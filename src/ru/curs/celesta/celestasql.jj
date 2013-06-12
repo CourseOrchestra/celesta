@@ -1,0 +1,155 @@
+options{
+    IGNORE_CASE=true ;
+    STATIC=false;
+//  DEBUG_LOOKAHEAD= true ;
+    FORCE_LA_CHECK=true;
+//  DEBUG_TOKEN_MANAGER=true;
+}
+
+PARSER_BEGIN(CelestaParser)
+package ru.curs.celesta;
+public class CelestaParser{
+}
+PARSER_END(CelestaParser)
+
+SKIP:
+{
+    " "
+|   "\t"
+|   "\r"
+|   "\n"
+}
+
+TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */ 
+{
+    <K_CREATE:  "CREATE">
+|   <K_TABLE:   "TABLE">
+|   <K_DEFAULT: "DEFAULT">
+|   <K_NOT:     "NOT">
+|   <K_NULL:   "NULL">
+|   <K_MAX:    "MAX">
+}
+
+TOKEN: /* Datatypes */
+{
+   <K_INT:     "INT">
+|   <K_REAL:     "REAL">
+|  <K_NVARCHAR:     "NVARCHAR">
+|  <K_IMAGE:     "IMAGE">
+|  <K_DATETIME:     "DATETIME">
+|  <K_BIT:     "BIT">
+}
+
+TOKEN : /* Numeric Constants */
+{
+	< S_DOUBLE: ((<S_INTEGER>)? "." <S_INTEGER> ( ["e","E"] ([ "-","+"])? <S_INTEGER> )? 
+				|
+				(<S_INTEGER>)+ (".")? ["e","E"] ([ "-","+"])? (<S_INTEGER>)+
+				)>
+  | 	< S_INTEGER: ( <DIGIT> )+ >
+  | 	< #DIGIT: ["0" - "9"] >
+  |     <S_BINARY_LITERAL: "0x"(["a"-"f", "A"-"F", "0"-"9"]["a"-"f", "A"-"F", "0"-"9"])+>
+}
+
+
+TOKEN:
+{
+	< S_IDENTIFIER: ( <LETTER> )+ ( <DIGIT> | <LETTER> |<SPECIAL_CHARS>)* >
+| 	< #LETTER: ["a"-"z", "A"-"Z", "_"] >
+|   < #SPECIAL_CHARS: "$" | "_">
+|   < S_CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")*>
+|   < S_QUOTED_IDENTIFIER: "\"" (~["\n","\r","\""])* "\"" | ("`" (~["\n","\r","`"])* "`") >
+}
+
+
+SPECIAL_TOKEN:
+{
+   <LINE_COMMENT: "--"(~["\r","\n"])*>
+|  <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+
+}
+
+/*Метамодель состоит из описания таблиц*/
+GrainModel model():
+{
+   GrainModel m = new GrainModel();
+}
+{ 
+   ( createTable(m) ";")*
+   {
+   return m;
+   }
+}
+
+
+
+void createTable(GrainModel m):
+{
+	Table table = null;
+	Token tableName = null;
+}
+{
+	<K_CREATE> <K_TABLE>
+	tableName = <S_IDENTIFIER> {table = new Table(tableName.toString());}
+	"("
+		columnDefinition(table)	("," columnDefinition(table))*
+	")"
+	{
+      m.addTable(table);
+    }
+}
+
+void columnDefinition(Table table):
+{
+   Column column = null;
+   Token token;
+   Token length = null;
+   boolean nullable;
+   boolean negative = false;
+}
+{
+  token = <S_IDENTIFIER>
+    (  (<K_INT>       {column = new IntegerColumn(token.toString()); token = null; } 
+	       nullable = nullable() 
+		  [<K_DEFAULT> ["-"] {negative = true;} token = <S_INTEGER>])
+    |  (<K_REAL>      {column = new FloatingColumn(token.toString()); token = null;} 
+	       nullable = nullable() 
+		  [<K_DEFAULT> ["-"] {negative = true;} (token = <S_INTEGER> | token = <S_DOUBLE>)])
+    |  (<K_NVARCHAR> {column = new StringColumn(token.toString()); token = null; } 
+	          ["("  (length = <S_INTEGER> | length = <K_MAX>) ")"]  
+	       nullable = nullable() 
+		  [<K_DEFAULT> token = <S_CHAR_LITERAL>])
+    |  (<K_IMAGE>     {column = new BinaryColumn(token.toString()); token = null;} 
+	       nullable = nullable()
+		  [<K_DEFAULT> token = <S_BINARY_LITERAL>])
+    |  (<K_DATETIME>  {column = new DateTimeColumn(token.toString()); token = null;} 
+	       nullable = nullable()
+		  [<K_DEFAULT> token = <S_CHAR_LITERAL>])
+    |  (<K_BIT>       {column = new BooleanColumn(token.toString()); token = null;}) 
+	       nullable = nullable() 
+	      [<K_DEFAULT> token = <S_CHAR_LITERAL>])
+			
+{ 
+    if (length != null){
+	  if ("MAX".equalsIgnoreCase(length.toString()))
+	     ((StringColumn) column).setMax(true);
+	  else
+	     ((StringColumn) column).setLength(Integer.parseInt(length.toString()));
+	}
+    column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
+	table.addColumn(column);
+}
+}
+
+boolean nullable():
+{
+boolean result = true;
+}
+{
+[<K_NULL>         {result = true;}
+|<K_NOT> <K_NULL> {result = false;}
+]
+{ 
+return result;
+}
+}

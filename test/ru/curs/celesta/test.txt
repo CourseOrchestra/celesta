@@ -1,0 +1,20 @@
+CREATE TABLE table1 --single-line comment
+(
+  column1  INT NULL,
+  column2  REAL NOT NULL DEFAULT -12323.2,
+  c3       BIT NOT NULL DEFAULT 'FALSE',
+  aaa      NVARCHAR(23) NOT NULL DEFAULT 'testtes''ttest',
+  bbb      NVARCHAR(MAX),
+  ccc      IMAGE,
+  e        INT DEFAULT -112,
+  f        REAL
+) 
+/*
+multi-line comment
+*/
+;
+
+CREATE TABLE table2(
+	column1 INT NOT NULL DEFAULT 2,  --TODO: debug IDENTITY here
+	column2 DATETIME DEFAULT '20111231'
+);
