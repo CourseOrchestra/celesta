@@ -1,6 +1,6 @@
 package ru.curs.celesta;
 
-public class StringColumn extends Column {
+public final class StringColumn extends Column {
 
 	private static final String INVALID_DEFAULT_VALUE_FORMAT = "Invalid default value format for nvarchar column. Should be quoted string.";
 

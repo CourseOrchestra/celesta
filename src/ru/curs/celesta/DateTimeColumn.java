@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DateTimeColumn extends Column {
+public final class DateTimeColumn extends Column {
 
 	private static final Pattern p = Pattern
 			.compile("'(\\d\\d\\d\\d)(\\d\\d)(\\d\\d)'");

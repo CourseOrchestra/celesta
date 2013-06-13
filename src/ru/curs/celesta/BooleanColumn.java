@@ -1,6 +1,6 @@
 package ru.curs.celesta;
 
-public class BooleanColumn extends Column {
+public final class BooleanColumn extends Column {
 	public BooleanColumn(String name) {
 		super(name);
 	}

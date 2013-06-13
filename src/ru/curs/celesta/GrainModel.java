@@ -1,22 +1,22 @@
 package ru.curs.celesta;
 
 import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class GrainModel {
-	private final Set<Table> tables = new LinkedHashSet<>();
+	private final Map<String, Table> tables = new LinkedHashMap<>();
 
 	public void addTable(Table table) throws ParseException {
-		if (!tables.add(table))
+		if (tables.put(table.getName(), table) != null)
 			throw new ParseException(String.format(
 					"Table '%s' defined more than once in a grain.",
 					table.getName()));
 
 	}
 
-	public Set<Table> getTables() {
-		return Collections.unmodifiableSet(tables);
+	public Map<String, Table> getTables() {
+		return Collections.unmodifiableMap(tables);
 	}
 
 	@Override

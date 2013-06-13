@@ -1,6 +1,6 @@
 package ru.curs.celesta;
 
-public class IntegerColumn extends Column {
+public final class IntegerColumn extends Column {
 	public IntegerColumn(String name) {
 		super(name);
 	}

@@ -1,6 +1,6 @@
 package ru.curs.celesta;
 
-public class BinaryColumn extends Column {
+public final class BinaryColumn extends Column {
 
 	private String defaultvalue;
 

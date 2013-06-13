@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -21,15 +21,15 @@ public class ParserTest {
 		CelestaParser cp = new CelestaParser(input);
 		GrainModel m = cp.model();
 
-		Set<Table> s = m.getTables();
+		Map<String, Table> s = m.getTables();
 		assertEquals(3, s.size());
 
-		Iterator<Table> i = s.iterator();
+		Iterator<Table> i = s.values().iterator();
 		// Первая таблица
 		Table t = i.next();
 		assertEquals("table1", t.getName());
 
-		Iterator<Column> ic = t.getColumns().iterator();
+		Iterator<Column> ic = t.getColumns().values().iterator();
 		Column c = ic.next();
 		assertEquals("column1", c.getName());
 		assertTrue(c instanceof IntegerColumn);
@@ -82,7 +82,7 @@ public class ParserTest {
 		// Пустая таблица
 		t = i.next();
 		assertEquals("table2", t.getName());
-		ic = t.getColumns().iterator();
+		ic = t.getColumns().values().iterator();
 
 		c = ic.next();
 		assertEquals("column1", c.getName());
@@ -113,4 +113,45 @@ public class ParserTest {
 		assertEquals("0x22AB15FF", ((BinaryColumn) c).getDefaultValue());
 	}
 
+	@Test
+	public void test2() throws ParseException {
+		GrainModel gm = new GrainModel();
+		Table t = new Table("aa");
+		gm.addTable(t);
+		t = new Table("bb");
+		gm.addTable(t);
+		assertEquals(2, gm.getTables().size());
+		t = new Table("aa");
+		boolean itWas = false;
+		try {
+			gm.addTable(t);
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		assertEquals(2, gm.getTables().size());
+
+		t = gm.getTables().get("aa");
+		assertEquals("aa", t.getName());
+		t = gm.getTables().get("bb");
+		assertEquals("bb", t.getName());
+
+		Column c = new IntegerColumn("col1");
+		t.addColumn(c);
+		c = new DateTimeColumn("col2");
+		t.addColumn(c);
+		c = new StringColumn("col3");
+		t.addColumn(c);
+		assertEquals(3, t.getColumns().size());
+		c = new DateTimeColumn("col2");
+		itWas = false;
+		try {
+			t.addColumn(c);
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		assertEquals(3, t.getColumns().size());
+		assertEquals("col2", t.getColumns().get("col2").getName());
+	}
 }
