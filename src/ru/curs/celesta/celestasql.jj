@@ -30,6 +30,8 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 |   <K_MAX:    "MAX">
 |   <K_IDENTITY: "IDENTITY">
 |   <K_GETDATE: "GETDATE">
+|   <K_PRIMARY: "PRIMARY">
+|   <K_KEY:    "KEY">
 }
 
 TOKEN: /* Datatypes */
@@ -94,11 +96,16 @@ void createTable(GrainModel m):
 	<K_CREATE> <K_TABLE>
 	tableName = <S_IDENTIFIER> {table = new Table(tableName.toString());}
 	"("
-		columnDefinition(table)	("," columnDefinition(table))*
+		tableConstituent(table)	("," tableConstituent(table))*
 	")"
 	{
       m.addTable(table);
     }
+}
+
+void tableConstituent(Table table):{}
+{
+   columnDefinition(table) | primaryKey(table)
 }
 
 void columnDefinition(Table table):
@@ -133,6 +140,7 @@ void columnDefinition(Table table):
     |  (<K_BIT>       {column = new BooleanColumn(token.toString()); token = null;}) 
 	       nullable = nullable() 
 	      [<K_DEFAULT> token = <S_CHAR_LITERAL>])
+	[<K_PRIMARY> <K_KEY>]
 			
 { 
     column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
@@ -142,13 +150,13 @@ void columnDefinition(Table table):
 
 boolean nullable():
 {
-boolean result = true;
+  boolean result = true;
 }
 {
-[<K_NULL>         {result = true;}
-|<K_NOT> <K_NULL> {result = false;}
-]
-{ 
-return result;
+[<K_NULL>         {result = true;} |<K_NOT> <K_NULL> {result = false;}] { return result;}
 }
+
+void primaryKey(Table table):{}
+{
+  <K_PRIMARY> <K_KEY> "(" <S_IDENTIFIER> ("," <S_IDENTIFIER>)* ")"
 }

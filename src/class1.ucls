@@ -75,7 +75,7 @@
   </class>  
   <class id="9" language="java" name="ru.curs.celesta.NamedElement" project="celesta" 
     file="/celesta/src/ru/curs/celesta/NamedElement.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="541" y="18"/>    
+    <position height="-1" width="-1" x="472" y="19"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
       visibility="true">      
       <attributes public="true" package="true" protected="true" private="true"/>      
@@ -92,51 +92,51 @@
     </display>  
   </class>  
   <generalization id="11">    
-    <end type="SOURCE" refId="3"/>    
+    <end type="SOURCE" refId="7"/>    
     <end type="TARGET" refId="2"/>  
   </generalization>  
   <generalization id="12">    
+    <end type="SOURCE" refId="8"/>    
+    <end type="TARGET" refId="2"/>  
+  </generalization>  
+  <generalization id="13">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="9"/>  
+  </generalization>  
+  <generalization id="14">    
     <end type="SOURCE" refId="2"/>    
     <end type="TARGET" refId="9"/>  
   </generalization>  
-  <association id="13">    
+  <generalization id="15">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="2"/>  
+  </generalization>  
+  <association id="16">    
     <end type="SOURCE" refId="10" navigable="false">      
-      <attribute id="14" name="tables"/>      
-      <multiplicity id="15" minimum="0" maximum="2147483647"/>    
+      <attribute id="17" name="tables"/>      
+      <multiplicity id="18" minimum="0" maximum="2147483647"/>    
     </end>    
     <end type="TARGET" refId="1" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <association id="16">    
+  <association id="19">    
     <end type="SOURCE" refId="1" navigable="false">      
-      <attribute id="17" name="columns"/>      
-      <multiplicity id="18" minimum="0" maximum="2147483647"/>    
+      <attribute id="20" name="columns"/>      
+      <multiplicity id="21" minimum="0" maximum="2147483647"/>    
     </end>    
     <end type="TARGET" refId="2" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <generalization id="19">    
-    <end type="SOURCE" refId="8"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
-  <generalization id="20">    
-    <end type="SOURCE" refId="6"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
-  <generalization id="21">    
-    <end type="SOURCE" refId="7"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
   <generalization id="22">    
     <end type="SOURCE" refId="4"/>    
     <end type="TARGET" refId="2"/>  
   </generalization>  
   <generalization id="23">    
-    <end type="SOURCE" refId="1"/>    
-    <end type="TARGET" refId="9"/>  
+    <end type="SOURCE" refId="6"/>    
+    <end type="TARGET" refId="2"/>  
   </generalization>  
   <generalization id="24">    
-    <end type="SOURCE" refId="5"/>    
+    <end type="SOURCE" refId="3"/>    
     <end type="TARGET" refId="2"/>  
   </generalization>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 

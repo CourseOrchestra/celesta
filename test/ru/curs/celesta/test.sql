@@ -3,6 +3,7 @@ CREATE TABLE table1 --single-line comment
   column1  INT NULL,
   column2  REAL NOT NULL DEFAULT -12323.2,
   c3       BIT NOT NULL DEFAULT 'FALSE',
+  PRIMARY KEY (column1, column2, c3),
   aaa      NVARCHAR(23) NOT NULL DEFAULT 'testtes''ttest',
   bbb      NVARCHAR(MAX),
   ccc      IMAGE,
@@ -15,7 +16,7 @@ multi-line comment
 ;
 
 CREATE TABLE table2(
-	column1 INT NOT NULL IDENTITY,
+	column1 INT NOT NULL IDENTITY PRIMARY KEY,
 	column2 DATETIME DEFAULT '20111231',
 	column3 DATETIME NOT NULL DEFAULT GETDATE(),
 	column4 IMAGE DEFAULT 0x22AB15FF

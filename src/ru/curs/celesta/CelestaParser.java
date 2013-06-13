@@ -16,7 +16,7 @@ public class CelestaParser implements CelestaParserConstants {
         break label_1;
       }
       createTable(m);
-      jj_consume_token(30);
+      jj_consume_token(32);
     }
    {if (true) return m;}
     throw new Error("Missing return statement in function");
@@ -29,23 +29,38 @@ public class CelestaParser implements CelestaParserConstants {
     jj_consume_token(K_TABLE);
     tableName = jj_consume_token(S_IDENTIFIER);
                                     table = new Table(tableName.toString());
-    jj_consume_token(31);
-    columnDefinition(table);
+    jj_consume_token(33);
+    tableConstituent(table);
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 32:
+      case 34:
         ;
         break;
       default:
         jj_la1[1] = jj_gen;
         break label_2;
       }
-      jj_consume_token(32);
-      columnDefinition(table);
+      jj_consume_token(34);
+      tableConstituent(table);
     }
-    jj_consume_token(33);
+    jj_consume_token(35);
       m.addTable(table);
+  }
+
+  final public void tableConstituent(Table table) throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case S_IDENTIFIER:
+      columnDefinition(table);
+      break;
+    case K_PRIMARY:
+      primaryKey(table);
+      break;
+    default:
+      jj_la1[2] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
   }
 
   final public void columnDefinition(Table table) throws ParseException {
@@ -67,11 +82,11 @@ public class CelestaParser implements CelestaParserConstants {
         case K_DEFAULT:
           jj_consume_token(K_DEFAULT);
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 34:
-            jj_consume_token(34);
+          case 36:
+            jj_consume_token(36);
             break;
           default:
-            jj_la1[2] = jj_gen;
+            jj_la1[3] = jj_gen;
             ;
           }
                                        negative = true;
@@ -81,13 +96,13 @@ public class CelestaParser implements CelestaParserConstants {
           token = jj_consume_token(K_IDENTITY);
           break;
         default:
-          jj_la1[3] = jj_gen;
+          jj_la1[4] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[4] = jj_gen;
+        jj_la1[5] = jj_gen;
         ;
       }
       break;
@@ -99,11 +114,11 @@ public class CelestaParser implements CelestaParserConstants {
       case K_DEFAULT:
         jj_consume_token(K_DEFAULT);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 34:
-          jj_consume_token(34);
+        case 36:
+          jj_consume_token(36);
           break;
         default:
-          jj_la1[5] = jj_gen;
+          jj_la1[6] = jj_gen;
           ;
         }
                                       negative = true;
@@ -115,13 +130,13 @@ public class CelestaParser implements CelestaParserConstants {
           token = jj_consume_token(S_DOUBLE);
           break;
         default:
-          jj_la1[6] = jj_gen;
+          jj_la1[7] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[7] = jj_gen;
+        jj_la1[8] = jj_gen;
         ;
       }
       break;
@@ -129,8 +144,8 @@ public class CelestaParser implements CelestaParserConstants {
       jj_consume_token(K_NVARCHAR);
                       column = new StringColumn(token.toString()); token = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 31:
-        jj_consume_token(31);
+      case 33:
+        jj_consume_token(33);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case S_INTEGER:
           length = jj_consume_token(S_INTEGER);
@@ -139,14 +154,14 @@ public class CelestaParser implements CelestaParserConstants {
           length = jj_consume_token(K_MAX);
           break;
         default:
-          jj_la1[8] = jj_gen;
+          jj_la1[9] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
-        jj_consume_token(33);
+        jj_consume_token(35);
         break;
       default:
-        jj_la1[9] = jj_gen;
+        jj_la1[10] = jj_gen;
         ;
       }
                            ((StringColumn) column).setLength(length.toString());
@@ -157,7 +172,7 @@ public class CelestaParser implements CelestaParserConstants {
         token = jj_consume_token(S_CHAR_LITERAL);
         break;
       default:
-        jj_la1[10] = jj_gen;
+        jj_la1[11] = jj_gen;
         ;
       }
       break;
@@ -171,7 +186,7 @@ public class CelestaParser implements CelestaParserConstants {
         token = jj_consume_token(S_BINARY_LITERAL);
         break;
       default:
-        jj_la1[11] = jj_gen;
+        jj_la1[12] = jj_gen;
         ;
       }
       break;
@@ -188,17 +203,17 @@ public class CelestaParser implements CelestaParserConstants {
           break;
         case K_GETDATE:
           token = jj_consume_token(K_GETDATE);
-          jj_consume_token(31);
           jj_consume_token(33);
+          jj_consume_token(35);
           break;
         default:
-          jj_la1[12] = jj_gen;
+          jj_la1[13] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[13] = jj_gen;
+        jj_la1[14] = jj_gen;
         ;
       }
       break;
@@ -212,21 +227,30 @@ public class CelestaParser implements CelestaParserConstants {
         token = jj_consume_token(S_CHAR_LITERAL);
         break;
       default:
-        jj_la1[14] = jj_gen;
+        jj_la1[15] = jj_gen;
         ;
       }
       break;
     default:
-      jj_la1[15] = jj_gen;
+      jj_la1[16] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
+    }
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case K_PRIMARY:
+      jj_consume_token(K_PRIMARY);
+      jj_consume_token(K_KEY);
+      break;
+    default:
+      jj_la1[17] = jj_gen;
+      ;
     }
     column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
         table.addColumn(column);
   }
 
   final public boolean nullable() throws ParseException {
-boolean result = true;
+  boolean result = true;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_NOT:
     case K_NULL:
@@ -238,20 +262,41 @@ boolean result = true;
       case K_NOT:
         jj_consume_token(K_NOT);
         jj_consume_token(K_NULL);
-                   result = false;
+                                                      result = false;
         break;
       default:
-        jj_la1[16] = jj_gen;
+        jj_la1[18] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[17] = jj_gen;
+      jj_la1[19] = jj_gen;
       ;
     }
-{if (true) return result;}
+                                                                          {if (true) return result;}
     throw new Error("Missing return statement in function");
+  }
+
+  final public void primaryKey(Table table) throws ParseException {
+    jj_consume_token(K_PRIMARY);
+    jj_consume_token(K_KEY);
+    jj_consume_token(33);
+    jj_consume_token(S_IDENTIFIER);
+    label_3:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 34:
+        ;
+        break;
+      default:
+        jj_la1[20] = jj_gen;
+        break label_3;
+      }
+      jj_consume_token(34);
+      jj_consume_token(S_IDENTIFIER);
+    }
+    jj_consume_token(35);
   }
 
   /** Generated Token Manager. */
@@ -263,7 +308,7 @@ boolean result = true;
   public Token jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[18];
+  final private int[] jj_la1 = new int[21];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static {
@@ -271,10 +316,10 @@ boolean result = true;
       jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x20,0x0,0x0,0x880,0x880,0x0,0x180000,0x80,0x100400,0x80000000,0x80,0x80,0x4001000,0x80,0x80,0x7e000,0x300,0x300,};
+      jj_la1_0 = new int[] {0x20,0x0,0x2002000,0x0,0x880,0x880,0x0,0x600000,0x80,0x400400,0x0,0x80,0x80,0x10001000,0x80,0x80,0x1f8000,0x2000,0x300,0x300,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x0,0x1,0x4,0x0,0x0,0x4,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_1 = new int[] {0x0,0x4,0x0,0x10,0x0,0x0,0x10,0x0,0x0,0x0,0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x4,};
    }
 
   /** Constructor with InputStream. */
@@ -288,7 +333,7 @@ boolean result = true;
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -302,7 +347,7 @@ boolean result = true;
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -312,7 +357,7 @@ boolean result = true;
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -322,7 +367,7 @@ boolean result = true;
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -331,7 +376,7 @@ boolean result = true;
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -340,7 +385,7 @@ boolean result = true;
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 21; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -391,12 +436,12 @@ boolean result = true;
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[35];
+    boolean[] la1tokens = new boolean[37];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 18; i++) {
+    for (int i = 0; i < 21; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -408,7 +453,7 @@ boolean result = true;
         }
       }
     }
-    for (int i = 0; i < 35; i++) {
+    for (int i = 0; i < 37; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;
