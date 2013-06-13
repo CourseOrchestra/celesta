@@ -41,10 +41,13 @@ public final class Table extends NamedElement {
 	 *             Если колонка с таким именем уже определена.
 	 */
 	void addColumn(Column column) throws ParseException {
-		if (columns.put(column.getName(), column) != null)
+		Column oldValue = columns.put(column.getName(), column);
+		if (oldValue != null) {
+			columns.put(oldValue.getName(), oldValue);
 			throw new ParseException(String.format(
 					"Column '%s' defined more than once in table '%s'.",
 					column.getName(), getName()));
+		}
 	}
 
 	@Override
@@ -67,6 +70,18 @@ public final class Table extends NamedElement {
 		if (c == null)
 			throw new ParseException(String.format(
 					"Column %s is not defined in table '%s'.", name, getName()));
+		if (c.isNullable())
+			throw new ParseException(String.format(
+					"Column %s is nullable and therefore it cannot be "
+							+ "a part of a primary key in table '%s'.", name,
+					getName()));
+		if (c instanceof BinaryColumn)
+			throw new ParseException(
+					String.format(
+							"Column %s is of long binary type and therefore "
+									+ "it cannot a part of a primary key in table '%s'.",
+							name, getName()));
+
 		if (pk.put(name, c) != null)
 			throw new ParseException(
 					String.format(

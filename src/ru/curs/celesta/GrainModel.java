@@ -28,11 +28,12 @@ public final class GrainModel {
 	 *             В случае, если таблица с таким именем уже существует.
 	 */
 	void addTable(Table table) throws ParseException {
-		if (tables.put(table.getName(), table) != null)
+		Table oldValue = tables.put(table.getName(), table);
+		if (oldValue != null) {
+			tables.put(oldValue.getName(), oldValue);
 			throw new ParseException(String.format(
 					"Table '%s' defined more than once in a grain.",
 					table.getName()));
-
+		}
 	}
-
 }

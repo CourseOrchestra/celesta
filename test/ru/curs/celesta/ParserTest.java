@@ -34,8 +34,8 @@ public class ParserTest {
 		Column c = ic.next();
 		assertEquals("column1", c.getName());
 		assertTrue(c instanceof IntegerColumn);
-		assertTrue(c.isNullable());
-		assertFalse(((IntegerColumn) c).isIdentity());
+		assertFalse(c.isNullable());
+		assertTrue(((IntegerColumn) c).isIdentity());
 
 		c = ic.next();
 		assertEquals("column2", c.getName());
@@ -153,9 +153,13 @@ public class ParserTest {
 		Column c = new IntegerColumn("col1");
 		t.addColumn(c);
 		c = new DateTimeColumn("col2");
+		c.setNullableAndDefault(false, "GETDATE");
+		assertTrue(((DateTimeColumn) c).isGetdate());
+		assertFalse(c.isNullable());
 		t.addColumn(c);
 		c = new StringColumn("col3");
 		t.addColumn(c);
+		c.setNullableAndDefault(false, "'-'");
 		assertEquals(3, t.getColumns().size());
 		c = new DateTimeColumn("col2");
 		itWas = false;
@@ -164,9 +168,13 @@ public class ParserTest {
 		} catch (ParseException e) {
 			itWas = true;
 		}
+
 		assertTrue(itWas);
 		assertEquals(3, t.getColumns().size());
-		assertEquals("col2", t.getColumns().get("col2").getName());
+		c = t.getColumns().get("col2");
+		assertFalse(c.isNullable());
+		assertTrue(((DateTimeColumn) c).isGetdate());
+		assertEquals("col2", c.getName());
 		// Корректное и некорректное добавление первичного ключа
 		t.addPK("col2");
 		itWas = false;

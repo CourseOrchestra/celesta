@@ -1,12 +1,12 @@
 CREATE TABLE table1 --single-line comment
 (
-  column1  INT NULL,
+  column1  INT NOT NULL IDENTITY,
   column2  REAL NOT NULL DEFAULT -12323.2,
   c3       BIT NOT NULL DEFAULT 'FALSE',
   PRIMARY KEY (column1, c3, column2),
   aaa      NVARCHAR(23) NOT NULL DEFAULT 'testtes''ttest',
   bbb      NVARCHAR(MAX),
-  ccc      IMAGE,
+  ccc      IMAGE NULL,
   e        INT DEFAULT -112,
   f        REAL
 ) 

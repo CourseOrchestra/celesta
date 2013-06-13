@@ -8,7 +8,7 @@ public abstract class Column extends NamedElement {
 
 	protected abstract void setDefault(String lexvalue) throws ParseException;
 
-	private boolean nullable;
+	private boolean nullable = true;
 
 	@Override
 	public String toString() {
