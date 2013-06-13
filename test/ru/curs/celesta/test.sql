@@ -3,7 +3,7 @@ CREATE TABLE table1 --single-line comment
   column1  INT NULL,
   column2  REAL NOT NULL DEFAULT -12323.2,
   c3       BIT NOT NULL DEFAULT 'FALSE',
-  PRIMARY KEY (column1, column2, c3),
+  PRIMARY KEY (column1, c3, column2),
   aaa      NVARCHAR(23) NOT NULL DEFAULT 'testtes''ttest',
   bbb      NVARCHAR(MAX),
   ccc      IMAGE,
@@ -24,7 +24,7 @@ CREATE TABLE table2(
  
 CREATE TABLE employees
 (
- emp_id nvarchar(11) NOT NULL DEFAULT 'aaa',
+ emp_id nvarchar(11) NOT NULL DEFAULT 'aaa' PRIMARY KEY,
  emp_lname nvarchar(40) NOT NULL DEFAULT 'bbb',
  emp_fname nvarchar(MAX),
  emp_hire_date datetime DEFAULT GETDATE(),

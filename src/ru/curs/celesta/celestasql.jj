@@ -99,6 +99,7 @@ void createTable(GrainModel m):
 		tableConstituent(table)	("," tableConstituent(table))*
 	")"
 	{
+	  table.finalizePK();
       m.addTable(table);
     }
 }
@@ -115,6 +116,7 @@ void columnDefinition(Table table):
    Token length = null;
    boolean nullable;
    boolean negative = false;
+   boolean pk = false;
 }
 {
   token = <S_IDENTIFIER>
@@ -140,11 +142,15 @@ void columnDefinition(Table table):
     |  (<K_BIT>       {column = new BooleanColumn(token.toString()); token = null;}) 
 	       nullable = nullable() 
 	      [<K_DEFAULT> token = <S_CHAR_LITERAL>])
-	[<K_PRIMARY> <K_KEY>]
+	[<K_PRIMARY> <K_KEY> {pk = true;}]
 			
 { 
     column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
 	table.addColumn(column);
+	if (pk) {
+	  table.addPK(column.getName());
+	  table.finalizePK();
+	}
 }
 }
 
@@ -156,7 +162,11 @@ boolean nullable():
 [<K_NULL>         {result = true;} |<K_NOT> <K_NULL> {result = false;}] { return result;}
 }
 
-void primaryKey(Table table):{}
+void primaryKey(Table table):{Token token;}
 {
-  <K_PRIMARY> <K_KEY> "(" <S_IDENTIFIER> ("," <S_IDENTIFIER>)* ")"
+  <K_PRIMARY> <K_KEY> "(" token = <S_IDENTIFIER> {table.addPK(token.toString());}
+                     ("," token = <S_IDENTIFIER> {table.addPK(token.toString());})* ")"
+  {
+    table.finalizePK();
+  }
 }

@@ -45,6 +45,7 @@ public class CelestaParser implements CelestaParserConstants {
       tableConstituent(table);
     }
     jj_consume_token(35);
+          table.finalizePK();
       m.addTable(table);
   }
 
@@ -69,6 +70,7 @@ public class CelestaParser implements CelestaParserConstants {
    Token length = null;
    boolean nullable;
    boolean negative = false;
+   boolean pk = false;
     token = jj_consume_token(S_IDENTIFIER);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_INT:
@@ -240,6 +242,7 @@ public class CelestaParser implements CelestaParserConstants {
     case K_PRIMARY:
       jj_consume_token(K_PRIMARY);
       jj_consume_token(K_KEY);
+                              pk = true;
       break;
     default:
       jj_la1[17] = jj_gen;
@@ -247,6 +250,10 @@ public class CelestaParser implements CelestaParserConstants {
     }
     column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
         table.addColumn(column);
+        if (pk) {
+          table.addPK(column.getName());
+          table.finalizePK();
+        }
   }
 
   final public boolean nullable() throws ParseException {
@@ -279,10 +286,12 @@ public class CelestaParser implements CelestaParserConstants {
   }
 
   final public void primaryKey(Table table) throws ParseException {
+                              Token token;
     jj_consume_token(K_PRIMARY);
     jj_consume_token(K_KEY);
     jj_consume_token(33);
-    jj_consume_token(S_IDENTIFIER);
+    token = jj_consume_token(S_IDENTIFIER);
+                                                  table.addPK(token.toString());
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -294,9 +303,11 @@ public class CelestaParser implements CelestaParserConstants {
         break label_3;
       }
       jj_consume_token(34);
-      jj_consume_token(S_IDENTIFIER);
+      token = jj_consume_token(S_IDENTIFIER);
+                                                  table.addPK(token.toString());
     }
     jj_consume_token(35);
+    table.finalizePK();
   }
 
   /** Generated Token Manager. */

@@ -3,6 +3,7 @@ package ru.curs.celesta;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
@@ -79,7 +80,19 @@ public class ParserTest {
 		assertTrue(c.isNullable());
 		assertNull(((FloatingColumn) c).getDefaultvalue());
 
-		// Пустая таблица
+		Map<String, Column> key = t.getPrimaryKey();
+		ic = key.values().iterator();
+		c = ic.next();
+		assertSame(c, t.getColumns().get("column1"));
+		assertEquals("column1", c.getName());
+		c = ic.next();
+		assertSame(c, t.getColumns().get("c3"));
+		assertEquals("c3", c.getName());
+		c = ic.next();
+		assertSame(c, t.getColumns().get("column2"));
+		assertEquals("column2", c.getName());
+
+		// Вторая таблица
 		t = i.next();
 		assertEquals("table2", t.getName());
 		ic = t.getColumns().values().iterator();
@@ -115,6 +128,7 @@ public class ParserTest {
 
 	@Test
 	public void test2() throws ParseException {
+		// Корректное и некорректное добавление таблицы
 		GrainModel gm = new GrainModel();
 		Table t = new Table("aa");
 		gm.addTable(t);
@@ -135,7 +149,7 @@ public class ParserTest {
 		assertEquals("aa", t.getName());
 		t = gm.getTables().get("bb");
 		assertEquals("bb", t.getName());
-
+		// Корректное и некорректное добавление поля
 		Column c = new IntegerColumn("col1");
 		t.addColumn(c);
 		c = new DateTimeColumn("col2");
@@ -153,5 +167,42 @@ public class ParserTest {
 		assertTrue(itWas);
 		assertEquals(3, t.getColumns().size());
 		assertEquals("col2", t.getColumns().get("col2").getName());
+		// Корректное и некорректное добавление первичного ключа
+		t.addPK("col2");
+		itWas = false;
+		try {
+			t.addPK("blahblah");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		t.addPK("col3");
+		Map<String, Column> key = t.getPrimaryKey();
+		assertEquals(2, key.size());
+		Iterator<Column> ic = key.values().iterator();
+		c = ic.next();
+		assertEquals("col2", c.getName());
+		c = ic.next();
+		assertEquals("col3", c.getName());
+		t.finalizePK();
+		itWas = false;
+		try {
+			t.addPK("col1");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		t.finalizePK(); // вызывать можно более одного раза, если PK определён
+
+		// вызывать нельзя ни разу, если PK не определён
+		t = gm.getTables().get("aa");
+		itWas = false;
+		try {
+			t.finalizePK();
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+
 	}
 }
