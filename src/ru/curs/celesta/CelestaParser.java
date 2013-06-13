@@ -4,6 +4,9 @@ public class CelestaParser implements CelestaParserConstants {
 
 /*Метамодель состоит из описания таблиц*/
   final public GrainModel model() throws ParseException {
+   /*This work is dedicated to Maria, my misterious muse :-) 
+     Ivan Ponomarev, June 2013.*/
+
    GrainModel m = new GrainModel();
     label_1:
     while (true) {

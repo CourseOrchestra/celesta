@@ -76,6 +76,9 @@ SPECIAL_TOKEN:
 /*Метамодель состоит из описания таблиц*/
 GrainModel model():
 {
+   /*This work is dedicated to Maria, my misterious muse :-) 
+     Ivan Ponomarev, June 2013.*/
+	 
    GrainModel m = new GrainModel();
 }
 { 
