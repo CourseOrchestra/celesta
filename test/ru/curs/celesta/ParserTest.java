@@ -65,6 +65,7 @@ public class ParserTest {
 		assertEquals("ccc", c.getName());
 		assertTrue(c instanceof BinaryColumn);
 		assertTrue(c.isNullable());
+		assertNull(((BinaryColumn) c).getDefaultValue());
 
 		c = ic.next();
 		assertEquals("e", c.getName());
@@ -106,6 +107,10 @@ public class ParserTest {
 		assertNull(((DateTimeColumn) c).getDefaultValue());
 		assertTrue(((DateTimeColumn) c).isGetdate());
 
+		c = ic.next();
+		assertEquals("column4", c.getName());
+		assertTrue(c instanceof BinaryColumn);
+		assertEquals("0x22AB15FF", ((BinaryColumn) c).getDefaultValue());
 	}
 
 }
