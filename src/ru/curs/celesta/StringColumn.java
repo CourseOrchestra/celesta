@@ -1,7 +1,7 @@
 package ru.curs.celesta;
 
 public class StringColumn extends Column {
-	
+
 	private static final String INVALID_DEFAULT_VALUE_FORMAT = "Invalid default value format for nvarchar column. Should be quoted string.";
 
 	public StringColumn(String name) {
@@ -69,12 +69,14 @@ public class StringColumn extends Column {
 		return max;
 	}
 
-	void setLength(int length) {
-		this.length = length;
-	}
-
-	void setMax(boolean max) {
-		this.max = max;
+	void setLength(String length) {
+		if ("MAX".equalsIgnoreCase(length)) {
+			max = true;
+			this.length = 0;
+		} else {
+			max = false;
+			this.length = Integer.parseInt(length);
+		}
 	}
 
 }

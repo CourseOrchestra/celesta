@@ -2,6 +2,7 @@ package ru.curs.celesta;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
@@ -16,12 +17,12 @@ public class ParserTest {
 
 	@Test
 	public void test1() throws ParseException {
-		InputStream input = ParserTest.class.getResourceAsStream("test.txt");
+		InputStream input = ParserTest.class.getResourceAsStream("test.sql");
 		CelestaParser cp = new CelestaParser(input);
 		GrainModel m = cp.model();
 
 		Set<Table> s = m.getTables();
-		assertEquals(2, s.size());
+		assertEquals(3, s.size());
 
 		Iterator<Table> i = s.iterator();
 		// Первая таблица
@@ -33,6 +34,7 @@ public class ParserTest {
 		assertEquals("column1", c.getName());
 		assertTrue(c instanceof IntegerColumn);
 		assertTrue(c.isNullable());
+		assertFalse(((IntegerColumn) c).isIdentity());
 
 		c = ic.next();
 		assertEquals("column2", c.getName());
@@ -74,7 +76,7 @@ public class ParserTest {
 		assertEquals("f", c.getName());
 		assertTrue(c instanceof FloatingColumn);
 		assertTrue(c.isNullable());
-		assertEquals(null, ((FloatingColumn) c).getDefaultvalue());
+		assertNull(((FloatingColumn) c).getDefaultvalue());
 
 		// Пустая таблица
 		t = i.next();
@@ -82,6 +84,11 @@ public class ParserTest {
 		ic = t.getColumns().iterator();
 
 		c = ic.next();
+		assertEquals("column1", c.getName());
+		assertTrue(c instanceof IntegerColumn);
+		assertFalse(c.isNullable());
+		assertNull(((IntegerColumn) c).getDefaultvalue());
+		assertTrue(((IntegerColumn) c).isIdentity());
 
 		c = ic.next();
 		assertEquals("column2", c.getName());
@@ -90,6 +97,14 @@ public class ParserTest {
 		Date d = ((DateTimeColumn) c).getDefaultValue();
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		assertEquals("2011-12-31", df.format(d));
+		assertFalse(((DateTimeColumn) c).isGetdate());
+
+		c = ic.next();
+		assertEquals("column3", c.getName());
+		assertTrue(c instanceof DateTimeColumn);
+		assertFalse(c.isNullable());
+		assertNull(((DateTimeColumn) c).getDefaultValue());
+		assertTrue(((DateTimeColumn) c).isGetdate());
 
 	}
 

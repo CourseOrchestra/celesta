@@ -15,6 +15,16 @@ multi-line comment
 ;
 
 CREATE TABLE table2(
-	column1 INT NOT NULL DEFAULT 2,  --TODO: debug IDENTITY here
-	column2 DATETIME DEFAULT '20111231'
+	column1 INT NOT NULL IDENTITY,
+	column2 DATETIME DEFAULT '20111231',
+	column3 DATETIME NOT NULL DEFAULT GETDATE()
+);
+ 
+CREATE TABLE employees
+(
+ emp_id nvarchar(11) NOT NULL DEFAULT 'aaa',
+ emp_lname nvarchar(40) NOT NULL DEFAULT 'bbb',
+ emp_fname nvarchar(MAX),
+ emp_hire_date datetime DEFAULT GETDATE(),
+ emp_mgr nvarchar(30)
 );

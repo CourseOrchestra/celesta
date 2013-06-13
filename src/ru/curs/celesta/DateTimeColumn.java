@@ -16,32 +16,50 @@ public class DateTimeColumn extends Column {
 
 	private Date defaultvalue;
 
+	private boolean getdate;
+
 	@Override
 	protected void setDefault(String lexvalue) throws ParseException {
 
 		if (lexvalue == null) {
 			defaultvalue = null;
-			return;
+			getdate = false;
+
+		} else if ("GETDATE".equalsIgnoreCase(lexvalue)) {
+			defaultvalue = null;
+			getdate = true;
+		} else {
+			Matcher m = p.matcher(lexvalue);
+			if (!m.matches())
+				throw new ParseException(
+						String.format(
+								"Invalid default datetime value %s. It should match 'YYYYMMDD' pattern.",
+								lexvalue));
+			int y = Integer.parseInt(m.group(1));
+			int mo = Integer.parseInt(m.group(2));
+			int d = Integer.parseInt(m.group(3));
+
+			Calendar c = Calendar.getInstance();
+			c.clear();
+
+			c.set(y, mo - 1, d);
+			defaultvalue = c.getTime();
+			getdate = false;
 		}
-		Matcher m = p.matcher(lexvalue);
-		if (!m.matches())
-			throw new ParseException(
-					String.format(
-							"Invalid default datetime value %s. It should match 'YYYYMMDD' pattern.",
-							lexvalue));
-		int y = Integer.parseInt(m.group(1));
-		int mo = Integer.parseInt(m.group(2));
-		int d = Integer.parseInt(m.group(3));
-
-		Calendar c = Calendar.getInstance();
-		c.clear();
-
-		c.set(y, mo - 1, d);
-		defaultvalue = c.getTime();
 	}
 
+	/**
+	 * Значение по умолчанию.
+	 */
 	public Date getDefaultValue() {
 		return defaultvalue;
+	}
+
+	/**
+	 * Используется ли конструкция GETDATE() в качестве значения по умолчанию.
+	 */
+	public boolean isGetdate() {
+		return getdate;
 	}
 
 }
