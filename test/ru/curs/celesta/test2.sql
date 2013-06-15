@@ -23,7 +23,7 @@ create table b (
  a nvarchar(5) not null default '' primary key,
  b int,
  c int,
- foreign key (b, a) references a(a, b) on delete no action on update cascade
+ foreign key (b, a) references a(a, b) on delete cascade on update cascade
  );
 
 

@@ -131,6 +131,40 @@ public class ParserTest {
 		InputStream input = ParserTest.class.getResourceAsStream("test2.sql");
 		CelestaParser cp = new CelestaParser(input);
 		GrainModel m = cp.model();
-	}
 
+		Table d = m.getTables().get("d");
+		assertEquals(0, d.getForeignKeys().size());
+
+		Table a = m.getTables().get("a");
+		assertEquals(2, a.getForeignKeys().size());
+		Iterator<ForeignKey> i = a.getForeignKeys().iterator();
+
+		ForeignKey fk = i.next();
+		assertEquals("a", fk.getParentTable().getName());
+		assertEquals(1, fk.getColumns().size());
+		assertEquals("kk", fk.getColumns().get("kk").getName());
+		assertEquals("d", fk.getReferencedTable().getName());
+		assertSame(FKBehaviour.NO_ACTION, fk.getDeleteBehaviour());
+		assertSame(FKBehaviour.SETNULL, fk.getUpdateBehaviour());
+
+		fk = i.next();
+		assertEquals("a", fk.getParentTable().getName());
+		assertEquals(1, fk.getColumns().size());
+		assertEquals("d", fk.getColumns().get("d").getName());
+		assertEquals("c", fk.getReferencedTable().getName());
+		assertSame(FKBehaviour.NO_ACTION, fk.getDeleteBehaviour());
+		assertSame(FKBehaviour.NO_ACTION, fk.getUpdateBehaviour());
+
+		Table b = m.getTables().get("b");
+		assertEquals(1, b.getForeignKeys().size());
+		i = b.getForeignKeys().iterator();
+		fk = i.next();
+		assertEquals("b", fk.getParentTable().getName());
+		assertEquals(2, fk.getColumns().size());
+		assertEquals("b", fk.getColumns().get("b").getName());
+		assertEquals("a", fk.getColumns().get("a").getName());
+		assertEquals("a", fk.getReferencedTable().getName());
+		assertSame(FKBehaviour.CASCADE, fk.getDeleteBehaviour());
+		assertSame(FKBehaviour.CASCADE, fk.getUpdateBehaviour());
+	}
 }

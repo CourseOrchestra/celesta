@@ -1,7 +1,7 @@
 package ru.curs.celesta;
 
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +35,7 @@ public final class Table extends NamedElement {
 
 	};
 
-	private final Set<ForeignKey> fKeys = new HashSet<>();
+	private final Set<ForeignKey> fKeys = new LinkedHashSet<>();
 
 	private boolean pkFinalized = false;
 
@@ -91,7 +91,8 @@ public final class Table extends NamedElement {
 		Column c = columns.get(name);
 		if (c == null)
 			throw new ParseException(String.format(
-					"Column '%s' is not defined in table '%s'.", name, getName()));
+					"Column '%s' is not defined in table '%s'.", name,
+					getName()));
 		if (c.isNullable())
 			throw new ParseException(String.format(
 					"Column '%s' is nullable and therefore it cannot be "

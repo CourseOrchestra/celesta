@@ -77,6 +77,7 @@ public class CelestaParser implements CelestaParserConstants {
    boolean nullable;
    boolean negative = false;
    boolean pk = false;
+   ForeignKey fk = null;
     token = jj_consume_token(S_IDENTIFIER);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_INT:
@@ -254,22 +255,23 @@ public class CelestaParser implements CelestaParserConstants {
       jj_la1[17] = jj_gen;
       ;
     }
+      column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
+          table.addColumn(column);
+          if (pk) {
+            table.addPK(column.getName());
+            table.finalizePK();
+          }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_FOREIGN:
       jj_consume_token(K_FOREIGN);
       jj_consume_token(K_KEY);
-      references();
+                              fk = new ForeignKey(table); fk.addColumn(column.getName());
+      references(fk);
       break;
     default:
       jj_la1[18] = jj_gen;
       ;
     }
-    column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
-        table.addColumn(column);
-        if (pk) {
-          table.addPK(column.getName());
-          table.finalizePK();
-        }
   }
 
   final public boolean nullable() throws ParseException {
@@ -327,10 +329,13 @@ public class CelestaParser implements CelestaParserConstants {
   }
 
   final public void foreignKey(Table table) throws ParseException {
+  Token token;
     jj_consume_token(K_FOREIGN);
     jj_consume_token(K_KEY);
+                     ForeignKey fk = new ForeignKey(table);
     jj_consume_token(42);
-    jj_consume_token(S_IDENTIFIER);
+    token = jj_consume_token(S_IDENTIFIER);
+                               fk.addColumn(token.toString());
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -342,15 +347,19 @@ public class CelestaParser implements CelestaParserConstants {
         break label_4;
       }
       jj_consume_token(43);
-      jj_consume_token(S_IDENTIFIER);
+      token = jj_consume_token(S_IDENTIFIER);
+                               fk.addColumn(token.toString());
     }
     jj_consume_token(44);
-    references();
+    references(fk);
   }
 
-  final public void references() throws ParseException {
+  final public void references(ForeignKey fk) throws ParseException {
+  Token token;
+  FKBehaviour action;
     jj_consume_token(K_REFERENCES);
-    jj_consume_token(S_IDENTIFIER);
+    token = jj_consume_token(S_IDENTIFIER);
+   fk.setReferencedTable("", token.toString());
     jj_consume_token(42);
     jj_consume_token(S_IDENTIFIER);
     label_5:
@@ -373,12 +382,14 @@ public class CelestaParser implements CelestaParserConstants {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_UPDATE:
         jj_consume_token(K_UPDATE);
-        action();
+        action = action();
+                                  fk.setUpdateBehaviour(action);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_ON:
           jj_consume_token(K_ON);
           jj_consume_token(K_DELETE);
-          action();
+          action = action();
+                                          fk.setDeleteBehaviour(action);
           break;
         default:
           jj_la1[24] = jj_gen;
@@ -387,12 +398,14 @@ public class CelestaParser implements CelestaParserConstants {
         break;
       case K_DELETE:
         jj_consume_token(K_DELETE);
-        action();
+        action = action();
+                                  fk.setDeleteBehaviour(action);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_ON:
           jj_consume_token(K_ON);
           jj_consume_token(K_UPDATE);
-          action();
+          action = action();
+                                          fk.setUpdateBehaviour(action);
           break;
         default:
           jj_la1[25] = jj_gen;
@@ -411,24 +424,30 @@ public class CelestaParser implements CelestaParserConstants {
     }
   }
 
-  final public void action() throws ParseException {
+  final public FKBehaviour action() throws ParseException {
+  FKBehaviour result;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_NO:
       jj_consume_token(K_NO);
       jj_consume_token(K_ACTION);
+                        result = FKBehaviour.NO_ACTION;
       break;
     case K_SET:
       jj_consume_token(K_SET);
       jj_consume_token(K_NULL);
+                       result =  FKBehaviour.SETNULL;
       break;
     case K_CASCADE:
       jj_consume_token(K_CASCADE);
+                         result =  FKBehaviour.CASCADE;
       break;
     default:
       jj_la1[28] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
+    {if (true) return result;}
+    throw new Error("Missing return statement in function");
   }
 
   /** Generated Token Manager. */

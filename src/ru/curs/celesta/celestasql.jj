@@ -131,6 +131,7 @@ void columnDefinition(Table table):
    boolean nullable;
    boolean negative = false;
    boolean pk = false;
+   ForeignKey fk = null;
 }
 {
   token = <S_IDENTIFIER>
@@ -157,16 +158,15 @@ void columnDefinition(Table table):
 	       nullable = nullable() 
 	      [<K_DEFAULT> token = <S_CHAR_LITERAL>])
 	[<K_PRIMARY> <K_KEY> {pk = true;}]
-	[<K_FOREIGN> <K_KEY> references()]
-			
-{ 
-    column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
-	table.addColumn(column);
-	if (pk) {
-	  table.addPK(column.getName());
-	  table.finalizePK();
-	}
-}
+	{ 
+      column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
+	  table.addColumn(column);
+	  if (pk) {
+	    table.addPK(column.getName());
+	    table.finalizePK();
+	  }
+    }
+	[<K_FOREIGN> <K_KEY> {fk = new ForeignKey(table); fk.addColumn(column.getName());} references(fk)]
 }
 
 boolean nullable():
@@ -187,27 +187,41 @@ void primaryKey(Table table):{Token token;}
 }
 
 void foreignKey(Table table):{
+  Token token;
 }
 {
-<K_FOREIGN><K_KEY>"(" <S_IDENTIFIER> ("," <S_IDENTIFIER> )* ")"
-references()
+<K_FOREIGN><K_KEY> { ForeignKey fk = new ForeignKey(table);}
+   "(" token = <S_IDENTIFIER> {fk.addColumn(token.toString());}
+  ("," token = <S_IDENTIFIER> {fk.addColumn(token.toString());})* ")"
+
+  references(fk) 
 }
 
-void references():{
+void references(ForeignKey fk):{
+  Token token;
+  FKBehaviour action;
 }
 {
-<K_REFERENCES> <S_IDENTIFIER>"(" <S_IDENTIFIER> ("," <S_IDENTIFIER> )* ")"
+<K_REFERENCES> token = <S_IDENTIFIER> 
+  {fk.setReferencedTable("", token.toString());} 
+  "(" <S_IDENTIFIER> ("," <S_IDENTIFIER> )* ")"
 
 [<K_ON>
-  ((<K_UPDATE> action() [<K_ON> <K_DELETE> action()])
-  |(<K_DELETE> action() [<K_ON> <K_UPDATE> action()]))
+  ((<K_UPDATE> action = action() {fk.setUpdateBehaviour(action);} 
+    [<K_ON> <K_DELETE> action = action() {fk.setDeleteBehaviour(action);}])
+  |(<K_DELETE> action = action() {fk.setDeleteBehaviour(action);} 
+    [<K_ON> <K_UPDATE> action = action() {fk.setUpdateBehaviour(action);}]))
 ]
 }
 
-void action():{
+FKBehaviour action():{
+  FKBehaviour result;
 }
 {
-   (<K_NO> <K_ACTION>)
-  |(<K_SET> <K_NULL>)
-  | <K_CASCADE>
+   ((<K_NO> <K_ACTION> {result = FKBehaviour.NO_ACTION;})
+  |(<K_SET> <K_NULL>  {result =  FKBehaviour.SETNULL;})
+  | (<K_CASCADE>        {result =  FKBehaviour.CASCADE;}))
+  {
+    return result;
+  }
 }
