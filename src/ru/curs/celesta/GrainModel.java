@@ -33,6 +33,8 @@ public final class GrainModel {
 	 *             В случае, если таблица с таким именем уже существует.
 	 */
 	void addTable(Table table) throws ParseException {
+		if (table.getGrainModel() != this)
+			throw new IllegalArgumentException();
 		tables.addElement(table);
 	}
 }

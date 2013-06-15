@@ -31,7 +31,16 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 |   <K_IDENTITY: "IDENTITY">
 |   <K_GETDATE: "GETDATE">
 |   <K_PRIMARY: "PRIMARY">
+|   <K_FOREIGN: "FOREIGN">
 |   <K_KEY:    "KEY">
+|   <K_REFERENCES: "REFERENCES">
+|   <K_ON:      "ON">
+|   <K_UPDATE:  "UPDATE">
+|   <K_DELETE:  "DELETE">
+|   <K_NO:     "NO">
+|   <K_ACTION:  "ACTION">
+|   <K_SET:     "SET">
+|   <K_CASCADE:  "CASCADE">
 }
 
 TOKEN: /* Datatypes */
@@ -97,7 +106,7 @@ void createTable(GrainModel m):
 }
 {
 	<K_CREATE> <K_TABLE>
-	tableName = <S_IDENTIFIER> {table = new Table(tableName.toString());}
+	tableName = <S_IDENTIFIER> {table = new Table(m, tableName.toString());}
 	"("
 		tableConstituent(table)	("," tableConstituent(table))*
 	")"
@@ -109,7 +118,9 @@ void createTable(GrainModel m):
 
 void tableConstituent(Table table):{}
 {
-   columnDefinition(table) | primaryKey(table)
+     columnDefinition(table) 
+   | primaryKey(table)
+   | foreignKey(table)
 }
 
 void columnDefinition(Table table):
@@ -146,6 +157,7 @@ void columnDefinition(Table table):
 	       nullable = nullable() 
 	      [<K_DEFAULT> token = <S_CHAR_LITERAL>])
 	[<K_PRIMARY> <K_KEY> {pk = true;}]
+	[<K_FOREIGN> <K_KEY> references()]
 			
 { 
     column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
@@ -172,4 +184,30 @@ void primaryKey(Table table):{Token token;}
   {
     table.finalizePK();
   }
+}
+
+void foreignKey(Table table):{
+}
+{
+<K_FOREIGN><K_KEY>"(" <S_IDENTIFIER> ("," <S_IDENTIFIER> )* ")"
+references()
+}
+
+void references():{
+}
+{
+<K_REFERENCES> <S_IDENTIFIER>"(" <S_IDENTIFIER> ("," <S_IDENTIFIER> )* ")"
+
+[<K_ON>
+  ((<K_UPDATE> action() [<K_ON> <K_DELETE> action()])
+  |(<K_DELETE> action() [<K_ON> <K_UPDATE> action()]))
+]
+}
+
+void action():{
+}
+{
+   (<K_NO> <K_ACTION>)
+  |(<K_SET> <K_NULL>)
+  | <K_CASCADE>
 }

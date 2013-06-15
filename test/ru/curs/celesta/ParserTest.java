@@ -128,89 +128,9 @@ public class ParserTest {
 
 	@Test
 	public void test2() throws ParseException {
-		// Корректное и некорректное добавление таблицы
-		GrainModel gm = new GrainModel();
-		Table t = new Table("aa");
-		gm.addTable(t);
-		t = new Table("bb");
-		gm.addTable(t);
-		assertEquals(2, gm.getTables().size());
-		t = new Table("aa");
-		boolean itWas = false;
-		try {
-			gm.addTable(t);
-		} catch (ParseException e) {
-			itWas = true;
-		}
-		assertTrue(itWas);
-		assertEquals(2, gm.getTables().size());
-
-		t = gm.getTables().get("aa");
-		assertEquals("aa", t.getName());
-		t = gm.getTables().get("bb");
-		assertEquals("bb", t.getName());
-		// Корректное и некорректное добавление поля
-		Column c = new IntegerColumn("col1");
-		t.addColumn(c);
-		c = new DateTimeColumn("col2");
-		c.setNullableAndDefault(false, "GETDATE");
-		assertTrue(((DateTimeColumn) c).isGetdate());
-		assertFalse(c.isNullable());
-		t.addColumn(c);
-		c = new StringColumn("col3");
-		t.addColumn(c);
-		c.setNullableAndDefault(false, "'-'");
-		assertEquals(3, t.getColumns().size());
-		c = new DateTimeColumn("col2");
-		itWas = false;
-		try {
-			t.addColumn(c);
-		} catch (ParseException e) {
-			itWas = true;
-		}
-
-		assertTrue(itWas);
-		assertEquals(3, t.getColumns().size());
-		c = t.getColumns().get("col2");
-		assertFalse(c.isNullable());
-		assertTrue(((DateTimeColumn) c).isGetdate());
-		assertEquals("col2", c.getName());
-		// Корректное и некорректное добавление первичного ключа
-		t.addPK("col2");
-		itWas = false;
-		try {
-			t.addPK("blahblah");
-		} catch (ParseException e) {
-			itWas = true;
-		}
-		assertTrue(itWas);
-		t.addPK("col3");
-		Map<String, Column> key = t.getPrimaryKey();
-		assertEquals(2, key.size());
-		Iterator<Column> ic = key.values().iterator();
-		c = ic.next();
-		assertEquals("col2", c.getName());
-		c = ic.next();
-		assertEquals("col3", c.getName());
-		t.finalizePK();
-		itWas = false;
-		try {
-			t.addPK("col1");
-		} catch (ParseException e) {
-			itWas = true;
-		}
-		assertTrue(itWas);
-		t.finalizePK(); // вызывать можно более одного раза, если PK определён
-
-		// вызывать нельзя ни разу, если PK не определён
-		t = gm.getTables().get("aa");
-		itWas = false;
-		try {
-			t.finalizePK();
-		} catch (ParseException e) {
-			itWas = true;
-		}
-		assertTrue(itWas);
-
+		InputStream input = ParserTest.class.getResourceAsStream("test2.sql");
+		CelestaParser cp = new CelestaParser(input);
+		GrainModel m = cp.model();
 	}
+
 }

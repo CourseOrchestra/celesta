@@ -1,6 +1,9 @@
 package ru.curs.celesta;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Объект-таблица в метаданных.
@@ -8,9 +11,10 @@ import java.util.Map;
  */
 public final class Table extends NamedElement {
 
-	Table(String name) {
-		super(name);
-	}
+	/**
+	 * Модель, к которой относится данная таблица.
+	 */
+	private final GrainModel model;
 
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
@@ -30,7 +34,17 @@ public final class Table extends NamedElement {
 		}
 
 	};
+
+	private final Set<ForeignKey> fKeys = new HashSet<>();
+
 	private boolean pkFinalized = false;
+
+	Table(GrainModel model, String name) {
+		super(name);
+		if (model == null)
+			throw new IllegalArgumentException();
+		this.model = model;
+	}
 
 	/**
 	 * Неизменяемый перечень столбцов таблицы.
@@ -77,10 +91,10 @@ public final class Table extends NamedElement {
 		Column c = columns.get(name);
 		if (c == null)
 			throw new ParseException(String.format(
-					"Column %s is not defined in table '%s'.", name, getName()));
+					"Column '%s' is not defined in table '%s'.", name, getName()));
 		if (c.isNullable())
 			throw new ParseException(String.format(
-					"Column %s is nullable and therefore it cannot be "
+					"Column '%s' is nullable and therefore it cannot be "
 							+ "a part of a primary key in table '%s'.", name,
 					getName()));
 		if (c instanceof BinaryColumn)
@@ -91,6 +105,24 @@ public final class Table extends NamedElement {
 							name, getName()));
 
 		pk.addElement(c);
+	}
+
+	void addFK(ForeignKey fk) throws ParseException {
+		if (fk.getParentTable() != this)
+			throw new IllegalArgumentException();
+		if (fKeys.contains(fk)) {
+			StringBuilder sb = new StringBuilder();
+			for (Column c : fk.getColumns().values()) {
+				if (sb.length() != 0)
+					sb.append(", ");
+				sb.append(c.getName());
+			}
+			throw new ParseException(
+					String.format(
+							"Foreign key with columns %s is already defined in table '%s'",
+							sb.toString(), getName()));
+		}
+		fKeys.add(fk);
 	}
 
 	/**
@@ -106,61 +138,18 @@ public final class Table extends NamedElement {
 		pkFinalized = true;
 	}
 
-	public class ForeignKey {
+	/**
+	 * Возвращает модель, к которой относится таблица.
+	 */
+	public GrainModel getGrainModel() {
+		return model;
+	}
 
-		private Table referencedTable;
-		private FKBehaviour deleteBehaviour;
-		private FKBehaviour updateBehaviour;
-
-		private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
-			@Override
-			String getErrorMsg(String name) {
-				return String
-						.format("Column '%s' defined more than once in foreign key for table '%s'.",
-								name, getName());
-			}
-		};
-
-		void setReferencedTable(Table referencedTable) {
-			this.referencedTable = referencedTable;
-		}
-
-		void setDeleteBehaviour(FKBehaviour deleteBehaviour) {
-			this.deleteBehaviour = deleteBehaviour;
-		}
-
-		void setUpdateBehaviour(FKBehaviour updateBehaviour) {
-			this.updateBehaviour = updateBehaviour;
-		}
-
-		/**
-		 * Неизменяемый перечень столбцов внешнего ключа.
-		 */
-		public Map<String, Column> getColumns() {
-			return columns.getElements();
-		}
-
-		/**
-		 * Таблица, на которую ссылается внешний ключ.
-		 */
-		public Table getReferencedTable() {
-			return referencedTable;
-		}
-
-		/**
-		 * Поведение при удалении.
-		 */
-		public FKBehaviour getDeleteBehaviour() {
-			return deleteBehaviour;
-		}
-
-		/**
-		 * Поведение при обновлении.
-		 */
-		public FKBehaviour getUpdateBehaviour() {
-			return updateBehaviour;
-		}
-
+	/**
+	 * Возвращает перечень внешних ключей таблицы.
+	 */
+	public Set<ForeignKey> getForeignKeys() {
+		return Collections.unmodifiableSet(fKeys);
 	}
 
 }

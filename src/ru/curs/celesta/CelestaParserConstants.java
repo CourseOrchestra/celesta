@@ -29,41 +29,59 @@ public interface CelestaParserConstants {
   /** RegularExpression Id. */
   int K_PRIMARY = 13;
   /** RegularExpression Id. */
-  int K_KEY = 14;
+  int K_FOREIGN = 14;
   /** RegularExpression Id. */
-  int K_INT = 15;
+  int K_KEY = 15;
   /** RegularExpression Id. */
-  int K_REAL = 16;
+  int K_REFERENCES = 16;
   /** RegularExpression Id. */
-  int K_NVARCHAR = 17;
+  int K_ON = 17;
   /** RegularExpression Id. */
-  int K_IMAGE = 18;
+  int K_UPDATE = 18;
   /** RegularExpression Id. */
-  int K_DATETIME = 19;
+  int K_DELETE = 19;
   /** RegularExpression Id. */
-  int K_BIT = 20;
+  int K_NO = 20;
   /** RegularExpression Id. */
-  int S_DOUBLE = 21;
+  int K_ACTION = 21;
   /** RegularExpression Id. */
-  int S_INTEGER = 22;
+  int K_SET = 22;
   /** RegularExpression Id. */
-  int DIGIT = 23;
+  int K_CASCADE = 23;
   /** RegularExpression Id. */
-  int S_BINARY_LITERAL = 24;
+  int K_INT = 24;
   /** RegularExpression Id. */
-  int S_IDENTIFIER = 25;
+  int K_REAL = 25;
   /** RegularExpression Id. */
-  int LETTER = 26;
+  int K_NVARCHAR = 26;
   /** RegularExpression Id. */
-  int SPECIAL_CHARS = 27;
+  int K_IMAGE = 27;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 28;
+  int K_DATETIME = 28;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 29;
+  int K_BIT = 29;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 30;
+  int S_DOUBLE = 30;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 31;
+  int S_INTEGER = 31;
+  /** RegularExpression Id. */
+  int DIGIT = 32;
+  /** RegularExpression Id. */
+  int S_BINARY_LITERAL = 33;
+  /** RegularExpression Id. */
+  int S_IDENTIFIER = 34;
+  /** RegularExpression Id. */
+  int LETTER = 35;
+  /** RegularExpression Id. */
+  int SPECIAL_CHARS = 36;
+  /** RegularExpression Id. */
+  int S_CHAR_LITERAL = 37;
+  /** RegularExpression Id. */
+  int S_QUOTED_IDENTIFIER = 38;
+  /** RegularExpression Id. */
+  int LINE_COMMENT = 39;
+  /** RegularExpression Id. */
+  int MULTI_LINE_COMMENT = 40;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -84,7 +102,16 @@ public interface CelestaParserConstants {
     "\"IDENTITY\"",
     "\"GETDATE\"",
     "\"PRIMARY\"",
+    "\"FOREIGN\"",
     "\"KEY\"",
+    "\"REFERENCES\"",
+    "\"ON\"",
+    "\"UPDATE\"",
+    "\"DELETE\"",
+    "\"NO\"",
+    "\"ACTION\"",
+    "\"SET\"",
+    "\"CASCADE\"",
     "\"INT\"",
     "\"REAL\"",
     "\"NVARCHAR\"",
