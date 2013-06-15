@@ -1,7 +1,5 @@
 package ru.curs.celesta;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -14,22 +12,38 @@ public final class Table extends NamedElement {
 		super(name);
 	}
 
-	private final Map<String, Column> columns = new LinkedHashMap<>();
-	private final Map<String, Column> pk = new LinkedHashMap<>();
+	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
+		@Override
+		String getErrorMsg(String name) {
+			return String.format(
+					"Column '%s' defined more than once in table '%s'.", name,
+					getName());
+		}
+
+	};
+	private final NamedElementHolder<Column> pk = new NamedElementHolder<Column>() {
+		@Override
+		String getErrorMsg(String name) {
+			return String
+					.format("Column '%s' defined more than once for primary key in table '%s'.",
+							name, getName());
+		}
+
+	};
 	private boolean pkFinalized = false;
 
 	/**
 	 * Неизменяемый перечень столбцов таблицы.
 	 */
 	public Map<String, Column> getColumns() {
-		return Collections.unmodifiableMap(columns);
+		return columns.getElements();
 	}
 
 	/**
 	 * Неизменяемый перечень столбцов первичного ключа таблицы.
 	 */
 	public Map<String, Column> getPrimaryKey() {
-		return Collections.unmodifiableMap(pk);
+		return pk.getElements();
 	}
 
 	/**
@@ -41,13 +55,7 @@ public final class Table extends NamedElement {
 	 *             Если колонка с таким именем уже определена.
 	 */
 	void addColumn(Column column) throws ParseException {
-		Column oldValue = columns.put(column.getName(), column);
-		if (oldValue != null) {
-			columns.put(oldValue.getName(), oldValue);
-			throw new ParseException(String.format(
-					"Column '%s' defined more than once in table '%s'.",
-					column.getName(), getName()));
-		}
+		columns.addElement(column);
 	}
 
 	@Override
@@ -82,11 +90,7 @@ public final class Table extends NamedElement {
 									+ "it cannot a part of a primary key in table '%s'.",
 							name, getName()));
 
-		if (pk.put(name, c) != null)
-			throw new ParseException(
-					String.format(
-							"Column '%s' defined more than once for primary key in table '%s'.",
-							name, getName()));
+		pk.addElement(c);
 	}
 
 	/**

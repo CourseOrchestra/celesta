@@ -1,22 +1,27 @@
 package ru.curs.celesta;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class GrainModel {
-	private final Map<String, Table> tables = new LinkedHashMap<>();
+	private final NamedElementHolder<Table> tables = new NamedElementHolder<Table>() {
+		@Override
+		String getErrorMsg(String name) {
+			return String.format(
+					"Table '%s' defined more than once in a grain.", name);
+		}
+
+	};
 
 	/**
 	 * Возвращает набор таблиц, определённый в грануле.
 	 */
 	public Map<String, Table> getTables() {
-		return Collections.unmodifiableMap(tables);
+		return tables.getElements();
 	}
 
 	@Override
 	public String toString() {
-		return tables.toString();
+		return tables.getElements().toString();
 	}
 
 	/**
@@ -28,12 +33,6 @@ public final class GrainModel {
 	 *             В случае, если таблица с таким именем уже существует.
 	 */
 	void addTable(Table table) throws ParseException {
-		Table oldValue = tables.put(table.getName(), table);
-		if (oldValue != null) {
-			tables.put(oldValue.getName(), oldValue);
-			throw new ParseException(String.format(
-					"Table '%s' defined more than once in a grain.",
-					table.getName()));
-		}
+		tables.addElement(table);
 	}
 }
