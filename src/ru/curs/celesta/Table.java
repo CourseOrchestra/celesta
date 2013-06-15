@@ -39,11 +39,12 @@ public final class Table extends NamedElement {
 
 	private boolean pkFinalized = false;
 
-	Table(GrainModel model, String name) {
+	Table(GrainModel model, String name) throws ParseException {
 		super(name);
 		if (model == null)
 			throw new IllegalArgumentException();
 		this.model = model;
+		model.addTable(this);
 	}
 
 	/**

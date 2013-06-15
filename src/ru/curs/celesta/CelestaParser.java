@@ -49,7 +49,6 @@ public class CelestaParser implements CelestaParserConstants {
     }
     jj_consume_token(44);
           table.finalizePK();
-      m.addTable(table);
   }
 
   final public void tableConstituent(Table table) throws ParseException {

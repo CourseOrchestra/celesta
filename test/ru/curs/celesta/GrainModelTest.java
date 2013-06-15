@@ -17,14 +17,11 @@ public class GrainModelTest {
 		// Корректное и некорректное добавление таблицы
 		GrainModel gm = new GrainModel();
 		Table t = new Table(gm, "aa");
-		gm.addTable(t);
 		t = new Table(gm, "bb");
-		gm.addTable(t);
 		assertEquals(2, gm.getTables().size());
-		t = new Table(gm, "aa");
 		boolean itWas = false;
 		try {
-			gm.addTable(t);
+			t = new Table(gm, "aa");
 		} catch (ParseException e) {
 			itWas = true;
 		}
@@ -111,7 +108,6 @@ public class GrainModelTest {
 		t1.finalizePK();
 		t1.addColumn(new IntegerColumn("intcol"));
 		t1.addColumn(new DateTimeColumn("datecol"));
-		gm.addTable(t1);
 
 		Table t2 = new Table(gm, "t2");
 		cc = new IntegerColumn("idb");
@@ -129,7 +125,6 @@ public class GrainModelTest {
 		c.setLength("5");
 		t2.addColumn(c);
 
-		gm.addTable(t2);
 		assertEquals(2, gm.getTables().size());
 		assertSame(gm, t1.getGrainModel());
 		assertSame(gm, t2.getGrainModel());
@@ -183,7 +178,6 @@ public class GrainModelTest {
 		t3.addColumn(c);
 		t3.addPK("idc");
 		t3.finalizePK();
-		gm.addTable(t3);
 
 		// Теперь проверяем, что ключи могут указывать лишь на совпадающие по
 		// типу поля
@@ -230,8 +224,6 @@ public class GrainModelTest {
 		t4.addPK("idd1");
 		t4.addPK("idd2");
 		t4.finalizePK();
-		gm.addTable(t4);
-
 		// А теперь проверяем выставление составного FK
 		fk = new ForeignKey(t2);
 		fk.addColumn("idb");
@@ -290,7 +282,6 @@ public class GrainModelTest {
 		t1.addColumn(c);
 		t1.addPK("c1");
 		t1.finalizePK();
-		gm.addTable(t1);
 
 		Table t2 = new Table(gm, "t2");
 		c = new IntegerColumn("c1");
@@ -307,8 +298,6 @@ public class GrainModelTest {
 		fk.setReferencedTable("", "t1");
 		assertSame(FKBehaviour.NO_ACTION, fk.getDeleteBehaviour());
 		assertSame(FKBehaviour.NO_ACTION, fk.getUpdateBehaviour());
-
-		gm.addTable(t2);
 
 		boolean itWas = false;
 		try {

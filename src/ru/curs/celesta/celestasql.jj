@@ -112,7 +112,6 @@ void createTable(GrainModel m):
 	")"
 	{
 	  table.finalizePK();
-      m.addTable(table);
     }
 }
 
