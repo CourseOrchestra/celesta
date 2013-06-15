@@ -1,6 +1,8 @@
 package ru.curs.celesta;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -43,10 +45,15 @@ abstract class NamedElement {
  * Например, это могут быть таблицы в грануле, поля в таблице, поля в ключе и т.
  * д.
  * 
+ * Реализация интерфейса Collection выполнена только лишь с той целью, чтобы
+ * утилита ObjectAid правильно выстраивала UML-диаграмму (воспринимая поле с
+ * типом NamedElementHolder как мульти-ссылку).
+ * 
  * @param <T>
  *            Тип именованных элементов в перечне.
  */
-abstract class NamedElementHolder<T extends NamedElement> {
+abstract class NamedElementHolder<T extends NamedElement> implements
+		Collection<T> {
 	private final Map<String, T> namespace = new LinkedHashMap<>();
 
 	Map<String, T> getElements() {
@@ -67,7 +74,70 @@ abstract class NamedElementHolder<T extends NamedElement> {
 		return namespace.get(name);
 	}
 
-	final boolean isEmpty() {
+	@Override
+	public final boolean isEmpty() {
 		return namespace.isEmpty();
 	}
+
+	@Override
+	public Iterator<T> iterator() {
+		return namespace.values().iterator();
+	}
+
+	@Override
+	public int size() {
+		return namespace.size();
+	}
+
+	@Override
+	public boolean contains(Object o) {
+		return namespace.containsValue(o);
+	}
+
+	@Override
+	public Object[] toArray() {
+		return namespace.values().toArray();
+	}
+
+	@Override
+	public <T1> T1[] toArray(T1[] a) {
+		return namespace.values().toArray(a);
+	}
+
+	@Override
+	@Deprecated
+	public boolean add(T e) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean remove(Object o) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean addAll(Collection<? extends T> c) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean removeAll(Collection<?> c) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean retainAll(Collection<?> c) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void clear() {
+		throw new UnsupportedOperationException();
+	}
+
 }

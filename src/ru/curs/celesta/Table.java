@@ -8,7 +8,7 @@ import java.util.Map;
  */
 public final class Table extends NamedElement {
 
-	public Table(String name) {
+	Table(String name) {
 		super(name);
 	}
 
@@ -104,6 +104,63 @@ public final class Table extends NamedElement {
 			throw new ParseException(String.format(
 					"No primary key defined for table %s!", getName()));
 		pkFinalized = true;
+	}
+
+	public class ForeignKey {
+
+		private Table referencedTable;
+		private FKBehaviour deleteBehaviour;
+		private FKBehaviour updateBehaviour;
+
+		private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
+			@Override
+			String getErrorMsg(String name) {
+				return String
+						.format("Column '%s' defined more than once in foreign key for table '%s'.",
+								name, getName());
+			}
+		};
+
+		void setReferencedTable(Table referencedTable) {
+			this.referencedTable = referencedTable;
+		}
+
+		void setDeleteBehaviour(FKBehaviour deleteBehaviour) {
+			this.deleteBehaviour = deleteBehaviour;
+		}
+
+		void setUpdateBehaviour(FKBehaviour updateBehaviour) {
+			this.updateBehaviour = updateBehaviour;
+		}
+
+		/**
+		 * Неизменяемый перечень столбцов внешнего ключа.
+		 */
+		public Map<String, Column> getColumns() {
+			return columns.getElements();
+		}
+
+		/**
+		 * Таблица, на которую ссылается внешний ключ.
+		 */
+		public Table getReferencedTable() {
+			return referencedTable;
+		}
+
+		/**
+		 * Поведение при удалении.
+		 */
+		public FKBehaviour getDeleteBehaviour() {
+			return deleteBehaviour;
+		}
+
+		/**
+		 * Поведение при обновлении.
+		 */
+		public FKBehaviour getUpdateBehaviour() {
+			return updateBehaviour;
+		}
+
 	}
 
 }

@@ -2,7 +2,7 @@ package ru.curs.celesta;
 
 public abstract class Column extends NamedElement {
 
-	public Column(String name) {
+	Column(String name) {
 		super(name);
 	}
 
