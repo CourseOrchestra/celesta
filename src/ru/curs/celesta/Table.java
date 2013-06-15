@@ -70,6 +70,8 @@ public final class Table extends NamedElement {
 	 *             Если колонка с таким именем уже определена.
 	 */
 	void addColumn(Column column) throws ParseException {
+		if (column.getParentTable() != this)
+			throw new IllegalArgumentException();
 		columns.addElement(column);
 	}
 

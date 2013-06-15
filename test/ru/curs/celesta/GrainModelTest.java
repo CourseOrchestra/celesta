@@ -33,21 +33,22 @@ public class GrainModelTest {
 		t = gm.getTables().get("bb");
 		assertEquals("bb", t.getName());
 		// Корректное и некорректное добавление поля
-		Column c = new IntegerColumn("col1");
-		t.addColumn(c);
-		c = new DateTimeColumn("col2");
+		Column c = new IntegerColumn(t, "col1");
+
+		c = new DateTimeColumn(t, "col2");
 		c.setNullableAndDefault(false, "GETDATE");
 		assertTrue(((DateTimeColumn) c).isGetdate());
 		assertFalse(c.isNullable());
-		t.addColumn(c);
-		c = new StringColumn("col3");
-		t.addColumn(c);
+
+		c = new StringColumn(t, "col3");
+
 		c.setNullableAndDefault(false, "'-'");
 		assertEquals(3, t.getColumns().size());
-		c = new DateTimeColumn("col2");
+
 		itWas = false;
 		try {
-			t.addColumn(c);
+			c = new DateTimeColumn(t, "col2");
+
 		} catch (ParseException e) {
 			itWas = true;
 		}
@@ -101,29 +102,27 @@ public class GrainModelTest {
 	public void test3() throws ParseException {
 		GrainModel gm = new GrainModel();
 		Table t1 = new Table(gm, "t1");
-		Column cc = new IntegerColumn("ida");
+		Column cc = new IntegerColumn(t1, "ida");
 		cc.setNullableAndDefault(false, "IDENTITY");
-		t1.addColumn(cc);
+
 		t1.addPK("ida");
 		t1.finalizePK();
-		t1.addColumn(new IntegerColumn("intcol"));
-		t1.addColumn(new DateTimeColumn("datecol"));
+		new IntegerColumn(t1, "intcol");
+		new DateTimeColumn(t1, "datecol");
 
 		Table t2 = new Table(gm, "t2");
-		cc = new IntegerColumn("idb");
+		cc = new IntegerColumn(t2, "idb");
 		cc.setNullableAndDefault(false, "IDENTITY");
-		t2.addColumn(cc);
 		t2.addPK("idb");
 		t2.finalizePK();
 
-		t2.addColumn(new IntegerColumn("intcol"));
-		t2.addColumn(new DateTimeColumn("datecol"));
-		StringColumn c = new StringColumn("scol2");
+		new IntegerColumn(t2, "intcol");
+		new DateTimeColumn(t2, "datecol");
+		StringColumn c = new StringColumn(t2, "scol2");
 		c.setLength("2");
-		t2.addColumn(c);
-		c = new StringColumn("scol5");
+
+		c = new StringColumn(t2, "scol5");
 		c.setLength("5");
-		t2.addColumn(c);
 
 		assertEquals(2, gm.getTables().size());
 		assertSame(gm, t1.getGrainModel());
@@ -172,10 +171,10 @@ public class GrainModelTest {
 		}
 
 		Table t3 = new Table(gm, "t3");
-		c = new StringColumn("idc");
+		c = new StringColumn(t3, "idc");
 		c.setLength("5");
 		c.setNullableAndDefault(false, "");
-		t3.addColumn(c);
+
 		t3.addPK("idc");
 		t3.finalizePK();
 
@@ -215,12 +214,12 @@ public class GrainModelTest {
 		assertSame(t3, fk.getReferencedTable());
 
 		Table t4 = new Table(gm, "t4");
-		cc = new IntegerColumn("idd1");
+		cc = new IntegerColumn(t4, "idd1");
 		cc.setNullableAndDefault(false, "-1");
-		t4.addColumn(cc);
-		cc = new IntegerColumn("idd2");
+
+		cc = new IntegerColumn(t4, "idd2");
 		cc.setNullableAndDefault(false, "123");
-		t4.addColumn(cc);
+
 		t4.addPK("idd1");
 		t4.addPK("idd2");
 		t4.finalizePK();
@@ -277,21 +276,20 @@ public class GrainModelTest {
 		GrainModel gm = new GrainModel();
 
 		Table t1 = new Table(gm, "t1");
-		IntegerColumn c = new IntegerColumn("c1");
+		IntegerColumn c = new IntegerColumn(t1, "c1");
 		c.setNullableAndDefault(false, "IDENTITY");
-		t1.addColumn(c);
+
 		t1.addPK("c1");
 		t1.finalizePK();
 
 		Table t2 = new Table(gm, "t2");
-		c = new IntegerColumn("c1");
+		c = new IntegerColumn(t2, "c1");
 		c.setNullableAndDefault(false, "IDENTITY");
-		t2.addColumn(c);
+
 		t2.addPK("c1");
 		t2.finalizePK();
-		c = new IntegerColumn("c2");
+		c = new IntegerColumn(t2, "c2");
 		c.setNullableAndDefault(false, "123");
-		t2.addColumn(c);
 
 		ForeignKey fk = new ForeignKey(t2);
 		fk.addColumn("c2");
@@ -301,7 +299,7 @@ public class GrainModelTest {
 
 		boolean itWas = false;
 		try {
-			fk.setDeleteBehaviour(FKBehaviour.SETNULL);
+			fk.setDeleteBehaviour(FKBehaviour.SET_NULL);
 		} catch (ParseException e) {
 			// нельзя использовать SET NULL в Not-nullable колонках
 			itWas = true;
@@ -313,7 +311,7 @@ public class GrainModelTest {
 
 		itWas = false;
 		try {
-			fk.setUpdateBehaviour(FKBehaviour.SETNULL);
+			fk.setUpdateBehaviour(FKBehaviour.SET_NULL);
 		} catch (ParseException e) {
 			// нельзя использовать SET NULL в Not-nullable колонках
 			itWas = true;

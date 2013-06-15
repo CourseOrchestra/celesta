@@ -145,7 +145,7 @@ public class ParserTest {
 		assertEquals("kk", fk.getColumns().get("kk").getName());
 		assertEquals("d", fk.getReferencedTable().getName());
 		assertSame(FKBehaviour.NO_ACTION, fk.getDeleteBehaviour());
-		assertSame(FKBehaviour.SETNULL, fk.getUpdateBehaviour());
+		assertSame(FKBehaviour.SET_NULL, fk.getUpdateBehaviour());
 
 		fk = i.next();
 		assertEquals("a", fk.getParentTable().getName());

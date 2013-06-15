@@ -4,8 +4,8 @@ public final class BinaryColumn extends Column {
 
 	private String defaultvalue;
 
-	public BinaryColumn(String name) {
-		super(name);
+	public BinaryColumn(Table table, String name) throws ParseException {
+		super(table, name);
 	}
 
 	@Override

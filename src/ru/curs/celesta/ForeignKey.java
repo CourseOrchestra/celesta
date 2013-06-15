@@ -28,7 +28,7 @@ public class ForeignKey {
 	void setDeleteBehaviour(FKBehaviour deleteBehaviour) throws ParseException {
 		if (deleteBehaviour == null)
 			throw new IllegalArgumentException();
-		if (deleteBehaviour == FKBehaviour.SETNULL)
+		if (deleteBehaviour == FKBehaviour.SET_NULL)
 			checkNullable();
 		this.deleteBehaviour = deleteBehaviour;
 	}
@@ -36,7 +36,7 @@ public class ForeignKey {
 	void setUpdateBehaviour(FKBehaviour updateBehaviour) throws ParseException {
 		if (updateBehaviour == null)
 			throw new IllegalArgumentException();
-		if (updateBehaviour == FKBehaviour.SETNULL)
+		if (updateBehaviour == FKBehaviour.SET_NULL)
 			checkNullable();
 		this.updateBehaviour = updateBehaviour;
 	}

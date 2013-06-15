@@ -134,32 +134,31 @@ void columnDefinition(Table table):
 }
 {
   token = <S_IDENTIFIER>
-    (  (<K_INT>       {column = new IntegerColumn(token.toString()); token = null; } 
+    (  (<K_INT>       {column = new IntegerColumn(table, token.toString()); token = null; } 
 	       nullable = nullable() 
 		  [(<K_DEFAULT> ["-"] {negative = true;} token = <S_INTEGER>)
 		  |(token = <K_IDENTITY>) 
 		  ])
-    |  (<K_REAL>      {column = new FloatingColumn(token.toString()); token = null;} 
+    |  (<K_REAL>      {column = new FloatingColumn(table, token.toString()); token = null;} 
 	       nullable = nullable() 
 		  [<K_DEFAULT> ["-"] {negative = true;} (token = <S_INTEGER> | token = <S_DOUBLE>)])
-    |  (<K_NVARCHAR> {column = new StringColumn(token.toString()); token = null; } 
+    |  (<K_NVARCHAR> {column = new StringColumn(table, token.toString()); token = null; } 
 	          ["("  (length = <S_INTEGER> | length = <K_MAX>) ")"]  
 			  {((StringColumn) column).setLength(length.toString());}
 	       nullable = nullable() 
 		  [<K_DEFAULT> token = <S_CHAR_LITERAL>])
-    |  (<K_IMAGE>     {column = new BinaryColumn(token.toString()); token = null;} 
+    |  (<K_IMAGE>     {column = new BinaryColumn(table, token.toString()); token = null;} 
 	       nullable = nullable()
 		  [<K_DEFAULT> token = <S_BINARY_LITERAL>])
-    |  (<K_DATETIME>  {column = new DateTimeColumn(token.toString()); token = null;} 
+    |  (<K_DATETIME>  {column = new DateTimeColumn(table, token.toString()); token = null;} 
 	       nullable = nullable()
 		  [<K_DEFAULT> (token = <S_CHAR_LITERAL> | token = <K_GETDATE> "(" ")")])
-    |  (<K_BIT>       {column = new BooleanColumn(token.toString()); token = null;}) 
+    |  (<K_BIT>       {column = new BooleanColumn(table, token.toString()); token = null;}) 
 	       nullable = nullable() 
 	      [<K_DEFAULT> token = <S_CHAR_LITERAL>])
 	[<K_PRIMARY> <K_KEY> {pk = true;}]
 	{ 
       column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
-	  table.addColumn(column);
 	  if (pk) {
 	    table.addPK(column.getName());
 	    table.finalizePK();
@@ -218,7 +217,7 @@ FKBehaviour action():{
 }
 {
    ((<K_NO> <K_ACTION> {result = FKBehaviour.NO_ACTION;})
-  |(<K_SET> <K_NULL>  {result =  FKBehaviour.SETNULL;})
+  |(<K_SET> <K_NULL>  {result =  FKBehaviour.SET_NULL;})
   | (<K_CASCADE>        {result =  FKBehaviour.CASCADE;}))
   {
     return result;

@@ -1,8 +1,8 @@
 package ru.curs.celesta;
 
 public final class BooleanColumn extends Column {
-	public BooleanColumn(String name) {
-		super(name);
+	public BooleanColumn(Table table, String name) throws ParseException {
+		super(table, name);
 	}
 
 	private Boolean defaultvalue;

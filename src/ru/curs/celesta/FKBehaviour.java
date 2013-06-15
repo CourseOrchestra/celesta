@@ -14,5 +14,5 @@ public enum FKBehaviour {
 	CASCADE, /**
 	 * Обнуление полей в ссылающихся записях.
 	 */
-	SETNULL
+	SET_NULL
 }

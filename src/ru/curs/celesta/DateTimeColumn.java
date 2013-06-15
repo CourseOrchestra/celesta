@@ -10,8 +10,8 @@ public final class DateTimeColumn extends Column {
 	private static final Pattern p = Pattern
 			.compile("'(\\d\\d\\d\\d)(\\d\\d)(\\d\\d)'");
 
-	public DateTimeColumn(String name) {
-		super(name);
+	public DateTimeColumn(Table table, String name) throws ParseException {
+		super(table, name);
 	}
 
 	private Date defaultvalue;

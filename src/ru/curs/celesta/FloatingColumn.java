@@ -1,11 +1,12 @@
 package ru.curs.celesta;
 
 public final class FloatingColumn extends Column {
-	public FloatingColumn(String name) {
-		super(name);
-	}
 
 	private Double defaultvalue;
+
+	public FloatingColumn(Table table, String name) throws ParseException {
+		super(table, name);
+	}
 
 	@Override
 	protected void setDefault(String lexvalue) {

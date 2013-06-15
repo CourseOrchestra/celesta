@@ -4,8 +4,8 @@ public final class StringColumn extends Column {
 
 	private static final String INVALID_DEFAULT_VALUE_FORMAT = "Invalid default value format for nvarchar column. Should be quoted string.";
 
-	public StringColumn(String name) {
-		super(name);
+	public StringColumn(Table table, String name) throws ParseException {
+		super(table, name);
 	}
 
 	private String defaultvalue;

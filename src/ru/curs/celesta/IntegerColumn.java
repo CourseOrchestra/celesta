@@ -1,12 +1,12 @@
 package ru.curs.celesta;
 
 public final class IntegerColumn extends Column {
-	public IntegerColumn(String name) {
-		super(name);
-	}
-
 	private Integer defaultvalue;
 	private boolean identity;
+
+	public IntegerColumn(Table table, String name) throws ParseException {
+		super(table, name);
+	}
 
 	@Override
 	protected void setDefault(String lexvalue) {

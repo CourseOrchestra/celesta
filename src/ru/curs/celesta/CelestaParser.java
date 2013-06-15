@@ -81,7 +81,7 @@ public class CelestaParser implements CelestaParserConstants {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_INT:
       jj_consume_token(K_INT);
-                       column = new IntegerColumn(token.toString()); token = null;
+                       column = new IntegerColumn(table, token.toString()); token = null;
       nullable = nullable();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_DEFAULT:
@@ -116,7 +116,7 @@ public class CelestaParser implements CelestaParserConstants {
       break;
     case K_REAL:
       jj_consume_token(K_REAL);
-                       column = new FloatingColumn(token.toString()); token = null;
+                       column = new FloatingColumn(table, token.toString()); token = null;
       nullable = nullable();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_DEFAULT:
@@ -150,7 +150,7 @@ public class CelestaParser implements CelestaParserConstants {
       break;
     case K_NVARCHAR:
       jj_consume_token(K_NVARCHAR);
-                      column = new StringColumn(token.toString()); token = null;
+                      column = new StringColumn(table, token.toString()); token = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 42:
         jj_consume_token(42);
@@ -186,7 +186,7 @@ public class CelestaParser implements CelestaParserConstants {
       break;
     case K_IMAGE:
       jj_consume_token(K_IMAGE);
-                       column = new BinaryColumn(token.toString()); token = null;
+                       column = new BinaryColumn(table, token.toString()); token = null;
       nullable = nullable();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_DEFAULT:
@@ -200,7 +200,7 @@ public class CelestaParser implements CelestaParserConstants {
       break;
     case K_DATETIME:
       jj_consume_token(K_DATETIME);
-                       column = new DateTimeColumn(token.toString()); token = null;
+                       column = new DateTimeColumn(table, token.toString()); token = null;
       nullable = nullable();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_DEFAULT:
@@ -227,7 +227,7 @@ public class CelestaParser implements CelestaParserConstants {
       break;
     case K_BIT:
       jj_consume_token(K_BIT);
-                       column = new BooleanColumn(token.toString()); token = null;
+                       column = new BooleanColumn(table, token.toString()); token = null;
       nullable = nullable();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_DEFAULT:
@@ -255,7 +255,6 @@ public class CelestaParser implements CelestaParserConstants {
       ;
     }
       column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
-          table.addColumn(column);
           if (pk) {
             table.addPK(column.getName());
             table.finalizePK();
@@ -434,7 +433,7 @@ public class CelestaParser implements CelestaParserConstants {
     case K_SET:
       jj_consume_token(K_SET);
       jj_consume_token(K_NULL);
-                       result =  FKBehaviour.SETNULL;
+                       result =  FKBehaviour.SET_NULL;
       break;
     case K_CASCADE:
       jj_consume_token(K_CASCADE);
