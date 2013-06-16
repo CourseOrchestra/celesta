@@ -22,6 +22,8 @@ CREATE TABLE table2(
 	column4 IMAGE DEFAULT 0x22AB15FF
 );
  
+CREATE INDEX idx1 ON  table1 (f, e, c3);
+
 CREATE TABLE employees
 (
  emp_id nvarchar(11) NOT NULL DEFAULT 'aaa' PRIMARY KEY,
@@ -30,3 +32,5 @@ CREATE TABLE employees
  emp_hire_date datetime DEFAULT GETDATE(),
  emp_mgr nvarchar(30)
 );
+
+CREATE INDEX table2_idx2 ON table2 (column3, column2);

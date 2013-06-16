@@ -24,6 +24,7 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 {
     <K_CREATE:  "CREATE">
 |   <K_TABLE:   "TABLE">
+|   <K_INDEX:   "INDEX">
 |   <K_DEFAULT: "DEFAULT">
 |   <K_NOT:     "NOT">
 |   <K_NULL:   "NULL">
@@ -91,7 +92,7 @@ GrainModel model():
    GrainModel m = new GrainModel();
 }
 { 
-   ( createTable(m) ";")*
+   ( <K_CREATE> (createTable(m) | createIndex(m)) ";")*
    {
    return m;
    }
@@ -105,7 +106,7 @@ void createTable(GrainModel m):
 	Token tableName = null;
 }
 {
-	<K_CREATE> <K_TABLE>
+    <K_TABLE>
 	tableName = <S_IDENTIFIER> {table = new Table(m, tableName.toString());}
 	"("
 		tableConstituent(table)	("," tableConstituent(table))*
@@ -223,4 +224,10 @@ FKBehaviour action():{
   {
     return result;
   }
+}
+
+void createIndex(GrainModel m):{
+}
+{
+<K_INDEX> <S_IDENTIFIER> <K_ON> <S_IDENTIFIER> "(" <S_IDENTIFIER> ("," <S_IDENTIFIER>) * ")"
 }

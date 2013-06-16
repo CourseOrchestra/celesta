@@ -13,6 +13,83 @@ import org.junit.Test;
 public class GrainModelTest {
 
 	@Test
+	public void test1() throws ParseException {
+		GrainModel gm = new GrainModel();
+		Table t = new Table(gm, "table1");
+		(new IntegerColumn(t, "a")).setNullableAndDefault(false, "IDENTITY");
+		new IntegerColumn(t, "b");
+		new IntegerColumn(t, "c");
+		new IntegerColumn(t, "d");
+		new BinaryColumn(t, "e");
+		t.addPK("a");
+		t.finalizePK();
+
+		Index ind = new Index(gm, "table1", "aa_i1");
+		ind.addColumn("b");
+		ind.addColumn("d");
+		ind.finalizeIndex();
+
+		assertEquals(1, gm.getIndices().size());
+		assertSame(ind, gm.getIndices().get("aa_i1"));
+		assertEquals(2, ind.getColumns().size());
+
+		boolean itWas = false;
+		try {
+			// Нельзя вставить в модель два индекса с одним и тем же именем.
+			ind = new Index(gm, "table1", "aa_i1");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+
+		ind = new Index(gm, "table1", "aa_i2");
+
+		itWas = false;
+		try {
+			// Нельзя индексировать IMAGE-поля.
+			ind.addColumn("e");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+
+		ind.addColumn("c");
+		ind.addColumn("d");
+
+		itWas = false;
+		try {
+			// Нельзя дважды вставить в индекс одно и то же поле.
+			ind.addColumn("c");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+
+		ind.finalizeIndex();
+
+		assertEquals(2, gm.getIndices().size());
+		assertSame(ind, gm.getIndices().get("aa_i2"));
+		assertEquals(2, ind.getColumns().size());
+
+		// Нелзя создавать полностью дублирующиеся индексы.
+		ind = new Index(gm, "table1", "aa_i3");
+		ind.addColumn("b");
+		ind.addColumn("d");
+		itWas = false;
+		try {
+			ind.finalizeIndex();
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		ind.addColumn("c");
+		ind.finalizeIndex();
+		assertEquals(3, gm.getIndices().size());
+		assertSame(ind, gm.getIndices().get("aa_i3"));
+		assertEquals(3, ind.getColumns().size());
+	}
+
+	@Test
 	public void test2() throws ParseException {
 		// Корректное и некорректное добавление таблицы
 		GrainModel gm = new GrainModel();
@@ -183,7 +260,7 @@ public class GrainModelTest {
 		assertTrue(itWas);
 		fk.addReferencedColumn("idb");
 		fk.finalizeReference();
-		
+
 		// Проверяем невозможность вставки двух идентичных FK в одну и ту же
 		// таблицу
 		fk = new ForeignKey(t1);
@@ -237,7 +314,7 @@ public class GrainModelTest {
 		fk.setReferencedTable("", "t3");
 		assertEquals(1, t2.getForeignKeys().size());
 		assertSame(t3, fk.getReferencedTable());
-		
+
 		fk.addReferencedColumn("idc");
 		fk.finalizeReference();
 
@@ -286,7 +363,7 @@ public class GrainModelTest {
 		fk.setReferencedTable("", "t4");
 		assertEquals(2, t2.getForeignKeys().size());
 		assertSame(t4, fk.getReferencedTable());
-		
+
 		fk.addReferencedColumn("idd1");
 		fk.addReferencedColumn("dummy1");
 		itWas = false;
@@ -299,7 +376,7 @@ public class GrainModelTest {
 		fk.addReferencedColumn("idd1");
 		fk.addReferencedColumn("idd2");
 		fk.finalizeReference();
-		
+
 		// Проверяем невозможность вставки двух идентичных FK в одну и ту же
 		// таблицу
 		fk = new ForeignKey(t2);
