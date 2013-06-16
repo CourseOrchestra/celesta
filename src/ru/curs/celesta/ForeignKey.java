@@ -1,6 +1,8 @@
 package ru.curs.celesta;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 public class ForeignKey {
@@ -18,6 +20,8 @@ public class ForeignKey {
 							name, parentTable.getName());
 		}
 	};
+
+	private final List<Column> referencedColumns = new LinkedList<>();
 
 	ForeignKey(Table parentTable) {
 		if (parentTable == null)
@@ -196,5 +200,74 @@ public class ForeignKey {
 				return false;
 		} else
 			return super.equals(obj);
+	}
+
+	/**
+	 * Добавляет колонку, на которую имеется ссылка. Список этих колонок не
+	 * хранится в Foreign Key, т. к. достаточно знания имени таблицы и знания о
+	 * первичном ключе таблицы (ссылки на UNIQUE-комбинации не применяются из-за
+	 * отсутствия поддержки UNIQUE-комбинаций). Механизм необходим для контроля
+	 * ссылочной корректности текста.
+	 * 
+	 * @param columnName
+	 *            имя колонки
+	 * @throws ParseException
+	 *             Если колонка не содержится в таблице, на которую ссылаются.
+	 */
+	void addReferencedColumn(String columnName) throws ParseException {
+		// Запускать этот метод можно только после простановки таблицы, на
+		// которую ссылаемся.
+		if (referencedTable == null)
+			throw new IllegalStateException();
+		Column c = referencedTable.getColumns().get(columnName);
+		if (c == null)
+			throw new ParseException(
+					String.format(
+							"Error creating foreign key for table '%s': column '%s' is not defined in table '%s'",
+							parentTable.getName(), columnName,
+							referencedTable.getName()
+
+					));
+		referencedColumns.add(c);
+
+	}
+
+	/**
+	 * Финализирует перечень полей, на который ссылается FK. Для удобства
+	 * тестирования и экономии памяти внутренний список ссылок подчищается сразу
+	 * за финализацией, он нигде не хранится и нигде не доступен. Его
+	 * единственная роль -- проверять правильность текста.
+	 * 
+	 * @throws ParseException
+	 *             Если перечень полей не совпадает с перечнем полей первичного
+	 *             ключа.
+	 */
+	public void finalizeReference() throws ParseException {
+
+		if (referencedTable == null)
+			throw new IllegalStateException();
+		Map<String, Column> pk = referencedTable.getPrimaryKey();
+		int size = referencedColumns.size();
+		if (pk.size() != size) {
+			referencedColumns.clear();
+			throw new ParseException(String.format(
+					"Error creating foreign key for table '%s': primary key "
+							+ "length in table '%s' is %d, but the number of "
+							+ "reference fields is %d.", parentTable.getName(),
+					referencedTable.getName(), pk.size(), size));
+		}
+		Iterator<Column> i = pk.values().iterator();
+		for (Column c : referencedColumns) {
+			Column c2 = i.next();
+			if (!c.getName().equals(c2.getName())) {
+				referencedColumns.clear();
+				throw new ParseException(String.format(
+						"Error creating foreign key for table '%s': expected primary key "
+								+ "field '%s'.'%s', but was '%s'.",
+						parentTable.getName(), referencedTable.getName(),
+						c2.getName(), c.getName()));
+			}
+		}
+		referencedColumns.clear();
 	}
 }

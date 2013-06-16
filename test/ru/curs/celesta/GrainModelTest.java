@@ -159,6 +159,31 @@ public class GrainModelTest {
 				.size());
 		assertSame(t2, fk.getReferencedTable());
 
+		itWas = false;
+		try {
+			// Несуществующее поле нельзя добавить в ссылку
+			fk.addReferencedColumn("blahblah");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		// Просто поле добавить можно
+		fk.addReferencedColumn("intcol");
+		try {
+			// Но в момент финализации происходит проверка, что мы указали
+			// первичный ключ.
+			fk.finalizeReference();
+			// Для удобства тестирования и экономии памяти список ссылок
+			// подчищается сразу за финализацией, он нигде не хранится и нигде
+			// не доступен. Его единственная роль -- проверять правильность
+			// текста.
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		fk.addReferencedColumn("idb");
+		fk.finalizeReference();
+		
 		// Проверяем невозможность вставки двух идентичных FK в одну и ту же
 		// таблицу
 		fk = new ForeignKey(t1);
@@ -212,6 +237,9 @@ public class GrainModelTest {
 		fk.setReferencedTable("", "t3");
 		assertEquals(1, t2.getForeignKeys().size());
 		assertSame(t3, fk.getReferencedTable());
+		
+		fk.addReferencedColumn("idc");
+		fk.finalizeReference();
 
 		Table t4 = new Table(gm, "t4");
 		cc = new IntegerColumn(t4, "idd1");
@@ -223,6 +251,8 @@ public class GrainModelTest {
 		t4.addPK("idd1");
 		t4.addPK("idd2");
 		t4.finalizePK();
+		new IntegerColumn(t4, "dummy1");
+		new IntegerColumn(t4, "dummy2");
 		// А теперь проверяем выставление составного FK
 		fk = new ForeignKey(t2);
 		fk.addColumn("idb");
@@ -256,7 +286,20 @@ public class GrainModelTest {
 		fk.setReferencedTable("", "t4");
 		assertEquals(2, t2.getForeignKeys().size());
 		assertSame(t4, fk.getReferencedTable());
-
+		
+		fk.addReferencedColumn("idd1");
+		fk.addReferencedColumn("dummy1");
+		itWas = false;
+		try {
+			fk.finalizeReference();
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		fk.addReferencedColumn("idd1");
+		fk.addReferencedColumn("idd2");
+		fk.finalizeReference();
+		
 		// Проверяем невозможность вставки двух идентичных FK в одну и ту же
 		// таблицу
 		fk = new ForeignKey(t2);

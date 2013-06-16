@@ -359,7 +359,8 @@ public class CelestaParser implements CelestaParserConstants {
     token = jj_consume_token(S_IDENTIFIER);
    fk.setReferencedTable("", token.toString());
     jj_consume_token(42);
-    jj_consume_token(S_IDENTIFIER);
+    token = jj_consume_token(S_IDENTIFIER);
+                              fk.addReferencedColumn(token.toString());
     label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -371,9 +372,11 @@ public class CelestaParser implements CelestaParserConstants {
         break label_5;
       }
       jj_consume_token(43);
-      jj_consume_token(S_IDENTIFIER);
+      token = jj_consume_token(S_IDENTIFIER);
+                               fk.addReferencedColumn(token.toString());
     }
     jj_consume_token(44);
+ fk.finalizeReference();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_ON:
       jj_consume_token(K_ON);

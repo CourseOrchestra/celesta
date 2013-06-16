@@ -202,8 +202,9 @@ void references(ForeignKey fk):{
 {
 <K_REFERENCES> token = <S_IDENTIFIER> 
   {fk.setReferencedTable("", token.toString());} 
-  "(" <S_IDENTIFIER> ("," <S_IDENTIFIER> )* ")"
-
+  "(" token = <S_IDENTIFIER> {fk.addReferencedColumn(token.toString());}
+  ("," token = <S_IDENTIFIER> {fk.addReferencedColumn(token.toString());})* ")"
+{fk.finalizeReference();}
 [<K_ON>
   ((<K_UPDATE> action = action() {fk.setUpdateBehaviour(action);} 
     [<K_ON> <K_DELETE> action = action() {fk.setDeleteBehaviour(action);}])
