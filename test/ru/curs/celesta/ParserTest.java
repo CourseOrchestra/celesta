@@ -124,6 +124,17 @@ public class ParserTest {
 		assertEquals("column4", c.getName());
 		assertTrue(c instanceof BinaryColumn);
 		assertEquals("0x22AB15FF", ((BinaryColumn) c).getDefaultValue());
+
+		assertEquals(2, m.getIndices().size());
+
+		Index idx = m.getIndices().get("idx1");
+		assertEquals("table1", idx.getTable().getName());
+		assertEquals(3, idx.getColumns().size());
+
+		idx = m.getIndices().get("table2_idx2");
+		assertEquals("table2", idx.getTable().getName());
+		assertEquals(2, idx.getColumns().size());
+
 	}
 
 	@Test

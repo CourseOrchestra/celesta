@@ -463,12 +463,18 @@ public class CelestaParser implements CelestaParserConstants {
   }
 
   final public void createIndex(GrainModel m) throws ParseException {
+Token indexName;
+Token tableName;
+Token columnName;
+Index ind;
     jj_consume_token(K_INDEX);
-    jj_consume_token(S_IDENTIFIER);
+    indexName = jj_consume_token(S_IDENTIFIER);
     jj_consume_token(K_ON);
-    jj_consume_token(S_IDENTIFIER);
+    tableName = jj_consume_token(S_IDENTIFIER);
+    ind = new Index(m, tableName.toString(), indexName.toString());
     jj_consume_token(43);
-    jj_consume_token(S_IDENTIFIER);
+    columnName = jj_consume_token(S_IDENTIFIER);
+                                    ind.addColumn(columnName.toString());
     label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -480,9 +486,11 @@ public class CelestaParser implements CelestaParserConstants {
         break label_6;
       }
       jj_consume_token(44);
-      jj_consume_token(S_IDENTIFIER);
+      columnName = jj_consume_token(S_IDENTIFIER);
+                                                                                                            ind.addColumn(columnName.toString());
     }
     jj_consume_token(45);
+    ind.finalizeIndex();
   }
 
   /** Generated Token Manager. */
