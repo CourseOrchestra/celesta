@@ -3,11 +3,26 @@ package ru.curs.celesta;
 public class CelestaParser implements CelestaParserConstants {
 
 /*Метамодель состоит из описания таблиц*/
-  final public Grain grain() throws ParseException {
+  final public Grain grain(Score s, String name) throws ParseException {
    /*This work is dedicated to Maria, my misterious muse :-) 
      Ivan Ponomarev, June 2013.*/
 
-   Grain g = new Grain();
+   Grain g = new Grain(s, name);
+   Token t;
+    jj_consume_token(K_CREATE);
+    t = jj_consume_token(S_IDENTIFIER);
+                       if (!"GRAIN".equalsIgnoreCase(t.toString()))
+      {if (true) throw new ParseException(String.format(
+          "Error: expected 'create GRAIN' at the beginning of the grain '%s' definition.", name));}
+    t = jj_consume_token(S_IDENTIFIER);
+                       if (!name.equalsIgnoreCase(t.toString())) {if (true) throw new ParseException(String.format(
+      "Error: expected 'create grain %s' at the beginning of the grain '%s' definition, found '%s'.", name, name, t.toString()));}
+    t = jj_consume_token(S_IDENTIFIER);
+                       if (!"VERSION".equalsIgnoreCase(t.toString())) {if (true) throw new ParseException(String.format(
+      "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
+    t = jj_consume_token(S_CHAR_LITERAL);
+                         g.setVersion(t.toString());
+    jj_consume_token(42);
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {

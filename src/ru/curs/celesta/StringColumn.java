@@ -2,7 +2,7 @@ package ru.curs.celesta;
 
 public final class StringColumn extends Column {
 
-	private static final String INVALID_DEFAULT_VALUE_FORMAT = "Invalid default value format for nvarchar column. Should be quoted string.";
+	private static final String INVALID_QUOTED_FORMAT = "Invalid quoted string format.";
 
 	public StringColumn(Table table, String name) throws ParseException {
 		super(table, name);
@@ -18,6 +18,10 @@ public final class StringColumn extends Column {
 			defaultvalue = null;
 			return;
 		}
+		defaultvalue = unquoteString(lexvalue);
+	}
+
+	public static String unquoteString(String lexvalue) throws ParseException {
 		StringBuilder sb = new StringBuilder();
 		int state = 0;
 		for (int i = 0; i < lexvalue.length(); i++) {
@@ -27,7 +31,7 @@ public final class StringColumn extends Column {
 				if (c == '\'')
 					state = 1;
 				else
-					throw new ParseException(INVALID_DEFAULT_VALUE_FORMAT);
+					throw new ParseException(INVALID_QUOTED_FORMAT);
 				break;
 			case 1:
 				if (c == '\'')
@@ -40,10 +44,10 @@ public final class StringColumn extends Column {
 					sb.append('\'');
 					state = 1;
 				} else
-					throw new ParseException(INVALID_DEFAULT_VALUE_FORMAT);
+					throw new ParseException(INVALID_QUOTED_FORMAT);
 			}
 		}
-		defaultvalue = sb.toString();
+		return sb.toString();
 	}
 
 	/**

@@ -16,13 +16,17 @@ import org.junit.Test;
 
 public class ParserTest {
 
+	private Score s = new Score();
+
 	@Test
 	public void test1() throws ParseException {
 		InputStream input = ParserTest.class.getResourceAsStream("test.sql");
 		CelestaParser cp = new CelestaParser(input);
-		Grain m = cp.grain();
+		Grain g = cp.grain(s, "test1");
+		assertEquals("test1", g.getName());
+		assertEquals("1.0", g.getVersion());
 
-		Map<String, Table> s = m.getTables();
+		Map<String, Table> s = g.getTables();
 		assertEquals(3, s.size());
 
 		Iterator<Table> i = s.values().iterator();
@@ -125,13 +129,13 @@ public class ParserTest {
 		assertTrue(c instanceof BinaryColumn);
 		assertEquals("0x22AB15FF", ((BinaryColumn) c).getDefaultValue());
 
-		assertEquals(2, m.getIndices().size());
+		assertEquals(2, g.getIndices().size());
 
-		Index idx = m.getIndices().get("idx1");
+		Index idx = g.getIndices().get("idx1");
 		assertEquals("table1", idx.getTable().getName());
 		assertEquals(3, idx.getColumns().size());
 
-		idx = m.getIndices().get("table2_idx2");
+		idx = g.getIndices().get("table2_idx2");
 		assertEquals("table2", idx.getTable().getName());
 		assertEquals(2, idx.getColumns().size());
 
@@ -141,12 +145,14 @@ public class ParserTest {
 	public void test2() throws ParseException {
 		InputStream input = ParserTest.class.getResourceAsStream("test2.sql");
 		CelestaParser cp = new CelestaParser(input);
-		Grain m = cp.grain();
+		Grain g = cp.grain(s, "test2");
+		assertEquals("test2", g.getName());
+		assertEquals("2.5", g.getVersion());
 
-		Table d = m.getTables().get("d");
+		Table d = g.getTables().get("d");
 		assertEquals(0, d.getForeignKeys().size());
 
-		Table a = m.getTables().get("a");
+		Table a = g.getTables().get("a");
 		assertEquals(2, a.getForeignKeys().size());
 		Iterator<ForeignKey> i = a.getForeignKeys().iterator();
 
@@ -166,7 +172,7 @@ public class ParserTest {
 		assertSame(FKBehaviour.NO_ACTION, fk.getDeleteBehaviour());
 		assertSame(FKBehaviour.NO_ACTION, fk.getUpdateBehaviour());
 
-		Table b = m.getTables().get("b");
+		Table b = g.getTables().get("b");
 		assertEquals(1, b.getForeignKeys().size());
 		i = b.getForeignKeys().iterator();
 		fk = i.next();

@@ -2,14 +2,18 @@ package ru.curs.celesta;
 
 import java.util.Map;
 
-public final class Grain {
+public final class Grain extends NamedElement {
+
+	private final Score score;
+
+	private String version;
+
 	private final NamedElementHolder<Table> tables = new NamedElementHolder<Table>() {
 		@Override
 		String getErrorMsg(String name) {
 			return String.format(
 					"Table '%s' defined more than once in a grain.", name);
 		}
-
 	};
 
 	private final NamedElementHolder<Index> indices = new NamedElementHolder<Index>() {
@@ -19,6 +23,14 @@ public final class Grain {
 					"Index '%s' defined more than once in a grain.", name);
 		}
 	};
+
+	public Grain(Score score, String name) throws ParseException {
+		super(name);
+		if (score == null)
+			throw new IllegalArgumentException();
+		this.score = score;
+		score.addGrain(this);
+	}
 
 	/**
 	 * Возвращает набор таблиц, определённый в грануле.
@@ -65,6 +77,30 @@ public final class Grain {
 		if (index.getGrain() != this)
 			throw new IllegalArgumentException();
 		indices.addElement(index);
+	}
+
+	/**
+	 * Возвращает модель, к которой принадлежит гранула.
+	 */
+	public Score getScore() {
+		return score;
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	/**
+	 * Устанавливает версию гранулы
+	 * 
+	 * @param version
+	 *            Quoted-string. В процессе установки обрамляющие и двойные
+	 *            кавычки удаляются.
+	 * @throws ParseException
+	 *             в случае, если имеется неверный формат quoted string.
+	 */
+	void setVersion(String version) throws ParseException {
+		this.version = StringColumn.unquoteString(version);
 	}
 
 }

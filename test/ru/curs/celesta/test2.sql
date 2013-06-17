@@ -1,3 +1,5 @@
+create grain test2 version '2.5';
+
 create table c (
 iii int not null identity primary key,
 bbb nvarchar(2)

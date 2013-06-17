@@ -12,9 +12,13 @@ import org.junit.Test;
 
 public class GrainModelTest {
 
+	private Score s = new Score();
+
 	@Test
 	public void test1() throws ParseException {
-		Grain g = new Grain();
+		Grain g = new Grain(s, "grain1");
+		assertSame(g, s.getGrains().get("grain1"));
+
 		Table t = new Table(g, "table1");
 		(new IntegerColumn(t, "a")).setNullableAndDefault(false, "IDENTITY");
 		new IntegerColumn(t, "b");
@@ -92,7 +96,7 @@ public class GrainModelTest {
 	@Test
 	public void test2() throws ParseException {
 		// Корректное и некорректное добавление таблицы
-		Grain g = new Grain();
+		Grain g = new Grain(s, "grain2");
 		Table t = new Table(g, "aa");
 		t = new Table(g, "bb");
 		assertEquals(2, g.getTables().size());
@@ -177,7 +181,7 @@ public class GrainModelTest {
 
 	@Test
 	public void test3() throws ParseException {
-		Grain g = new Grain();
+		Grain g = new Grain(s, "grain3");
 		Table t1 = new Table(g, "t1");
 		Column cc = new IntegerColumn(t1, "ida");
 		cc.setNullableAndDefault(false, "IDENTITY");
@@ -393,7 +397,7 @@ public class GrainModelTest {
 
 	@Test
 	public void test4() throws ParseException {
-		Grain gm = new Grain();
+		Grain gm = new Grain(s, "grain4");
 
 		Table t1 = new Table(gm, "t1");
 		IntegerColumn c = new IntegerColumn(t1, "c1");

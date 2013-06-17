@@ -84,14 +84,24 @@ SPECIAL_TOKEN:
 }
 
 /*Метамодель состоит из описания таблиц*/
-Grain grain():
+Grain grain(Score s, String name):
 {
    /*This work is dedicated to Maria, my misterious muse :-) 
      Ivan Ponomarev, June 2013.*/
 	 
-   Grain g = new Grain();
+   Grain g = new Grain(s, name);
+   Token t;
 }
 { 
+   <K_CREATE> 
+   t = <S_IDENTIFIER> {if (!"GRAIN".equalsIgnoreCase(t.toString())) 
+      throw new ParseException(String.format(
+	  "Error: expected 'create GRAIN' at the beginning of the grain '%s' definition.", name));}
+   t = <S_IDENTIFIER> {if (!name.equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
+      "Error: expected 'create grain %s' at the beginning of the grain '%s' definition, found '%s'.", name, name, t.toString()));}
+   t = <S_IDENTIFIER> {if (!"VERSION".equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
+      "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
+   t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}";"
    ( <K_CREATE> (createTable(g) | createIndex(g)) ";")*
    {
    return g;
