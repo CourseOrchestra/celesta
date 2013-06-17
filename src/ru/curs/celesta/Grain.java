@@ -2,6 +2,10 @@ package ru.curs.celesta;
 
 import java.util.Map;
 
+/**
+ * Гранула.
+ * 
+ */
 public final class Grain extends NamedElement {
 
 	private final Score score;
@@ -91,7 +95,7 @@ public final class Grain extends NamedElement {
 	}
 
 	/**
-	 * Устанавливает версию гранулы
+	 * Устанавливает версию гранулы.
 	 * 
 	 * @param version
 	 *            Quoted-string. В процессе установки обрамляющие и двойные

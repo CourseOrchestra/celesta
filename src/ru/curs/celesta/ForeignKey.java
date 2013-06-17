@@ -5,6 +5,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Класс внешнего ключа.
+ * 
+ */
 public class ForeignKey {
 
 	private final Table parentTable;
@@ -122,11 +126,12 @@ public class ForeignKey {
 	void setReferencedTable(String grain, String table) throws ParseException {
 		// Извлечение гранулы по имени.
 		Grain gm;
-		if ("".equals(grain))
+		if ("".equals(grain)) {
 			gm = parentTable.getGrain();
-		else
+		} else {
 			// TODO Реализовать кросс-гранульные ссылки!
 			throw new IllegalArgumentException("not yet implemented");
+		}
 
 		// Извлечение таблицы по имени.
 		Table t = gm.getTables().get(table);
@@ -153,7 +158,8 @@ public class ForeignKey {
 			if (c.getClass() != c2.getClass())
 				throw new ParseException(
 						String.format(
-								"Error creating foreign key for table %s: its field types do not coincide with field types of PK of table '%s'",
+								"Error creating foreign key for table %s: its field "
+										+ "types do not coincide with field types of PK of table '%s'",
 								parentTable.getName(),
 								referencedTable.getName()));
 			if (c2 instanceof StringColumn) {
@@ -161,7 +167,8 @@ public class ForeignKey {
 						.getLength()) {
 					throw new ParseException(
 							String.format(
-									"Error creating foreign key for table %s: its string field length do not coincide with field length of PK of table '%s'",
+									"Error creating foreign key for table %s: its string "
+											+ "field length do not coincide with field length of PK of table '%s'",
 									parentTable.getName(),
 									referencedTable.getName()));
 				}
@@ -196,10 +203,12 @@ public class ForeignKey {
 						return false;
 				}
 				return true;
-			} else
+			} else {
 				return false;
-		} else
+			}
+		} else {
 			return super.equals(obj);
+		}
 	}
 
 	/**

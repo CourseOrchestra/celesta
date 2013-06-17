@@ -5,18 +5,22 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Колонка дат (DATETIME).
+ * 
+ */
 public final class DateTimeColumn extends Column {
 
-	private static final Pattern p = Pattern
+	private static final Pattern P = Pattern
 			.compile("'(\\d\\d\\d\\d)(\\d\\d)(\\d\\d)'");
-
-	public DateTimeColumn(Table table, String name) throws ParseException {
-		super(table, name);
-	}
 
 	private Date defaultvalue;
 
 	private boolean getdate;
+
+	public DateTimeColumn(Table table, String name) throws ParseException {
+		super(table, name);
+	}
 
 	@Override
 	protected void setDefault(String lexvalue) throws ParseException {
@@ -29,7 +33,7 @@ public final class DateTimeColumn extends Column {
 			defaultvalue = null;
 			getdate = true;
 		} else {
-			Matcher m = p.matcher(lexvalue);
+			Matcher m = P.matcher(lexvalue);
 			if (!m.matches())
 				throw new ParseException(
 						String.format(

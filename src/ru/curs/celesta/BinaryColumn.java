@@ -1,5 +1,9 @@
 package ru.curs.celesta;
 
+/**
+ * Бинарная колонка (тип IMAGE или BLOB).
+ * 
+ */
 public final class BinaryColumn extends Column {
 
 	private String defaultvalue;

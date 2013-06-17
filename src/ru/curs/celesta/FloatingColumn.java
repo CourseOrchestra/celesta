@@ -1,5 +1,9 @@
 package ru.curs.celesta;
 
+/**
+ * Колонка с типом REAL.
+ *
+ */
 public final class FloatingColumn extends Column {
 
 	private Double defaultvalue;

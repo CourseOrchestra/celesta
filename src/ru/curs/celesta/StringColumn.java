@@ -1,16 +1,20 @@
 package ru.curs.celesta;
 
+/**
+ * Строковая колонка.
+ * 
+ */
 public final class StringColumn extends Column {
 
 	private static final String INVALID_QUOTED_FORMAT = "Invalid quoted string format.";
 
-	public StringColumn(Table table, String name) throws ParseException {
-		super(table, name);
-	}
-
 	private String defaultvalue;
 	private int length;
 	private boolean max;
+
+	public StringColumn(Table table, String name) throws ParseException {
+		super(table, name);
+	}
 
 	@Override
 	protected void setDefault(String lexvalue) throws ParseException {
@@ -28,23 +32,27 @@ public final class StringColumn extends Column {
 			char c = lexvalue.charAt(i);
 			switch (state) {
 			case 0:
-				if (c == '\'')
+				if (c == '\'') {
 					state = 1;
-				else
+				} else {
 					throw new ParseException(INVALID_QUOTED_FORMAT);
+				}
 				break;
 			case 1:
-				if (c == '\'')
+				if (c == '\'') {
 					state = 2;
-				else
+				} else {
 					sb.append(c);
+				}
 				break;
 			case 2:
 				if (c == '\'') {
 					sb.append('\'');
 					state = 1;
-				} else
+				} else {
 					throw new ParseException(INVALID_QUOTED_FORMAT);
+				}
+			default:
 			}
 		}
 		return sb.toString();

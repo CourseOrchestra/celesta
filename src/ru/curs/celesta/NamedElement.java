@@ -100,7 +100,7 @@ abstract class NamedElementHolder<T extends NamedElement> implements
 	}
 
 	@Override
-	public <T1> T1[] toArray(T1[] a) {
+	public <A> A[] toArray(A[] a) {
 		return namespace.values().toArray(a);
 	}
 

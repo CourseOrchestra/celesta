@@ -1,5 +1,9 @@
 package ru.curs.celesta;
 
+/**
+ * Целочисленная колонка.
+ * 
+ */
 public final class IntegerColumn extends Column {
 	private Integer defaultvalue;
 	private boolean identity;
