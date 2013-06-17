@@ -44,6 +44,23 @@ public final class Grain extends NamedElement {
 	}
 
 	/**
+	 * Возвращает таблицу по её имени, либо исключение с сообщением о том, что
+	 * таблица не найдена.
+	 * 
+	 * @param name
+	 *            Имя
+	 * @throws ParseException
+	 *             Если таблица с таким именем не найдена в грануле.
+	 */
+	public Table getTable(String name) throws ParseException {
+		Table result = tables.get(name);
+		if (result == null)
+			throw new ParseException(String.format(
+					"Table '%s' not found in grain '%s'", name, getName()));
+		return result;
+	}
+
+	/**
 	 * Возвращает набор индексов, определённых в грануле.
 	 */
 	public Map<String, Index> getIndices() {

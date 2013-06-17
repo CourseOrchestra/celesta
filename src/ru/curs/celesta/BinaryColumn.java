@@ -24,4 +24,9 @@ public final class BinaryColumn extends Column {
 		return defaultvalue;
 	}
 
+	@Override
+	protected String getDefaultDefault() {
+		return "0x00";
+	}
+
 }

@@ -15,13 +15,13 @@ public final class BooleanColumn extends Column {
 	protected void setDefault(String lexvalue) throws ParseException {
 		if (lexvalue == null) {
 			defaultvalue = null;
-		} else if ("'TRUE'".equalsIgnoreCase(lexvalue)) {
+		} else if ("'TRUE'".equalsIgnoreCase(lexvalue) || "1".equals(lexvalue)) {
 			defaultvalue = true;
-		} else if ("'FALSE'".equalsIgnoreCase(lexvalue)) {
+		} else if ("'FALSE'".equalsIgnoreCase(lexvalue) || "0".equals(lexvalue)) {
 			defaultvalue = false;
 		} else {
 			throw new ParseException(
-					"Default boolean value should be either 'TRUE' or 'FALSE'");
+					"Default boolean value should be either 'TRUE'/1 or 'FALSE'/1.");
 		}
 	}
 
@@ -30,6 +30,11 @@ public final class BooleanColumn extends Column {
 	 */
 	public Boolean getDefaultvalue() {
 		return defaultvalue;
+	}
+
+	@Override
+	protected String getDefaultDefault() {
+		return "0";
 	}
 
 }

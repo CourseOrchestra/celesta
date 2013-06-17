@@ -184,4 +184,22 @@ public class ParserTest {
 		assertSame(FKBehaviour.CASCADE, fk.getDeleteBehaviour());
 		assertSame(FKBehaviour.CASCADE, fk.getUpdateBehaviour());
 	}
+
+	@Test
+	public void test3() throws ParseException {
+		InputStream input = ParserTest.class.getResourceAsStream("test3.sql");
+		CelestaParser cp = new CelestaParser(input);
+		Grain g = cp.grain(s, "bc");
+		Table t = g.getTable("structure_subordination");
+		assertEquals(2, t.getForeignKeys().size());
+	}
+	
+	@Test
+	public void test4() throws ParseException {
+		InputStream input = ParserTest.class.getResourceAsStream("test4.sql");
+		CelestaParser cp = new CelestaParser(input);
+		Grain g = cp.grain(s, "skk");
+		// Table t = g.getTable("structure_subordination");
+		// assertEquals(2, t.getForeignKeys().size());
+	}
 }

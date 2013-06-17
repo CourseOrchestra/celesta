@@ -99,4 +99,9 @@ public final class StringColumn extends Column {
 		}
 	}
 
+	@Override
+	protected String getDefaultDefault() {
+		return "''";
+	}
+
 }

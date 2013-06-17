@@ -39,4 +39,9 @@ public final class IntegerColumn extends Column {
 	public boolean isIdentity() {
 		return identity;
 	}
+
+	@Override
+	protected String getDefaultDefault() {
+		return "0";
+	}
 }

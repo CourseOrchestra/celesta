@@ -1,5 +1,6 @@
 options{
     IGNORE_CASE=true ;
+	UNICODE_INPUT=true;
     STATIC=false;
 //  DEBUG_LOOKAHEAD= true ;
     FORCE_LA_CHECK=true;
@@ -43,6 +44,9 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 |   <K_ACTION:  "ACTION">
 |   <K_SET:     "SET">
 |   <K_CASCADE:  "CASCADE">
+|   <K_ALTER:    "ALTER">
+|   <K_ADD:      "ADD">
+|   <K_CONSTRAINT:"CONSTRAINT">
 }
 
 TOKEN: /* Datatypes */
@@ -103,7 +107,10 @@ Grain grain(Score s, String name):
    t = <S_IDENTIFIER> {if (!"VERSION".equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
       "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
    t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}";"
-   ( <K_CREATE> (createTable(g) | createIndex(g)) ";")*
+   ( ( (<K_CREATE> (createTable(g) 
+                 |  createIndex(g))) 
+	 | (<K_ALTER>   alterTable(g))) ";")*
+   <EOF>
    {
    return g;
    }
@@ -130,8 +137,9 @@ void createTable(Grain g):
 void tableConstituent(Table table):{}
 {
      columnDefinition(table) 
-   | primaryKey(table)
-   | foreignKey(table)
+   | constraint(table.getGrain()) (
+          primaryKey(table)
+        | foreignKey(table))
 }
 
 void columnDefinition(Table table):
@@ -147,10 +155,8 @@ void columnDefinition(Table table):
 {
   token = <S_IDENTIFIER>
     (  (<K_INT>       {column = new IntegerColumn(table, token.toString()); token = null; } 
-	       nullable = nullable() 
-		  [(<K_DEFAULT> ["-"] {negative = true;} token = <S_INTEGER>)
-		  |(token = <K_IDENTITY>) 
-		  ])
+	       nullable = nullable() [(<K_DEFAULT> ["-"] {negative = true;} token = <S_INTEGER>)|(token = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])]
+	    )
     |  (<K_REAL>      {column = new FloatingColumn(table, token.toString()); token = null;} 
 	       nullable = nullable() 
 		  [<K_DEFAULT> ["-"] {negative = true;} (token = <S_INTEGER> | token = <S_DOUBLE>)])
@@ -167,8 +173,8 @@ void columnDefinition(Table table):
 		  [<K_DEFAULT> (token = <S_CHAR_LITERAL> | token = <K_GETDATE> "(" ")")])
     |  (<K_BIT>       {column = new BooleanColumn(table, token.toString()); token = null;}) 
 	       nullable = nullable() 
-	      [<K_DEFAULT> token = <S_CHAR_LITERAL>])
-	[<K_PRIMARY> <K_KEY> {pk = true;}]
+	      [<K_DEFAULT> (token = <S_CHAR_LITERAL>| token = <S_INTEGER>)])
+	constraint(table.getGrain()) [<K_PRIMARY> <K_KEY> {pk = true;} constraint(table.getGrain())]
 	{ 
       column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
 	  if (pk) {
@@ -248,4 +254,25 @@ Index ind;
    {ind = new Index(g, tableName.toString(), indexName.toString());}
    "(" columnName = <S_IDENTIFIER> {ind.addColumn(columnName.toString());} ("," columnName = <S_IDENTIFIER>{ind.addColumn(columnName.toString());}) * ")"
    {ind.finalizeIndex();}
+}
+
+void alterTable(Grain g):{
+Token t;
+Table table;
+}
+{
+<K_TABLE> t = <S_IDENTIFIER> {
+  table = g.getTable(t.toString());
+  }
+<K_ADD> constraint(g) foreignKey(table)
+}
+
+String constraint(Grain g):{
+Token t = null;
+}
+{
+[<K_CONSTRAINT> t = <S_IDENTIFIER>]
+{
+return t==null? null:t.toString();
+}
 }

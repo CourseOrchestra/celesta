@@ -66,4 +66,9 @@ public final class DateTimeColumn extends Column {
 		return getdate;
 	}
 
+	@Override
+	protected String getDefaultDefault() {
+		return "GETDATE";
+	}
+
 }

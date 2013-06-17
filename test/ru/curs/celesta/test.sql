@@ -1,6 +1,6 @@
 CREATE GRAIN test1 VERSION '1.0';
 
-CREATE TABLE table1 --single-line comment
+CREATE TABLE table1 --single-line comment русские буквы
 (
   column1  INT NOT NULL IDENTITY,
   column2  REAL NOT NULL DEFAULT -12323.2,
@@ -14,6 +14,7 @@ CREATE TABLE table1 --single-line comment
 ) 
 /*
 multi-line comment
+русские буквы
 */
 ;
 

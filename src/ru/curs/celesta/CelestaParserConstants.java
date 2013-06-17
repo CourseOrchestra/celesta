@@ -51,39 +51,45 @@ public interface CelestaParserConstants {
   /** RegularExpression Id. */
   int K_CASCADE = 24;
   /** RegularExpression Id. */
-  int K_INT = 25;
+  int K_ALTER = 25;
   /** RegularExpression Id. */
-  int K_REAL = 26;
+  int K_ADD = 26;
   /** RegularExpression Id. */
-  int K_NVARCHAR = 27;
+  int K_CONSTRAINT = 27;
   /** RegularExpression Id. */
-  int K_IMAGE = 28;
+  int K_INT = 28;
   /** RegularExpression Id. */
-  int K_DATETIME = 29;
+  int K_REAL = 29;
   /** RegularExpression Id. */
-  int K_BIT = 30;
+  int K_NVARCHAR = 30;
   /** RegularExpression Id. */
-  int S_DOUBLE = 31;
+  int K_IMAGE = 31;
   /** RegularExpression Id. */
-  int S_INTEGER = 32;
+  int K_DATETIME = 32;
   /** RegularExpression Id. */
-  int DIGIT = 33;
+  int K_BIT = 33;
   /** RegularExpression Id. */
-  int S_BINARY_LITERAL = 34;
+  int S_DOUBLE = 34;
   /** RegularExpression Id. */
-  int S_IDENTIFIER = 35;
+  int S_INTEGER = 35;
   /** RegularExpression Id. */
-  int LETTER = 36;
+  int DIGIT = 36;
   /** RegularExpression Id. */
-  int SPECIAL_CHARS = 37;
+  int S_BINARY_LITERAL = 37;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 38;
+  int S_IDENTIFIER = 38;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 39;
+  int LETTER = 39;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 40;
+  int SPECIAL_CHARS = 40;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 41;
+  int S_CHAR_LITERAL = 41;
+  /** RegularExpression Id. */
+  int S_QUOTED_IDENTIFIER = 42;
+  /** RegularExpression Id. */
+  int LINE_COMMENT = 43;
+  /** RegularExpression Id. */
+  int MULTI_LINE_COMMENT = 44;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -115,6 +121,9 @@ public interface CelestaParserConstants {
     "\"ACTION\"",
     "\"SET\"",
     "\"CASCADE\"",
+    "\"ALTER\"",
+    "\"ADD\"",
+    "\"CONSTRAINT\"",
     "\"INT\"",
     "\"REAL\"",
     "\"NVARCHAR\"",

@@ -2,7 +2,7 @@ package ru.curs.celesta;
 
 /**
  * Колонка с типом REAL.
- *
+ * 
  */
 public final class FloatingColumn extends Column {
 
@@ -22,5 +22,10 @@ public final class FloatingColumn extends Column {
 	 */
 	public Double getDefaultvalue() {
 		return defaultvalue;
+	}
+
+	@Override
+	protected String getDefaultDefault() {
+		return "0";
 	}
 }

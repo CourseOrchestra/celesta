@@ -27,6 +27,12 @@ public abstract class Column extends NamedElement {
 	 */
 	protected abstract void setDefault(String lexvalue) throws ParseException;
 
+	/**
+	 * Возвращает значение по умолчанию, если оно не прописано (пустая строка
+	 * для строк, 0 для целых и т. д.).
+	 */
+	protected abstract String getDefaultDefault();
+
 	@Override
 	public String toString() {
 		return getName();
@@ -47,17 +53,20 @@ public abstract class Column extends NamedElement {
 	 * @param defaultValue
 	 *            значение по умолчанию
 	 * @throws ParseException
-	 *             в случае, если NOT NULL идёт без DEFAULT
+	 *             в случае, если значение DEFAULT имеет неверный формат.
 	 */
 	public final void setNullableAndDefault(boolean nullable,
 			String defaultValue) throws ParseException {
-		if (defaultValue == null && !nullable)
-			throw new ParseException(
-					String.format(
-							"Column %s is defined as NOT NULL but has no default value",
-							getName()));
+
+		String buf;
+		if (defaultValue == null && !nullable) {
+			buf = getDefaultDefault();
+		} else {
+			buf = defaultValue;
+		}
+
 		this.nullable = nullable;
-		setDefault(defaultValue);
+		setDefault(buf);
 	}
 
 	/**
