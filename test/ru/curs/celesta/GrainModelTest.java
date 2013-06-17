@@ -14,8 +14,8 @@ public class GrainModelTest {
 
 	@Test
 	public void test1() throws ParseException {
-		GrainModel gm = new GrainModel();
-		Table t = new Table(gm, "table1");
+		Grain g = new Grain();
+		Table t = new Table(g, "table1");
 		(new IntegerColumn(t, "a")).setNullableAndDefault(false, "IDENTITY");
 		new IntegerColumn(t, "b");
 		new IntegerColumn(t, "c");
@@ -24,25 +24,25 @@ public class GrainModelTest {
 		t.addPK("a");
 		t.finalizePK();
 
-		Index ind = new Index(gm, "table1", "aa_i1");
+		Index ind = new Index(g, "table1", "aa_i1");
 		ind.addColumn("b");
 		ind.addColumn("d");
 		ind.finalizeIndex();
 
-		assertEquals(1, gm.getIndices().size());
-		assertSame(ind, gm.getIndices().get("aa_i1"));
+		assertEquals(1, g.getIndices().size());
+		assertSame(ind, g.getIndices().get("aa_i1"));
 		assertEquals(2, ind.getColumns().size());
 
 		boolean itWas = false;
 		try {
 			// Нельзя вставить в модель два индекса с одним и тем же именем.
-			ind = new Index(gm, "table1", "aa_i1");
+			ind = new Index(g, "table1", "aa_i1");
 		} catch (ParseException e) {
 			itWas = true;
 		}
 		assertTrue(itWas);
 
-		ind = new Index(gm, "table1", "aa_i2");
+		ind = new Index(g, "table1", "aa_i2");
 
 		itWas = false;
 		try {
@@ -67,12 +67,12 @@ public class GrainModelTest {
 
 		ind.finalizeIndex();
 
-		assertEquals(2, gm.getIndices().size());
-		assertSame(ind, gm.getIndices().get("aa_i2"));
+		assertEquals(2, g.getIndices().size());
+		assertSame(ind, g.getIndices().get("aa_i2"));
 		assertEquals(2, ind.getColumns().size());
 
 		// Нелзя создавать полностью дублирующиеся индексы.
-		ind = new Index(gm, "table1", "aa_i3");
+		ind = new Index(g, "table1", "aa_i3");
 		ind.addColumn("b");
 		ind.addColumn("d");
 		itWas = false;
@@ -84,30 +84,30 @@ public class GrainModelTest {
 		assertTrue(itWas);
 		ind.addColumn("c");
 		ind.finalizeIndex();
-		assertEquals(3, gm.getIndices().size());
-		assertSame(ind, gm.getIndices().get("aa_i3"));
+		assertEquals(3, g.getIndices().size());
+		assertSame(ind, g.getIndices().get("aa_i3"));
 		assertEquals(3, ind.getColumns().size());
 	}
 
 	@Test
 	public void test2() throws ParseException {
 		// Корректное и некорректное добавление таблицы
-		GrainModel gm = new GrainModel();
-		Table t = new Table(gm, "aa");
-		t = new Table(gm, "bb");
-		assertEquals(2, gm.getTables().size());
+		Grain g = new Grain();
+		Table t = new Table(g, "aa");
+		t = new Table(g, "bb");
+		assertEquals(2, g.getTables().size());
 		boolean itWas = false;
 		try {
-			t = new Table(gm, "aa");
+			t = new Table(g, "aa");
 		} catch (ParseException e) {
 			itWas = true;
 		}
 		assertTrue(itWas);
-		assertEquals(2, gm.getTables().size());
+		assertEquals(2, g.getTables().size());
 
-		t = gm.getTables().get("aa");
+		t = g.getTables().get("aa");
 		assertEquals("aa", t.getName());
-		t = gm.getTables().get("bb");
+		t = g.getTables().get("bb");
 		assertEquals("bb", t.getName());
 		// Корректное и некорректное добавление поля
 		Column c = new IntegerColumn(t, "col1");
@@ -164,7 +164,7 @@ public class GrainModelTest {
 		t.finalizePK(); // вызывать можно более одного раза, если PK определён
 
 		// вызывать нельзя ни разу, если PK не определён
-		t = gm.getTables().get("aa");
+		t = g.getTables().get("aa");
 		itWas = false;
 		try {
 			t.finalizePK();
@@ -177,8 +177,8 @@ public class GrainModelTest {
 
 	@Test
 	public void test3() throws ParseException {
-		GrainModel gm = new GrainModel();
-		Table t1 = new Table(gm, "t1");
+		Grain g = new Grain();
+		Table t1 = new Table(g, "t1");
 		Column cc = new IntegerColumn(t1, "ida");
 		cc.setNullableAndDefault(false, "IDENTITY");
 
@@ -187,7 +187,7 @@ public class GrainModelTest {
 		new IntegerColumn(t1, "intcol");
 		new DateTimeColumn(t1, "datecol");
 
-		Table t2 = new Table(gm, "t2");
+		Table t2 = new Table(g, "t2");
 		cc = new IntegerColumn(t2, "idb");
 		cc.setNullableAndDefault(false, "IDENTITY");
 		t2.addPK("idb");
@@ -201,9 +201,9 @@ public class GrainModelTest {
 		c = new StringColumn(t2, "scol5");
 		c.setLength("5");
 
-		assertEquals(2, gm.getTables().size());
-		assertSame(gm, t1.getGrainModel());
-		assertSame(gm, t2.getGrainModel());
+		assertEquals(2, g.getTables().size());
+		assertSame(g, t1.getGrain());
+		assertSame(g, t2.getGrain());
 
 		// Неизвестную колонку в FK нельзя включать!
 		ForeignKey fk = new ForeignKey(t1);
@@ -272,7 +272,7 @@ public class GrainModelTest {
 			itWas = true;
 		}
 
-		Table t3 = new Table(gm, "t3");
+		Table t3 = new Table(g, "t3");
 		c = new StringColumn(t3, "idc");
 		c.setLength("5");
 		c.setNullableAndDefault(false, "");
@@ -318,7 +318,7 @@ public class GrainModelTest {
 		fk.addReferencedColumn("idc");
 		fk.finalizeReference();
 
-		Table t4 = new Table(gm, "t4");
+		Table t4 = new Table(g, "t4");
 		cc = new IntegerColumn(t4, "idd1");
 		cc.setNullableAndDefault(false, "-1");
 
@@ -393,7 +393,7 @@ public class GrainModelTest {
 
 	@Test
 	public void test4() throws ParseException {
-		GrainModel gm = new GrainModel();
+		Grain gm = new Grain();
 
 		Table t1 = new Table(gm, "t1");
 		IntegerColumn c = new IntegerColumn(t1, "c1");

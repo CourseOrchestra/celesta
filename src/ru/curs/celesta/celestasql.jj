@@ -84,30 +84,30 @@ SPECIAL_TOKEN:
 }
 
 /*Метамодель состоит из описания таблиц*/
-GrainModel model():
+Grain grain():
 {
    /*This work is dedicated to Maria, my misterious muse :-) 
      Ivan Ponomarev, June 2013.*/
 	 
-   GrainModel m = new GrainModel();
+   Grain g = new Grain();
 }
 { 
-   ( <K_CREATE> (createTable(m) | createIndex(m)) ";")*
+   ( <K_CREATE> (createTable(g) | createIndex(g)) ";")*
    {
-   return m;
+   return g;
    }
 }
 
 
 
-void createTable(GrainModel m):
+void createTable(Grain g):
 {
 	Table table = null;
 	Token tableName = null;
 }
 {
     <K_TABLE>
-	tableName = <S_IDENTIFIER> {table = new Table(m, tableName.toString());}
+	tableName = <S_IDENTIFIER> {table = new Table(g, tableName.toString());}
 	"("
 		tableConstituent(table)	("," tableConstituent(table))*
 	")"
@@ -226,7 +226,7 @@ FKBehaviour action():{
   }
 }
 
-void createIndex(GrainModel m):{
+void createIndex(Grain g):{
 Token indexName;
 Token tableName;
 Token columnName;
@@ -234,7 +234,7 @@ Index ind;
 }
 {
 <K_INDEX> indexName = <S_IDENTIFIER> <K_ON> tableName = <S_IDENTIFIER> 
-   {ind = new Index(m, tableName.toString(), indexName.toString());}
+   {ind = new Index(g, tableName.toString(), indexName.toString());}
    "(" columnName = <S_IDENTIFIER> {ind.addColumn(columnName.toString());} ("," columnName = <S_IDENTIFIER>{ind.addColumn(columnName.toString());}) * ")"
    {ind.finalizeIndex();}
 }

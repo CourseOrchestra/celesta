@@ -20,7 +20,7 @@ public class ParserTest {
 	public void test1() throws ParseException {
 		InputStream input = ParserTest.class.getResourceAsStream("test.sql");
 		CelestaParser cp = new CelestaParser(input);
-		GrainModel m = cp.model();
+		Grain m = cp.grain();
 
 		Map<String, Table> s = m.getTables();
 		assertEquals(3, s.size());
@@ -141,7 +141,7 @@ public class ParserTest {
 	public void test2() throws ParseException {
 		InputStream input = ParserTest.class.getResourceAsStream("test2.sql");
 		CelestaParser cp = new CelestaParser(input);
-		GrainModel m = cp.model();
+		Grain m = cp.grain();
 
 		Table d = m.getTables().get("d");
 		assertEquals(0, d.getForeignKeys().size());

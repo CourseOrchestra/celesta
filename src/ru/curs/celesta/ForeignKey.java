@@ -121,9 +121,9 @@ public class ForeignKey {
 	 */
 	void setReferencedTable(String grain, String table) throws ParseException {
 		// Извлечение гранулы по имени.
-		GrainModel gm;
+		Grain gm;
 		if ("".equals(grain))
-			gm = parentTable.getGrainModel();
+			gm = parentTable.getGrain();
 		else
 			// TODO Реализовать кросс-гранульные ссылки!
 			throw new IllegalArgumentException("not yet implemented");

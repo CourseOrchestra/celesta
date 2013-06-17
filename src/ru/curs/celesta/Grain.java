@@ -2,7 +2,7 @@ package ru.curs.celesta;
 
 import java.util.Map;
 
-public final class GrainModel {
+public final class Grain {
 	private final NamedElementHolder<Table> tables = new NamedElementHolder<Table>() {
 		@Override
 		String getErrorMsg(String name) {
@@ -48,7 +48,7 @@ public final class GrainModel {
 	 *             В случае, если таблица с таким именем уже существует.
 	 */
 	void addTable(Table table) throws ParseException {
-		if (table.getGrainModel() != this)
+		if (table.getGrain() != this)
 			throw new IllegalArgumentException();
 		tables.addElement(table);
 	}
@@ -62,7 +62,7 @@ public final class GrainModel {
 	 *             В случае, если индекс с таким именем уже существует.
 	 */
 	public void addIndex(Index index) throws ParseException {
-		if (index.getGrainModel() != this)
+		if (index.getGrain() != this)
 			throw new IllegalArgumentException();
 		indices.addElement(index);
 	}

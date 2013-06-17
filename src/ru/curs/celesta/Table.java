@@ -14,7 +14,7 @@ public final class Table extends NamedElement {
 	/**
 	 * Модель, к которой относится данная таблица.
 	 */
-	private final GrainModel model;
+	private final Grain grain;
 
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
@@ -39,12 +39,12 @@ public final class Table extends NamedElement {
 
 	private boolean pkFinalized = false;
 
-	Table(GrainModel model, String name) throws ParseException {
+	Table(Grain grain, String name) throws ParseException {
 		super(name);
-		if (model == null)
+		if (grain == null)
 			throw new IllegalArgumentException();
-		this.model = model;
-		model.addTable(this);
+		this.grain = grain;
+		grain.addTable(this);
 	}
 
 	/**
@@ -145,8 +145,8 @@ public final class Table extends NamedElement {
 	/**
 	 * Возвращает модель, к которой относится таблица.
 	 */
-	public GrainModel getGrainModel() {
-		return model;
+	public Grain getGrain() {
+		return grain;
 	}
 
 	/**

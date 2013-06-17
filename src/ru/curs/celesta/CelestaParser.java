@@ -3,11 +3,11 @@ package ru.curs.celesta;
 public class CelestaParser implements CelestaParserConstants {
 
 /*Метамодель состоит из описания таблиц*/
-  final public GrainModel model() throws ParseException {
+  final public Grain grain() throws ParseException {
    /*This work is dedicated to Maria, my misterious muse :-) 
      Ivan Ponomarev, June 2013.*/
 
-   GrainModel m = new GrainModel();
+   Grain g = new Grain();
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -21,10 +21,10 @@ public class CelestaParser implements CelestaParserConstants {
       jj_consume_token(K_CREATE);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_TABLE:
-        createTable(m);
+        createTable(g);
         break;
       case K_INDEX:
-        createIndex(m);
+        createIndex(g);
         break;
       default:
         jj_la1[1] = jj_gen;
@@ -33,16 +33,16 @@ public class CelestaParser implements CelestaParserConstants {
       }
       jj_consume_token(42);
     }
-   {if (true) return m;}
+   {if (true) return g;}
     throw new Error("Missing return statement in function");
   }
 
-  final public void createTable(GrainModel m) throws ParseException {
+  final public void createTable(Grain g) throws ParseException {
         Table table = null;
         Token tableName = null;
     jj_consume_token(K_TABLE);
     tableName = jj_consume_token(S_IDENTIFIER);
-                                    table = new Table(m, tableName.toString());
+                                    table = new Table(g, tableName.toString());
     jj_consume_token(43);
     tableConstituent(table);
     label_2:
@@ -462,7 +462,7 @@ public class CelestaParser implements CelestaParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public void createIndex(GrainModel m) throws ParseException {
+  final public void createIndex(Grain g) throws ParseException {
 Token indexName;
 Token tableName;
 Token columnName;
@@ -471,7 +471,7 @@ Index ind;
     indexName = jj_consume_token(S_IDENTIFIER);
     jj_consume_token(K_ON);
     tableName = jj_consume_token(S_IDENTIFIER);
-    ind = new Index(m, tableName.toString(), indexName.toString());
+    ind = new Index(g, tableName.toString(), indexName.toString());
     jj_consume_token(43);
     columnName = jj_consume_token(S_IDENTIFIER);
                                     ind.addColumn(columnName.toString());

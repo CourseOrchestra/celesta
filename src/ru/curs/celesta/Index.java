@@ -8,7 +8,7 @@ import java.util.Map;
  * ограничения UNIQUE.
  */
 public class Index extends NamedElement {
-	private final GrainModel model;
+	private final Grain grain;
 	private final Table table;
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
@@ -19,22 +19,22 @@ public class Index extends NamedElement {
 		}
 	};
 
-	public Index(GrainModel model, String tableName, String name)
+	public Index(Grain grain, String tableName, String name)
 			throws ParseException {
 		super(name);
-		if (model == null || tableName == null || name == null)
+		if (grain == null || tableName == null || name == null)
 			throw new IllegalArgumentException();
-		this.model = model;
-		table = model.getTables().get(tableName);
+		this.grain = grain;
+		table = grain.getTables().get(tableName);
 		if (table == null)
 			throw new ParseException(String.format(
 					"Error while creating index '%s': table '%s' not found.",
 					name, tableName));
-		model.addIndex(this);
+		grain.addIndex(this);
 	}
 
-	public GrainModel getGrainModel() {
-		return model;
+	public Grain getGrain() {
+		return grain;
 	}
 
 	public Table getTable() {
@@ -71,7 +71,7 @@ public class Index extends NamedElement {
 
 	public void finalizeIndex() throws ParseException {
 		// Ищем дублирующиеся по составу полей индексы
-		for (Index ind : model.getIndices().values()) {
+		for (Index ind : grain.getIndices().values()) {
 			if (ind == this)
 				continue;
 			if (ind.table != table)

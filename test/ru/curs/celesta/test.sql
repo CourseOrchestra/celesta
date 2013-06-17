@@ -1,3 +1,5 @@
+--CREATE GRAIN test1 VERSION '1.0';
+
 CREATE TABLE table1 --single-line comment
 (
   column1  INT NOT NULL IDENTITY,
