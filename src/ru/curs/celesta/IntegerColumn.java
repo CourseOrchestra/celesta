@@ -26,10 +26,16 @@ public final class IntegerColumn extends Column {
 		}
 	}
 
+	/**
+	 * Возвращает значение по умолчанию.
+	 */
 	public Integer getDefaultvalue() {
 		return defaultvalue;
 	}
 
+	/**
+	 * Является ли поле IDENTITY.
+	 */
 	public boolean isIdentity() {
 		return identity;
 	}

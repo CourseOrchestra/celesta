@@ -25,6 +25,9 @@ public final class BooleanColumn extends Column {
 		}
 	}
 
+	/**
+	 * Возвращает значение по умолчанию.
+	 */
 	public Boolean getDefaultvalue() {
 		return defaultvalue;
 	}

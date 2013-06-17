@@ -8,6 +8,7 @@ options{
 
 PARSER_BEGIN(CelestaParser)
 package ru.curs.celesta;
+//CHECKSTYLE:OFF
 public class CelestaParser{
 }
 PARSER_END(CelestaParser)

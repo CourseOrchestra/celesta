@@ -17,6 +17,14 @@ public abstract class Column extends NamedElement {
 		parentTable.addColumn(this);
 	}
 
+	/**
+	 * Устанаавливает значение по умолчанию.
+	 * 
+	 * @param lexvalue
+	 *            Новое значение в строковом (лексическом) формате.
+	 * @throws ParseException
+	 *             Если формат значения по умолчанию неверен.
+	 */
 	protected abstract void setDefault(String lexvalue) throws ParseException;
 
 	@Override

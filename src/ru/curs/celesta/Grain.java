@@ -90,6 +90,9 @@ public final class Grain extends NamedElement {
 		return score;
 	}
 
+	/**
+	 * Возвращает номер версии гранулы.
+	 */
 	public String getVersion() {
 		return version;
 	}

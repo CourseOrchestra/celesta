@@ -21,6 +21,9 @@ public class Score {
 		grains.addElement(grain);
 	}
 
+	/**
+	 * Гранулы.
+	 */
 	public Map<String, Grain> getGrains() {
 		return grains.getElements();
 	}

@@ -33,10 +33,16 @@ public class Index extends NamedElement {
 		grain.addIndex(this);
 	}
 
+	/**
+	 * Гранула индекса.
+	 */
 	public Grain getGrain() {
 		return grain;
 	}
 
+	/**
+	 * Таблица индекса.
+	 */
 	public Table getTable() {
 		return table;
 	}
@@ -69,6 +75,13 @@ public class Index extends NamedElement {
 		columns.addElement(c);
 	}
 
+	/**
+	 * Финализирует индекс.
+	 * 
+	 * @throws ParseException
+	 *             В случае, если на этой таблице обнаружен индекс,
+	 *             дублирующийся по составу полей.
+	 */
 	public void finalizeIndex() throws ParseException {
 		// Ищем дублирующиеся по составу полей индексы
 		for (Index ind : grain.getIndices().values()) {
@@ -94,6 +107,9 @@ public class Index extends NamedElement {
 		}
 	}
 
+	/**
+	 * Колонки индекса.
+	 */
 	public Map<String, Column> getColumns() {
 		return columns.getElements();
 	}

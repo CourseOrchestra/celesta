@@ -17,6 +17,9 @@ public final class FloatingColumn extends Column {
 		defaultvalue = (lexvalue == null) ? null : Double.parseDouble(lexvalue);
 	}
 
+	/**
+	 * Возвращает значение по умолчанию.
+	 */
 	public Double getDefaultvalue() {
 		return defaultvalue;
 	}

@@ -25,6 +25,14 @@ public final class StringColumn extends Column {
 		defaultvalue = unquoteString(lexvalue);
 	}
 
+	/**
+	 * Расковычивает строки в закавыченном формате.
+	 * 
+	 * @param lexvalue
+	 *            закавыченная строка.
+	 * @throws ParseException
+	 *             неверный формат.
+	 */
 	public static String unquoteString(String lexvalue) throws ParseException {
 		StringBuilder sb = new StringBuilder();
 		int state = 0;

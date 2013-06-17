@@ -17,7 +17,10 @@ public final class BinaryColumn extends Column {
 		defaultvalue = lexvalue;
 	}
 
-	public Object getDefaultValue() {
+	/**
+	 * Возвращает значение по умолчанию.
+	 */
+	public String getDefaultValue() {
 		return defaultvalue;
 	}
 
