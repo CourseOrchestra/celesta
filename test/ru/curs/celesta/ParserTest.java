@@ -193,13 +193,18 @@ public class ParserTest {
 		Table t = g.getTable("structure_subordination");
 		assertEquals(2, t.getForeignKeys().size());
 	}
-	
+
 	@Test
 	public void test4() throws ParseException {
 		InputStream input = ParserTest.class.getResourceAsStream("test4.sql");
 		CelestaParser cp = new CelestaParser(input);
 		Grain g = cp.grain(s, "skk");
-		// Table t = g.getTable("structure_subordination");
-		// assertEquals(2, t.getForeignKeys().size());
+		Table t = g.getTable("app_division_add_info_el");
+		assertEquals("pk_app_division_add_info_el", t.getPkConstraintName());
+		t = g.getTable("x_role_employees");
+		assertEquals(1, t.getForeignKeys().size());
+		ForeignKey fk = t.getForeignKeys().iterator().next();
+		assertEquals("fk_x_role_employees_x_roles", fk.getConstraintName());
+
 	}
 }

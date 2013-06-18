@@ -93,6 +93,8 @@ public class CelestaParser implements CelestaParserConstants {
   }
 
   final public void tableConstituent(Table table) throws ParseException {
+  String name;
+  ForeignKey fk;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case S_IDENTIFIER:
       columnDefinition(table);
@@ -100,13 +102,15 @@ public class CelestaParser implements CelestaParserConstants {
     case K_PRIMARY:
     case K_FOREIGN:
     case K_CONSTRAINT:
-      constraint(table.getGrain());
+      name = constraint(table.getGrain());
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_PRIMARY:
         primaryKey(table);
+                             table.setPkConstraintName(name);
         break;
       case K_FOREIGN:
-        foreignKey(table);
+        fk = foreignKey(table);
+                                  fk.setConstraintName(name);
         break;
       default:
         jj_la1[4] = jj_gen;
@@ -129,6 +133,7 @@ public class CelestaParser implements CelestaParserConstants {
    boolean negative = false;
    boolean pk = false;
    ForeignKey fk = null;
+   String name;
     token = jj_consume_token(S_IDENTIFIER);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_INT:
@@ -317,13 +322,13 @@ public class CelestaParser implements CelestaParserConstants {
       jj_consume_token(-1);
       throw new ParseException();
     }
-    constraint(table.getGrain());
+    name = constraint(table.getGrain());
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_PRIMARY:
       jj_consume_token(K_PRIMARY);
       jj_consume_token(K_KEY);
-                                                           pk = true;
-      constraint(table.getGrain());
+               pk = true; table.setPkConstraintName(name);
+      name = constraint(table.getGrain());
       break;
     default:
       jj_la1[22] = jj_gen;
@@ -338,7 +343,7 @@ public class CelestaParser implements CelestaParserConstants {
     case K_FOREIGN:
       jj_consume_token(K_FOREIGN);
       jj_consume_token(K_KEY);
-                              fk = new ForeignKey(table); fk.addColumn(column.getName());
+                              fk = new ForeignKey(table); fk.addColumn(column.getName()); fk.setConstraintName(name);
       references(fk);
       break;
     default:
@@ -401,11 +406,12 @@ public class CelestaParser implements CelestaParserConstants {
     table.finalizePK();
   }
 
-  final public void foreignKey(Table table) throws ParseException {
+  final public ForeignKey foreignKey(Table table) throws ParseException {
   Token token;
+  ForeignKey fk;
     jj_consume_token(K_FOREIGN);
     jj_consume_token(K_KEY);
-                     ForeignKey fk = new ForeignKey(table);
+                     fk = new ForeignKey(table);
     jj_consume_token(46);
     token = jj_consume_token(S_IDENTIFIER);
                                fk.addColumn(token.toString());
@@ -425,6 +431,8 @@ public class CelestaParser implements CelestaParserConstants {
     }
     jj_consume_token(48);
     references(fk);
+  {if (true) return fk;}
+    throw new Error("Missing return statement in function");
   }
 
   final public void references(ForeignKey fk) throws ParseException {
@@ -558,14 +566,17 @@ Index ind;
   }
 
   final public void alterTable(Grain g) throws ParseException {
-Token t;
-Table table;
+  Token t;
+  Table table;
+  String name;
+  ForeignKey fk;
     jj_consume_token(K_TABLE);
     t = jj_consume_token(S_IDENTIFIER);
   table = g.getTable(t.toString());
     jj_consume_token(K_ADD);
-    constraint(g);
-    foreignKey(table);
+    name = constraint(g);
+    fk = foreignKey(table);
+                                                     fk.setConstraintName(name);
   }
 
   final public String constraint(Grain g) throws ParseException {

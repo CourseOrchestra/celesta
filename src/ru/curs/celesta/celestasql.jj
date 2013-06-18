@@ -134,12 +134,14 @@ void createTable(Grain g):
     }
 }
 
-void tableConstituent(Table table):{}
+void tableConstituent(Table table):{
+  String name; 
+  ForeignKey fk;}
 {
      columnDefinition(table) 
-   | constraint(table.getGrain()) (
-          primaryKey(table)
-        | foreignKey(table))
+   | name = constraint(table.getGrain()) (
+          primaryKey(table) {table.setPkConstraintName(name);}
+        | fk = foreignKey(table) {fk.setConstraintName(name);})
 }
 
 void columnDefinition(Table table):
@@ -151,6 +153,7 @@ void columnDefinition(Table table):
    boolean negative = false;
    boolean pk = false;
    ForeignKey fk = null;
+   String name;
 }
 {
   token = <S_IDENTIFIER>
@@ -174,7 +177,8 @@ void columnDefinition(Table table):
     |  (<K_BIT>       {column = new BooleanColumn(table, token.toString()); token = null;}) 
 	       nullable = nullable() 
 	      [<K_DEFAULT> (token = <S_CHAR_LITERAL>| token = <S_INTEGER>)])
-	constraint(table.getGrain()) [<K_PRIMARY> <K_KEY> {pk = true;} constraint(table.getGrain())]
+	name = constraint(table.getGrain()) [<K_PRIMARY> <K_KEY> 
+	      {pk = true; table.setPkConstraintName(name);} name = constraint(table.getGrain())]
 	{ 
       column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
 	  if (pk) {
@@ -182,7 +186,7 @@ void columnDefinition(Table table):
 	    table.finalizePK();
 	  }
     }
-	[<K_FOREIGN> <K_KEY> {fk = new ForeignKey(table); fk.addColumn(column.getName());} references(fk)]
+	[<K_FOREIGN> <K_KEY> {fk = new ForeignKey(table); fk.addColumn(column.getName()); fk.setConstraintName(name);} references(fk)]
 }
 
 boolean nullable():
@@ -202,15 +206,18 @@ void primaryKey(Table table):{Token token;}
   }
 }
 
-void foreignKey(Table table):{
+ForeignKey foreignKey(Table table):{
   Token token;
+  ForeignKey fk;
 }
 {
-<K_FOREIGN><K_KEY> { ForeignKey fk = new ForeignKey(table);}
+<K_FOREIGN><K_KEY> { fk = new ForeignKey(table);}
    "(" token = <S_IDENTIFIER> {fk.addColumn(token.toString());}
   ("," token = <S_IDENTIFIER> {fk.addColumn(token.toString());})* ")"
 
-  references(fk) 
+  references(fk) {
+  return fk;
+  }
 }
 
 void references(ForeignKey fk):{
@@ -257,14 +264,16 @@ Index ind;
 }
 
 void alterTable(Grain g):{
-Token t;
-Table table;
+  Token t;
+  Table table;
+  String name;
+  ForeignKey fk;
 }
 {
 <K_TABLE> t = <S_IDENTIFIER> {
   table = g.getTable(t.toString());
   }
-<K_ADD> constraint(g) foreignKey(table)
+<K_ADD> name = constraint(g) fk = foreignKey(table) {fk.setConstraintName(name);}
 }
 
 String constraint(Grain g):{

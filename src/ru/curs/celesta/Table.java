@@ -39,6 +39,8 @@ public final class Table extends NamedElement {
 
 	private boolean pkFinalized = false;
 
+	private String pkConstraintName;
+
 	Table(Grain grain, String name) throws ParseException {
 		super(name);
 		if (grain == null)
@@ -154,6 +156,17 @@ public final class Table extends NamedElement {
 	 */
 	public Set<ForeignKey> getForeignKeys() {
 		return Collections.unmodifiableSet(fKeys);
+	}
+
+	/**
+	 * Возвращает имя ограничения PK (или null, если оно не задано).
+	 */
+	public String getPkConstraintName() {
+		return pkConstraintName;
+	}
+
+	void setPkConstraintName(String pkConstraintName) {
+		this.pkConstraintName = pkConstraintName;
 	}
 
 }

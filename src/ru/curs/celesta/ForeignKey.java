@@ -15,6 +15,7 @@ public class ForeignKey {
 	private Table referencedTable;
 	private FKBehaviour deleteBehaviour = FKBehaviour.NO_ACTION;
 	private FKBehaviour updateBehaviour = FKBehaviour.NO_ACTION;
+	private String constraintName;
 
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
@@ -278,5 +279,16 @@ public class ForeignKey {
 			}
 		}
 		referencedColumns.clear();
+	}
+
+	/**
+	 * Возвращает имя ограничения FK (или null, если оно не задано).
+	 */
+	public String getConstraintName() {
+		return constraintName;
+	}
+
+	void setConstraintName(String constraintName) {
+		this.constraintName = constraintName;
 	}
 }
