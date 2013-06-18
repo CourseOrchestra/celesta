@@ -273,6 +273,11 @@ Token t = null;
 {
 [<K_CONSTRAINT> t = <S_IDENTIFIER>]
 {
-return t==null? null:t.toString();
+if (t == null)
+  return null;
+else {
+  g.addConstraintName(t.toString());
+  return t.toString();
+} 
 }
 }

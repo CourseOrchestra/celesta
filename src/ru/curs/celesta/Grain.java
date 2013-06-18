@@ -1,6 +1,8 @@
 package ru.curs.celesta;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Гранула.
@@ -27,6 +29,8 @@ public final class Grain extends NamedElement {
 					"Index '%s' defined more than once in a grain.", name);
 		}
 	};
+
+	private final Set<String> constraintNames = new HashSet<>();
 
 	public Grain(Score score, String name) throws ParseException {
 		super(name);
@@ -125,6 +129,22 @@ public final class Grain extends NamedElement {
 	 */
 	void setVersion(String version) throws ParseException {
 		this.version = StringColumn.unquoteString(version);
+	}
+
+	/**
+	 * Добавление имени ограничения (для проверерки, что оно уникальное).
+	 * 
+	 * @param name
+	 *            Имя ограничения.
+	 * @throws ParseException
+	 *             В случае, если ограничение с таким именем уже определено.
+	 */
+	void addConstraintName(String name) throws ParseException {
+		if (constraintNames.contains(name))
+			throw new ParseException(String.format(
+					"Constraint '%s' is defined more than once in a grain.",
+					name));
+		constraintNames.add(name);
 	}
 
 }

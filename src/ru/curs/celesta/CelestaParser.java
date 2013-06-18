@@ -579,7 +579,12 @@ Token t = null;
       jj_la1[35] = jj_gen;
       ;
     }
-{if (true) return t==null? null:t.toString();}
+if (t == null)
+  {if (true) return null;}
+else {
+  g.addConstraintName(t.toString());
+  {if (true) return t.toString();}
+}
     throw new Error("Missing return statement in function");
   }
 
