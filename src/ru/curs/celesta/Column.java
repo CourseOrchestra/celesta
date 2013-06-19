@@ -59,11 +59,12 @@ public abstract class Column extends NamedElement {
 			String defaultValue) throws ParseException {
 
 		String buf;
-		if (defaultValue == null && !nullable) {
-			buf = getDefaultDefault();
-		} else {
-			buf = defaultValue;
-		}
+
+		// if (defaultValue == null && !nullable) {
+		// buf = getDefaultDefault();
+		// } else {
+		buf = defaultValue;
+		// }
 
 		this.nullable = nullable;
 		setDefault(buf);
