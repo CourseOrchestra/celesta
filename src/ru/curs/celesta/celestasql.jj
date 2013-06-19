@@ -147,7 +147,7 @@ void tableConstituent(Table table):{
 void columnDefinition(Table table):
 {
    Column column = null;
-   Token token;
+   Token t;
    Token length = null;
    boolean nullable;
    boolean negative = false;
@@ -156,31 +156,31 @@ void columnDefinition(Table table):
    String name;
 }
 {
-  token = <S_IDENTIFIER>
-    (  (<K_INT>       {column = new IntegerColumn(table, token.toString()); token = null; } 
-	       nullable = nullable() [(<K_DEFAULT> ["-"] {negative = true;} token = <S_INTEGER>)|(token = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])]
+  t = <S_IDENTIFIER>
+    (  (<K_INT>       {column = new IntegerColumn(table, t.toString()); t = null; } 
+	       nullable = nullable() [(<K_DEFAULT> ["-"] {negative = true;} t = <S_INTEGER>)|(t = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])]
 	    )
-    |  (<K_REAL>      {column = new FloatingColumn(table, token.toString()); token = null;} 
+    |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;} 
 	       nullable = nullable() 
-		  [<K_DEFAULT> ["-"] {negative = true;} (token = <S_INTEGER> | token = <S_DOUBLE>)])
-    |  (<K_NVARCHAR> {column = new StringColumn(table, token.toString()); token = null; } 
+		  [<K_DEFAULT> ["-"] {negative = true;} (t = <S_INTEGER> | t = <S_DOUBLE>)])
+    |  (<K_NVARCHAR> {column = new StringColumn(table, t.toString()); t = null; } 
 	          ["("  (length = <S_INTEGER> | length = <K_MAX>) ")"]  
 			  {((StringColumn) column).setLength(length.toString());}
 	       nullable = nullable() 
-		  [<K_DEFAULT> token = <S_CHAR_LITERAL>])
-    |  (<K_IMAGE>     {column = new BinaryColumn(table, token.toString()); token = null;} 
+		  [<K_DEFAULT> t = <S_CHAR_LITERAL>])
+    |  (<K_IMAGE>     {column = new BinaryColumn(table, t.toString()); t = null;} 
 	       nullable = nullable()
-		  [<K_DEFAULT> token = <S_BINARY_LITERAL>])
-    |  (<K_DATETIME>  {column = new DateTimeColumn(table, token.toString()); token = null;} 
+		  [<K_DEFAULT> t = <S_BINARY_LITERAL>])
+    |  (<K_DATETIME>  {column = new DateTimeColumn(table, t.toString()); t = null;} 
 	       nullable = nullable()
-		  [<K_DEFAULT> (token = <S_CHAR_LITERAL> | token = <K_GETDATE> "(" ")")])
-    |  (<K_BIT>       {column = new BooleanColumn(table, token.toString()); token = null;}) 
+		  [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <K_GETDATE> "(" ")")])
+    |  (<K_BIT>       {column = new BooleanColumn(table, t.toString()); t = null;}) 
 	       nullable = nullable() 
-	      [<K_DEFAULT> (token = <S_CHAR_LITERAL>| token = <S_INTEGER>)])
+	      [<K_DEFAULT> (t = <S_CHAR_LITERAL>| t = <S_INTEGER>)])
 	name = constraint(table.getGrain()) [<K_PRIMARY> <K_KEY> 
 	      {pk = true; table.setPkConstraintName(name);} name = constraint(table.getGrain())]
 	{ 
-      column.setNullableAndDefault(nullable, token == null? null: ((negative? "-": "") + token.toString()));
+      column.setNullableAndDefault(nullable, t == null? null: ((negative? "-": "") + t.toString()));
 	  if (pk) {
 	    table.addPK(column.getName());
 	    table.finalizePK();
@@ -197,23 +197,23 @@ boolean nullable():
 [<K_NULL>         {result = true;} |<K_NOT> <K_NULL> {result = false;}] { return result;}
 }
 
-void primaryKey(Table table):{Token token;}
+void primaryKey(Table table):{Token t;}
 {
-  <K_PRIMARY> <K_KEY> "(" token = <S_IDENTIFIER> {table.addPK(token.toString());}
-                     ("," token = <S_IDENTIFIER> {table.addPK(token.toString());})* ")"
+  <K_PRIMARY> <K_KEY> "(" t = <S_IDENTIFIER> {table.addPK(t.toString());}
+                     ("," t = <S_IDENTIFIER> {table.addPK(t.toString());})* ")"
   {
     table.finalizePK();
   }
 }
 
 ForeignKey foreignKey(Table table):{
-  Token token;
+  Token t;
   ForeignKey fk;
 }
 {
 <K_FOREIGN><K_KEY> { fk = new ForeignKey(table);}
-   "(" token = <S_IDENTIFIER> {fk.addColumn(token.toString());}
-  ("," token = <S_IDENTIFIER> {fk.addColumn(token.toString());})* ")"
+   "(" t = <S_IDENTIFIER> {fk.addColumn(t.toString());}
+  ("," t = <S_IDENTIFIER> {fk.addColumn(t.toString());})* ")"
 
   references(fk) {
   return fk;
@@ -221,14 +221,19 @@ ForeignKey foreignKey(Table table):{
 }
 
 void references(ForeignKey fk):{
-  Token token;
+  Token t;
+  Token t2 = null;
   FKBehaviour action;
 }
 {
-<K_REFERENCES> token = <S_IDENTIFIER> 
-  {fk.setReferencedTable("", token.toString());} 
-  "(" token = <S_IDENTIFIER> {fk.addReferencedColumn(token.toString());}
-  ("," token = <S_IDENTIFIER> {fk.addReferencedColumn(token.toString());})* ")"
+<K_REFERENCES> t = <S_IDENTIFIER> ["." t2 = <S_IDENTIFIER>]
+  { if (t2 == null)
+      fk.setReferencedTable("", t.toString());
+	else 
+	  fk.setReferencedTable(t.toString(), t2.toString());}
+	  
+  "(" t = <S_IDENTIFIER> {fk.addReferencedColumn(t.toString());}
+  ("," t = <S_IDENTIFIER> {fk.addReferencedColumn(t.toString());})* ")"
 {fk.finalizeReference();}
 [<K_ON>
   ((<K_UPDATE> action = action() {fk.setUpdateBehaviour(action);} 

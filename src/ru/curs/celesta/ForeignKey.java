@@ -130,8 +130,7 @@ public class ForeignKey {
 		if ("".equals(grain)) {
 			gm = parentTable.getGrain();
 		} else {
-			// TODO Реализовать кросс-гранульные ссылки!
-			throw new IllegalArgumentException("not yet implemented");
+			gm = parentTable.getGrain().getScore().getGrain(grain);
 		}
 
 		// Извлечение таблицы по имени.
