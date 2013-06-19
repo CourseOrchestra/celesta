@@ -17,7 +17,7 @@ public class GrainModelTest {
 	@Test
 	public void test1() throws ParseException {
 		Grain g = new Grain(s, "grain1");
-		assertSame(g, s.getGrains().get("grain1"));
+		assertSame(g, s.getGrain("grain1"));
 
 		Table t = new Table(g, "table1");
 		(new IntegerColumn(t, "a")).setNullableAndDefault(false, "IDENTITY");

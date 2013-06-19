@@ -1,0 +1,1 @@
+create grain g2 version '1.0';
