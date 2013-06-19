@@ -63,6 +63,7 @@ public class CelestaParser implements CelestaParserConstants {
       jj_consume_token(45);
     }
     jj_consume_token(0);
+   g.completeParsing();
    {if (true) return g;}
     throw new Error("Missing return statement in function");
   }

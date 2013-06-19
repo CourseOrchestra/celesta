@@ -112,6 +112,7 @@ Grain grain(Score s, String name):
 	 | (<K_ALTER>   alterTable(g))) ";")*
    <EOF>
    {
+   g.completeParsing();
    return g;
    }
 }

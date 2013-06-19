@@ -125,7 +125,7 @@ public class Score {
 				throw new ParseException(String.format(
 						"Cannot open file '%s'.", f.toString()));
 			}
-			// TODO здесь должна быть защита от зацикливания
+
 			CelestaParser parser = new CelestaParser(fis, "utf-8");
 			result = parser.grain(this, name);
 		}

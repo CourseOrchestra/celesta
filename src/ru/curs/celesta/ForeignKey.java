@@ -127,10 +127,18 @@ public class ForeignKey {
 	void setReferencedTable(String grain, String table) throws ParseException {
 		// Извлечение гранулы по имени.
 		Grain gm;
-		if ("".equals(grain)) {
+		if ("".equals(grain) || parentTable.getGrain().getName().equals(grain)) {
 			gm = parentTable.getGrain();
 		} else {
 			gm = parentTable.getGrain().getScore().getGrain(grain);
+			if (!gm.isParsingComplete())
+				throw new ParseException(
+						String.format(
+								"Error creating foreign key '%s'-->'%s.%s': "
+										+ "due to previous parsing errors or "
+										+ "cycle reference involving grains '%s' and '%s'.",
+								parentTable.getName(), grain, table,
+								parentTable.getGrain().getName(), grain));
 		}
 
 		// Извлечение таблицы по имени.

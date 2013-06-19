@@ -14,6 +14,8 @@ public final class Grain extends NamedElement {
 
 	private String version;
 
+	private boolean parsingComplete = false;
+
 	private final NamedElementHolder<Table> tables = new NamedElementHolder<Table>() {
 		@Override
 		String getErrorMsg(String name) {
@@ -145,6 +147,17 @@ public final class Grain extends NamedElement {
 					"Constraint '%s' is defined more than once in a grain.",
 					name));
 		constraintNames.add(name);
+	}
+
+	/**
+	 * Указывает на то, что разбор гранулы из файла завершён.
+	 */
+	public boolean isParsingComplete() {
+		return parsingComplete;
+	}
+
+	void completeParsing() {
+		parsingComplete = true;
 	}
 
 }

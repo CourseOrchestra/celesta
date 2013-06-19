@@ -1,5 +1,6 @@
 create grain g2 version '1.0';
 
+
 create table b (
 idb int identity not null primary key,
 descr nvarchar(2),
