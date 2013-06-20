@@ -1,4 +1,4 @@
-package ru.curs.celesta;
+package ru.curs.celesta.score;
 
 /**
  * Базовый класс описания столбца таблицы. Наследники этого класса соответствуют

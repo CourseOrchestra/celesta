@@ -1,5 +1,5 @@
 /**
  * Пакет, содержащий метаданные о стуктуре таблиц.
  */
-package ru.curs.celesta;
+package ru.curs.celesta.score;
 

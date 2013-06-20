@@ -1,4 +1,4 @@
-package ru.curs.celesta;
+package ru.curs.celesta.score;
 
 /**
  * Тип поведения внешнего ключа при удалении или обновлении первичного ключа

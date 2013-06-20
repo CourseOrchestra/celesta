@@ -1,4 +1,4 @@
-package ru.curs.celesta;
+package ru.curs.celesta.score;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;

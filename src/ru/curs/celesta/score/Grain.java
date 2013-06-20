@@ -1,4 +1,4 @@
-package ru.curs.celesta;
+package ru.curs.celesta.score;
 
 import java.util.HashSet;
 import java.util.Map;

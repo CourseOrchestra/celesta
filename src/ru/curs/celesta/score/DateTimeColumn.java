@@ -1,4 +1,4 @@
-package ru.curs.celesta;
+package ru.curs.celesta.score;
 
 import java.util.Calendar;
 import java.util.Date;

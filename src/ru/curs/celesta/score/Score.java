@@ -1,4 +1,4 @@
-package ru.curs.celesta;
+package ru.curs.celesta.score;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -143,10 +143,6 @@ public class Score {
 					is = null;
 				}
 			}
-
-			// System.out.println(String.format(
-			// "Grain '%s', length %d, checksum: %08X", result.getName(),
-			// result.getLength(), result.getChecksum()));
 		}
 
 		return result;
@@ -158,7 +154,7 @@ public class Score {
  * Обёртка InputStream для подсчёта контрольной суммы при чтении.
  * 
  */
-class ChecksumInputStream extends InputStream {
+final class ChecksumInputStream extends InputStream {
 	private final CRC32 checksum = new CRC32();
 	private final InputStream input;
 	private int counter = 0;

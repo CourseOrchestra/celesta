@@ -1,4 +1,4 @@
-package ru.curs.celesta;
+package ru.curs.celesta.score;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -13,6 +13,23 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.junit.Test;
+
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.CelestaParser;
+import ru.curs.celesta.score.ChecksumInputStream;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.FKBehaviour;
+import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.ForeignKey;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.Table;
 
 public class ParserTest {
 

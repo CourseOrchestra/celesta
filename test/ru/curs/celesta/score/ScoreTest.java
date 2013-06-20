@@ -1,9 +1,15 @@
-package ru.curs.celesta;
+package ru.curs.celesta.score;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import org.junit.Test;
+
+import ru.curs.celesta.score.CelestaException;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.Table;
 
 public class ScoreTest {
 	@Test
