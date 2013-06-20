@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.CRC32;
 
+import ru.curs.celesta.CelestaCritical;
+
 /**
  * Корневой класс полной модели данных гранул.
  * 
@@ -30,22 +32,22 @@ public class Score {
 	 * 
 	 * @param scorePath
 	 *            набор путей к папкам score, разделённый точкой с запятой.
-	 * @throws CelestaException
+	 * @throws CelestaCritical
 	 *             в случае указания несуществующего пути или в случае двойного
 	 *             определения гранулы с одним и тем же именем.
 	 */
-	public Score(String scorePath) throws CelestaException {
+	public Score(String scorePath) throws CelestaCritical {
 		for (String entry : scorePath.split(";")) {
 			File path = new File(entry);
 			if (!path.exists())
-				throw new CelestaException(String.format(
+				throw new CelestaCritical(String.format(
 						"Score path entry '%s' does not exist.",
 						path.toString()));
 			if (!path.canRead())
-				throw new CelestaException(String.format(
+				throw new CelestaCritical(String.format(
 						"Cannot read score path entry '%s'.", path.toString()));
 			if (!path.isDirectory())
-				throw new CelestaException(String.format(
+				throw new CelestaCritical(String.format(
 						"Score path entry '%s' is not a directory.",
 						path.toString()));
 
@@ -61,10 +63,10 @@ public class Score {
 
 				if (scriptFile.exists()) {
 					if (!scriptFile.canRead())
-						throw new CelestaException(String.format(
+						throw new CelestaCritical(String.format(
 								"Cannot read script file '%s'.", scriptFile));
 					if (grainFiles.containsKey(grainName))
-						throw new CelestaException(
+						throw new CelestaCritical(
 								String.format(
 										"Grain '%s' defined more than once on different paths.",
 										grainName));
@@ -78,7 +80,7 @@ public class Score {
 		parseGrains();
 	}
 
-	private void parseGrains() throws CelestaException {
+	private void parseGrains() throws CelestaCritical {
 		StringBuilder errorScript = new StringBuilder();
 		for (String s : grainFiles.keySet())
 			try {
@@ -91,7 +93,7 @@ public class Score {
 				errorScript.append(e.getMessage());
 			}
 		if (errorScript.length() > 0)
-			throw new CelestaException(errorScript.toString());
+			throw new CelestaCritical(errorScript.toString());
 	}
 
 	void addGrain(Grain grain) throws ParseException {
