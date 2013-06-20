@@ -196,7 +196,8 @@ public class ParserTest {
 
 	@Test
 	public void test4() throws ParseException {
-		InputStream input = ParserTest.class.getResourceAsStream("test4.sql");
+		ChecksumInputStream input = new ChecksumInputStream(
+				ParserTest.class.getResourceAsStream("test4.sql"));
 		CelestaParser cp = new CelestaParser(input);
 		Grain g = cp.grain(s, "skk");
 		Table t = g.getTable("app_division_add_info_el");
@@ -206,5 +207,7 @@ public class ParserTest {
 		ForeignKey fk = t.getForeignKeys().iterator().next();
 		assertEquals("fk_x_role_employees_x_roles", fk.getConstraintName());
 
+		assertEquals(21517, input.getCount());
+		assertEquals(0x21546431, input.getCRC32());
 	}
 }

@@ -14,6 +14,10 @@ public final class Grain extends NamedElement {
 
 	private String version;
 
+	private int length;
+
+	private int checksum;
+
 	private boolean parsingComplete = false;
 
 	private final NamedElementHolder<Table> tables = new NamedElementHolder<Table>() {
@@ -118,6 +122,31 @@ public final class Grain extends NamedElement {
 	 */
 	public String getVersion() {
 		return version;
+	}
+
+	/**
+	 * Возвращает длину файла-скрипта, на основе которого создана гранула.
+	 */
+	public int getLength() {
+		return length;
+	}
+
+	void setLength(int length) {
+		this.length = length;
+	}
+
+	/**
+	 * Возвращает контрольную сумму файла-скрипта, на основе которого создана
+	 * гранула. Совпадение версии, длины и контрольной суммы считается
+	 * достаточным условием для того, чтобы не заниматься чтением и обновлением
+	 * структуры базы данных.
+	 */
+	public int getChecksum() {
+		return checksum;
+	}
+
+	void setChecksum(int checksum) {
+		this.checksum = checksum;
 	}
 
 	/**

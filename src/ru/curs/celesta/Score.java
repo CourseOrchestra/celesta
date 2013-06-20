@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.CRC32;
 
 /**
  * Корневой класс полной модели данных гранул.
@@ -63,7 +66,7 @@ public class Score {
 					if (grainFiles.containsKey(grainName))
 						throw new CelestaException(
 								String.format(
-										"Grain '%s' defined more than once in different paths.",
+										"Grain '%s' defined more than once on different paths.",
 										grainName));
 					grainFiles.put(grainName, scriptFile);
 				}
@@ -118,18 +121,73 @@ public class Score {
 			if (f == null)
 				throw new ParseException(String.format("Unknown grain '%s'.",
 						name));
-			FileInputStream fis;
+			ChecksumInputStream is = null;
+
 			try {
-				fis = new FileInputStream(f);
+				is = new ChecksumInputStream(new FileInputStream(f));
 			} catch (FileNotFoundException e) {
 				throw new ParseException(String.format(
 						"Cannot open file '%s'.", f.toString()));
 			}
 
-			CelestaParser parser = new CelestaParser(fis, "utf-8");
-			result = parser.grain(this, name);
+			CelestaParser parser = new CelestaParser(is, "utf-8");
+			try {
+				result = parser.grain(this, name);
+				result.setChecksum(is.getCRC32());
+				result.setLength(is.getCount());
+			} finally {
+				try {
+					is.close();
+				} catch (IOException e) {
+					// This should never happen, however.
+					is = null;
+				}
+			}
+
+			// System.out.println(String.format(
+			// "Grain '%s', length %d, checksum: %08X", result.getName(),
+			// result.getLength(), result.getChecksum()));
+		}
+
+		return result;
+	}
+
+}
+
+/**
+ * Обёртка InputStream для подсчёта контрольной суммы при чтении.
+ * 
+ */
+class ChecksumInputStream extends InputStream {
+	private final CRC32 checksum = new CRC32();
+	private final InputStream input;
+	private int counter = 0;
+
+	ChecksumInputStream(InputStream input) {
+		this.input = input;
+	}
+
+	@Override
+	public int read() throws IOException {
+		int result = input.read();
+		if (result >= 0) {
+			counter++;
+			checksum.update(result);
 		}
 		return result;
+	}
+
+	public int getCRC32() {
+		return (int) checksum.getValue();
+	}
+
+	public int getCount() {
+		return counter;
+	}
+
+	@Override
+	public void close() throws IOException {
+		input.close();
 	}
 
 }
