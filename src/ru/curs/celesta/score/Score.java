@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.CRC32;
@@ -149,6 +150,13 @@ public class Score {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Возвращает неизменяемый набор гранул.
+	 */
+	public Map<String, Grain> getGrains() {
+		return Collections.unmodifiableMap(grains);
 	}
 
 }

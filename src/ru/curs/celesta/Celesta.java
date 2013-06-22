@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import ru.curs.celesta.dbutils.DBUpdator;
+import ru.curs.celesta.ormcompiler.ORMCompiler;
 import ru.curs.celesta.score.Score;
 
 /**
@@ -21,8 +23,10 @@ public final class Celesta {
 		score = new Score(AppSettings.getScorePath());
 
 		// 2. Перекомпиляция ORM-модулей, где это необходимо.
+		ORMCompiler.compile(score);
 
 		// 3. Обновление структуры базы данных.
+		DBUpdator.updateDB(score);
 	}
 
 	/**
@@ -59,7 +63,8 @@ public final class Celesta {
 	 *             в случае ошибки при инициализации.
 	 */
 
-	public static void initialize(Properties settings) throws CelestaCritical {
+	public static synchronized void initialize(Properties settings)
+			throws CelestaCritical {
 		if (theCelesta != null)
 			throw new CelestaCritical("Celesta is already initialized.");
 
@@ -77,7 +82,7 @@ public final class Celesta {
 	 *             в случае ошибки при инициализации, а также в случае, если
 	 *             Celesta уже была проинициализирована.
 	 */
-	public static void initialize() throws CelestaCritical {
+	public static synchronized void initialize() throws CelestaCritical {
 		if (theCelesta != null)
 			throw new CelestaCritical("Celesta is already initialized.");
 
@@ -112,7 +117,7 @@ public final class Celesta {
 	 * @throws CelestaCritical
 	 *             в случае ошибки при инициализации.
 	 */
-	public static Celesta getInstance() throws CelestaCritical {
+	public static synchronized Celesta getInstance() throws CelestaCritical {
 		if (theCelesta == null)
 			initialize();
 		return theCelesta;
