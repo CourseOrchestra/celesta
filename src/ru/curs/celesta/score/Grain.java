@@ -1,5 +1,6 @@
 package ru.curs.celesta.score;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +11,12 @@ import java.util.Set;
  */
 public final class Grain extends NamedElement {
 
+	/**
+	 * Счётчик вызовов метода parsingComplete для заполнения свойства
+	 * dependencyOrder.
+	 */
+	private static int orderCounter = 0;
+
 	private final Score score;
 
 	private VersionString version;
@@ -18,7 +25,11 @@ public final class Grain extends NamedElement {
 
 	private int checksum;
 
+	private int dependencyOrder;
+
 	private boolean parsingComplete = false;
+
+	private File grainPath;
 
 	private final NamedElementHolder<Table> tables = new NamedElementHolder<Table>() {
 		@Override
@@ -185,8 +196,30 @@ public final class Grain extends NamedElement {
 		return parsingComplete;
 	}
 
-	void completeParsing() {
-		parsingComplete = true;
+	/**
+	 * Если одна гранула имеет номер больший, чем другая, то значит, что она
+	 * может зависеть от первой.
+	 */
+	public int getDependencyOrder() {
+		return dependencyOrder;
 	}
 
+	void completeParsing() {
+		parsingComplete = true;
+		orderCounter++;
+		dependencyOrder = orderCounter;
+	}
+
+	/**
+	 * Возвращает путь к грануле.
+	 */
+	public File getGrainPath() {
+		return grainPath;
+	}
+
+	void setGrainPath(File grainPath) {
+		if (!grainPath.isDirectory())
+			throw new IllegalArgumentException();
+		this.grainPath = grainPath;
+	}
 }

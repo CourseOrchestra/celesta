@@ -137,6 +137,7 @@ public class Score {
 				result = parser.grain(this, name);
 				result.setChecksum(is.getCRC32());
 				result.setLength(is.getCount());
+				result.setGrainPath(f.getParentFile());
 			} finally {
 				try {
 					is.close();

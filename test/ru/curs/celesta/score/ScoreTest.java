@@ -3,6 +3,8 @@ package ru.curs.celesta.score;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import java.io.File;
+
 import org.junit.Test;
 
 import ru.curs.celesta.CelestaCritical;
@@ -23,5 +25,18 @@ public class ScoreTest {
 		Table a = b.getForeignKeys().iterator().next().getReferencedTable();
 		assertEquals("a", a.getName());
 		assertSame(g1, a.getGrain());
+
+		Grain g3 = s.getGrain("g3");
+
+		int o = g1.getDependencyOrder();
+		assertEquals(o + 1, g2.getDependencyOrder());
+		assertEquals(o + 2, g3.getDependencyOrder());
+
+		assertEquals("score" + File.separator + "g1", g1.getGrainPath()
+				.toString());
+		assertEquals("score" + File.separator + "g2", g2.getGrainPath()
+				.toString());
+		assertEquals("score" + File.separator + "g3", g3.getGrainPath()
+				.toString());
 	}
 }

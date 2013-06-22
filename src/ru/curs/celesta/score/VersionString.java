@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * запятую.
  * 
  */
-public class VersionString {
+public final class VersionString {
 	/**
 	 * Результат сравнения VersionStrings, на которых существует частичный
 	 * порядок (использование стандартного интерфейса Comparable невозможно, т.
