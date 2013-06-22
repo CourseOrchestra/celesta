@@ -16,8 +16,13 @@ public final class Celesta {
 	private Score score;
 
 	private Celesta() throws CelestaCritical {
+		// CELESTA STARTUP SEQUENCE
+		// 1. Разбор описания гранул.
 		score = new Score(AppSettings.getScorePath());
 
+		// 2. Перекомпиляция ORM-модулей, где это необходимо.
+
+		// 3. Обновление структуры базы данных.
 	}
 
 	/**

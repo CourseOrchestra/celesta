@@ -41,7 +41,7 @@ public class ParserTest {
 		CelestaParser cp = new CelestaParser(input);
 		Grain g = cp.grain(s, "test1");
 		assertEquals("test1", g.getName());
-		assertEquals("1.0", g.getVersion());
+		assertEquals("1.0", g.getVersion().toString());
 
 		Map<String, Table> s = g.getTables();
 		assertEquals(3, s.size());
@@ -164,7 +164,7 @@ public class ParserTest {
 		CelestaParser cp = new CelestaParser(input);
 		Grain g = cp.grain(s, "test2");
 		assertEquals("test2", g.getName());
-		assertEquals("2.5", g.getVersion());
+		assertEquals("2.5", g.getVersion().toString());
 
 		Table d = g.getTables().get("d");
 		assertEquals(0, d.getForeignKeys().size());

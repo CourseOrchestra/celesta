@@ -12,7 +12,7 @@ public final class Grain extends NamedElement {
 
 	private final Score score;
 
-	private String version;
+	private VersionString version;
 
 	private int length;
 
@@ -120,7 +120,7 @@ public final class Grain extends NamedElement {
 	/**
 	 * Возвращает номер версии гранулы.
 	 */
-	public String getVersion() {
+	public VersionString getVersion() {
 		return version;
 	}
 
@@ -159,7 +159,7 @@ public final class Grain extends NamedElement {
 	 *             в случае, если имеется неверный формат quoted string.
 	 */
 	void setVersion(String version) throws ParseException {
-		this.version = StringColumn.unquoteString(version);
+		this.version = new VersionString(StringColumn.unquoteString(version));
 	}
 
 	/**
