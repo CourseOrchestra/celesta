@@ -7,7 +7,7 @@ package ru.curs.celesta.dbutils;
 class MSSQLAdaptor extends DBAdaptor {
 
 	@Override
-	public boolean grainsTableExists() {
+	public boolean tableExists(String schema, String name) {
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -16,12 +16,6 @@ class MSSQLAdaptor extends DBAdaptor {
 	public boolean userTablesExist() {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	@Override
-	public void createSystemTables() {
-		// TODO Auto-generated method stub
-
 	}
 
 }

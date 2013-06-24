@@ -42,13 +42,20 @@ public final class DBUpdator {
 	public static void updateDB(Score score) throws CelestaCritical {
 		DBAdaptor dba = DBAdaptor.getAdaptor();
 		// Проверяем наличие главной системной таблицы.
-		if (!dba.grainsTableExists()) {
+		if (!dba.tableExists("celesta", "grains")) {
 			// Если главной таблицы нет, а другие таблицы есть -- ошибка.
 			if (dba.userTablesExist())
 				throw new CelestaCritical(
 						"No celesta.grains table found in non-empty database.");
 			// Если база вообще пустая, то создаём системные таблицы.
-			dba.createSystemTables();
+			try {
+				Grain sys = score.getGrain("celesta");
+				dba.createTable(sys.getTable("grains"));
+				updateGrain(sys);
+			} catch (ParseException e) {
+				throw new CelestaCritical(
+						"No 'celesta' grain definition found.");
+			}
 		}
 
 		// Теперь собираем в память информацию о гранулах на основании того, что
@@ -149,6 +156,8 @@ public final class DBUpdator {
 	 *             в случае ошибки обновления.
 	 */
 	static void updateGrain(Grain g) throws CelestaCritical {
+		// TODO выставление в статус updating
 
+		// TODO выставление в статус ready
 	}
 }

@@ -76,6 +76,8 @@ public class Score {
 
 			}
 		}
+
+		initSystemGrain();
 		// В этот момент в таблице grainFiles содержится перечень распознанных
 		// имён гранул с именами файлов-скриптов.
 		parseGrains();
@@ -150,6 +152,31 @@ public class Score {
 		}
 
 		return result;
+	}
+
+	private void initSystemGrain() throws CelestaCritical {
+		ChecksumInputStream is = new ChecksumInputStream(
+				Score.class.getResourceAsStream("celesta.sql"));
+
+		CelestaParser parser = new CelestaParser(is, "utf-8");
+		try {
+			Grain result;
+			try {
+				result = parser.grain(this, "celesta");
+			} catch (ParseException e) {
+				throw new CelestaCritical(e.getMessage());
+			}
+			result.setChecksum(is.getCRC32());
+			result.setLength(is.getCount());
+		} finally {
+			try {
+				is.close();
+			} catch (IOException e) {
+				// This should never happen, however.
+				is = null;
+			}
+		}
+
 	}
 
 	/**

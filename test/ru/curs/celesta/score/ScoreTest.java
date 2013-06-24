@@ -38,5 +38,11 @@ public class ScoreTest {
 				.toString());
 		assertEquals("score" + File.separator + "g3", g3.getGrainPath()
 				.toString());
+
+		Grain sys = s.getGrain("celesta");
+		a = sys.getTable("grains");
+		assertEquals("grains", a.getName());
+		assertEquals(o - 1, sys.getDependencyOrder());
 	}
+
 }

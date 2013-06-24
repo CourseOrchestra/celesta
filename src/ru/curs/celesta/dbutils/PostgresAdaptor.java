@@ -7,7 +7,7 @@ package ru.curs.celesta.dbutils;
 class PostgresAdaptor extends DBAdaptor {
 
 	@Override
-	public boolean grainsTableExists() {
+	public boolean tableExists(String schema, String name) {
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -16,12 +16,6 @@ class PostgresAdaptor extends DBAdaptor {
 	public boolean userTablesExist() {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	@Override
-	public void createSystemTables() {
-		// TODO Auto-generated method stub
-
 	}
 
 }

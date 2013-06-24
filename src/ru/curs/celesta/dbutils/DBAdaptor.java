@@ -2,6 +2,7 @@ package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.score.Table;
 
 /**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
@@ -13,18 +14,13 @@ abstract class DBAdaptor {
 	 * Возвращает true в том и только том случае, если база данных содержит
 	 * таблицу celesta.grains.
 	 */
-	public abstract boolean grainsTableExists();
+	public abstract boolean tableExists(String schema, String name);
 
 	/**
 	 * Возвращает true в том и только том случае, если база данных содержит
 	 * пользовательские таблицы (т. е. не является пустой базой данных).
 	 */
 	public abstract boolean userTablesExist();
-
-	/**
-	 * Создаёт таблицу Grains и другие системные таблицы.
-	 */
-	public abstract void createSystemTables();
 
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
@@ -47,5 +43,16 @@ abstract class DBAdaptor {
 		default:
 			throw new CelestaCritical("Unknown or unsupported database type.");
 		}
+	}
+
+	/**
+	 * Создаёт в базе данных таблицу "с нуля".
+	 * 
+	 * @param table
+	 *            Таблица для создания.
+	 */
+	public void createTable(Table table) {
+		// TODO Auto-generated method stub
+
 	}
 }
