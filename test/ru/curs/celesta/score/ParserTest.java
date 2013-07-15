@@ -146,6 +146,11 @@ public class ParserTest {
 		assertTrue(c instanceof BinaryColumn);
 		assertEquals("0x22AB15FF", ((BinaryColumn) c).getDefaultValue());
 
+		c = ic.next();
+		assertEquals("column5", c.getName());
+		assertTrue(c instanceof IntegerColumn);
+		assertEquals(11, ((IntegerColumn) c).getDefaultvalue().intValue());
+
 		assertEquals(2, g.getIndices().size());
 
 		Index idx = g.getIndices().get("idx1");

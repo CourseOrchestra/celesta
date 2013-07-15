@@ -43,6 +43,8 @@ public class ScoreTest {
 		a = sys.getTable("grains");
 		assertEquals("grains", a.getName());
 		assertEquals(o - 1, sys.getDependencyOrder());
+		IntegerColumn c = (IntegerColumn) a.getColumns().get("state");
+		assertEquals(3, c.getDefaultvalue().intValue());
 	}
 
 }

@@ -1,4 +1,4 @@
-package ru.curs.celesta.score;
+package ru.curs.celesta;
 
 import java.io.IOException;
 import java.util.Properties;

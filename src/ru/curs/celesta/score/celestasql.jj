@@ -8,7 +8,7 @@ options{
 }
 
 PARSER_BEGIN(CelestaParser)
-package ru.curs.celesta;
+package ru.curs.celesta.score;
 //CHECKSTYLE:OFF
 public class CelestaParser{
 }
@@ -159,7 +159,7 @@ void columnDefinition(Table table):
 {
   t = <S_IDENTIFIER>
     (  (<K_INT>       {column = new IntegerColumn(table, t.toString()); t = null; } 
-	       nullable = nullable() [(<K_DEFAULT> ["-"] {negative = true;} t = <S_INTEGER>)|(t = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])]
+	       nullable = nullable() [(<K_DEFAULT> ["-" {negative = true;}] t = <S_INTEGER>)|(t = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])]
 	    )
     |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;} 
 	       nullable = nullable() 

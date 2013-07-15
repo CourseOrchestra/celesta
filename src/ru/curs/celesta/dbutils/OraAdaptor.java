@@ -18,14 +18,128 @@ import ru.curs.celesta.score.StringColumn;
  */
 final class OraAdaptor extends DBAdaptor {
 
-	private static final Map<Class<? extends Column>, String> TYPES_DICT = new HashMap<>();
+	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
-		TYPES_DICT.put(IntegerColumn.class, "NUMBER");
-		TYPES_DICT.put(FloatingColumn.class, "REAL");
-		TYPES_DICT.put(StringColumn.class, "VARCHAR2");
-		TYPES_DICT.put(BinaryColumn.class, "BLOB");
-		TYPES_DICT.put(DateTimeColumn.class, "TIMESTAMP");
-		TYPES_DICT.put(BooleanColumn.class, "CHAR(1)");
+		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
+			@Override
+			String dbFieldType() {
+				return "number";
+			}
+
+			@Override
+			String getColumnDef(Column c) {
+				IntegerColumn ic = (IntegerColumn) c;
+				String defaultStr = "";
+				// TODO autoincrement
+				if (ic.isIdentity()) {
+					defaultStr = "IDENTITY";
+				} else if (ic.getDefaultvalue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultvalue();
+				}
+				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
+			}
+
+		}
+
+		);
+
+		TYPES_DICT.put(FloatingColumn.class, new ColumnDefiner() {
+
+			@Override
+			String dbFieldType() {
+				return "real";
+			}
+
+			@Override
+			String getColumnDef(Column c) {
+				FloatingColumn ic = (FloatingColumn) c;
+				String defaultStr = "";
+				if (ic.getDefaultvalue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultvalue();
+				}
+				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
+			}
+
+		}
+
+		);
+		TYPES_DICT.put(StringColumn.class, new ColumnDefiner() {
+
+			@Override
+			String dbFieldType() {
+				return "varchar2";
+			}
+
+			@Override
+			String getColumnDef(Column c) {
+				StringColumn ic = (StringColumn) c;
+				// See
+				// http://stackoverflow.com/questions/414817/what-is-the-equivalent-of-varcharmax-in-oracle
+				String fieldType = String.format("%s(%s)", dbFieldType(),
+						ic.isMax() ? "4000" : ic.getLength());
+				String defaultStr = "";
+				if (ic.getDefaultValue() != null) { // TODO quoted string
+					defaultStr = DEFAULT + ic.getDefaultValue();
+				}
+				return join(c.getName(), fieldType, nullable(c), defaultStr);
+			}
+
+		});
+		TYPES_DICT.put(BinaryColumn.class, new ColumnDefiner() {
+
+			@Override
+			String dbFieldType() {
+				return "blob";
+			}
+
+			@Override
+			String getColumnDef(Column c) {
+				BinaryColumn ic = (BinaryColumn) c;
+				String defaultStr = "";
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
+				}
+				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
+			}
+		});
+
+		TYPES_DICT.put(DateTimeColumn.class, new ColumnDefiner() {
+
+			@Override
+			String dbFieldType() {
+				return "timestamp";
+			}
+
+			@Override
+			String getColumnDef(Column c) {
+				DateTimeColumn ic = (DateTimeColumn) c;
+				String defaultStr = "";
+				if (ic.isGetdate()) {
+					defaultStr = DEFAULT + "sysdate";
+				} else if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
+				}
+				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
+			}
+		});
+		TYPES_DICT.put(BooleanColumn.class, new ColumnDefiner() {
+
+			@Override
+			String dbFieldType() {
+				return "char(1)";
+			}
+
+			@Override
+			String getColumnDef(Column c) {
+				BooleanColumn ic = (BooleanColumn) c;
+				String defaultStr = "";
+				if (ic.getDefaultvalue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultvalue();
+				}
+				// TODO: constraint на Y/N
+				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
+			}
+		});
 	}
 
 	@Override
@@ -45,10 +159,14 @@ final class OraAdaptor extends DBAdaptor {
 		// TODO Auto-generated method stub
 
 	}
-	
+
 	@Override
 	String dbFieldType(Column c) {
-		return TYPES_DICT.get(c.getClass());
+		return TYPES_DICT.get(c.getClass()).dbFieldType();
 	}
 
+	@Override
+	String columnDef(Column c) {
+		return TYPES_DICT.get(c.getClass()).getColumnDef(c);
+	}
 }

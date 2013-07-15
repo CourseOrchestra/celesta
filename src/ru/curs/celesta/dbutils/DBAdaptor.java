@@ -1,7 +1,12 @@
 package ru.curs.celesta.dbutils;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Table;
 
@@ -12,16 +17,60 @@ import ru.curs.celesta.score.Table;
 abstract class DBAdaptor {
 
 	/**
-	 * Возвращает true в том и только том случае, если база данных содержит
-	 * таблицу celesta.grains.
+	 * Класс, ответственный за генерацию определения столбца таблицы в разных
+	 * СУБД.
+	 * 
 	 */
-	public abstract boolean tableExists(String schema, String name);
+	abstract static class ColumnDefiner {
+		static final String DEFAULT = "default ";
+
+		abstract String dbFieldType();
+
+		abstract String getColumnDef(Column c);
+
+		String nullable(Column c) {
+			return c.isNullable() ? "" : "not null";
+		}
+
+		/**
+		 * Соединяет строки через пробел.
+		 * 
+		 * @param ss
+		 *            массив строк для соединения в виде свободного параметра.
+		 */
+		static String join(String... ss) {
+			StringBuilder sb = new StringBuilder();
+			boolean multiple = false;
+			for (String s : ss)
+				if (!"".equals(s)) {
+					if (multiple)
+						sb.append(' ' + s);
+					else {
+						sb.append(s);
+						multiple = true;
+					}
+				}
+			return sb.toString();
+		}
+	}
+
+	/**
+	 * Возвращает true в том и только том случае, если база данных содержит
+	 * таблицу.
+	 * 
+	 * @param schema
+	 *            схема.
+	 * @param name
+	 *            имя таблицы.
+	 */
+	public abstract boolean tableExists(String schema, String name)
+			throws CelestaCritical;
 
 	/**
 	 * Возвращает true в том и только том случае, если база данных содержит
 	 * пользовательские таблицы (т. е. не является пустой базой данных).
 	 */
-	public abstract boolean userTablesExist();
+	public abstract boolean userTablesExist() throws CelestaCritical;
 
 	/**
 	 * Создаёт в базе данных схему с указанным именем, если таковая схема ранее
@@ -68,15 +117,43 @@ abstract class DBAdaptor {
 		}
 	}
 
+	abstract String columnDef(Column c);
+
+	String tableDef(Table table) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(String.format("create table %s.%s(\n", table.getGrain()
+				.getName(), table.getName()));
+		boolean multiple = false;
+		for (Column c : table.getColumns().values()) {
+			if (multiple)
+				sb.append(",\n");
+			sb.append("  " + columnDef(c));
+			multiple = true;
+		}
+		sb.append("\n);");
+		return sb.toString();
+	}
+
 	/**
 	 * Создаёт в базе данных таблицу "с нуля".
 	 * 
 	 * @param table
 	 *            Таблица для создания.
+	 * @throws CelestaCritical
+	 *             В случае возникновения критического сбоя при создании
+	 *             таблицы, в том числе в случае, если такая таблица существует.
 	 */
-	public void createTable(Table table) {
-		// TODO Auto-generated method stub
-
+	public void createTable(Table table) throws CelestaCritical {
+		String def = tableDef(table);
+		Connection conn = ConnectionPool.get();
+		try {
+			PreparedStatement stmt = conn.prepareStatement(def);
+			stmt.execute();
+			stmt.close();
+		} catch (SQLException e) {
+			throw new CelestaCritical("Cannot create table. " + e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
 	}
-
 }
