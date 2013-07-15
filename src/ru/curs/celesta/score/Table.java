@@ -12,7 +12,7 @@ import java.util.Set;
 public final class Table extends NamedElement {
 
 	/**
-	 * Модель, к которой относится данная таблица.
+	 * Гранула, к которой относится данная таблица.
 	 */
 	private final Grain grain;
 
@@ -145,7 +145,7 @@ public final class Table extends NamedElement {
 	}
 
 	/**
-	 * Возвращает модель, к которой относится таблица.
+	 * Возвращает гранулу, к которой относится таблица.
 	 */
 	public Grain getGrain() {
 		return grain;
