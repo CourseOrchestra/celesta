@@ -72,9 +72,8 @@ final class PostgresAdaptor extends DBAdaptor {
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
-
 	}
-	
+
 	@Override
 	String dbFieldType(Column c) {
 		return TYPES_DICT.get(c.getClass());
