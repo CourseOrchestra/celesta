@@ -67,6 +67,25 @@ public final class StringColumn extends Column {
 	}
 
 	/**
+	 * Закавычевает строки.
+	 * 
+	 * @param lexvalue
+	 *            строка для закавычивания.
+	 */
+	public static String quoteString(String lexvalue) {
+		StringBuilder sb = new StringBuilder();
+		sb.append('\'');
+		for (int i = 0; i < lexvalue.length(); i++) {
+			char c = lexvalue.charAt(i);
+			sb.append(c);
+			if (c == '\'')
+				sb.append('\'');
+		}
+		sb.append('\'');
+		return sb.toString();
+	}
+
+	/**
 	 * Значение по умолчанию.
 	 */
 	public String getDefaultValue() {

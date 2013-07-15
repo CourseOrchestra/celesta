@@ -37,8 +37,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 				String defaultStr = "";
 				if (ic.isIdentity()) {
 					defaultStr = "IDENTITY";
-				} else if (ic.getDefaultvalue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultvalue();
+				} else if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}
@@ -81,7 +81,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 						ic.isMax() ? "max" : ic.getLength());
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
+					defaultStr = DEFAULT + StringColumn.quoteString(ic.getDefaultValue());
 				}
 				return join(c.getName(), fieldType, nullable(c), defaultStr);
 			}
@@ -135,8 +135,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 			String getColumnDef(Column c) {
 				BooleanColumn ic = (BooleanColumn) c;
 				String defaultStr = "";
-				if (ic.getDefaultvalue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultvalue();
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}

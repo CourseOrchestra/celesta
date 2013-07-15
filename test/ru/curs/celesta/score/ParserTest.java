@@ -93,7 +93,7 @@ public class ParserTest {
 		assertEquals("e", c.getName());
 		assertTrue(c instanceof IntegerColumn);
 		assertTrue(c.isNullable());
-		assertEquals(-112, (int) ((IntegerColumn) c).getDefaultvalue());
+		assertEquals(-112, (int) ((IntegerColumn) c).getDefaultValue());
 
 		c = ic.next();
 		assertEquals("f", c.getName());
@@ -122,7 +122,7 @@ public class ParserTest {
 		assertEquals("column1", c.getName());
 		assertTrue(c instanceof IntegerColumn);
 		assertFalse(c.isNullable());
-		assertNull(((IntegerColumn) c).getDefaultvalue());
+		assertNull(((IntegerColumn) c).getDefaultValue());
 		assertTrue(((IntegerColumn) c).isIdentity());
 
 		c = ic.next();
@@ -149,7 +149,7 @@ public class ParserTest {
 		c = ic.next();
 		assertEquals("column5", c.getName());
 		assertTrue(c instanceof IntegerColumn);
-		assertEquals(11, ((IntegerColumn) c).getDefaultvalue().intValue());
+		assertEquals(11, ((IntegerColumn) c).getDefaultValue().intValue());
 
 		assertEquals(2, g.getIndices().size());
 

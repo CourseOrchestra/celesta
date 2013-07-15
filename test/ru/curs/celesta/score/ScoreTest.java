@@ -44,7 +44,7 @@ public class ScoreTest {
 		assertEquals("grains", a.getName());
 		assertEquals(o - 1, sys.getDependencyOrder());
 		IntegerColumn c = (IntegerColumn) a.getColumns().get("state");
-		assertEquals(3, c.getDefaultvalue().intValue());
+		assertEquals(3, c.getDefaultValue().intValue());
 	}
 
 }
