@@ -2,6 +2,7 @@ package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Table;
 
 /**
@@ -21,6 +22,28 @@ abstract class DBAdaptor {
 	 * пользовательские таблицы (т. е. не является пустой базой данных).
 	 */
 	public abstract boolean userTablesExist();
+
+	/**
+	 * Создаёт в базе данных схему с указанным именем, если таковая схема ранее
+	 * не существовала.
+	 * 
+	 * @param string
+	 *            имя схемы.
+	 * @throws CelestaCritical
+	 *             только в том случае, если возник критический сбой при
+	 *             создании схемы. Не выбрасывается в случае, если схема с
+	 *             данным именем уже существует в базе данных.
+	 */
+	public abstract void createSchemaIfNotExists(String string)
+			throws CelestaCritical;
+
+	/**
+	 * Возвращает наименование типа столбца, соответствующее базе данных.
+	 * 
+	 * @param c
+	 *            Колонка в score
+	 */
+	abstract String dbFieldType(Column c);
 
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
@@ -55,4 +78,5 @@ abstract class DBAdaptor {
 		// TODO Auto-generated method stub
 
 	}
+
 }

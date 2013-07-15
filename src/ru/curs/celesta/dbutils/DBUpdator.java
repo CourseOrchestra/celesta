@@ -50,6 +50,7 @@ public final class DBUpdator {
 			// Если база вообще пустая, то создаём системные таблицы.
 			try {
 				Grain sys = score.getGrain("celesta");
+				dba.createSchemaIfNotExists("celesta");
 				dba.createTable(sys.getTable("grains"));
 				updateGrain(sys);
 			} catch (ParseException e) {
