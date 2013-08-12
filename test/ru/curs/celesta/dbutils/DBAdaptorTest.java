@@ -19,5 +19,12 @@ public class DBAdaptorTest {
 		a = new PostgresAdaptor();
 		System.out
 				.println(a.tableDef(s.getGrain("celesta").getTable("grains")));
+
+		a = new MySQLAdaptor();
+		System.out
+				.println(a.tableDef(s.getGrain("celesta").getTable("grains")));
+		a = new OraAdaptor();
+		System.out
+				.println(a.tableDef(s.getGrain("celesta").getTable("grains")));
 	}
 }

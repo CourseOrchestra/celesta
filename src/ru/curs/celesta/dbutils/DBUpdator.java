@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,13 @@ import ru.curs.celesta.score.VersionString;
  */
 public final class DBUpdator {
 
+	private static final Comparator<Grain> GRAIN_COMPARATOR = new Comparator<Grain>() {
+		@Override
+		public int compare(Grain o1, Grain o2) {
+			return o1.getDependencyOrder() - o2.getDependencyOrder();
+		}
+	};
+
 	private DBUpdator() {
 	}
 
@@ -26,6 +34,7 @@ public final class DBUpdator {
 	 * Буфер для хранения информации о грануле.
 	 */
 	private static class GrainInfo {
+		private boolean recover;
 		private int length;
 		private int checksum;
 		private VersionString version;
@@ -71,6 +80,7 @@ public final class DBUpdator {
 			GrainInfo gi = new GrainInfo();
 			gi.checksum = c.getChecksum();
 			gi.length = c.getLength();
+			gi.recover = c.getState() == GrainsCursor.RECOVER;
 			try {
 				gi.version = new VersionString(c.getVersion());
 			} catch (ParseException e) {
@@ -84,12 +94,7 @@ public final class DBUpdator {
 		// Получаем список гранул на основе метамодели и сортируем его по
 		// порядку зависимости.
 		List<Grain> grains = new ArrayList<>(score.getGrains().values());
-		Collections.sort(grains, new Comparator<Grain>() {
-			@Override
-			public int compare(Grain o1, Grain o2) {
-				return o1.getDependencyOrder() - o2.getDependencyOrder();
-			}
-		});
+		Collections.sort(grains, GRAIN_COMPARATOR);
 
 		// Выполняем итерацию по гранулам.
 		for (Grain g : grains) {
@@ -114,6 +119,11 @@ public final class DBUpdator {
 
 	private static void decideToUpgrade(Grain g, GrainInfo gi)
 			throws CelestaCritical {
+		if (gi.recover) {
+			updateGrain(g);
+			return;
+		}
+
 		// Как соотносятся версии?
 		switch (g.getVersion().compareTo(gi.version)) {
 		case LOWER:
@@ -157,8 +167,35 @@ public final class DBUpdator {
 	 *             в случае ошибки обновления.
 	 */
 	static void updateGrain(Grain g) throws CelestaCritical {
-		// TODO выставление в статус updating
+		// выставление в статус updating
+		GrainsCursor c = new GrainsCursor();
+		c.get(g.getName());
+		c.setState(GrainsCursor.UPGRADING);
+		c.update();
 
-		// TODO выставление в статус ready
+		// теперь собственно обновление гранулы
+		try {
+			// TODO
+
+			// по завершении -- обновление номера версии, контрольной суммы и
+			// выставление в статус ready
+			c.setState(GrainsCursor.READY);
+			c.setChecksum(g.getChecksum());
+			c.setLength(g.getLength());
+			c.setLastmodified(new Date());
+			c.setMessage("");
+			c.setVersion(g.getVersion().toString());
+			c.update();
+
+			// TODO DELETETHIS
+			throw new CelestaCritical("!!");
+		} catch (CelestaCritical e) {
+			// Если что-то пошло не так
+			c.setState(GrainsCursor.ERROR);
+			c.setMessage(String.format(
+					"Error while trying to update to version %s: %s", g
+							.getVersion().toString(), e.getMessage()));
+			c.update();
+		}
 	}
 }

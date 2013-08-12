@@ -37,4 +37,11 @@ abstract class AbstractCursor {
 	public void insert() {
 
 	}
+
+	/**
+	 * Осуществляет обновление курсора.
+	 */
+	public void update() {
+
+	}
 }

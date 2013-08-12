@@ -25,6 +25,10 @@ class GrainsCursor extends AbstractCursor {
 		// TODO Auto-generated constructor stub
 	}
 
+	void get(String id) {
+
+	}
+
 	String getId() {
 		return id;
 	}
