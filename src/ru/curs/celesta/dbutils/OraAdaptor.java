@@ -1,9 +1,10 @@
 package ru.curs.celesta.dbutils;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import ru.curs.celesta.CelestaCritical;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -78,8 +79,9 @@ final class OraAdaptor extends DBAdaptor {
 				String fieldType = String.format("%s(%s)", dbFieldType(),
 						ic.isMax() ? "4000" : ic.getLength());
 				String defaultStr = "";
-				if (ic.getDefaultValue() != null) { 
-					defaultStr = DEFAULT + StringColumn.quoteString(ic.getDefaultValue());
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT
+							+ StringColumn.quoteString(ic.getDefaultValue());
 				}
 				return join(c.getName(), fieldType, nullable(c), defaultStr);
 			}
@@ -143,21 +145,22 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public boolean tableExists(String schema, String name) {
+	boolean tableExists(Connection conn, String schema, String name)
+			throws SQLException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public boolean userTablesExist() {
+	boolean userTablesExist(Connection conn) throws SQLException {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public void createSchemaIfNotExists(String string) throws CelestaCritical {
+	void createSchemaIfNotExists(Connection conn, String string)
+			throws SQLException {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override

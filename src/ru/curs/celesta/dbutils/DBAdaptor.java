@@ -63,28 +63,63 @@ abstract class DBAdaptor {
 	 * @param name
 	 *            имя таблицы.
 	 */
-	public abstract boolean tableExists(String schema, String name)
-			throws CelestaCritical;
+	public final boolean tableExists(String schema, String name)
+			throws CelestaCritical {
+		Connection conn = ConnectionPool.get();
+		try {
+			return tableExists(conn, schema, name);
+		} catch (SQLException e) {
+			throw new CelestaCritical(e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
+	}
+
+	abstract boolean tableExists(Connection conn, String schema,
+			String name) throws SQLException;
 
 	/**
 	 * Возвращает true в том и только том случае, если база данных содержит
 	 * пользовательские таблицы (т. е. не является пустой базой данных).
 	 */
-	public abstract boolean userTablesExist() throws CelestaCritical;
+	public final boolean userTablesExist() throws CelestaCritical {
+		Connection conn = ConnectionPool.get();
+		try {
+			return userTablesExist(conn);
+		} catch (SQLException e) {
+			throw new CelestaCritical(e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
+	}
+
+	abstract boolean userTablesExist(Connection conn)
+			throws SQLException;
 
 	/**
 	 * Создаёт в базе данных схему с указанным именем, если таковая схема ранее
 	 * не существовала.
 	 * 
-	 * @param string
+	 * @param name
 	 *            имя схемы.
 	 * @throws CelestaCritical
 	 *             только в том случае, если возник критический сбой при
 	 *             создании схемы. Не выбрасывается в случае, если схема с
 	 *             данным именем уже существует в базе данных.
 	 */
-	public abstract void createSchemaIfNotExists(String string)
-			throws CelestaCritical;
+	public final void createSchemaIfNotExists(String name) throws CelestaCritical {
+		Connection conn = ConnectionPool.get();
+		try {
+			createSchemaIfNotExists(conn, name);
+		} catch (SQLException e) {
+			throw new CelestaCritical("Cannot create schema. " + e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
+	}
+
+	abstract void createSchemaIfNotExists(Connection conn, String name)
+			throws SQLException;
 
 	/**
 	 * Возвращает наименование типа столбца, соответствующее базе данных.

@@ -7,8 +7,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import ru.curs.celesta.CelestaCritical;
-import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -141,75 +139,55 @@ final class PostgresAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public boolean tableExists(String schema, String name)
-			throws CelestaCritical {
-		Connection conn = ConnectionPool.get();
+	boolean tableExists(Connection conn, String schema, String name)
+			throws SQLException {
+		PreparedStatement check = conn.prepareStatement(String.format(
+				"SELECT table_name FROM information_schema.tables  WHERE "
+						+ "table_schema = '%s' AND table_name = '%s'", schema,
+				name));
+		ResultSet rs = check.executeQuery();
 		try {
-			PreparedStatement check = conn.prepareStatement(String.format(
-					"SELECT table_name FROM information_schema.tables  WHERE "
-							+ "table_schema = '%s' AND table_name = '%s'",
-					schema, name));
-			ResultSet rs = check.executeQuery();
-			try {
-				return rs.next();
-			} finally {
-				rs.close();
-				check.close();
-			}
-		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			return rs.next();
 		} finally {
-			ConnectionPool.putBack(conn);
+			rs.close();
+			check.close();
 		}
 	}
 
 	@Override
-	public boolean userTablesExist() throws CelestaCritical {
-		Connection conn = ConnectionPool.get();
+	boolean userTablesExist(Connection conn) throws SQLException {
+		PreparedStatement check = conn
+				.prepareStatement("select count(*) from information_schema.tables "
+						+ "where table_type = 'BASE TABLE' "
+						+ "and table_schema not in ('pg_catalog', 'information_schema');");
+		ResultSet rs = check.executeQuery();
 		try {
-			PreparedStatement check = conn
-					.prepareStatement("select count(*) from information_schema.tables "
-							+ "where table_type = 'BASE TABLE' "
-							+ "and table_schema not in ('pg_catalog', 'information_schema');");
-			ResultSet rs = check.executeQuery();
-			try {
-				rs.next();
-				return rs.getInt(1) != 0;
-			} finally {
-				rs.close();
-				check.close();
-			}
-		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			rs.next();
+			return rs.getInt(1) != 0;
 		} finally {
-			ConnectionPool.putBack(conn);
+			rs.close();
+			check.close();
 		}
 	}
 
 	@Override
-	public void createSchemaIfNotExists(String name) throws CelestaCritical {
-		Connection conn = ConnectionPool.get();
+	void createSchemaIfNotExists(Connection conn, String name)
+			throws SQLException {
+		PreparedStatement check = conn
+				.prepareStatement(String
+						.format("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '%s';",
+								name));
+		ResultSet rs = check.executeQuery();
 		try {
-			PreparedStatement check = conn
-					.prepareStatement(String
-							.format("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '%s';",
-									name));
-			ResultSet rs = check.executeQuery();
-			try {
-				if (!rs.next()) {
-					PreparedStatement create = conn.prepareStatement(String
-							.format("create schema %s;", name));
-					create.execute();
-					create.close();
-				}
-			} finally {
-				rs.close();
-				check.close();
+			if (!rs.next()) {
+				PreparedStatement create = conn.prepareStatement(String.format(
+						"create schema %s;", name));
+				create.execute();
+				create.close();
 			}
-		} catch (SQLException e) {
-			throw new CelestaCritical("Cannot create schema. " + e.getMessage());
 		} finally {
-			ConnectionPool.putBack(conn);
+			rs.close();
+			check.close();
 		}
 	}
 
