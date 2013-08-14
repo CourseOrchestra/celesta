@@ -42,10 +42,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				}
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}
-
-		}
-
-		);
+		});
 
 		TYPES_DICT.put(FloatingColumn.class, new ColumnDefiner() {
 
@@ -63,10 +60,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 				}
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}
+		});
 
-		}
-
-		);
 		TYPES_DICT.put(StringColumn.class, new ColumnDefiner() {
 
 			@Override
@@ -81,12 +76,13 @@ final class MSSQLAdaptor extends DBAdaptor {
 						ic.isMax() ? "max" : ic.getLength());
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + StringColumn.quoteString(ic.getDefaultValue());
+					defaultStr = DEFAULT
+							+ StringColumn.quoteString(ic.getDefaultValue());
 				}
 				return join(c.getName(), fieldType, nullable(c), defaultStr);
 			}
-
 		});
+
 		TYPES_DICT.put(BinaryColumn.class, new ColumnDefiner() {
 
 			@Override
@@ -124,6 +120,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}
 		});
+
 		TYPES_DICT.put(BooleanColumn.class, new ColumnDefiner() {
 
 			@Override
@@ -167,8 +164,23 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	@Override
 	public boolean userTablesExist() throws CelestaCritical {
-		// TODO имплементировать
-		return false;
+		Connection conn = ConnectionPool.get();
+		try {
+			PreparedStatement check = conn
+					.prepareStatement("select count(*) from sys.tables;");
+			ResultSet rs = check.executeQuery();
+			try {
+				rs.next();
+				return rs.getInt(1) != 0;
+			} finally {
+				rs.close();
+				check.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaCritical(e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
 	}
 
 	@Override

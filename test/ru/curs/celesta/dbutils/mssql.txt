@@ -1,0 +1,9 @@
+create table celesta.grains(
+  id nvarchar(16) not null,
+  version nvarchar(max) not null,
+  length int not null,
+  checksum int not null,
+  state int not null default 3,
+  lastmodified datetime not null default getdate(),
+  message nvarchar(max) not null default ''
+);

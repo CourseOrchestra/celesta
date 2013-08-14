@@ -19,7 +19,6 @@ import ru.curs.celesta.score.StringColumn;
 
 /**
  * Адаптер Postgres.
- * 
  */
 final class PostgresAdaptor extends DBAdaptor {
 
@@ -43,10 +42,7 @@ final class PostgresAdaptor extends DBAdaptor {
 				}
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}
-
-		}
-
-		);
+		});
 
 		TYPES_DICT.put(FloatingColumn.class, new ColumnDefiner() {
 
@@ -64,10 +60,8 @@ final class PostgresAdaptor extends DBAdaptor {
 				}
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}
+		});
 
-		}
-
-		);
 		TYPES_DICT.put(StringColumn.class, new ColumnDefiner() {
 
 			@Override
@@ -87,8 +81,8 @@ final class PostgresAdaptor extends DBAdaptor {
 				}
 				return join(c.getName(), fieldType, nullable(c), defaultStr);
 			}
-
 		});
+
 		TYPES_DICT.put(BinaryColumn.class, new ColumnDefiner() {
 
 			@Override
@@ -126,6 +120,7 @@ final class PostgresAdaptor extends DBAdaptor {
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}
 		});
+
 		TYPES_DICT.put(BooleanColumn.class, new ColumnDefiner() {
 
 			@Override
@@ -169,9 +164,26 @@ final class PostgresAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public boolean userTablesExist() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean userTablesExist() throws CelestaCritical {
+		Connection conn = ConnectionPool.get();
+		try {
+			PreparedStatement check = conn
+					.prepareStatement("select count(*) from information_schema.tables "
+							+ "where table_type = 'BASE TABLE' "
+							+ "and table_schema not in ('pg_catalog', 'information_schema');");
+			ResultSet rs = check.executeQuery();
+			try {
+				rs.next();
+				return rs.getInt(1) != 0;
+			} finally {
+				rs.close();
+				check.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaCritical(e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
 	}
 
 	@Override

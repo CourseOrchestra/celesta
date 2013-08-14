@@ -1,30 +1,43 @@
 package ru.curs.celesta.dbutils;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import org.junit.Test;
 
 import ru.curs.celesta.CelestaCritical;
-import ru.curs.celesta.dbutils.MSSQLAdaptor;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 
 public class DBAdaptorTest {
 
+	private void testCelestaScore(Score s, DBAdaptor a, String fileName)
+			throws ParseException, IOException {
+		String[] actual = a.tableDef(s.getGrain("celesta").getTable("grains"))
+				.split("\n");
+		BufferedReader r = new BufferedReader(new InputStreamReader(
+				DBAdaptorTest.class.getResourceAsStream(fileName), "utf-8"));
+		for (String l : actual)
+			assertEquals(r.readLine(), l);
+	}
+
 	@Test
-	public void test1() throws CelestaCritical, ParseException {
+	public void test1() throws CelestaCritical, ParseException, IOException {
 		Score s = new Score("score");
+
 		DBAdaptor a = new MSSQLAdaptor();
-		System.out
-				.println(a.tableDef(s.getGrain("celesta").getTable("grains")));
+		testCelestaScore(s, a, "mssql.txt");
 
 		a = new PostgresAdaptor();
-		System.out
-				.println(a.tableDef(s.getGrain("celesta").getTable("grains")));
+		testCelestaScore(s, a, "postgre.txt");
 
 		a = new MySQLAdaptor();
-		System.out
-				.println(a.tableDef(s.getGrain("celesta").getTable("grains")));
+		testCelestaScore(s, a, "mysql.txt");
+
 		a = new OraAdaptor();
-		System.out
-				.println(a.tableDef(s.getGrain("celesta").getTable("grains")));
+		testCelestaScore(s, a, "ora.txt");
 	}
 }
