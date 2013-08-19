@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils;
 
+import java.sql.Connection;
 import java.util.Date;
 
 /**
@@ -21,12 +22,8 @@ class GrainsCursor extends AbstractCursor {
 	private Date lastmodified;
 	private String message;
 
-	public GrainsCursor() {
-		// TODO Auto-generated constructor stub
-	}
-
-	void get(String id) {
-
+	public GrainsCursor(Connection conn) {
+		super(conn);
 	}
 
 	String getId() {

@@ -37,18 +37,20 @@ public final class ConnectionPool {
 			c = POOL.poll();
 		}
 		try {
-			return DriverManager.getConnection(AppSettings
-					.getDatabaseConnection());
+			c = DriverManager
+					.getConnection(AppSettings.getDatabaseConnection());
+			c.setAutoCommit(false);
+			return c;
 		} catch (SQLException e) {
 			throw new CelestaCritical("Could not connect to "
 					+ AppSettings.getDatabaseConnection() + "with error: "
 					+ e.getMessage());
 		}
-
 	}
 
 	/**
-	 * Возвращает соединение в пул.
+	 * Возвращает соединение в пул. Выполняет операцию commit, если до этого она
+	 * не была произведена.
 	 * 
 	 * @param c
 	 *            возвращаемое соединение.
@@ -56,12 +58,29 @@ public final class ConnectionPool {
 	public static synchronized void putBack(Connection c) {
 		// Вставляем только хорошие соединения...
 		try {
-			if (c != null && !c.isValid(1))
+			if (c != null && !c.isValid(1)) {
+				c.commit();
 				POOL.add(c);
+			}
 		} catch (SQLException e) {
 			// do something to make CheckStyle happy ))
 			return;
 		}
 	}
 
+	/**
+	 * Выполняет команду commit на коннекшне, не выдавая исключения.
+	 * 
+	 * @param conn
+	 *            соединение для выполнения коммита.
+	 */
+	public static void commit(Connection conn) {
+		try {
+			if (conn != null)
+				conn.commit();
+		} catch (SQLException e) {
+			// do something to make CheckStyle happy ))
+			return;
+		}
+	}
 }
