@@ -42,9 +42,8 @@ public final class ConnectionPool {
 			c.setAutoCommit(false);
 			return c;
 		} catch (SQLException e) {
-			throw new CelestaCritical("Could not connect to "
-					+ AppSettings.getDatabaseConnection() + "with error: "
-					+ e.getMessage());
+			throw new CelestaCritical("Could not connect to %s with error: %s",
+					AppSettings.getDatabaseConnection(), e.getMessage());
 		}
 	}
 

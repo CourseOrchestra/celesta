@@ -82,4 +82,9 @@ class GrainsCursor extends AbstractCursor {
 		this.message = message;
 	}
 
+	@Override
+	public String tableName() {
+		return "celesta.grains";
+	}
+
 }

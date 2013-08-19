@@ -41,16 +41,16 @@ public class Score {
 		for (String entry : scorePath.split(";")) {
 			File path = new File(entry);
 			if (!path.exists())
-				throw new CelestaCritical(String.format(
+				throw new CelestaCritical(
 						"Score path entry '%s' does not exist.",
-						path.toString()));
+						path.toString());
 			if (!path.canRead())
-				throw new CelestaCritical(String.format(
-						"Cannot read score path entry '%s'.", path.toString()));
+				throw new CelestaCritical("Cannot read score path entry '%s'.",
+						path.toString());
 			if (!path.isDirectory())
-				throw new CelestaCritical(String.format(
+				throw new CelestaCritical(
 						"Score path entry '%s' is not a directory.",
-						path.toString()));
+						path.toString());
 
 			for (File grainPath : path.listFiles(new FileFilter() {
 				@Override
@@ -64,13 +64,12 @@ public class Score {
 
 				if (scriptFile.exists()) {
 					if (!scriptFile.canRead())
-						throw new CelestaCritical(String.format(
-								"Cannot read script file '%s'.", scriptFile));
+						throw new CelestaCritical(
+								"Cannot read script file '%s'.", scriptFile);
 					if (grainFiles.containsKey(grainName))
 						throw new CelestaCritical(
-								String.format(
-										"Grain '%s' defined more than once on different paths.",
-										grainName));
+								"Grain '%s' defined more than once on different paths.",
+								grainName);
 					grainFiles.put(grainName, scriptFile);
 				}
 

@@ -11,4 +11,8 @@ public class CelestaCritical extends Exception {
 	public CelestaCritical(String message) {
 		super(message);
 	}
+
+	public CelestaCritical(String message, Object... args) {
+		super(String.format(message, args));
+	}
 }

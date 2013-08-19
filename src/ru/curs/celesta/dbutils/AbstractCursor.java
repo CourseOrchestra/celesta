@@ -89,19 +89,36 @@ abstract class AbstractCursor {
 	 *             в случае, если запись не найдена
 	 */
 	public void get(Object... values) throws CelestaCritical {
-
+		if (!tryGet(values)) {
+			//
+		}
 	}
 
 	public boolean tryGet(Object... values) {
 		return false;
 	}
 
-	public void setFilter(String name, Object value) {
+	private String getFilters() {
+		return "";
+
+	}
+
+	public void setFilter(String name, String value) {
+
+	}
+
+	public void setRange(String name, Object value) {
+
+	}
+
+	public void setRange(String name, Object valueFrom, Object valueTo) {
 
 	}
 
 	public void orderBy(String... names) {
 
 	}
+
+	public abstract String tableName();
 
 }

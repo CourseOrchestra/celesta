@@ -14,6 +14,7 @@ import ru.curs.celesta.score.Score;
  */
 public final class Celesta {
 
+	private static final String CELESTA_IS_ALREADY_INITIALIZED = "Celesta is already initialized.";
 	private static Celesta theCelesta;
 	private Score score;
 
@@ -66,7 +67,7 @@ public final class Celesta {
 	public static synchronized void initialize(Properties settings)
 			throws CelestaCritical {
 		if (theCelesta != null)
-			throw new CelestaCritical("Celesta is already initialized.");
+			throw new CelestaCritical(CELESTA_IS_ALREADY_INITIALIZED);
 
 		AppSettings.init(settings);
 
@@ -84,7 +85,7 @@ public final class Celesta {
 	 */
 	public static synchronized void initialize() throws CelestaCritical {
 		if (theCelesta != null)
-			throw new CelestaCritical("Celesta is already initialized.");
+			throw new CelestaCritical(CELESTA_IS_ALREADY_INITIALIZED);
 
 		// Разбираемся с настроечным файлом: читаем его и превращаем в
 		// Properties.

@@ -144,20 +144,18 @@ public final class DBUpdator {
 		case LOWER:
 			// Старая версия -- не апгрейдим, ошибка.
 			throw new CelestaCritical(
-					String.format(
-							"Grain '%s' version '%s' is lower than database "
-									+ "grain version '%s'. Will not proceed with auto-upgrade.",
-							g.getName(), g.getVersion().toString(),
-							gi.version.toString()));
+					"Grain '%s' version '%s' is lower than database "
+							+ "grain version '%s'. Will not proceed with auto-upgrade.",
+					g.getName(), g.getVersion().toString(), gi.version
+							.toString());
 		case INCONSISTENT:
 			// Непонятная (несовместимая) версия -- не апгрейдим,
 			// ошибка.
 			throw new CelestaCritical(
-					String.format(
-							"Grain '%s' version '%s' is inconsistent than database "
-									+ "grain version '%s'. Will not proceed with auto-upgrade.",
-							g.getName(), g.getVersion().toString(),
-							gi.version.toString()));
+					"Grain '%s' version '%s' is inconsistent with database "
+							+ "grain version '%s'. Will not proceed with auto-upgrade.",
+					g.getName(), g.getVersion().toString(), gi.version
+							.toString());
 		case GREATER:
 			// Версия выросла -- апгрейдим.
 			updateGrain(g);
