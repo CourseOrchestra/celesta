@@ -75,8 +75,8 @@ abstract class DBAdaptor {
 		}
 	}
 
-	abstract boolean tableExists(Connection conn, String schema,
-			String name) throws SQLException;
+	abstract boolean tableExists(Connection conn, String schema, String name)
+			throws SQLException;
 
 	/**
 	 * Возвращает true в том и только том случае, если база данных содержит
@@ -93,8 +93,7 @@ abstract class DBAdaptor {
 		}
 	}
 
-	abstract boolean userTablesExist(Connection conn)
-			throws SQLException;
+	abstract boolean userTablesExist(Connection conn) throws SQLException;
 
 	/**
 	 * Создаёт в базе данных схему с указанным именем, если таковая схема ранее
@@ -107,7 +106,8 @@ abstract class DBAdaptor {
 	 *             создании схемы. Не выбрасывается в случае, если схема с
 	 *             данным именем уже существует в базе данных.
 	 */
-	public final void createSchemaIfNotExists(String name) throws CelestaCritical {
+	public final void createSchemaIfNotExists(String name)
+			throws CelestaCritical {
 		Connection conn = ConnectionPool.get();
 		try {
 			createSchemaIfNotExists(conn, name);
@@ -127,7 +127,9 @@ abstract class DBAdaptor {
 	 * @param c
 	 *            Колонка в score
 	 */
-	abstract String dbFieldType(Column c);
+	final String dbFieldType(Column c) {
+		return getColumnDefiner(c).dbFieldType();
+	}
 
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
@@ -152,7 +154,9 @@ abstract class DBAdaptor {
 		}
 	}
 
-	abstract String columnDef(Column c);
+	final String columnDef(Column c) {
+		return getColumnDefiner(c).getColumnDef(c);
+	}
 
 	String tableDef(Table table) {
 		StringBuilder sb = new StringBuilder();
@@ -191,4 +195,6 @@ abstract class DBAdaptor {
 			ConnectionPool.putBack(conn);
 		}
 	}
+
+	abstract ColumnDefiner getColumnDefiner(Column c);
 }

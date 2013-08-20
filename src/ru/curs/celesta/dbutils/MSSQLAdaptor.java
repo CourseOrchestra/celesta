@@ -188,12 +188,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String columnDef(Column c) {
-		return TYPES_DICT.get(c.getClass()).getColumnDef(c);
-	}
-
-	@Override
-	String dbFieldType(Column c) {
-		return TYPES_DICT.get(c.getClass()).dbFieldType();
+	ColumnDefiner getColumnDefiner(Column c) {
+		return TYPES_DICT.get(c.getClass());
 	}
 }

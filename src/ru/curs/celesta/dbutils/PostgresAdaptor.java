@@ -192,13 +192,8 @@ final class PostgresAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String dbFieldType(Column c) {
-		return TYPES_DICT.get(c.getClass()).dbFieldType();
-	}
-
-	@Override
-	String columnDef(Column c) {
-		return TYPES_DICT.get(c.getClass()).getColumnDef(c);
+	ColumnDefiner getColumnDefiner(Column c) {
+		return TYPES_DICT.get(c.getClass());
 	}
 
 }
