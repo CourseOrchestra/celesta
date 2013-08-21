@@ -67,12 +67,7 @@ public final class DBUpdator {
 					Grain sys = score.getGrain("celesta");
 					dba.createSchemaIfNotExists("celesta");
 					dba.createTable(sys.getTable("grains"));
-					c.init();
-					c.setId(sys.getName());
-					c.setLength(sys.getLength());
-					c.setChecksum(sys.getChecksum());
-					c.setState(GrainsCursor.RECOVER);
-					c.insert();
+					insertGrainRec(c, sys);
 					updateGrain(sys);
 				} catch (ParseException e) {
 					throw new CelestaCritical(
@@ -113,13 +108,7 @@ public final class DBUpdator {
 				// Запись о грануле есть?
 				GrainInfo gi = dbGrains.get(g.getName());
 				if (gi == null) {
-					// Записи нет --- создаём и апгрейдим.
-					c.init();
-					c.setId(g.getName());
-					c.setLength(g.getLength());
-					c.setChecksum(g.getChecksum());
-					c.setState(GrainsCursor.RECOVER);
-					c.insert();
+					insertGrainRec(c, g);
 					updateGrain(g);
 				} else {
 					// Запись есть -- решение об апгрейде принимается на основе
@@ -130,6 +119,19 @@ public final class DBUpdator {
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
+	}
+
+	private static void insertGrainRec(GrainsCursor c, Grain sys)
+			throws CelestaCritical {
+		c.init();
+		c.setId(sys.getName());
+		c.setVersion(sys.getVersion().toString());
+		c.setLength(sys.getLength());
+		c.setChecksum(sys.getChecksum());
+		c.setState(GrainsCursor.RECOVER);
+		c.setLastmodified(new Date());
+		c.setMessage("");
+		c.insert();
 	}
 
 	private static void decideToUpgrade(Grain g, GrainInfo gi)

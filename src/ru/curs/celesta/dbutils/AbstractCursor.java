@@ -173,12 +173,10 @@ abstract class AbstractCursor {
 			for (int i = 0; i < values.length; i++)
 				DBAdaptor.setParam(insert, i + 1, values[i]);
 			insert.execute();
-
 		} catch (SQLException e) {
 			throw new CelestaCritical(e.getMessage());
 		}
 		return true;
-
 	}
 
 	/**
