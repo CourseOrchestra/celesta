@@ -27,6 +27,9 @@ public final class Celesta {
 		ORMCompiler.compile(score);
 
 		// 3. Обновление структуры базы данных.
+		// Т. к. на данном этапе уже используется метаинформация, то theCelesta
+		// необходимо проинициализировать.
+		theCelesta = this;
 		DBUpdator.updateDB(score);
 	}
 
@@ -71,7 +74,7 @@ public final class Celesta {
 
 		AppSettings.init(settings);
 
-		theCelesta = new Celesta();
+		new Celesta();
 	}
 
 	/**

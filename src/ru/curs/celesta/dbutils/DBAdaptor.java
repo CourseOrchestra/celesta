@@ -3,6 +3,10 @@ package ru.curs.celesta.dbutils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaCritical;
@@ -197,4 +201,94 @@ abstract class DBAdaptor {
 	}
 
 	abstract ColumnDefiner getColumnDefiner(Column c);
+
+	abstract PreparedStatement getOneRecordStatement(Connection conn, Table t)
+			throws CelestaCritical;
+
+	abstract PreparedStatement getRecordSetStatement(Connection conn, Table t,
+			Map<String, AbstractFilter> filters, List<String> orderBy)
+			throws CelestaCritical;
+
+	abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t)
+			throws CelestaCritical;
+
+	abstract PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
+			throws CelestaCritical;
+
+	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
+			throws CelestaCritical;
+
+	static PreparedStatement prepareStatement(Connection conn, String sql)
+			throws CelestaCritical {
+		try {
+			return conn.prepareStatement(sql);
+		} catch (SQLException e) {
+			throw new CelestaCritical(e.getMessage());
+		}
+	}
+
+	static String getFieldList(Iterable<String> fields) {
+		// NB: этот метод возможно нужно будет сделать виртуальным, чтобы учесть
+		// особенности синтаксиса разных баз данных
+		StringBuilder sb = new StringBuilder();
+		for (String c : fields) {
+			if (sb.length() > 0)
+				sb.append(", ");
+			sb.append(c);
+		}
+		return sb.toString();
+	}
+
+	static String getTableFieldsList(Table t) {
+		return getFieldList(t.getColumns().keySet());
+	}
+
+	static String getSelectFromOrderBy(Table t, String whereClause,
+			List<String> orderBy) {
+		String sqlfrom = String.format("select %s from %s.%s",
+				getTableFieldsList(t), t.getGrain().getName(), t.getName());
+
+		String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
+
+		String orderByList = getFieldList(orderBy);
+		String sqlorder = "".equals(orderByList) ? "" : " order by "
+				+ orderByList;
+
+		return sqlfrom + sqlwhere + sqlorder + ";";
+	}
+
+	static String getRecordWhereClause(Table t) {
+		StringBuilder whereClause = new StringBuilder();
+		for (String fieldName : t.getPrimaryKey().keySet())
+			whereClause.append(String.format("%s(%s = ?)",
+					whereClause.length() > 0 ? " and " : "", fieldName));
+		return whereClause.toString();
+	}
+
+	static void setParam(PreparedStatement stmt, int i, Object v)
+			throws CelestaCritical {
+		try {
+			if (v == null)
+				stmt.setNull(i, java.sql.Types.NULL);
+			else if (v instanceof Integer)
+				stmt.setInt(i, (Integer) v);
+			else if (v instanceof Double)
+				stmt.setDouble(i, (Double) v);
+			else if (v instanceof String)
+				stmt.setString(i, (String) v);
+			else if (v instanceof Boolean)
+				stmt.setBoolean(i, (Boolean) v);
+			else if (v instanceof Date) {
+				Timestamp d = new Timestamp(((Date) v).getTime());
+				stmt.setTimestamp(i, d);
+			} else {
+				throw new CelestaCritical(
+						"You can filter only on Integer, Double, String, "
+								+ "Boolean or Date value types.");
+			}
+		} catch (SQLException e) {
+			throw new CelestaCritical(e.getMessage());
+		}
+	}
+
 }

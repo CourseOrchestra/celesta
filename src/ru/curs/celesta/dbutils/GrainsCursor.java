@@ -1,7 +1,13 @@
 package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.util.Date;
+
+import ru.curs.celesta.Celesta;
+import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.Table;
 
 /**
  * Курсор на таблице Grains.
@@ -14,6 +20,8 @@ class GrainsCursor extends AbstractCursor {
 	public static final int ERROR = 2;
 	public static final int RECOVER = 3;
 
+	private Table meta;
+
 	private String id;
 	private String version;
 	private int length;
@@ -22,7 +30,7 @@ class GrainsCursor extends AbstractCursor {
 	private Date lastmodified;
 	private String message;
 
-	public GrainsCursor(Connection conn) {
+	public GrainsCursor(Connection conn) throws CelestaCritical {
 		super(conn);
 	}
 
@@ -83,8 +91,39 @@ class GrainsCursor extends AbstractCursor {
 	}
 
 	@Override
-	public String tableName() {
-		return "celesta.grains";
+	public Table meta() throws CelestaCritical {
+		if (meta == null)
+			try {
+				meta = Celesta.getInstance().getScore().getGrain("celesta")
+						.getTable("grains");
+			} catch (ParseException e) {
+				throw new CelestaCritical(e.getMessage());
+			}
+		return meta;
 	}
 
+	@Override
+	void parseResult(ResultSet rs) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	void clearBuffer(boolean withKeys) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	Object[] currentKeyValues() {
+		Object[] result = { id };
+		return result;
+	}
+
+	@Override
+	Object[] currentValues() {
+		Object[] result = { id, version, length, checksum, state, lastmodified,
+				message };
+		return result;
+	}
 }
