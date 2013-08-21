@@ -68,7 +68,7 @@ public final class DBUpdator {
 					dba.createSchemaIfNotExists("celesta");
 					dba.createTable(sys.getTable("grains"));
 					insertGrainRec(c, sys);
-					updateGrain(sys);
+					updateGrain(c, sys);
 				} catch (ParseException e) {
 					throw new CelestaCritical(
 							"No 'celesta' grain definition found.");
@@ -109,11 +109,11 @@ public final class DBUpdator {
 				GrainInfo gi = dbGrains.get(g.getName());
 				if (gi == null) {
 					insertGrainRec(c, g);
-					updateGrain(g);
+					updateGrain(c, g);
 				} else {
 					// Запись есть -- решение об апгрейде принимается на основе
 					// версии и контрольной суммы.
-					decideToUpgrade(g, gi);
+					decideToUpgrade(c, g, gi);
 				}
 			}
 		} finally {
@@ -134,10 +134,10 @@ public final class DBUpdator {
 		c.insert();
 	}
 
-	private static void decideToUpgrade(Grain g, GrainInfo gi)
+	private static void decideToUpgrade(GrainsCursor c, Grain g, GrainInfo gi)
 			throws CelestaCritical {
 		if (gi.recover) {
-			updateGrain(g);
+			updateGrain(c, g);
 			return;
 		}
 
@@ -160,13 +160,13 @@ public final class DBUpdator {
 							.toString());
 		case GREATER:
 			// Версия выросла -- апгрейдим.
-			updateGrain(g);
+			updateGrain(c, g);
 			break;
 		case EQUALS:
 			// Версия не изменилась: апгрейдим лишь в том случае, если
 			// изменилась контрольная сумма.
 			if (gi.length != g.getLength() || gi.checksum != g.getChecksum())
-				updateGrain(g);
+				updateGrain(c, g);
 			break;
 		default:
 			break;
@@ -181,42 +181,38 @@ public final class DBUpdator {
 	 * @throws CelestaCritical
 	 *             в случае ошибки обновления.
 	 */
-	static void updateGrain(Grain g) throws CelestaCritical {
+	private static void updateGrain(GrainsCursor c, Grain g)
+			throws CelestaCritical {
+
+		System.out.println("Upgrading grain " + g.getName());
 		// выставление в статус updating
-		Connection conn = ConnectionPool.get();
+		c.get(g.getName());
+		c.setState(GrainsCursor.UPGRADING);
+		c.update();
+		ConnectionPool.commit(c.getConnection());
+		// теперь собственно обновление гранулы
 		try {
-			GrainsCursor c = new GrainsCursor(conn);
-			c.get(g.getName());
-			c.setState(GrainsCursor.UPGRADING);
+			// TODO
+
+			// по завершении -- обновление номера версии, контрольной суммы
+			// и выставление в статус ready
+			c.setState(GrainsCursor.READY);
+			c.setChecksum(g.getChecksum());
+			c.setLength(g.getLength());
+			c.setLastmodified(new Date());
+			c.setMessage("");
+			c.setVersion(g.getVersion().toString());
 			c.update();
-			ConnectionPool.commit(conn);
-			// теперь собственно обновление гранулы
-			try {
-				// TODO
 
-				// по завершении -- обновление номера версии, контрольной суммы
-				// и
-				// выставление в статус ready
-				c.setState(GrainsCursor.READY);
-				c.setChecksum(g.getChecksum());
-				c.setLength(g.getLength());
-				c.setLastmodified(new Date());
-				c.setMessage("");
-				c.setVersion(g.getVersion().toString());
-				c.update();
-
-				// TODO DELETETHIS
-				throw new CelestaCritical("!!");
-			} catch (CelestaCritical e) {
-				// Если что-то пошло не так
-				c.setState(GrainsCursor.ERROR);
-				c.setMessage(String.format(
-						"Error while trying to update to version %s: %s", g
-								.getVersion().toString(), e.getMessage()));
-				c.update();
-			}
-		} finally {
-			ConnectionPool.putBack(conn);
+			// TODO DELETETHIS
+			throw new CelestaCritical("!!");
+		} catch (CelestaCritical e) {
+			// Если что-то пошло не так
+			c.setState(GrainsCursor.ERROR);
+			c.setMessage(String.format(
+					"Error while trying to update to version %s: %s", g
+							.getVersion().toString(), e.getMessage()));
+			c.update();
 		}
 	}
 }

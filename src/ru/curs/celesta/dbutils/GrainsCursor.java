@@ -2,6 +2,7 @@ package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 
 import ru.curs.celesta.Celesta;
@@ -103,8 +104,14 @@ class GrainsCursor extends AbstractCursor {
 	}
 
 	@Override
-	void parseResult(ResultSet rs) {
-		// TODO Auto-generated method stub
+	void parseResult(ResultSet rs) throws SQLException {
+		id = rs.getString(1);
+		version = rs.getString(2);
+		length = rs.getInt(3);
+		checksum = rs.getInt(4);
+		state = rs.getInt(5);
+		lastmodified = rs.getDate(6);
+		message = rs.getString(7);
 
 	}
 

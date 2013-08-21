@@ -61,7 +61,7 @@ public final class ConnectionPool {
 	public static synchronized void putBack(Connection c) {
 		// Вставляем только хорошие соединения...
 		try {
-			if (c != null && !c.isValid(1)) {
+			if (c != null && c.isValid(1)) {
 				c.commit();
 				POOL.add(c);
 			}

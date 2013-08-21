@@ -69,6 +69,13 @@ abstract class AbstractCursor {
 	}
 
 	/**
+	 * Возвращает соединение, на котором создан данный курсор.
+	 */
+	public Connection getConnection() {
+		return conn;
+	}
+
+	/**
 	 * Переходит к первой записи в отфильтрованном наборе и возвращает
 	 * информацию об успешности перехода.
 	 * 
@@ -83,11 +90,11 @@ abstract class AbstractCursor {
 				cursor.close();
 			cursor = set.executeQuery();
 			result = cursor.next();
+			if (result)
+				parseResult(cursor);
 		} catch (SQLException e) {
 			throw new CelestaCritical(e.getMessage());
 		}
-		if (result)
-			parseResult(cursor);
 		return result;
 	}
 
@@ -121,17 +128,17 @@ abstract class AbstractCursor {
 	 */
 	public final boolean next() throws CelestaCritical {
 		boolean result = false;
-		if (cursor == null)
-			result = tryFirst();
-		else {
-			try {
+		try {
+			if (cursor == null)
+				result = tryFirst();
+			else {
 				result = cursor.next();
-			} catch (SQLException e) {
-				result = false;
 			}
+			if (result)
+				parseResult(cursor);
+		} catch (SQLException e) {
+			result = false;
 		}
-		if (result)
-			parseResult(cursor);
 		return result;
 	}
 
@@ -286,11 +293,11 @@ abstract class AbstractCursor {
 			ResultSet rs = get.executeQuery();
 			try {
 				result = rs.next();
+				if (result)
+					parseResult(rs);
 			} finally {
 				rs.close();
 			}
-			if (result)
-				parseResult(rs);
 		} catch (SQLException e) {
 			throw new CelestaCritical(e.getMessage());
 		}
@@ -441,7 +448,7 @@ abstract class AbstractCursor {
 	 */
 	public abstract Table meta() throws CelestaCritical;
 
-	abstract void parseResult(ResultSet rs);
+	abstract void parseResult(ResultSet rs) throws SQLException;
 
 	abstract void clearBuffer(boolean withKeys);
 
