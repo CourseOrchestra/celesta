@@ -5,12 +5,15 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Пул соединений с базой данных.
  * 
  */
 public final class ConnectionPool {
+
 	private static final Queue<Connection> POOL = new LinkedList<>();
 
 	private ConnectionPool() {
@@ -43,7 +46,8 @@ public final class ConnectionPool {
 			return c;
 		} catch (SQLException e) {
 			throw new CelestaCritical("Could not connect to %s with error: %s",
-					AppSettings.getDatabaseConnection(), e.getMessage());
+					PasswordHider.maskPassword(AppSettings
+							.getDatabaseConnection()), e.getMessage());
 		}
 	}
 
@@ -81,5 +85,68 @@ public final class ConnectionPool {
 			// do something to make CheckStyle happy ))
 			return;
 		}
+	}
+}
+
+/**
+ * Класс-утилита для сокрытия пароля в строке JDBC-подключения. Скопировано из
+ * проекта FormsServer.
+ * 
+ */
+final class PasswordHider {
+	// Пароль Oracle всегда между / и @ (и не может содержать @).
+	private static final Pattern ORA_PATTERN = Pattern.compile("/[^@]+@");
+	// В MS SQL всё продумано и если пароль содержит ;, она меняется на {;}
+	private static final Pattern MSSQL_PATTERN = Pattern.compile(
+			"(password)=([^{;]|(\\{(;\\})|[^;]?))+(;|$)",
+			Pattern.CASE_INSENSITIVE);
+	// В MySQL JDBC-URL не сработает правильно, если пароль содержит &
+	private static final Pattern MYSQL_PATTERN = Pattern.compile(
+			"(password)=[^&]+(&|$)", Pattern.CASE_INSENSITIVE);
+	// А это на случай неизвестного науке JDBC-драйвера
+	private static final Pattern GENERIC_PATTERN = Pattern.compile(
+			"(password)=.+$", Pattern.CASE_INSENSITIVE);
+
+	private PasswordHider() {
+
+	}
+
+	/**
+	 * 
+	 * Метод, маскирующий пароль в строке JDBC-подключения.
+	 * 
+	 * @param url
+	 *            Строка, содержащая URL JDBC-подключения
+	 * 
+	 */
+	public static String maskPassword(String url) {
+		if (url == null)
+			return null;
+		Matcher m;
+		StringBuffer sb = new StringBuffer();
+		if (url.toLowerCase().startsWith("jdbc:oracle")) {
+			m = ORA_PATTERN.matcher(url);
+			while (m.find()) {
+				m.appendReplacement(sb, "/*****@");
+			}
+		} else if (url.toLowerCase().startsWith("jdbc:sqlserver")) {
+			m = MSSQL_PATTERN.matcher(url);
+			while (m.find()) {
+				m.appendReplacement(sb, m.group(1) + "=*****" + m.group(5));
+			}
+		} else if (url.toLowerCase().startsWith("jdbc:mysql")
+				|| url.toLowerCase().startsWith("jdbc:postgresql")) {
+			m = MYSQL_PATTERN.matcher(url);
+			while (m.find()) {
+				m.appendReplacement(sb, m.group(1) + "=*****" + m.group(2));
+			}
+		} else {
+			m = GENERIC_PATTERN.matcher(url);
+			while (m.find()) {
+				m.appendReplacement(sb, m.group(1) + "=*****");
+			}
+		}
+		m.appendTail(sb);
+		return sb.toString();
 	}
 }
