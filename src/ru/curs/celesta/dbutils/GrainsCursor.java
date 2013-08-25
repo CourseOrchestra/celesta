@@ -5,23 +5,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 
-import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.Table;
 
 /**
  * Курсор на таблице Grains.
  * 
  */
-class GrainsCursor extends AbstractCursor {
+class GrainsCursor extends Cursor {
 
 	public static final int READY = 0;
 	public static final int UPGRADING = 1;
 	public static final int ERROR = 2;
 	public static final int RECOVER = 3;
-
-	private Table meta;
 
 	private String id;
 	private String version;
@@ -92,18 +87,6 @@ class GrainsCursor extends AbstractCursor {
 	}
 
 	@Override
-	public Table meta() throws CelestaException {
-		if (meta == null)
-			try {
-				meta = Celesta.getInstance().getScore().getGrain("celesta")
-						.getTable("grains");
-			} catch (ParseException e) {
-				throw new CelestaException(e.getMessage());
-			}
-		return meta;
-	}
-
-	@Override
 	void parseResult(ResultSet rs) throws SQLException {
 		id = rs.getString(1);
 		version = rs.getString(2);
@@ -138,5 +121,15 @@ class GrainsCursor extends AbstractCursor {
 		Object[] result = { id, version, length, checksum, state, lastmodified,
 				message };
 		return result;
+	}
+
+	@Override
+	String grainName() {
+		return "celesta";
+	}
+
+	@Override
+	String tableName() {
+		return "grains";
 	}
 }

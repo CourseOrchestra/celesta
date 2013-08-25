@@ -10,13 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Table;
 
 /**
  * Базовый класс курсора (аналог соответствующего класса в Python-коде).
  */
-abstract class AbstractCursor {
+abstract class Cursor {
+	private Table meta = null;
 	private final DBAdaptor db;
 	private final Connection conn;
 	private PreparedStatement get = null;
@@ -30,7 +33,7 @@ abstract class AbstractCursor {
 	private Map<String, AbstractFilter> filters = new HashMap<>();
 	private List<String> orderBy = new LinkedList<>();
 
-	public AbstractCursor(Connection conn) throws CelestaException {
+	public Cursor(Connection conn) throws CelestaException {
 		try {
 			if (conn.isClosed())
 				throw new CelestaException(
@@ -52,8 +55,8 @@ abstract class AbstractCursor {
 
 	private void validateColumName(String name) throws CelestaException {
 		if (!meta().getColumns().containsKey(name))
-			throw new CelestaException("No column %s exists in table %s.", name,
-					tableName());
+			throw new CelestaException("No column %s exists in table %s.",
+					name, tableName());
 	}
 
 	private void closeSet() throws CelestaException {
@@ -434,19 +437,23 @@ abstract class AbstractCursor {
 	}
 
 	/**
-	 * Имя таблицы.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка метаданных
-	 */
-	public final String tableName() throws CelestaException {
-		return meta().getName();
-	}
-
-	/**
 	 * Описание таблицы (метаинформация).
 	 */
-	public abstract Table meta() throws CelestaException;
+	public final Table meta() throws CelestaException {
+
+		if (meta == null)
+			try {
+				meta = Celesta.getInstance().getScore().getGrain(grainName())
+						.getTable(tableName());
+			} catch (ParseException e) {
+				throw new CelestaException(e.getMessage());
+			}
+		return meta;
+	}
+
+	abstract String grainName();
+
+	abstract String tableName();
 
 	abstract void parseResult(ResultSet rs) throws SQLException;
 

@@ -9,11 +9,19 @@ import java.io.OutputStreamWriter;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.Table;
 
 /**
  * Комилятор ORM-кода.
  */
 public final class ORMCompiler {
+
+	private static final String[] HEADER = {
+			"# coding=UTF-8",
+			"\"\"\"",
+			"THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.",
+			"DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.", "\"\"\"",
+			"import ru.curs.celesta.dbutils.Cursor as Cursor", "" };
 
 	private ORMCompiler() {
 
@@ -53,7 +61,22 @@ public final class ORMCompiler {
 
 	private static void compileGrain(Grain g, BufferedWriter w)
 			throws IOException {
-		w.write("# coding=UTF-8");
+		for (String s : HEADER) {
+			w.write(s);
+			w.newLine();
+		}
+
+		for (Table t : g.getTables().values())
+			compileTable(t, w);
+	}
+
+	private static void compileTable(Table t, BufferedWriter w)
+			throws IOException {
+		w.write(String.format("class %sCursor(Cursor):", t.getName()));
+		w.newLine();
+		w.write("    def __init__(self, conn):");
+		w.newLine();
+
 		w.newLine();
 	}
 }
