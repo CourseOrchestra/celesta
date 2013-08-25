@@ -123,4 +123,13 @@ public final class StringColumn extends Column {
 		return "''";
 	}
 
+	@Override
+	public String pythonDefaultValue() {
+		return "''";
+	}
+
+	@Override
+	public String jdbcGetterName() {
+		return "getString";
+	}
 }

@@ -76,4 +76,16 @@ public abstract class Column extends NamedElement {
 	public final boolean isNullable() {
 		return nullable;
 	}
+
+	/**
+	 * Пустое значение в языке Python. Необходимо для процедур генерации
+	 * ORM-кода.
+	 */
+	public abstract String pythonDefaultValue();
+
+	/**
+	 * Имя JDBC-геттера, подходящего для данного типа колонки. Необходимо для
+	 * процедур генерации ORM-кода.
+	 */
+	public abstract String jdbcGetterName();
 }

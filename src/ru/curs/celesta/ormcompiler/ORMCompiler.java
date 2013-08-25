@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.Table;
@@ -74,8 +75,36 @@ public final class ORMCompiler {
 			throws IOException {
 		w.write(String.format("class %sCursor(Cursor):", t.getName()));
 		w.newLine();
+
 		w.write("    def __init__(self, conn):");
 		w.newLine();
+		w.write("        AbstractCursor.__init(self, conn)");
+		w.newLine();
+		for (Column c : t.getColumns().values()) {
+			w.write(String.format("        self.%s = %s", c.getName(),
+					c.pythonDefaultValue()));
+			w.newLine();
+		}
+
+		w.write("    def grainName(self):");
+		w.newLine();
+		w.write(String.format("        return '%s'", t.getGrain().getName()));
+		w.newLine();
+
+		w.write("    def tableName(self):");
+		w.newLine();
+		w.write(String.format("        return '%s'", t.getName()));
+		w.newLine();
+
+		w.write("    def parseResult(self, rs):");
+		w.newLine();
+		int i = 1;
+		for (Column c : t.getColumns().values()) {
+			w.write(String.format("        self.%s = rs.%s(%d)", c.getName(),
+					c.jdbcGetterName(), i));
+			w.newLine();
+			i++;
+		}
 
 		w.newLine();
 	}

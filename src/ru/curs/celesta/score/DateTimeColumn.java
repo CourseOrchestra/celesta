@@ -85,4 +85,14 @@ public final class DateTimeColumn extends Column {
 		return "GETDATE";
 	}
 
+	@Override
+	public String pythonDefaultValue() {
+		return "None";
+	}
+
+	@Override
+	public String jdbcGetterName() {
+		return "getDate";
+	}
+
 }

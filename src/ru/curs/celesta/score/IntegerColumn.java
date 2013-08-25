@@ -44,4 +44,14 @@ public final class IntegerColumn extends Column {
 	protected String getDefaultDefault() {
 		return "0";
 	}
+
+	@Override
+	public String pythonDefaultValue() {
+		return "0";
+	}
+
+	@Override
+	public String jdbcGetterName() {
+		return "getInt";
+	}
 }

@@ -29,4 +29,13 @@ public final class BinaryColumn extends Column {
 		return "0x00";
 	}
 
+	@Override
+	public String pythonDefaultValue() {
+		return "None";
+	}
+
+	@Override
+	public String jdbcGetterName() {
+		throw new RuntimeException("Binary columns are not implemented yet.");
+	}
 }
