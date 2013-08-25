@@ -262,4 +262,15 @@ final class MySQLAdaptor extends DBAdaptor {
 		return prepareStatement(conn, sql);
 	}
 
+	@Override
+	String getIndicesSQL() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	String getColumnsSQL() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

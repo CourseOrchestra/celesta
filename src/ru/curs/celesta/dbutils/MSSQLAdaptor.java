@@ -288,4 +288,17 @@ final class MSSQLAdaptor extends DBAdaptor {
 				.getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
+
+	@Override
+	String getIndicesSQL() {
+		return "select name from sys.indexes where object_id in ("
+				+ "select object_id from sys.tables "
+				+ "where sys.tables.schema_id = SCHEMA_ID('%s')) "
+				+ "and name is not null;";
+	}
+
+	@Override
+	String getColumnsSQL() {
+		return "select name from sys.columns where object_id = OBJECT_ID('%s.%s');";
+	}
 }

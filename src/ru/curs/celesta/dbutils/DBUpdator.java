@@ -8,12 +8,17 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import ru.curs.celesta.CelestaCritical;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.VersionString;
 
 /**
@@ -21,6 +26,9 @@ import ru.curs.celesta.score.VersionString;
  * 
  */
 public final class DBUpdator {
+
+	private static DBAdaptor dba;
+	private static GrainsCursor c;
 
 	private static final Comparator<Grain> GRAIN_COMPARATOR = new Comparator<Grain>() {
 		@Override
@@ -51,10 +59,11 @@ public final class DBUpdator {
 	 *             в случае ошибки обновления.
 	 */
 	public static void updateDB(Score score) throws CelestaCritical {
-		DBAdaptor dba = DBAdaptor.getAdaptor();
+		if (dba == null)
+			dba = DBAdaptor.getAdaptor();
 		Connection conn = ConnectionPool.get();
 		try {
-			GrainsCursor c = new GrainsCursor(conn);
+			c = new GrainsCursor(conn);
 
 			// Проверяем наличие главной системной таблицы.
 			if (!dba.tableExists("celesta", "grains")) {
@@ -67,8 +76,8 @@ public final class DBUpdator {
 					Grain sys = score.getGrain("celesta");
 					dba.createSchemaIfNotExists("celesta");
 					dba.createTable(sys.getTable("grains"));
-					insertGrainRec(c, sys);
-					updateGrain(c, sys);
+					insertGrainRec(sys);
+					updateGrain(sys);
 				} catch (ParseException e) {
 					throw new CelestaCritical(
 							"No 'celesta' grain definition found.");
@@ -108,12 +117,12 @@ public final class DBUpdator {
 				// Запись о грануле есть?
 				GrainInfo gi = dbGrains.get(g.getName());
 				if (gi == null) {
-					insertGrainRec(c, g);
-					updateGrain(c, g);
+					insertGrainRec(g);
+					updateGrain(g);
 				} else {
 					// Запись есть -- решение об апгрейде принимается на основе
 					// версии и контрольной суммы.
-					decideToUpgrade(c, g, gi);
+					decideToUpgrade(g, gi);
 				}
 			}
 		} finally {
@@ -121,23 +130,22 @@ public final class DBUpdator {
 		}
 	}
 
-	private static void insertGrainRec(GrainsCursor c, Grain sys)
-			throws CelestaCritical {
+	private static void insertGrainRec(Grain g) throws CelestaCritical {
 		c.init();
-		c.setId(sys.getName());
-		c.setVersion(sys.getVersion().toString());
-		c.setLength(sys.getLength());
-		c.setChecksum(sys.getChecksum());
+		c.setId(g.getName());
+		c.setVersion(g.getVersion().toString());
+		c.setLength(g.getLength());
+		c.setChecksum(g.getChecksum());
 		c.setState(GrainsCursor.RECOVER);
 		c.setLastmodified(new Date());
 		c.setMessage("");
 		c.insert();
 	}
 
-	private static void decideToUpgrade(GrainsCursor c, Grain g, GrainInfo gi)
+	private static void decideToUpgrade(Grain g, GrainInfo gi)
 			throws CelestaCritical {
 		if (gi.recover) {
-			updateGrain(c, g);
+			updateGrain(g);
 			return;
 		}
 
@@ -160,13 +168,13 @@ public final class DBUpdator {
 							.toString());
 		case GREATER:
 			// Версия выросла -- апгрейдим.
-			updateGrain(c, g);
+			updateGrain(g);
 			break;
 		case EQUALS:
 			// Версия не изменилась: апгрейдим лишь в том случае, если
 			// изменилась контрольная сумма.
 			if (gi.length != g.getLength() || gi.checksum != g.getChecksum())
-				updateGrain(c, g);
+				updateGrain(g);
 			break;
 		default:
 			break;
@@ -181,10 +189,7 @@ public final class DBUpdator {
 	 * @throws CelestaCritical
 	 *             в случае ошибки обновления.
 	 */
-	private static void updateGrain(GrainsCursor c, Grain g)
-			throws CelestaCritical {
-
-		System.out.println("Upgrading grain " + g.getName());
+	private static void updateGrain(Grain g) throws CelestaCritical {
 		// выставление в статус updating
 		c.get(g.getName());
 		c.setState(GrainsCursor.UPGRADING);
@@ -192,9 +197,31 @@ public final class DBUpdator {
 		ConnectionPool.commit(c.getConnection());
 		// теперь собственно обновление гранулы
 		try {
-			// TODO
+			// Схему создаём, если ещё не создана.
+			dba.createSchemaIfNotExists(g.getName());
+			// Обновляем все таблицы.
+			for (Table t : g.getTables().values())
+				updateTable(t);
 
-			// по завершении -- обновление номера версии, контрольной суммы
+			// Обновляем все индексы.
+			Set<String> dbIndices = dba.getIndices(c.getConnection(), g);
+			Map<String, Index> myIndices = g.getIndices();
+			// Начинаем с удаления ненужных
+			for (String indexName : dbIndices)
+				if (!myIndices.containsKey(indexName))
+					dba.dropIndex(g, indexName);
+			for (Entry<String, Index> e : myIndices.entrySet()) {
+				if (dbIndices.contains(e.getKey())) {
+					// TODO БД содержит индекс с таким именем, надо проверить
+					// поля и пересоздавать индекс лишь в случае необходимости!!
+					System.out.println("Implement index check here.");
+				} else {
+					// Создаём не существовавший ранее индекс.
+					dba.createIndex(e.getValue());
+				}
+			}
+
+			// По завершении -- обновление номера версии, контрольной суммы
 			// и выставление в статус ready
 			c.setState(GrainsCursor.READY);
 			c.setChecksum(g.getChecksum());
@@ -203,9 +230,6 @@ public final class DBUpdator {
 			c.setMessage("");
 			c.setVersion(g.getVersion().toString());
 			c.update();
-
-			// TODO DELETETHIS
-			throw new CelestaCritical("!!");
 		} catch (CelestaCritical e) {
 			// Если что-то пошло не так
 			c.setState(GrainsCursor.ERROR);
@@ -215,4 +239,25 @@ public final class DBUpdator {
 			c.update();
 		}
 	}
+
+	private static void updateTable(Table t) throws CelestaCritical {
+		if (dba.tableExists(t.getGrain().getName(), t.getName())) {
+			Set<String> dbColumns = dba.getColumns(c.getConnection(), t);
+
+			for (Entry<String, Column> e : t.getColumns().entrySet()) {
+				if (dbColumns.contains(e.getKey())) {
+					// TODO БД содержит колонку с таким именем, надо проверить
+					// все её атрибуты и при необходимости и возможности --
+					// обновить.
+					System.out.println("Implement column check here.");
+				} else {
+					dba.createColumn(c.getConnection(), e.getValue());
+				}
+			}
+		} else {
+			dba.createTable(t);
+		}
+		// TODO обновление внешних ключей
+	}
+
 }

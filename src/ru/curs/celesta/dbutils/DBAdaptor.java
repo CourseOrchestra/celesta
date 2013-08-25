@@ -2,16 +2,22 @@ package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaCritical;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.Table;
 
 /**
@@ -19,121 +25,12 @@ import ru.curs.celesta.score.Table;
  * 
  */
 abstract class DBAdaptor {
-
-	/**
-	 * Класс, ответственный за генерацию определения столбца таблицы в разных
-	 * СУБД.
-	 * 
+	/*
+	 * NB для программистов. Класс большой, во избежание хаоса здесь порядок
+	 * такой: прежде всего -- метод getAdaptor(), далее идут public final
+	 * методы, далее --- внутренняя кухня (default final и default static
+	 * методы), в самом низу -- все объявления абстрактных методов.
 	 */
-	abstract static class ColumnDefiner {
-		static final String DEFAULT = "default ";
-
-		abstract String dbFieldType();
-
-		abstract String getColumnDef(Column c);
-
-		String nullable(Column c) {
-			return c.isNullable() ? "" : "not null";
-		}
-
-		/**
-		 * Соединяет строки через пробел.
-		 * 
-		 * @param ss
-		 *            массив строк для соединения в виде свободного параметра.
-		 */
-		static String join(String... ss) {
-			StringBuilder sb = new StringBuilder();
-			boolean multiple = false;
-			for (String s : ss)
-				if (!"".equals(s)) {
-					if (multiple)
-						sb.append(' ' + s);
-					else {
-						sb.append(s);
-						multiple = true;
-					}
-				}
-			return sb.toString();
-		}
-	}
-
-	/**
-	 * Возвращает true в том и только том случае, если база данных содержит
-	 * таблицу.
-	 * 
-	 * @param schema
-	 *            схема.
-	 * @param name
-	 *            имя таблицы.
-	 */
-	public final boolean tableExists(String schema, String name)
-			throws CelestaCritical {
-		Connection conn = ConnectionPool.get();
-		try {
-			return tableExists(conn, schema, name);
-		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
-		} finally {
-			ConnectionPool.putBack(conn);
-		}
-	}
-
-	abstract boolean tableExists(Connection conn, String schema, String name)
-			throws SQLException;
-
-	/**
-	 * Возвращает true в том и только том случае, если база данных содержит
-	 * пользовательские таблицы (т. е. не является пустой базой данных).
-	 */
-	public final boolean userTablesExist() throws CelestaCritical {
-		Connection conn = ConnectionPool.get();
-		try {
-			return userTablesExist(conn);
-		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
-		} finally {
-			ConnectionPool.putBack(conn);
-		}
-	}
-
-	abstract boolean userTablesExist(Connection conn) throws SQLException;
-
-	/**
-	 * Создаёт в базе данных схему с указанным именем, если таковая схема ранее
-	 * не существовала.
-	 * 
-	 * @param name
-	 *            имя схемы.
-	 * @throws CelestaCritical
-	 *             только в том случае, если возник критический сбой при
-	 *             создании схемы. Не выбрасывается в случае, если схема с
-	 *             данным именем уже существует в базе данных.
-	 */
-	public final void createSchemaIfNotExists(String name)
-			throws CelestaCritical {
-		Connection conn = ConnectionPool.get();
-		try {
-			createSchemaIfNotExists(conn, name);
-		} catch (SQLException e) {
-			throw new CelestaCritical("Cannot create schema. " + e.getMessage());
-		} finally {
-			ConnectionPool.putBack(conn);
-		}
-	}
-
-	abstract void createSchemaIfNotExists(Connection conn, String name)
-			throws SQLException;
-
-	/**
-	 * Возвращает наименование типа столбца, соответствующее базе данных.
-	 * 
-	 * @param c
-	 *            Колонка в score
-	 */
-	final String dbFieldType(Column c) {
-		return getColumnDefiner(c).dbFieldType();
-	}
 
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
@@ -158,23 +55,63 @@ abstract class DBAdaptor {
 		}
 	}
 
-	final String columnDef(Column c) {
-		return getColumnDefiner(c).getColumnDef(c);
+	/**
+	 * Возвращает true в том и только том случае, если база данных содержит
+	 * таблицу.
+	 * 
+	 * @param schema
+	 *            схема.
+	 * @param name
+	 *            имя таблицы.
+	 */
+	public final boolean tableExists(String schema, String name)
+			throws CelestaCritical {
+		Connection conn = ConnectionPool.get();
+		try {
+			return tableExists(conn, schema, name);
+		} catch (SQLException e) {
+			throw new CelestaCritical(e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
 	}
 
-	String tableDef(Table table) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(String.format("create table %s.%s(\n", table.getGrain()
-				.getName(), table.getName()));
-		boolean multiple = false;
-		for (Column c : table.getColumns().values()) {
-			if (multiple)
-				sb.append(",\n");
-			sb.append("  " + columnDef(c));
-			multiple = true;
+	/**
+	 * Возвращает true в том и только том случае, если база данных содержит
+	 * пользовательские таблицы (т. е. не является пустой базой данных).
+	 */
+	public final boolean userTablesExist() throws CelestaCritical {
+		Connection conn = ConnectionPool.get();
+		try {
+			return userTablesExist(conn);
+		} catch (SQLException e) {
+			throw new CelestaCritical(e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
 		}
-		sb.append("\n);");
-		return sb.toString();
+	}
+
+	/**
+	 * Создаёт в базе данных схему с указанным именем, если таковая схема ранее
+	 * не существовала.
+	 * 
+	 * @param name
+	 *            имя схемы.
+	 * @throws CelestaCritical
+	 *             только в том случае, если возник критический сбой при
+	 *             создании схемы. Не выбрасывается в случае, если схема с
+	 *             данным именем уже существует в базе данных.
+	 */
+	public final void createSchemaIfNotExists(String name)
+			throws CelestaCritical {
+		Connection conn = ConnectionPool.get();
+		try {
+			createSchemaIfNotExists(conn, name);
+		} catch (SQLException e) {
+			throw new CelestaCritical("Cannot create schema. " + e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
 	}
 
 	/**
@@ -186,7 +123,7 @@ abstract class DBAdaptor {
 	 *             В случае возникновения критического сбоя при создании
 	 *             таблицы, в том числе в случае, если такая таблица существует.
 	 */
-	public void createTable(Table table) throws CelestaCritical {
+	public final void createTable(Table table) throws CelestaCritical {
 		String def = tableDef(table);
 		Connection conn = ConnectionPool.get();
 		try {
@@ -200,23 +137,108 @@ abstract class DBAdaptor {
 		}
 	}
 
-	abstract ColumnDefiner getColumnDefiner(Column c);
+	/**
+	 * Добавляет к таблице новую колонку.
+	 * 
+	 * @param c
+	 *            Колонка для добавления.
+	 */
+	public final void createColumn(Connection conn, Column c)
+			throws CelestaCritical {
+		String sql = String.format("alter table %s.%s add %s;", c
+				.getParentTable().getGrain().getName(), c.getParentTable()
+				.getName(), columnDef(c));
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaCritical(e.getMessage());
+		}
+	}
 
-	abstract PreparedStatement getOneRecordStatement(Connection conn, Table t)
-			throws CelestaCritical;
+	/**
+	 * Возвращает набор имён индексов, связанных с таблицами, лежащими в
+	 * указанной грануле.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * @param g
+	 *            Гранула, по таблицам которой следует просматривать индексы.
+	 * @throws CelestaCritical
+	 *             В случае сбоя связи с БД.
+	 */
+	public final Set<String> getIndices(Connection conn, Grain g)
+			throws CelestaCritical {
+		String sql = String.format(getIndicesSQL(), g.getName());
+		return sqlToStringSet(conn, sql);
+	}
 
-	abstract PreparedStatement getRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, List<String> orderBy)
-			throws CelestaCritical;
+	/**
+	 * Возвращает набор имён столбцов определённой таблицы.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * @param t
+	 *            Таблица, по которой просматривать столбцы.
+	 * 
+	 * @throws CelestaCritical
+	 *             в случае сбоя связи с БД.
+	 */
+	public final Set<String> getColumns(Connection conn, Table t)
+			throws CelestaCritical {
+		String sql = String.format(getColumnsSQL(), t.getGrain().getName(),
+				t.getName());
+		return sqlToStringSet(conn, sql);
+	}
 
-	abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t)
-			throws CelestaCritical;
+	/**
+	 * Создаёт в грануле индекс на таблице.
+	 * 
+	 * @param index
+	 *            описание индекса.
+	 * @throws CelestaCritical
+	 *             Если что-то пошло не так.
+	 */
+	public final void createIndex(Index index) throws CelestaCritical {
+		// TODO
+	}
 
-	abstract PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
-			throws CelestaCritical;
+	public final void dropIndex(Grain g, String indexName) {
+		// TODO Auto-generated method stub
+	}
 
-	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
-			throws CelestaCritical;
+	/**
+	 * Возвращает наименование типа столбца, соответствующее базе данных.
+	 * 
+	 * @param c
+	 *            Колонка в score
+	 */
+	final String dbFieldType(Column c) {
+		return getColumnDefiner(c).dbFieldType();
+	}
+
+	final String columnDef(Column c) {
+		return getColumnDefiner(c).getColumnDef(c);
+	}
+
+	final String tableDef(Table table) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(String.format("create table %s.%s(\n", table.getGrain()
+				.getName(), table.getName()));
+		boolean multiple = false;
+		for (Column c : table.getColumns().values()) {
+			if (multiple)
+				sb.append(",\n");
+			sb.append("  " + columnDef(c));
+			multiple = true;
+		}
+		sb.append("\n);");
+		return sb.toString();
+	}
 
 	static PreparedStatement prepareStatement(Connection conn, String sql)
 			throws CelestaCritical {
@@ -291,4 +313,89 @@ abstract class DBAdaptor {
 		}
 	}
 
+	static Set<String> sqlToStringSet(Connection conn, String sql)
+			throws CelestaCritical {
+		Set<String> result = new HashSet<String>();
+		try {
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			try {
+				while (rs.next()) {
+					result.add(rs.getString(1));
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaCritical(e.getMessage());
+		}
+		return result;
+	}
+
+	abstract ColumnDefiner getColumnDefiner(Column c);
+
+	abstract boolean tableExists(Connection conn, String schema, String name)
+			throws SQLException;
+
+	abstract boolean userTablesExist(Connection conn) throws SQLException;
+
+	abstract void createSchemaIfNotExists(Connection conn, String name)
+			throws SQLException;
+
+	abstract String getIndicesSQL();
+
+	abstract String getColumnsSQL();
+
+	abstract PreparedStatement getOneRecordStatement(Connection conn, Table t)
+			throws CelestaCritical;
+
+	abstract PreparedStatement getRecordSetStatement(Connection conn, Table t,
+			Map<String, AbstractFilter> filters, List<String> orderBy)
+			throws CelestaCritical;
+
+	abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t)
+			throws CelestaCritical;
+
+	abstract PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
+			throws CelestaCritical;
+
+	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
+			throws CelestaCritical;
+}
+
+/**
+ * Класс, ответственный за генерацию определения столбца таблицы в разных СУБД.
+ * 
+ */
+abstract class ColumnDefiner {
+	static final String DEFAULT = "default ";
+
+	abstract String dbFieldType();
+
+	abstract String getColumnDef(Column c);
+
+	String nullable(Column c) {
+		return c.isNullable() ? "" : "not null";
+	}
+
+	/**
+	 * Соединяет строки через пробел.
+	 * 
+	 * @param ss
+	 *            массив строк для соединения в виде свободного параметра.
+	 */
+	static String join(String... ss) {
+		StringBuilder sb = new StringBuilder();
+		boolean multiple = false;
+		for (String s : ss)
+			if (!"".equals(s)) {
+				if (multiple)
+					sb.append(' ' + s);
+				else {
+					sb.append(s);
+					multiple = true;
+				}
+			}
+		return sb.toString();
+	}
 }

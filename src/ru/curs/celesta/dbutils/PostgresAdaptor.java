@@ -292,4 +292,15 @@ final class PostgresAdaptor extends DBAdaptor {
 		return prepareStatement(conn, sql);
 	}
 
+	@Override
+	String getIndicesSQL() {
+		return "select * from pg_catalog.pg_indexes where schemaname = '%s';";
+	}
+
+	@Override
+	String getColumnsSQL() {
+		return "select column_name from information_schema.columns "
+				+ "where table_schema = '%s' and table_name = '%s';";
+	}
+
 }
