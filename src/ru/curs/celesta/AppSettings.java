@@ -24,7 +24,7 @@ public final class AppSettings {
 		logger.setLevel(Level.INFO);
 	}
 
-	private AppSettings(Properties settings) throws CelestaCritical {
+	private AppSettings(Properties settings) throws CelestaException {
 
 		StringBuffer sb = new StringBuffer();
 
@@ -63,11 +63,11 @@ public final class AppSettings {
 			}
 
 		if (sb.length() > 0)
-			throw new CelestaCritical(sb.toString());
+			throw new CelestaException(sb.toString());
 
 	}
 
-	static void init(Properties settings) throws CelestaCritical {
+	static void init(Properties settings) throws CelestaException {
 		theSettings = new AppSettings(settings);
 	}
 

@@ -1,6 +1,6 @@
 package ru.curs.celesta.ormcompiler;
 
-import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Score;
 
 /**
@@ -18,7 +18,7 @@ public final class ORMCompiler {
 	 * @param score
 	 *            модель
 	 */
-	public static void compile(Score score) throws CelestaCritical {
+	public static void compile(Score score) throws CelestaException {
 
 	}
 }

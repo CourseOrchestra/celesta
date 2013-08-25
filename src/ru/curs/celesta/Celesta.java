@@ -18,7 +18,7 @@ public final class Celesta {
 	private static Celesta theCelesta;
 	private Score score;
 
-	private Celesta() throws CelestaCritical {
+	private Celesta() throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
 		// 1. Разбор описания гранул.
 		score = new Score(AppSettings.getScorePath());
@@ -44,7 +44,7 @@ public final class Celesta {
 		System.out.println();
 		try {
 			initialize();
-		} catch (CelestaCritical e) {
+		} catch (CelestaException e) {
 			System.out
 					.println("The following problems occured during initialization process:");
 			System.out.println(e.getMessage());
@@ -63,14 +63,14 @@ public final class Celesta {
 	 *            свойства, которые следует применить при инициализации --
 	 *            эквивалент файла celesta.properties.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             в случае ошибки при инициализации.
 	 */
 
 	public static synchronized void initialize(Properties settings)
-			throws CelestaCritical {
+			throws CelestaException {
 		if (theCelesta != null)
-			throw new CelestaCritical(CELESTA_IS_ALREADY_INITIALIZED);
+			throw new CelestaException(CELESTA_IS_ALREADY_INITIALIZED);
 
 		AppSettings.init(settings);
 
@@ -82,20 +82,20 @@ public final class Celesta {
 	 * celesta.properties, лежащем в одной папке с celesta.jar. Вызывать один из
 	 * перегруженных вариантов метода initialize можно не более одного раза.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             в случае ошибки при инициализации, а также в случае, если
 	 *             Celesta уже была проинициализирована.
 	 */
-	public static synchronized void initialize() throws CelestaCritical {
+	public static synchronized void initialize() throws CelestaException {
 		if (theCelesta != null)
-			throw new CelestaCritical(CELESTA_IS_ALREADY_INITIALIZED);
+			throw new CelestaException(CELESTA_IS_ALREADY_INITIALIZED);
 
 		// Разбираемся с настроечным файлом: читаем его и превращаем в
 		// Properties.
 		String path = getMyPath();
 		File f = new File(path + "celesta.properties");
 		if (!f.exists())
-			throw new CelestaCritical(String.format("File %s cannot be found.",
+			throw new CelestaException(String.format("File %s cannot be found.",
 					f.toString()));
 		Properties settings = new Properties();
 		try {
@@ -106,7 +106,7 @@ public final class Celesta {
 				in.close();
 			}
 		} catch (IOException e) {
-			throw new CelestaCritical(String.format(
+			throw new CelestaException(String.format(
 					"IOException while reading settings file: %s",
 					e.getMessage()));
 		}
@@ -118,10 +118,10 @@ public final class Celesta {
 	 * Возвращает объект-синглетон Celesta. Если до этого объект не был создан,
 	 * то сначала инициализирует его.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             в случае ошибки при инициализации.
 	 */
-	public static synchronized Celesta getInstance() throws CelestaCritical {
+	public static synchronized Celesta getInstance() throws CelestaException {
 		if (theCelesta == null)
 			initialize();
 		return theCelesta;

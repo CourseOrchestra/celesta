@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Table;
 
 /**
@@ -30,13 +30,13 @@ abstract class AbstractCursor {
 	private Map<String, AbstractFilter> filters = new HashMap<>();
 	private List<String> orderBy = new LinkedList<>();
 
-	public AbstractCursor(Connection conn) throws CelestaCritical {
+	public AbstractCursor(Connection conn) throws CelestaException {
 		try {
 			if (conn.isClosed())
-				throw new CelestaCritical(
+				throw new CelestaException(
 						"Trying to create a cursor on closed connection.");
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 		this.conn = conn;
 		db = DBAdaptor.getAdaptor();
@@ -50,19 +50,19 @@ abstract class AbstractCursor {
 			set.close();
 	}
 
-	private void validateColumName(String name) throws CelestaCritical {
+	private void validateColumName(String name) throws CelestaException {
 		if (!meta().getColumns().containsKey(name))
-			throw new CelestaCritical("No column %s exists in table %s.", name,
+			throw new CelestaException("No column %s exists in table %s.", name,
 					tableName());
 	}
 
-	private void closeSet() throws CelestaCritical {
+	private void closeSet() throws CelestaException {
 		cursor = null;
 		if (set != null) {
 			try {
 				set.close();
 			} catch (SQLException e) {
-				throw new CelestaCritical(e.getMessage());
+				throw new CelestaException(e.getMessage());
 			}
 			set = null;
 		}
@@ -81,7 +81,7 @@ abstract class AbstractCursor {
 	 * 
 	 * @return true, если переход успешен, false -- если записей в наборе нет.
 	 */
-	public final boolean tryFirst() throws CelestaCritical {
+	public final boolean tryFirst() throws CelestaException {
 		if (set == null)
 			set = db.getRecordSetStatement(conn, meta(), filters, orderBy);
 		boolean result = false;
@@ -93,7 +93,7 @@ abstract class AbstractCursor {
 			if (result)
 				parseResult(cursor);
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 		return result;
 	}
@@ -102,10 +102,10 @@ abstract class AbstractCursor {
 	 * Переходит к первой записи в отфильтрованном наборе, вызывая ошибку в
 	 * случае, если переход неудачен.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             в случае, если записей в наборе нет.
 	 */
-	public final void first() throws CelestaCritical {
+	public final void first() throws CelestaException {
 		if (!tryFirst()) {
 			StringBuilder sb = new StringBuilder();
 			for (Entry<String, AbstractFilter> e : filters.entrySet()) {
@@ -113,7 +113,7 @@ abstract class AbstractCursor {
 					sb.append(", ");
 				sb.append(String.format("%s=%s", e.getKey(), e.getValue()
 						.toString()));
-				throw new CelestaCritical("There is no %s (%s).", tableName(),
+				throw new CelestaException("There is no %s (%s).", tableName(),
 						sb.toString());
 			}
 		}
@@ -123,10 +123,10 @@ abstract class AbstractCursor {
 	 * Переходит к следующей записи в отсортированном наборе. Возвращает false,
 	 * если достигнут конец набора.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             в случае ошибки БД
 	 */
-	public final boolean next() throws CelestaCritical {
+	public final boolean next() throws CelestaException {
 		boolean result = false;
 		try {
 			if (cursor == null)
@@ -145,7 +145,7 @@ abstract class AbstractCursor {
 	/**
 	 * Осуществляет вставку курсора в БД.
 	 */
-	public final void insert() throws CelestaCritical {
+	public final void insert() throws CelestaException {
 		if (!tryInsert()) {
 			StringBuilder sb = new StringBuilder();
 			for (Object value : currentKeyValues()) {
@@ -153,7 +153,7 @@ abstract class AbstractCursor {
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
-			throw new CelestaCritical("Record %s (%s) already exists",
+			throw new CelestaException("Record %s (%s) already exists",
 					tableName(), sb.toString());
 		}
 	}
@@ -161,10 +161,10 @@ abstract class AbstractCursor {
 	/**
 	 * Осуществляет вставку курсора в БД.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             ошибка БД
 	 */
-	public final boolean tryInsert() throws CelestaCritical {
+	public final boolean tryInsert() throws CelestaException {
 		prepareGet(currentKeyValues());
 		try {
 			ResultSet rs = get.executeQuery();
@@ -181,7 +181,7 @@ abstract class AbstractCursor {
 				DBAdaptor.setParam(insert, i + 1, values[i]);
 			insert.execute();
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 		return true;
 	}
@@ -190,7 +190,7 @@ abstract class AbstractCursor {
 	 * Осуществляет сохранение содержимого курсора в БД, выбрасывая исключение в
 	 * случае, если запись с такими ключевыми полями не найдена.
 	 */
-	public final void update() throws CelestaCritical {
+	public final void update() throws CelestaException {
 		if (!tryUpdate()) {
 			StringBuilder sb = new StringBuilder();
 			for (Object value : currentKeyValues()) {
@@ -198,7 +198,7 @@ abstract class AbstractCursor {
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
-			throw new CelestaCritical("Record %s (%s) does not exist.",
+			throw new CelestaException("Record %s (%s) does not exist.",
 					tableName(), sb.toString());
 		}
 	}
@@ -206,10 +206,10 @@ abstract class AbstractCursor {
 	/**
 	 * Осуществляет сохранение содержимого курсора в БД.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             ошибка БД
 	 */
-	public final boolean tryUpdate() throws CelestaCritical {
+	public final boolean tryUpdate() throws CelestaException {
 		prepareGet(currentKeyValues());
 		try {
 			ResultSet rs = get.executeQuery();
@@ -230,7 +230,7 @@ abstract class AbstractCursor {
 			update.execute();
 
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 		return true;
 	}
@@ -238,10 +238,10 @@ abstract class AbstractCursor {
 	/**
 	 * Удаляет текущую запись.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             ошибка БД
 	 */
-	public void delete() throws CelestaCritical {
+	public void delete() throws CelestaException {
 		if (delete == null)
 			delete = db.getDeleteRecordStatement(conn, meta());
 		Object[] keyValues = currentKeyValues();
@@ -250,7 +250,7 @@ abstract class AbstractCursor {
 		try {
 			delete.execute();
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 	}
 
@@ -260,10 +260,10 @@ abstract class AbstractCursor {
 	 * 
 	 * @param values
 	 *            значения ключевых полей
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             в случае, если запись не найдена
 	 */
-	public final void get(Object... values) throws CelestaCritical {
+	public final void get(Object... values) throws CelestaException {
 		if (!tryGet(values)) {
 			StringBuilder sb = new StringBuilder();
 			for (Object value : values) {
@@ -271,7 +271,7 @@ abstract class AbstractCursor {
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
-			throw new CelestaCritical("There is no %s (%s).", tableName(),
+			throw new CelestaException("There is no %s (%s).", tableName(),
 					sb.toString());
 		}
 	}
@@ -282,11 +282,11 @@ abstract class AbstractCursor {
 	 * 
 	 * @param values
 	 *            значения ключевых полей
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             SQL-ошибка
 	 */
 
-	public final boolean tryGet(Object... values) throws CelestaCritical {
+	public final boolean tryGet(Object... values) throws CelestaException {
 		prepareGet(values);
 		boolean result = false;
 		try {
@@ -299,16 +299,16 @@ abstract class AbstractCursor {
 				rs.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 		return result;
 	}
 
-	private void prepareGet(Object... values) throws CelestaCritical {
+	private void prepareGet(Object... values) throws CelestaException {
 		if (get == null)
 			get = db.getOneRecordStatement(conn, meta());
 		if (meta().getPrimaryKey().size() != values.length)
-			throw new CelestaCritical(
+			throw new CelestaException(
 					"Invalid number of 'get' arguments for '%s': expected %d, provided %d.",
 					tableName(), meta().getPrimaryKey().size(), values.length);
 
@@ -322,10 +322,10 @@ abstract class AbstractCursor {
 	 * 
 	 * @param name
 	 *            Имя поля.
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             Неверное имя поля.
 	 */
-	public final void setRange(String name) throws CelestaCritical {
+	public final void setRange(String name) throws CelestaException {
 		validateColumName(name);
 		filters.remove(name);
 		closeSet();
@@ -338,11 +338,11 @@ abstract class AbstractCursor {
 	 *            Имя поля.
 	 * @param value
 	 *            Значение, по которому осуществляется фильтрация.
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             Неверное имя поля
 	 */
 	public final void setRange(String name, Object value)
-			throws CelestaCritical {
+			throws CelestaException {
 		validateColumName(name);
 		filters.put(name, new SingleValue(value));
 		closeSet();
@@ -357,11 +357,11 @@ abstract class AbstractCursor {
 	 *            Значение от
 	 * @param valueTo
 	 *            Значение до
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             Неверное имя поля, SQL-ошибка.
 	 */
 	public final void setRange(String name, Object valueFrom, Object valueTo)
-			throws CelestaCritical {
+			throws CelestaException {
 		validateColumName(name);
 		filters.put(name, new Range(valueFrom, valueTo));
 		closeSet();
@@ -374,11 +374,11 @@ abstract class AbstractCursor {
 	 *            Имя поля
 	 * @param value
 	 *            Фильтр
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             Неверное имя поля и т. п.
 	 */
 	public final void setFilter(String name, String value)
-			throws CelestaCritical {
+			throws CelestaException {
 		validateColumName(name);
 		filters.put(name, new Filter(value));
 		closeSet();
@@ -389,10 +389,10 @@ abstract class AbstractCursor {
 	 * 
 	 * @param names
 	 *            Перечень полей для сортировки.
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             неверное имя поля или SQL-ошибка.
 	 */
-	public final void orderBy(String... names) throws CelestaCritical {
+	public final void orderBy(String... names) throws CelestaException {
 		for (String name : names)
 			validateColumName(name);
 		orderBy.clear();
@@ -404,10 +404,10 @@ abstract class AbstractCursor {
 	/**
 	 * Сброс фильтров и сортировки.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             SQL-ошибка.
 	 */
-	public final void reset() throws CelestaCritical {
+	public final void reset() throws CelestaException {
 		filters.clear();
 		orderBy.clear();
 		closeSet();
@@ -423,10 +423,10 @@ abstract class AbstractCursor {
 	/**
 	 * Сброс фильтров, сортировки и полная очистка буфера.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             SQL-ошибка.
 	 */
-	public final void clear() throws CelestaCritical {
+	public final void clear() throws CelestaException {
 		clearBuffer(true);
 		filters.clear();
 		orderBy.clear();
@@ -436,17 +436,17 @@ abstract class AbstractCursor {
 	/**
 	 * Имя таблицы.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             ошибка метаданных
 	 */
-	public final String tableName() throws CelestaCritical {
+	public final String tableName() throws CelestaException {
 		return meta().getName();
 	}
 
 	/**
 	 * Описание таблицы (метаинформация).
 	 */
-	public abstract Table meta() throws CelestaCritical;
+	public abstract Table meta() throws CelestaException;
 
 	abstract void parseResult(ResultSet rs) throws SQLException;
 

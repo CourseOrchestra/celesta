@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -173,7 +173,7 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	PreparedStatement getOneRecordStatement(Connection conn, Table t)
-			throws CelestaCritical {
+			throws CelestaException {
 		String sql = String.format("select %s from %s.%s where %s limit 1;",
 				getTableFieldsList(t), t.getGrain().getName(), t.getName(),
 				getRecordWhereClause(t));
@@ -183,7 +183,7 @@ final class MySQLAdaptor extends DBAdaptor {
 	@Override
 	PreparedStatement getRecordSetStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters, List<String> orderBy)
-			throws CelestaCritical {
+			throws CelestaException {
 		// Готовим условие where
 		StringBuilder whereClause = new StringBuilder();
 		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
@@ -220,13 +220,13 @@ final class MySQLAdaptor extends DBAdaptor {
 			}
 			return result;
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 	}
 
 	@Override
 	PreparedStatement getInsertRecordStatement(Connection conn, Table t)
-			throws CelestaCritical {
+			throws CelestaException {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < t.getColumns().size(); i++) {
 			if (sb.length() > 0)
@@ -241,7 +241,7 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
-			throws CelestaCritical {
+			throws CelestaException {
 		StringBuilder setClause = new StringBuilder();
 		for (String c : t.getColumns().keySet()) {
 			if (setClause.length() > 0)
@@ -256,7 +256,7 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
-			throws CelestaCritical {
+			throws CelestaException {
 		String sql = String.format("delete %s.%s where %s;", t.getGrain()
 				.getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);

@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.CRC32;
 
-import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.CelestaException;
 
 /**
  * Корневой класс полной модели данных гранул.
@@ -33,22 +33,22 @@ public class Score {
 	 * 
 	 * @param scorePath
 	 *            набор путей к папкам score, разделённый точкой с запятой.
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             в случае указания несуществующего пути или в случае двойного
 	 *             определения гранулы с одним и тем же именем.
 	 */
-	public Score(String scorePath) throws CelestaCritical {
+	public Score(String scorePath) throws CelestaException {
 		for (String entry : scorePath.split(";")) {
 			File path = new File(entry);
 			if (!path.exists())
-				throw new CelestaCritical(
+				throw new CelestaException(
 						"Score path entry '%s' does not exist.",
 						path.toString());
 			if (!path.canRead())
-				throw new CelestaCritical("Cannot read score path entry '%s'.",
+				throw new CelestaException("Cannot read score path entry '%s'.",
 						path.toString());
 			if (!path.isDirectory())
-				throw new CelestaCritical(
+				throw new CelestaException(
 						"Score path entry '%s' is not a directory.",
 						path.toString());
 
@@ -63,11 +63,22 @@ public class Score {
 						grainPath.getPath(), File.separator, grainName));
 
 				if (scriptFile.exists()) {
+					/*
+					 * Наличие sql-файла говорит о том, что мы имеем дело с
+					 * папкой гранулы, и уже требуем от неё всё подряд.
+					 */
+					File initFile = new File(String.format("%s%s__init__.py",
+							grainPath.getPath(), File.separator));
+					if (!initFile.exists())
+						throw new CelestaException(
+								"Cannot find __init__.py in grain '%s' definition folder.",
+								grainName);
+
 					if (!scriptFile.canRead())
-						throw new CelestaCritical(
+						throw new CelestaException(
 								"Cannot read script file '%s'.", scriptFile);
 					if (grainFiles.containsKey(grainName))
-						throw new CelestaCritical(
+						throw new CelestaException(
 								"Grain '%s' defined more than once on different paths.",
 								grainName);
 					grainFiles.put(grainName, scriptFile);
@@ -82,7 +93,7 @@ public class Score {
 		parseGrains();
 	}
 
-	private void parseGrains() throws CelestaCritical {
+	private void parseGrains() throws CelestaException {
 		StringBuilder errorScript = new StringBuilder();
 		for (String s : grainFiles.keySet())
 			try {
@@ -95,7 +106,7 @@ public class Score {
 				errorScript.append(e.getMessage());
 			}
 		if (errorScript.length() > 0)
-			throw new CelestaCritical(errorScript.toString());
+			throw new CelestaException(errorScript.toString());
 	}
 
 	void addGrain(Grain grain) throws ParseException {
@@ -153,7 +164,7 @@ public class Score {
 		return result;
 	}
 
-	private void initSystemGrain() throws CelestaCritical {
+	private void initSystemGrain() throws CelestaException {
 		ChecksumInputStream is = new ChecksumInputStream(
 				Score.class.getResourceAsStream("celesta.sql"));
 
@@ -163,7 +174,7 @@ public class Score {
 			try {
 				result = parser.grain(this, "celesta");
 			} catch (ParseException e) {
-				throw new CelestaCritical(e.getMessage());
+				throw new CelestaException(e.getMessage());
 			}
 			result.setChecksum(is.getCRC32());
 			result.setLength(is.getCount());

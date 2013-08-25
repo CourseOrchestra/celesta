@@ -23,10 +23,10 @@ public final class ConnectionPool {
 	/**
 	 * Извлекает соединение из пула.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             В случае, если новое соединение не удалось создать.
 	 */
-	public static synchronized Connection get() throws CelestaCritical {
+	public static synchronized Connection get() throws CelestaException {
 		Connection c = POOL.poll();
 		while (c != null) {
 			try {
@@ -45,7 +45,7 @@ public final class ConnectionPool {
 			c.setAutoCommit(false);
 			return c;
 		} catch (SQLException e) {
-			throw new CelestaCritical("Could not connect to %s with error: %s",
+			throw new CelestaException("Could not connect to %s with error: %s",
 					PasswordHider.maskPassword(AppSettings
 							.getDatabaseConnection()), e.getMessage());
 		}

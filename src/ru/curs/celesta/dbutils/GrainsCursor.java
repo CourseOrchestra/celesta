@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.Date;
 
 import ru.curs.celesta.Celesta;
-import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Table;
 
@@ -31,7 +31,7 @@ class GrainsCursor extends AbstractCursor {
 	private Date lastmodified;
 	private String message;
 
-	public GrainsCursor(Connection conn) throws CelestaCritical {
+	public GrainsCursor(Connection conn) throws CelestaException {
 		super(conn);
 	}
 
@@ -92,13 +92,13 @@ class GrainsCursor extends AbstractCursor {
 	}
 
 	@Override
-	public Table meta() throws CelestaCritical {
+	public Table meta() throws CelestaException {
 		if (meta == null)
 			try {
 				meta = Celesta.getInstance().getScore().getGrain("celesta")
 						.getTable("grains");
 			} catch (ParseException e) {
-				throw new CelestaCritical(e.getMessage());
+				throw new CelestaException(e.getMessage());
 			}
 		return meta;
 	}

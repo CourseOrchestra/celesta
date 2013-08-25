@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
@@ -55,10 +55,10 @@ public final class DBUpdator {
 	 * 
 	 * @param score
 	 *            модель
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             в случае ошибки обновления.
 	 */
-	public static void updateDB(Score score) throws CelestaCritical {
+	public static void updateDB(Score score) throws CelestaException {
 		if (dba == null)
 			dba = DBAdaptor.getAdaptor();
 		Connection conn = ConnectionPool.get();
@@ -69,7 +69,7 @@ public final class DBUpdator {
 			if (!dba.tableExists("celesta", "grains")) {
 				// Если главной таблицы нет, а другие таблицы есть -- ошибка.
 				if (dba.userTablesExist())
-					throw new CelestaCritical(
+					throw new CelestaException(
 							"No celesta.grains table found in non-empty database.");
 				// Если база вообще пустая, то создаём системные таблицы.
 				try {
@@ -79,7 +79,7 @@ public final class DBUpdator {
 					insertGrainRec(sys);
 					updateGrain(sys);
 				} catch (ParseException e) {
-					throw new CelestaCritical(
+					throw new CelestaException(
 							"No 'celesta' grain definition found.");
 				}
 			}
@@ -90,7 +90,7 @@ public final class DBUpdator {
 			Map<String, GrainInfo> dbGrains = new HashMap<>();
 			while (c.next()) {
 				if (!(c.getState() == GrainsCursor.READY || c.getState() == GrainsCursor.RECOVER))
-					throw new CelestaCritical(
+					throw new CelestaException(
 							"Cannot proceed with database upgrade: there are grains "
 									+ "not in 'ready' or 'recover' state.");
 				GrainInfo gi = new GrainInfo();
@@ -100,7 +100,7 @@ public final class DBUpdator {
 				try {
 					gi.version = new VersionString(c.getVersion());
 				} catch (ParseException e) {
-					throw new CelestaCritical(String.format(
+					throw new CelestaException(String.format(
 							"Error while scanning celesta.grains table: %s",
 							e.getMessage()));
 				}
@@ -130,7 +130,7 @@ public final class DBUpdator {
 		}
 	}
 
-	private static void insertGrainRec(Grain g) throws CelestaCritical {
+	private static void insertGrainRec(Grain g) throws CelestaException {
 		c.init();
 		c.setId(g.getName());
 		c.setVersion(g.getVersion().toString());
@@ -143,7 +143,7 @@ public final class DBUpdator {
 	}
 
 	private static void decideToUpgrade(Grain g, GrainInfo gi)
-			throws CelestaCritical {
+			throws CelestaException {
 		if (gi.recover) {
 			updateGrain(g);
 			return;
@@ -153,7 +153,7 @@ public final class DBUpdator {
 		switch (g.getVersion().compareTo(gi.version)) {
 		case LOWER:
 			// Старая версия -- не апгрейдим, ошибка.
-			throw new CelestaCritical(
+			throw new CelestaException(
 					"Grain '%s' version '%s' is lower than database "
 							+ "grain version '%s'. Will not proceed with auto-upgrade.",
 					g.getName(), g.getVersion().toString(), gi.version
@@ -161,7 +161,7 @@ public final class DBUpdator {
 		case INCONSISTENT:
 			// Непонятная (несовместимая) версия -- не апгрейдим,
 			// ошибка.
-			throw new CelestaCritical(
+			throw new CelestaException(
 					"Grain '%s' version '%s' is inconsistent with database "
 							+ "grain version '%s'. Will not proceed with auto-upgrade.",
 					g.getName(), g.getVersion().toString(), gi.version
@@ -186,10 +186,10 @@ public final class DBUpdator {
 	 * 
 	 * @param g
 	 *            Гранула.
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             в случае ошибки обновления.
 	 */
-	private static void updateGrain(Grain g) throws CelestaCritical {
+	private static void updateGrain(Grain g) throws CelestaException {
 		// выставление в статус updating
 		c.get(g.getName());
 		c.setState(GrainsCursor.UPGRADING);
@@ -230,7 +230,7 @@ public final class DBUpdator {
 			c.setMessage("");
 			c.setVersion(g.getVersion().toString());
 			c.update();
-		} catch (CelestaCritical e) {
+		} catch (CelestaException e) {
 			// Если что-то пошло не так
 			c.setState(GrainsCursor.ERROR);
 			c.setMessage(String.format(
@@ -240,7 +240,7 @@ public final class DBUpdator {
 		}
 	}
 
-	private static void updateTable(Table t) throws CelestaCritical {
+	private static void updateTable(Table t) throws CelestaException {
 		if (dba.tableExists(t.getGrain().getName(), t.getName())) {
 			Set<String> dbColumns = dba.getColumns(c.getConnection(), t);
 

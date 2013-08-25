@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ru.curs.celesta.AppSettings;
-import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
@@ -35,11 +35,11 @@ abstract class DBAdaptor {
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             При ошибке создания адаптера (например, при создании адаптера
 	 *             не поддерживаемого типа).
 	 */
-	public static DBAdaptor getAdaptor() throws CelestaCritical {
+	public static DBAdaptor getAdaptor() throws CelestaException {
 		switch (AppSettings.getDBType()) {
 		case MSSQL:
 			return new MSSQLAdaptor();
@@ -51,7 +51,7 @@ abstract class DBAdaptor {
 			return new PostgresAdaptor();
 		case UNKNOWN:
 		default:
-			throw new CelestaCritical("Unknown or unsupported database type.");
+			throw new CelestaException("Unknown or unsupported database type.");
 		}
 	}
 
@@ -65,12 +65,12 @@ abstract class DBAdaptor {
 	 *            имя таблицы.
 	 */
 	public final boolean tableExists(String schema, String name)
-			throws CelestaCritical {
+			throws CelestaException {
 		Connection conn = ConnectionPool.get();
 		try {
 			return tableExists(conn, schema, name);
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -80,12 +80,12 @@ abstract class DBAdaptor {
 	 * Возвращает true в том и только том случае, если база данных содержит
 	 * пользовательские таблицы (т. е. не является пустой базой данных).
 	 */
-	public final boolean userTablesExist() throws CelestaCritical {
+	public final boolean userTablesExist() throws CelestaException {
 		Connection conn = ConnectionPool.get();
 		try {
 			return userTablesExist(conn);
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -97,18 +97,18 @@ abstract class DBAdaptor {
 	 * 
 	 * @param name
 	 *            имя схемы.
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             только в том случае, если возник критический сбой при
 	 *             создании схемы. Не выбрасывается в случае, если схема с
 	 *             данным именем уже существует в базе данных.
 	 */
 	public final void createSchemaIfNotExists(String name)
-			throws CelestaCritical {
+			throws CelestaException {
 		Connection conn = ConnectionPool.get();
 		try {
 			createSchemaIfNotExists(conn, name);
 		} catch (SQLException e) {
-			throw new CelestaCritical("Cannot create schema. " + e.getMessage());
+			throw new CelestaException("Cannot create schema. " + e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -119,11 +119,11 @@ abstract class DBAdaptor {
 	 * 
 	 * @param table
 	 *            Таблица для создания.
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             В случае возникновения критического сбоя при создании
 	 *             таблицы, в том числе в случае, если такая таблица существует.
 	 */
-	public final void createTable(Table table) throws CelestaCritical {
+	public final void createTable(Table table) throws CelestaException {
 		String def = tableDef(table);
 		Connection conn = ConnectionPool.get();
 		try {
@@ -131,7 +131,7 @@ abstract class DBAdaptor {
 			stmt.execute();
 			stmt.close();
 		} catch (SQLException e) {
-			throw new CelestaCritical("Cannot create table. " + e.getMessage());
+			throw new CelestaException("Cannot create table. " + e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -144,7 +144,7 @@ abstract class DBAdaptor {
 	 *            Колонка для добавления.
 	 */
 	public final void createColumn(Connection conn, Column c)
-			throws CelestaCritical {
+			throws CelestaException {
 		String sql = String.format("alter table %s.%s add %s;", c
 				.getParentTable().getGrain().getName(), c.getParentTable()
 				.getName(), columnDef(c));
@@ -156,7 +156,7 @@ abstract class DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 	}
 
@@ -168,11 +168,11 @@ abstract class DBAdaptor {
 	 *            Соединение с БД.
 	 * @param g
 	 *            Гранула, по таблицам которой следует просматривать индексы.
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             В случае сбоя связи с БД.
 	 */
 	public final Set<String> getIndices(Connection conn, Grain g)
-			throws CelestaCritical {
+			throws CelestaException {
 		String sql = String.format(getIndicesSQL(), g.getName());
 		return sqlToStringSet(conn, sql);
 	}
@@ -185,11 +185,11 @@ abstract class DBAdaptor {
 	 * @param t
 	 *            Таблица, по которой просматривать столбцы.
 	 * 
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             в случае сбоя связи с БД.
 	 */
 	public final Set<String> getColumns(Connection conn, Table t)
-			throws CelestaCritical {
+			throws CelestaException {
 		String sql = String.format(getColumnsSQL(), t.getGrain().getName(),
 				t.getName());
 		return sqlToStringSet(conn, sql);
@@ -200,10 +200,10 @@ abstract class DBAdaptor {
 	 * 
 	 * @param index
 	 *            описание индекса.
-	 * @throws CelestaCritical
+	 * @throws CelestaException
 	 *             Если что-то пошло не так.
 	 */
-	public final void createIndex(Index index) throws CelestaCritical {
+	public final void createIndex(Index index) throws CelestaException {
 		// TODO
 	}
 
@@ -241,11 +241,11 @@ abstract class DBAdaptor {
 	}
 
 	static PreparedStatement prepareStatement(Connection conn, String sql)
-			throws CelestaCritical {
+			throws CelestaException {
 		try {
 			return conn.prepareStatement(sql);
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 	}
 
@@ -288,7 +288,7 @@ abstract class DBAdaptor {
 	}
 
 	static void setParam(PreparedStatement stmt, int i, Object v)
-			throws CelestaCritical {
+			throws CelestaException {
 		try {
 			if (v == null)
 				stmt.setNull(i, java.sql.Types.NULL);
@@ -304,17 +304,17 @@ abstract class DBAdaptor {
 				Timestamp d = new Timestamp(((Date) v).getTime());
 				stmt.setTimestamp(i, d);
 			} else {
-				throw new CelestaCritical(
+				throw new CelestaException(
 						"You can filter only on Integer, Double, String, "
 								+ "Boolean or Date value types.");
 			}
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 	}
 
 	static Set<String> sqlToStringSet(Connection conn, String sql)
-			throws CelestaCritical {
+			throws CelestaException {
 		Set<String> result = new HashSet<String>();
 		try {
 			Statement stmt = conn.createStatement();
@@ -327,7 +327,7 @@ abstract class DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaCritical(e.getMessage());
+			throw new CelestaException(e.getMessage());
 		}
 		return result;
 	}
@@ -347,20 +347,20 @@ abstract class DBAdaptor {
 	abstract String getColumnsSQL();
 
 	abstract PreparedStatement getOneRecordStatement(Connection conn, Table t)
-			throws CelestaCritical;
+			throws CelestaException;
 
 	abstract PreparedStatement getRecordSetStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters, List<String> orderBy)
-			throws CelestaCritical;
+			throws CelestaException;
 
 	abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t)
-			throws CelestaCritical;
+			throws CelestaException;
 
 	abstract PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
-			throws CelestaCritical;
+			throws CelestaException;
 
 	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
-			throws CelestaCritical;
+			throws CelestaException;
 }
 
 /**

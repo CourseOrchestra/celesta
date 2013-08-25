@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 
 import org.junit.Test;
 
-import ru.curs.celesta.CelestaCritical;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 
@@ -25,7 +25,7 @@ public class DBAdaptorTest {
 	}
 
 	@Test
-	public void test1() throws CelestaCritical, ParseException, IOException {
+	public void test1() throws CelestaException, ParseException, IOException {
 		Score s = new Score("score");
 
 		DBAdaptor a = new MSSQLAdaptor();
