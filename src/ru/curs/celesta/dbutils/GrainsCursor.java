@@ -117,8 +117,14 @@ class GrainsCursor extends AbstractCursor {
 
 	@Override
 	void clearBuffer(boolean withKeys) {
-		// TODO Auto-generated method stub
-
+		if (withKeys)
+			id = null;
+		version = null;
+		length = 0;
+		checksum = 0;
+		state = 0;
+		lastmodified = null;
+		message = null;
 	}
 
 	@Override
