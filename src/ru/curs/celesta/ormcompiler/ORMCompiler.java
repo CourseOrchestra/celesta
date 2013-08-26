@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Column;
@@ -73,39 +76,80 @@ public final class ORMCompiler {
 
 	private static void compileTable(Table t, BufferedWriter w)
 			throws IOException {
+
+		Collection<Column> columns = t.getColumns().values();
+		Set<Column> pk = new LinkedHashSet<>(t.getPrimaryKey().values());
+
 		w.write(String.format("class %sCursor(Cursor):", t.getName()));
 		w.newLine();
-
+		// Конструктор
 		w.write("    def __init__(self, conn):");
 		w.newLine();
 		w.write("        AbstractCursor.__init(self, conn)");
 		w.newLine();
-		for (Column c : t.getColumns().values()) {
+		for (Column c : columns) {
 			w.write(String.format("        self.%s = %s", c.getName(),
 					c.pythonDefaultValue()));
 			w.newLine();
 		}
-
+		// Имя гранулы
 		w.write("    def grainName(self):");
 		w.newLine();
 		w.write(String.format("        return '%s'", t.getGrain().getName()));
 		w.newLine();
-
+		// Имя таблицы
 		w.write("    def tableName(self):");
 		w.newLine();
 		w.write(String.format("        return '%s'", t.getName()));
 		w.newLine();
-
+		// Разбор строки по переменным
 		w.write("    def parseResult(self, rs):");
 		w.newLine();
 		int i = 1;
-		for (Column c : t.getColumns().values()) {
+		for (Column c : columns) {
 			w.write(String.format("        self.%s = rs.%s(%d)", c.getName(),
 					c.jdbcGetterName(), i));
 			w.newLine();
 			i++;
 		}
-
+		// Очистка буфера
+		w.write("    def clearBuffer(self, withKeys):");
+		w.newLine();
+		w.write("        if withKeys:");
+		w.newLine();
+		for (Column c : pk) {
+			w.write(String.format("            self.%s = %s", c.getName(),
+					c.pythonDefaultValue()));
+			w.newLine();
+		}
+		for (Column c : columns)
+			if (!pk.contains(c)) {
+				w.write(String.format("        self.%s = %s", c.getName(),
+						c.pythonDefaultValue()));
+				w.newLine();
+			}
+		// Текущие значения ключевых полей
+		w.write("    def currentKeyValues(self):");
+		w.newLine();
+		StringBuilder sb = new StringBuilder();
+		for (Column c : pk) {
+			if (sb.length() > 0)
+				sb.append(", ");
+			sb.append(c.getName());
+		}
+		w.write(String.format("        return [%s]", sb.toString()));
+		w.newLine();
+		// Текущие значения всех полей
+		w.write("    def currentValues(self):");
+		w.newLine();
+		sb = new StringBuilder();
+		for (Column c : columns) {
+			if (sb.length() > 0)
+				sb.append(", ");
+			sb.append(c.getName());
+		}
+		w.write(String.format("        return [%s]", sb.toString()));
+		w.newLine();
 		w.newLine();
 	}
 }
