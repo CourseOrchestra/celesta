@@ -18,7 +18,7 @@ import ru.curs.celesta.score.Table;
 /**
  * Базовый класс курсора (аналог соответствующего класса в Python-коде).
  */
-abstract class Cursor {
+public abstract class Cursor {
 	private Table meta = null;
 	private final DBAdaptor db;
 	private final Connection conn;
@@ -83,6 +83,9 @@ abstract class Cursor {
 	 * информацию об успешности перехода.
 	 * 
 	 * @return true, если переход успешен, false -- если записей в наборе нет.
+	 * 
+	 * @throws CelestaException
+	 *             Ошибка связи с базой данных
 	 */
 	public final boolean tryFirst() throws CelestaException {
 		if (set == null)
@@ -147,6 +150,9 @@ abstract class Cursor {
 
 	/**
 	 * Осуществляет вставку курсора в БД.
+	 * 
+	 * @throws CelestaException
+	 *             в случае ошибки БД
 	 */
 	public final void insert() throws CelestaException {
 		if (!tryInsert()) {
@@ -192,6 +198,9 @@ abstract class Cursor {
 	/**
 	 * Осуществляет сохранение содержимого курсора в БД, выбрасывая исключение в
 	 * случае, если запись с такими ключевыми полями не найдена.
+	 * 
+	 * @throws CelestaException
+	 *             в случае ошибки БД
 	 */
 	public final void update() throws CelestaException {
 		if (!tryUpdate()) {
@@ -438,6 +447,10 @@ abstract class Cursor {
 
 	/**
 	 * Описание таблицы (метаинформация).
+	 * 
+	 * @throws CelestaException
+	 *             в случае ошибки извлечения метаинформации (в норме не должна
+	 *             происходить).
 	 */
 	public final Table meta() throws CelestaException {
 

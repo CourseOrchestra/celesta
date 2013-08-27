@@ -85,7 +85,7 @@ public final class ORMCompiler {
 		// Конструктор
 		w.write("    def __init__(self, conn):");
 		w.newLine();
-		w.write("        AbstractCursor.__init(self, conn)");
+		w.write("        Cursor.__init__(self, conn)");
 		w.newLine();
 		for (Column c : columns) {
 			w.write(String.format("        self.%s = %s", c.getName(),
