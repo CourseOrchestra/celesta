@@ -11,7 +11,7 @@ import ru.curs.celesta.CelestaException;
  * Курсор на таблице Grains.
  * 
  */
-class GrainsCursor extends Cursor {
+final class GrainsCursor extends Cursor {
 
 	public static final int READY = 0;
 	public static final int UPGRADING = 1;
@@ -87,7 +87,7 @@ class GrainsCursor extends Cursor {
 	}
 
 	@Override
-	void parseResult(ResultSet rs) throws SQLException {
+	protected void parseResult(ResultSet rs) throws SQLException {
 		id = rs.getString(1);
 		version = rs.getString(2);
 		length = rs.getInt(3);
@@ -99,7 +99,7 @@ class GrainsCursor extends Cursor {
 	}
 
 	@Override
-	void clearBuffer(boolean withKeys) {
+	protected void clearBuffer(boolean withKeys) {
 		if (withKeys)
 			id = null;
 		version = null;
@@ -111,25 +111,25 @@ class GrainsCursor extends Cursor {
 	}
 
 	@Override
-	Object[] currentKeyValues() {
+	protected Object[] currentKeyValues() {
 		Object[] result = { id };
 		return result;
 	}
 
 	@Override
-	Object[] currentValues() {
+	protected Object[] currentValues() {
 		Object[] result = { id, version, length, checksum, state, lastmodified,
 				message };
 		return result;
 	}
 
 	@Override
-	String grainName() {
+	protected String grainName() {
 		return "celesta";
 	}
 
 	@Override
-	String tableName() {
+	protected String tableName() {
 		return "grains";
 	}
 }

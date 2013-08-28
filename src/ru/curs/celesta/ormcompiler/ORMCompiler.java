@@ -25,7 +25,8 @@ public final class ORMCompiler {
 			"\"\"\"",
 			"THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.",
 			"DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.", "\"\"\"",
-			"import ru.curs.celesta.dbutils.Cursor as Cursor", "" };
+			"import ru.curs.celesta.dbutils.Cursor as Cursor",
+			"from java.lang import Object", "from jarray import array", "" };
 
 	private ORMCompiler() {
 
@@ -135,9 +136,9 @@ public final class ORMCompiler {
 		for (Column c : pk) {
 			if (sb.length() > 0)
 				sb.append(", ");
-			sb.append(c.getName());
+			sb.append(String.format("self.%s", c.getName()));
 		}
-		w.write(String.format("        return [%s]", sb.toString()));
+		w.write(String.format("        return array([%s], Object)", sb.toString()));
 		w.newLine();
 		// Текущие значения всех полей
 		w.write("    def currentValues(self):");
@@ -146,9 +147,9 @@ public final class ORMCompiler {
 		for (Column c : columns) {
 			if (sb.length() > 0)
 				sb.append(", ");
-			sb.append(c.getName());
+			sb.append(String.format("self.%s", c.getName()));
 		}
-		w.write(String.format("        return [%s]", sb.toString()));
+		w.write(String.format("        return array([%s], Object)", sb.toString()));
 		w.newLine();
 		w.newLine();
 	}

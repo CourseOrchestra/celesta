@@ -464,15 +464,15 @@ public abstract class Cursor {
 		return meta;
 	}
 
-	abstract String grainName();
+	protected abstract String grainName();
 
-	abstract String tableName();
+	protected abstract String tableName();
 
-	abstract void parseResult(ResultSet rs) throws SQLException;
+	protected abstract void parseResult(ResultSet rs) throws SQLException;
 
-	abstract void clearBuffer(boolean withKeys);
+	protected abstract void clearBuffer(boolean withKeys);
 
-	abstract Object[] currentKeyValues();
+	protected abstract Object[] currentKeyValues();
 
-	abstract Object[] currentValues();
+	protected abstract Object[] currentValues();
 }
