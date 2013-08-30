@@ -211,6 +211,40 @@ final class MSSQLAdaptor extends DBAdaptor {
 			throws CelestaException {
 
 		// Готовим условие where
+		StringBuilder whereClause = setWhereClause(filters);
+
+		// Соединяем полученные компоненты в стандартный запрос
+		// SELECT..FROM..WHERE..ORDER BY
+		String sql = getSelectFromOrderBy(t, whereClause.toString(), orderBy);
+
+		try {
+			PreparedStatement result = conn.prepareStatement(sql);
+			// А теперь заполняем параметры
+			fillSetQueryParameters(filters, result);
+			return result;
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
+	private void fillSetQueryParameters(Map<String, AbstractFilter> filters,
+			PreparedStatement result) throws CelestaException {
+		int i = 1;
+		for (AbstractFilter f : filters.values()) {
+			if (f instanceof SingleValue) {
+				setParam(result, i, ((SingleValue) f).getValue());
+				i++;
+			} else if (f instanceof Range) {
+				setParam(result, i, ((Range) f).getValueFrom());
+				i++;
+				setParam(result, i, ((Range) f).getValueTo());
+				i++;
+			} else if (f instanceof Filter)
+				throw new RuntimeException("not implemented yet");
+		}
+	}
+
+	private StringBuilder setWhereClause(Map<String, AbstractFilter> filters) {
 		StringBuilder whereClause = new StringBuilder();
 		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
 			if (whereClause.length() > 0)
@@ -223,31 +257,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 			else if (e.getValue() instanceof Filter)
 				throw new RuntimeException("not implemented yet");
 		}
-
-		// Соединяем полученные компоненты в стандартный запрос
-		// SELECT..FROM..WHERE..ORDER BY
-		String sql = getSelectFromOrderBy(t, whereClause.toString(), orderBy);
-
-		try {
-			PreparedStatement result = conn.prepareStatement(sql);
-			// А теперь заполняем параметры
-			int i = 1;
-			for (AbstractFilter f : filters.values()) {
-				if (f instanceof SingleValue) {
-					setParam(result, i, ((SingleValue) f).getValue());
-					i++;
-				} else if (f instanceof Range) {
-					setParam(result, i, ((Range) f).getValueFrom());
-					i++;
-					setParam(result, i, ((Range) f).getValueTo());
-					i++;
-				} else if (f instanceof Filter)
-					throw new RuntimeException("not implemented yet");
-			}
-			return result;
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
+		return whereClause;
 	}
 
 	@Override
@@ -300,5 +310,25 @@ final class MSSQLAdaptor extends DBAdaptor {
 	@Override
 	String getColumnsSQL() {
 		return "select name from sys.columns where object_id = OBJECT_ID('%s.%s');";
+	}
+
+	@Override
+	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
+			Map<String, AbstractFilter> filters) throws CelestaException {
+		// Готовим условие where
+		StringBuilder whereClause = setWhereClause(filters);
+
+		// Готовим запрос на удаление
+		String sql = String.format("delete %s.%s %s;", t.getGrain().getName(),
+				t.getName(), whereClause.length() > 0 ? "where " + whereClause
+						: "");
+		try {
+			PreparedStatement result = conn.prepareStatement(sql);
+			// А теперь заполняем параметры
+			fillSetQueryParameters(filters, result);
+			return result;
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
 	}
 }

@@ -273,4 +273,11 @@ final class MySQLAdaptor extends DBAdaptor {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
+			Map<String, AbstractFilter> filters) throws CelestaException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

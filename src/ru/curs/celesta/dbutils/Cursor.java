@@ -267,6 +267,26 @@ public abstract class Cursor {
 	}
 
 	/**
+	 * Удаляет все записи, попавшие в текущий фильтр.
+	 * 
+	 * @throws CelestaException
+	 *             Ошибка БД
+	 */
+	public void deleteAll() throws CelestaException {
+		PreparedStatement stmt = db.deleteRecordSetStatement(conn, meta(),
+				filters);
+		try {
+			try {
+				stmt.executeUpdate();
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
+	/**
 	 * Осуществляет поиск записи по ключевым полям, выбрасывает исключение, если
 	 * запись не найдена.
 	 * 

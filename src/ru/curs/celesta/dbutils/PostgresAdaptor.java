@@ -303,4 +303,11 @@ final class PostgresAdaptor extends DBAdaptor {
 				+ "where table_schema = '%s' and table_name = '%s';";
 	}
 
+	@Override
+	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
+			Map<String, AbstractFilter> filters) throws CelestaException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

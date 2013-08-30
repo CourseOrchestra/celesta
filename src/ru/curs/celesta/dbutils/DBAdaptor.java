@@ -108,7 +108,8 @@ abstract class DBAdaptor {
 		try {
 			createSchemaIfNotExists(conn, name);
 		} catch (SQLException e) {
-			throw new CelestaException("Cannot create schema. " + e.getMessage());
+			throw new CelestaException("Cannot create schema. "
+					+ e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -351,6 +352,10 @@ abstract class DBAdaptor {
 
 	abstract PreparedStatement getRecordSetStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters, List<String> orderBy)
+			throws CelestaException;
+
+	abstract PreparedStatement deleteRecordSetStatement(Connection conn,
+			Table t, Map<String, AbstractFilter> filters)
 			throws CelestaException;
 
 	abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t)
