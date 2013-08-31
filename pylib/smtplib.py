@@ -490,7 +490,8 @@ class SMTP:
             if q[-2:] != CRLF:
                 q = q + CRLF
             q = q + "." + CRLF
-            self.send(q)
+            for l in q.split(CRLF):
+                self.send(l + CRLF)
             (code,msg)=self.getreply()
             if self.debuglevel >0 : print>>stderr, "data:", (code,msg)
             return (code,msg)
