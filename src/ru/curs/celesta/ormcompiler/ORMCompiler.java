@@ -1,13 +1,18 @@
 package ru.curs.celesta.ormcompiler;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Column;
@@ -20,8 +25,9 @@ import ru.curs.celesta.score.Table;
  */
 public final class ORMCompiler {
 
+	private static final Pattern SIGNATURE = Pattern
+			.compile("len=([0-9]+), crc32=([0-9A-F]+)\\.");
 	private static final String[] HEADER = {
-			"# coding=UTF-8",
 			"\"\"\"",
 			"THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.",
 			"DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.", "\"\"\"",
@@ -47,6 +53,34 @@ public final class ORMCompiler {
 				File ormFile = new File(String.format("%s%s_%s_orm.py",
 						g.getGrainPath(), File.separator, g.getName()));
 				try {
+					// Блок проверки: а может, перекомпилировать нет нужды?
+					if (ormFile.exists() && ormFile.canRead()) {
+						int len = 0;
+						int crc32 = 0;
+						BufferedReader r = new BufferedReader(
+								new InputStreamReader(new FileInputStream(
+										ormFile), "utf-8"));
+						try {
+							String l = r.readLine();
+							while (l != null) {
+								Matcher m = SIGNATURE.matcher(l);
+								if (m.find()) {
+									len = Integer.parseInt(m.group(1));
+									crc32 = (int) Long
+											.parseLong(m.group(2), 16);
+									break;
+								}
+								l = r.readLine();
+							}
+						} finally {
+							r.close();
+						}
+
+						if (g.getLength() == len && g.getChecksum() == crc32)
+							continue;
+					}
+
+					// Перекомпилировать надо и мы начинаем запись.
 					FileOutputStream fos = new FileOutputStream(ormFile);
 					BufferedWriter w = new BufferedWriter(
 							new OutputStreamWriter(fos, "utf-8"));
@@ -66,6 +100,11 @@ public final class ORMCompiler {
 
 	private static void compileGrain(Grain g, BufferedWriter w)
 			throws IOException {
+		w.write("# coding=UTF-8");
+		w.newLine();
+		w.write(String.format("# Source grain parameters: len=%d, crc32=%08X.",
+				g.getLength(), g.getChecksum()));
+		w.newLine();
 		for (String s : HEADER) {
 			w.write(s);
 			w.newLine();
@@ -138,7 +177,8 @@ public final class ORMCompiler {
 				sb.append(", ");
 			sb.append(String.format("self.%s", c.getName()));
 		}
-		w.write(String.format("        return array([%s], Object)", sb.toString()));
+		w.write(String.format("        return array([%s], Object)",
+				sb.toString()));
 		w.newLine();
 		// Текущие значения всех полей
 		w.write("    def currentValues(self):");
@@ -149,7 +189,8 @@ public final class ORMCompiler {
 				sb.append(", ");
 			sb.append(String.format("self.%s", c.getName()));
 		}
-		w.write(String.format("        return array([%s], Object)", sb.toString()));
+		w.write(String.format("        return array([%s], Object)",
+				sb.toString()));
 		w.newLine();
 		w.newLine();
 	}
