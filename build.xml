@@ -3,10 +3,9 @@
 	<target name="compile">
 		<echo>Compile the source files</echo>
 		<javac destdir="build/classes" encoding="UTF-8">
-
-			<!--	<classpath>
+			<classpath>
 				<pathelement path="lib/jython.jar" />
-			</classpath>-->
+			</classpath>
 			<src>
 				<pathelement path="src" />
 			</src>
@@ -18,7 +17,7 @@
 		<jar destfile="build/celesta.jar" filesetmanifest="merge">
 			<fileset dir="build/classes" />
 			<zipfileset src="lib/sqljdbc4.jar" excludes="META-INF/MSFTSIG.*" />
-			<!--		<zipfileset src="lib/jython.jar" />-->
+			<zipfileset src="lib/jython.jar" />
 			<manifest>
 				<attribute name="Main-Class" value="ru.curs.celesta.Celesta" />
 			</manifest>

@@ -3,10 +3,25 @@ package ru.curs.celesta;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.sql.Connection;
+import java.util.LinkedHashSet;
 import java.util.Properties;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.python.core.PyException;
+import org.python.core.codecs;
+import org.python.util.PythonInterpreter;
 
 import ru.curs.celesta.dbutils.DBUpdator;
 import ru.curs.celesta.ormcompiler.ORMCompiler;
+import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 
 /**
@@ -15,6 +30,9 @@ import ru.curs.celesta.score.Score;
 public final class Celesta {
 
 	private static final String CELESTA_IS_ALREADY_INITIALIZED = "Celesta is already initialized.";
+	private static final Pattern PROCNAME = Pattern
+			.compile("([A-Za-z_][A-Za-z_0-9]*)\\.([A-Za-z_][A-Za-z_0-9]*)\\.([A-Za-z_][A-Za-z_0-9]*)");
+
 	private static Celesta theCelesta;
 	private Score score;
 
@@ -51,6 +69,77 @@ public final class Celesta {
 			System.exit(1);
 		}
 		System.out.println("Celesta initialized successfully.");
+
+		if (args.length > 0)
+			try {
+				String[] params = new String[args.length - 1];
+				for (int i = 1; i < args.length; i++)
+					params[i - 1] = args[i];
+
+				getInstance().runPython(args[0], params);
+			} catch (CelestaException e) {
+				System.out
+						.println("The following problems occured while trying to execute "
+								+ args[0] + ":");
+				System.out.println(e.getMessage());
+			}
+	}
+
+	/**
+	 * Запуск питоновской процедуры.
+	 * 
+	 * @param proc
+	 *            Имя процедуры в формате <grain>.<module>.<proc>
+	 * @param param
+	 *            Параметры для передачи процедуры.
+	 * @throws CelestaException
+	 *             В случае, если процедура не найдена или в случае ошибки
+	 *             выполненения процедуры.
+	 */
+	public void runPython(String proc, String... param) throws CelestaException {
+		Matcher m = PROCNAME.matcher(proc);
+
+		if (m.find()) {
+			String grainName = m.group(1);
+			String unitName = m.group(2);
+			String procName = m.group(3);
+
+			try {
+				getScore().getGrain(grainName);
+			} catch (ParseException e) {
+				throw new CelestaException(
+						"Invalid procedure name: %s, grain %s is unknown for the system.",
+						proc, grainName);
+			}
+
+			StringBuilder sb = new StringBuilder("conn");
+			for (String arg : param)
+				sb.append(String.format(", '%s'", arg));
+
+			PythonInterpreter interp = new PythonInterpreter();
+			Connection conn = ConnectionPool.get();
+			try {
+				interp.set("conn", conn);
+				try {
+					String line = String.format("from %s import %s as %s",
+							grainName, unitName, unitName);
+					interp.exec(line);
+					line = String.format("%s.%s(%s)", unitName, procName,
+							sb.toString());
+					interp.exec(line);
+				} catch (PyException e) {
+					throw new CelestaException(String.format(
+							"Python error: %s:%s", e.type, e.value));
+				}
+			} finally {
+				ConnectionPool.putBack(conn);
+			}
+
+		} else {
+			throw new CelestaException(
+					"Invalid procedure name: %s, should match pattern <grain>.<module>.<proc>.",
+					proc);
+		}
 	}
 
 	/**
@@ -74,7 +163,63 @@ public final class Celesta {
 
 		AppSettings.init(settings);
 
+		// Инициализация Jython
+		initCL(getMyPath());
+
 		new Celesta();
+	}
+
+	private static void initCL(String path) {
+
+		File lib = new File(path + "lib");
+
+		// Construct the "class path" for this class loader
+		Set<URL> set = new LinkedHashSet<URL>();
+		if (lib.isDirectory() && lib.exists() && lib.canRead()) {
+			String[] filenames = lib.list();
+			for (String filename : filenames) {
+				if (!filename.toLowerCase().endsWith(".jar"))
+					continue;
+				File file = new File(lib, filename);
+				URL url;
+				try {
+					url = file.toURI().toURL();
+					set.add(url);
+				} catch (MalformedURLException e) {
+					// This can't happen
+					e.printStackTrace();
+				}
+			}
+		}
+		// Construct the class loader itself
+		final URL[] array = set.toArray(new URL[set.size()]);
+		ClassLoader classLoader = AccessController
+				.doPrivileged(new PrivilegedAction<URLClassLoader>() {
+					@Override
+					public URLClassLoader run() {
+						return new URLClassLoader(array);
+					}
+				});
+		Thread.currentThread().setContextClassLoader(classLoader);
+
+		String libfolder = lib.toString();
+		Properties postProperties = new Properties();
+		postProperties.setProperty("python.packages.directories",
+				"java.ext.dirs,celesta.lib");
+		postProperties.setProperty("celesta.lib", libfolder);
+		StringBuilder sb = new StringBuilder(path + "pylib");
+		for (String entry : AppSettings.getScorePath().split(";")) {
+			File pathEntry = new File(entry);
+			if (pathEntry.exists() && pathEntry.isDirectory()) {
+				sb.append(";");
+				sb.append(pathEntry.getAbsolutePath());
+			}
+		}
+		postProperties.setProperty("python.path", sb.toString());
+		PythonInterpreter.initialize(System.getProperties(), postProperties,
+				null);
+
+		codecs.setDefaultEncoding("UTF-8");
 	}
 
 	/**
@@ -95,8 +240,8 @@ public final class Celesta {
 		String path = getMyPath();
 		File f = new File(path + "celesta.properties");
 		if (!f.exists())
-			throw new CelestaException(String.format("File %s cannot be found.",
-					f.toString()));
+			throw new CelestaException(String.format(
+					"File %s cannot be found.", f.toString()));
 		Properties settings = new Properties();
 		try {
 			FileInputStream in = new FileInputStream(f);
@@ -134,7 +279,10 @@ public final class Celesta {
 		if (f.getAbsolutePath().toLowerCase().endsWith(".jar"))
 			return f.getParent() + File.separator;
 		else {
-			return f.getAbsolutePath() + File.separator;
+			// NB второй вариант возвращает папку выше папки bin, если имеем
+			// дело с исходниками, построенными и отлаживаемыми в Eclipse
+			// return f.getAbsolutePath() + File.separator;
+			return f.getParent() + File.separator;
 		}
 	}
 
