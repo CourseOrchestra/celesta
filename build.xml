@@ -1,6 +1,10 @@
 <!DOCTYPE project>
-<project name="flute" default="jar">
-	<target name="compile">
+<project name="celesta" default="jar">
+	<target name="javacc">
+		<echo>Compiling Celesta parser</echo>
+		<javacc target="src/ru/curs/celesta/score/celestasql.jj" outputdirectory="src/ru/curs/celesta/score/" javacchome="javacc-5.0" />
+	</target>
+	<target name="compile" depends="javacc">
 		<echo>Compile the source files</echo>
 		<javac destdir="build/classes" encoding="UTF-8">
 			<classpath>
