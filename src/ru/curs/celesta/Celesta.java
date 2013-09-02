@@ -9,6 +9,7 @@ import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.LinkedHashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -128,8 +129,17 @@ public final class Celesta {
 							sb.toString());
 					interp.exec(line);
 				} catch (PyException e) {
+					String sqlErr = "";
+					try {
+						// Ошибка базы данных!
+						conn.rollback();
+					} catch (SQLException e1) {
+						// Если связь с базой развалилась, об этом тоже сообщим
+						// пользователю.
+						sqlErr = ". SQL error:" + e1.getMessage();
+					}
 					throw new CelestaException(String.format(
-							"Python error: %s:%s", e.type, e.value));
+							"Python error: %s:%s%s", e.type, e.value, sqlErr));
 				}
 			} finally {
 				ConnectionPool.putBack(conn);
