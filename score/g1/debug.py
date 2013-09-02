@@ -11,6 +11,8 @@ Celesta.initialize()
 conn = ConnectionPool.get()
 try:
     hello.hello(conn, 'blah-blah')
+except:
+    conn.rollback()
 finally:
     ConnectionPool.putBack(conn)
 
