@@ -73,7 +73,7 @@ public final class Celesta {
 
 		if (args.length > 1)
 			try {
-				String[] params = new String[args.length - 2];
+				Object[] params = new String[args.length - 2];
 				for (int i = 2; i < args.length; i++)
 					params[i - 2] = args[i];
 
@@ -101,7 +101,7 @@ public final class Celesta {
 	 *             В случае, если процедура не найдена или в случае ошибки
 	 *             выполненения процедуры.
 	 */
-	public void runPython(String userId, String proc, String... param)
+	public void runPython(String userId, String proc, Object... param)
 			throws CelestaException {
 		Matcher m = PROCNAME.matcher(proc);
 
@@ -119,14 +119,17 @@ public final class Celesta {
 			}
 
 			StringBuilder sb = new StringBuilder("context");
-			for (String arg : param)
-				sb.append(String.format(", '%s'", arg));
+			for (int i = 0; i < param.length; i++)
+				sb.append(String.format(", arg%d", i));
 
 			PythonInterpreter interp = new PythonInterpreter();
 			Connection conn = ConnectionPool.get();
 			CallContext context = new CallContext(conn, userId);
 			try {
 				interp.set("context", context);
+				for (int i = 0; i < param.length; i++)
+					interp.set(String.format("arg%d", i), param[i]);
+
 				try {
 					String line = String.format("from %s import %s as %s",
 							grainName, unitName, unitName);
