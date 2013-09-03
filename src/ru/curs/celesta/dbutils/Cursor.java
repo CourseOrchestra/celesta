@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.ParseException;
@@ -19,6 +20,8 @@ import ru.curs.celesta.score.Table;
  * Базовый класс курсора (аналог соответствующего класса в Python-коде).
  */
 public abstract class Cursor {
+	static final String SYSTEMUSERID = "system";
+
 	private Table meta = null;
 	private final DBAdaptor db;
 	private final Connection conn;
@@ -33,7 +36,8 @@ public abstract class Cursor {
 	private Map<String, AbstractFilter> filters = new HashMap<>();
 	private List<String> orderBy = new LinkedList<>();
 
-	public Cursor(Connection conn) throws CelestaException {
+	public Cursor(CallContext context) throws CelestaException {
+		conn = context.getConn();
 		try {
 			if (conn.isClosed())
 				throw new CelestaException(
@@ -41,7 +45,6 @@ public abstract class Cursor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
-		this.conn = conn;
 		db = DBAdaptor.getAdaptor();
 	}
 

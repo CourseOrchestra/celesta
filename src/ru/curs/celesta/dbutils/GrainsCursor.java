@@ -1,10 +1,10 @@
 package ru.curs.celesta.dbutils;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 
+import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 
 /**
@@ -26,8 +26,8 @@ final class GrainsCursor extends Cursor {
 	private Date lastmodified;
 	private String message;
 
-	public GrainsCursor(Connection conn) throws CelestaException {
-		super(conn);
+	public GrainsCursor(CallContext context) throws CelestaException {
+		super(context);
 	}
 
 	String getId() {

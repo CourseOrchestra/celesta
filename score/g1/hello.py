@@ -1,9 +1,10 @@
 from g1._g1_orm import aaCursor 
 
-def hello(conn, arg):
+def hello(context, arg):
     print 'Hello, world from Celesta Python procedure.'
+    print 'user %s' % context.userId
     print 'Argument passed was "%s".' % arg
-    aa = aaCursor(conn)
+    aa = aaCursor(context)
     aa.deleteAll()
     for i in range(1, 12):
         aa.idaa = i

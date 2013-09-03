@@ -123,9 +123,9 @@ public final class ORMCompiler {
 		w.write(String.format("class %sCursor(Cursor):", t.getName()));
 		w.newLine();
 		// Конструктор
-		w.write("    def __init__(self, conn):");
+		w.write("    def __init__(self, context):");
 		w.newLine();
-		w.write("        Cursor.__init__(self, conn)");
+		w.write("        Cursor.__init__(self, context)");
 		w.newLine();
 		for (Column c : columns) {
 			w.write(String.format("        self.%s = %s", c.getName(),

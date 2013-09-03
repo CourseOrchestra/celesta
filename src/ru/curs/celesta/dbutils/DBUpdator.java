@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.Column;
@@ -62,8 +63,9 @@ public final class DBUpdator {
 		if (dba == null)
 			dba = DBAdaptor.getAdaptor();
 		Connection conn = ConnectionPool.get();
+		CallContext context = new CallContext(conn, Cursor.SYSTEMUSERID);
 		try {
-			c = new GrainsCursor(conn);
+			c = new GrainsCursor(context);
 
 			// Проверяем наличие главной системной таблицы.
 			if (!dba.tableExists("celesta", "grains")) {

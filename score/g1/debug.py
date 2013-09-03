@@ -4,13 +4,15 @@
 #######################################################
 import ru.curs.celesta.Celesta as Celesta
 import ru.curs.celesta.ConnectionPool as ConnectionPool
+import ru.curs.celesta.CallContext as CallContext
 import hello
 
 
 Celesta.initialize()
 conn = ConnectionPool.get()
+context = CallContext(conn, 'user1')
 try:
-    hello.hello(conn, 'blah-blah')
+    hello.hello(context, 'blah-blah')
 except:
     conn.rollback()
 finally:

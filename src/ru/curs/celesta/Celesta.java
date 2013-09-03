@@ -71,13 +71,13 @@ public final class Celesta {
 		}
 		System.out.println("Celesta initialized successfully.");
 
-		if (args.length > 0)
+		if (args.length > 1)
 			try {
-				String[] params = new String[args.length - 1];
-				for (int i = 1; i < args.length; i++)
-					params[i - 1] = args[i];
+				String[] params = new String[args.length - 2];
+				for (int i = 2; i < args.length; i++)
+					params[i - 2] = args[i];
 
-				getInstance().runPython(args[0], params);
+				getInstance().runPython(args[0], args[1], params);
 			} catch (CelestaException e) {
 				System.out
 						.println("The following problems occured while trying to execute "
@@ -89,6 +89,10 @@ public final class Celesta {
 	/**
 	 * Запуск питоновской процедуры.
 	 * 
+	 * @param userId
+	 *            идентификатор пользователя, от имени которого производится
+	 *            изменение
+	 * 
 	 * @param proc
 	 *            Имя процедуры в формате <grain>.<module>.<proc>
 	 * @param param
@@ -97,7 +101,8 @@ public final class Celesta {
 	 *             В случае, если процедура не найдена или в случае ошибки
 	 *             выполненения процедуры.
 	 */
-	public void runPython(String proc, String... param) throws CelestaException {
+	public void runPython(String userId, String proc, String... param)
+			throws CelestaException {
 		Matcher m = PROCNAME.matcher(proc);
 
 		if (m.find()) {
@@ -113,14 +118,15 @@ public final class Celesta {
 						proc, grainName);
 			}
 
-			StringBuilder sb = new StringBuilder("conn");
+			StringBuilder sb = new StringBuilder("context");
 			for (String arg : param)
 				sb.append(String.format(", '%s'", arg));
 
 			PythonInterpreter interp = new PythonInterpreter();
 			Connection conn = ConnectionPool.get();
+			CallContext context = new CallContext(conn, userId);
 			try {
-				interp.set("conn", conn);
+				interp.set("context", context);
 				try {
 					String line = String.format("from %s import %s as %s",
 							grainName, unitName, unitName);
