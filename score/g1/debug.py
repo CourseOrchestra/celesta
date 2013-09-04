@@ -15,6 +15,7 @@ try:
     hello.hello(context, 'blah-blah')
 except:
     conn.rollback()
+    raise
 finally:
     ConnectionPool.putBack(conn)
 

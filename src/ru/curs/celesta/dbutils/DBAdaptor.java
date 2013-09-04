@@ -358,8 +358,8 @@ abstract class DBAdaptor {
 			Table t, Map<String, AbstractFilter> filters)
 			throws CelestaException;
 
-	abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t)
-			throws CelestaException;
+	abstract PreparedStatement getInsertRecordStatement(Connection conn,
+			Table t, boolean[] nullsMask) throws CelestaException;
 
 	abstract PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
 			throws CelestaException;

@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -261,16 +262,27 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getInsertRecordStatement(Connection conn, Table t)
-			throws CelestaException {
-		StringBuilder sb = new StringBuilder();
+	PreparedStatement getInsertRecordStatement(Connection conn, Table t,
+			boolean[] nullsMask) throws CelestaException {
+
+		Iterator<String> columns = t.getColumns().keySet().iterator();
+		// Создаём параметризуемую часть запроса, пропуская нулевые значения.
+		StringBuilder fields = new StringBuilder();
+		StringBuilder params = new StringBuilder();
 		for (int i = 0; i < t.getColumns().size(); i++) {
-			if (sb.length() > 0)
-				sb.append(", ");
-			sb.append("?");
+			String c = columns.next();
+			if (nullsMask[i])
+				continue;
+			if (params.length() > 0) {
+				fields.append(", ");
+				params.append(", ");
+			}
+			params.append("?");
+			fields.append(c);
 		}
+
 		String sql = String.format("insert %s.%s (%s) values (%s);", t
-				.getGrain().getName(), t.getName(), getTableFieldsList(t), sb
+				.getGrain().getName(), t.getName(), fields.toString(), params
 				.toString());
 		return prepareStatement(conn, sql);
 	}

@@ -128,8 +128,7 @@ public final class ORMCompiler {
 		w.write("        Cursor.__init__(self, context)");
 		w.newLine();
 		for (Column c : columns) {
-			w.write(String.format("        self.%s = %s", c.getName(),
-					c.pythonDefaultValue()));
+			w.write(String.format("        self.%s = None", c.getName()));
 			w.newLine();
 		}
 		// Имя гранулы
@@ -158,14 +157,12 @@ public final class ORMCompiler {
 		w.write("        if withKeys:");
 		w.newLine();
 		for (Column c : pk) {
-			w.write(String.format("            self.%s = %s", c.getName(),
-					c.pythonDefaultValue()));
+			w.write(String.format("            self.%s = None", c.getName()));
 			w.newLine();
 		}
 		for (Column c : columns)
 			if (!pk.contains(c)) {
-				w.write(String.format("        self.%s = %s", c.getName(),
-						c.pythonDefaultValue()));
+				w.write(String.format("        self.%s = None", c.getName()));
 				w.newLine();
 			}
 		// Текущие значения ключевых полей

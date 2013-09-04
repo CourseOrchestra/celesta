@@ -81,7 +81,7 @@ public final class Celesta {
 			} catch (CelestaException e) {
 				System.out
 						.println("The following problems occured while trying to execute "
-								+ args[0] + ":");
+								+ args[1] + ":");
 				System.out.println(e.getMessage());
 			}
 	}

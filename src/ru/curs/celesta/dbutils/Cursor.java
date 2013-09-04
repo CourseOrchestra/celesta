@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,6 +28,7 @@ public abstract class Cursor {
 	private final Connection conn;
 	private PreparedStatement get = null;
 	private PreparedStatement set = null;
+	private boolean[] insertMask = null;
 	private PreparedStatement insert = null;
 	private PreparedStatement update = null;
 	private PreparedStatement delete = null;
@@ -186,11 +188,21 @@ public abstract class Cursor {
 			} finally {
 				rs.close();
 			}
-			if (insert == null)
-				insert = db.getInsertRecordStatement(conn, meta());
 			Object[] values = currentValues();
+			boolean[] myMask = new boolean[values.length];
 			for (int i = 0; i < values.length; i++)
-				DBAdaptor.setParam(insert, i + 1, values[i]);
+				myMask[i] = values[i] == null;
+			if (!Arrays.equals(myMask, insertMask)) {
+				insert = db.getInsertRecordStatement(conn, meta(), myMask);
+				insertMask = myMask;
+			}
+
+			int j = 1;
+			for (int i = 0; i < values.length; i++)
+				if (!myMask[i]) {
+					DBAdaptor.setParam(insert, j, values[i]);
+					j++;
+				}
 			insert.execute();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
