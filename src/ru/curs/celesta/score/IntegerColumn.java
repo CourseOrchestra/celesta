@@ -13,11 +13,17 @@ public final class IntegerColumn extends Column {
 	}
 
 	@Override
-	protected void setDefault(String lexvalue) {
+	protected void setDefault(String lexvalue) throws ParseException {
 		if (lexvalue == null) {
 			defaultvalue = null;
 			identity = false;
 		} else if ("IDENTITY".equalsIgnoreCase(lexvalue)) {
+			for (Column c : getParentTable().getColumns().values())
+				if (c instanceof IntegerColumn && c != this
+						&& ((IntegerColumn) c).isIdentity())
+					throw new ParseException(
+							"More than one identity columns are defind in table "
+									+ getParentTable().getName());
 			defaultvalue = null;
 			identity = true;
 		} else {

@@ -2,7 +2,8 @@ create grain test2 version '2.5';
 
 create table c (
 iii int not null identity primary key,
-bbb nvarchar(2)
+bbb nvarchar(2),
+sss int -- identity (no more than one identity field is allowed!)
 );
 
 create table d (
