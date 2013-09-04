@@ -203,7 +203,9 @@ public abstract class Cursor {
 					DBAdaptor.setParam(insert, j, values[i]);
 					j++;
 				}
+			preInsert();
 			insert.execute();
+			postInsert();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
@@ -254,7 +256,9 @@ public abstract class Cursor {
 				DBAdaptor.setParam(update, i + 1, values[i]);
 			for (int i = 0; i < keyValues.length; i++)
 				DBAdaptor.setParam(update, i + values.length + 1, values[i]);
+			preUpdate();
 			update.execute();
+			postUpdate();
 
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -275,7 +279,9 @@ public abstract class Cursor {
 		for (int i = 0; i < keyValues.length; i++)
 			DBAdaptor.setParam(delete, i + 1, keyValues[i]);
 		try {
+			preDelete();
 			delete.execute();
+			postDelete();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
@@ -510,4 +516,16 @@ public abstract class Cursor {
 	protected abstract Object[] currentKeyValues();
 
 	protected abstract Object[] currentValues();
+
+	protected abstract void preDelete();
+
+	protected abstract void postDelete();
+
+	protected abstract void preUpdate();
+
+	protected abstract void postUpdate();
+
+	protected abstract void preInsert();
+
+	protected abstract void postInsert();
 }

@@ -132,4 +132,28 @@ final class GrainsCursor extends Cursor {
 	protected String tableName() {
 		return "grains";
 	}
+
+	@Override
+	protected void preDelete() {
+	}
+
+	@Override
+	protected void postDelete() {
+	}
+
+	@Override
+	protected void preUpdate() {
+	}
+
+	@Override
+	protected void postUpdate() {
+	}
+
+	@Override
+	protected void preInsert() {
+	}
+
+	@Override
+	protected void postInsert() {
+	}
 }

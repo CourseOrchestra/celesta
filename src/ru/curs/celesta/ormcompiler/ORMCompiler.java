@@ -34,6 +34,12 @@ public final class ORMCompiler {
 			"import ru.curs.celesta.dbutils.Cursor as Cursor",
 			"from java.lang import Object", "from jarray import array", "" };
 
+	private static final String[] TABLE_HEADER = { "    onPreDelete  = []",
+			"    onPostDelete = []", "    onPreInsert  = []",
+			"    onPostInsert = []", "    onPreUpdate  = []",
+			"    onPostUpdate = []" };
+	private static final String F_SELF = "            f(self)";
+
 	private ORMCompiler() {
 
 	}
@@ -120,8 +126,14 @@ public final class ORMCompiler {
 		Collection<Column> columns = t.getColumns().values();
 		Set<Column> pk = new LinkedHashSet<>(t.getPrimaryKey().values());
 
-		w.write(String.format("class %sCursor(Cursor):", t.getName()));
+		String className = t.getName() + "Cursor";
+
+		w.write(String.format("class %s(Cursor):", className));
 		w.newLine();
+		for (String s : TABLE_HEADER) {
+			w.write(s);
+			w.newLine();
+		}
 		// Конструктор
 		w.write("    def __init__(self, context):");
 		w.newLine();
@@ -131,6 +143,8 @@ public final class ORMCompiler {
 			w.write(String.format("        self.%s = None", c.getName()));
 			w.newLine();
 		}
+		w.write("        self.context = context");
+		w.newLine();
 		// Имя гранулы
 		w.write("    def grainName(self):");
 		w.newLine();
@@ -189,6 +203,44 @@ public final class ORMCompiler {
 		w.write(String.format("        return array([%s], Object)",
 				sb.toString()));
 		w.newLine();
+		// Триггеры
+		w.write("    def preDelete(self):");
+		w.newLine();
+		w.write(String.format("        for f in %s.onPreDelete:", className));
+		w.newLine();
+		w.write(String.format(F_SELF));
+		w.newLine();
+		w.write("    def postDelete(self):");
+		w.newLine();
+		w.write(String.format("        for f in %s.onPostDelete:", className));
+		w.newLine();
+		w.write(String.format(F_SELF));
+		w.newLine();
+		w.write("    def preInsert(self):");
+		w.newLine();
+		w.write(String.format("        for f in %s.onPreInsert:", className));
+		w.newLine();
+		w.write(String.format(F_SELF));
+		w.newLine();
+		w.write("    def postInsert(self):");
+		w.newLine();
+		w.write(String.format("        for f in %s.onPostInsert:", className));
+		w.newLine();
+		w.write(String.format(F_SELF));
+		w.newLine();
+		w.write("    def preUpdate(self):");
+		w.newLine();
+		w.write(String.format("        for f in %s.onPreUpdate:", className));
+		w.newLine();
+		w.write(String.format(F_SELF));
+		w.newLine();
+		w.write("    def postUpdate(self):");
+		w.newLine();
+		w.write(String.format("        for f in %s.onPostUpdate:", className));
+		w.newLine();
+		w.write(String.format(F_SELF));
+		w.newLine();
+
 		w.newLine();
 	}
 }
