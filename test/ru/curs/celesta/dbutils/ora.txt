@@ -2,8 +2,9 @@ create table celesta.grains(
   id varchar2(16) not null,
   version varchar2(4000) not null,
   length number not null,
-  checksum number not null,
+  checksum varchar2(8) not null,
   state number not null default 3,
   lastmodified timestamp not null default sysdate,
-  message varchar2(4000) not null default ''
+  message varchar2(4000) not null default '',
+  constraint pk_grains primary key (id)
 );

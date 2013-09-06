@@ -18,6 +18,8 @@ public class DBAdaptorTest {
 			throws ParseException, IOException {
 		String[] actual = a.tableDef(s.getGrain("celesta").getTable("grains"))
 				.split("\n");
+		// for (String l : actual)
+		// System.out.println(l);
 		BufferedReader r = new BufferedReader(new InputStreamReader(
 				DBAdaptorTest.class.getResourceAsStream(fileName), "utf-8"));
 		for (String l : actual)

@@ -108,8 +108,9 @@ public final class ORMCompiler {
 			throws IOException {
 		w.write("# coding=UTF-8");
 		w.newLine();
-		w.write(String.format("# Source grain parameters: len=%d, crc32=%08X.",
-				g.getLength(), g.getChecksum()));
+		w.write(String.format(
+				"# Source grain parameters: version=%s, len=%d, crc32=%08X.",
+				g.getVersion(), g.getLength(), g.getChecksum()));
 		w.newLine();
 		for (String s : HEADER) {
 			w.write(s);

@@ -142,7 +142,7 @@ final class OraAdaptor extends DBAdaptor {
 				BooleanColumn ic = (BooleanColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
+					defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
 				}
 				// TODO: constraint на Y/N
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);

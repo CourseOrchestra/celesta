@@ -96,7 +96,7 @@ public final class DBUpdator {
 							"Cannot proceed with database upgrade: there are grains "
 									+ "not in 'ready' or 'recover' state.");
 				GrainInfo gi = new GrainInfo();
-				gi.checksum = c.getChecksum();
+				gi.checksum = (int) Long.parseLong(c.getChecksum(), 16);
 				gi.length = c.getLength();
 				gi.recover = c.getState() == GrainsCursor.RECOVER;
 				try {
@@ -137,7 +137,7 @@ public final class DBUpdator {
 		c.setId(g.getName());
 		c.setVersion(g.getVersion().toString());
 		c.setLength(g.getLength());
-		c.setChecksum(g.getChecksum());
+		c.setChecksum(String.format("%08X", g.getChecksum()));
 		c.setState(GrainsCursor.RECOVER);
 		c.setLastmodified(new Date());
 		c.setMessage("");
@@ -226,7 +226,7 @@ public final class DBUpdator {
 			// По завершении -- обновление номера версии, контрольной суммы
 			// и выставление в статус ready
 			c.setState(GrainsCursor.READY);
-			c.setChecksum(g.getChecksum());
+			c.setChecksum(String.format("%08X", g.getChecksum()));
 			c.setLength(g.getLength());
 			c.setLastmodified(new Date());
 			c.setMessage("");

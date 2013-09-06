@@ -228,6 +228,7 @@ abstract class DBAdaptor {
 
 	final String tableDef(Table table) {
 		StringBuilder sb = new StringBuilder();
+		// Определение таблицы с колонками
 		sb.append(String.format("create table %s.%s(\n", table.getGrain()
 				.getName(), table.getName()));
 		boolean multiple = false;
@@ -237,7 +238,19 @@ abstract class DBAdaptor {
 			sb.append("  " + columnDef(c));
 			multiple = true;
 		}
-		sb.append("\n);");
+		sb.append(",\n");
+		// Определение первичного ключа (он у нас всегда присутствует)
+		sb.append(String.format("  constraint %s primary key (", table
+				.getPkConstraintName() == null ? "pk_" + table.getName()
+				: table.getPkConstraintName()));
+		multiple = false;
+		for (String s : table.getPrimaryKey().keySet()) {
+			if (multiple)
+				sb.append(", ");
+			sb.append(s);
+			multiple = true;
+		}
+		sb.append(")\n);");
 		return sb.toString();
 	}
 

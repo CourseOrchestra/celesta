@@ -21,7 +21,7 @@ final class GrainsCursor extends Cursor {
 	private String id;
 	private String version;
 	private int length;
-	private int checksum;
+	private String checksum;
 	private int state;
 	private Date lastmodified;
 	private String message;
@@ -54,11 +54,11 @@ final class GrainsCursor extends Cursor {
 		this.length = length;
 	}
 
-	int getChecksum() {
+	String getChecksum() {
 		return checksum;
 	}
 
-	void setChecksum(int checksum) {
+	void setChecksum(String checksum) {
 		this.checksum = checksum;
 	}
 
@@ -91,7 +91,7 @@ final class GrainsCursor extends Cursor {
 		id = rs.getString(1);
 		version = rs.getString(2);
 		length = rs.getInt(3);
-		checksum = rs.getInt(4);
+		checksum = rs.getString(4);
 		state = rs.getInt(5);
 		lastmodified = rs.getDate(6);
 		message = rs.getString(7);
@@ -104,7 +104,7 @@ final class GrainsCursor extends Cursor {
 			id = null;
 		version = null;
 		length = 0;
-		checksum = 0;
+		checksum = "";
 		state = 0;
 		lastmodified = null;
 		message = null;
