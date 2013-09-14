@@ -29,7 +29,8 @@ import ru.curs.celesta.score.VersionString;
 public final class DBUpdator {
 
 	private static DBAdaptor dba;
-	private static GrainsCursor c;
+	private static GrainsCursor grain;
+	private static TablesCursor table;
 
 	private static final Comparator<Grain> GRAIN_COMPARATOR = new Comparator<Grain>() {
 		@Override
@@ -65,7 +66,8 @@ public final class DBUpdator {
 		Connection conn = ConnectionPool.get();
 		CallContext context = new CallContext(conn, Cursor.SYSTEMUSERID);
 		try {
-			c = new GrainsCursor(context);
+			grain = new GrainsCursor(context);
+			table = new TablesCursor(context);
 
 			// Проверяем наличие главной системной таблицы.
 			if (!dba.tableExists("celesta", "grains")) {
@@ -78,6 +80,7 @@ public final class DBUpdator {
 					Grain sys = score.getGrain("celesta");
 					dba.createSchemaIfNotExists("celesta");
 					dba.createTable(sys.getTable("grains"));
+					dba.createTable(sys.getTable("tables"));
 					insertGrainRec(sys);
 					updateGrain(sys);
 				} catch (ParseException e) {
@@ -90,23 +93,24 @@ public final class DBUpdator {
 			// что
 			// хранится в таблице grains.
 			Map<String, GrainInfo> dbGrains = new HashMap<>();
-			while (c.next()) {
-				if (!(c.getState() == GrainsCursor.READY || c.getState() == GrainsCursor.RECOVER))
+			while (grain.next()) {
+				if (!(grain.getState() == GrainsCursor.READY || grain
+						.getState() == GrainsCursor.RECOVER))
 					throw new CelestaException(
 							"Cannot proceed with database upgrade: there are grains "
 									+ "not in 'ready' or 'recover' state.");
 				GrainInfo gi = new GrainInfo();
-				gi.checksum = (int) Long.parseLong(c.getChecksum(), 16);
-				gi.length = c.getLength();
-				gi.recover = c.getState() == GrainsCursor.RECOVER;
+				gi.checksum = (int) Long.parseLong(grain.getChecksum(), 16);
+				gi.length = grain.getLength();
+				gi.recover = grain.getState() == GrainsCursor.RECOVER;
 				try {
-					gi.version = new VersionString(c.getVersion());
+					gi.version = new VersionString(grain.getVersion());
 				} catch (ParseException e) {
 					throw new CelestaException(String.format(
 							"Error while scanning celesta.grains table: %s",
 							e.getMessage()));
 				}
-				dbGrains.put(c.getId(), gi);
+				dbGrains.put(grain.getId(), gi);
 			}
 
 			// Получаем список гранул на основе метамодели и сортируем его по
@@ -133,15 +137,15 @@ public final class DBUpdator {
 	}
 
 	private static void insertGrainRec(Grain g) throws CelestaException {
-		c.init();
-		c.setId(g.getName());
-		c.setVersion(g.getVersion().toString());
-		c.setLength(g.getLength());
-		c.setChecksum(String.format("%08X", g.getChecksum()));
-		c.setState(GrainsCursor.RECOVER);
-		c.setLastmodified(new Date());
-		c.setMessage("");
-		c.insert();
+		grain.init();
+		grain.setId(g.getName());
+		grain.setVersion(g.getVersion().toString());
+		grain.setLength(g.getLength());
+		grain.setChecksum(String.format("%08X", g.getChecksum()));
+		grain.setState(GrainsCursor.RECOVER);
+		grain.setLastmodified(new Date());
+		grain.setMessage("");
+		grain.insert();
 	}
 
 	private static void decideToUpgrade(Grain g, GrainInfo gi)
@@ -193,20 +197,32 @@ public final class DBUpdator {
 	 */
 	private static void updateGrain(Grain g) throws CelestaException {
 		// выставление в статус updating
-		c.get(g.getName());
-		c.setState(GrainsCursor.UPGRADING);
-		c.update();
-		ConnectionPool.commit(c.getConnection());
+		grain.get(g.getName());
+		grain.setState(GrainsCursor.UPGRADING);
+		grain.update();
+		ConnectionPool.commit(grain.getConnection());
+
 		// теперь собственно обновление гранулы
 		try {
 			// Схему создаём, если ещё не создана.
 			dba.createSchemaIfNotExists(g.getName());
 			// Обновляем все таблицы.
-			for (Table t : g.getTables().values())
+			table.setRange("grainid", g.getName());
+			while (table.next()) {
+				table.setOrphaned(!g.getTables().containsKey(
+						table.getTablename()));
+				table.update();
+			}
+			for (Table t : g.getTables().values()) {
 				updateTable(t);
+				table.setGrainid(g.getName());
+				table.setTablename(t.getName());
+				table.setOrphaned(false);
+				table.tryInsert();
+			}
 
 			// Обновляем все индексы.
-			Set<String> dbIndices = dba.getIndices(c.getConnection(), g);
+			Set<String> dbIndices = dba.getIndices(grain.getConnection(), g);
 			Map<String, Index> myIndices = g.getIndices();
 			// Начинаем с удаления ненужных
 			for (String indexName : dbIndices)
@@ -225,26 +241,26 @@ public final class DBUpdator {
 
 			// По завершении -- обновление номера версии, контрольной суммы
 			// и выставление в статус ready
-			c.setState(GrainsCursor.READY);
-			c.setChecksum(String.format("%08X", g.getChecksum()));
-			c.setLength(g.getLength());
-			c.setLastmodified(new Date());
-			c.setMessage("");
-			c.setVersion(g.getVersion().toString());
-			c.update();
+			grain.setState(GrainsCursor.READY);
+			grain.setChecksum(String.format("%08X", g.getChecksum()));
+			grain.setLength(g.getLength());
+			grain.setLastmodified(new Date());
+			grain.setMessage("");
+			grain.setVersion(g.getVersion().toString());
+			grain.update();
 		} catch (CelestaException e) {
 			// Если что-то пошло не так
-			c.setState(GrainsCursor.ERROR);
-			c.setMessage(String.format(
+			grain.setState(GrainsCursor.ERROR);
+			grain.setMessage(String.format(
 					"Error while trying to update to version %s: %s", g
 							.getVersion().toString(), e.getMessage()));
-			c.update();
+			grain.update();
 		}
 	}
 
 	private static void updateTable(Table t) throws CelestaException {
 		if (dba.tableExists(t.getGrain().getName(), t.getName())) {
-			Set<String> dbColumns = dba.getColumns(c.getConnection(), t);
+			Set<String> dbColumns = dba.getColumns(grain.getConnection(), t);
 
 			for (Entry<String, Column> e : t.getColumns().entrySet()) {
 				if (dbColumns.contains(e.getKey())) {
@@ -253,7 +269,7 @@ public final class DBUpdator {
 					// обновить.
 					System.out.println("Implement column check here.");
 				} else {
-					dba.createColumn(c.getConnection(), e.getValue());
+					dba.createColumn(grain.getConnection(), e.getValue());
 				}
 			}
 		} else {

@@ -13,6 +13,7 @@ CREATE TABLE grains(
 CREATE TABLE tables(
   grainid nvarchar(16) NOT NULL FOREIGN KEY REFERENCES grains(id),
   tablename nvarchar(100) NOT NULL,
+  orphaned bit not null default 0,
   CONSTRAINT pk_tables PRIMARY KEY (grainid, tablename)
 );
 
