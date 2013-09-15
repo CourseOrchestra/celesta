@@ -1,16 +1,17 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.syscursors;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице tables.
  * 
  */
-final class TablesCursor extends Cursor {
+public final class TablesCursor extends Cursor {
 	private String grainid;
 	private String tablename;
 	private boolean orphaned;
@@ -81,26 +82,53 @@ final class TablesCursor extends Cursor {
 	protected void postInsert() {
 	}
 
+	/**
+	 * Идентификатор гранулы.
+	 */
 	public String getGrainid() {
 		return grainid;
 	}
 
+	/**
+	 * Устанавливает идентификатор гранулы.
+	 * 
+	 * @param grainid
+	 *            Идентификатор гранулы.
+	 */
 	public void setGrainid(String grainid) {
 		this.grainid = grainid;
 	}
 
+	/**
+	 * Имя таблицы.
+	 */
 	public String getTablename() {
 		return tablename;
 	}
 
+	/**
+	 * Устанавливает имя таблицы.
+	 * 
+	 * @param tablename
+	 *            имя таблицы
+	 */
 	public void setTablename(String tablename) {
 		this.tablename = tablename;
 	}
 
+	/**
+	 * Является ли таблица осиротевшей (отсутствющей в метаданных гранулы).
+	 */
 	public boolean isOrphaned() {
 		return orphaned;
 	}
 
+	/**
+	 * Устанавливает признак того, что таблица остутствует в метаданных гранулы.
+	 * 
+	 * @param orphaned
+	 *            признак отсутствия в метаданных гранулы.
+	 */
 	public void setOrphaned(boolean orphaned) {
 		this.orphaned = orphaned;
 	}

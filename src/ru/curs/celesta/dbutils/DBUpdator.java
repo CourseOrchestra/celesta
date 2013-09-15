@@ -21,6 +21,8 @@ import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.VersionString;
+import ru.curs.celesta.syscursors.GrainsCursor;
+import ru.curs.celesta.syscursors.TablesCursor;
 
 /**
  * Класс, выполняющий процедуру обновления базы данных.
