@@ -2,11 +2,11 @@
 <project name="celesta" default="jar">
 	<target name="javacc">
 		<echo>Compiling Celesta parser</echo>
-		<javacc target="src/ru/curs/celesta/score/celestasql.jj" outputdirectory="src/ru/curs/celesta/score/" javacchome="javacc-5.0" />
+		<javacc target="src/ru/curs/celesta/score/CelestaParser.jj" outputdirectory="src/ru/curs/celesta/score/" javacchome="javacc-5.0" />
 	</target>
 	<target name="compile" depends="javacc">
 		<echo>Compile the source files</echo>
-		<javac destdir="build/classes" encoding="UTF-8">
+		<javac destdir="build/classes" includeantruntime="false" encoding="UTF-8">
 			<classpath>
 				<pathelement path="lib/jython.jar" />
 			</classpath>
