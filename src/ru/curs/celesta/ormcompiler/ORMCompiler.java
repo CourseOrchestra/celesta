@@ -159,12 +159,10 @@ public final class ORMCompiler {
 		// Разбор строки по переменным
 		w.write("    def parseResult(self, rs):");
 		w.newLine();
-		int i = 1;
 		for (Column c : columns) {
-			w.write(String.format("        self.%s = rs.%s(%d)", c.getName(),
-					c.jdbcGetterName(), i));
+			w.write(String.format("        self.%s = rs.%s('%s')", c.getName(),
+					c.jdbcGetterName(), c.getName()));
 			w.newLine();
-			i++;
 		}
 		// Очистка буфера
 		w.write("    def clearBuffer(self, withKeys):");
