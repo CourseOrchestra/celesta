@@ -32,9 +32,9 @@ public final class TablesCursor extends Cursor {
 
 	@Override
 	protected void parseResult(ResultSet rs) throws SQLException {
-		grainid = rs.getString(1);
-		tablename = rs.getString(2);
-		orphaned = rs.getBoolean(3);
+		grainid = rs.getString("grainid");
+		tablename = rs.getString("tablename");
+		orphaned = rs.getBoolean("orphaned");
 	}
 
 	@Override

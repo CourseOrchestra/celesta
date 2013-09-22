@@ -18,19 +18,19 @@ CREATE TABLE tables(
 );
 
 CREATE TABLE roles(
-  id int NOT NULL IDENTITY PRIMARY KEY,
+  id nvarchar(16) NOT NULL PRIMARY KEY,
   descritpion nvarchar(20)
 );
 
 CREATE TABLE userroles(
   userid nvarchar(250) NOT NULL,
-  roleid int NOT NULL,
+  roleid nvarchar(16) NOT NULL,
   CONSTRAINT pk_userroles PRIMARY KEY (userid, roleid),
   CONSTRAINT fk_userroles FOREIGN KEY (roleid) REFERENCES roles(id)
 );
 
 CREATE TABLE permissions(
-  roleid int NOT NULL,
+  roleid nvarchar(16) NOT NULL,
   grainid nvarchar(16) NOT NULL,
   tablename nvarchar(100) NOT NULL,
   r bit NOT NULL DEFAULT 'FALSE',

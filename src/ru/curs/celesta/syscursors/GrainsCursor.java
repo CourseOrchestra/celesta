@@ -164,13 +164,13 @@ public final class GrainsCursor extends Cursor {
 
 	@Override
 	protected void parseResult(ResultSet rs) throws SQLException {
-		id = rs.getString(1);
-		version = rs.getString(2);
-		length = rs.getInt(3);
-		checksum = rs.getString(4);
-		state = rs.getInt(5);
-		lastmodified = rs.getDate(6);
-		message = rs.getString(7);
+		id = rs.getString("id");
+		version = rs.getString("version");
+		length = rs.getInt("length");
+		checksum = rs.getString("checksum");
+		state = rs.getInt("state");
+		lastmodified = rs.getDate("lastmodified");
+		message = rs.getString("message");
 
 	}
 

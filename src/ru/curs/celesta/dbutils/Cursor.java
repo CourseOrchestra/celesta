@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.PermissionDeniedException;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Table;
 
@@ -23,9 +24,12 @@ import ru.curs.celesta.score.Table;
 public abstract class Cursor {
 	static final String SYSTEMUSERID = "system";
 
+	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
+
 	private Table meta = null;
 	private final DBAdaptor db;
 	private final Connection conn;
+	private final CallContext context;
 	private PreparedStatement get = null;
 	private PreparedStatement set = null;
 	private boolean[] insertMask = null;
@@ -39,6 +43,7 @@ public abstract class Cursor {
 	private List<String> orderBy = new LinkedList<>();
 
 	public Cursor(CallContext context) throws CelestaException {
+		this.context = context;
 		conn = context.getConn();
 		try {
 			if (conn.isClosed())
@@ -93,6 +98,9 @@ public abstract class Cursor {
 	 *             Ошибка связи с базой данных
 	 */
 	public final boolean tryFirst() throws CelestaException {
+		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.READ))
+			throw new PermissionDeniedException(context, meta(), Action.READ);
+
 		if (set == null)
 			set = db.getRecordSetStatement(conn, meta(), filters, orderBy);
 		boolean result = false;
@@ -179,6 +187,9 @@ public abstract class Cursor {
 	 *             ошибка БД
 	 */
 	public final boolean tryInsert() throws CelestaException {
+		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.INSERT))
+			throw new PermissionDeniedException(context, meta(), Action.INSERT);
+
 		prepareGet(currentKeyValues());
 		try {
 			ResultSet rs = get.executeQuery();
@@ -239,6 +250,9 @@ public abstract class Cursor {
 	 *             ошибка БД
 	 */
 	public final boolean tryUpdate() throws CelestaException {
+		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.MODIFY))
+			throw new PermissionDeniedException(context, meta(), Action.MODIFY);
+
 		prepareGet(currentKeyValues());
 		try {
 			ResultSet rs = get.executeQuery();
@@ -273,6 +287,9 @@ public abstract class Cursor {
 	 *             ошибка БД
 	 */
 	public void delete() throws CelestaException {
+		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.DELETE))
+			throw new PermissionDeniedException(context, meta(), Action.DELETE);
+
 		if (delete == null)
 			delete = db.getDeleteRecordStatement(conn, meta());
 		Object[] keyValues = currentKeyValues();
@@ -294,6 +311,9 @@ public abstract class Cursor {
 	 *             Ошибка БД
 	 */
 	public void deleteAll() throws CelestaException {
+		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.DELETE))
+			throw new PermissionDeniedException(context, meta(), Action.DELETE);
+
 		PreparedStatement stmt = db.deleteRecordSetStatement(conn, meta(),
 				filters);
 		try {
@@ -340,6 +360,9 @@ public abstract class Cursor {
 	 */
 
 	public final boolean tryGet(Object... values) throws CelestaException {
+		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.READ))
+			throw new PermissionDeniedException(context, meta(), Action.READ);
+
 		prepareGet(values);
 		boolean result = false;
 		try {
@@ -494,7 +517,6 @@ public abstract class Cursor {
 	 *             происходить).
 	 */
 	public final Table meta() throws CelestaException {
-
 		if (meta == null)
 			try {
 				meta = Celesta.getInstance().getScore().getGrain(grainName())
