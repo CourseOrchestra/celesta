@@ -6,13 +6,12 @@ import java.util.Date;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице Grains.
  * 
  */
-public final class GrainsCursor extends Cursor {
+public final class GrainsCursor extends SysCursor {
 
 	/**
 	 * Статус "готов".
@@ -200,36 +199,7 @@ public final class GrainsCursor extends Cursor {
 	}
 
 	@Override
-	protected String grainName() {
-		return "celesta";
-	}
-
-	@Override
 	protected String tableName() {
 		return "grains";
-	}
-
-	@Override
-	protected void preDelete() {
-	}
-
-	@Override
-	protected void postDelete() {
-	}
-
-	@Override
-	protected void preUpdate() {
-	}
-
-	@Override
-	protected void postUpdate() {
-	}
-
-	@Override
-	protected void preInsert() {
-	}
-
-	@Override
-	protected void postInsert() {
 	}
 }

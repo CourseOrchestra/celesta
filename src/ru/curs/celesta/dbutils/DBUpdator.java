@@ -202,7 +202,7 @@ public final class DBUpdator {
 		grain.get(g.getName());
 		grain.setState(GrainsCursor.UPGRADING);
 		grain.update();
-		ConnectionPool.commit(grain.getConnection());
+		ConnectionPool.commit(grain.callContext().getConn());
 
 		// теперь собственно обновление гранулы
 		try {
@@ -224,7 +224,8 @@ public final class DBUpdator {
 			}
 
 			// Обновляем все индексы.
-			Set<String> dbIndices = dba.getIndices(grain.getConnection(), g);
+			Set<String> dbIndices = dba.getIndices(
+					grain.callContext().getConn(), g);
 			Map<String, Index> myIndices = g.getIndices();
 			// Начинаем с удаления ненужных
 			for (String indexName : dbIndices)
@@ -262,7 +263,8 @@ public final class DBUpdator {
 
 	private static void updateTable(Table t) throws CelestaException {
 		if (dba.tableExists(t.getGrain().getName(), t.getName())) {
-			Set<String> dbColumns = dba.getColumns(grain.getConnection(), t);
+			Set<String> dbColumns = dba.getColumns(
+					grain.callContext().getConn(), t);
 
 			for (Entry<String, Column> e : t.getColumns().entrySet()) {
 				if (dbColumns.contains(e.getKey())) {
@@ -271,7 +273,7 @@ public final class DBUpdator {
 					// обновить.
 					System.out.println("Implement column check here.");
 				} else {
-					dba.createColumn(grain.getConnection(), e.getValue());
+					dba.createColumn(grain.callContext().getConn(), e.getValue());
 				}
 			}
 		} else {

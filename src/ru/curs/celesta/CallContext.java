@@ -6,7 +6,7 @@ import java.sql.Connection;
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
  * идентификатор пользователя.
  */
-public class CallContext {
+public final class CallContext {
 
 	private final Connection conn;
 	private final String userId;

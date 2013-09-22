@@ -5,13 +5,12 @@ import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице permissions.
  * 
  */
-public final class PermissionsCursor extends Cursor {
+public final class PermissionsCursor extends SysCursor {
 
 	private String roleId;
 	private String grainId;
@@ -23,11 +22,6 @@ public final class PermissionsCursor extends Cursor {
 
 	public PermissionsCursor(CallContext context) throws CelestaException {
 		super(context);
-	}
-
-	@Override
-	protected String grainName() {
-		return "celesta";
 	}
 
 	@Override
@@ -69,30 +63,6 @@ public final class PermissionsCursor extends Cursor {
 	protected Object[] currentValues() {
 		Object[] result = { roleId, grainId, tableName, r, i, m, d };
 		return result;
-	}
-
-	@Override
-	protected void preDelete() {
-	}
-
-	@Override
-	protected void postDelete() {
-	}
-
-	@Override
-	protected void preUpdate() {
-	}
-
-	@Override
-	protected void postUpdate() {
-	}
-
-	@Override
-	protected void preInsert() {
-	}
-
-	@Override
-	protected void postInsert() {
 	}
 
 	/**

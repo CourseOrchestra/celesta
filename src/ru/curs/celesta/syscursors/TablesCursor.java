@@ -5,24 +5,18 @@ import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице tables.
  * 
  */
-public final class TablesCursor extends Cursor {
+public final class TablesCursor extends SysCursor {
 	private String grainid;
 	private String tablename;
 	private boolean orphaned;
 
 	public TablesCursor(CallContext context) throws CelestaException {
 		super(context);
-	}
-
-	@Override
-	protected String grainName() {
-		return "celesta";
 	}
 
 	@Override
@@ -56,30 +50,6 @@ public final class TablesCursor extends Cursor {
 	protected Object[] currentValues() {
 		Object[] result = { grainid, tablename, orphaned };
 		return result;
-	}
-
-	@Override
-	protected void preDelete() {
-	}
-
-	@Override
-	protected void postDelete() {
-	}
-
-	@Override
-	protected void preUpdate() {
-	}
-
-	@Override
-	protected void postUpdate() {
-	}
-
-	@Override
-	protected void preInsert() {
-	}
-
-	@Override
-	protected void postInsert() {
 	}
 
 	/**

@@ -5,23 +5,17 @@ import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице userroles.
  */
-public final class UserRolesCursor extends Cursor {
+public final class UserRolesCursor extends SysCursor {
 
 	private String userId;
 	private String roleId;
 
 	public UserRolesCursor(CallContext context) throws CelestaException {
 		super(context);
-	}
-
-	@Override
-	protected String grainName() {
-		return "celesta";
 	}
 
 	@Override
@@ -53,30 +47,6 @@ public final class UserRolesCursor extends Cursor {
 	protected Object[] currentValues() {
 		Object[] result = { userId, roleId };
 		return result;
-	}
-
-	@Override
-	protected void preDelete() {
-	}
-
-	@Override
-	protected void postDelete() {
-	}
-
-	@Override
-	protected void preUpdate() {
-	}
-
-	@Override
-	protected void postUpdate() {
-	}
-
-	@Override
-	protected void preInsert() {
-	}
-
-	@Override
-	protected void postInsert() {
 	}
 
 	/**

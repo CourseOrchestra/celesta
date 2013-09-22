@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
@@ -22,9 +23,11 @@ import ru.curs.celesta.score.Table;
  * Базовый класс курсора (аналог соответствующего класса в Python-коде).
  */
 public abstract class Cursor {
-	static final String SYSTEMUSERID = "system";
+	static final String SYSTEMUSERID = String.format("SYS%08X",
+			(new Random()).nextInt());
 
 	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
+	private static final LoggingManager LOGGING_MGR = new LoggingManager();
 
 	private Table meta = null;
 	private final DBAdaptor db;
@@ -82,10 +85,10 @@ public abstract class Cursor {
 	}
 
 	/**
-	 * Возвращает соединение, на котором создан данный курсор.
+	 * Возвращает контекст вызова, в котором создан данный курсор.
 	 */
-	public Connection getConnection() {
-		return conn;
+	public final CallContext callContext() {
+		return context;
 	}
 
 	/**
@@ -216,6 +219,7 @@ public abstract class Cursor {
 				}
 			preInsert();
 			insert.execute();
+			LOGGING_MGR.log(this, Action.INSERT);
 			postInsert();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -272,6 +276,7 @@ public abstract class Cursor {
 				DBAdaptor.setParam(update, i + values.length + 1, values[i]);
 			preUpdate();
 			update.execute();
+			LOGGING_MGR.log(this, Action.MODIFY);
 			postUpdate();
 
 		} catch (SQLException e) {
@@ -286,7 +291,7 @@ public abstract class Cursor {
 	 * @throws CelestaException
 	 *             ошибка БД
 	 */
-	public void delete() throws CelestaException {
+	public final void delete() throws CelestaException {
 		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.DELETE))
 			throw new PermissionDeniedException(context, meta(), Action.DELETE);
 
@@ -298,6 +303,7 @@ public abstract class Cursor {
 		try {
 			preDelete();
 			delete.execute();
+			LOGGING_MGR.log(this, Action.DELETE);
 			postDelete();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -310,7 +316,7 @@ public abstract class Cursor {
 	 * @throws CelestaException
 	 *             Ошибка БД
 	 */
-	public void deleteAll() throws CelestaException {
+	public final void deleteAll() throws CelestaException {
 		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.DELETE))
 			throw new PermissionDeniedException(context, meta(), Action.DELETE);
 
@@ -550,4 +556,5 @@ public abstract class Cursor {
 	protected abstract void preInsert();
 
 	protected abstract void postInsert();
+
 }
