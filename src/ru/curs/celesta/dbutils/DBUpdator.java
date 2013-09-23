@@ -83,6 +83,7 @@ public final class DBUpdator {
 					dba.createSchemaIfNotExists("celesta");
 					dba.createTable(sys.getTable("grains"));
 					dba.createTable(sys.getTable("tables"));
+					dba.createTable(sys.getTable("logsetup"));
 					insertGrainRec(sys);
 					updateGrain(sys);
 				} catch (ParseException e) {
@@ -224,8 +225,8 @@ public final class DBUpdator {
 			}
 
 			// Обновляем все индексы.
-			Set<String> dbIndices = dba.getIndices(
-					grain.callContext().getConn(), g);
+			Set<String> dbIndices = dba.getIndices(grain.callContext()
+					.getConn(), g);
 			Map<String, Index> myIndices = g.getIndices();
 			// Начинаем с удаления ненужных
 			for (String indexName : dbIndices)
@@ -263,8 +264,8 @@ public final class DBUpdator {
 
 	private static void updateTable(Table t) throws CelestaException {
 		if (dba.tableExists(t.getGrain().getName(), t.getName())) {
-			Set<String> dbColumns = dba.getColumns(
-					grain.callContext().getConn(), t);
+			Set<String> dbColumns = dba.getColumns(grain.callContext()
+					.getConn(), t);
 
 			for (Entry<String, Column> e : t.getColumns().entrySet()) {
 				if (dbColumns.contains(e.getKey())) {
@@ -273,7 +274,8 @@ public final class DBUpdator {
 					// обновить.
 					System.out.println("Implement column check here.");
 				} else {
-					dba.createColumn(grain.callContext().getConn(), e.getValue());
+					dba.createColumn(grain.callContext().getConn(),
+							e.getValue());
 				}
 			}
 		} else {

@@ -19,7 +19,7 @@ CREATE TABLE tables(
 
 CREATE TABLE roles(
   id nvarchar(16) NOT NULL PRIMARY KEY,
-  descritpion nvarchar(20)
+  description nvarchar(20)
 );
 
 CREATE TABLE userroles(
