@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -16,6 +17,7 @@ import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
@@ -312,16 +314,21 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String getIndicesSQL() {
-		return "select name from sys.indexes where object_id in ("
+	public Set<String> getIndices(Connection conn, Grain g)
+			throws CelestaException {
+		String sql = String.format("select name from sys.indexes where object_id in ("
 				+ "select object_id from sys.tables "
 				+ "where sys.tables.schema_id = SCHEMA_ID('%s')) "
-				+ "and name is not null;";
+				+ "and name is not null;", g.getName());
+		return sqlToStringSet(conn, sql);
 	}
 
 	@Override
-	String getColumnsSQL() {
-		return "select name from sys.columns where object_id = OBJECT_ID('%s.%s');";
+	public Set<String> getColumns(Connection conn, Table t)
+			throws CelestaException {
+		String sql = String.format("select name from sys.columns where object_id = OBJECT_ID('%s.%s');", t.getGrain().getName(),
+				t.getName());
+		return sqlToStringSet(conn, sql);
 	}
 
 	@Override

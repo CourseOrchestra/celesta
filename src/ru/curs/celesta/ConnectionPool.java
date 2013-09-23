@@ -8,6 +8,8 @@ import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ru.curs.celesta.dbutils.DBAdaptor;
+
 /**
  * Пул соединений с базой данных.
  * 
@@ -30,21 +32,22 @@ public final class ConnectionPool {
 		Connection c = POOL.poll();
 		while (c != null) {
 			try {
-				if (c.isValid(1)) {
+				if (DBAdaptor.getAdaptor().isValidConnection(c, 1)) {
 					return c;
 				}
-			} catch (SQLException e) {
+			} catch (CelestaException e) {
 				// do something to make CheckStyle happy ))
 				c = null;
 			}
 			c = POOL.poll();
 		}
 		try {
+			Class.forName(AppSettings.getDbClassName());
 			c = DriverManager
 					.getConnection(AppSettings.getDatabaseConnection());
 			c.setAutoCommit(false);
 			return c;
-		} catch (SQLException e) {
+		} catch (SQLException | ClassNotFoundException e) {
 			throw new CelestaException("Could not connect to %s with error: %s",
 					PasswordHider.maskPassword(AppSettings
 							.getDatabaseConnection()), e.getMessage());
@@ -61,11 +64,11 @@ public final class ConnectionPool {
 	public static synchronized void putBack(Connection c) {
 		// Вставляем только хорошие соединения...
 		try {
-			if (c != null && c.isValid(1)) {
+			if (c != null && DBAdaptor.getAdaptor().isValidConnection(c, 1)) {
 				c.commit();
 				POOL.add(c);
 			}
-		} catch (SQLException e) {
+		} catch (SQLException | CelestaException e) {
 			// do something to make CheckStyle happy ))
 			return;
 		}

@@ -1,13 +1,18 @@
 package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -15,13 +20,13 @@ import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 
 /**
  * Адаптер Oracle Database.
- * 
  */
 final class OraAdaptor extends DBAdaptor {
 
@@ -37,13 +42,13 @@ final class OraAdaptor extends DBAdaptor {
 			String getColumnDef(Column c) {
 				IntegerColumn ic = (IntegerColumn) c;
 				String defaultStr = "";
-				// TODO autoincrement
+				// TODO: для поддержки autoincrement необходимо создавать
+				// SEQUENCE
 				if (ic.isIdentity()) {
-					defaultStr = "IDENTITY";
 				} else if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
 			}
 
 		}
@@ -64,7 +69,7 @@ final class OraAdaptor extends DBAdaptor {
 				if (ic.getDefaultvalue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultvalue();
 				}
-				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
 			}
 
 		}
@@ -89,7 +94,7 @@ final class OraAdaptor extends DBAdaptor {
 					defaultStr = DEFAULT
 							+ StringColumn.quoteString(ic.getDefaultValue());
 				}
-				return join(c.getName(), fieldType, nullable(c), defaultStr);
+				return join(c.getName(), fieldType, defaultStr, nullable(c));
 			}
 
 		});
@@ -107,7 +112,7 @@ final class OraAdaptor extends DBAdaptor {
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
 			}
 		});
 
@@ -127,7 +132,7 @@ final class OraAdaptor extends DBAdaptor {
 				} else if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
 			}
 		});
 		TYPES_DICT.put(BooleanColumn.class, new ColumnDefiner() {
@@ -142,10 +147,10 @@ final class OraAdaptor extends DBAdaptor {
 				BooleanColumn ic = (BooleanColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
+					defaultStr = DEFAULT + "'"
+							+ (ic.getDefaultValue() ? 'Y' : 'N') + "'";
 				}
-				// TODO: constraint на Y/N
-				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
 			}
 		});
 	}
@@ -153,20 +158,45 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
 			throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		if (schema == null || schema.isEmpty() || name == null
+				|| name.isEmpty()) {
+			return false;
+		}
+		DatabaseMetaData metaData = conn.getMetaData();
+		String tableName = String.format(tableTemplate(), schema, name)
+				.toUpperCase();
+		ResultSet rs = metaData.getTables(null, null, tableName,
+				new String[] { "TABLE" });
+		try {
+			if (rs.next()) {
+				// String tableSchem = rs.getString("TABLE_SCHEM");
+				String rTableName = rs.getString("TABLE_NAME");
+				// return schema.equals(tableSchem) && tableName.equals(name);
+				return tableName.equals(rTableName);
+			}
+			return false;
+		} finally {
+			rs.close();
+		}
 	}
 
 	@Override
 	boolean userTablesExist(Connection conn) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		PreparedStatement pstmt = conn
+				.prepareStatement("SELECT COUNT(*) FROM USER_TABLES");
+		ResultSet rs = pstmt.executeQuery();
+		try {
+			rs.next();
+			return rs.getInt(1) > 0;
+		} finally {
+			rs.close();
+			pstmt.close();
+		}
 	}
 
 	@Override
-	void createSchemaIfNotExists(Connection conn, String string)
+	void createSchemaIfNotExists(Connection conn, String schema)
 			throws SQLException {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -177,18 +207,16 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	PreparedStatement getOneRecordStatement(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format(
-				"select %s.%s from %s where %s and rownum = 1;",
-				getTableFieldsList(t), t.getGrain().getName(), t.getName(),
-				getRecordWhereClause(t));
+		String sql = String.format("select %s from " + tableTemplate()
+				+ " where %s and rownum = 1", getTableFieldsList(t), t
+				.getGrain().getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
-	@Override
-	PreparedStatement getRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, List<String> orderBy)
-			throws CelestaException {
-		// Готовим условие where
+	private String getWhereClause(Map<String, AbstractFilter> filters) {
+		if (filters == null) {
+			return null;
+		}
 		StringBuilder whereClause = new StringBuilder();
 		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
 			if (whereClause.length() > 0)
@@ -201,10 +229,16 @@ final class OraAdaptor extends DBAdaptor {
 			else if (e.getValue() instanceof Filter)
 				throw new RuntimeException("not implemented yet");
 		}
+		return whereClause.toString();
+	}
 
+	@Override
+	PreparedStatement getRecordSetStatement(Connection conn, Table t,
+			Map<String, AbstractFilter> filters, List<String> orderBy)
+			throws CelestaException {
 		// Соединяем полученные компоненты в стандартный запрос
 		// SELECT..FROM..WHERE..ORDER BY
-		String sql = getSelectFromOrderBy(t, whereClause.toString(), orderBy);
+		String sql = getSelectFromOrderBy(t, getWhereClause(filters), orderBy);
 
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
@@ -249,9 +283,9 @@ final class OraAdaptor extends DBAdaptor {
 			fields.append(c);
 		}
 
-		String sql = String.format("insert %s.%s (%s) values (%s);", t
-				.getGrain().getName(), t.getName(), fields.toString(), params
-				.toString());
+		String sql = String.format("insert into " + tableTemplate()
+				+ " (%s) values (%s)", t.getGrain().getName(), t.getName(),
+				fields.toString(), params.toString());
 		return prepareStatement(conn, sql);
 	}
 
@@ -265,36 +299,128 @@ final class OraAdaptor extends DBAdaptor {
 			setClause.append(String.format("%s = ?", c));
 		}
 
-		String sql = String.format("update %s.%s set %s where %s;", t
-				.getGrain().getName(), t.getName(), setClause.toString(),
-				getRecordWhereClause(t));
+		String sql = String.format("update " + tableTemplate()
+				+ " set %s where %s", t.getGrain().getName(), t.getName(),
+				setClause.toString(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
 	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format("delete %s.%s where %s;", t.getGrain()
-				.getName(), t.getName(), getRecordWhereClause(t));
+		String sql = String.format("delete " + tableTemplate() + " where %s", t
+				.getGrain().getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	String getIndicesSQL() {
-		// TODO Auto-generated method stub
-		return null;
+	public Set<String> getIndices(Connection conn, Grain g)
+			throws CelestaException {
+		Set<String> result = new HashSet<String>();
+		try {
+			for (Table t : g.getTables().values()) {
+				String tableName = String.format(tableTemplate(), g.getName(),
+						t.getName()).toUpperCase();
+				DatabaseMetaData metaData = conn.getMetaData();
+				ResultSet rs = metaData.getIndexInfo(null, null, tableName,
+						false, false);
+				try {
+					while (rs.next()) {
+						String rIndexName = rs.getString("INDEX_NAME");
+						if (rIndexName != null) {
+							result.add(rIndexName.toLowerCase());
+						}
+					}
+				} finally {
+					rs.close();
+				}
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return result;
 	}
 
 	@Override
-	String getColumnsSQL() {
-		// TODO Auto-generated method stub
-		return null;
+	public Set<String> getColumns(Connection conn, Table t)
+			throws CelestaException {
+		Set<String> result = new HashSet<String>();
+		try {
+			String tableName = String.format(tableTemplate(),
+					t.getGrain().getName(), t.getName()).toUpperCase();
+			DatabaseMetaData metaData = conn.getMetaData();
+			ResultSet rs = metaData.getColumns(null, null, tableName, null);
+			try {
+				while (rs.next()) {
+					String rColumnName = rs.getString("COLUMN_NAME");
+					result.add(rColumnName.toLowerCase());
+				}
+			} finally {
+				rs.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return result;
 	}
 
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters) throws CelestaException {
-		// TODO Auto-generated method stub
-		return null;
+		String whereClause = getWhereClause(filters);
+		String sql = String.format("delete from " + tableTemplate() + " %s", t
+				.getGrain().getName(), t.getName(), whereClause != null
+				&& !whereClause.isEmpty() ? "where " + whereClause : "");
+		try {
+			PreparedStatement result = conn.prepareStatement(sql);
+			if (filters != null) {
+				int i = 1;
+				for (AbstractFilter f : filters.values()) {
+					if (f instanceof SingleValue) {
+						setParam(result, i, ((SingleValue) f).getValue());
+						i++;
+					} else if (f instanceof Range) {
+						setParam(result, i, ((Range) f).getValueFrom());
+						i++;
+						setParam(result, i, ((Range) f).getValueTo());
+						i++;
+					} else if (f instanceof Filter)
+						throw new RuntimeException("not implemented yet");
+				}
+			}
+			return result;
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
+	@Override
+	public boolean isValidConnection(Connection conn, int timeout)
+			throws CelestaException {
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery("SELECT 1 FROM Dual");
+			if (rs.next()) {
+				return true;
+			}
+			return false;
+		} catch (SQLException e) {
+			return false;
+		} finally {
+			try {
+				if (stmt != null)
+					stmt.close();
+				if (rs != null)
+					rs.close();
+			} catch (SQLException e) {
+				throw new CelestaException(e.getMessage());
+			}
+		}
+	}
+
+	public String tableTemplate() {
+		return "%s_%s";
 	}
 }

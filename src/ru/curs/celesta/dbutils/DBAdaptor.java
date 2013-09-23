@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +25,7 @@ import ru.curs.celesta.score.Table;
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
  * 
  */
-abstract class DBAdaptor {
+public abstract class DBAdaptor {
 	/*
 	 * NB для программистов. Класс большой, во избежание хаоса здесь порядок
 	 * такой: прежде всего -- метод getAdaptor(), далее идут public final
@@ -52,6 +53,56 @@ abstract class DBAdaptor {
 		case UNKNOWN:
 		default:
 			throw new CelestaException("Unknown or unsupported database type.");
+		}
+	}
+
+	/**
+	 * Проверка на валидность соединения.
+	 * 
+	 * @param conn
+	 *            соединение.
+	 * @param timeout
+	 *            тайм-аут.
+	 * @return true если соединение валидно, иначе false
+	 * @throws CelestaException
+	 *             при возникновении ошибки работы с БД.
+	 */
+	public boolean isValidConnection(Connection conn, int timeout)
+			throws CelestaException {
+		try {
+			return conn.isValid(timeout);
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
+	/**
+	 * Получить шаблон имени таблицы.
+	 * 
+	 * @return
+	 */
+	public String tableTemplate() {
+		return "%s.%s";
+	}
+
+	/**
+	 * Удалить таблицу.
+	 * 
+	 * @param t
+	 *            удаляемая таблица
+	 * @throws CelestaException в случае ошибки работы с БД
+	 */
+	public void dropTables(Table t) throws CelestaException {
+		Connection conn = ConnectionPool.get();
+		try {
+			PreparedStatement pstmt = conn.prepareStatement(String.format(
+					"DROP TABLE " + tableTemplate(), t.getGrain().getName(),
+					t.getName()));
+			pstmt.executeQuery();
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
 		}
 	}
 
@@ -146,9 +197,9 @@ abstract class DBAdaptor {
 	 */
 	public final void createColumn(Connection conn, Column c)
 			throws CelestaException {
-		String sql = String.format("alter table %s.%s add %s;", c
-				.getParentTable().getGrain().getName(), c.getParentTable()
-				.getName(), columnDef(c));
+		String sql = String.format("alter table " + tableTemplate()
+				+ " add %s", c.getParentTable().getGrain().getName(), c
+				.getParentTable().getName(), columnDef(c));
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -172,10 +223,29 @@ abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             В случае сбоя связи с БД.
 	 */
-	public final Set<String> getIndices(Connection conn, Grain g)
+	public Set<String> getIndices(Connection conn, Grain g)
 			throws CelestaException {
-		String sql = String.format(getIndicesSQL(), g.getName());
-		return sqlToStringSet(conn, sql);
+		Set<String> result = new HashSet<String>();
+		try {
+			for (Table t : g.getTables().values()) {
+				DatabaseMetaData metaData = conn.getMetaData();
+				ResultSet rs = metaData.getIndexInfo(null, t.getGrain().getName(), t.getName(),
+						false, false);
+				try {
+					while (rs.next()) {
+						String rIndexName = rs.getString("INDEX_NAME");
+						if (rIndexName != null) {
+							result.add(rIndexName);
+						}
+					}
+				} finally {
+					rs.close();
+				}
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return result;
 	}
 
 	/**
@@ -189,11 +259,24 @@ abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя связи с БД.
 	 */
-	public final Set<String> getColumns(Connection conn, Table t)
+	public Set<String> getColumns(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format(getColumnsSQL(), t.getGrain().getName(),
-				t.getName());
-		return sqlToStringSet(conn, sql);
+		Set<String> result = new HashSet<String>();
+		try {
+			DatabaseMetaData metaData = conn.getMetaData();
+			ResultSet rs = metaData.getColumns(null,  t.getGrain().getName(), t.getName(), null);
+			try {
+				while (rs.next()) {
+					String rColumnName = rs.getString("COLUMN_NAME");
+					result.add(rColumnName);
+				}
+			} finally {
+				rs.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return result;
 	}
 
 	/**
@@ -229,8 +312,8 @@ abstract class DBAdaptor {
 	final String tableDef(Table table) {
 		StringBuilder sb = new StringBuilder();
 		// Определение таблицы с колонками
-		sb.append(String.format("create table %s.%s(\n", table.getGrain()
-				.getName(), table.getName()));
+		sb.append(String.format("create table " + tableTemplate() + "(\n",
+				table.getGrain().getName(), table.getName()));
 		boolean multiple = false;
 		for (Column c : table.getColumns().values()) {
 			if (multiple)
@@ -250,7 +333,7 @@ abstract class DBAdaptor {
 			sb.append(s);
 			multiple = true;
 		}
-		sb.append(")\n);");
+		sb.append(")\n)");
 		return sb.toString();
 	}
 
@@ -279,9 +362,9 @@ abstract class DBAdaptor {
 		return getFieldList(t.getColumns().keySet());
 	}
 
-	static String getSelectFromOrderBy(Table t, String whereClause,
+	public String getSelectFromOrderBy(Table t, String whereClause,
 			List<String> orderBy) {
-		String sqlfrom = String.format("select %s from %s.%s",
+		String sqlfrom = String.format("select %s from " + tableTemplate(),
 				getTableFieldsList(t), t.getGrain().getName(), t.getName());
 
 		String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
@@ -290,7 +373,7 @@ abstract class DBAdaptor {
 		String sqlorder = "".equals(orderByList) ? "" : " order by "
 				+ orderByList;
 
-		return sqlfrom + sqlwhere + sqlorder + ";";
+		return sqlfrom + sqlwhere + sqlorder;
 	}
 
 	static String getRecordWhereClause(Table t) {
@@ -356,10 +439,6 @@ abstract class DBAdaptor {
 	abstract void createSchemaIfNotExists(Connection conn, String name)
 			throws SQLException;
 
-	abstract String getIndicesSQL();
-
-	abstract String getColumnsSQL();
-
 	abstract PreparedStatement getOneRecordStatement(Connection conn, Table t)
 			throws CelestaException;
 
@@ -379,6 +458,7 @@ abstract class DBAdaptor {
 
 	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException;
+
 }
 
 /**

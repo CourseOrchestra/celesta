@@ -6,15 +6,12 @@ import java.util.Properties;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ru.curs.celesta.Celesta;
-import ru.curs.celesta.CelestaException;
-
 public class InitTest {
 
 	@BeforeClass
 	public static void init() throws IOException, CelestaException {
 		Properties params = new Properties();
-		params.load(InitTest.class.getResourceAsStream("test.properties"));
+		params.load(InitTest.class.getResourceAsStream("test.properties"));//celesta.oracle.properties
 		Celesta.initialize(params);
 	}
 
