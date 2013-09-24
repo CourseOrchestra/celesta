@@ -16,6 +16,8 @@ def hello(context, arg):
     b.deleteAll()
     b.descr = 'AB'
     b.insert()
+    b.descr = 'CD'
+    b.insert()
     
     while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)

@@ -29,7 +29,7 @@ import ru.curs.celesta.score.Table;
  * Адаптер Oracle Database.
  */
 final class OraAdaptor extends DBAdaptor {
-	
+
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
 		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
@@ -91,7 +91,9 @@ final class OraAdaptor extends DBAdaptor {
 					defaultStr = DEFAULT
 							+ StringColumn.quoteString(ic.getDefaultValue());
 				}
-				return join(c.getName(), fieldType, defaultStr, nullable(c));
+				String nullable = (DEFAULT + "''").equals(defaultStr) ? ""
+						: nullable(c);
+				return join(c.getName(), fieldType, defaultStr, nullable);
 			}
 
 		});
@@ -160,7 +162,7 @@ final class OraAdaptor extends DBAdaptor {
 	private interface PostCreateDropTableCommand {
 		void command(IntegerColumn column) throws CelestaException;
 	}
-	
+
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
 			throws SQLException {

@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.util.Properties;
 import java.util.Set;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -41,6 +42,16 @@ public class OraAdaptorTest {
 
 		dba = new OraAdaptor();
 		score = new Score(SCORE_NAME);
+	}
+
+	@Before
+	public void setup() throws Exception {
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		try {
+			dba.dropTables(t);
+		} catch (Exception e) {
+
+		}
 	}
 
 	@Test
@@ -161,7 +172,7 @@ public class OraAdaptorTest {
 			dba.dropTables(t);
 		}
 	}
-	
+
 	@Test
 	public void getIndices() throws Exception {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
@@ -176,7 +187,7 @@ public class OraAdaptorTest {
 			dba.dropTables(t);
 		}
 	}
-	
+
 	@Test
 	public void getOneRecordStatement() throws Exception {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
@@ -194,7 +205,7 @@ public class OraAdaptorTest {
 			dba.dropTables(t);
 		}
 	}
-	
+
 	@Test
 	public void deleteRecordSetStatement() throws Exception {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
@@ -202,7 +213,8 @@ public class OraAdaptorTest {
 		Connection conn = ConnectionPool.get();
 		try {
 			insertRow(conn, t, 1);
-			PreparedStatement pstmt = dba.deleteRecordSetStatement(conn, t, null);
+			PreparedStatement pstmt = dba.deleteRecordSetStatement(conn, t,
+					null);
 			assertNotNull(pstmt);
 			int rowCount = pstmt.executeUpdate();
 			assertTrue(rowCount == 1);

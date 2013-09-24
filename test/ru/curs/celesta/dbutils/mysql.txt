@@ -7,4 +7,4 @@ create table celesta.grains(
   lastmodified datetime not null default CURRENT_TIMESTAMP,
   message varchar(21844) not null default '',
   constraint pk_grains primary key (id)
-);
+)

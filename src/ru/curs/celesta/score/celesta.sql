@@ -7,7 +7,7 @@ CREATE TABLE grains(
   checksum nvarchar(8) not null, --CRC32 creation-скрипта гранулы (составляющая часть контрольной суммы)
   state int not null default 3, -- статус гранулы — см. далее
   lastmodified datetime not null default getdate(), -- дата и время последнего обновления статуса гранулы
-  message nvarchar(max) null default '' -- комментарий (например, сообщение об ошибке при последнем неудавшемся автообновлении)
+  message nvarchar(max) not null default '' -- комментарий (например, сообщение об ошибке при последнем неудавшемся автообновлении)
 );
 
 CREATE TABLE tables(
