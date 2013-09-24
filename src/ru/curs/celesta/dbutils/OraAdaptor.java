@@ -29,7 +29,7 @@ import ru.curs.celesta.score.Table;
  * Адаптер Oracle Database.
  */
 final class OraAdaptor extends DBAdaptor {
-
+	
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
 		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
@@ -42,10 +42,7 @@ final class OraAdaptor extends DBAdaptor {
 			String getColumnDef(Column c) {
 				IntegerColumn ic = (IntegerColumn) c;
 				String defaultStr = "";
-				// TODO: для поддержки autoincrement необходимо создавать
-				// SEQUENCE
-				if (ic.isIdentity()) {
-				} else if (ic.getDefaultValue() != null) {
+				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
 				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
@@ -155,6 +152,15 @@ final class OraAdaptor extends DBAdaptor {
 		});
 	}
 
+	private final String notImplementMsg = "not implemented yet";
+
+	/**
+	 * Выполняемое действия для Identity атрибута при create/drop таблицы.
+	 */
+	private interface PostCreateDropTableCommand {
+		void command(IntegerColumn column) throws CelestaException;
+	}
+	
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
 			throws SQLException {
@@ -227,7 +233,7 @@ final class OraAdaptor extends DBAdaptor {
 				whereClause.append(String.format("(%s between ? and ?)",
 						e.getKey()));
 			else if (e.getValue() instanceof Filter)
-				throw new RuntimeException("not implemented yet");
+				throw new RuntimeException(notImplementMsg);
 		}
 		return whereClause.toString();
 	}
@@ -254,7 +260,7 @@ final class OraAdaptor extends DBAdaptor {
 					setParam(result, i, ((Range) f).getValueTo());
 					i++;
 				} else if (f instanceof Filter)
-					throw new RuntimeException("not implemented yet");
+					throw new RuntimeException(notImplementMsg);
 			}
 			return result;
 		} catch (SQLException e) {
@@ -385,7 +391,7 @@ final class OraAdaptor extends DBAdaptor {
 						setParam(result, i, ((Range) f).getValueTo());
 						i++;
 					} else if (f instanceof Filter)
-						throw new RuntimeException("not implemented yet");
+						throw new RuntimeException(notImplementMsg);
 				}
 			}
 			return result;
@@ -420,6 +426,97 @@ final class OraAdaptor extends DBAdaptor {
 		}
 	}
 
+	private void createAutoincrement(Connection conn, Table table,
+			IntegerColumn col) throws SQLException {
+		// Создание Sequence
+		String sequenceName = String.format(tableTemplate() + "_%s", table
+				.getGrain().getName(), table.getName(), col.getName());
+		String sql = "CREATE SEQUENCE " + sequenceName
+				+ " START WITH 1 INCREMENT BY 1 MINVALUE 1 NOCACHE NOCYCLE";
+		Statement stmt = conn.createStatement();
+		try {
+			stmt.execute(sql);
+		} finally {
+			stmt.close();
+		}
+		// Создание Trigger
+		sql = String.format("CREATE OR REPLACE TRIGGER " + sequenceName
+				+ " BEFORE INSERT ON " + tableTemplate()
+				+ " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT "
+				+ sequenceName + ".NEXTVAL INTO :new.%s FROM dual; END;", table
+				.getGrain().getName(), table.getName(), col.getName(), col
+				.getName());
+		stmt = conn.createStatement();
+		try {
+			stmt.execute(sql);
+		} finally {
+			stmt.close();
+		}
+	}
+
+	/*
+	 * Trigger удаляется вместе с удалением таблицы
+	 */
+	private void deleteAutoincrement(Connection conn, Table table,
+			IntegerColumn col) throws SQLException {
+		// Удаление Sequence
+		String sequenceName = String.format(tableTemplate() + "_%s", table
+				.getGrain().getName(), table.getName(), col.getName());
+		String sql = "DROP SEQUENCE " + sequenceName;
+		Statement stmt = conn.createStatement();
+		try {
+			stmt.execute(sql);
+		} finally {
+			stmt.close();
+		}
+	}
+
+	private void postCreateDropTable(Connection conn, Table table,
+			PostCreateDropTableCommand action) throws CelestaException {
+		for (Column column : table.getColumns().values()) {
+			if (column instanceof IntegerColumn) {
+				IntegerColumn col = (IntegerColumn) column;
+				if (col.isIdentity()) {
+					action.command(col);
+				}
+			}
+		}
+	}
+
+	@Override
+	public void postCreateTable(final Connection conn, final Table table)
+			throws CelestaException {
+		postCreateDropTable(conn, table, new PostCreateDropTableCommand() {
+
+			@Override
+			public void command(IntegerColumn column) throws CelestaException {
+				try {
+					createAutoincrement(conn, table, column);
+				} catch (SQLException e) {
+					throw new CelestaException(e.getMessage());
+				}
+			}
+
+		});
+	}
+
+	public void postDropTable(final Connection conn, final Table table)
+			throws CelestaException {
+		postCreateDropTable(conn, table, new PostCreateDropTableCommand() {
+
+			@Override
+			public void command(IntegerColumn column) throws CelestaException {
+				try {
+					deleteAutoincrement(conn, table, column);
+				} catch (SQLException e) {
+					throw new CelestaException(e.getMessage());
+				}
+			}
+
+		});
+	}
+
+	@Override
 	public String tableTemplate() {
 		return "%s_%s";
 	}

@@ -99,11 +99,22 @@ public abstract class DBAdaptor {
 					"DROP TABLE " + tableTemplate(), t.getGrain().getName(),
 					t.getName()));
 			pstmt.executeQuery();
+			postDropTable(conn, t);
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
+	}
+	
+	/**
+	 * Вызывается после удаления таблицы.
+	 * @param conn соединение
+	 * @param table таблица
+	 * @throws CelestaException при возникновении ошибки
+	 */
+	public void postDropTable(Connection conn, Table table) throws CelestaException {
+		
 	}
 
 	/**
@@ -182,6 +193,7 @@ public abstract class DBAdaptor {
 			PreparedStatement stmt = conn.prepareStatement(def);
 			stmt.execute();
 			stmt.close();
+			postCreateTable(conn, table);
 		} catch (SQLException e) {
 			throw new CelestaException("Cannot create table. " + e.getMessage());
 		} finally {
@@ -189,6 +201,16 @@ public abstract class DBAdaptor {
 		}
 	}
 
+	/**
+	 * Вызывается после создания таблицы.
+	 * @param conn соединение
+	 * @param table таблица
+	 * @throws CelestaException при возникновении ошибки
+	 */
+	public void postCreateTable(Connection conn, Table table) throws CelestaException {
+		
+	}
+	
 	/**
 	 * Добавляет к таблице новую колонку.
 	 * 
