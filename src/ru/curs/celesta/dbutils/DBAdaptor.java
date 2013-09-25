@@ -78,8 +78,6 @@ public abstract class DBAdaptor {
 
 	/**
 	 * Получить шаблон имени таблицы.
-	 * 
-	 * @return
 	 */
 	public String tableTemplate() {
 		return "%s.%s";
@@ -90,7 +88,8 @@ public abstract class DBAdaptor {
 	 * 
 	 * @param t
 	 *            удаляемая таблица
-	 * @throws CelestaException в случае ошибки работы с БД
+	 * @throws CelestaException
+	 *             в случае ошибки работы с БД
 	 */
 	public void dropTables(Table t) throws CelestaException {
 		Connection conn = ConnectionPool.get();
@@ -106,15 +105,20 @@ public abstract class DBAdaptor {
 			ConnectionPool.putBack(conn);
 		}
 	}
-	
+
 	/**
 	 * Вызывается после удаления таблицы.
-	 * @param conn соединение
-	 * @param table таблица
-	 * @throws CelestaException при возникновении ошибки
+	 * 
+	 * @param conn
+	 *            соединение
+	 * @param table
+	 *            таблица
+	 * @throws CelestaException
+	 *             при возникновении ошибки
 	 */
-	public void postDropTable(Connection conn, Table table) throws CelestaException {
-		
+	public void postDropTable(Connection conn, Table table)
+			throws CelestaException {
+
 	}
 
 	/**
@@ -125,6 +129,8 @@ public abstract class DBAdaptor {
 	 *            схема.
 	 * @param name
 	 *            имя таблицы.
+	 * @throws CelestaException
+	 *             ошибка БД
 	 */
 	public final boolean tableExists(String schema, String name)
 			throws CelestaException {
@@ -141,6 +147,9 @@ public abstract class DBAdaptor {
 	/**
 	 * Возвращает true в том и только том случае, если база данных содержит
 	 * пользовательские таблицы (т. е. не является пустой базой данных).
+	 * 
+	 * @throws CelestaException
+	 *             ошибка БД
 	 */
 	public final boolean userTablesExist() throws CelestaException {
 		Connection conn = ConnectionPool.get();
@@ -203,25 +212,36 @@ public abstract class DBAdaptor {
 
 	/**
 	 * Вызывается после создания таблицы.
-	 * @param conn соединение
-	 * @param table таблица
-	 * @throws CelestaException при возникновении ошибки
+	 * 
+	 * @param conn
+	 *            соединение
+	 * @param table
+	 *            таблица
+	 * @throws CelestaException
+	 *             при возникновении ошибки
 	 */
-	public void postCreateTable(Connection conn, Table table) throws CelestaException {
-		
+	public void postCreateTable(Connection conn, Table table)
+			throws CelestaException {
+
 	}
-	
+
 	/**
 	 * Добавляет к таблице новую колонку.
 	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * 
 	 * @param c
 	 *            Колонка для добавления.
+	 * @throws CelestaException
+	 *             при ошибке добавления колонки.
 	 */
 	public final void createColumn(Connection conn, Column c)
 			throws CelestaException {
-		String sql = String.format("alter table " + tableTemplate()
-				+ " add %s", c.getParentTable().getGrain().getName(), c
-				.getParentTable().getName(), columnDef(c));
+		String sql = String.format(
+				"alter table " + tableTemplate() + " add %s", c
+						.getParentTable().getGrain().getName(), c
+						.getParentTable().getName(), columnDef(c));
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -251,8 +271,8 @@ public abstract class DBAdaptor {
 		try {
 			for (Table t : g.getTables().values()) {
 				DatabaseMetaData metaData = conn.getMetaData();
-				ResultSet rs = metaData.getIndexInfo(null, t.getGrain().getName(), t.getName(),
-						false, false);
+				ResultSet rs = metaData.getIndexInfo(null, t.getGrain()
+						.getName(), t.getName(), false, false);
 				try {
 					while (rs.next()) {
 						String rIndexName = rs.getString("INDEX_NAME");
@@ -286,7 +306,8 @@ public abstract class DBAdaptor {
 		Set<String> result = new HashSet<String>();
 		try {
 			DatabaseMetaData metaData = conn.getMetaData();
-			ResultSet rs = metaData.getColumns(null,  t.getGrain().getName(), t.getName(), null);
+			ResultSet rs = metaData.getColumns(null, t.getGrain().getName(),
+					t.getName(), null);
 			try {
 				while (rs.next()) {
 					String rColumnName = rs.getString("COLUMN_NAME");
@@ -313,6 +334,14 @@ public abstract class DBAdaptor {
 		// TODO
 	}
 
+	/**
+	 * Удаляет в грануле индекс на таблице.
+	 * 
+	 * @param g
+	 *            Гранула
+	 * @param indexName
+	 *            Имя индекса
+	 */
 	public final void dropIndex(Grain g, String indexName) {
 		// TODO Auto-generated method stub
 	}
@@ -384,7 +413,7 @@ public abstract class DBAdaptor {
 		return getFieldList(t.getColumns().keySet());
 	}
 
-	public String getSelectFromOrderBy(Table t, String whereClause,
+	final String getSelectFromOrderBy(Table t, String whereClause,
 			List<String> orderBy) {
 		String sqlfrom = String.format("select %s from " + tableTemplate(),
 				getTableFieldsList(t), t.getGrain().getName(), t.getName());
