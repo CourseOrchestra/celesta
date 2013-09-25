@@ -16,7 +16,9 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
+import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 
 /**
@@ -41,6 +43,7 @@ public abstract class Cursor {
 	private PreparedStatement delete = null;
 
 	private ResultSet cursor = null;
+	private Cursor xRec;
 
 	private Map<String, AbstractFilter> filters = new HashMap<>();
 	private List<String> orderBy = new LinkedList<>();
@@ -112,8 +115,10 @@ public abstract class Cursor {
 				cursor.close();
 			cursor = set.executeQuery();
 			result = cursor.next();
-			if (result)
+			if (result) {
 				parseResult(cursor);
+				xRec = getBufferCopy();
+			}
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
@@ -156,8 +161,10 @@ public abstract class Cursor {
 			else {
 				result = cursor.next();
 			}
-			if (result)
+			if (result) {
 				parseResult(cursor);
+				xRec = getBufferCopy();
+			}
 		} catch (SQLException e) {
 			result = false;
 		}
@@ -220,6 +227,8 @@ public abstract class Cursor {
 			preInsert();
 			insert.execute();
 			LOGGING_MGR.log(this, Action.INSERT);
+			// TODO чтение из базы данных того, что получилось после вставки
+			xRec = getBufferCopy();
 			postInsert();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -277,6 +286,7 @@ public abstract class Cursor {
 			preUpdate();
 			update.execute();
 			LOGGING_MGR.log(this, Action.MODIFY);
+			xRec = getBufferCopy();
 			postUpdate();
 
 		} catch (SQLException e) {
@@ -304,6 +314,7 @@ public abstract class Cursor {
 			preDelete();
 			delete.execute();
 			LOGGING_MGR.log(this, Action.DELETE);
+			xRec = getBufferCopy();
 			postDelete();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -375,8 +386,10 @@ public abstract class Cursor {
 			ResultSet rs = get.executeQuery();
 			try {
 				result = rs.next();
-				if (result)
+				if (result) {
 					parseResult(rs);
+					xRec = getBufferCopy();
+				}
 			} finally {
 				rs.close();
 			}
@@ -411,6 +424,28 @@ public abstract class Cursor {
 		validateColumName(name);
 		filters.remove(name);
 		closeSet();
+	}
+
+	/**
+	 * Возвращает максимальную длину текстового поля (если она определена).
+	 * 
+	 * @param name
+	 *            Имя текстового поля.
+	 * @return длина текстового поля или -1 (минус единица) если вместо длины
+	 *         указано MAX.
+	 * @throws CelestaException
+	 *             Если указано имя несуществующего или нетекстового поля.
+	 */
+	public final int getMaxStrLen(String name) throws CelestaException {
+		validateColumName(name);
+		Column c = meta().getColumns().get(name);
+		if (c instanceof StringColumn) {
+			StringColumn sc = (StringColumn) c;
+			return sc.isMax() ? -1 : sc.getLength();
+		} else {
+			throw new CelestaException("Column %s is not of string type.",
+					c.getName());
+		}
 	}
 
 	/**
@@ -533,6 +568,64 @@ public abstract class Cursor {
 		return meta;
 	}
 
+	private static void quoteFieldForCSV(String fieldValue, StringBuilder sb) {
+		boolean needQuotes = false;
+		for (int i = 0; !needQuotes && i < fieldValue.length(); i++) {
+			char c = fieldValue.charAt(i);
+			needQuotes = c == '"' || c == ',';
+		}
+		if (needQuotes) {
+			sb.append('"');
+			for (int i = 0; i < fieldValue.length(); i++) {
+				char c = fieldValue.charAt(i);
+				sb.append(c);
+				if (c == '"')
+					sb.append('"');
+			}
+			sb.append('"');
+		} else {
+			sb.append(fieldValue);
+		}
+
+	}
+
+	/**
+	 * Возвращает текущее состояние курсора в виде CSV-строки с
+	 * разделителями-запятыми.
+	 */
+	public final String asCSVLine() {
+		Object[] values = currentValues();
+		StringBuilder sb = new StringBuilder();
+		for (Object value : values) {
+			if (sb.length() > 0)
+				sb.append(",");
+			if (value == null)
+				sb.append("NULL");
+			else {
+				quoteFieldForCSV(value.toString(), sb);
+			}
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * Возвращает копию буфера, содержащую значения, полученные при последнем
+	 * чтении данных из базы.
+	 */
+	public final Cursor getXRec() {
+		return xRec;
+	}
+
+	/**
+	 * Копировать значения полей из курсора того же типа.
+	 * 
+	 * @param from
+	 *            курсор, из которого следует скопировать значения полей
+	 */
+	public abstract void copyFieldsFrom(Cursor from);
+
+	protected abstract Cursor getBufferCopy() throws CelestaException;
+
 	protected abstract String grainName();
 
 	protected abstract String tableName();
@@ -556,5 +649,4 @@ public abstract class Cursor {
 	protected abstract void preInsert();
 
 	protected abstract void postInsert();
-
 }

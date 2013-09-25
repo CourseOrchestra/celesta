@@ -5,11 +5,12 @@ import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице roles.
  */
-public class RolesCursor extends SysCursor {
+public final class RolesCursor extends SysCursor {
 
 	private String id;
 	private String description;
@@ -80,5 +81,19 @@ public class RolesCursor extends SysCursor {
 	 */
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	@Override
+	public void copyFieldsFrom(Cursor c) {
+		RolesCursor from = (RolesCursor) c;
+		id = from.id;
+		description = from.description;
+	}
+
+	@Override
+	protected Cursor getBufferCopy() throws CelestaException {
+		RolesCursor result = new RolesCursor(callContext());
+		result.copyFieldsFrom(this);
+		return result;
 	}
 }

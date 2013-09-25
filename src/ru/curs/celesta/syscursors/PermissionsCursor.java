@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице permissions.
@@ -182,5 +183,24 @@ public final class PermissionsCursor extends SysCursor {
 	 */
 	public void setD(boolean d) {
 		this.d = d;
+	}
+
+	@Override
+	public void copyFieldsFrom(Cursor c) {
+		PermissionsCursor from = (PermissionsCursor) c;
+		roleId = from.roleId;
+		grainId = from.grainId;
+		tableName = from.tableName;
+		r = from.r;
+		i = from.i;
+		m = from.m;
+		d = from.d;
+	}
+
+	@Override
+	protected Cursor getBufferCopy() throws CelestaException {
+		PermissionsCursor result = new PermissionsCursor(callContext());
+		result.copyFieldsFrom(this);
+		return result;
 	}
 }

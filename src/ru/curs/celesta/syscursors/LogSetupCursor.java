@@ -5,11 +5,12 @@ import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице logsetup.
  */
-public class LogSetupCursor extends SysCursor {
+public final class LogSetupCursor extends SysCursor {
 
 	private String grainid;
 	private String tablename;
@@ -142,6 +143,23 @@ public class LogSetupCursor extends SysCursor {
 	 */
 	public void setD(boolean d) {
 		this.d = d;
+	}
+
+	@Override
+	public void copyFieldsFrom(Cursor c) {
+		LogSetupCursor from = (LogSetupCursor) c;
+		grainid = from.grainid;
+		tablename = from.tablename;
+		i = from.i;
+		m = from.m;
+		d = from.d;
+	}
+
+	@Override
+	protected Cursor getBufferCopy() throws CelestaException {
+		LogSetupCursor result = new LogSetupCursor(callContext());
+		result.copyFieldsFrom(this);
+		return result;
 	}
 
 }

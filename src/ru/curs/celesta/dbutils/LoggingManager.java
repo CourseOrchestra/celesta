@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.syscursors.LogCursor;
 import ru.curs.celesta.syscursors.LogSetupCursor;
 
 /**
@@ -57,7 +58,7 @@ final class LoggingManager {
 
 	}
 
-	boolean isLoggingNeeded(CallContext c, Table t, Action a)
+	boolean isLoggingNeeded(CallContext sysContext, Table t, Action a)
 			throws CelestaException {
 		// Вычисляем местоположение данных в кэше.
 		int index = CacheEntry.hash(t) & (CACHE_SIZE - 1);
@@ -66,16 +67,14 @@ final class LoggingManager {
 		// (в противном случае -- обновляем кэш).
 		CacheEntry ce = cache[index];
 		if (ce == null || ce.isExpired() || ce.table != t) {
-			ce = refreshLogging(c, t);
+			ce = refreshLogging(sysContext, t);
 			cache[index] = ce;
 		}
 		return ce.isLoggingNeeded(a);
 	}
 
-	private CacheEntry refreshLogging(CallContext c, Table t)
+	private CacheEntry refreshLogging(CallContext sysContext, Table t)
 			throws CelestaException {
-		CallContext sysContext = new CallContext(c.getConn(),
-				Cursor.SYSTEMUSERID);
 		LogSetupCursor logsetup = new LogSetupCursor(sysContext);
 		int loggingMask = 0;
 		if (logsetup.tryGet(t.getGrain().getName(), t.getName())) {
@@ -87,8 +86,61 @@ final class LoggingManager {
 	}
 
 	public void log(Cursor c, Action a) throws CelestaException {
-		if (!isLoggingNeeded(c.callContext(), c.meta(), a))
+		if (a == Action.READ)
+			throw new IllegalArgumentException();
+		CallContext sysContext = new CallContext(c.callContext().getConn(),
+				Cursor.SYSTEMUSERID);
+		if (!isLoggingNeeded(sysContext, c.meta(), a))
 			return;
-		// TODO логирование здесь
+		LogCursor log = new LogCursor(sysContext);
+		log.init();
+		log.setUserid(c.callContext().getUserId());
+		log.setGrainid(c.grainName());
+		log.setTablename(c.tableName());
+		log.setActionType(a.shortId());
+		Object[] o = c.currentKeyValues();
+
+		String value;
+		int len;
+		if (o.length > 0) {
+			value = o[0] == null ? "NULL" : o[0].toString();
+			len = log.getMaxStrLen("pkvalue1");
+			log.setPkvalue1(trimValue(value, len));
+		}
+		if (o.length > 1) {
+			value = o[1] == null ? "NULL" : o[1].toString();
+			len = log.getMaxStrLen("pkvalue2");
+			log.setPkvalue2(trimValue(value, len));
+		}
+		if (o.length > 2) {
+			value = o[2] == null ? "NULL" : o[2].toString();
+			len = log.getMaxStrLen("pkvalue3");
+			log.setPkvalue3(trimValue(value, len));
+		}
+
+		len = log.getMaxStrLen("newvalues");
+		switch (a) {
+		case INSERT:
+			value = c.asCSVLine();
+			log.setNewvalues(trimValue(value, len));
+			break;
+		case MODIFY:
+			value = c.asCSVLine();
+			log.setNewvalues(trimValue(value, len));
+
+			value = c.getXRec().asCSVLine();
+			log.setOldvalues(trimValue(value, len));
+			break;
+		case DELETE:
+			value = c.getXRec().asCSVLine();
+			log.setOldvalues(trimValue(value, len));
+			break;
+		default:
+		}
+		log.insert();
+	}
+
+	private static String trimValue(String value, int len) {
+		return value.length() > len ? value.substring(0, len) : value;
 	}
 }

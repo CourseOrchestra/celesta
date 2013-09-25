@@ -202,6 +202,24 @@ public final class ORMCompiler {
 		w.write(String.format("        return array([%s], Object)",
 				sb.toString()));
 		w.newLine();
+		// Клонирование
+		w.write("    def copyFieldsFrom(self, c):");
+		w.newLine();
+		sb = new StringBuilder();
+		for (Column c : columns) {
+			w.write(String.format("        self.%s = c.%s", c.getName(),
+					c.getName()));
+			w.newLine();
+		}
+		w.write("    def getBufferCopy(self):");
+		w.newLine();
+		w.write(String.format("        result = %s(self.callContext())", className));
+		w.newLine();
+		w.write("        result.copyFieldsFrom(self)");
+		w.newLine();
+		w.write("        return result");
+		w.newLine();
+
 		// Триггеры
 		w.write("    def preDelete(self):");
 		w.newLine();

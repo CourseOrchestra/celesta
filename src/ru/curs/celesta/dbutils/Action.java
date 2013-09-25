@@ -14,6 +14,11 @@ public enum Action {
 		int getMask() {
 			return 1;
 		}
+
+		@Override
+		String shortId() {
+			return "R";
+		}
 	},
 	/**
 	 * Вставлять.
@@ -22,6 +27,11 @@ public enum Action {
 		@Override
 		int getMask() {
 			return 2;
+		}
+
+		@Override
+		String shortId() {
+			return "I";
 		}
 	},
 	/**
@@ -32,6 +42,11 @@ public enum Action {
 		int getMask() {
 			return 4;
 		}
+
+		@Override
+		String shortId() {
+			return "M";
+		}
 	},
 	/**
 	 * Удалять.
@@ -41,6 +56,12 @@ public enum Action {
 		int getMask() {
 			return 8;
 		}
+
+		@Override
+		String shortId() {
+			return "D";
+		}
 	};
 	abstract int getMask();
+	abstract String shortId();
 }

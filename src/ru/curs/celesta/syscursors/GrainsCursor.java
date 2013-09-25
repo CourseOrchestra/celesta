@@ -6,6 +6,7 @@ import java.util.Date;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице Grains.
@@ -201,5 +202,24 @@ public final class GrainsCursor extends SysCursor {
 	@Override
 	protected String tableName() {
 		return "grains";
+	}
+
+	@Override
+	public void copyFieldsFrom(Cursor c) {
+		GrainsCursor from = (GrainsCursor) c;
+		id = from.id;
+		version = from.version;
+		length = from.length;
+		checksum = from.checksum;
+		state = from.state;
+		lastmodified = from.lastmodified;
+		message = from.message;
+	}
+
+	@Override
+	protected Cursor getBufferCopy() throws CelestaException {
+		GrainsCursor result = new GrainsCursor(callContext());
+		result.copyFieldsFrom(this);
+		return result;
 	}
 }

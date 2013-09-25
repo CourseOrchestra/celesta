@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице userroles.
@@ -83,4 +84,17 @@ public final class UserRolesCursor extends SysCursor {
 		this.roleId = roleId;
 	}
 
+	@Override
+	public void copyFieldsFrom(Cursor c) {
+		UserRolesCursor from = (UserRolesCursor) c;
+		userId = from.userId;
+		roleId = from.roleId;
+	}
+
+	@Override
+	protected Cursor getBufferCopy() throws CelestaException {
+		UserRolesCursor result = new UserRolesCursor(callContext());
+		result.copyFieldsFrom(this);
+		return result;
+	}
 }

@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Курсор на таблице tables.
@@ -101,6 +102,21 @@ public final class TablesCursor extends SysCursor {
 	 */
 	public void setOrphaned(boolean orphaned) {
 		this.orphaned = orphaned;
+	}
+
+	@Override
+	public void copyFieldsFrom(Cursor c) {
+		TablesCursor from = (TablesCursor) c;
+		grainid = from.grainid;
+		tablename = from.tablename;
+		orphaned = from.orphaned;
+	}
+
+	@Override
+	protected Cursor getBufferCopy() throws CelestaException {
+		TablesCursor result = new TablesCursor(callContext());
+		result.copyFieldsFrom(this);
+		return result;
 	}
 
 }
