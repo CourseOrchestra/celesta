@@ -1,4 +1,4 @@
-CREATE GRAIN celesta VERSION '1.00';
+CREATE GRAIN celesta VERSION '1.01';
 
 CREATE TABLE grains(
   id nvarchar(16) NOT NULL PRIMARY KEY, --префикс (код) гранулы

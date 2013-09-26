@@ -21,9 +21,18 @@
 		<jar destfile="build/celesta.jar" filesetmanifest="merge">
 			<fileset dir="build/classes" />
 			<zipfileset src="lib/sqljdbc4.jar" excludes="META-INF/MSFTSIG.*" />
+			<zipfileset src="lib/ojdbc6.jar" />
 			<zipfileset src="lib/jython.jar" />
 			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Main-Class" value="ru.curs.celesta.Celesta" />
+				<attribute name="Specification-Title" value="Celesta" />
+				<attribute name="Specification-Version" value="" />
+				<attribute name="Specification-Vendor" value="www.curs.ru" />
+				<attribute name="Implementation-Title" value="Celesta" />
+				<attribute name="Implementation-Version" value="" />
+				<attribute name="Implementation-Vendor" value="www.curs.ru" />
+
 			</manifest>
 		</jar>
 	</target>
