@@ -11,7 +11,6 @@ import java.security.PrivilegedAction;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
-import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -185,9 +184,6 @@ public final class Celesta {
 
 		// Инициализация Jython
 		initCL(getMyPath());
-
-		// Строчка, нужная Ораклу
-		Locale.setDefault(Locale.US);
 
 		new Celesta();
 	}

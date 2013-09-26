@@ -71,6 +71,12 @@ public class Index extends NamedElement {
 							"Error while creating index '%s': column '%s' in table '%s' is "
 									+ "of long binary type and therefore cannot be a part of an index.",
 							getName(), columnName, table.getName()));
+		if (c instanceof StringColumn && ((StringColumn) c).isMax())
+			throw new ParseException(
+					String.format(
+							"Error while creating index '%s': column '%s' in table '%s' is "
+									+ "of nvarchar(max) type and therefore cannot be a part of an index.",
+							getName(), columnName, table.getName()));
 
 		columns.addElement(c);
 	}
