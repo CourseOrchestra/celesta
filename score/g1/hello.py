@@ -15,9 +15,14 @@ def hello(context, arg):
     b = bCursor(context)
     b.deleteAll()
     b.descr = 'AB'
+    print 'PRE B XREC: %s, REC: %s' %  (b.getXRec().asCSVLine(), b.asCSVLine())
     b.insert()
+    print 'POST B XREC: %s, REC: %s' %  (b.getXRec().asCSVLine(), b.asCSVLine())
+    b.idb = None
     b.descr = 'CD'
+    print 'PRE B XREC: %s, REC: %s' %  (b.getXRec().asCSVLine(), b.asCSVLine())
     b.insert()
+    print 'POST B XREC: %s, REC: %s' %  (b.getXRec().asCSVLine(), b.asCSVLine())
     
     while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)

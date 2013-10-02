@@ -316,18 +316,20 @@ final class MSSQLAdaptor extends DBAdaptor {
 	@Override
 	public Set<String> getIndices(Connection conn, Grain g)
 			throws CelestaException {
-		String sql = String.format("select name from sys.indexes where object_id in ("
-				+ "select object_id from sys.tables "
-				+ "where sys.tables.schema_id = SCHEMA_ID('%s')) "
-				+ "and name is not null;", g.getName());
+		String sql = String.format(
+				"select name from sys.indexes where object_id in ("
+						+ "select object_id from sys.tables "
+						+ "where sys.tables.schema_id = SCHEMA_ID('%s')) "
+						+ "and name is not null;", g.getName());
 		return sqlToStringSet(conn, sql);
 	}
 
 	@Override
 	public Set<String> getColumns(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format("select name from sys.columns where object_id = OBJECT_ID('%s.%s');", t.getGrain().getName(),
-				t.getName());
+		String sql = String
+				.format("select name from sys.columns where object_id = OBJECT_ID('%s.%s');",
+						t.getGrain().getName(), t.getName());
 		return sqlToStringSet(conn, sql);
 	}
 
@@ -349,5 +351,20 @@ final class MSSQLAdaptor extends DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
+	}
+
+	@Override
+	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+		PreparedStatement stmt = prepareStatement(conn, String.format(
+				"SELECT IDENT_CURRENT('%s.%s')", t.getGrain().getName(),
+				t.getName()));
+		try {
+			ResultSet rs = stmt.executeQuery();
+			rs.next();
+			return rs.getInt(1);
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+
 	}
 }

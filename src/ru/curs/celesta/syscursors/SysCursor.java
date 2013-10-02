@@ -44,4 +44,9 @@ public abstract class SysCursor extends Cursor {
 	protected void postInsert() {
 	}
 
+	@Override
+	protected void setAutoIncrement(int val) {
+		// do nothing by default
+	}
+
 }

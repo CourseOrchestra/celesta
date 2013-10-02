@@ -522,4 +522,27 @@ final class OraAdaptor extends DBAdaptor {
 	public String tableTemplate() {
 		return "%s_%s";
 	}
+
+	@Override
+	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+		String sequenceName = "";
+		for (Column col : t.getColumns().values())
+			if (col instanceof IntegerColumn
+					&& ((IntegerColumn) col).isIdentity()) {
+				sequenceName = String.format(tableTemplate() + "_%s", t
+						.getGrain().getName(), t.getName(), col.getName());
+				break;
+			}
+		if ("".equals(sequenceName))
+			throw new IllegalArgumentException("Table has no identity field");
+		PreparedStatement stmt = prepareStatement(conn,
+				String.format("SELECT %s.CURRVAL FROM DUAL", sequenceName));
+		try {
+			ResultSet rs = stmt.executeQuery();
+			rs.next();
+			return rs.getInt(1);
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
 }

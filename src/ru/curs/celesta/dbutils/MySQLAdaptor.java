@@ -280,4 +280,10 @@ final class MySQLAdaptor extends DBAdaptor {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+		// TODO use LAST_INSERT_ID()
+		return 0;
+	}
 }

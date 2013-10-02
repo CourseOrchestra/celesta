@@ -291,4 +291,10 @@ public final class LogCursor extends SysCursor {
 		result.copyFieldsFrom(this);
 		return result;
 	}
+
+	@Override
+	protected void setAutoIncrement(int val) {
+		entryno = val;
+	}
+
 }

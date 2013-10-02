@@ -18,6 +18,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 
@@ -227,7 +228,13 @@ public abstract class Cursor {
 			preInsert();
 			insert.execute();
 			LOGGING_MGR.log(this, Action.INSERT);
-			// TODO чтение из базы данных того, что получилось после вставки
+			for (Column c : meta().getColumns().values())
+				if (c instanceof IntegerColumn
+						&& ((IntegerColumn) c).isIdentity()) {
+					setAutoIncrement(db.getCurrentIdent(conn, meta()));
+					break;
+				}
+			internalGet(currentKeyValues());
 			xRec = getBufferCopy();
 			postInsert();
 		} catch (SQLException e) {
@@ -379,7 +386,10 @@ public abstract class Cursor {
 	public final boolean tryGet(Object... values) throws CelestaException {
 		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.READ))
 			throw new PermissionDeniedException(context, meta(), Action.READ);
+		return internalGet(values);
+	}
 
+	private boolean internalGet(Object... values) throws CelestaException {
 		prepareGet(values);
 		boolean result = false;
 		try {
@@ -613,6 +623,14 @@ public abstract class Cursor {
 	 * чтении данных из базы.
 	 */
 	public final Cursor getXRec() {
+		if (xRec == null) {
+			try {
+				xRec = getBufferCopy();
+				xRec.clear();
+			} catch (CelestaException e) {
+				xRec = null;
+			}
+		}
 		return xRec;
 	}
 
@@ -637,6 +655,8 @@ public abstract class Cursor {
 	protected abstract Object[] currentKeyValues();
 
 	protected abstract Object[] currentValues();
+
+	protected abstract void setAutoIncrement(int val);
 
 	protected abstract void preDelete();
 

@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.Table;
 
@@ -136,91 +137,30 @@ public final class ORMCompiler {
 			w.newLine();
 		}
 		// Конструктор
-		w.write("    def __init__(self, context):");
-		w.newLine();
-		w.write("        Cursor.__init__(self, context)");
-		w.newLine();
-		for (Column c : columns) {
-			w.write(String.format("        self.%s = None", c.getName()));
-			w.newLine();
-		}
-		w.write("        self.context = context");
-		w.newLine();
+		compileInit(w, columns);
 		// Имя гранулы
-		w.write("    def grainName(self):");
-		w.newLine();
-		w.write(String.format("        return '%s'", t.getGrain().getName()));
-		w.newLine();
+		compileGrainName(t, w);
 		// Имя таблицы
-		w.write("    def tableName(self):");
-		w.newLine();
-		w.write(String.format("        return '%s'", t.getName()));
-		w.newLine();
+		compileTableName(t, w);
 		// Разбор строки по переменным
-		w.write("    def parseResult(self, rs):");
-		w.newLine();
-		for (Column c : columns) {
-			w.write(String.format("        self.%s = rs.%s('%s')", c.getName(),
-					c.jdbcGetterName(), c.getName()));
-			w.newLine();
-		}
+		compileParseResult(w, columns);
 		// Очистка буфера
-		w.write("    def clearBuffer(self, withKeys):");
-		w.newLine();
-		w.write("        if withKeys:");
-		w.newLine();
-		for (Column c : pk) {
-			w.write(String.format("            self.%s = None", c.getName()));
-			w.newLine();
-		}
-		for (Column c : columns)
-			if (!pk.contains(c)) {
-				w.write(String.format("        self.%s = None", c.getName()));
-				w.newLine();
-			}
+		compileClearBuffer(w, columns, pk);
 		// Текущие значения ключевых полей
-		w.write("    def currentKeyValues(self):");
-		w.newLine();
-		StringBuilder sb = new StringBuilder();
-		for (Column c : pk) {
-			if (sb.length() > 0)
-				sb.append(", ");
-			sb.append(String.format("self.%s", c.getName()));
-		}
-		w.write(String.format("        return array([%s], Object)",
-				sb.toString()));
-		w.newLine();
+		compileCurrentKeyValues(w, pk);
 		// Текущие значения всех полей
-		w.write("    def currentValues(self):");
-		w.newLine();
-		sb = new StringBuilder();
-		for (Column c : columns) {
-			if (sb.length() > 0)
-				sb.append(", ");
-			sb.append(String.format("self.%s", c.getName()));
-		}
-		w.write(String.format("        return array([%s], Object)",
-				sb.toString()));
-		w.newLine();
+		compileCurrentValues(w, columns);
+		// Автоинкремент
+		compileSetAutoIncrement(w, columns);
 		// Клонирование
-		w.write("    def copyFieldsFrom(self, c):");
-		w.newLine();
-		sb = new StringBuilder();
-		for (Column c : columns) {
-			w.write(String.format("        self.%s = c.%s", c.getName(),
-					c.getName()));
-			w.newLine();
-		}
-		w.write("    def getBufferCopy(self):");
-		w.newLine();
-		w.write(String.format("        result = %s(self.callContext())", className));
-		w.newLine();
-		w.write("        result.copyFieldsFrom(self)");
-		w.newLine();
-		w.write("        return result");
-		w.newLine();
-
+		compileCopying(w, columns, className);
 		// Триггеры
+		compileTriggers(w, className);
+		w.newLine();
+	}
+
+	private static void compileTriggers(BufferedWriter w, String className)
+			throws IOException {
 		w.write("    def preDelete(self):");
 		w.newLine();
 		w.write(String.format("        for f in %s.onPreDelete:", className));
@@ -257,7 +197,130 @@ public final class ORMCompiler {
 		w.newLine();
 		w.write(String.format(F_SELF));
 		w.newLine();
+	}
 
+	private static void compileCopying(BufferedWriter w,
+			Collection<Column> columns, String className) throws IOException {
+		w.write("    def copyFieldsFrom(self, c):");
+		w.newLine();
+		for (Column c : columns) {
+			w.write(String.format("        self.%s = c.%s", c.getName(),
+					c.getName()));
+			w.newLine();
+		}
+		w.write("    def getBufferCopy(self):");
+		w.newLine();
+		w.write(String.format("        result = %s(self.callContext())",
+				className));
+		w.newLine();
+		w.write("        result.copyFieldsFrom(self)");
+		w.newLine();
+		w.write("        return result");
+		w.newLine();
+	}
+
+	private static void compileSetAutoIncrement(BufferedWriter w,
+			Collection<Column> columns) throws IOException {
+		w.write("    def setAutoIncrement(self, val):");
+		w.newLine();
+		boolean hasCode = false;
+		for (Column c : columns)
+			if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
+				w.write(String.format("        self.%s = val", c.getName()));
+
+				hasCode = true;
+				break;
+			}
+		if (!hasCode)
+			w.write("        pass");
+		w.newLine();
+	}
+
+	private static void compileCurrentValues(BufferedWriter w,
+			Collection<Column> columns) throws IOException {
+		w.write("    def currentValues(self):");
+		w.newLine();
+		StringBuilder sb = new StringBuilder();
+		for (Column c : columns) {
+			if (sb.length() > 0)
+				sb.append(", ");
+			sb.append(String.format("self.%s", c.getName()));
+		}
+		w.write(String.format("        return array([%s], Object)",
+				sb.toString()));
+		w.newLine();
+	}
+
+	private static void compileCurrentKeyValues(BufferedWriter w, Set<Column> pk)
+			throws IOException {
+		w.write("    def currentKeyValues(self):");
+		w.newLine();
+		StringBuilder sb = new StringBuilder();
+		for (Column c : pk) {
+			if (sb.length() > 0)
+				sb.append(", ");
+			sb.append(String.format("self.%s", c.getName()));
+		}
+		w.write(String.format("        return array([%s], Object)",
+				sb.toString()));
+		w.newLine();
+	}
+
+	private static void compileClearBuffer(BufferedWriter w,
+			Collection<Column> columns, Set<Column> pk) throws IOException {
+		w.write("    def clearBuffer(self, withKeys):");
+		w.newLine();
+		w.write("        if withKeys:");
+		w.newLine();
+		for (Column c : pk) {
+			w.write(String.format("            self.%s = None", c.getName()));
+			w.newLine();
+		}
+		for (Column c : columns)
+			if (!pk.contains(c)) {
+				w.write(String.format("        self.%s = None", c.getName()));
+				w.newLine();
+			}
+	}
+
+	private static void compileParseResult(BufferedWriter w,
+			Collection<Column> columns) throws IOException {
+		w.write("    def parseResult(self, rs):");
+		w.newLine();
+		for (Column c : columns) {
+			w.write(String.format("        self.%s = rs.%s('%s')", c.getName(),
+					c.jdbcGetterName(), c.getName()));
+			w.newLine();
+		}
+	}
+
+	private static void compileTableName(Table t, BufferedWriter w)
+			throws IOException {
+		w.write("    def tableName(self):");
+		w.newLine();
+		w.write(String.format("        return '%s'", t.getName()));
+		w.newLine();
+	}
+
+	private static void compileGrainName(Table t, BufferedWriter w)
+			throws IOException {
+		w.write("    def grainName(self):");
+		w.newLine();
+		w.write(String.format("        return '%s'", t.getGrain().getName()));
+		w.newLine();
+	}
+
+	private static void compileInit(BufferedWriter w, Collection<Column> columns)
+			throws IOException {
+		w.write("    def __init__(self, context):");
+		w.newLine();
+		w.write("        Cursor.__init__(self, context)");
+		w.newLine();
+		for (Column c : columns) {
+			w.write(String.format("        self.%s = None", c.getName()));
+			w.newLine();
+		}
+		w.write("        self.context = context");
 		w.newLine();
 	}
 }

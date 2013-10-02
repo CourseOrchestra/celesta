@@ -332,4 +332,10 @@ final class PostgresAdaptor extends DBAdaptor {
 		return null;
 	}
 
+	@Override
+	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

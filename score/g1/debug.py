@@ -10,7 +10,7 @@ import hello
 
 Celesta.initialize()
 conn = ConnectionPool.get()
-context = CallContext(conn, 'user1')
+context = CallContext(conn, 'user2')
 try:
     hello.hello(context, 'blah-blah')
 except:

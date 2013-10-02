@@ -504,6 +504,8 @@ public abstract class DBAdaptor {
 	abstract PreparedStatement getInsertRecordStatement(Connection conn,
 			Table t, boolean[] nullsMask) throws CelestaException;
 
+	abstract int getCurrentIdent(Connection conn, Table t) throws CelestaException;
+	
 	abstract PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
 			throws CelestaException;
 
