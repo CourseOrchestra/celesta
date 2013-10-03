@@ -303,9 +303,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 				setClause.append(String.format("%s = ?", c));
 			}
 
-		String sql = String.format("update %s.%s set %s where %s;", t
-				.getGrain().getName(), t.getName(), setClause.toString(),
-				getRecordWhereClause(t));
+		String sql = String.format("update " + tableTemplate()
+				+ " set %s where %s", t.getGrain().getName(), t.getName(),
+				setClause.toString(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 

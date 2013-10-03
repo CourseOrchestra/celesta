@@ -91,7 +91,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае ошибки работы с БД
 	 */
-	public void dropTables(Table t) throws CelestaException {
+	public void dropTable(Table t) throws CelestaException {
 		Connection conn = ConnectionPool.get();
 		try {
 			String sql = String.format("DROP TABLE " + tableTemplate(), t

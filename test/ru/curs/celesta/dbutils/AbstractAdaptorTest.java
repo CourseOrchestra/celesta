@@ -36,7 +36,7 @@ public abstract class AbstractAdaptorTest {
 		}
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 		try {
-			dba.dropTables(t);
+			dba.dropTable(t);
 		} catch (Exception e) {
 		}
 	}
@@ -50,7 +50,7 @@ public abstract class AbstractAdaptorTest {
 					t.getName());
 			assertTrue(result);
 		} finally {
-			dba.dropTables(t);
+			dba.dropTable(t);
 		}
 	}
 
@@ -62,7 +62,7 @@ public abstract class AbstractAdaptorTest {
 			boolean result = dba.userTablesExist();
 			assertTrue(result);
 		} finally {
-			dba.dropTables(t);
+			dba.dropTable(t);
 		}
 	}
 
@@ -71,7 +71,7 @@ public abstract class AbstractAdaptorTest {
 		try {
 			Table t = score.getGrain(GRAIN_NAME).getTable("test");
 			dba.createTable(t);
-			dba.dropTables(t);
+			dba.dropTable(t);
 		} catch (Exception ex) {
 			fail("Threw Exception:" + ex.getMessage());
 		}
@@ -118,7 +118,7 @@ public abstract class AbstractAdaptorTest {
 			assertTrue(rowCount == 1);
 		} finally {
 			ConnectionPool.putBack(conn);
-			dba.dropTables(t);
+			dba.dropTable(t);
 		}
 	}
 
@@ -140,7 +140,7 @@ public abstract class AbstractAdaptorTest {
 			assertTrue(rowCount == 1);
 		} finally {
 			ConnectionPool.putBack(conn);
-			dba.dropTables(t);
+			dba.dropTable(t);
 		}
 	}
 
@@ -158,7 +158,7 @@ public abstract class AbstractAdaptorTest {
 			assertTrue(rowCount == 1);
 		} finally {
 			ConnectionPool.putBack(conn);
-			dba.dropTables(t);
+			dba.dropTable(t);
 		}
 	}
 
@@ -173,7 +173,7 @@ public abstract class AbstractAdaptorTest {
 			assertTrue(columnSet.size() != 0);
 		} finally {
 			ConnectionPool.putBack(conn);
-			dba.dropTables(t);
+			dba.dropTable(t);
 		}
 	}
 
@@ -188,7 +188,7 @@ public abstract class AbstractAdaptorTest {
 			assertTrue(indicesSet.size() != 0);
 		} finally {
 			ConnectionPool.putBack(conn);
-			dba.dropTables(t);
+			dba.dropTable(t);
 		}
 	}
 
@@ -206,7 +206,7 @@ public abstract class AbstractAdaptorTest {
 			assertTrue(rs.next());
 		} finally {
 			ConnectionPool.putBack(conn);
-			dba.dropTables(t);
+			dba.dropTable(t);
 		}
 	}
 
@@ -224,7 +224,7 @@ public abstract class AbstractAdaptorTest {
 			assertTrue(rowCount == 1);
 		} finally {
 			ConnectionPool.putBack(conn);
-			dba.dropTables(t);
+			dba.dropTable(t);
 		}
 	}
 
