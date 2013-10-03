@@ -248,6 +248,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	private StringBuilder setWhereClause(Map<String, AbstractFilter> filters) {
+		if (filters == null)
+			throw new IllegalArgumentException();
 		StringBuilder whereClause = new StringBuilder();
 		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
 			if (whereClause.length() > 0)
@@ -293,11 +295,13 @@ final class MSSQLAdaptor extends DBAdaptor {
 	PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
 			throws CelestaException {
 		StringBuilder setClause = new StringBuilder();
-		for (String c : t.getColumns().keySet()) {
-			if (setClause.length() > 0)
-				setClause.append(", ");
-			setClause.append(String.format("%s = ?", c));
-		}
+		for (String c : t.getColumns().keySet())
+			// Пропускаем ключевые поля
+			if (!t.getPrimaryKey().containsKey(c)) {
+				if (setClause.length() > 0)
+					setClause.append(", ");
+				setClause.append(String.format("%s = ?", c));
+			}
 
 		String sql = String.format("update %s.%s set %s where %s;", t
 				.getGrain().getName(), t.getName(), setClause.toString(),

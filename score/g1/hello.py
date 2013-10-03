@@ -17,12 +17,20 @@ def hello(context, arg):
     b.descr = 'AB'
     print 'PRE B XREC: %s, REC: %s' %  (b.getXRec().asCSVLine(), b.asCSVLine())
     b.insert()
+    oldid = b.idb
+    
     print 'POST B XREC: %s, REC: %s' %  (b.getXRec().asCSVLine(), b.asCSVLine())
     b.idb = None
     b.descr = 'CD'
     print 'PRE B XREC: %s, REC: %s' %  (b.getXRec().asCSVLine(), b.asCSVLine())
     b.insert()
     print 'POST B XREC: %s, REC: %s' %  (b.getXRec().asCSVLine(), b.asCSVLine())
+    
+    b.get(oldid)
+    b.descr = 'EF'
+    print 'PRE UPDATE B XREC: %s, REC: %s' %  (b.getXRec().asCSVLine(), b.asCSVLine())
+    b.update()
+    print 'POST UPDATE B XREC: %s, REC: %s' %  (b.getXRec().asCSVLine(), b.asCSVLine())
     
     while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)

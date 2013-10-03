@@ -94,10 +94,10 @@ public abstract class DBAdaptor {
 	public void dropTables(Table t) throws CelestaException {
 		Connection conn = ConnectionPool.get();
 		try {
-			PreparedStatement pstmt = conn.prepareStatement(String.format(
-					"DROP TABLE " + tableTemplate(), t.getGrain().getName(),
-					t.getName()));
-			pstmt.executeQuery();
+			String sql = String.format("DROP TABLE " + tableTemplate(), t
+					.getGrain().getName(), t.getName());
+			PreparedStatement pstmt = conn.prepareStatement(sql);
+			pstmt.execute();
 			postDropTable(conn, t);
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -504,8 +504,9 @@ public abstract class DBAdaptor {
 	abstract PreparedStatement getInsertRecordStatement(Connection conn,
 			Table t, boolean[] nullsMask) throws CelestaException;
 
-	abstract int getCurrentIdent(Connection conn, Table t) throws CelestaException;
-	
+	abstract int getCurrentIdent(Connection conn, Table t)
+			throws CelestaException;
+
 	abstract PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
 			throws CelestaException;
 

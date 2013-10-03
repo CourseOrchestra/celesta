@@ -286,10 +286,21 @@ public abstract class Cursor {
 				update = db.getUpdateRecordStatement(conn, meta());
 			Object[] values = currentValues();
 			Object[] keyValues = currentKeyValues();
-			for (int i = 0; i < values.length; i++)
-				DBAdaptor.setParam(update, i + 1, values[i]);
-			for (int i = 0; i < keyValues.length; i++)
-				DBAdaptor.setParam(update, i + values.length + 1, values[i]);
+
+			// Заполняем параметры присвоения (set ...)
+			int j = 1;
+			int i = 0;
+			for (String c : meta().getColumns().keySet()) {
+				if (!meta().getPrimaryKey().containsKey(c)) {
+					DBAdaptor.setParam(update, j, values[i]);
+					j++;
+				}
+				i++;
+			}
+			// Заполняем параметры поиска (where ...)
+			for (i = 0; i < keyValues.length; i++)
+				DBAdaptor.setParam(update, i + j, values[i]);
+
 			preUpdate();
 			update.execute();
 			LOGGING_MGR.log(this, Action.MODIFY);

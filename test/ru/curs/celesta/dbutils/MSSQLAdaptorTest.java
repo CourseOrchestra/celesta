@@ -7,12 +7,12 @@ import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.InitTest;
 import ru.curs.celesta.score.Score;
 
-public class OraAdaptorTest extends AbstractAdaptorTest {
+public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 
-	public OraAdaptorTest() throws Exception {
+	public MSSQLAdaptorTest() throws Exception {
 		Properties params = new Properties();
 		params.load(InitTest.class
-				.getResourceAsStream("celesta.oracle.properties"));
+				.getResourceAsStream("celesta.mssql.properties"));
 		// Инициализация параметров приложения: вызов AppSettings.init(params) -
 		// метод имеет модификатор доступа "по умолчанию"
 		Method method = AppSettings.class.getDeclaredMethod("init",
@@ -20,7 +20,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
 		method.setAccessible(true);
 		method.invoke(null, params);
 
-		setDba(new OraAdaptor());
+		setDba(new MSSQLAdaptor());
 		setScore(new Score(SCORE_NAME));
 	}
 

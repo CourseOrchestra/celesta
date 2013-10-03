@@ -205,6 +205,8 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	void createSchemaIfNotExists(Connection conn, String schema)
 			throws SQLException {
+		// Ничего не делает для Oracle. Схемы имитируются префиксами на именах
+		// таблиц.
 	}
 
 	@Override
@@ -222,9 +224,8 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	private String getWhereClause(Map<String, AbstractFilter> filters) {
-		if (filters == null) {
-			return null;
-		}
+		if (filters == null)
+			throw new IllegalArgumentException();
 		StringBuilder whereClause = new StringBuilder();
 		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
 			if (whereClause.length() > 0)
@@ -301,11 +302,13 @@ final class OraAdaptor extends DBAdaptor {
 	PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
 			throws CelestaException {
 		StringBuilder setClause = new StringBuilder();
-		for (String c : t.getColumns().keySet()) {
-			if (setClause.length() > 0)
-				setClause.append(", ");
-			setClause.append(String.format("%s = ?", c));
-		}
+		for (String c : t.getColumns().keySet())
+			// Пропускаем ключевые поля
+			if (!t.getPrimaryKey().containsKey(c)) {
+				if (setClause.length() > 0)
+					setClause.append(", ");
+				setClause.append(String.format("%s = ?", c));
+			}
 
 		String sql = String.format("update " + tableTemplate()
 				+ " set %s where %s", t.getGrain().getName(), t.getName(),
@@ -377,8 +380,8 @@ final class OraAdaptor extends DBAdaptor {
 			Map<String, AbstractFilter> filters) throws CelestaException {
 		String whereClause = getWhereClause(filters);
 		String sql = String.format("delete from " + tableTemplate() + " %s", t
-				.getGrain().getName(), t.getName(), whereClause != null
-				&& !whereClause.isEmpty() ? "where " + whereClause : "");
+				.getGrain().getName(), t.getName(),
+				!whereClause.isEmpty() ? "where " + whereClause : "");
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
 			if (filters != null) {
