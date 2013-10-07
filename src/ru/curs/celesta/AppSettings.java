@@ -1,24 +1,21 @@
 package ru.curs.celesta;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.Properties;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+import java.util.logging.*;
 
 /**
  * Класс, хранящий параметры приложения. Разбирает .properties-файл.
  */
 public final class AppSettings {
-
+	private static final String DEFAULT_PYLIB_PATH = "pylib";
 	private static AppSettings theSettings;
 
 	private final String scorePath;
 	private final String dbClassName;
 	private final String databaseConnection;
 	private final Logger logger;
+	private final String pylibPath;
 	{
 		logger = Logger.getLogger("ru.curs.flute");
 		logger.setLevel(Level.INFO);
@@ -61,6 +58,11 @@ public final class AppSettings {
 			} catch (IOException e) {
 				sb.append("Could not access or create log file " + lf + '\n');
 			}
+
+		pylibPath = settings.getProperty("pylib.path", DEFAULT_PYLIB_PATH);
+		File pylibPathFile = new File(pylibPath);
+		if (!pylibPathFile.exists())
+			sb.append("Invalid pylib.path entry: " + pylibPath + '\n');
 
 		if (sb.length() > 0)
 			throw new CelestaException(sb.toString());
@@ -142,5 +144,12 @@ public final class AppSettings {
 	 */
 	public static Logger getLogger() {
 		return theSettings.logger;
+	}
+
+	/**
+	 * Значение параметра "pylib.path".
+	 */
+	public static String getPylibPath() {
+		return theSettings.pylibPath;
 	}
 }

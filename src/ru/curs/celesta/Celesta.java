@@ -3,6 +3,7 @@ package ru.curs.celesta;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -10,14 +11,18 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.python.core.PyException;
-import org.python.core.codecs;
+import org.python.core.PyObject;
+import org.python.core.PyString;
+import org.python.core.PySystemState;
 import org.python.util.PythonInterpreter;
 
 import ru.curs.celesta.dbutils.DBUpdator;
@@ -33,9 +38,11 @@ public final class Celesta {
 	private static final String CELESTA_IS_ALREADY_INITIALIZED = "Celesta is already initialized.";
 	private static final Pattern PROCNAME = Pattern
 			.compile("([A-Za-z_][A-Za-z_0-9]*)\\.([A-Za-z_][A-Za-z_0-9]*)\\.([A-Za-z_][A-Za-z_0-9]*)");
+	private static final String FILE_PROPERTIES = "celesta.properties";
 
 	private static Celesta theCelesta;
-	private Score score;
+	private final Score score;
+	private List<String> pyPathList;
 
 	private Celesta() throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
@@ -86,6 +93,33 @@ public final class Celesta {
 			}
 	}
 
+	private PythonInterpreter getPythonInterpreter() {
+		if (pyPathList == null) {
+			pyPathList = new ArrayList<String>();
+			File pathEntry = new File(getMyPath() + "pylib");
+			if (pathEntry.exists() && pathEntry.isDirectory()) {
+				pyPathList.add(pathEntry.getAbsolutePath());
+			}
+			pathEntry = new File(AppSettings.getPylibPath());
+			if (pathEntry.exists() && pathEntry.isDirectory()) {
+				pyPathList.add(pathEntry.getAbsolutePath());
+			}
+			for (String entry : AppSettings.getScorePath().split(";")) {
+				pathEntry = new File(entry);
+				if (pathEntry.exists() && pathEntry.isDirectory()) {
+					pyPathList.add(pathEntry.getAbsolutePath());
+				}
+			}
+		}
+		PySystemState state = new PySystemState();
+		for (String path : pyPathList) {
+			state.path.append(new PyString(path));
+		}
+
+		PythonInterpreter interp = new PythonInterpreter(null, state);
+		return interp;
+	}
+
 	/**
 	 * Запуск питоновской процедуры.
 	 * 
@@ -97,11 +131,12 @@ public final class Celesta {
 	 *            Имя процедуры в формате <grain>.<module>.<proc>
 	 * @param param
 	 *            Параметры для передачи процедуры.
+	 * @return PyObject
 	 * @throws CelestaException
 	 *             В случае, если процедура не найдена или в случае ошибки
 	 *             выполненения процедуры.
 	 */
-	public void runPython(String userId, String proc, Object... param)
+	public PyObject runPython(String userId, String proc, Object... param)
 			throws CelestaException {
 		Matcher m = PROCNAME.matcher(proc);
 
@@ -122,7 +157,7 @@ public final class Celesta {
 			for (int i = 0; i < param.length; i++)
 				sb.append(String.format(", arg%d", i));
 
-			PythonInterpreter interp = new PythonInterpreter();
+			PythonInterpreter interp = getPythonInterpreter();
 			Connection conn = ConnectionPool.get();
 			CallContext context = new CallContext(conn, userId);
 			try {
@@ -134,9 +169,10 @@ public final class Celesta {
 					String line = String.format("from %s import %s as %s",
 							grainName, unitName, unitName);
 					interp.exec(line);
-					line = String.format("%s.%s(%s)", unitName, procName,
-							sb.toString());
-					interp.exec(line);
+
+					PyObject pyObj = interp.eval(String.format("%s.%s(%s)",
+							unitName, procName, sb.toString()));
+					return pyObj;
 				} catch (PyException e) {
 					String sqlErr = "";
 					try {
@@ -182,63 +218,50 @@ public final class Celesta {
 
 		AppSettings.init(settings);
 
-		// Инициализация Jython
-		initCL(getMyPath());
+		initCL();
 
 		new Celesta();
 	}
 
-	private static void initCL(String path) {
-
-		File lib = new File(path + "lib");
-
-		// Construct the "class path" for this class loader
-		Set<URL> set = new LinkedHashSet<URL>();
-		if (lib.isDirectory() && lib.exists() && lib.canRead()) {
-			String[] filenames = lib.list();
-			for (String filename : filenames) {
-				if (!filename.toLowerCase().endsWith(".jar"))
-					continue;
-				File file = new File(lib, filename);
-				URL url;
-				try {
-					url = file.toURI().toURL();
-					set.add(url);
-				} catch (MalformedURLException e) {
-					// This can't happen
-					e.printStackTrace();
+	private static void initCL() {
+		File lib = new File(getMyPath() + "lib");
+		if (lib.exists()) {
+			// Construct the "class path" for this class loader
+			Set<URL> set = new LinkedHashSet<URL>();
+			if (lib.isDirectory() && lib.exists() && lib.canRead()) {
+				String[] filenames = lib.list();
+				for (String filename : filenames) {
+					if (!filename.toLowerCase().endsWith(".jar"))
+						continue;
+					File file = new File(lib, filename);
+					URL url;
+					try {
+						url = file.toURI().toURL();
+						set.add(url);
+					} catch (MalformedURLException e) {
+						// This can't happen
+						e.printStackTrace();
+					}
 				}
 			}
+			// Construct the class loader itself
+			final URL[] array = set.toArray(new URL[set.size()]);
+			ClassLoader classLoader = AccessController
+					.doPrivileged(new PrivilegedAction<URLClassLoader>() {
+						@Override
+						public URLClassLoader run() {
+							return new URLClassLoader(array);
+						}
+					});
+			Thread.currentThread().setContextClassLoader(classLoader);
 		}
-		// Construct the class loader itself
-		final URL[] array = set.toArray(new URL[set.size()]);
-		ClassLoader classLoader = AccessController
-				.doPrivileged(new PrivilegedAction<URLClassLoader>() {
-					@Override
-					public URLClassLoader run() {
-						return new URLClassLoader(array);
-					}
-				});
-		Thread.currentThread().setContextClassLoader(classLoader);
 
-		String libfolder = lib.toString();
 		Properties postProperties = new Properties();
 		postProperties.setProperty("python.packages.directories",
 				"java.ext.dirs,celesta.lib");
-		postProperties.setProperty("celesta.lib", libfolder);
-		StringBuilder sb = new StringBuilder(path + "pylib");
-		for (String entry : AppSettings.getScorePath().split(";")) {
-			File pathEntry = new File(entry);
-			if (pathEntry.exists() && pathEntry.isDirectory()) {
-				sb.append(";");
-				sb.append(pathEntry.getAbsolutePath());
-			}
-		}
-		postProperties.setProperty("python.path", sb.toString());
 		PythonInterpreter.initialize(System.getProperties(), postProperties,
 				null);
-
-		codecs.setDefaultEncoding("UTF-8");
+		// codecs.setDefaultEncoding("UTF-8");
 	}
 
 	/**
@@ -256,14 +279,18 @@ public final class Celesta {
 
 		// Разбираемся с настроечным файлом: читаем его и превращаем в
 		// Properties.
-		String path = getMyPath();
-		File f = new File(path + "celesta.properties");
-		if (!f.exists())
-			throw new CelestaException(String.format(
-					"File %s cannot be found.", f.toString()));
 		Properties settings = new Properties();
 		try {
-			FileInputStream in = new FileInputStream(f);
+			ClassLoader loader = Thread.currentThread().getContextClassLoader();
+			InputStream in = loader.getResourceAsStream(FILE_PROPERTIES);
+			if (in == null) {
+				String path = getMyPath();
+				File f = new File(path + FILE_PROPERTIES);
+				if (!f.exists())
+					throw new CelestaException(String.format(
+							"File %s cannot be found.", f.toString()));
+				in = new FileInputStream(f);
+			}
 			try {
 				settings.load(in);
 			} finally {

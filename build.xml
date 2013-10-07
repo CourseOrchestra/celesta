@@ -20,9 +20,9 @@
 		<echo>Building the jar file</echo>
 		<jar destfile="build/celesta.jar" filesetmanifest="merge">
 			<fileset dir="build/classes" />
-			<zipfileset src="lib/sqljdbc4.jar" excludes="META-INF/MSFTSIG.*" />
+			<!--<zipfileset src="lib/sqljdbc4.jar" excludes="META-INF/MSFTSIG.*" />
 			<zipfileset src="lib/ojdbc6.jar" />
-			<zipfileset src="lib/jython.jar" />
+			<zipfileset src="lib/jython.jar" />-->
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Main-Class" value="ru.curs.celesta.Celesta" />
