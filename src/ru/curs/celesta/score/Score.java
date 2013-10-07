@@ -45,8 +45,8 @@ public class Score {
 						"Score path entry '%s' does not exist.",
 						path.toString());
 			if (!path.canRead())
-				throw new CelestaException("Cannot read score path entry '%s'.",
-						path.toString());
+				throw new CelestaException(
+						"Cannot read score path entry '%s'.", path.toString());
 			if (!path.isDirectory())
 				throw new CelestaException(
 						"Score path entry '%s' is not a directory.",
@@ -91,6 +91,16 @@ public class Score {
 		// В этот момент в таблице grainFiles содержится перечень распознанных
 		// имён гранул с именами файлов-скриптов.
 		parseGrains();
+	}
+
+	/**
+	 * Сохраняет содержимое метаданных обратно в SQL-файлы, при этом
+	 * перезаписывая их содержимое.
+	 */
+	public void save() {
+		// TODO
+		throw new IllegalStateException(
+				"Score saving to files not implemented yet");
 	}
 
 	private void parseGrains() throws CelestaException {

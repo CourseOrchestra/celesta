@@ -169,7 +169,7 @@ public final class Grain extends NamedElement {
 	 * @throws ParseException
 	 *             в случае, если имеется неверный формат quoted string.
 	 */
-	void setVersion(String version) throws ParseException {
+	public void setVersion(String version) throws ParseException {
 		this.version = new VersionString(StringColumn.unquoteString(version));
 	}
 

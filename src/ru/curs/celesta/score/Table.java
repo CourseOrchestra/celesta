@@ -41,7 +41,7 @@ public final class Table extends NamedElement {
 
 	private String pkConstraintName;
 
-	Table(Grain grain, String name) throws ParseException {
+	public Table(Grain grain, String name) throws ParseException {
 		super(name);
 		if (grain == null)
 			throw new IllegalArgumentException();

@@ -28,7 +28,7 @@ public class ForeignKey {
 
 	private final List<Column> referencedColumns = new LinkedList<>();
 
-	ForeignKey(Table parentTable) {
+	public ForeignKey(Table parentTable) {
 		if (parentTable == null)
 			throw new IllegalArgumentException();
 		this.parentTable = parentTable;

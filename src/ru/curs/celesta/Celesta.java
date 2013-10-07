@@ -36,9 +36,11 @@ import ru.curs.celesta.score.Score;
 public final class Celesta {
 
 	private static final String CELESTA_IS_ALREADY_INITIALIZED = "Celesta is already initialized.";
+	private static final String CELESTA_IS_NOT_INITIALIZED = "Celesta is not initialized, use "
+			+ "one of 'initialize' methods instead.";
+	private static final String FILE_PROPERTIES = "celesta.properties";
 	private static final Pattern PROCNAME = Pattern
 			.compile("([A-Za-z_][A-Za-z_0-9]*)\\.([A-Za-z_][A-Za-z_0-9]*)\\.([A-Za-z_][A-Za-z_0-9]*)");
-	private static final String FILE_PROPERTIES = "celesta.properties";
 
 	private static Celesta theCelesta;
 	private final Score score;
@@ -302,6 +304,21 @@ public final class Celesta {
 		}
 
 		initialize(settings);
+	}
+
+	/**
+	 * Производит повторную инициализацию Celesta. Метод необходим для системы
+	 * динамического изменения структуры базы данных.
+	 * 
+	 * @throws CelestaException
+	 *             если Celesta не была иницилизирована или в случае ошибки
+	 *             инициализации.
+	 */
+	public static synchronized void reInitialize() throws CelestaException {
+		if (theCelesta == null)
+			throw new CelestaException(CELESTA_IS_NOT_INITIALIZED);
+		theCelesta = null;
+		new Celesta();
 	}
 
 	/**
