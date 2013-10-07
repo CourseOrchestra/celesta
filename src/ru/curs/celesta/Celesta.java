@@ -225,23 +225,22 @@ public final class Celesta {
 
 	private static void initCL() {
 		File lib = new File(getMyPath() + "lib");
-		if (lib.exists()) {
+		if (lib.exists() && lib.isDirectory() && lib.canRead()) {
 			// Construct the "class path" for this class loader
 			Set<URL> set = new LinkedHashSet<URL>();
-			if (lib.isDirectory() && lib.exists() && lib.canRead()) {
-				String[] filenames = lib.list();
-				for (String filename : filenames) {
-					if (!filename.toLowerCase().endsWith(".jar"))
-						continue;
-					File file = new File(lib, filename);
-					URL url;
-					try {
-						url = file.toURI().toURL();
-						set.add(url);
-					} catch (MalformedURLException e) {
-						// This can't happen
-						e.printStackTrace();
-					}
+
+			String[] filenames = lib.list();
+			for (String filename : filenames) {
+				if (!filename.toLowerCase().endsWith(".jar"))
+					continue;
+				File file = new File(lib, filename);
+				URL url;
+				try {
+					url = file.toURI().toURL();
+					set.add(url);
+				} catch (MalformedURLException e) {
+					// This can't happen
+					e.printStackTrace();
 				}
 			}
 			// Construct the class loader itself
