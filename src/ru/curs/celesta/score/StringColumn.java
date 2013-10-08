@@ -108,14 +108,29 @@ public final class StringColumn extends Column {
 		return max;
 	}
 
-	void setLength(String length) {
+	/**
+	 * Устанавливает длину текстового поля.
+	 * 
+	 * @param length
+	 *            Новая длина
+	 * @throws ParseException
+	 *             Если указана нулевая или отрицательная длина.
+	 */
+	public void setLength(String length) throws ParseException {
 		if ("MAX".equalsIgnoreCase(length)) {
 			max = true;
 			this.length = 0;
 		} else {
 			max = false;
-			this.length = Integer.parseInt(length);
+			int newLength = Integer.parseInt(length);
+			if (newLength <= 0)
+				throw new ParseException(
+						String.format(
+								"String column length for column '%s' must be greater than zero.",
+								getName()));
+			this.length = newLength;
 		}
+		getParentTable().getGrain().modify();
 	}
 
 	@Override

@@ -2,26 +2,44 @@
 <project name="SqlServer" id="Project961930" database="SqlServer" >
 	<schema name="celesta" catalogname="celesta" schemaname="celesta" defo="y" >
 		<table name="grains" >
-			<column name="id" type="nvarchar" length="16" jt="12" mandatory="y" />
-			<column name="version" type="nvarchar(max)" jt="12" mandatory="y" />
-			<column name="length" type="int" length="10" jt="4" mandatory="y" />
-			<column name="checksum" type="int" length="10" jt="4" mandatory="y" />
-			<column name="state" type="int" length="10" jt="4" mandatory="y" >
+			<column name="id" type="nvarchar" length="16" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="version" type="nvarchar(max)" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="length" type="int" length="10" jt="4" mandatory="y" regexp_nulls="0" />
+			<column name="checksum" type="int" length="10" jt="4" mandatory="y" regexp_nulls="0" />
+			<column name="state" type="int" length="10" jt="4" mandatory="y" regexp_nulls="0" >
 				<defo>3</defo>
 			</column>
-			<column name="lastmodified" type="datetime" length="23" decimal="3" jt="93" mandatory="y" >
+			<column name="lastmodified" type="datetime" length="23" decimal="3" jt="93" mandatory="y" regexp_nulls="0" >
 				<defo>getdate()</defo>
 			</column>
-			<column name="message" type="nvarchar(max)" jt="12" mandatory="y" >
+			<column name="message" type="nvarchar(max)" jt="12" mandatory="y" regexp_nulls="0" >
 				<defo>&#039;&#039;</defo>
 			</column>
 			<index name="Idx_grains" unique="PRIMARY_KEY" >
 				<column name="id" />
 			</index>
 		</table>
+		<table name="log" >
+			<column name="entryno" type="int" jt="4" mandatory="y" autoincrement="y" regexp_nulls="0" />
+			<column name="grainid" type="nvarchar" length="16" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="tablename" type="nvarchar" length="100" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="action" type="nvarchar" length="1" jt="12" />
+			<column name="pkvalue1" type="nvarchar" length="100" jt="12" />
+			<column name="pkvalue2" type="nvarchar" length="100" jt="12" />
+			<column name="pkvalue3" type="nvarchar" length="100" jt="12" />
+			<column name="oldvalues" type="nvarchar" length="4000" jt="12" />
+			<column name="newvalues" type="nvarchar" length="4000" jt="12" />
+			<index name="Pk_log" unique="PRIMARY_KEY" >
+				<column name="entryno" />
+			</index>
+			<fk name="Fk_log" to_schema="celesta" to_table="tables" >
+				<fk_column name="grainid" pk="grainid" />
+				<fk_column name="tablename" pk="tablename" />
+			</fk>
+		</table>
 		<table name="logsetup" >
-			<column name="grainid" type="nvarchar" length="16" jt="12" mandatory="y" />
-			<column name="tablename" type="nvarchar" length="100" jt="12" mandatory="y" />
+			<column name="grainid" type="nvarchar" length="16" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="tablename" type="nvarchar" length="100" jt="12" mandatory="y" regexp_nulls="0" />
 			<column name="i" type="bit" jt="-7" />
 			<column name="m" type="bit" jt="-7" />
 			<column name="d" type="bit" jt="-7" />
@@ -41,9 +59,9 @@
 			</fk>
 		</table>
 		<table name="permissions" >
-			<column name="roleid" type="int" jt="4" mandatory="y" />
-			<column name="grainid" type="nvarchar" length="16" jt="12" mandatory="y" />
-			<column name="tablename" type="nvarchar" length="100" jt="12" mandatory="y" />
+			<column name="roleid" type="int" jt="4" mandatory="y" regexp_nulls="0" />
+			<column name="grainid" type="nvarchar" length="16" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="tablename" type="nvarchar" length="100" jt="12" mandatory="y" regexp_nulls="0" />
 			<column name="r" type="bit" jt="-7" />
 			<column name="i" type="bit" jt="-7" />
 			<column name="m" type="bit" jt="-7" />
@@ -71,15 +89,15 @@
 			</fk>
 		</table>
 		<table name="roles" >
-			<column name="id" type="int" jt="4" mandatory="y" />
+			<column name="id" type="int" jt="4" mandatory="y" regexp_nulls="0" />
 			<column name="descritpion" type="nvarchar" length="20" jt="12" />
 			<index name="Pk_roles" unique="PRIMARY_KEY" >
 				<column name="id" />
 			</index>
 		</table>
 		<table name="tables" >
-			<column name="grainid" type="nvarchar" length="16" jt="12" mandatory="y" />
-			<column name="tablename" type="nvarchar" length="100" jt="12" mandatory="y" />
+			<column name="grainid" type="nvarchar" length="16" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="tablename" type="nvarchar" length="100" jt="12" mandatory="y" regexp_nulls="0" />
 			<index name="Idx_tables" unique="PRIMARY_KEY" >
 				<column name="grainid" />
 				<column name="tablename" />
@@ -95,8 +113,8 @@
 			</fk>
 		</table>
 		<table name="userroles" >
-			<column name="userid" type="nvarchar" length="250" jt="12" mandatory="y" />
-			<column name="roleid" type="int" jt="4" mandatory="y" />
+			<column name="userid" type="nvarchar" length="250" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="roleid" type="int" jt="4" mandatory="y" regexp_nulls="0" />
 			<index name="Idx_userroles" unique="PRIMARY_KEY" >
 				<column name="userid" />
 				<column name="roleid" />
@@ -106,24 +124,6 @@
 			</index>
 			<fk name="Fk_userroles" to_schema="celesta" to_table="roles" >
 				<fk_column name="roleid" pk="id" />
-			</fk>
-		</table>
-		<table name="log" >
-			<column name="entryno" type="int" jt="4" mandatory="y" autoincrement="y" />
-			<column name="grainid" type="nvarchar" length="16" jt="12" mandatory="y" />
-			<column name="tablename" type="nvarchar" length="100" jt="12" mandatory="y" />
-			<column name="action" type="nvarchar" length="1" jt="12" />
-			<column name="pkvalue1" type="nvarchar" length="100" jt="12" />
-			<column name="pkvalue2" type="nvarchar" length="100" jt="12" />
-			<column name="pkvalue3" type="nvarchar" length="100" jt="12" />
-			<column name="oldvalues" type="nvarchar" length="4000" jt="12" />
-			<column name="newvalues" type="nvarchar" length="4000" jt="12" />
-			<index name="Pk_log" unique="PRIMARY_KEY" >
-				<column name="entryno" />
-			</index>
-			<fk name="Fk_log" to_schema="celesta" to_table="tables" >
-				<fk_column name="grainid" pk="grainid" />
-				<fk_column name="tablename" pk="tablename" />
 			</fk>
 		</table>
 	</schema>

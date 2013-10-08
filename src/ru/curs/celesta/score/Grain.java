@@ -19,7 +19,7 @@ public final class Grain extends NamedElement {
 
 	private final Score score;
 
-	private VersionString version;
+	private VersionString version = VersionString.DEFAULT;
 
 	private int length;
 
@@ -28,6 +28,8 @@ public final class Grain extends NamedElement {
 	private int dependencyOrder;
 
 	private boolean parsingComplete = false;
+
+	private boolean modified = true;
 
 	private File grainPath;
 
@@ -55,6 +57,9 @@ public final class Grain extends NamedElement {
 			throw new IllegalArgumentException();
 		this.score = score;
 		score.addGrain(this);
+
+		grainPath = new File(String.format("%s%s%s",
+				score.getDefaultGrainPath(), File.separator, name));
 	}
 
 	/**
@@ -105,6 +110,7 @@ public final class Grain extends NamedElement {
 		if (table.getGrain() != this)
 			throw new IllegalArgumentException();
 		tables.addElement(table);
+		modify();
 	}
 
 	/**
@@ -119,6 +125,7 @@ public final class Grain extends NamedElement {
 		if (index.getGrain() != this)
 			throw new IllegalArgumentException();
 		indices.addElement(index);
+		modify();
 	}
 
 	/**
@@ -206,6 +213,7 @@ public final class Grain extends NamedElement {
 
 	void completeParsing() {
 		parsingComplete = true;
+		modified = false;
 		orderCounter++;
 		dependencyOrder = orderCounter;
 	}
@@ -221,5 +229,19 @@ public final class Grain extends NamedElement {
 		if (!grainPath.isDirectory())
 			throw new IllegalArgumentException();
 		this.grainPath = grainPath;
+	}
+
+	/**
+	 * Возвращает признак модификации гранулы (true, если составляющие части
+	 * гранулы были модифицированы в runtime).
+	 */
+	public boolean isModified() {
+		return modified;
+	}
+
+	void modify() throws ParseException {
+		if ("celesta".equals(getName()) && parsingComplete)
+			throw new ParseException("You cannot modify system grain.");
+		modified = true;
 	}
 }

@@ -57,7 +57,6 @@ public abstract class Column extends NamedElement {
 	 */
 	public final void setNullableAndDefault(boolean nullable,
 			String defaultValue) throws ParseException {
-
 		String buf;
 
 		// if (defaultValue == null && !nullable) {
@@ -68,6 +67,7 @@ public abstract class Column extends NamedElement {
 
 		this.nullable = nullable;
 		setDefault(buf);
+		parentTable.getGrain().modify();
 	}
 
 	/**

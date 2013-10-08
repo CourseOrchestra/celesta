@@ -13,6 +13,13 @@ import java.util.regex.Pattern;
  * 
  */
 public final class VersionString {
+
+	/**
+	 * Строка версии по умолчанию для вновь создаваемых динамически гранул,
+	 * соответствует "1.00".
+	 */
+	public static final VersionString DEFAULT;
+
 	/**
 	 * Результат сравнения VersionStrings, на которых существует частичный
 	 * порядок (использование стандартного интерфейса Comparable невозможно, т.
@@ -37,6 +44,16 @@ public final class VersionString {
 
 	private static final Pattern P = Pattern
 			.compile("([A-Z_]*)([0-9]+\\.[0-9]+)");
+
+	static {
+		VersionString v;
+		try {
+			v = new VersionString("1.00");
+		} catch (ParseException e) {
+			v = null;
+		}
+		DEFAULT = v;
+	}
 
 	private final Map<String, Double> versions = new HashMap<>();
 	private final String versionString;

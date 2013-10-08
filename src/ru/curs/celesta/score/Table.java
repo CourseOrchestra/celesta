@@ -74,6 +74,7 @@ public final class Table extends NamedElement {
 	void addColumn(Column column) throws ParseException {
 		if (column.getParentTable() != this)
 			throw new IllegalArgumentException();
+		grain.modify();
 		columns.addElement(column);
 	}
 
@@ -86,13 +87,24 @@ public final class Table extends NamedElement {
 	 * Устанавливает первичный ключ для таблицы в виде массива колонок.
 	 * Используется для динамического управления метаданными.
 	 * 
-	 * @param columns
+	 * @param columnNames
 	 *            перечень колонок
 	 * @throws ParseException
 	 *             в случае, когда передаётся пустой перечень
 	 */
-	public void setPK(Column[] columns) throws ParseException {
-		// TODO реализовать
+	public void setPK(String[] columnNames) throws ParseException {
+		if (columnNames == null || columnNames.length == 0)
+			throw new ParseException(String.format(
+					"Primary key for table %s.%s cannot be empty.",
+					grain.getName(), getName()));
+		for (String n : columnNames)
+			validatePKColumn(n);
+		grain.modify();
+		pk.clear();
+		pkFinalized = false;
+		for (String n : columnNames)
+			addPK(n);
+		finalizePK();
 	}
 
 	/**
@@ -106,6 +118,11 @@ public final class Table extends NamedElement {
 			throw new ParseException(String.format(
 					"More than one PRIMARY KEY definition in table '%s'.",
 					getName()));
+		Column c = validatePKColumn(name);
+		pk.addElement(c);
+	}
+
+	private Column validatePKColumn(String name) throws ParseException {
 		Column c = columns.get(name);
 		if (c == null)
 			throw new ParseException(String.format(
@@ -122,8 +139,14 @@ public final class Table extends NamedElement {
 							"Column %s is of long binary type and therefore "
 									+ "it cannot a part of a primary key in table '%s'.",
 							name, getName()));
+		if (c instanceof StringColumn && ((StringColumn) c).isMax())
+			throw new ParseException(
+					String.format(
+							"Column '%s' is of nvarchar(max) type and therefore "
+									+ "it cannot a part of a primary key in table '%s'.",
+							name, getName()));
 
-		pk.addElement(c);
+		return c;
 	}
 
 	void addFK(ForeignKey fk) throws ParseException {
@@ -141,6 +164,7 @@ public final class Table extends NamedElement {
 							"Foreign key with columns %s is already defined in table '%s'",
 							sb.toString(), getName()));
 		}
+		grain.modify();
 		fKeys.add(fk);
 	}
 

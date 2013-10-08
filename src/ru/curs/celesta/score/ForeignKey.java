@@ -49,6 +49,7 @@ public class ForeignKey {
 		if (deleteBehaviour == FKBehaviour.SET_NULL)
 			checkNullable();
 		this.deleteBehaviour = deleteBehaviour;
+		parentTable.getGrain().modify();
 	}
 
 	void setUpdateBehaviour(FKBehaviour updateBehaviour) throws ParseException {
@@ -57,6 +58,7 @@ public class ForeignKey {
 		if (updateBehaviour == FKBehaviour.SET_NULL)
 			checkNullable();
 		this.updateBehaviour = updateBehaviour;
+		parentTable.getGrain().modify();
 	}
 
 	private void checkNullable() throws ParseException {

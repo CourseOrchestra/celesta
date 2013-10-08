@@ -23,6 +23,8 @@ public class Score {
 
 	private final Map<String, File> grainFiles = new HashMap<>();
 
+	private File defaultGrainPath;
+
 	Score() {
 
 	}
@@ -51,6 +53,8 @@ public class Score {
 				throw new CelestaException(
 						"Score path entry '%s' is not a directory.",
 						path.toString());
+
+			defaultGrainPath = path;
 
 			for (File grainPath : path.listFiles(new FileFilter() {
 				@Override
@@ -204,6 +208,14 @@ public class Score {
 	 */
 	public Map<String, Grain> getGrains() {
 		return Collections.unmodifiableMap(grains);
+	}
+
+	/**
+	 * Возвращает путь по умолчанию для создаваемых динамически гранул. Значение
+	 * равно последней записи в score.path.
+	 */
+	File getDefaultGrainPath() {
+		return defaultGrainPath;
 	}
 
 }

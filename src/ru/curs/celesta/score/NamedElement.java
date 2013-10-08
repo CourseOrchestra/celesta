@@ -137,7 +137,7 @@ abstract class NamedElementHolder<T extends NamedElement> implements
 
 	@Override
 	public void clear() {
-		throw new UnsupportedOperationException();
+		namespace.clear();
 	}
 
 }
