@@ -19,8 +19,7 @@ public class Index extends NamedElement {
 		}
 	};
 
-	public Index(Grain grain, String tableName, String name)
-			throws ParseException {
+	Index(Grain grain, String tableName, String name) throws ParseException {
 		super(name);
 		if (grain == null || tableName == null || name == null)
 			throw new IllegalArgumentException();
@@ -31,6 +30,13 @@ public class Index extends NamedElement {
 					"Error while creating index '%s': table '%s' not found.",
 					name, tableName));
 		grain.addIndex(this);
+	}
+
+	public Index(Table t, String name, String[] columns) throws ParseException {
+		this(t.getGrain(), t.getName(), name);
+		for (String n : columns)
+			addColumn(n);
+		finalizeIndex();
 	}
 
 	/**
@@ -56,7 +62,7 @@ public class Index extends NamedElement {
 	 *             В случае, если колонка не найдена, или уже встречается в
 	 *             индексе, или имеет тип IMAGE.
 	 */
-	public void addColumn(String columnName) throws ParseException {
+	void addColumn(String columnName) throws ParseException {
 		if (columnName == null)
 			throw new IllegalArgumentException();
 		Column c = table.getColumns().get(columnName);
@@ -88,7 +94,7 @@ public class Index extends NamedElement {
 	 *             В случае, если на этой таблице обнаружен индекс,
 	 *             дублирующийся по составу полей.
 	 */
-	public void finalizeIndex() throws ParseException {
+	void finalizeIndex() throws ParseException {
 		// Ищем дублирующиеся по составу полей индексы
 		for (Index ind : grain.getIndices().values()) {
 			if (ind == this)

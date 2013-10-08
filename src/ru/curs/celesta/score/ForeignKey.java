@@ -28,10 +28,19 @@ public class ForeignKey {
 
 	private final List<Column> referencedColumns = new LinkedList<>();
 
-	public ForeignKey(Table parentTable) {
+	ForeignKey(Table parentTable) {
 		if (parentTable == null)
 			throw new IllegalArgumentException();
 		this.parentTable = parentTable;
+	}
+
+	public ForeignKey(Table parentTable, Table referencedTable,
+			String[] columnNames) throws ParseException {
+		this(parentTable);
+		for (String n : columnNames)
+			addColumn(n);
+		setReferencedTable(referencedTable.getGrain().getName(),
+				referencedTable.getName());
 	}
 
 	void setDeleteBehaviour(FKBehaviour deleteBehaviour) throws ParseException {
@@ -259,7 +268,7 @@ public class ForeignKey {
 	 *             Если перечень полей не совпадает с перечнем полей первичного
 	 *             ключа.
 	 */
-	public void finalizeReference() throws ParseException {
+	void finalizeReference() throws ParseException {
 
 		if (referencedTable == null)
 			throw new IllegalStateException();

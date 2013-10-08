@@ -83,6 +83,19 @@ public final class Table extends NamedElement {
 	}
 
 	/**
+	 * Устанавливает первичный ключ для таблицы в виде массива колонок.
+	 * Используется для динамического управления метаданными.
+	 * 
+	 * @param columns
+	 *            перечень колонок
+	 * @throws ParseException
+	 *             в случае, когда передаётся пустой перечень
+	 */
+	public void setPK(Column[] columns) throws ParseException {
+		// TODO реализовать
+	}
+
+	/**
 	 * Добавляет колонку первичного ключа.
 	 * 
 	 * @param string
