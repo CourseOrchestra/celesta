@@ -23,6 +23,7 @@ import org.python.core.PyException;
 import org.python.core.PyObject;
 import org.python.core.PyString;
 import org.python.core.PySystemState;
+import org.python.core.codecs;
 import org.python.util.PythonInterpreter;
 
 import ru.curs.celesta.dbutils.DBUpdator;
@@ -116,9 +117,9 @@ public final class Celesta {
 		PySystemState state = new PySystemState();
 		for (String path : pyPathList) {
 			state.path.append(new PyString(path));
-		}
-
+		}		
 		PythonInterpreter interp = new PythonInterpreter(null, state);
+		codecs.setDefaultEncoding("UTF-8");
 		return interp;
 	}
 
@@ -262,7 +263,6 @@ public final class Celesta {
 				"java.ext.dirs,celesta.lib");
 		PythonInterpreter.initialize(System.getProperties(), postProperties,
 				null);
-		// codecs.setDefaultEncoding("UTF-8");
 	}
 
 	/**
