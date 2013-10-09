@@ -112,7 +112,12 @@ abstract class NamedElementHolder<T extends NamedElement> implements
 
 	@Override
 	public boolean remove(Object o) {
-		throw new UnsupportedOperationException();
+		if (o instanceof NamedElement) {
+			NamedElement e = (NamedElement) o;
+			return namespace.remove(e.getName()) != null;
+		} else {
+			return false;
+		}
 	}
 
 	@Override

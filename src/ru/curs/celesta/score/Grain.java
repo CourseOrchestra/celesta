@@ -2,8 +2,12 @@ package ru.curs.celesta.score;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import ru.curs.celesta.CelestaException;
 
 /**
  * Гранула.
@@ -109,8 +113,8 @@ public final class Grain extends NamedElement {
 	void addTable(Table table) throws ParseException {
 		if (table.getGrain() != this)
 			throw new IllegalArgumentException();
-		tables.addElement(table);
 		modify();
+		tables.addElement(table);
 	}
 
 	/**
@@ -124,8 +128,40 @@ public final class Grain extends NamedElement {
 	public void addIndex(Index index) throws ParseException {
 		if (index.getGrain() != this)
 			throw new IllegalArgumentException();
-		indices.addElement(index);
 		modify();
+		indices.addElement(index);
+	}
+
+	synchronized void removeIndex(Index index) throws ParseException {
+		modify();
+		indices.remove(index);
+	}
+
+	synchronized void removeTable(Table table) throws ParseException {
+		// Проверяем, не системную ли таблицу хотим удалить
+		modify();
+
+		// Удаляются все индексы на данной таблице
+		List<Index> indToDelete = new LinkedList<>();
+		for (Index ind : indices)
+			if (ind.getTable() == table)
+				indToDelete.add(ind);
+
+		// Удаляются все внешние ключи, ссылающиеся на данную таблицу
+		List<ForeignKey> fkToDelete = new LinkedList<>();
+		for (Grain g : score.getGrains().values())
+			for (Table t : g.getTables().values())
+				for (ForeignKey fk : t.getForeignKeys())
+					if (fk.getReferencedTable() == table)
+						fkToDelete.add(fk);
+
+		for (Index ind : indToDelete)
+			ind.delete();
+		for (ForeignKey fk : fkToDelete)
+			fk.delete();
+
+		// Удаляется сама таблица
+		tables.remove(table);
 	}
 
 	/**
@@ -244,4 +280,17 @@ public final class Grain extends NamedElement {
 			throw new ParseException("You cannot modify system grain.");
 		modified = true;
 	}
+
+	/**
+	 * Сохраняет гранулу обратно в файл, расположенный в grainPath.
+	 * 
+	 * @throws CelestaException
+	 *             ошибка ввода-вывода
+	 */
+	void save() throws CelestaException {
+		// TODO реализовать
+		throw new IllegalStateException(
+				"Score saving to files not implemented yet");
+	}
+
 }

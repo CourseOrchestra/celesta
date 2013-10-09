@@ -100,11 +100,13 @@ public class Score {
 	/**
 	 * Сохраняет содержимое метаданных обратно в SQL-файлы, при этом
 	 * перезаписывая их содержимое.
+	 * 
+	 * @throws CelestaException при ошибке ввода-вывода.
 	 */
-	public void save() {
-		// TODO
-		throw new IllegalStateException(
-				"Score saving to files not implemented yet");
+	public void save() throws CelestaException {
+		for (Grain g: grains.values())
+			if (g.isModified())
+				g.save();
 	}
 
 	private void parseGrains() throws CelestaException {

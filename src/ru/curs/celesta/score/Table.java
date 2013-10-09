@@ -11,6 +11,9 @@ import java.util.Set;
  */
 public final class Table extends NamedElement {
 
+	private static final String YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO = "Table '%s.%s', "
+			+ "field '%s': you cannot drop a column that belongs to ";
+
 	/**
 	 * Гранула, к которой относится данная таблица.
 	 */
@@ -168,6 +171,39 @@ public final class Table extends NamedElement {
 		fKeys.add(fk);
 	}
 
+	synchronized void removeFK(ForeignKey foreignKey) throws ParseException {
+		grain.modify();
+		fKeys.remove(foreignKey);
+	}
+
+	synchronized void removeColumn(Column column) throws ParseException {
+		// Составную часть первичного ключа нельзя удалить
+		if (pk.contains(column))
+			throw new ParseException(String.format(
+					YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO
+							+ "a primary key. Change primary key first.",
+					getGrain().getName(), getName(), column.getName()));
+		// Составную часть индекса нельзя удалить
+		for (Index ind : getGrain().getIndices().values())
+			if (ind.getColumns().containsValue(column))
+				throw new ParseException(
+						String.format(
+								YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO
+										+ "an index. Drop or change relevant index first.",
+								getGrain().getName(), getName(),
+								column.getName()));
+		// Составную часть внешнего ключа нельзя удалить
+		for (ForeignKey fk : fKeys)
+			if (fk.getColumns().containsValue(column))
+				String.format(
+						YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO
+								+ "a foreign key. Drop or change relevant foreign key first.",
+						getGrain().getName(), getName(), column.getName());
+
+		grain.modify();
+		columns.remove(column);
+	}
+
 	/**
 	 * Финализирует создание первичного ключа.
 	 * 
@@ -206,4 +242,13 @@ public final class Table extends NamedElement {
 		this.pkConstraintName = pkConstraintName;
 	}
 
+	/**
+	 * Удаляет таблицу.
+	 * 
+	 * @throws ParseException
+	 *             при попытке изменить системную гранулу
+	 */
+	public void delete() throws ParseException {
+		grain.removeTable(this);
+	}
 }

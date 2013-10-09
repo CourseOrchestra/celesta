@@ -48,8 +48,8 @@ public class ForeignKey {
 			throw new IllegalArgumentException();
 		if (deleteBehaviour == FKBehaviour.SET_NULL)
 			checkNullable();
-		this.deleteBehaviour = deleteBehaviour;
 		parentTable.getGrain().modify();
+		this.deleteBehaviour = deleteBehaviour;
 	}
 
 	void setUpdateBehaviour(FKBehaviour updateBehaviour) throws ParseException {
@@ -57,8 +57,8 @@ public class ForeignKey {
 			throw new IllegalArgumentException();
 		if (updateBehaviour == FKBehaviour.SET_NULL)
 			checkNullable();
-		this.updateBehaviour = updateBehaviour;
 		parentTable.getGrain().modify();
+		this.updateBehaviour = updateBehaviour;
 	}
 
 	private void checkNullable() throws ParseException {
@@ -308,5 +308,15 @@ public class ForeignKey {
 
 	void setConstraintName(String constraintName) {
 		this.constraintName = constraintName;
+	}
+
+	/**
+	 * Удаляет внешний ключ.
+	 * 
+	 * @throws ParseException
+	 *             при попытке изменить системную гранулу.
+	 */
+	public void delete() throws ParseException {
+		parentTable.removeFK(this);
 	}
 }

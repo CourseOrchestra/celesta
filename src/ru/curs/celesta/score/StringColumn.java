@@ -118,6 +118,7 @@ public final class StringColumn extends Column {
 	 */
 	public void setLength(String length) throws ParseException {
 		if ("MAX".equalsIgnoreCase(length)) {
+			getParentTable().getGrain().modify();
 			max = true;
 			this.length = 0;
 		} else {
@@ -128,9 +129,9 @@ public final class StringColumn extends Column {
 						String.format(
 								"String column length for column '%s' must be greater than zero.",
 								getName()));
+			getParentTable().getGrain().modify();
 			this.length = newLength;
 		}
-		getParentTable().getGrain().modify();
 	}
 
 	@Override

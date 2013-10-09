@@ -125,4 +125,14 @@ public class Index extends NamedElement {
 	public Map<String, Column> getColumns() {
 		return columns.getElements();
 	}
+
+	/**
+	 * Удаляет индекс.
+	 * 
+	 * @throws ParseException
+	 *             при попытке изменить системную гранулу
+	 */
+	public void delete() throws ParseException {
+		grain.removeIndex(this);
+	}
 }

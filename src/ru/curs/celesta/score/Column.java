@@ -57,17 +57,15 @@ public abstract class Column extends NamedElement {
 	 */
 	public final void setNullableAndDefault(boolean nullable,
 			String defaultValue) throws ParseException {
+		parentTable.getGrain().modify();
 		String buf;
-
 		// if (defaultValue == null && !nullable) {
 		// buf = getDefaultDefault();
 		// } else {
 		buf = defaultValue;
 		// }
-
 		this.nullable = nullable;
 		setDefault(buf);
-		parentTable.getGrain().modify();
 	}
 
 	/**
@@ -88,4 +86,15 @@ public abstract class Column extends NamedElement {
 	 * процедур генерации ORM-кода.
 	 */
 	public abstract String jdbcGetterName();
+
+	/**
+	 * Удаляет колонку.
+	 * 
+	 * @throws ParseException
+	 *             Если удаляется составная часть первичного ключа, внешнего
+	 *             ключа или индекса.
+	 */
+	void delete() throws ParseException {
+		parentTable.removeColumn(this);
+	}
 }

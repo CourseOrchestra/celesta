@@ -142,4 +142,27 @@ public class ScoreTest {
 		assertEquals(2, b.getPrimaryKey().size());
 	}
 
+	@Test
+	public void modificationTest5() throws CelestaException, ParseException {
+		Score s = new Score("score");
+		Grain g2 = s.getGrain("g2");
+		Grain g3 = s.getGrain("g3");
+		assertFalse(g2.isModified());
+		assertFalse(g3.isModified());
+
+		Table b = g2.getTable("b");
+		Table c = g3.getTable("c");
+
+		assertEquals(1, c.getForeignKeys().size());
+		ForeignKey fk = c.getForeignKeys().iterator().next();
+		assertSame(b, fk.getReferencedTable());
+
+		assertTrue(g2.getTables().containsKey("b"));
+		b.delete();
+		assertFalse(g2.getTables().containsKey("b"));
+		assertTrue(g2.isModified());
+		assertEquals(0, c.getForeignKeys().size());
+
+		assertTrue(g3.isModified());
+	}
 }
