@@ -15,10 +15,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 
 /**
@@ -241,14 +244,36 @@ public final class ORMCompiler {
 		w.write("    def currentValues(self):");
 		w.newLine();
 		StringBuilder sb = new StringBuilder();
-		for (Column c : columns) {
-			if (sb.length() > 0)
-				sb.append(", ");
-			sb.append(String.format("self.%s", c.getName()));
-		}
+		for (Column c : columns)
+			addValue(sb, c);
+
 		w.write(String.format("        return array([%s], Object)",
 				sb.toString()));
 		w.newLine();
+	}
+
+	private static void addValue(StringBuilder sb, Column c) {
+		if (sb.length() > 0)
+			sb.append(", ");
+		if (c instanceof BooleanColumn)
+			sb.append(String.format(
+					"None if self.%s == None else bool(self.%s)", c.getName(),
+					c.getName()));
+		else if (c instanceof IntegerColumn)
+			sb.append(String.format(
+					"None if self.%s == None else int(self.%s)", c.getName(),
+					c.getName()));
+		else if (c instanceof FloatingColumn)
+			sb.append(String.format(
+					"None if self.%s == None else float(self.%s)", c.getName(),
+					c.getName()));
+		else if (c instanceof StringColumn)
+			sb.append(String.format(
+					"None if self.%s == None else str(self.%s)", c.getName(),
+					c.getName()));
+		else {
+			sb.append(String.format("self.%s", c.getName()));
+		}
 	}
 
 	private static void compileCurrentKeyValues(BufferedWriter w, Set<Column> pk)
@@ -256,11 +281,9 @@ public final class ORMCompiler {
 		w.write("    def currentKeyValues(self):");
 		w.newLine();
 		StringBuilder sb = new StringBuilder();
-		for (Column c : pk) {
-			if (sb.length() > 0)
-				sb.append(", ");
-			sb.append(String.format("self.%s", c.getName()));
-		}
+		for (Column c : pk)
+			addValue(sb, c);
+
 		w.write(String.format("        return array([%s], Object)",
 				sb.toString()));
 		w.newLine();
