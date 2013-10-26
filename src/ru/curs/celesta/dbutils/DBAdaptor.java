@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils;
 
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -9,6 +10,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +18,7 @@ import java.util.Set;
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
@@ -409,14 +412,20 @@ public abstract class DBAdaptor {
 		return sb.toString();
 	}
 
-	static String getTableFieldsList(Table t) {
-		return getFieldList(t.getColumns().keySet());
+	static String getTableFieldsListExceptBLOBs(Table t) {
+		List<String> flds = new LinkedList<String>();
+		for (Map.Entry<String, Column> e : t.getColumns().entrySet()) {
+			if (!(e.getValue() instanceof BinaryColumn))
+				flds.add(e.getKey());
+		}
+		return getFieldList(flds);
 	}
 
 	final String getSelectFromOrderBy(Table t, String whereClause,
 			List<String> orderBy) {
 		String sqlfrom = String.format("select %s from " + tableTemplate(),
-				getTableFieldsList(t), t.getGrain().getName(), t.getName());
+				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
+				t.getName());
 
 		String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
 
@@ -451,10 +460,10 @@ public abstract class DBAdaptor {
 			else if (v instanceof Date) {
 				Timestamp d = new Timestamp(((Date) v).getTime());
 				stmt.setTimestamp(i, d);
-			} else {
-				throw new CelestaException(
-						"You can filter only on Integer, Double, String, "
-								+ "Boolean or Date value types.");
+			} else if (v instanceof BLOB) {
+				Blob b = stmt.getConnection().createBlob();
+				((BLOB) v).saveToJDBCBlob(b);
+				stmt.setBlob(i, b);
 			}
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -491,6 +500,9 @@ public abstract class DBAdaptor {
 			throws SQLException;
 
 	abstract PreparedStatement getOneRecordStatement(Connection conn, Table t)
+			throws CelestaException;
+
+	abstract PreparedStatement getOneFieldStatement(Connection conn, Column c)
 			throws CelestaException;
 
 	abstract PreparedStatement getRecordSetStatement(Connection conn, Table t,

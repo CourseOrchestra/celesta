@@ -1,5 +1,8 @@
 package ru.curs.celesta.dbutils;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,6 +19,7 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
+import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.IntegerColumn;
@@ -445,6 +449,59 @@ public abstract class Cursor {
 		validateColumName(name);
 		filters.remove(name);
 		closeSet();
+	}
+
+	/**
+	 * Прочитывает содержимое BLOB-поля в память.
+	 * 
+	 * @param name
+	 *            имя поля
+	 * @throws CelestaException
+	 *             Неверное имя поля
+	 */
+	protected BLOB calcBlob(String name) throws CelestaException {
+		validateColumName(name);
+		Column c = meta().getColumns().get(name);
+		if (!(c instanceof BinaryColumn))
+			throw new CelestaException("'%s' is not a BLOB column.",
+					c.getName());
+		BLOB result;
+		PreparedStatement stmt = db.getOneFieldStatement(conn, c);
+		Object[] keyVals = currentKeyValues();
+		for (int i = 0; i < keyVals.length; i++)
+			DBAdaptor.setParam(stmt, i + 1, keyVals[i]);
+		try {
+			ResultSet rs = stmt.executeQuery();
+			try {
+				if (rs.next()) {
+					Blob b = rs.getBlob(1);
+					if (!(b == null || rs.wasNull()))
+						try {
+							InputStream is = b.getBinaryStream();
+							try {
+								result = new BLOB(is);
+							} finally {
+								is.close();
+							}
+						} finally {
+							b.free();
+						}
+					else {
+						// Поле имеет значение null
+						result = new BLOB();
+					}
+				} else {
+					// Записи не существует вовсе
+					result = new BLOB();
+				}
+			} finally {
+				rs.close();
+			}
+			stmt.close();
+		} catch (SQLException | IOException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return result;
 	}
 
 	/**

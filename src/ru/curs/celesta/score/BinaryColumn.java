@@ -36,6 +36,6 @@ public final class BinaryColumn extends Column {
 
 	@Override
 	public String jdbcGetterName() {
-		throw new RuntimeException("Binary columns are not implemented yet.");
+		return "getBlob";
 	}
 }

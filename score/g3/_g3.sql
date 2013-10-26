@@ -5,5 +5,6 @@ idc int identity not null primary key,
 descr nvarchar(2),
 idb int foreign key references g2.b(idb),
 aaa nvarchar(10),
-bbb int default 3
+bbb int default 3,
+dat image
 );

@@ -20,6 +20,7 @@ import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
@@ -29,6 +30,7 @@ import ru.curs.celesta.score.Table;
  */
 public final class ORMCompiler {
 
+	private static final String SELF_S_EQUALS_NONE = "        self.%s = None";
 	private static final Pattern SIGNATURE = Pattern
 			.compile("len=([0-9]+), crc32=([0-9A-F]+)\\.");
 	private static final String[] HEADER = {
@@ -153,6 +155,8 @@ public final class ORMCompiler {
 		compileCurrentKeyValues(w, pk);
 		// Текущие значения всех полей
 		compileCurrentValues(w, columns);
+		// Вычисление BLOB-полей
+		compileCalcBLOBs(w, columns);
 		// Автоинкремент
 		compileSetAutoIncrement(w, columns);
 		// Клонирование
@@ -160,6 +164,23 @@ public final class ORMCompiler {
 		// Триггеры
 		compileTriggers(w, className);
 		w.newLine();
+	}
+
+	private static void compileCalcBLOBs(BufferedWriter w,
+			Collection<Column> columns) throws IOException {
+		for (Column c : columns)
+			if (c instanceof BinaryColumn) {
+				w.write(String.format("    def calc%s(self):", c.getName()));
+				w.newLine();
+				w.write(String.format("        self.%s = self.calcBlob('%s')",
+						c.getName(), c.getName()));
+				w.newLine();
+				w.write(String.format(
+						"        self.getXRec().%s = self.%s.clone()",
+						c.getName(), c.getName()));
+				w.newLine();
+			}
+
 	}
 
 	private static void compileTriggers(BufferedWriter w, String className)
@@ -301,7 +322,7 @@ public final class ORMCompiler {
 		}
 		for (Column c : columns)
 			if (!pk.contains(c)) {
-				w.write(String.format("        self.%s = None", c.getName()));
+				w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
 				w.newLine();
 			}
 	}
@@ -311,8 +332,12 @@ public final class ORMCompiler {
 		w.write("    def parseResult(self, rs):");
 		w.newLine();
 		for (Column c : columns) {
-			w.write(String.format("        self.%s = rs.%s('%s')", c.getName(),
-					c.jdbcGetterName(), c.getName()));
+			if (c instanceof BinaryColumn) {
+				w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
+			} else {
+				w.write(String.format("        self.%s = rs.%s('%s')",
+						c.getName(), c.jdbcGetterName(), c.getName()));
+			}
 			w.newLine();
 		}
 	}
@@ -340,7 +365,7 @@ public final class ORMCompiler {
 		w.write("        Cursor.__init__(self, context)");
 		w.newLine();
 		for (Column c : columns) {
-			w.write(String.format("        self.%s = None", c.getName()));
+			w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
 			w.newLine();
 		}
 		w.write("        self.context = context");

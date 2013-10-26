@@ -191,6 +191,26 @@ public abstract class AbstractAdaptorTest {
 			dba.dropTable(t);
 		}
 	}
+	
+	@Test
+	public void getOneFieldStatement() throws Exception {
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+		Connection conn = ConnectionPool.get();
+		try {
+			insertRow(conn, t, 1);
+			Column c = t.getColumns().get("attrInt");
+			PreparedStatement pstmt = dba.getOneFieldStatement(conn, c);
+			assertNotNull(pstmt);
+			DBAdaptor.setParam(pstmt, 1, 1);// key value
+			ResultSet rs = pstmt.executeQuery();
+			assertTrue(rs.next());
+			rs.getInt("attrInt");
+		} finally {
+			ConnectionPool.putBack(conn);
+			dba.dropTable(t);
+		}
+	}
 
 	@Test
 	public void getOneRecordStatement() throws Exception {

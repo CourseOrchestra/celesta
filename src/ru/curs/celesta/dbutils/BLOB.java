@@ -3,6 +3,8 @@ package ru.curs.celesta.dbutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Blob;
+import java.sql.SQLException;
 
 /**
  * Класс для работы с BLOB-полями.
@@ -42,12 +44,12 @@ public final class BLOB {
 
 	/**
 	 * Клон-BLOB, указывающий на ту же самую страницу данных.
-	 * 
-	 * @param source
 	 */
-	BLOB(BLOB source) {
-		this.data = source.data;
-		this.size = source.size;
+	public BLOB clone() {
+		BLOB result = new BLOB();
+		result.data = data;
+		result.size = size;
+		return result;
 	}
 
 	/**
@@ -83,6 +85,17 @@ public final class BLOB {
 		};
 	}
 
+	void saveToJDBCBlob(Blob b) throws SQLException {
+		DataPage currPage = data;
+		int i = 1;
+		while (currPage != null && currPage.pos == currPage.data.length) {
+			i += b.setBytes(i, currPage.data);
+			currPage = currPage.nextPage;
+		}
+		if (currPage != null)
+			b.setBytes(i, currPage.data, 0, currPage.pos);
+	}
+
 	/**
 	 * Принимает ли данное поле в таблице значение NULL.
 	 */
@@ -100,8 +113,7 @@ public final class BLOB {
 	}
 
 	/**
-	 * Вычисляет размер данных. Внимание: операция может быть дорогостоящей для
-	 * данных, превосходящих 64К.
+	 * Возвращает размер данных.
 	 */
 	public int size() {
 		return size;

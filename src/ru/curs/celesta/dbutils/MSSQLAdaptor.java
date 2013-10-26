@@ -200,11 +200,21 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
+	PreparedStatement getOneFieldStatement(Connection conn, Column c)
+			throws CelestaException {
+		Table t = c.getParentTable();
+		String sql = String.format("select top 1 %s from %s.%s where %s;",
+				c.getName(), t.getGrain().getName(), t.getName(),
+				getRecordWhereClause(t));
+		return prepareStatement(conn, sql);
+	}
+
+	@Override
 	PreparedStatement getOneRecordStatement(Connection conn, Table t)
 			throws CelestaException {
 		String sql = String.format("select top 1 %s from %s.%s where %s;",
-				getTableFieldsList(t), t.getGrain().getName(), t.getName(),
-				getRecordWhereClause(t));
+				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
+				t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
