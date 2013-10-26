@@ -15,13 +15,19 @@ public class BLOBTest {
 			4, 65, -117, 8, 55, -2 };
 
 	@Test
-	public void test1() {
+	public void test1() throws IOException {
 		// 1. Нулевой BLOB
-		BLOB a = new BLOB(null);
+		BLOB a = new BLOB();
 		assertTrue(a.isNull());
 		assertNull(a.getInStream());
 		assertFalse(a.isModified());
 		assertEquals(0, a.size());
+
+		a.setNull();
+		assertNull(a.getInStream());
+		assertFalse(a.isModified());
+		assertEquals(0, a.size());
+
 	}
 
 	@Test
@@ -52,7 +58,7 @@ public class BLOBTest {
 
 	@Test
 	public void test6() throws IOException {
-		DataPage d = DataPage.load(new InputStream() {
+		BLOB a = new BLOB(new InputStream() {
 			private int i = 0;
 
 			@Override
@@ -60,8 +66,6 @@ public class BLOBTest {
 				return i < shortData.length ? (int) shortData[i++] & 0xFF : -1;
 			}
 		});
-
-		BLOB a = new BLOB(d);
 
 		byte[] longData = new byte[90000];
 		Random rnd = new Random();
@@ -84,7 +88,7 @@ public class BLOBTest {
 	}
 
 	private void subTest2(final byte[] data) throws IOException {
-		BLOB a = new BLOB(null);
+		BLOB a = new BLOB();
 		assertFalse(a.isModified());
 		OutputStream os = a.getOutStream();
 		os.write(data);
@@ -104,7 +108,7 @@ public class BLOBTest {
 	}
 
 	private void subTest(final byte[] data) throws IOException {
-		DataPage d = DataPage.load(new InputStream() {
+		BLOB a = new BLOB(new InputStream() {
 			private int i = 0;
 
 			@Override
@@ -112,8 +116,6 @@ public class BLOBTest {
 				return i < data.length ? (int) data[i++] & 0xFF : -1;
 			}
 		});
-
-		BLOB a = new BLOB(d);
 
 		assertFalse(a.isNull());
 		InputStream is = a.getInStream();

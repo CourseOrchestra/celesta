@@ -7,12 +7,47 @@ import java.io.OutputStream;
 /**
  * Класс для работы с BLOB-полями.
  */
-public class BLOB {
+public final class BLOB {
 	private DataPage data;
-	private boolean isModified = false;
+	private boolean isModified;
+	private int size;
 
-	BLOB(DataPage data) {
-		this.data = data;
+	/**
+	 * Пустой (NULL) BLOB.
+	 */
+	BLOB() {
+	}
+
+	/**
+	 * BLOB на основе данных потока.
+	 * 
+	 * @param source
+	 *            Поток, из которого данные прочитываются в BLOB.
+	 * @throws IOException
+	 *             При ошибке чтения.
+	 */
+	BLOB(final InputStream source) throws IOException {
+		InputStream counter = new InputStream() {
+			@Override
+			public int read() throws IOException {
+				int result = source.read();
+				if (result >= 0)
+					size++;
+				return result;
+			}
+		};
+		int buf = counter.read();
+		data = buf < 0 ? new DataPage(0) : new DataPage(buf, counter);
+	}
+
+	/**
+	 * Клон-BLOB, указывающий на ту же самую страницу данных.
+	 * 
+	 * @param source
+	 */
+	BLOB(BLOB source) {
+		this.data = source.data;
+		this.size = source.size;
 	}
 
 	/**
@@ -36,12 +71,14 @@ public class BLOB {
 	public OutputStream getOutStream() {
 		isModified = true;
 		data = new DataPage();
+		size = 0;
 		return new OutputStream() {
 			private DataPage tail = data;
 
 			@Override
 			public void write(int b) {
 				tail = tail.write(b);
+				size++;
 			}
 		};
 	}
@@ -58,6 +95,7 @@ public class BLOB {
 	 */
 	public void setNull() {
 		isModified = isModified || (data != null);
+		size = 0;
 		data = null;
 	}
 
@@ -66,82 +104,67 @@ public class BLOB {
 	 * данных, превосходящих 64К.
 	 */
 	public int size() {
-		return data == null ? 0 : data.size();
-	}
-}
-
-/**
- * Данные BLOB-поля.
- */
-final class DataPage {
-	private static final int DEFAULT_PAGE_SIZE = 0xFFFF;
-	private static final int BYTE_MASK = 0xFF;
-
-	private final byte[] data;
-	private DataPage nextPage;
-	private int pos;
-
-	DataPage() {
-		this(DEFAULT_PAGE_SIZE);
+		return size;
 	}
 
-	private DataPage(int size) {
-		data = new byte[size];
-	}
+	/**
+	 * Данные BLOB-поля.
+	 */
+	private static final class DataPage {
+		private static final int DEFAULT_PAGE_SIZE = 0xFFFF;
+		private static final int BYTE_MASK = 0xFF;
 
-	private DataPage(int firstByte, InputStream source) throws IOException {
-		this();
-		int buf = firstByte;
-		while (pos < data.length && buf >= 0) {
-			data[pos++] = (byte) buf;
-			buf = source.read();
+		private final byte[] data;
+		private DataPage nextPage;
+		private int pos;
+
+		DataPage() {
+			this(DEFAULT_PAGE_SIZE);
 		}
-		nextPage = buf < 0 ? null : new DataPage(buf, source);
-	}
 
-	static DataPage load(InputStream source) throws IOException {
-		int buf = source.read();
-		return buf < 0 ? new DataPage(0) : new DataPage(buf, source);
-	}
-
-	DataPage write(int b) {
-		if (pos < data.length) {
-			data[pos++] = (byte) (b & BYTE_MASK);
-			return this;
-		} else {
-			DataPage result = new DataPage();
-			nextPage = result;
-			return result.write(b);
+		private DataPage(int size) {
+			data = new byte[size];
 		}
-	}
 
-	InputStream getInStream() {
-		return new InputStream() {
-			private int i = 0;
-			private DataPage currentPage = DataPage.this;
-
-			@Override
-			public int read() {
-				if (i < currentPage.pos)
-					return (int) currentPage.data[i++] & BYTE_MASK;
-				else if (currentPage.nextPage != null) {
-					i = 0;
-					currentPage = currentPage.nextPage;
-					return read();
-				} else {
-					return -1;
-				}
+		private DataPage(int firstByte, InputStream source) throws IOException {
+			this();
+			int buf = firstByte;
+			while (pos < data.length && buf >= 0) {
+				data[pos++] = (byte) buf;
+				buf = source.read();
 			}
-		};
-	}
-
-	int size() {
-		int result = 0;
-		DataPage currPage = this;
-		while (currPage.pos == currPage.data.length) {
-			result += currPage.pos;
-			currPage = currPage.nextPage;
+			nextPage = buf < 0 ? null : new DataPage(buf, source);
 		}
-		return result + currPage.pos;
+
+		DataPage write(int b) {
+			if (pos < data.length) {
+				data[pos++] = (byte) (b & BYTE_MASK);
+				return this;
+			} else {
+				DataPage result = new DataPage();
+				nextPage = result;
+				return result.write(b);
+			}
+		}
+
+		InputStream getInStream() {
+			return new InputStream() {
+				private int i = 0;
+				private DataPage currentPage = DataPage.this;
+
+				@Override
+				public int read() {
+					if (i < currentPage.pos)
+						return (int) currentPage.data[i++] & BYTE_MASK;
+					else if (currentPage.nextPage != null) {
+						i = 0;
+						currentPage = currentPage.nextPage;
+						return read();
+					} else {
+						return -1;
+					}
+				}
+			};
+		}
 	}
 }
