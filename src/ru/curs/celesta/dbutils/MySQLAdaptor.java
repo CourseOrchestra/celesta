@@ -181,13 +181,13 @@ final class MySQLAdaptor extends DBAdaptor {
 				getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
-	
+
 	@Override
 	PreparedStatement getOneRecordStatement(Connection conn, Table t)
 			throws CelestaException {
 		String sql = String.format("select %s from %s.%s where %s limit 1;",
-				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(), t.getName(),
-				getRecordWhereClause(t));
+				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
+				t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
@@ -262,15 +262,19 @@ final class MySQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
-			throws CelestaException {
+	PreparedStatement getUpdateRecordStatement(Connection conn, Table t,
+			boolean[] equalsMask) throws CelestaException {
 		StringBuilder setClause = new StringBuilder();
+		int i = 0;
 		for (String c : t.getColumns().keySet()) {
-			if (setClause.length() > 0)
-				setClause.append(", ");
-			setClause.append(String.format("%s = ?", c));
+			// Пропускаем ключевые поля и поля, не изменившие своего значения
+			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
+				if (setClause.length() > 0)
+					setClause.append(", ");
+				setClause.append(String.format("%s = ?", c));
+			}
+			i++;
 		}
-
 		String sql = String.format("update %s set %s where %s;", t.getName(),
 				setClause.toString(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);

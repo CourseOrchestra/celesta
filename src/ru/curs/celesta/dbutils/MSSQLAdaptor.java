@@ -302,17 +302,19 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
-			throws CelestaException {
+	PreparedStatement getUpdateRecordStatement(Connection conn, Table t,
+			boolean[] equalsMask) throws CelestaException {
 		StringBuilder setClause = new StringBuilder();
-		for (String c : t.getColumns().keySet())
-			// Пропускаем ключевые поля
-			if (!t.getPrimaryKey().containsKey(c)) {
+		int i = 0;
+		for (String c : t.getColumns().keySet()) {
+			// Пропускаем ключевые поля и поля, не изменившие своего значения
+			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
 				if (setClause.length() > 0)
 					setClause.append(", ");
 				setClause.append(String.format("%s = ?", c));
 			}
-
+			i++;
+		}
 		String sql = String.format("update " + tableTemplate()
 				+ " set %s where %s", t.getGrain().getName(), t.getName(),
 				setClause.toString(), getRecordWhereClause(t));

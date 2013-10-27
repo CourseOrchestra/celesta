@@ -43,7 +43,10 @@ def hello(context, arg):
     ins = BufferedReader(InputStreamReader(c.dat.getInStream(), 'utf-8'))
     print ins.readLine()
     
-    return
+    c.dat = None
+    c.update()
+    
+    #return
     
     aa = aaCursor(context)
     aa.deleteAll()

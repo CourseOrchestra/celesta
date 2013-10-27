@@ -43,6 +43,7 @@ public abstract class Cursor {
 	private PreparedStatement get = null;
 	private PreparedStatement set = null;
 	private boolean[] insertMask = null;
+	private boolean[] updateMask = null;
 	private PreparedStatement insert = null;
 	private PreparedStatement update = null;
 	private PreparedStatement delete = null;
@@ -286,16 +287,31 @@ public abstract class Cursor {
 			} finally {
 				rs.close();
 			}
-			if (update == null)
-				update = db.getUpdateRecordStatement(conn, meta());
 			Object[] values = currentValues();
+			Object[] xValues = getXRec().currentValues();
+			// Маска: true для тех случаев, когда поле не было изменено
+			boolean[] myMask = new boolean[values.length];
+			boolean notChanged = true;
+			for (int i = 0; i < values.length; i++) {
+				myMask[i] = compareValues(values[i], xValues[i]);
+				notChanged &= myMask[i];
+			}
+			// Если ничего не изменилось -- выполнять дальнейшие действия нет
+			// необходимости
+			if (notChanged)
+				return true;
+			if (!Arrays.equals(myMask, updateMask)) {
+				update = db.getUpdateRecordStatement(conn, meta(), myMask);
+				updateMask = myMask;
+			}
+
 			Object[] keyValues = currentKeyValues();
 
 			// Заполняем параметры присвоения (set ...)
 			int j = 1;
 			int i = 0;
 			for (String c : meta().getColumns().keySet()) {
-				if (!meta().getPrimaryKey().containsKey(c)) {
+				if (!(myMask[i] || meta().getPrimaryKey().containsKey(c))) {
 					DBAdaptor.setParam(update, j, values[i]);
 					j++;
 				}
@@ -315,6 +331,23 @@ public abstract class Cursor {
 			throw new CelestaException(e.getMessage());
 		}
 		return true;
+	}
+
+	/**
+	 * Сравнивает значения для того, чтобы определить: что именно было изменено
+	 * в записи. Возвращает true, если значения изменены не были.
+	 * 
+	 * @param newVal
+	 *            новое значение
+	 * @param oldVal
+	 *            старое значение
+	 */
+	private static boolean compareValues(Object newVal, Object oldVal) {
+		if (newVal == null)
+			return oldVal == null || (oldVal instanceof BLOB);
+		if (newVal instanceof BLOB)
+			return !((BLOB) newVal).isModified();
+		return newVal.equals(oldVal);
 	}
 
 	/**

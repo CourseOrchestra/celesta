@@ -293,13 +293,18 @@ final class PostgresAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getUpdateRecordStatement(Connection conn, Table t)
-			throws CelestaException {
+	PreparedStatement getUpdateRecordStatement(Connection conn, Table t,
+			boolean[] equalsMask) throws CelestaException {
 		StringBuilder setClause = new StringBuilder();
+		int i = 0;
 		for (String c : t.getColumns().keySet()) {
-			if (setClause.length() > 0)
-				setClause.append(", ");
-			setClause.append(String.format("%s = ?", c));
+			// Пропускаем ключевые поля и поля, не изменившие своего значения
+			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
+				if (setClause.length() > 0)
+					setClause.append(", ");
+				setClause.append(String.format("%s = ?", c));
+			}
+			i++;
 		}
 
 		String sql = String.format("update %s.%s set %s where %s;", t
