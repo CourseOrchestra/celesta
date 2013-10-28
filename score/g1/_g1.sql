@@ -6,6 +6,8 @@ idc int ,
 textvalue nvarchar(10)
 );
 
+create index aaidx on aa (idc, textvalue);
+
 create table a (
 ida int identity not null primary key,
 descr nvarchar(2),

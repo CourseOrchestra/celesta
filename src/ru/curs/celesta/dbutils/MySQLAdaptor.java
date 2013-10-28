@@ -15,6 +15,8 @@ import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
@@ -299,5 +301,23 @@ final class MySQLAdaptor extends DBAdaptor {
 	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
 		// TODO use LAST_INSERT_ID()
 		return 0;
+	}
+
+	@Override
+	String getCreateIndexSQL(Index index) {
+		String fieldList = getFieldList(index.getColumns().keySet());
+		String sql = String.format("CREATE INDEX %s ON " + tableTemplate()
+				+ " (%s)", index.getName(), index.getTable().getGrain()
+				.getName(), index.getTable().getName(), fieldList);
+		return sql;
+	}
+
+	@Override
+	String getDropIndexSQL(Grain g, IndexInfo indexInfo) {
+		String sql = String
+				.format("DROP INDEX %s ON " + tableTemplate(),
+						indexInfo.getIndexName(), g.getName(),
+						indexInfo.getTableName());
+		return sql;
 	}
 }

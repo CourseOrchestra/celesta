@@ -18,6 +18,7 @@ import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
@@ -330,17 +331,6 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public Set<String> getIndices(Connection conn, Grain g)
-			throws CelestaException {
-		String sql = String.format(
-				"select name from sys.indexes where object_id in ("
-						+ "select object_id from sys.tables "
-						+ "where sys.tables.schema_id = SCHEMA_ID('%s')) "
-						+ "and name is not null;", g.getName());
-		return sqlToStringSet(conn, sql);
-	}
-
-	@Override
 	public Set<String> getColumns(Connection conn, Table t)
 			throws CelestaException {
 		String sql = String
@@ -382,5 +372,23 @@ final class MSSQLAdaptor extends DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 
+	}
+
+	@Override
+	String getCreateIndexSQL(Index index) {
+		String fieldList = getFieldList(index.getColumns().keySet());
+		String sql = String.format("CREATE INDEX %s ON " + tableTemplate()
+				+ " (%s)", index.getName(), index.getTable().getGrain()
+				.getName(), index.getTable().getName(), fieldList);
+		return sql;
+	}
+
+	@Override
+	String getDropIndexSQL(Grain g, IndexInfo indexInfo) {
+		String sql = String
+				.format("DROP INDEX %s ON " + tableTemplate(),
+						indexInfo.getIndexName(), g.getName(),
+						indexInfo.getTableName());
+		return sql;
 	}
 }

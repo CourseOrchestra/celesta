@@ -258,6 +258,51 @@ public abstract class DBAdaptor {
 	}
 
 	/**
+	 * Информация об индексе, полученная из метаданых базы данных.
+	 */
+	static class IndexInfo {
+		private final String tableName;
+		private final String indexName;
+		private final int hash;
+
+		IndexInfo(String tableName, String indexName) {
+			this.tableName = tableName;
+			this.indexName = indexName;
+			hash = Integer.rotateLeft(tableName.hashCode(), 3)
+					^ indexName.hashCode();
+		}
+
+		String getTableName() {
+			return tableName;
+		}
+
+		String getIndexName() {
+			return indexName;
+		}
+
+		@Override
+		public int hashCode() {
+			return hash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof IndexInfo) {
+				IndexInfo ii = (IndexInfo) obj;
+				return tableName.equals(ii.tableName)
+						&& indexName.equals(ii.indexName);
+			}
+			return super.equals(obj);
+		}
+
+		@Override
+		public String toString() {
+			return String.format("%s.%s", tableName, indexName);
+		}
+
+	}
+
+	/**
 	 * Возвращает набор имён индексов, связанных с таблицами, лежащими в
 	 * указанной грануле.
 	 * 
@@ -268,9 +313,9 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             В случае сбоя связи с БД.
 	 */
-	public Set<String> getIndices(Connection conn, Grain g)
+	public Set<IndexInfo> getIndices(Connection conn, Grain g)
 			throws CelestaException {
-		Set<String> result = new HashSet<String>();
+		Set<IndexInfo> result = new HashSet<>();
 		try {
 			for (Table t : g.getTables().values()) {
 				DatabaseMetaData metaData = conn.getMetaData();
@@ -278,9 +323,10 @@ public abstract class DBAdaptor {
 						.getName(), t.getName(), false, false);
 				try {
 					while (rs.next()) {
-						String rIndexName = rs.getString("INDEX_NAME");
-						if (rIndexName != null) {
-							result.add(rIndexName);
+						String indName = rs.getString("INDEX_NAME");
+						if (indName != null && rs.getBoolean("NON_UNIQUE")) {
+							IndexInfo info = new IndexInfo(t.getName(), indName);
+							result.add(info);
 						}
 					}
 				} finally {
@@ -334,7 +380,18 @@ public abstract class DBAdaptor {
 	 *             Если что-то пошло не так.
 	 */
 	public final void createIndex(Index index) throws CelestaException {
-		// TODO
+		String sql = getCreateIndexSQL(index);
+		Connection conn = ConnectionPool.get();
+		try {
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			stmt.execute();
+			stmt.close();
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot create index '%s': %s",
+					index.getName(), e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
 	}
 
 	/**
@@ -342,11 +399,25 @@ public abstract class DBAdaptor {
 	 * 
 	 * @param g
 	 *            Гранула
-	 * @param indexName
-	 *            Имя индекса
+	 * @param indexInfo
+	 *            Массив из двух элементов: имя таблицы, имя индекса
+	 * @throws CelestaException
+	 *             Если что-то пошло не так.
 	 */
-	public final void dropIndex(Grain g, String indexName) {
-		// TODO Auto-generated method stub
+	public final void dropIndex(Grain g, IndexInfo indexInfo)
+			throws CelestaException {
+		String sql = getDropIndexSQL(g, indexInfo);
+		Connection conn = ConnectionPool.get();
+		try {
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			stmt.execute();
+			stmt.close();
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot drop index '%s': %s ",
+					indexInfo.getIndexName(), e.getMessage());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
 	}
 
 	/**
@@ -525,6 +596,9 @@ public abstract class DBAdaptor {
 	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException;
 
+	abstract String getCreateIndexSQL(Index index);
+
+	abstract String getDropIndexSQL(Grain g, IndexInfo indexInfo);
 }
 
 /**

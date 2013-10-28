@@ -130,7 +130,9 @@ public abstract class AbstractAdaptorTest {
 		try {
 			insertRow(conn, t, 1);
 			int count = t.getColumns().size();
-			PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t);
+			boolean[] mask = new boolean[count];
+			PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t,
+					mask);
 			assertNotNull(pstmt);
 			for (int i = 2; i <= count; i++) {
 				DBAdaptor.setParam(pstmt, i - 1, 2);
@@ -183,15 +185,16 @@ public abstract class AbstractAdaptorTest {
 		dba.createTable(t);
 		Connection conn = ConnectionPool.get();
 		try {
-			Set<String> indicesSet = dba.getIndices(conn, t.getGrain());
+			Set<DBAdaptor.IndexInfo> indicesSet = dba.getIndices(conn,
+					t.getGrain());
 			assertNotNull(indicesSet);
-			assertTrue(indicesSet.size() != 0);
+			assertTrue(indicesSet.size() == 0);
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
 		}
 	}
-	
+
 	@Test
 	public void getOneFieldStatement() throws Exception {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");

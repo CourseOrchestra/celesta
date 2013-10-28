@@ -79,9 +79,6 @@ def hello(context, arg):
     while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)
         
-        
-
-        
     print 'Python procedure finished.'
     
 def testTrigger(rec):

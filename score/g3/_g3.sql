@@ -8,3 +8,5 @@ aaa nvarchar(10),
 bbb int default 3,
 dat image
 );
+
+create index idxc on c (descr, aaa);

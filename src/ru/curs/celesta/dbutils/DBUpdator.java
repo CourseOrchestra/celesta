@@ -90,6 +90,7 @@ public final class DBUpdator {
 					throw new CelestaException(
 							"No 'celesta' grain definition found.");
 				}
+
 			}
 
 			// Теперь собираем в память информацию о гранулах на основании того,
@@ -122,18 +123,22 @@ public final class DBUpdator {
 			Collections.sort(grains, GRAIN_COMPARATOR);
 
 			// Выполняем итерацию по гранулам.
+			boolean success = true;
 			for (Grain g : grains) {
 				// Запись о грануле есть?
 				GrainInfo gi = dbGrains.get(g.getName());
 				if (gi == null) {
 					insertGrainRec(g);
-					updateGrain(g);
+					success = updateGrain(g) & success;
 				} else {
 					// Запись есть -- решение об апгрейде принимается на основе
 					// версии и контрольной суммы.
-					decideToUpgrade(g, gi);
+					success = decideToUpgrade(g, gi) & success;
 				}
 			}
+			if (!success)
+				throw new CelestaException(
+						"Not all grains were updated successfully, see celesta.grains table data for details.");
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -151,12 +156,10 @@ public final class DBUpdator {
 		grain.insert();
 	}
 
-	private static void decideToUpgrade(Grain g, GrainInfo gi)
+	private static boolean decideToUpgrade(Grain g, GrainInfo gi)
 			throws CelestaException {
-		if (gi.recover) {
-			updateGrain(g);
-			return;
-		}
+		if (gi.recover)
+			return updateGrain(g);
 
 		// Как соотносятся версии?
 		switch (g.getVersion().compareTo(gi.version)) {
@@ -177,16 +180,14 @@ public final class DBUpdator {
 							.toString());
 		case GREATER:
 			// Версия выросла -- апгрейдим.
-			updateGrain(g);
-			break;
+			return updateGrain(g);
 		case EQUALS:
 			// Версия не изменилась: апгрейдим лишь в том случае, если
 			// изменилась контрольная сумма.
 			if (gi.length != g.getLength() || gi.checksum != g.getChecksum())
-				updateGrain(g);
-			break;
+				return updateGrain(g);
 		default:
-			break;
+			return true;
 		}
 	}
 
@@ -198,7 +199,7 @@ public final class DBUpdator {
 	 * @throws CelestaException
 	 *             в случае ошибки обновления.
 	 */
-	private static void updateGrain(Grain g) throws CelestaException {
+	private static boolean updateGrain(Grain g) throws CelestaException {
 		// выставление в статус updating
 		grain.get(g.getName());
 		grain.setState(GrainsCursor.UPGRADING);
@@ -225,15 +226,17 @@ public final class DBUpdator {
 			}
 
 			// Обновляем все индексы.
-			Set<String> dbIndices = dba.getIndices(grain.callContext()
-					.getConn(), g);
+			Set<DBAdaptor.IndexInfo> dbIndices = dba.getIndices(grain
+					.callContext().getConn(), g);
 			Map<String, Index> myIndices = g.getIndices();
 			// Начинаем с удаления ненужных
-			for (String indexName : dbIndices)
-				if (!myIndices.containsKey(indexName))
-					dba.dropIndex(g, indexName);
+			for (DBAdaptor.IndexInfo indexInfo : dbIndices)
+				if (!myIndices.containsKey(indexInfo.getIndexName()))
+					dba.dropIndex(g, indexInfo);
 			for (Entry<String, Index> e : myIndices.entrySet()) {
-				if (dbIndices.contains(e.getKey())) {
+				DBAdaptor.IndexInfo indexInfo = new DBAdaptor.IndexInfo(e
+						.getValue().getTable().getName(), e.getKey());
+				if (dbIndices.contains(indexInfo)) {
 					// TODO БД содержит индекс с таким именем, надо проверить
 					// поля и пересоздавать индекс лишь в случае необходимости!!
 					System.out.println("Implement index check here.");
@@ -252,6 +255,8 @@ public final class DBUpdator {
 			grain.setMessage("");
 			grain.setVersion(g.getVersion().toString());
 			grain.update();
+			ConnectionPool.commit(grain.callContext().getConn());
+			return true;
 		} catch (CelestaException e) {
 			// Если что-то пошло не так
 			grain.setState(GrainsCursor.ERROR);
@@ -259,6 +264,8 @@ public final class DBUpdator {
 					"Error while trying to update to version %s: %s", g
 							.getVersion().toString(), e.getMessage()));
 			grain.update();
+			ConnectionPool.commit(grain.callContext().getConn());
+			return false;
 		}
 	}
 

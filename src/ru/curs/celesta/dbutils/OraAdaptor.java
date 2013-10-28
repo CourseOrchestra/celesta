@@ -21,6 +21,7 @@ import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
@@ -338,9 +339,9 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public Set<String> getIndices(Connection conn, Grain g)
+	public Set<IndexInfo> getIndices(Connection conn, Grain g)
 			throws CelestaException {
-		Set<String> result = new HashSet<String>();
+		Set<IndexInfo> result = new HashSet<>();
 		try {
 			for (Table t : g.getTables().values()) {
 				String tableName = String.format(tableTemplate(), g.getName(),
@@ -350,9 +351,19 @@ final class OraAdaptor extends DBAdaptor {
 						false, false);
 				try {
 					while (rs.next()) {
-						String rIndexName = rs.getString("INDEX_NAME");
-						if (rIndexName != null) {
-							result.add(rIndexName.toLowerCase());
+						String indName = rs.getString("INDEX_NAME");
+						// Условие NON_UNIQUE нужно, чтобы не попадали в него
+						// первичные ключи
+						if (indName != null && rs.getBoolean("NON_UNIQUE")) {
+							// Мы отрезаем "имягранулы_" от имени индекса.
+							indName = indName.toLowerCase();
+							String grainPrefix = g.getName().toLowerCase()
+									+ "_";
+							if (indName.startsWith(grainPrefix))
+								indName = indName.substring(grainPrefix
+										.length());
+							IndexInfo info = new IndexInfo(t.getName(), indName);
+							result.add(info);
 						}
 					}
 				} finally {
@@ -560,5 +571,24 @@ final class OraAdaptor extends DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
+	}
+
+	@Override
+	String getCreateIndexSQL(Index index) {
+		String grainName = index.getTable().getGrain().getName();
+		String fieldList = getFieldList(index.getColumns().keySet());
+		String sql = String.format("CREATE INDEX " + tableTemplate() + " ON "
+				+ tableTemplate() + " (%s)", grainName, index.getName(),
+				grainName, index.getTable().getName(), fieldList);
+		return sql;
+	}
+
+	@Override
+	String getDropIndexSQL(Grain g, IndexInfo indexInfo) {
+		String sql = String.format("DROP INDEX " + tableTemplate(),
+				g.getName(), indexInfo.getIndexName());
+		System.out.println(sql);
+
+		return sql;
 	}
 }
