@@ -16,6 +16,8 @@ import org.junit.Test;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.Table;
@@ -181,12 +183,21 @@ public abstract class AbstractAdaptorTest {
 
 	@Test
 	public void getIndices() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		Grain grain = score.getGrain(GRAIN_NAME);
+		Table t = grain.getTable("test");
 		dba.createTable(t);
+		Index i = grain.getIndices().get("idxtest");
+		dba.createIndex(i);
 		Connection conn = ConnectionPool.get();
 		try {
 			Set<DBAdaptor.IndexInfo> indicesSet = dba.getIndices(conn,
 					t.getGrain());
+			assertNotNull(indicesSet);
+			assertTrue(indicesSet.size() == 1);
+			dba.dropIndex(grain,
+					new DBAdaptor.IndexInfo(t.getName(), i.getName()));
+
+			indicesSet = dba.getIndices(conn, t.getGrain());
 			assertNotNull(indicesSet);
 			assertTrue(indicesSet.size() == 0);
 		} finally {
