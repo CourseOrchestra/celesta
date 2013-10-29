@@ -9,11 +9,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
@@ -313,9 +315,9 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             В случае сбоя связи с БД.
 	 */
-	public Set<IndexInfo> getIndices(Connection conn, Grain g)
-			throws CelestaException {
-		Set<IndexInfo> result = new HashSet<>();
+	public Map<IndexInfo, TreeMap<Short, String>> getIndices(Connection conn,
+			Grain g) throws CelestaException {
+		Map<IndexInfo, TreeMap<Short, String>> result = new HashMap<>();
 		try {
 			for (Table t : g.getTables().values()) {
 				DatabaseMetaData metaData = conn.getMetaData();
@@ -326,7 +328,13 @@ public abstract class DBAdaptor {
 						String indName = rs.getString("INDEX_NAME");
 						if (indName != null && rs.getBoolean("NON_UNIQUE")) {
 							IndexInfo info = new IndexInfo(t.getName(), indName);
-							result.add(info);
+							TreeMap<Short, String> columns = result.get(info);
+							if (columns == null) {
+								columns = new TreeMap<>();
+								result.put(info, columns);
+							}
+							columns.put(rs.getShort("ORDINAL_POSITION"),
+									rs.getString("COLUMN_NAME"));
 						}
 					}
 				} finally {

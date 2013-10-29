@@ -2,18 +2,22 @@ package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.dbutils.DBAdaptor.IndexInfo;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
@@ -226,25 +230,7 @@ public final class DBUpdator {
 			}
 
 			// Обновляем все индексы.
-			Set<DBAdaptor.IndexInfo> dbIndices = dba.getIndices(grain
-					.callContext().getConn(), g);
-			Map<String, Index> myIndices = g.getIndices();
-			// Начинаем с удаления ненужных
-			for (DBAdaptor.IndexInfo indexInfo : dbIndices)
-				if (!myIndices.containsKey(indexInfo.getIndexName()))
-					dba.dropIndex(g, indexInfo);
-			for (Entry<String, Index> e : myIndices.entrySet()) {
-				DBAdaptor.IndexInfo indexInfo = new DBAdaptor.IndexInfo(e
-						.getValue().getTable().getName(), e.getKey());
-				if (dbIndices.contains(indexInfo)) {
-					// TODO БД содержит индекс с таким именем, надо проверить
-					// поля и пересоздавать индекс лишь в случае необходимости!!
-					System.out.println("Implement index check here.");
-				} else {
-					// Создаём не существовавший ранее индекс.
-					dba.createIndex(e.getValue());
-				}
-			}
+			updateGrainIndices(g);
 
 			// По завершении -- обновление номера версии, контрольной суммы
 			// и выставление в статус ready
@@ -266,6 +252,41 @@ public final class DBUpdator {
 			grain.update();
 			ConnectionPool.commit(grain.callContext().getConn());
 			return false;
+		}
+	}
+
+	private static void updateGrainIndices(Grain g) throws CelestaException {
+		Map<IndexInfo, TreeMap<Short, String>> dbIndices = dba.getIndices(grain
+				.callContext().getConn(), g);
+		Map<String, Index> myIndices = g.getIndices();
+		// Начинаем с удаления ненужных
+		for (DBAdaptor.IndexInfo indexInfo : dbIndices.keySet())
+			if (!myIndices.containsKey(indexInfo.getIndexName()))
+				dba.dropIndex(g, indexInfo);
+		for (Entry<String, Index> e : myIndices.entrySet()) {
+			DBAdaptor.IndexInfo indexInfo = new DBAdaptor.IndexInfo(e
+					.getValue().getTable().getName(), e.getKey());
+			if (dbIndices.containsKey(indexInfo)) {
+				// БД содержит индекс с таким именем, надо проверить
+				// поля и пересоздать индекс в случае необходимости.
+				Collection<String> dbIndexCols = dbIndices.get(indexInfo)
+						.values();
+				Collection<String> metaIndexCols = e.getValue().getColumns()
+						.keySet();
+				Iterator<String> i1 = dbIndexCols.iterator();
+				Iterator<String> i2 = metaIndexCols.iterator();
+				boolean equals = dbIndexCols.size() == metaIndexCols.size();
+				while (i1.hasNext() && equals) {
+					equals = i1.next().equalsIgnoreCase(i2.next()) && equals;
+				}
+				if (!equals) {
+					dba.dropIndex(g, indexInfo);
+					dba.createIndex(e.getValue());
+				}
+			} else {
+				// Создаём не существовавший ранее индекс.
+				dba.createIndex(e.getValue());
+			}
 		}
 	}
 

@@ -55,9 +55,11 @@ abstract class NamedElement {
 abstract class NamedElementHolder<T extends NamedElement> implements
 		Collection<T> {
 	private final Map<String, T> namespace = new LinkedHashMap<>();
+	private final Map<String, T> namespaceReadOnly = Collections
+			.unmodifiableMap(namespace);
 
 	Map<String, T> getElements() {
-		return Collections.unmodifiableMap(namespace);
+		return namespaceReadOnly;
 	}
 
 	abstract String getErrorMsg(String name);

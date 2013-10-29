@@ -8,13 +8,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.dbutils.DBAdaptor.IndexInfo;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
@@ -190,8 +193,8 @@ public abstract class AbstractAdaptorTest {
 		dba.createIndex(i);
 		Connection conn = ConnectionPool.get();
 		try {
-			Set<DBAdaptor.IndexInfo> indicesSet = dba.getIndices(conn,
-					t.getGrain());
+			Map<IndexInfo, TreeMap<Short, String>> indicesSet = dba.getIndices(
+					conn, t.getGrain());
 			assertNotNull(indicesSet);
 			assertTrue(indicesSet.size() == 1);
 			dba.dropIndex(grain,

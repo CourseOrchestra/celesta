@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -339,9 +340,9 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public Set<IndexInfo> getIndices(Connection conn, Grain g)
-			throws CelestaException {
-		Set<IndexInfo> result = new HashSet<>();
+	public Map<IndexInfo, TreeMap<Short, String>> getIndices(Connection conn,
+			Grain g) throws CelestaException {
+		Map<IndexInfo, TreeMap<Short, String>> result = new HashMap<>();
 		try {
 			for (Table t : g.getTables().values()) {
 				String tableName = String.format(tableTemplate(), g.getName(),
@@ -363,7 +364,13 @@ final class OraAdaptor extends DBAdaptor {
 								indName = indName.substring(grainPrefix
 										.length());
 							IndexInfo info = new IndexInfo(t.getName(), indName);
-							result.add(info);
+							TreeMap<Short, String> columns = result.get(info);
+							if (columns == null) {
+								columns = new TreeMap<>();
+								result.put(info, columns);
+							}
+							columns.put(rs.getShort("ORDINAL_POSITION"),
+									rs.getString("COLUMN_NAME"));
 						}
 					}
 				} finally {
@@ -587,8 +594,6 @@ final class OraAdaptor extends DBAdaptor {
 	String getDropIndexSQL(Grain g, IndexInfo indexInfo) {
 		String sql = String.format("DROP INDEX " + tableTemplate(),
 				g.getName(), indexInfo.getIndexName());
-		System.out.println(sql);
-
 		return sql;
 	}
 }
