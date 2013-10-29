@@ -70,6 +70,7 @@ public class CelestaParser implements CelestaParserConstants {
           jj_consume_token(-1);
           throw new ParseException();
         }
+                                                                        doc = null;
         break;
       case K_ALTER:
         jj_consume_token(K_ALTER);

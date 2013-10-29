@@ -1,5 +1,8 @@
 package ru.curs.celesta.score;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+
 /**
  * Базовый класс описания столбца таблицы. Наследники этого класса соответствуют
  * разным типам столбцов.
@@ -94,7 +97,14 @@ public abstract class Column extends NamedElement {
 	 *             Если удаляется составная часть первичного ключа, внешнего
 	 *             ключа или индекса.
 	 */
-	void delete() throws ParseException {
+	final void delete() throws ParseException {
 		parentTable.removeColumn(this);
+	}
+
+	void save(BufferedWriter bw) throws IOException {
+		bw.write("  ");
+		if (Grain.writeCelestaDoc(this, bw))
+			bw.write("  ");
+		bw.write(getName());
 	}
 }

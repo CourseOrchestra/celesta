@@ -1,5 +1,8 @@
 package ru.curs.celesta.score;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+
 /**
  * Целочисленная колонка.
  * 
@@ -59,5 +62,18 @@ public final class IntegerColumn extends Column {
 	@Override
 	public String jdbcGetterName() {
 		return "getInt";
+	}
+
+	@Override
+	void save(BufferedWriter bw) throws IOException {
+		super.save(bw);
+		bw.write(" INT");
+		if (!isNullable())
+			bw.write(" NOT NULL");
+		Integer defaultVal = getDefaultValue();
+		if (defaultVal != null) {
+			bw.write(" DEFAULT ");
+			bw.write(defaultVal.toString());
+		}
 	}
 }

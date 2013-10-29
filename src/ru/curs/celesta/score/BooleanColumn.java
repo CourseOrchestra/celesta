@@ -1,5 +1,8 @@
 package ru.curs.celesta.score;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+
 /**
  * Булевская колонка (тип BIT).
  * 
@@ -45,6 +48,26 @@ public final class BooleanColumn extends Column {
 	@Override
 	public String jdbcGetterName() {
 		return "getBoolean";
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ru.curs.celesta.score.Column#save(java.io.BufferedWriter)
+	 */
+	@Override
+	void save(BufferedWriter bw) throws IOException {
+		super.save(bw);
+		bw.write(" BIT");
+		if (!isNullable())
+			bw.write(" NOT NULL");
+		Boolean defaultVal = getDefaultValue();
+		if (defaultVal != null) {
+			bw.write(" DEFAULT '");
+			bw.write(defaultVal.toString().toUpperCase());
+			bw.write("'");
+		}
+
 	}
 
 }

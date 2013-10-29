@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,6 +15,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.CelestaParser;
@@ -34,6 +36,16 @@ import ru.curs.celesta.score.Table;
 public class ParserTest {
 
 	private Score s = new Score();
+
+	@Test
+	public void test0() throws ParseException, CelestaException {
+		InputStream input = ParserTest.class.getResourceAsStream("test.sql");
+		CelestaParser cp = new CelestaParser(input, "utf-8");
+		Grain g = cp.grain(s, "test1");
+		g.setGrainPath(new File("c:/temp/testsave"));
+		g.setVersion("'2.0'");
+		g.save();
+	}
 
 	@Test
 	public void test1() throws ParseException {
@@ -167,6 +179,8 @@ public class ParserTest {
 		assertEquals("table2", idx.getTable().getName());
 		assertEquals(2, idx.getColumns().size());
 
+		t = g.getTable("employees");
+		assertNull(t.getCelestaDoc());
 	}
 
 	@Test

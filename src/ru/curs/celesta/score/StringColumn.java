@@ -1,5 +1,8 @@
 package ru.curs.celesta.score;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+
 /**
  * Строковая колонка.
  * 
@@ -147,5 +150,24 @@ public final class StringColumn extends Column {
 	@Override
 	public String jdbcGetterName() {
 		return "getString";
+	}
+
+	@Override
+	void save(BufferedWriter bw) throws IOException {
+		super.save(bw);
+		bw.write(" NVARCHAR(");
+		if (isMax())
+			bw.write("MAX");
+		else {
+			bw.write(Integer.toString(getLength()));
+		}
+		bw.write(")");
+		if (!isNullable())
+			bw.write(" NOT NULL");
+		String defaultVal = getDefaultValue();
+		if (defaultVal != null) {
+			bw.write(" DEFAULT ");
+			bw.write(quoteString(defaultVal));
+		}
 	}
 }

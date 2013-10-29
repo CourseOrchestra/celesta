@@ -1,5 +1,9 @@
 package ru.curs.celesta.score;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -93,6 +97,25 @@ public final class DateTimeColumn extends Column {
 	@Override
 	public String jdbcGetterName() {
 		return "getDate";
+	}
+
+	@Override
+	void save(BufferedWriter bw) throws IOException {
+		super.save(bw);
+		bw.write(" DATETIME");
+		if (!isNullable())
+			bw.write(" NOT NULL");
+		if (isGetdate())
+			bw.write(" DEFAULT GETDATE()");
+		else {
+			Date defaultVal = getDefaultValue();
+			if (defaultVal != null) {
+				bw.write(" DEFAULT '");
+				DateFormat df = new SimpleDateFormat("yyyyMMdd");
+				bw.write(df.format(defaultVal));
+				bw.write("'");
+			}
+		}
 	}
 
 }

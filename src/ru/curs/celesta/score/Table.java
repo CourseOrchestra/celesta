@@ -1,5 +1,7 @@
 package ru.curs.celesta.score;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -250,5 +252,34 @@ public final class Table extends NamedElement {
 	 */
 	public void delete() throws ParseException {
 		grain.removeTable(this);
+	}
+
+	void save(BufferedWriter bw) throws IOException {
+		Grain.writeCelestaDoc(this, bw);
+		bw.write(String.format("CREATE TABLE %s(", getName()));
+		bw.newLine();
+		boolean comma = false;
+		for (Column c : getColumns().values()) {
+			if (comma) {
+				bw.write(",");
+				bw.newLine();
+			}
+			c.save(bw);
+			comma = true;
+		}
+		bw.newLine();
+		bw.write("  PRIMARY KEY (");
+		comma = false;
+		for (Column c : getPrimaryKey().values()) {
+			if (comma)
+				bw.write(", ");
+			bw.write(c.getName());
+			comma = true;
+		}
+		bw.write(");");
+		bw.newLine();
+		bw.write(");");
+		bw.newLine();
+		bw.newLine();
 	}
 }

@@ -111,7 +111,7 @@ Grain grain(Score s, String name):
       "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
    t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}";"
    ( ( ([doc = <CELESTA_DOC>]<K_CREATE> (createTable(g, doc == null? null: doc.toString()) 
-                 |  createIndex(g, doc == null? null: doc.toString()))) 
+                 |  createIndex(g, doc == null? null: doc.toString())) {doc = null;}) 
 	 | (<K_ALTER>   alterTable(g))) ";")*
    <EOF>
    {

@@ -1,6 +1,10 @@
 package ru.curs.celesta.score;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -213,6 +217,7 @@ public final class Grain extends NamedElement {
 	 *             в случае, если имеется неверный формат quoted string.
 	 */
 	public void setVersion(String version) throws ParseException {
+		modify();
 		this.version = new VersionString(StringColumn.unquoteString(version));
 	}
 
@@ -288,9 +293,59 @@ public final class Grain extends NamedElement {
 	 *             ошибка ввода-вывода
 	 */
 	void save() throws CelestaException {
-		// TODO реализовать
-		throw new IllegalStateException(
-				"Score saving to files not implemented yet");
+		// Сохранять неизменённую гранулу нет смысла.
+		if (!modified)
+			return;
+		File scriptFile = new File(String.format("%s%s_%s.sql",
+				grainPath.getPath(), File.separator, getName()));
+		try {
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(scriptFile), "utf-8"));
+			try {
+				writeCelestaDoc(this, bw);
+				bw.write("CREATE GRAIN ");
+				bw.write(getName());
+				bw.write(" VERSION '");
+				bw.write(getVersion().toString());
+				bw.write("';");
+				bw.newLine();
+				bw.newLine();
+				bw.write("-- *** TABLES ***");
+				bw.newLine();
+				for (Table t : getTables().values())
+					t.save(bw);
+
+				bw.write("-- *** FOREIGN KEYS ***");
+				bw.newLine();
+				for (Table t : getTables().values())
+					for (ForeignKey fk : t.getForeignKeys())
+						fk.save(bw);
+
+				bw.write("-- *** INDICES ***");
+				bw.newLine();
+				for (Index i : getIndices().values())
+					i.save(bw);
+			} finally {
+				bw.close();
+			}
+
+		} catch (IOException e) {
+			throw new CelestaException("Cannot save '%s' grain script: %s",
+					getName(), e.getMessage());
+		}
 	}
 
+	static boolean writeCelestaDoc(NamedElement e, BufferedWriter bw)
+			throws IOException {
+		String doc = e.getCelestaDoc();
+		if (doc == null) {
+			return false;
+		} else {
+			bw.write("/**");
+			bw.write(doc);
+			bw.write("*/");
+			bw.newLine();
+			return true;
+		}
+	}
 }

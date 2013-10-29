@@ -1,5 +1,7 @@
 package ru.curs.celesta.score;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -134,5 +136,23 @@ public class Index extends NamedElement {
 	 */
 	public void delete() throws ParseException {
 		grain.removeIndex(this);
+	}
+
+	void save(BufferedWriter bw) throws IOException {
+		Grain.writeCelestaDoc(this, bw);
+		bw.write("CREATE INDEX ");
+		bw.write(getName());
+		bw.write(" ON ");
+		bw.write(table.getName());
+		bw.write("(");
+		boolean comma = false;
+		for (Column c : columns) {
+			if (comma)
+				bw.write(", ");
+			bw.write(c.getName());
+			comma = true;
+		}
+		bw.write(");");
+		bw.newLine();
 	}
 }
