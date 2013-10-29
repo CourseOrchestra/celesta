@@ -75,5 +75,7 @@ public final class IntegerColumn extends Column {
 			bw.write(" DEFAULT ");
 			bw.write(defaultVal.toString());
 		}
+		if (identity)
+			bw.write(" IDENTITY");
 	}
 }

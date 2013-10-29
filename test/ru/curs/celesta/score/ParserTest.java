@@ -7,6 +7,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,35 +17,33 @@ import java.util.Map;
 import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.BinaryColumn;
-import ru.curs.celesta.score.BooleanColumn;
-import ru.curs.celesta.score.CelestaParser;
-import ru.curs.celesta.score.ChecksumInputStream;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKBehaviour;
-import ru.curs.celesta.score.FloatingColumn;
-import ru.curs.celesta.score.ForeignKey;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.Index;
-import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.Table;
 
 public class ParserTest {
 
 	private Score s = new Score();
 
 	@Test
-	public void test0() throws ParseException, CelestaException {
+	public void test0() throws ParseException, CelestaException, IOException {
 		InputStream input = ParserTest.class.getResourceAsStream("test.sql");
-		CelestaParser cp = new CelestaParser(input, "utf-8");
-		Grain g = cp.grain(s, "test1");
-		g.setGrainPath(new File("c:/temp/testsave"));
-		g.setVersion("'2.0'");
-		g.save();
+		try {
+			CelestaParser cp = new CelestaParser(input, "utf-8");
+			Grain g = cp.grain(s, "test1");
+			g.setGrainPath(new File("testScore"));
+			g.setVersion("'2.0'");
+			g.save();
+		} finally {
+			input.close();
+		}
+		input = ParserTest.class.getResourceAsStream("test2.sql");
+		try {
+			CelestaParser cp = new CelestaParser(input, "utf-8");
+			Grain g = cp.grain(s, "test2");
+			g.setGrainPath(new File("testScore"));
+			g.setVersion("'2.0'");
+			g.save();
+		} finally {
+			input.close();
+		}
 	}
 
 	@Test

@@ -317,9 +317,10 @@ public final class Grain extends NamedElement {
 
 				bw.write("-- *** FOREIGN KEYS ***");
 				bw.newLine();
+				int j = 1;
 				for (Table t : getTables().values())
 					for (ForeignKey fk : t.getForeignKeys())
-						fk.save(bw);
+						fk.save(bw, j++);
 
 				bw.write("-- *** INDICES ***");
 				bw.newLine();

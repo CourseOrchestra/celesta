@@ -322,11 +322,14 @@ public class ForeignKey {
 		parentTable.removeFK(this);
 	}
 
-	void save(BufferedWriter bw) throws IOException {
+	void save(BufferedWriter bw, int count) throws IOException {
 		bw.write("ALTER TABLE ");
 		bw.write(getParentTable().getName());
 		bw.write(" ADD CONSTRAINT ");
-		bw.write(getConstraintName());
+		String name = getConstraintName();
+		if (name == null)
+			name = "fk" + count;
+		bw.write(name);
 		bw.write(" FOREIGN KEY (");
 		boolean comma = false;
 		for (Column c : getColumns().values()) {
@@ -345,7 +348,31 @@ public class ForeignKey {
 			bw.write(c.getName());
 			comma = true;
 		}
-		bw.write(");");
+		bw.write(")");
+		switch (updateBehaviour) {
+		case CASCADE:
+			bw.write(" ON UPDATE CASCADE");
+			break;
+		case SET_NULL:
+			bw.write(" ON UPDATE SET NULL");
+			break;
+		case NO_ACTION:
+		default:
+			break;
+		}
+		switch (deleteBehaviour) {
+		case CASCADE:
+			bw.write(" ON DELETE CASCADE");
+			break;
+		case SET_NULL:
+			bw.write(" ON DELETE SET NULL");
+			break;
+		case NO_ACTION:
+		default:
+			break;
+		}
+
+		bw.write(";");
 		bw.newLine();
 	}
 }
