@@ -1,3 +1,4 @@
+/**описание гранулы: * grain celestadoc*/
 CREATE GRAIN test1 VERSION '1.0';
 
 CREATE TABLE table1 --single-line comment русские буквы
@@ -18,14 +19,18 @@ multi-line comment
 */
 ;
 
+/**table2 celestadoc*/
 CREATE TABLE table2(
+    /**описание первой колонки*/
 	column1 INT NOT NULL IDENTITY PRIMARY KEY,
+	/**описание второй колонки*/
 	column2 DATETIME DEFAULT '20111231',
 	column3 DATETIME NOT NULL DEFAULT GETDATE(),
 	column4 IMAGE DEFAULT 0x22AB15FF,
 	column5 INT DEFAULT 11
 );
  
+ /**описание индекса idx1*/
 CREATE INDEX idx1 ON  table1 (f, e, c3);
 
 CREATE TABLE employees

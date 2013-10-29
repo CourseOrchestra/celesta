@@ -38,10 +38,11 @@ public class ParserTest {
 	@Test
 	public void test1() throws ParseException {
 		InputStream input = ParserTest.class.getResourceAsStream("test.sql");
-		CelestaParser cp = new CelestaParser(input);
+		CelestaParser cp = new CelestaParser(input, "utf-8");
 		Grain g = cp.grain(s, "test1");
 		assertEquals("test1", g.getName());
 		assertEquals("1.0", g.getVersion().toString());
+		assertEquals("описание гранулы: * grain celestadoc", g.getCelestaDoc());
 
 		Map<String, Table> s = g.getTables();
 		assertEquals(3, s.size());
@@ -116,10 +117,12 @@ public class ParserTest {
 		// Вторая таблица
 		t = i.next();
 		assertEquals("table2", t.getName());
+		assertEquals("table2 celestadoc", t.getCelestaDoc());
 		ic = t.getColumns().values().iterator();
 
 		c = ic.next();
 		assertEquals("column1", c.getName());
+		assertEquals("описание первой колонки", c.getCelestaDoc());
 		assertTrue(c instanceof IntegerColumn);
 		assertFalse(c.isNullable());
 		assertNull(((IntegerColumn) c).getDefaultValue());
@@ -127,6 +130,7 @@ public class ParserTest {
 
 		c = ic.next();
 		assertEquals("column2", c.getName());
+		assertEquals("описание второй колонки", c.getCelestaDoc());
 		assertTrue(c instanceof DateTimeColumn);
 		assertTrue(c.isNullable());
 		Date d = ((DateTimeColumn) c).getDefaultValue();
@@ -136,6 +140,7 @@ public class ParserTest {
 
 		c = ic.next();
 		assertEquals("column3", c.getName());
+		assertNull(c.getCelestaDoc());
 		assertTrue(c instanceof DateTimeColumn);
 		assertFalse(c.isNullable());
 		assertNull(((DateTimeColumn) c).getDefaultValue());
@@ -155,6 +160,7 @@ public class ParserTest {
 
 		Index idx = g.getIndices().get("idx1");
 		assertEquals("table1", idx.getTable().getName());
+		assertEquals("описание индекса idx1", idx.getCelestaDoc());
 		assertEquals(3, idx.getColumns().size());
 
 		idx = g.getIndices().get("table2_idx2");

@@ -78,6 +78,7 @@ TOKEN:
 |   < #SPECIAL_CHARS: "$" | "_">
 |   < S_CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")*>
 |   < S_QUOTED_IDENTIFIER: "\"" (~["\n","\r","\""])* "\"" | ("`" (~["\n","\r","`"])* "`") >
+|   < CELESTA_DOC: "/**" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
 }
 
 
@@ -96,8 +97,10 @@ Grain grain(Score s, String name):
 	 
    Grain g = new Grain(s, name);
    Token t;
+   Token doc = null;
 }
 { 
+   [doc = <CELESTA_DOC> {g.setCelestaDocLexem(doc.toString());}]
    <K_CREATE> 
    t = <S_IDENTIFIER> {if (!"GRAIN".equalsIgnoreCase(t.toString())) 
       throw new ParseException(String.format(
@@ -107,8 +110,8 @@ Grain grain(Score s, String name):
    t = <S_IDENTIFIER> {if (!"VERSION".equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
       "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
    t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}";"
-   ( ( (<K_CREATE> (createTable(g) 
-                 |  createIndex(g))) 
+   ( ( ([doc = <CELESTA_DOC>]<K_CREATE> (createTable(g, doc == null? null: doc.toString()) 
+                 |  createIndex(g, doc == null? null: doc.toString()))) 
 	 | (<K_ALTER>   alterTable(g))) ";")*
    <EOF>
    {
@@ -119,14 +122,15 @@ Grain grain(Score s, String name):
 
 
 
-void createTable(Grain g):
+void createTable(Grain g, String doc):
 {
 	Table table = null;
 	Token tableName = null;
 }
 {
     <K_TABLE>
-	tableName = <S_IDENTIFIER> {table = new Table(g, tableName.toString());}
+	tableName = <S_IDENTIFIER> {table = new Table(g, tableName.toString());
+	                            table.setCelestaDocLexem(doc);}
 	"("
 		tableConstituent(table)	("," tableConstituent(table))*
 	")"
@@ -137,7 +141,8 @@ void createTable(Grain g):
 
 void tableConstituent(Table table):{
   String name; 
-  ForeignKey fk;}
+  ForeignKey fk;
+}
 {
      columnDefinition(table) 
    | name = constraint(table.getGrain()) (
@@ -155,8 +160,10 @@ void columnDefinition(Table table):
    boolean pk = false;
    ForeignKey fk = null;
    String name;
+   Token doc = null;
 }
 {
+ [doc = <CELESTA_DOC>]
   t = <S_IDENTIFIER>
     (  (<K_INT>       {column = new IntegerColumn(table, t.toString()); t = null; } 
 	       nullable = nullable() [(<K_DEFAULT> ["-" {negative = true;}] t = <S_INTEGER>)|(t = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])]
@@ -182,6 +189,7 @@ void columnDefinition(Table table):
 	      {pk = true; table.setPkConstraintName(name);} name = constraint(table.getGrain())]
 	{ 
       column.setNullableAndDefault(nullable, t == null? null: ((negative? "-": "") + t.toString()));
+	  column.setCelestaDocLexem(doc == null? null:doc.toString());
 	  if (pk) {
 	    table.addPK(column.getName());
 	    table.finalizePK();
@@ -256,7 +264,7 @@ FKBehaviour action():{
   }
 }
 
-void createIndex(Grain g):{
+void createIndex(Grain g, String doc):{
 Token indexName;
 Token tableName;
 Token columnName;
@@ -264,7 +272,8 @@ Index ind;
 }
 {
 <K_INDEX> indexName = <S_IDENTIFIER> <K_ON> tableName = <S_IDENTIFIER> 
-   {ind = new Index(g, tableName.toString(), indexName.toString());}
+   {ind = new Index(g, tableName.toString(), indexName.toString());
+    ind.setCelestaDocLexem(doc);}
    "(" columnName = <S_IDENTIFIER> {ind.addColumn(columnName.toString());} ("," columnName = <S_IDENTIFIER>{ind.addColumn(columnName.toString());}) * ")"
    {ind.finalizeIndex();}
 }

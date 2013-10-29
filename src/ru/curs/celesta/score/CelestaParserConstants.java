@@ -87,9 +87,11 @@ public interface CelestaParserConstants {
   /** RegularExpression Id. */
   int S_QUOTED_IDENTIFIER = 42;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 43;
+  int CELESTA_DOC = 43;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 44;
+  int LINE_COMMENT = 44;
+  /** RegularExpression Id. */
+  int MULTI_LINE_COMMENT = 45;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -139,6 +141,7 @@ public interface CelestaParserConstants {
     "<SPECIAL_CHARS>",
     "<S_CHAR_LITERAL>",
     "<S_QUOTED_IDENTIFIER>",
+    "<CELESTA_DOC>",
     "<LINE_COMMENT>",
     "<MULTI_LINE_COMMENT>",
     "\";\"",
