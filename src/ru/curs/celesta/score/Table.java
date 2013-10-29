@@ -258,6 +258,7 @@ public final class Table extends NamedElement {
 		Grain.writeCelestaDoc(this, bw);
 		bw.write(String.format("CREATE TABLE %s(", getName()));
 		bw.newLine();
+		boolean singlePK = pk.size() == 1;
 		boolean comma = false;
 		for (Column c : getColumns().values()) {
 			if (comma) {
@@ -265,19 +266,23 @@ public final class Table extends NamedElement {
 				bw.newLine();
 			}
 			c.save(bw);
+			if (singlePK && pk.contains(c))
+				bw.write(" PRIMARY KEY");
 			comma = true;
 		}
 		bw.newLine();
-		bw.write("  PRIMARY KEY (");
-		comma = false;
-		for (Column c : getPrimaryKey().values()) {
-			if (comma)
-				bw.write(", ");
-			bw.write(c.getName());
-			comma = true;
+		if (!singlePK) {
+			bw.write("  PRIMARY KEY (");
+			comma = false;
+			for (Column c : getPrimaryKey().values()) {
+				if (comma)
+					bw.write(", ");
+				bw.write(c.getName());
+				comma = true;
+			}
+			bw.write(");");
+			bw.newLine();
 		}
-		bw.write(");");
-		bw.newLine();
 		bw.write(");");
 		bw.newLine();
 		bw.newLine();

@@ -13,6 +13,7 @@ primary key (e)
 
 create table a (
  a int not null default 0,
+/**a celestadoc*/
  b nvarchar(5) not null default '',
  c datetime,
  d int,
