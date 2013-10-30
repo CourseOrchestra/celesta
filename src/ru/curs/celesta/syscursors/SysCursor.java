@@ -16,36 +16,51 @@ public abstract class SysCursor extends Cursor {
 	}
 
 	@Override
-	protected final String grainName() {
+	// CHECKSTYLE:OFF
+	protected final String _grainName() {
 		return "celesta";
 	}
 
 	@Override
-	protected void preDelete() {
+	// CHECKSTYLE:OFF
+	protected void _preDelete() {
+		// CHECKSTYLE:ON
 	}
 
 	@Override
-	protected void postDelete() {
+	// CHECKSTYLE:OFF
+	protected void _postDelete() {
+		// CHECKSTYLE:ON
 	}
 
 	@Override
-	protected void preUpdate() {
+	// CHECKSTYLE:OFF
+	protected void _preUpdate() {
+		// CHECKSTYLE:ON
 	}
 
 	@Override
-	protected void postUpdate() {
+	// CHECKSTYLE:OFF
+	protected void _postUpdate() {
+		// CHECKSTYLE:ON
 	}
 
 	@Override
-	protected void preInsert() {
+	// CHECKSTYLE:OFF
+	protected void _preInsert() {
+		// CHECKSTYLE:ON
 	}
 
 	@Override
-	protected void postInsert() {
+	// CHECKSTYLE:OFF
+	protected void _postInsert() {
+		// CHECKSTYLE:ON
 	}
 
 	@Override
-	protected void setAutoIncrement(int val) {
+	// CHECKSTYLE:OFF
+	protected void _setAutoIncrement(int val) {
+		// CHECKSTYLE:ON
 		// do nothing by default
 	}
 

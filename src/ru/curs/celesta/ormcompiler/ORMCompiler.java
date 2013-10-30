@@ -159,10 +159,10 @@ public final class ORMCompiler {
 		compileCalcBLOBs(w, columns);
 		// Автоинкремент
 		compileSetAutoIncrement(w, columns);
-		// Клонирование
-		compileCopying(w, columns, className);
 		// Триггеры
 		compileTriggers(w, className);
+		// Клонирование
+		compileCopying(w, columns, className);
 		w.newLine();
 	}
 
@@ -185,37 +185,37 @@ public final class ORMCompiler {
 
 	private static void compileTriggers(BufferedWriter w, String className)
 			throws IOException {
-		w.write("    def preDelete(self):");
+		w.write("    def _preDelete(self):");
 		w.newLine();
 		w.write(String.format("        for f in %s.onPreDelete:", className));
 		w.newLine();
 		w.write(String.format(F_SELF));
 		w.newLine();
-		w.write("    def postDelete(self):");
+		w.write("    def _postDelete(self):");
 		w.newLine();
 		w.write(String.format("        for f in %s.onPostDelete:", className));
 		w.newLine();
 		w.write(String.format(F_SELF));
 		w.newLine();
-		w.write("    def preInsert(self):");
+		w.write("    def _preInsert(self):");
 		w.newLine();
 		w.write(String.format("        for f in %s.onPreInsert:", className));
 		w.newLine();
 		w.write(String.format(F_SELF));
 		w.newLine();
-		w.write("    def postInsert(self):");
+		w.write("    def _postInsert(self):");
 		w.newLine();
 		w.write(String.format("        for f in %s.onPostInsert:", className));
 		w.newLine();
 		w.write(String.format(F_SELF));
 		w.newLine();
-		w.write("    def preUpdate(self):");
+		w.write("    def _preUpdate(self):");
 		w.newLine();
 		w.write(String.format("        for f in %s.onPreUpdate:", className));
 		w.newLine();
 		w.write(String.format(F_SELF));
 		w.newLine();
-		w.write("    def postUpdate(self):");
+		w.write("    def _postUpdate(self):");
 		w.newLine();
 		w.write(String.format("        for f in %s.onPostUpdate:", className));
 		w.newLine();
@@ -225,14 +225,7 @@ public final class ORMCompiler {
 
 	private static void compileCopying(BufferedWriter w,
 			Collection<Column> columns, String className) throws IOException {
-		w.write("    def copyFieldsFrom(self, c):");
-		w.newLine();
-		for (Column c : columns) {
-			w.write(String.format("        self.%s = c.%s", c.getName(),
-					c.getName()));
-			w.newLine();
-		}
-		w.write("    def getBufferCopy(self):");
+		w.write("    def _getBufferCopy(self):");
 		w.newLine();
 		w.write(String.format("        result = %s(self.callContext())",
 				className));
@@ -241,11 +234,19 @@ public final class ORMCompiler {
 		w.newLine();
 		w.write("        return result");
 		w.newLine();
+		
+		w.write("    def copyFieldsFrom(self, c):");
+		w.newLine();
+		for (Column c : columns) {
+			w.write(String.format("        self.%s = c.%s", c.getName(),
+					c.getName()));
+			w.newLine();
+		}
 	}
 
 	private static void compileSetAutoIncrement(BufferedWriter w,
 			Collection<Column> columns) throws IOException {
-		w.write("    def setAutoIncrement(self, val):");
+		w.write("    def _setAutoIncrement(self, val):");
 		w.newLine();
 		boolean hasCode = false;
 		for (Column c : columns)
@@ -262,7 +263,7 @@ public final class ORMCompiler {
 
 	private static void compileCurrentValues(BufferedWriter w,
 			Collection<Column> columns) throws IOException {
-		w.write("    def currentValues(self):");
+		w.write("    def _currentValues(self):");
 		w.newLine();
 		StringBuilder sb = new StringBuilder();
 		for (Column c : columns)
@@ -299,7 +300,7 @@ public final class ORMCompiler {
 
 	private static void compileCurrentKeyValues(BufferedWriter w, Set<Column> pk)
 			throws IOException {
-		w.write("    def currentKeyValues(self):");
+		w.write("    def _currentKeyValues(self):");
 		w.newLine();
 		StringBuilder sb = new StringBuilder();
 		for (Column c : pk)
@@ -312,7 +313,7 @@ public final class ORMCompiler {
 
 	private static void compileClearBuffer(BufferedWriter w,
 			Collection<Column> columns, Set<Column> pk) throws IOException {
-		w.write("    def clearBuffer(self, withKeys):");
+		w.write("    def _clearBuffer(self, withKeys):");
 		w.newLine();
 		w.write("        if withKeys:");
 		w.newLine();
@@ -329,7 +330,7 @@ public final class ORMCompiler {
 
 	private static void compileParseResult(BufferedWriter w,
 			Collection<Column> columns) throws IOException {
-		w.write("    def parseResult(self, rs):");
+		w.write("    def _parseResult(self, rs):");
 		w.newLine();
 		for (Column c : columns) {
 			if (c instanceof BinaryColumn) {
@@ -344,7 +345,7 @@ public final class ORMCompiler {
 
 	private static void compileTableName(Table t, BufferedWriter w)
 			throws IOException {
-		w.write("    def tableName(self):");
+		w.write("    def _tableName(self):");
 		w.newLine();
 		w.write(String.format("        return '%s'", t.getName()));
 		w.newLine();
@@ -352,7 +353,7 @@ public final class ORMCompiler {
 
 	private static void compileGrainName(Table t, BufferedWriter w)
 			throws IOException {
-		w.write("    def grainName(self):");
+		w.write("    def _grainName(self):");
 		w.newLine();
 		w.write(String.format("        return '%s'", t.getGrain().getName()));
 		w.newLine();

@@ -20,18 +20,24 @@ public final class UserRolesCursor extends SysCursor {
 	}
 
 	@Override
-	protected String tableName() {
+	// CHECKSTYLE:OFF
+	protected String _tableName() {
+		// CHECKSTYLE:ON
 		return "userroles";
 	}
 
 	@Override
-	protected void parseResult(ResultSet rs) throws SQLException {
+	// CHECKSTYLE:OFF
+	protected void _parseResult(ResultSet rs) throws SQLException {
+		// CHECKSTYLE:ON
 		userId = rs.getString("userid");
 		roleId = rs.getString("roleid");
 	}
 
 	@Override
-	protected void clearBuffer(boolean withKeys) {
+	// CHECKSTYLE:OFF
+	protected void _clearBuffer(boolean withKeys) {
+		// CHECKSTYLE:ON
 		if (withKeys) {
 			userId = null;
 			roleId = null;
@@ -39,13 +45,17 @@ public final class UserRolesCursor extends SysCursor {
 	}
 
 	@Override
-	protected Object[] currentKeyValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentKeyValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { userId, roleId };
 		return result;
 	}
 
 	@Override
-	protected Object[] currentValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { userId, roleId };
 		return result;
 	}
@@ -92,7 +102,9 @@ public final class UserRolesCursor extends SysCursor {
 	}
 
 	@Override
-	protected Cursor getBufferCopy() throws CelestaException {
+	// CHECKSTYLE:OFF
+	protected Cursor _getBufferCopy() throws CelestaException {
+		// CHECKSTYLE:ON
 		UserRolesCursor result = new UserRolesCursor(callContext());
 		result.copyFieldsFrom(this);
 		return result;

@@ -78,7 +78,7 @@ public abstract class Cursor {
 	private void validateColumName(String name) throws CelestaException {
 		if (!meta().getColumns().containsKey(name))
 			throw new CelestaException("No column %s exists in table %s.",
-					name, tableName());
+					name, _tableName());
 	}
 
 	private void closeSet() throws CelestaException {
@@ -122,8 +122,8 @@ public abstract class Cursor {
 			cursor = set.executeQuery();
 			result = cursor.next();
 			if (result) {
-				parseResult(cursor);
-				xRec = getBufferCopy();
+				_parseResult(cursor);
+				xRec = _getBufferCopy();
 			}
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -146,8 +146,8 @@ public abstract class Cursor {
 					sb.append(", ");
 				sb.append(String.format("%s=%s", e.getKey(), e.getValue()
 						.toString()));
-				throw new CelestaException("There is no %s (%s).", tableName(),
-						sb.toString());
+				throw new CelestaException("There is no %s (%s).",
+						_tableName(), sb.toString());
 			}
 		}
 	}
@@ -168,8 +168,8 @@ public abstract class Cursor {
 				result = cursor.next();
 			}
 			if (result) {
-				parseResult(cursor);
-				xRec = getBufferCopy();
+				_parseResult(cursor);
+				xRec = _getBufferCopy();
 			}
 		} catch (SQLException e) {
 			result = false;
@@ -186,13 +186,13 @@ public abstract class Cursor {
 	public final void insert() throws CelestaException {
 		if (!tryInsert()) {
 			StringBuilder sb = new StringBuilder();
-			for (Object value : currentKeyValues()) {
+			for (Object value : _currentKeyValues()) {
 				if (sb.length() > 0)
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
 			throw new CelestaException("Record %s (%s) already exists",
-					tableName(), sb.toString());
+					_tableName(), sb.toString());
 		}
 	}
 
@@ -206,7 +206,7 @@ public abstract class Cursor {
 		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.INSERT))
 			throw new PermissionDeniedException(context, meta(), Action.INSERT);
 
-		prepareGet(currentKeyValues());
+		prepareGet(_currentKeyValues());
 		try {
 			ResultSet rs = get.executeQuery();
 			try {
@@ -215,7 +215,7 @@ public abstract class Cursor {
 			} finally {
 				rs.close();
 			}
-			Object[] values = currentValues();
+			Object[] values = _currentValues();
 			boolean[] myMask = new boolean[values.length];
 			for (int i = 0; i < values.length; i++)
 				myMask[i] = values[i] == null;
@@ -230,18 +230,18 @@ public abstract class Cursor {
 					DBAdaptor.setParam(insert, j, values[i]);
 					j++;
 				}
-			preInsert();
+			_preInsert();
 			insert.execute();
 			LOGGING_MGR.log(this, Action.INSERT);
 			for (Column c : meta().getColumns().values())
 				if (c instanceof IntegerColumn
 						&& ((IntegerColumn) c).isIdentity()) {
-					setAutoIncrement(db.getCurrentIdent(conn, meta()));
+					_setAutoIncrement(db.getCurrentIdent(conn, meta()));
 					break;
 				}
-			internalGet(currentKeyValues());
-			xRec = getBufferCopy();
-			postInsert();
+			internalGet(_currentKeyValues());
+			xRec = _getBufferCopy();
+			_postInsert();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
@@ -258,13 +258,13 @@ public abstract class Cursor {
 	public final void update() throws CelestaException {
 		if (!tryUpdate()) {
 			StringBuilder sb = new StringBuilder();
-			for (Object value : currentKeyValues()) {
+			for (Object value : _currentKeyValues()) {
 				if (sb.length() > 0)
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
 			throw new CelestaException("Record %s (%s) does not exist.",
-					tableName(), sb.toString());
+					_tableName(), sb.toString());
 		}
 	}
 
@@ -278,7 +278,7 @@ public abstract class Cursor {
 		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.MODIFY))
 			throw new PermissionDeniedException(context, meta(), Action.MODIFY);
 
-		prepareGet(currentKeyValues());
+		prepareGet(_currentKeyValues());
 		try {
 			ResultSet rs = get.executeQuery();
 			try {
@@ -287,8 +287,8 @@ public abstract class Cursor {
 			} finally {
 				rs.close();
 			}
-			Object[] values = currentValues();
-			Object[] xValues = getXRec().currentValues();
+			Object[] values = _currentValues();
+			Object[] xValues = getXRec()._currentValues();
 			// Маска: true для тех случаев, когда поле не было изменено
 			boolean[] myMask = new boolean[values.length];
 			boolean notChanged = true;
@@ -305,7 +305,7 @@ public abstract class Cursor {
 				updateMask = myMask;
 			}
 
-			Object[] keyValues = currentKeyValues();
+			Object[] keyValues = _currentKeyValues();
 
 			// Заполняем параметры присвоения (set ...)
 			int j = 1;
@@ -321,11 +321,11 @@ public abstract class Cursor {
 			for (i = 0; i < keyValues.length; i++)
 				DBAdaptor.setParam(update, i + j, values[i]);
 
-			preUpdate();
+			_preUpdate();
 			update.execute();
 			LOGGING_MGR.log(this, Action.MODIFY);
-			xRec = getBufferCopy();
-			postUpdate();
+			xRec = _getBufferCopy();
+			_postUpdate();
 
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -362,15 +362,15 @@ public abstract class Cursor {
 
 		if (delete == null)
 			delete = db.getDeleteRecordStatement(conn, meta());
-		Object[] keyValues = currentKeyValues();
+		Object[] keyValues = _currentKeyValues();
 		for (int i = 0; i < keyValues.length; i++)
 			DBAdaptor.setParam(delete, i + 1, keyValues[i]);
 		try {
-			preDelete();
+			_preDelete();
 			delete.execute();
 			LOGGING_MGR.log(this, Action.DELETE);
-			xRec = getBufferCopy();
-			postDelete();
+			xRec = _getBufferCopy();
+			_postDelete();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
@@ -416,7 +416,7 @@ public abstract class Cursor {
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
-			throw new CelestaException("There is no %s (%s).", tableName(),
+			throw new CelestaException("There is no %s (%s).", _tableName(),
 					sb.toString());
 		}
 	}
@@ -445,8 +445,8 @@ public abstract class Cursor {
 			try {
 				result = rs.next();
 				if (result) {
-					parseResult(rs);
-					xRec = getBufferCopy();
+					_parseResult(rs);
+					xRec = _getBufferCopy();
 				}
 			} finally {
 				rs.close();
@@ -463,7 +463,7 @@ public abstract class Cursor {
 		if (meta().getPrimaryKey().size() != values.length)
 			throw new CelestaException(
 					"Invalid number of 'get' arguments for '%s': expected %d, provided %d.",
-					tableName(), meta().getPrimaryKey().size(), values.length);
+					_tableName(), meta().getPrimaryKey().size(), values.length);
 
 		for (int i = 0; i < values.length; i++)
 			DBAdaptor.setParam(get, i + 1, values[i]);
@@ -500,7 +500,7 @@ public abstract class Cursor {
 					c.getName());
 		BLOB result;
 		PreparedStatement stmt = db.getOneFieldStatement(conn, c);
-		Object[] keyVals = currentKeyValues();
+		Object[] keyVals = _currentKeyValues();
 		for (int i = 0; i < keyVals.length; i++)
 			DBAdaptor.setParam(stmt, i + 1, keyVals[i]);
 		try {
@@ -645,7 +645,7 @@ public abstract class Cursor {
 	 * Очистка всех полей буфера, кроме ключевых.
 	 */
 	public final void init() {
-		clearBuffer(false);
+		_clearBuffer(false);
 	}
 
 	/**
@@ -655,7 +655,7 @@ public abstract class Cursor {
 	 *             SQL-ошибка.
 	 */
 	public final void clear() throws CelestaException {
-		clearBuffer(true);
+		_clearBuffer(true);
 		filters.clear();
 		orderBy.clear();
 		closeSet();
@@ -671,8 +671,8 @@ public abstract class Cursor {
 	public final Table meta() throws CelestaException {
 		if (meta == null)
 			try {
-				meta = Celesta.getInstance().getScore().getGrain(grainName())
-						.getTable(tableName());
+				meta = Celesta.getInstance().getScore().getGrain(_grainName())
+						.getTable(_tableName());
 			} catch (ParseException e) {
 				throw new CelestaException(e.getMessage());
 			}
@@ -705,7 +705,7 @@ public abstract class Cursor {
 	 * разделителями-запятыми.
 	 */
 	public final String asCSVLine() {
-		Object[] values = currentValues();
+		Object[] values = _currentValues();
 		StringBuilder sb = new StringBuilder();
 		for (Object value : values) {
 			if (sb.length() > 0)
@@ -726,7 +726,7 @@ public abstract class Cursor {
 	public final Cursor getXRec() {
 		if (xRec == null) {
 			try {
-				xRec = getBufferCopy();
+				xRec = _getBufferCopy();
 				xRec.clear();
 			} catch (CelestaException e) {
 				xRec = null;
@@ -743,31 +743,40 @@ public abstract class Cursor {
 	 */
 	public abstract void copyFieldsFrom(Cursor from);
 
-	protected abstract Cursor getBufferCopy() throws CelestaException;
+	// CHECKSTYLE:OFF
+	/*
+	 * Эта группа методов именуется по правилам Python, а не Java. В Python
+	 * имена protected-методов начинаются с underscore. Использование методов
+	 * без underscore приводит к конфликтам с именами атрибутов.
+	 */
 
-	protected abstract String grainName();
+	protected abstract Cursor _getBufferCopy() throws CelestaException;
 
-	protected abstract String tableName();
+	protected abstract String _grainName();
 
-	protected abstract void parseResult(ResultSet rs) throws SQLException;
+	protected abstract String _tableName();
 
-	protected abstract void clearBuffer(boolean withKeys);
+	protected abstract void _parseResult(ResultSet rs) throws SQLException;
 
-	protected abstract Object[] currentKeyValues();
+	protected abstract void _clearBuffer(boolean withKeys);
 
-	protected abstract Object[] currentValues();
+	protected abstract Object[] _currentKeyValues();
 
-	protected abstract void setAutoIncrement(int val);
+	protected abstract Object[] _currentValues();
 
-	protected abstract void preDelete();
+	protected abstract void _setAutoIncrement(int val);
 
-	protected abstract void postDelete();
+	protected abstract void _preDelete();
 
-	protected abstract void preUpdate();
+	protected abstract void _postDelete();
 
-	protected abstract void postUpdate();
+	protected abstract void _preUpdate();
 
-	protected abstract void preInsert();
+	protected abstract void _postUpdate();
 
-	protected abstract void postInsert();
+	protected abstract void _preInsert();
+
+	protected abstract void _postInsert();
+
+	// CHECKSTYLE:ON
 }

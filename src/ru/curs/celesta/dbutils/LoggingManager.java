@@ -95,10 +95,10 @@ final class LoggingManager {
 		LogCursor log = new LogCursor(sysContext);
 		log.init();
 		log.setUserid(c.callContext().getUserId());
-		log.setGrainid(c.grainName());
-		log.setTablename(c.tableName());
+		log.setGrainid(c._grainName());
+		log.setTablename(c._tableName());
 		log.setActionType(a.shortId());
-		Object[] o = c.currentKeyValues();
+		Object[] o = c._currentKeyValues();
 
 		String value;
 		int len;

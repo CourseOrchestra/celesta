@@ -20,31 +20,41 @@ public final class RolesCursor extends SysCursor {
 	}
 
 	@Override
-	protected String tableName() {
+	// CHECKSTYLE:OFF
+	protected String _tableName() {
+		// CHECKSTYLE:ON
 		return "roles";
 	}
 
 	@Override
-	protected void parseResult(ResultSet rs) throws SQLException {
+	// CHECKSTYLE:OFF
+	protected void _parseResult(ResultSet rs) throws SQLException {
+		// CHECKSTYLE:ON
 		id = rs.getString("id");
 		description = rs.getString("description");
 	}
 
 	@Override
-	protected void clearBuffer(boolean withKeys) {
+	// CHECKSTYLE:OFF
+	protected void _clearBuffer(boolean withKeys) {
+		// CHECKSTYLE:ON
 		if (withKeys)
 			id = null;
 		description = null;
 	}
 
 	@Override
-	protected Object[] currentKeyValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentKeyValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { id };
 		return result;
 	}
 
 	@Override
-	protected Object[] currentValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { id, description };
 		return result;
 	}
@@ -91,7 +101,9 @@ public final class RolesCursor extends SysCursor {
 	}
 
 	@Override
-	protected Cursor getBufferCopy() throws CelestaException {
+	// CHECKSTYLE:OFF
+	protected Cursor _getBufferCopy() throws CelestaException {
+		// CHECKSTYLE:ON
 		RolesCursor result = new RolesCursor(callContext());
 		result.copyFieldsFrom(this);
 		return result;

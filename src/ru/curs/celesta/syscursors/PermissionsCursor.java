@@ -26,12 +26,16 @@ public final class PermissionsCursor extends SysCursor {
 	}
 
 	@Override
-	protected String tableName() {
+	// CHECKSTYLE:OFF
+	protected String _tableName() {
+		// CHECKSTYLE:ON
 		return "permissions";
 	}
 
 	@Override
-	protected void parseResult(ResultSet rs) throws SQLException {
+	// CHECKSTYLE:OFF
+	protected void _parseResult(ResultSet rs) throws SQLException {
+		// CHECKSTYLE:ON
 		roleId = rs.getString("roleid");
 		grainId = rs.getString("grainid");
 		tableName = rs.getString("tablename");
@@ -42,7 +46,9 @@ public final class PermissionsCursor extends SysCursor {
 	}
 
 	@Override
-	protected void clearBuffer(boolean withKeys) {
+	// CHECKSTYLE:OFF
+	protected void _clearBuffer(boolean withKeys) {
+		// CHECKSTYLE:ON
 		if (withKeys) {
 			roleId = null;
 			grainId = null;
@@ -55,13 +61,17 @@ public final class PermissionsCursor extends SysCursor {
 	}
 
 	@Override
-	protected Object[] currentKeyValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentKeyValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { roleId, grainId, tableName };
 		return result;
 	}
 
 	@Override
-	protected Object[] currentValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { roleId, grainId, tableName, r, i, m, d };
 		return result;
 	}
@@ -198,7 +208,9 @@ public final class PermissionsCursor extends SysCursor {
 	}
 
 	@Override
-	protected Cursor getBufferCopy() throws CelestaException {
+	// CHECKSTYLE:OFF
+	protected Cursor _getBufferCopy() throws CelestaException {
+		// CHECKSTYLE:ON
 		PermissionsCursor result = new PermissionsCursor(callContext());
 		result.copyFieldsFrom(this);
 		return result;

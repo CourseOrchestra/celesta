@@ -30,12 +30,16 @@ public final class LogCursor extends SysCursor {
 	}
 
 	@Override
-	protected String tableName() {
+	// CHECKSTYLE:OFF
+	protected String _tableName() {
+		// CHECKSTYLE:ON
 		return "log";
 	}
 
 	@Override
-	protected void parseResult(ResultSet rs) throws SQLException {
+	// CHECKSTYLE:OFF
+	protected void _parseResult(ResultSet rs) throws SQLException {
+		// CHECKSTYLE:ON
 		entryno = rs.getInt("entryno");
 		entryTime = rs.getDate("entry_time");
 		userid = rs.getString("userid");
@@ -50,7 +54,9 @@ public final class LogCursor extends SysCursor {
 	}
 
 	@Override
-	protected void clearBuffer(boolean withKeys) {
+	// CHECKSTYLE:OFF
+	protected void _clearBuffer(boolean withKeys) {
+		// CHECKSTYLE:ON
 		if (withKeys)
 			entryno = null;
 		entryTime = null;
@@ -66,13 +72,17 @@ public final class LogCursor extends SysCursor {
 	}
 
 	@Override
-	protected Object[] currentKeyValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentKeyValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { entryno };
 		return result;
 	}
 
 	@Override
-	protected Object[] currentValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { entryno, entryTime, userid, grainid, tablename,
 				actionType, pkvalue1, pkvalue2, pkvalue3, oldvalues, newvalues };
 		return result;
@@ -286,14 +296,18 @@ public final class LogCursor extends SysCursor {
 	}
 
 	@Override
-	protected Cursor getBufferCopy() throws CelestaException {
+	// CHECKSTYLE:OFF
+	protected Cursor _getBufferCopy() throws CelestaException {
+		// CHECKSTYLE:ON
 		LogCursor result = new LogCursor(callContext());
 		result.copyFieldsFrom(this);
 		return result;
 	}
 
 	@Override
-	protected void setAutoIncrement(int val) {
+	// CHECKSTYLE:OFF
+	protected void _setAutoIncrement(int val) {
+		// CHECKSTYLE:ON
 		entryno = val;
 	}
 

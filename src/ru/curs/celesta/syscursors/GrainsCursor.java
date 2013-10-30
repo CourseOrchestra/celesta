@@ -163,7 +163,9 @@ public final class GrainsCursor extends SysCursor {
 	}
 
 	@Override
-	protected void parseResult(ResultSet rs) throws SQLException {
+	// CHECKSTYLE:OFF
+	protected void _parseResult(ResultSet rs) throws SQLException {
+		// CHECKSTYLE:ON
 		id = rs.getString("id");
 		version = rs.getString("version");
 		length = rs.getInt("length");
@@ -175,7 +177,9 @@ public final class GrainsCursor extends SysCursor {
 	}
 
 	@Override
-	protected void clearBuffer(boolean withKeys) {
+	// CHECKSTYLE:OFF
+	protected void _clearBuffer(boolean withKeys) {
+		// CHECKSTYLE:ON
 		if (withKeys)
 			id = null;
 		version = null;
@@ -187,25 +191,33 @@ public final class GrainsCursor extends SysCursor {
 	}
 
 	@Override
-	protected Object[] currentKeyValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentKeyValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { id };
 		return result;
 	}
 
 	@Override
-	protected Object[] currentValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { id, version, length, checksum, state, lastmodified,
 				message };
 		return result;
 	}
 
 	@Override
-	protected String tableName() {
+	// CHECKSTYLE:OFF
+	protected String _tableName() {
+		// CHECKSTYLE:ON
 		return "grains";
 	}
 
 	@Override
+	// CHECKSTYLE:OFF
 	public void copyFieldsFrom(Cursor c) {
+		// CHECKSTYLE:ON
 		GrainsCursor from = (GrainsCursor) c;
 		id = from.id;
 		version = from.version;
@@ -217,7 +229,9 @@ public final class GrainsCursor extends SysCursor {
 	}
 
 	@Override
-	protected Cursor getBufferCopy() throws CelestaException {
+	// CHECKSTYLE:OFF
+	protected Cursor _getBufferCopy() throws CelestaException {
+		// CHECKSTYLE:ON
 		GrainsCursor result = new GrainsCursor(callContext());
 		result.copyFieldsFrom(this);
 		return result;

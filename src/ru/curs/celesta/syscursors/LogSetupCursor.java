@@ -23,12 +23,16 @@ public final class LogSetupCursor extends SysCursor {
 	}
 
 	@Override
-	protected String tableName() {
+	// CHECKSTYLE:OFF
+	protected String _tableName() {
+		// CHECKSTYLE:ON
 		return "logsetup";
 	}
 
 	@Override
-	protected void parseResult(ResultSet rs) throws SQLException {
+	// CHECKSTYLE:OFF
+	protected void _parseResult(ResultSet rs) throws SQLException {
+		// CHECKSTYLE:ON
 		grainid = rs.getString("grainid");
 		tablename = rs.getString("tablename");
 		i = rs.getBoolean("i");
@@ -37,7 +41,9 @@ public final class LogSetupCursor extends SysCursor {
 	}
 
 	@Override
-	protected void clearBuffer(boolean withKeys) {
+	// CHECKSTYLE:OFF
+	protected void _clearBuffer(boolean withKeys) {
+		// CHECKSTYLE:ON
 		if (withKeys) {
 			grainid = null;
 			tablename = null;
@@ -48,13 +54,17 @@ public final class LogSetupCursor extends SysCursor {
 	}
 
 	@Override
-	protected Object[] currentKeyValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentKeyValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { grainid, tablename };
 		return result;
 	}
 
 	@Override
-	protected Object[] currentValues() {
+	// CHECKSTYLE:OFF
+	protected Object[] _currentValues() {
+		// CHECKSTYLE:ON
 		Object[] result = { grainid, tablename, i, m, d };
 		return result;
 	}
@@ -156,7 +166,9 @@ public final class LogSetupCursor extends SysCursor {
 	}
 
 	@Override
-	protected Cursor getBufferCopy() throws CelestaException {
+	// CHECKSTYLE:OFF
+	protected Cursor _getBufferCopy() throws CelestaException {
+		// CHECKSTYLE:ON
 		LogSetupCursor result = new LogSetupCursor(callContext());
 		result.copyFieldsFrom(this);
 		return result;
