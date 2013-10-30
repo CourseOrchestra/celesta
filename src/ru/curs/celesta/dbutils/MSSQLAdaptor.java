@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import ru.curs.celesta.CelestaException;
@@ -225,11 +224,11 @@ final class MSSQLAdaptor extends DBAdaptor {
 			throws CelestaException {
 
 		// Готовим условие where
-		StringBuilder whereClause = setWhereClause(filters);
+		String whereClause = getWhereClause(filters);
 
 		// Соединяем полученные компоненты в стандартный запрос
 		// SELECT..FROM..WHERE..ORDER BY
-		String sql = getSelectFromOrderBy(t, whereClause.toString(), orderBy);
+		String sql = getSelectFromOrderBy(t, whereClause, orderBy);
 
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
@@ -254,26 +253,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 				setParam(result, i, ((Range) f).getValueTo());
 				i++;
 			} else if (f instanceof Filter)
-				throw new RuntimeException("not implemented yet");
+				throw new RuntimeException(NOT_IMPLEMENTED_YET);
 		}
-	}
-
-	private StringBuilder setWhereClause(Map<String, AbstractFilter> filters) {
-		if (filters == null)
-			throw new IllegalArgumentException();
-		StringBuilder whereClause = new StringBuilder();
-		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
-			if (whereClause.length() > 0)
-				whereClause.append(" and ");
-			if (e.getValue() instanceof SingleValue)
-				whereClause.append(String.format("(%s = ?)", e.getKey()));
-			else if (e.getValue() instanceof Range)
-				whereClause.append(String.format("(%s between ? and ?)",
-						e.getKey()));
-			else if (e.getValue() instanceof Filter)
-				throw new RuntimeException("not implemented yet");
-		}
-		return whereClause;
 	}
 
 	@Override
@@ -343,7 +324,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters) throws CelestaException {
 		// Готовим условие where
-		StringBuilder whereClause = setWhereClause(filters);
+		String whereClause = getWhereClause(filters);
 
 		// Готовим запрос на удаление
 		String sql = String.format("delete %s.%s %s;", t.getGrain().getName(),

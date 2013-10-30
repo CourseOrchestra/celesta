@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
@@ -37,6 +38,7 @@ public abstract class DBAdaptor {
 	 * методы, далее --- внутренняя кухня (default final и default static
 	 * методы), в самом низу -- все объявления абстрактных методов.
 	 */
+	static final String NOT_IMPLEMENTED_YET = "not implemented yet";
 
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
@@ -377,6 +379,30 @@ public abstract class DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 		return result;
+	}
+
+	/**
+	 * Возвращает условие where на таблице, исходя из текущих фильтров.
+	 * 
+	 * @param filters
+	 *            фильтры
+	 */
+	final String getWhereClause(Map<String, AbstractFilter> filters) {
+		if (filters == null)
+			throw new IllegalArgumentException();
+		StringBuilder whereClause = new StringBuilder();
+		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
+			if (whereClause.length() > 0)
+				whereClause.append(" and ");
+			if (e.getValue() instanceof SingleValue)
+				whereClause.append(String.format("(%s = ?)", e.getKey()));
+			else if (e.getValue() instanceof Range)
+				whereClause.append(String.format("(%s between ? and ?)",
+						e.getKey()));
+			else if (e.getValue() instanceof Filter)
+				throw new RuntimeException(NOT_IMPLEMENTED_YET);
+		}
+		return whereClause.toString();
 	}
 
 	/**

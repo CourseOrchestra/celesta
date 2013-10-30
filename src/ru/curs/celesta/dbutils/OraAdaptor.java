@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -156,8 +155,6 @@ final class OraAdaptor extends DBAdaptor {
 		});
 	}
 
-	private final String notImplementMsg = "not implemented yet";
-
 	/**
 	 * Выполняемое действия для Identity атрибута при create/drop таблицы.
 	 */
@@ -235,24 +232,6 @@ final class OraAdaptor extends DBAdaptor {
 		return prepareStatement(conn, sql);
 	}
 
-	private String getWhereClause(Map<String, AbstractFilter> filters) {
-		if (filters == null)
-			throw new IllegalArgumentException();
-		StringBuilder whereClause = new StringBuilder();
-		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
-			if (whereClause.length() > 0)
-				whereClause.append(" and ");
-			if (e.getValue() instanceof SingleValue)
-				whereClause.append(String.format("(%s = ?)", e.getKey()));
-			else if (e.getValue() instanceof Range)
-				whereClause.append(String.format("(%s between ? and ?)",
-						e.getKey()));
-			else if (e.getValue() instanceof Filter)
-				throw new RuntimeException(notImplementMsg);
-		}
-		return whereClause.toString();
-	}
-
 	@Override
 	PreparedStatement getRecordSetStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters, List<String> orderBy)
@@ -275,7 +254,7 @@ final class OraAdaptor extends DBAdaptor {
 					setParam(result, i, ((Range) f).getValueTo());
 					i++;
 				} else if (f instanceof Filter)
-					throw new RuntimeException(notImplementMsg);
+					throw new RuntimeException(NOT_IMPLEMENTED_YET);
 			}
 			return result;
 		} catch (SQLException e) {
@@ -427,7 +406,7 @@ final class OraAdaptor extends DBAdaptor {
 						setParam(result, i, ((Range) f).getValueTo());
 						i++;
 					} else if (f instanceof Filter)
-						throw new RuntimeException(notImplementMsg);
+						throw new RuntimeException(NOT_IMPLEMENTED_YET);
 				}
 			}
 			return result;
