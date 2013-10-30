@@ -153,6 +153,31 @@ public abstract class Cursor {
 	}
 
 	/**
+	 * Возвращает число записей в отфильтрованном наборе.
+	 * 
+	 * @throws CelestaException
+	 *             в случае ошибки доступа или ошибки БД
+	 */
+	public final int count() throws CelestaException {
+		int result;
+		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters);
+		try {
+			ResultSet rs = set.executeQuery();
+			rs.next();
+			result = rs.getInt(1);
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		} finally {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				stmt = null;
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * Переходит к следующей записи в отсортированном наборе. Возвращает false,
 	 * если достигнут конец набора.
 	 * 

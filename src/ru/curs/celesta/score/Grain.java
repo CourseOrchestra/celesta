@@ -296,6 +296,8 @@ public final class Grain extends NamedElement {
 		// Сохранять неизменённую гранулу нет смысла.
 		if (!modified)
 			return;
+		if (!grainPath.exists())
+			grainPath.mkdirs();
 		File scriptFile = new File(String.format("%s%s_%s.sql",
 				grainPath.getPath(), File.separator, getName()));
 		try {

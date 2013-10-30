@@ -616,6 +616,17 @@ public abstract class DBAdaptor {
 		return result;
 	}
 
+	final PreparedStatement getSetCountStatement(Connection conn, Table t,
+			Map<String, AbstractFilter> filters) throws CelestaException {
+		String whereClause = getWhereClause(filters);
+		String sql = String.format("select count(*) from " + tableTemplate()
+				+ ("".equals(whereClause) ? "" : " where " + whereClause), t
+				.getGrain().getName(), t.getName());
+		PreparedStatement result = prepareStatement(conn, sql);
+		fillSetQueryParameters(filters, result);
+		return result;
+	}
+
 	abstract ColumnDefiner getColumnDefiner(Column c);
 
 	abstract boolean tableExists(Connection conn, String schema, String name)
@@ -655,6 +666,7 @@ public abstract class DBAdaptor {
 	abstract String getCreateIndexSQL(Index index);
 
 	abstract String getDropIndexSQL(Grain g, IndexInfo indexInfo);
+
 }
 
 /**

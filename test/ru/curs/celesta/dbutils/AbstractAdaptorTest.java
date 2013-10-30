@@ -2,6 +2,7 @@ package ru.curs.celesta.dbutils;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.sql.Connection;
@@ -121,6 +122,32 @@ public abstract class AbstractAdaptorTest {
 		try {
 			int rowCount = insertRow(conn, t, 1);
 			assertTrue(rowCount == 1);
+		} finally {
+			ConnectionPool.putBack(conn);
+			dba.dropTable(t);
+		}
+	}
+
+	@Test
+	public void getSetCountStatement() throws Exception {
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+		Connection conn = ConnectionPool.get();
+		try {
+			PreparedStatement stmt = dba.getSetCountStatement(conn, t,
+					Collections.<String, AbstractFilter> emptyMap());
+			ResultSet rs = stmt.executeQuery();
+			rs.next();
+			assertEquals(0, rs.getInt(1));
+
+			insertRow(conn, t, 1);
+			insertRow(conn, t, 2);
+			insertRow(conn, t, 3);
+
+			rs = stmt.executeQuery();
+			rs.next();
+			assertEquals(3, rs.getInt(1));
+
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
