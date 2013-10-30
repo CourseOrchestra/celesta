@@ -242,20 +242,7 @@ final class OraAdaptor extends DBAdaptor {
 
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
-			// А теперь заполняем параметры
-			int i = 1;
-			for (AbstractFilter f : filters.values()) {
-				if (f instanceof SingleValue) {
-					setParam(result, i, ((SingleValue) f).getValue());
-					i++;
-				} else if (f instanceof Range) {
-					setParam(result, i, ((Range) f).getValueFrom());
-					i++;
-					setParam(result, i, ((Range) f).getValueTo());
-					i++;
-				} else if (f instanceof Filter)
-					throw new RuntimeException(NOT_IMPLEMENTED_YET);
-			}
+			fillSetQueryParameters(filters, result);
 			return result;
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -395,19 +382,7 @@ final class OraAdaptor extends DBAdaptor {
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
 			if (filters != null) {
-				int i = 1;
-				for (AbstractFilter f : filters.values()) {
-					if (f instanceof SingleValue) {
-						setParam(result, i, ((SingleValue) f).getValue());
-						i++;
-					} else if (f instanceof Range) {
-						setParam(result, i, ((Range) f).getValueFrom());
-						i++;
-						setParam(result, i, ((Range) f).getValueTo());
-						i++;
-					} else if (f instanceof Filter)
-						throw new RuntimeException(NOT_IMPLEMENTED_YET);
-				}
+				fillSetQueryParameters(filters, result);
 			}
 			return result;
 		} catch (SQLException e) {

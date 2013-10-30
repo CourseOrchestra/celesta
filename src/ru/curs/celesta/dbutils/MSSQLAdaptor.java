@@ -240,23 +240,6 @@ final class MSSQLAdaptor extends DBAdaptor {
 		}
 	}
 
-	private void fillSetQueryParameters(Map<String, AbstractFilter> filters,
-			PreparedStatement result) throws CelestaException {
-		int i = 1;
-		for (AbstractFilter f : filters.values()) {
-			if (f instanceof SingleValue) {
-				setParam(result, i, ((SingleValue) f).getValue());
-				i++;
-			} else if (f instanceof Range) {
-				setParam(result, i, ((Range) f).getValueFrom());
-				i++;
-				setParam(result, i, ((Range) f).getValueTo());
-				i++;
-			} else if (f instanceof Filter)
-				throw new RuntimeException(NOT_IMPLEMENTED_YET);
-		}
-	}
-
 	@Override
 	PreparedStatement getInsertRecordStatement(Connection conn, Table t,
 			boolean[] nullsMask) throws CelestaException {

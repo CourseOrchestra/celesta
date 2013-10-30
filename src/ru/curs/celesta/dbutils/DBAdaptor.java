@@ -406,6 +406,28 @@ public abstract class DBAdaptor {
 	}
 
 	/**
+	 * Устанавливает параметры на запрос по фильтрам.
+	 * 
+	 * @param filters
+	 *            Фильтры, с которыми вызывался getWhereClause
+	 * @throws CelestaException
+	 *             в случае сбоя JDBC
+	 */
+	final void fillSetQueryParameters(Map<String, AbstractFilter> filters,
+			PreparedStatement result) throws CelestaException {
+		int i = 1;
+		for (AbstractFilter f : filters.values()) {
+			if (f instanceof SingleValue) {
+				setParam(result, i++, ((SingleValue) f).getValue());
+			} else if (f instanceof Range) {
+				setParam(result, i++, ((Range) f).getValueFrom());
+				setParam(result, i++, ((Range) f).getValueTo());
+			} else if (f instanceof Filter)
+				throw new RuntimeException(NOT_IMPLEMENTED_YET);
+		}
+	}
+
+	/**
 	 * Создаёт в грануле индекс на таблице.
 	 * 
 	 * @param index
