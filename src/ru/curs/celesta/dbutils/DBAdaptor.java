@@ -211,7 +211,8 @@ public abstract class DBAdaptor {
 			stmt.close();
 			postCreateTable(conn, table);
 		} catch (SQLException e) {
-			throw new CelestaException("Cannot create table. " + e.getMessage());
+			throw new CelestaException("creating %s: %s", table.getName(),
+					e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -257,7 +258,8 @@ public abstract class DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
+			throw new CelestaException("creating %s.%s: %s", c.getParentTable()
+					.getName(), c.getName(), e.getMessage());
 		}
 	}
 

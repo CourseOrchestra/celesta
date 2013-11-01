@@ -36,11 +36,6 @@ public final class BooleanColumn extends Column {
 	}
 
 	@Override
-	protected String getDefaultDefault() {
-		return "0";
-	}
-
-	@Override
 	public String pythonDefaultValue() {
 		return "False";
 	}

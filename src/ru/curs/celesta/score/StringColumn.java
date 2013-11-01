@@ -138,11 +138,6 @@ public final class StringColumn extends Column {
 	}
 
 	@Override
-	protected String getDefaultDefault() {
-		return "''";
-	}
-
-	@Override
 	public String pythonDefaultValue() {
 		return "''";
 	}

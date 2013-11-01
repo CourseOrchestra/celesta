@@ -30,12 +30,6 @@ public abstract class Column extends NamedElement {
 	 */
 	protected abstract void setDefault(String lexvalue) throws ParseException;
 
-	/**
-	 * Возвращает значение по умолчанию, если оно не прописано (пустая строка
-	 * для строк, 0 для целых и т. д.).
-	 */
-	protected abstract String getDefaultDefault();
-
 	@Override
 	public String toString() {
 		return getName();

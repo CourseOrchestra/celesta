@@ -246,9 +246,8 @@ public final class DBUpdator {
 		} catch (CelestaException e) {
 			// Если что-то пошло не так
 			grain.setState(GrainsCursor.ERROR);
-			grain.setMessage(String.format(
-					"Error while trying to update to version %s: %s", g
-							.getVersion().toString(), e.getMessage()));
+			grain.setMessage(String.format("%s/%d/%08X: %s", g.getVersion()
+					.toString(), g.getLength(), g.getChecksum(), e.getMessage()));
 			grain.update();
 			ConnectionPool.commit(grain.callContext().getConn());
 			return false;

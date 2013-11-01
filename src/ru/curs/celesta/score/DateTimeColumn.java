@@ -85,11 +85,6 @@ public final class DateTimeColumn extends Column {
 	}
 
 	@Override
-	protected String getDefaultDefault() {
-		return "GETDATE";
-	}
-
-	@Override
 	public String pythonDefaultValue() {
 		return "None";
 	}

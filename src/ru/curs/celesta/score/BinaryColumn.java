@@ -28,11 +28,6 @@ public final class BinaryColumn extends Column {
 	}
 
 	@Override
-	protected String getDefaultDefault() {
-		return "0x00";
-	}
-
-	@Override
 	public String pythonDefaultValue() {
 		return "None";
 	}
