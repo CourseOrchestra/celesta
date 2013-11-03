@@ -73,9 +73,8 @@ TOKEN : /* Numeric Constants */
 
 TOKEN:
 {
-	< S_IDENTIFIER: ( <LETTER> )+ ( <DIGIT> | <LETTER> |<SPECIAL_CHARS>)* >
+	< S_IDENTIFIER: ( <LETTER> )+ ( <DIGIT> | <LETTER> )* >
 | 	< #LETTER: ["a"-"z", "A"-"Z", "_"] >
-|   < #SPECIAL_CHARS: "$" | "_">
 |   < S_CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")*>
 |   < S_QUOTED_IDENTIFIER: "\"" (~["\n","\r","\""])* "\"" | ("`" (~["\n","\r","`"])* "`") >
 |   < CELESTA_DOC: "/**" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">

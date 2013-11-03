@@ -81,17 +81,15 @@ public interface CelestaParserConstants {
   /** RegularExpression Id. */
   int LETTER = 39;
   /** RegularExpression Id. */
-  int SPECIAL_CHARS = 40;
+  int S_CHAR_LITERAL = 40;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 41;
+  int S_QUOTED_IDENTIFIER = 41;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 42;
+  int CELESTA_DOC = 42;
   /** RegularExpression Id. */
-  int CELESTA_DOC = 43;
+  int LINE_COMMENT = 43;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 44;
-  /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 45;
+  int MULTI_LINE_COMMENT = 44;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -138,7 +136,6 @@ public interface CelestaParserConstants {
     "<S_BINARY_LITERAL>",
     "<S_IDENTIFIER>",
     "<LETTER>",
-    "<SPECIAL_CHARS>",
     "<S_CHAR_LITERAL>",
     "<S_QUOTED_IDENTIFIER>",
     "<CELESTA_DOC>",

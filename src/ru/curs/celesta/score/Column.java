@@ -11,9 +11,12 @@ public abstract class Column extends NamedElement {
 
 	private final Table parentTable;
 	private boolean nullable = true;
+	private final String quotedName;
 
 	Column(Table parentTable, String name) throws ParseException {
 		super(name);
+		quotedName = String.format("\"%s\"", name);
+
 		if (parentTable == null)
 			throw new IllegalArgumentException();
 		this.parentTable = parentTable;
@@ -100,5 +103,12 @@ public abstract class Column extends NamedElement {
 		if (Grain.writeCelestaDoc(this, bw))
 			bw.write("  ");
 		bw.write(getName());
+	}
+
+	/**
+	 * Возвращает имя колонки в прямых кавычках ("ANSI quotes").
+	 */
+	public String getQuotedName() {
+		return quotedName;
 	}
 }

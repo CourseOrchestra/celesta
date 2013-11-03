@@ -1,10 +1,10 @@
 create table celesta.grains(
-  id varchar(16) not null,
-  version varchar(65535) not null,
-  length integer not null,
-  checksum varchar(8) not null,
-  state integer not null default 3,
-  lastmodified timestamp not null default CURRENT_TIMESTAMP,
-  message varchar(65535) not null default '',
-  constraint pk_grains primary key (id)
+  "id" varchar(16) not null,
+  "version" varchar(65535) not null,
+  "length" integer not null,
+  "checksum" varchar(8) not null,
+  "state" integer not null default 3,
+  "lastmodified" timestamp not null default CURRENT_TIMESTAMP,
+  "message" varchar(65535) not null default '',
+  constraint "pk_grains" primary key ("id")
 )

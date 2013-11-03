@@ -9,8 +9,8 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +48,8 @@ final class OraAdaptor extends DBAdaptor {
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
+				return join(c.getQuotedName(), dbFieldType(), defaultStr,
+						nullable(c));
 			}
 
 		}
@@ -69,7 +70,8 @@ final class OraAdaptor extends DBAdaptor {
 				if (ic.getDefaultvalue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultvalue();
 				}
-				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
+				return join(c.getQuotedName(), dbFieldType(), defaultStr,
+						nullable(c));
 			}
 
 		}
@@ -96,7 +98,7 @@ final class OraAdaptor extends DBAdaptor {
 				}
 				String nullable = (DEFAULT + "''").equals(defaultStr) ? ""
 						: nullable(c);
-				return join(c.getName(), fieldType, defaultStr, nullable);
+				return join(c.getQuotedName(), fieldType, defaultStr, nullable);
 			}
 
 		});
@@ -116,7 +118,8 @@ final class OraAdaptor extends DBAdaptor {
 					defaultStr = String.format(DEFAULT + "'%s'", ic
 							.getDefaultValue().substring(2));
 				}
-				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
+				return join(c.getQuotedName(), dbFieldType(), defaultStr,
+						nullable(c));
 			}
 		});
 
@@ -138,7 +141,8 @@ final class OraAdaptor extends DBAdaptor {
 					defaultStr = String.format(DEFAULT + "date '%s'",
 							df.format(ic.getDefaultValue()));
 				}
-				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
+				return join(c.getQuotedName(), dbFieldType(), defaultStr,
+						nullable(c));
 			}
 		});
 		TYPES_DICT.put(BooleanColumn.class, new ColumnDefiner() {
@@ -156,8 +160,8 @@ final class OraAdaptor extends DBAdaptor {
 					defaultStr = DEFAULT + (ic.getDefaultValue() ? "1" : "0");
 				}
 				String check = String.format("check (%s in (0, 1))",
-						c.getName());
-				return join(c.getName(), dbFieldType(), defaultStr,
+						c.getQuotedName());
+				return join(c.getQuotedName(), dbFieldType(), defaultStr,
 						nullable(c), check);
 			}
 		});
@@ -226,7 +230,7 @@ final class OraAdaptor extends DBAdaptor {
 			throws CelestaException {
 		Table t = c.getParentTable();
 		String sql = String.format("select %s from " + tableTemplate()
-				+ " where %s and rownum = 1", c.getName(), t.getGrain()
+				+ " where %s and rownum = 1", c.getQuotedName(), t.getGrain()
 				.getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
@@ -275,7 +279,9 @@ final class OraAdaptor extends DBAdaptor {
 				params.append(", ");
 			}
 			params.append("?");
+			fields.append('"');
 			fields.append(c);
+			fields.append('"');
 		}
 
 		String sql = String.format("insert into " + tableTemplate()
@@ -294,7 +300,7 @@ final class OraAdaptor extends DBAdaptor {
 			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
 				if (setClause.length() > 0)
 					setClause.append(", ");
-				setClause.append(String.format("%s = ?", c));
+				setClause.append(String.format("\"%s\" = ?", c));
 			}
 			i++;
 		}
@@ -331,7 +337,8 @@ final class OraAdaptor extends DBAdaptor {
 						// первичные ключи
 						if (indName != null && rs.getBoolean("NON_UNIQUE")) {
 							// Мы отрезаем "имягранулы_" от имени индекса.
-							indName = indName.toLowerCase();
+							indName = indName.toLowerCase(); // TODO: quote
+																// index name!!
 							String grainPrefix = g.getName().toLowerCase()
 									+ "_";
 							if (indName.startsWith(grainPrefix))
@@ -360,7 +367,7 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	public Set<String> getColumns(Connection conn, Table t)
 			throws CelestaException {
-		Set<String> result = new HashSet<String>();
+		Set<String> result = new LinkedHashSet<>();
 		try {
 			String tableName = String.format(tableTemplate(),
 					t.getGrain().getName(), t.getName()).toUpperCase();
@@ -369,7 +376,7 @@ final class OraAdaptor extends DBAdaptor {
 			try {
 				while (rs.next()) {
 					String rColumnName = rs.getString("COLUMN_NAME");
-					result.add(rColumnName.toLowerCase());
+					result.add(rColumnName);
 				}
 			} finally {
 				rs.close();
@@ -426,9 +433,7 @@ final class OraAdaptor extends DBAdaptor {
 
 	private void createAutoincrement(Connection conn, Table table,
 			IntegerColumn col) throws SQLException {
-		// Создание Sequence
-		String sequenceName = String.format(tableTemplate() + "_%s", table
-				.getGrain().getName(), table.getName(), col.getName());
+		String sequenceName = getSequenceName(table, col);
 		String sql = "CREATE SEQUENCE " + sequenceName
 				+ " START WITH 1 INCREMENT BY 1 MINVALUE 1 NOCACHE NOCYCLE";
 		Statement stmt = conn.createStatement();
@@ -442,8 +447,8 @@ final class OraAdaptor extends DBAdaptor {
 				+ " BEFORE INSERT ON " + tableTemplate()
 				+ " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT "
 				+ sequenceName + ".NEXTVAL INTO :new.%s FROM dual; END;", table
-				.getGrain().getName(), table.getName(), col.getName(), col
-				.getName());
+				.getGrain().getName(), table.getName(), col.getQuotedName(),
+				col.getQuotedName());
 		stmt = conn.createStatement();
 		try {
 			stmt.execute(sql);
@@ -458,8 +463,7 @@ final class OraAdaptor extends DBAdaptor {
 	private void deleteAutoincrement(Connection conn, Table table,
 			IntegerColumn col) throws SQLException {
 		// Удаление Sequence
-		String sequenceName = String.format(tableTemplate() + "_%s", table
-				.getGrain().getName(), table.getName(), col.getName());
+		String sequenceName = getSequenceName(table, col);
 		String sql = "DROP SEQUENCE " + sequenceName;
 		Statement stmt = conn.createStatement();
 		try {
@@ -467,6 +471,12 @@ final class OraAdaptor extends DBAdaptor {
 		} finally {
 			stmt.close();
 		}
+	}
+
+	private String getSequenceName(Table table, Column col) {
+		String sequenceName = String.format(tableTemplate() + "_%s", table
+				.getGrain().getName(), table.getName(), col.getName());
+		return sequenceName;
 	}
 
 	private void postCreateDropTable(Connection conn, Table table,
@@ -525,8 +535,7 @@ final class OraAdaptor extends DBAdaptor {
 		for (Column col : t.getColumns().values())
 			if (col instanceof IntegerColumn
 					&& ((IntegerColumn) col).isIdentity()) {
-				sequenceName = String.format(tableTemplate() + "_%s", t
-						.getGrain().getName(), t.getName(), col.getName());
+				sequenceName = getSequenceName(t, col);
 				break;
 			}
 		if ("".equals(sequenceName))

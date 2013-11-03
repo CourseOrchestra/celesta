@@ -1,7 +1,10 @@
 package ru.curs.celesta.dbutils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -22,6 +25,8 @@ import ru.curs.celesta.dbutils.DBAdaptor.IndexInfo;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.Table;
 
@@ -196,7 +201,14 @@ public abstract class AbstractAdaptorTest {
 		try {
 			Set<String> columnSet = dba.getColumns(conn, t);
 			assertNotNull(columnSet);
-			assertTrue(columnSet.size() != 0);
+			assertEquals(13, columnSet.size());
+			assertTrue(columnSet.contains("f4"));
+			assertFalse(columnSet.contains("nonExistentColumn"));
+			// String[] columnNames = { "id", "attrVarchar", "attrInt", "f1",
+			// "f2", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11" };
+			// System.out
+			// .println(Arrays.toString(columnSet.toArray(new String[0])));
+
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
@@ -282,6 +294,157 @@ public abstract class AbstractAdaptorTest {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
 		}
+	}
+
+	@Test
+	public void getColumnInfo1() throws CelestaException, ParseException {
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+		DBAdaptor.ColumnInfo c;
+
+		// Проверяем реакцию на столбец, которого нет в базе данных
+		Column newCol = new IntegerColumn(t, "nonExistentColumn");
+		assertSame(newCol, t.getColumn("nonExistentColumn"));
+		c = dba.getColumnInfo(newCol);
+		assertNull(c);
+
+		// Этот тест проверяет типы колонок и выражения not null
+		// attrVarchar nvarchar(2),
+		c = dba.getColumnInfo(t.getColumn("attrVarchar"));
+		assertEquals("attrVarchar", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.NVARCHAR, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(2, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f1 bit not null,
+		c = dba.getColumnInfo(t.getColumn("f1"));
+		assertEquals("f1", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.BIT, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f4 real,
+		c = dba.getColumnInfo(t.getColumn("f4"));
+		assertEquals("f4", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.REAL, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f7 nvarchar(8),
+		c = dba.getColumnInfo(t.getColumn("f7"));
+		assertEquals("f7", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.NVARCHAR, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(8, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f11 image not null
+		c = dba.getColumnInfo(t.getColumn("f11"));
+		assertEquals("f11", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.IMAGE, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+	}
+
+	@Test
+	public void getColumnInfo2() throws CelestaException, ParseException {
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+		DBAdaptor.ColumnInfo c;
+		// Этот тест проверяет выражения default и дополнительные атрибуты
+		// id int identity not null primary key,
+		c = dba.getColumnInfo(t.getColumn("id"));
+		assertEquals("id", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.INT, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(true, c.isIdentity());
+
+		// attrInt int default 3,
+		c = dba.getColumnInfo(t.getColumn("attrInt"));
+		assertEquals("attrInt", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.INT, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("3", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f2 bit default 'true',
+		c = dba.getColumnInfo(t.getColumn("f2"));
+		assertEquals("f2", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.BIT, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("'TRUE'", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f5 real not null default 5.5,
+		c = dba.getColumnInfo(t.getColumn("f5"));
+		assertEquals("f5", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.REAL, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("5.5", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f6 nvarchar(max) not null default 'abc',
+		c = dba.getColumnInfo(t.getColumn("f6"));
+		assertEquals("f6", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.NVARCHAR, c.getType());
+		assertEquals(false, c.isNullable());
+		// assertEquals(0, c.getLength()); -- database-dependent value
+		assertEquals("'abc'", c.getDefaultValue());
+		assertEquals(true, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f8 datetime default '20130401',
+		c = dba.getColumnInfo(t.getColumn("f8"));
+		assertEquals("f8", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.DATETIME, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("'20130401'", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f9 datetime not null default getdate(),
+		c = dba.getColumnInfo(t.getColumn("f9"));
+		assertEquals("f9", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.DATETIME, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("GETDATE()", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f10 image default 0xFFAAFFAAFF,
+		c = dba.getColumnInfo(t.getColumn("f10"));
+		assertEquals("f10", c.getName());
+		assertEquals(DBAdaptor.DBColumnType.IMAGE, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
 	}
 
 	protected void setDba(DBAdaptor dba) {

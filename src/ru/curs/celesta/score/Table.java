@@ -62,6 +62,24 @@ public final class Table extends NamedElement {
 	}
 
 	/**
+	 * Возвращает столбец по его имени, либо исключение с сообщением о том, что
+	 * столбец не найден.
+	 * 
+	 * @param name
+	 *            Имя
+	 * @throws ParseException
+	 *             Если столбец с таким именем не найден в таблице.
+	 */
+	public Column getColumn(String name) throws ParseException {
+		Column result = columns.get(name);
+		if (result == null)
+			throw new ParseException(String.format(
+					"Column '%s' not found in table '%s.%s'", name, getGrain()
+							.getName(), getName()));
+		return result;
+	}
+
+	/**
 	 * Неизменяемый перечень столбцов первичного ключа таблицы.
 	 */
 	public Map<String, Column> getPrimaryKey() {

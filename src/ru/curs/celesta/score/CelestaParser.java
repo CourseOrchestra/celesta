@@ -33,7 +33,7 @@ public class CelestaParser implements CelestaParserConstants {
       "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
     t = jj_consume_token(S_CHAR_LITERAL);
                          g.setVersion(t.toString());
-    jj_consume_token(46);
+    jj_consume_token(45);
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -81,7 +81,7 @@ public class CelestaParser implements CelestaParserConstants {
         jj_consume_token(-1);
         throw new ParseException();
       }
-      jj_consume_token(46);
+      jj_consume_token(45);
     }
     jj_consume_token(0);
    g.completeParsing();
@@ -96,22 +96,22 @@ public class CelestaParser implements CelestaParserConstants {
     tableName = jj_consume_token(S_IDENTIFIER);
                                     table = new Table(g, tableName.toString());
                                     table.setCelestaDocLexem(doc);
-    jj_consume_token(47);
+    jj_consume_token(46);
     tableConstituent(table);
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 48:
+      case 47:
         ;
         break;
       default:
         jj_la1[5] = jj_gen;
         break label_2;
       }
-      jj_consume_token(48);
+      jj_consume_token(47);
       tableConstituent(table);
     }
-    jj_consume_token(49);
+    jj_consume_token(48);
           table.finalizePK();
   }
 
@@ -180,8 +180,8 @@ public class CelestaParser implements CelestaParserConstants {
         case K_DEFAULT:
           jj_consume_token(K_DEFAULT);
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 50:
-            jj_consume_token(50);
+          case 49:
+            jj_consume_token(49);
                                                          negative = true;
             break;
           default:
@@ -222,8 +222,8 @@ public class CelestaParser implements CelestaParserConstants {
       case K_DEFAULT:
         jj_consume_token(K_DEFAULT);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 50:
-          jj_consume_token(50);
+        case 49:
+          jj_consume_token(49);
                                      negative = true;
           break;
         default:
@@ -252,8 +252,8 @@ public class CelestaParser implements CelestaParserConstants {
       jj_consume_token(K_NVARCHAR);
                       column = new StringColumn(table, t.toString()); t = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 47:
-        jj_consume_token(47);
+      case 46:
+        jj_consume_token(46);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case S_INTEGER:
           length = jj_consume_token(S_INTEGER);
@@ -266,7 +266,7 @@ public class CelestaParser implements CelestaParserConstants {
           jj_consume_token(-1);
           throw new ParseException();
         }
-        jj_consume_token(49);
+        jj_consume_token(48);
         break;
       default:
         jj_la1[17] = jj_gen;
@@ -311,8 +311,8 @@ public class CelestaParser implements CelestaParserConstants {
           break;
         case K_GETDATE:
           t = jj_consume_token(K_GETDATE);
-          jj_consume_token(47);
-          jj_consume_token(49);
+          jj_consume_token(46);
+          jj_consume_token(48);
           break;
         default:
           jj_la1[20] = jj_gen;
@@ -419,24 +419,24 @@ public class CelestaParser implements CelestaParserConstants {
                               Token t;
     jj_consume_token(K_PRIMARY);
     jj_consume_token(K_KEY);
-    jj_consume_token(47);
+    jj_consume_token(46);
     t = jj_consume_token(S_IDENTIFIER);
                                               table.addPK(t.toString());
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 48:
+      case 47:
         ;
         break;
       default:
         jj_la1[29] = jj_gen;
         break label_3;
       }
-      jj_consume_token(48);
+      jj_consume_token(47);
       t = jj_consume_token(S_IDENTIFIER);
                                               table.addPK(t.toString());
     }
-    jj_consume_token(49);
+    jj_consume_token(48);
     table.finalizePK();
   }
 
@@ -446,24 +446,24 @@ public class CelestaParser implements CelestaParserConstants {
     jj_consume_token(K_FOREIGN);
     jj_consume_token(K_KEY);
                      fk = new ForeignKey(table);
-    jj_consume_token(47);
+    jj_consume_token(46);
     t = jj_consume_token(S_IDENTIFIER);
                            fk.addColumn(t.toString());
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 48:
+      case 47:
         ;
         break;
       default:
         jj_la1[30] = jj_gen;
         break label_4;
       }
-      jj_consume_token(48);
+      jj_consume_token(47);
       t = jj_consume_token(S_IDENTIFIER);
                            fk.addColumn(t.toString());
     }
-    jj_consume_token(49);
+    jj_consume_token(48);
     references(fk);
   {if (true) return fk;}
     throw new Error("Missing return statement in function");
@@ -476,8 +476,8 @@ public class CelestaParser implements CelestaParserConstants {
     jj_consume_token(K_REFERENCES);
     t = jj_consume_token(S_IDENTIFIER);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 51:
-      jj_consume_token(51);
+    case 50:
+      jj_consume_token(50);
       t2 = jj_consume_token(S_IDENTIFIER);
       break;
     default:
@@ -488,24 +488,24 @@ public class CelestaParser implements CelestaParserConstants {
       fk.setReferencedTable("", t.toString());
         else
           fk.setReferencedTable(t.toString(), t2.toString());
-    jj_consume_token(47);
+    jj_consume_token(46);
     t = jj_consume_token(S_IDENTIFIER);
                           fk.addReferencedColumn(t.toString());
     label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 48:
+      case 47:
         ;
         break;
       default:
         jj_la1[32] = jj_gen;
         break label_5;
       }
-      jj_consume_token(48);
+      jj_consume_token(47);
       t = jj_consume_token(S_IDENTIFIER);
                            fk.addReferencedColumn(t.toString());
     }
-    jj_consume_token(49);
+    jj_consume_token(48);
  fk.finalizeReference();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_ON:
@@ -592,24 +592,24 @@ Index ind;
     tableName = jj_consume_token(S_IDENTIFIER);
     ind = new Index(g, tableName.toString(), indexName.toString());
     ind.setCelestaDocLexem(doc);
-    jj_consume_token(47);
+    jj_consume_token(46);
     columnName = jj_consume_token(S_IDENTIFIER);
                                     ind.addColumn(columnName.toString());
     label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 48:
+      case 47:
         ;
         break;
       default:
         jj_la1[38] = jj_gen;
         break label_6;
       }
-      jj_consume_token(48);
+      jj_consume_token(47);
       columnName = jj_consume_token(S_IDENTIFIER);
                                                                                                             ind.addColumn(columnName.toString());
     }
-    jj_consume_token(49);
+    jj_consume_token(48);
     ind.finalizeIndex();
   }
 
@@ -667,7 +667,7 @@ else {
       jj_la1_0 = new int[] {0x0,0x2000020,0x0,0xc0,0x2000020,0x0,0xc000,0x800c000,0x0,0x0,0x200,0x1100,0x1100,0x0,0x0,0x100,0x800,0x0,0x100,0x100,0x2000,0x100,0x0,0x100,0xf0000000,0x4000,0x8000,0x600,0x600,0x0,0x0,0x0,0x0,0x40000,0x40000,0x180000,0x40000,0x1a00000,0x0,0x8000000,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x800,0x800,0x800,0x0,0x800,0x10000,0x0,0x840,0x800,0x40000,0x0,0x0,0x0,0x40000,0xc,0x0,0x8,0x8000,0x0,0x0,0x200,0x0,0x208,0x0,0x3,0x0,0x0,0x0,0x0,0x10000,0x10000,0x80000,0x10000,0x0,0x0,0x0,0x0,0x0,0x10000,0x0,};
+      jj_la1_1 = new int[] {0x400,0x400,0x400,0x0,0x400,0x8000,0x0,0x440,0x400,0x20000,0x0,0x0,0x0,0x20000,0xc,0x0,0x8,0x4000,0x0,0x0,0x100,0x0,0x108,0x0,0x3,0x0,0x0,0x0,0x0,0x8000,0x8000,0x40000,0x8000,0x0,0x0,0x0,0x0,0x0,0x8000,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -784,7 +784,7 @@ else {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[52];
+    boolean[] la1tokens = new boolean[51];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -801,7 +801,7 @@ else {
         }
       }
     }
-    for (int i = 0; i < 52; i++) {
+    for (int i = 0; i < 51; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

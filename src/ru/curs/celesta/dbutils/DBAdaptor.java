@@ -11,12 +11,13 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.Map.Entry;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
@@ -254,6 +255,7 @@ public abstract class DBAdaptor {
 		String def = tableDef(table);
 		Connection conn = ConnectionPool.get();
 		try {
+			// System.out.println(def); //for debug purposes
 			PreparedStatement stmt = conn.prepareStatement(def);
 			stmt.execute();
 			stmt.close();
@@ -412,7 +414,7 @@ public abstract class DBAdaptor {
 	 */
 	public Set<String> getColumns(Connection conn, Table t)
 			throws CelestaException {
-		Set<String> result = new HashSet<String>();
+		Set<String> result = new LinkedHashSet<>();
 		try {
 			DatabaseMetaData metaData = conn.getMetaData();
 			ResultSet rs = metaData.getColumns(null, t.getGrain().getName(),
@@ -445,9 +447,9 @@ public abstract class DBAdaptor {
 			if (whereClause.length() > 0)
 				whereClause.append(" and ");
 			if (e.getValue() instanceof SingleValue)
-				whereClause.append(String.format("(%s = ?)", e.getKey()));
+				whereClause.append(String.format("(\"%s\" = ?)", e.getKey()));
 			else if (e.getValue() instanceof Range)
-				whereClause.append(String.format("(%s between ? and ?)",
+				whereClause.append(String.format("(\"%s\" between ? and ?)",
 						e.getKey()));
 			else if (e.getValue() instanceof Filter)
 				throw new RuntimeException(NOT_IMPLEMENTED_YET);
@@ -554,14 +556,16 @@ public abstract class DBAdaptor {
 		}
 		sb.append(",\n");
 		// Определение первичного ключа (он у нас всегда присутствует)
-		sb.append(String.format("  constraint %s primary key (", table
+		sb.append(String.format("  constraint \"%s\" primary key (", table
 				.getPkConstraintName() == null ? "pk_" + table.getName()
 				: table.getPkConstraintName()));
 		multiple = false;
 		for (String s : table.getPrimaryKey().keySet()) {
 			if (multiple)
 				sb.append(", ");
+			sb.append('"');
 			sb.append(s);
+			sb.append('"');
 			multiple = true;
 		}
 		sb.append(")\n)");
@@ -584,7 +588,9 @@ public abstract class DBAdaptor {
 		for (String c : fields) {
 			if (sb.length() > 0)
 				sb.append(", ");
+			sb.append('"');
 			sb.append(c);
+			sb.append('"');
 		}
 		return sb.toString();
 	}
@@ -616,7 +622,7 @@ public abstract class DBAdaptor {
 	static String getRecordWhereClause(Table t) {
 		StringBuilder whereClause = new StringBuilder();
 		for (String fieldName : t.getPrimaryKey().keySet())
-			whereClause.append(String.format("%s(%s = ?)",
+			whereClause.append(String.format("%s(\"%s\" = ?)",
 					whereClause.length() > 0 ? " and " : "", fieldName));
 		return whereClause.toString();
 	}
