@@ -11,7 +11,9 @@ CREATE TABLE table1(
   bbb NVARCHAR(MAX),
   ccc IMAGE,
   e INT DEFAULT -112,
-  f REAL
+  f REAL,
+  f1 INT DEFAULT 4,
+  f2 REAL DEFAULT 5.5
   PRIMARY KEY (column1, c3, column2);
 );
 

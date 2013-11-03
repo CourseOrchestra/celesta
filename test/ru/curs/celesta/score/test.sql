@@ -11,7 +11,9 @@ CREATE TABLE table1 --single-line comment русские буквы
   bbb      NVARCHAR(MAX),
   ccc      IMAGE NULL,
   e        INT DEFAULT -112,
-  f        REAL
+  f        REAL,
+  f1       INT DEFAULT 4,
+  f2       REAL DEFAULT 5.5
 ) 
 /*
 multi-line comment

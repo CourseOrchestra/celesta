@@ -6,6 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -110,7 +112,9 @@ final class OraAdaptor extends DBAdaptor {
 				BinaryColumn ic = (BinaryColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
+					// Отрезаем 0x и закавычиваем
+					defaultStr = String.format(DEFAULT + "'%s'", ic
+							.getDefaultValue().substring(2));
 				}
 				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
 			}
@@ -130,7 +134,9 @@ final class OraAdaptor extends DBAdaptor {
 				if (ic.isGetdate()) {
 					defaultStr = DEFAULT + "sysdate";
 				} else if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
+					DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+					defaultStr = String.format(DEFAULT + "date '%s'",
+							df.format(ic.getDefaultValue()));
 				}
 				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
 			}
@@ -139,7 +145,7 @@ final class OraAdaptor extends DBAdaptor {
 
 			@Override
 			String dbFieldType() {
-				return "char(1)";
+				return "int";
 			}
 
 			@Override
@@ -147,10 +153,12 @@ final class OraAdaptor extends DBAdaptor {
 				BooleanColumn ic = (BooleanColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + "'"
-							+ (ic.getDefaultValue() ? 'Y' : 'N') + "'";
+					defaultStr = DEFAULT + (ic.getDefaultValue() ? "1" : "0");
 				}
-				return join(c.getName(), dbFieldType(), defaultStr, nullable(c));
+				String check = String.format("check (%s in (0, 1))",
+						c.getName());
+				return join(c.getName(), dbFieldType(), defaultStr,
+						nullable(c), check);
 			}
 		});
 	}
@@ -549,5 +557,11 @@ final class OraAdaptor extends DBAdaptor {
 		String sql = String.format("DROP INDEX " + tableTemplate(),
 				g.getName(), indexInfo.getIndexName());
 		return sql;
+	}
+
+	@Override
+	ColumnInfo getColumnInfo(Column c) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

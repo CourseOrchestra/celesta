@@ -170,7 +170,7 @@ void columnDefinition(Table table):
 	    )
     |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;} 
 	       nullable = nullable() 
-		  [<K_DEFAULT> ["-"] {negative = true;} (t = <S_INTEGER> | t = <S_DOUBLE>)])
+		  [<K_DEFAULT> ["-" {negative = true;}] (t = <S_INTEGER> | t = <S_DOUBLE>)])
     |  (<K_NVARCHAR> {column = new StringColumn(table, t.toString()); t = null; } 
 	          ["("  (length = <S_INTEGER> | length = <K_MAX>) ")"]  
 			  {((StringColumn) column).setLength(length.toString());}

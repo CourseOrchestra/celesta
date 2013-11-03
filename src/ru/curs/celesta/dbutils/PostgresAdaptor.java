@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -121,7 +123,10 @@ final class PostgresAdaptor extends DBAdaptor {
 				if (ic.isGetdate()) {
 					defaultStr = DEFAULT + "CURRENT_TIMESTAMP";
 				} else if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
+					DateFormat df = new SimpleDateFormat("yyyyMMdd");
+					defaultStr = String.format(DEFAULT + " '%s'",
+							df.format(ic.getDefaultValue()));
+
 				}
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}
@@ -359,6 +364,12 @@ final class PostgresAdaptor extends DBAdaptor {
 		String sql = String.format("DROP INDEX " + tableTemplate(),
 				g.getName(), indexInfo.getIndexName());
 		return sql;
+	}
+
+	@Override
+	ColumnInfo getColumnInfo(Column c) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

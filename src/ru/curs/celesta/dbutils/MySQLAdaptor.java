@@ -3,6 +3,8 @@ package ru.curs.celesta.dbutils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -125,7 +127,10 @@ final class MySQLAdaptor extends DBAdaptor {
 				if (ic.isGetdate()) {
 					defaultStr = DEFAULT + "CURRENT_TIMESTAMP";
 				} else if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
+					DateFormat df = new SimpleDateFormat("yyyyMMdd");
+					defaultStr = String.format(DEFAULT + " '%s'",
+							df.format(ic.getDefaultValue()));
+
 				}
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}
@@ -319,5 +324,11 @@ final class MySQLAdaptor extends DBAdaptor {
 						indexInfo.getIndexName(), g.getName(),
 						indexInfo.getTableName());
 		return sql;
+	}
+
+	@Override
+	ColumnInfo getColumnInfo(Column c) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

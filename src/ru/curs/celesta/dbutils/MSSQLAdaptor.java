@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -120,7 +122,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 				if (ic.isGetdate()) {
 					defaultStr = DEFAULT + "getdate()";
 				} else if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
+					DateFormat df = new SimpleDateFormat("yyyyMMdd");
+					defaultStr = String.format(DEFAULT + " '%s'",
+							df.format(ic.getDefaultValue()));
 				}
 				return join(c.getName(), dbFieldType(), nullable(c), defaultStr);
 			}
@@ -354,5 +358,11 @@ final class MSSQLAdaptor extends DBAdaptor {
 						indexInfo.getIndexName(), g.getName(),
 						indexInfo.getTableName());
 		return sql;
+	}
+
+	@Override
+	ColumnInfo getColumnInfo(Column c) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

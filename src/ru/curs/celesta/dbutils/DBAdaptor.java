@@ -64,6 +64,54 @@ public abstract class DBAdaptor {
 	}
 
 	/**
+	 * Celesta-тип колонки в базе данных.
+	 */
+	static enum DBColumnType {
+		INT, REAL, NVARCHAR, IMAGE, DATETIME, BIT, UNDEFINED;
+	}
+
+	/**
+	 * Данные о колонке в базе данных в виде, необходимом для Celesta.
+	 */
+	static final class ColumnInfo {
+		private String name;
+		private DBColumnType type;
+		private boolean isNullable;
+		private String defaultValue;
+		private int length;
+		private boolean isMax;
+		private boolean isIdentity;
+
+		String getName() {
+			return name;
+		}
+
+		DBColumnType getType() {
+			return type;
+		}
+
+		boolean isNullable() {
+			return isNullable;
+		}
+
+		String getDefaultValue() {
+			return defaultValue;
+		}
+
+		int getLength() {
+			return length;
+		}
+
+		boolean isMax() {
+			return isMax;
+		}
+
+		boolean isIdentity() {
+			return isIdentity;
+		}
+	}
+
+	/**
 	 * Проверка на валидность соединения.
 	 * 
 	 * @param conn
@@ -266,7 +314,7 @@ public abstract class DBAdaptor {
 	/**
 	 * Информация об индексе, полученная из метаданых базы данных.
 	 */
-	static class IndexInfo {
+	static final class IndexInfo {
 		private final String tableName;
 		private final String indexName;
 		private final int hash;
@@ -669,6 +717,7 @@ public abstract class DBAdaptor {
 
 	abstract String getDropIndexSQL(Grain g, IndexInfo indexInfo);
 
+	abstract ColumnInfo getColumnInfo(Column c);
 }
 
 /**

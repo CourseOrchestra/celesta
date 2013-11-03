@@ -1,8 +1,8 @@
 package ru.curs.celesta.dbutils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.sql.Connection;
@@ -22,7 +22,6 @@ import ru.curs.celesta.dbutils.DBAdaptor.IndexInfo;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
-import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.Table;
 
@@ -83,28 +82,20 @@ public abstract class AbstractAdaptorTest {
 		}
 	}
 
-	private int insertRow(Connection conn, Table t, Object val)
-			throws Exception {
+	private int insertRow(Connection conn, Table t, int val) throws Exception {
 		int count = t.getColumns().size();
-
-		boolean[] nullsMask = new boolean[count];
-		int i = 0;
-		for (Column c : t.getColumns().values()) {
-			nullsMask[i] = (c instanceof IntegerColumn)
-					&& ((IntegerColumn) c).isIdentity();
-			i++;
-		}
-
+		assertEquals(13, count);
+		boolean[] nullsMask = { true, false, false, false, true, false, true,
+				true, false, true, true, true, false };
+		BLOB b = new BLOB();
+		b.getOutStream().write(new byte[] { 1, 2, 3 });
+		Object[] rowData = { "ab", val, false, 1.1, "eee", b };
 		PreparedStatement pstmt = dba.getInsertRecordStatement(conn, t,
 				nullsMask);
 		assertNotNull(pstmt);
-		i = 1;
-		for (boolean n : nullsMask)
-			if (!n) {
-				DBAdaptor.setParam(pstmt, i, val);
-				i++;
-			}
-
+		int i = 1;
+		for (Object fieldVal : rowData)
+			DBAdaptor.setParam(pstmt, i++, fieldVal);
 		try {
 			int rowCount = pstmt.executeUpdate();
 			return rowCount;
@@ -162,14 +153,15 @@ public abstract class AbstractAdaptorTest {
 		try {
 			insertRow(conn, t, 1);
 			int count = t.getColumns().size();
-			boolean[] mask = new boolean[count];
+			assertEquals(13, count);
+			boolean[] mask = { true, true, false, true, true, true, true, true,
+					true, true, true, true, true };
+
 			PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t,
 					mask);
 			assertNotNull(pstmt);
-			for (int i = 2; i <= count; i++) {
-				DBAdaptor.setParam(pstmt, i - 1, 2);
-			}
-			DBAdaptor.setParam(pstmt, count, 1);// key value
+			DBAdaptor.setParam(pstmt, 1, 2); // field value
+			DBAdaptor.setParam(pstmt, 2, 1); // key value
 			int rowCount = pstmt.executeUpdate();
 			assertTrue(rowCount == 1);
 		} finally {

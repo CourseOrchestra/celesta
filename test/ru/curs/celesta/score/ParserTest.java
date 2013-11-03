@@ -113,6 +113,16 @@ public class ParserTest {
 		assertTrue(c.isNullable());
 		assertNull(((FloatingColumn) c).getDefaultvalue());
 
+		c = ic.next();
+		assertEquals("f1", c.getName());
+		assertEquals(Integer.valueOf(4),
+				Integer.valueOf(((IntegerColumn) c).getDefaultValue()));
+		c = ic.next();
+		assertEquals("f2", c.getName());
+		assertEquals(5.5,
+				((FloatingColumn) c).getDefaultvalue(), .00001);
+		
+
 		Map<String, Column> key = t.getPrimaryKey();
 		ic = key.values().iterator();
 		c = ic.next();

@@ -224,12 +224,12 @@ public class CelestaParser implements CelestaParserConstants {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case 50:
           jj_consume_token(50);
+                                     negative = true;
           break;
         default:
           jj_la1[13] = jj_gen;
           ;
         }
-                                      negative = true;
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case S_INTEGER:
           t = jj_consume_token(S_INTEGER);
