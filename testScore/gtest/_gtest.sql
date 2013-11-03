@@ -16,4 +16,4 @@ f10 image default 0xFFAAFFAAFF,
 f11 image not null
 );
 
-create index idxtest on test (attrInt);
+create index idxTest on test (attrInt);

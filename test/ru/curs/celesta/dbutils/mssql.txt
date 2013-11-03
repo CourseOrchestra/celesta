@@ -1,4 +1,4 @@
-create table celesta.grains(
+create table "celesta"."grains"(
   "id" nvarchar(16) not null,
   "version" nvarchar(max) not null,
   "length" int not null,

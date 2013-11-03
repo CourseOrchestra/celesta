@@ -136,7 +136,7 @@ public abstract class DBAdaptor {
 	 * Получить шаблон имени таблицы.
 	 */
 	public String tableTemplate() {
-		return "%s.%s";
+		return "\"%s\".\"%s\"";
 	}
 
 	/**
@@ -255,7 +255,7 @@ public abstract class DBAdaptor {
 		String def = tableDef(table);
 		Connection conn = ConnectionPool.get();
 		try {
-			// System.out.println(def); //for debug purposes
+			// System.out.println(def); // for debug purposes
 			PreparedStatement stmt = conn.prepareStatement(def);
 			stmt.execute();
 			stmt.close();

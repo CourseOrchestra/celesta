@@ -30,6 +30,7 @@ import ru.curs.celesta.score.Table;
  */
 final class MSSQLAdaptor extends DBAdaptor {
 
+	private static final String WHERE_S = " where %s;";
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
 		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
@@ -47,7 +48,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 				} else if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c),
+						defaultStr);
 			}
 		});
 
@@ -65,7 +67,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 				if (ic.getDefaultvalue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultvalue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c),
+						defaultStr);
 			}
 		});
 
@@ -86,7 +89,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 					defaultStr = DEFAULT
 							+ StringColumn.quoteString(ic.getDefaultValue());
 				}
-				return join(c.getQuotedName(), fieldType, nullable(c), defaultStr);
+				return join(c.getQuotedName(), fieldType, nullable(c),
+						defaultStr);
 			}
 		});
 
@@ -104,7 +108,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c),
+						defaultStr);
 			}
 		});
 
@@ -126,7 +131,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 					defaultStr = String.format(DEFAULT + " '%s'",
 							df.format(ic.getDefaultValue()));
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c),
+						defaultStr);
 			}
 		});
 
@@ -144,7 +150,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c),
+						defaultStr);
 			}
 		});
 	}
@@ -207,18 +214,18 @@ final class MSSQLAdaptor extends DBAdaptor {
 	PreparedStatement getOneFieldStatement(Connection conn, Column c)
 			throws CelestaException {
 		Table t = c.getParentTable();
-		String sql = String.format("select top 1 %s from %s.%s where %s;",
-				c.getQuotedName(), t.getGrain().getName(), t.getName(),
-				getRecordWhereClause(t));
+		String sql = String.format("select top 1 %s from " + tableTemplate()
+				+ WHERE_S, c.getQuotedName(), t.getGrain().getName(),
+				t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
 	PreparedStatement getOneRecordStatement(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format("select top 1 %s from %s.%s where %s;",
-				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
-				t.getName(), getRecordWhereClause(t));
+		String sql = String.format("select top 1 %s from " + tableTemplate()
+				+ WHERE_S, getTableFieldsListExceptBLOBs(t), t.getGrain()
+				.getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
@@ -264,9 +271,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 			fields.append(c);
 		}
 
-		String sql = String.format("insert %s.%s (%s) values (%s);", t
-				.getGrain().getName(), t.getName(), fields.toString(), params
-				.toString());
+		String sql = String.format("insert " + tableTemplate()
+				+ " (%s) values (%s);", t.getGrain().getName(), t.getName(),
+				fields.toString(), params.toString());
 		return prepareStatement(conn, sql);
 	}
 
@@ -293,8 +300,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 	@Override
 	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format("delete %s.%s where %s;", t.getGrain()
-				.getName(), t.getName(), getRecordWhereClause(t));
+		String sql = String.format("delete " + tableTemplate() + WHERE_S, t
+				.getGrain().getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
@@ -314,9 +321,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 		String whereClause = getWhereClause(filters);
 
 		// Готовим запрос на удаление
-		String sql = String.format("delete %s.%s %s;", t.getGrain().getName(),
-				t.getName(), whereClause.length() > 0 ? "where " + whereClause
-						: "");
+		String sql = String.format("delete " + tableTemplate() + " %s;", t
+				.getGrain().getName(), t.getName(),
+				whereClause.length() > 0 ? "where " + whereClause : "");
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
 			// А теперь заполняем параметры
@@ -346,7 +353,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	String getCreateIndexSQL(Index index) {
 		String fieldList = getFieldList(index.getColumns().keySet());
 		String sql = String.format("CREATE INDEX %s ON " + tableTemplate()
-				+ " (%s)", index.getName(), index.getTable().getGrain()
+				+ " (%s)", index.getQuotedName(), index.getTable().getGrain()
 				.getName(), index.getTable().getName(), fieldList);
 		return sql;
 	}

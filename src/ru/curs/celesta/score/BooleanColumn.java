@@ -45,11 +45,6 @@ public final class BooleanColumn extends Column {
 		return "getBoolean";
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ru.curs.celesta.score.Column#save(java.io.BufferedWriter)
-	 */
 	@Override
 	void save(BufferedWriter bw) throws IOException {
 		super.save(bw);

@@ -182,15 +182,12 @@ final class OraAdaptor extends DBAdaptor {
 			return false;
 		}
 		DatabaseMetaData metaData = conn.getMetaData();
-		String tableName = String.format(tableTemplate(), schema, name)
-				.toUpperCase();
+		String tableName = String.format("%s_%s", schema, name);
 		ResultSet rs = metaData.getTables(null, null, tableName,
 				new String[] { "TABLE" });
 		try {
 			if (rs.next()) {
-				// String tableSchem = rs.getString("TABLE_SCHEM");
 				String rTableName = rs.getString("TABLE_NAME");
-				// return schema.equals(tableSchem) && tableName.equals(name);
 				return tableName.equals(rTableName);
 			}
 			return false;
@@ -326,7 +323,7 @@ final class OraAdaptor extends DBAdaptor {
 		try {
 			for (Table t : g.getTables().values()) {
 				String tableName = String.format(tableTemplate(), g.getName(),
-						t.getName()).toUpperCase();
+						t.getName());
 				DatabaseMetaData metaData = conn.getMetaData();
 				ResultSet rs = metaData.getIndexInfo(null, null, tableName,
 						false, false);
@@ -337,10 +334,7 @@ final class OraAdaptor extends DBAdaptor {
 						// первичные ключи
 						if (indName != null && rs.getBoolean("NON_UNIQUE")) {
 							// Мы отрезаем "имягранулы_" от имени индекса.
-							indName = indName.toLowerCase(); // TODO: quote
-																// index name!!
-							String grainPrefix = g.getName().toLowerCase()
-									+ "_";
+							String grainPrefix = g.getName() + "_";
 							if (indName.startsWith(grainPrefix))
 								indName = indName.substring(grainPrefix
 										.length());
@@ -369,8 +363,8 @@ final class OraAdaptor extends DBAdaptor {
 			throws CelestaException {
 		Set<String> result = new LinkedHashSet<>();
 		try {
-			String tableName = String.format(tableTemplate(),
-					t.getGrain().getName(), t.getName()).toUpperCase();
+			String tableName = String.format("%s_%s", t.getGrain().getName(),
+					t.getName());
 			DatabaseMetaData metaData = conn.getMetaData();
 			ResultSet rs = metaData.getColumns(null, null, tableName, null);
 			try {
@@ -474,8 +468,8 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	private String getSequenceName(Table table, Column col) {
-		String sequenceName = String.format(tableTemplate() + "_%s", table
-				.getGrain().getName(), table.getName(), col.getName());
+		String sequenceName = String.format("\"%s_%s_%s\"", table.getGrain()
+				.getName(), table.getName(), col.getName());
 		return sequenceName;
 	}
 
@@ -526,7 +520,7 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	public String tableTemplate() {
-		return "%s_%s";
+		return "\"%s_%s\"";
 	}
 
 	@Override

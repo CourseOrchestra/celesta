@@ -233,12 +233,16 @@ public abstract class AbstractAdaptorTest {
 		Grain grain = score.getGrain(GRAIN_NAME);
 		Table t = grain.getTable("test");
 		dba.createTable(t);
-		Index i = grain.getIndices().get("idxtest");
+		Index i = grain.getIndices().get("idxTest");
 		dba.createIndex(i);
 		Connection conn = ConnectionPool.get();
 		try {
 			Map<IndexInfo, TreeMap<Short, String>> indicesSet = dba.getIndices(
 					conn, t.getGrain());
+			
+			// for (IndexInfo ii : indicesSet.keySet())
+			// System.out.println(ii.getIndexName());
+
 			assertNotNull(indicesSet);
 			assertEquals(1, indicesSet.size());
 			dba.dropIndex(grain,

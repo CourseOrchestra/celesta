@@ -48,7 +48,8 @@ final class PostgresAdaptor extends DBAdaptor {
 				} else if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c),
+						defaultStr);
 			}
 		});
 
@@ -66,7 +67,8 @@ final class PostgresAdaptor extends DBAdaptor {
 				if (ic.getDefaultvalue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultvalue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c),
+						defaultStr);
 			}
 		});
 
@@ -87,7 +89,8 @@ final class PostgresAdaptor extends DBAdaptor {
 					defaultStr = DEFAULT
 							+ StringColumn.quoteString(ic.getDefaultValue());
 				}
-				return join(c.getQuotedName(), fieldType, nullable(c), defaultStr);
+				return join(c.getQuotedName(), fieldType, nullable(c),
+						defaultStr);
 			}
 		});
 
@@ -105,7 +108,8 @@ final class PostgresAdaptor extends DBAdaptor {
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c),
+						defaultStr);
 			}
 		});
 
@@ -128,7 +132,8 @@ final class PostgresAdaptor extends DBAdaptor {
 							df.format(ic.getDefaultValue()));
 
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c),
+						defaultStr);
 			}
 		});
 
@@ -146,7 +151,8 @@ final class PostgresAdaptor extends DBAdaptor {
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c), defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c),
+						defaultStr);
 			}
 		});
 	}
@@ -213,18 +219,18 @@ final class PostgresAdaptor extends DBAdaptor {
 	PreparedStatement getOneFieldStatement(Connection conn, Column c)
 			throws CelestaException {
 		Table t = c.getParentTable();
-		String sql = String.format("select %s from %s.%s where %s limit 1;",
-				c.getQuotedName(), t.getGrain().getName(), t.getName(),
-				getRecordWhereClause(t));
+		String sql = String.format("select %s from " + tableTemplate()
+				+ " where %s limit 1;", c.getQuotedName(), t.getGrain()
+				.getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
 	PreparedStatement getOneRecordStatement(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format("select %s from %s.%s where %s limit 1;",
-				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
-				t.getName(), getRecordWhereClause(t));
+		String sql = String.format("select %s from " + tableTemplate()
+				+ " where %s limit 1;", getTableFieldsListExceptBLOBs(t), t
+				.getGrain().getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
@@ -292,9 +298,9 @@ final class PostgresAdaptor extends DBAdaptor {
 			fields.append(c);
 		}
 
-		String sql = String.format("insert %s.%s (%s) values (%s);", t
-				.getGrain().getName(), t.getName(), fields.toString(), params
-				.toString());
+		String sql = String.format("insert " + tableTemplate()
+				+ " (%s) values (%s);", t.getGrain().getName(), t.getName(),
+				fields.toString(), params.toString());
 		return prepareStatement(conn, sql);
 	}
 
@@ -313,9 +319,9 @@ final class PostgresAdaptor extends DBAdaptor {
 			i++;
 		}
 
-		String sql = String.format("update %s.%s set %s where %s;", t
-				.getGrain().getName(), t.getName(), setClause.toString(),
-				getRecordWhereClause(t));
+		String sql = String.format("update " + tableTemplate()
+				+ " set %s where %s;", t.getGrain().getName(), t.getName(),
+				setClause.toString(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 

@@ -276,7 +276,7 @@ public final class DBUpdator {
 				Iterator<String> i2 = metaIndexCols.iterator();
 				boolean equals = dbIndexCols.size() == metaIndexCols.size();
 				while (i1.hasNext() && equals) {
-					equals = i1.next().equalsIgnoreCase(i2.next()) && equals;
+					equals = i1.next().equals(i2.next()) && equals;
 				}
 				if (!equals) {
 					dba.dropIndex(g, indexInfo);
