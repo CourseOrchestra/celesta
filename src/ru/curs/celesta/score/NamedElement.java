@@ -16,21 +16,39 @@ import java.util.regex.Pattern;
 abstract class NamedElement {
 
 	private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/");
+	private static final Pattern NAME_PATTERN = Pattern
+			.compile("[a-zA-Z_][0-9a-zA-Z_]*");
 
 	private final String name;
+	private final String quotedName;
 
 	private String celestaDoc;
 
-	public NamedElement(String name) {
+	public NamedElement(String name) throws ParseException {
 		// Не должно быть name==null, т. к. все методы написаны исходя из того,
 		// что name != null.
 		if (name == null)
 			throw new IllegalArgumentException();
+		Matcher m = NAME_PATTERN.matcher(name);
+		if (!m.matches())
+			throw new ParseException(String.format("Invalid identifier: '%s'.",
+					name));
 		this.name = name;
+		this.quotedName = String.format("\"%s\"", name);
 	}
 
+	/**
+	 * Возвращает имя.
+	 */
 	public final String getName() {
 		return name;
+	}
+
+	/**
+	 * Возвращает имя в прямых кавычках ("ANSI quotes").
+	 */
+	public final String getQuotedName() {
+		return quotedName;
 	}
 
 	@Override

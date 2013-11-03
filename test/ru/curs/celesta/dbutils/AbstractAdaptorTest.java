@@ -117,10 +117,23 @@ public abstract class AbstractAdaptorTest {
 		Connection conn = ConnectionPool.get();
 		try {
 			int rowCount = insertRow(conn, t, 1);
-			assertTrue(rowCount == 1);
+			assertEquals(1, rowCount);
+			assertEquals(1, getCount(conn, t));
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
+		}
+	}
+
+	private int getCount(Connection conn, Table t) throws Exception {
+		PreparedStatement stmt = dba.getSetCountStatement(conn, t,
+				Collections.<String, AbstractFilter> emptyMap());
+		try {
+			ResultSet rs = stmt.executeQuery();
+			rs.next();
+			return rs.getInt(1);
+		} finally {
+			stmt.close();
 		}
 	}
 
@@ -130,20 +143,15 @@ public abstract class AbstractAdaptorTest {
 		dba.createTable(t);
 		Connection conn = ConnectionPool.get();
 		try {
-			PreparedStatement stmt = dba.getSetCountStatement(conn, t,
-					Collections.<String, AbstractFilter> emptyMap());
-			ResultSet rs = stmt.executeQuery();
-			rs.next();
-			assertEquals(0, rs.getInt(1));
-
+			int count = getCount(conn, t);
+			assertEquals(0, count);
 			insertRow(conn, t, 1);
 			insertRow(conn, t, 2);
 			insertRow(conn, t, 3);
-
-			rs = stmt.executeQuery();
-			rs.next();
-			assertEquals(3, rs.getInt(1));
-
+			count = getCount(conn, t);
+			assertEquals(3, count);
+			insertRow(conn, t, 10);
+			assertEquals(4, getCount(conn, t));
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
@@ -157,8 +165,9 @@ public abstract class AbstractAdaptorTest {
 		Connection conn = ConnectionPool.get();
 		try {
 			insertRow(conn, t, 1);
-			int count = t.getColumns().size();
-			assertEquals(13, count);
+			assertEquals(1, getCount(conn, t));
+
+			assertEquals(13, t.getColumns().size());
 			boolean[] mask = { true, true, false, true, true, true, true, true,
 					true, true, true, true, true };
 
@@ -168,7 +177,8 @@ public abstract class AbstractAdaptorTest {
 			DBAdaptor.setParam(pstmt, 1, 2); // field value
 			DBAdaptor.setParam(pstmt, 2, 1); // key value
 			int rowCount = pstmt.executeUpdate();
-			assertTrue(rowCount == 1);
+			assertEquals(1, rowCount);
+			assertEquals(1, getCount(conn, t));
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
@@ -182,11 +192,14 @@ public abstract class AbstractAdaptorTest {
 		Connection conn = ConnectionPool.get();
 		try {
 			insertRow(conn, t, 1);
+			insertRow(conn, t, 10);
+			assertEquals(2, getCount(conn, t));
 			PreparedStatement pstmt = dba.getDeleteRecordStatement(conn, t);
 			assertNotNull(pstmt);
 			DBAdaptor.setParam(pstmt, 1, 1);// key value
 			int rowCount = pstmt.executeUpdate();
-			assertTrue(rowCount == 1);
+			assertEquals(1, rowCount);
+			assertEquals(1, getCount(conn, t));
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
@@ -227,13 +240,13 @@ public abstract class AbstractAdaptorTest {
 			Map<IndexInfo, TreeMap<Short, String>> indicesSet = dba.getIndices(
 					conn, t.getGrain());
 			assertNotNull(indicesSet);
-			assertTrue(indicesSet.size() == 1);
+			assertEquals(1, indicesSet.size());
 			dba.dropIndex(grain,
 					new DBAdaptor.IndexInfo(t.getName(), i.getName()));
 
 			indicesSet = dba.getIndices(conn, t.getGrain());
 			assertNotNull(indicesSet);
-			assertTrue(indicesSet.size() == 0);
+			assertEquals(0, indicesSet.size());
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
@@ -246,14 +259,14 @@ public abstract class AbstractAdaptorTest {
 		dba.createTable(t);
 		Connection conn = ConnectionPool.get();
 		try {
-			insertRow(conn, t, 1);
+			insertRow(conn, t, 121215);
 			Column c = t.getColumns().get("attrInt");
 			PreparedStatement pstmt = dba.getOneFieldStatement(conn, c);
 			assertNotNull(pstmt);
 			DBAdaptor.setParam(pstmt, 1, 1);// key value
 			ResultSet rs = pstmt.executeQuery();
 			assertTrue(rs.next());
-			rs.getInt("attrInt");
+			assertEquals(121215, rs.getInt("attrInt"));
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
@@ -285,11 +298,14 @@ public abstract class AbstractAdaptorTest {
 		Connection conn = ConnectionPool.get();
 		try {
 			insertRow(conn, t, 1);
+			insertRow(conn, t, 1);
+			assertEquals(2, getCount(conn, t));
 			PreparedStatement pstmt = dba.deleteRecordSetStatement(conn, t,
 					Collections.<String, AbstractFilter> emptyMap());
 			assertNotNull(pstmt);
 			int rowCount = pstmt.executeUpdate();
-			assertTrue(rowCount == 1);
+			assertEquals(2, rowCount);
+			assertEquals(0, getCount(conn, t));
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
