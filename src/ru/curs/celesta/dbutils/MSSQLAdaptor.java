@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -195,7 +194,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 			rs.next();
 			if (rs.getInt(1) == -1) {
 				PreparedStatement create = conn.prepareStatement(String.format(
-						"create schema %s;", name));
+						"create schema \"%s\";", name));
 				create.execute();
 				create.close();
 			}
@@ -208,6 +207,11 @@ final class MSSQLAdaptor extends DBAdaptor {
 	@Override
 	ColumnDefiner getColumnDefiner(Column c) {
 		return TYPES_DICT.get(c.getClass());
+	}
+
+	@Override
+	ColumnDefiner getColumnDefiner(Class<?> c) {
+		return TYPES_DICT.get(c);
 	}
 
 	@Override
@@ -305,14 +309,14 @@ final class MSSQLAdaptor extends DBAdaptor {
 		return prepareStatement(conn, sql);
 	}
 
-	@Override
-	public Set<String> getColumns(Connection conn, Table t)
-			throws CelestaException {
-		String sql = String
-				.format("select name from sys.columns where object_id = OBJECT_ID('%s.%s');",
-						t.getGrain().getName(), t.getName());
-		return sqlToStringSet(conn, sql);
-	}
+	// @Override
+	// public Set<String> getColumns(Connection conn, Table t)
+	// throws CelestaException {
+	// String sql = String
+	// .format("select name from sys.columns where object_id = OBJECT_ID('%s.%s');",
+	// t.getGrain().getName(), t.getName());
+	// return sqlToStringSet(conn, sql);
+	// }
 
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
@@ -368,8 +372,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	ColumnInfo getColumnInfo(Column c) {
-		// TODO Auto-generated method stub
-		return null;
+	public ColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
+		ColumnInfo result = super.getColumnInfo(conn, c);
+		// TODO
+		return result;
 	}
 }

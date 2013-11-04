@@ -200,7 +200,7 @@ final class PostgresAdaptor extends DBAdaptor {
 		try {
 			if (!rs.next()) {
 				PreparedStatement create = conn.prepareStatement(String.format(
-						"create schema %s;", name));
+						"create schema \"%s\";", name));
 				create.execute();
 				create.close();
 			}
@@ -213,6 +213,11 @@ final class PostgresAdaptor extends DBAdaptor {
 	@Override
 	ColumnDefiner getColumnDefiner(Column c) {
 		return TYPES_DICT.get(c.getClass());
+	}
+	
+	@Override
+	ColumnDefiner getColumnDefiner(Class<?> c) {
+		return TYPES_DICT.get(c);
 	}
 
 	@Override
@@ -373,9 +378,10 @@ final class PostgresAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	ColumnInfo getColumnInfo(Column c) {
-		// TODO Auto-generated method stub
-		return null;
+	public ColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
+		ColumnInfo result = super.getColumnInfo(conn, c);
+		// TODO
+		return result;
 	}
 
 }

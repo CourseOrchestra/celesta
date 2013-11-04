@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.DBAdaptor.ColumnInfo;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -220,6 +221,11 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	ColumnDefiner getColumnDefiner(Column c) {
 		return TYPES_DICT.get(c.getClass());
+	}
+
+	@Override
+	ColumnDefiner getColumnDefiner(Class<?> c) {
+		return TYPES_DICT.get(c);
 	}
 
 	@Override
@@ -562,9 +568,41 @@ final class OraAdaptor extends DBAdaptor {
 		return sql;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	ColumnInfo getColumnInfo(Column c) {
-		// TODO Auto-generated method stub
-		return null;
+	public ColumnInfo getColumnInfo(Connection conn, Column c)
+			throws CelestaException {
+		try {
+			String tableName = String.format("%s_%s", c.getParentTable()
+					.getGrain().getName(), c.getParentTable().getName());
+			DatabaseMetaData metaData = conn.getMetaData();
+			ResultSet rs = metaData.getColumns(null, null, tableName,
+					c.getName());
+			
+			try {
+				if (rs.next()) {
+					ColumnInfo result = new ColumnInfo();
+					result.setName(rs.getString(COLUMN_NAME));
+					String typeName = rs.getString("TYPE_NAME");
+					for (Class<?> cc : COLUMN_CLASSES)
+						if (getColumnDefiner(cc).dbFieldType()
+								.equalsIgnoreCase(typeName)) {
+							result.setType((Class<? extends Column>) cc);
+							break;
+						}
+					result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
+					if (result.getType() == StringColumn.class)
+						result.setLength(rs.getInt("COLUMN_SIZE"));
+					return result;
+				} else {
+					return null;
+				}
+			} finally {
+				rs.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+
 	}
 }

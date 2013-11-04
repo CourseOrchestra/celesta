@@ -23,9 +23,14 @@ import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 
 /**
@@ -33,6 +38,7 @@ import ru.curs.celesta.score.Table;
  * 
  */
 public abstract class DBAdaptor {
+
 	/*
 	 * NB для программистов. Класс большой, во избежание хаоса здесь порядок
 	 * такой: прежде всего -- метод getAdaptor(), далее идут public final
@@ -40,6 +46,11 @@ public abstract class DBAdaptor {
 	 * методы), в самом низу -- все объявления абстрактных методов.
 	 */
 	static final String NOT_IMPLEMENTED_YET = "not implemented yet";
+
+	static final Class<?>[] COLUMN_CLASSES = { IntegerColumn.class,
+			StringColumn.class, BooleanColumn.class, FloatingColumn.class,
+			BinaryColumn.class, DateTimeColumn.class };
+	static final String COLUMN_NAME = "COLUMN_NAME";
 
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
@@ -65,20 +76,13 @@ public abstract class DBAdaptor {
 	}
 
 	/**
-	 * Celesta-тип колонки в базе данных.
-	 */
-	static enum DBColumnType {
-		INT, REAL, NVARCHAR, IMAGE, DATETIME, BIT, UNDEFINED;
-	}
-
-	/**
 	 * Данные о колонке в базе данных в виде, необходимом для Celesta.
 	 */
 	static final class ColumnInfo {
 		private String name;
-		private DBColumnType type;
+		private Class<? extends Column> type;
 		private boolean isNullable;
-		private String defaultValue;
+		private String defaultValue = "";
 		private int length;
 		private boolean isMax;
 		private boolean isIdentity;
@@ -87,7 +91,7 @@ public abstract class DBAdaptor {
 			return name;
 		}
 
-		DBColumnType getType() {
+		Class<? extends Column> getType() {
 			return type;
 		}
 
@@ -109,6 +113,34 @@ public abstract class DBAdaptor {
 
 		boolean isIdentity() {
 			return isIdentity;
+		}
+
+		void setName(String name) {
+			this.name = name;
+		}
+
+		void setType(Class<? extends Column> type) {
+			this.type = type;
+		}
+
+		void setNullable(boolean isNullable) {
+			this.isNullable = isNullable;
+		}
+
+		void setDefaultValue(String defaultValue) {
+			this.defaultValue = defaultValue;
+		}
+
+		void setLength(int length) {
+			this.length = length;
+		}
+
+		void setMax(boolean isMax) {
+			this.isMax = isMax;
+		}
+
+		void setIdentity(boolean isIdentity) {
+			this.isIdentity = isIdentity;
 		}
 	}
 
@@ -388,7 +420,7 @@ public abstract class DBAdaptor {
 								result.put(info, columns);
 							}
 							columns.put(rs.getShort("ORDINAL_POSITION"),
-									rs.getString("COLUMN_NAME"));
+									rs.getString(COLUMN_NAME));
 						}
 					}
 				} finally {
@@ -421,7 +453,7 @@ public abstract class DBAdaptor {
 					t.getName(), null);
 			try {
 				while (rs.next()) {
-					String rColumnName = rs.getString("COLUMN_NAME");
+					String rColumnName = rs.getString(COLUMN_NAME);
 					result.add(rColumnName);
 				}
 			} finally {
@@ -431,6 +463,52 @@ public abstract class DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 		return result;
+	}
+
+	/**
+	 * Возвращает информацию о столбце.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * 
+	 * @param c
+	 *            Столбец.
+	 * @throws CelestaException
+	 *             в случае сбоя связи с БД.
+	 */
+	@SuppressWarnings("unchecked")
+	public ColumnInfo getColumnInfo(Connection conn, Column c)
+			throws CelestaException {
+		try {
+			DatabaseMetaData metaData = conn.getMetaData();
+			ResultSet rs = metaData.getColumns(null, c.getParentTable()
+					.getGrain().getName(), c.getParentTable().getName(),
+					c.getName());
+			try {
+				if (rs.next()) {
+					ColumnInfo result = new ColumnInfo();
+					result.setName(rs.getString(COLUMN_NAME));
+					String typeName = rs.getString("TYPE_NAME");
+					for (Class<?> cc : COLUMN_CLASSES)
+						if (getColumnDefiner(cc).dbFieldType()
+								.equalsIgnoreCase(typeName)) {
+							result.setType((Class<? extends Column>) cc);
+							break;
+						}
+					result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
+					if (result.getType() == StringColumn.class)
+						result.setLength(rs.getInt("COLUMN_SIZE"));
+					return result;
+				} else {
+					return null;
+				}
+			} finally {
+				rs.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+
 	}
 
 	/**
@@ -685,6 +763,8 @@ public abstract class DBAdaptor {
 
 	abstract ColumnDefiner getColumnDefiner(Column c);
 
+	abstract ColumnDefiner getColumnDefiner(Class<?> c);
+
 	abstract boolean tableExists(Connection conn, String schema, String name)
 			throws SQLException;
 
@@ -723,7 +803,6 @@ public abstract class DBAdaptor {
 
 	abstract String getDropIndexSQL(Grain g, IndexInfo indexInfo);
 
-	abstract ColumnInfo getColumnInfo(Column c);
 }
 
 /**
