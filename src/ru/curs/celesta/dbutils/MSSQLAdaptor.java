@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -210,11 +211,6 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	ColumnDefiner getColumnDefiner(Class<?> c) {
-		return TYPES_DICT.get(c);
-	}
-
-	@Override
 	PreparedStatement getOneFieldStatement(Connection conn, Column c)
 			throws CelestaException {
 		Table t = c.getParentTable();
@@ -371,10 +367,56 @@ final class MSSQLAdaptor extends DBAdaptor {
 		return sql;
 	}
 
+	/**
+	 * Возвращает информацию о столбце.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * 
+	 * @param c
+	 *            Столбец.
+	 * @throws CelestaException
+	 *             в случае сбоя связи с БД.
+	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	public ColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
-		ColumnInfo result = super.getColumnInfo(conn, c);
-		// TODO
-		return result;
+	public ColumnInfo getColumnInfo(Connection conn, Column c)
+			throws CelestaException {
+		try {
+			DatabaseMetaData metaData = conn.getMetaData();
+			ResultSet rs = metaData.getColumns(null, c.getParentTable()
+					.getGrain().getName(), c.getParentTable().getName(),
+					c.getName());
+			try {
+				if (rs.next()) {
+					ColumnInfo result = new ColumnInfo();
+					result.setName(rs.getString(COLUMN_NAME));
+					String typeName = rs.getString("TYPE_NAME");
+					if ("int identity".equalsIgnoreCase(typeName)) {
+						result.setType(IntegerColumn.class);
+						result.setIdentity(true);
+					} else {
+						for (Class<?> cc : COLUMN_CLASSES)
+							if (TYPES_DICT.get(cc).dbFieldType()
+									.equalsIgnoreCase(typeName)) {
+								result.setType((Class<? extends Column>) cc);
+								break;
+							}
+					}
+					result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
+					if (result.getType() == StringColumn.class)
+						result.setLength(rs.getInt("COLUMN_SIZE"));
+					return result;
+				} else {
+					return null;
+				}
+			} finally {
+				rs.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+
 	}
+
 }

@@ -466,52 +466,6 @@ public abstract class DBAdaptor {
 	}
 
 	/**
-	 * Возвращает информацию о столбце.
-	 * 
-	 * @param conn
-	 *            Соединение с БД.
-	 * 
-	 * @param c
-	 *            Столбец.
-	 * @throws CelestaException
-	 *             в случае сбоя связи с БД.
-	 */
-	@SuppressWarnings("unchecked")
-	public ColumnInfo getColumnInfo(Connection conn, Column c)
-			throws CelestaException {
-		try {
-			DatabaseMetaData metaData = conn.getMetaData();
-			ResultSet rs = metaData.getColumns(null, c.getParentTable()
-					.getGrain().getName(), c.getParentTable().getName(),
-					c.getName());
-			try {
-				if (rs.next()) {
-					ColumnInfo result = new ColumnInfo();
-					result.setName(rs.getString(COLUMN_NAME));
-					String typeName = rs.getString("TYPE_NAME");
-					for (Class<?> cc : COLUMN_CLASSES)
-						if (getColumnDefiner(cc).dbFieldType()
-								.equalsIgnoreCase(typeName)) {
-							result.setType((Class<? extends Column>) cc);
-							break;
-						}
-					result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
-					if (result.getType() == StringColumn.class)
-						result.setLength(rs.getInt("COLUMN_SIZE"));
-					return result;
-				} else {
-					return null;
-				}
-			} finally {
-				rs.close();
-			}
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-
-	}
-
-	/**
 	 * Возвращает условие where на таблице, исходя из текущих фильтров.
 	 * 
 	 * @param filters
@@ -763,8 +717,6 @@ public abstract class DBAdaptor {
 
 	abstract ColumnDefiner getColumnDefiner(Column c);
 
-	abstract ColumnDefiner getColumnDefiner(Class<?> c);
-
 	abstract boolean tableExists(Connection conn, String schema, String name)
 			throws SQLException;
 
@@ -802,6 +754,20 @@ public abstract class DBAdaptor {
 	abstract String getCreateIndexSQL(Index index);
 
 	abstract String getDropIndexSQL(Grain g, IndexInfo indexInfo);
+
+	/**
+	 * Возвращает информацию о столбце.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * 
+	 * @param c
+	 *            Столбец.
+	 * @throws CelestaException
+	 *             в случае сбоя связи с БД.
+	 */
+	abstract ColumnInfo getColumnInfo(Connection conn, Column c)
+			throws CelestaException;
 
 }
 

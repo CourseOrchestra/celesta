@@ -9,15 +9,17 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.DBAdaptor.ColumnInfo;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -33,6 +35,8 @@ import ru.curs.celesta.score.Table;
  * Адаптер Oracle Database.
  */
 final class OraAdaptor extends DBAdaptor {
+	private static final Pattern BOOLEAN_CHECK = Pattern
+			.compile("\"([^\"]+)\" *[iI][nN] *\\( *0 *, *1 *\\)");
 
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
@@ -224,11 +228,6 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	ColumnDefiner getColumnDefiner(Class<?> c) {
-		return TYPES_DICT.get(c);
-	}
-
-	@Override
 	PreparedStatement getOneFieldStatement(Connection conn, Column c)
 			throws CelestaException {
 		Table t = c.getParentTable();
@@ -262,7 +261,6 @@ final class OraAdaptor extends DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
-
 	}
 
 	@Override
@@ -573,23 +571,52 @@ final class OraAdaptor extends DBAdaptor {
 	public ColumnInfo getColumnInfo(Connection conn, Column c)
 			throws CelestaException {
 		try {
+			// В Oracle булевские столбцы имеют тот же тип данных,
+			// что и INT-столбцы, поэтому их приходится отрабатывать отдельно,
+			// просатривая, есть ли на них ограничение CHECK.
+			Set<String> boolColumns = new HashSet<>();
+			ResultSet rs;
+			PreparedStatement checkForBool = conn
+					.prepareStatement(String
+							.format("SELECT SEARCH_CONDITION FROM ALL_CONSTRAINTS WHERE "
+									+ "OWNER = sys_context('userenv','session_user')"
+									+ " AND TABLE_NAME = '%s_%s'"
+									+ "AND CONSTRAINT_TYPE = 'C'", c
+									.getParentTable().getGrain().getName(), c
+									.getParentTable().getName()));
+			try {
+				rs = checkForBool.executeQuery();
+				while (rs.next()) {
+					Matcher m = BOOLEAN_CHECK.matcher(rs.getString(1));
+					if (m.find())
+						boolColumns.add(m.group(1));
+				}
+			} finally {
+				checkForBool.close();
+
+			}
 			String tableName = String.format("%s_%s", c.getParentTable()
 					.getGrain().getName(), c.getParentTable().getName());
 			DatabaseMetaData metaData = conn.getMetaData();
-			ResultSet rs = metaData.getColumns(null, null, tableName,
-					c.getName());
-			
+			rs = metaData.getColumns(null, null, tableName, c.getName());
 			try {
 				if (rs.next()) {
 					ColumnInfo result = new ColumnInfo();
 					result.setName(rs.getString(COLUMN_NAME));
 					String typeName = rs.getString("TYPE_NAME");
-					for (Class<?> cc : COLUMN_CLASSES)
-						if (getColumnDefiner(cc).dbFieldType()
-								.equalsIgnoreCase(typeName)) {
-							result.setType((Class<? extends Column>) cc);
-							break;
-						}
+					if ("float".equalsIgnoreCase(typeName))
+						result.setType(FloatingColumn.class);
+					else {
+						for (Class<?> cc : COLUMN_CLASSES)
+							if (TYPES_DICT.get(cc).dbFieldType()
+									.equalsIgnoreCase(typeName)) {
+								result.setType((Class<? extends Column>) cc);
+								break;
+							}
+						if (IntegerColumn.class == result.getType()
+								&& boolColumns.contains(c.getName()))
+							result.setType(BooleanColumn.class);
+					}
 					result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
 					if (result.getType() == StringColumn.class)
 						result.setLength(rs.getInt("COLUMN_SIZE"));

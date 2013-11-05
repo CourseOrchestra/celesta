@@ -184,11 +184,6 @@ final class MySQLAdaptor extends DBAdaptor {
 	ColumnDefiner getColumnDefiner(Column c) {
 		return TYPES_DICT.get(c.getClass());
 	}
-	
-	@Override
-	ColumnDefiner getColumnDefiner(Class<?> c) {
-		return TYPES_DICT.get(c);
-	}
 
 	@Override
 	PreparedStatement getOneFieldStatement(Connection conn, Column c)
@@ -338,9 +333,10 @@ final class MySQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public ColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
-		ColumnInfo result = super.getColumnInfo(conn, c);
-		//TODO
+	public ColumnInfo getColumnInfo(Connection conn, Column c)
+			throws CelestaException {
+		ColumnInfo result = new ColumnInfo();
+		// TODO
 		return result;
 	}
 }
