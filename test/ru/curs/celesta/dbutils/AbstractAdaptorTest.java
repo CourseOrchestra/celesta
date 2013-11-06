@@ -57,12 +57,21 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
+	public void isValidConnection() throws Exception {
+		Connection conn = ConnectionPool.get();
+		assertTrue(dba.isValidConnection(conn, 0));
+	}
+
+	@Test
 	public void tableExists() throws Exception {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-		dba.createTable(t);
+
 		try {
 			boolean result = dba.tableExists(t.getGrain().getName(),
 					t.getName());
+			assertFalse(result);
+			dba.createTable(t);
+			result = dba.tableExists(t.getGrain().getName(), t.getName());
 			assertTrue(result);
 		} finally {
 			dba.dropTable(t);

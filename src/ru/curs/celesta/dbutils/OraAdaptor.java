@@ -9,7 +9,6 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -35,6 +34,8 @@ import ru.curs.celesta.score.Table;
  * Адаптер Oracle Database.
  */
 final class OraAdaptor extends DBAdaptor {
+	private static final int LENGTHFORMAX = 4000;
+
 	private static final Pattern BOOLEAN_CHECK = Pattern
 			.compile("\"([^\"]+)\" *[iI][nN] *\\( *0 *, *1 *\\)");
 
@@ -94,8 +95,11 @@ final class OraAdaptor extends DBAdaptor {
 				StringColumn ic = (StringColumn) c;
 				// See
 				// http://stackoverflow.com/questions/414817/what-is-the-equivalent-of-varcharmax-in-oracle
-				String fieldType = String.format("%s(%s)", dbFieldType(),
-						ic.isMax() ? "4000" : ic.getLength());
+				String fieldType = String.format(
+						"%s(%s)",
+						dbFieldType(),
+						ic.isMax() ? Integer.toString(LENGTHFORMAX) : ic
+								.getLength());
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT
@@ -566,45 +570,71 @@ final class OraAdaptor extends DBAdaptor {
 		return sql;
 	}
 
+	private boolean checkForBoolean(Connection conn, Column c)
+			throws SQLException {
+		PreparedStatement checkForBool = conn.prepareStatement(String.format(
+				"SELECT SEARCH_CONDITION FROM ALL_CONSTRAINTS WHERE "
+						+ "OWNER = sys_context('userenv','session_user')"
+						+ " AND TABLE_NAME = '%s_%s'"
+						+ "AND CONSTRAINT_TYPE = 'C'", c.getParentTable()
+						.getGrain().getName(), c.getParentTable().getName()));
+		try {
+			ResultSet rs = checkForBool.executeQuery();
+			while (rs.next()) {
+				Matcher m = BOOLEAN_CHECK.matcher(rs.getString(1));
+				if (m.find() && m.group(1).equals(c.getName()))
+					return true;
+			}
+		} finally {
+			checkForBool.close();
+		}
+		return false;
+
+	}
+
+	private boolean checkForIncrementTrigger(Connection conn, Column c)
+			throws SQLException {
+		PreparedStatement checkForTrigger = conn
+				.prepareStatement(String
+						.format("select TRIGGER_BODY  from all_triggers where owner = sys_context('userenv','session_user') "
+								+ "and table_name = '%s_%s' and trigger_name = '%s_%s_%s' and triggering_event = 'INSERT'",
+								c.getParentTable().getGrain().getName(), c
+										.getParentTable().getName(), c
+										.getParentTable().getGrain().getName(),
+								c.getParentTable().getName(), c.getName()));
+		try {
+			ResultSet rs = checkForTrigger.executeQuery();
+			if (rs.next()) {
+				String body = rs.getString(1);
+				if (body != null && body.contains(".NEXTVAL"))
+					return true;
+			}
+		} finally {
+			checkForTrigger.close();
+		}
+		return false;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public ColumnInfo getColumnInfo(Connection conn, Column c)
 			throws CelestaException {
 		try {
-			// В Oracle булевские столбцы имеют тот же тип данных,
-			// что и INT-столбцы, поэтому их приходится отрабатывать отдельно,
-			// просатривая, есть ли на них ограничение CHECK.
-			Set<String> boolColumns = new HashSet<>();
-			ResultSet rs;
-			PreparedStatement checkForBool = conn
-					.prepareStatement(String
-							.format("SELECT SEARCH_CONDITION FROM ALL_CONSTRAINTS WHERE "
-									+ "OWNER = sys_context('userenv','session_user')"
-									+ " AND TABLE_NAME = '%s_%s'"
-									+ "AND CONSTRAINT_TYPE = 'C'", c
-									.getParentTable().getGrain().getName(), c
-									.getParentTable().getName()));
-			try {
-				rs = checkForBool.executeQuery();
-				while (rs.next()) {
-					Matcher m = BOOLEAN_CHECK.matcher(rs.getString(1));
-					if (m.find())
-						boolColumns.add(m.group(1));
-				}
-			} finally {
-				checkForBool.close();
-
-			}
 			String tableName = String.format("%s_%s", c.getParentTable()
 					.getGrain().getName(), c.getParentTable().getName());
 			DatabaseMetaData metaData = conn.getMetaData();
-			rs = metaData.getColumns(null, null, tableName, c.getName());
+			ResultSet rs = metaData.getColumns(null, null, tableName,
+					c.getName());
+			ColumnInfo result;
 			try {
 				if (rs.next()) {
-					ColumnInfo result = new ColumnInfo();
+					result = new ColumnInfo();
 					result.setName(rs.getString(COLUMN_NAME));
 					String typeName = rs.getString("TYPE_NAME");
-					if ("float".equalsIgnoreCase(typeName))
+
+					if (typeName.startsWith("TIMESTAMP")) {
+						result.setType(DateTimeColumn.class);
+					} else if ("float".equalsIgnoreCase(typeName))
 						result.setType(FloatingColumn.class);
 					else {
 						for (Class<?> cc : COLUMN_CLASSES)
@@ -613,20 +643,58 @@ final class OraAdaptor extends DBAdaptor {
 								result.setType((Class<? extends Column>) cc);
 								break;
 							}
-						if (IntegerColumn.class == result.getType()
-								&& boolColumns.contains(c.getName()))
+					}
+					if (IntegerColumn.class == result.getType()) {
+						// В Oracle булевские столбцы имеют тот же тип данных,
+						// что и INT-столбцы: просматриваем, есть ли на них
+						// ограничение CHECK.
+						if (checkForBoolean(conn, c))
 							result.setType(BooleanColumn.class);
+						// В Oracle признак IDENTITY имитируется триггером.
+						// Просматриваем, есть ли на поле триггер, обладающий
+						// признаками того, что это -- созданный Celesta
+						// системный триггер.
+						else if (checkForIncrementTrigger(conn, c))
+							result.setIdentity(true);
 					}
 					result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
-					if (result.getType() == StringColumn.class)
+					if (result.getType() == StringColumn.class) {
 						result.setLength(rs.getInt("COLUMN_SIZE"));
-					return result;
+						result.setMax(result.getLength() >= LENGTHFORMAX);
+					}
+
 				} else {
 					return null;
 				}
 			} finally {
 				rs.close();
 			}
+			// В Oracle JDBC не работает штатное поле для значения DEFAULT
+			// ("COLUMN_DEF"),
+			// поэтому извлекаем его самостоятельно.
+			PreparedStatement getDefault = conn
+					.prepareStatement(String
+							.format("select DATA_DEFAULT from DBA_TAB_COLUMNS where "
+									+ "owner = sys_context('userenv','session_user') "
+									+ "and TABLE_NAME = '%s_%s' and COLUMN_NAME = '%s'",
+									c.getParentTable().getGrain().getName(), c
+											.getParentTable().getName(), c
+											.getName()));
+			try {
+				rs = getDefault.executeQuery();
+				if (rs.next()) {
+					String body = rs.getString(1);
+					if (body != null) {
+						if (BooleanColumn.class == result.getType())
+							body = "0".equals(body) ? "'FALSE'" : "'TRUE'";
+						body = body.trim();
+						result.setDefaultValue(body);
+					}
+				}
+			} finally {
+				getDefault.close();
+			}
+			return result;
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}

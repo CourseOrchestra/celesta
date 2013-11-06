@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -31,6 +33,9 @@ import ru.curs.celesta.score.Table;
 final class MSSQLAdaptor extends DBAdaptor {
 
 	private static final String WHERE_S = " where %s;";
+	// Паттерн, "раздевающий" default-значение от внешних скобок
+	private static final Pattern MSSQLDEFAULT = Pattern
+			.compile("\\(*([^)]*)\\)*");
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
 		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
@@ -367,6 +372,26 @@ final class MSSQLAdaptor extends DBAdaptor {
 		return sql;
 	}
 
+	private boolean checkIfVarcharMax(Connection conn, Column c)
+			throws SQLException {
+		PreparedStatement checkForMax = conn.prepareStatement(String.format(
+				"select max_length from sys.columns where "
+						+ "object_id  = OBJECT_ID('%s.%s') and name = '%s'", c
+						.getParentTable().getGrain().getName(), c
+						.getParentTable().getName(), c.getName()));
+		try {
+			ResultSet rs = checkForMax.executeQuery();
+			if (rs.next()) {
+				int len = rs.getInt(1);
+				return len == -1;
+			}
+		} finally {
+			checkForMax.close();
+		}
+		return false;
+
+	}
+
 	/**
 	 * Возвращает информацию о столбце.
 	 * 
@@ -404,8 +429,19 @@ final class MSSQLAdaptor extends DBAdaptor {
 							}
 					}
 					result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
-					if (result.getType() == StringColumn.class)
+					if (result.getType() == StringColumn.class) {
 						result.setLength(rs.getInt("COLUMN_SIZE"));
+						result.setMax(checkIfVarcharMax(conn, c));
+					}
+					String defaultBody = rs.getString("COLUMN_DEF");
+					if (defaultBody != null) {
+						Matcher m = MSSQLDEFAULT.matcher(defaultBody);
+						m.find();
+						defaultBody = m.group(1);
+						if (BooleanColumn.class == result.getType())
+							defaultBody = defaultBody.toUpperCase();
+						result.setDefaultValue(defaultBody);
+					}
 					return result;
 				} else {
 					return null;
