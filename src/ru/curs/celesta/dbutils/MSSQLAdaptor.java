@@ -11,8 +11,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -33,9 +31,6 @@ import ru.curs.celesta.score.Table;
 final class MSSQLAdaptor extends DBAdaptor {
 
 	private static final String WHERE_S = " where %s;";
-	// Паттерн, "раздевающий" default-значение от внешних скобок
-	private static final Pattern MSSQLDEFAULT = Pattern
-			.compile("\\(*([^)]*)\\)*");
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
 		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
@@ -435,10 +430,17 @@ final class MSSQLAdaptor extends DBAdaptor {
 					}
 					String defaultBody = rs.getString("COLUMN_DEF");
 					if (defaultBody != null) {
-						Matcher m = MSSQLDEFAULT.matcher(defaultBody);
-						m.find();
-						defaultBody = m.group(1);
-						if (BooleanColumn.class == result.getType())
+						int i = 0;
+						// Снимаем наружные скобки
+						while (defaultBody.charAt(i) == '('
+								&& defaultBody.charAt(defaultBody.length() - i
+										- 1) == ')') {
+							i++;
+						}
+						defaultBody = defaultBody.substring(i,
+								defaultBody.length() - i);
+						if (BooleanColumn.class == result.getType()
+								|| DateTimeColumn.class == result.getType())
 							defaultBody = defaultBody.toUpperCase();
 						result.setDefaultValue(defaultBody);
 					}
@@ -454,5 +456,4 @@ final class MSSQLAdaptor extends DBAdaptor {
 		}
 
 	}
-
 }

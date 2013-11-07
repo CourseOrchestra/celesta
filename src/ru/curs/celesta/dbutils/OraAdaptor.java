@@ -38,6 +38,9 @@ final class OraAdaptor extends DBAdaptor {
 
 	private static final Pattern BOOLEAN_CHECK = Pattern
 			.compile("\"([^\"]+)\" *[iI][nN] *\\( *0 *, *1 *\\)");
+	private static final Pattern DATE_PATTERN = Pattern
+			.compile("'(\\d\\d\\d\\d)-([01]\\d)-([0123]\\d)'");
+	private static final Pattern HEX_STRING = Pattern.compile("'([0-9A-F]+)'");
 
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
@@ -672,32 +675,53 @@ final class OraAdaptor extends DBAdaptor {
 			// В Oracle JDBC не работает штатное поле для значения DEFAULT
 			// ("COLUMN_DEF"),
 			// поэтому извлекаем его самостоятельно.
-			PreparedStatement getDefault = conn
-					.prepareStatement(String
-							.format("select DATA_DEFAULT from DBA_TAB_COLUMNS where "
-									+ "owner = sys_context('userenv','session_user') "
-									+ "and TABLE_NAME = '%s_%s' and COLUMN_NAME = '%s'",
-									c.getParentTable().getGrain().getName(), c
-											.getParentTable().getName(), c
-											.getName()));
-			try {
-				rs = getDefault.executeQuery();
-				if (rs.next()) {
-					String body = rs.getString(1);
-					if (body != null) {
-						if (BooleanColumn.class == result.getType())
-							body = "0".equals(body) ? "'FALSE'" : "'TRUE'";
-						body = body.trim();
-						result.setDefaultValue(body);
-					}
-				}
-			} finally {
-				getDefault.close();
-			}
+			processDefaults(conn, c, result);
 			return result;
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
 
+	}
+
+	private void processDefaults(Connection conn, Column c, ColumnInfo result)
+			throws SQLException {
+		ResultSet rs;
+		PreparedStatement getDefault = conn.prepareStatement(String.format(
+				"select DATA_DEFAULT from DBA_TAB_COLUMNS where "
+						+ "owner = sys_context('userenv','session_user') "
+						+ "and TABLE_NAME = '%s_%s' and COLUMN_NAME = '%s'", c
+						.getParentTable().getGrain().getName(), c
+						.getParentTable().getName(), c.getName()));
+		try {
+			rs = getDefault.executeQuery();
+			if (!rs.next())
+				return;
+			String body = rs.getString(1);
+			if (body == null)
+				return;
+
+			if (BooleanColumn.class == result.getType())
+				body = "0".equals(body) ? "'FALSE'" : "'TRUE'";
+			else if (DateTimeColumn.class == result.getType()) {
+				if (body.toLowerCase().contains("sysdate"))
+					body = "GETDATE()";
+				else {
+					Matcher m = DATE_PATTERN.matcher(body);
+					if (m.find())
+						body = String.format("'%s%s%s'", m.group(1),
+								m.group(2), m.group(3));
+				}
+			} else if (BinaryColumn.class == result.getType()) {
+				Matcher m = HEX_STRING.matcher(body);
+				if (m.find())
+					body = "0x" + m.group(1);
+			} else {
+				body = body.trim();
+			}
+			result.setDefaultValue(body);
+
+		} finally {
+			getDefault.close();
+		}
 	}
 }
