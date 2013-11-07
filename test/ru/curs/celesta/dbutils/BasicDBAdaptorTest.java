@@ -12,16 +12,17 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 
-public class DBAdaptorTest {
+public class BasicDBAdaptorTest {
 
 	private void testCelestaScore(Score s, DBAdaptor a, String fileName)
 			throws ParseException, IOException {
-		String[] actual = a.tableDef(s.getGrain("celesta").getTable("grains"))
+		String[] actual = (a.tableDef(s.getGrain("celesta").getTable("grains"))
+				+ "\n" + a.tableDef(s.getGrain("celesta").getTable("tables")))
 				.split("\n");
 		// for (String l : actual)
 		// System.out.println(l);
 		BufferedReader r = new BufferedReader(new InputStreamReader(
-				DBAdaptorTest.class.getResourceAsStream(fileName), "utf-8"));
+				BasicDBAdaptorTest.class.getResourceAsStream(fileName), "utf-8"));
 		for (String l : actual)
 			assertEquals(r.readLine(), l);
 	}

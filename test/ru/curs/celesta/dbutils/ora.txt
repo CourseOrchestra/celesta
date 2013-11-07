@@ -8,3 +8,9 @@ create table "celesta_grains"(
   "message" varchar2(4000) default '',
   constraint "pk_grains" primary key ("id")
 )
+create table "celesta_tables"(
+  "grainid" varchar2(16) not null,
+  "tablename" varchar2(100) not null,
+  "orphaned" int default 0 not null check ("orphaned" in (0, 1)),
+  constraint "pk_tables" primary key ("grainid", "tablename")
+)
