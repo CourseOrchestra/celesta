@@ -142,6 +142,57 @@ public abstract class DBAdaptor {
 		void setIdentity(boolean isIdentity) {
 			this.isIdentity = isIdentity;
 		}
+
+		boolean reflects(Column value) {
+			// TODO Auto-generated method stub
+			System.out.println("Implement column check here.");
+
+			boolean result = value.getClass() == type
+					&& value.isNullable() == isNullable;
+
+			// Если тип или nullability не совпадают -- дальше проверять нет
+			// смысла
+			if (!result)
+				return false;
+
+			// Теперь проверяем для каждого типа отдельно
+			if (type == BooleanColumn.class) {
+				BooleanColumn col = (BooleanColumn) value;
+				if ("'TRUE'".equals(defaultValue)) {
+					result &= Boolean.TRUE.equals(col.getDefaultValue());
+				} else if ("'FALSE'".equals(defaultValue)) {
+					result &= Boolean.FALSE.equals(col.getDefaultValue());
+				} else {
+					result &= col.getDefaultValue() == null;
+				}
+			} else if (type == IntegerColumn.class) {
+				IntegerColumn col = (IntegerColumn) value;
+				result &= isIdentity == col.isIdentity()
+						&& defaultValue.isEmpty() ? col.getDefaultValue() == null
+						: col.getDefaultValue().equals(
+								Integer.parseInt(defaultValue));
+			} else if (type == FloatingColumn.class) {
+				FloatingColumn col = (FloatingColumn) value;
+				result &= defaultValue.isEmpty() ? col.getDefaultvalue() == null
+						: col.getDefaultvalue().equals(
+								Double.parseDouble(defaultValue));
+			} else if (type == StringColumn.class) {
+				StringColumn col = (StringColumn) value;
+				result &= isMax ? col.isMax()
+						: length == col.getLength() && defaultValue.isEmpty() ? col
+								.getDefaultValue() == null : col
+								.getDefaultValue().equals(defaultValue);
+
+			} else if (type == DateTimeColumn.class) {
+				DateTimeColumn col = (DateTimeColumn) value;
+
+			} else if (type == BinaryColumn.class) {
+				BinaryColumn col = (BinaryColumn) value;
+			}
+
+			return true;
+
+		}
 	}
 
 	/**
@@ -343,6 +394,23 @@ public abstract class DBAdaptor {
 			throw new CelestaException("creating %s.%s: %s", c.getParentTable()
 					.getName(), c.getName(), e.getMessage());
 		}
+	}
+
+	/**
+	 * Обновляет на таблице колонку.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * 
+	 * @param c
+	 *            Колонка для обновления.
+	 * @throws CelestaException
+	 *             при ошибке обновления колонки.
+	 */
+	public final void updateColumn(Connection conn, Column c)
+			throws CelestaException {
+		// TODO Auto-generated method stub
+		System.out.println("Implement column update here.");
 	}
 
 	/**

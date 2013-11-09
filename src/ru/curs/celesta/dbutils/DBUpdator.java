@@ -293,14 +293,18 @@ public final class DBUpdator {
 		if (dba.tableExists(t.getGrain().getName(), t.getName())) {
 			Set<String> dbColumns = dba.getColumns(grain.callContext()
 					.getConn(), t);
-
 			for (Entry<String, Column> e : t.getColumns().entrySet()) {
 				if (dbColumns.contains(e.getKey())) {
-					// TODO БД содержит колонку с таким именем, надо проверить
-					// все её атрибуты и при необходимости и возможности --
+					// Таблица содержит колонку с таким именем, надо проверить
+					// все её атрибуты и при необходимости -- попытаться
 					// обновить.
-					System.out.println("Implement column check here.");
+					DBAdaptor.ColumnInfo ci = dba.getColumnInfo(grain
+							.callContext().getConn(), e.getValue());
+					if (!ci.reflects(e.getValue()))
+						dba.updateColumn(grain.callContext().getConn(),
+								e.getValue());
 				} else {
+					// Таблица не содержит колонку с таким именем, добавляем
 					dba.createColumn(grain.callContext().getConn(),
 							e.getValue());
 				}
@@ -308,6 +312,7 @@ public final class DBUpdator {
 		} else {
 			dba.createTable(t);
 		}
+		
 		// TODO обновление внешних ключей
 	}
 

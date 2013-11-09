@@ -12,8 +12,11 @@ create index aaidx on aa (idc, textvalue);
  * 
  * comment
  */
+ 
+/** описание таблицы */
 create table a (
 ida int identity not null primary key,
+/** описание поля*/
 descr nvarchar(2),
 parent int foreign key references a(ida), --ссылка на саму себя
 fff int foreign key references aa(idaa) --первая часть круговой ссылки
