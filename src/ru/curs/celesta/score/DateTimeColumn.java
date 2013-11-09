@@ -70,9 +70,7 @@ public final class DateTimeColumn extends Column {
 		return c.getTime();
 	}
 
-	/**
-	 * Значение по умолчанию.
-	 */
+	@Override
 	public Date getDefaultValue() {
 		return defaultvalue;
 	}

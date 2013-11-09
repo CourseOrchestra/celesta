@@ -20,10 +20,8 @@ public final class FloatingColumn extends Column {
 		defaultvalue = (lexvalue == null) ? null : Double.parseDouble(lexvalue);
 	}
 
-	/**
-	 * Возвращает значение по умолчанию.
-	 */
-	public Double getDefaultvalue() {
+	@Override
+	public Double getDefaultValue() {
 		return defaultvalue;
 	}
 
@@ -43,7 +41,7 @@ public final class FloatingColumn extends Column {
 		bw.write(" REAL");
 		if (!isNullable())
 			bw.write(" NOT NULL");
-		Double defaultVal = getDefaultvalue();
+		Double defaultVal = getDefaultValue();
 		if (defaultVal != null) {
 			bw.write(" DEFAULT ");
 			bw.write(defaultVal.toString());

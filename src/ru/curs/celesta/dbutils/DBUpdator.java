@@ -17,7 +17,6 @@ import java.util.TreeMap;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.DBAdaptor.IndexInfo;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
@@ -255,20 +254,20 @@ public final class DBUpdator {
 	}
 
 	private static void updateGrainIndices(Grain g) throws CelestaException {
-		Map<IndexInfo, TreeMap<Short, String>> dbIndices = dba.getIndices(grain
+		Map<DBIndexInfo, TreeMap<Short, String>> dbIndices = dba.getIndices(grain
 				.callContext().getConn(), g);
 		Map<String, Index> myIndices = g.getIndices();
 		// Начинаем с удаления ненужных
-		for (DBAdaptor.IndexInfo indexInfo : dbIndices.keySet())
-			if (!myIndices.containsKey(indexInfo.getIndexName()))
-				dba.dropIndex(g, indexInfo);
+		for (DBIndexInfo dBIndexInfo : dbIndices.keySet())
+			if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
+				dba.dropIndex(g, dBIndexInfo);
 		for (Entry<String, Index> e : myIndices.entrySet()) {
-			DBAdaptor.IndexInfo indexInfo = new DBAdaptor.IndexInfo(e
+			DBIndexInfo dBIndexInfo = new DBIndexInfo(e
 					.getValue().getTable().getName(), e.getKey());
-			if (dbIndices.containsKey(indexInfo)) {
+			if (dbIndices.containsKey(dBIndexInfo)) {
 				// БД содержит индекс с таким именем, надо проверить
 				// поля и пересоздать индекс в случае необходимости.
-				Collection<String> dbIndexCols = dbIndices.get(indexInfo)
+				Collection<String> dbIndexCols = dbIndices.get(dBIndexInfo)
 						.values();
 				Collection<String> metaIndexCols = e.getValue().getColumns()
 						.keySet();
@@ -279,7 +278,7 @@ public final class DBUpdator {
 					equals = i1.next().equals(i2.next()) && equals;
 				}
 				if (!equals) {
-					dba.dropIndex(g, indexInfo);
+					dba.dropIndex(g, dBIndexInfo);
 					dba.createIndex(e.getValue());
 				}
 			} else {
@@ -298,8 +297,8 @@ public final class DBUpdator {
 					// Таблица содержит колонку с таким именем, надо проверить
 					// все её атрибуты и при необходимости -- попытаться
 					// обновить.
-					DBAdaptor.ColumnInfo ci = dba.getColumnInfo(grain
-							.callContext().getConn(), e.getValue());
+					DBColumnInfo ci = dba.getColumnInfo(grain.callContext()
+							.getConn(), e.getValue());
 					if (!ci.reflects(e.getValue()))
 						dba.updateColumn(grain.callContext().getConn(),
 								e.getValue());
@@ -312,7 +311,7 @@ public final class DBUpdator {
 		} else {
 			dba.createTable(t);
 		}
-		
+
 		// TODO обновление внешних ключей
 	}
 

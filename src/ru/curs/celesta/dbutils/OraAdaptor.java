@@ -76,8 +76,8 @@ final class OraAdaptor extends DBAdaptor {
 			String getColumnDef(Column c) {
 				FloatingColumn ic = (FloatingColumn) c;
 				String defaultStr = "";
-				if (ic.getDefaultvalue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultvalue();
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
 				return join(c.getQuotedName(), dbFieldType(), defaultStr,
 						nullable(c));
@@ -328,9 +328,9 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public Map<IndexInfo, TreeMap<Short, String>> getIndices(Connection conn,
+	public Map<DBIndexInfo, TreeMap<Short, String>> getIndices(Connection conn,
 			Grain g) throws CelestaException {
-		Map<IndexInfo, TreeMap<Short, String>> result = new HashMap<>();
+		Map<DBIndexInfo, TreeMap<Short, String>> result = new HashMap<>();
 		try {
 			for (Table t : g.getTables().values()) {
 				String tableName = String.format(tableTemplate(), g.getName(),
@@ -349,7 +349,7 @@ final class OraAdaptor extends DBAdaptor {
 							if (indName.startsWith(grainPrefix))
 								indName = indName.substring(grainPrefix
 										.length());
-							IndexInfo info = new IndexInfo(t.getName(), indName);
+							DBIndexInfo info = new DBIndexInfo(t.getName(), indName);
 							TreeMap<Short, String> columns = result.get(info);
 							if (columns == null) {
 								columns = new TreeMap<>();
@@ -567,9 +567,9 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String getDropIndexSQL(Grain g, IndexInfo indexInfo) {
+	String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
 		String sql = String.format("DROP INDEX " + tableTemplate(),
-				g.getName(), indexInfo.getIndexName());
+				g.getName(), dBIndexInfo.getIndexName());
 		return sql;
 	}
 
@@ -620,7 +620,7 @@ final class OraAdaptor extends DBAdaptor {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public ColumnInfo getColumnInfo(Connection conn, Column c)
+	public DBColumnInfo getColumnInfo(Connection conn, Column c)
 			throws CelestaException {
 		try {
 			String tableName = String.format("%s_%s", c.getParentTable()
@@ -628,10 +628,10 @@ final class OraAdaptor extends DBAdaptor {
 			DatabaseMetaData metaData = conn.getMetaData();
 			ResultSet rs = metaData.getColumns(null, null, tableName,
 					c.getName());
-			ColumnInfo result;
+			DBColumnInfo result;
 			try {
 				if (rs.next()) {
-					result = new ColumnInfo();
+					result = new DBColumnInfo();
 					result.setName(rs.getString(COLUMN_NAME));
 					String typeName = rs.getString("TYPE_NAME");
 
@@ -683,7 +683,7 @@ final class OraAdaptor extends DBAdaptor {
 
 	}
 
-	private void processDefaults(Connection conn, Column c, ColumnInfo result)
+	private void processDefaults(Connection conn, Column c, DBColumnInfo result)
 			throws SQLException {
 		ResultSet rs;
 		PreparedStatement getDefault = conn.prepareStatement(String.format(

@@ -30,6 +30,7 @@ import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 
@@ -72,126 +73,6 @@ public abstract class DBAdaptor {
 		case UNKNOWN:
 		default:
 			throw new CelestaException("Unknown or unsupported database type.");
-		}
-	}
-
-	/**
-	 * Данные о колонке в базе данных в виде, необходимом для Celesta.
-	 */
-	static final class ColumnInfo {
-		private String name;
-		private Class<? extends Column> type;
-		private boolean isNullable;
-		private String defaultValue = "";
-		private int length;
-		private boolean isMax;
-		private boolean isIdentity;
-
-		String getName() {
-			return name;
-		}
-
-		Class<? extends Column> getType() {
-			return type;
-		}
-
-		boolean isNullable() {
-			return isNullable;
-		}
-
-		String getDefaultValue() {
-			return defaultValue;
-		}
-
-		int getLength() {
-			return length;
-		}
-
-		boolean isMax() {
-			return isMax;
-		}
-
-		boolean isIdentity() {
-			return isIdentity;
-		}
-
-		void setName(String name) {
-			this.name = name;
-		}
-
-		void setType(Class<? extends Column> type) {
-			this.type = type;
-		}
-
-		void setNullable(boolean isNullable) {
-			this.isNullable = isNullable;
-		}
-
-		void setDefaultValue(String defaultValue) {
-			this.defaultValue = defaultValue;
-		}
-
-		void setLength(int length) {
-			this.length = length;
-		}
-
-		void setMax(boolean isMax) {
-			this.isMax = isMax;
-		}
-
-		void setIdentity(boolean isIdentity) {
-			this.isIdentity = isIdentity;
-		}
-
-		boolean reflects(Column value) {
-			// TODO Auto-generated method stub
-			System.out.println("Implement column check here.");
-
-			boolean result = value.getClass() == type
-					&& value.isNullable() == isNullable;
-
-			// Если тип или nullability не совпадают -- дальше проверять нет
-			// смысла
-			if (!result)
-				return false;
-
-			// Теперь проверяем для каждого типа отдельно
-			if (type == BooleanColumn.class) {
-				BooleanColumn col = (BooleanColumn) value;
-				if ("'TRUE'".equals(defaultValue)) {
-					result &= Boolean.TRUE.equals(col.getDefaultValue());
-				} else if ("'FALSE'".equals(defaultValue)) {
-					result &= Boolean.FALSE.equals(col.getDefaultValue());
-				} else {
-					result &= col.getDefaultValue() == null;
-				}
-			} else if (type == IntegerColumn.class) {
-				IntegerColumn col = (IntegerColumn) value;
-				result &= isIdentity == col.isIdentity()
-						&& defaultValue.isEmpty() ? col.getDefaultValue() == null
-						: col.getDefaultValue().equals(
-								Integer.parseInt(defaultValue));
-			} else if (type == FloatingColumn.class) {
-				FloatingColumn col = (FloatingColumn) value;
-				result &= defaultValue.isEmpty() ? col.getDefaultvalue() == null
-						: col.getDefaultvalue().equals(
-								Double.parseDouble(defaultValue));
-			} else if (type == StringColumn.class) {
-				StringColumn col = (StringColumn) value;
-				result &= isMax ? col.isMax()
-						: length == col.getLength() && defaultValue.isEmpty() ? col
-								.getDefaultValue() == null : col
-								.getDefaultValue().equals(defaultValue);
-
-			} else if (type == DateTimeColumn.class) {
-				DateTimeColumn col = (DateTimeColumn) value;
-
-			} else if (type == BinaryColumn.class) {
-				BinaryColumn col = (BinaryColumn) value;
-			}
-
-			return true;
-
 		}
 	}
 
@@ -414,51 +295,6 @@ public abstract class DBAdaptor {
 	}
 
 	/**
-	 * Информация об индексе, полученная из метаданых базы данных.
-	 */
-	static final class IndexInfo {
-		private final String tableName;
-		private final String indexName;
-		private final int hash;
-
-		IndexInfo(String tableName, String indexName) {
-			this.tableName = tableName;
-			this.indexName = indexName;
-			hash = Integer.rotateLeft(tableName.hashCode(), 3)
-					^ indexName.hashCode();
-		}
-
-		String getTableName() {
-			return tableName;
-		}
-
-		String getIndexName() {
-			return indexName;
-		}
-
-		@Override
-		public int hashCode() {
-			return hash;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof IndexInfo) {
-				IndexInfo ii = (IndexInfo) obj;
-				return tableName.equals(ii.tableName)
-						&& indexName.equals(ii.indexName);
-			}
-			return super.equals(obj);
-		}
-
-		@Override
-		public String toString() {
-			return String.format("%s.%s", tableName, indexName);
-		}
-
-	}
-
-	/**
 	 * Возвращает набор имён индексов, связанных с таблицами, лежащими в
 	 * указанной грануле.
 	 * 
@@ -469,9 +305,9 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             В случае сбоя связи с БД.
 	 */
-	public Map<IndexInfo, TreeMap<Short, String>> getIndices(Connection conn,
+	public Map<DBIndexInfo, TreeMap<Short, String>> getIndices(Connection conn,
 			Grain g) throws CelestaException {
-		Map<IndexInfo, TreeMap<Short, String>> result = new HashMap<>();
+		Map<DBIndexInfo, TreeMap<Short, String>> result = new HashMap<>();
 		try {
 			for (Table t : g.getTables().values()) {
 				DatabaseMetaData metaData = conn.getMetaData();
@@ -481,7 +317,7 @@ public abstract class DBAdaptor {
 					while (rs.next()) {
 						String indName = rs.getString("INDEX_NAME");
 						if (indName != null && rs.getBoolean("NON_UNIQUE")) {
-							IndexInfo info = new IndexInfo(t.getName(), indName);
+							DBIndexInfo info = new DBIndexInfo(t.getName(), indName);
 							TreeMap<Short, String> columns = result.get(info);
 							if (columns == null) {
 								columns = new TreeMap<>();
@@ -607,14 +443,14 @@ public abstract class DBAdaptor {
 	 * 
 	 * @param g
 	 *            Гранула
-	 * @param indexInfo
+	 * @param dBIndexInfo
 	 *            Массив из двух элементов: имя таблицы, имя индекса
 	 * @throws CelestaException
 	 *             Если что-то пошло не так.
 	 */
-	public final void dropIndex(Grain g, IndexInfo indexInfo)
+	public final void dropIndex(Grain g, DBIndexInfo dBIndexInfo)
 			throws CelestaException {
-		String sql = getDropIndexSQL(g, indexInfo);
+		String sql = getDropIndexSQL(g, dBIndexInfo);
 		Connection conn = ConnectionPool.get();
 		try {
 			PreparedStatement stmt = conn.prepareStatement(sql);
@@ -622,7 +458,7 @@ public abstract class DBAdaptor {
 			stmt.close();
 		} catch (SQLException e) {
 			throw new CelestaException("Cannot drop index '%s': %s ",
-					indexInfo.getIndexName(), e.getMessage());
+					dBIndexInfo.getIndexName(), e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -821,7 +657,7 @@ public abstract class DBAdaptor {
 
 	abstract String getCreateIndexSQL(Index index);
 
-	abstract String getDropIndexSQL(Grain g, IndexInfo indexInfo);
+	abstract String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo);
 
 	/**
 	 * Возвращает информацию о столбце.
@@ -834,7 +670,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя связи с БД.
 	 */
-	abstract ColumnInfo getColumnInfo(Connection conn, Column c)
+	abstract DBColumnInfo getColumnInfo(Connection conn, Column c)
 			throws CelestaException;
 
 }
@@ -874,4 +710,175 @@ abstract class ColumnDefiner {
 			}
 		return sb.toString();
 	}
+}
+
+/**
+ * Данные о колонке в базе данных в виде, необходимом для Celesta.
+ */
+final class DBColumnInfo {
+	private String name;
+	private Class<? extends Column> type;
+	private boolean isNullable;
+	private String defaultValue = "";
+	private int length;
+	private boolean isMax;
+	private boolean isIdentity;
+
+	String getName() {
+		return name;
+	}
+
+	Class<? extends Column> getType() {
+		return type;
+	}
+
+	boolean isNullable() {
+		return isNullable;
+	}
+
+	String getDefaultValue() {
+		return defaultValue;
+	}
+
+	int getLength() {
+		return length;
+	}
+
+	boolean isMax() {
+		return isMax;
+	}
+
+	boolean isIdentity() {
+		return isIdentity;
+	}
+
+	void setName(String name) {
+		this.name = name;
+	}
+
+	void setType(Class<? extends Column> type) {
+		this.type = type;
+	}
+
+	void setNullable(boolean isNullable) {
+		this.isNullable = isNullable;
+	}
+
+	void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
+	}
+
+	void setLength(int length) {
+		this.length = length;
+	}
+
+	void setMax(boolean isMax) {
+		this.isMax = isMax;
+	}
+
+	void setIdentity(boolean isIdentity) {
+		this.isIdentity = isIdentity;
+	}
+
+	boolean reflects(Column value) {
+		// Если тип или nullability не совпадают -- дальше не проверяем.
+		if (!(value.getClass() == type && value.isNullable() == isNullable))
+			return false;
+
+		if (type == IntegerColumn.class) {
+			// Если свойство IDENTITY не совпадает -- не проверяем
+			if (isIdentity != ((IntegerColumn) value).isIdentity())
+				return false;
+		} else if (type == StringColumn.class) {
+			// Если параметры длин не совпали -- не проверяем
+			StringColumn col = (StringColumn) value;
+			if (!(isMax ? col.isMax() : length == col.getLength()))
+				return false;
+		}
+
+		// Если в данных пустой default, а в метаданных -- не пустой -- то
+		// не проверяем
+		if (defaultValue.isEmpty())
+			return value.getDefaultValue() == null;
+
+		// Случай непустого default-значения в данных.
+		return checkDefault(value);
+	}
+
+	private boolean checkDefault(Column value) {
+		boolean result;
+		if (type == BooleanColumn.class) {
+			try {
+				result = BooleanColumn.parseSQLBool(defaultValue).equals(
+						value.getDefaultValue());
+			} catch (ParseException e) {
+				result = false;
+			}
+		} else if (type == IntegerColumn.class) {
+			result = Integer.valueOf(defaultValue).equals(
+					value.getDefaultValue());
+		} else if (type == FloatingColumn.class) {
+			result = Double.valueOf(defaultValue).equals(
+					value.getDefaultValue());
+		} else if (type == DateTimeColumn.class) {
+			if ("GETDATE()".equalsIgnoreCase(defaultValue))
+				result = ((DateTimeColumn) value).isGetdate();
+			else {
+				try {
+					result = DateTimeColumn.parseISODate(defaultValue).equals(
+							value.getDefaultValue());
+				} catch (ParseException e) {
+					result = false;
+				}
+			}
+		} else {
+			result = defaultValue.equals(value.getDefaultValue());
+		}
+		return result;
+	}
+}
+
+/**
+ * Информация об индексе, полученная из метаданых базы данных.
+ */
+final class DBIndexInfo {
+	private final String tableName;
+	private final String indexName;
+	private final int hash;
+
+	DBIndexInfo(String tableName, String indexName) {
+		this.tableName = tableName;
+		this.indexName = indexName;
+		hash = Integer.rotateLeft(tableName.hashCode(), 3)
+				^ indexName.hashCode();
+	}
+
+	String getTableName() {
+		return tableName;
+	}
+
+	String getIndexName() {
+		return indexName;
+	}
+
+	@Override
+	public int hashCode() {
+		return hash;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof DBIndexInfo) {
+			DBIndexInfo ii = (DBIndexInfo) obj;
+			return tableName.equals(ii.tableName)
+					&& indexName.equals(ii.indexName);
+		}
+		return super.equals(obj);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s.%s", tableName, indexName);
+	}
+
 }

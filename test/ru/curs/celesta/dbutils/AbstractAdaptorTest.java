@@ -21,7 +21,7 @@ import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.DBAdaptor.IndexInfo;
+import ru.curs.celesta.dbutils.DBIndexInfo;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -251,7 +251,7 @@ public abstract class AbstractAdaptorTest {
 		dba.createIndex(i);
 		Connection conn = ConnectionPool.get();
 		try {
-			Map<IndexInfo, TreeMap<Short, String>> indicesSet = dba.getIndices(
+			Map<DBIndexInfo, TreeMap<Short, String>> indicesSet = dba.getIndices(
 					conn, t.getGrain());
 
 			// for (IndexInfo ii : indicesSet.keySet())
@@ -260,7 +260,7 @@ public abstract class AbstractAdaptorTest {
 			assertNotNull(indicesSet);
 			assertEquals(1, indicesSet.size());
 			dba.dropIndex(grain,
-					new DBAdaptor.IndexInfo(t.getName(), i.getName()));
+					new DBIndexInfo(t.getName(), i.getName()));
 
 			indicesSet = dba.getIndices(conn, t.getGrain());
 			assertNotNull(indicesSet);
@@ -334,7 +334,7 @@ public abstract class AbstractAdaptorTest {
 	public void getColumnInfo1() throws CelestaException, ParseException {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 		dba.createTable(t);
-		DBAdaptor.ColumnInfo c;
+		DBColumnInfo c;
 		Connection conn = ConnectionPool.get();
 		try {
 			// Проверяем реакцию на столбец, которого нет в базе данных
@@ -403,7 +403,7 @@ public abstract class AbstractAdaptorTest {
 	public void getColumnInfo2() throws CelestaException, ParseException {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 		dba.createTable(t);
-		DBAdaptor.ColumnInfo c;
+		DBColumnInfo c;
 		Connection conn = ConnectionPool.get();
 		try {
 			// Этот тест проверяет выражения default и дополнительные атрибуты

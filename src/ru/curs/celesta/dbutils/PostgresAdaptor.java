@@ -64,8 +64,8 @@ final class PostgresAdaptor extends DBAdaptor {
 			String getColumnDef(Column c) {
 				FloatingColumn ic = (FloatingColumn) c;
 				String defaultStr = "";
-				if (ic.getDefaultvalue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultvalue();
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
 				return join(c.getQuotedName(), dbFieldType(), nullable(c),
 						defaultStr);
@@ -366,16 +366,16 @@ final class PostgresAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String getDropIndexSQL(Grain g, IndexInfo indexInfo) {
+	String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
 		String sql = String.format("DROP INDEX " + tableTemplate(),
-				g.getName(), indexInfo.getIndexName());
+				g.getName(), dBIndexInfo.getIndexName());
 		return sql;
 	}
 
 	@Override
-	public ColumnInfo getColumnInfo(Connection conn, Column c)
+	public DBColumnInfo getColumnInfo(Connection conn, Column c)
 			throws CelestaException {
-		ColumnInfo result = new ColumnInfo();
+		DBColumnInfo result = new DBColumnInfo();
 		// TODO
 		return result;
 	}

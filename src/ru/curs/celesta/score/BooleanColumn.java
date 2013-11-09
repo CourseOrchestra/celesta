@@ -16,21 +16,33 @@ public final class BooleanColumn extends Column {
 
 	@Override
 	protected void setDefault(String lexvalue) throws ParseException {
-		if (lexvalue == null) {
-			defaultvalue = null;
-		} else if ("'TRUE'".equalsIgnoreCase(lexvalue) || "1".equals(lexvalue)) {
-			defaultvalue = true;
-		} else if ("'FALSE'".equalsIgnoreCase(lexvalue) || "0".equals(lexvalue)) {
-			defaultvalue = false;
-		} else {
-			throw new ParseException(
-					"Default boolean value should be either 'TRUE'/1 or 'FALSE'/1.");
-		}
+		defaultvalue = parseSQLBool(lexvalue);
 	}
 
 	/**
-	 * Возвращает значение по умолчанию.
+	 * Производит разбор строки в SQL-определении DEFAULT в boolean-значение.
+	 * 
+	 * @param lexvalue
+	 *            строковое определение.
+	 * 
+	 * @throws ParseException
+	 *             неверный формат строки.
 	 */
+	public static Boolean parseSQLBool(String lexvalue) throws ParseException {
+		if (lexvalue == null) {
+			return null;
+		} else if ("'TRUE'".equalsIgnoreCase(lexvalue) || "1".equals(lexvalue)) {
+			return true;
+		} else if ("'FALSE'".equalsIgnoreCase(lexvalue) || "0".equals(lexvalue)) {
+			return false;
+		} else {
+			throw new ParseException(
+					"Default boolean value should be either 'TRUE'/1 or 'FALSE'/0.");
+		}
+
+	}
+
+	@Override
 	public Boolean getDefaultValue() {
 		return defaultvalue;
 	}

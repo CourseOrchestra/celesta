@@ -35,9 +35,7 @@ public final class IntegerColumn extends Column {
 		}
 	}
 
-	/**
-	 * Возвращает значение по умолчанию.
-	 */
+	@Override
 	public Integer getDefaultValue() {
 		return defaultvalue;
 	}

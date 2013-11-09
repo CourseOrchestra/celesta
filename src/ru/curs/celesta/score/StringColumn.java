@@ -88,9 +88,7 @@ public final class StringColumn extends Column {
 		return sb.toString();
 	}
 
-	/**
-	 * Значение по умолчанию.
-	 */
+	@Override
 	public String getDefaultValue() {
 		return defaultvalue;
 	}

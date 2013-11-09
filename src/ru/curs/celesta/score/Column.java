@@ -101,4 +101,9 @@ public abstract class Column extends NamedElement {
 			bw.write("  ");
 		bw.write(getName());
 	}
+
+	/**
+	 * Возвращает значение по умолчанию.
+	 */
+	public abstract Object getDefaultValue();
 }

@@ -64,8 +64,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 			String getColumnDef(Column c) {
 				FloatingColumn ic = (FloatingColumn) c;
 				String defaultStr = "";
-				if (ic.getDefaultvalue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultvalue();
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
 				return join(c.getQuotedName(), dbFieldType(), nullable(c),
 						defaultStr);
@@ -359,11 +359,11 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String getDropIndexSQL(Grain g, IndexInfo indexInfo) {
+	String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
 		String sql = String
 				.format("DROP INDEX %s ON " + tableTemplate(),
-						indexInfo.getIndexName(), g.getName(),
-						indexInfo.getTableName());
+						dBIndexInfo.getIndexName(), g.getName(),
+						dBIndexInfo.getTableName());
 		return sql;
 	}
 
@@ -400,7 +400,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public ColumnInfo getColumnInfo(Connection conn, Column c)
+	public DBColumnInfo getColumnInfo(Connection conn, Column c)
 			throws CelestaException {
 		try {
 			DatabaseMetaData metaData = conn.getMetaData();
@@ -409,7 +409,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 					c.getName());
 			try {
 				if (rs.next()) {
-					ColumnInfo result = new ColumnInfo();
+					DBColumnInfo result = new DBColumnInfo();
 					result.setName(rs.getString(COLUMN_NAME));
 					String typeName = rs.getString("TYPE_NAME");
 					if ("int identity".equalsIgnoreCase(typeName)) {
