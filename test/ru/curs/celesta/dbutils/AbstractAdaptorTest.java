@@ -251,16 +251,15 @@ public abstract class AbstractAdaptorTest {
 		dba.createIndex(i);
 		Connection conn = ConnectionPool.get();
 		try {
-			Map<DBIndexInfo, TreeMap<Short, String>> indicesSet = dba.getIndices(
-					conn, t.getGrain());
+			Map<DBIndexInfo, TreeMap<Short, String>> indicesSet = dba
+					.getIndices(conn, t.getGrain());
 
 			// for (IndexInfo ii : indicesSet.keySet())
 			// System.out.println(ii.getIndexName());
 
 			assertNotNull(indicesSet);
 			assertEquals(1, indicesSet.size());
-			dba.dropIndex(grain,
-					new DBIndexInfo(t.getName(), i.getName()));
+			dba.dropIndex(grain, new DBIndexInfo(t.getName(), i.getName()));
 
 			indicesSet = dba.getIndices(conn, t.getGrain());
 			assertNotNull(indicesSet);
@@ -486,6 +485,32 @@ public abstract class AbstractAdaptorTest {
 			assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
 			assertEquals(false, c.isMax());
 			assertEquals(false, c.isIdentity());
+		} finally {
+			ConnectionPool.putBack(conn);
+			dba.dropTable(t);
+		}
+	}
+
+	@Test
+	public void testReflects() throws CelestaException, ParseException {
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+		DBColumnInfo c;
+		Connection conn = ConnectionPool.get();
+		try {
+			c = dba.getColumnInfo(conn, t.getColumn("f8"));
+			assertTrue(c.reflects(t.getColumn("f8")));
+			assertFalse(c.reflects(t.getColumn("f1")));
+			assertFalse(c.reflects(t.getColumn("f9")));
+			
+			c = dba.getColumnInfo(conn, t.getColumn("attrVarchar"));
+			assertTrue(c.reflects(t.getColumn("attrVarchar")));
+			assertFalse(c.reflects(t.getColumn("f7")));
+
+			c = dba.getColumnInfo(conn, t.getColumn("f10"));
+			assertTrue(c.reflects(t.getColumn("f10")));
+			assertFalse(c.reflects(t.getColumn("f11")));
+			
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
