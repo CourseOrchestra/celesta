@@ -278,23 +278,6 @@ public abstract class DBAdaptor {
 	}
 
 	/**
-	 * Обновляет на таблице колонку.
-	 * 
-	 * @param conn
-	 *            Соединение с БД.
-	 * 
-	 * @param c
-	 *            Колонка для обновления.
-	 * @throws CelestaException
-	 *             при ошибке обновления колонки.
-	 */
-	public final void updateColumn(Connection conn, Column c)
-			throws CelestaException {
-		// TODO Auto-generated method stub
-		System.out.println("Implement column update here.");
-	}
-
-	/**
 	 * Возвращает набор имён индексов, связанных с таблицами, лежащими в
 	 * указанной грануле.
 	 * 
@@ -317,7 +300,8 @@ public abstract class DBAdaptor {
 					while (rs.next()) {
 						String indName = rs.getString("INDEX_NAME");
 						if (indName != null && rs.getBoolean("NON_UNIQUE")) {
-							DBIndexInfo info = new DBIndexInfo(t.getName(), indName);
+							DBIndexInfo info = new DBIndexInfo(t.getName(),
+									indName);
 							TreeMap<Short, String> columns = result.get(info);
 							if (columns == null) {
 								columns = new TreeMap<>();
@@ -671,6 +655,20 @@ public abstract class DBAdaptor {
 	 *             в случае сбоя связи с БД.
 	 */
 	abstract DBColumnInfo getColumnInfo(Connection conn, Column c)
+			throws CelestaException;
+
+	/**
+	 * Обновляет на таблице колонку.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * 
+	 * @param c
+	 *            Колонка для обновления.
+	 * @throws CelestaException
+	 *             при ошибке обновления колонки.
+	 */
+	abstract void updateColumn(Connection conn, Column c)
 			throws CelestaException;
 
 }

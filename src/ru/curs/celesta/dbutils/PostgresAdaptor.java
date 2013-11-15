@@ -380,4 +380,23 @@ final class PostgresAdaptor extends DBAdaptor {
 		return result;
 	}
 
+	@Override
+	void updateColumn(Connection conn, Column c) throws CelestaException {
+		String def = columnDef(c);
+		String sql = String.format("ALTER TABLE " + tableTemplate()
+				+ " ALTER COLUMN %s", c.getParentTable().getGrain().getName(),
+				c.getParentTable().getName(), def);
+		PreparedStatement stmt = prepareStatement(conn, sql);
+		try {
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Cannot modify column %s on table %s.%s: %s", c.getName(),
+					c.getParentTable().getGrain().getName(), c.getParentTable()
+							.getName(), e.getMessage());
+
+		}
+
+	}
+
 }

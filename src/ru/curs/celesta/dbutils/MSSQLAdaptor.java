@@ -360,10 +360,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	@Override
 	String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
-		String sql = String
-				.format("DROP INDEX %s ON " + tableTemplate(),
-						dBIndexInfo.getIndexName(), g.getName(),
-						dBIndexInfo.getTableName());
+		String sql = String.format("DROP INDEX %s ON " + tableTemplate(),
+				dBIndexInfo.getIndexName(), g.getName(),
+				dBIndexInfo.getTableName());
 		return sql;
 	}
 
@@ -453,6 +452,25 @@ final class MSSQLAdaptor extends DBAdaptor {
 			}
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
+		}
+
+	}
+
+	@Override
+	void updateColumn(Connection conn, Column c) throws CelestaException {
+		String def = columnDef(c);
+		String sql = String.format("ALTER TABLE " + tableTemplate()
+				+ " ALTER COLUMN %s", c.getParentTable().getGrain().getName(),
+				c.getParentTable().getName(), def);
+		PreparedStatement stmt = prepareStatement(conn, sql);
+		try {
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Cannot modify column %s on table %s.%s: %s", c.getName(),
+					c.getParentTable().getGrain().getName(), c.getParentTable()
+							.getName(), e.getMessage());
+
 		}
 
 	}

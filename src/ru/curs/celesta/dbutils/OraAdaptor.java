@@ -349,7 +349,8 @@ final class OraAdaptor extends DBAdaptor {
 							if (indName.startsWith(grainPrefix))
 								indName = indName.substring(grainPrefix
 										.length());
-							DBIndexInfo info = new DBIndexInfo(t.getName(), indName);
+							DBIndexInfo info = new DBIndexInfo(t.getName(),
+									indName);
 							TreeMap<Short, String> columns = result.get(info);
 							if (columns == null) {
 								columns = new TreeMap<>();
@@ -479,8 +480,8 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	private String getSequenceName(Table table, Column col) {
-		String sequenceName = String.format("\"%s_%s_%s\"", table.getGrain()
-				.getName(), table.getName(), col.getName());
+		String sequenceName = String.format("\"%s_%s_inc\"", table.getGrain()
+				.getName(), table.getName());
 		return sequenceName;
 	}
 
@@ -600,16 +601,17 @@ final class OraAdaptor extends DBAdaptor {
 		PreparedStatement checkForTrigger = conn
 				.prepareStatement(String
 						.format("select TRIGGER_BODY  from all_triggers where owner = sys_context('userenv','session_user') "
-								+ "and table_name = '%s_%s' and trigger_name = '%s_%s_%s' and triggering_event = 'INSERT'",
+								+ "and table_name = '%s_%s' and trigger_name = '%s_%s_inc' and triggering_event = 'INSERT'",
 								c.getParentTable().getGrain().getName(), c
 										.getParentTable().getName(), c
 										.getParentTable().getGrain().getName(),
-								c.getParentTable().getName(), c.getName()));
+								c.getParentTable().getName()));
 		try {
 			ResultSet rs = checkForTrigger.executeQuery();
 			if (rs.next()) {
 				String body = rs.getString(1);
-				if (body != null && body.contains(".NEXTVAL"))
+				if (body != null && body.contains(".NEXTVAL")
+						&& body.contains("\"" + c.getName() + "\""))
 					return true;
 			}
 		} finally {
@@ -723,5 +725,24 @@ final class OraAdaptor extends DBAdaptor {
 		} finally {
 			getDefault.close();
 		}
+	}
+
+	@Override
+	void updateColumn(Connection conn, Column c) throws CelestaException {
+		String def = columnDef(c);
+		String sql = String.format("ALTER TABLE " + tableTemplate()
+				+ " MODIFY COLUMN %s", c.getParentTable().getGrain().getName(),
+				c.getParentTable().getName(), def);
+		PreparedStatement stmt = prepareStatement(conn, sql);
+		try {
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Cannot modify column %s on table %s.%s: %s", c.getName(),
+					c.getParentTable().getGrain().getName(), c.getParentTable()
+							.getName(), e.getMessage());
+
+		}
+
 	}
 }

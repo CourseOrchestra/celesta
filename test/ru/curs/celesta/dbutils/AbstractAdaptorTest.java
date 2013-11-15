@@ -160,11 +160,19 @@ public abstract class AbstractAdaptorTest {
 			int count = getCount(conn, t);
 			assertEquals(0, count);
 			insertRow(conn, t, 1);
+			assertEquals(1, dba.getCurrentIdent(conn, t));
+
 			insertRow(conn, t, 2);
+			assertEquals(2, dba.getCurrentIdent(conn, t));
+
 			insertRow(conn, t, 3);
+			assertEquals(3, dba.getCurrentIdent(conn, t));
 			count = getCount(conn, t);
 			assertEquals(3, count);
+			
+			
 			insertRow(conn, t, 10);
+			assertEquals(4, dba.getCurrentIdent(conn, t));
 			assertEquals(4, getCount(conn, t));
 		} finally {
 			ConnectionPool.putBack(conn);
@@ -502,7 +510,7 @@ public abstract class AbstractAdaptorTest {
 			assertTrue(c.reflects(t.getColumn("f8")));
 			assertFalse(c.reflects(t.getColumn("f1")));
 			assertFalse(c.reflects(t.getColumn("f9")));
-			
+
 			c = dba.getColumnInfo(conn, t.getColumn("attrVarchar"));
 			assertTrue(c.reflects(t.getColumn("attrVarchar")));
 			assertFalse(c.reflects(t.getColumn("f7")));
@@ -510,7 +518,7 @@ public abstract class AbstractAdaptorTest {
 			c = dba.getColumnInfo(conn, t.getColumn("f10"));
 			assertTrue(c.reflects(t.getColumn("f10")));
 			assertFalse(c.reflects(t.getColumn("f11")));
-			
+
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
