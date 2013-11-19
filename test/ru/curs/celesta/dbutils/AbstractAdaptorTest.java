@@ -169,8 +169,7 @@ public abstract class AbstractAdaptorTest {
 			assertEquals(3, dba.getCurrentIdent(conn, t));
 			count = getCount(conn, t);
 			assertEquals(3, count);
-			
-			
+
 			insertRow(conn, t, 10);
 			assertEquals(4, dba.getCurrentIdent(conn, t));
 			assertEquals(4, getCount(conn, t));
@@ -493,6 +492,57 @@ public abstract class AbstractAdaptorTest {
 			assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
 			assertEquals(false, c.isMax());
 			assertEquals(false, c.isIdentity());
+		} finally {
+			ConnectionPool.putBack(conn);
+			dba.dropTable(t);
+		}
+	}
+
+	@Test
+	public void updateColumn() throws CelestaException, ParseException {
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+		DBColumnInfo c;
+		Column col;
+		Connection conn = ConnectionPool.get();
+		try {
+			// Этот тест проверяет выражения default и дополнительные атрибуты
+			col = t.getColumn("attrInt");
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("attrInt", c.getName());
+			assertSame(IntegerColumn.class, c.getType());
+			assertEquals(true, c.isNullable());
+			assertEquals("3", c.getDefaultValue());
+			assertEquals(false, c.isIdentity());
+			col.setNullableAndDefault(false, "55");
+			dba.updateColumn(conn, col);
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("attrInt", c.getName());
+			assertSame(IntegerColumn.class, c.getType());
+			assertEquals(false, c.isNullable());
+			assertEquals("55", c.getDefaultValue());
+			assertEquals(false, c.isIdentity());
+
+			// f6 nvarchar(max) not null default 'abc',
+			col = t.getColumn("f6");
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("f6", c.getName());
+			assertSame(StringColumn.class, c.getType());
+			assertEquals(false, c.isNullable());
+			assertEquals("'abc'", c.getDefaultValue());
+			assertEquals(true, c.isMax());
+			StringColumn scol = (StringColumn) col;
+			scol.setLength("234");
+			scol.setNullableAndDefault(true, "'eee'");
+			dba.updateColumn(conn, col);
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("f6", c.getName());
+			assertSame(StringColumn.class, c.getType());
+			assertEquals(true, c.isNullable());
+			assertEquals("'eee'", c.getDefaultValue());
+			assertEquals(false, c.isMax());
+			assertEquals(234, c.getLength());
+
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);

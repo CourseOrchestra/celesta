@@ -43,29 +43,52 @@ final class OraAdaptor extends DBAdaptor {
 	private static final Pattern HEX_STRING = Pattern.compile("'([0-9A-F]+)'");
 
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
+
+	/**
+	 * Определитель колонок для Oracle, учитывающий тот факт, что в Oracle
+	 * DEFAULT должен идти до NOT NULL.
+	 */
+	abstract static class OraColumnDefiner extends ColumnDefiner {
+		abstract String getInternalDefinition(Column c);
+
+		@Override
+		String getFullDefinition(Column c) {
+			return join(getInternalDefinition(c), getDefaultDefinition(c),
+					nullable(c));
+		}
+
+		@Override
+		final String getMainDefinition(Column c) {
+			return join(getInternalDefinition(c), nullable(c));
+		}
+	}
+
 	static {
-		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(IntegerColumn.class, new OraColumnDefiner() {
 			@Override
 			String dbFieldType() {
 				return "number";
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getInternalDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType());
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				IntegerColumn ic = (IntegerColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), defaultStr,
-						nullable(c));
+				return defaultStr;
 			}
-
 		}
 
 		);
 
-		TYPES_DICT.put(FloatingColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(FloatingColumn.class, new OraColumnDefiner() {
 
 			@Override
 			String dbFieldType() {
@@ -73,28 +96,40 @@ final class OraAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getInternalDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType());
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				FloatingColumn ic = (FloatingColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), defaultStr,
-						nullable(c));
+				return defaultStr;
 			}
 
 		}
 
 		);
-		TYPES_DICT.put(StringColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(StringColumn.class, new OraColumnDefiner() {
 
 			@Override
 			String dbFieldType() {
 				return "varchar2";
 			}
 
+			// Пустая DEFAULT-строка не сочетается с NOT NULL в Oracle.
 			@Override
-			String getColumnDef(Column c) {
+			String nullable(Column c) {
+				StringColumn ic = (StringColumn) c;
+				return ("".equals(ic.getDefaultValue())) ? "" : super
+						.nullable(c);
+			}
+
+			@Override
+			String getInternalDefinition(Column c) {
 				StringColumn ic = (StringColumn) c;
 				// See
 				// http://stackoverflow.com/questions/414817/what-is-the-equivalent-of-varcharmax-in-oracle
@@ -103,26 +138,34 @@ final class OraAdaptor extends DBAdaptor {
 						dbFieldType(),
 						ic.isMax() ? Integer.toString(LENGTHFORMAX) : ic
 								.getLength());
+				return join(c.getQuotedName(), fieldType);
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
+				StringColumn ic = (StringColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT
 							+ StringColumn.quoteString(ic.getDefaultValue());
 				}
-				String nullable = (DEFAULT + "''").equals(defaultStr) ? ""
-						: nullable(c);
-				return join(c.getQuotedName(), fieldType, defaultStr, nullable);
+				return defaultStr;
 			}
 
 		});
-		TYPES_DICT.put(BinaryColumn.class, new ColumnDefiner() {
-
+		TYPES_DICT.put(BinaryColumn.class, new OraColumnDefiner() {
 			@Override
 			String dbFieldType() {
 				return "blob";
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getInternalDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType());
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				BinaryColumn ic = (BinaryColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
@@ -130,12 +173,11 @@ final class OraAdaptor extends DBAdaptor {
 					defaultStr = String.format(DEFAULT + "'%s'", ic
 							.getDefaultValue().substring(2));
 				}
-				return join(c.getQuotedName(), dbFieldType(), defaultStr,
-						nullable(c));
+				return defaultStr;
 			}
 		});
 
-		TYPES_DICT.put(DateTimeColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(DateTimeColumn.class, new OraColumnDefiner() {
 
 			@Override
 			String dbFieldType() {
@@ -143,7 +185,12 @@ final class OraAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getInternalDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType());
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				DateTimeColumn ic = (DateTimeColumn) c;
 				String defaultStr = "";
 				if (ic.isGetdate()) {
@@ -153,11 +200,10 @@ final class OraAdaptor extends DBAdaptor {
 					defaultStr = String.format(DEFAULT + "date '%s'",
 							df.format(ic.getDefaultValue()));
 				}
-				return join(c.getQuotedName(), dbFieldType(), defaultStr,
-						nullable(c));
+				return defaultStr;
 			}
 		});
-		TYPES_DICT.put(BooleanColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(BooleanColumn.class, new OraColumnDefiner() {
 
 			@Override
 			String dbFieldType() {
@@ -165,17 +211,31 @@ final class OraAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getInternalDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType());
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				BooleanColumn ic = (BooleanColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + (ic.getDefaultValue() ? "1" : "0");
 				}
-				String check = String.format("check (%s in (0, 1))",
-						c.getQuotedName());
-				return join(c.getQuotedName(), dbFieldType(), defaultStr,
+				return defaultStr;
+			}
+
+			@Override
+			String getFullDefinition(Column c) {
+				String check = String.format(
+						"constraint \"chk_%s_%s_%s\" check (%s in (0, 1))", c
+								.getParentTable().getGrain().getName(), c
+								.getParentTable().getName(), c.getName(), c
+								.getQuotedName());
+				return join(getInternalDefinition(c), getDefaultDefinition(c),
 						nullable(c), check);
 			}
+
 		});
 	}
 
@@ -733,6 +793,7 @@ final class OraAdaptor extends DBAdaptor {
 		String sql = String.format("ALTER TABLE " + tableTemplate()
 				+ " MODIFY COLUMN %s", c.getParentTable().getGrain().getName(),
 				c.getParentTable().getName(), def);
+		System.out.println(sql);
 		PreparedStatement stmt = prepareStatement(conn, sql);
 		try {
 			stmt.executeUpdate();

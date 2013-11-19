@@ -3,14 +3,14 @@ create table "celesta"."grains"(
   "version" nvarchar(max) not null,
   "length" int not null,
   "checksum" nvarchar(8) not null,
-  "state" int not null default 3,
-  "lastmodified" datetime not null default getdate(),
-  "message" nvarchar(max) not null default '',
+  "state" int not null constraint "def_grains_state" default 3,
+  "lastmodified" datetime not null constraint "def_grains_lastmodified" default getdate(),
+  "message" nvarchar(max) not null constraint "def_grains_message" default '',
   constraint "pk_grains" primary key ("id")
 )
 create table "celesta"."tables"(
   "grainid" nvarchar(16) not null,
   "tablename" nvarchar(100) not null,
-  "orphaned" bit not null default 'false',
+  "orphaned" bit not null constraint "def_tables_orphaned" default 'false',
   constraint "pk_tables" primary key ("grainid", "tablename")
 )

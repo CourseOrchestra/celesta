@@ -39,7 +39,12 @@ final class PostgresAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				IntegerColumn ic = (IntegerColumn) c;
 				String defaultStr = "";
 				// TODO autoincrement
@@ -48,8 +53,7 @@ final class PostgresAdaptor extends DBAdaptor {
 				} else if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 
@@ -61,14 +65,18 @@ final class PostgresAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				FloatingColumn ic = (FloatingColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 
@@ -80,17 +88,22 @@ final class PostgresAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
 				StringColumn ic = (StringColumn) c;
 				String fieldType = String.format("%s(%s)", dbFieldType(),
 						ic.isMax() ? "65535" : ic.getLength());
+				return join(c.getQuotedName(), fieldType, nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
+				StringColumn ic = (StringColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT
 							+ StringColumn.quoteString(ic.getDefaultValue());
 				}
-				return join(c.getQuotedName(), fieldType, nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 
@@ -102,14 +115,18 @@ final class PostgresAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				BinaryColumn ic = (BinaryColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 
@@ -121,7 +138,12 @@ final class PostgresAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				DateTimeColumn ic = (DateTimeColumn) c;
 				String defaultStr = "";
 				if (ic.isGetdate()) {
@@ -132,8 +154,7 @@ final class PostgresAdaptor extends DBAdaptor {
 							df.format(ic.getDefaultValue()));
 
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 
@@ -145,14 +166,18 @@ final class PostgresAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				BooleanColumn ic = (BooleanColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 	}

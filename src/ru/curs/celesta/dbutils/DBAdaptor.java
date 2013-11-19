@@ -459,7 +459,7 @@ public abstract class DBAdaptor {
 	}
 
 	final String columnDef(Column c) {
-		return getColumnDefiner(c).getColumnDef(c);
+		return getColumnDefiner(c).getFullDefinition(c);
 	}
 
 	final String tableDef(Table table) {
@@ -682,7 +682,13 @@ abstract class ColumnDefiner {
 
 	abstract String dbFieldType();
 
-	abstract String getColumnDef(Column c);
+	abstract String getMainDefinition(Column c);
+
+	abstract String getDefaultDefinition(Column c);
+
+	String getFullDefinition(Column c) {
+		return join(getMainDefinition(c), getDefaultDefinition(c));
+	}
 
 	String nullable(Column c) {
 		return c.isNullable() ? "" : "not null";

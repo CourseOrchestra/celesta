@@ -37,16 +37,25 @@ final class MySQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
 				IntegerColumn ic = (IntegerColumn) c;
 				String defaultStr = "";
 				if (ic.isIdentity()) {
 					defaultStr = "AUTO_INCREMENT";
-				} else if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
 				return join(c.getQuotedName(), dbFieldType(), nullable(c),
 						defaultStr);
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
+				IntegerColumn ic = (IntegerColumn) c;
+				String defaultStr = "";
+				if (!ic.isIdentity() && ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
+				}
+
+				return defaultStr;
 			}
 
 		}
@@ -61,14 +70,18 @@ final class MySQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				FloatingColumn ic = (FloatingColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 
 		}
@@ -82,19 +95,25 @@ final class MySQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
 				StringColumn ic = (StringColumn) c;
 				// See
 				// http://stackoverflow.com/questions/332798/equivalent-of-varcharmax-in-mysql
 				String fieldType = String.format("%s(%s)", dbFieldType(),
 						ic.isMax() ? "21844" : ic.getLength());
+
+				return join(c.getQuotedName(), fieldType, nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
+				StringColumn ic = (StringColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT
 							+ StringColumn.quoteString(ic.getDefaultValue());
 				}
-				return join(c.getQuotedName(), fieldType, nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 
 		});
@@ -106,14 +125,18 @@ final class MySQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				BinaryColumn ic = (BinaryColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 
@@ -125,7 +148,12 @@ final class MySQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				DateTimeColumn ic = (DateTimeColumn) c;
 				String defaultStr = "";
 				if (ic.isGetdate()) {
@@ -134,10 +162,8 @@ final class MySQLAdaptor extends DBAdaptor {
 					DateFormat df = new SimpleDateFormat("yyyyMMdd");
 					defaultStr = String.format(DEFAULT + " '%s'",
 							df.format(ic.getDefaultValue()));
-
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 		TYPES_DICT.put(BooleanColumn.class, new ColumnDefiner() {
@@ -148,14 +174,18 @@ final class MySQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				BooleanColumn ic = (BooleanColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 	}

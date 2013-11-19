@@ -31,6 +31,7 @@ import ru.curs.celesta.score.Table;
 final class MSSQLAdaptor extends DBAdaptor {
 
 	private static final String WHERE_S = " where %s;";
+
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
 		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
@@ -40,16 +41,22 @@ final class MSSQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
 				IntegerColumn ic = (IntegerColumn) c;
 				String defaultStr = "";
 				if (ic.isIdentity()) {
 					defaultStr = "IDENTITY";
-				} else if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
 				return join(c.getQuotedName(), dbFieldType(), nullable(c),
 						defaultStr);
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
+				IntegerColumn ic = (IntegerColumn) c;
+				if (!ic.isIdentity() && ic.getDefaultValue() != null)
+					return msSQLDefault(c) + ic.getDefaultValue();
+				return "";
 			}
 		});
 
@@ -61,14 +68,18 @@ final class MSSQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				FloatingColumn ic = (FloatingColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
+					defaultStr = msSQLDefault(c) + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 
@@ -80,17 +91,22 @@ final class MSSQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
 				StringColumn ic = (StringColumn) c;
 				String fieldType = String.format("%s(%s)", dbFieldType(),
 						ic.isMax() ? "max" : ic.getLength());
+				return join(c.getQuotedName(), fieldType, nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
+				StringColumn ic = (StringColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT
+					defaultStr = msSQLDefault(c)
 							+ StringColumn.quoteString(ic.getDefaultValue());
 				}
-				return join(c.getQuotedName(), fieldType, nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 
@@ -102,14 +118,20 @@ final class MSSQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				BinaryColumn ic = (BinaryColumn) c;
+
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
+					defaultStr = msSQLDefault(c) + ic.getDefaultValue();
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
+
 			}
 		});
 
@@ -121,18 +143,22 @@ final class MSSQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				DateTimeColumn ic = (DateTimeColumn) c;
 				String defaultStr = "";
 				if (ic.isGetdate()) {
-					defaultStr = DEFAULT + "getdate()";
+					defaultStr = msSQLDefault(c) + "getdate()";
 				} else if (ic.getDefaultValue() != null) {
 					DateFormat df = new SimpleDateFormat("yyyyMMdd");
-					defaultStr = String.format(DEFAULT + " '%s'",
+					defaultStr = String.format(msSQLDefault(c) + " '%s'",
 							df.format(ic.getDefaultValue()));
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
 
@@ -144,16 +170,27 @@ final class MSSQLAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			String getColumnDef(Column c) {
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
 				BooleanColumn ic = (BooleanColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
+					defaultStr = msSQLDefault(c) + "'" + ic.getDefaultValue()
+							+ "'";
 				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return defaultStr;
 			}
 		});
+	}
+
+	private static String msSQLDefault(Column c) {
+		return String.format("constraint \"def_%s_%s\" ", c.getParentTable()
+				.getName(), c.getName())
+				+ ColumnDefiner.DEFAULT;
 	}
 
 	@Override
@@ -462,6 +499,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 		String sql = String.format("ALTER TABLE " + tableTemplate()
 				+ " ALTER COLUMN %s", c.getParentTable().getGrain().getName(),
 				c.getParentTable().getName(), def);
+		System.out.println(sql);
 		PreparedStatement stmt = prepareStatement(conn, sql);
 		try {
 			stmt.executeUpdate();
