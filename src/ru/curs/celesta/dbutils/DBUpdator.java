@@ -301,7 +301,7 @@ public final class DBUpdator {
 							.getConn(), e.getValue());
 					if (!ci.reflects(e.getValue()))
 						dba.updateColumn(grain.callContext().getConn(),
-								e.getValue());
+								e.getValue(), ci);
 				} else {
 					// Таблица не содержит колонку с таким именем, добавляем
 					dba.createColumn(grain.callContext().getConn(),

@@ -370,7 +370,7 @@ final class MySQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void updateColumn(Connection conn, Column c) throws CelestaException {
+	void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
 		String def = columnDef(c);
 		String sql = String.format("ALTER TABLE " + tableTemplate()
 				+ " MODIFY COLUMN %s", c.getParentTable().getGrain().getName(),

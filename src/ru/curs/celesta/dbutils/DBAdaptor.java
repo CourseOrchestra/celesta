@@ -668,7 +668,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             при ошибке обновления колонки.
 	 */
-	abstract void updateColumn(Connection conn, Column c)
+	abstract void updateColumn(Connection conn, Column c, DBColumnInfo actual)
 			throws CelestaException;
 
 }
@@ -682,16 +682,35 @@ abstract class ColumnDefiner {
 
 	abstract String dbFieldType();
 
+	/**
+	 * Возвращает определение колонки, содержащее имя, тип и NULL/NOT NULL (без
+	 * DEFAULT). Требуется для механизма изменения колонок.
+	 * 
+	 * @param c
+	 *            колонка.
+	 */
 	abstract String getMainDefinition(Column c);
 
+	/**
+	 * Отдельно возвращает DEFAULT-определение колонки.
+	 * 
+	 * @param c
+	 *            колонка.
+	 */
 	abstract String getDefaultDefinition(Column c);
 
+	/**
+	 * Возвращает полное определение колонки (для создания колонки).
+	 * 
+	 * @param c
+	 *            колонка
+	 */
 	String getFullDefinition(Column c) {
 		return join(getMainDefinition(c), getDefaultDefinition(c));
 	}
 
 	String nullable(Column c) {
-		return c.isNullable() ? "" : "not null";
+		return c.isNullable() ? "null" : "not null";
 	}
 
 	/**
@@ -785,9 +804,16 @@ final class DBColumnInfo {
 	}
 
 	boolean reflects(Column value) {
-		// Если тип или nullability не совпадают -- дальше не проверяем.
-		if (!(value.getClass() == type && value.isNullable() == isNullable))
+		// Если тип не совпадает -- дальше не проверяем.
+		if (value.getClass() != type)
 			return false;
+
+		// Проверяем nullability, но помним о том, что в Oracle DEFAULT
+		// ''-строки всегда nullable
+		if (type != StringColumn.class || !"''".equals(defaultValue)) {
+			if (value.isNullable() != isNullable)
+				return false;
+		}
 
 		if (type == IntegerColumn.class) {
 			// Если свойство IDENTITY не совпадает -- не проверяем

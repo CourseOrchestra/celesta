@@ -500,13 +500,13 @@ public abstract class AbstractAdaptorTest {
 
 	@Test
 	public void updateColumn() throws CelestaException, ParseException {
+		// NULL/NOT NULL и DEFAULT (простые)
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 		dba.createTable(t);
 		DBColumnInfo c;
 		Column col;
 		Connection conn = ConnectionPool.get();
 		try {
-			// Этот тест проверяет выражения default и дополнительные атрибуты
 			col = t.getColumn("attrInt");
 			c = dba.getColumnInfo(conn, col);
 			assertEquals("attrInt", c.getName());
@@ -515,7 +515,7 @@ public abstract class AbstractAdaptorTest {
 			assertEquals("3", c.getDefaultValue());
 			assertEquals(false, c.isIdentity());
 			col.setNullableAndDefault(false, "55");
-			dba.updateColumn(conn, col);
+			dba.updateColumn(conn, col, c);
 			c = dba.getColumnInfo(conn, col);
 			assertEquals("attrInt", c.getName());
 			assertSame(IntegerColumn.class, c.getType());
@@ -534,7 +534,7 @@ public abstract class AbstractAdaptorTest {
 			StringColumn scol = (StringColumn) col;
 			scol.setLength("234");
 			scol.setNullableAndDefault(true, "'eee'");
-			dba.updateColumn(conn, col);
+			dba.updateColumn(conn, col, c);
 			c = dba.getColumnInfo(conn, col);
 			assertEquals("f6", c.getName());
 			assertSame(StringColumn.class, c.getType());

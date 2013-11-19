@@ -30,6 +30,8 @@ import ru.curs.celesta.score.Table;
  */
 final class MSSQLAdaptor extends DBAdaptor {
 
+	private static final String ALTER_TABLE = "alter table ";
+
 	private static final String WHERE_S = " where %s;";
 
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
@@ -494,12 +496,36 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void updateColumn(Connection conn, Column c) throws CelestaException {
-		String def = columnDef(c);
-		String sql = String.format("ALTER TABLE " + tableTemplate()
-				+ " ALTER COLUMN %s", c.getParentTable().getGrain().getName(),
-				c.getParentTable().getName(), def);
+	void updateColumn(Connection conn, Column c, DBColumnInfo actual)
+			throws CelestaException {
+
+		String sql;
+		if (!"".equals(actual.getDefaultValue())) {
+			sql = String.format(ALTER_TABLE + tableTemplate()
+					+ " drop constraint \"def_%s_%s\"", c.getParentTable()
+					.getGrain().getName(), c.getParentTable().getName(), c
+					.getParentTable().getName(), c.getName());
+			runUpdateSQL(conn, c, sql);
+		}
+
+		String def = getColumnDefiner(c).getMainDefinition(c);
+		sql = String.format(ALTER_TABLE + tableTemplate() + " alter column %s",
+				c.getParentTable().getGrain().getName(), c.getParentTable()
+						.getName(), def);
+		runUpdateSQL(conn, c, sql);
+
+		sql = String.format(ALTER_TABLE + tableTemplate() + " add %s for %s", c
+				.getParentTable().getGrain().getName(), c.getParentTable()
+				.getName(), getColumnDefiner(c).getDefaultDefinition(c), c
+				.getQuotedName());
+		runUpdateSQL(conn, c, sql);
+	}
+
+	private void runUpdateSQL(Connection conn, Column c, String sql)
+			throws CelestaException {
+
 		System.out.println(sql);
+
 		PreparedStatement stmt = prepareStatement(conn, sql);
 		try {
 			stmt.executeUpdate();
@@ -510,6 +536,5 @@ final class MSSQLAdaptor extends DBAdaptor {
 							.getName(), e.getMessage());
 
 		}
-
 	}
 }

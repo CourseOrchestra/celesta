@@ -124,7 +124,7 @@ final class OraAdaptor extends DBAdaptor {
 			@Override
 			String nullable(Column c) {
 				StringColumn ic = (StringColumn) c;
-				return ("".equals(ic.getDefaultValue())) ? "" : super
+				return ("".equals(ic.getDefaultValue())) ? "null" : super
 						.nullable(c);
 			}
 
@@ -738,6 +738,7 @@ final class OraAdaptor extends DBAdaptor {
 			// ("COLUMN_DEF"),
 			// поэтому извлекаем его самостоятельно.
 			processDefaults(conn, c, result);
+
 			return result;
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -788,11 +789,12 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void updateColumn(Connection conn, Column c) throws CelestaException {
-		String def = columnDef(c);
-		String sql = String.format("ALTER TABLE " + tableTemplate()
-				+ " MODIFY COLUMN %s", c.getParentTable().getGrain().getName(),
-				c.getParentTable().getName(), def);
+	void updateColumn(Connection conn, Column c, DBColumnInfo actual)
+			throws CelestaException {
+		String def = getColumnDefiner(c).getFullDefinition(c); // getColumnDefiner(c).getMainDefinition(c);
+		String sql = String.format("alter table " + tableTemplate()
+				+ " modify (%s)", c.getParentTable().getGrain().getName(), c
+				.getParentTable().getName(), def);
 		System.out.println(sql);
 		PreparedStatement stmt = prepareStatement(conn, sql);
 		try {
