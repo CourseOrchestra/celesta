@@ -514,11 +514,14 @@ final class MSSQLAdaptor extends DBAdaptor {
 						.getName(), def);
 		runUpdateSQL(conn, c, sql);
 
-		sql = String.format(ALTER_TABLE + tableTemplate() + " add %s for %s", c
-				.getParentTable().getGrain().getName(), c.getParentTable()
-				.getName(), getColumnDefiner(c).getDefaultDefinition(c), c
-				.getQuotedName());
-		runUpdateSQL(conn, c, sql);
+		def = getColumnDefiner(c).getDefaultDefinition(c);
+		if (!"".equals(def)) {
+			sql = String.format(ALTER_TABLE + tableTemplate()
+					+ " add %s for %s",
+					c.getParentTable().getGrain().getName(), c.getParentTable()
+							.getName(), def, c.getQuotedName());
+			runUpdateSQL(conn, c, sql);
+		}
 	}
 
 	private void runUpdateSQL(Connection conn, Column c, String sql)

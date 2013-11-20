@@ -42,7 +42,7 @@ final class OraAdaptor extends DBAdaptor {
 			.compile("'(\\d\\d\\d\\d)-([01]\\d)-([0123]\\d)'");
 	private static final Pattern HEX_STRING = Pattern.compile("'([0-9A-F]+)'");
 
-	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
+	private static final Map<Class<? extends Column>, OraColumnDefiner> TYPES_DICT = new HashMap<>();
 
 	/**
 	 * Определитель колонок для Oracle, учитывающий тот факт, что в Oracle
@@ -253,18 +253,20 @@ final class OraAdaptor extends DBAdaptor {
 				|| name.isEmpty()) {
 			return false;
 		}
-		DatabaseMetaData metaData = conn.getMetaData();
-		String tableName = String.format("%s_%s", schema, name);
-		ResultSet rs = metaData.getTables(null, null, tableName,
-				new String[] { "TABLE" });
+
+		PreparedStatement checkForTable = conn
+				.prepareStatement(String
+						.format("select count(*) from all_tables where owner = "
+								+ "sys_context('userenv','session_user') and table_name = '%s_%s'",
+								schema, name));
+		ResultSet rs = checkForTable.executeQuery();
 		try {
 			if (rs.next()) {
-				String rTableName = rs.getString("TABLE_NAME");
-				return tableName.equals(rTableName);
+				return rs.getInt(1) > 0;
 			}
 			return false;
 		} finally {
-			rs.close();
+			checkForTable.close();
 		}
 	}
 
@@ -290,7 +292,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	ColumnDefiner getColumnDefiner(Column c) {
+	OraColumnDefiner getColumnDefiner(Column c) {
 		return TYPES_DICT.get(c.getClass());
 	}
 
@@ -760,7 +762,7 @@ final class OraAdaptor extends DBAdaptor {
 			if (!rs.next())
 				return;
 			String body = rs.getString(1);
-			if (body == null)
+			if (body == null || "null".equalsIgnoreCase(body))
 				return;
 
 			if (BooleanColumn.class == result.getType())
@@ -791,10 +793,24 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	void updateColumn(Connection conn, Column c, DBColumnInfo actual)
 			throws CelestaException {
-		String def = getColumnDefiner(c).getFullDefinition(c); // getColumnDefiner(c).getMainDefinition(c);
+		OraColumnDefiner definer = getColumnDefiner(c);
+
+		// В Oracle нельзя снять default, можно только установить его в Null
+		String defdef = definer.getDefaultDefinition(c);
+		if ("".equals(defdef) && !"".equals(actual.getDefaultValue()))
+			defdef = "default null";
+		String def = OraColumnDefiner.join(definer.getInternalDefinition(c),
+				defdef);
+
+		// Явно задавать nullable в Oracle можно только если действительно надо
+		// изменить
+		if (actual.isNullable() != c.isNullable())
+			def = OraColumnDefiner.join(def, definer.nullable(c));
+
 		String sql = String.format("alter table " + tableTemplate()
 				+ " modify (%s)", c.getParentTable().getGrain().getName(), c
 				.getParentTable().getName(), def);
+
 		System.out.println(sql);
 		PreparedStatement stmt = prepareStatement(conn, sql);
 		try {

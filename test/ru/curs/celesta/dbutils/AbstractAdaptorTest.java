@@ -65,7 +65,6 @@ public abstract class AbstractAdaptorTest {
 	@Test
 	public void tableExists() throws Exception {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-
 		try {
 			boolean result = dba.tableExists(t.getGrain().getName(),
 					t.getName());
@@ -542,6 +541,43 @@ public abstract class AbstractAdaptorTest {
 			assertEquals("'eee'", c.getDefaultValue());
 			assertEquals(false, c.isMax());
 			assertEquals(234, c.getLength());
+
+			// f8 datetime default '20130401',
+			col = t.getColumn("f8");
+			DateTimeColumn dcol = (DateTimeColumn) col;
+			assertFalse(dcol.isGetdate());
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("f8", c.getName());
+			assertSame(DateTimeColumn.class, c.getType());
+			assertEquals(true, c.isNullable());
+			assertEquals("'20130401'", c.getDefaultValue());
+
+			col.setNullableAndDefault(true, "getdate");
+			assertTrue(dcol.isGetdate());
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("f8", c.getName());
+			assertSame(DateTimeColumn.class, c.getType());
+			assertEquals(true, c.isNullable());
+			assertEquals("GETDATE()", c.getDefaultValue());
+
+			col.setNullableAndDefault(true, null);
+			assertFalse(dcol.isGetdate());
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("f8", c.getName());
+			assertSame(DateTimeColumn.class, c.getType());
+			assertEquals(true, c.isNullable());
+			assertEquals("", c.getDefaultValue());
+
+			col.setNullableAndDefault(false, "getdate");
+			assertTrue(dcol.isGetdate());
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("f8", c.getName());
+			assertSame(DateTimeColumn.class, c.getType());
+			assertEquals(false, c.isNullable());
+			assertEquals("GETDATE()", c.getDefaultValue());
 
 		} finally {
 			ConnectionPool.putBack(conn);
