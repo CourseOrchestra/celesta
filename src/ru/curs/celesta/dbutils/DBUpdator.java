@@ -87,6 +87,7 @@ public final class DBUpdator {
 					dba.createTable(sys.getTable("grains"));
 					dba.createTable(sys.getTable("tables"));
 					dba.createTable(sys.getTable("logsetup"));
+					dba.createTable(sys.getTable("sequences"));
 					insertGrainRec(sys);
 					updateGrain(sys);
 				} catch (ParseException e) {
@@ -254,16 +255,16 @@ public final class DBUpdator {
 	}
 
 	private static void updateGrainIndices(Grain g) throws CelestaException {
-		Map<DBIndexInfo, TreeMap<Short, String>> dbIndices = dba.getIndices(grain
-				.callContext().getConn(), g);
+		Map<DBIndexInfo, TreeMap<Short, String>> dbIndices = dba.getIndices(
+				grain.callContext().getConn(), g);
 		Map<String, Index> myIndices = g.getIndices();
 		// Начинаем с удаления ненужных
 		for (DBIndexInfo dBIndexInfo : dbIndices.keySet())
 			if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
 				dba.dropIndex(g, dBIndexInfo);
 		for (Entry<String, Index> e : myIndices.entrySet()) {
-			DBIndexInfo dBIndexInfo = new DBIndexInfo(e
-					.getValue().getTable().getName(), e.getKey());
+			DBIndexInfo dBIndexInfo = new DBIndexInfo(e.getValue().getTable()
+					.getName(), e.getKey());
 			if (dbIndices.containsKey(dBIndexInfo)) {
 				// БД содержит индекс с таким именем, надо проверить
 				// поля и пересоздать индекс в случае необходимости.

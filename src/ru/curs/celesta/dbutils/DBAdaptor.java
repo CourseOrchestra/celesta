@@ -838,6 +838,9 @@ final class DBColumnInfo {
 					result = false;
 				}
 			}
+		} else if (type == StringColumn.class) {
+			result = defaultValue.equals(StringColumn
+					.quoteString(((StringColumn) value).getDefaultValue()));
 		} else {
 			result = defaultValue.equals(value.getDefaultValue());
 		}
