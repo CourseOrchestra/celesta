@@ -25,7 +25,7 @@ public final class IntegerColumn extends Column {
 				if (c instanceof IntegerColumn && c != this
 						&& ((IntegerColumn) c).isIdentity())
 					throw new ParseException(
-							"More than one identity columns are defind in table "
+							"More than one identity columns are defined in table "
 									+ getParentTable().getName());
 			defaultvalue = null;
 			identity = true;
