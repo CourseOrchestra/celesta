@@ -34,9 +34,16 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	private static final String WHERE_S = " where %s;";
 
-	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
+	/**
+	 * Определитель колонок для MSSQL.
+	 */
+	abstract static class MSColumnDefiner extends ColumnDefiner {
+		abstract String getLightDefaultDefinition(Column c);
+	}
+
+	private static final Map<Class<? extends Column>, MSColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
-		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(IntegerColumn.class, new MSColumnDefiner() {
 			@Override
 			String dbFieldType() {
 				return "int";
@@ -44,25 +51,27 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 			@Override
 			String getMainDefinition(Column c) {
-				IntegerColumn ic = (IntegerColumn) c;
-				String defaultStr = "";
-				if (ic.isIdentity()) {
-					defaultStr = "IDENTITY";
-				}
-				return join(c.getQuotedName(), dbFieldType(), nullable(c),
-						defaultStr);
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
 			}
 
 			@Override
 			String getDefaultDefinition(Column c) {
 				IntegerColumn ic = (IntegerColumn) c;
-				if (!ic.isIdentity() && ic.getDefaultValue() != null)
+				if (ic.getDefaultValue() != null)
 					return msSQLDefault(c) + ic.getDefaultValue();
+				return "";
+			}
+
+			@Override
+			String getLightDefaultDefinition(Column c) {
+				IntegerColumn ic = (IntegerColumn) c;
+				if (ic.getDefaultValue() != null)
+					return DEFAULT + ic.getDefaultValue();
 				return "";
 			}
 		});
 
-		TYPES_DICT.put(FloatingColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(FloatingColumn.class, new MSColumnDefiner() {
 
 			@Override
 			String dbFieldType() {
@@ -83,9 +92,19 @@ final class MSSQLAdaptor extends DBAdaptor {
 				}
 				return defaultStr;
 			}
+
+			@Override
+			String getLightDefaultDefinition(Column c) {
+				FloatingColumn ic = (FloatingColumn) c;
+				String defaultStr = "";
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
+				}
+				return defaultStr;
+			}
 		});
 
-		TYPES_DICT.put(StringColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(StringColumn.class, new MSColumnDefiner() {
 
 			@Override
 			String dbFieldType() {
@@ -110,9 +129,20 @@ final class MSSQLAdaptor extends DBAdaptor {
 				}
 				return defaultStr;
 			}
+
+			@Override
+			String getLightDefaultDefinition(Column c) {
+				StringColumn ic = (StringColumn) c;
+				String defaultStr = "";
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT
+							+ StringColumn.quoteString(ic.getDefaultValue());
+				}
+				return defaultStr;
+			}
 		});
 
-		TYPES_DICT.put(BinaryColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(BinaryColumn.class, new MSColumnDefiner() {
 
 			@Override
 			String dbFieldType() {
@@ -135,9 +165,20 @@ final class MSSQLAdaptor extends DBAdaptor {
 				return defaultStr;
 
 			}
+
+			@Override
+			String getLightDefaultDefinition(Column c) {
+				BinaryColumn ic = (BinaryColumn) c;
+
+				String defaultStr = "";
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
+				}
+				return defaultStr;
+			}
 		});
 
-		TYPES_DICT.put(DateTimeColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(DateTimeColumn.class, new MSColumnDefiner() {
 
 			@Override
 			String dbFieldType() {
@@ -162,9 +203,23 @@ final class MSSQLAdaptor extends DBAdaptor {
 				}
 				return defaultStr;
 			}
+
+			@Override
+			String getLightDefaultDefinition(Column c) {
+				DateTimeColumn ic = (DateTimeColumn) c;
+				String defaultStr = "";
+				if (ic.isGetdate()) {
+					defaultStr = DEFAULT + "getdate()";
+				} else if (ic.getDefaultValue() != null) {
+					DateFormat df = new SimpleDateFormat("yyyyMMdd");
+					defaultStr = String.format(DEFAULT + " '%s'",
+							df.format(ic.getDefaultValue()));
+				}
+				return defaultStr;
+			}
 		});
 
-		TYPES_DICT.put(BooleanColumn.class, new ColumnDefiner() {
+		TYPES_DICT.put(BooleanColumn.class, new MSColumnDefiner() {
 
 			@Override
 			String dbFieldType() {
@@ -183,6 +238,16 @@ final class MSSQLAdaptor extends DBAdaptor {
 				if (ic.getDefaultValue() != null) {
 					defaultStr = msSQLDefault(c) + "'" + ic.getDefaultValue()
 							+ "'";
+				}
+				return defaultStr;
+			}
+
+			@Override
+			String getLightDefaultDefinition(Column c) {
+				BooleanColumn ic = (BooleanColumn) c;
+				String defaultStr = "";
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
 				}
 				return defaultStr;
 			}
@@ -245,7 +310,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	ColumnDefiner getColumnDefiner(Column c) {
+	MSColumnDefiner getColumnDefiner(Column c) {
 		return TYPES_DICT.get(c.getClass());
 	}
 
@@ -324,8 +389,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 		for (String c : t.getColumns().keySet()) {
 			// Пропускаем ключевые поля и поля, не изменившие своего значения
 			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
-				if (setClause.length() > 0)
-					setClause.append(", ");
+				padComma(setClause);
 				setClause.append(String.format("%s = ?", c));
 			}
 			i++;
@@ -375,9 +439,11 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	@Override
 	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
-		PreparedStatement stmt = prepareStatement(conn, String.format(
-				"SELECT IDENT_CURRENT('%s.%s')", t.getGrain().getName(),
-				t.getName()));
+		PreparedStatement stmt = prepareStatement(
+				conn,
+				String.format(
+						"select seqvalue from celesta.sequences where grainid = '%s' and tablename = '%s'",
+						t.getGrain().getName(), t.getName()));
 		try {
 			ResultSet rs = stmt.executeQuery();
 			rs.next();
@@ -385,7 +451,6 @@ final class MSSQLAdaptor extends DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
-
 	}
 
 	@Override
@@ -425,6 +490,28 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	}
 
+	private boolean checkForIncrementTrigger(Connection conn, Column c)
+			throws SQLException {
+		PreparedStatement checkForTrigger = conn
+				.prepareStatement(String
+						.format("select text from sys.syscomments where id = object_id('%s.\"%s_inc\"')",
+								c.getParentTable().getGrain().getQuotedName(),
+								c.getParentTable().getName()));
+		try {
+			ResultSet rs = checkForTrigger.executeQuery();
+			if (rs.next()) {
+				String body = rs.getString(1);
+				if (body != null
+						&& body.contains(String.format("/*IDENTITY %s*/",
+								c.getName())))
+					return true;
+			}
+		} finally {
+			checkForTrigger.close();
+		}
+		return false;
+	}
+
 	/**
 	 * Возвращает информацию о столбце.
 	 * 
@@ -450,9 +537,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 					DBColumnInfo result = new DBColumnInfo();
 					result.setName(rs.getString(COLUMN_NAME));
 					String typeName = rs.getString("TYPE_NAME");
-					if ("int identity".equalsIgnoreCase(typeName)) {
+					if ("int".equalsIgnoreCase(typeName)) {
 						result.setType(IntegerColumn.class);
-						result.setIdentity(true);
+						result.setIdentity(checkForIncrementTrigger(conn, c));
 					} else {
 						for (Class<?> cc : COLUMN_CLASSES)
 							if (TYPES_DICT.get(cc).dbFieldType()
@@ -522,6 +609,17 @@ final class MSSQLAdaptor extends DBAdaptor {
 							.getName(), def, c.getQuotedName());
 			runUpdateSQL(conn, c, sql);
 		}
+
+		if (c instanceof IntegerColumn)
+			try {
+				manageAutoIncrement(conn, c.getParentTable());
+			} catch (SQLException e) {
+				throw new CelestaException(
+						"Failed to update field %s.%s.%s: %s", c
+								.getParentTable().getGrain().getName(), c
+								.getParentTable().getName(), c.getName(),
+						e.getMessage());
+			}
 	}
 
 	private void runUpdateSQL(Connection conn, Column c, String sql)
@@ -538,6 +636,126 @@ final class MSSQLAdaptor extends DBAdaptor {
 					c.getParentTable().getGrain().getName(), c.getParentTable()
 							.getName(), e.getMessage());
 
+		}
+	}
+
+	@Override
+	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
+		// 1. Firstly, we have to clean up table from any auto-increment
+		// triggers
+		String triggerName = String.format("\"%s\".\"%s_inc\"", t.getGrain()
+				.getName(), t.getName());
+		String sql = String.format("drop trigger %s", triggerName);
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		try {
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			// do nothing
+			sql = "";
+		} finally {
+			stmt.close();
+		}
+
+		// 2. Check if table has IDENTITY field, if it doesn't, no need to
+		// proceed.
+		IntegerColumn ic = null;
+		for (Column c : t.getColumns().values())
+			if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
+				ic = (IntegerColumn) c;
+				break;
+			}
+		if (ic == null)
+			return;
+
+		// 3. Now, we know that we surely have IDENTITY field, and we must
+		// assure that we have an appropriate sequence.
+		sql = String
+				.format("insert into celesta.sequences (grainid, tablename) values ('%s', '%s')",
+						t.getGrain().getName(), t.getName());
+		stmt = conn.prepareStatement(sql);
+		try {
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			// do nothing
+			sql = "";
+		} finally {
+			stmt.close();
+		}
+
+		// 4. Now we have to create the auto-increment trigger
+		StringBuilder body = new StringBuilder();
+		body.append(String.format(
+				"create trigger %s on %s.%s instead of insert as begin\n",
+				triggerName, t.getGrain().getQuotedName(), t.getQuotedName()));
+		body.append(String.format("  /*IDENTITY %s*/\n", ic.getName()));
+		body.append("  set nocount on;\n");
+		body.append("  begin transaction;\n");
+		body.append("  declare @id int;\n");
+		body.append("  declare @tmp table (\n");
+
+		StringBuilder selectList = new StringBuilder();
+		StringBuilder insertList = new StringBuilder();
+		Iterator<Column> i = t.getColumns().values().iterator();
+		while (i.hasNext()) {
+			Column c = i.next();
+			MSColumnDefiner d = getColumnDefiner(c);
+			body.append("    ");
+			if (c == ic) {
+				body.append(c.getName());
+				body.append(" int not null identity");
+				padComma(insertList);
+				insertList.append("@id + ");
+				insertList.append(c.getQuotedName());
+			} else {
+				body.append(ColumnDefiner.join(d.getMainDefinition(c),
+						d.getLightDefaultDefinition(c)));
+				padComma(selectList);
+				padComma(insertList);
+				selectList.append(c.getQuotedName());
+				insertList.append(c.getQuotedName());
+			}
+			body.append(i.hasNext() ? ",\n" : "\n");
+		}
+		body.append("  );\n");
+		body.append(String.format(
+				"  insert into @tmp (%s) select %s from inserted;\n",
+				selectList, selectList));
+		body.append(String
+				.format("  select @id = seqvalue from celesta.sequences where grainid = '%s' and tablename = '%s';\n",
+						t.getGrain().getName(), t.getName()));
+		body.append(String
+				.format("  update celesta.sequences set seqvalue = @id + @@IDENTITY where grainid = '%s' and tablename = '%s';\n",
+						t.getGrain().getName(), t.getName()));
+		body.append(String.format("  insert into %s.%s select %s from @tmp;\n",
+				t.getGrain().getQuotedName(), t.getQuotedName(), insertList));
+		body.append("  commit transaction;\n");
+		body.append("end;\n");
+		stmt = conn.prepareStatement(body.toString());
+		try {
+			stmt.executeUpdate();
+		} finally {
+			stmt.close();
+		}
+	}
+
+	private static void padComma(StringBuilder insertList) {
+		if (insertList.length() > 0)
+			insertList.append(", ");
+	}
+
+	@Override
+	void dropAutoIncrement(Connection conn, Table t) throws SQLException {
+		String sql = String
+				.format("delete from celesta.sequences where grainid = '%s' and tablename = '%s';\n",
+						t.getGrain().getName(), t.getName());
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		try {
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			// do nothing
+			sql = "";
+		} finally {
+			stmt.close();
 		}
 	}
 }

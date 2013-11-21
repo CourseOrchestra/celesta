@@ -239,13 +239,6 @@ final class OraAdaptor extends DBAdaptor {
 		});
 	}
 
-	/**
-	 * Выполняемое действия для Identity атрибута при create/drop таблицы.
-	 */
-	private interface PostCreateDropTableCommand {
-		void command(IntegerColumn column) throws CelestaException;
-	}
-
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
 			throws SQLException {
@@ -499,97 +492,10 @@ final class OraAdaptor extends DBAdaptor {
 		}
 	}
 
-	private void createAutoincrement(Connection conn, Table table,
-			IntegerColumn col) throws SQLException {
-		String sequenceName = getSequenceName(table, col);
-		String sql = "CREATE SEQUENCE " + sequenceName
-				+ " START WITH 1 INCREMENT BY 1 MINVALUE 1 NOCACHE NOCYCLE";
-		Statement stmt = conn.createStatement();
-		try {
-			stmt.execute(sql);
-		} finally {
-			stmt.close();
-		}
-		// Создание Trigger
-		sql = String.format("CREATE OR REPLACE TRIGGER " + sequenceName
-				+ " BEFORE INSERT ON " + tableTemplate()
-				+ " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT "
-				+ sequenceName + ".NEXTVAL INTO :new.%s FROM dual; END;", table
-				.getGrain().getName(), table.getName(), col.getQuotedName(),
-				col.getQuotedName());
-		stmt = conn.createStatement();
-		try {
-			stmt.execute(sql);
-		} finally {
-			stmt.close();
-		}
-	}
-
-	/*
-	 * Trigger удаляется вместе с удалением таблицы
-	 */
-	private void deleteAutoincrement(Connection conn, Table table,
-			IntegerColumn col) throws SQLException {
-		// Удаление Sequence
-		String sequenceName = getSequenceName(table, col);
-		String sql = "DROP SEQUENCE " + sequenceName;
-		Statement stmt = conn.createStatement();
-		try {
-			stmt.execute(sql);
-		} finally {
-			stmt.close();
-		}
-	}
-
-	private String getSequenceName(Table table, Column col) {
+	private String getSequenceName(Table table) {
 		String sequenceName = String.format("\"%s_%s_inc\"", table.getGrain()
 				.getName(), table.getName());
 		return sequenceName;
-	}
-
-	private void postCreateDropTable(Connection conn, Table table,
-			PostCreateDropTableCommand action) throws CelestaException {
-		for (Column column : table.getColumns().values()) {
-			if (column instanceof IntegerColumn) {
-				IntegerColumn col = (IntegerColumn) column;
-				if (col.isIdentity()) {
-					action.command(col);
-				}
-			}
-		}
-	}
-
-	@Override
-	public void postCreateTable(final Connection conn, final Table table)
-			throws CelestaException {
-		postCreateDropTable(conn, table, new PostCreateDropTableCommand() {
-
-			@Override
-			public void command(IntegerColumn column) throws CelestaException {
-				try {
-					createAutoincrement(conn, table, column);
-				} catch (SQLException e) {
-					throw new CelestaException(e.getMessage());
-				}
-			}
-
-		});
-	}
-
-	public void postDropTable(final Connection conn, final Table table)
-			throws CelestaException {
-		postCreateDropTable(conn, table, new PostCreateDropTableCommand() {
-
-			@Override
-			public void command(IntegerColumn column) throws CelestaException {
-				try {
-					deleteAutoincrement(conn, table, column);
-				} catch (SQLException e) {
-					throw new CelestaException(e.getMessage());
-				}
-			}
-
-		});
 	}
 
 	@Override
@@ -599,15 +505,7 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
-		String sequenceName = "";
-		for (Column col : t.getColumns().values())
-			if (col instanceof IntegerColumn
-					&& ((IntegerColumn) col).isIdentity()) {
-				sequenceName = getSequenceName(t, col);
-				break;
-			}
-		if ("".equals(sequenceName))
-			throw new IllegalArgumentException("Table has no identity field");
+		String sequenceName = getSequenceName(t);
 		PreparedStatement stmt = prepareStatement(conn,
 				String.format("SELECT %s.CURRVAL FROM DUAL", sequenceName));
 		try {
@@ -821,6 +719,102 @@ final class OraAdaptor extends DBAdaptor {
 					c.getParentTable().getGrain().getName(), c.getParentTable()
 							.getName(), e.getMessage());
 
+		}
+		if (c instanceof IntegerColumn)
+			try {
+				manageAutoIncrement(conn, c.getParentTable());
+			} catch (SQLException e) {
+				throw new CelestaException(
+						"Failed to update field %s.%s.%s: %s", c
+								.getParentTable().getGrain().getName(), c
+								.getParentTable().getName(), c.getName(),
+						e.getMessage());
+			}
+	}
+
+	@Override
+	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
+		// 1. Firstly, we have to clean up table from any auto-increment
+		// triggers
+		String sequenceName = getSequenceName(t);
+		String sql = String.format("drop trigger %s", sequenceName);
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		try {
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			// do nothing
+			sql = "";
+		} finally {
+			stmt.close();
+		}
+
+		// 2. Check if table has IDENTITY field, if it doesn't, no need to
+		// proceed.
+		IntegerColumn ic = null;
+		for (Column c : t.getColumns().values())
+			if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
+				ic = (IntegerColumn) c;
+				break;
+			}
+		if (ic == null)
+			return;
+
+		// 2. Now, we know that we surely have IDENTITY field, and we have to
+		// be sure that we have an appropriate sequence.
+		boolean hasSequence = false;
+		stmt = conn
+				.prepareStatement(String
+						.format("select count(*) from all_sequences where sequence_owner = "
+								+ "sys_context('userenv','session_user') and sequence_name = '%s_%s_inc'",
+								t.getGrain().getName(), t.getName()));
+		ResultSet rs = stmt.executeQuery();
+		try {
+			hasSequence = rs.next() && rs.getInt(1) > 0;
+		} finally {
+			stmt.close();
+		}
+		if (!hasSequence) {
+			sql = String
+					.format("CREATE SEQUENCE %s"
+							+ " START WITH 1 INCREMENT BY 1 MINVALUE 1 NOCACHE NOCYCLE",
+							sequenceName);
+			stmt = conn.prepareStatement(sql);
+			try {
+				stmt.executeUpdate();
+			} finally {
+				stmt.close();
+			}
+		}
+
+		// 3. Now we have to create or replace the auto-increment trigger
+		sql = String.format("CREATE OR REPLACE TRIGGER " + sequenceName
+				+ " BEFORE INSERT ON " + tableTemplate()
+				+ " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT "
+				+ sequenceName + ".NEXTVAL INTO :new.%s FROM dual; END;", t
+				.getGrain().getName(), t.getName(), ic.getQuotedName(), ic
+				.getQuotedName());
+		Statement s = conn.createStatement();
+		try {
+			s.execute(sql);
+		} finally {
+			stmt.close();
+		}
+	}
+
+	@Override
+	void dropAutoIncrement(Connection conn, Table t) throws SQLException {
+		// Удаление Sequence
+		String sequenceName = getSequenceName(t);
+		String sql = "DROP SEQUENCE " + sequenceName;
+		Statement stmt = conn.createStatement();
+		try {
+			stmt.execute(sql);
+		} catch (SQLException e) {
+			// do nothing
+			sql = "";
+		} finally {
+
+			stmt.close();
 		}
 
 	}

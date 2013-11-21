@@ -424,4 +424,17 @@ final class PostgresAdaptor extends DBAdaptor {
 
 	}
 
+	@Override
+	void manageAutoIncrement(Connection conn, Table t)
+			throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	void dropAutoIncrement(Connection conn, Table t) throws SQLException {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

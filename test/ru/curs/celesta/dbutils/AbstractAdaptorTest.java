@@ -521,6 +521,10 @@ public abstract class AbstractAdaptorTest {
 			assertEquals(false, c.isNullable());
 			assertEquals("55", c.getDefaultValue());
 			assertEquals(false, c.isIdentity());
+			col.setNullableAndDefault(false, null);
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("", c.getDefaultValue());
 
 			// f6 nvarchar(max) not null default 'abc',
 			col = t.getColumn("f6");
@@ -583,6 +587,61 @@ public abstract class AbstractAdaptorTest {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
 		}
+	}
+
+	@Test
+	public void updateColumn2test() throws CelestaException, ParseException {
+		// IDENTITY
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+		DBColumnInfo c;
+		IntegerColumn col;
+		Connection conn = ConnectionPool.get();
+		try {
+			col = (IntegerColumn) t.getColumn("id");
+			assertTrue(col.isIdentity());
+			c = dba.getColumnInfo(conn, col);
+			assertTrue(c.isIdentity());
+			col.setNullableAndDefault(false, null);
+			assertFalse(col.isIdentity());
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertFalse(c.isIdentity());
+			assertFalse(c.isNullable());
+
+			col = (IntegerColumn) t.getColumn("attrInt");
+			c = dba.getColumnInfo(conn, col);
+			assertFalse(c.isIdentity());
+			col.setNullableAndDefault(true, "identity");
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertTrue(c.isIdentity());
+			assertTrue(c.isNullable());
+			
+			col.setNullableAndDefault(true, null);
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertFalse(c.isIdentity());
+			assertTrue(c.isNullable());
+			
+			col = (IntegerColumn) t.getColumn("id");
+			assertFalse(col.isIdentity());
+			c = dba.getColumnInfo(conn, col);
+			assertFalse(c.isIdentity());
+			assertFalse(c.isNullable());
+
+			col.setNullableAndDefault(false, "identity");
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertTrue(c.isIdentity());
+			assertFalse(c.isNullable());
+			
+
+		} finally {
+			ConnectionPool.putBack(conn);
+			dba.dropTable(t);
+		}
+
 	}
 
 	@Test

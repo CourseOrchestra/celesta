@@ -66,3 +66,10 @@ CREATE TABLE log(
   newvalues nvarchar(4000),
   CONSTRAINT fk_log FOREIGN KEY(grainid, tablename) REFERENCES tables(grainid, tablename)
 );
+
+CREATE TABLE sequences(
+  grainid nvarchar(16) NOT NULL FOREIGN KEY REFERENCES grains(id),
+  tablename nvarchar(100) NOT NULL,
+  seqvalue int not null default 0,
+  CONSTRAINT pk_sequences PRIMARY KEY (grainid, tablename)
+);
