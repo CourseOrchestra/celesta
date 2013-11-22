@@ -703,7 +703,6 @@ public abstract class AbstractAdaptorTest {
 
 	}
 
-	// f10
 	@Test
 	public void updateColumn4test() throws CelestaException, ParseException,
 			IOException, SQLException {
@@ -734,6 +733,63 @@ public abstract class AbstractAdaptorTest {
 			c = dba.getColumnInfo(conn, col);
 			assertFalse(c.isNullable());
 			assertEquals("", c.getDefaultValue());
+		} finally {
+			ConnectionPool.putBack(conn);
+			dba.dropTable(t);
+		}
+
+	}
+
+	@Test
+	public void updateColumn5test() throws CelestaException, ParseException,
+			IOException, SQLException {
+		// BLOB Default
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+
+		DBColumnInfo c;
+		IntegerColumn col;
+		StringColumn scol;
+		Connection conn = ConnectionPool.get();
+		try {
+			// To test transforms on non-empty table
+			// insertRow(conn, t, 11);
+			col = (IntegerColumn) t.getColumn("attrInt");
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("attrInt", c.getName());
+			assertSame(IntegerColumn.class, c.getType());
+			assertEquals(true, c.isNullable());
+			assertEquals("3", c.getDefaultValue());
+			assertEquals(false, c.isIdentity());
+
+			t.getGrain().getIndices().get("idxTest").delete();
+
+			col.delete();
+			scol = new StringColumn(t, "attrInt");
+			scol.setLength("40");
+			scol.setNullableAndDefault(true, "'русские буквы'");
+			dba.updateColumn(conn, scol, c);
+
+			c = dba.getColumnInfo(conn, scol);
+			assertEquals("attrInt", c.getName());
+			assertSame(StringColumn.class, c.getType());
+			assertEquals(true, c.isNullable());
+			assertEquals("'русские буквы'", c.getDefaultValue());
+			assertEquals(40, c.getLength());
+			
+			scol.delete();
+			
+			col = new IntegerColumn(t, "attrInt");
+			col.setNullableAndDefault(true, "5");
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("attrInt", c.getName());
+			assertSame(IntegerColumn.class, c.getType());
+			assertEquals(true, c.isNullable());
+			assertEquals("5", c.getDefaultValue());
+			assertEquals(false, c.isIdentity());
+			
+			
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);

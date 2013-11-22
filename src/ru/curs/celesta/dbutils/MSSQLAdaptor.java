@@ -695,9 +695,13 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 		StringBuilder selectList = new StringBuilder();
 		StringBuilder insertList = new StringBuilder();
+		StringBuilder fullList = new StringBuilder();
 		Iterator<Column> i = t.getColumns().values().iterator();
 		while (i.hasNext()) {
 			Column c = i.next();
+			padComma(fullList);
+			fullList.append(c.getQuotedName());
+
 			MSColumnDefiner d = getColumnDefiner(c);
 			body.append("    ");
 			if (c == ic) {
@@ -726,10 +730,15 @@ final class MSSQLAdaptor extends DBAdaptor {
 		body.append(String
 				.format("  update celesta.sequences set seqvalue = @id + @@IDENTITY where grainid = '%s' and tablename = '%s';\n",
 						t.getGrain().getName(), t.getName()));
-		body.append(String.format("  insert into %s.%s select %s from @tmp;\n",
-				t.getGrain().getQuotedName(), t.getQuotedName(), insertList));
+		body.append(String.format(
+				"  insert into %s.%s (%s) select %s from @tmp;\n", t.getGrain()
+						.getQuotedName(), t.getQuotedName(), fullList,
+				insertList));
 		body.append("  commit transaction;\n");
 		body.append("end;\n");
+
+		// System.out.println(body.toString());
+
 		stmt = conn.prepareStatement(body.toString());
 		try {
 			stmt.executeUpdate();

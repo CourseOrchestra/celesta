@@ -214,6 +214,11 @@ public final class DBUpdator {
 		try {
 			// Схему создаём, если ещё не создана.
 			dba.createSchemaIfNotExists(g.getName());
+
+			// Выполняем удаление ненужных индексов, чтобы облегчить задачу
+			// обновления столбцов на таблицах.
+			dropOrphanedGrainIndices(g);
+
 			// Обновляем все таблицы.
 			table.setRange("grainid", g.getName());
 			while (table.next()) {
@@ -231,6 +236,9 @@ public final class DBUpdator {
 
 			// Обновляем все индексы.
 			updateGrainIndices(g);
+
+			// Обновляем внешние ключи
+			// TODO обновление внешних ключей
 
 			// По завершении -- обновление номера версии, контрольной суммы
 			// и выставление в статус ready
@@ -254,14 +262,27 @@ public final class DBUpdator {
 		}
 	}
 
+	private static void dropOrphanedGrainIndices(Grain g)
+			throws CelestaException {
+		Map<DBIndexInfo, TreeMap<Short, String>> dbIndices = dba.getIndices(
+				grain.callContext().getConn(), g);
+		Map<String, Index> myIndices = g.getIndices();
+		// Удаление ненужных индексов
+		for (DBIndexInfo dBIndexInfo : dbIndices.keySet())
+			if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
+				dba.dropIndex(g, dBIndexInfo);
+	}
+
 	private static void updateGrainIndices(Grain g) throws CelestaException {
 		Map<DBIndexInfo, TreeMap<Short, String>> dbIndices = dba.getIndices(
 				grain.callContext().getConn(), g);
 		Map<String, Index> myIndices = g.getIndices();
-		// Начинаем с удаления ненужных
+		// Начинаем с удаления ненужных индексов (ещё раз)
 		for (DBIndexInfo dBIndexInfo : dbIndices.keySet())
 			if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
 				dba.dropIndex(g, dBIndexInfo);
+
+		// Обновление и создание нужных индексов
 		for (Entry<String, Index> e : myIndices.entrySet()) {
 			DBIndexInfo dBIndexInfo = new DBIndexInfo(e.getValue().getTable()
 					.getName(), e.getKey());
@@ -310,10 +331,9 @@ public final class DBUpdator {
 				}
 			}
 		} else {
+			// Таблицы не существует вовсе, создаём с нуля.
 			dba.createTable(t);
 		}
-
-		// TODO обновление внешних ключей
 	}
 
 }

@@ -91,7 +91,7 @@ public abstract class Column extends NamedElement {
 	 *             Если удаляется составная часть первичного ключа, внешнего
 	 *             ключа или индекса.
 	 */
-	final void delete() throws ParseException {
+	public final void delete() throws ParseException {
 		parentTable.removeColumn(this);
 	}
 
