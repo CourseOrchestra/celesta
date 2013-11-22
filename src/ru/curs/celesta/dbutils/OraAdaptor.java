@@ -387,38 +387,45 @@ final class OraAdaptor extends DBAdaptor {
 			Grain g) throws CelestaException {
 		Map<DBIndexInfo, TreeMap<Short, String>> result = new HashMap<>();
 		try {
-			for (Table t : g.getTables().values()) {
-				String tableName = String.format(tableTemplate(), g.getName(),
-						t.getName());
-				DatabaseMetaData metaData = conn.getMetaData();
-				ResultSet rs = metaData.getIndexInfo(null, null, tableName,
-						false, false);
-				try {
-					while (rs.next()) {
-						String indName = rs.getString("INDEX_NAME");
-						// Условие NON_UNIQUE нужно, чтобы не попадали в него
-						// первичные ключи
-						if (indName != null && rs.getBoolean("NON_UNIQUE")) {
-							// Мы отрезаем "имягранулы_" от имени индекса.
-							String grainPrefix = g.getName() + "_";
-							if (indName.startsWith(grainPrefix))
-								indName = indName.substring(grainPrefix
-										.length());
-							DBIndexInfo info = new DBIndexInfo(t.getName(),
-									indName);
-							TreeMap<Short, String> columns = result.get(info);
-							if (columns == null) {
-								columns = new TreeMap<>();
-								result.put(info, columns);
+			for (Table t : g.getTables().values())
+				// В Oracle имеет смысл спрашивать про индексы только лишь
+				// существующих таблиц.
+				// В противном случае возникнет ошибка.
+				if (tableExists(conn, g.getName(), t.getName())) {
+					String tableName = String.format(tableTemplate(),
+							g.getName(), t.getName());
+
+					DatabaseMetaData metaData = conn.getMetaData();
+					ResultSet rs = metaData.getIndexInfo(null, null, tableName,
+							false, false);
+					try {
+						while (rs.next()) {
+							String indName = rs.getString("INDEX_NAME");
+							// Условие NON_UNIQUE нужно, чтобы не попадали в
+							// него
+							// первичные ключи
+							if (indName != null && rs.getBoolean("NON_UNIQUE")) {
+								// Мы отрезаем "имягранулы_" от имени индекса.
+								String grainPrefix = g.getName() + "_";
+								if (indName.startsWith(grainPrefix))
+									indName = indName.substring(grainPrefix
+											.length());
+								DBIndexInfo info = new DBIndexInfo(t.getName(),
+										indName);
+								TreeMap<Short, String> columns = result
+										.get(info);
+								if (columns == null) {
+									columns = new TreeMap<>();
+									result.put(info, columns);
+								}
+								columns.put(rs.getShort("ORDINAL_POSITION"),
+										rs.getString("COLUMN_NAME"));
 							}
-							columns.put(rs.getShort("ORDINAL_POSITION"),
-									rs.getString("COLUMN_NAME"));
 						}
+					} finally {
+						rs.close();
 					}
-				} finally {
-					rs.close();
 				}
-			}
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
