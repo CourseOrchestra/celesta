@@ -617,13 +617,13 @@ public abstract class AbstractAdaptorTest {
 			c = dba.getColumnInfo(conn, col);
 			assertTrue(c.isIdentity());
 			assertTrue(c.isNullable());
-			
+
 			col.setNullableAndDefault(true, null);
 			dba.updateColumn(conn, col, c);
 			c = dba.getColumnInfo(conn, col);
 			assertFalse(c.isIdentity());
 			assertTrue(c.isNullable());
-			
+
 			col = (IntegerColumn) t.getColumn("id");
 			assertFalse(col.isIdentity());
 			c = dba.getColumnInfo(conn, col);
@@ -635,8 +635,52 @@ public abstract class AbstractAdaptorTest {
 			c = dba.getColumnInfo(conn, col);
 			assertTrue(c.isIdentity());
 			assertFalse(c.isNullable());
-			
 
+		} finally {
+			ConnectionPool.putBack(conn);
+			dba.dropTable(t);
+		}
+
+	}
+
+	@Test
+	public void updateColumn3test() throws CelestaException, ParseException {
+		// String length
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+		DBColumnInfo c;
+		StringColumn col;
+		Connection conn = ConnectionPool.get();
+		try {
+			col = (StringColumn) t.getColumn("attrVarchar");
+			assertEquals(2, col.getLength());
+			c = dba.getColumnInfo(conn, col);
+			assertEquals(2, c.getLength());
+			assertFalse(c.isMax());
+			col.setLength("19");
+			assertEquals(19, col.getLength());
+			assertFalse(col.isMax());
+
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertEquals(19, c.getLength());
+			assertFalse(c.isMax());
+
+			col.setLength("max");
+			assertTrue(col.isMax());
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertTrue(c.isMax());
+
+			col.setNullableAndDefault(false, "'www'");
+			col.setLength("3");
+			assertFalse(col.isMax());
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertFalse(c.isMax());
+			assertEquals(3, c.getLength());
+			assertFalse(c.isNullable());
+			assertEquals("'www'", c.getDefaultValue());
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
