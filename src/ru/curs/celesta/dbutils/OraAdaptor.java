@@ -669,9 +669,8 @@ final class OraAdaptor extends DBAdaptor {
 			String body = rs.getString(1);
 			if (body == null || "null".equalsIgnoreCase(body))
 				return;
-
 			if (BooleanColumn.class == result.getType())
-				body = "0".equals(body) ? "'FALSE'" : "'TRUE'";
+				body = "0".equals(body.trim()) ? "'FALSE'" : "'TRUE'";
 			else if (DateTimeColumn.class == result.getType()) {
 				if (body.toLowerCase().contains("sysdate"))
 					body = "GETDATE()";

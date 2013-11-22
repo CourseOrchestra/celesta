@@ -62,8 +62,8 @@ CREATE TABLE log(
   pkvalue1 nvarchar(100),
   pkvalue2 nvarchar(100),
   pkvalue3 nvarchar(100),
-  oldvalues nvarchar(4000),
-  newvalues nvarchar(4000),
+  oldvalues nvarchar(3999), -- there is wisdom in this number (3999), do not modify.
+  newvalues nvarchar(3999), -- we need definite max length and it must be different from varchar(max) in Oracle
   CONSTRAINT fk_log FOREIGN KEY(grainid, tablename) REFERENCES tables(grainid, tablename)
 );
 
