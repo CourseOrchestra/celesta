@@ -163,6 +163,8 @@ public final class ORMCompiler {
 		compileTriggers(w, className);
 		// Клонирование
 		compileCopying(w, columns, className);
+		// Итерация в Python-стиле
+		compileIterate(w);
 		w.newLine();
 	}
 
@@ -234,7 +236,7 @@ public final class ORMCompiler {
 		w.newLine();
 		w.write("        return result");
 		w.newLine();
-		
+
 		w.write("    def copyFieldsFrom(self, c):");
 		w.newLine();
 		for (Column c : columns) {
@@ -356,6 +358,21 @@ public final class ORMCompiler {
 		w.write("    def _grainName(self):");
 		w.newLine();
 		w.write(String.format("        return '%s'", t.getGrain().getName()));
+		w.newLine();
+	}
+
+	private static void compileIterate(BufferedWriter w) throws IOException {
+		w.write("    def iterate(self):");
+		w.newLine();
+		w.write("        if self.tryFirst():");
+		w.newLine();
+		w.write("            while True:");
+		w.newLine();
+		w.write("                yield self");
+		w.newLine();
+		w.write("                if not self.next():");
+		w.newLine();
+		w.write("                    break");
 		w.newLine();
 	}
 

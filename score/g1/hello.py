@@ -76,7 +76,7 @@ def hello(context, arg):
     b.update()
     print 'POST UPDATE B XREC: %s, REC: %s' % (b.getXRec().asCSVLine(), b.asCSVLine())
 
-    while aa.next():
+    for aa in aa.iterate(): # while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)
         
     print 'Python procedure finished.'
