@@ -52,6 +52,7 @@ public abstract class DBAdaptor {
 			StringColumn.class, BooleanColumn.class, FloatingColumn.class,
 			BinaryColumn.class, DateTimeColumn.class };
 	static final String COLUMN_NAME = "COLUMN_NAME";
+	static final String ALTER_TABLE = "alter table ";
 
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
@@ -493,6 +494,21 @@ public abstract class DBAdaptor {
 				flds.add(e.getKey());
 		}
 		return getFieldList(flds);
+	}
+
+	static void runUpdateColumnSQL(Connection conn, Column c, String sql)
+			throws CelestaException {
+		System.out.println(sql);
+		PreparedStatement stmt = prepareStatement(conn, sql);
+		try {
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Cannot modify column %s on table %s.%s: %s", c.getName(),
+					c.getParentTable().getGrain().getName(), c.getParentTable()
+							.getName(), e.getMessage());
+
+		}
 	}
 
 	final String getSelectFromOrderBy(Table t, String whereClause,

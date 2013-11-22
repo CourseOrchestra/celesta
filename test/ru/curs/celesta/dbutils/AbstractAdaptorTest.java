@@ -750,9 +750,10 @@ public abstract class AbstractAdaptorTest {
 		DBColumnInfo c;
 		IntegerColumn col;
 		StringColumn scol;
+		BooleanColumn bcol;
 		Connection conn = ConnectionPool.get();
 		try {
-			// To test transforms on non-empty table
+			// Table should be empty in Oracle to change data type...
 			// insertRow(conn, t, 11);
 			col = (IntegerColumn) t.getColumn("attrInt");
 			c = dba.getColumnInfo(conn, col);
@@ -763,22 +764,21 @@ public abstract class AbstractAdaptorTest {
 			assertEquals(false, c.isIdentity());
 
 			t.getGrain().getIndices().get("idxTest").delete();
-
+			// int --> nvarchar
 			col.delete();
 			scol = new StringColumn(t, "attrInt");
 			scol.setLength("40");
 			scol.setNullableAndDefault(true, "'русские буквы'");
 			dba.updateColumn(conn, scol, c);
-
 			c = dba.getColumnInfo(conn, scol);
 			assertEquals("attrInt", c.getName());
 			assertSame(StringColumn.class, c.getType());
 			assertEquals(true, c.isNullable());
 			assertEquals("'русские буквы'", c.getDefaultValue());
 			assertEquals(40, c.getLength());
-			
+
+			// nvarchar --> int
 			scol.delete();
-			
 			col = new IntegerColumn(t, "attrInt");
 			col.setNullableAndDefault(true, "5");
 			dba.updateColumn(conn, col, c);
@@ -788,8 +788,30 @@ public abstract class AbstractAdaptorTest {
 			assertEquals(true, c.isNullable());
 			assertEquals("5", c.getDefaultValue());
 			assertEquals(false, c.isIdentity());
-			
-			
+
+			// int --> boolean (test specially for Oracle!)
+			col.delete();
+			bcol = new BooleanColumn(t, "attrInt");
+			bcol.setNullableAndDefault(true, null);
+			dba.updateColumn(conn, bcol, c);
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("attrInt", c.getName());
+			assertSame(BooleanColumn.class, c.getType());
+			assertEquals(true, c.isNullable());
+			assertEquals("", c.getDefaultValue());
+
+			// boolean --> back to int
+			bcol.delete();
+			col = new IntegerColumn(t, "attrInt");
+			col.setNullableAndDefault(true, null);
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("attrInt", c.getName());
+			assertSame(IntegerColumn.class, c.getType());
+			assertEquals(true, c.isNullable());
+			assertEquals("", c.getDefaultValue());
+			assertEquals(false, c.isIdentity());
+
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);

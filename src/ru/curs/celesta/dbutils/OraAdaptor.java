@@ -207,7 +207,7 @@ final class OraAdaptor extends DBAdaptor {
 
 			@Override
 			String dbFieldType() {
-				return "int";
+				return "number";
 			}
 
 			@Override
@@ -691,6 +691,18 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	void updateColumn(Connection conn, Column c, DBColumnInfo actual)
 			throws CelestaException {
+
+		if (actual.getType() == BooleanColumn.class
+				&& !(c instanceof BooleanColumn)) {
+			// Тип Boolean меняется на что-то другое, надо сброить constraint
+			String check = String.format(ALTER_TABLE + tableTemplate()
+					+ " drop constraint \"chk_%s_%s_%s\"", c.getParentTable()
+					.getGrain().getName(), c.getParentTable().getName(), c
+					.getParentTable().getGrain().getName(), c.getParentTable()
+					.getName(), c.getName());
+			runUpdateColumnSQL(conn, c, check);
+		}
+
 		OraColumnDefiner definer = getColumnDefiner(c);
 
 		// В Oracle нельзя снять default, можно только установить его в Null
@@ -713,22 +725,23 @@ final class OraAdaptor extends DBAdaptor {
 		if (actual.isNullable() != c.isNullable())
 			def = OraColumnDefiner.join(def, definer.nullable(c));
 
-		String sql = String.format("alter table " + tableTemplate()
+		String sql = String.format(ALTER_TABLE + tableTemplate()
 				+ " modify (%s)", c.getParentTable().getGrain().getName(), c
 				.getParentTable().getName(), def);
+		runUpdateColumnSQL(conn, c, sql);
 
-		System.out.println(sql);
-		PreparedStatement stmt = prepareStatement(conn, sql);
-		try {
-			stmt.executeUpdate();
-		} catch (SQLException e) {
-			throw new CelestaException(
-					"Cannot modify column %s on table %s.%s: %s", c.getName(),
+		if (c instanceof BooleanColumn
+				&& actual.getType() != BooleanColumn.class) {
+			// Тип поменялся на Boolean, надо добавить constraint
+			String check = String.format(ALTER_TABLE + tableTemplate()
+					+ " add constraint \"chk_%s_%s_%s\" check (%s in (0, 1))",
 					c.getParentTable().getGrain().getName(), c.getParentTable()
-							.getName(), e.getMessage());
+							.getName(),
+					c.getParentTable().getGrain().getName(), c.getParentTable()
+							.getName(), c.getName(), c.getQuotedName());
+			runUpdateColumnSQL(conn, c, check);
 
-		}
-		if (c instanceof IntegerColumn)
+		} else if (c instanceof IntegerColumn)
 			try {
 				manageAutoIncrement(conn, c.getParentTable());
 			} catch (SQLException e) {

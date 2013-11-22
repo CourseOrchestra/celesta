@@ -30,8 +30,6 @@ import ru.curs.celesta.score.Table;
  */
 final class MSSQLAdaptor extends DBAdaptor {
 
-	private static final String ALTER_TABLE = "alter table ";
-
 	private static final String WHERE_S = " where %s;";
 
 	/**
@@ -592,14 +590,14 @@ final class MSSQLAdaptor extends DBAdaptor {
 					+ " drop constraint \"def_%s_%s\"", c.getParentTable()
 					.getGrain().getName(), c.getParentTable().getName(), c
 					.getParentTable().getName(), c.getName());
-			runUpdateSQL(conn, c, sql);
+			runUpdateColumnSQL(conn, c, sql);
 		}
 
 		String def = getColumnDefiner(c).getMainDefinition(c);
 		sql = String.format(ALTER_TABLE + tableTemplate() + " alter column %s",
 				c.getParentTable().getGrain().getName(), c.getParentTable()
 						.getName(), def);
-		runUpdateSQL(conn, c, sql);
+		runUpdateColumnSQL(conn, c, sql);
 
 		def = getColumnDefiner(c).getDefaultDefinition(c);
 		if (!"".equals(def)) {
@@ -607,7 +605,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 					+ " add %s for %s",
 					c.getParentTable().getGrain().getName(), c.getParentTable()
 							.getName(), def, c.getQuotedName());
-			runUpdateSQL(conn, c, sql);
+			runUpdateColumnSQL(conn, c, sql);
 		}
 
 		if (c instanceof IntegerColumn)
@@ -620,23 +618,6 @@ final class MSSQLAdaptor extends DBAdaptor {
 								.getParentTable().getName(), c.getName(),
 						e.getMessage());
 			}
-	}
-
-	private void runUpdateSQL(Connection conn, Column c, String sql)
-			throws CelestaException {
-
-		System.out.println(sql);
-
-		PreparedStatement stmt = prepareStatement(conn, sql);
-		try {
-			stmt.executeUpdate();
-		} catch (SQLException e) {
-			throw new CelestaException(
-					"Cannot modify column %s on table %s.%s: %s", c.getName(),
-					c.getParentTable().getGrain().getName(), c.getParentTable()
-							.getName(), e.getMessage());
-
-		}
 	}
 
 	@Override
