@@ -8,9 +8,11 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -100,7 +102,8 @@ public abstract class AbstractAdaptorTest {
 		}
 	}
 
-	private int insertRow(Connection conn, Table t, int val) throws Exception {
+	private int insertRow(Connection conn, Table t, int val)
+			throws IOException, CelestaException, SQLException {
 		int count = t.getColumns().size();
 		assertEquals(13, count);
 		boolean[] nullsMask = { true, false, false, false, true, false, true,
@@ -117,7 +120,7 @@ public abstract class AbstractAdaptorTest {
 		try {
 			int rowCount = pstmt.executeUpdate();
 			return rowCount;
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 			throw e;
 		}
@@ -498,7 +501,8 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void updateColumn() throws CelestaException, ParseException {
+	public void updateColumn() throws CelestaException, ParseException,
+			IOException, SQLException {
 		// NULL/NOT NULL и DEFAULT (простые)
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 		dba.createTable(t);
@@ -506,6 +510,9 @@ public abstract class AbstractAdaptorTest {
 		Column col;
 		Connection conn = ConnectionPool.get();
 		try {
+			// To test transforms on non-empty table
+			insertRow(conn, t, 17);
+
 			col = t.getColumn("attrInt");
 			c = dba.getColumnInfo(conn, col);
 			assertEquals("attrInt", c.getName());
@@ -590,7 +597,8 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void updateColumn2test() throws CelestaException, ParseException {
+	public void updateColumn2test() throws CelestaException, ParseException,
+			IOException, SQLException {
 		// IDENTITY
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 		dba.createTable(t);
@@ -598,6 +606,9 @@ public abstract class AbstractAdaptorTest {
 		IntegerColumn col;
 		Connection conn = ConnectionPool.get();
 		try {
+			// To test transforms on non-empty table
+			insertRow(conn, t, 15);
+
 			col = (IntegerColumn) t.getColumn("id");
 			assertTrue(col.isIdentity());
 			c = dba.getColumnInfo(conn, col);
@@ -644,7 +655,8 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void updateColumn3test() throws CelestaException, ParseException {
+	public void updateColumn3test() throws CelestaException, ParseException,
+			IOException, SQLException {
 		// String length
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 		dba.createTable(t);
@@ -652,6 +664,9 @@ public abstract class AbstractAdaptorTest {
 		StringColumn col;
 		Connection conn = ConnectionPool.get();
 		try {
+			// To test transforms on non-empty table
+			insertRow(conn, t, 15);
+
 			col = (StringColumn) t.getColumn("attrVarchar");
 			assertEquals(2, col.getLength());
 			c = dba.getColumnInfo(conn, col);
@@ -681,6 +696,44 @@ public abstract class AbstractAdaptorTest {
 			assertEquals(3, c.getLength());
 			assertFalse(c.isNullable());
 			assertEquals("'www'", c.getDefaultValue());
+		} finally {
+			ConnectionPool.putBack(conn);
+			dba.dropTable(t);
+		}
+
+	}
+
+	// f10
+	@Test
+	public void updateColumn4test() throws CelestaException, ParseException,
+			IOException, SQLException {
+		// BLOB Default
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+
+		DBColumnInfo c;
+		BinaryColumn col;
+		Connection conn = ConnectionPool.get();
+		try {
+			// To test transforms on non-empty table
+			insertRow(conn, t, 11);
+
+			col = (BinaryColumn) t.getColumn("f10");
+			c = dba.getColumnInfo(conn, col);
+			assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
+			assertTrue(c.isNullable());
+
+			col.setNullableAndDefault(false, "0xABABAB");
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertFalse(c.isNullable());
+			assertEquals("0xABABAB", c.getDefaultValue());
+
+			col.setNullableAndDefault(false, null);
+			dba.updateColumn(conn, col, c);
+			c = dba.getColumnInfo(conn, col);
+			assertFalse(c.isNullable());
+			assertEquals("", c.getDefaultValue());
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);

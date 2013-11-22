@@ -697,8 +697,16 @@ final class OraAdaptor extends DBAdaptor {
 		String defdef = definer.getDefaultDefinition(c);
 		if ("".equals(defdef) && !"".equals(actual.getDefaultValue()))
 			defdef = "default null";
-		String def = OraColumnDefiner.join(definer.getInternalDefinition(c),
-				defdef);
+
+		// В Oracle, если меняешь blob-поле, то в alter table не надо
+		// указывать его тип (будет ошибка).
+		String def;
+		if (actual.getType() == BinaryColumn.class && c instanceof BinaryColumn) {
+			def = OraColumnDefiner.join(c.getQuotedName(), defdef);
+		} else {
+			def = OraColumnDefiner.join(definer.getInternalDefinition(c),
+					defdef);
+		}
 
 		// Явно задавать nullable в Oracle можно только если действительно надо
 		// изменить
