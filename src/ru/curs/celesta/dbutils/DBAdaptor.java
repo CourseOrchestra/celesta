@@ -498,7 +498,7 @@ public abstract class DBAdaptor {
 
 	static void runUpdateColumnSQL(Connection conn, Column c, String sql)
 			throws CelestaException {
-		System.out.println(sql);
+		// System.out.println(sql); /for debug
 		PreparedStatement stmt = prepareStatement(conn, sql);
 		try {
 			stmt.executeUpdate();
