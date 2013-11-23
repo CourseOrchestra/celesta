@@ -13,8 +13,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +30,7 @@ import org.python.util.PythonInterpreter;
 
 import ru.curs.celesta.dbutils.DBUpdator;
 import ru.curs.celesta.ormcompiler.ORMCompiler;
+import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 
@@ -46,6 +49,7 @@ public final class Celesta {
 	private static Celesta theCelesta;
 	private final Score score;
 	private List<String> pyPathList;
+	private final Queue<PythonInterpreter> interpreterPool = new LinkedList<>();
 
 	private Celesta() throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
@@ -88,6 +92,7 @@ public final class Celesta {
 					params[i - 2] = args[i];
 
 				getInstance().runPython(args[0], args[1], params);
+
 			} catch (CelestaException e) {
 				System.out
 						.println("The following problems occured while trying to execute "
@@ -96,7 +101,34 @@ public final class Celesta {
 			}
 	}
 
-	private PythonInterpreter getPythonInterpreter() {
+	private synchronized PythonInterpreter getPythonInterpreter() {
+		// Для начала, пытаемся достать готовый интерпретатор из пула.
+		PythonInterpreter interp = interpreterPool.poll();
+		if (interp != null)
+			return interp;
+
+		initPyPathList();
+
+		PySystemState state = new PySystemState();
+		for (String path : pyPathList)
+			state.path.append(new PyString(path));
+		interp = new PythonInterpreter(null, state);
+		codecs.setDefaultEncoding("UTF-8");
+		
+		// Инициализация пакетов гранул
+		for (Grain g : theCelesta.getScore().getGrains().values())
+			if (!"celesta".equals(g.getName())) {
+				String line = String.format("import %s", g.getName());
+				interp.exec(line);
+			}
+		return interp;
+	}
+
+	private synchronized void returnPythonInterpreter(PythonInterpreter interp) {
+		interpreterPool.add(interp);
+	}
+
+	private void initPyPathList() {
 		if (pyPathList == null) {
 			pyPathList = new ArrayList<String>();
 			File pathEntry = new File(getMyPath() + "pylib");
@@ -114,13 +146,6 @@ public final class Celesta {
 				}
 			}
 		}
-		PySystemState state = new PySystemState();
-		for (String path : pyPathList) {
-			state.path.append(new PyString(path));
-		}		
-		PythonInterpreter interp = new PythonInterpreter(null, state);
-		codecs.setDefaultEncoding("UTF-8");
-		return interp;
 	}
 
 	/**
@@ -190,6 +215,7 @@ public final class Celesta {
 							"Python error: %s:%s%s", e.type, e.value, sqlErr));
 				}
 			} finally {
+				returnPythonInterpreter(interp);
 				ConnectionPool.putBack(conn);
 			}
 
@@ -221,6 +247,7 @@ public final class Celesta {
 
 		AppSettings.init(settings);
 
+		// Инициализация ClassLoader для нужд Jython-интерпретатора
 		initCL();
 
 		new Celesta();
@@ -263,6 +290,7 @@ public final class Celesta {
 				"java.ext.dirs,celesta.lib");
 		PythonInterpreter.initialize(System.getProperties(), postProperties,
 				null);
+		// codecs.setDefaultEncoding("UTF-8");
 	}
 
 	/**

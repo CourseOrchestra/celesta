@@ -1,3 +1,5 @@
+print "hello unit called"
+
 from g1._g1_orm import aaCursor 
 from g2._g2_orm import bCursor
 from g3._g3_orm import cCursor
