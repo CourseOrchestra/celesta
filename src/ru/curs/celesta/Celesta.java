@@ -114,7 +114,7 @@ public final class Celesta {
 			state.path.append(new PyString(path));
 		interp = new PythonInterpreter(null, state);
 		codecs.setDefaultEncoding("UTF-8");
-		
+
 		// Инициализация пакетов гранул
 		for (Grain g : theCelesta.getScore().getGrains().values())
 			if (!"celesta".equals(g.getName())) {
@@ -126,6 +126,13 @@ public final class Celesta {
 
 	private synchronized void returnPythonInterpreter(PythonInterpreter interp) {
 		interpreterPool.add(interp);
+	}
+
+	/**
+	 * Очищает пул интерпретаторов Python.
+	 */
+	public synchronized void clearInterpretersPool() {
+		interpreterPool.clear();
 	}
 
 	private void initPyPathList() {
