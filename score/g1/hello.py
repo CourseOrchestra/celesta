@@ -13,6 +13,7 @@ def hello(context, arg):
     print 'Argument passed was "%s".' % arg
     
     c = cCursor(context)
+    print 'c.count() = %d' % c.count()
     c.descr = 'ab'
     c.calcdat()
     os = c.dat.getOutStream()

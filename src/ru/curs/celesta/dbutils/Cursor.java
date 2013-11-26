@@ -55,6 +55,15 @@ public abstract class Cursor {
 	private List<String> orderBy = new LinkedList<>();
 
 	public Cursor(CallContext context) throws CelestaException {
+		if (context.getConn() == null)
+			throw new CelestaException(
+					"Invalid context passed to %s constructor: connection is null.",
+					this.getClass().getName());
+		if (context.getUserId() == null)
+			throw new CelestaException(
+					"Invalid context passed to %s constructor: user id is null.",
+					this.getClass().getName());
+
 		this.context = context;
 		conn = context.getConn();
 		try {
@@ -162,7 +171,7 @@ public abstract class Cursor {
 		int result;
 		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters);
 		try {
-			ResultSet rs = set.executeQuery();
+			ResultSet rs = stmt.executeQuery();
 			rs.next();
 			result = rs.getInt(1);
 		} catch (SQLException e) {
