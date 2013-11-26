@@ -30,6 +30,12 @@ public final class GrainsCursor extends SysCursor {
 	 * Статус "обновить!".
 	 */
 	public static final int RECOVER = 3;
+	
+	/**
+	 * Статус "не обновлять!".
+	 */
+	public static final int LOCK = 4;
+	
 
 	private String id;
 	private String version;

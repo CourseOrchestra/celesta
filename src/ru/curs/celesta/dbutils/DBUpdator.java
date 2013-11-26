@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,14 @@ public final class DBUpdator {
 		}
 	};
 
+	private static final Set<Integer> EXPECTED_STATUSES;
+	static {
+		EXPECTED_STATUSES = new HashSet<>();
+		EXPECTED_STATUSES.add(GrainsCursor.READY);
+		EXPECTED_STATUSES.add(GrainsCursor.RECOVER);
+		EXPECTED_STATUSES.add(GrainsCursor.LOCK);
+	}
+
 	private DBUpdator() {
 	}
 
@@ -52,6 +61,7 @@ public final class DBUpdator {
 	 */
 	private static class GrainInfo {
 		private boolean recover;
+		private boolean lock;
 		private int length;
 		private int checksum;
 		private VersionString version;
@@ -102,15 +112,16 @@ public final class DBUpdator {
 			// хранится в таблице grains.
 			Map<String, GrainInfo> dbGrains = new HashMap<>();
 			while (grain.next()) {
-				if (!(grain.getState() == GrainsCursor.READY || grain
-						.getState() == GrainsCursor.RECOVER))
+
+				if (!(EXPECTED_STATUSES.contains(grain.getState())))
 					throw new CelestaException(
 							"Cannot proceed with database upgrade: there are grains "
-									+ "not in 'ready' or 'recover' state.");
+									+ "not in 'ready', 'recover' or 'lock' state.");
 				GrainInfo gi = new GrainInfo();
 				gi.checksum = (int) Long.parseLong(grain.getChecksum(), 16);
 				gi.length = grain.getLength();
 				gi.recover = grain.getState() == GrainsCursor.RECOVER;
+				gi.lock = grain.getState() == GrainsCursor.LOCK;
 				try {
 					gi.version = new VersionString(grain.getVersion());
 				} catch (ParseException e) {
@@ -162,6 +173,9 @@ public final class DBUpdator {
 
 	private static boolean decideToUpgrade(Grain g, GrainInfo gi)
 			throws CelestaException {
+		if (gi.lock)
+			return true;
+
 		if (gi.recover)
 			return updateGrain(g);
 
