@@ -219,7 +219,7 @@ public final class Celesta {
 						sqlErr = ". SQL error:" + e1.getMessage();
 					}
 					throw new CelestaException(String.format(
-							"Python error: %s:%s%s", e.type, e.getMessage(),
+							"Python error: %s:%s%s", e.type, e.value,
 							sqlErr));
 				}
 			} finally {
