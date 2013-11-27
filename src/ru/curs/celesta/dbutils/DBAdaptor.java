@@ -206,8 +206,8 @@ public abstract class DBAdaptor {
 		Connection conn = ConnectionPool.get();
 		try {
 			// System.out.println(def); // for debug purposes
-			PreparedStatement stmt = conn.prepareStatement(def);
-			stmt.execute();
+			Statement stmt = conn.createStatement();
+			stmt.executeUpdate(def);
 			stmt.close();
 			manageAutoIncrement(conn, table);
 		} catch (SQLException e) {
@@ -497,10 +497,14 @@ public abstract class DBAdaptor {
 
 	static void runUpdateColumnSQL(Connection conn, Column c, String sql)
 			throws CelestaException {
-		// System.out.println(sql); /for debug
-		PreparedStatement stmt = prepareStatement(conn, sql);
+		// System.out.println(sql); //for debug
 		try {
-			stmt.executeUpdate();
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
 		} catch (SQLException e) {
 			throw new CelestaException(
 					"Cannot modify column %s on table %s.%s: %s", c.getName(),
