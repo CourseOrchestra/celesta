@@ -513,12 +513,16 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
 		String sequenceName = getSequenceName(t);
-		PreparedStatement stmt = prepareStatement(conn,
-				String.format("SELECT %s.CURRVAL FROM DUAL", sequenceName));
+		String sql = String.format("SELECT %s.CURRVAL FROM DUAL", sequenceName);
 		try {
-			ResultSet rs = stmt.executeQuery();
-			rs.next();
-			return rs.getInt(1);
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				rs.next();
+				return rs.getInt(1);
+			} finally {
+				stmt.close();
+			}
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
@@ -901,8 +905,8 @@ final class OraAdaptor extends DBAdaptor {
 	void createTablePK(Connection conn, Table t) throws CelestaException {
 		StringBuilder sql = new StringBuilder();
 		sql.append(String.format("alter table \"%s_%s\" add constraint \"%s\" "
-				+ " primary key (", t.getGrain().getName(),
-				t.getName(), t.getPkConstraintName()));
+				+ " primary key (", t.getGrain().getName(), t.getName(),
+				t.getPkConstraintName()));
 		boolean multiple = false;
 		for (String s : t.getPrimaryKey().keySet()) {
 			if (multiple)

@@ -438,15 +438,18 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	@Override
 	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
-		PreparedStatement stmt = prepareStatement(
-				conn,
-				String.format(
-						"select seqvalue from celesta.sequences where grainid = '%s' and tablename = '%s'",
-						t.getGrain().getName(), t.getName()));
+		String sql = String
+				.format("select seqvalue from celesta.sequences where grainid = '%s' and tablename = '%s'",
+						t.getGrain().getName(), t.getName());
 		try {
-			ResultSet rs = stmt.executeQuery();
-			rs.next();
-			return rs.getInt(1);
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				rs.next();
+				return rs.getInt(1);
+			} finally {
+				stmt.close();
+			}
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
