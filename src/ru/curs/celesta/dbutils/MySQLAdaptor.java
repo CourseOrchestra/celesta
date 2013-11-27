@@ -400,4 +400,24 @@ final class MySQLAdaptor extends DBAdaptor {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	DBPKInfo getPrimaryKeyInfo(Connection conn, Table t)
+			throws CelestaException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	void dropTablePK(Connection conn, Table t, String pkName)
+			throws CelestaException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	void createTablePK(Connection conn, Table t) throws CelestaException {
+		// TODO Auto-generated method stub
+		
+	}
 }

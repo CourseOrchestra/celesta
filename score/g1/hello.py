@@ -56,8 +56,9 @@ def hello(context, arg):
     for i in range(1, 12):
         aa.idaa = i 
         aa.idc = i * i
-        aa.insert()
-    
+        if not aa.tryInsert():
+            aa.update()
+
     b = bCursor(context)
     b.deleteAll()
     b.descr = 'AB'

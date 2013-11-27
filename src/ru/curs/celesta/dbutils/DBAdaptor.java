@@ -448,9 +448,8 @@ public abstract class DBAdaptor {
 		}
 		sb.append(",\n");
 		// Определение первичного ключа (он у нас всегда присутствует)
-		sb.append(String.format("  constraint \"%s\" primary key (", table
-				.getPkConstraintName() == null ? "pk_" + table.getName()
-				: table.getPkConstraintName()));
+		sb.append(String.format("  constraint \"%s\" primary key (",
+				table.getPkConstraintName()));
 		multiple = false;
 		for (String s : table.getPrimaryKey().keySet()) {
 			if (multiple)
@@ -488,7 +487,7 @@ public abstract class DBAdaptor {
 	}
 
 	static String getTableFieldsListExceptBLOBs(Table t) {
-		List<String> flds = new LinkedList<String>();
+		List<String> flds = new LinkedList<>();
 		for (Map.Entry<String, Column> e : t.getColumns().entrySet()) {
 			if (!(e.getValue() instanceof BinaryColumn))
 				flds.add(e.getKey());
@@ -664,6 +663,49 @@ public abstract class DBAdaptor {
 	abstract void updateColumn(Connection conn, Column c, DBColumnInfo actual)
 			throws CelestaException;
 
+	/**
+	 * Возвращает информацию о первичном ключе таблицы.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * @param t
+	 *            Таблица, информацию о первичном ключе которой необходимо
+	 *            получить.
+	 * @throws CelestaException
+	 *             в случае сбоя связи с БД.
+	 */
+	abstract DBPKInfo getPrimaryKeyInfo(Connection conn, Table t)
+			throws CelestaException;
+
+	/**
+	 * Удаляет первичный ключ на таблице с использованием известного имени
+	 * первичного ключа.
+	 * 
+	 * @param conn
+	 *            Соединение с базой данных.
+	 * @param t
+	 *            Таблица.
+	 * @param pkName
+	 *            Имя первичного ключа.
+	 * @throws CelestaException
+	 *             в случае сбоя связи с БД.
+	 */
+	abstract void dropTablePK(Connection conn, Table t, String pkName)
+			throws CelestaException;
+
+	/**
+	 * Создаёт первичный ключ на таблице в соответствии с метаописанием.
+	 * 
+	 * @param conn
+	 *            Соединение с базой данных.
+	 * @param t
+	 *            Таблица.
+	 * @throws CelestaException
+	 *             неудача создания первичного ключа (например, неуникальные
+	 *             записи).
+	 */
+	abstract void createTablePK(Connection conn, Table t)
+			throws CelestaException;
 }
 
 /**
@@ -905,6 +947,31 @@ final class DBIndexInfo {
 	@Override
 	public String toString() {
 		return String.format("%s.%s", tableName, indexName);
+	}
+
+}
+
+/**
+ * Информация о первичном ключе, полученная из метаданных базы данных.
+ */
+final class DBPKInfo {
+	private String name;
+	private final List<String> columnNames = new LinkedList<>();
+
+	void addColumnName(String columnName) {
+		columnNames.add(columnName);
+	}
+
+	void setName(String name) {
+		this.name = name;
+	}
+
+	String getName() {
+		return name;
+	}
+
+	List<String> getColumnNames() {
+		return columnNames;
 	}
 
 }

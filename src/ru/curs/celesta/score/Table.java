@@ -115,7 +115,7 @@ public final class Table extends NamedElement {
 	 * @throws ParseException
 	 *             в случае, когда передаётся пустой перечень
 	 */
-	public void setPK(String[] columnNames) throws ParseException {
+	public void setPK(String... columnNames) throws ParseException {
 		if (columnNames == null || columnNames.length == 0)
 			throw new ParseException(String.format(
 					"Primary key for table %s.%s cannot be empty.",
@@ -255,7 +255,7 @@ public final class Table extends NamedElement {
 	 * Возвращает имя ограничения PK (или null, если оно не задано).
 	 */
 	public String getPkConstraintName() {
-		return pkConstraintName;
+		return pkConstraintName == null ? "pk_" + getName() : pkConstraintName;
 	}
 
 	void setPkConstraintName(String pkConstraintName) {

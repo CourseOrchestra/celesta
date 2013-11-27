@@ -5,6 +5,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -747,5 +748,79 @@ final class MSSQLAdaptor extends DBAdaptor {
 		} finally {
 			stmt.close();
 		}
+	}
+
+	@Override
+	DBPKInfo getPrimaryKeyInfo(Connection conn, Table t)
+			throws CelestaException {
+
+		DBPKInfo result = new DBPKInfo();
+		try {
+			String sql = String
+					.format("select CONSTRAINT_NAME, COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE "
+							+ " where TABLE_SCHEMA = '%s' and TABLE_NAME = '%s' order by ORDINAL_POSITION",
+							t.getGrain().getName(), t.getName());
+			Statement check = conn.createStatement();
+			ResultSet rs = check.executeQuery(sql);
+			try {
+				while (rs.next()) {
+					result.setName(rs.getString(1));
+					result.getColumnNames().add(rs.getString(2));
+				}
+			} finally {
+				rs.close();
+				check.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return result;
+	}
+
+	@Override
+	void dropTablePK(Connection conn, Table t, String pkName)
+			throws CelestaException {
+		String sql = String.format("alter table %s.%s drop constraint \"%s\"",
+				t.getGrain().getQuotedName(), t.getQuotedName(), pkName);
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
+	@Override
+	void createTablePK(Connection conn, Table t) throws CelestaException {
+		StringBuilder sql = new StringBuilder();
+		sql.append(String.format("alter table %s.%s add constraint \"%s\" "
+				+ " primary key (", t.getGrain().getQuotedName(),
+				t.getQuotedName(), t.getPkConstraintName()));
+		boolean multiple = false;
+		for (String s : t.getPrimaryKey().keySet()) {
+			if (multiple)
+				sql.append(", ");
+			sql.append('"');
+			sql.append(s);
+			sql.append('"');
+			multiple = true;
+		}
+		sql.append(")");
+
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql.toString());
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+
 	}
 }

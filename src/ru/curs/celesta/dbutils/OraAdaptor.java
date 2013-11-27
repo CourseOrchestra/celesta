@@ -845,4 +845,85 @@ final class OraAdaptor extends DBAdaptor {
 		}
 
 	}
+
+	@Override
+	DBPKInfo getPrimaryKeyInfo(Connection conn, Table t)
+			throws CelestaException {
+		DBPKInfo result = new DBPKInfo();
+		try {
+			String sql = String
+					.format("select cons.constraint_name, column_name from all_constraints cons "
+							+ "inner join all_cons_columns cols on cons.constraint_name = cols.constraint_name  "
+							+ "and cons.owner = cols.owner where "
+							+ "cons.owner = sys_context('userenv','session_user') "
+							+ "and cons.table_name = '%s_%s'"
+							+ " and cons.constraint_type = 'P' order by cols.position",
+							t.getGrain().getName(), t.getName());
+			Statement check = conn.createStatement();
+			ResultSet rs = check.executeQuery(sql);
+			try {
+				while (rs.next()) {
+					result.setName(rs.getString(1));
+					result.getColumnNames().add(rs.getString(2));
+				}
+			} finally {
+				rs.close();
+				check.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+
+		return result;
+
+	}
+
+	@Override
+	void dropTablePK(Connection conn, Table t, String pkName)
+			throws CelestaException {
+		String sql = String.format(
+				"alter table \"%s_%s\" drop constraint \"%s\"", t.getGrain()
+						.getName(), t.getName(), pkName);
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+
+	}
+
+	@Override
+	void createTablePK(Connection conn, Table t) throws CelestaException {
+		StringBuilder sql = new StringBuilder();
+		sql.append(String.format("alter table \"%s_%s\" add constraint \"%s\" "
+				+ " primary key (", t.getGrain().getName(),
+				t.getName(), t.getPkConstraintName()));
+		boolean multiple = false;
+		for (String s : t.getPrimaryKey().keySet()) {
+			if (multiple)
+				sql.append(", ");
+			sql.append('"');
+			sql.append(s);
+			sql.append('"');
+			multiple = true;
+		}
+		sql.append(")");
+
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql.toString());
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+
+	}
 }

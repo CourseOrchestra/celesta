@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -845,6 +846,45 @@ public abstract class AbstractAdaptorTest {
 		}
 	}
 
+	@Test
+	public void getPKInfo() throws CelestaException, ParseException, IOException, SQLException {
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(t);
+		DBPKInfo c;
+		Connection conn = ConnectionPool.get();
+		try {
+			insertRow(conn, t, 15);
+			
+			c = dba.getPrimaryKeyInfo(conn, t);
+			assertNotNull(c);
+			assertEquals("pk_test", c.getName());
+			assertEquals(1, c.getColumnNames().size());
+			String[] expected = { "id" };
+			assertTrue(Arrays.equals(expected,
+					c.getColumnNames().toArray(new String[0])));
+
+			dba.dropTablePK(conn, t, "pk_test");
+			c = dba.getPrimaryKeyInfo(conn, t);
+			assertNull(c.getName());
+			assertEquals(0, c.getColumnNames().size());
+
+			t.setPK("id", "f1", "f9");
+			dba.createTablePK(conn, t);
+			c = dba.getPrimaryKeyInfo(conn, t);
+			assertNotNull(c);
+			assertEquals("pk_test", c.getName());
+			assertEquals(3, c.getColumnNames().size());
+			String[] expected2 = { "id", "f1", "f9" };
+			assertTrue(Arrays.equals(expected2,
+					c.getColumnNames().toArray(new String[0])));
+
+		} finally {
+			ConnectionPool.putBack(conn);
+			dba.dropTable(t);
+		}
+
+	}
+
 	protected void setDba(DBAdaptor dba) {
 		this.dba = dba;
 	}
@@ -852,4 +892,5 @@ public abstract class AbstractAdaptorTest {
 	protected void setScore(Score score) {
 		this.score = score;
 	}
+
 }
