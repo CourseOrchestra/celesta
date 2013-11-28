@@ -196,26 +196,30 @@ public abstract class DBAdaptor {
 	/**
 	 * Создаёт в базе данных таблицу "с нуля".
 	 * 
+	 * @param conn
+	 *            Соединение.
 	 * @param table
 	 *            Таблица для создания.
 	 * @throws CelestaException
 	 *             В случае возникновения критического сбоя при создании
 	 *             таблицы, в том числе в случае, если такая таблица существует.
 	 */
-	public final void createTable(Table table) throws CelestaException {
+	public final void createTable(Connection conn, Table table)
+			throws CelestaException {
 		String def = tableDef(table);
-		Connection conn = ConnectionPool.get();
 		try {
 			// System.out.println(def); // for debug purposes
 			Statement stmt = conn.createStatement();
-			stmt.executeUpdate(def);
-			stmt.close();
+			try {
+				stmt.executeUpdate(def);
+			} finally {
+				stmt.close();
+			}
 			manageAutoIncrement(conn, table);
+			ConnectionPool.commit(conn);
 		} catch (SQLException e) {
 			throw new CelestaException("creating %s: %s", table.getName(),
 					e.getMessage());
-		} finally {
-			ConnectionPool.putBack(conn);
 		}
 	}
 
@@ -375,23 +379,28 @@ public abstract class DBAdaptor {
 	/**
 	 * Создаёт в грануле индекс на таблице.
 	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * 
 	 * @param index
 	 *            описание индекса.
 	 * @throws CelestaException
 	 *             Если что-то пошло не так.
 	 */
-	public final void createIndex(Index index) throws CelestaException {
+	public final void createIndex(Connection conn, Index index)
+			throws CelestaException {
 		String sql = getCreateIndexSQL(index);
-		Connection conn = ConnectionPool.get();
 		try {
-			PreparedStatement stmt = conn.prepareStatement(sql);
-			stmt.execute();
-			stmt.close();
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+			ConnectionPool.commit(conn);
 		} catch (SQLException e) {
 			throw new CelestaException("Cannot create index '%s': %s",
 					index.getName(), e.getMessage());
-		} finally {
-			ConnectionPool.putBack(conn);
 		}
 	}
 

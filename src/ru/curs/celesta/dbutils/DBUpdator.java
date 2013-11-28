@@ -94,10 +94,10 @@ public final class DBUpdator {
 				try {
 					Grain sys = score.getGrain("celesta");
 					dba.createSchemaIfNotExists("celesta");
-					dba.createTable(sys.getTable("grains"));
-					dba.createTable(sys.getTable("tables"));
-					dba.createTable(sys.getTable("logsetup"));
-					dba.createTable(sys.getTable("sequences"));
+					dba.createTable(conn, sys.getTable("grains"));
+					dba.createTable(conn, sys.getTable("tables"));
+					dba.createTable(conn, sys.getTable("logsetup"));
+					dba.createTable(conn, sys.getTable("sequences"));
 					insertGrainRec(sys);
 					updateGrain(sys);
 				} catch (ParseException e) {
@@ -317,8 +317,9 @@ public final class DBUpdator {
 	}
 
 	private static void updateGrainIndices(Grain g) throws CelestaException {
+		final Connection conn = grain.callContext().getConn();
 		Map<DBIndexInfo, TreeMap<Short, String>> dbIndices = dba.getIndices(
-				grain.callContext().getConn(), g);
+				conn, g);
 		Map<String, Index> myIndices = g.getIndices();
 		// Начинаем с удаления ненужных индексов (ещё раз)
 
@@ -354,11 +355,11 @@ public final class DBUpdator {
 				}
 				if (!equals) {
 					dba.dropIndex(g, dBIndexInfo);
-					dba.createIndex(e.getValue());
+					dba.createIndex(conn, e.getValue());
 				}
 			} else {
 				// Создаём не существовавший ранее индекс.
-				dba.createIndex(e.getValue());
+				dba.createIndex(conn, e.getValue());
 			}
 		}
 	}
@@ -368,7 +369,7 @@ public final class DBUpdator {
 
 		if (!dba.tableExists(t.getGrain().getName(), t.getName())) {
 			// Таблицы не существует в базе данных, создаём с нуля.
-			dba.createTable(t);
+			dba.createTable(conn, t);
 			return;
 		}
 
