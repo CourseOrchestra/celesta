@@ -11,6 +11,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -978,4 +979,18 @@ final class DBPKInfo {
 		return columnNames;
 	}
 
+	boolean isEmpty() {
+		return columnNames.isEmpty();
+	}
+
+	boolean reflects(Table t) {
+		boolean result = t.getPkConstraintName().equals(name)
+				&& (columnNames.size() == t.getPrimaryKey().size());
+		Iterator<String> i1 = t.getPrimaryKey().keySet().iterator();
+		Iterator<String> i2 = columnNames.iterator();
+		while (result && i1.hasNext()) {
+			result = i1.next().equals(i2.next());
+		}
+		return result;
+	}
 }

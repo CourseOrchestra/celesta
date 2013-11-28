@@ -847,14 +847,15 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void getPKInfo() throws CelestaException, ParseException, IOException, SQLException {
+	public void getPKInfo() throws CelestaException, ParseException,
+			IOException, SQLException {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 		dba.createTable(t);
 		DBPKInfo c;
 		Connection conn = ConnectionPool.get();
 		try {
 			insertRow(conn, t, 15);
-			
+
 			c = dba.getPrimaryKeyInfo(conn, t);
 			assertNotNull(c);
 			assertEquals("pk_test", c.getName());
@@ -862,11 +863,15 @@ public abstract class AbstractAdaptorTest {
 			String[] expected = { "id" };
 			assertTrue(Arrays.equals(expected,
 					c.getColumnNames().toArray(new String[0])));
+			assertTrue(c.reflects(t));
+			assertFalse(c.isEmpty());
 
 			dba.dropTablePK(conn, t, "pk_test");
 			c = dba.getPrimaryKeyInfo(conn, t);
 			assertNull(c.getName());
 			assertEquals(0, c.getColumnNames().size());
+			assertFalse(c.reflects(t));
+			assertTrue(c.isEmpty());
 
 			t.setPK("id", "f1", "f9");
 			dba.createTablePK(conn, t);
@@ -877,7 +882,8 @@ public abstract class AbstractAdaptorTest {
 			String[] expected2 = { "id", "f1", "f9" };
 			assertTrue(Arrays.equals(expected2,
 					c.getColumnNames().toArray(new String[0])));
-
+			assertTrue(c.reflects(t));
+			assertFalse(c.isEmpty());
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);

@@ -364,29 +364,44 @@ public final class DBUpdator {
 	}
 
 	private static void updateTable(Table t) throws CelestaException {
-		if (dba.tableExists(t.getGrain().getName(), t.getName())) {
-			Set<String> dbColumns = dba.getColumns(grain.callContext()
-					.getConn(), t);
-			for (Entry<String, Column> e : t.getColumns().entrySet()) {
-				if (dbColumns.contains(e.getKey())) {
-					// Таблица содержит колонку с таким именем, надо проверить
-					// все её атрибуты и при необходимости -- попытаться
-					// обновить.
-					DBColumnInfo ci = dba.getColumnInfo(grain.callContext()
-							.getConn(), e.getValue());
-					if (!ci.reflects(e.getValue()))
-						dba.updateColumn(grain.callContext().getConn(),
-								e.getValue(), ci);
-				} else {
-					// Таблица не содержит колонку с таким именем, добавляем
-					dba.createColumn(grain.callContext().getConn(),
-							e.getValue());
-				}
-			}
-		} else {
-			// Таблицы не существует вовсе, создаём с нуля.
+		final Connection conn = grain.callContext().getConn();
+
+		if (!dba.tableExists(t.getGrain().getName(), t.getName())) {
+			// Таблицы не существует в базе данных, создаём с нуля.
 			dba.createTable(t);
+			return;
 		}
+
+		// Таблица существует в базе данных, определяем: надо ли удалить
+		// первичный ключ
+		DBPKInfo pkInfo = dba.getPrimaryKeyInfo(conn, t);
+		if (!(pkInfo.isEmpty() || pkInfo.reflects(t)))
+			dba.dropTablePK(conn, t, pkInfo.getName());
+
+		Set<String> dbColumns = dba.getColumns(conn, t);
+		for (Entry<String, Column> e : t.getColumns().entrySet()) {
+			if (dbColumns.contains(e.getKey())) {
+				// Таблица содержит колонку с таким именем, надо проверить
+				// все её атрибуты и при необходимости -- попытаться
+				// обновить.
+				DBColumnInfo ci = dba.getColumnInfo(conn, e.getValue());
+				if (!ci.reflects(e.getValue())) {
+					// Если колонка, требующая обновления, входит в первичный
+					// ключ -- сбрасываем первичный ключ.
+					if (t.getPrimaryKey().containsKey(e.getKey()))
+						dba.dropTablePK(conn, t, pkInfo.getName());
+					dba.updateColumn(conn, e.getValue(), ci);
+				}
+			} else {
+				// Таблица не содержит колонку с таким именем, добавляем
+				dba.createColumn(conn, e.getValue());
+			}
+		}
+		// Ещё раз проверяем первичный ключ и при необходимости создаём.
+		pkInfo = dba.getPrimaryKeyInfo(conn, t);
+		if (pkInfo.isEmpty())
+			dba.createTablePK(conn, t);
+
 	}
 
 }
