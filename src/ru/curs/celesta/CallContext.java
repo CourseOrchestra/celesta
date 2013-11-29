@@ -1,7 +1,6 @@
 package ru.curs.celesta;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
@@ -43,8 +42,7 @@ public final class CallContext {
 		try {
 			conn.commit();
 		} catch (SQLException e) {
-			throw new CelestaException("Commit unsuccessful: %s",
-					e.getMessage());
+			throw new CelestaException("Commit unsuccessful: %s", e.getMessage());
 		}
 	}
 
@@ -52,7 +50,7 @@ public final class CallContext {
 	 * Возвращает экземпляр Celesta, использованный при создании контекста
 	 * вызова.
 	 */
-	Celesta getCelesta() {
+	public Celesta getCelesta() {
 		return celesta;
 	}
 
