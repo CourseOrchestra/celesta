@@ -28,6 +28,7 @@ import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
@@ -236,10 +237,9 @@ public abstract class DBAdaptor {
 	 */
 	public final void createColumn(Connection conn, Column c)
 			throws CelestaException {
-		String sql = String.format(
-				"alter table " + tableTemplate() + " add %s", c
-						.getParentTable().getGrain().getName(), c
-						.getParentTable().getName(), columnDef(c));
+		String sql = String.format(ALTER_TABLE + tableTemplate() + " add %s", c
+				.getParentTable().getGrain().getName(), c.getParentTable()
+				.getName(), columnDef(c));
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -401,6 +401,65 @@ public abstract class DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException("Cannot create index '%s': %s",
 					index.getName(), e.getMessage());
+		}
+	}
+
+	/**
+	 * Создаёт первичный ключ.
+	 * 
+	 * @param conn
+	 *            соединение с БД.
+	 * @param fk
+	 *            первичный ключ
+	 * @throws CelestaException
+	 *             в случае неудачи создания ключа
+	 */
+	public final void createFK(Connection conn, ForeignKey fk)
+			throws CelestaException {
+		// Строим запрос на создание FK
+		StringBuilder sql = new StringBuilder();
+		sql.append(ALTER_TABLE);
+		sql.append(String.format(tableTemplate(), fk.getParentTable()
+				.getGrain().getName(), fk.getParentTable().getName()));
+		sql.append(" add constraint \"");
+		sql.append(fk.getConstraintName());
+		sql.append("\" foreign key (");
+		boolean needComma = false;
+		for (String name : fk.getColumns().keySet()) {
+			if (needComma)
+				sql.append(", ");
+			sql.append('"');
+			sql.append(name);
+			sql.append('"');
+			needComma = true;
+		}
+		sql.append(") references ");
+		sql.append(String.format(tableTemplate(), fk.getReferencedTable()
+				.getGrain().getName(), fk.getReferencedTable().getName()));
+		sql.append("(");
+		needComma = false;
+		for (String name : fk.getReferencedTable().getPrimaryKey().keySet()) {
+			if (needComma)
+				sql.append(", ");
+			sql.append('"');
+			sql.append(name);
+			sql.append('"');
+			needComma = true;
+		}
+		sql.append(")");
+
+		System.out.println(sql);
+		// Построили, выполняем
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql.toString());
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot create foreign key '%s': %s",
+					fk.getConstraintName(), e.getMessage());
 		}
 	}
 

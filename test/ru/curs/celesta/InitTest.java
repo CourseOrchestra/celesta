@@ -28,7 +28,7 @@ public class InitTest {
 	@Test
 	public void testSysCursors() throws CelestaException {
 		Connection conn = ConnectionPool.get();
-		CallContext ctxt = new CallContext(conn, "user");
+		CallContext ctxt = new CallContext(conn, "user", null);
 		try {
 			GrainsCursor g = new GrainsCursor(ctxt);
 			assertEquals("grains", g.meta().getName());

@@ -11,10 +11,12 @@ public final class CallContext {
 
 	private final Connection conn;
 	private final String userId;
+	private final Celesta celesta;
 
-	public CallContext(Connection conn, String userId) {
+	public CallContext(Connection conn, String userId, Celesta celesta) {
 		this.conn = conn;
 		this.userId = userId;
+		this.celesta = celesta;
 	}
 
 	/**
@@ -44,6 +46,14 @@ public final class CallContext {
 			throw new CelestaException("Commit unsuccessful: %s",
 					e.getMessage());
 		}
+	}
+
+	/**
+	 * Возвращает экземпляр Celesta, использованный при создании контекста
+	 * вызова.
+	 */
+	Celesta getCelesta() {
+		return celesta;
 	}
 
 }

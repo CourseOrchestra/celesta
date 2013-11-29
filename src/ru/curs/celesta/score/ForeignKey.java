@@ -305,7 +305,11 @@ public class ForeignKey {
 	 * Возвращает имя ограничения FK (или null, если оно не задано).
 	 */
 	public String getConstraintName() {
-		return constraintName;
+		return constraintName == null ? String
+				.format("fk_%s_%s_%s_%s", parentTable.getGrain().getName(),
+						parentTable.getName(), referencedTable.getGrain()
+								.getName(), referencedTable.getName())
+				: constraintName;
 	}
 
 	void setConstraintName(String constraintName) {

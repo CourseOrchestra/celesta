@@ -194,7 +194,7 @@ public final class Celesta {
 
 			PythonInterpreter interp = getPythonInterpreter();
 			Connection conn = ConnectionPool.get();
-			CallContext context = new CallContext(conn, userId);
+			CallContext context = new CallContext(conn, userId, this);
 			try {
 				interp.set("context", context);
 				for (int i = 0; i < param.length; i++)

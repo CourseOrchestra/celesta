@@ -19,6 +19,7 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.ParseException;
@@ -79,7 +80,7 @@ public final class DBUpdator {
 		if (dba == null)
 			dba = DBAdaptor.getAdaptor();
 		Connection conn = ConnectionPool.get();
-		CallContext context = new CallContext(conn, Cursor.SYSTEMUSERID);
+		CallContext context = new CallContext(conn, Cursor.SYSTEMUSERID, null);
 		try {
 			grain = new GrainsCursor(context);
 			table = new TablesCursor(context);
@@ -233,6 +234,9 @@ public final class DBUpdator {
 			// обновления столбцов на таблицах.
 			dropOrphanedGrainIndices(g);
 
+			// Сбрасываем внешние ключи, более не включённые в метаданные
+			dropOrphanedGrainFKeys(g);
+
 			// Обновляем все таблицы.
 			table.setRange("grainid", g.getName());
 			while (table.next()) {
@@ -252,7 +256,7 @@ public final class DBUpdator {
 			updateGrainIndices(g);
 
 			// Обновляем внешние ключи
-			// TODO обновление внешних ключей
+			updateGrainFKeys(g);
 
 			// По завершении -- обновление номера версии, контрольной суммы
 			// и выставление в статус ready
@@ -274,6 +278,21 @@ public final class DBUpdator {
 			ConnectionPool.commit(grain.callContext().getConn());
 			return false;
 		}
+	}
+
+	private static void updateGrainFKeys(Grain g) throws CelestaException {
+		// TODO Auto-generated method stub
+		// final Connection conn = grain.callContext().getConn();
+		// for (Table t : g.getTables().values())
+		// for (ForeignKey fk : t.getForeignKeys()) {
+		// // /<<<<<<<<<<переделать
+		// dba.createFK(conn, fk);
+		// }
+	}
+
+	private static void dropOrphanedGrainFKeys(Grain g) {
+		// TODO Auto-generated method stub
+
 	}
 
 	private static void dropOrphanedGrainIndices(Grain g)
