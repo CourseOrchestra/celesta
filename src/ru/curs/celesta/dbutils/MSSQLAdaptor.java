@@ -10,6 +10,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -825,5 +826,29 @@ final class MSSQLAdaptor extends DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 
+	}
+
+	@Override
+	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+		String sql = String.format(
+				"select CONSTRAINT_NAME, UPDATE_RULE, DELETE_RULE "
+						+ "from INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS "
+						+ "where CONSTRAINT_SCHEMA = '%s'", g.getName());
+		List<DBFKInfo> result = new LinkedList<>();
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				while (rs.next()) {
+					DBFKInfo i = new DBFKInfo(rs.getString("CONSTRAINT_NAME"));
+					result.add(i);
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return result;
 	}
 }

@@ -17,3 +17,12 @@ f11 image not null
 );
 
 create index idxTest on test (attrInt);
+
+create table refTo (
+  k1 nvarchar(2) not null,
+  k2 int not null,
+  descr nvarchar(10),
+  primary key (k1, k2)
+);
+
+alter table test add constraint fk_testName foreign key (attrVarchar, attrInt) references refTo (k1, k2);

@@ -457,4 +457,10 @@ final class PostgresAdaptor extends DBAdaptor {
 		
 	}
 
+	@Override
+	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

@@ -15,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -30,6 +31,7 @@ import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
@@ -529,7 +531,7 @@ public abstract class AbstractAdaptorTest {
 			IOException, SQLException {
 		// NULL/NOT NULL и DEFAULT (простые)
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-		
+
 		DBColumnInfo c;
 		Column col;
 		Connection conn = ConnectionPool.get();
@@ -626,7 +628,7 @@ public abstract class AbstractAdaptorTest {
 			IOException, SQLException {
 		// IDENTITY
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-		
+
 		DBColumnInfo c;
 		IntegerColumn col;
 		Connection conn = ConnectionPool.get();
@@ -685,7 +687,7 @@ public abstract class AbstractAdaptorTest {
 			IOException, SQLException {
 		// String length
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-		
+
 		DBColumnInfo c;
 		StringColumn col;
 		Connection conn = ConnectionPool.get();
@@ -735,7 +737,6 @@ public abstract class AbstractAdaptorTest {
 			IOException, SQLException {
 		// BLOB Default
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-		
 
 		DBColumnInfo c;
 		BinaryColumn col;
@@ -773,7 +774,6 @@ public abstract class AbstractAdaptorTest {
 			IOException, SQLException {
 		// BLOB Default
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-
 
 		DBColumnInfo c;
 		IntegerColumn col;
@@ -851,7 +851,7 @@ public abstract class AbstractAdaptorTest {
 	@Test
 	public void testReflects() throws CelestaException, ParseException {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-		
+
 		DBColumnInfo c;
 		Connection conn = ConnectionPool.get();
 		try {
@@ -879,7 +879,7 @@ public abstract class AbstractAdaptorTest {
 	public void getPKInfo() throws CelestaException, ParseException,
 			IOException, SQLException {
 		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-		
+
 		DBPKInfo c;
 		Connection conn = ConnectionPool.get();
 		try {
@@ -917,6 +917,42 @@ public abstract class AbstractAdaptorTest {
 		} finally {
 			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
+		}
+
+	}
+
+	@Test
+	public void getFKInfo() throws ParseException, CelestaException {
+		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		Grain g = score.getGrain(GRAIN_NAME);
+		Table t2 = g.getTable("refTo");
+		ForeignKey fk = t.getForeignKeys().iterator().next();
+		assertEquals("fk_testName", fk.getConstraintName());
+		Connection conn = ConnectionPool.get();
+		try {
+			dba.createTable(conn, t);
+			try {
+				dba.dropTable(t2);
+			} catch (CelestaException e) {
+				// do nothing
+			}
+			dba.createTable(conn, t2);
+			List<DBFKInfo> l = dba.getFKInfo(conn, g);
+			assertEquals(0, l.size());
+
+			dba.createFK(conn, fk);
+			l = dba.getFKInfo(conn, g);
+			assertEquals(1, l.size());
+			DBFKInfo info = l.get(0);
+			assertEquals("fk_testName", info.getName());
+		} catch (CelestaException e) {
+			e.printStackTrace();
+			throw e;
+
+		} finally {
+			ConnectionPool.putBack(conn);
+			dba.dropTable(t);
+			dba.dropTable(t2);
 		}
 
 	}

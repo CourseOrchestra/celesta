@@ -420,4 +420,10 @@ final class MySQLAdaptor extends DBAdaptor {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

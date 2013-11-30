@@ -779,6 +779,9 @@ public abstract class DBAdaptor {
 	 */
 	abstract void createTablePK(Connection conn, Table t)
 			throws CelestaException;
+
+	abstract List<DBFKInfo> getFKInfo(Connection conn, Grain g)
+			throws CelestaException;
 }
 
 /**
@@ -1061,4 +1064,44 @@ final class DBPKInfo {
 		}
 		return result;
 	}
+}
+
+/**
+ * Информация о внешнем ключе, полученная из базы данных.
+ */
+final class DBFKInfo {
+
+	private String tableName;
+	private String name;
+	private String refTableName;
+	private final List<String> columnNames = new LinkedList<>();
+
+	public DBFKInfo(String name) {
+		this.name = name;
+	}
+
+	Object getName() {
+		return name;
+	}
+
+	String getTableName() {
+		return tableName;
+	}
+
+	void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
+
+	String getRefTableName() {
+		return refTableName;
+	}
+
+	void setRefTableName(String refTableName) {
+		this.refTableName = refTableName;
+	}
+
+	List<String> getColumnNames() {
+		return columnNames;
+	}
+
 }

@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -929,5 +930,30 @@ final class OraAdaptor extends DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 
+	}
+
+	@Override
+	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+		String sql = String
+				.format("select constraint_name, table_name, delete_rule from all_constraints "
+						+ "where constraint_type = 'R' and owner = sys_context('userenv','session_user')"
+						+ "and  table_name like '%s_%%'", g.getName());
+
+		List<DBFKInfo> result = new LinkedList<>();
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				while (rs.next()) {
+					DBFKInfo i = new DBFKInfo(rs.getString("CONSTRAINT_NAME"));
+					result.add(i);
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return result;
 	}
 }
