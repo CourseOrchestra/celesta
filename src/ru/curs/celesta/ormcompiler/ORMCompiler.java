@@ -340,6 +340,10 @@ public final class ORMCompiler {
 			} else {
 				w.write(String.format("        self.%s = rs.%s('%s')",
 						c.getName(), c.jdbcGetterName(), c.getName()));
+				w.newLine();
+				w.write(String.format("        if rs.wasNull():"));
+				w.newLine();
+				w.write(String.format("    " + SELF_S_EQUALS_NONE, c.getName()));
 			}
 			w.newLine();
 		}
