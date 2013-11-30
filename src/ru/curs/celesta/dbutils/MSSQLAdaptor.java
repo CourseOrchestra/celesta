@@ -332,28 +332,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				.getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
-
-	@Override
-	PreparedStatement getRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, List<String> orderBy)
-			throws CelestaException {
-
-		// Готовим условие where
-		String whereClause = getWhereClause(filters);
-
-		// Соединяем полученные компоненты в стандартный запрос
-		// SELECT..FROM..WHERE..ORDER BY
-		String sql = getSelectFromOrderBy(t, whereClause, orderBy);
-
-		try {
-			PreparedStatement result = conn.prepareStatement(sql);
-			// А теперь заполняем параметры
-			fillSetQueryParameters(filters, result);
-			return result;
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-	}
+	
 
 	@Override
 	PreparedStatement getInsertRecordStatement(Connection conn, Table t,
@@ -421,7 +400,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters) throws CelestaException {
 		// Готовим условие where
-		String whereClause = getWhereClause(filters);
+		String whereClause = getWhereClause(t, filters);
 
 		// Готовим запрос на удаление
 		String sql = String.format("delete " + tableTemplate() + " %s;", t

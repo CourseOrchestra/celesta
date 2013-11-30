@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -235,50 +234,6 @@ final class MySQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, List<String> orderBy)
-			throws CelestaException {
-		// Готовим условие where
-		StringBuilder whereClause = new StringBuilder();
-		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
-			if (whereClause.length() > 0)
-				whereClause.append(" and ");
-			if (e.getValue() instanceof SingleValue)
-				whereClause.append(String.format("(%s = ?)", e.getKey()));
-			else if (e.getValue() instanceof Range)
-				whereClause.append(String.format("(%s between ? and ?)",
-						e.getKey()));
-			else if (e.getValue() instanceof Filter)
-				throw new RuntimeException("not implemented yet");
-		}
-
-		// Соединяем полученные компоненты в стандартный запрос
-		// SELECT..FROM..WHERE..ORDER BY
-		String sql = getSelectFromOrderBy(t, whereClause.toString(), orderBy);
-
-		try {
-			PreparedStatement result = conn.prepareStatement(sql);
-			// А теперь заполняем параметры
-			int i = 1;
-			for (AbstractFilter f : filters.values()) {
-				if (f instanceof SingleValue) {
-					setParam(result, i, ((SingleValue) f).getValue());
-					i++;
-				} else if (f instanceof Range) {
-					setParam(result, i, ((Range) f).getValueFrom());
-					i++;
-					setParam(result, i, ((Range) f).getValueTo());
-					i++;
-				} else if (f instanceof Filter)
-					throw new RuntimeException("not implemented yet");
-			}
-			return result;
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-	}
-
-	@Override
 	PreparedStatement getInsertRecordStatement(Connection conn, Table t,
 			boolean[] nullsMask) throws CelestaException {
 
@@ -370,7 +325,8 @@ final class MySQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
+	void updateColumn(Connection conn, Column c, DBColumnInfo actual)
+			throws CelestaException {
 		String def = columnDef(c);
 		String sql = String.format("ALTER TABLE " + tableTemplate()
 				+ " MODIFY COLUMN %s", c.getParentTable().getGrain().getName(),
@@ -389,16 +345,15 @@ final class MySQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void manageAutoIncrement(Connection conn, Table t)
-			throws SQLException {
+	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	void dropAutoIncrement(Connection conn, Table t) throws SQLException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -412,13 +367,13 @@ final class MySQLAdaptor extends DBAdaptor {
 	void dropTablePK(Connection conn, Table t, String pkName)
 			throws CelestaException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	void createTablePK(Connection conn, Table t) throws CelestaException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override

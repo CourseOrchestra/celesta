@@ -310,23 +310,6 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, List<String> orderBy)
-			throws CelestaException {
-		// Соединяем полученные компоненты в стандартный запрос
-		// SELECT..FROM..WHERE..ORDER BY
-		String sql = getSelectFromOrderBy(t, getWhereClause(filters), orderBy);
-
-		try {
-			PreparedStatement result = conn.prepareStatement(sql);
-			fillSetQueryParameters(filters, result);
-			return result;
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-	}
-
-	@Override
 	PreparedStatement getInsertRecordStatement(Connection conn, Table t,
 			boolean[] nullsMask) throws CelestaException {
 
@@ -459,7 +442,7 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters) throws CelestaException {
-		String whereClause = getWhereClause(filters);
+		String whereClause = getWhereClause(t, filters);
 		String sql = String.format("delete from " + tableTemplate() + " %s", t
 				.getGrain().getName(), t.getName(),
 				!whereClause.isEmpty() ? "where " + whereClause : "");

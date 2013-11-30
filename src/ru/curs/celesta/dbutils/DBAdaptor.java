@@ -335,8 +335,11 @@ public abstract class DBAdaptor {
 	 * 
 	 * @param filters
 	 *            фильтры
+	 * @throws CelestaException
+	 *             в случае некорректного фильтра
 	 */
-	final String getWhereClause(Map<String, AbstractFilter> filters) {
+	final String getWhereClause(Table t, Map<String, AbstractFilter> filters)
+			throws CelestaException {
 		if (filters == null)
 			throw new IllegalArgumentException();
 		StringBuilder whereClause = new StringBuilder();
@@ -348,8 +351,10 @@ public abstract class DBAdaptor {
 			else if (e.getValue() instanceof Range)
 				whereClause.append(String.format("(\"%s\" between ? and ?)",
 						e.getKey()));
-			else if (e.getValue() instanceof Filter)
-				throw new RuntimeException(NOT_IMPLEMENTED_YET);
+			else if (e.getValue() instanceof Filter) {
+				Column c = t.getColumns().get(e.getKey());
+				whereClause.append(((Filter) e.getValue()).makeWhereClause(c));
+			}
 		}
 		return whereClause.toString();
 	}
@@ -371,8 +376,10 @@ public abstract class DBAdaptor {
 			} else if (f instanceof Range) {
 				setParam(result, i++, ((Range) f).getValueFrom());
 				setParam(result, i++, ((Range) f).getValueTo());
-			} else if (f instanceof Filter)
-				throw new RuntimeException(NOT_IMPLEMENTED_YET);
+			}
+			// Пока что фильтры параметров не требуют
+			// else if (f instanceof Filter)
+			// throw new RuntimeException(NOT_IMPLEMENTED_YET);
 		}
 	}
 
@@ -486,6 +493,41 @@ public abstract class DBAdaptor {
 					dBIndexInfo.getIndexName(), e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
+		}
+	}
+
+	/**
+	 * Возвращает PreparedStatement, содержащий отфильтрованный набор записей.
+	 * 
+	 * @param conn
+	 *            Соединение.
+	 * @param t
+	 *            Таблица.
+	 * @param filters
+	 *            Фильтры на таблице.
+	 * @param orderBy
+	 *            Порядок сортировки.
+	 * @throws CelestaException
+	 *             Ошибка БД или некорректный фильтр.
+	 */
+	public final PreparedStatement getRecordSetStatement(Connection conn,
+			Table t, Map<String, AbstractFilter> filters, List<String> orderBy)
+			throws CelestaException {
+
+		// Готовим условие where
+		String whereClause = getWhereClause(t, filters);
+
+		// Соединяем полученные компоненты в стандартный запрос
+		// SELECT..FROM..WHERE..ORDER BY
+		String sql = getSelectFromOrderBy(t, whereClause, orderBy);
+
+		try {
+			PreparedStatement result = conn.prepareStatement(sql);
+			// А теперь заполняем параметры
+			fillSetQueryParameters(filters, result);
+			return result;
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
 		}
 	}
 
@@ -653,7 +695,7 @@ public abstract class DBAdaptor {
 
 	final PreparedStatement getSetCountStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters) throws CelestaException {
-		String whereClause = getWhereClause(filters);
+		String whereClause = getWhereClause(t, filters);
 		String sql = String.format("select count(*) from " + tableTemplate()
 				+ ("".equals(whereClause) ? "" : " where " + whereClause), t
 				.getGrain().getName(), t.getName());
@@ -682,10 +724,6 @@ public abstract class DBAdaptor {
 			throws CelestaException;
 
 	abstract PreparedStatement getOneFieldStatement(Connection conn, Column c)
-			throws CelestaException;
-
-	abstract PreparedStatement getRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, List<String> orderBy)
 			throws CelestaException;
 
 	abstract PreparedStatement deleteRecordSetStatement(Connection conn,

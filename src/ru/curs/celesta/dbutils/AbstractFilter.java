@@ -1,5 +1,8 @@
 package ru.curs.celesta.dbutils;
 
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.Column;
+
 /**
  * Внутреннее представление фильтра на поле.
  */
@@ -67,5 +70,14 @@ class Filter extends AbstractFilter {
 	@Override
 	public String toString() {
 		return String.format("%s", value);
+	}
+
+	public String makeWhereClause(Column c) throws CelestaException {
+		if ("null".equalsIgnoreCase(value))
+			return String.format("%s is null", c.getQuotedName());
+		else if ("!null".equalsIgnoreCase(value))
+			return String.format("not (%s is null)", c.getQuotedName());
+
+		throw new CelestaException("Invalid filter: %s.", value);
 	}
 }
