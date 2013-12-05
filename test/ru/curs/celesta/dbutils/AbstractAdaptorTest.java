@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -20,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,77 +46,8 @@ public abstract class AbstractAdaptorTest {
 	private DBAdaptor dba;
 	private Score score;
 
-	@Before
-	public void setup() throws Exception {
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createSchemaIfNotExists(conn, GRAIN_NAME);
-		} finally {
-			ConnectionPool.putBack(conn);
-		}
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-		try {
-			dba.dropTable(t);
-		} catch (Exception e) {
-		}
-	}
-
-	@Test
-	public void isValidConnection() throws Exception {
-		Connection conn = ConnectionPool.get();
-		assertTrue(dba.isValidConnection(conn, 0));
-	}
-
-	@Test
-	public void tableExists() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-		Connection conn = ConnectionPool.get();
-		try {
-			boolean result = dba.tableExists(t.getGrain().getName(),
-					t.getName());
-			assertFalse(result);
-
-			dba.createTable(conn, t);
-			result = dba.tableExists(t.getGrain().getName(), t.getName());
-			assertTrue(result);
-		} finally {
-			dba.dropTable(t);
-			ConnectionPool.putBack(conn);
-		}
-	}
-
-	@Test
-	public void userTablesExist() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			try {
-				boolean result = dba.userTablesExist(conn);
-				assertTrue(result);
-			} finally {
-				dba.dropTable(t);
-			}
-		} finally {
-			ConnectionPool.putBack(conn);
-		}
-	}
-
-	@Test
-	public void createTable() throws CelestaException {
-		try {
-			Table t = score.getGrain(GRAIN_NAME).getTable("test");
-			Connection conn = ConnectionPool.get();
-			try {
-				dba.createTable(conn, t);
-				dba.dropTable(t);
-			} finally {
-				ConnectionPool.putBack(conn);
-			}
-		} catch (Exception ex) {
-			fail("Threw Exception:" + ex.getMessage());
-		}
-	}
+	private Connection conn;
+	private Table t;
 
 	private int insertRow(Connection conn, Table t, int val)
 			throws IOException, CelestaException, SQLException {
@@ -142,22 +73,6 @@ public abstract class AbstractAdaptorTest {
 		}
 	}
 
-	@Test
-	public void getInsertRecordStatement() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			int rowCount = insertRow(conn, t, 1);
-			assertEquals(1, rowCount);
-			assertEquals(1, getCount(conn, t));
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
-	}
-
 	private int getCount(Connection conn, Table t) throws Exception {
 		PreparedStatement stmt = dba.getSetCountStatement(conn, t,
 				Collections.<String, AbstractFilter> emptyMap());
@@ -170,515 +85,493 @@ public abstract class AbstractAdaptorTest {
 		}
 	}
 
-	@Test
-	public void getSetCountStatement() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+	protected void setDba(DBAdaptor dba) {
+		this.dba = dba;
+	}
 
-		Connection conn = ConnectionPool.get();
+	protected void setScore(Score score) {
+		this.score = score;
+	}
+
+	@Before
+	public void setup() throws Exception {
+		conn = ConnectionPool.get();
+		dba.createSchemaIfNotExists(conn, GRAIN_NAME);
+		t = score.getGrain(GRAIN_NAME).getTable("test");
 		try {
-			dba.createTable(conn, t);
-			int count = getCount(conn, t);
-			assertEquals(0, count);
-			insertRow(conn, t, 1);
-			assertEquals(1, dba.getCurrentIdent(conn, t));
+			dba.dropTable(t);
+		} catch (Exception e) {
+		}
+	}
 
-			insertRow(conn, t, 2);
-			assertEquals(2, dba.getCurrentIdent(conn, t));
+	@After
+	public void tearDown() throws Exception {
+		ConnectionPool.putBack(conn);
+		try {
+			dba.dropTable(t);
+		} catch (Exception e) {
+		}
+	}
 
-			insertRow(conn, t, 3);
-			assertEquals(3, dba.getCurrentIdent(conn, t));
-			count = getCount(conn, t);
-			assertEquals(3, count);
+	@Test
+	public void isValidConnection() throws Exception {
+		assertTrue(dba.isValidConnection(conn, 0));
+	}
 
-			insertRow(conn, t, 10);
-			assertEquals(4, dba.getCurrentIdent(conn, t));
-			assertEquals(4, getCount(conn, t));
+	@Test
+	public void tableExists() throws Exception {
+		boolean result = dba.tableExists(t.getGrain().getName(), t.getName());
+		assertFalse(result);
+
+		dba.createTable(conn, t);
+		result = dba.tableExists(t.getGrain().getName(), t.getName());
+		assertTrue(result);
+	}
+
+	@Test
+	public void userTablesExist() throws Exception {
+		dba.createTable(conn, t);
+		try {
+			boolean result = dba.userTablesExist(conn);
+			assertTrue(result);
 		} finally {
-			ConnectionPool.putBack(conn);
 			dba.dropTable(t);
 		}
+	}
+
+	@Test
+	public void createTable() throws CelestaException {
+		dba.createTable(conn, t);
+		dba.dropTable(t);
+	}
+
+	@Test
+	public void getInsertRecordStatement() throws Exception {
+		dba.createTable(conn, t);
+		int rowCount = insertRow(conn, t, 1);
+		assertEquals(1, rowCount);
+		assertEquals(1, getCount(conn, t));
+	}
+
+	@Test
+	public void getSetCountStatement() throws Exception {
+		dba.createTable(conn, t);
+		int count = getCount(conn, t);
+		assertEquals(0, count);
+		insertRow(conn, t, 1);
+		assertEquals(1, dba.getCurrentIdent(conn, t));
+
+		insertRow(conn, t, 2);
+		assertEquals(2, dba.getCurrentIdent(conn, t));
+
+		insertRow(conn, t, 3);
+		assertEquals(3, dba.getCurrentIdent(conn, t));
+		count = getCount(conn, t);
+		assertEquals(3, count);
+
+		insertRow(conn, t, 10);
+		assertEquals(4, dba.getCurrentIdent(conn, t));
+		assertEquals(4, getCount(conn, t));
 	}
 
 	@Test
 	public void getUpdateRecordStatement() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+		dba.createTable(conn, t);
+		insertRow(conn, t, 1);
+		assertEquals(1, getCount(conn, t));
 
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			insertRow(conn, t, 1);
-			assertEquals(1, getCount(conn, t));
+		assertEquals(13, t.getColumns().size());
+		boolean[] mask = { true, true, false, true, true, true, true, true,
+				true, true, true, true, true };
 
-			assertEquals(13, t.getColumns().size());
-			boolean[] mask = { true, true, false, true, true, true, true, true,
-					true, true, true, true, true };
-
-			PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t,
-					mask);
-			assertNotNull(pstmt);
-			DBAdaptor.setParam(pstmt, 1, 2); // field value
-			DBAdaptor.setParam(pstmt, 2, 1); // key value
-			int rowCount = pstmt.executeUpdate();
-			assertEquals(1, rowCount);
-			assertEquals(1, getCount(conn, t));
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask);
+		assertNotNull(pstmt);
+		DBAdaptor.setParam(pstmt, 1, 2); // field value
+		DBAdaptor.setParam(pstmt, 2, 1); // key value
+		int rowCount = pstmt.executeUpdate();
+		assertEquals(1, rowCount);
+		assertEquals(1, getCount(conn, t));
 	}
 
 	@Test
 	public void getDeleteRecordStatement() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			insertRow(conn, t, 1);
-			insertRow(conn, t, 10);
-			assertEquals(2, getCount(conn, t));
-			PreparedStatement pstmt = dba.getDeleteRecordStatement(conn, t);
-			assertNotNull(pstmt);
-			DBAdaptor.setParam(pstmt, 1, 1);// key value
-			int rowCount = pstmt.executeUpdate();
-			assertEquals(1, rowCount);
-			assertEquals(1, getCount(conn, t));
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		dba.createTable(conn, t);
+		insertRow(conn, t, 1);
+		insertRow(conn, t, 10);
+		assertEquals(2, getCount(conn, t));
+		PreparedStatement pstmt = dba.getDeleteRecordStatement(conn, t);
+		assertNotNull(pstmt);
+		DBAdaptor.setParam(pstmt, 1, 1);// key value
+		int rowCount = pstmt.executeUpdate();
+		assertEquals(1, rowCount);
+		assertEquals(1, getCount(conn, t));
 	}
 
 	@Test
 	public void getColumns() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			Set<String> columnSet = dba.getColumns(conn, t);
-			assertNotNull(columnSet);
-			assertEquals(13, columnSet.size());
-			assertTrue(columnSet.contains("f4"));
-			assertFalse(columnSet.contains("nonExistentColumn"));
-			// String[] columnNames = { "id", "attrVarchar", "attrInt", "f1",
-			// "f2", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11" };
-			// System.out
-			// .println(Arrays.toString(columnSet.toArray(new String[0])));
-
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		dba.createTable(conn, t);
+		Set<String> columnSet = dba.getColumns(conn, t);
+		assertNotNull(columnSet);
+		assertEquals(13, columnSet.size());
+		assertTrue(columnSet.contains("f4"));
+		assertFalse(columnSet.contains("nonExistentColumn"));
+		// String[] columnNames = { "id", "attrVarchar", "attrInt", "f1",
+		// "f2", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11" };
+		// System.out
+		// .println(Arrays.toString(columnSet.toArray(new String[0])));
 	}
 
 	@Test
 	public void getIndices() throws Exception {
 		Grain grain = score.getGrain(GRAIN_NAME);
-		Table t = grain.getTable("test");
 		Index i = grain.getIndices().get("idxTest");
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			dba.createIndex(conn, i);
-			Map<DBIndexInfo, TreeMap<Short, String>> indicesSet = dba
-					.getIndices(conn, t.getGrain());
 
-			// for (IndexInfo ii : indicesSet.keySet())
-			// System.out.println(ii.getIndexName());
+		dba.createTable(conn, t);
+		dba.createIndex(conn, i);
+		Map<DBIndexInfo, TreeMap<Short, String>> indicesSet = dba.getIndices(
+				conn, t.getGrain());
 
-			assertNotNull(indicesSet);
-			assertEquals(1, indicesSet.size());
-			dba.dropIndex(grain, new DBIndexInfo(t.getName(), i.getName()));
+		// for (IndexInfo ii : indicesSet.keySet())
+		// System.out.println(ii.getIndexName());
 
-			indicesSet = dba.getIndices(conn, t.getGrain());
-			assertNotNull(indicesSet);
-			assertEquals(0, indicesSet.size());
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		assertNotNull(indicesSet);
+		assertEquals(1, indicesSet.size());
+		dba.dropIndex(grain, new DBIndexInfo(t.getName(), i.getName()));
+
+		indicesSet = dba.getIndices(conn, t.getGrain());
+		assertNotNull(indicesSet);
+		assertEquals(0, indicesSet.size());
 	}
 
 	@Test
 	public void getOneFieldStatement() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			insertRow(conn, t, 121215);
-			Column c = t.getColumns().get("attrInt");
-			PreparedStatement pstmt = dba.getOneFieldStatement(conn, c);
-			assertNotNull(pstmt);
-			DBAdaptor.setParam(pstmt, 1, 1);// key value
-			ResultSet rs = pstmt.executeQuery();
-			assertTrue(rs.next());
-			assertEquals(121215, rs.getInt("attrInt"));
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		dba.createTable(conn, t);
+		insertRow(conn, t, 121215);
+		Column c = t.getColumns().get("attrInt");
+		PreparedStatement pstmt = dba.getOneFieldStatement(conn, c);
+		assertNotNull(pstmt);
+		DBAdaptor.setParam(pstmt, 1, 1);// key value
+		ResultSet rs = pstmt.executeQuery();
+		assertTrue(rs.next());
+		assertEquals(121215, rs.getInt("attrInt"));
 	}
 
 	@Test
 	public void getOneRecordStatement() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			insertRow(conn, t, 1);
-			PreparedStatement pstmt = dba.getOneRecordStatement(conn, t);
-			assertNotNull(pstmt);
-			DBAdaptor.setParam(pstmt, 1, 1);// key value
-			ResultSet rs = pstmt.executeQuery();
-			assertTrue(rs.next());
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		dba.createTable(conn, t);
+		insertRow(conn, t, 1);
+		PreparedStatement pstmt = dba.getOneRecordStatement(conn, t);
+		assertNotNull(pstmt);
+		DBAdaptor.setParam(pstmt, 1, 1);// key value
+		ResultSet rs = pstmt.executeQuery();
+		assertTrue(rs.next());
 	}
 
 	@Test
 	public void deleteRecordSetStatement() throws Exception {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			insertRow(conn, t, 1);
-			insertRow(conn, t, 1);
-			assertEquals(2, getCount(conn, t));
-			PreparedStatement pstmt = dba.deleteRecordSetStatement(conn, t,
-					Collections.<String, AbstractFilter> emptyMap());
-			assertNotNull(pstmt);
-			int rowCount = pstmt.executeUpdate();
-			assertEquals(2, rowCount);
-			assertEquals(0, getCount(conn, t));
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		dba.createTable(conn, t);
+		insertRow(conn, t, 1);
+		insertRow(conn, t, 1);
+		assertEquals(2, getCount(conn, t));
+		PreparedStatement pstmt = dba.deleteRecordSetStatement(conn, t,
+				Collections.<String, AbstractFilter> emptyMap());
+		assertNotNull(pstmt);
+		int rowCount = pstmt.executeUpdate();
+		assertEquals(2, rowCount);
+		assertEquals(0, getCount(conn, t));
 	}
 
 	@Test
 	public void getColumnInfo1() throws CelestaException, ParseException {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 
 		DBColumnInfo c;
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			// Проверяем реакцию на столбец, которого нет в базе данных
-			Column newCol = new IntegerColumn(t, "nonExistentColumn");
-			assertSame(newCol, t.getColumn("nonExistentColumn"));
-			c = dba.getColumnInfo(conn, newCol);
-			assertNull(c);
 
-			// Этот тест проверяет типы колонок и выражения not null
-			// attrVarchar nvarchar(2),
-			c = dba.getColumnInfo(conn, t.getColumn("attrVarchar"));
-			assertEquals("attrVarchar", c.getName());
-			assertSame(StringColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals(2, c.getLength());
-			assertEquals("", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
+		dba.createTable(conn, t);
+		// Проверяем реакцию на столбец, которого нет в базе данных
+		Column newCol = new IntegerColumn(t, "nonExistentColumn");
+		assertSame(newCol, t.getColumn("nonExistentColumn"));
+		c = dba.getColumnInfo(conn, newCol);
+		assertNull(c);
 
-			// f1 bit not null,
-			c = dba.getColumnInfo(conn, t.getColumn("f1"));
-			assertEquals("f1", c.getName());
-			assertSame(BooleanColumn.class, c.getType());
-			assertEquals(false, c.isNullable());
-			assertEquals(0, c.getLength());
-			assertEquals("", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
+		// Этот тест проверяет типы колонок и выражения not null
+		// attrVarchar nvarchar(2),
+		c = dba.getColumnInfo(conn, t.getColumn("attrVarchar"));
+		assertEquals("attrVarchar", c.getName());
+		assertSame(StringColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(2, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
 
-			// f4 real,
-			c = dba.getColumnInfo(conn, t.getColumn("f4"));
-			assertEquals("f4", c.getName());
-			assertSame(FloatingColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals(0, c.getLength());
-			assertEquals("", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
+		// f1 bit not null,
+		c = dba.getColumnInfo(conn, t.getColumn("f1"));
+		assertEquals("f1", c.getName());
+		assertSame(BooleanColumn.class, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
 
-			// f7 nvarchar(8),
-			c = dba.getColumnInfo(conn, t.getColumn("f7"));
-			assertEquals("f7", c.getName());
-			assertSame(StringColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals(8, c.getLength());
-			assertEquals("", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
+		// f4 real,
+		c = dba.getColumnInfo(conn, t.getColumn("f4"));
+		assertEquals("f4", c.getName());
+		assertSame(FloatingColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
 
-			// f11 image not null
-			c = dba.getColumnInfo(conn, t.getColumn("f11"));
-			assertEquals("f11", c.getName());
-			assertSame(BinaryColumn.class, c.getType());
-			assertEquals(false, c.isNullable());
-			assertEquals(0, c.getLength());
-			assertEquals("", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		// f7 nvarchar(8),
+		c = dba.getColumnInfo(conn, t.getColumn("f7"));
+		assertEquals("f7", c.getName());
+		assertSame(StringColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(8, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f11 image not null
+		c = dba.getColumnInfo(conn, t.getColumn("f11"));
+		assertEquals("f11", c.getName());
+		assertSame(BinaryColumn.class, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
 	}
 
 	@Test
 	public void getColumnInfo2() throws CelestaException, ParseException {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
-
 		DBColumnInfo c;
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			// Этот тест проверяет выражения default и дополнительные атрибуты
-			// id int identity not null primary key,
-			c = dba.getColumnInfo(conn, t.getColumn("id"));
-			assertEquals("id", c.getName());
-			assertSame(IntegerColumn.class, c.getType());
-			assertEquals(false, c.isNullable());
-			assertEquals(0, c.getLength());
-			assertEquals("", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(true, c.isIdentity());
 
-			// attrInt int default 3,
-			c = dba.getColumnInfo(conn, t.getColumn("attrInt"));
-			assertEquals("attrInt", c.getName());
-			assertSame(IntegerColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals(0, c.getLength());
-			assertEquals("3", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
+		dba.createTable(conn, t);
+		// Этот тест проверяет выражения default и дополнительные атрибуты
+		// id int identity not null primary key,
+		c = dba.getColumnInfo(conn, t.getColumn("id"));
+		assertEquals("id", c.getName());
+		assertSame(IntegerColumn.class, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(true, c.isIdentity());
 
-			// f2 bit default 'true',
-			c = dba.getColumnInfo(conn, t.getColumn("f2"));
-			assertEquals("f2", c.getName());
-			assertSame(BooleanColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals(0, c.getLength());
-			assertEquals("'TRUE'", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
+		// attrInt int default 3,
+		c = dba.getColumnInfo(conn, t.getColumn("attrInt"));
+		assertEquals("attrInt", c.getName());
+		assertSame(IntegerColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("3", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
 
-			// f5 real not null default 5.5,
-			c = dba.getColumnInfo(conn, t.getColumn("f5"));
-			assertEquals("f5", c.getName());
-			assertSame(FloatingColumn.class, c.getType());
-			assertEquals(false, c.isNullable());
-			assertEquals(0, c.getLength());
-			assertEquals("5.5", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
+		// f2 bit default 'true',
+		c = dba.getColumnInfo(conn, t.getColumn("f2"));
+		assertEquals("f2", c.getName());
+		assertSame(BooleanColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("'TRUE'", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
 
-			// f6 nvarchar(max) not null default 'abc',
-			c = dba.getColumnInfo(conn, t.getColumn("f6"));
-			assertEquals("f6", c.getName());
-			assertSame(StringColumn.class, c.getType());
-			assertEquals(false, c.isNullable());
-			// assertEquals(0, c.getLength()); -- database-dependent value
-			assertEquals("'abc'", c.getDefaultValue());
-			assertEquals(true, c.isMax());
-			assertEquals(false, c.isIdentity());
+		// f5 real not null default 5.5,
+		c = dba.getColumnInfo(conn, t.getColumn("f5"));
+		assertEquals("f5", c.getName());
+		assertSame(FloatingColumn.class, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("5.5", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
 
-			// f8 datetime default '20130401',
-			c = dba.getColumnInfo(conn, t.getColumn("f8"));
-			assertEquals("f8", c.getName());
-			assertSame(DateTimeColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals(0, c.getLength());
-			assertEquals("'20130401'", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
+		// f6 nvarchar(max) not null default 'abc',
+		c = dba.getColumnInfo(conn, t.getColumn("f6"));
+		assertEquals("f6", c.getName());
+		assertSame(StringColumn.class, c.getType());
+		assertEquals(false, c.isNullable());
+		// assertEquals(0, c.getLength()); -- database-dependent value
+		assertEquals("'abc'", c.getDefaultValue());
+		assertEquals(true, c.isMax());
+		assertEquals(false, c.isIdentity());
 
-			// f9 datetime not null default getdate(),
-			c = dba.getColumnInfo(conn, t.getColumn("f9"));
-			assertEquals("f9", c.getName());
-			assertSame(DateTimeColumn.class, c.getType());
-			assertEquals(false, c.isNullable());
-			assertEquals(0, c.getLength());
-			assertEquals("GETDATE()", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
+		// f8 datetime default '20130401',
+		c = dba.getColumnInfo(conn, t.getColumn("f8"));
+		assertEquals("f8", c.getName());
+		assertSame(DateTimeColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("'20130401'", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
 
-			// f10 image default 0xFFAAFFAAFF,
-			c = dba.getColumnInfo(conn, t.getColumn("f10"));
-			assertEquals("f10", c.getName());
-			assertSame(BinaryColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals(0, c.getLength());
-			assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(false, c.isIdentity());
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		// f9 datetime not null default getdate(),
+		c = dba.getColumnInfo(conn, t.getColumn("f9"));
+		assertEquals("f9", c.getName());
+		assertSame(DateTimeColumn.class, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("GETDATE()", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
+
+		// f10 image default 0xFFAAFFAAFF,
+		c = dba.getColumnInfo(conn, t.getColumn("f10"));
+		assertEquals("f10", c.getName());
+		assertSame(BinaryColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals(0, c.getLength());
+		assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(false, c.isIdentity());
 	}
 
 	@Test
 	public void updateColumn() throws CelestaException, ParseException,
 			IOException, SQLException {
 		// NULL/NOT NULL и DEFAULT (простые)
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 
 		DBColumnInfo c;
 		Column col;
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			// To test transforms on non-empty table
-			insertRow(conn, t, 17);
 
-			col = t.getColumn("attrInt");
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("attrInt", c.getName());
-			assertSame(IntegerColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals("3", c.getDefaultValue());
-			assertEquals(false, c.isIdentity());
-			col.setNullableAndDefault(false, "55");
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("attrInt", c.getName());
-			assertSame(IntegerColumn.class, c.getType());
-			assertEquals(false, c.isNullable());
-			assertEquals("55", c.getDefaultValue());
-			assertEquals(false, c.isIdentity());
-			col.setNullableAndDefault(false, null);
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("", c.getDefaultValue());
+		dba.createTable(conn, t);
+		// To test transforms on non-empty table
+		insertRow(conn, t, 17);
 
-			// f6 nvarchar(max) not null default 'abc',
-			col = t.getColumn("f6");
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("f6", c.getName());
-			assertSame(StringColumn.class, c.getType());
-			assertEquals(false, c.isNullable());
-			assertEquals("'abc'", c.getDefaultValue());
-			assertEquals(true, c.isMax());
-			StringColumn scol = (StringColumn) col;
-			scol.setLength("234");
-			scol.setNullableAndDefault(true, "'eee'");
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("f6", c.getName());
-			assertSame(StringColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals("'eee'", c.getDefaultValue());
-			assertEquals(false, c.isMax());
-			assertEquals(234, c.getLength());
+		col = t.getColumn("attrInt");
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("attrInt", c.getName());
+		assertSame(IntegerColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals("3", c.getDefaultValue());
+		assertEquals(false, c.isIdentity());
+		col.setNullableAndDefault(false, "55");
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("attrInt", c.getName());
+		assertSame(IntegerColumn.class, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals("55", c.getDefaultValue());
+		assertEquals(false, c.isIdentity());
+		col.setNullableAndDefault(false, null);
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("", c.getDefaultValue());
 
-			// f8 datetime default '20130401',
-			col = t.getColumn("f8");
-			DateTimeColumn dcol = (DateTimeColumn) col;
-			assertFalse(dcol.isGetdate());
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("f8", c.getName());
-			assertSame(DateTimeColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals("'20130401'", c.getDefaultValue());
+		// f6 nvarchar(max) not null default 'abc',
+		col = t.getColumn("f6");
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("f6", c.getName());
+		assertSame(StringColumn.class, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals("'abc'", c.getDefaultValue());
+		assertEquals(true, c.isMax());
+		StringColumn scol = (StringColumn) col;
+		scol.setLength("234");
+		scol.setNullableAndDefault(true, "'eee'");
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("f6", c.getName());
+		assertSame(StringColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals("'eee'", c.getDefaultValue());
+		assertEquals(false, c.isMax());
+		assertEquals(234, c.getLength());
 
-			col.setNullableAndDefault(true, "getdate");
-			assertTrue(dcol.isGetdate());
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("f8", c.getName());
-			assertSame(DateTimeColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals("GETDATE()", c.getDefaultValue());
+		// f8 datetime default '20130401',
+		col = t.getColumn("f8");
+		DateTimeColumn dcol = (DateTimeColumn) col;
+		assertFalse(dcol.isGetdate());
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("f8", c.getName());
+		assertSame(DateTimeColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals("'20130401'", c.getDefaultValue());
 
-			col.setNullableAndDefault(true, null);
-			assertFalse(dcol.isGetdate());
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("f8", c.getName());
-			assertSame(DateTimeColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals("", c.getDefaultValue());
+		col.setNullableAndDefault(true, "getdate");
+		assertTrue(dcol.isGetdate());
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("f8", c.getName());
+		assertSame(DateTimeColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals("GETDATE()", c.getDefaultValue());
 
-			col.setNullableAndDefault(false, "getdate");
-			assertTrue(dcol.isGetdate());
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("f8", c.getName());
-			assertSame(DateTimeColumn.class, c.getType());
-			assertEquals(false, c.isNullable());
-			assertEquals("GETDATE()", c.getDefaultValue());
+		col.setNullableAndDefault(true, null);
+		assertFalse(dcol.isGetdate());
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("f8", c.getName());
+		assertSame(DateTimeColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals("", c.getDefaultValue());
 
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		col.setNullableAndDefault(false, "getdate");
+		assertTrue(dcol.isGetdate());
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("f8", c.getName());
+		assertSame(DateTimeColumn.class, c.getType());
+		assertEquals(false, c.isNullable());
+		assertEquals("GETDATE()", c.getDefaultValue());
 	}
 
 	@Test
 	public void updateColumn2test() throws CelestaException, ParseException,
 			IOException, SQLException {
 		// IDENTITY
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 
 		DBColumnInfo c;
 		IntegerColumn col;
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			// To test transforms on non-empty table
-			insertRow(conn, t, 15);
 
-			col = (IntegerColumn) t.getColumn("id");
-			assertTrue(col.isIdentity());
-			c = dba.getColumnInfo(conn, col);
-			assertTrue(c.isIdentity());
-			col.setNullableAndDefault(false, null);
-			assertFalse(col.isIdentity());
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertFalse(c.isIdentity());
-			assertFalse(c.isNullable());
+		dba.createTable(conn, t);
+		// To test transforms on non-empty table
+		insertRow(conn, t, 15);
 
-			col = (IntegerColumn) t.getColumn("attrInt");
-			c = dba.getColumnInfo(conn, col);
-			assertFalse(c.isIdentity());
-			col.setNullableAndDefault(true, "identity");
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertTrue(c.isIdentity());
-			assertTrue(c.isNullable());
+		col = (IntegerColumn) t.getColumn("id");
+		assertTrue(col.isIdentity());
+		c = dba.getColumnInfo(conn, col);
+		assertTrue(c.isIdentity());
+		col.setNullableAndDefault(false, null);
+		assertFalse(col.isIdentity());
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertFalse(c.isIdentity());
+		assertFalse(c.isNullable());
 
-			col.setNullableAndDefault(true, null);
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertFalse(c.isIdentity());
-			assertTrue(c.isNullable());
+		col = (IntegerColumn) t.getColumn("attrInt");
+		c = dba.getColumnInfo(conn, col);
+		assertFalse(c.isIdentity());
+		col.setNullableAndDefault(true, "identity");
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertTrue(c.isIdentity());
+		assertTrue(c.isNullable());
 
-			col = (IntegerColumn) t.getColumn("id");
-			assertFalse(col.isIdentity());
-			c = dba.getColumnInfo(conn, col);
-			assertFalse(c.isIdentity());
-			assertFalse(c.isNullable());
+		col.setNullableAndDefault(true, null);
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertFalse(c.isIdentity());
+		assertTrue(c.isNullable());
 
-			col.setNullableAndDefault(false, "identity");
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertTrue(c.isIdentity());
-			assertFalse(c.isNullable());
+		col = (IntegerColumn) t.getColumn("id");
+		assertFalse(col.isIdentity());
+		c = dba.getColumnInfo(conn, col);
+		assertFalse(c.isIdentity());
+		assertFalse(c.isNullable());
 
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		col.setNullableAndDefault(false, "identity");
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertTrue(c.isIdentity());
+		assertFalse(c.isNullable());
 
 	}
 
@@ -686,49 +579,42 @@ public abstract class AbstractAdaptorTest {
 	public void updateColumn3test() throws CelestaException, ParseException,
 			IOException, SQLException {
 		// String length
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 
 		DBColumnInfo c;
 		StringColumn col;
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			// To test transforms on non-empty table
-			insertRow(conn, t, 15);
+		dba.createTable(conn, t);
+		// To test transforms on non-empty table
+		insertRow(conn, t, 15);
 
-			col = (StringColumn) t.getColumn("attrVarchar");
-			assertEquals(2, col.getLength());
-			c = dba.getColumnInfo(conn, col);
-			assertEquals(2, c.getLength());
-			assertFalse(c.isMax());
-			col.setLength("19");
-			assertEquals(19, col.getLength());
-			assertFalse(col.isMax());
+		col = (StringColumn) t.getColumn("attrVarchar");
+		assertEquals(2, col.getLength());
+		c = dba.getColumnInfo(conn, col);
+		assertEquals(2, c.getLength());
+		assertFalse(c.isMax());
+		col.setLength("19");
+		assertEquals(19, col.getLength());
+		assertFalse(col.isMax());
 
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertEquals(19, c.getLength());
-			assertFalse(c.isMax());
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals(19, c.getLength());
+		assertFalse(c.isMax());
 
-			col.setLength("max");
-			assertTrue(col.isMax());
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertTrue(c.isMax());
+		col.setLength("max");
+		assertTrue(col.isMax());
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertTrue(c.isMax());
 
-			col.setNullableAndDefault(false, "'www'");
-			col.setLength("3");
-			assertFalse(col.isMax());
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertFalse(c.isMax());
-			assertEquals(3, c.getLength());
-			assertFalse(c.isNullable());
-			assertEquals("'www'", c.getDefaultValue());
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		col.setNullableAndDefault(false, "'www'");
+		col.setLength("3");
+		assertFalse(col.isMax());
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertFalse(c.isMax());
+		assertEquals(3, c.getLength());
+		assertFalse(c.isNullable());
+		assertEquals("'www'", c.getDefaultValue());
 
 	}
 
@@ -736,36 +622,29 @@ public abstract class AbstractAdaptorTest {
 	public void updateColumn4test() throws CelestaException, ParseException,
 			IOException, SQLException {
 		// BLOB Default
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 
 		DBColumnInfo c;
 		BinaryColumn col;
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			// To test transforms on non-empty table
-			insertRow(conn, t, 11);
+		dba.createTable(conn, t);
+		// To test transforms on non-empty table
+		insertRow(conn, t, 11);
 
-			col = (BinaryColumn) t.getColumn("f10");
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
-			assertTrue(c.isNullable());
+		col = (BinaryColumn) t.getColumn("f10");
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
+		assertTrue(c.isNullable());
 
-			col.setNullableAndDefault(false, "0xABABAB");
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertFalse(c.isNullable());
-			assertEquals("0xABABAB", c.getDefaultValue());
+		col.setNullableAndDefault(false, "0xABABAB");
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertFalse(c.isNullable());
+		assertEquals("0xABABAB", c.getDefaultValue());
 
-			col.setNullableAndDefault(false, null);
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertFalse(c.isNullable());
-			assertEquals("", c.getDefaultValue());
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		col.setNullableAndDefault(false, null);
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertFalse(c.isNullable());
+		assertEquals("", c.getDefaultValue());
 
 	}
 
@@ -773,162 +652,140 @@ public abstract class AbstractAdaptorTest {
 	public void updateColumn5test() throws CelestaException, ParseException,
 			IOException, SQLException {
 		// BLOB Default
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 
 		DBColumnInfo c;
 		IntegerColumn col;
 		StringColumn scol;
 		BooleanColumn bcol;
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			// Table should be empty in Oracle to change data type...
-			// insertRow(conn, t, 11);
-			col = (IntegerColumn) t.getColumn("attrInt");
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("attrInt", c.getName());
-			assertSame(IntegerColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals("3", c.getDefaultValue());
-			assertEquals(false, c.isIdentity());
+		dba.createTable(conn, t);
+		// Table should be empty in Oracle to change data type...
+		// insertRow(conn, t, 11);
+		col = (IntegerColumn) t.getColumn("attrInt");
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("attrInt", c.getName());
+		assertSame(IntegerColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals("3", c.getDefaultValue());
+		assertEquals(false, c.isIdentity());
 
-			t.getGrain().getIndices().get("idxTest").delete();
-			// int --> nvarchar
-			col.delete();
-			scol = new StringColumn(t, "attrInt");
-			scol.setLength("40");
-			scol.setNullableAndDefault(true, "'русские буквы'");
-			dba.updateColumn(conn, scol, c);
-			c = dba.getColumnInfo(conn, scol);
-			assertEquals("attrInt", c.getName());
-			assertSame(StringColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals("'русские буквы'", c.getDefaultValue());
-			assertEquals(40, c.getLength());
+		t.getGrain().getIndices().get("idxTest").delete();
+		// int --> nvarchar
+		col.delete();
+		scol = new StringColumn(t, "attrInt");
+		scol.setLength("40");
+		scol.setNullableAndDefault(true, "'русские буквы'");
+		dba.updateColumn(conn, scol, c);
+		c = dba.getColumnInfo(conn, scol);
+		assertEquals("attrInt", c.getName());
+		assertSame(StringColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals("'русские буквы'", c.getDefaultValue());
+		assertEquals(40, c.getLength());
 
-			// nvarchar --> int
-			scol.delete();
-			col = new IntegerColumn(t, "attrInt");
-			col.setNullableAndDefault(true, "5");
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("attrInt", c.getName());
-			assertSame(IntegerColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals("5", c.getDefaultValue());
-			assertEquals(false, c.isIdentity());
+		// nvarchar --> int
+		scol.delete();
+		col = new IntegerColumn(t, "attrInt");
+		col.setNullableAndDefault(true, "5");
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("attrInt", c.getName());
+		assertSame(IntegerColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals("5", c.getDefaultValue());
+		assertEquals(false, c.isIdentity());
 
-			// int --> boolean (test specially for Oracle!)
-			col.delete();
-			bcol = new BooleanColumn(t, "attrInt");
-			bcol.setNullableAndDefault(true, null);
-			dba.updateColumn(conn, bcol, c);
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("attrInt", c.getName());
-			assertSame(BooleanColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals("", c.getDefaultValue());
+		// int --> boolean (test specially for Oracle!)
+		col.delete();
+		bcol = new BooleanColumn(t, "attrInt");
+		bcol.setNullableAndDefault(true, null);
+		dba.updateColumn(conn, bcol, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("attrInt", c.getName());
+		assertSame(BooleanColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals("", c.getDefaultValue());
 
-			// boolean --> back to int
-			bcol.delete();
-			col = new IntegerColumn(t, "attrInt");
-			col.setNullableAndDefault(true, null);
-			dba.updateColumn(conn, col, c);
-			c = dba.getColumnInfo(conn, col);
-			assertEquals("attrInt", c.getName());
-			assertSame(IntegerColumn.class, c.getType());
-			assertEquals(true, c.isNullable());
-			assertEquals("", c.getDefaultValue());
-			assertEquals(false, c.isIdentity());
-
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		// boolean --> back to int
+		bcol.delete();
+		col = new IntegerColumn(t, "attrInt");
+		col.setNullableAndDefault(true, null);
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("attrInt", c.getName());
+		assertSame(IntegerColumn.class, c.getType());
+		assertEquals(true, c.isNullable());
+		assertEquals("", c.getDefaultValue());
+		assertEquals(false, c.isIdentity());
 
 	}
 
 	@Test
 	public void testReflects() throws CelestaException, ParseException {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 
 		DBColumnInfo c;
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			c = dba.getColumnInfo(conn, t.getColumn("f8"));
-			assertTrue(c.reflects(t.getColumn("f8")));
-			assertFalse(c.reflects(t.getColumn("f1")));
-			assertFalse(c.reflects(t.getColumn("f9")));
 
-			c = dba.getColumnInfo(conn, t.getColumn("attrVarchar"));
-			assertTrue(c.reflects(t.getColumn("attrVarchar")));
-			assertFalse(c.reflects(t.getColumn("f7")));
+		dba.createTable(conn, t);
+		c = dba.getColumnInfo(conn, t.getColumn("f8"));
+		assertTrue(c.reflects(t.getColumn("f8")));
+		assertFalse(c.reflects(t.getColumn("f1")));
+		assertFalse(c.reflects(t.getColumn("f9")));
 
-			c = dba.getColumnInfo(conn, t.getColumn("f10"));
-			assertTrue(c.reflects(t.getColumn("f10")));
-			assertFalse(c.reflects(t.getColumn("f11")));
+		c = dba.getColumnInfo(conn, t.getColumn("attrVarchar"));
+		assertTrue(c.reflects(t.getColumn("attrVarchar")));
+		assertFalse(c.reflects(t.getColumn("f7")));
 
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		c = dba.getColumnInfo(conn, t.getColumn("f10"));
+		assertTrue(c.reflects(t.getColumn("f10")));
+		assertFalse(c.reflects(t.getColumn("f11")));
+
 	}
 
 	@Test
 	public void getPKInfo() throws CelestaException, ParseException,
 			IOException, SQLException {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
 
 		DBPKInfo c;
-		Connection conn = ConnectionPool.get();
-		try {
-			dba.createTable(conn, t);
-			insertRow(conn, t, 15);
 
-			c = dba.getPrimaryKeyInfo(conn, t);
-			assertNotNull(c);
-			assertEquals("pk_test", c.getName());
-			assertEquals(1, c.getColumnNames().size());
-			String[] expected = { "id" };
-			assertTrue(Arrays.equals(expected,
-					c.getColumnNames().toArray(new String[0])));
-			assertTrue(c.reflects(t));
-			assertFalse(c.isEmpty());
+		dba.createTable(conn, t);
+		insertRow(conn, t, 15);
 
-			dba.dropTablePK(conn, t, "pk_test");
-			c = dba.getPrimaryKeyInfo(conn, t);
-			assertNull(c.getName());
-			assertEquals(0, c.getColumnNames().size());
-			assertFalse(c.reflects(t));
-			assertTrue(c.isEmpty());
+		c = dba.getPrimaryKeyInfo(conn, t);
+		assertNotNull(c);
+		assertEquals("pk_test", c.getName());
+		assertEquals(1, c.getColumnNames().size());
+		String[] expected = { "id" };
+		assertTrue(Arrays.equals(expected,
+				c.getColumnNames().toArray(new String[0])));
+		assertTrue(c.reflects(t));
+		assertFalse(c.isEmpty());
 
-			t.setPK("id", "f1", "f9");
-			dba.createTablePK(conn, t);
-			c = dba.getPrimaryKeyInfo(conn, t);
-			assertNotNull(c);
-			assertEquals("pk_test", c.getName());
-			assertEquals(3, c.getColumnNames().size());
-			String[] expected2 = { "id", "f1", "f9" };
-			assertTrue(Arrays.equals(expected2,
-					c.getColumnNames().toArray(new String[0])));
-			assertTrue(c.reflects(t));
-			assertFalse(c.isEmpty());
-		} finally {
-			ConnectionPool.putBack(conn);
-			dba.dropTable(t);
-		}
+		dba.dropTablePK(conn, t, "pk_test");
+		c = dba.getPrimaryKeyInfo(conn, t);
+		assertNull(c.getName());
+		assertEquals(0, c.getColumnNames().size());
+		assertFalse(c.reflects(t));
+		assertTrue(c.isEmpty());
+
+		t.setPK("id", "f1", "f9");
+		dba.createTablePK(conn, t);
+		c = dba.getPrimaryKeyInfo(conn, t);
+		assertNotNull(c);
+		assertEquals("pk_test", c.getName());
+		assertEquals(3, c.getColumnNames().size());
+		String[] expected2 = { "id", "f1", "f9" };
+		assertTrue(Arrays.equals(expected2,
+				c.getColumnNames().toArray(new String[0])));
+		assertTrue(c.reflects(t));
+		assertFalse(c.isEmpty());
 
 	}
 
 	@Test
-	public void getFKInfo() throws ParseException, CelestaException {
-		Table t = score.getGrain(GRAIN_NAME).getTable("test");
+	public void getFKInfo() throws ParseException, CelestaException, SQLException {
 		Grain g = score.getGrain(GRAIN_NAME);
 		Table t2 = g.getTable("refTo");
 		ForeignKey fk = t.getForeignKeys().iterator().next();
 		assertEquals("fk_testName", fk.getConstraintName());
-		Connection conn = ConnectionPool.get();
 		try {
 			dba.createTable(conn, t);
 			try {
@@ -950,19 +807,10 @@ public abstract class AbstractAdaptorTest {
 			throw e;
 
 		} finally {
-			ConnectionPool.putBack(conn);
+			conn.commit();
 			dba.dropTable(t);
 			dba.dropTable(t2);
 		}
-
-	}
-
-	protected void setDba(DBAdaptor dba) {
-		this.dba = dba;
-	}
-
-	protected void setScore(Score score) {
-		this.score = score;
 	}
 
 }
