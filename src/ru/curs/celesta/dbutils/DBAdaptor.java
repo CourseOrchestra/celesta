@@ -109,23 +109,23 @@ public abstract class DBAdaptor {
 	/**
 	 * Удалить таблицу.
 	 * 
+	 * @param conn
+	 *            Соединение с БД
 	 * @param t
 	 *            удаляемая таблица
 	 * @throws CelestaException
 	 *             в случае ошибки работы с БД
 	 */
-	public void dropTable(Table t) throws CelestaException {
-		Connection conn = ConnectionPool.get();
+	public void dropTable(Connection conn, Table t) throws CelestaException {
 		try {
 			String sql = String.format("DROP TABLE " + tableTemplate(), t
 					.getGrain().getName(), t.getName());
 			PreparedStatement pstmt = conn.prepareStatement(sql);
 			pstmt.execute();
 			dropAutoIncrement(conn, t);
+			conn.commit();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
-		} finally {
-			ConnectionPool.putBack(conn);
 		}
 	}
 
