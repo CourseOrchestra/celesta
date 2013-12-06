@@ -25,4 +25,5 @@ create table refTo (
   primary key (k1, k2)
 );
 
-alter table test add constraint fk_testName foreign key (attrVarchar, attrInt) references refTo (k1, k2);
+alter table test add constraint fk_testName foreign key (attrVarchar, attrInt) references refTo (k1, k2)
+ on update cascade on delete set null;
