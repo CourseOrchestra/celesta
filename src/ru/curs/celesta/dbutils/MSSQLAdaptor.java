@@ -19,7 +19,6 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKBehaviour;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
@@ -805,17 +804,6 @@ final class MSSQLAdaptor extends DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 
-	}
-
-	private static FKBehaviour getFKBehaviour(String rule) {
-		if ("NO ACTION".equalsIgnoreCase(rule)
-				|| "RECTRICT".equalsIgnoreCase(rule))
-			return FKBehaviour.NO_ACTION;
-		if ("SET NULL".equalsIgnoreCase(rule))
-			return FKBehaviour.SET_NULL;
-		if ("CASCADE".equalsIgnoreCase(rule))
-			return FKBehaviour.CASCADE;
-		return null;
 	}
 
 	@Override

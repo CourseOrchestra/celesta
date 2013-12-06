@@ -26,6 +26,7 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.FKBehaviour;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
@@ -114,12 +115,17 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае ошибки работы с БД
 	 */
-	public void dropTable(Connection conn, Table t) throws CelestaException {
+	public final void dropTable(Connection conn, Table t)
+			throws CelestaException {
 		try {
 			String sql = String.format("DROP TABLE " + tableTemplate(), t
 					.getGrain().getName(), t.getName());
-			PreparedStatement pstmt = conn.prepareStatement(sql);
-			pstmt.execute();
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
 			dropAutoIncrement(conn, t);
 			conn.commit();
 		} catch (SQLException e) {
@@ -453,18 +459,6 @@ public abstract class DBAdaptor {
 		}
 		sql.append(")");
 
-		switch (fk.getUpdateBehaviour()) {
-		case SET_NULL:
-			sql.append(" on update set null");
-			break;
-		case CASCADE:
-			sql.append(" on update cascade");
-			break;
-		case NO_ACTION:
-		default:
-			break;
-		}
-
 		switch (fk.getDeleteBehaviour()) {
 		case SET_NULL:
 			sql.append(" on delete set null");
@@ -476,7 +470,10 @@ public abstract class DBAdaptor {
 		default:
 			break;
 		}
-		// System.out.println(sql);
+
+		processUpdateRule(fk, sql);
+
+		System.out.println(sql);
 		// Построили, выполняем
 		try {
 			Statement stmt = conn.createStatement();
@@ -488,6 +485,20 @@ public abstract class DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException("Cannot create foreign key '%s': %s",
 					fk.getConstraintName(), e.getMessage());
+		}
+	}
+
+	void processUpdateRule(ForeignKey fk, StringBuilder sql) {
+		switch (fk.getUpdateBehaviour()) {
+		case SET_NULL:
+			sql.append(" on update set null");
+			break;
+		case CASCADE:
+			sql.append(" on update cascade");
+			break;
+		case NO_ACTION:
+		default:
+			break;
 		}
 	}
 
@@ -644,6 +655,17 @@ public abstract class DBAdaptor {
 							.getName(), e.getMessage());
 
 		}
+	}
+	
+	static FKBehaviour getFKBehaviour(String rule) {
+		if ("NO ACTION".equalsIgnoreCase(rule)
+				|| "RECTRICT".equalsIgnoreCase(rule))
+			return FKBehaviour.NO_ACTION;
+		if ("SET NULL".equalsIgnoreCase(rule))
+			return FKBehaviour.SET_NULL;
+		if ("CASCADE".equalsIgnoreCase(rule))
+			return FKBehaviour.CASCADE;
+		return null;
 	}
 
 	final String getSelectFromOrderBy(Table t, String whereClause,

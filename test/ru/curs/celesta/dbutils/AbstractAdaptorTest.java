@@ -771,6 +771,10 @@ public abstract class AbstractAdaptorTest {
 
 			assertEquals(FKBehaviour.CASCADE, info.getUpdateBehaviour());
 			assertEquals(FKBehaviour.SET_NULL, info.getDeleteBehaviour());
+
+			assertEquals("gtest", info.getRefGrainName());
+			assertEquals("refTo", info.getRefTableName());
+
 		} catch (CelestaException e) {
 			e.printStackTrace();
 			throw e;

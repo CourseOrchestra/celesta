@@ -25,6 +25,7 @@ import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
@@ -42,6 +43,8 @@ final class OraAdaptor extends DBAdaptor {
 	private static final Pattern DATE_PATTERN = Pattern
 			.compile("'(\\d\\d\\d\\d)-([01]\\d)-([0123]\\d)'");
 	private static final Pattern HEX_STRING = Pattern.compile("'([0-9A-F]+)'");
+	private static final Pattern TABLE_PATTERN = Pattern
+			.compile("([a-zA-Z][a-zA-Z0-9]*)_([a-zA-Z_][a-zA-Z0-9_]*)");
 
 	private static final Map<Class<? extends Column>, OraColumnDefiner> TYPES_DICT = new HashMap<>();
 
@@ -403,7 +406,7 @@ final class OraAdaptor extends DBAdaptor {
 									result.put(info, columns);
 								}
 								columns.put(rs.getShort("ORDINAL_POSITION"),
-										rs.getString("COLUMN_NAME"));
+										rs.getString(COLUMN_NAME));
 							}
 						}
 					} finally {
@@ -427,7 +430,7 @@ final class OraAdaptor extends DBAdaptor {
 			ResultSet rs = metaData.getColumns(null, null, tableName, null);
 			try {
 				while (rs.next()) {
-					String rColumnName = rs.getString("COLUMN_NAME");
+					String rColumnName = rs.getString(COLUMN_NAME);
 					result.add(rColumnName);
 				}
 			} finally {
@@ -918,18 +921,38 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
 		String sql = String
-				.format("select constraint_name, table_name, delete_rule from all_constraints "
-						+ "where constraint_type = 'R' and owner = sys_context('userenv','session_user')"
-						+ "and  table_name like '%s_%%'", g.getName());
+				.format("select cols.constraint_name, cols.table_name, cons.delete_rule, cols.column_name "
+						+ "from all_constraints cons inner join all_cons_columns cols "
+						+ "on cols.owner = cons.owner and cols.constraint_name = cons.constraint_name "
+						+ "and cols.table_name = cons.table_name where constraint_type = 'R' "
+						+ "and cons.owner = sys_context('userenv','session_user') "
+						+ "and  cons.table_name like '%s_%%' order by cols.constraint_name, cols.position",
+						g.getName());
 
+		System.out.println(sql);
 		List<DBFKInfo> result = new LinkedList<>();
 		try {
 			Statement stmt = conn.createStatement();
 			try {
+				DBFKInfo i = null;
 				ResultSet rs = stmt.executeQuery(sql);
 				while (rs.next()) {
-					DBFKInfo i = new DBFKInfo(rs.getString("CONSTRAINT_NAME"));
-					result.add(i);
+					String fkName = rs.getString("CONSTRAINT_NAME");
+					if (i == null || !i.getName().equals(fkName)) {
+						i = new DBFKInfo(fkName);
+						result.add(i);
+						String tableName = rs.getString("TABLE_NAME");
+						Matcher m = TABLE_PATTERN.matcher(tableName);
+						m.find();
+						i.setTableName(m.group(2));
+						// i.setRefGrainName(rs.getString("REF_GRAIN"));
+						// i.setRefTableName(rs.getString("REF_TABLE_NAME"));
+						// i.setUpdateBehaviour(getFKBehaviour(rs
+						// .getString("UPDATE_RULE")));
+						i.setDeleteBehaviour(getFKBehaviour(rs
+								.getString("DELETE_RULE")));
+					}
+					i.getColumnNames().add(rs.getString(COLUMN_NAME));
 				}
 			} finally {
 				stmt.close();
@@ -938,5 +961,11 @@ final class OraAdaptor extends DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 		return result;
+
+	}
+
+	@Override
+	void processUpdateRule(ForeignKey fk, StringBuilder sql) {
+		// TODO Auto-generated method stub
 	}
 }
