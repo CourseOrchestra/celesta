@@ -13,7 +13,7 @@ import org.junit.Test;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKBehaviour;
+import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
@@ -431,32 +431,32 @@ public class GrainModelTest {
 		ForeignKey fk = new ForeignKey(t2);
 		fk.addColumn("c2");
 		fk.setReferencedTable("", "t1");
-		assertSame(FKBehaviour.NO_ACTION, fk.getDeleteBehaviour());
-		assertSame(FKBehaviour.NO_ACTION, fk.getUpdateBehaviour());
+		assertSame(FKRule.NO_ACTION, fk.getDeleteBehaviour());
+		assertSame(FKRule.NO_ACTION, fk.getUpdateBehaviour());
 
 		boolean itWas = false;
 		try {
-			fk.setDeleteBehaviour(FKBehaviour.SET_NULL);
+			fk.setDeleteBehaviour(FKRule.SET_NULL);
 		} catch (ParseException e) {
 			// нельзя использовать SET NULL в Not-nullable колонках
 			itWas = true;
 		}
 		assertTrue(itWas);
-		assertSame(FKBehaviour.NO_ACTION, fk.getDeleteBehaviour());
-		fk.setDeleteBehaviour(FKBehaviour.CASCADE);
-		assertSame(FKBehaviour.CASCADE, fk.getDeleteBehaviour());
+		assertSame(FKRule.NO_ACTION, fk.getDeleteBehaviour());
+		fk.setDeleteBehaviour(FKRule.CASCADE);
+		assertSame(FKRule.CASCADE, fk.getDeleteBehaviour());
 
 		itWas = false;
 		try {
-			fk.setUpdateBehaviour(FKBehaviour.SET_NULL);
+			fk.setUpdateBehaviour(FKRule.SET_NULL);
 		} catch (ParseException e) {
 			// нельзя использовать SET NULL в Not-nullable колонках
 			itWas = true;
 		}
 		assertTrue(itWas);
-		assertSame(FKBehaviour.NO_ACTION, fk.getUpdateBehaviour());
-		fk.setUpdateBehaviour(FKBehaviour.CASCADE);
-		assertSame(FKBehaviour.CASCADE, fk.getUpdateBehaviour());
+		assertSame(FKRule.NO_ACTION, fk.getUpdateBehaviour());
+		fk.setUpdateBehaviour(FKRule.CASCADE);
+		assertSame(FKRule.CASCADE, fk.getUpdateBehaviour());
 
 	}
 

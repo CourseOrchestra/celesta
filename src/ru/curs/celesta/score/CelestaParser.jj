@@ -231,7 +231,7 @@ ForeignKey foreignKey(Table table):{
 void references(ForeignKey fk):{
   Token t;
   Token t2 = null;
-  FKBehaviour action;
+  FKRule action;
 }
 {
 <K_REFERENCES> t = <S_IDENTIFIER> ["." t2 = <S_IDENTIFIER>]
@@ -251,13 +251,13 @@ void references(ForeignKey fk):{
 ]
 }
 
-FKBehaviour action():{
-  FKBehaviour result;
+FKRule action():{
+  FKRule result;
 }
 {
-   ((<K_NO> <K_ACTION> {result = FKBehaviour.NO_ACTION;})
-  |(<K_SET> <K_NULL>  {result =  FKBehaviour.SET_NULL;})
-  | (<K_CASCADE>        {result =  FKBehaviour.CASCADE;}))
+   ((<K_NO> <K_ACTION> {result = FKRule.NO_ACTION;})
+  |(<K_SET> <K_NULL>  {result =  FKRule.SET_NULL;})
+  | (<K_CASCADE>        {result =  FKRule.CASCADE;}))
   {
     return result;
   }

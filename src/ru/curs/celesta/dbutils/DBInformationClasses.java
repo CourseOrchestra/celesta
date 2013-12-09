@@ -7,7 +7,7 @@ import java.util.List;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKBehaviour;
+import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.ParseException;
@@ -247,8 +247,8 @@ final class DBFKInfo {
 	private String name;
 	private String refGrainName;
 	private String refTableName;
-	private FKBehaviour deleteBehaviour = FKBehaviour.NO_ACTION;
-	private FKBehaviour updateBehaviour = FKBehaviour.NO_ACTION;
+	private FKRule deleteBehaviour = FKRule.NO_ACTION;
+	private FKRule updateBehaviour = FKRule.NO_ACTION;
 	private final List<String> columnNames = new LinkedList<>();
 
 	public DBFKInfo(String name) {
@@ -287,19 +287,19 @@ final class DBFKInfo {
 		this.refGrainName = refGrainName;
 	}
 
-	FKBehaviour getDeleteBehaviour() {
+	FKRule getDeleteBehaviour() {
 		return deleteBehaviour;
 	}
 
-	void setDeleteBehaviour(FKBehaviour deleteBehaviour) {
+	void setDeleteBehaviour(FKRule deleteBehaviour) {
 		this.deleteBehaviour = deleteBehaviour;
 	}
 
-	FKBehaviour getUpdateBehaviour() {
+	FKRule getUpdateBehaviour() {
 		return updateBehaviour;
 	}
 
-	void setUpdateBehaviour(FKBehaviour updateBehaviour) {
+	void setUpdateBehaviour(FKRule updateBehaviour) {
 		this.updateBehaviour = updateBehaviour;
 	}
 

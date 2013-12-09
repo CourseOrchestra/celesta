@@ -24,6 +24,7 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
@@ -921,15 +922,20 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
 		String sql = String
-				.format("select cols.constraint_name, cols.table_name, cons.delete_rule, cols.column_name "
+				.format("select cols.constraint_name, cols.table_name table_name, "
+						+ "ref.table_name ref_table_name, cons.delete_rule, cols.column_name "
 						+ "from all_constraints cons inner join all_cons_columns cols "
 						+ "on cols.owner = cons.owner and cols.constraint_name = cons.constraint_name "
-						+ "and cols.table_name = cons.table_name where constraint_type = 'R' "
+						+ "  and cols.table_name = cons.table_name "
+						+ "inner join all_constraints ref on ref.owner = cons.owner "
+						+ "  and ref.constraint_name = cons.r_constraint_name "
+						+ "where cons.constraint_type = 'R' "
 						+ "and cons.owner = sys_context('userenv','session_user') "
+						+ "and ref.constraint_type = 'P' "
 						+ "and  cons.table_name like '%s_%%' order by cols.constraint_name, cols.position",
 						g.getName());
 
-		System.out.println(sql);
+		// System.out.println(sql);
 		List<DBFKInfo> result = new LinkedList<>();
 		try {
 			Statement stmt = conn.createStatement();
@@ -945,10 +951,13 @@ final class OraAdaptor extends DBAdaptor {
 						Matcher m = TABLE_PATTERN.matcher(tableName);
 						m.find();
 						i.setTableName(m.group(2));
-						// i.setRefGrainName(rs.getString("REF_GRAIN"));
-						// i.setRefTableName(rs.getString("REF_TABLE_NAME"));
-						// i.setUpdateBehaviour(getFKBehaviour(rs
-						// .getString("UPDATE_RULE")));
+						tableName = rs.getString("REF_TABLE_NAME");
+						m = TABLE_PATTERN.matcher(tableName);
+						m.find();
+						i.setRefGrainName(m.group(1));
+						i.setRefTableName(m.group(2));
+						i.setUpdateBehaviour(getUpdateBehaviour(conn,
+								tableName, fkName));
 						i.setDeleteBehaviour(getFKBehaviour(rs
 								.getString("DELETE_RULE")));
 					}
@@ -964,8 +973,120 @@ final class OraAdaptor extends DBAdaptor {
 
 	}
 
+	private FKRule getUpdateBehaviour(Connection conn, String tableName,
+			String fkName) throws SQLException {
+		// now we are looking for triggers that define update
+		// rule
+		String sql = String
+				.format("select trigger_name from all_triggers "
+						+ "where owner = sys_context('userenv','session_user') "
+						+ "and table_name = '%s' and trigger_name like '%%_%s' and triggering_event = 'UPDATE'",
+						tableName, fkName);
+		Statement stmt = conn.createStatement();
+		try {
+			ResultSet rs = stmt.executeQuery(sql);
+			if (rs.next()) {
+				sql = rs.getString("TRIGGER_NAME");
+				if (sql.startsWith("cascade"))
+					return FKRule.CASCADE;
+				else if (sql.startsWith("setnull"))
+					return FKRule.SET_NULL;
+			}
+			return FKRule.NO_ACTION;
+		} finally {
+			stmt.close();
+		}
+	}
+
 	@Override
-	void processUpdateRule(ForeignKey fk, StringBuilder sql) {
-		// TODO Auto-generated method stub
+	void processCreateUpdateRule(ForeignKey fk, LinkedList<StringBuilder> sql) {
+		StringBuilder sb;
+
+		// Clean up unwanted triggers
+		switch (fk.getUpdateBehaviour()) {
+		case CASCADE:
+			sb = new StringBuilder("drop trigger \"setnull_");
+			sb.append(fk.getConstraintName());
+			sb.append("\"");
+			sql.add(sb);
+			break;
+		case SET_NULL:
+			sb = new StringBuilder("drop trigger \"cascade_");
+			sb.append(fk.getConstraintName());
+			sb.append("\"");
+			sql.add(sb);
+			break;
+		case NO_ACTION:
+		default:
+			sb = new StringBuilder("drop trigger \"setnull_");
+			sb.append(fk.getConstraintName());
+			sb.append("\"");
+			sql.add(sb);
+			sb = new StringBuilder("drop trigger \"cascade_");
+			sb.append(fk.getConstraintName());
+			sb.append("\"");
+			sql.add(sb);
+			return;
+		}
+
+		sb = new StringBuilder();
+		sb.append("create or replace trigger \"");
+		if (fk.getUpdateBehaviour() == FKRule.CASCADE) {
+			sb.append("cascade_");
+		} else {
+			sb.append("setnull_");
+		}
+
+		sb.append(fk.getConstraintName());
+		sb.append("\" after update of ");
+		Table t = fk.getReferencedTable();
+		boolean needComma = false;
+		for (Column c : t.getPrimaryKey().values()) {
+			if (needComma)
+				sb.append(", ");
+			sb.append(c.getQuotedName());
+			needComma = true;
+		}
+		sb.append(String.format(" on \"%s_%s\"", t.getGrain().getName(),
+				t.getName()));
+		sb.append(String.format(" for each row begin\n  update \"%s_%s\" set ",
+				fk.getParentTable().getGrain().getName(), fk.getParentTable()
+						.getName()));
+
+		Iterator<Column> i1 = fk.getColumns().values().iterator();
+		Iterator<Column> i2 = t.getPrimaryKey().values().iterator();
+		needComma = false;
+		while (i1.hasNext()) {
+			sb.append(needComma ? ",\n    " : "\n    ");
+			needComma = true;
+			sb.append(i1.next().getQuotedName());
+			sb.append(" = :new.");
+			sb.append(i2.next().getQuotedName());
+		}
+		sb.append("\n  where ");
+		i1 = fk.getColumns().values().iterator();
+		i2 = t.getPrimaryKey().values().iterator();
+		needComma = false;
+		while (i1.hasNext()) {
+			sb.append(needComma ? ",\n    " : "\n    ");
+			needComma = true;
+			sb.append(i1.next().getQuotedName());
+			if (fk.getUpdateBehaviour() == FKRule.CASCADE) {
+				sb.append(" = :old.");
+				sb.append(i2.next().getQuotedName());
+			} else {
+				sb.append(" = null");
+			}
+		}
+		sb.append(";\nend;");
+		sql.add(sb);
+	}
+
+	@Override
+	void processDropUpdateRule(LinkedList<String> sqlQueue, String fkName) {
+		String sql = String.format("drop trigger \"setnull_%s\"", fkName);
+		sqlQueue.add(sql);
+		sql = String.format("drop trigger \"cascade_%s\"", fkName);
+		sqlQueue.add(sql);
 	}
 }

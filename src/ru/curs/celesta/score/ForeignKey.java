@@ -15,8 +15,8 @@ public class ForeignKey {
 
 	private final Table parentTable;
 	private Table referencedTable;
-	private FKBehaviour deleteBehaviour = FKBehaviour.NO_ACTION;
-	private FKBehaviour updateBehaviour = FKBehaviour.NO_ACTION;
+	private FKRule deleteBehaviour = FKRule.NO_ACTION;
+	private FKRule updateBehaviour = FKRule.NO_ACTION;
 	private String constraintName;
 
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
@@ -45,19 +45,19 @@ public class ForeignKey {
 				referencedTable.getName());
 	}
 
-	void setDeleteBehaviour(FKBehaviour deleteBehaviour) throws ParseException {
+	void setDeleteBehaviour(FKRule deleteBehaviour) throws ParseException {
 		if (deleteBehaviour == null)
 			throw new IllegalArgumentException();
-		if (deleteBehaviour == FKBehaviour.SET_NULL)
+		if (deleteBehaviour == FKRule.SET_NULL)
 			checkNullable();
 		parentTable.getGrain().modify();
 		this.deleteBehaviour = deleteBehaviour;
 	}
 
-	void setUpdateBehaviour(FKBehaviour updateBehaviour) throws ParseException {
+	void setUpdateBehaviour(FKRule updateBehaviour) throws ParseException {
 		if (updateBehaviour == null)
 			throw new IllegalArgumentException();
-		if (updateBehaviour == FKBehaviour.SET_NULL)
+		if (updateBehaviour == FKRule.SET_NULL)
 			checkNullable();
 		parentTable.getGrain().modify();
 		this.updateBehaviour = updateBehaviour;
@@ -96,14 +96,14 @@ public class ForeignKey {
 	/**
 	 * Поведение при удалении.
 	 */
-	public FKBehaviour getDeleteBehaviour() {
+	public FKRule getDeleteBehaviour() {
 		return deleteBehaviour;
 	}
 
 	/**
 	 * Поведение при обновлении.
 	 */
-	public FKBehaviour getUpdateBehaviour() {
+	public FKRule getUpdateBehaviour() {
 		return updateBehaviour;
 	}
 

@@ -30,7 +30,7 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKBehaviour;
+import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
@@ -766,15 +766,18 @@ public abstract class AbstractAdaptorTest {
 			String[] expected = { "attrVarchar", "attrInt" };
 			String[] actual = info.getColumnNames().toArray(new String[0]);
 
-			System.out.println(Arrays.toString(actual));
+			// System.out.println(Arrays.toString(actual));
 			assertTrue(Arrays.equals(expected, actual));
-
-			assertEquals(FKBehaviour.CASCADE, info.getUpdateBehaviour());
-			assertEquals(FKBehaviour.SET_NULL, info.getDeleteBehaviour());
+			assertEquals(FKRule.CASCADE, info.getUpdateBehaviour());
+			assertEquals(FKRule.SET_NULL, info.getDeleteBehaviour());
 
 			assertEquals("gtest", info.getRefGrainName());
 			assertEquals("refTo", info.getRefTableName());
 
+			dba.dropFK(conn, t.getGrain().getName(), t.getName(),
+					fk.getConstraintName());
+			l = dba.getFKInfo(conn, g);
+			assertEquals(0, l.size());
 		} catch (CelestaException e) {
 			e.printStackTrace();
 			throw e;

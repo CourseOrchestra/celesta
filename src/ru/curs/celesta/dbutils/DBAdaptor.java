@@ -26,7 +26,7 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKBehaviour;
+import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
@@ -427,6 +427,8 @@ public abstract class DBAdaptor {
 	 */
 	public final void createFK(Connection conn, ForeignKey fk)
 			throws CelestaException {
+		LinkedList<StringBuilder> sqlQueue = new LinkedList<>();
+
 		// Строим запрос на создание FK
 		StringBuilder sql = new StringBuilder();
 		sql.append(ALTER_TABLE);
@@ -471,24 +473,78 @@ public abstract class DBAdaptor {
 			break;
 		}
 
-		processUpdateRule(fk, sql);
+		sqlQueue.add(sql);
+		processCreateUpdateRule(fk, sqlQueue);
 
-		System.out.println(sql);
 		// Построили, выполняем
-		try {
-			Statement stmt = conn.createStatement();
+		for (StringBuilder sqlStmt : sqlQueue) {
+			String sqlstmt = sqlStmt.toString();
+
+			// System.out.println("----------------");
+			// System.out.println(sqlStmt);
+
 			try {
-				stmt.executeUpdate(sql.toString());
-			} finally {
-				stmt.close();
+				Statement stmt = conn.createStatement();
+				try {
+					stmt.executeUpdate(sqlstmt);
+				} finally {
+					stmt.close();
+				}
+			} catch (SQLException e) {
+				if (!sqlstmt.startsWith("drop"))
+					throw new CelestaException(
+							"Cannot create foreign key '%s': %s",
+							fk.getConstraintName(), e.getMessage());
 			}
-		} catch (SQLException e) {
-			throw new CelestaException("Cannot create foreign key '%s': %s",
-					fk.getConstraintName(), e.getMessage());
 		}
 	}
 
-	void processUpdateRule(ForeignKey fk, StringBuilder sql) {
+	/**
+	 * Удаляет первичный ключ из базы данных.
+	 * 
+	 * @param conn
+	 *            Соединение с БД
+	 * @param grainName
+	 *            имя гранулы
+	 * @param tableName
+	 *            Имя таблицы, на которой определён первичный ключ.
+	 * @param fkName
+	 *            Имя первичного ключа.
+	 * @throws CelestaException
+	 *             В случае сбоя в базе данных.
+	 */
+	public final void dropFK(Connection conn, String grainName,
+			String tableName, String fkName) throws CelestaException {
+		LinkedList<String> sqlQueue = new LinkedList<>();
+		String sql = String.format("alter table " + tableTemplate()
+				+ " drop constraint \"%s\"", grainName, tableName, fkName);
+		sqlQueue.add(sql);
+		processDropUpdateRule(sqlQueue, fkName);
+		// Построили, выполняем
+		for (String sqlStmt : sqlQueue) {
+			// System.out.println(sqlStmt);
+			try {
+				Statement stmt = conn.createStatement();
+				try {
+					stmt.executeUpdate(sqlStmt);
+				} finally {
+					stmt.close();
+				}
+			} catch (SQLException e) {
+				if (!sqlStmt.startsWith("drop trigger"))
+					throw new CelestaException(
+							"Cannot drop foreign key '%s': %s", fkName,
+							e.getMessage());
+			}
+		}
+	}
+
+	void processDropUpdateRule(LinkedList<String> sqlQueue, String fkName) {
+
+	}
+
+	void processCreateUpdateRule(ForeignKey fk, LinkedList<StringBuilder> queue) {
+		StringBuilder sql = queue.peek();
 		switch (fk.getUpdateBehaviour()) {
 		case SET_NULL:
 			sql.append(" on update set null");
@@ -656,15 +712,15 @@ public abstract class DBAdaptor {
 
 		}
 	}
-	
-	static FKBehaviour getFKBehaviour(String rule) {
+
+	static FKRule getFKBehaviour(String rule) {
 		if ("NO ACTION".equalsIgnoreCase(rule)
 				|| "RECTRICT".equalsIgnoreCase(rule))
-			return FKBehaviour.NO_ACTION;
+			return FKRule.NO_ACTION;
 		if ("SET NULL".equalsIgnoreCase(rule))
-			return FKBehaviour.SET_NULL;
+			return FKRule.SET_NULL;
 		if ("CASCADE".equalsIgnoreCase(rule))
-			return FKBehaviour.CASCADE;
+			return FKRule.CASCADE;
 		return null;
 	}
 

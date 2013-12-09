@@ -472,7 +472,7 @@ public class CelestaParser implements CelestaParserConstants {
   final public void references(ForeignKey fk) throws ParseException {
   Token t;
   Token t2 = null;
-  FKBehaviour action;
+  FKRule action;
     jj_consume_token(K_REFERENCES);
     t = jj_consume_token(S_IDENTIFIER);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -555,22 +555,22 @@ public class CelestaParser implements CelestaParserConstants {
     }
   }
 
-  final public FKBehaviour action() throws ParseException {
-  FKBehaviour result;
+  final public FKRule action() throws ParseException {
+  FKRule result;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_NO:
       jj_consume_token(K_NO);
       jj_consume_token(K_ACTION);
-                        result = FKBehaviour.NO_ACTION;
+                        result = FKRule.NO_ACTION;
       break;
     case K_SET:
       jj_consume_token(K_SET);
       jj_consume_token(K_NULL);
-                       result =  FKBehaviour.SET_NULL;
+                       result =  FKRule.SET_NULL;
       break;
     case K_CASCADE:
       jj_consume_token(K_CASCADE);
-                         result =  FKBehaviour.CASCADE;
+                         result =  FKRule.CASCADE;
       break;
     default:
       jj_la1[37] = jj_gen;
