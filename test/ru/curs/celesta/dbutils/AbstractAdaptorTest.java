@@ -123,7 +123,8 @@ public abstract class AbstractAdaptorTest {
 
 	@Test
 	public void createAndDropAndExists() throws Exception {
-		boolean result = dba.tableExists(conn, t.getGrain().getName(), t.getName());
+		boolean result = dba.tableExists(conn, t.getGrain().getName(),
+				t.getName());
 		assertTrue(result);
 		// В этот момент userTablesExist точно должен возвращать true, но на
 		// false протестировать не можем, ибо также другие таблицы есть в базе
@@ -708,7 +709,7 @@ public abstract class AbstractAdaptorTest {
 		DBPKInfo c;
 		insertRow(conn, t, 15);
 
-		c = dba.getPrimaryKeyInfo(conn, t);
+		c = dba.getPKInfo(conn, t);
 		assertNotNull(c);
 		assertEquals("pk_test", c.getName());
 		assertEquals(1, c.getColumnNames().size());
@@ -718,16 +719,16 @@ public abstract class AbstractAdaptorTest {
 		assertTrue(c.reflects(t));
 		assertFalse(c.isEmpty());
 
-		dba.dropTablePK(conn, t, "pk_test");
-		c = dba.getPrimaryKeyInfo(conn, t);
+		dba.dropPK(conn, t, "pk_test");
+		c = dba.getPKInfo(conn, t);
 		assertNull(c.getName());
 		assertEquals(0, c.getColumnNames().size());
 		assertFalse(c.reflects(t));
 		assertTrue(c.isEmpty());
 
 		t.setPK("id", "f1", "f9");
-		dba.createTablePK(conn, t);
-		c = dba.getPrimaryKeyInfo(conn, t);
+		dba.createPK(conn, t);
+		c = dba.getPKInfo(conn, t);
 		assertNotNull(c);
 		assertEquals("pk_test", c.getName());
 		assertEquals(3, c.getColumnNames().size());
@@ -743,6 +744,9 @@ public abstract class AbstractAdaptorTest {
 	public void getFKInfo() throws ParseException, CelestaException,
 			SQLException {
 		dba.dropTable(conn, t);
+		assertFalse(dba.tableExists(conn, "gtest", "test"));
+		assertFalse(dba.tableExists(conn, "gtest", "refTo"));
+
 		Grain g = score.getGrain(GRAIN_NAME);
 		Table t2 = g.getTable("refTo");
 		ForeignKey fk = t.getForeignKeys().iterator().next();
@@ -755,6 +759,9 @@ public abstract class AbstractAdaptorTest {
 				// do nothing
 			}
 			dba.createTable(conn, t2);
+			assertTrue(dba.tableExists(conn, "gtest", "test"));
+			assertTrue(dba.tableExists(conn, "gtest", "refTo"));
+
 			List<DBFKInfo> l = dba.getFKInfo(conn, g);
 			assertEquals(0, l.size());
 
@@ -775,7 +782,12 @@ public abstract class AbstractAdaptorTest {
 			assertEquals("refTo", info.getRefTableName());
 
 			assertTrue(info.reflects(fk));
-			
+
+			// Проверяем, что не произошло "запутки" первичных и внешних ключей
+			// (существовавший когда-то баг)
+			assertTrue(dba.getPKInfo(conn, t).reflects(t));
+			assertTrue(dba.getPKInfo(conn, t2).reflects(t2));
+
 			dba.dropFK(conn, t.getGrain().getName(), t.getName(),
 					fk.getConstraintName());
 			l = dba.getFKInfo(conn, g);

@@ -263,15 +263,15 @@ final class MSSQLAdaptor extends DBAdaptor {
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
 			throws CelestaException {
+		String sql = String.format("select coalesce(object_id('%s.%s'), -1)",
+				schema, name);
 		try {
-			PreparedStatement check = conn.prepareStatement(String.format(
-					"select coalesce(object_id('%s.%s'), -1)", schema, name));
-			ResultSet rs = check.executeQuery();
+			Statement check = conn.createStatement();
+			ResultSet rs = check.executeQuery(sql);
 			try {
 				rs.next();
 				return rs.getInt(1) != -1;
 			} finally {
-				rs.close();
 				check.close();
 			}
 		} catch (SQLException e) {
@@ -737,7 +737,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	DBPKInfo getPrimaryKeyInfo(Connection conn, Table t)
+	DBPKInfo getPKInfo(Connection conn, Table t)
 			throws CelestaException {
 
 		DBPKInfo result = new DBPKInfo();
@@ -751,7 +751,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 							+ "where cons.CONSTRAINT_TYPE = 'PRIMARY KEY' and cons.TABLE_SCHEMA = '%s' "
 							+ "and cons.TABLE_NAME = '%s' order by ORDINAL_POSITION",
 							t.getGrain().getName(), t.getName());
-			//System.out.println(sql);
+			// System.out.println(sql);
 			Statement check = conn.createStatement();
 			ResultSet rs = check.executeQuery(sql);
 			try {
@@ -770,7 +770,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void dropTablePK(Connection conn, Table t, String pkName)
+	void dropPK(Connection conn, Table t, String pkName)
 			throws CelestaException {
 		String sql = String.format("alter table %s.%s drop constraint \"%s\"",
 				t.getGrain().getQuotedName(), t.getQuotedName(), pkName);
@@ -788,7 +788,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void createTablePK(Connection conn, Table t) throws CelestaException {
+	void createPK(Connection conn, Table t) throws CelestaException {
 		StringBuilder sql = new StringBuilder();
 		sql.append(String.format("alter table %s.%s add constraint \"%s\" "
 				+ " primary key (", t.getGrain().getQuotedName(),

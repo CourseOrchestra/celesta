@@ -861,7 +861,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя связи с БД.
 	 */
-	abstract DBPKInfo getPrimaryKeyInfo(Connection conn, Table t)
+	abstract DBPKInfo getPKInfo(Connection conn, Table t)
 			throws CelestaException;
 
 	/**
@@ -877,7 +877,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя связи с БД.
 	 */
-	abstract void dropTablePK(Connection conn, Table t, String pkName)
+	abstract void dropPK(Connection conn, Table t, String pkName)
 			throws CelestaException;
 
 	/**
@@ -891,7 +891,7 @@ public abstract class DBAdaptor {
 	 *             неудача создания первичного ключа (например, неуникальные
 	 *             записи).
 	 */
-	abstract void createTablePK(Connection conn, Table t)
+	abstract void createPK(Connection conn, Table t)
 			throws CelestaException;
 
 	abstract List<DBFKInfo> getFKInfo(Connection conn, Grain g)

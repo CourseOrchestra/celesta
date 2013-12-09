@@ -251,13 +251,14 @@ final class OraAdaptor extends DBAdaptor {
 				|| name.isEmpty()) {
 			return false;
 		}
+		String sql = String
+				.format("select count(*) from all_tables where owner = "
+						+ "sys_context('userenv','session_user') and table_name = '%s_%s'",
+						schema, name);
+
 		try {
-			PreparedStatement checkForTable = conn
-					.prepareStatement(String
-							.format("select count(*) from all_tables where owner = "
-									+ "sys_context('userenv','session_user') and table_name = '%s_%s'",
-									schema, name));
-			ResultSet rs = checkForTable.executeQuery();
+			Statement checkForTable = conn.createStatement();
+			ResultSet rs = checkForTable.executeQuery(sql);
 			try {
 				if (rs.next()) {
 					return rs.getInt(1) > 0;
@@ -842,7 +843,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	DBPKInfo getPrimaryKeyInfo(Connection conn, Table t)
+	DBPKInfo getPKInfo(Connection conn, Table t)
 			throws CelestaException {
 		DBPKInfo result = new DBPKInfo();
 		try {
@@ -874,7 +875,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void dropTablePK(Connection conn, Table t, String pkName)
+	void dropPK(Connection conn, Table t, String pkName)
 			throws CelestaException {
 		String sql = String.format(
 				"alter table \"%s_%s\" drop constraint \"%s\"", t.getGrain()
@@ -893,7 +894,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void createTablePK(Connection conn, Table t) throws CelestaException {
+	void createPK(Connection conn, Table t) throws CelestaException {
 		StringBuilder sql = new StringBuilder();
 		sql.append(String.format("alter table \"%s_%s\" add constraint \"%s\" "
 				+ " primary key (", t.getGrain().getName(), t.getName(),

@@ -405,9 +405,9 @@ public final class DBUpdator {
 
 		// Таблица существует в базе данных, определяем: надо ли удалить
 		// первичный ключ
-		DBPKInfo pkInfo = dba.getPrimaryKeyInfo(conn, t);
+		DBPKInfo pkInfo = dba.getPKInfo(conn, t);
 		if (!(pkInfo.isEmpty() || pkInfo.reflects(t)))
-			dba.dropTablePK(conn, t, pkInfo.getName());
+			dba.dropPK(conn, t, pkInfo.getName());
 
 		Set<String> dbColumns = dba.getColumns(conn, t);
 		for (Entry<String, Column> e : t.getColumns().entrySet()) {
@@ -420,7 +420,7 @@ public final class DBUpdator {
 					// Если колонка, требующая обновления, входит в первичный
 					// ключ -- сбрасываем первичный ключ.
 					if (t.getPrimaryKey().containsKey(e.getKey()))
-						dba.dropTablePK(conn, t, pkInfo.getName());
+						dba.dropPK(conn, t, pkInfo.getName());
 					dba.updateColumn(conn, e.getValue(), ci);
 				}
 			} else {
@@ -429,9 +429,9 @@ public final class DBUpdator {
 			}
 		}
 		// Ещё раз проверяем первичный ключ и при необходимости создаём.
-		pkInfo = dba.getPrimaryKeyInfo(conn, t);
+		pkInfo = dba.getPKInfo(conn, t);
 		if (pkInfo.isEmpty())
-			dba.createTablePK(conn, t);
+			dba.createPK(conn, t);
 
 	}
 
