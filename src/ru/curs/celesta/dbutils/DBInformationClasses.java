@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,6 +11,7 @@ import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
+import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.StringColumn;
@@ -196,6 +198,17 @@ final class DBIndexInfo {
 	@Override
 	public String toString() {
 		return String.format("%s.%s", tableName, indexName);
+	}
+
+	boolean reflects(Collection<String> dbIndexCols, Index ind) {
+		Collection<String> metaIndexCols = ind.getColumns().keySet();
+		Iterator<String> i1 = dbIndexCols.iterator();
+		Iterator<String> i2 = metaIndexCols.iterator();
+		boolean result = dbIndexCols.size() == metaIndexCols.size();
+		while (i1.hasNext() && result) {
+			result = i1.next().equals(i2.next()) && result;
+		}
+		return result;
 	}
 
 }

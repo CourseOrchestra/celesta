@@ -221,6 +221,9 @@ public abstract class AbstractAdaptorTest {
 
 		assertNotNull(indicesSet);
 		assertEquals(1, indicesSet.size());
+		DBIndexInfo inf = indicesSet.keySet().iterator().next();
+		assertTrue(inf.reflects(indicesSet.get(inf).values(), i));
+
 		dba.dropIndex(grain, new DBIndexInfo(t.getName(), i.getName()));
 
 		indicesSet = dba.getIndices(conn, t.getGrain());

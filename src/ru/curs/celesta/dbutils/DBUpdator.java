@@ -2,13 +2,11 @@ package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -329,17 +327,9 @@ public final class DBUpdator {
 			DBIndexInfo dBIndexInfo = new DBIndexInfo(e.getValue().getTable()
 					.getName(), e.getKey());
 			if (dbIndices.containsKey(dBIndexInfo)) {
-				Collection<String> dbIndexCols = dbIndices.get(dBIndexInfo)
-						.values();
-				Collection<String> metaIndexCols = e.getValue().getColumns()
-						.keySet();
-				Iterator<String> i1 = dbIndexCols.iterator();
-				Iterator<String> i2 = metaIndexCols.iterator();
-				boolean equals = dbIndexCols.size() == metaIndexCols.size();
-				while (i1.hasNext() && equals) {
-					equals = i1.next().equals(i2.next()) && equals;
-				}
-				if (!equals)
+				boolean reflects = dBIndexInfo.reflects(
+						dbIndices.get(dBIndexInfo).values(), e.getValue());
+				if (!reflects)
 					dba.dropIndex(g, dBIndexInfo);
 			}
 		}
@@ -373,17 +363,9 @@ public final class DBUpdator {
 			if (dbIndices.containsKey(dBIndexInfo)) {
 				// БД содержит индекс с таким именем, надо проверить
 				// поля и пересоздать индекс в случае необходимости.
-				Collection<String> dbIndexCols = dbIndices.get(dBIndexInfo)
-						.values();
-				Collection<String> metaIndexCols = e.getValue().getColumns()
-						.keySet();
-				Iterator<String> i1 = dbIndexCols.iterator();
-				Iterator<String> i2 = metaIndexCols.iterator();
-				boolean equals = dbIndexCols.size() == metaIndexCols.size();
-				while (i1.hasNext() && equals) {
-					equals = i1.next().equals(i2.next()) && equals;
-				}
-				if (!equals) {
+				boolean reflects = dBIndexInfo.reflects(
+						dbIndices.get(dBIndexInfo).values(), e.getValue());
+				if (!reflects) {
 					dba.dropIndex(g, dBIndexInfo);
 					dba.createIndex(conn, e.getValue());
 				}
