@@ -86,7 +86,7 @@ public final class DBUpdator {
 			table = new TablesCursor(context);
 
 			// Проверяем наличие главной системной таблицы.
-			if (!dba.tableExists("celesta", "grains")) {
+			if (!dba.tableExists(conn, "celesta", "grains")) {
 				// Если главной таблицы нет, а другие таблицы есть -- ошибка.
 				if (dba.userTablesExist())
 					throw new CelestaException(
@@ -290,9 +290,20 @@ public final class DBUpdator {
 		// }
 	}
 
-	private static void dropOrphanedGrainFKeys(Grain g) {
-		// TODO Auto-generated method stub
-
+	private static void dropOrphanedGrainFKeys(Grain g) throws CelestaException {
+		Connection conn = grain.callContext().getConn();
+		List<DBFKInfo> dbFKeys = dba.getFKInfo(conn, g);
+		Map<String, ForeignKey> fKeys = new HashMap<>();
+		for (Table t : g.getTables().values())
+			for (ForeignKey fk : t.getForeignKeys())
+				fKeys.put(fk.getConstraintName(), fk);
+		for (DBFKInfo dbFKey : dbFKeys) {
+			ForeignKey fKey = fKeys.get(dbFKey.getName());
+			if (fKey == null || !dbFKey.reflects(fKey)) {
+				dba.dropFK(conn, g.getName(), dbFKey.getTableName(),
+						dbFKey.getName());
+			}
+		}
 	}
 
 	private static void dropOrphanedGrainIndices(Grain g)
@@ -386,7 +397,7 @@ public final class DBUpdator {
 	private static void updateTable(Table t) throws CelestaException {
 		final Connection conn = grain.callContext().getConn();
 
-		if (!dba.tableExists(t.getGrain().getName(), t.getName())) {
+		if (!dba.tableExists(conn, t.getGrain().getName(), t.getName())) {
 			// Таблицы не существует в базе данных, создаём с нуля.
 			dba.createTable(conn, t);
 			return;

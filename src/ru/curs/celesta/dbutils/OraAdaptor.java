@@ -246,25 +246,28 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
-			throws SQLException {
+			throws CelestaException {
 		if (schema == null || schema.isEmpty() || name == null
 				|| name.isEmpty()) {
 			return false;
 		}
-
-		PreparedStatement checkForTable = conn
-				.prepareStatement(String
-						.format("select count(*) from all_tables where owner = "
-								+ "sys_context('userenv','session_user') and table_name = '%s_%s'",
-								schema, name));
-		ResultSet rs = checkForTable.executeQuery();
 		try {
-			if (rs.next()) {
-				return rs.getInt(1) > 0;
+			PreparedStatement checkForTable = conn
+					.prepareStatement(String
+							.format("select count(*) from all_tables where owner = "
+									+ "sys_context('userenv','session_user') and table_name = '%s_%s'",
+									schema, name));
+			ResultSet rs = checkForTable.executeQuery();
+			try {
+				if (rs.next()) {
+					return rs.getInt(1) > 0;
+				}
+				return false;
+			} finally {
+				checkForTable.close();
 			}
-			return false;
-		} finally {
-			checkForTable.close();
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
 		}
 	}
 

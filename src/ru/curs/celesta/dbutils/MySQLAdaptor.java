@@ -191,7 +191,7 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
-			throws SQLException {
+			throws CelestaException {
 		// TODO Auto-generated method stub
 		return false;
 	}

@@ -123,7 +123,7 @@ public abstract class AbstractAdaptorTest {
 
 	@Test
 	public void createAndDropAndExists() throws Exception {
-		boolean result = dba.tableExists(t.getGrain().getName(), t.getName());
+		boolean result = dba.tableExists(conn, t.getGrain().getName(), t.getName());
 		assertTrue(result);
 		// В этот момент userTablesExist точно должен возвращать true, но на
 		// false протестировать не можем, ибо также другие таблицы есть в базе
@@ -131,7 +131,7 @@ public abstract class AbstractAdaptorTest {
 		result = dba.userTablesExist(conn);
 		assertTrue(result);
 		dba.dropTable(conn, t);
-		result = dba.tableExists(t.getGrain().getName(), t.getName());
+		result = dba.tableExists(conn, t.getGrain().getName(), t.getName());
 		assertFalse(result);
 	}
 

@@ -135,29 +135,6 @@ public abstract class DBAdaptor {
 
 	/**
 	 * Возвращает true в том и только том случае, если база данных содержит
-	 * таблицу.
-	 * 
-	 * @param schema
-	 *            схема.
-	 * @param name
-	 *            имя таблицы.
-	 * @throws CelestaException
-	 *             ошибка БД
-	 */
-	public final boolean tableExists(String schema, String name)
-			throws CelestaException {
-		Connection conn = ConnectionPool.get();
-		try {
-			return tableExists(conn, schema, name);
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		} finally {
-			ConnectionPool.putBack(conn);
-		}
-	}
-
-	/**
-	 * Возвращает true в том и только том случае, если база данных содержит
 	 * пользовательские таблицы (т. е. не является пустой базой данных).
 	 * 
 	 * @throws CelestaException
@@ -806,7 +783,7 @@ public abstract class DBAdaptor {
 	abstract ColumnDefiner getColumnDefiner(Column c);
 
 	abstract boolean tableExists(Connection conn, String schema, String name)
-			throws SQLException;
+			throws CelestaException;
 
 	abstract boolean userTablesExist(Connection conn) throws SQLException;
 

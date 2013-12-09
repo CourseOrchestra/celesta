@@ -22,4 +22,4 @@ parent int foreign key references a(ida), --ссылка на саму себя
 fff int foreign key references aa(idaa) --первая часть круговой ссылки
 );
 
-alter table aa add constraint fk1 foreign key (idc) references a(ida); --вторая часть круговой ссылки
+--alter table aa add constraint fk1 foreign key (idc) references a(ida); --вторая часть круговой ссылки

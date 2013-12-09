@@ -262,16 +262,20 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
-			throws SQLException {
-		PreparedStatement check = conn.prepareStatement(String.format(
-				"select coalesce(object_id('%s.%s'), -1)", schema, name));
-		ResultSet rs = check.executeQuery();
+			throws CelestaException {
 		try {
-			rs.next();
-			return rs.getInt(1) != -1;
-		} finally {
-			rs.close();
-			check.close();
+			PreparedStatement check = conn.prepareStatement(String.format(
+					"select coalesce(object_id('%s.%s'), -1)", schema, name));
+			ResultSet rs = check.executeQuery();
+			try {
+				rs.next();
+				return rs.getInt(1) != -1;
+			} finally {
+				rs.close();
+				check.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
 		}
 	}
 
@@ -739,9 +743,15 @@ final class MSSQLAdaptor extends DBAdaptor {
 		DBPKInfo result = new DBPKInfo();
 		try {
 			String sql = String
-					.format("select CONSTRAINT_NAME, COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE "
-							+ " where TABLE_SCHEMA = '%s' and TABLE_NAME = '%s' order by ORDINAL_POSITION",
+					.format("select cons.CONSTRAINT_NAME, cols.COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE cols "
+							+ "inner join INFORMATION_SCHEMA.TABLE_CONSTRAINTS cons "
+							+ "on cols.TABLE_SCHEMA = cons.TABLE_SCHEMA "
+							+ "and cols.TABLE_NAME = cons.TABLE_NAME "
+							+ "and cols.CONSTRAINT_NAME = cons.CONSTRAINT_NAME "
+							+ "where cons.CONSTRAINT_TYPE = 'PRIMARY KEY' and cons.TABLE_SCHEMA = '%s' "
+							+ "and cons.TABLE_NAME = '%s' order by ORDINAL_POSITION",
 							t.getGrain().getName(), t.getName());
+			//System.out.println(sql);
 			Statement check = conn.createStatement();
 			ResultSet rs = check.executeQuery(sql);
 			try {
@@ -772,7 +782,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
+			throw new CelestaException("Cannot drop PK '%s': %s", pkName,
+					e.getMessage());
 		}
 	}
 
@@ -801,7 +812,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
+			throw new CelestaException("Cannot create PK '%s': %s",
+					t.getPkConstraintName(), e.getMessage());
 		}
 
 	}

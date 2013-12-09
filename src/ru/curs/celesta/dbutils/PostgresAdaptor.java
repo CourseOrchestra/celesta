@@ -183,17 +183,21 @@ final class PostgresAdaptor extends DBAdaptor {
 
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
-			throws SQLException {
-		PreparedStatement check = conn.prepareStatement(String.format(
-				"SELECT table_name FROM information_schema.tables  WHERE "
-						+ "table_schema = '%s' AND table_name = '%s'", schema,
-				name));
-		ResultSet rs = check.executeQuery();
+			throws CelestaException {
 		try {
-			return rs.next();
-		} finally {
-			rs.close();
-			check.close();
+			PreparedStatement check = conn.prepareStatement(String.format(
+					"SELECT table_name FROM information_schema.tables  WHERE "
+							+ "table_schema = '%s' AND table_name = '%s'",
+					schema, name));
+			ResultSet rs = check.executeQuery();
+			try {
+				return rs.next();
+			} finally {
+				rs.close();
+				check.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
 		}
 	}
 
