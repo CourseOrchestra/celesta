@@ -279,13 +279,25 @@ public final class DBUpdator {
 	}
 
 	private static void updateGrainFKeys(Grain g) throws CelestaException {
-		// TODO Auto-generated method stub
-		// final Connection conn = grain.callContext().getConn();
-		// for (Table t : g.getTables().values())
-		// for (ForeignKey fk : t.getForeignKeys()) {
-		// // /<<<<<<<<<<переделать
-		// dba.createFK(conn, fk);
-		// }
+		Connection conn = grain.callContext().getConn();
+		Map<String, DBFKInfo> dbFKeys = new HashMap<>();
+		for (DBFKInfo dbi : dba.getFKInfo(conn, g))
+			dbFKeys.put(dbi.getName(), dbi);
+		for (Table t : g.getTables().values())
+			for (ForeignKey fk : t.getForeignKeys()) {
+				if (dbFKeys.containsKey(fk.getConstraintName())) {
+					// FK обнаружен в базе, апдейтим при необходимости.
+					DBFKInfo dbi = dbFKeys.get(fk.getConstraintName());
+					if (!dbi.reflects(fk)) {
+						dba.dropFK(conn, g.getName(), dbi.getTableName(),
+								dbi.getName());
+						dba.createFK(conn, fk);
+					}
+				} else {
+					// FK не обнаружен в базе, создаём с нуля
+					dba.createFK(conn, fk);
+				}
+			}
 	}
 
 	private static void dropOrphanedGrainFKeys(Grain g) throws CelestaException {

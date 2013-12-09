@@ -891,8 +891,7 @@ public abstract class DBAdaptor {
 	 *             неудача создания первичного ключа (например, неуникальные
 	 *             записи).
 	 */
-	abstract void createPK(Connection conn, Table t)
-			throws CelestaException;
+	abstract void createPK(Connection conn, Table t) throws CelestaException;
 
 	abstract List<DBFKInfo> getFKInfo(Connection conn, Grain g)
 			throws CelestaException;

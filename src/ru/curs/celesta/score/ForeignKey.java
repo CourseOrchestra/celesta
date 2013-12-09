@@ -13,6 +13,8 @@ import java.util.Map;
  */
 public class ForeignKey {
 
+	private static final int HASH_MASK = 0xFFFF;
+	private static final int MAX_CONSTRAINT_NAME = 26;
 	private final Table parentTable;
 	private Table referencedTable;
 	private FKRule deleteRule = FKRule.NO_ACTION;
@@ -302,17 +304,33 @@ public class ForeignKey {
 	}
 
 	/**
-	 * Возвращает имя ограничения FK (или null, если оно не задано).
+	 * Возвращает имя ограничения FK (или генерирует его, если оно не задано).
 	 */
 	public String getConstraintName() {
-		return constraintName == null ? String
-				.format("fk_%s_%s_%s_%s", parentTable.getGrain().getName(),
-						parentTable.getName(), referencedTable.getGrain()
-								.getName(), referencedTable.getName())
-				: constraintName;
+		if (constraintName != null)
+			return constraintName;
+
+		String result = String.format("fk_%s_%s_%s_%s", parentTable.getGrain()
+				.getName(), parentTable.getName(), referencedTable.getGrain()
+				.getName(), referencedTable.getName());
+		if (result.length() > MAX_CONSTRAINT_NAME) {
+
+			result = String.format("%s%04X",
+					result.substring(0, MAX_CONSTRAINT_NAME), result.hashCode()
+							& HASH_MASK);
+		}
+		// System.out.println(result);
+		return result;
 	}
 
-	void setConstraintName(String constraintName) {
+	void setConstraintName(String constraintName) throws ParseException {
+		// This is because Oracle supports only 30-characters-long names
+		// but we need extra 4 characters for trigger prefixes
+		if (constraintName != null
+				&& constraintName.length() > MAX_CONSTRAINT_NAME)
+			throw new ParseException(String.format(
+					"Foreign key name '%s' is longer than %d characters.",
+					constraintName, MAX_CONSTRAINT_NAME));
 		this.constraintName = constraintName;
 	}
 

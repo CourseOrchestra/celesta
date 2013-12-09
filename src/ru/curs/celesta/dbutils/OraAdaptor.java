@@ -1009,24 +1009,24 @@ final class OraAdaptor extends DBAdaptor {
 		// Clean up unwanted triggers
 		switch (fk.getUpdateRule()) {
 		case CASCADE:
-			sb = new StringBuilder("drop trigger \"setnull_");
+			sb = new StringBuilder("drop trigger \"snl_");
 			sb.append(fk.getConstraintName());
 			sb.append("\"");
 			sql.add(sb);
 			break;
 		case SET_NULL:
-			sb = new StringBuilder("drop trigger \"cascade_");
+			sb = new StringBuilder("drop trigger \"csc_");
 			sb.append(fk.getConstraintName());
 			sb.append("\"");
 			sql.add(sb);
 			break;
 		case NO_ACTION:
 		default:
-			sb = new StringBuilder("drop trigger \"setnull_");
+			sb = new StringBuilder("drop trigger \"snl_");
 			sb.append(fk.getConstraintName());
 			sb.append("\"");
 			sql.add(sb);
-			sb = new StringBuilder("drop trigger \"cascade_");
+			sb = new StringBuilder("drop trigger \"csc_");
 			sb.append(fk.getConstraintName());
 			sb.append("\"");
 			sql.add(sb);
@@ -1036,9 +1036,9 @@ final class OraAdaptor extends DBAdaptor {
 		sb = new StringBuilder();
 		sb.append("create or replace trigger \"");
 		if (fk.getUpdateRule() == FKRule.CASCADE) {
-			sb.append("cascade_");
+			sb.append("csc_");
 		} else {
-			sb.append("setnull_");
+			sb.append("snl_");
 		}
 
 		sb.append(fk.getConstraintName());
@@ -1088,9 +1088,9 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	void processDropUpdateRule(LinkedList<String> sqlQueue, String fkName) {
-		String sql = String.format("drop trigger \"setnull_%s\"", fkName);
+		String sql = String.format("drop trigger \"snl_%s\"", fkName);
 		sqlQueue.add(sql);
-		sql = String.format("drop trigger \"cascade_%s\"", fkName);
+		sql = String.format("drop trigger \"csc_%s\"", fkName);
 		sqlQueue.add(sql);
 	}
 }

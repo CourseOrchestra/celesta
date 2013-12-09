@@ -1,7 +1,7 @@
-CREATE GRAIN celesta VERSION '1.01';
+create grain celesta version '1.02';
 
-CREATE TABLE grains(
-  id nvarchar(16) NOT NULL PRIMARY KEY, --префикс (код) гранулы
+create table grains(
+  id nvarchar(16) not null primary key, --префикс (код) гранулы
   version  nvarchar(max) not null, -- version tag гранулы
   length int not null, -- длина creation-скрипта гранулы  в байтах (составляющая часть контрольной суммы)
   checksum nvarchar(8) not null, --CRC32 creation-скрипта гранулы (составляющая часть контрольной суммы)
@@ -10,66 +10,68 @@ CREATE TABLE grains(
   message nvarchar(max) not null default '' -- комментарий (например, сообщение об ошибке при последнем неудавшемся автообновлении)
 );
 
-CREATE TABLE tables(
-  grainid nvarchar(16) NOT NULL FOREIGN KEY REFERENCES grains(id),
-  tablename nvarchar(100) NOT NULL,
+create table tables(
+  grainid nvarchar(16) not null,
+  tablename nvarchar(100) not null,
   orphaned bit not null default 0,
-  CONSTRAINT pk_tables PRIMARY KEY (grainid, tablename)
+  constraint pk_tables primary key (grainid, tablename),
+  constraint fk_tables_grains foreign key (grainid) references grains(id)
 );
 
-CREATE TABLE roles(
-  id nvarchar(16) NOT NULL PRIMARY KEY,
+create table roles(
+  id nvarchar(16) not null primary key,
   description nvarchar(20)
 );
 
-CREATE TABLE userroles(
-  userid nvarchar(250) NOT NULL,
-  roleid nvarchar(16) NOT NULL,
-  CONSTRAINT pk_userroles PRIMARY KEY (userid, roleid),
-  CONSTRAINT fk_userroles FOREIGN KEY (roleid) REFERENCES roles(id)
+create table userroles(
+  userid nvarchar(250) not null,
+  roleid nvarchar(16) not null,
+  constraint pk_userroles primary key (userid, roleid),
+  constraint fk_userroles_roles foreign key (roleid) references roles(id)
 );
 
-CREATE TABLE permissions(
-  roleid nvarchar(16) NOT NULL,
-  grainid nvarchar(16) NOT NULL,
-  tablename nvarchar(100) NOT NULL,
-  r bit NOT NULL DEFAULT 'FALSE',
-  i bit NOT NULL DEFAULT 'FALSE',
-  m bit NOT NULL DEFAULT 'FALSE',
-  d bit NOT NULL DEFAULT 'FALSE',
-  CONSTRAINT pk_permissions PRIMARY KEY (roleid, grainid, tablename), 
-  CONSTRAINT fk_permissions1 FOREIGN KEY(roleid) REFERENCES roles(id),
-  CONSTRAINT fk_permissions2 FOREIGN KEY(grainid, tablename) REFERENCES tables(grainid, tablename)
+create table permissions(
+  roleid nvarchar(16) not null,
+  grainid nvarchar(16) not null,
+  tablename nvarchar(100) not null,
+  r bit not null default 'FALSE',
+  i bit not null default 'FALSE',
+  m bit not null default 'FALSE',
+  d bit not null default 'FALSE',
+  constraint pk_permissions primary key (roleid, grainid, tablename), 
+  constraint fk_permissions_roles foreign key(roleid) references roles(id),
+  constraint fk_permissions_tables foreign key(grainid, tablename) references tables(grainid, tablename)
 );
 
-CREATE TABLE logsetup(
-  grainid nvarchar(16) NOT NULL,
-  tablename nvarchar(100) NOT NULL,
+create table logsetup(
+  grainid nvarchar(16) not null,
+  tablename nvarchar(100) not null,
   i bit,
   m bit,
   d bit,
-  CONSTRAINT pk_logsetup PRIMARY KEY (grainid, tablename),
-  CONSTRAINT fk_logsetup FOREIGN KEY (grainid, tablename) REFERENCES tables(grainid, tablename)
+  constraint pk_logsetup primary key (grainid, tablename),
+  constraint fk_logsetup_tables foreign key (grainid, tablename) references tables(grainid, tablename)
 );
 
-CREATE TABLE log(
-  entryno int IDENTITY NOT NULL PRIMARY KEY,
-  entry_time DATETIME NOT NULL DEFAULT GETDATE(),
-  userid nvarchar(250) NOT NULL,
-  grainid nvarchar(16) NOT NULL,
-  tablename nvarchar(100) NOT NULL,
-  action_type nvarchar(1) NOT NULL,
+create table log(
+  entryno int identity not null primary key,
+  entry_time datetime not null default getdate(),
+  userid nvarchar(250) not null,
+  grainid nvarchar(16) not null,
+  tablename nvarchar(100) not null,
+  action_type nvarchar(1) not null,
   pkvalue1 nvarchar(100),
   pkvalue2 nvarchar(100),
   pkvalue3 nvarchar(100),
   oldvalues nvarchar(3999), -- there is wisdom in this number (3999), do not modify.
-  newvalues nvarchar(3999), -- we need definite max length and it must be different from varchar(max) in Oracle
-  CONSTRAINT fk_log FOREIGN KEY(grainid, tablename) REFERENCES tables(grainid, tablename)
+  newvalues nvarchar(3999), -- we need definite max length and it must be different from varchar(max) in oracle
+  constraint fk_log_tables foreign key(grainid, tablename) references tables(grainid, tablename)
 );
 
-CREATE TABLE sequences(
-  grainid nvarchar(16) NOT NULL FOREIGN KEY REFERENCES grains(id),
-  tablename nvarchar(100) NOT NULL,
+create table sequences(
+  grainid nvarchar(16) not null,
+  tablename nvarchar(100) not null,
   seqvalue int not null default 0,
-  CONSTRAINT pk_sequences PRIMARY KEY (grainid, tablename)
+  constraint pk_sequences primary key (grainid, tablename),
+  constraint fk_sequences_grains foreign key(grainid) references grains(id)
 );

@@ -16,6 +16,8 @@ public final class Table extends NamedElement {
 	private static final String YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO = "Table '%s.%s', "
 			+ "field '%s': you cannot drop a column that belongs to ";
 
+	private static final int MAX_CONSTRAINT_NAME = 30;
+
 	/**
 	 * Гранула, к которой относится данная таблица.
 	 */
@@ -258,7 +260,12 @@ public final class Table extends NamedElement {
 		return pkConstraintName == null ? "pk_" + getName() : pkConstraintName;
 	}
 
-	void setPkConstraintName(String pkConstraintName) {
+	void setPkConstraintName(String pkConstraintName) throws ParseException {
+		if (pkConstraintName != null
+				&& pkConstraintName.length() > MAX_CONSTRAINT_NAME)
+			throw new ParseException(String.format(
+					"Primary key name '%s' is longer than %d characters.",
+					pkConstraintName, MAX_CONSTRAINT_NAME));
 		this.pkConstraintName = pkConstraintName;
 	}
 
