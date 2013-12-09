@@ -49,6 +49,9 @@ final class OraAdaptor extends DBAdaptor {
 
 	private static final Map<Class<? extends Column>, OraColumnDefiner> TYPES_DICT = new HashMap<>();
 
+	private static final int MAX_CONSTRAINT_NAME = 30;
+	private static final int HASH_MASK = 0xFFFF;
+
 	/**
 	 * Определитель колонок для Oracle, учитывающий тот факт, что в Oracle
 	 * DEFAULT должен идти до NOT NULL.
@@ -233,10 +236,8 @@ final class OraAdaptor extends DBAdaptor {
 			@Override
 			String getFullDefinition(Column c) {
 				String check = String.format(
-						"constraint \"chk_%s_%s_%s\" check (%s in (0, 1))", c
-								.getParentTable().getGrain().getName(), c
-								.getParentTable().getName(), c.getName(), c
-								.getQuotedName());
+						"constraint %s check (%s in (0, 1))",
+						getBooleanCheckName(c), c.getQuotedName());
 				return join(getInternalDefinition(c), getDefaultDefinition(c),
 						nullable(c), check);
 			}
@@ -698,10 +699,9 @@ final class OraAdaptor extends DBAdaptor {
 				&& !(c instanceof BooleanColumn)) {
 			// Тип Boolean меняется на что-то другое, надо сброить constraint
 			String check = String.format(ALTER_TABLE + tableTemplate()
-					+ " drop constraint \"chk_%s_%s_%s\"", c.getParentTable()
-					.getGrain().getName(), c.getParentTable().getName(), c
-					.getParentTable().getGrain().getName(), c.getParentTable()
-					.getName(), c.getName());
+					+ " drop constraint %s", c.getParentTable().getGrain()
+					.getName(), c.getParentTable().getName(),
+					getBooleanCheckName(c));
 			runUpdateColumnSQL(conn, c, check);
 		}
 
@@ -736,11 +736,9 @@ final class OraAdaptor extends DBAdaptor {
 				&& actual.getType() != BooleanColumn.class) {
 			// Тип поменялся на Boolean, надо добавить constraint
 			String check = String.format(ALTER_TABLE + tableTemplate()
-					+ " add constraint \"chk_%s_%s_%s\" check (%s in (0, 1))",
-					c.getParentTable().getGrain().getName(), c.getParentTable()
-							.getName(),
-					c.getParentTable().getGrain().getName(), c.getParentTable()
-							.getName(), c.getName(), c.getQuotedName());
+					+ " add constraint %s check (%s in (0, 1))", c
+					.getParentTable().getGrain().getName(), c.getParentTable()
+					.getName(), getBooleanCheckName(c), c.getQuotedName());
 			runUpdateColumnSQL(conn, c, check);
 
 		} else if (c instanceof IntegerColumn)
@@ -753,6 +751,18 @@ final class OraAdaptor extends DBAdaptor {
 								.getParentTable().getName(), c.getName(),
 						e.getMessage());
 			}
+	}
+
+	private static String getBooleanCheckName(Column c) {
+		String result = String.format("\"chk_%s_%s_%s\"", c.getParentTable()
+				.getGrain().getName(), c.getParentTable().getName(),
+				c.getName());
+		if (result.length() > MAX_CONSTRAINT_NAME) {
+			result = String.format("%s%04X",
+					result.substring(0, MAX_CONSTRAINT_NAME - 4),
+					result.hashCode() & HASH_MASK);
+		}
+		return result;
 	}
 
 	@Override
@@ -843,8 +853,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	DBPKInfo getPKInfo(Connection conn, Table t)
-			throws CelestaException {
+	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
 		DBPKInfo result = new DBPKInfo();
 		try {
 			String sql = String
@@ -991,9 +1000,9 @@ final class OraAdaptor extends DBAdaptor {
 			ResultSet rs = stmt.executeQuery(sql);
 			if (rs.next()) {
 				sql = rs.getString("TRIGGER_NAME");
-				if (sql.startsWith("cascade"))
+				if (sql.startsWith("csc_"))
 					return FKRule.CASCADE;
-				else if (sql.startsWith("setnull"))
+				else if (sql.startsWith("snl_"))
 					return FKRule.SET_NULL;
 			}
 			return FKRule.NO_ACTION;

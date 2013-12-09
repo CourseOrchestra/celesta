@@ -256,9 +256,9 @@ public class ParserTest {
 		t = g.getTable("x_role_employees");
 		assertEquals(1, t.getForeignKeys().size());
 		ForeignKey fk = t.getForeignKeys().iterator().next();
-		assertEquals("fk_x_role_employees_x_roles", fk.getConstraintName());
+		assertEquals("fk_x_rolempyees_xroles", fk.getConstraintName());
 
-		assertEquals(21517, input.getCount());
-		assertEquals(0x21546431, input.getCRC32());
+		assertEquals(21056, input.getCount());
+		assertEquals(1746796829, input.getCRC32());
 	}
 }

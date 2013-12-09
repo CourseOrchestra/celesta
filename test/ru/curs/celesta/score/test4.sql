@@ -24,7 +24,7 @@ CREATE TABLE app_division_currentstatus(
 	app_id int NOT NULL DEFAULT 0,
 	app_division_id int NOT NULL DEFAULT 0,
 	status_id int NOT NULL DEFAULT 0,
- CONSTRAINT pk_app_division_currentstatus_id PRIMARY KEY  
+ CONSTRAINT pk_app_div_crntsts_id PRIMARY KEY  
 (
 	id
 )
@@ -34,7 +34,7 @@ CREATE TABLE app_division_currentstatus_emp(
 	app_division_currentstatus_id int NOT NULL DEFAULT 0,
 	emp_id int NOT NULL DEFAULT 0,
 	resp bit NOT NULL DEFAULT 0,
- CONSTRAINT pk_app_division_currentstatus_id_emp_id PRIMARY KEY  
+ CONSTRAINT pk_app_div_curst_id_emp_id PRIMARY KEY  
 (
 	app_division_currentstatus_id,
 	emp_id
@@ -727,47 +727,47 @@ CREATE TABLE xlreports(
 );
 
 
-ALTER TABLE app_division_currentstatus  ADD CONSTRAINT fk_app_division_currentstatus_app_division FOREIGN KEY(app_division_id)
+ALTER TABLE app_division_currentstatus  ADD CONSTRAINT fk_app_div_curst_app_div FOREIGN KEY(app_division_id)
 REFERENCES app_division (id)
 ;
 
-ALTER TABLE app_division_currentstatus  ADD  CONSTRAINT fk_app_division_currentstatus_app_division_status FOREIGN KEY(status_id)
+ALTER TABLE app_division_currentstatus  ADD  CONSTRAINT fk_app_div_curstappdivst FOREIGN KEY(status_id)
 REFERENCES app_division_status (id)
 ;
 
-ALTER TABLE app_division_currentstatus  ADD  CONSTRAINT fk_app_division_currentstatus_application FOREIGN KEY(app_id)
+ALTER TABLE app_division_currentstatus  ADD  CONSTRAINT fk_app_div_curst_app FOREIGN KEY(app_id)
 REFERENCES application (id)
 ON DELETE CASCADE
 ;
 
-ALTER TABLE app_division_currentstatus_emp  ADD  CONSTRAINT fk_app_division_currentstatus_emp_app_division_currentstatus FOREIGN KEY(app_division_currentstatus_id)
+ALTER TABLE app_division_currentstatus_emp  ADD  CONSTRAINT fk_ap_divcrstempapdivcrst FOREIGN KEY(app_division_currentstatus_id)
 REFERENCES app_division_currentstatus (id)
 ;
 
-ALTER TABLE app_division_group  ADD  CONSTRAINT fk_app_division_group_app_division FOREIGN KEY(app_division)
+ALTER TABLE app_division_group  ADD  CONSTRAINT fk_app_div_grp_app_div FOREIGN KEY(app_division)
 REFERENCES app_division (id)
 ;
 
-ALTER TABLE app_indicator_group  ADD  CONSTRAINT fk_app_indicator_group_application FOREIGN KEY(application_id)
+ALTER TABLE app_indicator_group  ADD  CONSTRAINT fk_app_indic_grp_app FOREIGN KEY(application_id)
 REFERENCES application (id)
 ON DELETE CASCADE
 ;
 
-ALTER TABLE app_indicator_group_log  ADD  CONSTRAINT fk_app_indicator_group_log_app_version FOREIGN KEY(version_no)
+ALTER TABLE app_indicator_group_log  ADD  CONSTRAINT fk_appindicgrplogappver FOREIGN KEY(version_no)
 REFERENCES app_version (ver)
 ;
 
 
-ALTER TABLE app_indicator_group_log  ADD  CONSTRAINT fk_app_indicator_group_log_application FOREIGN KEY(application_id)
+ALTER TABLE app_indicator_group_log  ADD  CONSTRAINT fk_app_indic_grplogapp FOREIGN KEY(application_id)
 REFERENCES application (id)
 ON DELETE CASCADE
 ;
 
-ALTER TABLE app_indicator_group_version  ADD  CONSTRAINT fk_app_indicator_group_version_app_version FOREIGN KEY(ver)
+ALTER TABLE app_indicator_group_version  ADD  CONSTRAINT fk_appindcgrpverappver FOREIGN KEY(ver)
 REFERENCES app_version (ver)
 ;
 
-ALTER TABLE app_indicator_group_version  ADD  CONSTRAINT fk_app_indicator_group_version_application FOREIGN KEY(application_id)
+ALTER TABLE app_indicator_group_version  ADD  CONSTRAINT fk_app_indicgrpverapp FOREIGN KEY(application_id)
 REFERENCES application (id)
 ON DELETE CASCADE
 ;
@@ -776,49 +776,49 @@ ALTER TABLE app_indicators  ADD  CONSTRAINT fk_group_indicators_group FOREIGN KE
 REFERENCES app_indicator_group (groupid)
 ;
 
-ALTER TABLE app_indicators  ADD  CONSTRAINT fk_group_indicators_indicator FOREIGN KEY(indicator_id)
+ALTER TABLE app_indicators  ADD  CONSTRAINT fk_group_indicatoicator FOREIGN KEY(indicator_id)
 REFERENCES indicator (id)
 ;
 
-ALTER TABLE app_indicators_log  ADD  CONSTRAINT fk_app_indicators_log_app_indicator FOREIGN KEY(indicator_id)
+ALTER TABLE app_indicators_log  ADD  CONSTRAINT fk_appindicatorslondicator FOREIGN KEY(indicator_id)
 REFERENCES indicator (id)
 ;
 
 
-ALTER TABLE app_indicators_log  ADD  CONSTRAINT fk_app_indicators_log_app_version FOREIGN KEY(version_no)
+ALTER TABLE app_indicators_log  ADD  CONSTRAINT fk_appinogappversion FOREIGN KEY(version_no)
 REFERENCES app_version (ver)
 ;
 
-ALTER TABLE app_indicators_version  ADD  CONSTRAINT fk_app_indicators_version_app_indicator FOREIGN KEY(indicator_id)
+ALTER TABLE app_indicators_version  ADD  CONSTRAINT fk_appincatsverpicar FOREIGN KEY(indicator_id)
 REFERENCES indicator (id)
 ;
 
-ALTER TABLE app_indicators_version  ADD  CONSTRAINT fk_app_indicators_version_app_version FOREIGN KEY(ver)
+ALTER TABLE app_indicators_version  ADD  CONSTRAINT fk_appiicatoronappvsio FOREIGN KEY(ver)
 REFERENCES app_version (ver)
 ;
 
-ALTER TABLE app_version  ADD  CONSTRAINT fk_app_version_app_division FOREIGN KEY(app_division_id)
+ALTER TABLE app_version  ADD  CONSTRAINT fk_apversionappdivision FOREIGN KEY(app_division_id)
 REFERENCES app_division (id)
 ;
 
-ALTER TABLE app_version  ADD  CONSTRAINT fk_app_version_application FOREIGN KEY(application_id)
+ALTER TABLE app_version  ADD  CONSTRAINT fk_appversionaication FOREIGN KEY(application_id)
 REFERENCES application (id)
 ON DELETE CASCADE
 ;
 
-ALTER TABLE application  ADD  CONSTRAINT fk_application_appContractorType FOREIGN KEY(appContractorTypeId)
+ALTER TABLE application  ADD  CONSTRAINT fk_applicatippContractoype FOREIGN KEY(appContractorTypeId)
 REFERENCES appContractorType (id)
 ;
 
-ALTER TABLE application  ADD  CONSTRAINT fk_application_application_status FOREIGN KEY(application_status_id)
+ALTER TABLE application  ADD  CONSTRAINT fk_appicaiopplicationstat FOREIGN KEY(application_status_id)
 REFERENCES application_status (id)
 ;
 
-ALTER TABLE application  ADD  CONSTRAINT fk_application_businessline FOREIGN KEY(businessline_id)
+ALTER TABLE application  ADD  CONSTRAINT fk_applicationbusinessline FOREIGN KEY(businessline_id)
 REFERENCES businessline (id)
 ;
 
-ALTER TABLE application  ADD  CONSTRAINT fk_application_coll_authority FOREIGN KEY(coll_authority_id)
+ALTER TABLE application  ADD  CONSTRAINT fk_applicationcollauthorit FOREIGN KEY(coll_authority_id)
 REFERENCES coll_authority (id)
 ;
 
@@ -826,34 +826,34 @@ ALTER TABLE application  ADD  CONSTRAINT fk_application_product FOREIGN KEY(prod
 REFERENCES product (id)
 ;
 
-ALTER TABLE application  ADD  CONSTRAINT fk_application_question_type FOREIGN KEY(question_type_id)
+ALTER TABLE application  ADD  CONSTRAINT fk_applitio_qetiontype FOREIGN KEY(question_type_id)
 REFERENCES question_type (id)
 ;
 
-ALTER TABLE application_template  ADD  CONSTRAINT fk_application_template_application FOREIGN KEY(app_id)
+ALTER TABLE application_template  ADD  CONSTRAINT fk_appiaionteplatapplcaion FOREIGN KEY(app_id)
 REFERENCES application (id)
 ;
 
 
-ALTER TABLE coll_authority  ADD  CONSTRAINT fk_coll_authority_authority1 FOREIGN KEY(authority_id)
+ALTER TABLE coll_authority  ADD  CONSTRAINT fk_coll_auhorityauthority1 FOREIGN KEY(authority_id)
 REFERENCES authority (id)
 ;
 
 
-ALTER TABLE coll_authority ADD  CONSTRAINT fk_coll_authority_meeting_type1 FOREIGN KEY(meeting_id)
+ALTER TABLE coll_authority ADD  CONSTRAINT fk_colluthoitymeetingype1 FOREIGN KEY(meeting_id)
 REFERENCES meeting_type (id)
 ;
 
 
-ALTER TABLE coll_authority_businessline  ADD  CONSTRAINT fk_coll_authority_businessline_businessline1 FOREIGN KEY(businessline_id)
+ALTER TABLE coll_authority_businessline  ADD  CONSTRAINT fk_colaurbulineessline1 FOREIGN KEY(businessline_id)
 REFERENCES businessline (id)
 ;
 
-ALTER TABLE coll_authority_businessline  ADD  CONSTRAINT fk_coll_authority_businessline_coll_authority1 FOREIGN KEY(coll_authority_id)
+ALTER TABLE coll_authority_businessline  ADD  CONSTRAINT fk_clluthoy_nsnco_auhort1 FOREIGN KEY(coll_authority_id)
 REFERENCES coll_authority (id)
 ;
 
-ALTER TABLE crpos_sec  ADD  CONSTRAINT fk_cross_sec_application FOREIGN KEY(app_id)
+ALTER TABLE crpos_sec  ADD  CONSTRAINT fk_cross_secpplication FOREIGN KEY(app_id)
 REFERENCES application (id)
 ;
 
@@ -862,7 +862,7 @@ REFERENCES app_indicator_group (groupid)
 ;
 
 
-ALTER TABLE filesForApplication  ADD  CONSTRAINT fk_filesForApplication_application FOREIGN KEY(application)
+ALTER TABLE filesForApplication  ADD  CONSTRAINT fk_fileForppiconplcation FOREIGN KEY(application)
 REFERENCES application (id)
 ON DELETE CASCADE
 ;
@@ -876,7 +876,7 @@ REFERENCES indicator (id)
 ON DELETE CASCADE
 ;
 
-ALTER TABLE indicatoroptions  ADD  CONSTRAINT fk_indicatoroptions_indicator FOREIGN KEY(indicator_id)
+ALTER TABLE indicatoroptions  ADD  CONSTRAINT fk_indicatorptionndictor FOREIGN KEY(indicator_id)
 REFERENCES indicator (id)
 ON DELETE CASCADE
 ;
@@ -895,12 +895,12 @@ REFERENCES perms_group_type (id)
 ;
 
 
-ALTER TABLE product_application_type  ADD  CONSTRAINT fk_product_application_type_application_type1 FOREIGN KEY(application_type_id)
+ALTER TABLE product_application_type  ADD  CONSTRAINT fk_produppintyapicatontye1 FOREIGN KEY(application_type_id)
 REFERENCES application_type (id)
 ;
 
 
-ALTER TABLE product_application_type  ADD  CONSTRAINT fk_product_application_type_product1 FOREIGN KEY(product_id)
+ALTER TABLE product_application_type  ADD  CONSTRAINT fk_productappiatonyppruct1 FOREIGN KEY(product_id)
 REFERENCES product (id)
 ;
 
@@ -908,21 +908,21 @@ ALTER TABLE subgroup_org  ADD  CONSTRAINT fk_subgroup_org_subgroup FOREIGN KEY(s
 REFERENCES subgroup (id)
 ;
 
-ALTER TABLE x_list_objects  ADD  CONSTRAINT fk_x_list_objects_perms_group_type FOREIGN KEY(perms_group_type)
+ALTER TABLE x_list_objects  ADD  CONSTRAINT fk_x_st_bjpe_optype FOREIGN KEY(perms_group_type)
 REFERENCES perms_group_type (id)
 ;
 
-ALTER TABLE x_list_objects  ADD  CONSTRAINT fk_x_list_objects_x_list_object_type FOREIGN KEY(object_type_id)
+ALTER TABLE x_list_objects  ADD  CONSTRAINT fk_x_litobje_i_j_tpe FOREIGN KEY(object_type_id)
 REFERENCES x_list_object_type (id)
 ;
 
 
-ALTER TABLE x_role_employees  ADD  CONSTRAINT fk_x_role_employees_x_roles FOREIGN KEY(role_id, role_type_id)
+ALTER TABLE x_role_employees  ADD  CONSTRAINT fk_x_rolempyees_xroles FOREIGN KEY(role_id, role_type_id)
 REFERENCES x_roles (id, type)
 ;
 
 
-ALTER TABLE x_role_perms  ADD  CONSTRAINT fk_x_role_perms_object_type FOREIGN KEY(object_type)
+ALTER TABLE x_role_perms  ADD  CONSTRAINT fk_x_rle_permsject_type FOREIGN KEY(object_type)
 REFERENCES x_list_object_type (id)
 ;
 

@@ -314,10 +314,9 @@ public class ForeignKey {
 				.getName(), parentTable.getName(), referencedTable.getGrain()
 				.getName(), referencedTable.getName());
 		if (result.length() > MAX_CONSTRAINT_NAME) {
-
 			result = String.format("%s%04X",
-					result.substring(0, MAX_CONSTRAINT_NAME), result.hashCode()
-							& HASH_MASK);
+					result.substring(0, MAX_CONSTRAINT_NAME - 4),
+					result.hashCode() & HASH_MASK);
 		}
 		// System.out.println(result);
 		return result;

@@ -25,7 +25,6 @@ import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.DBIndexInfo;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -98,6 +97,7 @@ public abstract class AbstractAdaptorTest {
 	public void setup() throws Exception {
 		conn = ConnectionPool.get();
 		dba.createSchemaIfNotExists(conn, GRAIN_NAME);
+
 		t = score.getGrain(GRAIN_NAME).getTable("test");
 		try {
 			// Могла остаться от незавершившегося теста
