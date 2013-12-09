@@ -461,7 +461,7 @@ public abstract class DBAdaptor {
 		}
 		sql.append(")");
 
-		switch (fk.getDeleteBehaviour()) {
+		switch (fk.getDeleteRule()) {
 		case SET_NULL:
 			sql.append(" on delete set null");
 			break;
@@ -545,7 +545,7 @@ public abstract class DBAdaptor {
 
 	void processCreateUpdateRule(ForeignKey fk, LinkedList<StringBuilder> queue) {
 		StringBuilder sql = queue.peek();
-		switch (fk.getUpdateBehaviour()) {
+		switch (fk.getUpdateRule()) {
 		case SET_NULL:
 			sql.append(" on update set null");
 			break;
@@ -713,7 +713,7 @@ public abstract class DBAdaptor {
 		}
 	}
 
-	static FKRule getFKBehaviour(String rule) {
+	static FKRule getFKRule(String rule) {
 		if ("NO ACTION".equalsIgnoreCase(rule)
 				|| "RECTRICT".equalsIgnoreCase(rule))
 			return FKRule.NO_ACTION;

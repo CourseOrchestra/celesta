@@ -244,10 +244,10 @@ void references(ForeignKey fk):{
   ("," t = <S_IDENTIFIER> {fk.addReferencedColumn(t.toString());})* ")"
 {fk.finalizeReference();}
 [<K_ON>
-  ((<K_UPDATE> action = action() {fk.setUpdateBehaviour(action);} 
-    [<K_ON> <K_DELETE> action = action() {fk.setDeleteBehaviour(action);}])
-  |(<K_DELETE> action = action() {fk.setDeleteBehaviour(action);} 
-    [<K_ON> <K_UPDATE> action = action() {fk.setUpdateBehaviour(action);}]))
+  ((<K_UPDATE> action = action() {fk.setUpdateRule(action);} 
+    [<K_ON> <K_DELETE> action = action() {fk.setDeleteRule(action);}])
+  |(<K_DELETE> action = action() {fk.setDeleteRule(action);} 
+    [<K_ON> <K_UPDATE> action = action() {fk.setUpdateRule(action);}]))
 ]
 }
 

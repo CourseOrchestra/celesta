@@ -847,9 +847,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 						i.setTableName(rs.getString("FK_TABLE_NAME"));
 						i.setRefGrainName(rs.getString("REF_GRAIN"));
 						i.setRefTableName(rs.getString("REF_TABLE_NAME"));
-						i.setUpdateBehaviour(getFKBehaviour(rs
+						i.setUpdateBehaviour(getFKRule(rs
 								.getString("UPDATE_RULE")));
-						i.setDeleteBehaviour(getFKBehaviour(rs
+						i.setDeleteBehaviour(getFKRule(rs
 								.getString("DELETE_RULE")));
 					}
 					i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));

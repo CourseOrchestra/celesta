@@ -958,7 +958,7 @@ final class OraAdaptor extends DBAdaptor {
 						i.setRefTableName(m.group(2));
 						i.setUpdateBehaviour(getUpdateBehaviour(conn,
 								tableName, fkName));
-						i.setDeleteBehaviour(getFKBehaviour(rs
+						i.setDeleteBehaviour(getFKRule(rs
 								.getString("DELETE_RULE")));
 					}
 					i.getColumnNames().add(rs.getString(COLUMN_NAME));
@@ -1003,7 +1003,7 @@ final class OraAdaptor extends DBAdaptor {
 		StringBuilder sb;
 
 		// Clean up unwanted triggers
-		switch (fk.getUpdateBehaviour()) {
+		switch (fk.getUpdateRule()) {
 		case CASCADE:
 			sb = new StringBuilder("drop trigger \"setnull_");
 			sb.append(fk.getConstraintName());
@@ -1031,7 +1031,7 @@ final class OraAdaptor extends DBAdaptor {
 
 		sb = new StringBuilder();
 		sb.append("create or replace trigger \"");
-		if (fk.getUpdateBehaviour() == FKRule.CASCADE) {
+		if (fk.getUpdateRule() == FKRule.CASCADE) {
 			sb.append("cascade_");
 		} else {
 			sb.append("setnull_");
@@ -1071,7 +1071,7 @@ final class OraAdaptor extends DBAdaptor {
 			sb.append(needComma ? ",\n    " : "\n    ");
 			needComma = true;
 			sb.append(i1.next().getQuotedName());
-			if (fk.getUpdateBehaviour() == FKRule.CASCADE) {
+			if (fk.getUpdateRule() == FKRule.CASCADE) {
 				sb.append(" = :old.");
 				sb.append(i2.next().getQuotedName());
 			} else {

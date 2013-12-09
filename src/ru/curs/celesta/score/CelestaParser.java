@@ -514,13 +514,13 @@ public class CelestaParser implements CelestaParserConstants {
       case K_UPDATE:
         jj_consume_token(K_UPDATE);
         action = action();
-                                  fk.setUpdateBehaviour(action);
+                                  fk.setUpdateRule(action);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_ON:
           jj_consume_token(K_ON);
           jj_consume_token(K_DELETE);
           action = action();
-                                          fk.setDeleteBehaviour(action);
+                                          fk.setDeleteRule(action);
           break;
         default:
           jj_la1[33] = jj_gen;
@@ -530,13 +530,13 @@ public class CelestaParser implements CelestaParserConstants {
       case K_DELETE:
         jj_consume_token(K_DELETE);
         action = action();
-                                  fk.setDeleteBehaviour(action);
+                                  fk.setDeleteRule(action);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_ON:
           jj_consume_token(K_ON);
           jj_consume_token(K_UPDATE);
           action = action();
-                                          fk.setUpdateBehaviour(action);
+                                          fk.setUpdateRule(action);
           break;
         default:
           jj_la1[34] = jj_gen;

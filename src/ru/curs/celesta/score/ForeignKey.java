@@ -15,8 +15,8 @@ public class ForeignKey {
 
 	private final Table parentTable;
 	private Table referencedTable;
-	private FKRule deleteBehaviour = FKRule.NO_ACTION;
-	private FKRule updateBehaviour = FKRule.NO_ACTION;
+	private FKRule deleteRule = FKRule.NO_ACTION;
+	private FKRule updateRule = FKRule.NO_ACTION;
 	private String constraintName;
 
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
@@ -45,22 +45,22 @@ public class ForeignKey {
 				referencedTable.getName());
 	}
 
-	void setDeleteBehaviour(FKRule deleteBehaviour) throws ParseException {
+	void setDeleteRule(FKRule deleteBehaviour) throws ParseException {
 		if (deleteBehaviour == null)
 			throw new IllegalArgumentException();
 		if (deleteBehaviour == FKRule.SET_NULL)
 			checkNullable();
 		parentTable.getGrain().modify();
-		this.deleteBehaviour = deleteBehaviour;
+		this.deleteRule = deleteBehaviour;
 	}
 
-	void setUpdateBehaviour(FKRule updateBehaviour) throws ParseException {
+	void setUpdateRule(FKRule updateBehaviour) throws ParseException {
 		if (updateBehaviour == null)
 			throw new IllegalArgumentException();
 		if (updateBehaviour == FKRule.SET_NULL)
 			checkNullable();
 		parentTable.getGrain().modify();
-		this.updateBehaviour = updateBehaviour;
+		this.updateRule = updateBehaviour;
 	}
 
 	private void checkNullable() throws ParseException {
@@ -96,15 +96,15 @@ public class ForeignKey {
 	/**
 	 * Поведение при удалении.
 	 */
-	public FKRule getDeleteBehaviour() {
-		return deleteBehaviour;
+	public FKRule getDeleteRule() {
+		return deleteRule;
 	}
 
 	/**
 	 * Поведение при обновлении.
 	 */
-	public FKRule getUpdateBehaviour() {
-		return updateBehaviour;
+	public FKRule getUpdateRule() {
+		return updateRule;
 	}
 
 	/**
@@ -353,7 +353,7 @@ public class ForeignKey {
 			comma = true;
 		}
 		bw.write(")");
-		switch (updateBehaviour) {
+		switch (updateRule) {
 		case CASCADE:
 			bw.write(" ON UPDATE CASCADE");
 			break;
@@ -364,7 +364,7 @@ public class ForeignKey {
 		default:
 			break;
 		}
-		switch (deleteBehaviour) {
+		switch (deleteRule) {
 		case CASCADE:
 			bw.write(" ON DELETE CASCADE");
 			break;

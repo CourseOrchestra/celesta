@@ -431,32 +431,32 @@ public class GrainModelTest {
 		ForeignKey fk = new ForeignKey(t2);
 		fk.addColumn("c2");
 		fk.setReferencedTable("", "t1");
-		assertSame(FKRule.NO_ACTION, fk.getDeleteBehaviour());
-		assertSame(FKRule.NO_ACTION, fk.getUpdateBehaviour());
+		assertSame(FKRule.NO_ACTION, fk.getDeleteRule());
+		assertSame(FKRule.NO_ACTION, fk.getUpdateRule());
 
 		boolean itWas = false;
 		try {
-			fk.setDeleteBehaviour(FKRule.SET_NULL);
+			fk.setDeleteRule(FKRule.SET_NULL);
 		} catch (ParseException e) {
 			// нельзя использовать SET NULL в Not-nullable колонках
 			itWas = true;
 		}
 		assertTrue(itWas);
-		assertSame(FKRule.NO_ACTION, fk.getDeleteBehaviour());
-		fk.setDeleteBehaviour(FKRule.CASCADE);
-		assertSame(FKRule.CASCADE, fk.getDeleteBehaviour());
+		assertSame(FKRule.NO_ACTION, fk.getDeleteRule());
+		fk.setDeleteRule(FKRule.CASCADE);
+		assertSame(FKRule.CASCADE, fk.getDeleteRule());
 
 		itWas = false;
 		try {
-			fk.setUpdateBehaviour(FKRule.SET_NULL);
+			fk.setUpdateRule(FKRule.SET_NULL);
 		} catch (ParseException e) {
 			// нельзя использовать SET NULL в Not-nullable колонках
 			itWas = true;
 		}
 		assertTrue(itWas);
-		assertSame(FKRule.NO_ACTION, fk.getUpdateBehaviour());
-		fk.setUpdateBehaviour(FKRule.CASCADE);
-		assertSame(FKRule.CASCADE, fk.getUpdateBehaviour());
+		assertSame(FKRule.NO_ACTION, fk.getUpdateRule());
+		fk.setUpdateRule(FKRule.CASCADE);
+		assertSame(FKRule.CASCADE, fk.getUpdateRule());
 
 	}
 

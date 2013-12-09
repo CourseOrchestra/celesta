@@ -212,16 +212,16 @@ public class ParserTest {
 		assertEquals(1, fk.getColumns().size());
 		assertEquals("kk", fk.getColumns().get("kk").getName());
 		assertEquals("d", fk.getReferencedTable().getName());
-		assertSame(FKRule.NO_ACTION, fk.getDeleteBehaviour());
-		assertSame(FKRule.SET_NULL, fk.getUpdateBehaviour());
+		assertSame(FKRule.NO_ACTION, fk.getDeleteRule());
+		assertSame(FKRule.SET_NULL, fk.getUpdateRule());
 
 		fk = i.next();
 		assertEquals("a", fk.getParentTable().getName());
 		assertEquals(1, fk.getColumns().size());
 		assertEquals("d", fk.getColumns().get("d").getName());
 		assertEquals("c", fk.getReferencedTable().getName());
-		assertSame(FKRule.NO_ACTION, fk.getDeleteBehaviour());
-		assertSame(FKRule.NO_ACTION, fk.getUpdateBehaviour());
+		assertSame(FKRule.NO_ACTION, fk.getDeleteRule());
+		assertSame(FKRule.NO_ACTION, fk.getUpdateRule());
 
 		Table b = g.getTables().get("b");
 		assertEquals(1, b.getForeignKeys().size());
@@ -232,8 +232,8 @@ public class ParserTest {
 		assertEquals("b", fk.getColumns().get("b").getName());
 		assertEquals("a", fk.getColumns().get("a").getName());
 		assertEquals("a", fk.getReferencedTable().getName());
-		assertSame(FKRule.CASCADE, fk.getDeleteBehaviour());
-		assertSame(FKRule.CASCADE, fk.getUpdateBehaviour());
+		assertSame(FKRule.CASCADE, fk.getDeleteRule());
+		assertSame(FKRule.CASCADE, fk.getUpdateRule());
 	}
 
 	@Test
