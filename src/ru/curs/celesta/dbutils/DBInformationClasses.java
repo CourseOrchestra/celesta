@@ -9,6 +9,7 @@ import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.StringColumn;
@@ -301,6 +302,24 @@ final class DBFKInfo {
 
 	void setUpdateBehaviour(FKRule updateBehaviour) {
 		this.updateBehaviour = updateBehaviour;
+	}
+
+	public boolean reflects(ForeignKey fk) {
+		if (!fk.getParentTable().getName().equals(tableName))
+			return false;
+		if (!fk.getReferencedTable().getGrain().getName().equals(refGrainName))
+			return false;
+		if (!fk.getReferencedTable().getName().equals(refTableName))
+			return false;
+		if (fk.getColumns().size() != columnNames.size())
+			return false;
+		Iterator<String> i1 = fk.getColumns().keySet().iterator();
+		Iterator<String> i2 = columnNames.iterator();
+		while (i1.hasNext()) {
+			if (!i1.next().equals(i2.next()))
+				return false;
+		}
+		return true;
 	}
 
 }

@@ -774,6 +774,8 @@ public abstract class AbstractAdaptorTest {
 			assertEquals("gtest", info.getRefGrainName());
 			assertEquals("refTo", info.getRefTableName());
 
+			assertTrue(info.reflects(fk));
+			
 			dba.dropFK(conn, t.getGrain().getName(), t.getName(),
 					fk.getConstraintName());
 			l = dba.getFKInfo(conn, g);
