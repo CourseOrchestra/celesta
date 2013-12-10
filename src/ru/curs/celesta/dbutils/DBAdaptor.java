@@ -576,7 +576,7 @@ public abstract class DBAdaptor {
 	 *             Ошибка БД или некорректный фильтр.
 	 */
 	public final PreparedStatement getRecordSetStatement(Connection conn,
-			Table t, Map<String, AbstractFilter> filters, List<String> orderBy)
+			Table t, Map<String, AbstractFilter> filters, String orderBy)
 			throws CelestaException {
 
 		// Готовим условие where
@@ -702,18 +702,14 @@ public abstract class DBAdaptor {
 	}
 
 	final String getSelectFromOrderBy(Table t, String whereClause,
-			List<String> orderBy) {
+			String orderBy) {
 		String sqlfrom = String.format("select %s from " + tableTemplate(),
 				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
 				t.getName());
 
 		String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
 
-		String orderByList = getFieldList(orderBy);
-		String sqlorder = "".equals(orderByList) ? "" : " order by "
-				+ orderByList;
-
-		return sqlfrom + sqlwhere + sqlorder;
+		return sqlfrom + sqlwhere + " order by " + orderBy;
 	}
 
 	static String getRecordWhereClause(Table t) {

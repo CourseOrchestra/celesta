@@ -9,11 +9,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
@@ -21,8 +23,8 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 
@@ -35,6 +37,9 @@ public abstract class Cursor {
 
 	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
 	private static final LoggingManager LOGGING_MGR = new LoggingManager();
+	private static final Pattern COLUMN_NAME = Pattern
+			.compile("([a-zA-Z_][a-zA-Z0-9_]*)"
+					+ "( +([Aa]|[Dd][Ee])[Ss][Cc])?");
 
 	private Table meta = null;
 	private final DBAdaptor db;
@@ -52,7 +57,8 @@ public abstract class Cursor {
 	private Cursor xRec;
 
 	private Map<String, AbstractFilter> filters = new HashMap<>();
-	private List<String> orderBy = new LinkedList<>();
+
+	private String orderBy = null;
 
 	public Cursor(CallContext context) throws CelestaException {
 		if (context.getConn() == null)
@@ -123,7 +129,7 @@ public abstract class Cursor {
 			throw new PermissionDeniedException(context, meta(), Action.READ);
 
 		if (set == null)
-			set = db.getRecordSetStatement(conn, meta(), filters, orderBy);
+			set = db.getRecordSetStatement(conn, meta(), filters, getOrderBy());
 		boolean result = false;
 		try {
 			if (cursor != null)
@@ -646,6 +652,18 @@ public abstract class Cursor {
 		closeSet();
 	}
 
+	String getOrderBy() {
+		if (orderBy == null)
+			try {
+				orderBy();
+				// CHECKSTYLE:OFF
+			} catch (CelestaException e) {
+				// do nothing, will never happen
+			}
+		// CHECKSTYLE:ON
+		return orderBy;
+	}
+
 	/**
 	 * Установка сортировки.
 	 * 
@@ -655,12 +673,45 @@ public abstract class Cursor {
 	 *             неверное имя поля или SQL-ошибка.
 	 */
 	public final void orderBy(String... names) throws CelestaException {
-		for (String name : names)
-			validateColumName(name);
-		orderBy.clear();
-		for (String name : names)
-			orderBy.add(name);
-		closeSet();
+		StringBuilder orderByClause = new StringBuilder();
+		boolean needComma = false;
+		Set<String> colNames = new HashSet<>();
+		for (String name : names) {
+			Matcher m = COLUMN_NAME.matcher(name);
+			if (!m.matches())
+				throw new CelestaException(
+						"orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
+						name);
+			String colName = m.group(1);
+			validateColumName(colName);
+			if (!colNames.add(colName))
+				throw new CelestaException(
+						"Column '%s' is used more than once in orderby() call",
+						colName);
+
+			String order;
+			if (m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim())) {
+				order = "";
+			} else {
+				order = " desc";
+			}
+			if (needComma)
+				orderByClause.append(", ");
+			orderByClause.append(String.format("\"%s\"%s", colName, order));
+			needComma = true;
+
+		}
+		// Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
+		// естественном порядке
+		for (String colName : meta().getPrimaryKey().keySet())
+			if (!colNames.contains(colName)) {
+				if (needComma)
+					orderByClause.append(", ");
+				orderByClause.append(String.format("\"%s\"", colName));
+				needComma = true;
+			}
+
+		orderBy = orderByClause.toString();
 	}
 
 	/**
@@ -671,7 +722,7 @@ public abstract class Cursor {
 	 */
 	public final void reset() throws CelestaException {
 		filters.clear();
-		orderBy.clear();
+		orderBy = null;
 		closeSet();
 	}
 
@@ -691,7 +742,7 @@ public abstract class Cursor {
 	public final void clear() throws CelestaException {
 		_clearBuffer(true);
 		filters.clear();
-		orderBy.clear();
+		orderBy = null;
 		closeSet();
 	}
 
