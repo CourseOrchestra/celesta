@@ -1,11 +1,15 @@
+# coding=UTF-8
 print "hello unit called"
 
 from g1._g1_orm import aaCursor 
+from g1._g1_orm import adressesCursor
 from g2._g2_orm import bCursor
 from g3._g3_orm import cCursor
 import java.io.OutputStreamWriter as OutputStreamWriter
 import java.io.InputStreamReader as InputStreamReader
 import java.io.BufferedReader as BufferedReader
+
+
 
 def hello(context, arg):
     print 'Hello, world from Celesta Python procedure.'
@@ -80,9 +84,31 @@ def hello(context, arg):
     b.update()
     print 'POST UPDATE B XREC: %s, REC: %s' % (b.getXRec().asCSVLine(), b.asCSVLine())
 
+    aa.idaa = 1
+    aa.delete()  
     for aa in aa.iterate(): # while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)
         
+    adresses = adressesCursor(context)
+    adresses.postalcode = '11111'
+    adresses.building = '11'
+    adresses.flat = '2'
+    adresses.delete()
+    adresses.init()
+    adresses.country = 'Россия'
+    adresses.city = 'Москва'
+    adresses.street = 'Ленинский пр-т'
+    adresses.insert()
+    adresses.clear()
+    
+    adresses.get('11111', '11', '2')
+    print adresses.asCSVLine()
+    adresses.country = 'Украина'
+    adresses.update()
+    print adresses.asCSVLine()
+    adresses.get('11111', '11', '2')
+    print adresses.asCSVLine()    
+  
     print 'Python procedure finished.'
     
 def testTrigger(rec):

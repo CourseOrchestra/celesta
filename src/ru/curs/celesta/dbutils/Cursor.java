@@ -56,9 +56,10 @@ public abstract class Cursor {
 	private ResultSet cursor = null;
 	private Cursor xRec;
 
+	// Поля фильтров и сортировок
 	private Map<String, AbstractFilter> filters = new HashMap<>();
-
 	private String orderBy = null;
+	private Range<Long> limit = new Range<Long>(0L, 0L);
 
 	public Cursor(CallContext context) throws CelestaException {
 		if (context.getConn() == null)
@@ -102,7 +103,9 @@ public abstract class Cursor {
 			try {
 				set.close();
 			} catch (SQLException e) {
-				throw new CelestaException(e.getMessage());
+				throw new CelestaException(
+						"Database error when closing recordset for table '%s': %s",
+						_tableName(), e.getMessage());
 			}
 			set = null;
 		}
@@ -129,7 +132,8 @@ public abstract class Cursor {
 			throw new PermissionDeniedException(context, meta(), Action.READ);
 
 		if (set == null)
-			set = db.getRecordSetStatement(conn, meta(), filters, getOrderBy());
+			set = db.getRecordSetStatement(conn, meta(), filters, getOrderBy(),
+					limit);
 		boolean result = false;
 		try {
 			if (cursor != null)
@@ -359,7 +363,7 @@ public abstract class Cursor {
 			}
 			// Заполняем параметры поиска (where ...)
 			for (i = 0; i < keyValues.length; i++)
-				DBAdaptor.setParam(update, i + j, values[i]);
+				DBAdaptor.setParam(update, i + j, keyValues[i]);
 
 			_preUpdate();
 			update.execute();
@@ -631,7 +635,7 @@ public abstract class Cursor {
 	public final void setRange(String name, Object valueFrom, Object valueTo)
 			throws CelestaException {
 		validateColumName(name);
-		filters.put(name, new Range(valueFrom, valueTo));
+		filters.put(name, new Range<Object>(valueFrom, valueTo));
 		closeSet();
 	}
 
@@ -652,15 +656,26 @@ public abstract class Cursor {
 		closeSet();
 	}
 
-	String getOrderBy() {
+	/**
+	 * Устанавливает фильтр на диапазон возвращаемых курсором записей.
+	 * 
+	 * @param skip
+	 *            Количество записей, которое необходимо пропустить (0 -
+	 *            начинать с начала).
+	 * @param count
+	 *            Максимальное количество записей, которое необходимо вернуть (0
+	 *            - вернуть все записи).
+	 * @throws CelestaException
+	 *             ошибка БД.
+	 */
+	public final void limit(long skip, long count) throws CelestaException {
+		limit = new Range<Long>(skip, count);
+		closeSet();
+	}
+
+	private String getOrderBy() throws CelestaException {
 		if (orderBy == null)
-			try {
-				orderBy();
-				// CHECKSTYLE:OFF
-			} catch (CelestaException e) {
-				// do nothing, will never happen
-			}
-		// CHECKSTYLE:ON
+			orderBy();
 		return orderBy;
 	}
 

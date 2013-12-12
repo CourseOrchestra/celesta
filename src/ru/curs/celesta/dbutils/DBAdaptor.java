@@ -348,15 +348,16 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя JDBC
 	 */
+	@SuppressWarnings("unchecked")
 	final void fillSetQueryParameters(Map<String, AbstractFilter> filters,
 			PreparedStatement result) throws CelestaException {
 		int i = 1;
 		for (AbstractFilter f : filters.values()) {
 			if (f instanceof SingleValue) {
 				setParam(result, i++, ((SingleValue) f).getValue());
-			} else if (f instanceof Range) {
-				setParam(result, i++, ((Range) f).getValueFrom());
-				setParam(result, i++, ((Range) f).getValueTo());
+			} else if (f instanceof Range<?>) {
+				setParam(result, i++, ((Range<Object>) f).getValueFrom());
+				setParam(result, i++, ((Range<Object>) f).getValueTo());
 			}
 			// Пока что фильтры параметров не требуют
 			// else if (f instanceof Filter)
@@ -572,12 +573,14 @@ public abstract class DBAdaptor {
 	 *            Фильтры на таблице.
 	 * @param orderBy
 	 *            Порядок сортировки.
+	 * @param limit
+	 *            Количество строк для пропуска и для возврата (limit-фильтр).
 	 * @throws CelestaException
 	 *             Ошибка БД или некорректный фильтр.
 	 */
 	public final PreparedStatement getRecordSetStatement(Connection conn,
-			Table t, Map<String, AbstractFilter> filters, String orderBy)
-			throws CelestaException {
+			Table t, Map<String, AbstractFilter> filters, String orderBy,
+			Range<Long> limit) throws CelestaException {
 
 		// Готовим условие where
 		String whereClause = getWhereClause(t, filters);
