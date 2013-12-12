@@ -57,7 +57,7 @@ def hello(context, arg):
     
     aa = aaCursor(context)
     aa.deleteAll()
-    for i in range(1, 12):
+    for i in range(1, 20):
         aa.idaa = i 
         aa.idc = i * i
         if not aa.tryInsert():
@@ -86,6 +86,17 @@ def hello(context, arg):
 
     aa.idaa = 1
     aa.delete()  
+    
+    aa.limit(5, 5)
+    for aa in aa.iterate(): # while aa.next():
+        print "%s : %s" % (aa.idaa , aa.idc)
+
+    print '---'
+    aa.limit(0, 5)
+    for aa in aa.iterate(): # while aa.next():
+        print "%s : %s" % (aa.idaa , aa.idc)
+    print '---'
+    aa.limit(3, 0)
     for aa in aa.iterate(): # while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)
         

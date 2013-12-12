@@ -357,8 +357,7 @@ final class MySQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	DBPKInfo getPKInfo(Connection conn, Table t)
-			throws CelestaException {
+	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -380,5 +379,26 @@ final class MySQLAdaptor extends DBAdaptor {
 	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	String getLimitedSQL(Table t, String whereClause, String orderBy,
+			long offset, long rowCount) {
+		if (offset == 0 && rowCount == 0)
+			throw new IllegalArgumentException();
+		String sql;
+		if (offset == 0)
+			sql = getSelectFromOrderBy(t, whereClause, orderBy)
+					+ String.format(" limit %d", rowCount);
+		else if (rowCount == 0)
+			// Маразм? Но это ровно то, что написано в
+			// http://dev.mysql.com/doc/refman/5.7/en/select.html
+			sql = getSelectFromOrderBy(t, whereClause, orderBy)
+					+ String.format(" limit %d,18446744073709551615", offset);
+		else {
+			sql = getSelectFromOrderBy(t, whereClause, orderBy)
+					+ String.format(" limit %d,%d", offset, rowCount);
+		}
+		return sql;
 	}
 }

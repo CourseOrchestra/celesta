@@ -348,16 +348,15 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя JDBC
 	 */
-	@SuppressWarnings("unchecked")
 	final void fillSetQueryParameters(Map<String, AbstractFilter> filters,
 			PreparedStatement result) throws CelestaException {
 		int i = 1;
 		for (AbstractFilter f : filters.values()) {
 			if (f instanceof SingleValue) {
 				setParam(result, i++, ((SingleValue) f).getValue());
-			} else if (f instanceof Range<?>) {
-				setParam(result, i++, ((Range<Object>) f).getValueFrom());
-				setParam(result, i++, ((Range<Object>) f).getValueTo());
+			} else if (f instanceof Range) {
+				setParam(result, i++, ((Range) f).getValueFrom());
+				setParam(result, i++, ((Range) f).getValueTo());
 			}
 			// Пока что фильтры параметров не требуют
 			// else if (f instanceof Filter)
@@ -573,22 +572,30 @@ public abstract class DBAdaptor {
 	 *            Фильтры на таблице.
 	 * @param orderBy
 	 *            Порядок сортировки.
-	 * @param limit
-	 *            Количество строк для пропуска и для возврата (limit-фильтр).
+	 * @param offset
+	 *            Количество строк для пропуска
+	 * @param rowCount
+	 *            Количество строк для возврата (limit-фильтр).
 	 * @throws CelestaException
 	 *             Ошибка БД или некорректный фильтр.
 	 */
+	// CHECKSTYLE:OFF 6 parameters
 	public final PreparedStatement getRecordSetStatement(Connection conn,
 			Table t, Map<String, AbstractFilter> filters, String orderBy,
-			Range<Long> limit) throws CelestaException {
-
+			long offset, long rowCount) throws CelestaException {
+		// CHECKSTYLE:ON
+		String sql;
 		// Готовим условие where
 		String whereClause = getWhereClause(t, filters);
 
-		// Соединяем полученные компоненты в стандартный запрос
-		// SELECT..FROM..WHERE..ORDER BY
-		String sql = getSelectFromOrderBy(t, whereClause, orderBy);
-
+		if (offset == 0 && rowCount == 0) {
+			// Запрос не лимитированный -- одинаков для всех СУБД
+			// Соединяем полученные компоненты в стандартный запрос
+			// SELECT..FROM..WHERE..ORDER BY
+			sql = getSelectFromOrderBy(t, whereClause, orderBy);
+		} else {
+			sql = getLimitedSQL(t, whereClause, orderBy, offset, rowCount);
+		}
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
 			// А теперь заполняем параметры
@@ -598,6 +605,9 @@ public abstract class DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 	}
+
+	abstract String getLimitedSQL(Table t, String whereClause, String orderBy,
+			long offset, long rowCount);
 
 	/**
 	 * Возвращает наименование типа столбца, соответствующее базе данных.

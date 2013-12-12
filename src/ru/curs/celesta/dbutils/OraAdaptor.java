@@ -969,10 +969,9 @@ final class OraAdaptor extends DBAdaptor {
 						m.find();
 						i.setRefGrainName(m.group(1));
 						i.setRefTableName(m.group(2));
-						i.setUpdateRule(getUpdateBehaviour(conn,
-								tableName, fkName));
-						i.setDeleteRule(getFKRule(rs
-								.getString("DELETE_RULE")));
+						i.setUpdateRule(getUpdateBehaviour(conn, tableName,
+								fkName));
+						i.setDeleteRule(getFKRule(rs.getString("DELETE_RULE")));
 					}
 					i.getColumnNames().add(rs.getString(COLUMN_NAME));
 				}
@@ -1101,5 +1100,33 @@ final class OraAdaptor extends DBAdaptor {
 		sqlQueue.add(sql);
 		sql = String.format("drop trigger \"csc_%s\"", fkName);
 		sqlQueue.add(sql);
+	}
+
+	@Override
+	String getLimitedSQL(Table t, String whereClause, String orderBy,
+			long offset, long rowCount) {
+		if (offset == 0 && rowCount == 0)
+			throw new IllegalArgumentException();
+		String sql;
+		if (offset == 0) {
+			// No offset -- simpler query
+			sql = String.format(
+					"with a as (%s) select a.* from a where rownum <= %d",
+					getSelectFromOrderBy(t, whereClause, orderBy), rowCount);
+		} else if (rowCount == 0) {
+			// No rowCount -- simpler query
+			sql = String.format(
+					"with a as (%s) select * from (select a.*, ROWNUM rnum "
+							+ "from a) where rnum >= %d order by rnum",
+					getSelectFromOrderBy(t, whereClause, orderBy), offset + 1L);
+
+		} else {
+			sql = String
+					.format("with a as (%s) select * from (select a.*, ROWNUM rnum "
+							+ "from a where rownum <= %d) where rnum >= %d order by rnum",
+							getSelectFromOrderBy(t, whereClause, orderBy),
+							offset + rowCount, offset + 1L);
+		}
+		return sql;
 	}
 }

@@ -737,8 +737,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	DBPKInfo getPKInfo(Connection conn, Table t)
-			throws CelestaException {
+	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
 
 		DBPKInfo result = new DBPKInfo();
 		try {
@@ -859,10 +858,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 						i.setTableName(rs.getString("FK_TABLE_NAME"));
 						i.setRefGrainName(rs.getString("REF_GRAIN"));
 						i.setRefTableName(rs.getString("REF_TABLE_NAME"));
-						i.setUpdateRule(getFKRule(rs
-								.getString("UPDATE_RULE")));
-						i.setDeleteRule(getFKRule(rs
-								.getString("DELETE_RULE")));
+						i.setUpdateRule(getFKRule(rs.getString("UPDATE_RULE")));
+						i.setDeleteRule(getFKRule(rs.getString("DELETE_RULE")));
 					}
 					i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
 				}
@@ -873,5 +870,38 @@ final class MSSQLAdaptor extends DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 		return result;
+	}
+
+	@Override
+	String getLimitedSQL(Table t, String whereClause, String orderBy,
+			long offset, long rowCount) {
+		if (offset == 0 && rowCount == 0)
+			throw new IllegalArgumentException();
+		String sql;
+		String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
+		String rowFilter;
+		if (offset == 0) {
+			// Запрос только с ограничением числа записей -- применяем MS SQL
+			// Server TOP-конструкцию.
+			sql = String.format("select top %d %s from %s.%s", rowCount,
+					getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
+					t.getName())
+					+ sqlwhere + " order by " + orderBy;
+			return sql;
+			// Иначе -- запрос с пропуском начальных записей -- применяем
+			// ROW_NUMBER
+		} else if (rowCount == 0) {
+			rowFilter = String.format(">= %d", offset + 1L);
+		} else {
+			rowFilter = String.format("between %d and %d", offset + 1L, offset
+					+ rowCount);
+		}
+		sql = String
+				.format("with a as "
+						+ "(select ROW_NUMBER() OVER (ORDER BY %s) as [limit_row_number], %s from %s.%s %s) "
+						+ " select * from a where [limit_row_number] %s",
+						orderBy, getTableFieldsListExceptBLOBs(t), t.getGrain()
+								.getName(), t.getName(), sqlwhere, rowFilter);
+		return sql;
 	}
 }

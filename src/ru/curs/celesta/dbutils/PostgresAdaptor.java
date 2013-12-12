@@ -397,8 +397,7 @@ final class PostgresAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	DBPKInfo getPKInfo(Connection conn, Table t)
-			throws CelestaException {
+	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -420,6 +419,25 @@ final class PostgresAdaptor extends DBAdaptor {
 	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	String getLimitedSQL(Table t, String whereClause, String orderBy,
+			long offset, long rowCount) {
+		if (offset == 0 && rowCount == 0)
+			throw new IllegalArgumentException();
+		String sql;
+		if (offset == 0)
+			sql = getSelectFromOrderBy(t, whereClause, orderBy)
+					+ String.format(" limit %d", rowCount);
+		else if (rowCount == 0)
+			sql = getSelectFromOrderBy(t, whereClause, orderBy)
+					+ String.format(" limit all offset %d", offset);
+		else {
+			sql = getSelectFromOrderBy(t, whereClause, orderBy)
+					+ String.format(" limit %d offset %d", offset, rowCount);
+		}
+		return sql;
 	}
 
 }

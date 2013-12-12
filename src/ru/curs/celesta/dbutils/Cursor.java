@@ -59,7 +59,8 @@ public abstract class Cursor {
 	// Поля фильтров и сортировок
 	private Map<String, AbstractFilter> filters = new HashMap<>();
 	private String orderBy = null;
-	private Range<Long> limit = new Range<Long>(0L, 0L);
+	private long offset = 0;
+	private long rowCount = 0;
 
 	public Cursor(CallContext context) throws CelestaException {
 		if (context.getConn() == null)
@@ -133,7 +134,7 @@ public abstract class Cursor {
 
 		if (set == null)
 			set = db.getRecordSetStatement(conn, meta(), filters, getOrderBy(),
-					limit);
+					offset, rowCount);
 		boolean result = false;
 		try {
 			if (cursor != null)
@@ -635,7 +636,7 @@ public abstract class Cursor {
 	public final void setRange(String name, Object valueFrom, Object valueTo)
 			throws CelestaException {
 		validateColumName(name);
-		filters.put(name, new Range<Object>(valueFrom, valueTo));
+		filters.put(name, new Range(valueFrom, valueTo));
 		closeSet();
 	}
 
@@ -659,17 +660,24 @@ public abstract class Cursor {
 	/**
 	 * Устанавливает фильтр на диапазон возвращаемых курсором записей.
 	 * 
-	 * @param skip
+	 * @param offset
 	 *            Количество записей, которое необходимо пропустить (0 -
 	 *            начинать с начала).
-	 * @param count
+	 * @param rowCount
 	 *            Максимальное количество записей, которое необходимо вернуть (0
 	 *            - вернуть все записи).
 	 * @throws CelestaException
 	 *             ошибка БД.
 	 */
-	public final void limit(long skip, long count) throws CelestaException {
-		limit = new Range<Long>(skip, count);
+	public final void limit(long offset, long rowCount) throws CelestaException {
+		if (offset < 0)
+			throw new CelestaException("Negative offset (%d) in limit(...) call",
+					offset);
+		if (rowCount < 0)
+			throw new CelestaException(
+					"Negative rowCount (%d) in limit(...) call", rowCount);
+		this.offset = offset;
+		this.rowCount = rowCount;
 		closeSet();
 	}
 
