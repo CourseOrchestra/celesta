@@ -33,15 +33,12 @@ class SingleValue extends AbstractFilter {
 /**
  * Фильтр в виде диапазона значений от..до.
  * 
- * @param <T>
- *            тип значений.
- * 
  */
-class Range<T> extends AbstractFilter {
-	private final T valueFrom;
-	private final T valueTo;
+class Range extends AbstractFilter {
+	private final Object valueFrom;
+	private final Object valueTo;
 
-	public Range(T valueFrom, T valueTo) {
+	public Range(Object valueFrom, Object valueTo) {
 		this.valueFrom = valueFrom;
 		this.valueTo = valueTo;
 	}
@@ -52,11 +49,11 @@ class Range<T> extends AbstractFilter {
 				.format("%s..%s", valueFrom.toString(), valueTo.toString());
 	}
 
-	public T getValueFrom() {
+	public Object getValueFrom() {
 		return valueFrom;
 	}
 
-	public T getValueTo() {
+	public Object getValueTo() {
 		return valueTo;
 	}
 }
