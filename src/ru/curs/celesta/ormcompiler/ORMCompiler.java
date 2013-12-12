@@ -293,7 +293,7 @@ public final class ORMCompiler {
 					c.getName()));
 		else if (c instanceof StringColumn)
 			sb.append(String.format(
-					"None if self.%s == None else str(self.%s)", c.getName(),
+					"None if self.%s == None else unicode(self.%s)", c.getName(),
 					c.getName()));
 		else {
 			sb.append(String.format("self.%s", c.getName()));
