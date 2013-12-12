@@ -17,11 +17,11 @@ import ru.curs.celesta.syscursors.UserRolesCursor;
 final class PermissionManager {
 
 	/**
-	 * Имя роли, обладающей правами на чтение всех таблиц.
+	 * Имя роли, обладающей правами на редактирование всех таблиц.
 	 */
 	public static final String EDITOR = "editor";
 	/**
-	 * Имя роли, обладающей правами на редактирование всех таблиц.
+	 * Имя роли, обладающей правами на чтение всех таблиц.
 	 */
 	public static final String READER = "reader";
 	/**
