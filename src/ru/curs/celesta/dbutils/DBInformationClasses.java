@@ -261,8 +261,8 @@ final class DBFKInfo {
 	private String name;
 	private String refGrainName;
 	private String refTableName;
-	private FKRule deleteBehaviour = FKRule.NO_ACTION;
-	private FKRule updateBehaviour = FKRule.NO_ACTION;
+	private FKRule deleteRule = FKRule.NO_ACTION;
+	private FKRule updateRule = FKRule.NO_ACTION;
 	private final List<String> columnNames = new LinkedList<>();
 
 	public DBFKInfo(String name) {
@@ -301,20 +301,20 @@ final class DBFKInfo {
 		this.refGrainName = refGrainName;
 	}
 
-	FKRule getDeleteBehaviour() {
-		return deleteBehaviour;
+	FKRule getDeleteRule() {
+		return deleteRule;
 	}
 
-	void setDeleteBehaviour(FKRule deleteBehaviour) {
-		this.deleteBehaviour = deleteBehaviour;
+	void setDeleteRule(FKRule deleteBehaviour) {
+		this.deleteRule = deleteBehaviour;
 	}
 
-	FKRule getUpdateBehaviour() {
-		return updateBehaviour;
+	FKRule getUpdateRule() {
+		return updateRule;
 	}
 
-	void setUpdateBehaviour(FKRule updateBehaviour) {
-		this.updateBehaviour = updateBehaviour;
+	void setUpdateRule(FKRule updateBehaviour) {
+		this.updateRule = updateBehaviour;
 	}
 
 	public boolean reflects(ForeignKey fk) {
@@ -332,6 +332,10 @@ final class DBFKInfo {
 			if (!i1.next().equals(i2.next()))
 				return false;
 		}
+		if (!fk.getDeleteRule().equals(deleteRule))
+			return false;
+		if (!fk.getUpdateRule().equals(updateRule))
+			return false;
 		return true;
 	}
 

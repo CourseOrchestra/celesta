@@ -969,9 +969,9 @@ final class OraAdaptor extends DBAdaptor {
 						m.find();
 						i.setRefGrainName(m.group(1));
 						i.setRefTableName(m.group(2));
-						i.setUpdateBehaviour(getUpdateBehaviour(conn,
+						i.setUpdateRule(getUpdateBehaviour(conn,
 								tableName, fkName));
-						i.setDeleteBehaviour(getFKRule(rs
+						i.setDeleteRule(getFKRule(rs
 								.getString("DELETE_RULE")));
 					}
 					i.getColumnNames().add(rs.getString(COLUMN_NAME));

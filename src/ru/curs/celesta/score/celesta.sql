@@ -27,7 +27,7 @@ create table userroles(
   userid nvarchar(250) not null,
   roleid nvarchar(16) not null,
   constraint pk_userroles primary key (userid, roleid),
-  constraint fk_userroles_roles foreign key (roleid) references roles(id)
+  constraint fk_userroles_roles foreign key (roleid) references roles(id) on update cascade
 );
 
 create table permissions(
@@ -39,7 +39,7 @@ create table permissions(
   m bit not null default 'FALSE',
   d bit not null default 'FALSE',
   constraint pk_permissions primary key (roleid, grainid, tablename), 
-  constraint fk_permissions_roles foreign key(roleid) references roles(id),
+  constraint fk_permissions_roles foreign key(roleid) references roles(id) on update cascade,
   constraint fk_permissions_tables foreign key(grainid, tablename) references tables(grainid, tablename)
 );
 

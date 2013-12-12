@@ -778,8 +778,8 @@ public abstract class AbstractAdaptorTest {
 
 			// System.out.println(Arrays.toString(actual));
 			assertTrue(Arrays.equals(expected, actual));
-			assertEquals(FKRule.CASCADE, info.getUpdateBehaviour());
-			assertEquals(FKRule.SET_NULL, info.getDeleteBehaviour());
+			assertEquals(FKRule.CASCADE, info.getUpdateRule());
+			assertEquals(FKRule.SET_NULL, info.getDeleteRule());
 
 			assertEquals("gtest", info.getRefGrainName());
 			assertEquals("refTo", info.getRefTableName());
