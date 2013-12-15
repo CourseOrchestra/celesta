@@ -44,7 +44,7 @@ public final class Celesta {
 			+ "one of 'initialize' methods instead.";
 	private static final String FILE_PROPERTIES = "celesta.properties";
 	private static final Pattern PROCNAME = Pattern
-			.compile("([A-Za-z_][A-Za-z_0-9]*)\\.([A-Za-z_][A-Za-z_0-9]*)\\.([A-Za-z_][A-Za-z_0-9]*)");
+			.compile("\\s*([A-Za-z][A-Za-z0-9]*)((\\.[A-Za-z_]\\w*)+)\\.([A-Za-z_]\\w*)\\s*");
 
 	private static Celesta theCelesta;
 	private final Score score;
@@ -175,10 +175,10 @@ public final class Celesta {
 			throws CelestaException {
 		Matcher m = PROCNAME.matcher(proc);
 
-		if (m.find()) {
+		if (m.matches()) {
 			String grainName = m.group(1);
 			String unitName = m.group(2);
-			String procName = m.group(3);
+			String procName = m.group(4);
 
 			try {
 				getScore().getGrain(grainName);
@@ -201,12 +201,12 @@ public final class Celesta {
 					interp.set(String.format("arg%d", i), param[i]);
 
 				try {
-					String line = String.format("from %s import %s as %s",
-							grainName, unitName, unitName);
+					String line = String.format("import %s%s", grainName,
+							unitName);
 					interp.exec(line);
-
-					PyObject pyObj = interp.eval(String.format("%s.%s(%s)",
-							unitName, procName, sb.toString()));
+					line = String.format("%s%s.%s(%s)", grainName, unitName,
+							procName, sb.toString());
+					PyObject pyObj = interp.eval(line);
 					return pyObj;
 				} catch (PyException e) {
 					String sqlErr = "";
@@ -219,8 +219,7 @@ public final class Celesta {
 						sqlErr = ". SQL error:" + e1.getMessage();
 					}
 					throw new CelestaException(String.format(
-							"Python error: %s:%s%s", e.type, e.value,
-							sqlErr));
+							"Python error: %s:%s%s", e.type, e.value, sqlErr));
 				}
 			} finally {
 				returnPythonInterpreter(interp);
@@ -229,7 +228,8 @@ public final class Celesta {
 
 		} else {
 			throw new CelestaException(
-					"Invalid procedure name: %s, should match pattern <grain>.<module>.<proc>.",
+					"Invalid procedure name: %s, should match pattern <grain>.(<module>.)...<proc>, "
+							+ "note that grain name should not contain underscores.",
 					proc);
 		}
 	}
