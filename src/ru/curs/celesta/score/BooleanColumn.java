@@ -72,4 +72,14 @@ public final class BooleanColumn extends Column {
 
 	}
 
+	@Override
+	public String getCelestaType() {
+		return "BIT";
+	}
+
+	@Override
+	public String getCelestaDefault() {
+		return defaultvalue == null ? null : ("'"
+				+ defaultvalue.toString().toUpperCase() + "'");
+	}
 }

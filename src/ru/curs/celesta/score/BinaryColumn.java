@@ -47,4 +47,14 @@ public final class BinaryColumn extends Column {
 			bw.write(defaultVal);
 		}
 	}
+
+	@Override
+	public String getCelestaType() {
+		return "IMAGE";
+	}
+
+	@Override
+	public String getCelestaDefault() {
+		return defaultvalue;
+	}
 }

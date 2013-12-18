@@ -106,4 +106,14 @@ public abstract class Column extends NamedElement {
 	 * Возвращает значение по умолчанию.
 	 */
 	public abstract Object getDefaultValue();
+
+	/**
+	 * Возвращает тип данных Celesta для колонки.
+	 */
+	public abstract String getCelestaType();
+
+	/**
+	 * DEFAULT-значение поля в языке CelestaSQL.
+	 */
+	public abstract String getCelestaDefault();
 }

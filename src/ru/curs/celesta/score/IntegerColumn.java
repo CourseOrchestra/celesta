@@ -71,4 +71,14 @@ public final class IntegerColumn extends Column {
 		if (identity)
 			bw.write(" IDENTITY");
 	}
+
+	@Override
+	public String getCelestaType() {
+		return "INT";
+	}
+
+	@Override
+	public String getCelestaDefault() {
+		return defaultvalue == null ? null : defaultvalue.toString();
+	}
 }

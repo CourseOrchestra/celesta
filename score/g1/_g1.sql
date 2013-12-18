@@ -13,16 +13,16 @@ create index aaidx on aa (idc, textvalue);
  * comment
  */
  
-/** описание таблицы */
+/** РѕРїРёСЃР°РЅРёРµ С‚Р°Р±Р»РёС†С‹ */
 create table a (
 ida int identity not null primary key,
-/** описание поля*/
+/** РѕРїРёСЃР°РЅРёРµ РїРѕР»СЏ*/
 descr nvarchar(2),
-parent int foreign key references a(ida), --ссылка на саму себя
-fff int foreign key references aa(idaa) --первая часть круговой ссылки
+parent int foreign key references a(ida), --СЃСЃС‹Р»РєР° РЅР° СЃР°РјСѓ СЃРµР±СЏ
+fff int foreign key references aa(idaa) --РїРµСЂРІР°СЏ С‡Р°СЃС‚СЊ РєСЂСѓРіРѕРІРѕР№ СЃСЃС‹Р»РєРё
 );
 
---alter table aa add constraint fk1 foreign key (idc) references a(ida); --вторая часть круговой ссылки
+--alter table aa add constraint fk1 foreign key (idc) references a(ida); --РІС‚РѕСЂР°СЏ С‡Р°СЃС‚СЊ РєСЂСѓРіРѕРІРѕР№ СЃСЃС‹Р»РєРё
 
  create table adresses (
  postalcode nvarchar(10) not null,

@@ -163,4 +163,14 @@ public final class StringColumn extends Column {
 			bw.write(quoteString(defaultVal));
 		}
 	}
+
+	@Override
+	public String getCelestaType() {
+		return "NVARCHAR";
+	}
+
+	@Override
+	public String getCelestaDefault() {
+		return defaultvalue == null ? null : quoteString(defaultvalue);
+	}
 }

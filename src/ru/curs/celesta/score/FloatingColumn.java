@@ -48,4 +48,14 @@ public final class FloatingColumn extends Column {
 		}
 	}
 
+	@Override
+	public String getCelestaType() {
+		return "REAL";
+	}
+
+	@Override
+	public String getCelestaDefault() {
+		return defaultvalue == null ? null : defaultvalue.toString();
+	}
+
 }

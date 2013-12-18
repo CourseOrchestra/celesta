@@ -1,15 +1,25 @@
+/**Celesta system grain. Not for modification.*/
 create grain celesta version '1.02';
 
+/**Active grains list.*/
 create table grains(
-  id nvarchar(16) not null primary key, --префикс (код) гранулы
-  version  nvarchar(max) not null, -- version tag гранулы
-  length int not null, -- длина creation-скрипта гранулы  в байтах (составляющая часть контрольной суммы)
-  checksum nvarchar(8) not null, --CRC32 creation-скрипта гранулы (составляющая часть контрольной суммы)
-  state int not null default 3, -- статус гранулы — см. далее
-  lastmodified datetime not null default getdate(), -- дата и время последнего обновления статуса гранулы
-  message nvarchar(max) not null default '' -- комментарий (например, сообщение об ошибке при последнем неудавшемся автообновлении)
+  /**grain prefix (id)*/
+  id nvarchar(16) not null primary key, 
+  /**grain version tag*/
+  version  nvarchar(max) not null,
+  /**grain creation script length in bytes*/
+  length int not null,
+  /**grain creation script CRC32 value*/
+  checksum nvarchar(8) not null,
+  /**grain status*/  
+  state int not null default 3,
+  /**date and time of last grain status update*/
+  lastmodified datetime not null default getdate(), 
+  /**comment (e. g. error message for the last failed auto-update)*/
+  message nvarchar(max) not null default '' 
 );
 
+/**Tables list.*/
 create table tables(
   grainid nvarchar(16) not null,
   tablename nvarchar(100) not null,
@@ -18,11 +28,13 @@ create table tables(
   constraint fk_tables_grains foreign key (grainid) references grains(id)
 );
 
+/**Roles list.*/
 create table roles(
   id nvarchar(16) not null primary key,
   description nvarchar(20)
 );
 
+/**Links users to their roles.*/
 create table userroles(
   userid nvarchar(250) not null,
   roleid nvarchar(16) not null,
@@ -30,6 +42,7 @@ create table userroles(
   constraint fk_userroles_roles foreign key (roleid) references roles(id) on update cascade
 );
 
+/**Security permissions for the roles.*/
 create table permissions(
   roleid nvarchar(16) not null,
   grainid nvarchar(16) not null,
@@ -43,6 +56,7 @@ create table permissions(
   constraint fk_permissions_tables foreign key(grainid, tablename) references tables(grainid, tablename)
 );
 
+/**Change-logging system setup.*/
 create table logsetup(
   grainid nvarchar(16) not null,
   tablename nvarchar(100) not null,
@@ -53,6 +67,7 @@ create table logsetup(
   constraint fk_logsetup_tables foreign key (grainid, tablename) references tables(grainid, tablename)
 );
 
+/**Changelog.*/
 create table log(
   entryno int identity not null primary key,
   entry_time datetime not null default getdate(),
@@ -68,6 +83,7 @@ create table log(
   constraint fk_log_tables foreign key(grainid, tablename) references tables(grainid, tablename)
 );
 
+/**This table emulates sequences functionality for MS SQL Server and MySQL.*/
 create table sequences(
   grainid nvarchar(16) not null,
   tablename nvarchar(100) not null,

@@ -111,4 +111,23 @@ public final class DateTimeColumn extends Column {
 		}
 	}
 
+	@Override
+	public String getCelestaType() {
+		return "DATETIME";
+	}
+
+	@Override
+	public String getCelestaDefault() {
+		if (isGetdate()) {
+			return "GETDATE()";
+		} else {
+			if (defaultvalue == null) {
+				return null;
+			} else {
+				DateFormat df = new SimpleDateFormat("yyyyMMdd");
+				return "'" + df.format(defaultvalue) + "'";
+			}
+		}
+	}
+
 }

@@ -84,7 +84,8 @@ abstract class NamedElement {
 			Matcher m = COMMENT.matcher(celestaDoc);
 			if (!m.matches())
 				throw new ParseException(
-						"Celestadoc should match pattern /**...*/.");
+						"Celestadoc should match pattern /**...*/, was "
+								+ celestaDoc);
 			this.celestaDoc = m.group(1);
 		}
 	}

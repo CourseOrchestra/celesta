@@ -12,4 +12,5 @@ primary key (idc)
 --, test2 int not null
 );
 
+/**описание индекса*/
 create index idxc on c (descr, aaa);
