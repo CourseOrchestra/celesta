@@ -8,6 +8,10 @@ import java.io.IOException;
  * 
  */
 public final class StringColumn extends Column {
+	/**
+	 * Celesta-тип данных колонки.
+	 */
+	public static final String CELESTA_TYPE = "NVARCHAR";
 
 	private static final String INVALID_QUOTED_FORMAT = "Invalid quoted string format.";
 
@@ -166,7 +170,7 @@ public final class StringColumn extends Column {
 
 	@Override
 	public String getCelestaType() {
-		return "NVARCHAR";
+		return CELESTA_TYPE;
 	}
 
 	@Override

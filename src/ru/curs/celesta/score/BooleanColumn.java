@@ -8,6 +8,10 @@ import java.io.IOException;
  * 
  */
 public final class BooleanColumn extends Column {
+	/**
+	 * Celesta-тип данных колонки.
+	 */
+	public static final String CELESTA_TYPE = "BIT";
 	private Boolean defaultvalue;
 
 	public BooleanColumn(Table table, String name) throws ParseException {
@@ -74,7 +78,7 @@ public final class BooleanColumn extends Column {
 
 	@Override
 	public String getCelestaType() {
-		return "BIT";
+		return CELESTA_TYPE;
 	}
 
 	@Override

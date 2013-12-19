@@ -9,6 +9,10 @@ import java.io.IOException;
  */
 public final class BinaryColumn extends Column {
 
+	/**
+	 * Celesta-тип данных колонки.
+	 */
+	public static final String CELESTA_TYPE = "IMAGE";
 	private String defaultvalue;
 
 	public BinaryColumn(Table table, String name) throws ParseException {
@@ -50,7 +54,7 @@ public final class BinaryColumn extends Column {
 
 	@Override
 	public String getCelestaType() {
-		return "IMAGE";
+		return CELESTA_TYPE;
 	}
 
 	@Override

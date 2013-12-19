@@ -15,6 +15,11 @@ import java.util.regex.Pattern;
  */
 public final class DateTimeColumn extends Column {
 
+	/**
+	 * Celesta-тип данных колонки.
+	 */
+	public static final String CELESTA_TYPE = "DATETIME";
+
 	private static final Pattern P = Pattern
 			.compile("'(\\d\\d\\d\\d)([01]\\d)([0123]\\d)'");
 
@@ -113,7 +118,7 @@ public final class DateTimeColumn extends Column {
 
 	@Override
 	public String getCelestaType() {
-		return "DATETIME";
+		return CELESTA_TYPE;
 	}
 
 	@Override

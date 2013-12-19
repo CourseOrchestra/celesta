@@ -29,13 +29,22 @@ public final class DBSchemaSync {
 			throw new Exception(
 					"There should be two arguments: score path and .dbs-file.");
 
-		File dbsFile = new File(args[1]);
-
-		System.out.println("parsing score...");
-		Score s = new Score(args[0]);
-
-		System.out.println("processing...");
-		Celesta2DBSchema.scoreToDBS(s, dbsFile);
-		System.out.println("done.");
+		if (args[0].trim().toLowerCase().endsWith(".dbs")) {
+			System.out.println("DBS-->SCORE");
+			File dbsFile = new File(args[0]);
+			System.out.println("parsing score...");
+			Score s = new Score(args[1]);
+			System.out.println("processing...");
+			DBSchema2Celesta.dBSToScore(dbsFile, s);
+			System.out.println("done.");
+		} else {
+			File dbsFile = new File(args[1]);
+			System.out.println("DBS-->SCORE");
+			System.out.println("parsing score...");
+			Score s = new Score(args[0]);
+			System.out.println("processing...");
+			Celesta2DBSchema.scoreToDBS(s, dbsFile);
+			System.out.println("done.");
+		}
 	}
 }

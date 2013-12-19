@@ -8,6 +8,10 @@ import java.io.IOException;
  * 
  */
 public final class FloatingColumn extends Column {
+	/**
+	 * Celesta-тип данных колонки.
+	 */
+	public static final String CELESTA_TYPE = "REAL";
 
 	private Double defaultvalue;
 
@@ -50,7 +54,7 @@ public final class FloatingColumn extends Column {
 
 	@Override
 	public String getCelestaType() {
-		return "REAL";
+		return CELESTA_TYPE;
 	}
 
 	@Override

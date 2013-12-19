@@ -8,6 +8,10 @@ import java.io.IOException;
  * 
  */
 public final class IntegerColumn extends Column {
+	/**
+	 * Celesta-тип данных колонки.
+	 */
+	public static final String CELESTA_TYPE = "INT";
 	private Integer defaultvalue;
 	private boolean identity;
 
@@ -74,7 +78,7 @@ public final class IntegerColumn extends Column {
 
 	@Override
 	public String getCelestaType() {
-		return "INT";
+		return CELESTA_TYPE;
 	}
 
 	@Override

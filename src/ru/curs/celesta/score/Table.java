@@ -260,7 +260,16 @@ public final class Table extends NamedElement {
 		return pkConstraintName == null ? "pk_" + getName() : pkConstraintName;
 	}
 
-	void setPkConstraintName(String pkConstraintName) throws ParseException {
+	/**
+	 * Устанавливает имя ограничения PK.
+	 * 
+	 * @param pkConstraintName
+	 *            имя
+	 * @throws ParseException
+	 *             неверное имя
+	 */
+	public void setPkConstraintName(String pkConstraintName)
+			throws ParseException {
 		if (pkConstraintName != null
 				&& pkConstraintName.length() > MAX_CONSTRAINT_NAME)
 			throw new ParseException(String.format(
@@ -283,7 +292,6 @@ public final class Table extends NamedElement {
 		Grain.writeCelestaDoc(this, bw);
 		bw.write(String.format("CREATE TABLE %s(", getName()));
 		bw.newLine();
-		boolean singlePK = pk.size() == 1;
 		boolean comma = false;
 		for (Column c : getColumns().values()) {
 			if (comma) {
@@ -291,23 +299,26 @@ public final class Table extends NamedElement {
 				bw.newLine();
 			}
 			c.save(bw);
-			if (singlePK && pk.contains(c))
-				bw.write(" PRIMARY KEY");
 			comma = true;
 		}
+
+		if (comma)
+			bw.write(",");
+
 		bw.newLine();
-		if (!singlePK) {
-			bw.write("  PRIMARY KEY (");
-			comma = false;
-			for (Column c : getPrimaryKey().values()) {
-				if (comma)
-					bw.write(", ");
-				bw.write(c.getName());
-				comma = true;
-			}
-			bw.write(");");
-			bw.newLine();
+		bw.write("  CONSTRAINT ");
+		bw.write(getPkConstraintName());
+		bw.write(" PRIMARY KEY (");
+		comma = false;
+		for (Column c : getPrimaryKey().values()) {
+			if (comma)
+				bw.write(", ");
+			bw.write(c.getName());
+			comma = true;
 		}
+		bw.write(")");
+		bw.newLine();
+
 		bw.write(");");
 		bw.newLine();
 		bw.newLine();

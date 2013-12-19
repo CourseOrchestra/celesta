@@ -47,7 +47,15 @@ public class ForeignKey {
 				referencedTable.getName());
 	}
 
-	void setDeleteRule(FKRule deleteBehaviour) throws ParseException {
+	/**
+	 * Устанавливает правило на удаление.
+	 * 
+	 * @param deleteBehaviour
+	 *            Правило на удаление.
+	 * @throws ParseException
+	 *             При попытке модификации системной гранулы.
+	 */
+	public void setDeleteRule(FKRule deleteBehaviour) throws ParseException {
 		if (deleteBehaviour == null)
 			throw new IllegalArgumentException();
 		if (deleteBehaviour == FKRule.SET_NULL)
@@ -56,7 +64,15 @@ public class ForeignKey {
 		this.deleteRule = deleteBehaviour;
 	}
 
-	void setUpdateRule(FKRule updateBehaviour) throws ParseException {
+	/**
+	 * Устанавливает правило на обновление.
+	 * 
+	 * @param updateBehaviour
+	 *            Правило на обновление.
+	 * @throws ParseException
+	 *             При попытке модификации системной гранулы.
+	 */
+	public void setUpdateRule(FKRule updateBehaviour) throws ParseException {
 		if (updateBehaviour == null)
 			throw new IllegalArgumentException();
 		if (updateBehaviour == FKRule.SET_NULL)
@@ -360,6 +376,10 @@ public class ForeignKey {
 			comma = true;
 		}
 		bw.write(") REFERENCES ");
+
+		bw.write(referencedTable.getGrain().getName());
+		bw.write(".");
+
 		bw.write(referencedTable.getName());
 		bw.write("(");
 		comma = false;
