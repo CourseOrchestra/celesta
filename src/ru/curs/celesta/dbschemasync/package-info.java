@@ -1,4 +1,4 @@
 /**
  * Содержит утилиту синхронизации с проектами DBSchema.
  */
-package dbschemasync;
+package ru.curs.celesta.dbschemasync;

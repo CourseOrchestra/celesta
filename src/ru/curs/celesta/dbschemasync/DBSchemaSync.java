@@ -1,4 +1,4 @@
-package dbschemasync;
+package ru.curs.celesta.dbschemasync;
 
 import java.io.File;
 
@@ -39,7 +39,7 @@ public final class DBSchemaSync {
 			System.out.println("done.");
 		} else {
 			File dbsFile = new File(args[1]);
-			System.out.println("DBS-->SCORE");
+			System.out.println("SCORE-->DBS");
 			System.out.println("parsing score...");
 			Score s = new Score(args[0]);
 			System.out.println("processing...");

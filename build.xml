@@ -19,7 +19,9 @@
 	<target name="jar" depends="compile">
 		<echo>Building the jar file</echo>
 		<jar destfile="build/celesta.jar" filesetmanifest="merge">
-			<fileset dir="build/classes" />
+			<fileset dir="build/classes">
+				<exclude name="**/dbschemasync/*" />
+			</fileset>
 			<zipfileset src="lib/sqljdbc4.jar" excludes="META-INF/MSFTSIG.*" />
 			<zipfileset src="lib/ojdbc6.jar" />
 			<zipfileset src="lib/jython.jar" />
@@ -33,6 +35,25 @@
 				<attribute name="Implementation-Version" value="" />
 				<attribute name="Implementation-Vendor" value="www.curs.ru" />
 
+			</manifest>
+		</jar>
+
+		<jar destfile="build/schemasync.jar">
+			<fileset dir="build/classes">
+				<exclude name="**/dbutils/*" />
+				<exclude name="**/ormcompiler/*" />
+				<exclude name="**/showcase/*" />
+				<exclude name="**/syscursors/*" />
+			</fileset>
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Main-Class" value="ru.curs.celesta.dbschemasync.DBSchemaSync" />
+				<attribute name="Specification-Title" value="Celesta" />
+				<attribute name="Specification-Version" value="" />
+				<attribute name="Specification-Vendor" value="www.curs.ru" />
+				<attribute name="Implementation-Title" value="Celesta" />
+				<attribute name="Implementation-Version" value="" />
+				<attribute name="Implementation-Vendor" value="www.curs.ru" />
 			</manifest>
 		</jar>
 	</target>
