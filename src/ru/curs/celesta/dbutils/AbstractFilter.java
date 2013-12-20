@@ -1,5 +1,8 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Column;
 
@@ -62,6 +65,9 @@ class Range extends AbstractFilter {
  * Сложный фильтр.
  */
 class Filter extends AbstractFilter {
+	private static final Pattern LIKETERM = Pattern
+			.compile("(\\*?)(([^*]|\\*+[^*])+)(\\**)");
+
 	private final String value;
 
 	public Filter(String value) {
@@ -79,6 +85,10 @@ class Filter extends AbstractFilter {
 		else if ("!null".equalsIgnoreCase(value))
 			return String.format("not (%s is null)", c.getQuotedName());
 
-		throw new CelestaException("Invalid filter: %s.", value);
+		Matcher m = LIKETERM.matcher(value);
+		m.matches();
+		return String.format("%s like '%s%s%s'", c.getQuotedName(), m.group(1)
+				.isEmpty() ? "" : "%", m.group(2), m.group(4).isEmpty() ? ""
+				: "%");
 	}
 }
