@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -319,16 +320,30 @@ final class MySQLAdaptor extends DBAdaptor {
 	@Override
 	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format("delete " + tableTemplate() + " where %s;",
-				t.getGrain().getName(), t.getName(), getRecordWhereClause(t));
+		String sql = String.format("delete from " + tableTemplate()
+				+ " where %s;", t.getGrain().getName(), t.getName(),
+				getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters) throws CelestaException {
-		// TODO Auto-generated method stub
-		return null;
+		// Готовим условие where
+		String whereClause = getWhereClause(t, filters);
+
+		// Готовим запрос на удаление
+		String sql = String.format("delete from " + tableTemplate() + " %s;", t
+				.getGrain().getName(), t.getName(),
+				whereClause.length() > 0 ? "where " + whereClause : "");
+		try {
+			PreparedStatement result = conn.prepareStatement(sql);
+			// А теперь заполняем параметры
+			fillSetQueryParameters(filters, result);
+			return result;
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -415,8 +430,56 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
-		// TODO Auto-generated method stub
-		return null;
+		// Full foreign key information query
+		String sql = String
+				.format("SELECT RC.CONSTRAINT_SCHEMA AS 'GRAIN'"
+						+ "   , KCU1.CONSTRAINT_NAME AS 'FK_CONSTRAINT_NAME'"
+						+ "   , KCU1.TABLE_NAME AS 'FK_TABLE_NAME'"
+						+ "   , KCU1.COLUMN_NAME AS 'FK_COLUMN_NAME'"
+						+ "   , KCU2.TABLE_SCHEMA AS 'REF_GRAIN'"
+						+ "   , KCU2.TABLE_NAME AS 'REF_TABLE_NAME'"
+						+ "   , RC.UPDATE_RULE, RC.DELETE_RULE "
+						+ "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS RC "
+						+ "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE KCU1 "
+						+ "   ON  KCU1.CONSTRAINT_CATALOG = RC.CONSTRAINT_CATALOG"
+						+ "   AND KCU1.CONSTRAINT_SCHEMA  = RC.CONSTRAINT_SCHEMA"
+						+ "   AND KCU1.CONSTRAINT_NAME    = RC.CONSTRAINT_NAME "
+						+ "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE KCU2"
+						+ "   ON  KCU2.CONSTRAINT_CATALOG = RC.UNIQUE_CONSTRAINT_CATALOG"
+						+ "   AND KCU2.CONSTRAINT_SCHEMA  = RC.UNIQUE_CONSTRAINT_SCHEMA"
+						+ "   AND KCU2.CONSTRAINT_NAME    = RC.UNIQUE_CONSTRAINT_NAME"
+						+ "   AND KCU2.ORDINAL_POSITION   = KCU1.ORDINAL_POSITION "
+						+ "   AND KCU2.TABLE_NAME =  RC.REFERENCED_TABLE_NAME "
+						+ "WHERE RC.CONSTRAINT_SCHEMA = '%s' "
+						+ "ORDER BY KCU1.CONSTRAINT_NAME, KCU1.ORDINAL_POSITION",
+						g.getName());
+		System.out.println(sql);
+		List<DBFKInfo> result = new LinkedList<>();
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				DBFKInfo i = null;
+				ResultSet rs = stmt.executeQuery(sql);
+				while (rs.next()) {
+					String fkName = rs.getString("FK_CONSTRAINT_NAME");
+					if (i == null || !i.getName().equals(fkName)) {
+						i = new DBFKInfo(fkName);
+						result.add(i);
+						i.setTableName(rs.getString("FK_TABLE_NAME"));
+						i.setRefGrainName(rs.getString("REF_GRAIN"));
+						i.setRefTableName(rs.getString("REF_TABLE_NAME"));
+						i.setUpdateRule(getFKRule(rs.getString("UPDATE_RULE")));
+						i.setDeleteRule(getFKRule(rs.getString("DELETE_RULE")));
+					}
+					i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return result;
 	}
 
 	@Override
