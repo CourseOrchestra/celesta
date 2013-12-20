@@ -2,13 +2,17 @@ package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -99,7 +103,7 @@ final class MySQLAdaptor extends DBAdaptor {
 				// See
 				// http://stackoverflow.com/questions/332798/equivalent-of-varcharmax-in-mysql
 				String fieldType = String.format("%s(%s)", dbFieldType(),
-						ic.isMax() ? "21844" : ic.getLength());
+						ic.isMax() ? "4000" : ic.getLength());
 
 				return join(c.getQuotedName(), fieldType, nullable(c));
 			}
@@ -130,11 +134,15 @@ final class MySQLAdaptor extends DBAdaptor {
 
 			@Override
 			String getDefaultDefinition(Column c) {
-				BinaryColumn ic = (BinaryColumn) c;
+				// TODO: manage the fact that MySQL doesn't allow defaults on
+				// blobs
+
+				// BinaryColumn ic = (BinaryColumn) c;
 				String defaultStr = "";
-				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
-				}
+
+				// if (ic.getDefaultValue() != null) {
+				// defaultStr = DEFAULT + ic.getDefaultValue();
+				// }
 				return defaultStr;
 			}
 		});
@@ -181,8 +189,10 @@ final class MySQLAdaptor extends DBAdaptor {
 			String getDefaultDefinition(Column c) {
 				BooleanColumn ic = (BooleanColumn) c;
 				String defaultStr = "";
-				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
+				if (ic.getDefaultValue() == Boolean.TRUE) {
+					defaultStr = DEFAULT + "b'1'";
+				} else if (ic.getDefaultValue() == Boolean.FALSE) {
+					defaultStr = DEFAULT + "b'0'";
 				}
 				return defaultStr;
 			}
@@ -192,21 +202,49 @@ final class MySQLAdaptor extends DBAdaptor {
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
 			throws CelestaException {
-		// TODO Auto-generated method stub
-		return false;
+		String sql = String.format(
+				"select count(*) from information_schema.tables "
+						+ "where table_schema = '%s' and table_name = '%s'",
+				schema, name);
+		try {
+			Statement check = conn.createStatement();
+			ResultSet rs = check.executeQuery(sql);
+			try {
+				rs.next();
+				return rs.getInt(1) > 0;
+			} finally {
+				check.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
 	}
 
 	@Override
 	boolean userTablesExist(Connection conn) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		String sql = "select count(*) from information_schema.tables "
+				+ "where table_schema not in ('information_schema', 'performance_schema', 'mysql')";
+
+		Statement check = conn.createStatement();
+		ResultSet rs = check.executeQuery(sql);
+		try {
+			rs.next();
+			return rs.getInt(1) > 0;
+		} finally {
+			check.close();
+		}
 	}
 
 	@Override
-	void createSchemaIfNotExists(Connection conn, String string)
+	void createSchemaIfNotExists(Connection conn, String name)
 			throws SQLException {
-		// TODO Auto-generated method stub
-
+		String sql = String.format("create schema if not exists %s", name);
+		Statement stmt = conn.createStatement();
+		try {
+			stmt.executeUpdate(sql);
+		} finally {
+			stmt.close();
+		}
 	}
 
 	@Override
@@ -400,5 +438,55 @@ final class MySQLAdaptor extends DBAdaptor {
 					+ String.format(" limit %d,%d", offset, rowCount);
 		}
 		return sql;
+	}
+
+	@Override
+	public boolean isValidConnection(Connection conn, int timeout)
+			throws CelestaException {
+		boolean result = super.isValidConnection(conn, timeout);
+		if (result) {
+			try {
+				Statement stmt = conn.createStatement();
+				try {
+					ResultSet rs = stmt
+							.executeQuery("SELECT @@GLOBAL.sql_mode");
+					rs.next();
+					String val = rs.getString(1);
+					if (!val.contains("ANSI_QUOTES"))
+						throw new CelestaException(
+								"sql_mode variable for given MySQL database should contain ANSI_QUOTES, contains only %s.",
+								val);
+				} finally {
+					stmt.close();
+				}
+			} catch (SQLException e) {
+				result = false;
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public Set<String> getColumns(Connection conn, Table t)
+			throws CelestaException {
+		String sql = String
+				.format("select column_name from information_schema.columns where table_schema = '%s' and table_name = '%s'",
+						t.getGrain().getName(), t.getName());
+		Set<String> result = new LinkedHashSet<>();
+		try {
+			Statement check = conn.createStatement();
+			ResultSet rs = check.executeQuery(sql);
+			try {
+				while (rs.next()) {
+					result.add(rs.getString(1));
+				}
+			} finally {
+				check.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Error while submitting '%s': %s.", sql,
+					e.getMessage());
+		}
+		return result;
 	}
 }

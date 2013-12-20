@@ -25,6 +25,7 @@
 			<zipfileset src="lib/sqljdbc4.jar" excludes="META-INF/MSFTSIG.*" />
 			<zipfileset src="lib/ojdbc6.jar" />
 			<zipfileset src="lib/jython.jar" />
+			<zipfileset src="lib/mysql-connector-java-5.1.27-bin.jar" />
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Main-Class" value="ru.curs.celesta.Celesta" />

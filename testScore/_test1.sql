@@ -13,27 +13,29 @@ CREATE TABLE table1(
   e INT DEFAULT -112,
   f REAL,
   f1 INT DEFAULT 4,
-  f2 REAL DEFAULT 5.5
-  PRIMARY KEY (column1, c3, column2);
+  f2 REAL DEFAULT 5.5,
+  CONSTRAINT pk_table1 PRIMARY KEY (column1, c3, column2)
 );
 
 /**table2 celestadoc*/
 CREATE TABLE table2(
   /**описание первой колонки*/
-  column1 INT NOT NULL IDENTITY PRIMARY KEY,
+  column1 INT NOT NULL IDENTITY,
   /**описание второй колонки*/
   column2 DATETIME DEFAULT '20111231',
   column3 DATETIME NOT NULL DEFAULT GETDATE(),
   column4 IMAGE DEFAULT 0x22AB15FF,
-  column5 INT DEFAULT 11
+  column5 INT DEFAULT 11,
+  CONSTRAINT pk_table2 PRIMARY KEY (column1)
 );
 
 CREATE TABLE employees(
-  emp_id NVARCHAR(11) NOT NULL DEFAULT 'aaa' PRIMARY KEY,
+  emp_id NVARCHAR(11) NOT NULL DEFAULT 'aaa',
   emp_lname NVARCHAR(40) NOT NULL DEFAULT 'bbb',
   emp_fname NVARCHAR(MAX),
   emp_hire_date DATETIME DEFAULT GETDATE(),
-  emp_mgr NVARCHAR(30)
+  emp_mgr NVARCHAR(30),
+  CONSTRAINT pk_employees PRIMARY KEY (emp_id)
 );
 
 -- *** FOREIGN KEYS ***
