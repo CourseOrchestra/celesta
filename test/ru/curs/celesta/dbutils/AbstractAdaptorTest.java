@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.junit.After;
 import org.junit.Before;
@@ -213,18 +212,14 @@ public abstract class AbstractAdaptorTest {
 		Index i = grain.getIndices().get("idxTest");
 
 		dba.createIndex(conn, i);
-		Map<DBIndexInfo, TreeMap<Short, String>> indicesSet = dba.getIndices(
-				conn, t.getGrain());
-
-		// for (IndexInfo ii : indicesSet.keySet())
-		// System.out.println(ii.getIndexName());
-
+		Map<String, DBIndexInfo> indicesSet = dba
+				.getIndices(conn, t.getGrain());
 		assertNotNull(indicesSet);
 		assertEquals(1, indicesSet.size());
-		DBIndexInfo inf = indicesSet.keySet().iterator().next();
-		assertTrue(inf.reflects(indicesSet.get(inf).values(), i));
+		DBIndexInfo inf = indicesSet.get("idxTest");
+		assertTrue(inf.reflects(i));
 
-		dba.dropIndex(grain, new DBIndexInfo(t.getName(), i.getName()));
+		dba.dropIndex(grain, new DBIndexInfo(t.getName(), i.getName()), false);
 
 		indicesSet = dba.getIndices(conn, t.getGrain());
 		assertNotNull(indicesSet);
@@ -790,6 +785,12 @@ public abstract class AbstractAdaptorTest {
 			// (существовавший когда-то баг)
 			assertTrue(dba.getPKInfo(conn, t).reflects(t));
 			assertTrue(dba.getPKInfo(conn, t2).reflects(t2));
+			// Проверяем, что не отображаются "лишние" индексы (актуально для
+			// MySQL)
+			Map<String, DBIndexInfo> indicesSet = dba.getIndices(conn,
+					t.getGrain());
+			assertNotNull(indicesSet);
+			assertEquals(0, indicesSet.size());
 
 			dba.dropFK(conn, t.getGrain().getName(), t.getName(),
 					fk.getConstraintName());

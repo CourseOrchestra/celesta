@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
@@ -233,50 +231,6 @@ public abstract class DBAdaptor {
 			throw new CelestaException("creating %s.%s: %s", c.getParentTable()
 					.getName(), c.getName(), e.getMessage());
 		}
-	}
-
-	/**
-	 * Возвращает набор имён индексов, связанных с таблицами, лежащими в
-	 * указанной грануле.
-	 * 
-	 * @param conn
-	 *            Соединение с БД.
-	 * @param g
-	 *            Гранула, по таблицам которой следует просматривать индексы.
-	 * @throws CelestaException
-	 *             В случае сбоя связи с БД.
-	 */
-	public Map<DBIndexInfo, TreeMap<Short, String>> getIndices(Connection conn,
-			Grain g) throws CelestaException {
-		Map<DBIndexInfo, TreeMap<Short, String>> result = new HashMap<>();
-		try {
-			for (Table t : g.getTables().values()) {
-				DatabaseMetaData metaData = conn.getMetaData();
-				ResultSet rs = metaData.getIndexInfo(null, t.getGrain()
-						.getName(), t.getName(), false, false);
-				try {
-					while (rs.next()) {
-						String indName = rs.getString("INDEX_NAME");
-						if (indName != null && rs.getBoolean("NON_UNIQUE")) {
-							DBIndexInfo info = new DBIndexInfo(t.getName(),
-									indName);
-							TreeMap<Short, String> columns = result.get(info);
-							if (columns == null) {
-								columns = new TreeMap<>();
-								result.put(info, columns);
-							}
-							columns.put(rs.getShort("ORDINAL_POSITION"),
-									rs.getString(COLUMN_NAME));
-						}
-					}
-				} finally {
-					rs.close();
-				}
-			}
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-		return result;
 	}
 
 	/**
@@ -541,21 +495,25 @@ public abstract class DBAdaptor {
 	 * @param g
 	 *            Гранула
 	 * @param dBIndexInfo
-	 *            Массив из двух элементов: имя таблицы, имя индекса
+	 *            Информация об индексе
+	 * @param suppressError
+	 *            Гасить ошибку удаления индекса (актуально для MySQL, в которой
+	 *            не все индексы могут быть удалены прежде внешнего ключа).
 	 * @throws CelestaException
 	 *             Если что-то пошло не так.
 	 */
-	public final void dropIndex(Grain g, DBIndexInfo dBIndexInfo)
-			throws CelestaException {
+	public final void dropIndex(Grain g, DBIndexInfo dBIndexInfo,
+			boolean suppressError) throws CelestaException {
 		String sql = getDropIndexSQL(g, dBIndexInfo);
 		Connection conn = ConnectionPool.get();
 		try {
-			PreparedStatement stmt = conn.prepareStatement(sql);
-			stmt.execute();
+			Statement stmt = conn.createStatement();
+			stmt.executeUpdate(sql);
 			stmt.close();
 		} catch (SQLException e) {
-			throw new CelestaException("Cannot drop index '%s': %s ",
-					dBIndexInfo.getIndexName(), e.getMessage());
+			if (!suppressError)
+				throw new CelestaException("Cannot drop index '%s': %s ",
+						dBIndexInfo.getIndexName(), e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -652,6 +610,28 @@ public abstract class DBAdaptor {
 		return sb.toString();
 	}
 
+	final String getSelectFromOrderBy(Table t, String whereClause,
+			String orderBy) {
+		String sqlfrom = String.format("select %s from " + tableTemplate(),
+				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
+				t.getName());
+
+		String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
+
+		return sqlfrom + sqlwhere + " order by " + orderBy;
+	}
+
+	final PreparedStatement getSetCountStatement(Connection conn, Table t,
+			Map<String, AbstractFilter> filters) throws CelestaException {
+		String whereClause = getWhereClause(t, filters);
+		String sql = String.format("select count(*) from " + tableTemplate()
+				+ ("".equals(whereClause) ? "" : " where " + whereClause), t
+				.getGrain().getName(), t.getName());
+		PreparedStatement result = prepareStatement(conn, sql);
+		fillSetQueryParameters(filters, result);
+		return result;
+	}
+
 	static PreparedStatement prepareStatement(Connection conn, String sql)
 			throws CelestaException {
 		try {
@@ -714,15 +694,9 @@ public abstract class DBAdaptor {
 		return null;
 	}
 
-	final String getSelectFromOrderBy(Table t, String whereClause,
-			String orderBy) {
-		String sqlfrom = String.format("select %s from " + tableTemplate(),
-				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
-				t.getName());
-
-		String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
-
-		return sqlfrom + sqlwhere + " order by " + orderBy;
+	static void padComma(StringBuilder insertList) {
+		if (insertList.length() > 0)
+			insertList.append(", ");
 	}
 
 	static String getRecordWhereClause(Table t) {
@@ -775,17 +749,6 @@ public abstract class DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
-		return result;
-	}
-
-	final PreparedStatement getSetCountStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters) throws CelestaException {
-		String whereClause = getWhereClause(t, filters);
-		String sql = String.format("select count(*) from " + tableTemplate()
-				+ ("".equals(whereClause) ? "" : " where " + whereClause), t
-				.getGrain().getName(), t.getName());
-		PreparedStatement result = prepareStatement(conn, sql);
-		fillSetQueryParameters(filters, result);
 		return result;
 	}
 
@@ -904,6 +867,21 @@ public abstract class DBAdaptor {
 
 	abstract List<DBFKInfo> getFKInfo(Connection conn, Grain g)
 			throws CelestaException;
+
+	/**
+	 * Возвращает набор индексов, связанных с таблицами, лежащими в указанной
+	 * грануле.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * @param g
+	 *            Гранула, по таблицам которой следует просматривать индексы.
+	 * @throws CelestaException
+	 *             В случае сбоя связи с БД.
+	 */
+	abstract Map<String, DBIndexInfo> getIndices(Connection conn, Grain g)
+			throws CelestaException;
+
 }
 
 /**

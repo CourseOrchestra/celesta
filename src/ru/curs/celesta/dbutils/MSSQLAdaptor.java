@@ -715,11 +715,6 @@ final class MSSQLAdaptor extends DBAdaptor {
 		}
 	}
 
-	private static void padComma(StringBuilder insertList) {
-		if (insertList.length() > 0)
-			insertList.append(", ");
-	}
-
 	@Override
 	void dropAutoIncrement(Connection conn, Table t) throws SQLException {
 		String sql = String
@@ -903,5 +898,55 @@ final class MSSQLAdaptor extends DBAdaptor {
 						orderBy, getTableFieldsListExceptBLOBs(t), t.getGrain()
 								.getName(), t.getName(), sqlwhere, rowFilter);
 		return sql;
+	}
+
+	@Override
+	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g)
+			throws CelestaException {
+		String sql = String
+				.format("select "
+						+ "    s.name as SchemaName,"
+						+ "    o.name as TableName,"
+						+ "    i.name as IndexName,"
+						+ "    co.name as ColumnName,"
+						+ "    ic.key_ordinal as ColumnOrder "
+						+ "from sys.indexes i "
+						+ "inner join sys.objects o on i.object_id = o.object_id "
+						+ "inner join sys.index_columns ic on ic.object_id = i.object_id "
+						+ "    and ic.index_id = i.index_id "
+						+ "inner join sys.columns co on co.object_id = i.object_id "
+						+ "    and co.column_id = ic.column_id "
+						+ "inner join sys.schemas s on o.schema_id = s.schema_id "
+						+ "where i.is_primary_key = 0 and o.[type] = 'U' "
+						+ " and s.name = '%s' "
+						+ " order by o.name,  i.[name], ic.key_ordinal;",
+						g.getName());
+
+		// System.out.println(sql);
+
+		Map<String, DBIndexInfo> result = new HashMap<>();
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				DBIndexInfo i = null;
+				ResultSet rs = stmt.executeQuery(sql);
+				while (rs.next()) {
+					String tabName = rs.getString("TableName");
+					String indName = rs.getString("IndexName");
+					if (i == null || !i.getTableName().equals(tabName)
+							|| !i.getIndexName().equals(indName)) {
+						i = new DBIndexInfo(tabName, indName);
+						result.put(indName, i);
+					}
+					i.getColumnNames().add(rs.getString("ColumnName"));
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Could not get indices information: %s",
+					e.getMessage());
+		}
+		return result;
 	}
 }

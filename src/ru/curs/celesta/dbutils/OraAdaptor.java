@@ -15,7 +15,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -373,56 +372,6 @@ final class OraAdaptor extends DBAdaptor {
 		String sql = String.format("delete " + tableTemplate() + " where %s", t
 				.getGrain().getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
-	}
-
-	@Override
-	public Map<DBIndexInfo, TreeMap<Short, String>> getIndices(Connection conn,
-			Grain g) throws CelestaException {
-		Map<DBIndexInfo, TreeMap<Short, String>> result = new HashMap<>();
-		try {
-			for (Table t : g.getTables().values())
-				// В Oracle имеет смысл спрашивать про индексы только лишь
-				// существующих таблиц.
-				// В противном случае возникнет ошибка.
-				if (tableExists(conn, g.getName(), t.getName())) {
-					String tableName = String.format(tableTemplate(),
-							g.getName(), t.getName());
-
-					DatabaseMetaData metaData = conn.getMetaData();
-					ResultSet rs = metaData.getIndexInfo(null, null, tableName,
-							false, false);
-					try {
-						while (rs.next()) {
-							String indName = rs.getString("INDEX_NAME");
-							// Условие NON_UNIQUE нужно, чтобы не попадали в
-							// него
-							// первичные ключи
-							if (indName != null && rs.getBoolean("NON_UNIQUE")) {
-								// Мы отрезаем "имягранулы_" от имени индекса.
-								String grainPrefix = g.getName() + "_";
-								if (indName.startsWith(grainPrefix))
-									indName = indName.substring(grainPrefix
-											.length());
-								DBIndexInfo info = new DBIndexInfo(t.getName(),
-										indName);
-								TreeMap<Short, String> columns = result
-										.get(info);
-								if (columns == null) {
-									columns = new TreeMap<>();
-									result.put(info, columns);
-								}
-								columns.put(rs.getShort("ORDINAL_POSITION"),
-										rs.getString(COLUMN_NAME));
-							}
-						}
-					} finally {
-						rs.close();
-					}
-				}
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-		return result;
 	}
 
 	@Override
@@ -945,7 +894,7 @@ final class OraAdaptor extends DBAdaptor {
 						+ "where cons.constraint_type = 'R' "
 						+ "and cons.owner = sys_context('userenv','session_user') "
 						+ "and ref.constraint_type = 'P' "
-						+ "and  cons.table_name like '%s_%%' order by cols.constraint_name, cols.position",
+						+ "and  cons.table_name like '%s@_%%' escape '@' order by cols.constraint_name, cols.position",
 						g.getName());
 
 		// System.out.println(sql);
@@ -1129,4 +1078,56 @@ final class OraAdaptor extends DBAdaptor {
 		}
 		return sql;
 	}
+
+	@Override
+	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g)
+			throws CelestaException {
+		String sql = String
+				.format("select ind.table_name TABLE_NAME, ind.index_name INDEX_NAME, cols.column_name COLUMN_NAME,"
+						+ " cols.column_position POSITION "
+						+ "from all_indexes ind "
+						+ "inner join all_ind_columns cols "
+						+ "on ind.owner = cols.index_owner "
+						+ "and ind.table_name = cols.table_name "
+						+ "and ind.index_name = cols.index_name "
+						+ "where ind.owner = sys_context('userenv','session_user') and ind.uniqueness = 'NONUNIQUE' "
+						+ "and ind.table_name like '%s@_%%' escape '@'"
+						+ "order by ind.table_name, ind.index_name, cols.column_position",
+						g.getName());
+
+		// System.out.println(sql);
+
+		Map<String, DBIndexInfo> result = new HashMap<>();
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				DBIndexInfo i = null;
+				ResultSet rs = stmt.executeQuery(sql);
+				while (rs.next()) {
+					String tabName = rs.getString("TABLE_NAME");
+					Matcher m = TABLE_PATTERN.matcher(tabName);
+					m.find();
+					tabName = m.group(2);
+					String indName = rs.getString("INDEX_NAME");
+					m = TABLE_PATTERN.matcher(indName);
+					m.find();
+					indName = m.group(2);
+
+					if (i == null || !i.getTableName().equals(tabName)
+							|| !i.getIndexName().equals(indName)) {
+						i = new DBIndexInfo(tabName, indName);
+						result.put(indName, i);
+					}
+					i.getColumnNames().add(rs.getString("COLUMN_NAME"));
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Could not get indices information: %s",
+					e.getMessage());
+		}
+		return result;
+	}
+
 }

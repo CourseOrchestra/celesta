@@ -163,13 +163,11 @@ final class DBColumnInfo {
 final class DBIndexInfo {
 	private final String tableName;
 	private final String indexName;
-	private final int hash;
+	private final List<String> columnNames = new LinkedList<>();
 
 	DBIndexInfo(String tableName, String indexName) {
 		this.tableName = tableName;
 		this.indexName = indexName;
-		hash = Integer.rotateLeft(tableName.hashCode(), 3)
-				^ indexName.hashCode();
 	}
 
 	String getTableName() {
@@ -180,19 +178,8 @@ final class DBIndexInfo {
 		return indexName;
 	}
 
-	@Override
-	public int hashCode() {
-		return hash;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof DBIndexInfo) {
-			DBIndexInfo ii = (DBIndexInfo) obj;
-			return tableName.equals(ii.tableName)
-					&& indexName.equals(ii.indexName);
-		}
-		return super.equals(obj);
+	List<String> getColumnNames() {
+		return columnNames;
 	}
 
 	@Override
@@ -200,17 +187,23 @@ final class DBIndexInfo {
 		return String.format("%s.%s", tableName, indexName);
 	}
 
-	boolean reflects(Collection<String> dbIndexCols, Index ind) {
+	boolean reflects(Index ind) {
+		boolean result = ind.getName().equals(indexName)
+				&& ind.getTable().getName().equals(tableName);
+		if (!result)
+			return false;
+		Collection<String> dbIndexCols = columnNames;
 		Collection<String> metaIndexCols = ind.getColumns().keySet();
 		Iterator<String> i1 = dbIndexCols.iterator();
 		Iterator<String> i2 = metaIndexCols.iterator();
-		boolean result = dbIndexCols.size() == metaIndexCols.size();
+		result = dbIndexCols.size() == metaIndexCols.size();
+		if (!result)
+			return false;
 		while (i1.hasNext() && result) {
 			result = i1.next().equals(i2.next()) && result;
 		}
 		return result;
 	}
-
 }
 
 /**

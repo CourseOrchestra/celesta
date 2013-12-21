@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
@@ -325,60 +324,44 @@ public final class DBUpdator {
 		 * структуры таблиц, чтобы увеличить вероятность успешного результата:
 		 * висящие на полях индексы могут помешать процессу.
 		 */
-		Map<DBIndexInfo, TreeMap<Short, String>> dbIndices = dba.getIndices(
-				grain.callContext().getConn(), g);
+		final Connection conn = grain.callContext().getConn();
+		Map<String, DBIndexInfo> dbIndices = dba.getIndices(conn, g);
 		Map<String, Index> myIndices = g.getIndices();
-		// Удаление не существующих в метаданных индексов
-		for (DBIndexInfo dBIndexInfo : dbIndices.keySet())
+		// Удаление несуществующих в метаданных индексов.
+		for (DBIndexInfo dBIndexInfo : dbIndices.values())
 			if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
-				dba.dropIndex(g, dBIndexInfo);
+				dba.dropIndex(g, dBIndexInfo, true);
 
 		// Удаление индексов, которые будут в дальнейшем изменены, перед
 		// обновлением таблиц.
 		for (Entry<String, Index> e : myIndices.entrySet()) {
-			DBIndexInfo dBIndexInfo = new DBIndexInfo(e.getValue().getTable()
-					.getName(), e.getKey());
-			if (dbIndices.containsKey(dBIndexInfo)) {
-				boolean reflects = dBIndexInfo.reflects(
-						dbIndices.get(dBIndexInfo).values(), e.getValue());
+			DBIndexInfo dBIndexInfo = dbIndices.get(e.getKey());
+			if (dBIndexInfo != null) {
+				boolean reflects = dBIndexInfo.reflects(e.getValue());
 				if (!reflects)
-					dba.dropIndex(g, dBIndexInfo);
+					dba.dropIndex(g, dBIndexInfo, true);
 			}
 		}
-
 	}
 
 	private static void updateGrainIndices(Grain g) throws CelestaException {
 		final Connection conn = grain.callContext().getConn();
-		Map<DBIndexInfo, TreeMap<Short, String>> dbIndices = dba.getIndices(
-				conn, g);
+		Map<String, DBIndexInfo> dbIndices = dba.getIndices(conn, g);
 		Map<String, Index> myIndices = g.getIndices();
 		// Начинаем с удаления ненужных индексов (ещё раз)
-
-		for (DBIndexInfo dBIndexInfo : dbIndices.keySet())
+		for (DBIndexInfo dBIndexInfo : dbIndices.values())
 			if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
-				/*
-				 * NB Ошибка "не могу удалить не существующий индекс"? У меня
-				 * нет уверенности в том, что JDBC getMetaData работает
-				 * корректно в случае, когда индекс, к примеру, был удалён в
-				 * процедуре dropOrphanedGrainIndices. Если моё предположение
-				 * верно, то правильное решение -- переписать метод
-				 * dba.getIndices, чтобы он не зависел от JDBC metaData и не
-				 * возвращал бы уже удалённые индексы.
-				 */
-				dba.dropIndex(g, dBIndexInfo);
+				dba.dropIndex(g, dBIndexInfo, true);
 
 		// Обновление и создание нужных индексов
 		for (Entry<String, Index> e : myIndices.entrySet()) {
-			DBIndexInfo dBIndexInfo = new DBIndexInfo(e.getValue().getTable()
-					.getName(), e.getKey());
-			if (dbIndices.containsKey(dBIndexInfo)) {
+			DBIndexInfo dBIndexInfo = dbIndices.get(e.getKey());
+			if (dBIndexInfo != null) {
 				// БД содержит индекс с таким именем, надо проверить
 				// поля и пересоздать индекс в случае необходимости.
-				boolean reflects = dBIndexInfo.reflects(
-						dbIndices.get(dBIndexInfo).values(), e.getValue());
+				boolean reflects = dBIndexInfo.reflects(e.getValue());
 				if (!reflects) {
-					dba.dropIndex(g, dBIndexInfo);
+					dba.dropIndex(g, dBIndexInfo, false);
 					dba.createIndex(conn, e.getValue());
 				}
 			} else {

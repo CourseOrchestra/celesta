@@ -440,4 +440,11 @@ final class PostgresAdaptor extends DBAdaptor {
 		return sql;
 	}
 
+	@Override
+	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g)
+			throws CelestaException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

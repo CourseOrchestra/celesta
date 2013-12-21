@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -21,6 +22,7 @@ import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
@@ -306,13 +308,13 @@ final class MySQLAdaptor extends DBAdaptor {
 		for (String c : t.getColumns().keySet()) {
 			// Пропускаем ключевые поля и поля, не изменившие своего значения
 			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
-				if (setClause.length() > 0)
-					setClause.append(", ");
+				padComma(setClause);
 				setClause.append(String.format("%s = ?", c));
 			}
 			i++;
 		}
-		String sql = String.format("update %s set %s where %s;", t.getName(),
+		String sql = String.format("update " + tableTemplate()
+				+ " set %s where %s", t.getGrain().getName(), t.getName(),
 				setClause.toString(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
@@ -600,6 +602,45 @@ final class MySQLAdaptor extends DBAdaptor {
 			throw new CelestaException("Cannot drop foreign key '%s': %s",
 					fkName, e.getMessage());
 		}
+	}
+
+	@Override
+	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g)
+			throws CelestaException {
+		Map<String, DBIndexInfo> result = new HashMap<>();
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				for (Table t : g.getTables().values())
+					if (tableExists(conn, g.getName(), t.getName())) {
+						Set<String> fkKeyNames = new HashSet<>();
+						for (ForeignKey fk : t.getForeignKeys())
+							fkKeyNames.add(fk.getConstraintName());
+						String sql = String
+								.format("SHOW INDEX FROM %s.%s WHERE key_name<>'PRIMARY';",
+										g.getQuotedName(), t.getQuotedName());
+						ResultSet rs = stmt.executeQuery(sql);
+						DBIndexInfo i = null;
+						while (rs.next()) {
+							String indName = rs.getString("Key_name");
+							if (fkKeyNames.contains(indName))
+								continue;
+							if (i == null || !i.getIndexName().equals(indName)) {
+								i = new DBIndexInfo(t.getName(), indName);
+								result.put(indName, i);
+							}
+							i.getColumnNames().add(rs.getString("Column_name"));
+						}
+						rs.close();
+					}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Could not get indices information: %s",
+					e.getMessage());
+		}
+		return result;
 	}
 
 }
