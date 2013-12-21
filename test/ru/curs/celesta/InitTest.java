@@ -19,6 +19,7 @@ public class InitTest {
 	public static void init() throws IOException, CelestaException {
 		Properties params = new Properties();
 		params.load(InitTest.class.getResourceAsStream("test.properties"));// celesta.oracle.properties
+		ConnectionPool.clear();
 		Celesta.initialize(params);
 	}
 

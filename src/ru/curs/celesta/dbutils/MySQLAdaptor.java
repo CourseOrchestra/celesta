@@ -411,8 +411,39 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
-		// TODO Auto-generated method stub
-		return null;
+		DBPKInfo result = new DBPKInfo();
+		try {
+			String sql = String
+					.format("select cons.CONSTRAINT_NAME, cols.COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE cols "
+							+ "inner join INFORMATION_SCHEMA.TABLE_CONSTRAINTS cons "
+							+ "on cols.TABLE_SCHEMA = cons.TABLE_SCHEMA "
+							+ "and cols.TABLE_NAME = cons.TABLE_NAME "
+							+ "and cols.CONSTRAINT_NAME = cons.CONSTRAINT_NAME "
+							+ "where cons.CONSTRAINT_TYPE = 'PRIMARY KEY' and cons.TABLE_SCHEMA = '%s' "
+							+ "and cons.TABLE_NAME = '%s' order by ORDINAL_POSITION",
+							t.getGrain().getName(), t.getName());
+			// System.out.println(sql);
+			Statement check = conn.createStatement();
+			ResultSet rs = check.executeQuery(sql);
+			try {
+				while (rs.next()) {
+					String pkName = rs.getString(1);
+					if (!"PRIMARY".equals(pkName))
+						throw new CelestaException(
+								"Expected PRIMARY for MySQL PK name, found %s",
+								pkName);
+					// To make comparision happy
+					result.setName(t.getPkConstraintName());
+					result.getColumnNames().add(rs.getString(2));
+				}
+			} finally {
+				rs.close();
+				check.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return result;
 	}
 
 	@Override
@@ -453,7 +484,7 @@ final class MySQLAdaptor extends DBAdaptor {
 						+ "WHERE RC.CONSTRAINT_SCHEMA = '%s' "
 						+ "ORDER BY KCU1.CONSTRAINT_NAME, KCU1.ORDINAL_POSITION",
 						g.getName());
-		System.out.println(sql);
+		// System.out.println(sql);
 		List<DBFKInfo> result = new LinkedList<>();
 		try {
 			Statement stmt = conn.createStatement();
@@ -552,4 +583,23 @@ final class MySQLAdaptor extends DBAdaptor {
 		}
 		return result;
 	}
+
+	@Override
+	public void dropFK(Connection conn, String grainName, String tableName,
+			String fkName) throws CelestaException {
+		String sql = String.format("alter table " + tableTemplate()
+				+ " drop foreign key \"%s\"", grainName, tableName, fkName);
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot drop foreign key '%s': %s",
+					fkName, e.getMessage());
+		}
+	}
+
 }

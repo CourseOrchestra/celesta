@@ -5,12 +5,14 @@ import java.lang.reflect.Method;
 import java.util.Properties;
 
 import ru.curs.celesta.AppSettings;
+import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.InitTest;
 import ru.curs.celesta.score.Score;
 
 public class MySQLAdaptorTest extends AbstractAdaptorTest {
 
 	public MySQLAdaptorTest() throws Exception {
+		ConnectionPool.clear();
 		Properties params = new Properties();
 		InputStream is = InitTest.class
 				.getResourceAsStream("celesta.mysql.properties");

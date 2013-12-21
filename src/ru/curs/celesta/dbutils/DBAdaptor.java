@@ -490,8 +490,8 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             В случае сбоя в базе данных.
 	 */
-	public final void dropFK(Connection conn, String grainName,
-			String tableName, String fkName) throws CelestaException {
+	public void dropFK(Connection conn, String grainName, String tableName,
+			String fkName) throws CelestaException {
 		LinkedList<String> sqlQueue = new LinkedList<>();
 		String sql = String.format("alter table " + tableTemplate()
 				+ " drop constraint \"%s\"", grainName, tableName, fkName);

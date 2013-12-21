@@ -48,7 +48,8 @@ public final class ConnectionPool {
 			c.setAutoCommit(false);
 			return c;
 		} catch (SQLException | ClassNotFoundException e) {
-			throw new CelestaException("Could not connect to %s with error: %s",
+			throw new CelestaException(
+					"Could not connect to %s with error: %s",
 					PasswordHider.maskPassword(AppSettings
 							.getDatabaseConnection()), e.getMessage());
 		}
@@ -87,6 +88,21 @@ public final class ConnectionPool {
 		} catch (SQLException e) {
 			// do something to make CheckStyle happy ))
 			return;
+		}
+	}
+
+	/**
+	 * Очищает пул.
+	 */
+	public static synchronized void clear() {
+		Connection c = POOL.poll();
+		while (c != null) {
+			try {
+				c.close();
+			} catch (SQLException e) {
+				c = null;
+			}
+			c = POOL.poll();
 		}
 	}
 }
