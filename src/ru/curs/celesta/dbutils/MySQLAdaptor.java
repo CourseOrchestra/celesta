@@ -58,9 +58,6 @@ final class MySQLAdaptor extends DBAdaptor {
 			.compile("(\\w+)(\\((\\d+)\\))?");
 	private static final Pattern MYSQLDATEPATTERN = Pattern
 			.compile("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)");
-	private static final Pattern HEXSTR = Pattern
-			.compile("0x(([0-9A-Fa-f][0-9A-Fa-f])+)");
-
 	private static final int VARCHARMAX = 4000;
 
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
@@ -319,7 +316,9 @@ final class MySQLAdaptor extends DBAdaptor {
 				params.append(", ");
 			}
 			params.append("?");
+			fields.append('"');
 			fields.append(c);
+			fields.append('"');
 		}
 
 		String sql = String.format("insert " + tableTemplate()

@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils;
 
-import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
@@ -52,6 +52,8 @@ public abstract class DBAdaptor {
 			BinaryColumn.class, DateTimeColumn.class };
 	static final String COLUMN_NAME = "COLUMN_NAME";
 	static final String ALTER_TABLE = "alter table ";
+	static final Pattern HEXSTR = Pattern
+			.compile("0x(([0-9A-Fa-f][0-9A-Fa-f])+)");
 
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
@@ -724,9 +726,12 @@ public abstract class DBAdaptor {
 				Timestamp d = new Timestamp(((Date) v).getTime());
 				stmt.setTimestamp(i, d);
 			} else if (v instanceof BLOB) {
-				Blob b = stmt.getConnection().createBlob();
-				((BLOB) v).saveToJDBCBlob(b);
-				stmt.setBlob(i, b);
+				stmt.setBinaryStream(i, ((BLOB) v).getInStream(),
+						((BLOB) v).size());
+				// createBlob is not implemented for PostgreSQL driver!
+				// Blob b = stmt.getConnection().createBlob();
+				// ((BLOB) v).saveToJDBCBlob(b);
+				// stmt.setBlob(i, b);
 			}
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());

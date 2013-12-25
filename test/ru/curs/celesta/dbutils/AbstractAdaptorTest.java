@@ -96,12 +96,14 @@ public abstract class AbstractAdaptorTest {
 	public void setup() throws Exception {
 		conn = ConnectionPool.get();
 		dba.createSchemaIfNotExists(conn, GRAIN_NAME);
+		conn.commit();
 
 		t = score.getGrain(GRAIN_NAME).getTable("test");
 		try {
 			// Могла остаться от незавершившегося теста
 			dba.dropTable(conn, t);
-		} catch (Exception e) {
+		} catch (CelestaException e) {
+			conn.rollback();
 		}
 		dba.createTable(conn, t);
 	}

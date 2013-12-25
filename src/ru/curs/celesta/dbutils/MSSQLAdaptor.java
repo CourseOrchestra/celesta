@@ -354,7 +354,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 				params.append(", ");
 			}
 			params.append("?");
+			fields.append('"');
 			fields.append(c);
+			fields.append('"');
 		}
 
 		String sql = String.format("insert " + tableTemplate()

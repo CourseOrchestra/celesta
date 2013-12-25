@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -46,10 +48,7 @@ final class PostgresAdaptor extends DBAdaptor {
 			String getDefaultDefinition(Column c) {
 				IntegerColumn ic = (IntegerColumn) c;
 				String defaultStr = "";
-				// TODO autoincrement
-				if (ic.isIdentity()) {
-					defaultStr = "IDENTITY";
-				} else if (ic.getDefaultValue() != null) {
+				if (ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
 				return defaultStr;
@@ -120,10 +119,12 @@ final class PostgresAdaptor extends DBAdaptor {
 
 			@Override
 			String getDefaultDefinition(Column c) {
-				BinaryColumn ic = (BinaryColumn) c;
+				BinaryColumn bc = (BinaryColumn) c;
 				String defaultStr = "";
-				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT + ic.getDefaultValue();
+				if (bc.getDefaultValue() != null) {
+					Matcher m = HEXSTR.matcher(bc.getDefaultValue());
+					m.matches();
+					defaultStr = DEFAULT + String.format("E'%s'", m.group(1));
 				}
 				return defaultStr;
 			}
@@ -220,17 +221,17 @@ final class PostgresAdaptor extends DBAdaptor {
 	@Override
 	void createSchemaIfNotExists(Connection conn, String name)
 			throws SQLException {
-		PreparedStatement check = conn
-				.prepareStatement(String
-						.format("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '%s';",
-								name));
-		ResultSet rs = check.executeQuery();
+		// NB: starting from 9.3 version we are able to use
+		// 'create schema if not exists' synthax, but we are developing on 9.2
+		String sql = String
+				.format("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '%s';",
+						name);
+		Statement check = conn.createStatement();
+		ResultSet rs = check.executeQuery(sql);
 		try {
 			if (!rs.next()) {
-				PreparedStatement create = conn.prepareStatement(String.format(
-						"create schema \"%s\";", name));
-				create.execute();
-				create.close();
+				check.executeUpdate(String
+						.format("create schema \"%s\";", name));
 			}
 		} finally {
 			rs.close();
@@ -279,12 +280,17 @@ final class PostgresAdaptor extends DBAdaptor {
 				params.append(", ");
 			}
 			params.append("?");
+			fields.append('"');
 			fields.append(c);
+			fields.append('"');
 		}
 
-		String sql = String.format("insert " + tableTemplate()
+		String sql = String.format("insert into " + tableTemplate()
 				+ " (%s) values (%s);", t.getGrain().getName(), t.getName(),
 				fields.toString(), params.toString());
+		
+		System.out.println(sql);
+		
 		return prepareStatement(conn, sql);
 	}
 
