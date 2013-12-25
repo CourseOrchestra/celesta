@@ -34,6 +34,22 @@ import ru.curs.celesta.score.Table;
  */
 final class MySQLAdaptor extends DBAdaptor {
 
+	/**
+	 * Default-значение для IDENTITY-колонок.
+	 * 
+	 * В связи с застарелым багом MySQL (http://bugs.mysql.com/bug.php?id=6295),
+	 * наличие before-триггера, выставляющего not-null значения, не спасает от
+	 * ошибки при вставке нулевых значений в ненулевые колонки. Ситуация должна
+	 * измениться, начиная в MySQL 5.7 -- тогда эту константу и всё, что с ней
+	 * связано, надо будет удалить.
+	 * 
+	 * Пока же "магическое число" в качестве default-значения (вряд ли кому-то
+	 * понадобится задавать такое значение в качестве default в бизнес-решении)
+	 * сигнализирует о том, что колонка на самом деле default-значения не имеет,
+	 * а "магическое" default служит просто для обхода бага.
+	 */
+	private static final int IDENTITY_DEFAULT_VALUE = 0xF001C0DE;
+
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
 		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
@@ -47,7 +63,8 @@ final class MySQLAdaptor extends DBAdaptor {
 				IntegerColumn ic = (IntegerColumn) c;
 				String defaultStr = "";
 				if (ic.isIdentity()) {
-					defaultStr = "AUTO_INCREMENT";
+					defaultStr = String.format("DEFAULT %d",
+							IDENTITY_DEFAULT_VALUE);
 				}
 				return join(c.getQuotedName(), dbFieldType(), nullable(c),
 						defaultStr);
@@ -60,7 +77,6 @@ final class MySQLAdaptor extends DBAdaptor {
 				if (!ic.isIdentity() && ic.getDefaultValue() != null) {
 					defaultStr = DEFAULT + ic.getDefaultValue();
 				}
-
 				return defaultStr;
 			}
 
@@ -401,7 +417,74 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
-		// TODO Auto-generated method stub
+		// 1. Firstly, we have to clean up table from any auto-increment
+		// triggers
+		String triggerName = String.format("\"%s\".\"%s_inc\"", t.getGrain()
+				.getName(), t.getName());
+		String sql = String.format("drop trigger %s", triggerName);
+		Statement stmt = conn.createStatement();
+		try {
+			stmt.executeUpdate(sql);
+		} catch (SQLException e) {
+			// do nothing
+			sql = "";
+		} finally {
+			stmt.close();
+		}
+
+		// 2. Check if table has IDENTITY field, if it doesn't, no need to
+		// proceed.
+		IntegerColumn ic = null;
+		for (Column c : t.getColumns().values())
+			if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
+				ic = (IntegerColumn) c;
+				break;
+			}
+		if (ic == null)
+			return;
+
+		// 3. Now, we know that we surely have IDENTITY field, and we must
+		// assure that we have an appropriate sequence.
+		sql = String
+				.format("insert into celesta.sequences (grainid, tablename) values ('%s', '%s')",
+						t.getGrain().getName(), t.getName());
+		// System.out.println(sql);
+		stmt = conn.createStatement();
+		try {
+			stmt.executeUpdate(sql);
+		} catch (SQLException e) {
+			// do nothing
+			sql = "";
+		} finally {
+			stmt.close();
+		}
+
+		// 4. Now we have to create the auto-increment trigger
+		StringBuilder body = new StringBuilder();
+		// body.append("delimiter $$\n");
+		body.append(String.format(
+				"create trigger %s before insert on %s.%s for each row\n",
+				triggerName, t.getGrain().getQuotedName(), t.getQuotedName()));
+		body.append("begin\n");
+		body.append(String.format("  /*IDENTITY %s*/\n", ic.getName()));
+		body.append("  declare  x int;\n");
+		body.append(String
+				.format("  set x = (SELECT seqvalue FROM celesta.sequences WHERE grainid = '%s' and tablename = '%s') + 1;\n",
+						t.getGrain().getName(), t.getName()));
+		body.append(String
+				.format("  update celesta.sequences set seqvalue = x WHERE grainid = '%s' and tablename = '%s';\n",
+						t.getGrain().getName(), t.getName()));
+		body.append("  set new.id = x;\n");
+		body.append("end");
+
+		// System.out.println(body.toString());
+
+		stmt = conn.createStatement();
+		try {
+			stmt.executeUpdate(body.toString());
+		} finally {
+			stmt.close();
+		}
 
 	}
 
@@ -451,14 +534,49 @@ final class MySQLAdaptor extends DBAdaptor {
 	@Override
 	void dropPK(Connection conn, Table t, String pkName)
 			throws CelestaException {
-		// TODO Auto-generated method stub
-
+		String sql = String.format("alter table %s.%s drop primary key", t
+				.getGrain().getQuotedName(), t.getQuotedName());
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot drop PK '%s': %s", pkName,
+					e.getMessage());
+		}
 	}
 
 	@Override
 	void createPK(Connection conn, Table t) throws CelestaException {
-		// TODO Auto-generated method stub
+		StringBuilder sql = new StringBuilder();
+		sql.append(String.format("alter table %s.%s add primary key (", t
+				.getGrain().getQuotedName(), t.getQuotedName()));
+		boolean multiple = false;
+		for (String s : t.getPrimaryKey().keySet()) {
+			if (multiple)
+				sql.append(", ");
+			sql.append('"');
+			sql.append(s);
+			sql.append('"');
+			multiple = true;
+		}
+		sql.append(")");
 
+		//		System.out.println(sql.toString());
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql.toString());
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot create PK '%s': %s",
+					t.getPkConstraintName(), e.getMessage());
+		}
 	}
 
 	@Override
