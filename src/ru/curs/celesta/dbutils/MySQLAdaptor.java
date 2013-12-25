@@ -58,6 +58,8 @@ final class MySQLAdaptor extends DBAdaptor {
 			.compile("(\\w+)(\\((\\d+)\\))?");
 	private static final Pattern MYSQLDATEPATTERN = Pattern
 			.compile("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)");
+	private static final Pattern HEXSTR = Pattern
+			.compile("0x(([0-9A-Fa-f][0-9A-Fa-f])+)");
 
 	private static final int VARCHARMAX = 4000;
 
@@ -159,21 +161,20 @@ final class MySQLAdaptor extends DBAdaptor {
 
 			@Override
 			String getMainDefinition(Column c) {
-				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+				/*
+				 * Поле в MySQL не может быть одновременно not null и default в
+				 * силу известного бага (before-триггер срабатывает после
+				 * проверки на not null).
+				 */
+				String nullable = c.getDefaultValue() == null ? nullable(c)
+						: "null";
+				return join(c.getQuotedName(), dbFieldType(), nullable);
 			}
 
 			@Override
 			String getDefaultDefinition(Column c) {
-				// TODO: manage the fact that MySQL doesn't allow defaults on
-				// blobs
-
-				// BinaryColumn ic = (BinaryColumn) c;
-				String defaultStr = "";
-
-				// if (ic.getDefaultValue() != null) {
-				// defaultStr = DEFAULT + ic.getDefaultValue();
-				// }
-				return defaultStr;
+				// MySQL doesn't allow defaults on blobs!
+				return "";
 			}
 		});
 
@@ -413,23 +414,63 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	private boolean checkForIncrementTrigger(Connection conn, Column c)
 			throws SQLException {
-		PreparedStatement checkForTrigger = conn.prepareStatement(String
-				.format("show create trigger %s.\"%s_inc\"", c.getParentTable()
-						.getGrain().getQuotedName(), c.getParentTable()
-						.getName()));
+		String sql = String.format("show create trigger %s.\"%s_inc\"", c
+				.getParentTable().getGrain().getQuotedName(), c
+				.getParentTable().getName());
+		Statement checkForTrigger = conn.createStatement();
 		try {
-			ResultSet rs = checkForTrigger.executeQuery();
-			if (rs.next()) {
-				String body = rs.getString("SQL Original Statement");
-				if (body != null
-						&& body.contains(String.format("/*IDENTITY %s*/",
-								c.getName())))
-					return true;
+			try {
+				ResultSet rs = checkForTrigger.executeQuery(sql);
+				if (rs.next()) {
+					String body = rs.getString("SQL Original Statement");
+					if (body != null
+							&& body.contains(String.format("/*IDENTITY %s*/",
+									c.getName())))
+						return true;
+				}
+			} finally {
+				checkForTrigger.close();
 			}
-		} finally {
-			checkForTrigger.close();
+		} catch (SQLException e) {
+			// trigger does not exist! -- return nothing.
+			return false;
 		}
 		return false;
+	}
+
+	private String getBlobDefault(Connection conn, Column c)
+			throws SQLException {
+		String sql = String.format("show create trigger %s.\"%s_inc\"", c
+				.getParentTable().getGrain().getQuotedName(), c
+				.getParentTable().getName());
+
+		Pattern search = Pattern
+				.compile(String.format(
+						"/\\*%s DEFAULT 0x(([0-9A-Fa-f][0-9A-Fa-f])+)\\*/",
+						c.getName()));
+
+		Statement checkForTrigger = conn.createStatement();
+		try {
+			try {
+				ResultSet rs = checkForTrigger.executeQuery(sql);
+				if (rs.next()) {
+					String body = rs.getString("SQL Original Statement");
+					if (body == null)
+						return "";
+					Matcher m = search.matcher(body);
+					if (m.find()) {
+						String result = "0x" + m.group(1);
+						return result;
+					}
+				}
+			} finally {
+				checkForTrigger.close();
+			}
+		} catch (SQLException e) {
+			// trigger does not exist! -- return nothing.
+			return "";
+		}
+		return "";
 	}
 
 	@SuppressWarnings("unchecked")
@@ -474,7 +515,14 @@ final class MySQLAdaptor extends DBAdaptor {
 						defaultBody = null;
 					if (defaultBody != null) {
 						defaultBody = modifyDefault(result, defaultBody);
+
 						result.setDefaultValue(defaultBody);
+					} else if (result.getType() == BinaryColumn.class) {
+						result.setDefaultValue(getBlobDefault(conn, c));
+						// Если есть defaultvalue -- успокоим компаратор тем
+						// значением, которое он ожидает увидеть.
+						result.setNullable(result.getDefaultValue() == null ? result
+								.isNullable() : c.isNullable());
 					}
 					return result;
 				} else {
@@ -491,7 +539,7 @@ final class MySQLAdaptor extends DBAdaptor {
 	private String modifyDefault(DBColumnInfo ci, String defaultBody) {
 
 		String result = defaultBody;
-		//		System.out.println(result);
+		// System.out.println(result);
 
 		if (DateTimeColumn.class == ci.getType()) {
 			if (CURRENT_TIMESTAMP.equalsIgnoreCase(defaultBody))
@@ -513,7 +561,6 @@ final class MySQLAdaptor extends DBAdaptor {
 		} else if (StringColumn.class == ci.getType()) {
 			result = StringColumn.quoteString(defaultBody);
 		}
-
 		return result;
 	}
 
@@ -524,9 +571,14 @@ final class MySQLAdaptor extends DBAdaptor {
 		String sql = String.format("ALTER TABLE " + tableTemplate()
 				+ " MODIFY COLUMN %s", c.getParentTable().getGrain().getName(),
 				c.getParentTable().getName(), def);
-		PreparedStatement stmt = prepareStatement(conn, sql);
 		try {
-			stmt.executeUpdate();
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+			manageAutoIncrement(conn, c.getParentTable());
 		} catch (SQLException e) {
 			throw new CelestaException(
 					"Cannot modify column %s on table %s.%s: %s", c.getName(),
@@ -534,7 +586,6 @@ final class MySQLAdaptor extends DBAdaptor {
 							.getName(), e.getMessage());
 
 		}
-
 	}
 
 	@Override
@@ -554,15 +605,17 @@ final class MySQLAdaptor extends DBAdaptor {
 			stmt.close();
 		}
 
-		// 2. Check if table has IDENTITY field, if it doesn't, no need to
-		// proceed.
+		// 2. Check if table has IDENTITY field and/or BLOBs with defaults, if
+		// it doesn't, no need to proceed.
 		IntegerColumn ic = null;
+		List<BinaryColumn> l = new LinkedList<>();
 		for (Column c : t.getColumns().values())
 			if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
 				ic = (IntegerColumn) c;
-				break;
-			}
-		if (ic == null)
+			} else if (c instanceof BinaryColumn
+					&& ((BinaryColumn) c).getDefaultValue() != null)
+				l.add((BinaryColumn) c);
+		if (ic == null && l.isEmpty())
 			return;
 
 		// 3. Now, we know that we surely have IDENTITY field, and we must
@@ -583,22 +636,34 @@ final class MySQLAdaptor extends DBAdaptor {
 
 		// 4. Now we have to create the auto-increment trigger
 		StringBuilder body = new StringBuilder();
-		// body.append("delimiter $$\n");
 		body.append(String.format(
 				"create trigger %s before insert on %s.%s for each row\n",
 				triggerName, t.getGrain().getQuotedName(), t.getQuotedName()));
 		body.append("begin\n");
-		body.append(String.format("  /*IDENTITY %s*/\n", ic.getName()));
-		body.append("  declare  x int;\n");
-		body.append(String
-				.format("  set x = (SELECT seqvalue FROM celesta.sequences WHERE grainid = '%s' and tablename = '%s') + 1;\n",
-						t.getGrain().getName(), t.getName()));
-		body.append(String
-				.format("  update celesta.sequences set seqvalue = x WHERE grainid = '%s' and tablename = '%s';\n",
-						t.getGrain().getName(), t.getName()));
-		body.append("  set new.id = x;\n");
-		body.append("end");
 
+		if (ic != null) {
+			body.append(String.format("  /*IDENTITY %s*/\n", ic.getName()));
+			body.append("  declare  x int;\n");
+			body.append(String
+					.format("  set x = (SELECT seqvalue FROM celesta.sequences WHERE grainid = '%s' and tablename = '%s') + 1;\n",
+							t.getGrain().getName(), t.getName()));
+			body.append(String
+					.format("  update celesta.sequences set seqvalue = x WHERE grainid = '%s' and tablename = '%s';\n",
+							t.getGrain().getName(), t.getName()));
+			body.append(String.format("  set new.%s = x;\n", ic.getQuotedName()));
+		}
+		for (BinaryColumn bc : l) {
+			body.append(String.format("  /*%s DEFAULT %s*/\n", bc.getName(),
+					bc.getDefaultValue()));
+			body.append(String.format("  if new.%s is null then\n",
+					bc.getQuotedName()));
+			Matcher m = HEXSTR.matcher(bc.getDefaultValue());
+			m.matches();
+			body.append(String.format("    set new.%s = x'%s';\n",
+					bc.getQuotedName(), m.group(1)));
+			body.append("  end if;\n");
+		}
+		body.append("end");
 		// System.out.println(body.toString());
 
 		stmt = conn.createStatement();

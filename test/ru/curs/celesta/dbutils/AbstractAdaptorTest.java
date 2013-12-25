@@ -493,6 +493,19 @@ public abstract class AbstractAdaptorTest {
 		assertSame(DateTimeColumn.class, c.getType());
 		assertEquals(false, c.isNullable());
 		assertEquals("GETDATE()", c.getDefaultValue());
+
+		// f10 image default 0xFFAAFFAAFF
+		col = t.getColumn("f10");
+		c = dba.getColumnInfo(conn, col);
+		assertTrue(col.isNullable());
+		assertTrue(c.isNullable());
+		assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
+		col.setNullableAndDefault(false, "0xBBCC");
+		dba.updateColumn(conn, col, c);
+		c = dba.getColumnInfo(conn, col);
+		assertEquals("0xBBCC", c.getDefaultValue());
+		assertFalse(c.isNullable());
+
 	}
 
 	@Test
