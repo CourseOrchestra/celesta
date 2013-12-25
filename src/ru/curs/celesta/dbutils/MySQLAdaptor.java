@@ -15,6 +15,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -34,6 +36,8 @@ import ru.curs.celesta.score.Table;
  */
 final class MySQLAdaptor extends DBAdaptor {
 
+	private static final String CURRENT_TIMESTAMP = "CURRENT_TIMESTAMP";
+
 	/**
 	 * Default-значение для IDENTITY-колонок.
 	 * 
@@ -49,6 +53,13 @@ final class MySQLAdaptor extends DBAdaptor {
 	 * а "магическое" default служит просто для обхода бага.
 	 */
 	private static final int IDENTITY_DEFAULT_VALUE = 0xF001C0DE;
+
+	private static final Pattern FIELDTYPE = Pattern
+			.compile("(\\w+)(\\((\\d+)\\))?");
+	private static final Pattern MYSQLDATEPATTERN = Pattern
+			.compile("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)");
+
+	private static final int VARCHARMAX = 4000;
 
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
@@ -88,7 +99,7 @@ final class MySQLAdaptor extends DBAdaptor {
 
 			@Override
 			String dbFieldType() {
-				return "real";
+				return "double";
 			}
 
 			@Override
@@ -121,8 +132,8 @@ final class MySQLAdaptor extends DBAdaptor {
 				StringColumn ic = (StringColumn) c;
 				// See
 				// http://stackoverflow.com/questions/332798/equivalent-of-varcharmax-in-mysql
-				String fieldType = String.format("%s(%s)", dbFieldType(),
-						ic.isMax() ? "4000" : ic.getLength());
+				String fieldType = String.format("%s(%d)", dbFieldType(),
+						ic.isMax() ? VARCHARMAX : ic.getLength());
 
 				return join(c.getQuotedName(), fieldType, nullable(c));
 			}
@@ -183,7 +194,7 @@ final class MySQLAdaptor extends DBAdaptor {
 				DateTimeColumn ic = (DateTimeColumn) c;
 				String defaultStr = "";
 				if (ic.isGetdate()) {
-					defaultStr = DEFAULT + "CURRENT_TIMESTAMP";
+					defaultStr = DEFAULT + CURRENT_TIMESTAMP;
 				} else if (ic.getDefaultValue() != null) {
 					DateFormat df = new SimpleDateFormat("yyyyMMdd");
 					defaultStr = String.format(DEFAULT + " '%s'",
@@ -366,8 +377,21 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
-		// TODO use LAST_INSERT_ID()
-		return 0;
+		String sql = String
+				.format("select seqvalue from celesta.sequences where grainid = '%s' and tablename = '%s'",
+						t.getGrain().getName(), t.getName());
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				rs.next();
+				return rs.getInt(1);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -387,11 +411,109 @@ final class MySQLAdaptor extends DBAdaptor {
 		return sql;
 	}
 
+	private boolean checkForIncrementTrigger(Connection conn, Column c)
+			throws SQLException {
+		PreparedStatement checkForTrigger = conn.prepareStatement(String
+				.format("show create trigger %s.\"%s_inc\"", c.getParentTable()
+						.getGrain().getQuotedName(), c.getParentTable()
+						.getName()));
+		try {
+			ResultSet rs = checkForTrigger.executeQuery();
+			if (rs.next()) {
+				String body = rs.getString("SQL Original Statement");
+				if (body != null
+						&& body.contains(String.format("/*IDENTITY %s*/",
+								c.getName())))
+					return true;
+			}
+		} finally {
+			checkForTrigger.close();
+		}
+		return false;
+	}
+
+	@SuppressWarnings("unchecked")
 	@Override
 	public DBColumnInfo getColumnInfo(Connection conn, Column c)
 			throws CelestaException {
-		DBColumnInfo result = new DBColumnInfo();
-		// TODO
+		try {
+			Statement stmt = conn.createStatement();
+
+			ResultSet rs = stmt.executeQuery(String.format(
+					"show columns from %s.%s where field = '%s'", c
+							.getParentTable().getGrain().getQuotedName(), c
+							.getParentTable().getQuotedName(), c.getName()));
+			try {
+				if (rs.next()) {
+					DBColumnInfo result = new DBColumnInfo();
+					result.setName(rs.getString("Field"));
+					Matcher m = FIELDTYPE.matcher(rs.getString("Type"));
+					m.matches();
+					String typeName = m.group(1);
+					int len = m.group(3) == null ? 0 : Integer.parseInt(m
+							.group(3));
+					if ("int".equalsIgnoreCase(typeName)) {
+						result.setType(IntegerColumn.class);
+						result.setIdentity(checkForIncrementTrigger(conn, c));
+					} else {
+						for (Class<?> cc : COLUMN_CLASSES)
+							if (TYPES_DICT.get(cc).dbFieldType()
+									.equalsIgnoreCase(typeName)) {
+								result.setType((Class<? extends Column>) cc);
+								break;
+							}
+					}
+					result.setNullable("yes".equalsIgnoreCase(rs
+							.getString("Null")));
+					if (result.getType() == StringColumn.class) {
+						result.setLength(len);
+						result.setMax(len == VARCHARMAX);
+					}
+					String defaultBody = rs.getString("Default");
+					if (rs.wasNull())
+						defaultBody = null;
+					if (defaultBody != null) {
+						defaultBody = modifyDefault(result, defaultBody);
+						result.setDefaultValue(defaultBody);
+					}
+					return result;
+				} else {
+					return null;
+				}
+			} finally {
+				rs.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
+	private String modifyDefault(DBColumnInfo ci, String defaultBody) {
+
+		String result = defaultBody;
+		//		System.out.println(result);
+
+		if (DateTimeColumn.class == ci.getType()) {
+			if (CURRENT_TIMESTAMP.equalsIgnoreCase(defaultBody))
+				result = "GETDATE()";
+			else {
+				Matcher m = MYSQLDATEPATTERN.matcher(defaultBody);
+				m.find();
+				result = String.format("'%s%s%s'", m.group(1), m.group(2),
+						m.group(3));
+			}
+		} else if (IntegerColumn.class == ci.getType()
+				&& String.valueOf(IDENTITY_DEFAULT_VALUE).equals(defaultBody))
+			result = "";
+		else if (BooleanColumn.class == ci.getType()) {
+			if ("B'1'".equalsIgnoreCase(defaultBody))
+				result = "'TRUE'";
+			else if ("B'1'".equalsIgnoreCase(defaultBody))
+				result = "'FALSE'";
+		} else if (StringColumn.class == ci.getType()) {
+			result = StringColumn.quoteString(defaultBody);
+		}
+
 		return result;
 	}
 
@@ -490,8 +612,18 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	void dropAutoIncrement(Connection conn, Table t) throws SQLException {
-		// TODO Auto-generated method stub
-
+		String sql = String
+				.format("delete from celesta.sequences where grainid = '%s' and tablename = '%s';\n",
+						t.getGrain().getName(), t.getName());
+		Statement stmt = conn.createStatement();
+		try {
+			stmt.executeUpdate(sql);
+		} catch (SQLException e) {
+			// do nothing
+			sql = "";
+		} finally {
+			stmt.close();
+		}
 	}
 
 	@Override
@@ -565,7 +697,7 @@ final class MySQLAdaptor extends DBAdaptor {
 		}
 		sql.append(")");
 
-		//		System.out.println(sql.toString());
+		// System.out.println(sql.toString());
 		try {
 			Statement stmt = conn.createStatement();
 			try {
