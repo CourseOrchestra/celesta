@@ -288,9 +288,9 @@ final class PostgresAdaptor extends DBAdaptor {
 		String sql = String.format("insert into " + tableTemplate()
 				+ " (%s) values (%s);", t.getGrain().getName(), t.getName(),
 				fields.toString(), params.toString());
-		
-		System.out.println(sql);
-		
+
+		// System.out.println(sql);
+
 		return prepareStatement(conn, sql);
 	}
 
@@ -318,7 +318,8 @@ final class PostgresAdaptor extends DBAdaptor {
 	@Override
 	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format("delete %s where %s;", t.getName(),
+		String sql = String.format("delete from " + tableTemplate()
+				+ " where %s;", t.getGrain().getName(), t.getName(),
 				getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
@@ -392,14 +393,86 @@ final class PostgresAdaptor extends DBAdaptor {
 
 	@Override
 	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
-		// TODO Auto-generated method stub
+		String sql;
+		Statement stmt = conn.createStatement();
+		try {
+			// 1. Firstly, we have to clean up table from any auto-increment
+			// defaults. Meanwhile we check if table has IDENTITY field, if it
+			// doesn't, no need to proceed.
+			IntegerColumn idColumn = null;
+			for (Column c : t.getColumns().values())
+				if (c instanceof IntegerColumn) {
+					IntegerColumn ic = (IntegerColumn) c;
+					if (ic.isIdentity())
+						idColumn = ic;
+					else {
+						if (ic.getDefaultValue() == null) {
+							sql = String
+									.format("alter table %s.%s alter column %s drop default",
+											t.getGrain().getQuotedName(),
+											t.getQuotedName(),
+											ic.getQuotedName());
+						} else {
+							sql = String
+									.format("alter table %s.%s alter column %s set default %d",
+											t.getGrain().getQuotedName(), t
+													.getQuotedName(), ic
+													.getQuotedName(), ic
+													.getDefaultValue()
+													.intValue());
+						}
+						stmt.executeUpdate(sql);
+					}
+				}
 
+			if (idColumn == null)
+				return;
+
+			// 2. Now, we know that we surely have IDENTITY field, and we have
+			// to be sure that we have an appropriate sequence.
+			boolean hasSequence = false;
+			sql = String
+					.format("select count(*) from pg_class c inner join pg_namespace n ON n.oid = c.relnamespace "
+							+ "where n.nspname = '%s' and c.relname = '%s_seq' and c.relkind = 'S'",
+							t.getGrain().getName(), t.getName());
+			ResultSet rs = stmt.executeQuery(sql);
+			rs.next();
+			try {
+				hasSequence = rs.getInt(1) > 0;
+			} finally {
+				rs.close();
+			}
+			if (!hasSequence) {
+				sql = String
+						.format("create sequence \"%s\".\"%s_seq\" increment 1 minvalue 1",
+								t.getGrain().getName(), t.getName());
+				stmt.executeUpdate(sql);
+			}
+
+			// 3. Now we have to create the auto-increment default
+			sql = String.format(
+					"alter table %s.%s alter column %s set default "
+							+ "nextval('\"%s\".\"%s_seq\"'::regclass);", t
+							.getGrain().getQuotedName(), t.getQuotedName(),
+					idColumn.getQuotedName(), t.getGrain().getName(), t
+							.getName());
+			stmt.executeUpdate(sql);
+		} finally {
+			stmt.close();
+		}
 	}
 
 	@Override
 	void dropAutoIncrement(Connection conn, Table t) throws SQLException {
-		// TODO Auto-generated method stub
-
+		// Удаление Sequence
+		String sql = String.format("drop sequence if exists \"%s\".\"%s_seq\"",
+				t.getGrain().getName(), t.getName());
+		Statement stmt = conn.createStatement();
+		try {
+			stmt.execute(sql);
+		} finally {
+			stmt.close();
+		}
 	}
 
 	@Override

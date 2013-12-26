@@ -110,9 +110,11 @@ public abstract class AbstractAdaptorTest {
 
 	@After
 	public void tearDown() throws Exception {
+		conn.rollback();
 		try {
 			dba.dropTable(conn, t);
 		} catch (Exception e) {
+			// e.printStackTrace();
 		}
 		ConnectionPool.putBack(conn);
 	}
