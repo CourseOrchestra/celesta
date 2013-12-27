@@ -397,7 +397,7 @@ final class MySQLAdaptor extends DBAdaptor {
 	@Override
 	String getCreateIndexSQL(Index index) {
 		String fieldList = getFieldList(index.getColumns().keySet());
-		String sql = String.format("CREATE INDEX %s ON " + tableTemplate()
+		String sql = String.format("CREATE INDEX \"%s\" ON " + tableTemplate()
 				+ " (%s)", index.getName(), index.getTable().getGrain()
 				.getName(), index.getTable().getName(), fieldList);
 		return sql;

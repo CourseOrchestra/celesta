@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
@@ -181,6 +182,9 @@ final class PostgresAdaptor extends DBAdaptor {
 			}
 		});
 	}
+
+	private static final Pattern QUOTED_NAME = Pattern
+			.compile("\"?([^\"]+)\"?");
 
 	@Override
 	boolean tableExists(Connection conn, String schema, String name)
@@ -374,7 +378,7 @@ final class PostgresAdaptor extends DBAdaptor {
 	@Override
 	String getCreateIndexSQL(Index index) {
 		String fieldList = getFieldList(index.getColumns().keySet());
-		String sql = String.format("CREATE INDEX %s ON " + tableTemplate()
+		String sql = String.format("CREATE INDEX \"%s\" ON " + tableTemplate()
 				+ " (%s)", index.getName(), index.getTable().getGrain()
 				.getName(), index.getTable().getName(), fieldList);
 		return sql;
@@ -546,8 +550,54 @@ final class PostgresAdaptor extends DBAdaptor {
 	@Override
 	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g)
 			throws CelestaException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+		String sql = String
+				.format("SELECT c.relname AS tablename, i.relname AS indexname, "
+						+ "i.oid, array_length(x.indkey, 1) as colcount "
+						+ "FROM pg_index x "
+						+ "INNER JOIN pg_class c ON c.oid = x.indrelid "
+						+ "INNER JOIN pg_class i ON i.oid = x.indexrelid "
+						+ "INNER JOIN pg_namespace n ON n.oid = c.relnamespace "
+						+ "WHERE c.relkind = 'r'::\"char\" AND i.relkind = 'i'::\"char\" "
+						+ "and n.nspname = '%s' and x.indisunique = false;",
+						g.getName());
+		Map<String, DBIndexInfo> result = new HashMap<>();
+		try {
+			Statement stmt = conn.createStatement();
+			PreparedStatement stmt2 = conn
+					.prepareStatement("select pg_get_indexdef(?, ?, false)");
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				while (rs.next()) {
+					String tabName = rs.getString("tablename");
+					String indName = rs.getString("indexname");
+					DBIndexInfo ii = new DBIndexInfo(tabName, indName);
+					result.put(indName, ii);
+					int colCount = rs.getInt("colcount");
+					int oid = rs.getInt("oid");
+					stmt2.setInt(1, oid);
+					for (int i = 1; i <= colCount; i++) {
+						stmt2.setInt(2, i);
+						ResultSet rs2 = stmt2.executeQuery();
+						try {
+							rs2.next();
+							String colName = rs2.getString(1);
+							Matcher m = QUOTED_NAME.matcher(colName);
+							m.matches();
+							ii.getColumnNames().add(m.group(1));
+						} finally {
+							rs2.close();
+						}
+					}
 
+				}
+			} finally {
+				stmt.close();
+				stmt2.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Could not get indices information: %s",
+					e.getMessage());
+		}
+		return result;
+	}
 }

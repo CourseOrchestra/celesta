@@ -228,6 +228,13 @@ public abstract class AbstractAdaptorTest {
 		indicesSet = dba.getIndices(conn, t.getGrain());
 		assertNotNull(indicesSet);
 		assertEquals(0, indicesSet.size());
+		String[] cols = { "f1", "f2", "f9", "f8" };
+		i = new Index(t, "testName", cols);
+		dba.createIndex(conn, i);
+		indicesSet = dba.getIndices(conn, t.getGrain());
+		inf = indicesSet.get("testName");
+		assertTrue(inf.reflects(i));
+		dba.dropIndex(grain, inf, false);
 	}
 
 	@Test
