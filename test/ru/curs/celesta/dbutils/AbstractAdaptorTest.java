@@ -771,13 +771,14 @@ public abstract class AbstractAdaptorTest {
 			try {
 				dba.dropTable(conn, t2);
 			} catch (CelestaException e) {
-				// do nothing
+				conn.rollback();
 			}
 			dba.createTable(conn, t2);
 			assertTrue(dba.tableExists(conn, "gtest", "test"));
 			assertTrue(dba.tableExists(conn, "gtest", "refTo"));
 
 			List<DBFKInfo> l = dba.getFKInfo(conn, g);
+			assertNotNull(l);
 			assertEquals(0, l.size());
 
 			dba.createFK(conn, fk);
@@ -817,6 +818,7 @@ public abstract class AbstractAdaptorTest {
 			e.printStackTrace();
 			throw e;
 		} finally {
+			conn.rollback();
 			dba.dropTable(conn, t);
 			dba.dropTable(conn, t2);
 		}

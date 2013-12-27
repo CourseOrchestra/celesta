@@ -374,7 +374,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 			// Пропускаем ключевые поля и поля, не изменившие своего значения
 			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
 				padComma(setClause);
-				setClause.append(String.format("%s = ?", c));
+				setClause.append(String.format("\"%s\" = ?", c));
 			}
 			i++;
 		}

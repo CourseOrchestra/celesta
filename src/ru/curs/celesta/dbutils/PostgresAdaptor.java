@@ -302,15 +302,14 @@ final class PostgresAdaptor extends DBAdaptor {
 		for (String c : t.getColumns().keySet()) {
 			// Пропускаем ключевые поля и поля, не изменившие своего значения
 			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
-				if (setClause.length() > 0)
-					setClause.append(", ");
-				setClause.append(String.format("%s = ?", c));
+				padComma(setClause);
+				setClause.append(String.format("\"%s\" = ?", c));
 			}
 			i++;
 		}
 
 		String sql = String.format("update " + tableTemplate()
-				+ " set %s where %s;", t.getGrain().getName(), t.getName(),
+				+ " set %s where %s", t.getGrain().getName(), t.getName(),
 				setClause.toString(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
@@ -337,14 +336,39 @@ final class PostgresAdaptor extends DBAdaptor {
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
 			Map<String, AbstractFilter> filters) throws CelestaException {
-		// TODO Auto-generated method stub
-		return null;
+		// Готовим условие where
+		String whereClause = getWhereClause(t, filters);
+
+		// Готовим запрос на удаление
+		String sql = String.format("delete from " + tableTemplate() + " %s;", t
+				.getGrain().getName(), t.getName(),
+				whereClause.length() > 0 ? "where " + whereClause : "");
+		try {
+			PreparedStatement result = conn.prepareStatement(sql);
+			// А теперь заполняем параметры
+			fillSetQueryParameters(filters, result);
+			return result;
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
 	}
 
 	@Override
 	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
-		// TODO Auto-generated method stub
-		return 0;
+		String sql = String.format("select last_value from \"%s\".\"%s_seq\"",
+				t.getGrain().getName(), t.getName());
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				rs.next();
+				return rs.getInt(1);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
 	}
 
 	@Override
