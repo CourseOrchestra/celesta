@@ -505,21 +505,103 @@ final class PostgresAdaptor extends DBAdaptor {
 
 	@Override
 	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
-		// TODO Auto-generated method stub
-		return null;
+		String sql = String
+				.format("SELECT i.relname AS indexname, "
+						+ "i.oid, array_length(x.indkey, 1) as colcount "
+						+ "FROM pg_index x "
+						+ "INNER JOIN pg_class c ON c.oid = x.indrelid "
+						+ "INNER JOIN pg_class i ON i.oid = x.indexrelid "
+						+ "INNER JOIN pg_namespace n ON n.oid = c.relnamespace "
+						+ "WHERE c.relkind = 'r'::\"char\" AND i.relkind = 'i'::\"char\" "
+						+ "and n.nspname = '%s' and c.relname = '%s' and x.indisprimary",
+						t.getGrain().getName(), t.getName());
+		DBPKInfo result = new DBPKInfo();
+		try {
+			Statement stmt = conn.createStatement();
+			PreparedStatement stmt2 = conn
+					.prepareStatement("select pg_get_indexdef(?, ?, false)");
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				if (rs.next()) {
+					String indName = rs.getString("indexname");
+					int colCount = rs.getInt("colcount");
+					int oid = rs.getInt("oid");
+					result.setName(indName);
+					stmt2.setInt(1, oid);
+					for (int i = 1; i <= colCount; i++) {
+						stmt2.setInt(2, i);
+						ResultSet rs2 = stmt2.executeQuery();
+						try {
+							rs2.next();
+							String colName = rs2.getString(1);
+							Matcher m = QUOTED_NAME.matcher(colName);
+							m.matches();
+							result.addColumnName(m.group(1));
+						} finally {
+							rs2.close();
+						}
+					}
+				}
+			} finally {
+				stmt.close();
+				stmt2.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Could not get indices information: %s",
+					e.getMessage());
+		}
+		return result;
+
 	}
 
 	@Override
 	void dropPK(Connection conn, Table t, String pkName)
 			throws CelestaException {
-		// TODO Auto-generated method stub
-
+		String sql = String.format("alter table %s.%s drop constraint \"%s\"",
+				t.getGrain().getQuotedName(), t.getQuotedName(), pkName);
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot drop PK '%s': %s", pkName,
+					e.getMessage());
+		}
 	}
 
 	@Override
 	void createPK(Connection conn, Table t) throws CelestaException {
-		// TODO Auto-generated method stub
+		StringBuilder sql = new StringBuilder();
+		sql.append(String.format(
+				"alter table %s.%s add constraint \"%s\" primary key (", t
+						.getGrain().getQuotedName(), t.getQuotedName(), t
+						.getPkConstraintName()));
+		boolean multiple = false;
+		for (String s : t.getPrimaryKey().keySet()) {
+			if (multiple)
+				sql.append(", ");
+			sql.append('"');
+			sql.append(s);
+			sql.append('"');
+			multiple = true;
+		}
+		sql.append(")");
 
+		// System.out.println(sql.toString());
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql.toString());
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot create PK '%s': %s",
+					t.getPkConstraintName(), e.getMessage());
+		}
 	}
 
 	@Override
