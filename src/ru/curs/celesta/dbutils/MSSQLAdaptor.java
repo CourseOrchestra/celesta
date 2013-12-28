@@ -146,7 +146,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 			@Override
 			String dbFieldType() {
-				return "image";
+				return "varbinary(max)";
 			}
 
 			@Override
@@ -510,10 +510,12 @@ final class MSSQLAdaptor extends DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя связи с БД.
 	 */
+	// CHECKSTYLE:OFF
 	@SuppressWarnings("unchecked")
 	@Override
 	public DBColumnInfo getColumnInfo(Connection conn, Column c)
-			throws CelestaException {
+	throws CelestaException {
+		// CHECKSTYLE:ON
 		try {
 			DatabaseMetaData metaData = conn.getMetaData();
 			ResultSet rs = metaData.getColumns(null, c.getParentTable()
@@ -524,7 +526,10 @@ final class MSSQLAdaptor extends DBAdaptor {
 					DBColumnInfo result = new DBColumnInfo();
 					result.setName(rs.getString(COLUMN_NAME));
 					String typeName = rs.getString("TYPE_NAME");
-					if ("int".equalsIgnoreCase(typeName)) {
+					if ("varbinary".equalsIgnoreCase(typeName)
+							&& checkIfVarcharMax(conn, c)) {
+						result.setType(BinaryColumn.class);
+					} else if ("int".equalsIgnoreCase(typeName)) {
 						result.setType(IntegerColumn.class);
 						result.setIdentity(checkForIncrementTrigger(conn, c));
 					} else {
