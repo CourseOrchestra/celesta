@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,12 +34,18 @@ import ru.curs.celesta.score.Table;
  */
 final class PostgresAdaptor extends DBAdaptor {
 
+	private static final String NOW = "now()";
+	private static final Pattern POSTGRESDATEPATTERN = Pattern
+			.compile("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)");
+	private static final Pattern HEX_STRING = Pattern
+			.compile("'\\\\x([0-9A-Fa-f]+)'");
+
 	private static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 	static {
 		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
 			@Override
 			String dbFieldType() {
-				return "integer";
+				return "int4";
 			}
 
 			@Override
@@ -61,7 +68,7 @@ final class PostgresAdaptor extends DBAdaptor {
 
 			@Override
 			String dbFieldType() {
-				return "double precision";
+				return "float8"; // double precision";
 			}
 
 			@Override
@@ -90,8 +97,8 @@ final class PostgresAdaptor extends DBAdaptor {
 			@Override
 			String getMainDefinition(Column c) {
 				StringColumn ic = (StringColumn) c;
-				String fieldType = String.format("%s(%s)", dbFieldType(),
-						ic.isMax() ? "65535" : ic.getLength());
+				String fieldType = ic.isMax() ? "text" : String.format(
+						"%s(%s)", dbFieldType(), ic.getLength());
 				return join(c.getQuotedName(), fieldType, nullable(c));
 			}
 
@@ -126,7 +133,8 @@ final class PostgresAdaptor extends DBAdaptor {
 				if (bc.getDefaultValue() != null) {
 					Matcher m = HEXSTR.matcher(bc.getDefaultValue());
 					m.matches();
-					defaultStr = DEFAULT + String.format("E'%s'", m.group(1));
+					defaultStr = DEFAULT
+							+ String.format("E'\\\\x%s'", m.group(1));
 				}
 				return defaultStr;
 			}
@@ -149,7 +157,7 @@ final class PostgresAdaptor extends DBAdaptor {
 				DateTimeColumn ic = (DateTimeColumn) c;
 				String defaultStr = "";
 				if (ic.isGetdate()) {
-					defaultStr = DEFAULT + "CURRENT_TIMESTAMP";
+					defaultStr = DEFAULT + NOW;
 				} else if (ic.getDefaultValue() != null) {
 					DateFormat df = new SimpleDateFormat("yyyyMMdd");
 					defaultStr = String.format(DEFAULT + " '%s'",
@@ -392,24 +400,136 @@ final class PostgresAdaptor extends DBAdaptor {
 		return sql;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public DBColumnInfo getColumnInfo(Connection conn, Column c)
 			throws CelestaException {
-		DBColumnInfo result = new DBColumnInfo();
-		// TODO
+		try {
+			DatabaseMetaData metaData = conn.getMetaData();
+			ResultSet rs = metaData.getColumns(null, c.getParentTable()
+					.getGrain().getName(), c.getParentTable().getName(),
+					c.getName());
+			try {
+				if (rs.next()) {
+					DBColumnInfo result = new DBColumnInfo();
+					result.setName(rs.getString(COLUMN_NAME));
+					String typeName = rs.getString("TYPE_NAME");
+					if ("serial".equalsIgnoreCase(typeName)) {
+						result.setType(IntegerColumn.class);
+						result.setIdentity(true);
+						result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
+						return result;
+					} else if ("text".equalsIgnoreCase(typeName)) {
+						result.setType(StringColumn.class);
+						result.setMax(true);
+					} else {
+						for (Class<?> cc : COLUMN_CLASSES)
+							if (TYPES_DICT.get(cc).dbFieldType()
+									.equalsIgnoreCase(typeName)) {
+								result.setType((Class<? extends Column>) cc);
+								break;
+							}
+					}
+					result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
+					if (result.getType() == StringColumn.class) {
+						result.setLength(rs.getInt("COLUMN_SIZE"));
+					}
+					String defaultBody = rs.getString("COLUMN_DEF");
+					if (defaultBody != null) {
+						defaultBody = modifyDefault(result, defaultBody);
+						result.setDefaultValue(defaultBody);
+					}
+					return result;
+				} else {
+					return null;
+				}
+			} finally {
+				rs.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
+	private String modifyDefault(DBColumnInfo ci, String defaultBody) {
+		String result = defaultBody;
+		if (DateTimeColumn.class == ci.getType()) {
+			if (NOW.equalsIgnoreCase(defaultBody))
+				result = "GETDATE()";
+			else {
+				Matcher m = POSTGRESDATEPATTERN.matcher(defaultBody);
+				m.find();
+				result = String.format("'%s%s%s'", m.group(1), m.group(2),
+						m.group(3));
+			}
+		} else if (BooleanColumn.class == ci.getType()) {
+			result = "'" + defaultBody.toUpperCase() + "'";
+		} else if (StringColumn.class == ci.getType()) {
+			if (result.endsWith("::text"))
+				result = result.substring(0,
+						result.length() - "::text".length());
+			else if (result.endsWith("::character varying"))
+				result = result.substring(0, result.length()
+						- "::character varying".length());
+		} else if (BinaryColumn.class == ci.getType()) {
+			Matcher m = HEX_STRING.matcher(defaultBody);
+			if (m.find())
+				result = "0x" + m.group(1).toUpperCase();
+		}
 		return result;
 	}
 
 	@Override
 	void updateColumn(Connection conn, Column c, DBColumnInfo actual)
 			throws CelestaException {
-		String def = columnDef(c);
-		String sql = String.format("ALTER TABLE " + tableTemplate()
-				+ " ALTER COLUMN %s", c.getParentTable().getGrain().getName(),
-				c.getParentTable().getName(), def);
-		PreparedStatement stmt = prepareStatement(conn, sql);
 		try {
-			stmt.executeUpdate();
+			String sql;
+			List<String> batch = new LinkedList<>();
+			// Начинаем с удаления default-значения
+			sql = String.format(ALTER_TABLE + tableTemplate()
+					+ " ALTER COLUMN \"%s\" DROP DEFAULT", c.getParentTable()
+					.getGrain().getName(), c.getParentTable().getName(),
+					c.getName());
+			batch.add(sql);
+
+			updateColType(c, actual, batch);
+
+			// Проверяем nullability
+			if (c.isNullable() != actual.isNullable()) {
+				sql = String.format(ALTER_TABLE + tableTemplate()
+						+ " ALTER COLUMN \"%s\" %s", c.getParentTable()
+						.getGrain().getName(), c.getParentTable().getName(), c
+						.getName(), c.isNullable() ? "DROP NOT NULL"
+						: "SET NOT NULL");
+				batch.add(sql);
+			}
+
+			// Если в данных пустой default, а в метаданных -- не пустой -- то
+			if (c.getDefaultValue() != null
+					|| (c instanceof DateTimeColumn && ((DateTimeColumn) c)
+							.isGetdate())) {
+				sql = String
+						.format(ALTER_TABLE + tableTemplate()
+								+ " ALTER COLUMN \"%s\" SET %s", c
+								.getParentTable().getGrain().getName(), c
+								.getParentTable().getName(), c.getName(),
+								getColumnDefiner(c).getDefaultDefinition(c));
+				batch.add(sql);
+			}
+
+			Statement stmt = conn.createStatement();
+			try {
+				// System.out.println(">>batch begin>>");
+				for (String s : batch) {
+					// System.out.println(s);
+					stmt.executeUpdate(s);
+				}
+				// System.out.println("<<batch end<<");
+			} finally {
+				stmt.close();
+			}
+
+			manageAutoIncrement(conn, c.getParentTable());
 		} catch (SQLException e) {
 			throw new CelestaException(
 					"Cannot modify column %s on table %s.%s: %s", c.getName(),
@@ -418,6 +538,43 @@ final class PostgresAdaptor extends DBAdaptor {
 
 		}
 
+	}
+
+	private void updateColType(Column c, DBColumnInfo actual, List<String> batch) {
+		String sql;
+		String colType;
+		if (c.getClass() == StringColumn.class) {
+			StringColumn sc = (StringColumn) c;
+			colType = sc.isMax() ? "text" : String.format("%s(%s)",
+					getColumnDefiner(c).dbFieldType(), sc.getLength());
+		} else {
+			colType = getColumnDefiner(c).dbFieldType();
+		}
+		// Если тип не совпадает
+		if (c.getClass() != actual.getType()) {
+			sql = String.format(ALTER_TABLE + tableTemplate()
+					+ " ALTER COLUMN \"%s\" TYPE %s", c.getParentTable()
+					.getGrain().getName(), c.getParentTable().getName(),
+					c.getName(), colType);
+			if (c.getClass() == IntegerColumn.class)
+				sql += String.format(" USING (%s::integer);",
+						c.getQuotedName());
+			else if (c.getClass() == BooleanColumn.class)
+				sql += String.format(" USING (%s::boolean);",
+						c.getQuotedName());
+
+			batch.add(sql);
+		} else if (c.getClass() == StringColumn.class) {
+			StringColumn sc = (StringColumn) c;
+			if (sc.isMax() != actual.isMax()
+					|| sc.getLength() != actual.getLength()) {
+				sql = String.format(ALTER_TABLE + tableTemplate()
+						+ " ALTER COLUMN \"%s\" TYPE %s", c
+						.getParentTable().getGrain().getName(), c
+						.getParentTable().getName(), c.getName(), colType);
+				batch.add(sql);
+			}
+		}
 	}
 
 	@Override

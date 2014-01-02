@@ -569,16 +569,6 @@ public abstract class DBAdaptor {
 	abstract String getLimitedSQL(Table t, String whereClause, String orderBy,
 			long offset, long rowCount);
 
-	/**
-	 * Возвращает наименование типа столбца, соответствующее базе данных.
-	 * 
-	 * @param c
-	 *            Колонка в score
-	 */
-	final String dbFieldType(Column c) {
-		return getColumnDefiner(c).dbFieldType();
-	}
-
 	final String columnDef(Column c) {
 		return getColumnDefiner(c).getFullDefinition(c);
 	}
