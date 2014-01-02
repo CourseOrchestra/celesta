@@ -2,7 +2,6 @@ package ru.curs.celesta.dbutils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -552,19 +551,14 @@ public abstract class Cursor {
 			ResultSet rs = stmt.executeQuery();
 			try {
 				if (rs.next()) {
-					Blob b = rs.getBlob(1);
-					if (!(b == null || rs.wasNull()))
+					InputStream is = rs.getBinaryStream(1);
+					if (!(is == null || rs.wasNull())) {
 						try {
-							InputStream is = b.getBinaryStream();
-							try {
-								result = new BLOB(is);
-							} finally {
-								is.close();
-							}
+							result = new BLOB(is);
 						} finally {
-							b.free();
+							is.close();
 						}
-					else {
+					} else {
 						// Поле имеет значение null
 						result = new BLOB();
 					}
@@ -671,8 +665,8 @@ public abstract class Cursor {
 	 */
 	public final void limit(long offset, long rowCount) throws CelestaException {
 		if (offset < 0)
-			throw new CelestaException("Negative offset (%d) in limit(...) call",
-					offset);
+			throw new CelestaException(
+					"Negative offset (%d) in limit(...) call", offset);
 		if (rowCount < 0)
 			throw new CelestaException(
 					"Negative rowCount (%d) in limit(...) call", rowCount);
