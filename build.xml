@@ -4,7 +4,12 @@
 		<echo>Compiling Celesta parser</echo>
 		<javacc target="src/ru/curs/celesta/score/CelestaParser.jj" outputdirectory="src/ru/curs/celesta/score/" javacchome="javacc-5.0" />
 	</target>
-	<target name="compile" depends="javacc">
+	<target name="javacc2">
+		<echo>Compiling complex filter parser</echo>
+		<javacc target="src/ru/curs/celesta/dbutils/filter/FilterParser.jj" outputdirectory="src/ru/curs/celesta/dbutils/filter" javacchome="javacc-5.0" />
+	</target>
+	
+	<target name="compile" depends="javacc,javacc2">
 		<echo>Compile the source files</echo>
 		<javac destdir="build/classes" includeantruntime="false" encoding="UTF-8">
 			<classpath>

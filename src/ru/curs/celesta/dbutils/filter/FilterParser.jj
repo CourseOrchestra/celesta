@@ -1,0 +1,161 @@
+options{
+    IGNORE_CASE=true ;
+    UNICODE_INPUT=true;
+    STATIC=false;
+//  DEBUG_LOOKAHEAD= true ;
+    FORCE_LA_CHECK=true;
+//  DEBUG_TOKEN_MANAGER=true;
+}
+PARSER_BEGIN(FilterParser)
+package ru.curs.celesta.dbutils.filter;
+
+import java.io.StringReader;
+import ru.curs.celesta.CelestaException;
+
+public class FilterParser{
+   public static enum FilterType { NUMERIC , TEXT ,  OTHER };
+   private FilterType filterType;
+   private String fieldName;
+   
+   public static String translateFilter(FilterType fieldType, String fieldName, String filter) throws CelestaException {
+	 StringReader sr = new StringReader(filter);
+     try {
+		 FilterParser parser = new FilterParser(sr);
+		 try {
+            return parser.filterExpr(fieldType, fieldName);
+		 } catch (ParseException e) {
+		    throw new CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
+         }		 
+     } finally {
+         sr.close();
+     }
+   }
+   
+   private String leftPercent(String val){
+		return "'%" + val.substring(1);
+   }
+   
+   private String rightPercent(String val){
+		return val.substring(0, val.length()-1) + "%'";
+   }
+   
+   private String bothPercent(String val){
+		return "'%" + val.substring(1, val.length()-1) + "%'";
+   }
+   
+}
+PARSER_END(FilterParser)
+
+SKIP:
+{
+    " "
+}
+
+TOKEN: 
+{
+    < S_DOUBLE: ((<S_INTEGER>)? "." <S_INTEGER> ( ["e","E"] ([ "-","+"])? <S_INTEGER> )? 
+                |
+                (<S_INTEGER>)+ (".")? ["e","E"] ([ "-","+"])? (<S_INTEGER>)+
+                )>
+  | < S_INTEGER: ( <DIGIT> )+ >
+  | < #DIGIT: ["0" - "9"] >
+  | < S_CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")*>
+  | < S_NULL: "NULL">
+}
+
+String filterExpr(FilterType filterType, String fieldName):
+{
+  this.filterType = filterType;
+  this.fieldName = fieldName;
+  String result;
+}
+{
+  (
+    LOOKAHEAD({filterType == FilterType.OTHER})   result = nullExpr() <EOF>
+  | LOOKAHEAD({filterType != FilterType.OTHER})    result = expr() <EOF>
+  )
+   {return result;}
+}
+
+String nullExpr():
+{
+}
+{
+      <S_NULL>     {return String.format("%s is null", fieldName);}
+	|"!" <S_NULL>  {return String.format("not %s is null", fieldName);}
+}
+
+String expr():
+{
+  String buf;
+  StringBuilder result = new StringBuilder();
+}
+{
+  ( buf = singleExpr() {result.append(buf);}
+   [
+     ("&" buf = singleExpr() {result.append(" and " +  buf);})+
+     | 
+     ("|" buf = singleExpr() {result.append(" or " +buf);})+
+   ]
+   )
+   { return result.toString();}
+}
+
+String singleExpr():
+{
+  String buf;
+  String result;
+}
+{
+   (  ("(" buf = expr() ")")    { result = "(" + buf + ")";}
+   | ("!" buf = singleExpr())  { result = "not " + buf;} 
+   | buf = term()              { result =  buf;}
+   )
+   {return result;}
+}
+
+String term():
+{
+ Token tok;
+ String result;
+}
+{
+  ( 
+  tok = <S_NULL>                              { result = String.format("%s is null", fieldName);}
+  | LOOKAHEAD({filterType == FilterType.NUMERIC}) result = numTerm()
+  | LOOKAHEAD({filterType == FilterType.TEXT})    result = textTerm() 
+  )
+  {return result;}
+}
+
+String numTerm(): {String val1; String val2;}{ 
+     (">" val1 = number()  {return String.format("%s > %s", fieldName, val1);})
+   | ("<" val1 = number()  {return String.format("%s < %s", fieldName, val1);})
+   | (".." val1 = number() {return String.format("%s <= %s", fieldName, val1);})  
+   | (val1 = number() [".." [val2 = number() {return String.format("%s between %s and %s", fieldName, val1, val2);}] {return String.format("%s >= %s", fieldName, val1);}] 
+   {return String.format("%s = %s", fieldName, val1);})
+}
+
+String number(): {Token tok;}{
+     tok = <S_INTEGER> {return tok.toString();}
+   | tok = <S_DOUBLE>  {return tok.toString();}
+}
+
+String textTerm(): {String val1; String val2; boolean ci = false; String fn = fieldName;}{
+   ["@" {ci = true; fn = "UPPER(" + fn + ")";}]
+   (   
+     (">"  val1 = text(ci) {return String.format("%s > %s", fn, val1);})
+   | ("<"  val1 = text(ci) {return String.format("%s < %s", fn, val1);})
+   | (".." val1 = text(ci) {return String.format("%s <= %s", fn, val1);})
+   | ("%"  val1 = text(ci) ["%" {return String.format("%s like %s", fn,  bothPercent(val1));}]{return String.format("%s like %s", fn,  leftPercent(val1));})   
+   | (val1 = text(ci) 
+        [  (".." [val2 = text(ci) {return String.format("%s between %s and %s", fn, val1, val2);}] {return String.format("%s >= %s", fn, val1);})
+         | ("%"  {return String.format("%s like %s", fn,  rightPercent(val1));})
+        ] 
+        {return String.format("%s = %s", fn, val1);})
+	)
+}
+
+String text(boolean ci): {Token tok;}{
+     tok = <S_CHAR_LITERAL> {return ci? tok.toString().toUpperCase() : tok.toString();}
+}
