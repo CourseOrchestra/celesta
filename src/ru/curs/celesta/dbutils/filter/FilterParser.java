@@ -62,7 +62,7 @@ public class FilterParser implements FilterParserConstants {
     case 7:
       jj_consume_token(7);
       jj_consume_token(S_NULL);
-                        {if (true) return String.format("not %s is null", fieldName);}
+                        {if (true) return String.format("not (%s is null)", fieldName);}
       break;
     default:
       jj_la1[0] = jj_gen;
@@ -135,12 +135,12 @@ public class FilterParser implements FilterParserConstants {
       jj_consume_token(10);
       buf = expr();
       jj_consume_token(11);
-                                  result = "(" + buf + ")";
+                                 result = "(" + buf + ")";
       break;
     case 7:
       jj_consume_token(7);
       buf = singleExpr();
-                                 result = "not " + buf;
+                                 result = "not (" + buf + ")";
       break;
     default:
       jj_la1[5] = jj_gen;

@@ -647,6 +647,11 @@ public abstract class Cursor {
 	public final void setFilter(String name, String value)
 			throws CelestaException {
 		validateColumName(name);
+		if (value == null || value.isEmpty())
+			throw new CelestaException(
+					"Filter for column %s is null or empty. "
+							+ "Use setrange(fieldname) to remove any filters from the column.",
+					name);
 		filters.put(name, new Filter(value));
 		closeSet();
 	}

@@ -1,10 +1,12 @@
 package ru.curs.celesta.dbutils;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.filter.FilterParser;
+import ru.curs.celesta.dbutils.filter.FilterParser.FilterType;
 import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.StringColumn;
 
 /**
  * Внутреннее представление фильтра на поле.
@@ -65,8 +67,6 @@ class Range extends AbstractFilter {
  * Сложный фильтр.
  */
 class Filter extends AbstractFilter {
-	private static final Pattern LIKETERM = Pattern
-			.compile("(\\*?)(([^*]|\\*+[^*])+)(\\**)");
 
 	private final String value;
 
@@ -80,15 +80,16 @@ class Filter extends AbstractFilter {
 	}
 
 	public String makeWhereClause(Column c) throws CelestaException {
-		if ("null".equalsIgnoreCase(value))
-			return String.format("%s is null", c.getQuotedName());
-		else if ("!null".equalsIgnoreCase(value))
-			return String.format("not (%s is null)", c.getQuotedName());
-
-		Matcher m = LIKETERM.matcher(value);
-		m.matches();
-		return String.format("%s like '%s%s%s'", c.getQuotedName(), m.group(1)
-				.isEmpty() ? "" : "%", m.group(2), m.group(4).isEmpty() ? ""
-				: "%");
+		FilterType ft;
+		if (c instanceof IntegerColumn || c instanceof FloatingColumn)
+			ft = FilterType.NUMERIC;
+		else if (c instanceof StringColumn)
+			ft = FilterType.TEXT;
+		else {
+			ft = FilterType.OTHER;
+		}
+		String result = FilterParser.translateFilter(ft, c.getQuotedName(),
+				value);
+		return result;
 	}
 }

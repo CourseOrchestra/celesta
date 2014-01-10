@@ -82,7 +82,7 @@ String nullExpr():
 }
 {
       <S_NULL>     {return String.format("%s is null", fieldName);}
-	|"!" <S_NULL>  {return String.format("not %s is null", fieldName);}
+	|"!" <S_NULL>  {return String.format("not (%s is null)", fieldName);}
 }
 
 String expr():
@@ -107,8 +107,8 @@ String singleExpr():
   String result;
 }
 {
-   (  ("(" buf = expr() ")")    { result = "(" + buf + ")";}
-   | ("!" buf = singleExpr())  { result = "not " + buf;} 
+   ( ("(" buf = expr() ")")    { result = "(" + buf + ")";}
+   | ("!" buf = singleExpr())  { result = "not (" + buf + ")";} 
    | buf = term()              { result =  buf;}
    )
    {return result;}
