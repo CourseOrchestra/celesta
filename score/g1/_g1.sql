@@ -34,3 +34,9 @@ fff int foreign key references aa(idaa) --первая часть кругово
 
  primary key (postalcode, building, flat)
  );
+ 
+ /**view description*/
+create view testview as 
+ select distinct grainid as fieldalias , ta.tablename, celesta.grains.checksum 
+   from celesta.tables ta inner join celesta.grains on ta.grainid = celesta.grains.id
+   where tablename >= 'aa';

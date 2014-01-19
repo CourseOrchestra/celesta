@@ -1,1 +1,1 @@
-..\..\..\..\javacc-5.0\bin\javacc celestasql.jj
+..\..\..\..\..\javacc-5.0\bin\javacc celestaParser.jj

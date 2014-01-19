@@ -49,6 +49,14 @@ public final class Grain extends NamedElement {
 		}
 	};
 
+	private final NamedElementHolder<View> views = new NamedElementHolder<View>() {
+		@Override
+		String getErrorMsg(String name) {
+			return String.format(
+					"View '%s' defined more than once in a grain.", name);
+		}
+	};
+
 	private final NamedElementHolder<Index> indices = new NamedElementHolder<Index>() {
 		@Override
 		String getErrorMsg(String name) {
@@ -120,6 +128,11 @@ public final class Grain extends NamedElement {
 	void addTable(Table table) throws ParseException {
 		if (table.getGrain() != this)
 			throw new IllegalArgumentException();
+		if (views.get(table.getName()) != null)
+			throw new ParseException(
+					String.format(
+							"Cannot create table '%s', a view with the same name already exists in grain '%s'.",
+							table.getName(), getName()));
 		modify();
 		tables.addElement(table);
 	}
@@ -353,5 +366,42 @@ public final class Grain extends NamedElement {
 			bw.newLine();
 			return true;
 		}
+	}
+
+	void addView(View view) throws ParseException {
+		if (view.getGrain() != this)
+			throw new IllegalArgumentException();
+		if (tables.get(view.getName()) != null)
+			throw new ParseException(
+					String.format(
+							"Cannot create view '%s', a table with the same name already exists in grain '%s'.",
+							view.getName(), getName()));
+		modify();
+		views.addElement(view);
+	}
+
+	/**
+	 * Возвращает представление по его имени, либо исключение с сообщением о
+	 * том, что представление не найдено.
+	 * 
+	 * @param name
+	 *            Имя
+	 * @throws ParseException
+	 *             Если таблица с таким именем не найдена в грануле.
+	 */
+
+	public View getView(String name) throws ParseException {
+		View result = views.get(name);
+		if (result == null)
+			throw new ParseException(String.format(
+					"View '%s' not found in grain '%s'", name, getName()));
+		return result;
+	}
+
+	/**
+	 * Возвращает набор представлений, определённый в грануле.
+	 */
+	public Map<String, View> getViews() {
+		return views.getElements();
 	}
 }

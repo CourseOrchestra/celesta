@@ -50,6 +50,15 @@ public class ScoreTest {
 	}
 
 	@Test
+	public void test2() throws CelestaException, ParseException {
+		Score s = new Score("score");
+		Grain g1 = s.getGrain("g1");
+		View v = g1.getView("testview");
+		assertEquals("testview", v.getName());
+		assertEquals("view description", v.getCelestaDoc());
+	}
+
+	@Test
 	public void modificationTest1() throws CelestaException, ParseException {
 		Score s = new Score("score");
 		Grain g1 = s.getGrain("g1");
@@ -164,5 +173,29 @@ public class ScoreTest {
 		assertEquals(0, c.getForeignKeys().size());
 
 		assertTrue(g3.isModified());
+	}
+
+	@Test
+	public void modificationTest6() throws CelestaException, ParseException {
+		Score s = new Score("score");
+		Grain g2 = s.getGrain("g2");
+		// Нельзя создать view с именем таблицы
+		boolean itWas = false;
+		try {
+			new View(g2, "b");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		// Нельзя создать таблицу с именем view
+		new View(g2, "newView");
+		itWas = false;
+		try {
+			new Table(g2, "newView");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		new Table(g2, "newView2");
 	}
 }

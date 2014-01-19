@@ -17,79 +17,113 @@ public interface CelestaParserConstants {
   /** RegularExpression Id. */
   int K_INDEX = 7;
   /** RegularExpression Id. */
-  int K_DEFAULT = 8;
+  int K_VIEW = 8;
   /** RegularExpression Id. */
-  int K_NOT = 9;
+  int K_AS = 9;
   /** RegularExpression Id. */
-  int K_NULL = 10;
+  int K_DEFAULT = 10;
   /** RegularExpression Id. */
-  int K_MAX = 11;
+  int K_NOT = 11;
   /** RegularExpression Id. */
-  int K_IDENTITY = 12;
+  int K_NULL = 12;
   /** RegularExpression Id. */
-  int K_GETDATE = 13;
+  int K_MAX = 13;
   /** RegularExpression Id. */
-  int K_PRIMARY = 14;
+  int K_IDENTITY = 14;
   /** RegularExpression Id. */
-  int K_FOREIGN = 15;
+  int K_GETDATE = 15;
   /** RegularExpression Id. */
-  int K_KEY = 16;
+  int K_PRIMARY = 16;
   /** RegularExpression Id. */
-  int K_REFERENCES = 17;
+  int K_FOREIGN = 17;
   /** RegularExpression Id. */
-  int K_ON = 18;
+  int K_KEY = 18;
   /** RegularExpression Id. */
-  int K_UPDATE = 19;
+  int K_REFERENCES = 19;
   /** RegularExpression Id. */
-  int K_DELETE = 20;
+  int K_ON = 20;
   /** RegularExpression Id. */
-  int K_NO = 21;
+  int K_UPDATE = 21;
   /** RegularExpression Id. */
-  int K_ACTION = 22;
+  int K_DELETE = 22;
   /** RegularExpression Id. */
-  int K_SET = 23;
+  int K_NO = 23;
   /** RegularExpression Id. */
-  int K_CASCADE = 24;
+  int K_ACTION = 24;
   /** RegularExpression Id. */
-  int K_ALTER = 25;
+  int K_SET = 25;
   /** RegularExpression Id. */
-  int K_ADD = 26;
+  int K_CASCADE = 26;
   /** RegularExpression Id. */
-  int K_CONSTRAINT = 27;
+  int K_ALTER = 27;
   /** RegularExpression Id. */
-  int K_INT = 28;
+  int K_ADD = 28;
   /** RegularExpression Id. */
-  int K_REAL = 29;
+  int K_CONSTRAINT = 29;
   /** RegularExpression Id. */
-  int K_NVARCHAR = 30;
+  int K_IN = 30;
   /** RegularExpression Id. */
-  int K_IMAGE = 31;
+  int K_OR = 31;
   /** RegularExpression Id. */
-  int K_DATETIME = 32;
+  int K_AND = 32;
   /** RegularExpression Id. */
-  int K_BIT = 33;
+  int K_LIKE = 33;
   /** RegularExpression Id. */
-  int S_DOUBLE = 34;
+  int K_BETWEEN = 34;
   /** RegularExpression Id. */
-  int S_INTEGER = 35;
+  int K_IS = 35;
   /** RegularExpression Id. */
-  int DIGIT = 36;
+  int K_SELECT = 36;
   /** RegularExpression Id. */
-  int S_BINARY_LITERAL = 37;
+  int K_DISTINCT = 37;
   /** RegularExpression Id. */
-  int S_IDENTIFIER = 38;
+  int K_FROM = 38;
   /** RegularExpression Id. */
-  int LETTER = 39;
+  int K_INNER = 39;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 40;
+  int K_LEFT = 40;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 41;
+  int K_RIGHT = 41;
   /** RegularExpression Id. */
-  int CELESTA_DOC = 42;
+  int K_FULL = 42;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 43;
+  int K_JOIN = 43;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 44;
+  int K_WHERE = 44;
+  /** RegularExpression Id. */
+  int K_INT = 45;
+  /** RegularExpression Id. */
+  int K_REAL = 46;
+  /** RegularExpression Id. */
+  int K_NVARCHAR = 47;
+  /** RegularExpression Id. */
+  int K_IMAGE = 48;
+  /** RegularExpression Id. */
+  int K_DATETIME = 49;
+  /** RegularExpression Id. */
+  int K_BIT = 50;
+  /** RegularExpression Id. */
+  int S_DOUBLE = 51;
+  /** RegularExpression Id. */
+  int S_INTEGER = 52;
+  /** RegularExpression Id. */
+  int DIGIT = 53;
+  /** RegularExpression Id. */
+  int S_BINARY_LITERAL = 54;
+  /** RegularExpression Id. */
+  int S_IDENTIFIER = 55;
+  /** RegularExpression Id. */
+  int LETTER = 56;
+  /** RegularExpression Id. */
+  int S_CHAR_LITERAL = 57;
+  /** RegularExpression Id. */
+  int S_QUOTED_IDENTIFIER = 58;
+  /** RegularExpression Id. */
+  int CELESTA_DOC = 59;
+  /** RegularExpression Id. */
+  int LINE_COMMENT = 60;
+  /** RegularExpression Id. */
+  int MULTI_LINE_COMMENT = 61;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -104,6 +138,8 @@ public interface CelestaParserConstants {
     "\"CREATE\"",
     "\"TABLE\"",
     "\"INDEX\"",
+    "\"VIEW\"",
+    "\"AS\"",
     "\"DEFAULT\"",
     "\"NOT\"",
     "\"NULL\"",
@@ -124,6 +160,21 @@ public interface CelestaParserConstants {
     "\"ALTER\"",
     "\"ADD\"",
     "\"CONSTRAINT\"",
+    "\"IN\"",
+    "\"OR\"",
+    "\"AND\"",
+    "\"LIKE\"",
+    "\"BETWEEN\"",
+    "\"IS\"",
+    "\"SELECT\"",
+    "\"DISTINCT\"",
+    "\"FROM\"",
+    "\"INNER\"",
+    "\"LEFT\"",
+    "\"RIGHT\"",
+    "\"FULL\"",
+    "\"JOIN\"",
+    "\"WHERE\"",
     "\"INT\"",
     "\"REAL\"",
     "\"NVARCHAR\"",
@@ -147,6 +198,12 @@ public interface CelestaParserConstants {
     "\")\"",
     "\"-\"",
     "\".\"",
+    "\"=\"",
+    "\">\"",
+    "\"<\"",
+    "\"+\"",
+    "\"*\"",
+    "\"/\"",
   };
 
 }

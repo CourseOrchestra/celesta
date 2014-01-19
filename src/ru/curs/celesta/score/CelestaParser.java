@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 //CHECKSTYLE:OFF
 public class CelestaParser implements CelestaParserConstants {
 
-/*Метамодель состоит из описания таблиц*/
+/*Metamodel. Root rule.*/
   final public Grain grain(Score s, String name) throws ParseException {
    /*This work is dedicated to Maria, my misterious muse :-) 
      Ivan Ponomarev, June 2013.*/
@@ -33,7 +33,7 @@ public class CelestaParser implements CelestaParserConstants {
       "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
     t = jj_consume_token(S_CHAR_LITERAL);
                          g.setVersion(t.toString());
-    jj_consume_token(45);
+    jj_consume_token(62);
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -65,12 +65,15 @@ public class CelestaParser implements CelestaParserConstants {
         case K_INDEX:
           createIndex(g, doc == null? null: doc.toString());
           break;
+        case K_VIEW:
+          createView(g, doc == null? null: doc.toString());
+          break;
         default:
           jj_la1[3] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
-                                                                        doc = null;
+                                                                                        doc = null;
         break;
       case K_ALTER:
         jj_consume_token(K_ALTER);
@@ -81,7 +84,7 @@ public class CelestaParser implements CelestaParserConstants {
         jj_consume_token(-1);
         throw new ParseException();
       }
-      jj_consume_token(45);
+      jj_consume_token(62);
     }
     jj_consume_token(0);
    g.completeParsing();
@@ -96,22 +99,22 @@ public class CelestaParser implements CelestaParserConstants {
     tableName = jj_consume_token(S_IDENTIFIER);
                                     table = new Table(g, tableName.toString());
                                     table.setCelestaDocLexem(doc);
-    jj_consume_token(46);
+    jj_consume_token(63);
     tableConstituent(table);
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 47:
+      case 64:
         ;
         break;
       default:
         jj_la1[5] = jj_gen;
         break label_2;
       }
-      jj_consume_token(47);
+      jj_consume_token(64);
       tableConstituent(table);
     }
-    jj_consume_token(48);
+    jj_consume_token(65);
           table.finalizePK();
   }
 
@@ -180,8 +183,8 @@ public class CelestaParser implements CelestaParserConstants {
         case K_DEFAULT:
           jj_consume_token(K_DEFAULT);
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 49:
-            jj_consume_token(49);
+          case 66:
+            jj_consume_token(66);
                                                          negative = true;
             break;
           default:
@@ -222,8 +225,8 @@ public class CelestaParser implements CelestaParserConstants {
       case K_DEFAULT:
         jj_consume_token(K_DEFAULT);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 49:
-          jj_consume_token(49);
+        case 66:
+          jj_consume_token(66);
                                      negative = true;
           break;
         default:
@@ -252,8 +255,8 @@ public class CelestaParser implements CelestaParserConstants {
       jj_consume_token(K_NVARCHAR);
                       column = new StringColumn(table, t.toString()); t = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 46:
-        jj_consume_token(46);
+      case 63:
+        jj_consume_token(63);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case S_INTEGER:
           length = jj_consume_token(S_INTEGER);
@@ -266,7 +269,7 @@ public class CelestaParser implements CelestaParserConstants {
           jj_consume_token(-1);
           throw new ParseException();
         }
-        jj_consume_token(48);
+        jj_consume_token(65);
         break;
       default:
         jj_la1[17] = jj_gen;
@@ -311,8 +314,8 @@ public class CelestaParser implements CelestaParserConstants {
           break;
         case K_GETDATE:
           t = jj_consume_token(K_GETDATE);
-          jj_consume_token(46);
-          jj_consume_token(48);
+          jj_consume_token(63);
+          jj_consume_token(65);
           break;
         default:
           jj_la1[20] = jj_gen;
@@ -419,24 +422,24 @@ public class CelestaParser implements CelestaParserConstants {
                               Token t;
     jj_consume_token(K_PRIMARY);
     jj_consume_token(K_KEY);
-    jj_consume_token(46);
+    jj_consume_token(63);
     t = jj_consume_token(S_IDENTIFIER);
                                               table.addPK(t.toString());
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 47:
+      case 64:
         ;
         break;
       default:
         jj_la1[29] = jj_gen;
         break label_3;
       }
-      jj_consume_token(47);
+      jj_consume_token(64);
       t = jj_consume_token(S_IDENTIFIER);
                                               table.addPK(t.toString());
     }
-    jj_consume_token(48);
+    jj_consume_token(65);
     table.finalizePK();
   }
 
@@ -446,24 +449,24 @@ public class CelestaParser implements CelestaParserConstants {
     jj_consume_token(K_FOREIGN);
     jj_consume_token(K_KEY);
                      fk = new ForeignKey(table);
-    jj_consume_token(46);
+    jj_consume_token(63);
     t = jj_consume_token(S_IDENTIFIER);
                            fk.addColumn(t.toString());
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 47:
+      case 64:
         ;
         break;
       default:
         jj_la1[30] = jj_gen;
         break label_4;
       }
-      jj_consume_token(47);
+      jj_consume_token(64);
       t = jj_consume_token(S_IDENTIFIER);
                            fk.addColumn(t.toString());
     }
-    jj_consume_token(48);
+    jj_consume_token(65);
     references(fk);
   {if (true) return fk;}
     throw new Error("Missing return statement in function");
@@ -476,8 +479,8 @@ public class CelestaParser implements CelestaParserConstants {
     jj_consume_token(K_REFERENCES);
     t = jj_consume_token(S_IDENTIFIER);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 50:
-      jj_consume_token(50);
+    case 67:
+      jj_consume_token(67);
       t2 = jj_consume_token(S_IDENTIFIER);
       break;
     default:
@@ -488,24 +491,24 @@ public class CelestaParser implements CelestaParserConstants {
       fk.setReferencedTable("", t.toString());
         else
           fk.setReferencedTable(t.toString(), t2.toString());
-    jj_consume_token(46);
+    jj_consume_token(63);
     t = jj_consume_token(S_IDENTIFIER);
                           fk.addReferencedColumn(t.toString());
     label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 47:
+      case 64:
         ;
         break;
       default:
         jj_la1[32] = jj_gen;
         break label_5;
       }
-      jj_consume_token(47);
+      jj_consume_token(64);
       t = jj_consume_token(S_IDENTIFIER);
                            fk.addReferencedColumn(t.toString());
     }
-    jj_consume_token(48);
+    jj_consume_token(65);
  fk.finalizeReference();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_ON:
@@ -592,24 +595,24 @@ Index ind;
     tableName = jj_consume_token(S_IDENTIFIER);
     ind = new Index(g, tableName.toString(), indexName.toString());
     ind.setCelestaDocLexem(doc);
-    jj_consume_token(46);
+    jj_consume_token(63);
     columnName = jj_consume_token(S_IDENTIFIER);
                                     ind.addColumn(columnName.toString());
     label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 47:
+      case 64:
         ;
         break;
       default:
         jj_la1[38] = jj_gen;
         break label_6;
       }
-      jj_consume_token(47);
+      jj_consume_token(64);
       columnName = jj_consume_token(S_IDENTIFIER);
                                                                                                             ind.addColumn(columnName.toString());
     }
-    jj_consume_token(48);
+    jj_consume_token(65);
     ind.finalizeIndex();
   }
 
@@ -647,6 +650,443 @@ else {
     throw new Error("Missing return statement in function");
   }
 
+  final public void createView(Grain g, String doc) throws ParseException {
+        View view = null;
+        Token viewName = null;
+    jj_consume_token(K_VIEW);
+    viewName = jj_consume_token(S_IDENTIFIER);
+    jj_consume_token(K_AS);
+                                           view = new View(g, viewName.toString());
+                                    view.setCelestaDocLexem(doc);
+    select();
+  }
+
+  final public void sqlExpression() throws ParseException {
+    sqlAndExpression();
+    label_7:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case K_OR:
+        ;
+        break;
+      default:
+        jj_la1[40] = jj_gen;
+        break label_7;
+      }
+      jj_consume_token(K_OR);
+      sqlAndExpression();
+    }
+  }
+
+  final public void sqlAndExpression() throws ParseException {
+    sqlUnaryLogicalExpression();
+    label_8:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case K_AND:
+        ;
+        break;
+      default:
+        jj_la1[41] = jj_gen;
+        break label_8;
+      }
+      jj_consume_token(K_AND);
+      sqlUnaryLogicalExpression();
+    }
+  }
+
+  final public void sqlUnaryLogicalExpression() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case K_NOT:
+      jj_consume_token(K_NOT);
+      break;
+    default:
+      jj_la1[42] = jj_gen;
+      ;
+    }
+    sqlRelationalExpression();
+  }
+
+  final public void sqlRelationalExpression() throws ParseException {
+    sqlSimpleExpression();
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case K_IN:
+    case K_LIKE:
+    case K_BETWEEN:
+    case K_IS:
+    case 68:
+    case 69:
+    case 70:
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 68:
+      case 69:
+      case 70:
+        relop();
+        sqlSimpleExpression();
+        break;
+      case K_IN:
+        jj_consume_token(K_IN);
+        jj_consume_token(63);
+        sqlExpression();
+        label_9:
+        while (true) {
+          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case 64:
+            ;
+            break;
+          default:
+            jj_la1[43] = jj_gen;
+            break label_9;
+          }
+          jj_consume_token(64);
+          sqlExpression();
+        }
+        jj_consume_token(65);
+        break;
+      case K_BETWEEN:
+        jj_consume_token(K_BETWEEN);
+        sqlSimpleExpression();
+        jj_consume_token(K_AND);
+        sqlSimpleExpression();
+        break;
+      case K_LIKE:
+        jj_consume_token(K_LIKE);
+        sqlSimpleExpression();
+        break;
+      case K_IS:
+        jj_consume_token(K_IS);
+        jj_consume_token(K_NULL);
+        break;
+      default:
+        jj_la1[44] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      break;
+    default:
+      jj_la1[45] = jj_gen;
+      ;
+    }
+  }
+
+  final public void relop() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case 68:
+      jj_consume_token(68);
+      break;
+    case 69:
+      jj_consume_token(69);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 68:
+        jj_consume_token(68);
+        break;
+      default:
+        jj_la1[46] = jj_gen;
+        ;
+      }
+      break;
+    case 70:
+      jj_consume_token(70);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 68:
+      case 69:
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case 68:
+          jj_consume_token(68);
+          break;
+        case 69:
+          jj_consume_token(69);
+          break;
+        default:
+          jj_la1[47] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+        break;
+      default:
+        jj_la1[48] = jj_gen;
+        ;
+      }
+      break;
+    default:
+      jj_la1[49] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+  }
+
+  final public void sqlSimpleExpression() throws ParseException {
+    sqlMultiplicativeExpression();
+    label_10:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 66:
+      case 71:
+        ;
+        break;
+      default:
+        jj_la1[50] = jj_gen;
+        break label_10;
+      }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 71:
+        jj_consume_token(71);
+        break;
+      case 66:
+        jj_consume_token(66);
+        break;
+      default:
+        jj_la1[51] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      sqlMultiplicativeExpression();
+    }
+  }
+
+  final public void sqlMultiplicativeExpression() throws ParseException {
+    sqlUnaryExpression();
+    label_11:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 72:
+      case 73:
+        ;
+        break;
+      default:
+        jj_la1[52] = jj_gen;
+        break label_11;
+      }
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 72:
+        jj_consume_token(72);
+        break;
+      case 73:
+        jj_consume_token(73);
+        break;
+      default:
+        jj_la1[53] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      sqlUnaryExpression();
+    }
+  }
+
+  final public void sqlUnaryExpression() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case 66:
+    case 71:
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 71:
+        jj_consume_token(71);
+        break;
+      case 66:
+        jj_consume_token(66);
+        break;
+      default:
+        jj_la1[54] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      sqlPrimaryExpression();
+      break;
+    case K_NULL:
+    case S_DOUBLE:
+    case S_INTEGER:
+    case S_IDENTIFIER:
+    case S_CHAR_LITERAL:
+    case 63:
+      sqlPrimaryExpression();
+      break;
+    default:
+      jj_la1[55] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+  }
+
+  final public void sqlPrimaryExpression() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case S_INTEGER:
+      jj_consume_token(S_INTEGER);
+      break;
+    case S_DOUBLE:
+      jj_consume_token(S_DOUBLE);
+      break;
+    case S_CHAR_LITERAL:
+      jj_consume_token(S_CHAR_LITERAL);
+      break;
+    case K_NULL:
+      jj_consume_token(K_NULL);
+      break;
+    case 63:
+      jj_consume_token(63);
+      sqlExpression();
+      jj_consume_token(65);
+      break;
+    case S_IDENTIFIER:
+      fieldReference();
+      break;
+    default:
+      jj_la1[56] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+  }
+
+  final public void fieldReference() throws ParseException {
+    jj_consume_token(S_IDENTIFIER);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case 67:
+      jj_consume_token(67);
+      jj_consume_token(S_IDENTIFIER);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 67:
+        jj_consume_token(67);
+        jj_consume_token(S_IDENTIFIER);
+        break;
+      default:
+        jj_la1[57] = jj_gen;
+        ;
+      }
+      break;
+    default:
+      jj_la1[58] = jj_gen;
+      ;
+    }
+  }
+
+  final public void select() throws ParseException {
+    jj_consume_token(K_SELECT);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case K_DISTINCT:
+      jj_consume_token(K_DISTINCT);
+      break;
+    default:
+      jj_la1[59] = jj_gen;
+      ;
+    }
+    selectItem();
+    label_12:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 64:
+        ;
+        break;
+      default:
+        jj_la1[60] = jj_gen;
+        break label_12;
+      }
+      jj_consume_token(64);
+      selectItem();
+    }
+    jj_consume_token(K_FROM);
+    fromClause();
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case K_WHERE:
+      jj_consume_token(K_WHERE);
+      sqlExpression();
+      break;
+    default:
+      jj_la1[61] = jj_gen;
+      ;
+    }
+  }
+
+  final public void selectItem() throws ParseException {
+    fieldReference();
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case K_AS:
+      jj_consume_token(K_AS);
+      break;
+    default:
+      jj_la1[62] = jj_gen;
+      ;
+    }
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case S_IDENTIFIER:
+      jj_consume_token(S_IDENTIFIER);
+      break;
+    default:
+      jj_la1[63] = jj_gen;
+      ;
+    }
+  }
+
+  final public void tableReference() throws ParseException {
+    jj_consume_token(S_IDENTIFIER);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case 67:
+      jj_consume_token(67);
+      jj_consume_token(S_IDENTIFIER);
+      break;
+    default:
+      jj_la1[64] = jj_gen;
+      ;
+    }
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case K_AS:
+      jj_consume_token(K_AS);
+      break;
+    default:
+      jj_la1[65] = jj_gen;
+      ;
+    }
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case S_IDENTIFIER:
+      jj_consume_token(S_IDENTIFIER);
+      break;
+    default:
+      jj_la1[66] = jj_gen;
+      ;
+    }
+  }
+
+  final public void fromClause() throws ParseException {
+    tableReference();
+    label_13:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case K_INNER:
+      case K_LEFT:
+      case K_RIGHT:
+      case K_FULL:
+        ;
+        break;
+      default:
+        jj_la1[67] = jj_gen;
+        break label_13;
+      }
+      join();
+    }
+  }
+
+  final public void join() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case K_INNER:
+      jj_consume_token(K_INNER);
+      break;
+    case K_LEFT:
+      jj_consume_token(K_LEFT);
+      break;
+    case K_RIGHT:
+      jj_consume_token(K_RIGHT);
+      break;
+    case K_FULL:
+      jj_consume_token(K_FULL);
+      break;
+    default:
+      jj_la1[68] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    jj_consume_token(K_JOIN);
+    tableReference();
+    jj_consume_token(K_ON);
+    sqlExpression();
+  }
+
   /** Generated Token Manager. */
   public CelestaParserTokenManager token_source;
   SimpleCharStream jj_input_stream;
@@ -656,18 +1096,23 @@ else {
   public Token jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[40];
+  final private int[] jj_la1 = new int[69];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
+  static private int[] jj_la1_2;
   static {
       jj_la1_init_0();
       jj_la1_init_1();
+      jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x2000020,0x0,0xc0,0x2000020,0x0,0xc000,0x800c000,0x0,0x0,0x200,0x1100,0x1100,0x0,0x0,0x100,0x800,0x0,0x100,0x100,0x2000,0x100,0x0,0x100,0xf0000000,0x4000,0x8000,0x600,0x600,0x0,0x0,0x0,0x0,0x40000,0x40000,0x180000,0x40000,0x1a00000,0x0,0x8000000,};
+      jj_la1_0 = new int[] {0x0,0x8000020,0x0,0x1c0,0x8000020,0x0,0x30000,0x20030000,0x0,0x0,0x800,0x4400,0x4400,0x0,0x0,0x400,0x2000,0x0,0x400,0x400,0x8000,0x400,0x0,0x400,0x0,0x10000,0x20000,0x1800,0x1800,0x0,0x0,0x0,0x0,0x100000,0x100000,0x600000,0x100000,0x6800000,0x0,0x20000000,0x80000000,0x0,0x800,0x0,0x40000000,0x40000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1000,0x1000,0x0,0x0,0x0,0x0,0x0,0x200,0x0,0x0,0x200,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x400,0x400,0x400,0x0,0x400,0x8000,0x0,0x440,0x400,0x20000,0x0,0x0,0x0,0x20000,0xc,0x0,0x8,0x4000,0x0,0x0,0x100,0x0,0x108,0x0,0x3,0x0,0x0,0x0,0x0,0x8000,0x8000,0x40000,0x8000,0x0,0x0,0x0,0x0,0x0,0x8000,0x0,};
+      jj_la1_1 = new int[] {0x8000000,0x8000000,0x8000000,0x0,0x8000000,0x0,0x0,0x8800000,0x8000000,0x0,0x0,0x0,0x0,0x0,0x180000,0x0,0x100000,0x80000000,0x0,0x0,0x2000000,0x0,0x2100000,0x0,0x7e000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0xe,0xe,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x82980000,0x82980000,0x0,0x0,0x20,0x0,0x1000,0x0,0x800000,0x0,0x0,0x800000,0x780,0x780,};
+   }
+   private static void jj_la1_init_2() {
+      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x8,0x1,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x1,0x70,0x70,0x10,0x30,0x30,0x70,0x84,0x84,0x300,0x300,0x84,0x84,0x0,0x8,0x8,0x0,0x1,0x0,0x0,0x0,0x8,0x0,0x0,0x0,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -681,7 +1126,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 40; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -695,7 +1140,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 40; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -705,7 +1150,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 40; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -715,7 +1160,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 40; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -724,7 +1169,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 40; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -733,7 +1178,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 40; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -784,12 +1229,12 @@ else {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[51];
+    boolean[] la1tokens = new boolean[74];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < 69; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -798,10 +1243,13 @@ else {
           if ((jj_la1_1[i] & (1<<j)) != 0) {
             la1tokens[32+j] = true;
           }
+          if ((jj_la1_2[i] & (1<<j)) != 0) {
+            la1tokens[64+j] = true;
+          }
         }
       }
     }
-    for (int i = 0; i < 51; i++) {
+    for (int i = 0; i < 74; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;
