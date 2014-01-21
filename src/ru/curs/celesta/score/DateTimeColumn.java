@@ -94,7 +94,7 @@ public final class DateTimeColumn extends Column {
 
 	@Override
 	public String jdbcGetterName() {
-		return "getDate";
+		return "getTimestamp";
 	}
 
 	@Override
