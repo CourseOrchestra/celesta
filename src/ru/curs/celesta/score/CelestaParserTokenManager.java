@@ -2,7 +2,7 @@
 package ru.curs.celesta.score;
 
 /** Token Manager. */
-public class CelestaParserTokenManager implements CelestaParserConstants
+class CelestaParserTokenManager implements CelestaParserConstants
 {
 
   /** Debug output. */

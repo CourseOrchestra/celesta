@@ -3,7 +3,7 @@
 package ru.curs.celesta.score;
 
 /** Token Manager Error. */
-public class TokenMgrError extends Error
+class TokenMgrError extends Error
 {
 
   /**
@@ -144,4 +144,4 @@ public class TokenMgrError extends Error
     this(LexicalError(EOFSeen, lexState, errorLine, errorColumn, errorAfter, curChar), reason);
   }
 }
-/* JavaCC - OriginalChecksum=553f7cd606cf03cb633614eaf9803e99 (do not edit this line) */
+/* JavaCC - OriginalChecksum=218a881fd0789e25cb96ed90ae902ee5 (do not edit this line) */

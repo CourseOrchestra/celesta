@@ -2,9 +2,8 @@ options{
     IGNORE_CASE=true ;
 	UNICODE_INPUT=true;
     STATIC=false;
-//  DEBUG_LOOKAHEAD= true ;
     FORCE_LA_CHECK=true;
-//  DEBUG_TOKEN_MANAGER=true;
+    SUPPORT_CLASS_VISIBILITY_PUBLIC=false;
 }
 
 PARSER_BEGIN(CelestaParser)
@@ -329,13 +328,16 @@ void createView(Grain g, String doc):
 {
 <K_VIEW> viewName = <S_IDENTIFIER> <K_AS> {view = new View(g, viewName.toString());
 	                            view.setCelestaDocLexem(doc);}
-								select()
+								select(view)
 }
 
-void sqlExpression():
+Expr sqlExpression():
 {}
 {
-    sqlAndExpression() (<K_OR> sqlAndExpression())*
+    sqlAndExpression() (<K_OR> 
+	  sqlAndExpression() //TODO
+	)*
+	{return null;}
 }
 
 void sqlAndExpression():
@@ -353,76 +355,100 @@ void sqlUnaryLogicalExpression():
 void sqlRelationalExpression():
 {}
 {
-    sqlSimpleExpression()
-    ( relop() sqlSimpleExpression()
+    sqlTermExpr()
+    ( relop() sqlTermExpr()
       | (<K_IN> "(" sqlExpression() ("," sqlExpression())* ")")
-      | (<K_BETWEEN> sqlSimpleExpression() <K_AND> sqlSimpleExpression())
-      | (<K_LIKE> sqlSimpleExpression())
+      | (<K_BETWEEN> sqlTermExpr() <K_AND> sqlTermExpr())
+      | (<K_LIKE> sqlTermExpr())
       | (<K_IS> <K_NULL>)
-   )?
+   )
 }
 
-void relop():
-{}
-{
-    "="
-  | ">" ["="]
-  | "<" ["=" | ">" ]
+int relop():
+{int result;}
+{ (
+    "=" {result = Relop.EQ;}
+  | ">" {result = Relop.GT;} ["=" {result = Relop.GTEQ;}]
+  | "<" {result = Relop.LS;} ["=" {result = Relop.LSEQ;} | ">" {result = Relop.NTEQ;}]
+  )
+  {return result;}
 }
 
 
-void sqlSimpleExpression():
-{}
+TerminalExpr sqlTermExpr():
+{TerminalExpr result;}
 {
-    sqlMultiplicativeExpression() ( ("+" | "-" )
-                                 sqlMultiplicativeExpression()
+    result = sqlMultiplicativeExpression() ( ("+" | "-" )
+                                 sqlMultiplicativeExpression() //TODO!
                                )*
+    {return result;}
 }
 
-void sqlMultiplicativeExpression():
-{}
+TerminalExpr sqlMultiplicativeExpression():
+{TerminalExpr result;}
 {
-    sqlUnaryExpression() (  ("*" | "/" ) sqlUnaryExpression())*
+    result = sqlUnaryExpression() (  ("*" | "/" ) 
+	                     sqlUnaryExpression() //TODO!
+						 )*
+	{return result;}
 }
 
-void sqlUnaryExpression():
-{}
+TerminalExpr sqlUnaryExpression():
+{TerminalExpr result;}
 {
-    (("+" | "-") sqlPrimaryExpression())
-|
-    sqlPrimaryExpression()
+(
+    ("-" result = sqlPrimaryExpression() {result = new UnaryOp(result);} )
+    |
+    (result = sqlPrimaryExpression())
+) {return result;}
 }
 
 
-void sqlPrimaryExpression():
-{}
-{
-    <S_INTEGER>
-  | <S_DOUBLE>
-  | <S_CHAR_LITERAL>
-  | <K_NULL>
-  | "(" sqlExpression() ")"
-  | fieldReference()
+TerminalExpr sqlPrimaryExpression():
+{TerminalExpr result;
+Token t = null;}
+{ (
+    t = <S_INTEGER>          {result = new NumericLiteral(t.toString());}
+  | t = <S_DOUBLE>           {result = new NumericLiteral(t.toString());}
+  | t = <S_CHAR_LITERAL>     {result = new TextLiteral(t.toString());}
+  | "(" result = sqlTermExpr() ")"  {result = new ParenthesizedExpr(result);}
+  | result = fieldReference()         
+  ) {return result;}
 }
 
-void fieldReference():
-{}
+FieldRef fieldReference():
+{  
+  String grainName = null;
+  String tableName = null;
+  String fieldName;
+  Token t;
+}
 {
-  <S_IDENTIFIER> ["." <S_IDENTIFIER> ["." <S_IDENTIFIER>]]
+  t = <S_IDENTIFIER> {fieldName = t.toString();} 
+  ["." t = <S_IDENTIFIER> {tableName = fieldName; fieldName = t.toString();} 
+  ["." t = <S_IDENTIFIER> {grainName = tableName; tableName = fieldName; fieldName = t.toString();} ]]
+  {return new FieldRef(grainName, tableName, fieldName);}
 }
 
-void select():
+void select(View v):
 {}
 {
-    <K_SELECT> [ <K_DISTINCT> ] selectItem() ("," selectItem())*
+    <K_SELECT> [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
     <K_FROM>  fromClause()
     [<K_WHERE> sqlExpression() ]
 }
 
-void selectItem():
-{}
+void selectItem(View v):
 {
-   fieldReference() [<K_AS>] [<S_IDENTIFIER>] //alias
+  Token aliasToken = null;
+  String alias = "";
+  Expr expr;  
+}
+{
+   expr = sqlTermExpr() [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]  
+   { if (alias.isEmpty() && expr instanceof FieldRef)
+		   alias = ((FieldRef) expr).getColumnName();
+     v.addColumn(alias, expr); }
 }
 
 void tableReference():

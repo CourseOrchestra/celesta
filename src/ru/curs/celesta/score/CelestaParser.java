@@ -658,10 +658,10 @@ else {
     jj_consume_token(K_AS);
                                            view = new View(g, viewName.toString());
                                     view.setCelestaDocLexem(doc);
-    select();
+    select(view);
   }
 
-  final public void sqlExpression() throws ParseException {
+  final public Expr sqlExpression() throws ParseException {
     sqlAndExpression();
     label_7:
     while (true) {
@@ -676,6 +676,8 @@ else {
       jj_consume_token(K_OR);
       sqlAndExpression();
     }
+         {if (true) return null;}
+    throw new Error("Missing return statement in function");
   }
 
   final public void sqlAndExpression() throws ParseException {
@@ -708,115 +710,112 @@ else {
   }
 
   final public void sqlRelationalExpression() throws ParseException {
-    sqlSimpleExpression();
+    sqlTermExpr();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case K_IN:
-    case K_LIKE:
-    case K_BETWEEN:
-    case K_IS:
     case 68:
     case 69:
     case 70:
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 68:
-      case 69:
-      case 70:
-        relop();
-        sqlSimpleExpression();
-        break;
-      case K_IN:
-        jj_consume_token(K_IN);
-        jj_consume_token(63);
-        sqlExpression();
-        label_9:
-        while (true) {
-          switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 64:
-            ;
-            break;
-          default:
-            jj_la1[43] = jj_gen;
-            break label_9;
-          }
-          jj_consume_token(64);
-          sqlExpression();
+      relop();
+      sqlTermExpr();
+      break;
+    case K_IN:
+      jj_consume_token(K_IN);
+      jj_consume_token(63);
+      sqlExpression();
+      label_9:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case 64:
+          ;
+          break;
+        default:
+          jj_la1[43] = jj_gen;
+          break label_9;
         }
-        jj_consume_token(65);
-        break;
-      case K_BETWEEN:
-        jj_consume_token(K_BETWEEN);
-        sqlSimpleExpression();
-        jj_consume_token(K_AND);
-        sqlSimpleExpression();
-        break;
-      case K_LIKE:
-        jj_consume_token(K_LIKE);
-        sqlSimpleExpression();
-        break;
-      case K_IS:
-        jj_consume_token(K_IS);
-        jj_consume_token(K_NULL);
-        break;
-      default:
-        jj_la1[44] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
+        jj_consume_token(64);
+        sqlExpression();
       }
+      jj_consume_token(65);
+      break;
+    case K_BETWEEN:
+      jj_consume_token(K_BETWEEN);
+      sqlTermExpr();
+      jj_consume_token(K_AND);
+      sqlTermExpr();
+      break;
+    case K_LIKE:
+      jj_consume_token(K_LIKE);
+      sqlTermExpr();
+      break;
+    case K_IS:
+      jj_consume_token(K_IS);
+      jj_consume_token(K_NULL);
       break;
     default:
-      jj_la1[45] = jj_gen;
-      ;
+      jj_la1[44] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
     }
   }
 
-  final public void relop() throws ParseException {
+  final public int relop() throws ParseException {
+ int result;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 68:
       jj_consume_token(68);
+         result = Relop.EQ;
       break;
     case 69:
       jj_consume_token(69);
+         result = Relop.GT;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 68:
         jj_consume_token(68);
+                                   result = Relop.GTEQ;
         break;
       default:
-        jj_la1[46] = jj_gen;
+        jj_la1[45] = jj_gen;
         ;
       }
       break;
     case 70:
       jj_consume_token(70);
+         result = Relop.LS;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 68:
       case 69:
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case 68:
           jj_consume_token(68);
+                                   result = Relop.LSEQ;
           break;
         case 69:
           jj_consume_token(69);
+                                                                result = Relop.NTEQ;
           break;
         default:
-          jj_la1[47] = jj_gen;
+          jj_la1[46] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[48] = jj_gen;
+        jj_la1[47] = jj_gen;
         ;
       }
       break;
     default:
-      jj_la1[49] = jj_gen;
+      jj_la1[48] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
+   {if (true) return result;}
+    throw new Error("Missing return statement in function");
   }
 
-  final public void sqlSimpleExpression() throws ParseException {
-    sqlMultiplicativeExpression();
+  final public TerminalExpr sqlTermExpr() throws ParseException {
+ TerminalExpr result;
+    result = sqlMultiplicativeExpression();
     label_10:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -825,7 +824,7 @@ else {
         ;
         break;
       default:
-        jj_la1[50] = jj_gen;
+        jj_la1[49] = jj_gen;
         break label_10;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -836,16 +835,19 @@ else {
         jj_consume_token(66);
         break;
       default:
-        jj_la1[51] = jj_gen;
+        jj_la1[50] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       sqlMultiplicativeExpression();
     }
+     {if (true) return result;}
+    throw new Error("Missing return statement in function");
   }
 
-  final public void sqlMultiplicativeExpression() throws ParseException {
-    sqlUnaryExpression();
+  final public TerminalExpr sqlMultiplicativeExpression() throws ParseException {
+ TerminalExpr result;
+    result = sqlUnaryExpression();
     label_11:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -854,7 +856,7 @@ else {
         ;
         break;
       default:
-        jj_la1[52] = jj_gen;
+        jj_la1[51] = jj_gen;
         break label_11;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -865,109 +867,117 @@ else {
         jj_consume_token(73);
         break;
       default:
-        jj_la1[53] = jj_gen;
+        jj_la1[52] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       sqlUnaryExpression();
     }
+         {if (true) return result;}
+    throw new Error("Missing return statement in function");
   }
 
-  final public void sqlUnaryExpression() throws ParseException {
+  final public TerminalExpr sqlUnaryExpression() throws ParseException {
+ TerminalExpr result;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 66:
-    case 71:
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 71:
-        jj_consume_token(71);
-        break;
-      case 66:
-        jj_consume_token(66);
-        break;
-      default:
-        jj_la1[54] = jj_gen;
-        jj_consume_token(-1);
-        throw new ParseException();
-      }
-      sqlPrimaryExpression();
+      jj_consume_token(66);
+      result = sqlPrimaryExpression();
+                                          result = new UnaryOp(result);
       break;
-    case K_NULL:
     case S_DOUBLE:
     case S_INTEGER:
     case S_IDENTIFIER:
     case S_CHAR_LITERAL:
     case 63:
-      sqlPrimaryExpression();
+      result = sqlPrimaryExpression();
       break;
     default:
-      jj_la1[55] = jj_gen;
+      jj_la1[53] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
+   {if (true) return result;}
+    throw new Error("Missing return statement in function");
   }
 
-  final public void sqlPrimaryExpression() throws ParseException {
+  final public TerminalExpr sqlPrimaryExpression() throws ParseException {
+ TerminalExpr result;
+Token t = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case S_INTEGER:
-      jj_consume_token(S_INTEGER);
+      t = jj_consume_token(S_INTEGER);
+                              result = new NumericLiteral(t.toString());
       break;
     case S_DOUBLE:
-      jj_consume_token(S_DOUBLE);
+      t = jj_consume_token(S_DOUBLE);
+                              result = new NumericLiteral(t.toString());
       break;
     case S_CHAR_LITERAL:
-      jj_consume_token(S_CHAR_LITERAL);
-      break;
-    case K_NULL:
-      jj_consume_token(K_NULL);
+      t = jj_consume_token(S_CHAR_LITERAL);
+                              result = new TextLiteral(t.toString());
       break;
     case 63:
       jj_consume_token(63);
-      sqlExpression();
+      result = sqlTermExpr();
       jj_consume_token(65);
+                                     result = new ParenthesizedExpr(result);
       break;
     case S_IDENTIFIER:
-      fieldReference();
+      result = fieldReference();
       break;
     default:
-      jj_la1[56] = jj_gen;
+      jj_la1[54] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
+     {if (true) return result;}
+    throw new Error("Missing return statement in function");
   }
 
-  final public void fieldReference() throws ParseException {
-    jj_consume_token(S_IDENTIFIER);
+  final public FieldRef fieldReference() throws ParseException {
+  String grainName = null;
+  String tableName = null;
+  String fieldName;
+  Token t;
+    t = jj_consume_token(S_IDENTIFIER);
+                      fieldName = t.toString();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 67:
       jj_consume_token(67);
-      jj_consume_token(S_IDENTIFIER);
+      t = jj_consume_token(S_IDENTIFIER);
+                           tableName = fieldName; fieldName = t.toString();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 67:
         jj_consume_token(67);
-        jj_consume_token(S_IDENTIFIER);
+        t = jj_consume_token(S_IDENTIFIER);
+                           grainName = tableName; tableName = fieldName; fieldName = t.toString();
         break;
       default:
-        jj_la1[57] = jj_gen;
+        jj_la1[55] = jj_gen;
         ;
       }
       break;
     default:
-      jj_la1[58] = jj_gen;
+      jj_la1[56] = jj_gen;
       ;
     }
+   {if (true) return new FieldRef(grainName, tableName, fieldName);}
+    throw new Error("Missing return statement in function");
   }
 
-  final public void select() throws ParseException {
+  final public void select(View v) throws ParseException {
     jj_consume_token(K_SELECT);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_DISTINCT:
       jj_consume_token(K_DISTINCT);
+                               v.setDistinct(true);
       break;
     default:
-      jj_la1[59] = jj_gen;
+      jj_la1[57] = jj_gen;
       ;
     }
-    selectItem();
+    selectItem(v);
     label_12:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -975,11 +985,11 @@ else {
         ;
         break;
       default:
-        jj_la1[60] = jj_gen;
+        jj_la1[58] = jj_gen;
         break label_12;
       }
       jj_consume_token(64);
-      selectItem();
+      selectItem(v);
     }
     jj_consume_token(K_FROM);
     fromClause();
@@ -989,29 +999,36 @@ else {
       sqlExpression();
       break;
     default:
-      jj_la1[61] = jj_gen;
+      jj_la1[59] = jj_gen;
       ;
     }
   }
 
-  final public void selectItem() throws ParseException {
-    fieldReference();
+  final public void selectItem(View v) throws ParseException {
+  Token aliasToken = null;
+  String alias = "";
+  Expr expr;
+    expr = sqlTermExpr();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_AS:
       jj_consume_token(K_AS);
       break;
     default:
-      jj_la1[62] = jj_gen;
+      jj_la1[60] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case S_IDENTIFIER:
-      jj_consume_token(S_IDENTIFIER);
+      aliasToken = jj_consume_token(S_IDENTIFIER);
+                                                                alias = aliasToken.toString();
       break;
     default:
-      jj_la1[63] = jj_gen;
+      jj_la1[61] = jj_gen;
       ;
     }
+     if (alias.isEmpty() && expr instanceof FieldRef)
+                   alias = ((FieldRef) expr).getColumnName();
+     v.addColumn(alias, expr);
   }
 
   final public void tableReference() throws ParseException {
@@ -1022,7 +1039,7 @@ else {
       jj_consume_token(S_IDENTIFIER);
       break;
     default:
-      jj_la1[64] = jj_gen;
+      jj_la1[62] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1030,7 +1047,7 @@ else {
       jj_consume_token(K_AS);
       break;
     default:
-      jj_la1[65] = jj_gen;
+      jj_la1[63] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1038,7 +1055,7 @@ else {
       jj_consume_token(S_IDENTIFIER);
       break;
     default:
-      jj_la1[66] = jj_gen;
+      jj_la1[64] = jj_gen;
       ;
     }
   }
@@ -1055,7 +1072,7 @@ else {
         ;
         break;
       default:
-        jj_la1[67] = jj_gen;
+        jj_la1[65] = jj_gen;
         break label_13;
       }
       join();
@@ -1077,7 +1094,7 @@ else {
       jj_consume_token(K_FULL);
       break;
     default:
-      jj_la1[68] = jj_gen;
+      jj_la1[66] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1096,7 +1113,7 @@ else {
   public Token jj_nt;
   private int jj_ntk;
   private int jj_gen;
-  final private int[] jj_la1 = new int[69];
+  final private int[] jj_la1 = new int[67];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -1106,13 +1123,13 @@ else {
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x8000020,0x0,0x1c0,0x8000020,0x0,0x30000,0x20030000,0x0,0x0,0x800,0x4400,0x4400,0x0,0x0,0x400,0x2000,0x0,0x400,0x400,0x8000,0x400,0x0,0x400,0x0,0x10000,0x20000,0x1800,0x1800,0x0,0x0,0x0,0x0,0x100000,0x100000,0x600000,0x100000,0x6800000,0x0,0x20000000,0x80000000,0x0,0x800,0x0,0x40000000,0x40000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1000,0x1000,0x0,0x0,0x0,0x0,0x0,0x200,0x0,0x0,0x200,0x0,0x0,0x0,};
+      jj_la1_0 = new int[] {0x0,0x8000020,0x0,0x1c0,0x8000020,0x0,0x30000,0x20030000,0x0,0x0,0x800,0x4400,0x4400,0x0,0x0,0x400,0x2000,0x0,0x400,0x400,0x8000,0x400,0x0,0x400,0x0,0x10000,0x20000,0x1800,0x1800,0x0,0x0,0x0,0x0,0x100000,0x100000,0x600000,0x100000,0x6800000,0x0,0x20000000,0x80000000,0x0,0x800,0x0,0x40000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x200,0x0,0x0,0x200,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x8000000,0x8000000,0x8000000,0x0,0x8000000,0x0,0x0,0x8800000,0x8000000,0x0,0x0,0x0,0x0,0x0,0x180000,0x0,0x100000,0x80000000,0x0,0x0,0x2000000,0x0,0x2100000,0x0,0x7e000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0xe,0xe,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x82980000,0x82980000,0x0,0x0,0x20,0x0,0x1000,0x0,0x800000,0x0,0x0,0x800000,0x780,0x780,};
+      jj_la1_1 = new int[] {0x8000000,0x8000000,0x8000000,0x0,0x8000000,0x0,0x0,0x8800000,0x8000000,0x0,0x0,0x0,0x0,0x0,0x180000,0x0,0x100000,0x80000000,0x0,0x0,0x2000000,0x0,0x2100000,0x0,0x7e000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0xe,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x82980000,0x82980000,0x0,0x0,0x20,0x0,0x1000,0x0,0x800000,0x0,0x0,0x800000,0x780,0x780,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x8,0x1,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x1,0x70,0x70,0x10,0x30,0x30,0x70,0x84,0x84,0x300,0x300,0x84,0x84,0x0,0x8,0x8,0x0,0x1,0x0,0x0,0x0,0x8,0x0,0x0,0x0,0x0,};
+      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x8,0x1,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x1,0x70,0x10,0x30,0x30,0x70,0x84,0x84,0x300,0x300,0x4,0x0,0x8,0x8,0x0,0x1,0x0,0x0,0x0,0x8,0x0,0x0,0x0,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -1126,7 +1143,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 67; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1140,7 +1157,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 67; i++) jj_la1[i] = -1;
   }
 
   /** Constructor. */
@@ -1150,7 +1167,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 67; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1160,7 +1177,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 67; i++) jj_la1[i] = -1;
   }
 
   /** Constructor with generated Token Manager. */
@@ -1169,7 +1186,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 67; i++) jj_la1[i] = -1;
   }
 
   /** Reinitialise. */
@@ -1178,7 +1195,7 @@ else {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 69; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 67; i++) jj_la1[i] = -1;
   }
 
   private Token jj_consume_token(int kind) throws ParseException {
@@ -1234,7 +1251,7 @@ else {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 69; i++) {
+    for (int i = 0; i < 67; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {

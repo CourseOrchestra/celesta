@@ -56,6 +56,7 @@ public class ScoreTest {
 		View v = g1.getView("testview");
 		assertEquals("testview", v.getName());
 		assertEquals("view description", v.getCelestaDoc());
+		assertTrue(v.isDistinct());
 	}
 
 	@Test
