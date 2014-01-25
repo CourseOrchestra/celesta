@@ -1,6 +1,8 @@
 package ru.curs.celesta.score;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,7 +14,9 @@ public class View extends NamedElement {
 
 	private boolean distinct;
 
-	private Map<String, Expr> columns = new LinkedHashMap<>();
+	private final Map<String, Expr> columns = new LinkedHashMap<>();
+	private final Map<String, Expr> unmodifiableColumns = Collections
+			.unmodifiableMap(columns);
 
 	public View(Grain grain, String name) throws ParseException {
 		super(name);
@@ -73,6 +77,13 @@ public class View extends NamedElement {
 		columns.put(alias, expr);
 	}
 
+	/**
+	 * Возвращает перечень столбцов представления.
+	 */
+	public Map<String, Expr> getColumns() {
+		return unmodifiableColumns;
+	}
+
 }
 
 /** Скалярное выражение SQL. */
@@ -82,17 +93,17 @@ abstract class Expr {
 /**
  * Выражение в скобках.
  */
-final class ParenthesizedExpr extends TerminalExpr {
-	private final TerminalExpr parenthesized;
+final class ParenthesizedExpr extends Expr {
+	private final Expr parenthesized;
 
-	public ParenthesizedExpr(TerminalExpr parenthesized) {
+	public ParenthesizedExpr(Expr parenthesized) {
 		this.parenthesized = parenthesized;
 	}
 
 	/**
 	 * Возвращает выражение, заключенное в скобки.
 	 */
-	public TerminalExpr getParenthesized() {
+	public Expr getParenthesized() {
 		return parenthesized;
 	}
 }
@@ -133,6 +144,11 @@ final class Relop extends LogicalExpr {
 	 */
 	public static final int EQ = 5;
 
+	/**
+	 * LIKE.
+	 */
+	public static final int LIKE = 6;
+
 	private final Expr left;
 	private final Expr right;
 	private final int relop;
@@ -170,21 +186,101 @@ final class Relop extends LogicalExpr {
  * ... IN (..., ..., ...).
  */
 final class In extends LogicalExpr {
-	// TODO
+	private final Expr left;
+	private final List<Expr> operands;
+
+	In(Expr left, List<Expr> operands) {
+		this.operands = operands;
+		this.left = left;
+	}
+
+	/**
+	 * Оператор.
+	 */
+	public Expr getLeft() {
+		return left;
+	}
+
+	/**
+	 * Операнды.
+	 */
+	public List<Expr> getOperands() {
+		return operands;
+	}
+
 }
 
 /**
  * BETWEEN.
  */
 final class Between extends LogicalExpr {
-	// TODO
+	private final Expr left;
+	private final Expr right1;
+	private final Expr right2;
+
+	public Between(Expr left, Expr right1, Expr right2) {
+		this.left = left;
+		this.right1 = right1;
+		this.right2 = right2;
+	}
+
+	/**
+	 * Левая часть.
+	 */
+	public Expr getLeft() {
+		return left;
+	}
+
+	/**
+	 * Часть от...
+	 */
+	public Expr getRight1() {
+		return right1;
+	}
+
+	/**
+	 * Часть до...
+	 */
+	public Expr getRight2() {
+		return right2;
+	}
+
+}
+
+/**
+ * IS NULL.
+ */
+final class IsNull extends LogicalExpr {
+	private final Expr expr;
+
+	IsNull(Expr expr) {
+		this.expr = expr;
+	}
+
+	/**
+	 * Выражение, от которого берётся IS NULL.
+	 */
+	public Expr getExpr() {
+		return expr;
+	}
 }
 
 /**
  * NOT.
  */
-final class UnaryLogicalOp extends LogicalExpr {
-	// TODO
+final class NotExpr extends LogicalExpr {
+	private final Expr expr;
+
+	NotExpr(Expr expr) {
+		this.expr = expr;
+	}
+
+	/**
+	 * Выражение, от которого берётся NOT.
+	 */
+	public Expr getExpr() {
+		return expr;
+	}
 }
 
 /**
@@ -193,7 +289,29 @@ final class UnaryLogicalOp extends LogicalExpr {
 final class BinaryLogicalOp extends LogicalExpr {
 	public static final int AND = 0;
 	public static final int OR = 1;
-	// TODO
+
+	private final int operator;
+	private final List<Expr> operands;
+
+	BinaryLogicalOp(int operator, List<Expr> operands) {
+		this.operands = operands;
+		this.operator = operator;
+	}
+
+	/**
+	 * Оператор.
+	 */
+	public int getOperator() {
+		return operator;
+	}
+
+	/**
+	 * Операнды.
+	 */
+	public List<Expr> getOperands() {
+		return operands;
+	}
+
 }
 
 /**
@@ -205,24 +323,46 @@ abstract class TerminalExpr extends Expr {
 /**
  * +, -, *, /.
  */
-final class BinaryOp extends NumericExpr {
+final class BinaryTermOp extends NumericExpr {
 	public static final int PLUS = 0;
 	public static final int MINUS = 0;
 	public static final int TIMES = 0;
 	public static final int OVER = 0;
+
+	private final int operator;
+	private final List<Expr> operands;
+
+	BinaryTermOp(int operator, List<Expr> operands) {
+		this.operands = operands;
+		this.operator = operator;
+	}
+
+	/**
+	 * Оператор.
+	 */
+	public int getOperator() {
+		return operator;
+	}
+
+	/**
+	 * Операнды.
+	 */
+	public List<Expr> getOperands() {
+		return operands;
+	}
 }
 
 /**
  * Унарный минус.
  */
-final class UnaryOp extends NumericExpr {
-	private final TerminalExpr arg;// TODO
+final class UnaryMinus extends NumericExpr {
+	private final Expr arg;
 
-	public UnaryOp(TerminalExpr arg) {
+	public UnaryMinus(Expr arg) {
 		this.arg = arg;
 	}
 
-	public TerminalExpr getExpr() {
+	public Expr getExpr() {
 		return arg;
 	}
 }

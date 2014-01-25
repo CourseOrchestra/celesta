@@ -1,5 +1,6 @@
 package ru.curs.celesta.score;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -57,6 +58,10 @@ public class ScoreTest {
 		assertEquals("testview", v.getName());
 		assertEquals("view description", v.getCelestaDoc());
 		assertTrue(v.isDistinct());
+
+		assertEquals(4, v.getColumns().size());
+		String[] ref = { "fieldAlias", "tablename", "checksum", "f1" };
+		assertArrayEquals(ref, v.getColumns().keySet().toArray(new String[0]));
 	}
 
 	@Test

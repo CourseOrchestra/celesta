@@ -8,6 +8,9 @@ options{
 
 PARSER_BEGIN(CelestaParser)
 package ru.curs.celesta.score;
+
+import java.util.List;
+import java.util.ArrayList;
 //CHECKSTYLE:OFF
 public class CelestaParser{
 }
@@ -332,36 +335,49 @@ void createView(Grain g, String doc):
 }
 
 Expr sqlExpression():
-{}
+{ Expr result;
+  List<Expr> operands = new ArrayList<Expr>(5);}
 {
-    sqlAndExpression() (<K_OR> 
-	  sqlAndExpression() //TODO
-	)*
-	{return null;}
+    result = sqlAndExpression()   {operands.add(result);} (<K_OR> 
+	  result = sqlAndExpression() {operands.add(result);}
+	  )*
+	{return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.OR, operands);}
 }
 
-void sqlAndExpression():
-{}
+Expr sqlAndExpression():
+{ Expr result;
+  List<Expr> operands = new ArrayList<Expr>(5);}
 {
-    sqlUnaryLogicalExpression() (<K_AND> sqlUnaryLogicalExpression())*
+    result = sqlUnaryLogicalExpression()    {operands.add(result);} (<K_AND> 
+	  result = sqlUnaryLogicalExpression()  {operands.add(result);}
+	  )* 
+	{return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.AND, operands);}
 }
 
-void sqlUnaryLogicalExpression():
-{}
+Expr sqlUnaryLogicalExpression():
+{ boolean isNot = false;
+  Expr result;}
 {
-  [<K_NOT>] sqlRelationalExpression()
+  [<K_NOT> {isNot = true;}] result = sqlRelationalExpression() 
+  {return isNot? new NotExpr(result) : result; }
 }
 
-void sqlRelationalExpression():
-{}
+Expr sqlRelationalExpression():
+{ Expr result;
+  Expr buf1;
+  Expr buf2;
+  List<Expr> operands = new ArrayList<Expr>(5);
+  int relop;}
 {
-    sqlTermExpr()
-    ( relop() sqlTermExpr()
-      | (<K_IN> "(" sqlExpression() ("," sqlExpression())* ")")
-      | (<K_BETWEEN> sqlTermExpr() <K_AND> sqlTermExpr())
-      | (<K_LIKE> sqlTermExpr())
-      | (<K_IS> <K_NULL>)
-   )
+    result = sqlTermExpr()
+    (   relop = relop() buf1 = sqlTermExpr()                            {result = new Relop(result, buf1, relop);}
+      | (<K_IN> "(" buf1 = sqlTermExpr() {operands.add(buf1);} ("," buf1 = sqlTermExpr() {operands.add(buf1);})* ")") 
+	                                                                    {result = new In(result, operands);}
+      | (<K_BETWEEN> buf1 = sqlTermExpr() <K_AND> buf2 = sqlTermExpr()) {result = new Between(result, buf1, buf2);}
+      | (<K_LIKE> buf1 = sqlTermExpr())                                 {result = new Relop(result, buf1, Relop.LIKE);}
+      | (<K_IS> <K_NULL>)                                               {result = new IsNull(result);}
+    )?
+	{return result;}
 }
 
 int relop():
@@ -374,44 +390,45 @@ int relop():
   {return result;}
 }
 
-
-TerminalExpr sqlTermExpr():
-{TerminalExpr result;}
+Expr sqlTermExpr():
+{ Expr result;
+  List<Expr> operands = new ArrayList<Expr>(5);
+  int operator = -1;}
 {
-    result = sqlMultiplicativeExpression() ( ("+" | "-" )
-                                 sqlMultiplicativeExpression() //TODO!
+    result = sqlMultiplicativeExpression() {operands.add(result);} ( ("+" {operator = BinaryTermOp.PLUS;}| "-" {operator = BinaryTermOp.MINUS;})
+                                 result =  sqlMultiplicativeExpression() {operands.add(result);}
                                )*
-    {return result;}
+    {return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
 }
 
-TerminalExpr sqlMultiplicativeExpression():
-{TerminalExpr result;}
+Expr sqlMultiplicativeExpression():
+{ Expr result;
+  List<Expr> operands = new ArrayList<Expr>(5);
+  int operator = -1;}
 {
-    result = sqlUnaryExpression() (  ("*" | "/" ) 
-	                     sqlUnaryExpression() //TODO!
+    result = sqlUnaryExpression() {operands.add(result);} (  ("*" {operator = BinaryTermOp.TIMES;} | "/" {operator = BinaryTermOp.OVER;}) 
+	                     result = sqlUnaryExpression() {operands.add(result);}
 						 )*
-	{return result;}
+	{return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
 }
 
-TerminalExpr sqlUnaryExpression():
-{TerminalExpr result;}
+Expr sqlUnaryExpression():
+{Expr result;
+boolean isMinus = false;}
 {
-(
-    ("-" result = sqlPrimaryExpression() {result = new UnaryOp(result);} )
-    |
-    (result = sqlPrimaryExpression())
-) {return result;}
+    ["-" {isMinus = true;}] result = sqlPrimaryExpression() 
+    {return isMinus? new UnaryMinus(result) : result;}
 }
 
 
-TerminalExpr sqlPrimaryExpression():
-{TerminalExpr result;
+Expr sqlPrimaryExpression():
+{Expr result;
 Token t = null;}
 { (
     t = <S_INTEGER>          {result = new NumericLiteral(t.toString());}
   | t = <S_DOUBLE>           {result = new NumericLiteral(t.toString());}
   | t = <S_CHAR_LITERAL>     {result = new TextLiteral(t.toString());}
-  | "(" result = sqlTermExpr() ")"  {result = new ParenthesizedExpr(result);}
+  |  "(" result = sqlExpression() ")"  {result = new ParenthesizedExpr(result);}
   | result = fieldReference()         
   ) {return result;}
 }
