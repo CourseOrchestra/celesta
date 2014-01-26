@@ -334,48 +334,48 @@ void createView(Grain g, String doc):
 								select(view)
 }
 
-Expr sqlExpression():
+Expr sqlExpression(View v):
 { Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);}
 {
-    result = sqlAndExpression()   {operands.add(result);} (<K_OR> 
-	  result = sqlAndExpression() {operands.add(result);}
+    result = sqlAndExpression(v)   {operands.add(result);} (<K_OR> 
+	  result = sqlAndExpression(v) {operands.add(result);}
 	  )*
-	{return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.OR, operands);}
+	{return operands.size() == 1? result : new BinaryLogicalOp(v, BinaryLogicalOp.OR, operands);}
 }
 
-Expr sqlAndExpression():
+Expr sqlAndExpression(View v):
 { Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);}
 {
-    result = sqlUnaryLogicalExpression()    {operands.add(result);} (<K_AND> 
-	  result = sqlUnaryLogicalExpression()  {operands.add(result);}
+    result = sqlUnaryLogicalExpression(v)    {operands.add(result);} (<K_AND> 
+	  result = sqlUnaryLogicalExpression(v)  {operands.add(result);}
 	  )* 
-	{return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.AND, operands);}
+	{return operands.size() == 1? result : new BinaryLogicalOp(v, BinaryLogicalOp.AND, operands);}
 }
 
-Expr sqlUnaryLogicalExpression():
+Expr sqlUnaryLogicalExpression(View v):
 { boolean isNot = false;
   Expr result;}
 {
-  [<K_NOT> {isNot = true;}] result = sqlRelationalExpression() 
-  {return isNot? new NotExpr(result) : result; }
+  [<K_NOT> {isNot = true;}] result = sqlRelationalExpression(v) 
+  {return isNot? new NotExpr(v, result) : result; }
 }
 
-Expr sqlRelationalExpression():
+Expr sqlRelationalExpression(View v):
 { Expr result;
   Expr buf1;
   Expr buf2;
   List<Expr> operands = new ArrayList<Expr>(5);
   int relop;}
 {
-    result = sqlTermExpr()
-    (   relop = relop() buf1 = sqlTermExpr()                            {result = new Relop(result, buf1, relop);}
-      | (<K_IN> "(" buf1 = sqlTermExpr() {operands.add(buf1);} ("," buf1 = sqlTermExpr() {operands.add(buf1);})* ")") 
-	                                                                    {result = new In(result, operands);}
-      | (<K_BETWEEN> buf1 = sqlTermExpr() <K_AND> buf2 = sqlTermExpr()) {result = new Between(result, buf1, buf2);}
-      | (<K_LIKE> buf1 = sqlTermExpr())                                 {result = new Relop(result, buf1, Relop.LIKE);}
-      | (<K_IS> <K_NULL>)                                               {result = new IsNull(result);}
+    result = sqlTermExpr(v)
+    (   relop = relop() buf1 = sqlTermExpr(v)                            {result = new Relop(v, result, buf1, relop);}
+      | (<K_IN> "(" buf1 = sqlTermExpr(v) {operands.add(buf1);} ("," buf1 = sqlTermExpr(v) {operands.add(buf1);})* ")") 
+	                                                                    {result = new In(v, result, operands);}
+      | (<K_BETWEEN> buf1 = sqlTermExpr(v) <K_AND> buf2 = sqlTermExpr(v)) {result = new Between(v, result, buf1, buf2);}
+      | (<K_LIKE> buf1 = sqlTermExpr(v))                                 {result = new Relop(v, result, buf1, Relop.LIKE);}
+      | (<K_IS> <K_NULL>)                                               {result = new IsNull(v, result);}
     )?
 	{return result;}
 }
@@ -390,52 +390,52 @@ int relop():
   {return result;}
 }
 
-Expr sqlTermExpr():
+Expr sqlTermExpr(View v):
 { Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
   int operator = -1;}
 {
-    result = sqlMultiplicativeExpression() {operands.add(result);} ( ( "+" {operator = BinaryTermOp.PLUS;}
+    result = sqlMultiplicativeExpression(v) {operands.add(result);} ( ( "+" {operator = BinaryTermOp.PLUS;}
 	                                                                 | "-" {operator = BinaryTermOp.MINUS;}
 																	 | "||"{operator = BinaryTermOp.CONCAT;})
-                                 result =  sqlMultiplicativeExpression() {operands.add(result);}
+                                 result =  sqlMultiplicativeExpression(v) {operands.add(result);}
                                )*
-    {return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
+    {return operands.size() == 1? result : new BinaryTermOp(v, operator, operands);}
 }
 
-Expr sqlMultiplicativeExpression():
+Expr sqlMultiplicativeExpression(View v):
 { Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
   int operator = -1;}
 {
-    result = sqlUnaryExpression() {operands.add(result);} (  ("*" {operator = BinaryTermOp.TIMES;} | "/" {operator = BinaryTermOp.OVER;}) 
-	                     result = sqlUnaryExpression() {operands.add(result);}
+    result = sqlUnaryExpression(v) {operands.add(result);} (  ("*" {operator = BinaryTermOp.TIMES;} | "/" {operator = BinaryTermOp.OVER;}) 
+	                     result = sqlUnaryExpression(v) {operands.add(result);}
 						 )*
-	{return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
+	{return operands.size() == 1? result : new BinaryTermOp(v, operator, operands);}
 }
 
-Expr sqlUnaryExpression():
+Expr sqlUnaryExpression(View v):
 {Expr result;
 boolean isMinus = false;}
 {
-    ["-" {isMinus = true;}] result = sqlPrimaryExpression() 
-    {return isMinus? new UnaryMinus(result) : result;}
+    ["-" {isMinus = true;}] result = sqlPrimaryExpression(v) 
+    {return isMinus? new UnaryMinus(v, result) : result;}
 }
 
 
-Expr sqlPrimaryExpression():
+Expr sqlPrimaryExpression(View v):
 {Expr result;
 Token t = null;}
 { (
-    t = <S_INTEGER>          {result = new NumericLiteral(t.toString());}
-  | t = <S_DOUBLE>           {result = new NumericLiteral(t.toString());}
-  | t = <S_CHAR_LITERAL>     {result = new TextLiteral(t.toString());}
-  |  "(" result = sqlExpression() ")"  {result = new ParenthesizedExpr(result);}
-  | result = fieldReference()         
+    t = <S_INTEGER>          {result = new NumericLiteral(v, t.toString());}
+  | t = <S_DOUBLE>           {result = new NumericLiteral(v, t.toString());}
+  | t = <S_CHAR_LITERAL>     {result = new TextLiteral(v, t.toString());}
+  |  "(" result = sqlExpression(v) ")"  {result = new ParenthesizedExpr(v, result);}
+  | result = fieldReference(v)         
   ) {return result;}
 }
 
-FieldRef fieldReference():
+FieldRef fieldReference(View v):
 {  
   String grainName = null;
   String tableName = null;
@@ -446,15 +446,15 @@ FieldRef fieldReference():
   t = <S_IDENTIFIER> {fieldName = t.toString();} 
   ["." t = <S_IDENTIFIER> {tableName = fieldName; fieldName = t.toString();} 
   ["." t = <S_IDENTIFIER> {grainName = tableName; tableName = fieldName; fieldName = t.toString();} ]]
-  {return new FieldRef(grainName, tableName, fieldName);}
+  {return new FieldRef(v, grainName, tableName, fieldName);}
 }
 
 void select(View v):
 {}
 {
     <K_SELECT> [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
-    <K_FROM>  fromClause()
-    [<K_WHERE> sqlExpression() ]
+    <K_FROM>  fromClause(v)
+    [<K_WHERE> sqlExpression(v) ]
 }
 
 void selectItem(View v):
@@ -464,31 +464,31 @@ void selectItem(View v):
   Expr expr;  
 }
 {
-   expr = sqlTermExpr() [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]  
+   expr = sqlTermExpr(v) [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]  
    { if (alias.isEmpty() && expr instanceof FieldRef)
 		   alias = ((FieldRef) expr).getColumnName();
      v.addColumn(alias, expr); }
 }
 
-void tableReference():
+void tableReference(View v):
 {}
 {
   <S_IDENTIFIER>["." <S_IDENTIFIER>] [<K_AS>] [<S_IDENTIFIER>]
 }
 
-void fromClause():
+void fromClause(View v):
 {}
 {
-    tableReference() 
-    (join())*
+    tableReference(v) 
+    (join(v))*
 }
 
-void join():
+void join(View v):
 {}
 {
   (<K_INNER> | <K_LEFT> | <K_RIGHT> | <K_FULL>) 
   <K_JOIN>
-   tableReference()
+   tableReference(v)
    <K_ON> 
-   sqlExpression()
+   sqlExpression(v)
 }

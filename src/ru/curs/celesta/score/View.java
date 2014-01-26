@@ -90,11 +90,17 @@ public class View extends NamedElement {
  * Тип выражения.
  */
 enum ExprType {
-	LOGIC, NUMERIC, TEXT, OTHER
+	LOGIC, NUMERIC, TEXT, OTHER, UNDEFINED
 }
 
 /** Скалярное выражение SQL. */
 abstract class Expr {
+	private final View v;
+
+	Expr(View v) {
+		this.v = v;
+	}
+
 	/**
 	 * Возвращает Celesta-SQL представление выражения.
 	 */
@@ -104,6 +110,10 @@ abstract class Expr {
 	 * Возвращает тип выражения.
 	 */
 	public abstract ExprType getType();
+
+	final View getView() {
+		return v;
+	}
 }
 
 /**
@@ -112,7 +122,8 @@ abstract class Expr {
 final class ParenthesizedExpr extends Expr {
 	private final Expr parenthesized;
 
-	public ParenthesizedExpr(Expr parenthesized) {
+	public ParenthesizedExpr(View v, Expr parenthesized) {
+		super(v);
 		this.parenthesized = parenthesized;
 	}
 
@@ -175,7 +186,8 @@ final class Relop extends Expr {
 	private final Expr right;
 	private final int relop;
 
-	public Relop(Expr left, Expr right, int relop) {
+	public Relop(View v, Expr left, Expr right, int relop) {
+		super(v);
 		if (relop < 0 || relop >= OPS.length)
 			throw new IllegalArgumentException();
 		// TODO: сравнивать можно только однотипные термы
@@ -224,7 +236,8 @@ final class In extends Expr {
 	private final Expr left;
 	private final List<Expr> operands;
 
-	In(Expr left, List<Expr> operands) {
+	In(View v, Expr left, List<Expr> operands) {
+		super(v);
 		this.operands = operands;
 		this.left = left;
 		// TODO: все операнды должны быть однотипны
@@ -274,7 +287,8 @@ final class Between extends Expr {
 	private final Expr right1;
 	private final Expr right2;
 
-	public Between(Expr left, Expr right1, Expr right2) {
+	public Between(View v, Expr left, Expr right1, Expr right2) {
+		super(v);
 		this.left = left;
 		this.right1 = right1;
 		this.right2 = right2;
@@ -321,7 +335,8 @@ final class Between extends Expr {
 final class IsNull extends Expr {
 	private final Expr expr;
 
-	IsNull(Expr expr) {
+	IsNull(View v, Expr expr) {
+		super(v);
 		// TODO это должен быть терм
 		this.expr = expr;
 	}
@@ -350,7 +365,8 @@ final class IsNull extends Expr {
 final class NotExpr extends Expr {
 	private final Expr expr;
 
-	NotExpr(Expr expr) {
+	NotExpr(View v, Expr expr) {
+		super(v);
 		// TODO это должен быть LOGIC
 		this.expr = expr;
 	}
@@ -384,7 +400,8 @@ final class BinaryLogicalOp extends Expr {
 	private final int operator;
 	private final List<Expr> operands;
 
-	BinaryLogicalOp(int operator, List<Expr> operands) {
+	BinaryLogicalOp(View v, int operator, List<Expr> operands) {
+		super(v);
 		if (operator < 0 || operator >= OPS.length)
 			throw new IllegalArgumentException();
 		// TODO: все операнды должны быть логическими
@@ -440,7 +457,8 @@ final class BinaryTermOp extends Expr {
 	private final int operator;
 	private final List<Expr> operands;
 
-	BinaryTermOp(int operator, List<Expr> operands) {
+	BinaryTermOp(View v, int operator, List<Expr> operands) {
+		super(v);
 		if (operator < 0 || operator >= OPS.length)
 			throw new IllegalArgumentException();
 		// TODO: для CONCAT все должны быть TEXT, для остальных -- NUMERIC
@@ -487,7 +505,8 @@ final class BinaryTermOp extends Expr {
 final class UnaryMinus extends Expr {
 	private final Expr arg;
 
-	public UnaryMinus(Expr arg) {
+	public UnaryMinus(View v, Expr arg) {
+		super(v);
 		// TODO операнд должен быть NUMERIC
 		this.arg = arg;
 	}
@@ -513,7 +532,8 @@ final class UnaryMinus extends Expr {
 final class NumericLiteral extends Expr {
 	private final String lexValue;
 
-	NumericLiteral(String lexValue) {
+	NumericLiteral(View v, String lexValue) {
+		super(v);
 		this.lexValue = lexValue;
 	}
 
@@ -541,7 +561,8 @@ final class NumericLiteral extends Expr {
 class TextLiteral extends Expr {
 	private final String lexValue;
 
-	TextLiteral(String lexValue) {
+	TextLiteral(View v, String lexValue) {
+		super(v);
 		this.lexValue = lexValue;
 	}
 
@@ -571,8 +592,11 @@ final class FieldRef extends Expr {
 	private final String grainName;
 	private final String tableNameOrAlias;
 	private final String columnName;
+	private Column column;
 
-	public FieldRef(String grainName, String tableNameOrAlias, String columnName) {
+	public FieldRef(View v, String grainName, String tableNameOrAlias,
+			String columnName) throws ParseException {
+		super(v);
 		if (columnName == null)
 			throw new IllegalArgumentException();
 		if (grainName != null && tableNameOrAlias == null)
@@ -580,6 +604,11 @@ final class FieldRef extends Expr {
 		this.grainName = grainName;
 		this.tableNameOrAlias = tableNameOrAlias;
 		this.columnName = columnName;
+		if (grainName != null) {
+			Grain g = v.getGrain().getScore().getGrain(grainName);
+			Table t = g.getTable(tableNameOrAlias);
+			column = t.getColumn(columnName);
+		}
 	}
 
 	/**
@@ -620,7 +649,28 @@ final class FieldRef extends Expr {
 
 	@Override
 	public ExprType getType() {
-		// TODO РАЗОБРАТЬСЯ ТУТ. Возвращать undefined, затем проверять.
-		return null;
+		if (column != null) {
+			if (column instanceof IntegerColumn
+					|| column instanceof FloatingColumn)
+				return ExprType.NUMERIC;
+			if (column instanceof StringColumn)
+				return ExprType.TEXT;
+			return ExprType.OTHER;
+		}
+		return ExprType.UNDEFINED;
+	}
+
+	/**
+	 * Возвращает столбец, на который указывает ссылка.
+	 */
+	public Column getColumn() {
+		return column;
+	}
+
+	/**
+	 * Устанавливает столбец ссылки.
+	 */
+	public void setColumn(Column column) {
+		this.column = column;
 	}
 }
