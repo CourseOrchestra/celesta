@@ -202,6 +202,7 @@ interface CelestaParserConstants {
     "\">\"",
     "\"<\"",
     "\"+\"",
+    "\"||\"",
     "\"*\"",
     "\"/\"",
   };

@@ -395,7 +395,9 @@ Expr sqlTermExpr():
   List<Expr> operands = new ArrayList<Expr>(5);
   int operator = -1;}
 {
-    result = sqlMultiplicativeExpression() {operands.add(result);} ( ("+" {operator = BinaryTermOp.PLUS;}| "-" {operator = BinaryTermOp.MINUS;})
+    result = sqlMultiplicativeExpression() {operands.add(result);} ( ( "+" {operator = BinaryTermOp.PLUS;}
+	                                                                 | "-" {operator = BinaryTermOp.MINUS;}
+																	 | "||"{operator = BinaryTermOp.CONCAT;})
                                  result =  sqlMultiplicativeExpression() {operands.add(result);}
                                )*
     {return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
