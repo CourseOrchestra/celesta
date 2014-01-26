@@ -662,6 +662,7 @@ else {
                                            view = new View(g, viewName.toString());
                                     view.setCelestaDocLexem(doc);
     select(view);
+                                                                 view.finalizeParsing();
   }
 
   final public Expr sqlExpression(View v) throws ParseException {

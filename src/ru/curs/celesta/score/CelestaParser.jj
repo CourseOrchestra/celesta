@@ -332,6 +332,7 @@ void createView(Grain g, String doc):
 <K_VIEW> viewName = <S_IDENTIFIER> <K_AS> {view = new View(g, viewName.toString());
 	                            view.setCelestaDocLexem(doc);}
 								select(view)
+								{view.finalizeParsing();}
 }
 
 Expr sqlExpression(View v):

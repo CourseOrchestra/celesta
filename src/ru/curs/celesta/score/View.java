@@ -84,13 +84,28 @@ public class View extends NamedElement {
 		return unmodifiableColumns;
 	}
 
+	/**
+	 * Финализирует разбор представления, разрешая ссылки на поля и проверяя
+	 * типы выражений.
+	 * 
+	 * @throws ParseException
+	 *             ошибка проверки типов или разрешения ссылок.
+	 */
+	void finalizeParsing() throws ParseException {
+		// TODO написать метод
+		// for (Expr e : columns.values()) {
+		// e.validateTypes();
+		// }
+
+	}
+
 }
 
 /**
  * Тип выражения.
  */
 enum ExprType {
-	LOGIC, NUMERIC, TEXT, OTHER, UNDEFINED
+	LOGIC, NUMERIC, TEXT, DATE, BIT, BLOB, UNDEFINED
 }
 
 /** Скалярное выражение SQL. */
@@ -99,6 +114,18 @@ abstract class Expr {
 
 	Expr(View v) {
 		this.v = v;
+	}
+
+	final View getView() {
+		return v;
+	}
+
+	final void assertType(ExprType t) throws ParseException {
+		if (getType() != t)
+			throw new ParseException(
+					String.format(
+							"Expression '%s' is expected to be of %s type, but it is %s",
+							getCSQL(), t.toString(), getType().toString()));
 	}
 
 	/**
@@ -111,9 +138,13 @@ abstract class Expr {
 	 */
 	public abstract ExprType getType();
 
-	final View getView() {
-		return v;
-	}
+	/**
+	 * Проверяет типы всех входящих в выражение субвыражений.
+	 * 
+	 * @throws ParseException
+	 *             в случае, если контроль типов не проходит.
+	 */
+	public abstract void validateTypes() throws ParseException;
 }
 
 /**
@@ -142,6 +173,11 @@ final class ParenthesizedExpr extends Expr {
 	@Override
 	public ExprType getType() {
 		return parenthesized.getType();
+	}
+
+	@Override
+	public void validateTypes() throws ParseException {
+		parenthesized.validateTypes();
 	}
 }
 
@@ -190,7 +226,6 @@ final class Relop extends Expr {
 		super(v);
 		if (relop < 0 || relop >= OPS.length)
 			throw new IllegalArgumentException();
-		// TODO: сравнивать можно только однотипные термы
 		this.left = left;
 		this.right = right;
 		this.relop = relop;
@@ -227,6 +262,26 @@ final class Relop extends Expr {
 		return ExprType.LOGIC;
 	}
 
+	@Override
+	public void validateTypes() throws ParseException {
+		left.validateTypes();
+		right.validateTypes();
+
+		ExprType t = left.getType();
+		// Сравнивать можно не все типы.
+		if (t == ExprType.DATE || t == ExprType.NUMERIC || t == ExprType.TEXT) {
+			// сравнивать можно только однотипные термы
+			right.assertType(t);
+			// при этом like действует только на строковых термах
+			if (relop == LIKE)
+				left.assertType(ExprType.TEXT);
+		} else {
+			throw new ParseException(
+					String.format(
+							"Wrong expression '%s': type %s cannot be used in comparisions.",
+							getCSQL(), t.toString()));
+		}
+	}
 }
 
 /**
@@ -240,7 +295,6 @@ final class In extends Expr {
 		super(v);
 		this.operands = operands;
 		this.left = left;
-		// TODO: все операнды должны быть однотипны
 	}
 
 	/**
@@ -277,6 +331,27 @@ final class In extends Expr {
 		return ExprType.LOGIC;
 	}
 
+	@Override
+	public void validateTypes() throws ParseException {
+		left.validateTypes();
+		for (Expr operand : operands)
+			operand.validateTypes();
+
+		ExprType t = left.getType();
+		// Сравнивать можно не все типы.
+		if (t == ExprType.DATE || t == ExprType.NUMERIC || t == ExprType.TEXT) {
+			// все операнды должны быть однотипны
+			for (Expr operand : operands) {
+				operand.assertType(t);
+			}
+		} else {
+			throw new ParseException(
+					String.format(
+							"Wrong expression '%s': type %s cannot be used in ...IN(...) expression.",
+							getCSQL(), t.toString()));
+		}
+	}
+
 }
 
 /**
@@ -292,7 +367,6 @@ final class Between extends Expr {
 		this.left = left;
 		this.right1 = right1;
 		this.right2 = right2;
-		// TODO: все операнды должны быть однотипны
 	}
 
 	/**
@@ -327,6 +401,27 @@ final class Between extends Expr {
 		return ExprType.LOGIC;
 	}
 
+	@Override
+	public void validateTypes() throws ParseException {
+		left.validateTypes();
+		right1.validateTypes();
+		right2.validateTypes();
+
+		ExprType t = left.getType();
+		// Сравнивать можно не все типы.
+		if (t == ExprType.DATE || t == ExprType.NUMERIC || t == ExprType.TEXT) {
+			// все операнды должны быть однотипны
+			right1.assertType(t);
+			right2.assertType(t);
+		} else {
+			throw new ParseException(
+					String.format(
+							"Wrong expression '%s': type %s cannot be used in ...BETWEEN...AND... expression.",
+							getCSQL(), t.toString()));
+		}
+
+	}
+
 }
 
 /**
@@ -335,9 +430,13 @@ final class Between extends Expr {
 final class IsNull extends Expr {
 	private final Expr expr;
 
-	IsNull(View v, Expr expr) {
+	IsNull(View v, Expr expr) throws ParseException {
 		super(v);
-		// TODO это должен быть терм
+		if (expr.getType() == ExprType.LOGIC)
+			throw new ParseException(
+					String.format(
+							"Expression '%s' is logical condition and cannot be an argument of IS NULL operator.",
+							getCSQL()));
 		this.expr = expr;
 	}
 
@@ -357,6 +456,12 @@ final class IsNull extends Expr {
 	public ExprType getType() {
 		return ExprType.LOGIC;
 	}
+
+	@Override
+	public void validateTypes() throws ParseException {
+		expr.validateTypes();
+		// VМы уже проверили, что это терм.
+	}
 }
 
 /**
@@ -365,9 +470,12 @@ final class IsNull extends Expr {
 final class NotExpr extends Expr {
 	private final Expr expr;
 
-	NotExpr(View v, Expr expr) {
+	NotExpr(View v, Expr expr) throws ParseException {
 		super(v);
-		// TODO это должен быть LOGIC
+		if (expr.getType() != ExprType.LOGIC)
+			throw new ParseException(String.format(
+					"Expression '%s' is expected to be logical condition.",
+					getCSQL()));
 		this.expr = expr;
 	}
 
@@ -387,6 +495,12 @@ final class NotExpr extends Expr {
 	public ExprType getType() {
 		return ExprType.LOGIC;
 	}
+
+	@Override
+	public void validateTypes() throws ParseException {
+		expr.validateTypes();
+		// Мы уже проверили, что это логическое условие.
+	}
 }
 
 /**
@@ -400,11 +514,19 @@ final class BinaryLogicalOp extends Expr {
 	private final int operator;
 	private final List<Expr> operands;
 
-	BinaryLogicalOp(View v, int operator, List<Expr> operands) {
+	BinaryLogicalOp(View v, int operator, List<Expr> operands)
+			throws ParseException {
 		super(v);
 		if (operator < 0 || operator >= OPS.length)
 			throw new IllegalArgumentException();
-		// TODO: все операнды должны быть логическими
+		if (operands.isEmpty())
+			throw new IllegalArgumentException();
+		// все операнды должны быть логическими
+		for (Expr e : operands)
+			if (e.getType() != ExprType.LOGIC)
+				throw new ParseException(String.format(
+						"Expression '%s' is expected to be logical condition.",
+						e.getCSQL()));
 		this.operands = operands;
 		this.operator = operator;
 	}
@@ -441,6 +563,11 @@ final class BinaryLogicalOp extends Expr {
 		return ExprType.LOGIC;
 	}
 
+	@Override
+	public void validateTypes() throws ParseException {
+		for (Expr e : operands)
+			e.validateTypes();
+	}
 }
 
 /**
@@ -461,7 +588,9 @@ final class BinaryTermOp extends Expr {
 		super(v);
 		if (operator < 0 || operator >= OPS.length)
 			throw new IllegalArgumentException();
-		// TODO: для CONCAT все должны быть TEXT, для остальных -- NUMERIC
+		if (operands.isEmpty())
+			throw new IllegalArgumentException();
+
 		this.operands = operands;
 		this.operator = operator;
 	}
@@ -497,6 +626,18 @@ final class BinaryTermOp extends Expr {
 	public ExprType getType() {
 		return operator == CONCAT ? ExprType.TEXT : ExprType.NUMERIC;
 	}
+
+	@Override
+	public void validateTypes() throws ParseException {
+		for (Expr e : operands)
+			e.validateTypes();
+
+		// для CONCAT все операнды должны быть TEXT, для остальных -- NUMERIC
+		ExprType t = operator == CONCAT ? ExprType.TEXT : ExprType.NUMERIC;
+		for (Expr e : operands)
+			e.assertType(t);
+
+	}
 }
 
 /**
@@ -507,7 +648,6 @@ final class UnaryMinus extends Expr {
 
 	public UnaryMinus(View v, Expr arg) {
 		super(v);
-		// TODO операнд должен быть NUMERIC
 		this.arg = arg;
 	}
 
@@ -523,6 +663,13 @@ final class UnaryMinus extends Expr {
 	@Override
 	public ExprType getType() {
 		return ExprType.NUMERIC;
+	}
+
+	@Override
+	public void validateTypes() throws ParseException {
+		arg.validateTypes();
+		// операнд должен быть NUMERIC
+		arg.assertType(ExprType.NUMERIC);
 	}
 }
 
@@ -553,6 +700,11 @@ final class NumericLiteral extends Expr {
 	public ExprType getType() {
 		return ExprType.NUMERIC;
 	}
+
+	@Override
+	public void validateTypes() throws ParseException {
+		// do nothing, this is literal!
+	}
 }
 
 /**
@@ -581,6 +733,11 @@ class TextLiteral extends Expr {
 	@Override
 	public ExprType getType() {
 		return ExprType.TEXT;
+	}
+
+	@Override
+	public void validateTypes() throws ParseException {
+		// do nothing, this is literal!
 	}
 
 }
@@ -655,7 +812,14 @@ final class FieldRef extends Expr {
 				return ExprType.NUMERIC;
 			if (column instanceof StringColumn)
 				return ExprType.TEXT;
-			return ExprType.OTHER;
+			if (column instanceof BooleanColumn)
+				return ExprType.BIT;
+			if (column instanceof DateTimeColumn)
+				return ExprType.DATE;
+			if (column instanceof BinaryColumn)
+				return ExprType.BLOB;
+			// This should not happen unless we introduced new types in Celesta
+			throw new IllegalStateException();
 		}
 		return ExprType.UNDEFINED;
 	}
@@ -672,5 +836,10 @@ final class FieldRef extends Expr {
 	 */
 	public void setColumn(Column column) {
 		this.column = column;
+	}
+
+	@Override
+	public void validateTypes() throws ParseException {
+		// do nothing, this is field reference!
 	}
 }
