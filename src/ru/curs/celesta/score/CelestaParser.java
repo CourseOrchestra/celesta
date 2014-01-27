@@ -1023,6 +1023,7 @@ Token t = null;
   }
 
   final public void select(View v) throws ParseException {
+ Expr where;
     jj_consume_token(K_SELECT);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_DISTINCT:
@@ -1052,7 +1053,8 @@ Token t = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_WHERE:
       jj_consume_token(K_WHERE);
-      sqlExpression(v);
+      where = sqlExpression(v);
+                                         v.setWhereCondition(where);
       break;
     default:
       jj_la1[60] = jj_gen;
@@ -1087,12 +1089,19 @@ Token t = null;
      v.addColumn(alias, expr);
   }
 
-  final public void tableReference(View v) throws ParseException {
-    jj_consume_token(S_IDENTIFIER);
+  final public TableRef tableReference(View v) throws ParseException {
+  TableRef result;
+  Token t;
+  String grainName = null;
+  String tableName = null;
+  String alias;
+    t = jj_consume_token(S_IDENTIFIER);
+                      tableName = t.toString(); alias = tableName;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 67:
       jj_consume_token(67);
-      jj_consume_token(S_IDENTIFIER);
+      t = jj_consume_token(S_IDENTIFIER);
+                               grainName = tableName; tableName = t.toString(); alias = tableName;
       break;
     default:
       jj_la1[63] = jj_gen;
@@ -1108,16 +1117,27 @@ Token t = null;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case S_IDENTIFIER:
-      jj_consume_token(S_IDENTIFIER);
+      t = jj_consume_token(S_IDENTIFIER);
+                                        alias = t.toString();
       break;
     default:
       jj_la1[65] = jj_gen;
       ;
     }
+     Table tab;
+     if (grainName == null) {
+            tab = v.getGrain().getTable(tableName);
+         } else {
+            tab = v.getGrain().getScore().getGrain(grainName).getTable(tableName);
+         }
+         {if (true) return new TableRef(tab, alias);}
+    throw new Error("Missing return statement in function");
   }
 
   final public void fromClause(View v) throws ParseException {
-    tableReference(v);
+ TableRef tRef;
+    tRef = tableReference(v);
+                              v.addFromTableRef(tRef);
     label_13:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1131,23 +1151,31 @@ Token t = null;
         jj_la1[66] = jj_gen;
         break label_13;
       }
-      join(v);
+      tRef = join(v);
+                     v.addFromTableRef(tRef);
     }
   }
 
-  final public void join(View v) throws ParseException {
+  final public TableRef join(View v) throws ParseException {
+  TableRef tRef;
+  JoinType jt;
+  Expr onExpr;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_INNER:
       jj_consume_token(K_INNER);
+              jt = JoinType.INNER;
       break;
     case K_LEFT:
       jj_consume_token(K_LEFT);
+                                                jt = JoinType.LEFT;
       break;
     case K_RIGHT:
       jj_consume_token(K_RIGHT);
+                                                                                 jt = JoinType.RIGHT;
       break;
     case K_FULL:
       jj_consume_token(K_FULL);
+                                                                                                                  jt = JoinType.FULL;
       break;
     default:
       jj_la1[67] = jj_gen;
@@ -1155,9 +1183,13 @@ Token t = null;
       throw new ParseException();
     }
     jj_consume_token(K_JOIN);
-    tableReference(v);
+    tRef = tableReference(v);
     jj_consume_token(K_ON);
-    sqlExpression(v);
+    onExpr = sqlExpression(v);
+     tRef.setJoinType(jt);
+     tRef.setOnExpr(onExpr);
+         {if (true) return tRef;}
+    throw new Error("Missing return statement in function");
   }
 
   /** Generated Token Manager. */

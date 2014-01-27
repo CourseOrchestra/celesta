@@ -38,6 +38,6 @@ fff int foreign key references aa(idaa) --первая часть кругово
  /**view description*/
 create view testview as 
  select distinct grainid as fieldAlias , ta.tablename, celesta.grains.checksum ,
-   ta.tablename + celesta.grains.checksum as f1
+   ta.tablename || celesta.grains.checksum as f1
    from celesta.tables ta inner join celesta.grains on ta.grainid = celesta.grains.id
-   where tablename >= 'aa' and 5 between 0 and 6 or '55' > 1;
+   where tablename >= 'aa' and 5 between 0 and 6 or '55' > '1';

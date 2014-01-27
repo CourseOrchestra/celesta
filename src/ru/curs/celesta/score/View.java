@@ -1,5 +1,6 @@
 package ru.curs.celesta.score;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,10 +14,14 @@ public class View extends NamedElement {
 	private Grain grain;
 
 	private boolean distinct;
-
 	private final Map<String, Expr> columns = new LinkedHashMap<>();
+	private final Map<String, TableRef> tables = new LinkedHashMap<>();
+	private Expr whereCondition;
+
 	private final Map<String, Expr> unmodifiableColumns = Collections
 			.unmodifiableMap(columns);
+	private final Map<String, TableRef> unmodifiableTables = Collections
+			.unmodifiableMap(tables);
 
 	public View(Grain grain, String name) throws ParseException {
 		super(name);
@@ -78,10 +83,49 @@ public class View extends NamedElement {
 	}
 
 	/**
+	 * Добавляет ссылку на таблицу к представлению.
+	 * 
+	 * @param ref
+	 *            Ссылка на таблицу.
+	 * @throws ParseException
+	 *             Неуникальный алиас или иная ошибка.
+	 */
+	void addFromTableRef(TableRef ref) throws ParseException {
+		if (ref == null)
+			throw new IllegalArgumentException();
+
+		String alias = ref.getAlias();
+		if (alias == null || alias.isEmpty())
+			throw new ParseException(String.format(
+					"View '%s' contains a table with undefined alias.",
+					getName()));
+		if (tables.containsKey(alias))
+			throw new ParseException(
+					String.format(
+							"View '%s' already contains table with name or alias '%s'. Use unique aliases for view tables.",
+							getName(), alias));
+
+		tables.put(alias, ref);
+
+		Expr onCondition = ref.getOnExpr();
+		if (onCondition != null) {
+			onCondition.resolveFieldRefs(new ArrayList<>(tables.values()));
+			onCondition.validateTypes();
+		}
+	}
+
+	/**
 	 * Возвращает перечень столбцов представления.
 	 */
 	public Map<String, Expr> getColumns() {
 		return unmodifiableColumns;
+	}
+
+	/**
+	 * Возвращает перечень from-таблиц представления.
+	 */
+	public Map<String, TableRef> getTables() {
+		return unmodifiableTables;
 	}
 
 	/**
@@ -92,11 +136,34 @@ public class View extends NamedElement {
 	 *             ошибка проверки типов или разрешения ссылок.
 	 */
 	void finalizeParsing() throws ParseException {
-		// TODO написать метод
-		// for (Expr e : columns.values()) {
-		// e.validateTypes();
-		// }
+		List<TableRef> t = new ArrayList<>(tables.values());
+		for (Expr e : columns.values()) {
+			e.resolveFieldRefs(t);
+			e.validateTypes();
+		}
+		whereCondition.resolveFieldRefs(t);
+		whereCondition.validateTypes();
+	}
 
+	/**
+	 * Возвращает условие where для SQL-запроса.
+	 */
+	Expr getWhereCondition() {
+		return whereCondition;
+	}
+
+	/**
+	 * Устанавливает условие where для SQL-запроса.
+	 * 
+	 * @param whereCondition
+	 *            условие where.
+	 * @throws ParseException
+	 *             если тип выражения неверный.
+	 */
+	void setWhereCondition(Expr whereCondition) throws ParseException {
+		if (whereCondition != null)
+			whereCondition.assertType(ExprType.LOGIC);
+		this.whereCondition = whereCondition;
 	}
 
 }
@@ -139,6 +206,18 @@ abstract class Expr {
 	public abstract ExprType getType();
 
 	/**
+	 * Разрешает ссылки на поля таблиц, используя контекст объявленных таблиц с
+	 * их псевдонимами.
+	 * 
+	 * @param tables
+	 *            перечень таблиц.
+	 * @throws ParseException
+	 *             в случае, если ссылка не может быть разрешена.
+	 */
+	public abstract void resolveFieldRefs(List<TableRef> tables)
+			throws ParseException;
+
+	/**
 	 * Проверяет типы всех входящих в выражение субвыражений.
 	 * 
 	 * @throws ParseException
@@ -178,6 +257,11 @@ final class ParenthesizedExpr extends Expr {
 	@Override
 	public void validateTypes() throws ParseException {
 		parenthesized.validateTypes();
+	}
+
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		parenthesized.resolveFieldRefs(tables);
 	}
 }
 
@@ -282,6 +366,12 @@ final class Relop extends Expr {
 							getCSQL(), t.toString()));
 		}
 	}
+
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		left.resolveFieldRefs(tables);
+		right.resolveFieldRefs(tables);
+	}
 }
 
 /**
@@ -350,6 +440,13 @@ final class In extends Expr {
 							"Wrong expression '%s': type %s cannot be used in ...IN(...) expression.",
 							getCSQL(), t.toString()));
 		}
+	}
+
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		left.resolveFieldRefs(tables);
+		for (Expr operand : operands)
+			operand.resolveFieldRefs(tables);
 	}
 
 }
@@ -422,6 +519,13 @@ final class Between extends Expr {
 
 	}
 
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		left.resolveFieldRefs(tables);
+		right1.resolveFieldRefs(tables);
+		right2.resolveFieldRefs(tables);
+	}
+
 }
 
 /**
@@ -460,7 +564,12 @@ final class IsNull extends Expr {
 	@Override
 	public void validateTypes() throws ParseException {
 		expr.validateTypes();
-		// VМы уже проверили, что это терм.
+		// Мы уже проверили, что это терм.
+	}
+
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		expr.resolveFieldRefs(tables);
 	}
 }
 
@@ -500,6 +609,11 @@ final class NotExpr extends Expr {
 	public void validateTypes() throws ParseException {
 		expr.validateTypes();
 		// Мы уже проверили, что это логическое условие.
+	}
+
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		expr.resolveFieldRefs(tables);
 	}
 }
 
@@ -567,6 +681,12 @@ final class BinaryLogicalOp extends Expr {
 	public void validateTypes() throws ParseException {
 		for (Expr e : operands)
 			e.validateTypes();
+	}
+
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		for (Expr e : operands)
+			e.resolveFieldRefs(tables);
 	}
 }
 
@@ -638,6 +758,12 @@ final class BinaryTermOp extends Expr {
 			e.assertType(t);
 
 	}
+
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		for (Expr e : operands)
+			e.resolveFieldRefs(tables);
+	}
 }
 
 /**
@@ -670,6 +796,11 @@ final class UnaryMinus extends Expr {
 		arg.validateTypes();
 		// операнд должен быть NUMERIC
 		arg.assertType(ExprType.NUMERIC);
+	}
+
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		arg.resolveFieldRefs(tables);
 	}
 }
 
@@ -705,12 +836,17 @@ final class NumericLiteral extends Expr {
 	public void validateTypes() throws ParseException {
 		// do nothing, this is literal!
 	}
+
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		// do nothing, this is literal!
+	}
 }
 
 /**
  * Текстовый литерал.
  */
-class TextLiteral extends Expr {
+final class TextLiteral extends Expr {
 	private final String lexValue;
 
 	TextLiteral(View v, String lexValue) {
@@ -740,6 +876,11 @@ class TextLiteral extends Expr {
 		// do nothing, this is literal!
 	}
 
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		// do nothing, this is literal!
+	}
+
 }
 
 /**
@@ -749,7 +890,7 @@ final class FieldRef extends Expr {
 	private final String grainName;
 	private final String tableNameOrAlias;
 	private final String columnName;
-	private Column column;
+	private Column column = null;
 
 	public FieldRef(View v, String grainName, String tableNameOrAlias,
 			String columnName) throws ParseException {
@@ -761,11 +902,7 @@ final class FieldRef extends Expr {
 		this.grainName = grainName;
 		this.tableNameOrAlias = tableNameOrAlias;
 		this.columnName = columnName;
-		if (grainName != null) {
-			Grain g = v.getGrain().getScore().getGrain(grainName);
-			Table t = g.getTable(tableNameOrAlias);
-			column = t.getColumn(columnName);
-		}
+
 	}
 
 	/**
@@ -841,5 +978,91 @@ final class FieldRef extends Expr {
 	@Override
 	public void validateTypes() throws ParseException {
 		// do nothing, this is field reference!
+	}
+
+	@Override
+	public void resolveFieldRefs(List<TableRef> tables) throws ParseException {
+		if (column != null)
+			return;
+		int foundCounter = 0;
+		for (TableRef tRef : tables) {
+			if (grainName != null
+					&& grainName.equals(tRef.getTable().getGrain().getName())
+					&& tableNameOrAlias.equals(tRef.getTable().getName())) {
+				column = tRef.getTable().getColumn(columnName);
+				foundCounter++;
+			} else if (grainName == null && tableNameOrAlias != null
+					&& tableNameOrAlias.equals(tRef.getAlias())) {
+				column = tRef.getTable().getColumn(columnName);
+				foundCounter++;
+			} else if (grainName == null && tableNameOrAlias == null
+					&& tRef.getTable().getColumns().containsKey(columnName)) {
+				column = tRef.getTable().getColumn(columnName);
+				foundCounter++;
+			}
+		}
+		if (foundCounter == 0)
+			throw new ParseException(String.format(
+					"Cannot resolve field reference '%s'", getCSQL()));
+		if (foundCounter > 1)
+			throw new ParseException(String.format(
+					"Ambiguous field reference '%s'", getCSQL()));
+	}
+}
+
+/**
+ * Тип JOIN.
+ */
+enum JoinType {
+	INNER, LEFT, RIGHT, FULL
+}
+
+/**
+ * Ссылка на таблицу в SQL-запросе.
+ */
+class TableRef {
+	private final Table table;
+	private final String alias;
+
+	private JoinType joinType;
+	private Expr onExpr;
+
+	public TableRef(Table table, String alias) {
+		this.table = table;
+		this.alias = alias;
+	}
+
+	/**
+	 * Тип JOIN.
+	 */
+	public JoinType getJoinType() {
+		return joinType;
+	}
+
+	/**
+	 * Таблица.
+	 */
+	public Table getTable() {
+		return table;
+	}
+
+	public Expr getOnExpr() {
+		return onExpr;
+	}
+
+	public void setOnExpr(Expr onExpr) throws ParseException {
+		if (onExpr == null)
+			throw new IllegalArgumentException();
+		onExpr.assertType(ExprType.LOGIC);
+		this.onExpr = onExpr;
+
+	}
+
+	public String getAlias() {
+		return alias;
+	}
+
+	public void setJoinType(JoinType joinType) {
+		this.joinType = joinType;
 	}
 }

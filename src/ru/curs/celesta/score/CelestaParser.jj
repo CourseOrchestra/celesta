@@ -451,11 +451,11 @@ FieldRef fieldReference(View v):
 }
 
 void select(View v):
-{}
+{Expr where;}
 {
     <K_SELECT> [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
     <K_FROM>  fromClause(v)
-    [<K_WHERE> sqlExpression(v) ]
+    [<K_WHERE> where = sqlExpression(v) {v.setWhereCondition(where);} ]
 }
 
 void selectItem(View v):
@@ -471,25 +471,48 @@ void selectItem(View v):
      v.addColumn(alias, expr); }
 }
 
-void tableReference(View v):
-{}
+TableRef tableReference(View v):
+{ TableRef result;
+  Token t;
+  String grainName = null;
+  String tableName = null;
+  String alias;
+}
 {
-  <S_IDENTIFIER>["." <S_IDENTIFIER>] [<K_AS>] [<S_IDENTIFIER>]
+  t = <S_IDENTIFIER> {tableName = t.toString(); alias = tableName;} 
+      ["." t = <S_IDENTIFIER> {grainName = tableName; tableName = t.toString(); alias = tableName;}] 
+	  [<K_AS>] [t = <S_IDENTIFIER> {alias = t.toString();} ]
+  
+  {
+     Table tab;
+     if (grainName == null) {
+	    tab = v.getGrain().getTable(tableName);
+	 } else {
+	    tab = v.getGrain().getScore().getGrain(grainName).getTable(tableName);
+	 }
+	 return new TableRef(tab, alias);
+  }
 }
 
 void fromClause(View v):
-{}
+{TableRef tRef;}
 {
-    tableReference(v) 
-    (join(v))*
+    tRef = tableReference(v) {v.addFromTableRef(tRef);} 
+    (tRef = join(v) {v.addFromTableRef(tRef);} )*
 }
 
-void join(View v):
-{}
+TableRef join(View v):
+{ TableRef tRef;
+  JoinType jt;
+  Expr onExpr;}
 {
-  (<K_INNER> | <K_LEFT> | <K_RIGHT> | <K_FULL>) 
-  <K_JOIN>
-   tableReference(v)
+  (<K_INNER> {jt = JoinType.INNER;} | <K_LEFT> {jt = JoinType.LEFT;}| <K_RIGHT> {jt = JoinType.RIGHT;}| <K_FULL> {jt = JoinType.FULL;}) 
+   <K_JOIN>
+   tRef = tableReference(v)
    <K_ON> 
-   sqlExpression(v)
+   onExpr = sqlExpression(v)
+   { tRef.setJoinType(jt);
+     tRef.setOnExpr(onExpr);
+	 return tRef;
+   }
 }
