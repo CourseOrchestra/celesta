@@ -1,5 +1,7 @@
 package ru.curs.celesta.score;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -166,6 +168,54 @@ public class View extends NamedElement {
 		this.whereCondition = whereCondition;
 	}
 
+	void save(BufferedWriter bw) throws IOException {
+		Grain.writeCelestaDoc(this, bw);
+		bw.write(String.format("CREATE VIEW %s AS", getName()));
+		bw.newLine();
+		bw.write("  SELECT ");
+		if (distinct)
+			bw.write("DISTINCT ");
+		boolean cont = false;
+		for (Map.Entry<String, Expr> e : columns.entrySet()) {
+			if (cont)
+				bw.write(", ");
+			bw.write(e.getValue().getCSQL());
+			bw.write(" AS ");
+			bw.write(e.getKey());
+			cont = true;
+		}
+		bw.newLine();
+		bw.write("  FROM ");
+		cont = false;
+		for (TableRef tRef : tables.values()) {
+			if (cont) {
+				bw.newLine();
+				bw.write(String
+						.format("    %s ", tRef.getJoinType().toString()));
+				bw.write("JOIN ");
+			}
+			Table t = tRef.getTable();
+			if (t.getGrain() == getGrain()) {
+				bw.write(String.format("%s AS %s", t.getName(), tRef.getAlias()));
+			} else {
+				bw.write(String.format("%s.%s AS %s", t.getGrain().getName(),
+						t.getName(), tRef.getAlias()));
+			}
+			if (cont) {
+				bw.write(" ON ");
+				bw.write(tRef.getOnExpr().getCSQL());
+			}
+			cont = true;
+		}
+		if (whereCondition != null) {
+			bw.newLine();
+			bw.write("  WHERE ");
+			bw.write(whereCondition.getCSQL());
+		}
+		bw.write(";");
+		bw.newLine();
+		bw.newLine();
+	}
 }
 
 /**
@@ -985,22 +1035,24 @@ final class FieldRef extends Expr {
 		if (column != null)
 			return;
 		int foundCounter = 0;
-		for (TableRef tRef : tables) {
-			if (grainName != null
-					&& grainName.equals(tRef.getTable().getGrain().getName())
-					&& tableNameOrAlias.equals(tRef.getTable().getName())) {
-				column = tRef.getTable().getColumn(columnName);
-				foundCounter++;
-			} else if (grainName == null && tableNameOrAlias != null
-					&& tableNameOrAlias.equals(tRef.getAlias())) {
-				column = tRef.getTable().getColumn(columnName);
-				foundCounter++;
-			} else if (grainName == null && tableNameOrAlias == null
-					&& tRef.getTable().getColumns().containsKey(columnName)) {
-				column = tRef.getTable().getColumn(columnName);
-				foundCounter++;
+		for (TableRef tRef : tables)
+			if (grainName == null) {
+				if (tableNameOrAlias != null
+						&& tableNameOrAlias.equals(tRef.getAlias())) {
+					column = tRef.getTable().getColumn(columnName);
+					foundCounter++;
+				} else if (tableNameOrAlias == null
+						&& tRef.getTable().getColumns().containsKey(columnName)) {
+					column = tRef.getTable().getColumn(columnName);
+					foundCounter++;
+				}
+			} else {
+				if (grainName.equals(tRef.getTable().getGrain().getName())
+						&& tableNameOrAlias.equals(tRef.getTable().getName())) {
+					column = tRef.getTable().getColumn(columnName);
+					foundCounter++;
+				}
 			}
-		}
 		if (foundCounter == 0)
 			throw new ParseException(String.format(
 					"Cannot resolve field reference '%s'", getCSQL()));

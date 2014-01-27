@@ -7,14 +7,11 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.Table;
 
 public class ScoreTest {
 	@Test
@@ -51,7 +48,7 @@ public class ScoreTest {
 	}
 
 	@Test
-	public void test2() throws CelestaException, ParseException {
+	public void test2() throws CelestaException, ParseException, IOException {
 		Score s = new Score("score");
 		Grain g1 = s.getGrain("g1");
 		View v = g1.getView("testview");
@@ -62,6 +59,12 @@ public class ScoreTest {
 		assertEquals(4, v.getColumns().size());
 		String[] ref = { "fieldAlias", "tablename", "checksum", "f1" };
 		assertArrayEquals(ref, v.getColumns().keySet().toArray(new String[0]));
+
+		// StringWriter sw = new StringWriter();
+		// BufferedWriter bw = new BufferedWriter(sw);
+		// v.save(bw);
+		// bw.flush();
+		// System.out.println(sw.toString());
 	}
 
 	@Test
