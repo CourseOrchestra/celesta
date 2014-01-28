@@ -207,4 +207,43 @@ public class ScoreTest {
 		assertTrue(itWas);
 		new Table(g2, "newView2");
 	}
+
+	@Test
+	public void modificationTest7() throws CelestaException, ParseException,
+			IOException {
+		Score s = new Score("score");
+		Grain g1 = s.getGrain("g1");
+		assertEquals(1, g1.getViews().size());
+		View v = g1.getView("testview");
+		assertFalse(g1.isModified());
+		v.delete();
+		assertEquals(0, g1.getViews().size());
+		assertTrue(g1.isModified());
+	}
+
+	@Test
+	public void modificationTest8() throws CelestaException, ParseException,
+			IOException {
+		Score s = new Score("score");
+		Grain g1 = s.getGrain("g1");
+		assertEquals(1, g1.getViews().size());
+		assertFalse(g1.isModified());
+		boolean itWas = false;
+		View nv;
+		try {
+			nv = new View(g1, "testit",
+					"select postalcode, city from adresses where flat = 5");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+		assertEquals(1, g1.getViews().size());
+		assertTrue(g1.isModified());
+		nv = new View(g1, "testit",
+				"select postalcode, city from adresses where flat = '5'");
+		assertEquals(2, nv.getColumns().size());
+		assertEquals(2, g1.getViews().size());
+		assertTrue(g1.isModified());
+
+	}
 }

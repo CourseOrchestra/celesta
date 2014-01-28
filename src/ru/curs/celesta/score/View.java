@@ -2,6 +2,7 @@ package ru.curs.celesta.score;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -25,12 +26,30 @@ public class View extends NamedElement {
 	private final Map<String, TableRef> unmodifiableTables = Collections
 			.unmodifiableMap(tables);
 
-	public View(Grain grain, String name) throws ParseException {
+	View(Grain grain, String name) throws ParseException {
 		super(name);
 		if (grain == null)
 			throw new IllegalArgumentException();
 		this.grain = grain;
 		grain.addView(this);
+
+	}
+
+	public View(Grain grain, String name, String sql) throws ParseException {
+		this(grain, name);
+		StringReader sr = new StringReader(sql);
+		CelestaParser parser = new CelestaParser(sr);
+		try {
+			try {
+				parser.select(this);
+			} finally {
+				sr.close();
+			}
+			finalizeParsing();
+		} catch (ParseException e) {
+			delete();
+			throw e;
+		}
 	}
 
 	/**
@@ -215,6 +234,16 @@ public class View extends NamedElement {
 		bw.write(";");
 		bw.newLine();
 		bw.newLine();
+	}
+
+	/**
+	 * Удаляет таблицу.
+	 * 
+	 * @throws ParseException
+	 *             при попытке изменить системную гранулу
+	 */
+	public void delete() throws ParseException {
+		grain.removeView(this);
 	}
 }
 

@@ -157,6 +157,11 @@ public final class Grain extends NamedElement {
 		indices.remove(index);
 	}
 
+	synchronized void removeView(View view) throws ParseException {
+		modify();
+		views.remove(view);
+	}
+
 	synchronized void removeTable(Table table) throws ParseException {
 		// Проверяем, не системную ли таблицу хотим удалить
 		modify();
@@ -344,6 +349,12 @@ public final class Grain extends NamedElement {
 				bw.newLine();
 				for (Index i : getIndices().values())
 					i.save(bw);
+
+				bw.write("-- *** VIEWS ***");
+				bw.newLine();
+				for (View v : getViews().values())
+					v.save(bw);
+
 			} finally {
 				bw.close();
 			}
@@ -404,4 +415,5 @@ public final class Grain extends NamedElement {
 	public Map<String, View> getViews() {
 		return views.getElements();
 	}
+
 }

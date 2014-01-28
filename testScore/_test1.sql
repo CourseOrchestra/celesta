@@ -43,3 +43,4 @@ CREATE TABLE employees(
 /**описание индекса idx1*/
 CREATE INDEX idx1 ON table1(f, e, c3);
 CREATE INDEX table2_idx2 ON table2(column3, column2);
+-- *** VIEWS ***
