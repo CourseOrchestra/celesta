@@ -27,3 +27,6 @@ create table refTo (
 
 alter table test add constraint fk_testName foreign key (attrVarchar, attrInt) references refTo (k1, k2)
  on update cascade on delete set null;
+ 
+create view testview as 
+  select id, descr from test inner join refTo on attrVarchar = k1 and attrInt = k2;

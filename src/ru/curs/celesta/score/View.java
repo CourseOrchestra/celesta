@@ -162,8 +162,10 @@ public class View extends NamedElement {
 			e.resolveFieldRefs(t);
 			e.validateTypes();
 		}
-		whereCondition.resolveFieldRefs(t);
-		whereCondition.validateTypes();
+		if (whereCondition != null) {
+			whereCondition.resolveFieldRefs(t);
+			whereCondition.validateTypes();
+		}
 	}
 
 	/**

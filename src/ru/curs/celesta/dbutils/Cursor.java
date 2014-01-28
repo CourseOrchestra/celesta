@@ -31,7 +31,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see http://www.gnu.org/licenses/.
 
-*/
+ */
 
 package ru.curs.celesta.dbutils;
 
@@ -884,6 +884,46 @@ public abstract class Cursor {
 	 *            курсор, из которого следует скопировать значения полей
 	 */
 	public abstract void copyFieldsFrom(Cursor from);
+
+	/**
+	 * Есть ли у сессии права на чтение текущей таблицы.
+	 * 
+	 * @throws CelestaException
+	 *             ошибка базы данных.
+	 */
+	public final boolean canRead() throws CelestaException {
+		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.READ);
+	}
+
+	/**
+	 * Есть ли у сессии права на вставку в текущую таблицу.
+	 * 
+	 * @throws CelestaException
+	 *             ошибка базы данных.
+	 */
+	public final boolean canInsert() throws CelestaException {
+		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.INSERT);
+	}
+
+	/**
+	 * Есть ли у сессии права на модификацию данных текущей таблицы.
+	 * 
+	 * @throws CelestaException
+	 *             ошибка базы данных.
+	 */
+	public final boolean canModify() throws CelestaException {
+		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.MODIFY);
+	}
+
+	/**
+	 * Есть ли у сессии права на удаление данных текущей таблицы.
+	 * 
+	 * @throws CelestaException
+	 *             ошибка базы данных.
+	 */
+	public final boolean canDelete() throws CelestaException {
+		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.DELETE);
+	}
 
 	// CHECKSTYLE:OFF
 	/*

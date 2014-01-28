@@ -31,7 +31,7 @@ final class PermissionManager {
 	/**
 	 * "Срок годности" записи кэша (в миллисекундах).
 	 */
-	private static final int CACHE_ENTRY_SHELF_LIFE = 10000;
+	private static final int CACHE_ENTRY_SHELF_LIFE = 20000;
 
 	private static final int FULL_RIGHTS = Action.READ.getMask()
 			| Action.INSERT.getMask() | Action.MODIFY.getMask()
