@@ -1173,7 +1173,7 @@ final class OraAdaptor extends DBAdaptor {
 			@Override
 			protected String tableName(TableRef tRef) {
 				Table t = tRef.getTable();
-				return String.format(TABLE_TEMPLATE + " as \"%s\"", t.getGrain()
+				return String.format(TABLE_TEMPLATE + " \"%s\"", t.getGrain()
 						.getName(), t.getName(), tRef.getAlias());
 			}
 

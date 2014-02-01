@@ -31,7 +31,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see http://www.gnu.org/licenses/.
 
-*/
+ */
 package ru.curs.celesta;
 
 import java.io.File;
@@ -181,7 +181,7 @@ public final class Celesta {
 				pyPathList.add(pathEntry.getAbsolutePath());
 			}
 			for (String entry : AppSettings.getScorePath().split(";")) {
-				pathEntry = new File(entry);
+				pathEntry = new File(entry.trim());
 				if (pathEntry.exists() && pathEntry.isDirectory()) {
 					pyPathList.add(pathEntry.getAbsolutePath());
 				}

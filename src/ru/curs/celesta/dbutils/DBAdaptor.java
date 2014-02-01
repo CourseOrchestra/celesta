@@ -901,9 +901,13 @@ public abstract class DBAdaptor {
 		List<String> result = new LinkedList<>();
 		try {
 			Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery(sql);
-			while (rs.next()) {
-				result.add(rs.getString(1));
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				while (rs.next()) {
+					result.add(rs.getString(1));
+				}
+			} finally {
+				stmt.close();
 			}
 		} catch (SQLException e) {
 			throw new CelestaException("Cannot get views list: %s",
@@ -932,10 +936,15 @@ public abstract class DBAdaptor {
 			bw.flush();
 
 			String sql = sw.toString();
-			
-			System.out.println(sql);
-			// TODO доделать
-		} catch (IOException e) {
+			// System.out.println(sql);
+
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException | IOException e) {
 			throw new CelestaException("Error while creating view %s.%s: %s", v
 					.getGrain().getName(), v.getName(), e.getMessage());
 
@@ -956,8 +965,19 @@ public abstract class DBAdaptor {
 	 *             Ошибка БД.
 	 */
 	public void dropView(Connection conn, View v) throws CelestaException {
-		// TODO Auto-generated method stub
-
+		try {
+			String sql = String.format("DROP VIEW " + tableTemplate(), v
+					.getGrain().getName(), v.getName());
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+			conn.commit();
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
 	}
 
 }

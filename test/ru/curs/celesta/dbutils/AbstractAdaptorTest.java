@@ -839,8 +839,8 @@ public abstract class AbstractAdaptorTest {
 		Table t2 = g.getTable("refTo");
 		try {
 			ForeignKey fk = t.getForeignKeys().iterator().next();
-			View v = g.getView("testView");
-			assertEquals("testView", v.getName());
+			View v = g.getView("testview");
+			assertEquals("testview", v.getName());
 			dba.createTable(conn, t2);
 			dba.createFK(conn, fk);
 			// пустой перечень view

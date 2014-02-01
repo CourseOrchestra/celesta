@@ -31,7 +31,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see http://www.gnu.org/licenses/.
 
-*/
+ */
 package ru.curs.celesta.score;
 
 import java.io.File;
@@ -75,7 +75,7 @@ public class Score {
 	 */
 	public Score(String scorePath) throws CelestaException {
 		for (String entry : scorePath.split(";")) {
-			File path = new File(entry);
+			File path = new File(entry.trim());
 			if (!path.exists())
 				throw new CelestaException(
 						"Score path entry '%s' does not exist.",
@@ -135,10 +135,11 @@ public class Score {
 	 * Сохраняет содержимое метаданных обратно в SQL-файлы, при этом
 	 * перезаписывая их содержимое.
 	 * 
-	 * @throws CelestaException при ошибке ввода-вывода.
+	 * @throws CelestaException
+	 *             при ошибке ввода-вывода.
 	 */
 	public void save() throws CelestaException {
-		for (Grain g: grains.values())
+		for (Grain g : grains.values())
 			if (g.isModified())
 				g.save();
 	}

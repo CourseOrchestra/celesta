@@ -246,9 +246,6 @@ public class View extends NamedElement {
 		bw.write(gen.preamble(this));
 		bw.newLine();
 		selectScript(bw, gen);
-		bw.write(";");
-		bw.newLine();
-		bw.newLine();
 	}
 
 	void save(BufferedWriter bw) throws IOException {
@@ -256,13 +253,7 @@ public class View extends NamedElement {
 
 			@Override
 			protected String preamble(View view) {
-				StringBuilder sb = new StringBuilder();
-				sb.append("/**");
-				sb.append(view.getCelestaDoc());
-				sb.append("*/");
-				sb.append("\n");
-				sb.append(String.format("create view %s as", viewName(view)));
-				return sb.toString();
+				return String.format("create view %s as", viewName(view));
 			}
 
 			@Override
@@ -288,7 +279,11 @@ public class View extends NamedElement {
 			}
 
 		};
+		Grain.writeCelestaDoc(this, bw);
 		createViewScript(bw, gen);
+		bw.write(";");
+		bw.newLine();
+		bw.newLine();
 	}
 
 	/**
