@@ -189,10 +189,7 @@ public class View extends NamedElement {
 		this.whereCondition = whereCondition;
 	}
 
-	void save(BufferedWriter bw) throws IOException {
-		Grain.writeCelestaDoc(this, bw);
-		bw.write(String.format("CREATE VIEW %s AS", getName()));
-		bw.newLine();
+	void selectScript(BufferedWriter bw, SQLGenerator gen) throws IOException {
 		bw.write("  SELECT ");
 		if (distinct)
 			bw.write("DISTINCT ");
@@ -200,7 +197,7 @@ public class View extends NamedElement {
 		for (Map.Entry<String, Expr> e : columns.entrySet()) {
 			if (cont)
 				bw.write(", ");
-			bw.write(e.getValue().getCSQL());
+			bw.write(gen.generateSQL(e.getValue()));
 			bw.write(" AS ");
 			bw.write(e.getKey());
 			cont = true;
@@ -224,15 +221,22 @@ public class View extends NamedElement {
 			}
 			if (cont) {
 				bw.write(" ON ");
-				bw.write(tRef.getOnExpr().getCSQL());
+				bw.write(gen.generateSQL(tRef.getOnExpr()));
 			}
 			cont = true;
 		}
 		if (whereCondition != null) {
 			bw.newLine();
 			bw.write("  WHERE ");
-			bw.write(whereCondition.getCSQL());
+			bw.write(gen.generateSQL(whereCondition));
 		}
+	}
+
+	void save(BufferedWriter bw) throws IOException {
+		Grain.writeCelestaDoc(this, bw);
+		bw.write(String.format("CREATE VIEW %s AS", getName()));
+		bw.newLine();
+		selectScript(bw, new SQLGenerator());
 		bw.write(";");
 		bw.newLine();
 		bw.newLine();
