@@ -30,6 +30,7 @@ import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.View;
 
 /**
  * Адаптер MуSQL.
@@ -957,4 +958,9 @@ final class MySQLAdaptor extends DBAdaptor {
 		return result;
 	}
 
+	@Override
+	ViewDefiner getViewDefiner(View v) {
+		return new ViewDefiner(v) {
+		};
+	}
 }

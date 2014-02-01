@@ -503,10 +503,10 @@ void fromClause(View v):
 
 TableRef join(View v):
 { TableRef tRef;
-  JoinType jt;
+  TableRef.JoinType jt;
   Expr onExpr;}
 {
-  (<K_INNER> {jt = JoinType.INNER;} | <K_LEFT> {jt = JoinType.LEFT;}| <K_RIGHT> {jt = JoinType.RIGHT;}| <K_FULL> {jt = JoinType.FULL;}) 
+  (<K_INNER> {jt = TableRef.JoinType.INNER;} | <K_LEFT> {jt = TableRef.JoinType.LEFT;}| <K_RIGHT> {jt = TableRef.JoinType.RIGHT;}) 
    <K_JOIN>
    tRef = tableReference(v)
    <K_ON> 

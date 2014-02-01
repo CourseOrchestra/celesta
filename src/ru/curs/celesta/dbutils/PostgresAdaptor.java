@@ -28,6 +28,7 @@ import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.View;
 
 /**
  * Адаптер Postgres.
@@ -557,11 +558,11 @@ final class PostgresAdaptor extends DBAdaptor {
 					.getGrain().getName(), c.getParentTable().getName(),
 					c.getName(), colType);
 			if (c.getClass() == IntegerColumn.class)
-				sql += String.format(" USING (%s::integer);",
-						c.getQuotedName());
+				sql += String
+						.format(" USING (%s::integer);", c.getQuotedName());
 			else if (c.getClass() == BooleanColumn.class)
-				sql += String.format(" USING (%s::boolean);",
-						c.getQuotedName());
+				sql += String
+						.format(" USING (%s::boolean);", c.getQuotedName());
 
 			batch.add(sql);
 		} else if (c.getClass() == StringColumn.class) {
@@ -569,9 +570,9 @@ final class PostgresAdaptor extends DBAdaptor {
 			if (sc.isMax() != actual.isMax()
 					|| sc.getLength() != actual.getLength()) {
 				sql = String.format(ALTER_TABLE + tableTemplate()
-						+ " ALTER COLUMN \"%s\" TYPE %s", c
-						.getParentTable().getGrain().getName(), c
-						.getParentTable().getName(), c.getName(), colType);
+						+ " ALTER COLUMN \"%s\" TYPE %s", c.getParentTable()
+						.getGrain().getName(), c.getParentTable().getName(),
+						c.getName(), colType);
 				batch.add(sql);
 			}
 		}
@@ -888,5 +889,11 @@ final class PostgresAdaptor extends DBAdaptor {
 					e.getMessage());
 		}
 		return result;
+	}
+
+	@Override
+	ViewDefiner getViewDefiner(View v) {
+		return new ViewDefiner(v) {
+		};
 	}
 }

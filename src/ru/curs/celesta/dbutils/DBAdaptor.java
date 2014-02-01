@@ -1,5 +1,8 @@
 package ru.curs.celesta.dbutils;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -24,6 +27,7 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
@@ -32,6 +36,8 @@ import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.TableRef;
+import ru.curs.celesta.score.View;
 
 /**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
@@ -877,6 +883,77 @@ public abstract class DBAdaptor {
 	abstract Map<String, DBIndexInfo> getIndices(Connection conn, Grain g)
 			throws CelestaException;
 
+	/**
+	 * Возвращает перечень имён представлений в грануле.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * @param g
+	 *            Гранула, перечень имён представлений которой необходимо
+	 *            получить.
+	 * @throws CelestaException
+	 *             В случае сбоя связи с БД.
+	 */
+	public List<String> getViewList(Connection conn, Grain g)
+			throws CelestaException {
+		String sql = String
+				.format("select table_name from information_schema.views where table_schema = '%s'",
+						g.getName());
+		List<String> result = new LinkedList<>();
+		try {
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				result.add(rs.getString(1));
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot get views list: %s",
+					e.toString());
+		}
+		return result;
+	}
+
+	/**
+	 * Создаёт представление в базе данных на основе метаданных.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * @param v
+	 *            Представление.
+	 * @throws CelestaException
+	 *             Ошибка БД.
+	 */
+	public void createView(Connection conn, View v) throws CelestaException {
+		ViewDefiner vd = getViewDefiner(v);
+		try {
+			String sql = vd.getDef();
+			System.out.println(sql);
+			// TODO доделать
+		} catch (IOException e) {
+			throw new CelestaException("Error while creating view %s.%s: %s", v
+					.getGrain().getName(), v.getName(), e.getMessage());
+
+		}
+
+	}
+
+	abstract ViewDefiner getViewDefiner(View v);
+
+	/**
+	 * Удаление представления.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * @param v
+	 *            Представление.
+	 * @throws CelestaException
+	 *             Ошибка БД.
+	 */
+	public void dropView(Connection conn, View v) throws CelestaException {
+		// TODO Auto-generated method stub
+
+	}
+
 }
 
 /**
@@ -938,5 +1015,106 @@ abstract class ColumnDefiner {
 				}
 			}
 		return sb.toString();
+	}
+}
+
+/**
+ * Класс, отвечающий за определение представлений в различных СУБД.
+ */
+abstract class ViewDefiner {
+
+	private final View v;
+	private final StringWriter sw = new StringWriter();
+	private final BufferedWriter bf = new BufferedWriter(sw);
+
+	ViewDefiner(View v) {
+		this.v = v;
+	}
+
+	final BufferedWriter bf() {
+		return bf;
+	}
+
+	final View v() {
+		return v;
+	}
+
+	void preamble() throws IOException {
+		bf().write(String.format("create or replace view %s as", viewName()));
+		bf().newLine();
+	}
+
+	void select() throws IOException {
+		// SELECT
+		bf().write(" select ");
+		if (v().isDistinct())
+			bf().write("distinct ");
+
+		// FIELDS
+		boolean flag = false;
+		for (Entry<String, Expr> e : v().getColumns().entrySet()) {
+			if (flag)
+				bf().write(", ");
+			writeColumn(e.getValue(), e.getKey());
+			flag = true;
+		}
+		bf().newLine();
+
+		// FROM
+		bf().write("  from ");
+		flag = false;
+		for (TableRef tRef : v().getTables().values()) {
+			if (flag) {
+				bf.newLine();
+				bf.write(String.format("   %s join ", tRef.getJoinType()
+						.toString()));
+			}
+			bf().write(tableName(tRef.getTable()));
+			bf().write(" as \"");
+			bf().write(tRef.getAlias());
+			bf().write("\"");
+			if (flag) {
+				bf.write(" on ");
+				writeExpr(tRef.getOnExpr());
+			}
+			flag = true;
+		}
+
+		// WHERE
+		bf().newLine();
+		if (v().getWhereCondition() != null) {
+			bf().write(" where ");
+			writeExpr(v().getWhereCondition());
+		}
+		bf().write(";");
+	}
+
+	String viewName() {
+		return String.format("%s.%s", v().getGrain().getQuotedName(), v()
+				.getQuotedName());
+	}
+
+	String tableName(Table t) {
+		return String.format("%s.%s", t.getGrain().getQuotedName(),
+				t.getQuotedName());
+	}
+
+	void writeColumn(Expr expr, String alias) throws IOException {
+		writeExpr(expr);
+		bf().write(" as \"");
+		bf().write(alias);
+		bf().write("\"");
+	}
+
+	private void writeExpr(Expr expr) {
+		// TODO Auto-generated method stub
+
+	}
+
+	String getDef() throws IOException {
+		preamble();
+		select();
+		bf.flush();
+		return sw.toString();
 	}
 }

@@ -31,11 +31,14 @@ import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.View;
 
 /**
  * Адаптер Oracle Database.
  */
 final class OraAdaptor extends DBAdaptor {
+	private static final String TABLE_TEMPLATE = "\"%s_%s\"";
+
 	private static final int LENGTHFORMAX = 4000;
 
 	private static final Pattern BOOLEAN_CHECK = Pattern
@@ -449,7 +452,7 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	public String tableTemplate() {
-		return "\"%s_%s\"";
+		return TABLE_TEMPLATE;
 	}
 
 	@Override
@@ -1130,4 +1133,47 @@ final class OraAdaptor extends DBAdaptor {
 		return result;
 	}
 
+	@Override
+	public List<String> getViewList(Connection conn, Grain g)
+			throws CelestaException {
+
+		String sql = String
+				.format("select view_name from all_views "
+						+ "where owner = sys_context('userenv','session_user') and view_name like '%s@_%%' escape '@'",
+						g.getName());
+		List<String> result = new LinkedList<>();
+		try {
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				String buf = rs.getString(1);
+				Matcher m = TABLE_PATTERN.matcher(buf);
+				m.find();
+				result.add(m.group(2));
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot get views list: %s",
+					e.toString());
+		}
+		return result;
+	}
+
+	@Override
+	ViewDefiner getViewDefiner(View v) {
+		return new ViewDefiner(v) {
+
+			@Override
+			String viewName() {
+				return String.format(TABLE_TEMPLATE, v().getGrain().getName(),
+						v().getName());
+			}
+
+			@Override
+			String tableName(Table t) {
+				return String.format(TABLE_TEMPLATE, t.getGrain().getName(),
+						t.getName());
+			}
+
+		};
+	}
 }

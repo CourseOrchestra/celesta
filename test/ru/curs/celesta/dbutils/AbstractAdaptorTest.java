@@ -38,6 +38,7 @@ import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.View;
 
 public abstract class AbstractAdaptorTest {
 	final static String GRAIN_NAME = "gtest";
@@ -824,6 +825,39 @@ public abstract class AbstractAdaptorTest {
 		} catch (CelestaException e) {
 			e.printStackTrace();
 			throw e;
+		} finally {
+			conn.rollback();
+			dba.dropTable(conn, t);
+			dba.dropTable(conn, t2);
+		}
+	}
+
+	@Test
+	public void viewTest() throws ParseException, CelestaException,
+			SQLException {
+		Grain g = score.getGrain(GRAIN_NAME);
+		Table t2 = g.getTable("refTo");
+		try {
+			ForeignKey fk = t.getForeignKeys().iterator().next();
+			View v = g.getView("testView");
+			assertEquals("testView", v.getName());
+			dba.createTable(conn, t2);
+			dba.createFK(conn, fk);
+			// пустой перечень view
+			List<String> viewList = dba.getViewList(conn, g);
+			assertNotNull(viewList);
+			assertTrue(viewList.isEmpty());
+			// создать view
+			dba.createView(conn, v);
+			// увидеть его в перечне
+			viewList = dba.getViewList(conn, g);
+			assertEquals(1, viewList.size());
+			assertEquals(v.getName(), viewList.get(0));
+			// удалить view
+			dba.dropView(conn, v);
+			// пустой перечень view
+			viewList = dba.getViewList(conn, g);
+			assertTrue(viewList.isEmpty());
 		} finally {
 			conn.rollback();
 			dba.dropTable(conn, t);

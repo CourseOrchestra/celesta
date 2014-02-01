@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -25,6 +26,7 @@ import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.View;
 
 /**
  * Адаптер MSSQL.
@@ -514,7 +516,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	@SuppressWarnings("unchecked")
 	@Override
 	public DBColumnInfo getColumnInfo(Connection conn, Column c)
-	throws CelestaException {
+			throws CelestaException {
 		// CHECKSTYLE:ON
 		try {
 			DatabaseMetaData metaData = conn.getMetaData();
@@ -955,5 +957,18 @@ final class MSSQLAdaptor extends DBAdaptor {
 					e.getMessage());
 		}
 		return result;
+	}
+
+	@Override
+	ViewDefiner getViewDefiner(View v) {
+		return new ViewDefiner(v) {
+
+			@Override
+			void preamble() throws IOException {
+				bf().write(String.format("create view %s as", viewName()));
+				bf().newLine();
+			}
+
+		};
 	}
 }
