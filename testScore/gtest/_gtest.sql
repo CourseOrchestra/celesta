@@ -29,4 +29,4 @@ alter table test add constraint fk_testName foreign key (attrVarchar, attrInt) r
  on update cascade on delete set null;
  
 create view testView as 
-  select id, descr from test inner join refTo on attrVarchar = k1 and attrInt = k2;
+  select id, descr, descr || 'foo' as descr2 from test inner join refTo on attrVarchar = k1 and attrInt = k2;

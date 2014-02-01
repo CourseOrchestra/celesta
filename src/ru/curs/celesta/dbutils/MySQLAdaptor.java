@@ -960,6 +960,11 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	SQLGenerator getViewSQLGenerator() {
-		return new SQLGenerator();
+		return new SQLGenerator() {
+			@Override
+			protected String concat() {
+				return " + ";
+			}
+		};
 	}
 }

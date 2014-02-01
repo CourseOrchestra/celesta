@@ -32,6 +32,7 @@ import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.TableRef;
 import ru.curs.celesta.score.View;
 
 /**
@@ -1170,9 +1171,10 @@ final class OraAdaptor extends DBAdaptor {
 			}
 
 			@Override
-			protected String tableName(Table t) {
-				return String.format(TABLE_TEMPLATE, t.getGrain().getName(),
-						t.getName());
+			protected String tableName(TableRef tRef) {
+				Table t = tRef.getTable();
+				return String.format(TABLE_TEMPLATE + " as \"%s\"", t.getGrain()
+						.getName(), t.getName(), tRef.getAlias());
 			}
 
 		};

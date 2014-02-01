@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 /**
  * Ссылка на таблицу в SQL-запросе.
  */
-class TableRef {
+public class TableRef {
 	/**
 	 * Тип JOIN. Не поддерживается FULL JOIN, т. к. он не поддерживается в
 	 * MySQL, и CROSS JOIN из соображений безопасности быстродействия.

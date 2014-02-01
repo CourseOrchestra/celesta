@@ -199,7 +199,11 @@ public class View extends NamedElement {
 				bw.write(", ");
 			bw.write(gen.generateSQL(e.getValue()));
 			bw.write(" as ");
+			if (gen.quoteNames())
+				bw.write("\"");
 			bw.write(e.getKey());
+			if (gen.quoteNames())
+				bw.write("\"");
 			cont = true;
 		}
 		bw.newLine();
@@ -212,13 +216,7 @@ public class View extends NamedElement {
 						.format("    %s ", tRef.getJoinType().toString()));
 				bw.write("join ");
 			}
-			Table t = tRef.getTable();
-			if (t.getGrain() == getGrain()) {
-				bw.write(String.format("%s as %s", t.getName(), tRef.getAlias()));
-			} else {
-				bw.write(String.format("%s.%s as %s", t.getGrain().getName(),
-						t.getName(), tRef.getAlias()));
-			}
+			bw.write(gen.tableName(tRef));
 			if (cont) {
 				bw.write(" on ");
 				bw.write(gen.generateSQL(tRef.getOnExpr()));
@@ -273,9 +271,20 @@ public class View extends NamedElement {
 			}
 
 			@Override
-			protected String tableName(Table t) {
-				return String.format("%s.%s", t.getGrain().getName(),
-						t.getName());
+			protected String tableName(TableRef tRef) {
+				Table t = tRef.getTable();
+				if (t.getGrain() == getGrain()) {
+					return String.format("%s as %s", t.getName(),
+							tRef.getAlias());
+				} else {
+					return String.format("%s.%s as %s", t.getGrain().getName(),
+							t.getName(), tRef.getAlias());
+				}
+			}
+
+			@Override
+			protected boolean quoteNames() {
+				return false;
 			}
 
 		};

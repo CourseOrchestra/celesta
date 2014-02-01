@@ -69,14 +69,26 @@ public class SQLGenerator extends ExprVisitor {
 	final void visitFieldRef(FieldRef expr) throws ParseException {
 		StringBuilder result = new StringBuilder();
 		if (expr.getGrainName() != null) {
+			if (quoteNames())
+				result.append("\"");
 			result.append(expr.getGrainName());
+			if (quoteNames())
+				result.append("\"");
 			result.append(".");
 		}
 		if (expr.getTableNameOrAlias() != null) {
+			if (quoteNames())
+				result.append("\"");
 			result.append(expr.getTableNameOrAlias());
+			if (quoteNames())
+				result.append("\"");
 			result.append(".");
 		}
+		if (quoteNames())
+			result.append("\"");
 		result.append(expr.getColumnName());
+		if (quoteNames())
+			result.append("\"");
 		stack.push(result.toString());
 	}
 
@@ -129,6 +141,10 @@ public class SQLGenerator extends ExprVisitor {
 		stack.push("-" + stack.pop());
 	}
 
+	protected boolean quoteNames() {
+		return true;
+	}
+
 	protected String concat() {
 		return " || ";
 	}
@@ -142,8 +158,8 @@ public class SQLGenerator extends ExprVisitor {
 				v.getQuotedName());
 	}
 
-	protected String tableName(Table t) {
-		return String.format("%s.%s", t.getGrain().getQuotedName(),
-				t.getQuotedName());
+	protected String tableName(TableRef t) {
+		return String.format("%s.%s as \"%s\"", t.getTable().getGrain()
+				.getQuotedName(), t.getTable().getQuotedName(), t.getAlias());
 	}
 }
