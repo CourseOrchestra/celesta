@@ -959,15 +959,18 @@ public abstract class DBAdaptor {
 	 * 
 	 * @param conn
 	 *            Соединение с БД.
-	 * @param v
-	 *            Представление.
+	 * @param grainName
+	 *            Имя гранулы.
+	 * @param viewName
+	 *            Имя представления.
 	 * @throws CelestaException
 	 *             Ошибка БД.
 	 */
-	public void dropView(Connection conn, View v) throws CelestaException {
+	public void dropView(Connection conn, String grainName, String viewName)
+			throws CelestaException {
 		try {
-			String sql = String.format("DROP VIEW " + tableTemplate(), v
-					.getGrain().getName(), v.getName());
+			String sql = String.format("DROP VIEW " + tableTemplate(),
+					grainName, viewName);
 			Statement stmt = conn.createStatement();
 			try {
 				stmt.executeUpdate(sql);
@@ -979,7 +982,6 @@ public abstract class DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 	}
-
 }
 
 /**

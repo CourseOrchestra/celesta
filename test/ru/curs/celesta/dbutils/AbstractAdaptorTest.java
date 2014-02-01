@@ -854,7 +854,7 @@ public abstract class AbstractAdaptorTest {
 			assertEquals(1, viewList.size());
 			assertEquals(v.getName(), viewList.get(0));
 			// удалить view
-			dba.dropView(conn, v);
+			dba.dropView(conn, v.getGrain().getName(), v.getName());
 			// пустой перечень view
 			viewList = dba.getViewList(conn, g);
 			assertTrue(viewList.isEmpty());

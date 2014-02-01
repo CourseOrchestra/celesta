@@ -68,14 +68,7 @@ public class SQLGenerator extends ExprVisitor {
 
 	final void visitFieldRef(FieldRef expr) throws ParseException {
 		StringBuilder result = new StringBuilder();
-		if (expr.getGrainName() != null) {
-			if (quoteNames())
-				result.append("\"");
-			result.append(expr.getGrainName());
-			if (quoteNames())
-				result.append("\"");
-			result.append(".");
-		}
+
 		if (expr.getTableNameOrAlias() != null) {
 			if (quoteNames())
 				result.append("\"");

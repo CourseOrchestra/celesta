@@ -23,6 +23,7 @@ import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.VersionString;
+import ru.curs.celesta.score.View;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.TablesCursor;
 
@@ -227,6 +228,9 @@ public final class DBUpdator {
 			// Схему создаём, если ещё не создана.
 			dba.createSchemaIfNotExists(g.getName());
 
+			// Удаляем все представления
+			dropAllViews(g);
+
 			// Выполняем удаление ненужных индексов, чтобы облегчить задачу
 			// обновления столбцов на таблицах.
 			dropOrphanedGrainIndices(g);
@@ -255,6 +259,9 @@ public final class DBUpdator {
 			// Обновляем внешние ключи
 			updateGrainFKeys(g);
 
+			// Создаём представления заново
+			createViews(g);
+
 			// По завершении -- обновление номера версии, контрольной суммы
 			// и выставление в статус ready
 			grain.setState(GrainsCursor.READY);
@@ -275,6 +282,18 @@ public final class DBUpdator {
 			ConnectionPool.commit(grain.callContext().getConn());
 			return false;
 		}
+	}
+
+	private static void createViews(Grain g) throws CelestaException {
+		Connection conn = grain.callContext().getConn();
+		for (View v : g.getViews().values())
+			dba.createView(conn, v);
+	}
+
+	private static void dropAllViews(Grain g) throws CelestaException {
+		Connection conn = grain.callContext().getConn();
+		for (String viewName : dba.getViewList(conn, g))
+			dba.dropView(conn, g.getName(), viewName);
 	}
 
 	private static void updateGrainFKeys(Grain g) throws CelestaException {

@@ -554,29 +554,18 @@ final class TextLiteral extends Expr {
  * Ссылка на колонку таблицы.
  */
 final class FieldRef extends Expr {
-	private final String grainName;
 	private final String tableNameOrAlias;
 	private final String columnName;
 	private Column column = null;
 
-	public FieldRef(View v, String grainName, String tableNameOrAlias,
-			String columnName) throws ParseException {
+	public FieldRef(View v, String tableNameOrAlias, String columnName)
+			throws ParseException {
 		super(v);
 		if (columnName == null)
 			throw new IllegalArgumentException();
-		if (grainName != null && tableNameOrAlias == null)
-			throw new IllegalArgumentException();
-		this.grainName = grainName;
 		this.tableNameOrAlias = tableNameOrAlias;
 		this.columnName = columnName;
 
-	}
-
-	/**
-	 * Имя гранулы.
-	 */
-	public String getGrainName() {
-		return grainName;
 	}
 
 	/**

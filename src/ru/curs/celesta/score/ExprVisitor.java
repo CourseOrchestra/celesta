@@ -62,27 +62,18 @@ final class FieldResolver extends ExprVisitor {
 		if (fr.getColumn() != null)
 			return;
 		int foundCounter = 0;
-		for (TableRef tRef : tables)
-			if (fr.getGrainName() == null) {
-				if (fr.getTableNameOrAlias() != null
-						&& fr.getTableNameOrAlias().equals(tRef.getAlias())) {
-					fr.setColumn(tRef.getTable().getColumn(fr.getColumnName()));
-					foundCounter++;
-				} else if (fr.getTableNameOrAlias() == null
-						&& tRef.getTable().getColumns()
-								.containsKey(fr.getColumnName())) {
-					fr.setColumn(tRef.getTable().getColumn(fr.getColumnName()));
-					foundCounter++;
-				}
-			} else {
-				if (fr.getGrainName().equals(
-						tRef.getTable().getGrain().getName())
-						&& fr.getTableNameOrAlias().equals(
-								tRef.getTable().getName())) {
-					fr.setColumn(tRef.getTable().getColumn(fr.getColumnName()));
-					foundCounter++;
-				}
+		for (TableRef tRef : tables) {
+			if (fr.getTableNameOrAlias() != null
+					&& fr.getTableNameOrAlias().equals(tRef.getAlias())) {
+				fr.setColumn(tRef.getTable().getColumn(fr.getColumnName()));
+				foundCounter++;
+			} else if (fr.getTableNameOrAlias() == null
+					&& tRef.getTable().getColumns()
+							.containsKey(fr.getColumnName())) {
+				fr.setColumn(tRef.getTable().getColumn(fr.getColumnName()));
+				foundCounter++;
 			}
+		}
 		if (foundCounter == 0)
 			throw new ParseException(String.format(
 					"Cannot resolve field reference '%s'", fr.getCSQL()));

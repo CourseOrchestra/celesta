@@ -438,16 +438,14 @@ Token t = null;}
 
 FieldRef fieldReference(View v):
 {  
-  String grainName = null;
   String tableName = null;
   String fieldName;
   Token t;
 }
 {
   t = <S_IDENTIFIER> {fieldName = t.toString();} 
-  ["." t = <S_IDENTIFIER> {tableName = fieldName; fieldName = t.toString();} 
-  ["." t = <S_IDENTIFIER> {grainName = tableName; tableName = fieldName; fieldName = t.toString();} ]]
-  {return new FieldRef(v, grainName, tableName, fieldName);}
+  ["." t = <S_IDENTIFIER> {tableName = fieldName; fieldName = t.toString();} ]
+  {return new FieldRef(v, tableName, fieldName);}
 }
 
 void select(View v):
