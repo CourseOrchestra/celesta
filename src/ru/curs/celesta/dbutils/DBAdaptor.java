@@ -27,16 +27,15 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
-import ru.curs.celesta.score.TableRef;
 import ru.curs.celesta.score.View;
 
 /**
@@ -924,9 +923,16 @@ public abstract class DBAdaptor {
 	 *             Ошибка БД.
 	 */
 	public void createView(Connection conn, View v) throws CelestaException {
-		ViewDefiner vd = getViewDefiner(v);
+		SQLGenerator gen = getViewSQLGenerator();
 		try {
-			String sql = vd.getDef();
+			StringWriter sw = new StringWriter();
+			BufferedWriter bw = new BufferedWriter(sw);
+
+			v.createViewScript(bw, gen);
+			bw.flush();
+
+			String sql = sw.toString();
+			
 			System.out.println(sql);
 			// TODO доделать
 		} catch (IOException e) {
@@ -937,7 +943,7 @@ public abstract class DBAdaptor {
 
 	}
 
-	abstract ViewDefiner getViewDefiner(View v);
+	abstract SQLGenerator getViewSQLGenerator();
 
 	/**
 	 * Удаление представления.
@@ -1015,106 +1021,5 @@ abstract class ColumnDefiner {
 				}
 			}
 		return sb.toString();
-	}
-}
-
-/**
- * Класс, отвечающий за определение представлений в различных СУБД.
- */
-abstract class ViewDefiner {
-
-	private final View v;
-	private final StringWriter sw = new StringWriter();
-	private final BufferedWriter bf = new BufferedWriter(sw);
-
-	ViewDefiner(View v) {
-		this.v = v;
-	}
-
-	final BufferedWriter bf() {
-		return bf;
-	}
-
-	final View v() {
-		return v;
-	}
-
-	void preamble() throws IOException {
-		bf().write(String.format("create or replace view %s as", viewName()));
-		bf().newLine();
-	}
-
-	void select() throws IOException {
-		// SELECT
-		bf().write(" select ");
-		if (v().isDistinct())
-			bf().write("distinct ");
-
-		// FIELDS
-		boolean flag = false;
-		for (Entry<String, Expr> e : v().getColumns().entrySet()) {
-			if (flag)
-				bf().write(", ");
-			writeColumn(e.getValue(), e.getKey());
-			flag = true;
-		}
-		bf().newLine();
-
-		// FROM
-		bf().write("  from ");
-		flag = false;
-		for (TableRef tRef : v().getTables().values()) {
-			if (flag) {
-				bf.newLine();
-				bf.write(String.format("   %s join ", tRef.getJoinType()
-						.toString()));
-			}
-			bf().write(tableName(tRef.getTable()));
-			bf().write(" as \"");
-			bf().write(tRef.getAlias());
-			bf().write("\"");
-			if (flag) {
-				bf.write(" on ");
-				writeExpr(tRef.getOnExpr());
-			}
-			flag = true;
-		}
-
-		// WHERE
-		bf().newLine();
-		if (v().getWhereCondition() != null) {
-			bf().write(" where ");
-			writeExpr(v().getWhereCondition());
-		}
-		bf().write(";");
-	}
-
-	String viewName() {
-		return String.format("%s.%s", v().getGrain().getQuotedName(), v()
-				.getQuotedName());
-	}
-
-	String tableName(Table t) {
-		return String.format("%s.%s", t.getGrain().getQuotedName(),
-				t.getQuotedName());
-	}
-
-	void writeColumn(Expr expr, String alias) throws IOException {
-		writeExpr(expr);
-		bf().write(" as \"");
-		bf().write(alias);
-		bf().write("\"");
-	}
-
-	private void writeExpr(Expr expr) {
-		// TODO Auto-generated method stub
-
-	}
-
-	String getDef() throws IOException {
-		preamble();
-		select();
-		bf.flush();
-		return sw.toString();
 	}
 }

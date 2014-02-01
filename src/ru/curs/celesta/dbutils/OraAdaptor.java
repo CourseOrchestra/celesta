@@ -29,6 +29,7 @@ import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
@@ -1159,17 +1160,17 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	ViewDefiner getViewDefiner(View v) {
-		return new ViewDefiner(v) {
+	SQLGenerator getViewSQLGenerator() {
+		return new SQLGenerator() {
 
 			@Override
-			String viewName() {
-				return String.format(TABLE_TEMPLATE, v().getGrain().getName(),
-						v().getName());
+			protected String viewName(View v) {
+				return String.format(TABLE_TEMPLATE, v.getGrain().getName(),
+						v.getName());
 			}
 
 			@Override
-			String tableName(Table t) {
+			protected String tableName(Table t) {
 				return String.format(TABLE_TEMPLATE, t.getGrain().getName(),
 						t.getName());
 			}

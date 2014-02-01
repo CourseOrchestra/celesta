@@ -190,56 +190,96 @@ public class View extends NamedElement {
 	}
 
 	void selectScript(BufferedWriter bw, SQLGenerator gen) throws IOException {
-		bw.write("  SELECT ");
+		bw.write("  select ");
 		if (distinct)
-			bw.write("DISTINCT ");
+			bw.write("distinct ");
 		boolean cont = false;
 		for (Map.Entry<String, Expr> e : columns.entrySet()) {
 			if (cont)
 				bw.write(", ");
 			bw.write(gen.generateSQL(e.getValue()));
-			bw.write(" AS ");
+			bw.write(" as ");
 			bw.write(e.getKey());
 			cont = true;
 		}
 		bw.newLine();
-		bw.write("  FROM ");
+		bw.write("  from ");
 		cont = false;
 		for (TableRef tRef : tables.values()) {
 			if (cont) {
 				bw.newLine();
 				bw.write(String
 						.format("    %s ", tRef.getJoinType().toString()));
-				bw.write("JOIN ");
+				bw.write("join ");
 			}
 			Table t = tRef.getTable();
 			if (t.getGrain() == getGrain()) {
-				bw.write(String.format("%s AS %s", t.getName(), tRef.getAlias()));
+				bw.write(String.format("%s as %s", t.getName(), tRef.getAlias()));
 			} else {
-				bw.write(String.format("%s.%s AS %s", t.getGrain().getName(),
+				bw.write(String.format("%s.%s as %s", t.getGrain().getName(),
 						t.getName(), tRef.getAlias()));
 			}
 			if (cont) {
-				bw.write(" ON ");
+				bw.write(" on ");
 				bw.write(gen.generateSQL(tRef.getOnExpr()));
 			}
 			cont = true;
 		}
 		if (whereCondition != null) {
 			bw.newLine();
-			bw.write("  WHERE ");
+			bw.write("  where ");
 			bw.write(gen.generateSQL(whereCondition));
 		}
 	}
 
-	void save(BufferedWriter bw) throws IOException {
-		Grain.writeCelestaDoc(this, bw);
-		bw.write(String.format("CREATE VIEW %s AS", getName()));
+	/**
+	 * Создаёт скрипт CREATE VIEW в различных диалектах SQL, используя паттерн
+	 * visitor.
+	 * 
+	 * @param bw
+	 *            поток, в который происходит сохранение.
+	 * @param gen
+	 *            генератор-visitor
+	 * @throws IOException
+	 *             ошибка записи в поток
+	 */
+	public void createViewScript(BufferedWriter bw, SQLGenerator gen)
+			throws IOException {
+		bw.write(gen.preamble(this));
 		bw.newLine();
-		selectScript(bw, new SQLGenerator());
+		selectScript(bw, gen);
 		bw.write(";");
 		bw.newLine();
 		bw.newLine();
+	}
+
+	void save(BufferedWriter bw) throws IOException {
+		SQLGenerator gen = new SQLGenerator() {
+
+			@Override
+			protected String preamble(View view) {
+				StringBuilder sb = new StringBuilder();
+				sb.append("/**");
+				sb.append(view.getCelestaDoc());
+				sb.append("*/");
+				sb.append("\n");
+				sb.append(String.format("create view %s as", viewName(view)));
+				return sb.toString();
+			}
+
+			@Override
+			protected String viewName(View v) {
+				return getName();
+			}
+
+			@Override
+			protected String tableName(Table t) {
+				return String.format("%s.%s", t.getGrain().getName(),
+						t.getName());
+			}
+
+		};
+		createViewScript(bw, gen);
 	}
 
 	/**

@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 import java.util.List;
 
 /** Скалярное выражение SQL. */
-public abstract class Expr {
+abstract class Expr {
 	private final View v;
 
 	Expr(View v) {

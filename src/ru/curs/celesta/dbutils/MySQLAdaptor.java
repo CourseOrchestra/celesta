@@ -28,9 +28,9 @@ import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
-import ru.curs.celesta.score.View;
 
 /**
  * Адаптер MуSQL.
@@ -959,8 +959,7 @@ final class MySQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	ViewDefiner getViewDefiner(View v) {
-		return new ViewDefiner(v) {
-		};
+	SQLGenerator getViewSQLGenerator() {
+		return new SQLGenerator();
 	}
 }

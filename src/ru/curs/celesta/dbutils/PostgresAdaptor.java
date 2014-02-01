@@ -26,9 +26,9 @@ import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
-import ru.curs.celesta.score.View;
 
 /**
  * Адаптер Postgres.
@@ -892,8 +892,7 @@ final class PostgresAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	ViewDefiner getViewDefiner(View v) {
-		return new ViewDefiner(v) {
-		};
+	SQLGenerator getViewSQLGenerator() {
+		return new SQLGenerator();
 	}
 }

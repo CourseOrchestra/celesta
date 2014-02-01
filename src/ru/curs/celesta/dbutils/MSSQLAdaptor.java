@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -24,6 +23,7 @@ import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
@@ -960,13 +960,17 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	ViewDefiner getViewDefiner(View v) {
-		return new ViewDefiner(v) {
+	SQLGenerator getViewSQLGenerator() {
+		return new SQLGenerator() {
 
 			@Override
-			void preamble() throws IOException {
-				bf().write(String.format("create view %s as", viewName()));
-				bf().newLine();
+			protected String concat() {
+				return " + ";
+			}
+
+			@Override
+			protected String preamble(View view) {
+				return String.format("create view %s as", viewName(view));
 			}
 
 		};
