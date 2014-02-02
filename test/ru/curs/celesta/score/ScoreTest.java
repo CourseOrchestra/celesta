@@ -58,13 +58,15 @@ public class ScoreTest {
 
 		assertEquals(4, v.getColumns().size());
 		String[] ref = { "fieldAlias", "tablename", "checksum", "f1" };
-		assertArrayEquals(ref, v.getColumns().keySet().toArray(new String[0]));
+		assertArrayEquals(ref, v.getColumns().toArray(new String[0]));
 
-		// StringWriter sw = new StringWriter();
-		// BufferedWriter bw = new BufferedWriter(sw);
-		// v.save(bw);
-		// bw.flush();
-		// System.out.println(sw.toString());
+		String[] expected = {
+				"  select distinct grainid as fieldAlias, ta.tablename as tablename, grains.checksum as checksum, ta.tablename || grains.checksum as f1",
+				"  from celesta.tables as ta",
+				"    INNER join celesta.grains as grains on ta.grainid = grains.id",
+				"  where tablename >= 'aa' AND 5 BETWEEN 0 AND 6 OR '55' > '1'" };
+
+		assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
 	}
 
 	@Test

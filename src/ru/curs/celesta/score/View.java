@@ -3,8 +3,8 @@ package ru.curs.celesta.score;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,11 +20,7 @@ public class View extends NamedElement {
 	private final Map<String, Expr> columns = new LinkedHashMap<>();
 	private final Map<String, TableRef> tables = new LinkedHashMap<>();
 	private Expr whereCondition;
-
-	private final Map<String, Expr> unmodifiableColumns = Collections
-			.unmodifiableMap(columns);
-	private final Map<String, TableRef> unmodifiableTables = Collections
-			.unmodifiableMap(tables);
+	private String queryString;
 
 	View(Grain grain, String name) throws ParseException {
 		super(name);
@@ -62,7 +58,7 @@ public class View extends NamedElement {
 	/**
 	 * Использовано ли слово DISTINCT в запросе представления.
 	 */
-	public boolean isDistinct() {
+	boolean isDistinct() {
 		return distinct;
 	}
 
@@ -72,7 +68,7 @@ public class View extends NamedElement {
 	 * @param distinct
 	 *            Если запрос имеет вид SELECT DISTINCT.
 	 */
-	public void setDistinct(boolean distinct) {
+	void setDistinct(boolean distinct) {
 		this.distinct = distinct;
 	}
 
@@ -138,15 +134,8 @@ public class View extends NamedElement {
 	/**
 	 * Возвращает перечень столбцов представления.
 	 */
-	public Map<String, Expr> getColumns() {
-		return unmodifiableColumns;
-	}
-
-	/**
-	 * Возвращает перечень from-таблиц представления.
-	 */
-	public Map<String, TableRef> getTables() {
-		return unmodifiableTables;
+	public List<String> getColumns() {
+		return new ArrayList<>(columns.keySet());
 	}
 
 	/**
@@ -171,7 +160,7 @@ public class View extends NamedElement {
 	/**
 	 * Возвращает условие where для SQL-запроса.
 	 */
-	public Expr getWhereCondition() {
+	Expr getWhereCondition() {
 		return whereCondition;
 	}
 
@@ -189,7 +178,8 @@ public class View extends NamedElement {
 		this.whereCondition = whereCondition;
 	}
 
-	void selectScript(BufferedWriter bw, SQLGenerator gen) throws IOException {
+	private void selectScript(BufferedWriter bw, SQLGenerator gen)
+			throws IOException {
 		bw.write("  select ");
 		if (distinct)
 			bw.write("distinct ");
@@ -248,37 +238,40 @@ public class View extends NamedElement {
 		selectScript(bw, gen);
 	}
 
+	/**
+	 * Генератор CelestaSQL.
+	 */
+	private class CelestaSQLGen extends SQLGenerator {
+		@Override
+		protected String preamble(View view) {
+			return String.format("create view %s as", viewName(view));
+		}
+
+		@Override
+		protected String viewName(View v) {
+			return getName();
+		}
+
+		@Override
+		protected String tableName(TableRef tRef) {
+			Table t = tRef.getTable();
+			if (t.getGrain() == getGrain()) {
+				return String.format("%s as %s", t.getName(), tRef.getAlias());
+			} else {
+				return String.format("%s.%s as %s", t.getGrain().getName(),
+						t.getName(), tRef.getAlias());
+			}
+		}
+
+		@Override
+		protected boolean quoteNames() {
+			return false;
+		}
+
+	}
+
 	void save(BufferedWriter bw) throws IOException {
-		SQLGenerator gen = new SQLGenerator() {
-
-			@Override
-			protected String preamble(View view) {
-				return String.format("create view %s as", viewName(view));
-			}
-
-			@Override
-			protected String viewName(View v) {
-				return getName();
-			}
-
-			@Override
-			protected String tableName(TableRef tRef) {
-				Table t = tRef.getTable();
-				if (t.getGrain() == getGrain()) {
-					return String.format("%s as %s", t.getName(),
-							tRef.getAlias());
-				} else {
-					return String.format("%s.%s as %s", t.getGrain().getName(),
-							t.getName(), tRef.getAlias());
-				}
-			}
-
-			@Override
-			protected boolean quoteNames() {
-				return false;
-			}
-
-		};
+		SQLGenerator gen = new CelestaSQLGen();
 		Grain.writeCelestaDoc(this, bw);
 		createViewScript(bw, gen);
 		bw.write(";");
@@ -294,5 +287,27 @@ public class View extends NamedElement {
 	 */
 	public void delete() throws ParseException {
 		grain.removeView(this);
+	}
+
+	/**
+	 * Возвращает SQL-запрос на языке Celesta, на основании которого построено
+	 * представление.
+	 */
+	public String getCelestaQueryString() {
+		if (queryString != null)
+			return queryString;
+		StringWriter sw = new StringWriter();
+		BufferedWriter bw = new BufferedWriter(sw);
+		SQLGenerator gen = new CelestaSQLGen();
+		try {
+			selectScript(bw, gen);
+			bw.flush();
+		} catch (IOException e) {
+			// This should never happen for in-memory streams
+			throw new RuntimeException(e);
+		}
+
+		queryString = sw.toString();
+		return queryString;
 	}
 }
