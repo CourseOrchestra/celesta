@@ -26,6 +26,7 @@ import ru.curs.celesta.score.VersionString;
 import ru.curs.celesta.score.View;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.TablesCursor;
+import ru.curs.celesta.syscursors.TablesCursor.TableType;
 
 /**
  * Класс, выполняющий процедуру обновления базы данных.
@@ -239,19 +240,8 @@ public final class DBUpdator {
 			dropOrphanedGrainFKeys(g);
 
 			// Обновляем все таблицы.
-			table.setRange("grainid", g.getName());
-			while (table.next()) {
-				table.setOrphaned(!g.getTables().containsKey(
-						table.getTablename()));
-				table.update();
-			}
-			for (Table t : g.getTables().values()) {
+			for (Table t : g.getTables().values())
 				updateTable(t);
-				table.setGrainid(g.getName());
-				table.setTablename(t.getName());
-				table.setOrphaned(false);
-				table.tryInsert();
-			}
 
 			// Обновляем все индексы.
 			updateGrainIndices(g);
@@ -262,6 +252,36 @@ public final class DBUpdator {
 			// Создаём представления заново
 			createViews(g);
 
+			// Обновляем справочник celesta.tables.
+			table.setRange("grainid", g.getName());
+			while (table.next()) {
+				switch (table.getTableType()) {
+				case TABLE:
+					table.setOrphaned(!g.getTables().containsKey(
+							table.getTablename()));
+					break;
+				case VIEW:
+					table.setOrphaned(!g.getViews().containsKey(
+							table.getTablename()));
+				default:
+					break;
+				}
+				table.update();
+			}
+			for (Table t : g.getTables().values()) {
+				table.setGrainid(g.getName());
+				table.setTablename(t.getName());
+				table.setTableType(TableType.TABLE);
+				table.setOrphaned(false);
+				table.tryInsert();
+			}
+			for (View v : g.getViews().values()) {
+				table.setGrainid(g.getName());
+				table.setTablename(v.getName());
+				table.setTableType(TableType.VIEW);
+				table.setOrphaned(false);
+				table.tryInsert();
+			}
 			// По завершении -- обновление номера версии, контрольной суммы
 			// и выставление в статус ready
 			grain.setState(GrainsCursor.READY);

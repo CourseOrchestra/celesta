@@ -12,8 +12,22 @@ import ru.curs.celesta.dbutils.Cursor;
  * 
  */
 public final class TablesCursor extends SysCursor {
+	/**
+	 * Тип таблицы.
+	 */
+	public enum TableType {
+		/**
+		 * Таблица.
+		 */
+		TABLE, /**
+		 * Представление.
+		 */
+		VIEW
+	}
+
 	private String grainid;
 	private String tablename;
+	private TableType tableType;
 	private boolean orphaned;
 
 	public TablesCursor(CallContext context) throws CelestaException {
@@ -33,6 +47,8 @@ public final class TablesCursor extends SysCursor {
 		// CHECKSTYLE:ON
 		grainid = rs.getString("grainid");
 		tablename = rs.getString("tablename");
+		tableType = "T".equals(rs.getString("tabletype")) ? TableType.TABLE
+				: TableType.VIEW;
 		orphaned = rs.getBoolean("orphaned");
 	}
 
@@ -59,7 +75,8 @@ public final class TablesCursor extends SysCursor {
 	// CHECKSTYLE:OFF
 	protected Object[] _currentValues() {
 		// CHECKSTYLE:ON
-		Object[] result = { grainid, tablename, orphaned };
+		Object[] result = { grainid, tablename,
+				tableType == TableType.TABLE ? "T" : "V", orphaned };
 		return result;
 	}
 
@@ -114,12 +131,30 @@ public final class TablesCursor extends SysCursor {
 		this.orphaned = orphaned;
 	}
 
+	/**
+	 * Возвращает тип таблицы: TABLE для таблицы, VIEW - для представления.
+	 */
+	public TableType getTableType() {
+		return tableType;
+	}
+
+	/**
+	 * Устанавливает тип.
+	 * 
+	 * @param tableType
+	 *            Тип: TABLE для таблицы, VIEW - для представления.
+	 */
+	public void setTableType(TableType tableType) {
+		this.tableType = tableType;
+	}
+
 	@Override
 	public void copyFieldsFrom(Cursor c) {
 		TablesCursor from = (TablesCursor) c;
 		grainid = from.grainid;
 		tablename = from.tablename;
 		orphaned = from.orphaned;
+		tableType = from.tableType;
 	}
 
 	@Override
@@ -130,5 +165,4 @@ public final class TablesCursor extends SysCursor {
 		result.copyFieldsFrom(this);
 		return result;
 	}
-
 }
