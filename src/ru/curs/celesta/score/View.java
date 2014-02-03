@@ -12,10 +12,7 @@ import java.util.Map;
 /**
  * Объект-представление в метаданных.
  */
-public class View extends NamedElement {
-
-	private Grain grain;
-
+public class View extends GrainElement {
 	private boolean distinct;
 	private final Map<String, Expr> columns = new LinkedHashMap<>();
 	private final Map<String, TableRef> tables = new LinkedHashMap<>();
@@ -23,12 +20,8 @@ public class View extends NamedElement {
 	private String queryString;
 
 	View(Grain grain, String name) throws ParseException {
-		super(name);
-		if (grain == null)
-			throw new IllegalArgumentException();
-		this.grain = grain;
+		super(grain, name);
 		grain.addView(this);
-
 	}
 
 	public View(Grain grain, String name, String sql) throws ParseException {
@@ -46,13 +39,6 @@ public class View extends NamedElement {
 			delete();
 			throw e;
 		}
-	}
-
-	/**
-	 * Возвращает гранулу, к которой относится представление.
-	 */
-	public Grain getGrain() {
-		return grain;
 	}
 
 	/**
@@ -286,7 +272,7 @@ public class View extends NamedElement {
 	 *             при попытке изменить системную гранулу
 	 */
 	public void delete() throws ParseException {
-		grain.removeView(this);
+		getGrain().removeView(this);
 	}
 
 	/**

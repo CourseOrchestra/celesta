@@ -11,17 +11,12 @@ import java.util.Set;
  * Объект-таблица в метаданных.
  * 
  */
-public final class Table extends NamedElement {
+public final class Table extends GrainElement {
 
 	private static final String YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO = "Table '%s.%s', "
 			+ "field '%s': you cannot drop a column that belongs to ";
 
 	private static final int MAX_CONSTRAINT_NAME = 30;
-
-	/**
-	 * Гранула, к которой относится данная таблица.
-	 */
-	private final Grain grain;
 
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
@@ -49,10 +44,7 @@ public final class Table extends NamedElement {
 	private String pkConstraintName;
 
 	public Table(Grain grain, String name) throws ParseException {
-		super(name);
-		if (grain == null)
-			throw new IllegalArgumentException();
-		this.grain = grain;
+		super(grain, name);
 		grain.addTable(this);
 	}
 
@@ -99,7 +91,7 @@ public final class Table extends NamedElement {
 	void addColumn(Column column) throws ParseException {
 		if (column.getParentTable() != this)
 			throw new IllegalArgumentException();
-		grain.modify();
+		getGrain().modify();
 		columns.addElement(column);
 	}
 
@@ -120,11 +112,11 @@ public final class Table extends NamedElement {
 	public void setPK(String... columnNames) throws ParseException {
 		if (columnNames == null || columnNames.length == 0)
 			throw new ParseException(String.format(
-					"Primary key for table %s.%s cannot be empty.",
-					grain.getName(), getName()));
+					"Primary key for table %s.%s cannot be empty.", getGrain()
+							.getName(), getName()));
 		for (String n : columnNames)
 			validatePKColumn(n);
-		grain.modify();
+		getGrain().modify();
 		pk.clear();
 		pkFinalized = false;
 		for (String n : columnNames)
@@ -189,12 +181,12 @@ public final class Table extends NamedElement {
 							"Foreign key with columns %s is already defined in table '%s'",
 							sb.toString(), getName()));
 		}
-		grain.modify();
+		getGrain().modify();
 		fKeys.add(fk);
 	}
 
 	synchronized void removeFK(ForeignKey foreignKey) throws ParseException {
-		grain.modify();
+		getGrain().modify();
 		fKeys.remove(foreignKey);
 	}
 
@@ -222,7 +214,7 @@ public final class Table extends NamedElement {
 								+ "a foreign key. Drop or change relevant foreign key first.",
 						getGrain().getName(), getName(), column.getName());
 
-		grain.modify();
+		getGrain().modify();
 		columns.remove(column);
 	}
 
@@ -237,13 +229,6 @@ public final class Table extends NamedElement {
 			throw new ParseException(String.format(
 					"No primary key defined for table %s!", getName()));
 		pkFinalized = true;
-	}
-
-	/**
-	 * Возвращает гранулу, к которой относится таблица.
-	 */
-	public Grain getGrain() {
-		return grain;
 	}
 
 	/**
@@ -285,7 +270,7 @@ public final class Table extends NamedElement {
 	 *             при попытке изменить системную гранулу
 	 */
 	public void delete() throws ParseException {
-		grain.removeTable(this);
+		getGrain().removeTable(this);
 	}
 
 	void save(BufferedWriter bw) throws IOException {

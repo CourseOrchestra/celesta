@@ -112,6 +112,9 @@
 			<column name="orphaned" type="bit" length="1" jt="-7" mandatory="y" regexp_nulls="0" >
 				<defo>&#039;false&#039;</defo>
 			</column>
+			<column name="tabletype" type="nvarchar" length="1" jt="12" mandatory="y" regexp_nulls="0" >
+				<defo>&#039;T&#039;</defo>
+			</column>
 			<index name="pk_tables" unique="PRIMARY_KEY" >
 				<column name="grainid" />
 				<column name="tablename" />
@@ -161,14 +164,14 @@ end;
 	</schema>
 	<connector name="SqlServer" database="SqlServer" driver_class="com.microsoft.sqlserver.jdbc.SQLServerDriver" driver_jar="sqljdbc4.jar" host="localhost" port="1433" instance="celesta" user="sa" schema_mapping="" />
 	<layout id="Layout1064123" name="celesta" show_relation_columns="y" >
-		<entity schema="celesta" name="roles" color="c0d4f3" x="540" y="285" />
-		<entity schema="celesta" name="logsetup" color="c0d4f3" x="45" y="300" />
-		<entity schema="celesta" name="tables" color="c0d4f3" x="270" y="285" />
-		<entity schema="celesta" name="grains" color="c0d4f3" x="330" y="60" />
-		<entity schema="celesta" name="userroles" color="c0d4f3" x="690" y="450" />
-		<entity schema="celesta" name="permissions" color="c0d4f3" x="510" y="480" />
-		<entity schema="celesta" name="sequences" color="c6d9f6" x="525" y="150" />
-		<entity schema="celesta" name="log" color="c0d4f3" x="240" y="465" />
+		<entity schema="celesta" name="roles" color="c0d4f3" x="525" y="225" />
+		<entity schema="celesta" name="logsetup" color="c0d4f3" x="45" y="75" />
+		<entity schema="celesta" name="log" color="c0d4f3" x="45" y="285" />
+		<entity schema="celesta" name="permissions" color="c0d4f3" x="435" y="360" />
+		<entity schema="celesta" name="userroles" color="c0d4f3" x="705" y="360" />
+		<entity schema="celesta" name="sequences" color="c6d9f6" x="615" y="90" />
+		<entity schema="celesta" name="grains" color="c0d4f3" x="405" y="60" />
+		<entity schema="celesta" name="tables" color="c0d4f3" x="255" y="240" />
 		<script name="log" id="SQL8622334" >
 			<string><![CDATA[SELECT * 
 FROM

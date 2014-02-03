@@ -9,8 +9,7 @@ import java.util.Map;
  * Табличный индекс. Celesta допускает создание только простых индексов, без
  * ограничения UNIQUE.
  */
-public class Index extends NamedElement {
-	private final Grain grain;
+public class Index extends GrainElement {
 	private final Table table;
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
@@ -22,10 +21,9 @@ public class Index extends NamedElement {
 	};
 
 	Index(Grain grain, String tableName, String name) throws ParseException {
-		super(name);
-		if (grain == null || tableName == null || name == null)
+		super(grain, name);
+		if (tableName == null || name == null)
 			throw new IllegalArgumentException();
-		this.grain = grain;
 		table = grain.getTables().get(tableName);
 		if (table == null)
 			throw new ParseException(String.format(
@@ -39,13 +37,6 @@ public class Index extends NamedElement {
 		for (String n : columns)
 			addColumn(n);
 		finalizeIndex();
-	}
-
-	/**
-	 * Гранула индекса.
-	 */
-	public Grain getGrain() {
-		return grain;
 	}
 
 	/**
@@ -98,7 +89,7 @@ public class Index extends NamedElement {
 	 */
 	void finalizeIndex() throws ParseException {
 		// Ищем дублирующиеся по составу полей индексы
-		for (Index ind : grain.getIndices().values()) {
+		for (Index ind : getGrain().getIndices().values()) {
 			if (ind == this)
 				continue;
 			if (ind.table != table)
@@ -135,7 +126,7 @@ public class Index extends NamedElement {
 	 *             при попытке изменить системную гранулу
 	 */
 	public void delete() throws ParseException {
-		grain.removeIndex(this);
+		getGrain().removeIndex(this);
 	}
 
 	void save(BufferedWriter bw) throws IOException {

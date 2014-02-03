@@ -37,16 +37,12 @@ package ru.curs.celesta.dbutils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,14 +57,12 @@ import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.View;
 
 /**
- * Базовый класс курсора (аналог соответствующего класса в Python-коде).
+ * Базовый класс курсора для модификации данных в таблицах.
  */
-public abstract class Cursor {
-	static final String SYSTEMUSERID = String.format("SYS%08X",
-			(new Random()).nextInt());
-
+public abstract class Cursor extends ReadOnlyCursor {
 	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
 	private static final LoggingManager LOGGING_MGR = new LoggingManager();
 	private static final Pattern COLUMN_NAME = Pattern
@@ -76,9 +70,6 @@ public abstract class Cursor {
 					+ "( +([Aa]|[Dd][Ee])[Ss][Cc])?");
 
 	private Table meta = null;
-	private final DBAdaptor db;
-	private final Connection conn;
-	private final CallContext context;
 	private PreparedStatement get = null;
 	private PreparedStatement set = null;
 	private boolean[] insertMask = null;
@@ -90,32 +81,8 @@ public abstract class Cursor {
 	private ResultSet cursor = null;
 	private Cursor xRec;
 
-	// Поля фильтров и сортировок
-	private Map<String, AbstractFilter> filters = new HashMap<>();
-	private String orderBy = null;
-	private long offset = 0;
-	private long rowCount = 0;
-
 	public Cursor(CallContext context) throws CelestaException {
-		if (context.getConn() == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: connection is null.",
-					this.getClass().getName());
-		if (context.getUserId() == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: user id is null.",
-					this.getClass().getName());
-
-		this.context = context;
-		conn = context.getConn();
-		try {
-			if (conn.isClosed())
-				throw new CelestaException(
-						"Trying to create a cursor on closed connection.");
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-		db = DBAdaptor.getAdaptor();
+		super(context);
 	}
 
 	@Override
@@ -125,7 +92,7 @@ public abstract class Cursor {
 		if (set != null)
 			set.close();
 	}
-
+	
 	private void validateColumName(String name) throws CelestaException {
 		if (!meta().getColumns().containsKey(name))
 			throw new CelestaException("No column %s exists in table %s.",

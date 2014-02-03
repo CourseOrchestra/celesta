@@ -11,6 +11,7 @@ create table "celesta"."grains"(
 create table "celesta"."tables"(
   "grainid" varchar(16) not null,
   "tablename" varchar(100) not null,
+  "tabletype" varchar(1) not null default 'T',
   "orphaned" bool not null default 'false',
   constraint "pk_tables" primary key ("grainid", "tablename")
 )

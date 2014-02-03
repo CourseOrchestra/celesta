@@ -8,8 +8,8 @@ from g3._g3_orm import cCursor
 import java.io.OutputStreamWriter as OutputStreamWriter
 import java.io.InputStreamReader as InputStreamReader
 import java.io.BufferedReader as BufferedReader
-
-
+import ru.curs.celesta.syscursors.GrainsCursor as GrainsCursor
+import ru.curs.celesta.syscursors.PermissionsCursor as PermissionsCursor
 
 def hello(context, arg):
     print 'Hello, world from Celesta Python procedure.'
@@ -119,6 +119,18 @@ def hello(context, arg):
     print adresses.asCSVLine()
     adresses.get('11111', '11', '2')
     print adresses.asCSVLine()    
+    
+    
+    grain = GrainsCursor(context)
+    grain.orderBy("checksum")
+    while grain.next():
+        print grain.checksum
+        
+    perms = PermissionsCursor(context)
+    perms.orderBy("roleid", "grainid", "tablename")
+    while perms.next():
+        print perms.i
+    
   
     print 'Python procedure finished.'
     

@@ -11,6 +11,7 @@ create table "celesta_grains"(
 create table "celesta_tables"(
   "grainid" varchar2(16) not null,
   "tablename" varchar2(100) not null,
+  "tabletype" varchar2(1) default 'T' not null,
   "orphaned" number default 0 not null constraint "chk_celesta_tables_orphaned" check ("orphaned" in (0, 1)),
   constraint "pk_tables" primary key ("grainid", "tablename")
 )

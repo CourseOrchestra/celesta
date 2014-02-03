@@ -95,7 +95,7 @@ final class PermissionManager {
 			throws CelestaException {
 		// Системному пользователю дозволяется всё без дальнейшего
 		// разбирательства.
-		if (Cursor.SYSTEMUSERID.equals(c.getUserId()))
+		if (ReadOnlyCursor.SYSTEMUSERID.equals(c.getUserId()))
 			return true;
 
 		// Вычисляем местоположение данных в кэше.
@@ -115,7 +115,7 @@ final class PermissionManager {
 	private CacheEntry refreshPermissions(CallContext c, Table t)
 			throws CelestaException {
 		CallContext sysContext = new CallContext(c.getConn(),
-				Cursor.SYSTEMUSERID, null);
+				ReadOnlyCursor.SYSTEMUSERID, null);
 		UserRolesCursor userRoles = new UserRolesCursor(sysContext);
 		PermissionsCursor permissions = new PermissionsCursor(sysContext);
 		userRoles.setRange("userid", c.getUserId());
