@@ -19,8 +19,8 @@
       <operations public="true" package="false" protected="false" private="false"/>    
     </display>  
   </class>  
-  <class id="3" language="java" name="ru.curs.celesta.dbutils.ReadOnlyCursor" project="celesta" 
-    file="/celesta/src/ru/curs/celesta/dbutils/ReadOnlyCursor.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="3" language="java" name="ru.curs.celesta.dbutils.BasicCursor" project="celesta" 
+    file="/celesta/src/ru/curs/celesta/dbutils/BasicCursor.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="735" y="121"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
       visibility="true">      

@@ -2,7 +2,7 @@ package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.syscursors.PermissionsCursor;
 import ru.curs.celesta.syscursors.UserRolesCursor;
 
@@ -46,13 +46,14 @@ final class PermissionManager {
 	private static class CacheEntry {
 
 		private final String userName;
-		private final Table table;
+		private final GrainElement table;
 
 		private final int permissionMask;
 
 		private final long expirationTime;
 
-		public CacheEntry(String userName, Table table, int permissionMask) {
+		public CacheEntry(String userName, GrainElement table,
+				int permissionMask) {
 			if (userName == null)
 				throw new IllegalArgumentException();
 			this.userName = userName;
@@ -63,7 +64,7 @@ final class PermissionManager {
 					+ CACHE_ENTRY_SHELF_LIFE;
 		}
 
-		public static int hash(String userName, Table table) {
+		public static int hash(String userName, GrainElement table) {
 			return (userName + '|' + table.getGrain().getName() + '|' + table
 					.getName()).hashCode();
 		}
@@ -91,11 +92,11 @@ final class PermissionManager {
 	 * @throws CelestaException
 	 *             ошибка БД
 	 */
-	public boolean isActionAllowed(CallContext c, Table t, Action a)
+	public boolean isActionAllowed(CallContext c, GrainElement t, Action a)
 			throws CelestaException {
 		// Системному пользователю дозволяется всё без дальнейшего
 		// разбирательства.
-		if (ReadOnlyCursor.SYSTEMUSERID.equals(c.getUserId()))
+		if (BasicCursor.SYSTEMUSERID.equals(c.getUserId()))
 			return true;
 
 		// Вычисляем местоположение данных в кэше.
@@ -112,10 +113,10 @@ final class PermissionManager {
 		return ce.isActionPermitted(a);
 	}
 
-	private CacheEntry refreshPermissions(CallContext c, Table t)
+	private CacheEntry refreshPermissions(CallContext c, GrainElement t)
 			throws CelestaException {
 		CallContext sysContext = new CallContext(c.getConn(),
-				ReadOnlyCursor.SYSTEMUSERID, null);
+				BasicCursor.SYSTEMUSERID, null);
 		UserRolesCursor userRoles = new UserRolesCursor(sysContext);
 		PermissionsCursor permissions = new PermissionsCursor(sysContext);
 		userRoles.setRange("userid", c.getUserId());

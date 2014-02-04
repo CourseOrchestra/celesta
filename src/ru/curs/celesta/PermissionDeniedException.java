@@ -1,7 +1,7 @@
 package ru.curs.celesta;
 
 import ru.curs.celesta.dbutils.Action;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.GrainElement;
 
 /**
  * Исключение, возникающее при отсутствии разрешений на таблицу.
@@ -19,9 +19,9 @@ public class PermissionDeniedException extends CelestaException {
 		super(message, args);
 	}
 
-	public PermissionDeniedException(CallContext context, Table table,
+	public PermissionDeniedException(CallContext context, GrainElement table,
 			Action action) {
-		this("There is no %s permission for user %s on table %s.%s", action
+		this("There is no %s permission for user %s on object %s.%s", action
 				.toString(), context.getUserId(), table.getGrain().getName(),
 				table.getName());
 	}

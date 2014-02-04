@@ -57,13 +57,12 @@ import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
-import ru.curs.celesta.score.View;
 
 /**
  * Базовый класс курсора для модификации данных в таблицах.
  */
-public abstract class Cursor extends ReadOnlyCursor {
-	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
+public abstract class Cursor extends BasicCursor {
+
 	private static final LoggingManager LOGGING_MGR = new LoggingManager();
 	private static final Pattern COLUMN_NAME = Pattern
 			.compile("([a-zA-Z_][a-zA-Z0-9_]*)"
@@ -92,7 +91,7 @@ public abstract class Cursor extends ReadOnlyCursor {
 		if (set != null)
 			set.close();
 	}
-	
+
 	private void validateColumName(String name) throws CelestaException {
 		if (!meta().getColumns().containsKey(name))
 			throw new CelestaException("No column %s exists in table %s.",
@@ -114,13 +113,6 @@ public abstract class Cursor extends ReadOnlyCursor {
 	}
 
 	/**
-	 * Возвращает контекст вызова, в котором создан данный курсор.
-	 */
-	public final CallContext callContext() {
-		return context;
-	}
-
-	/**
 	 * Переходит к первой записи в отфильтрованном наборе и возвращает
 	 * информацию об успешности перехода.
 	 * 
@@ -130,8 +122,8 @@ public abstract class Cursor extends ReadOnlyCursor {
 	 *             Ошибка связи с базой данных
 	 */
 	public final boolean tryFirst() throws CelestaException {
-		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.READ))
-			throw new PermissionDeniedException(context, meta(), Action.READ);
+		if (!canRead())
+			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 
 		if (set == null)
 			set = db.getRecordSetStatement(conn, meta(), filters, getOrderBy(),
@@ -249,8 +241,8 @@ public abstract class Cursor extends ReadOnlyCursor {
 	 *             ошибка БД
 	 */
 	public final boolean tryInsert() throws CelestaException {
-		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.INSERT))
-			throw new PermissionDeniedException(context, meta(), Action.INSERT);
+		if (!canInsert())
+			throw new PermissionDeniedException(callContext(), meta(), Action.INSERT);
 
 		prepareGet(_currentKeyValues());
 		try {
@@ -321,8 +313,8 @@ public abstract class Cursor extends ReadOnlyCursor {
 	 *             ошибка БД
 	 */
 	public final boolean tryUpdate() throws CelestaException {
-		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.MODIFY))
-			throw new PermissionDeniedException(context, meta(), Action.MODIFY);
+		if (!canModify())
+			throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
 
 		prepareGet(_currentKeyValues());
 		try {
@@ -403,8 +395,8 @@ public abstract class Cursor extends ReadOnlyCursor {
 	 *             ошибка БД
 	 */
 	public final void delete() throws CelestaException {
-		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.DELETE))
-			throw new PermissionDeniedException(context, meta(), Action.DELETE);
+		if (!canDelete())
+			throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
 
 		if (delete == null)
 			delete = db.getDeleteRecordStatement(conn, meta());
@@ -429,8 +421,8 @@ public abstract class Cursor extends ReadOnlyCursor {
 	 *             Ошибка БД
 	 */
 	public final void deleteAll() throws CelestaException {
-		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.DELETE))
-			throw new PermissionDeniedException(context, meta(), Action.DELETE);
+		if (!canDelete())
+			throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
 
 		PreparedStatement stmt = db.deleteRecordSetStatement(conn, meta(),
 				filters);
@@ -478,8 +470,8 @@ public abstract class Cursor extends ReadOnlyCursor {
 	 */
 
 	public final boolean tryGet(Object... values) throws CelestaException {
-		if (!PERMISSION_MGR.isActionAllowed(context, meta(), Action.READ))
-			throw new PermissionDeniedException(context, meta(), Action.READ);
+		if (!canRead())
+			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 		return internalGet(values);
 	}
 
@@ -852,46 +844,6 @@ public abstract class Cursor extends ReadOnlyCursor {
 	 */
 	public abstract void copyFieldsFrom(Cursor from);
 
-	/**
-	 * Есть ли у сессии права на чтение текущей таблицы.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка базы данных.
-	 */
-	public final boolean canRead() throws CelestaException {
-		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.READ);
-	}
-
-	/**
-	 * Есть ли у сессии права на вставку в текущую таблицу.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка базы данных.
-	 */
-	public final boolean canInsert() throws CelestaException {
-		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.INSERT);
-	}
-
-	/**
-	 * Есть ли у сессии права на модификацию данных текущей таблицы.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка базы данных.
-	 */
-	public final boolean canModify() throws CelestaException {
-		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.MODIFY);
-	}
-
-	/**
-	 * Есть ли у сессии права на удаление данных текущей таблицы.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка базы данных.
-	 */
-	public final boolean canDelete() throws CelestaException {
-		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.DELETE);
-	}
-
 	// CHECKSTYLE:OFF
 	/*
 	 * Эта группа методов именуется по правилам Python, а не Java. В Python
@@ -900,12 +852,6 @@ public abstract class Cursor extends ReadOnlyCursor {
 	 */
 
 	protected abstract Cursor _getBufferCopy() throws CelestaException;
-
-	protected abstract String _grainName();
-
-	protected abstract String _tableName();
-
-	protected abstract void _parseResult(ResultSet rs) throws SQLException;
 
 	protected abstract void _clearBuffer(boolean withKeys);
 
