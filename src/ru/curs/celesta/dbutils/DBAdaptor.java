@@ -31,12 +31,14 @@ import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.ViewColumnType;
 
 /**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
@@ -280,8 +282,8 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае некорректного фильтра
 	 */
-	final String getWhereClause(Table t, Map<String, AbstractFilter> filters)
-			throws CelestaException {
+	final String getWhereClause(GrainElement t,
+			Map<String, AbstractFilter> filters) throws CelestaException {
 		if (filters == null)
 			throw new IllegalArgumentException();
 		StringBuilder whereClause = new StringBuilder();
@@ -294,8 +296,9 @@ public abstract class DBAdaptor {
 				whereClause.append(String.format("(\"%s\" between ? and ?)",
 						e.getKey()));
 			else if (e.getValue() instanceof Filter) {
-				Column c = t.getColumns().get(e.getKey());
-				whereClause.append(((Filter) e.getValue()).makeWhereClause(c));
+				Object c = t.getColumns().get(e.getKey());
+				whereClause.append(((Filter) e.getValue()).makeWhereClause("\""
+						+ e.getKey() + "\"", c));
 			}
 		}
 		return whereClause.toString();
@@ -546,8 +549,8 @@ public abstract class DBAdaptor {
 	 */
 	// CHECKSTYLE:OFF 6 parameters
 	public final PreparedStatement getRecordSetStatement(Connection conn,
-			Table t, Map<String, AbstractFilter> filters, String orderBy,
-			long offset, long rowCount) throws CelestaException {
+			GrainElement t, Map<String, AbstractFilter> filters,
+			String orderBy, long offset, long rowCount) throws CelestaException {
 		// CHECKSTYLE:ON
 		String sql;
 		// Готовим условие where
@@ -571,8 +574,8 @@ public abstract class DBAdaptor {
 		}
 	}
 
-	abstract String getLimitedSQL(Table t, String whereClause, String orderBy,
-			long offset, long rowCount);
+	abstract String getLimitedSQL(GrainElement t, String whereClause,
+			String orderBy, long offset, long rowCount);
 
 	final String columnDef(Column c) {
 		return getColumnDefiner(c).getFullDefinition(c);
@@ -607,7 +610,7 @@ public abstract class DBAdaptor {
 		return sb.toString();
 	}
 
-	final String getSelectFromOrderBy(Table t, String whereClause,
+	final String getSelectFromOrderBy(GrainElement t, String whereClause,
 			String orderBy) {
 		String sqlfrom = String.format("select %s from " + tableTemplate(),
 				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
@@ -618,8 +621,9 @@ public abstract class DBAdaptor {
 		return sqlfrom + sqlwhere + " order by " + orderBy;
 	}
 
-	final PreparedStatement getSetCountStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters) throws CelestaException {
+	final PreparedStatement getSetCountStatement(Connection conn,
+			GrainElement t, Map<String, AbstractFilter> filters)
+			throws CelestaException {
 		String whereClause = getWhereClause(t, filters);
 		String sql = String.format("select count(*) from " + tableTemplate()
 				+ ("".equals(whereClause) ? "" : " where " + whereClause), t
@@ -652,10 +656,10 @@ public abstract class DBAdaptor {
 		return sb.toString();
 	}
 
-	static String getTableFieldsListExceptBLOBs(Table t) {
+	static String getTableFieldsListExceptBLOBs(GrainElement t) {
 		List<String> flds = new LinkedList<>();
-		for (Map.Entry<String, Column> e : t.getColumns().entrySet()) {
-			if (!(e.getValue() instanceof BinaryColumn))
+		for (Map.Entry<String, ?> e : (t.getColumns()).entrySet()) {
+			if (!(e.getValue() instanceof BinaryColumn || e.getValue() == ViewColumnType.BLOB))
 				flds.add(e.getKey());
 		}
 		return getFieldList(flds);

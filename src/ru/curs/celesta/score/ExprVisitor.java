@@ -89,9 +89,9 @@ final class FieldResolver extends ExprVisitor {
  */
 final class TypeChecker extends ExprVisitor {
 	void visitBetween(Between expr) throws ParseException {
-		ExprType t = expr.getLeft().getType();
+		ViewColumnType t = expr.getLeft().getType();
 		// Сравнивать можно не все типы.
-		if (t == ExprType.DATE || t == ExprType.NUMERIC || t == ExprType.TEXT) {
+		if (t == ViewColumnType.DATE || t == ViewColumnType.NUMERIC || t == ViewColumnType.TEXT) {
 			// все операнды должны быть однотипны
 			expr.getRight1().assertType(t);
 			expr.getRight2().assertType(t);
@@ -105,16 +105,16 @@ final class TypeChecker extends ExprVisitor {
 
 	void visitBinaryTermOp(BinaryTermOp expr) throws ParseException {
 		// для CONCAT все операнды должны быть TEXT, для остальных -- NUMERIC
-		ExprType t = expr.getOperator() == BinaryTermOp.CONCAT ? ExprType.TEXT
-				: ExprType.NUMERIC;
+		ViewColumnType t = expr.getOperator() == BinaryTermOp.CONCAT ? ViewColumnType.TEXT
+				: ViewColumnType.NUMERIC;
 		for (Expr e : expr.getOperands())
 			e.assertType(t);
 	}
 
 	void visitIn(In expr) throws ParseException {
-		ExprType t = expr.getLeft().getType();
+		ViewColumnType t = expr.getLeft().getType();
 		// Сравнивать можно не все типы.
-		if (t == ExprType.DATE || t == ExprType.NUMERIC || t == ExprType.TEXT) {
+		if (t == ViewColumnType.DATE || t == ViewColumnType.NUMERIC || t == ViewColumnType.TEXT) {
 			// все операнды должны быть однотипны
 			for (Expr operand : expr.getOperands()) {
 				operand.assertType(t);
@@ -129,14 +129,14 @@ final class TypeChecker extends ExprVisitor {
 	}
 
 	void visitRelop(Relop expr) throws ParseException {
-		ExprType t = expr.getLeft().getType();
+		ViewColumnType t = expr.getLeft().getType();
 		// Сравнивать можно не все типы.
-		if (t == ExprType.DATE || t == ExprType.NUMERIC || t == ExprType.TEXT) {
+		if (t == ViewColumnType.DATE || t == ViewColumnType.NUMERIC || t == ViewColumnType.TEXT) {
 			// сравнивать можно только однотипные термы
 			expr.getRight().assertType(t);
 			// при этом like действует только на строковых термах
 			if (expr.getRelop() == Relop.LIKE)
-				expr.getLeft().assertType(ExprType.TEXT);
+				expr.getLeft().assertType(ViewColumnType.TEXT);
 		} else {
 			throw new ParseException(
 					String.format(
@@ -147,6 +147,6 @@ final class TypeChecker extends ExprVisitor {
 
 	void visitUnaryMinus(UnaryMinus expr) throws ParseException {
 		// операнд должен быть NUMERIC
-		expr.getExpr().assertType(ExprType.NUMERIC);
+		expr.getExpr().assertType(ViewColumnType.NUMERIC);
 	}
 }

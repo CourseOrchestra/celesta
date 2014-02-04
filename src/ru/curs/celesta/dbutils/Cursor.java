@@ -41,11 +41,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
@@ -64,20 +60,15 @@ import ru.curs.celesta.score.Table;
 public abstract class Cursor extends BasicCursor {
 
 	private static final LoggingManager LOGGING_MGR = new LoggingManager();
-	private static final Pattern COLUMN_NAME = Pattern
-			.compile("([a-zA-Z_][a-zA-Z0-9_]*)"
-					+ "( +([Aa]|[Dd][Ee])[Ss][Cc])?");
 
 	private Table meta = null;
 	private PreparedStatement get = null;
-	private PreparedStatement set = null;
 	private boolean[] insertMask = null;
 	private boolean[] updateMask = null;
 	private PreparedStatement insert = null;
 	private PreparedStatement update = null;
 	private PreparedStatement delete = null;
 
-	private ResultSet cursor = null;
 	private Cursor xRec;
 
 	public Cursor(CallContext context) throws CelestaException {
@@ -86,133 +77,9 @@ public abstract class Cursor extends BasicCursor {
 
 	@Override
 	protected void finalize() throws Throwable {
+		super.finalize();
 		if (get != null)
 			get.close();
-		if (set != null)
-			set.close();
-	}
-
-	private void validateColumName(String name) throws CelestaException {
-		if (!meta().getColumns().containsKey(name))
-			throw new CelestaException("No column %s exists in table %s.",
-					name, _tableName());
-	}
-
-	private void closeSet() throws CelestaException {
-		cursor = null;
-		if (set != null) {
-			try {
-				set.close();
-			} catch (SQLException e) {
-				throw new CelestaException(
-						"Database error when closing recordset for table '%s': %s",
-						_tableName(), e.getMessage());
-			}
-			set = null;
-		}
-	}
-
-	/**
-	 * Переходит к первой записи в отфильтрованном наборе и возвращает
-	 * информацию об успешности перехода.
-	 * 
-	 * @return true, если переход успешен, false -- если записей в наборе нет.
-	 * 
-	 * @throws CelestaException
-	 *             Ошибка связи с базой данных
-	 */
-	public final boolean tryFirst() throws CelestaException {
-		if (!canRead())
-			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
-
-		if (set == null)
-			set = db.getRecordSetStatement(conn, meta(), filters, getOrderBy(),
-					offset, rowCount);
-		boolean result = false;
-		try {
-			if (cursor != null)
-				cursor.close();
-			cursor = set.executeQuery();
-			result = cursor.next();
-			if (result) {
-				_parseResult(cursor);
-				xRec = _getBufferCopy();
-			}
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-		return result;
-	}
-
-	/**
-	 * Переходит к первой записи в отфильтрованном наборе, вызывая ошибку в
-	 * случае, если переход неудачен.
-	 * 
-	 * @throws CelestaException
-	 *             в случае, если записей в наборе нет.
-	 */
-	public final void first() throws CelestaException {
-		if (!tryFirst()) {
-			StringBuilder sb = new StringBuilder();
-			for (Entry<String, AbstractFilter> e : filters.entrySet()) {
-				if (sb.length() > 0)
-					sb.append(", ");
-				sb.append(String.format("%s=%s", e.getKey(), e.getValue()
-						.toString()));
-				throw new CelestaException("There is no %s (%s).",
-						_tableName(), sb.toString());
-			}
-		}
-	}
-
-	/**
-	 * Возвращает число записей в отфильтрованном наборе.
-	 * 
-	 * @throws CelestaException
-	 *             в случае ошибки доступа или ошибки БД
-	 */
-	public final int count() throws CelestaException {
-		int result;
-		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters);
-		try {
-			ResultSet rs = stmt.executeQuery();
-			rs.next();
-			result = rs.getInt(1);
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		} finally {
-			try {
-				stmt.close();
-			} catch (SQLException e) {
-				stmt = null;
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * Переходит к следующей записи в отсортированном наборе. Возвращает false,
-	 * если достигнут конец набора.
-	 * 
-	 * @throws CelestaException
-	 *             в случае ошибки БД
-	 */
-	public final boolean next() throws CelestaException {
-		boolean result = false;
-		try {
-			if (cursor == null)
-				result = tryFirst();
-			else {
-				result = cursor.next();
-			}
-			if (result) {
-				_parseResult(cursor);
-				xRec = _getBufferCopy();
-			}
-		} catch (SQLException e) {
-			result = false;
-		}
-		return result;
 	}
 
 	/**
@@ -242,7 +109,8 @@ public abstract class Cursor extends BasicCursor {
 	 */
 	public final boolean tryInsert() throws CelestaException {
 		if (!canInsert())
-			throw new PermissionDeniedException(callContext(), meta(), Action.INSERT);
+			throw new PermissionDeniedException(callContext(), meta(),
+					Action.INSERT);
 
 		prepareGet(_currentKeyValues());
 		try {
@@ -258,7 +126,7 @@ public abstract class Cursor extends BasicCursor {
 			for (int i = 0; i < values.length; i++)
 				myMask[i] = values[i] == null;
 			if (!Arrays.equals(myMask, insertMask)) {
-				insert = db.getInsertRecordStatement(conn, meta(), myMask);
+				insert = db().getInsertRecordStatement(conn(), meta(), myMask);
 				insertMask = myMask;
 			}
 
@@ -274,11 +142,11 @@ public abstract class Cursor extends BasicCursor {
 			for (Column c : meta().getColumns().values())
 				if (c instanceof IntegerColumn
 						&& ((IntegerColumn) c).isIdentity()) {
-					_setAutoIncrement(db.getCurrentIdent(conn, meta()));
+					_setAutoIncrement(db().getCurrentIdent(conn(), meta()));
 					break;
 				}
 			internalGet(_currentKeyValues());
-			xRec = _getBufferCopy();
+			initXRec();
 			_postInsert();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -314,7 +182,8 @@ public abstract class Cursor extends BasicCursor {
 	 */
 	public final boolean tryUpdate() throws CelestaException {
 		if (!canModify())
-			throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
+			throw new PermissionDeniedException(callContext(), meta(),
+					Action.MODIFY);
 
 		prepareGet(_currentKeyValues());
 		try {
@@ -339,7 +208,7 @@ public abstract class Cursor extends BasicCursor {
 			if (notChanged)
 				return true;
 			if (!Arrays.equals(myMask, updateMask)) {
-				update = db.getUpdateRecordStatement(conn, meta(), myMask);
+				update = db().getUpdateRecordStatement(conn(), meta(), myMask);
 				updateMask = myMask;
 			}
 
@@ -362,7 +231,7 @@ public abstract class Cursor extends BasicCursor {
 			_preUpdate();
 			update.execute();
 			LOGGING_MGR.log(this, Action.MODIFY);
-			xRec = _getBufferCopy();
+			initXRec();
 			_postUpdate();
 
 		} catch (SQLException e) {
@@ -396,10 +265,11 @@ public abstract class Cursor extends BasicCursor {
 	 */
 	public final void delete() throws CelestaException {
 		if (!canDelete())
-			throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
+			throw new PermissionDeniedException(callContext(), meta(),
+					Action.DELETE);
 
 		if (delete == null)
-			delete = db.getDeleteRecordStatement(conn, meta());
+			delete = db().getDeleteRecordStatement(conn(), meta());
 		Object[] keyValues = _currentKeyValues();
 		for (int i = 0; i < keyValues.length; i++)
 			DBAdaptor.setParam(delete, i + 1, keyValues[i]);
@@ -407,11 +277,16 @@ public abstract class Cursor extends BasicCursor {
 			_preDelete();
 			delete.execute();
 			LOGGING_MGR.log(this, Action.DELETE);
-			xRec = _getBufferCopy();
+			initXRec();
 			_postDelete();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
+	}
+
+	@Override
+	final void initXRec() throws CelestaException {
+		xRec = _getBufferCopy();
 	}
 
 	/**
@@ -422,10 +297,11 @@ public abstract class Cursor extends BasicCursor {
 	 */
 	public final void deleteAll() throws CelestaException {
 		if (!canDelete())
-			throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
+			throw new PermissionDeniedException(callContext(), meta(),
+					Action.DELETE);
 
-		PreparedStatement stmt = db.deleteRecordSetStatement(conn, meta(),
-				filters);
+		PreparedStatement stmt = db().deleteRecordSetStatement(conn(), meta(),
+				getFilters());
 		try {
 			try {
 				stmt.executeUpdate();
@@ -471,7 +347,8 @@ public abstract class Cursor extends BasicCursor {
 
 	public final boolean tryGet(Object... values) throws CelestaException {
 		if (!canRead())
-			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+			throw new PermissionDeniedException(callContext(), meta(),
+					Action.READ);
 		return internalGet(values);
 	}
 
@@ -484,7 +361,7 @@ public abstract class Cursor extends BasicCursor {
 				result = rs.next();
 				if (result) {
 					_parseResult(rs);
-					xRec = _getBufferCopy();
+					initXRec();
 				}
 			} finally {
 				rs.close();
@@ -497,7 +374,7 @@ public abstract class Cursor extends BasicCursor {
 
 	private void prepareGet(Object... values) throws CelestaException {
 		if (get == null)
-			get = db.getOneRecordStatement(conn, meta());
+			get = db().getOneRecordStatement(conn(), meta());
 		if (meta().getPrimaryKey().size() != values.length)
 			throw new CelestaException(
 					"Invalid number of 'get' arguments for '%s': expected %d, provided %d.",
@@ -506,20 +383,6 @@ public abstract class Cursor extends BasicCursor {
 		for (int i = 0; i < values.length; i++)
 			DBAdaptor.setParam(get, i + 1, values[i]);
 
-	}
-
-	/**
-	 * Сброс любого фильтра на поле.
-	 * 
-	 * @param name
-	 *            Имя поля.
-	 * @throws CelestaException
-	 *             Неверное имя поля.
-	 */
-	public final void setRange(String name) throws CelestaException {
-		validateColumName(name);
-		filters.remove(name);
-		closeSet();
 	}
 
 	/**
@@ -537,7 +400,7 @@ public abstract class Cursor extends BasicCursor {
 			throw new CelestaException("'%s' is not a BLOB column.",
 					c.getName());
 		BLOB result;
-		PreparedStatement stmt = db.getOneFieldStatement(conn, c);
+		PreparedStatement stmt = db().getOneFieldStatement(conn(), c);
 		Object[] keyVals = _currentKeyValues();
 		for (int i = 0; i < keyVals.length; i++)
 			DBAdaptor.setParam(stmt, i + 1, keyVals[i]);
@@ -593,173 +456,10 @@ public abstract class Cursor extends BasicCursor {
 	}
 
 	/**
-	 * Установка диапазона из единственного значения на поле.
-	 * 
-	 * @param name
-	 *            Имя поля.
-	 * @param value
-	 *            Значение, по которому осуществляется фильтрация.
-	 * @throws CelestaException
-	 *             Неверное имя поля
-	 */
-	public final void setRange(String name, Object value)
-			throws CelestaException {
-		validateColumName(name);
-		filters.put(name, new SingleValue(value));
-		closeSet();
-	}
-
-	/**
-	 * Установка диапазона от..до на поле.
-	 * 
-	 * @param name
-	 *            Имя поля
-	 * @param valueFrom
-	 *            Значение от
-	 * @param valueTo
-	 *            Значение до
-	 * @throws CelestaException
-	 *             Неверное имя поля, SQL-ошибка.
-	 */
-	public final void setRange(String name, Object valueFrom, Object valueTo)
-			throws CelestaException {
-		validateColumName(name);
-		filters.put(name, new Range(valueFrom, valueTo));
-		closeSet();
-	}
-
-	/**
-	 * Установка фильтра на поле.
-	 * 
-	 * @param name
-	 *            Имя поля
-	 * @param value
-	 *            Фильтр
-	 * @throws CelestaException
-	 *             Неверное имя поля и т. п.
-	 */
-	public final void setFilter(String name, String value)
-			throws CelestaException {
-		validateColumName(name);
-		if (value == null || value.isEmpty())
-			throw new CelestaException(
-					"Filter for column %s is null or empty. "
-							+ "Use setrange(fieldname) to remove any filters from the column.",
-					name);
-		filters.put(name, new Filter(value));
-		closeSet();
-	}
-
-	/**
-	 * Устанавливает фильтр на диапазон возвращаемых курсором записей.
-	 * 
-	 * @param offset
-	 *            Количество записей, которое необходимо пропустить (0 -
-	 *            начинать с начала).
-	 * @param rowCount
-	 *            Максимальное количество записей, которое необходимо вернуть (0
-	 *            - вернуть все записи).
-	 * @throws CelestaException
-	 *             ошибка БД.
-	 */
-	public final void limit(long offset, long rowCount) throws CelestaException {
-		if (offset < 0)
-			throw new CelestaException(
-					"Negative offset (%d) in limit(...) call", offset);
-		if (rowCount < 0)
-			throw new CelestaException(
-					"Negative rowCount (%d) in limit(...) call", rowCount);
-		this.offset = offset;
-		this.rowCount = rowCount;
-		closeSet();
-	}
-
-	private String getOrderBy() throws CelestaException {
-		if (orderBy == null)
-			orderBy();
-		return orderBy;
-	}
-
-	/**
-	 * Установка сортировки.
-	 * 
-	 * @param names
-	 *            Перечень полей для сортировки.
-	 * @throws CelestaException
-	 *             неверное имя поля или SQL-ошибка.
-	 */
-	public final void orderBy(String... names) throws CelestaException {
-		StringBuilder orderByClause = new StringBuilder();
-		boolean needComma = false;
-		Set<String> colNames = new HashSet<>();
-		for (String name : names) {
-			Matcher m = COLUMN_NAME.matcher(name);
-			if (!m.matches())
-				throw new CelestaException(
-						"orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
-						name);
-			String colName = m.group(1);
-			validateColumName(colName);
-			if (!colNames.add(colName))
-				throw new CelestaException(
-						"Column '%s' is used more than once in orderby() call",
-						colName);
-
-			String order;
-			if (m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim())) {
-				order = "";
-			} else {
-				order = " desc";
-			}
-			if (needComma)
-				orderByClause.append(", ");
-			orderByClause.append(String.format("\"%s\"%s", colName, order));
-			needComma = true;
-
-		}
-		// Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
-		// естественном порядке
-		for (String colName : meta().getPrimaryKey().keySet())
-			if (!colNames.contains(colName)) {
-				if (needComma)
-					orderByClause.append(", ");
-				orderByClause.append(String.format("\"%s\"", colName));
-				needComma = true;
-			}
-
-		orderBy = orderByClause.toString();
-	}
-
-	/**
-	 * Сброс фильтров и сортировки.
-	 * 
-	 * @throws CelestaException
-	 *             SQL-ошибка.
-	 */
-	public final void reset() throws CelestaException {
-		filters.clear();
-		orderBy = null;
-		closeSet();
-	}
-
-	/**
 	 * Очистка всех полей буфера, кроме ключевых.
 	 */
 	public final void init() {
 		_clearBuffer(false);
-	}
-
-	/**
-	 * Сброс фильтров, сортировки и полная очистка буфера.
-	 * 
-	 * @throws CelestaException
-	 *             SQL-ошибка.
-	 */
-	public final void clear() throws CelestaException {
-		_clearBuffer(true);
-		filters.clear();
-		orderBy = null;
-		closeSet();
 	}
 
 	/**
@@ -769,6 +469,7 @@ public abstract class Cursor extends BasicCursor {
 	 *             в случае ошибки извлечения метаинформации (в норме не должна
 	 *             происходить).
 	 */
+	@Override
 	public final Table meta() throws CelestaException {
 		if (meta == null)
 			try {
@@ -801,6 +502,21 @@ public abstract class Cursor extends BasicCursor {
 
 	}
 
+	@Override
+	final void appendPK(StringBuilder orderByClause, boolean needComma,
+			Set<String> colNames) throws CelestaException {
+		boolean nc = needComma;
+		// Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
+		// естественном порядке
+		for (String colName : meta().getPrimaryKey().keySet())
+			if (!colNames.contains(colName)) {
+				if (nc)
+					orderByClause.append(", ");
+				orderByClause.append(String.format("\"%s\"", colName));
+				nc = true;
+			}
+	}
+
 	/**
 	 * Возвращает текущее состояние курсора в виде CSV-строки с
 	 * разделителями-запятыми.
@@ -827,7 +543,7 @@ public abstract class Cursor extends BasicCursor {
 	public final Cursor getXRec() {
 		if (xRec == null) {
 			try {
-				xRec = _getBufferCopy();
+				initXRec();
 				xRec.clear();
 			} catch (CelestaException e) {
 				xRec = null;
@@ -852,8 +568,6 @@ public abstract class Cursor extends BasicCursor {
 	 */
 
 	protected abstract Cursor _getBufferCopy() throws CelestaException;
-
-	protected abstract void _clearBuffer(boolean withKeys);
 
 	protected abstract Object[] _currentKeyValues();
 

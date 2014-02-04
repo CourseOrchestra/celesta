@@ -3,10 +3,10 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.FilterParser;
 import ru.curs.celesta.dbutils.filter.FilterParser.FilterType;
-import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.ViewColumnType;
 
 /**
  * Внутреннее представление фильтра на поле.
@@ -79,17 +79,18 @@ class Filter extends AbstractFilter {
 		return String.format("%s", value);
 	}
 
-	public String makeWhereClause(Column c) throws CelestaException {
+	public String makeWhereClause(String quotedName, Object c)
+			throws CelestaException {
 		FilterType ft;
-		if (c instanceof IntegerColumn || c instanceof FloatingColumn)
+		if (c instanceof IntegerColumn || c instanceof FloatingColumn
+				|| c == ViewColumnType.NUMERIC)
 			ft = FilterType.NUMERIC;
-		else if (c instanceof StringColumn)
+		else if (c instanceof StringColumn || c == ViewColumnType.TEXT)
 			ft = FilterType.TEXT;
 		else {
 			ft = FilterType.OTHER;
 		}
-		String result = FilterParser.translateFilter(ft, c.getQuotedName(),
-				value);
+		String result = FilterParser.translateFilter(ft, quotedName, value);
 		return result;
 	}
 }

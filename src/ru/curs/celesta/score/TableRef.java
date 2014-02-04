@@ -57,7 +57,7 @@ public class TableRef {
 	void setOnExpr(Expr onExpr) throws ParseException {
 		if (onExpr == null)
 			throw new IllegalArgumentException();
-		onExpr.assertType(ExprType.LOGIC);
+		onExpr.assertType(ViewColumnType.LOGIC);
 		this.onExpr = onExpr;
 
 	}

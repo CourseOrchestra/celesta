@@ -1,5 +1,7 @@
 package ru.curs.celesta.score;
 
+import java.util.Map;
+
 /**
  * Базовый класс для элементов гранулы (таблиц, индексов и представлений).
  */
@@ -23,4 +25,9 @@ public abstract class GrainElement extends NamedElement {
 	public final Grain getGrain() {
 		return grain;
 	}
+
+	/**
+	 * Перечень столбцов с именами.
+	 */
+	public abstract Map<String, ?> getColumns();
 }

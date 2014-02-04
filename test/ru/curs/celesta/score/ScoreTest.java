@@ -58,7 +58,7 @@ public class ScoreTest {
 
 		assertEquals(4, v.getColumns().size());
 		String[] ref = { "fieldAlias", "tablename", "checksum", "f1" };
-		assertArrayEquals(ref, v.getColumns().toArray(new String[0]));
+		assertArrayEquals(ref, v.getColumns().keySet().toArray(new String[0]));
 
 		String[] expected = {
 				"  select distinct grainid as fieldAlias, ta.tablename as tablename, grains.checksum as checksum, ta.tablename || grains.checksum as f1",

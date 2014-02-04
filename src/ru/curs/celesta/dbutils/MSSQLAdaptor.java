@@ -21,6 +21,7 @@ import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.SQLGenerator;
@@ -877,7 +878,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String getLimitedSQL(Table t, String whereClause, String orderBy,
+	String getLimitedSQL(GrainElement t, String whereClause, String orderBy,
 			long offset, long rowCount) {
 		if (offset == 0 && rowCount == 0)
 			throw new IllegalArgumentException();

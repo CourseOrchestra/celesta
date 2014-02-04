@@ -14,7 +14,7 @@ abstract class Expr {
 		return v;
 	}
 
-	final void assertType(ExprType t) throws ParseException {
+	final void assertType(ViewColumnType t) throws ParseException {
 		if (getType() != t)
 			throw new ParseException(
 					String.format(
@@ -25,7 +25,7 @@ abstract class Expr {
 	/**
 	 * Возвращает Celesta-SQL представление выражения.
 	 */
-	public final String getCSQL() {
+	final String getCSQL() {
 		SQLGenerator gen = new SQLGenerator();
 		return gen.generateSQL(this);
 	}
@@ -33,7 +33,7 @@ abstract class Expr {
 	/**
 	 * Возвращает тип выражения.
 	 */
-	public abstract ExprType getType();
+	public abstract ViewColumnType getType();
 
 	/**
 	 * Разрешает ссылки на поля таблиц, используя контекст объявленных таблиц с
@@ -44,7 +44,7 @@ abstract class Expr {
 	 * @throws ParseException
 	 *             в случае, если ссылка не может быть разрешена.
 	 */
-	public final void resolveFieldRefs(List<TableRef> tables)
+	final void resolveFieldRefs(List<TableRef> tables)
 			throws ParseException {
 		FieldResolver r = new FieldResolver(tables);
 		accept(r);
@@ -56,7 +56,7 @@ abstract class Expr {
 	 * @throws ParseException
 	 *             в случае, если контроль типов не проходит.
 	 */
-	public final void validateTypes() throws ParseException {
+	final void validateTypes() throws ParseException {
 		TypeChecker c = new TypeChecker();
 		accept(c);
 	}
@@ -71,14 +71,7 @@ abstract class Expr {
 	 * @throws ParseException
 	 *             семантическая ошибка при обходе дерева.
 	 */
-	public abstract void accept(ExprVisitor visitor) throws ParseException;
-}
-
-/**
- * Тип выражения.
- */
-enum ExprType {
-	LOGIC, NUMERIC, TEXT, DATE, BIT, BLOB, UNDEFINED
+	abstract void accept(ExprVisitor visitor) throws ParseException;
 }
 
 /**
@@ -100,7 +93,7 @@ final class ParenthesizedExpr extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
+	public ViewColumnType getType() {
 		return parenthesized.getType();
 	}
 
@@ -183,8 +176,8 @@ final class Relop extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
-		return ExprType.LOGIC;
+	public ViewColumnType getType() {
+		return ViewColumnType.LOGIC;
 	}
 
 	@Override
@@ -223,8 +216,8 @@ final class In extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
-		return ExprType.LOGIC;
+	public ViewColumnType getType() {
+		return ViewColumnType.LOGIC;
 	}
 
 	@Override
@@ -274,8 +267,8 @@ final class Between extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
-		return ExprType.LOGIC;
+	public ViewColumnType getType() {
+		return ViewColumnType.LOGIC;
 	}
 
 	@Override
@@ -296,7 +289,7 @@ final class IsNull extends Expr {
 
 	IsNull(View v, Expr expr) throws ParseException {
 		super(v);
-		if (expr.getType() == ExprType.LOGIC)
+		if (expr.getType() == ViewColumnType.LOGIC)
 			throw new ParseException(
 					String.format(
 							"Expression '%s' is logical condition and cannot be an argument of IS NULL operator.",
@@ -312,8 +305,8 @@ final class IsNull extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
-		return ExprType.LOGIC;
+	public ViewColumnType getType() {
+		return ViewColumnType.LOGIC;
 	}
 
 	@Override
@@ -331,7 +324,7 @@ final class NotExpr extends Expr {
 
 	NotExpr(View v, Expr expr) throws ParseException {
 		super(v);
-		if (expr.getType() != ExprType.LOGIC)
+		if (expr.getType() != ViewColumnType.LOGIC)
 			throw new ParseException(String.format(
 					"Expression '%s' is expected to be logical condition.",
 					getCSQL()));
@@ -346,8 +339,8 @@ final class NotExpr extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
-		return ExprType.LOGIC;
+	public ViewColumnType getType() {
+		return ViewColumnType.LOGIC;
 	}
 
 	@Override
@@ -377,7 +370,7 @@ final class BinaryLogicalOp extends Expr {
 			throw new IllegalArgumentException();
 		// все операнды должны быть логическими
 		for (Expr e : operands)
-			if (e.getType() != ExprType.LOGIC)
+			if (e.getType() != ViewColumnType.LOGIC)
 				throw new ParseException(String.format(
 						"Expression '%s' is expected to be logical condition.",
 						e.getCSQL()));
@@ -400,8 +393,8 @@ final class BinaryLogicalOp extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
-		return ExprType.LOGIC;
+	public ViewColumnType getType() {
+		return ViewColumnType.LOGIC;
 	}
 
 	@Override
@@ -452,8 +445,8 @@ final class BinaryTermOp extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
-		return operator == CONCAT ? ExprType.TEXT : ExprType.NUMERIC;
+	public ViewColumnType getType() {
+		return operator == CONCAT ? ViewColumnType.TEXT : ViewColumnType.NUMERIC;
 	}
 
 	@Override
@@ -480,8 +473,8 @@ final class UnaryMinus extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
-		return ExprType.NUMERIC;
+	public ViewColumnType getType() {
+		return ViewColumnType.NUMERIC;
 	}
 
 	@Override
@@ -510,8 +503,8 @@ final class NumericLiteral extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
-		return ExprType.NUMERIC;
+	public ViewColumnType getType() {
+		return ViewColumnType.NUMERIC;
 	}
 
 	@Override
@@ -539,8 +532,8 @@ final class TextLiteral extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
-		return ExprType.TEXT;
+	public ViewColumnType getType() {
+		return ViewColumnType.TEXT;
 	}
 
 	@Override
@@ -583,23 +576,23 @@ final class FieldRef extends Expr {
 	}
 
 	@Override
-	public ExprType getType() {
+	public ViewColumnType getType() {
 		if (column != null) {
 			if (column instanceof IntegerColumn
 					|| column instanceof FloatingColumn)
-				return ExprType.NUMERIC;
+				return ViewColumnType.NUMERIC;
 			if (column instanceof StringColumn)
-				return ExprType.TEXT;
+				return ViewColumnType.TEXT;
 			if (column instanceof BooleanColumn)
-				return ExprType.BIT;
+				return ViewColumnType.BIT;
 			if (column instanceof DateTimeColumn)
-				return ExprType.DATE;
+				return ViewColumnType.DATE;
 			if (column instanceof BinaryColumn)
-				return ExprType.BLOB;
+				return ViewColumnType.BLOB;
 			// This should not happen unless we introduced new types in Celesta
 			throw new IllegalStateException();
 		}
-		return ExprType.UNDEFINED;
+		return ViewColumnType.UNDEFINED;
 	}
 
 	/**
