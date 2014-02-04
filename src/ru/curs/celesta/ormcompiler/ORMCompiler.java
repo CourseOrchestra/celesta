@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,11 +20,14 @@ import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.ViewColumnType;
 
 /**
  * Комилятор ORM-кода.
@@ -38,6 +42,7 @@ public final class ORMCompiler {
 			"THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.",
 			"DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.", "\"\"\"",
 			"import ru.curs.celesta.dbutils.Cursor as Cursor",
+			"import ru.curs.celesta.dbutils.ViewCursor as ViewCursor",
 			"from java.lang import Object", "from jarray import array", "" };
 
 	private static final String[] TABLE_HEADER = { "    onPreDelete  = []",
@@ -125,6 +130,63 @@ public final class ORMCompiler {
 
 		for (Table t : g.getTables().values())
 			compileTable(t, w);
+
+		for (View v : g.getViews().values())
+			compileView(v, w);
+	}
+
+	private static void compileView(View v, BufferedWriter w)
+			throws IOException {
+		String className = v.getName() + "Cursor";
+
+		Map<String, ViewColumnType> columns = v.getColumns();
+
+		w.write(String.format("class %s(ViewCursor):", className));
+		w.newLine();
+		// Конструктор
+		compileViewInit(w, columns);
+		// Имя гранулы
+		compileGrainName(v, w);
+		// Имя таблицы
+		compileTableName(v, w);
+		// Разбор строки по переменным
+		compileParseResult(w, columns);
+		// Очистка буфера
+		compileClearBuffer(w, columns);
+		// Итерация в Python-стиле
+		compileIterate(w);
+		w.newLine();
+
+	}
+
+	private static void compileClearBuffer(BufferedWriter w,
+			Map<String, ViewColumnType> columns) throws IOException {
+		w.write("    def _clearBuffer(self, withKeys):");
+		w.newLine();
+		for (String c : columns.keySet()) {
+			w.write(String.format(SELF_S_EQUALS_NONE, c));
+			w.newLine();
+		}
+	}
+
+	private static void compileParseResult(BufferedWriter w,
+			Map<String, ViewColumnType> columns) throws IOException {
+		w.write("    def _parseResult(self, rs):");
+		w.newLine();
+		for (Map.Entry<String, ViewColumnType> e : columns.entrySet()) {
+			if (e.getValue() == ViewColumnType.BLOB) {
+				w.write(String.format(SELF_S_EQUALS_NONE, e.getKey()));
+			} else {
+				w.write(String.format("        self.%s = rs.%s('%s')",
+						e.getKey(), e.getValue().jdbcGetterName(), e.getKey()));
+				w.newLine();
+				w.write(String.format("        if rs.wasNull():"));
+				w.newLine();
+				w.write(String.format("    " + SELF_S_EQUALS_NONE, e.getKey()));
+			}
+			w.newLine();
+		}
+
 	}
 
 	private static void compileTable(Table t, BufferedWriter w)
@@ -142,7 +204,7 @@ public final class ORMCompiler {
 			w.newLine();
 		}
 		// Конструктор
-		compileInit(w, columns);
+		compileTableInit(w, columns);
 		// Имя гранулы
 		compileGrainName(t, w);
 		// Имя таблицы
@@ -293,8 +355,8 @@ public final class ORMCompiler {
 					c.getName()));
 		else if (c instanceof StringColumn)
 			sb.append(String.format(
-					"None if self.%s == None else unicode(self.%s)", c.getName(),
-					c.getName()));
+					"None if self.%s == None else unicode(self.%s)",
+					c.getName(), c.getName()));
 		else {
 			sb.append(String.format("self.%s", c.getName()));
 		}
@@ -349,7 +411,7 @@ public final class ORMCompiler {
 		}
 	}
 
-	private static void compileTableName(Table t, BufferedWriter w)
+	private static void compileTableName(GrainElement t, BufferedWriter w)
 			throws IOException {
 		w.write("    def _tableName(self):");
 		w.newLine();
@@ -357,7 +419,7 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileGrainName(Table t, BufferedWriter w)
+	private static void compileGrainName(GrainElement t, BufferedWriter w)
 			throws IOException {
 		w.write("    def _grainName(self):");
 		w.newLine();
@@ -380,14 +442,28 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileInit(BufferedWriter w, Collection<Column> columns)
-			throws IOException {
+	private static void compileTableInit(BufferedWriter w,
+			Collection<Column> columns) throws IOException {
 		w.write("    def __init__(self, context):");
 		w.newLine();
 		w.write("        Cursor.__init__(self, context)");
 		w.newLine();
 		for (Column c : columns) {
 			w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
+			w.newLine();
+		}
+		w.write("        self.context = context");
+		w.newLine();
+	}
+
+	private static void compileViewInit(BufferedWriter w,
+			Map<String, ViewColumnType> columns) throws IOException {
+		w.write("    def __init__(self, context):");
+		w.newLine();
+		w.write("        ViewCursor.__init__(self, context)");
+		w.newLine();
+		for (String c : columns.keySet()) {
+			w.write(String.format(SELF_S_EQUALS_NONE, c));
 			w.newLine();
 		}
 		w.write("        self.context = context");

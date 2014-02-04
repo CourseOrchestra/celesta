@@ -1,5 +1,7 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.Set;
+
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
@@ -34,6 +36,20 @@ public abstract class ViewCursor extends BasicCursor {
 				throw new CelestaException(e.getMessage());
 			}
 		return meta;
+	}
+
+	@Override
+	void appendPK(StringBuilder orderByClause, boolean needComma,
+			Set<String> colNames) throws CelestaException {
+		// для представлений мы сортируем всегда по первому столбцу, если
+		// сортировки нет вообще
+		if (colNames.isEmpty()) {
+			if (needComma)
+				orderByClause.append(", ");
+			orderByClause.append(String.format("\"%s\"", meta().getColumns()
+					.keySet().iterator().next()));
+		}
+
 	}
 
 }

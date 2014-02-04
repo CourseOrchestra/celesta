@@ -5,6 +5,7 @@ from g1._g1_orm import aaCursor
 from g1._g1_orm import adressesCursor
 from g2._g2_orm import bCursor
 from g3._g3_orm import cCursor
+from g1._g1_orm import testviewCursor
 import java.io.OutputStreamWriter as OutputStreamWriter
 import java.io.InputStreamReader as InputStreamReader
 import java.io.BufferedReader as BufferedReader
@@ -53,7 +54,7 @@ def hello(context, arg):
     c.dat = None
     c.update()
     
-    #return
+    # return
     
     aa = aaCursor(context)
     aa.deleteAll()
@@ -88,16 +89,16 @@ def hello(context, arg):
     aa.delete()  
     
     aa.limit(5, 5)
-    for aa in aa.iterate(): # while aa.next():
+    for aa in aa.iterate():  # while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)
 
     print '---'
     aa.limit(0, 5)
-    for aa in aa.iterate(): # while aa.next():
+    for aa in aa.iterate():  # while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)
     print '---'
     aa.limit(3, 0)
-    for aa in aa.iterate(): # while aa.next():
+    for aa in aa.iterate():  # while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)
         
     adresses = adressesCursor(context)
@@ -121,15 +122,11 @@ def hello(context, arg):
     print adresses.asCSVLine()    
     
     
-    grain = GrainsCursor(context)
-    grain.orderBy("checksum")
-    while grain.next():
-        print grain.checksum
-        
-    perms = PermissionsCursor(context)
-    perms.orderBy("roleid", "grainid", "tablename")
-    while perms.next():
-        print perms.i
+    testview = testviewCursor(context)
+    testview.orderBy("f1")
+    testview.limit(2, 2)
+    for testview in testview.iterate():
+        print '%s - %s - %s' % (testview.fieldAlias, testview.checksum, testview.f1)
     
   
     print 'Python procedure finished.'

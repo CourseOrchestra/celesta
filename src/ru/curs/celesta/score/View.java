@@ -5,12 +5,10 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * Объект-представление в метаданных.
@@ -18,75 +16,7 @@ import java.util.Set;
 public class View extends GrainElement {
 	private boolean distinct;
 	private final Map<String, Expr> columns = new LinkedHashMap<>();
-	private final Map<String, ViewColumnType> columnTypes = new Map<String, ViewColumnType>() {
-		@Override
-		public int size() {
-			return columns.size();
-		}
-
-		@Override
-		public boolean isEmpty() {
-			return columns.isEmpty();
-		}
-
-		@Override
-		public boolean containsKey(Object key) {
-			return columns.containsKey(key);
-		}
-
-		@Override
-		public boolean containsValue(Object value) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public ViewColumnType get(Object key) {
-			Expr buf = columns.get(key);
-			return buf == null ? null : buf.getType();
-		}
-
-		@Override
-		public ViewColumnType put(String key, ViewColumnType value) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public ViewColumnType remove(Object key) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void putAll(Map<? extends String, ? extends ViewColumnType> m) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void clear() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public Set<String> keySet() {
-			return columns.keySet();
-		}
-
-		@Override
-		public Collection<ViewColumnType> values() {
-			ViewColumnType[] buf = new ViewColumnType[columns.size()];
-			int i = 0;
-			for (Expr e : columns.values()) {
-				buf[i] = e.getType();
-				i++;
-			}
-			return Arrays.asList(buf);
-		}
-
-		@Override
-		public Set<java.util.Map.Entry<String, ViewColumnType>> entrySet() {
-			throw new UnsupportedOperationException();
-		}
-
-	};
+	private Map<String, ViewColumnType> columnTypes = null;
 	private final Map<String, TableRef> tables = new LinkedHashMap<>();
 	private Expr whereCondition;
 	private String queryString;
@@ -193,6 +123,11 @@ public class View extends GrainElement {
 	 * Возвращает перечень столбцов представления.
 	 */
 	public final Map<String, ViewColumnType> getColumns() {
+		if (columnTypes == null) {
+			columnTypes = new LinkedHashMap<>();
+			for (Entry<String, Expr> e : columns.entrySet())
+				columnTypes.put(e.getKey(), e.getValue().getType());
+		}
 		return columnTypes;
 	}
 

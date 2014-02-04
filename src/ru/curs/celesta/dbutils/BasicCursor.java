@@ -401,9 +401,8 @@ public abstract class BasicCursor {
 		orderBy = orderByClause.toString();
 	}
 
-	void appendPK(StringBuilder orderByClause, boolean needComma,
-			Set<String> colNames) throws CelestaException {
-	}
+	abstract void appendPK(StringBuilder orderByClause, boolean needComma,
+			Set<String> colNames) throws CelestaException;
 
 	/**
 	 * Сброс фильтров, сортировки и полная очистка буфера.
