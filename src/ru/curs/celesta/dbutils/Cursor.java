@@ -191,6 +191,13 @@ public abstract class Cursor extends BasicCursor {
 			try {
 				if (!rs.next())
 					return false;
+				// Прочитали из базы данных значения -- обновляем xRec
+				if (xRec == null) {
+					xRec = _getBufferCopy();
+					//Вопрос на будущее: эта строчка должна быть здесь или за фигурной скобкой?
+					//(проблема совместной работы над базой)
+					xRec._parseResult(rs);
+				}
 			} finally {
 				rs.close();
 			}
