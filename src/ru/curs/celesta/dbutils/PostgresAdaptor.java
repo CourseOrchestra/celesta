@@ -717,7 +717,7 @@ final class PostgresAdaptor extends DBAdaptor {
 	@Override
 	void dropPK(Connection conn, Table t, String pkName)
 			throws CelestaException {
-		String sql = String.format("alter table %s.%s drop constraint \"%s\"",
+		String sql = String.format("alter table %s.%s drop constraint \"%s\" cascade",
 				t.getGrain().getQuotedName(), t.getQuotedName(), pkName);
 		try {
 			Statement stmt = conn.createStatement();

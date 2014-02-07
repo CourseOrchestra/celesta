@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -79,7 +80,8 @@ public final class DBUpdator {
 		if (dba == null)
 			dba = DBAdaptor.getAdaptor();
 		Connection conn = ConnectionPool.get();
-		CallContext context = new CallContext(conn, BasicCursor.SYSTEMUSERID, null);
+		CallContext context = new CallContext(conn, BasicCursor.SYSTEMUSERID,
+				null);
 		try {
 			grain = new GrainsCursor(context);
 			table = new TablesCursor(context);
@@ -294,10 +296,17 @@ public final class DBUpdator {
 			ConnectionPool.commit(grain.callContext().getConn());
 			return true;
 		} catch (CelestaException e) {
+			String newMsg = "";
+			try {
+				grain.callContext().getConn().rollback();
+			} catch (SQLException e1) {
+				newMsg = ", " + e1.getMessage();
+			}
 			// Если что-то пошло не так
 			grain.setState(GrainsCursor.ERROR);
 			grain.setMessage(String.format("%s/%d/%08X: %s", g.getVersion()
-					.toString(), g.getLength(), g.getChecksum(), e.getMessage()));
+					.toString(), g.getLength(), g.getChecksum(), e.getMessage()
+					+ newMsg));
 			grain.update();
 			ConnectionPool.commit(grain.callContext().getConn());
 			return false;
