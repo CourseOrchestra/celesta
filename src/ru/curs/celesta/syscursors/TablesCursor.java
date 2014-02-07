@@ -27,7 +27,7 @@ public final class TablesCursor extends SysCursor {
 
 	private String grainid;
 	private String tablename;
-	private TableType tableType;
+	private TableType tabletype;
 	private boolean orphaned;
 
 	public TablesCursor(CallContext context) throws CelestaException {
@@ -47,7 +47,7 @@ public final class TablesCursor extends SysCursor {
 		// CHECKSTYLE:ON
 		grainid = rs.getString("grainid");
 		tablename = rs.getString("tablename");
-		tableType = "T".equals(rs.getString("tabletype")) ? TableType.TABLE
+		tabletype = "T".equals(rs.getString("tabletype")) ? TableType.TABLE
 				: TableType.VIEW;
 		orphaned = rs.getBoolean("orphaned");
 	}
@@ -76,7 +76,7 @@ public final class TablesCursor extends SysCursor {
 	protected Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { grainid, tablename,
-				tableType == TableType.TABLE ? "T" : "V", orphaned };
+				tabletype == TableType.TABLE ? "T" : "V", orphaned };
 		return result;
 	}
 
@@ -134,8 +134,8 @@ public final class TablesCursor extends SysCursor {
 	/**
 	 * Возвращает тип таблицы: TABLE для таблицы, VIEW - для представления.
 	 */
-	public TableType getTableType() {
-		return tableType;
+	public TableType getTabletype() {
+		return tabletype;
 	}
 
 	/**
@@ -144,8 +144,8 @@ public final class TablesCursor extends SysCursor {
 	 * @param tableType
 	 *            Тип: TABLE для таблицы, VIEW - для представления.
 	 */
-	public void setTableType(TableType tableType) {
-		this.tableType = tableType;
+	public void setTabletype(TableType tableType) {
+		this.tabletype = tableType;
 	}
 
 	@Override
@@ -154,7 +154,7 @@ public final class TablesCursor extends SysCursor {
 		grainid = from.grainid;
 		tablename = from.tablename;
 		orphaned = from.orphaned;
-		tableType = from.tableType;
+		tabletype = from.tabletype;
 	}
 
 	@Override

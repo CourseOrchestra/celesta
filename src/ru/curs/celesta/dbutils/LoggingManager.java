@@ -97,7 +97,7 @@ final class LoggingManager {
 		log.setUserid(c.callContext().getUserId());
 		log.setGrainid(c._grainName());
 		log.setTablename(c._tableName());
-		log.setActionType(a.shortId());
+		log.setAction_type(a.shortId());
 		Object[] o = c._currentKeyValues();
 
 		String value;

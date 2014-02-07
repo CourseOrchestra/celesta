@@ -14,16 +14,20 @@ import ru.curs.celesta.dbutils.Cursor;
 public final class LogCursor extends SysCursor {
 
 	private Integer entryno;
-	private Date entryTime;
 	private String userid;
 	private String grainid;
 	private String tablename;
-	private String actionType;
 	private String pkvalue1;
 	private String pkvalue2;
 	private String pkvalue3;
 	private String oldvalues;
 	private String newvalues;
+	// CHECKSTYLE:OFF
+	// Поля базы данных
+	private Date entry_time;
+	private String action_type;
+
+	// CHECKSTYLE:ON
 
 	public LogCursor(CallContext context) throws CelestaException {
 		super(context);
@@ -41,11 +45,11 @@ public final class LogCursor extends SysCursor {
 	protected void _parseResult(ResultSet rs) throws SQLException {
 		// CHECKSTYLE:ON
 		entryno = rs.getInt("entryno");
-		entryTime = rs.getDate("entry_time");
+		entry_time = rs.getDate("entry_time");
 		userid = rs.getString("userid");
 		grainid = rs.getString("grainid");
 		tablename = rs.getString("tablename");
-		actionType = rs.getString("action_type");
+		action_type = rs.getString("action_type");
 		pkvalue1 = rs.getString("pkvalue1");
 		pkvalue2 = rs.getString("pkvalue2");
 		pkvalue3 = rs.getString("pkvalue3");
@@ -59,11 +63,11 @@ public final class LogCursor extends SysCursor {
 		// CHECKSTYLE:ON
 		if (withKeys)
 			entryno = null;
-		entryTime = null;
+		entry_time = null;
 		userid = null;
 		grainid = null;
 		tablename = null;
-		actionType = null;
+		action_type = null;
 		pkvalue1 = null;
 		pkvalue2 = null;
 		pkvalue3 = null;
@@ -83,8 +87,8 @@ public final class LogCursor extends SysCursor {
 	// CHECKSTYLE:OFF
 	protected Object[] _currentValues() {
 		// CHECKSTYLE:ON
-		Object[] result = { entryno, entryTime, userid, grainid, tablename,
-				actionType, pkvalue1, pkvalue2, pkvalue3, oldvalues, newvalues };
+		Object[] result = { entryno, entry_time, userid, grainid, tablename,
+				action_type, pkvalue1, pkvalue2, pkvalue3, oldvalues, newvalues };
 		return result;
 	}
 
@@ -105,11 +109,13 @@ public final class LogCursor extends SysCursor {
 		this.entryno = entryno;
 	}
 
+	// CHECKSTYLE:OFF
+	// так (с подчёркиванием) называются поля в базе данных
 	/**
 	 * Время записи.
 	 */
-	public Date getEntryTime() {
-		return entryTime;
+	public Date getEntry_time() {
+		return entry_time;
 	}
 
 	/**
@@ -118,9 +124,28 @@ public final class LogCursor extends SysCursor {
 	 * @param entryTime
 	 *            the entryTime to set
 	 */
-	public void setEntryTime(Date entryTime) {
-		this.entryTime = entryTime;
+	public void setEntry_time(Date entryTime) {
+		this.entry_time = entryTime;
 	}
+
+	/**
+	 * Тип действия (I, M, D).
+	 */
+	public String getAction_type() {
+		return action_type;
+	}
+
+	/**
+	 * Устанавливает тип действия.
+	 * 
+	 * @param actionType
+	 *            the actionType to set
+	 */
+	public void setAction_type(String actionType) {
+		this.action_type = actionType;
+	}
+
+	// CHECKSTYLE:ON
 
 	/**
 	 * Идентификатор пользователя, произведшего изменение.
@@ -171,23 +196,6 @@ public final class LogCursor extends SysCursor {
 	 */
 	public void setTablename(String tablename) {
 		this.tablename = tablename;
-	}
-
-	/**
-	 * Тип действия (I, M, D).
-	 */
-	public String getActionType() {
-		return actionType;
-	}
-
-	/**
-	 * Устанавливает тип действия.
-	 * 
-	 * @param actionType
-	 *            the actionType to set
-	 */
-	public void setActionType(String actionType) {
-		this.actionType = actionType;
 	}
 
 	/**
@@ -283,11 +291,11 @@ public final class LogCursor extends SysCursor {
 	public void copyFieldsFrom(Cursor c) {
 		LogCursor from = (LogCursor) c;
 		entryno = from.entryno;
-		entryTime = from.entryTime;
+		entry_time = from.entry_time;
 		userid = from.userid;
 		grainid = from.grainid;
 		tablename = from.tablename;
-		actionType = from.actionType;
+		action_type = from.action_type;
 		pkvalue1 = from.pkvalue1;
 		pkvalue2 = from.pkvalue2;
 		pkvalue3 = from.pkvalue3;

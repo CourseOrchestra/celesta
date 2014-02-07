@@ -257,7 +257,7 @@ public final class DBUpdator {
 			// Обновляем справочник celesta.tables.
 			table.setRange("grainid", g.getName());
 			while (table.next()) {
-				switch (table.getTableType()) {
+				switch (table.getTabletype()) {
 				case TABLE:
 					table.setOrphaned(!g.getTables().containsKey(
 							table.getTablename()));
@@ -273,14 +273,14 @@ public final class DBUpdator {
 			for (Table t : g.getTables().values()) {
 				table.setGrainid(g.getName());
 				table.setTablename(t.getName());
-				table.setTableType(TableType.TABLE);
+				table.setTabletype(TableType.TABLE);
 				table.setOrphaned(false);
 				table.tryInsert();
 			}
 			for (View v : g.getViews().values()) {
 				table.setGrainid(g.getName());
 				table.setTablename(v.getName());
-				table.setTableType(TableType.VIEW);
+				table.setTabletype(TableType.VIEW);
 				table.setOrphaned(false);
 				table.tryInsert();
 			}

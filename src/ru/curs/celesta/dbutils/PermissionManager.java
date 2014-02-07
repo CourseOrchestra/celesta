@@ -124,15 +124,15 @@ final class PermissionManager {
 		int permissionsMask = 0;
 
 		while (userRoles.next() && permissionsMask != FULL_RIGHTS) {
-			if (READER.equals(userRoles.getRoleId())
+			if (READER.equals(userRoles.getRoleid())
 					|| (t.getGrain().getName() + '.' + READER).equals(userRoles
-							.getRoleId())) {
+							.getRoleid())) {
 				permissionsMask |= Action.READ.getMask();
-			} else if (EDITOR.equals(userRoles.getRoleId())
+			} else if (EDITOR.equals(userRoles.getRoleid())
 					|| (t.getGrain().getName() + '.' + EDITOR).equals(userRoles
-							.getRoleId())) {
+							.getRoleid())) {
 				permissionsMask = FULL_RIGHTS;
-			} else if (permissions.tryGet(userRoles.getRoleId(), t.getGrain()
+			} else if (permissions.tryGet(userRoles.getRoleid(), t.getGrain()
 					.getName(), t.getName())) {
 				permissionsMask |= permissions.isR() ? Action.READ.getMask()
 						: 0;

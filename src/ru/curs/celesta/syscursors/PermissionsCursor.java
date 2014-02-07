@@ -15,7 +15,7 @@ public final class PermissionsCursor extends SysCursor {
 
 	private String roleId;
 	private String grainId;
-	private String tableName;
+	private String tablename;
 	private boolean r;
 	private boolean i;
 	private boolean m;
@@ -38,7 +38,7 @@ public final class PermissionsCursor extends SysCursor {
 		// CHECKSTYLE:ON
 		roleId = rs.getString("roleid");
 		grainId = rs.getString("grainid");
-		tableName = rs.getString("tablename");
+		tablename = rs.getString("tablename");
 		r = rs.getBoolean("r");
 		i = rs.getBoolean("i");
 		m = rs.getBoolean("m");
@@ -52,7 +52,7 @@ public final class PermissionsCursor extends SysCursor {
 		if (withKeys) {
 			roleId = null;
 			grainId = null;
-			tableName = null;
+			tablename = null;
 		}
 		r = false;
 		i = false;
@@ -64,7 +64,7 @@ public final class PermissionsCursor extends SysCursor {
 	// CHECKSTYLE:OFF
 	protected Object[] _currentKeyValues() {
 		// CHECKSTYLE:ON
-		Object[] result = { roleId, grainId, tableName };
+		Object[] result = { roleId, grainId, tablename };
 		return result;
 	}
 
@@ -72,7 +72,7 @@ public final class PermissionsCursor extends SysCursor {
 	// CHECKSTYLE:OFF
 	protected Object[] _currentValues() {
 		// CHECKSTYLE:ON
-		Object[] result = { roleId, grainId, tableName, r, i, m, d };
+		Object[] result = { roleId, grainId, tablename, r, i, m, d };
 		return result;
 	}
 
@@ -113,8 +113,8 @@ public final class PermissionsCursor extends SysCursor {
 	/**
 	 * Возвращает имя таблицы.
 	 */
-	public String getTableName() {
-		return tableName;
+	public String getTablename() {
+		return tablename;
 	}
 
 	/**
@@ -123,8 +123,8 @@ public final class PermissionsCursor extends SysCursor {
 	 * @param tableName
 	 *            Имя таблицы
 	 */
-	public void setTableName(String tableName) {
-		this.tableName = tableName;
+	public void setTablename(String tableName) {
+		this.tablename = tableName;
 	}
 
 	/**
@@ -200,7 +200,7 @@ public final class PermissionsCursor extends SysCursor {
 		PermissionsCursor from = (PermissionsCursor) c;
 		roleId = from.roleId;
 		grainId = from.grainId;
-		tableName = from.tableName;
+		tablename = from.tablename;
 		r = from.r;
 		i = from.i;
 		m = from.m;

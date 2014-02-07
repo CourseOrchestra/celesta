@@ -12,8 +12,8 @@ import ru.curs.celesta.dbutils.Cursor;
  */
 public final class UserRolesCursor extends SysCursor {
 
-	private String userId;
-	private String roleId;
+	private String userid;
+	private String roleid;
 
 	public UserRolesCursor(CallContext context) throws CelestaException {
 		super(context);
@@ -30,8 +30,8 @@ public final class UserRolesCursor extends SysCursor {
 	// CHECKSTYLE:OFF
 	protected void _parseResult(ResultSet rs) throws SQLException {
 		// CHECKSTYLE:ON
-		userId = rs.getString("userid");
-		roleId = rs.getString("roleid");
+		userid = rs.getString("userid");
+		roleid = rs.getString("roleid");
 	}
 
 	@Override
@@ -39,8 +39,8 @@ public final class UserRolesCursor extends SysCursor {
 	protected void _clearBuffer(boolean withKeys) {
 		// CHECKSTYLE:ON
 		if (withKeys) {
-			userId = null;
-			roleId = null;
+			userid = null;
+			roleid = null;
 		}
 	}
 
@@ -48,7 +48,7 @@ public final class UserRolesCursor extends SysCursor {
 	// CHECKSTYLE:OFF
 	protected Object[] _currentKeyValues() {
 		// CHECKSTYLE:ON
-		Object[] result = { userId, roleId };
+		Object[] result = { userid, roleid };
 		return result;
 	}
 
@@ -56,15 +56,15 @@ public final class UserRolesCursor extends SysCursor {
 	// CHECKSTYLE:OFF
 	protected Object[] _currentValues() {
 		// CHECKSTYLE:ON
-		Object[] result = { userId, roleId };
+		Object[] result = { userid, roleid };
 		return result;
 	}
 
 	/**
 	 * Идентификатор пользователя.
 	 */
-	public String getUserId() {
-		return userId;
+	public String getUserid() {
+		return userid;
 	}
 
 	/**
@@ -73,15 +73,15 @@ public final class UserRolesCursor extends SysCursor {
 	 * @param userId
 	 *            идентификатор
 	 */
-	public void setUserId(String userId) {
-		this.userId = userId;
+	public void setUserid(String userId) {
+		this.userid = userId;
 	}
 
 	/**
 	 * Роль пользователя.
 	 */
-	public String getRoleId() {
-		return roleId;
+	public String getRoleid() {
+		return roleid;
 	}
 
 	/**
@@ -90,15 +90,15 @@ public final class UserRolesCursor extends SysCursor {
 	 * @param roleId
 	 *            имя роли
 	 */
-	public void setRoleId(String roleId) {
-		this.roleId = roleId;
+	public void setRoleid(String roleId) {
+		this.roleid = roleId;
 	}
 
 	@Override
 	public void copyFieldsFrom(Cursor c) {
 		UserRolesCursor from = (UserRolesCursor) c;
-		userId = from.userId;
-		roleId = from.roleId;
+		userid = from.userid;
+		roleid = from.roleid;
 	}
 
 	@Override
