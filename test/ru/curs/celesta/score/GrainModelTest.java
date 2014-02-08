@@ -304,7 +304,7 @@ public class GrainModelTest {
 		itWas = false;
 		try {
 			// Ошибка, потому что datecol -- Datetime, а в T3 первичный ключ --
-			// NVARCHAR(5)
+			// VARCHAR(5)
 			fk.setReferencedTable("", "t3");
 		} catch (ParseException e) {
 			itWas = true;
@@ -316,8 +316,8 @@ public class GrainModelTest {
 		fk.addColumn("scol2");
 		itWas = false;
 		try {
-			// Ошибка, потому что scol2 -- NVARCHAR(2), а в T3 первичный ключ --
-			// NVARCHAR(5)
+			// Ошибка, потому что scol2 -- VARCHAR(2), а в T3 первичный ключ --
+			// VARCHAR(5)
 			fk.setReferencedTable("", "t3");
 		} catch (ParseException e) {
 			itWas = true;

@@ -26,54 +26,55 @@ SKIP:
 
 TOKEN: /* SQL keywords */ 
 {
-    <K_CREATE:  "CREATE">
-|   <K_TABLE:   "TABLE">
-|   <K_INDEX:   "INDEX">
-|   <K_VIEW:    "VIEW">
-|   <K_AS:      "AS">
-|   <K_DEFAULT: "DEFAULT">
-|   <K_NOT:     "NOT">
-|   <K_NULL:    "NULL">
-|   <K_MAX:     "MAX">
-|   <K_IDENTITY: "IDENTITY">
-|   <K_GETDATE: "GETDATE">
-|   <K_PRIMARY: "PRIMARY">
-|   <K_FOREIGN: "FOREIGN">
-|   <K_KEY:     "KEY">
+    <K_CREATE:     "CREATE">
+|   <K_TABLE:      "TABLE">
+|   <K_INDEX:      "INDEX">
+|   <K_VIEW:       "VIEW">
+|   <K_AS:         "AS">
+|   <K_DEFAULT:    "DEFAULT">
+|   <K_NOT:        "NOT">
+|   <K_NULL:       "NULL">
+|   <K_MAX:        "MAX">
+|   <K_TEXT:       "TEXT">
+|   <K_IDENTITY:   "IDENTITY">
+|   <K_GETDATE:    "GETDATE">
+|   <K_PRIMARY:    "PRIMARY">
+|   <K_FOREIGN:    "FOREIGN">
+|   <K_KEY:        "KEY">
 |   <K_REFERENCES: "REFERENCES">
-|   <K_ON:       "ON">
-|   <K_UPDATE:   "UPDATE">
-|   <K_DELETE:   "DELETE">
-|   <K_NO:       "NO">
-|   <K_ACTION:   "ACTION">
-|   <K_SET:      "SET">
-|   <K_CASCADE:  "CASCADE">
-|   <K_ALTER:    "ALTER">
-|   <K_ADD:      "ADD">
-|   <K_CONSTRAINT:"CONSTRAINT">
-|   <K_IN:       "IN">
-|   <K_OR:       "OR">
-|   <K_AND:      "AND">
-|   <K_LIKE:     "LIKE">
-|   <K_BETWEEN:  "BETWEEN">
-|   <K_IS:       "IS">
-|   <K_SELECT:   "SELECT">
-|   <K_DISTINCT: "DISTINCT">
-|   <K_FROM:     "FROM">
-|   <K_INNER:    "INNER">
-|   <K_LEFT:     "LEFT">
-|   <K_RIGHT:    "RIGHT">
-|   <K_FULL:     "FULL">
-|   <K_JOIN:     "JOIN">
-|   <K_WHERE:    "WHERE">
+|   <K_ON:         "ON">
+|   <K_UPDATE:     "UPDATE">
+|   <K_DELETE:     "DELETE">
+|   <K_NO:         "NO">
+|   <K_ACTION:     "ACTION">
+|   <K_SET:        "SET">
+|   <K_CASCADE:    "CASCADE">
+|   <K_ALTER:      "ALTER">
+|   <K_ADD:        "ADD">
+|   <K_CONSTRAINT: "CONSTRAINT">
+|   <K_IN:         "IN">
+|   <K_OR:         "OR">
+|   <K_AND:        "AND">
+|   <K_LIKE:       "LIKE">
+|   <K_BETWEEN:    "BETWEEN">
+|   <K_IS:         "IS">
+|   <K_SELECT:     "SELECT">
+|   <K_DISTINCT:   "DISTINCT">
+|   <K_FROM:       "FROM">
+|   <K_INNER:      "INNER">
+|   <K_LEFT:       "LEFT">
+|   <K_RIGHT:      "RIGHT">
+|   <K_FULL:       "FULL">
+|   <K_JOIN:       "JOIN">
+|   <K_WHERE:      "WHERE">
 }
 
 TOKEN: /* Datatypes */
 {
    <K_INT:       "INT">
 |  <K_REAL:      "REAL">
-|  <K_NVARCHAR:  "NVARCHAR">
-|  <K_IMAGE:     "IMAGE">
+|  <K_VARCHAR:  "VARCHAR">
+|  <K_BLOB:     "BLOB">
 |  <K_DATETIME:  "DATETIME">
 |  <K_BIT:       "BIT">
 }
@@ -188,12 +189,17 @@ void columnDefinition(Table table):
     |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;} 
 	       nullable = nullable() 
 		  [<K_DEFAULT> ["-" {negative = true;}] (t = <S_INTEGER> | t = <S_DOUBLE>)])
-    |  (<K_NVARCHAR> {column = new StringColumn(table, t.toString()); t = null; } 
-	          ["("  (length = <S_INTEGER> | length = <K_MAX>) ")"]  
+    |  (<K_VARCHAR> {column = new StringColumn(table, t.toString()); t = null; } 
+	          ["("  (length = <S_INTEGER> /* | length = <K_MAX>*/) ")"]  
 			  {((StringColumn) column).setLength(length.toString());}
 	       nullable = nullable() 
 		  [<K_DEFAULT> t = <S_CHAR_LITERAL>])
-    |  (<K_IMAGE>     {column = new BinaryColumn(table, t.toString()); t = null;} 
+    |  (<K_TEXT> {column = new StringColumn(table, t.toString()); 
+	              ((StringColumn) column).setLength("MAX");
+				  t = null;} 
+	       nullable = nullable() 
+		  [<K_DEFAULT> t = <S_CHAR_LITERAL>])
+    |  (<K_BLOB>     {column = new BinaryColumn(table, t.toString()); t = null;} 
 	       nullable = nullable()
 		  [<K_DEFAULT> t = <S_BINARY_LITERAL>])
     |  (<K_DATETIME>  {column = new DateTimeColumn(table, t.toString()); t = null;} 

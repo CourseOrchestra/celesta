@@ -174,7 +174,7 @@ public final class DBSchema2Celesta {
 	private static void updateFK(Element fk, Table t) throws ParseException {
 		String toSchema = fk.getAttribute("to_schema");
 		String toTable = fk.getAttribute("to_table");
-		
+
 		Table referencedTable = t.getGrain().getScore().getGrain(toSchema)
 				.getTable(toTable);
 
@@ -272,12 +272,12 @@ public final class DBSchema2Celesta {
 				ic.setNullableAndDefault(isNullable, defaultVal);
 			}
 			ic.setCelestaDoc(celestaDoc);
-		} else if (StringColumn.CELESTA_TYPE.equals(celestaType)) {
+		} else if (StringColumn.VARCHAR.equals(celestaType)) {
 			StringColumn sc = new StringColumn(t, columnName);
 			sc.setLength(column.getAttribute("length"));
 			sc.setNullableAndDefault(isNullable, defaultVal);
 			sc.setCelestaDoc(celestaDoc);
-		} else if ((StringColumn.CELESTA_TYPE + "(MAX)").equals(celestaType)) {
+		} else if ((StringColumn.TEXT).equals(celestaType)) {
 			StringColumn sc = new StringColumn(t, columnName);
 			sc.setLength("MAX");
 			sc.setNullableAndDefault(isNullable, defaultVal);

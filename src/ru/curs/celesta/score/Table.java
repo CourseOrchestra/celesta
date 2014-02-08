@@ -159,7 +159,7 @@ public final class Table extends GrainElement {
 		if (c instanceof StringColumn && ((StringColumn) c).isMax())
 			throw new ParseException(
 					String.format(
-							"Column '%s' is of nvarchar(max) type and therefore "
+							"Column '%s' is of varchar(max) type and therefore "
 									+ "it cannot a part of a primary key in table '%s'.",
 							name, getName()));
 

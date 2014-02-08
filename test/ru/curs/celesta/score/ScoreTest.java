@@ -6,8 +6,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 
 import org.junit.Test;
 
@@ -246,6 +250,42 @@ public class ScoreTest {
 		assertEquals(2, nv.getColumns().size());
 		assertEquals(2, g1.getViews().size());
 		assertTrue(g1.isModified());
+
+	}
+
+	@Test
+	public void saveTest() throws ParseException, CelestaException, IOException {
+
+		Score s = new Score("testScore");
+		Grain g = s.getGrain("gtest");
+		Table t = g.getTable("test");
+		StringWriter sw = new StringWriter();
+
+		BufferedWriter bw = new BufferedWriter(sw);
+		t.save(bw);
+		bw.flush();
+		// System.out.println(sw);
+
+		String[] actual = sw.toString().split("\r?\n");
+		// for (String l : actual)
+		// System.out.println(l);
+		BufferedReader r = new BufferedReader(new InputStreamReader(
+				ScoreTest.class.getResourceAsStream("expectedsave.sql"),
+				"utf-8"));
+		for (String l : actual)
+			assertEquals(r.readLine(), l);
+
+		assertEquals("VARCHAR", t.getColumn("attrVarchar").getCelestaType());
+		assertEquals("INT", t.getColumn("attrInt").getCelestaType());
+		assertEquals("BIT", t.getColumn("f1").getCelestaType());
+		assertEquals("REAL", t.getColumn("f5").getCelestaType());
+		assertEquals("TEXT", t.getColumn("f6").getCelestaType());
+		assertEquals("DATETIME", t.getColumn("f8").getCelestaType());
+		assertEquals("BLOB", t.getColumn("f10").getCelestaType());
+		
+		
+		
+		// TODO запись в поток CelestaSQL таблицы gtest.test!!!
 
 	}
 }

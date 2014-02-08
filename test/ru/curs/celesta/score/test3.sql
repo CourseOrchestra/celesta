@@ -2,20 +2,20 @@ CREATE GRAIN BC VERSION '0.1';
 
 CREATE TABLE element_type ( 
 	id                   int NOT NULL IDENTITY,
-	name                 nvarchar( 250 ) NOT NULL DEFAULT '',
+	name                 varchar( 250 ) NOT NULL DEFAULT '',
 	is_human             bit NOT NULL  DEFAULT 0,
 	 PRIMARY KEY ( id )
  );
 
 CREATE TABLE position ( 
 	id                   int NOT NULL IDENTITY,
-	name                 nvarchar( 250 ) NOT NULL DEFAULT '',
+	name                 varchar( 250 ) NOT NULL DEFAULT '',
 	 PRIMARY KEY ( id )
  );
 
 CREATE TABLE structure_elements ( 
 	id                   int NOT NULL IDENTITY,
-	bkey                 nvarchar( 32 ) NOT NULL DEFAULT '',
+	bkey                 varchar( 32 ) NOT NULL DEFAULT '',
 	structure_type       int NOT NULL  DEFAULT 0,
 	create_date          datetime NOT NULL DEFAULT GETDATE(),
     modify_date          datetime NOT NULL DEFAULT GETDATE(),
@@ -49,11 +49,11 @@ CREATE TABLE calendar (
 	day                  int NOT NULL default 0,
 	dayOfYear            int NOT NULL default 0,
 	isWorkday            bit NOT NULL default 0,
-	monthName            nvarchar( 255 ) NOT NULL default '',
+	monthName            varchar( 255 ) NOT NULL default '',
 	monthNumber          int NOT NULL default 0,
 	quarter              int ,
 	week                 int NOT NULL default 0,
-	weekdayName          nvarchar( 255 ) NOT NULL default '',
+	weekdayName          varchar( 255 ) NOT NULL default '',
 	weekdayNumber        int NOT NULL default 0,
 	year                 int NOT NULL default 0,
 	 PRIMARY KEY ( date )
@@ -61,7 +61,7 @@ CREATE TABLE calendar (
 
 CREATE TABLE groupmaillist ( 
 	id                   int NOT NULL default 0,
-	name                 nvarchar( 255 ),
+	name                 varchar( 255 ),
 	 PRIMARY KEY ( id )
  );
 
@@ -80,11 +80,11 @@ CREATE TABLE employee_positions (
  );
 
 CREATE TABLE sc_user ( 
-	sid                  nvarchar( 255 ) NOT NULL default '',
+	sid                  varchar( 255 ) NOT NULL default '',
 	employeeid           int NOT NULL default 0,
-	userlogin            nvarchar( 255 ),
-	fullname             nvarchar( 250 ),
-	email                nvarchar( 50 ),
+	userlogin            varchar( 255 ),
+	fullname             varchar( 250 ),
+	email                varchar( 50 ),
 	 PRIMARY KEY ( sid )
  );
 
@@ -93,11 +93,11 @@ CREATE INDEX ix_employee_login ON sc_user ( employeeid );
 CREATE TABLE structure_characteristics ( 
 	structureid          int NOT NULL default 0,
 	from_date            datetime NOT NULL default getdate(),
-	fullname             nvarchar( 250 ) NOT NULL default '',
-	email                nvarchar( 50 ),
-	note                 nvarchar( 50 ),
-	info_binary          image,
-	info_image           image,
+	fullname             varchar( 250 ) NOT NULL default '',
+	email                varchar( 50 ),
+	note                 varchar( 50 ),
+	info_binary          blob,
+	info_image           blob,
 	to_date              datetime,
 	 PRIMARY KEY ( structureid, from_date )
  );
@@ -106,40 +106,40 @@ CREATE INDEX ix_structure_fullname ON structure_characteristics ( fullname );
 
 CREATE TABLE structure_element_errors_log ( 
 	element_id           int NOT NULL default 0,
-	errormessage         nvarchar( 255 ),
+	errormessage         varchar( 255 ),
 	import_row_id        int NOT NULL default 0,
 	primary key (import_row_id, element_id)
  );
  
  CREATE TABLE structure_import_errors_log ( 
 	id                   int NOT NULL IDENTITY,
-	errormessage         nvarchar( 255 ),
-	file_name            nvarchar( 2000 ) NOT NULL default '',
+	errormessage         varchar( 255 ),
+	file_name            varchar( 2000 ) NOT NULL default '',
 	import_date          datetime,
 	 PRIMARY KEY ( id )
  );
 
 CREATE TABLE mailmessages(
-	inboxid nvarchar(50) NOT NULL default '',
-	msgid nvarchar(300) NOT NULL default '',
-	sender nvarchar(200),
-	subject nvarchar(max),
-	body nvarchar(max),
+	inboxid varchar(50) NOT NULL default '',
+	msgid varchar(300) NOT NULL default '',
+	sender varchar(200),
+	subject text,
+	body text,
      PRIMARY KEY (inboxid, msgid)
 );
 
 CREATE TABLE mailattachments(
-   inboxid nvarchar(50) NOT NULL default '',
-   msgid nvarchar(300) NOT NULL default '',
+   inboxid varchar(50) NOT NULL default '',
+   msgid varchar(300) NOT NULL default '',
    attachno int NOT NULL default 0,
-   attachname nvarchar(400),
-   attachbody image,
+   attachname varchar(400),
+   attachbody blob,
     PRIMARY KEY (inboxid, msgid, attachno)
 );
 
 CREATE TABLE mail_spam(
 	id int  NOT NULL IDENTITY,
-	spamlist nvarchar(max) NULL,
+	spamlist text NULL,
   PRIMARY KEY 
 (
 	id 

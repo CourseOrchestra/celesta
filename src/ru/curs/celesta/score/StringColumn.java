@@ -11,7 +11,8 @@ public final class StringColumn extends Column {
 	/**
 	 * Celesta-тип данных колонки.
 	 */
-	public static final String CELESTA_TYPE = "NVARCHAR";
+	public static final String VARCHAR = "VARCHAR";
+	public static final String TEXT = "TEXT";
 
 	private static final String INVALID_QUOTED_FORMAT = "Invalid quoted string format.";
 
@@ -152,13 +153,14 @@ public final class StringColumn extends Column {
 	@Override
 	void save(BufferedWriter bw) throws IOException {
 		super.save(bw);
-		bw.write(" NVARCHAR(");
 		if (isMax())
-			bw.write("MAX");
+			bw.write(" TEXT");
 		else {
+			bw.write(" VARCHAR(");
 			bw.write(Integer.toString(getLength()));
+			bw.write(")");
 		}
-		bw.write(")");
+
 		if (!isNullable())
 			bw.write(" NOT NULL");
 		String defaultVal = getDefaultValue();
@@ -170,7 +172,7 @@ public final class StringColumn extends Column {
 
 	@Override
 	public String getCelestaType() {
-		return CELESTA_TYPE;
+		return max ? TEXT : VARCHAR;
 	}
 
 	@Override

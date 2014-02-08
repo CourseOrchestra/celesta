@@ -7,9 +7,9 @@ CREATE TABLE table1(
   column1 INT NOT NULL IDENTITY,
   column2 REAL NOT NULL DEFAULT -12323.2,
   c3 BIT NOT NULL DEFAULT 'FALSE',
-  aaa NVARCHAR(23) NOT NULL DEFAULT 'testtes''ttest',
-  bbb NVARCHAR(MAX),
-  ccc IMAGE,
+  aaa VARCHAR(23) NOT NULL DEFAULT 'testtes''ttest',
+  bbb TEXT,
+  ccc BLOB,
   e INT DEFAULT -112,
   f REAL,
   f1 INT DEFAULT 4,
@@ -24,17 +24,17 @@ CREATE TABLE table2(
   /**описание второй колонки*/
   column2 DATETIME DEFAULT '20111231',
   column3 DATETIME NOT NULL DEFAULT GETDATE(),
-  column4 IMAGE DEFAULT 0x22AB15FF,
+  column4 BLOB DEFAULT 0x22AB15FF,
   column5 INT DEFAULT 11,
   CONSTRAINT pk_table2 PRIMARY KEY (column1)
 );
 
 CREATE TABLE employees(
-  emp_id NVARCHAR(11) NOT NULL DEFAULT 'aaa',
-  emp_lname NVARCHAR(40) NOT NULL DEFAULT 'bbb',
-  emp_fname NVARCHAR(MAX),
+  emp_id VARCHAR(11) NOT NULL DEFAULT 'aaa',
+  emp_lname VARCHAR(40) NOT NULL DEFAULT 'bbb',
+  emp_fname TEXT,
   emp_hire_date DATETIME DEFAULT GETDATE(),
-  emp_mgr NVARCHAR(30),
+  emp_mgr VARCHAR(30),
   CONSTRAINT pk_employees PRIMARY KEY (emp_id)
 );
 

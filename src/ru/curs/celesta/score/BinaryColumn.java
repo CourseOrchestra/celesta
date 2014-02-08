@@ -12,7 +12,7 @@ public final class BinaryColumn extends Column {
 	/**
 	 * Celesta-тип данных колонки.
 	 */
-	public static final String CELESTA_TYPE = "IMAGE";
+	public static final String CELESTA_TYPE = "BLOB";
 	private String defaultvalue;
 
 	public BinaryColumn(Table table, String name) throws ParseException {
@@ -42,7 +42,7 @@ public final class BinaryColumn extends Column {
 	@Override
 	void save(BufferedWriter bw) throws IOException {
 		super.save(bw);
-		bw.write(" IMAGE");
+		bw.write(" BLOB");
 		if (!isNullable())
 			bw.write(" NOT NULL");
 		String defaultVal = getDefaultValue();

@@ -36,7 +36,7 @@ public class CelestaParser implements CelestaParserConstants {
       "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
     t = jj_consume_token(S_CHAR_LITERAL);
                          g.setVersion(t.toString());
-    jj_consume_token(62);
+    jj_consume_token(63);
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -87,7 +87,7 @@ public class CelestaParser implements CelestaParserConstants {
         jj_consume_token(-1);
         throw new ParseException();
       }
-      jj_consume_token(62);
+      jj_consume_token(63);
     }
     jj_consume_token(0);
    g.completeParsing();
@@ -102,22 +102,22 @@ public class CelestaParser implements CelestaParserConstants {
     tableName = jj_consume_token(S_IDENTIFIER);
                                     table = new Table(g, tableName.toString());
                                     table.setCelestaDocLexem(doc);
-    jj_consume_token(63);
+    jj_consume_token(64);
     tableConstituent(table);
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 64:
+      case 65:
         ;
         break;
       default:
         jj_la1[5] = jj_gen;
         break label_2;
       }
-      jj_consume_token(64);
+      jj_consume_token(65);
       tableConstituent(table);
     }
-    jj_consume_token(65);
+    jj_consume_token(66);
           table.finalizePK();
   }
 
@@ -186,8 +186,8 @@ public class CelestaParser implements CelestaParserConstants {
         case K_DEFAULT:
           jj_consume_token(K_DEFAULT);
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 66:
-            jj_consume_token(66);
+          case 67:
+            jj_consume_token(67);
                                                          negative = true;
             break;
           default:
@@ -228,8 +228,8 @@ public class CelestaParser implements CelestaParserConstants {
       case K_DEFAULT:
         jj_consume_token(K_DEFAULT);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 66:
-          jj_consume_token(66);
+        case 67:
+          jj_consume_token(67);
                                      negative = true;
           break;
         default:
@@ -254,31 +254,36 @@ public class CelestaParser implements CelestaParserConstants {
         ;
       }
       break;
-    case K_NVARCHAR:
-      jj_consume_token(K_NVARCHAR);
-                      column = new StringColumn(table, t.toString()); t = null;
+    case K_VARCHAR:
+      jj_consume_token(K_VARCHAR);
+                     column = new StringColumn(table, t.toString()); t = null;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 63:
-        jj_consume_token(63);
-        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case S_INTEGER:
-          length = jj_consume_token(S_INTEGER);
-          break;
-        case K_MAX:
-          length = jj_consume_token(K_MAX);
-          break;
-        default:
-          jj_la1[16] = jj_gen;
-          jj_consume_token(-1);
-          throw new ParseException();
-        }
-        jj_consume_token(65);
+      case 64:
+        jj_consume_token(64);
+        length = jj_consume_token(S_INTEGER);
+        jj_consume_token(66);
+        break;
+      default:
+        jj_la1[16] = jj_gen;
+        ;
+      }
+                           ((StringColumn) column).setLength(length.toString());
+      nullable = nullable();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case K_DEFAULT:
+        jj_consume_token(K_DEFAULT);
+        t = jj_consume_token(S_CHAR_LITERAL);
         break;
       default:
         jj_la1[17] = jj_gen;
         ;
       }
-                           ((StringColumn) column).setLength(length.toString());
+      break;
+    case K_TEXT:
+      jj_consume_token(K_TEXT);
+                  column = new StringColumn(table, t.toString());
+                      ((StringColumn) column).setLength("MAX");
+                                  t = null;
       nullable = nullable();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_DEFAULT:
@@ -290,9 +295,9 @@ public class CelestaParser implements CelestaParserConstants {
         ;
       }
       break;
-    case K_IMAGE:
-      jj_consume_token(K_IMAGE);
-                       column = new BinaryColumn(table, t.toString()); t = null;
+    case K_BLOB:
+      jj_consume_token(K_BLOB);
+                      column = new BinaryColumn(table, t.toString()); t = null;
       nullable = nullable();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_DEFAULT:
@@ -317,8 +322,8 @@ public class CelestaParser implements CelestaParserConstants {
           break;
         case K_GETDATE:
           t = jj_consume_token(K_GETDATE);
-          jj_consume_token(63);
-          jj_consume_token(65);
+          jj_consume_token(64);
+          jj_consume_token(66);
           break;
         default:
           jj_la1[20] = jj_gen;
@@ -425,24 +430,24 @@ public class CelestaParser implements CelestaParserConstants {
                               Token t;
     jj_consume_token(K_PRIMARY);
     jj_consume_token(K_KEY);
-    jj_consume_token(63);
+    jj_consume_token(64);
     t = jj_consume_token(S_IDENTIFIER);
                                               table.addPK(t.toString());
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 64:
+      case 65:
         ;
         break;
       default:
         jj_la1[29] = jj_gen;
         break label_3;
       }
-      jj_consume_token(64);
+      jj_consume_token(65);
       t = jj_consume_token(S_IDENTIFIER);
                                               table.addPK(t.toString());
     }
-    jj_consume_token(65);
+    jj_consume_token(66);
     table.finalizePK();
   }
 
@@ -452,24 +457,24 @@ public class CelestaParser implements CelestaParserConstants {
     jj_consume_token(K_FOREIGN);
     jj_consume_token(K_KEY);
                      fk = new ForeignKey(table);
-    jj_consume_token(63);
+    jj_consume_token(64);
     t = jj_consume_token(S_IDENTIFIER);
                            fk.addColumn(t.toString());
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 64:
+      case 65:
         ;
         break;
       default:
         jj_la1[30] = jj_gen;
         break label_4;
       }
-      jj_consume_token(64);
+      jj_consume_token(65);
       t = jj_consume_token(S_IDENTIFIER);
                            fk.addColumn(t.toString());
     }
-    jj_consume_token(65);
+    jj_consume_token(66);
     references(fk);
   {if (true) return fk;}
     throw new Error("Missing return statement in function");
@@ -482,8 +487,8 @@ public class CelestaParser implements CelestaParserConstants {
     jj_consume_token(K_REFERENCES);
     t = jj_consume_token(S_IDENTIFIER);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 67:
-      jj_consume_token(67);
+    case 68:
+      jj_consume_token(68);
       t2 = jj_consume_token(S_IDENTIFIER);
       break;
     default:
@@ -494,24 +499,24 @@ public class CelestaParser implements CelestaParserConstants {
       fk.setReferencedTable("", t.toString());
         else
           fk.setReferencedTable(t.toString(), t2.toString());
-    jj_consume_token(63);
+    jj_consume_token(64);
     t = jj_consume_token(S_IDENTIFIER);
                           fk.addReferencedColumn(t.toString());
     label_5:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 64:
+      case 65:
         ;
         break;
       default:
         jj_la1[32] = jj_gen;
         break label_5;
       }
-      jj_consume_token(64);
+      jj_consume_token(65);
       t = jj_consume_token(S_IDENTIFIER);
                            fk.addReferencedColumn(t.toString());
     }
-    jj_consume_token(65);
+    jj_consume_token(66);
  fk.finalizeReference();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_ON:
@@ -598,24 +603,24 @@ Index ind;
     tableName = jj_consume_token(S_IDENTIFIER);
     ind = new Index(g, tableName.toString(), indexName.toString());
     ind.setCelestaDocLexem(doc);
-    jj_consume_token(63);
+    jj_consume_token(64);
     columnName = jj_consume_token(S_IDENTIFIER);
                                     ind.addColumn(columnName.toString());
     label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 64:
+      case 65:
         ;
         break;
       default:
         jj_la1[38] = jj_gen;
         break label_6;
       }
-      jj_consume_token(64);
+      jj_consume_token(65);
       columnName = jj_consume_token(S_IDENTIFIER);
                                                                                                             ind.addColumn(columnName.toString());
     }
-    jj_consume_token(65);
+    jj_consume_token(66);
     ind.finalizeIndex();
   }
 
@@ -740,37 +745,37 @@ else {
     case K_LIKE:
     case K_BETWEEN:
     case K_IS:
-    case 68:
     case 69:
     case 70:
+    case 71:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 68:
       case 69:
       case 70:
+      case 71:
         relop = relop();
         buf1 = sqlTermExpr(v);
                                                                           result = new Relop(v, result, buf1, relop);
         break;
       case K_IN:
         jj_consume_token(K_IN);
-        jj_consume_token(63);
+        jj_consume_token(64);
         buf1 = sqlTermExpr(v);
                                            operands.add(buf1);
         label_9:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 64:
+          case 65:
             ;
             break;
           default:
             jj_la1[43] = jj_gen;
             break label_9;
           }
-          jj_consume_token(64);
+          jj_consume_token(65);
           buf1 = sqlTermExpr(v);
                                                                                             operands.add(buf1);
         }
-        jj_consume_token(65);
+        jj_consume_token(66);
                                                                              result = new In(v, result, operands);
         break;
       case K_BETWEEN:
@@ -807,16 +812,16 @@ else {
   final public int relop() throws ParseException {
  int result;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 68:
-      jj_consume_token(68);
-         result = Relop.EQ;
-      break;
     case 69:
       jj_consume_token(69);
+         result = Relop.EQ;
+      break;
+    case 70:
+      jj_consume_token(70);
          result = Relop.GT;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 68:
-        jj_consume_token(68);
+      case 69:
+        jj_consume_token(69);
                                    result = Relop.GTEQ;
         break;
       default:
@@ -824,19 +829,19 @@ else {
         ;
       }
       break;
-    case 70:
-      jj_consume_token(70);
+    case 71:
+      jj_consume_token(71);
          result = Relop.LS;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 68:
       case 69:
+      case 70:
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 68:
-          jj_consume_token(68);
-                                   result = Relop.LSEQ;
-          break;
         case 69:
           jj_consume_token(69);
+                                   result = Relop.LSEQ;
+          break;
+        case 70:
+          jj_consume_token(70);
                                                                 result = Relop.NTEQ;
           break;
         default:
@@ -868,9 +873,9 @@ else {
     label_10:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 66:
-      case 71:
+      case 67:
       case 72:
+      case 73:
         ;
         break;
       default:
@@ -878,16 +883,16 @@ else {
         break label_10;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 71:
-        jj_consume_token(71);
-                                                                             operator = BinaryTermOp.PLUS;
-        break;
-      case 66:
-        jj_consume_token(66);
-                                                                                operator = BinaryTermOp.MINUS;
-        break;
       case 72:
         jj_consume_token(72);
+                                                                             operator = BinaryTermOp.PLUS;
+        break;
+      case 67:
+        jj_consume_token(67);
+                                                                                operator = BinaryTermOp.MINUS;
+        break;
+      case 73:
+        jj_consume_token(73);
                                                                                                                                                 operator = BinaryTermOp.CONCAT;
         break;
       default:
@@ -911,8 +916,8 @@ else {
     label_11:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 73:
       case 74:
+      case 75:
         ;
         break;
       default:
@@ -920,12 +925,12 @@ else {
         break label_11;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 73:
-        jj_consume_token(73);
-                                                                    operator = BinaryTermOp.TIMES;
-        break;
       case 74:
         jj_consume_token(74);
+                                                                    operator = BinaryTermOp.TIMES;
+        break;
+      case 75:
+        jj_consume_token(75);
                                                                                                            operator = BinaryTermOp.OVER;
         break;
       default:
@@ -944,8 +949,8 @@ else {
  Expr result;
 boolean isMinus = false;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 66:
-      jj_consume_token(66);
+    case 67:
+      jj_consume_token(67);
           isMinus = true;
       break;
     default:
@@ -973,10 +978,10 @@ Token t = null;
       t = jj_consume_token(S_CHAR_LITERAL);
                               result = new TextLiteral(v, t.toString());
       break;
-    case 63:
-      jj_consume_token(63);
+    case 64:
+      jj_consume_token(64);
       result = sqlExpression(v);
-      jj_consume_token(65);
+      jj_consume_token(66);
                                          result = new ParenthesizedExpr(v, result);
       break;
     case S_IDENTIFIER:
@@ -998,8 +1003,8 @@ Token t = null;
     t = jj_consume_token(S_IDENTIFIER);
                       fieldName = t.toString();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 67:
-      jj_consume_token(67);
+    case 68:
+      jj_consume_token(68);
       t = jj_consume_token(S_IDENTIFIER);
                            tableName = fieldName; fieldName = t.toString();
       break;
@@ -1027,14 +1032,14 @@ Token t = null;
     label_12:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 64:
+      case 65:
         ;
         break;
       default:
         jj_la1[58] = jj_gen;
         break label_12;
       }
-      jj_consume_token(64);
+      jj_consume_token(65);
       selectItem(v);
     }
     jj_consume_token(K_FROM);
@@ -1087,8 +1092,8 @@ Token t = null;
     t = jj_consume_token(S_IDENTIFIER);
                       tableName = t.toString(); alias = tableName;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 67:
-      jj_consume_token(67);
+    case 68:
+      jj_consume_token(68);
       t = jj_consume_token(S_IDENTIFIER);
                                grainName = tableName; tableName = t.toString(); alias = tableName;
       break;
@@ -1195,13 +1200,13 @@ Token t = null;
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x0,0x8000020,0x0,0x1c0,0x8000020,0x0,0x30000,0x20030000,0x0,0x0,0x800,0x4400,0x4400,0x0,0x0,0x400,0x2000,0x0,0x400,0x400,0x8000,0x400,0x0,0x400,0x0,0x10000,0x20000,0x1800,0x1800,0x0,0x0,0x0,0x0,0x100000,0x100000,0x600000,0x100000,0x6800000,0x0,0x20000000,0x80000000,0x0,0x800,0x0,0x40000000,0x40000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x200,0x0,0x0,0x200,0x0,0x0,0x0,};
+      jj_la1_0 = new int[] {0x0,0x10000020,0x0,0x1c0,0x10000020,0x0,0x60000,0x40060000,0x0,0x0,0x800,0x8400,0x8400,0x0,0x0,0x400,0x0,0x400,0x400,0x400,0x10000,0x400,0x0,0x400,0x4000,0x20000,0x40000,0x1800,0x1800,0x0,0x0,0x0,0x0,0x200000,0x200000,0xc00000,0x200000,0xd000000,0x0,0x40000000,0x0,0x0,0x800,0x0,0x80000000,0x80000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x200,0x0,0x0,0x200,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x8000000,0x8000000,0x8000000,0x0,0x8000000,0x0,0x0,0x8800000,0x8000000,0x0,0x0,0x0,0x0,0x0,0x180000,0x0,0x100000,0x80000000,0x0,0x0,0x2000000,0x0,0x2100000,0x0,0x7e000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0xe,0xe,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x82980000,0x0,0x20,0x0,0x1000,0x0,0x800000,0x0,0x0,0x800000,0x380,0x380,};
+      jj_la1_1 = new int[] {0x10000000,0x10000000,0x10000000,0x0,0x10000000,0x0,0x0,0x11000000,0x10000000,0x0,0x0,0x0,0x0,0x0,0x300000,0x0,0x0,0x0,0x0,0x0,0x4000000,0x0,0x4200000,0x0,0xfc000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x2,0x0,0x0,0x1c,0x1c,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x5300000,0x0,0x40,0x0,0x2000,0x0,0x1000000,0x0,0x0,0x1000000,0x700,0x700,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x4,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x1,0x8,0x1,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x1,0x70,0x70,0x10,0x30,0x30,0x70,0x184,0x184,0x600,0x600,0x4,0x0,0x8,0x0,0x1,0x0,0x0,0x0,0x8,0x0,0x0,0x0,0x0,};
+      jj_la1_2 = new int[] {0x0,0x0,0x0,0x0,0x0,0x2,0x0,0x0,0x0,0x8,0x0,0x0,0x0,0x8,0x0,0x0,0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x2,0x2,0x10,0x2,0x0,0x0,0x0,0x0,0x0,0x2,0x0,0x0,0x0,0x0,0x2,0xe0,0xe0,0x20,0x60,0x60,0xe0,0x308,0x308,0xc00,0xc00,0x8,0x1,0x10,0x0,0x2,0x0,0x0,0x0,0x10,0x0,0x0,0x0,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -1318,7 +1323,7 @@ Token t = null;
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[75];
+    boolean[] la1tokens = new boolean[76];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -1338,7 +1343,7 @@ Token t = null;
         }
       }
     }
-    for (int i = 0; i < 75; i++) {
+    for (int i = 0; i < 76; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

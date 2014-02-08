@@ -283,7 +283,7 @@ public abstract class AbstractAdaptorTest {
 		assertNull(c);
 
 		// Этот тест проверяет типы колонок и выражения not null
-		// attrVarchar nvarchar(2),
+		// attrVarchar varchar(2),
 		c = dba.getColumnInfo(conn, t.getColumn("attrVarchar"));
 		assertEquals("attrVarchar", c.getName());
 		assertSame(StringColumn.class, c.getType());
@@ -313,7 +313,7 @@ public abstract class AbstractAdaptorTest {
 		assertEquals(false, c.isMax());
 		assertEquals(false, c.isIdentity());
 
-		// f7 nvarchar(8),
+		// f7 varchar(8),
 		c = dba.getColumnInfo(conn, t.getColumn("f7"));
 		assertEquals("f7", c.getName());
 		assertSame(StringColumn.class, c.getType());
@@ -379,7 +379,7 @@ public abstract class AbstractAdaptorTest {
 		assertEquals(false, c.isMax());
 		assertEquals(false, c.isIdentity());
 
-		// f6 nvarchar(max) not null default 'abc',
+		// f6 varchar(max) not null default 'abc',
 		c = dba.getColumnInfo(conn, t.getColumn("f6"));
 		assertEquals("f6", c.getName());
 		assertSame(StringColumn.class, c.getType());
@@ -449,7 +449,7 @@ public abstract class AbstractAdaptorTest {
 		c = dba.getColumnInfo(conn, col);
 		assertEquals("", c.getDefaultValue());
 
-		// f6 nvarchar(max) not null default 'abc',
+		// f6 varchar(max) not null default 'abc',
 		col = t.getColumn("f6");
 		c = dba.getColumnInfo(conn, col);
 		assertEquals("f6", c.getName());
@@ -657,7 +657,7 @@ public abstract class AbstractAdaptorTest {
 		assertEquals(false, c.isIdentity());
 
 		t.getGrain().getIndices().get("idxTest").delete();
-		// int --> nvarchar
+		// int --> varchar
 		col.delete();
 		scol = new StringColumn(t, "attrInt");
 		scol.setLength("40");
@@ -670,7 +670,7 @@ public abstract class AbstractAdaptorTest {
 		assertEquals("'русские буквы'", c.getDefaultValue());
 		assertEquals(40, c.getLength());
 
-		// nvarchar --> int
+		// varchar --> int
 		scol.delete();
 		col = new IntegerColumn(t, "attrInt");
 		col.setNullableAndDefault(true, "5");

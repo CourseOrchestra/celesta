@@ -7,9 +7,9 @@ CREATE TABLE table1 --single-line comment русские буквы
   column2  REAL NOT NULL DEFAULT -12323.2,
   c3       BIT NOT NULL DEFAULT 'FALSE',
   PRIMARY KEY (column1, c3, column2),
-  aaa      NVARCHAR(23) NOT NULL DEFAULT 'testtes''ttest',
-  bbb      NVARCHAR(MAX),
-  ccc      IMAGE NULL,
+  aaa      VARCHAR(23) NOT NULL DEFAULT 'testtes''ttest',
+  bbb      TEXT,
+  ccc      BLOB NULL,
   e        INT DEFAULT -112,
   f        REAL,
   f1       INT DEFAULT 4,
@@ -28,7 +28,7 @@ CREATE TABLE table2(
 	/**описание второй колонки*/
 	column2 DATETIME DEFAULT '20111231',
 	column3 DATETIME NOT NULL DEFAULT GETDATE(),
-	column4 IMAGE DEFAULT 0x22AB15FF,
+	column4 BLOB DEFAULT 0x22AB15FF,
 	column5 INT DEFAULT 11
 );
  
@@ -37,11 +37,11 @@ CREATE INDEX idx1 ON  table1 (f, e, c3);
 
 CREATE TABLE employees
 (
- emp_id nvarchar(11) NOT NULL DEFAULT 'aaa' PRIMARY KEY,
- emp_lname nvarchar(40) NOT NULL DEFAULT 'bbb',
- emp_fname nvarchar(MAX),
+ emp_id VARCHAR(11) NOT NULL DEFAULT 'aaa' PRIMARY KEY,
+ emp_lname VARCHAR(40) NOT NULL DEFAULT 'bbb',
+ emp_fname TEXT,
  emp_hire_date datetime DEFAULT GETDATE(),
- emp_mgr nvarchar(30)
+ emp_mgr VARCHAR(30)
 );
 
 CREATE INDEX table2_idx2 ON table2 (column3, column2);
