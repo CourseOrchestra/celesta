@@ -9,8 +9,6 @@ from g1._g1_orm import testviewCursor
 import java.io.OutputStreamWriter as OutputStreamWriter
 import java.io.InputStreamReader as InputStreamReader
 import java.io.BufferedReader as BufferedReader
-import ru.curs.celesta.syscursors.GrainsCursor as GrainsCursor
-import ru.curs.celesta.syscursors.PermissionsCursor as PermissionsCursor
 
 def hello(context, arg):
     print 'Hello, world from Celesta Python procedure.'
@@ -27,6 +25,7 @@ def hello(context, arg):
         osw.append('hello, blob field!')
     finally:
         osw.close()
+    c.longtext = 'Привет, длинное текстовое поле'
     c.insert()
     insertedId = c.idc
     
@@ -35,7 +34,7 @@ def hello(context, arg):
     c.get(insertedId)
     c.calcdat()
     ins = BufferedReader(InputStreamReader(c.dat.getInStream(), 'utf-8'))
-    print ins.readLine()
+    print '%s ... %s' % (ins.readLine(), c.longtext)
 
     os = c.dat.getOutStream()
     osw = OutputStreamWriter(os, 'utf-8')
@@ -49,7 +48,7 @@ def hello(context, arg):
     c.get(insertedId)
     c.calcdat()
     ins = BufferedReader(InputStreamReader(c.dat.getInStream(), 'utf-8'))
-    print ins.readLine()
+    print '%s ... %s' % (ins.readLine(), c.longtext) 
     
     c.dat = None
     c.update()

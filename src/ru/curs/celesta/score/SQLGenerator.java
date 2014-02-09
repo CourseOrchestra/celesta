@@ -2,6 +2,7 @@ package ru.curs.celesta.score;
 
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Класс-генератор SQL-выражений.
@@ -50,18 +51,21 @@ public class SQLGenerator extends ExprVisitor {
 
 	final void visitBinaryTermOp(BinaryTermOp expr) throws ParseException {
 		StringBuilder result = new StringBuilder();
-		String op = expr.getOperator() == BinaryTermOp.CONCAT ? concat()
-				: BinaryTermOp.OPS[expr.getOperator()];
 		LinkedList<String> operands = new LinkedList<>();
 		for (int i = 0; i < expr.getOperands().size(); i++)
 			operands.push(stack.pop());
 
-		boolean needOp = false;
-		for (String operand : operands) {
-			if (needOp)
-				result.append(op);
-			result.append(operand);
-			needOp = true;
+		if (expr.getOperator() == BinaryTermOp.CONCAT) {
+			concat(result, operands);
+		} else {
+			String op = BinaryTermOp.OPS[expr.getOperator()];
+			boolean needOp = false;
+			for (String operand : operands) {
+				if (needOp)
+					result.append(op);
+				result.append(operand);
+				needOp = true;
+			}
 		}
 		stack.push(result.toString());
 	}
@@ -140,6 +144,16 @@ public class SQLGenerator extends ExprVisitor {
 
 	protected String concat() {
 		return " || ";
+	}
+
+	protected void concat(StringBuilder result, List<String> operands) {
+		boolean needOp = false;
+		for (String operand : operands) {
+			if (needOp)
+				result.append(concat());
+			result.append(operand);
+			needOp = true;
+		}
 	}
 
 	protected String preamble(View view) {

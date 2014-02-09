@@ -963,8 +963,16 @@ final class MySQLAdaptor extends DBAdaptor {
 	SQLGenerator getViewSQLGenerator() {
 		return new SQLGenerator() {
 			@Override
-			protected String concat() {
-				return " + ";
+			protected void concat(StringBuilder result, List<String> operands) {
+				result.append("concat(");
+				boolean needOp = false;
+				for (String operand : operands) {
+					if (needOp)
+						result.append(",");
+					result.append(operand);
+					needOp = true;
+				}
+				result.append(")");
 			}
 		};
 	}

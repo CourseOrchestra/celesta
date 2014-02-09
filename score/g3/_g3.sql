@@ -7,6 +7,7 @@ idb int foreign key references g2.b(idb),
 aaa varchar(10),
 bbb int default 3,
 dat blob,
+longtext text,
 test int not null default 0,
 primary key (idc)
 --, test2 int not null

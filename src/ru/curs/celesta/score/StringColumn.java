@@ -9,9 +9,12 @@ import java.io.IOException;
  */
 public final class StringColumn extends Column {
 	/**
-	 * Celesta-тип данных колонки.
+	 * Celesta-тип данных колонки для короткой строки.
 	 */
 	public static final String VARCHAR = "VARCHAR";
+	/**
+	 * Celesta-тип данных колонки для длинной строки.
+	 */
 	public static final String TEXT = "TEXT";
 
 	private static final String INVALID_QUOTED_FORMAT = "Invalid quoted string format.";
