@@ -18,6 +18,7 @@ abstract class NamedElement {
 	private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/");
 	private static final Pattern NAME_PATTERN = Pattern
 			.compile("[a-zA-Z_][0-9a-zA-Z_]*");
+	private static final int MAX_IDENTIFIER_LENGTH = 30;
 
 	private final String name;
 	private final String quotedName;
@@ -33,6 +34,11 @@ abstract class NamedElement {
 		if (!m.matches())
 			throw new ParseException(String.format("Invalid identifier: '%s'.",
 					name));
+		if (name.length() > MAX_IDENTIFIER_LENGTH)
+			throw new ParseException(
+					String.format(
+							"Identifier '%s' is too long. Identifiers in Celesta must be %d characters long or shorter.",
+							name, MAX_IDENTIFIER_LENGTH));
 		this.name = name;
 		this.quotedName = String.format("\"%s\"", name);
 	}
