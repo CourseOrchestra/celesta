@@ -254,8 +254,29 @@ public class ScoreTest {
 	}
 
 	@Test
-	public void saveTest() throws ParseException, CelestaException, IOException {
+	public void setCelestaDoc() throws ParseException, CelestaException {
+		Score s = new Score("testScore");
+		Grain g = s.getGrain("gtest");
+		Table t = g.getTable("test");
+		t.setCelestaDocLexem("/** бла бла бла бла*/");
+		assertEquals(" бла бла бла бла", t.getCelestaDoc());
+		// Была ошибка -- не брал многострочный комментарий
+		t.setCelestaDocLexem("/** бла бла бла\r\n бла*/");
+		assertEquals(" бла бла бла\r\n бла", t.getCelestaDoc());
+		t.setCelestaDocLexem("/**бла\rбла\nбла\r\nбла*/");
+		assertEquals("бла\rбла\nбла\r\nбла", t.getCelestaDoc());
+		boolean itWas = false;
+		try {
+			t.setCelestaDocLexem("/*бла\rбла\nбла\r\nбла*/");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		assertTrue(itWas);
+	}
 
+	@Test
+	public void saveTest() throws ParseException, CelestaException, IOException {
+		// Проверяется функциональность записи динамически изменённых объектов.
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
 		Table t = g.getTable("test");
@@ -282,10 +303,6 @@ public class ScoreTest {
 		assertEquals("TEXT", t.getColumn("f6").getCelestaType());
 		assertEquals("DATETIME", t.getColumn("f8").getCelestaType());
 		assertEquals("BLOB", t.getColumn("f10").getCelestaType());
-		
-		
-		
-		// TODO запись в поток CelestaSQL таблицы gtest.test!!!
 
 	}
 }

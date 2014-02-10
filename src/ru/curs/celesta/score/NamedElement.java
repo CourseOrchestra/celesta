@@ -15,7 +15,8 @@ import java.util.regex.Pattern;
  */
 abstract class NamedElement {
 
-	private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/");
+	private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/",
+			Pattern.DOTALL);
 	private static final Pattern NAME_PATTERN = Pattern
 			.compile("[a-zA-Z_][0-9a-zA-Z_]*");
 	private static final int MAX_IDENTIFIER_LENGTH = 30;
