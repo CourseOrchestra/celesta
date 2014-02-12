@@ -13,8 +13,7 @@ import java.util.Map;
  */
 public class ForeignKey {
 
-	private static final int HASH_MASK = 0xFFFF;
-	private static final int MAX_CONSTRAINT_NAME = 26;
+	private static final int MAX_CONSTRAINT_NAME = 30;
 	private final Table parentTable;
 	private Table referencedTable;
 	private FKRule deleteRule = FKRule.NO_ACTION;
@@ -326,13 +325,15 @@ public class ForeignKey {
 		if (constraintName != null)
 			return constraintName;
 
-		String result = String.format("fk_%s_%s_%s_%s", parentTable.getGrain()
-				.getName(), parentTable.getName(), referencedTable.getGrain()
-				.getName(), referencedTable.getName());
+		String result = String.format("fk_%s_%s_%s_%s_%s", parentTable
+				.getGrain().getName(), parentTable.getName(), referencedTable
+				.getGrain().getName(), referencedTable.getName(), columns
+				.getElements().keySet().iterator().next());
+
 		if (result.length() > MAX_CONSTRAINT_NAME) {
-			result = String.format("%s%04X",
-					result.substring(0, MAX_CONSTRAINT_NAME - 4),
-					result.hashCode() & HASH_MASK);
+			result = String.format("%s%08X",
+					result.substring(0, MAX_CONSTRAINT_NAME - 8),
+					result.hashCode());
 		}
 		// System.out.println(result);
 		return result;

@@ -25,6 +25,16 @@ create table refTo (
   primary key (k1, k2)
 );
 
+create table refTo2(
+ f1 bit not null primary key
+);
+
+create table test2(
+ f1 int identity not null primary key,
+ field2 bit foreign key references refTo2(f1),
+ field3 bit foreign key references refTo2(f1)
+);
+
 alter table test add constraint fk_testName foreign key (attrVarchar, attrInt) references refTo (k1, k2)
  on update cascade on delete set null;
  
