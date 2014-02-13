@@ -144,11 +144,6 @@ public final class StringColumn extends Column {
 	}
 
 	@Override
-	public String pythonDefaultValue() {
-		return "''";
-	}
-
-	@Override
 	public String jdbcGetterName() {
 		return "getString";
 	}

@@ -15,11 +15,15 @@ import java.util.regex.Pattern;
  */
 abstract class NamedElement {
 
+	/**
+	 * Максимальная длина идентификатора Celesta.
+	 */
+	public static final int MAX_IDENTIFIER_LENGTH = 30;
+
 	private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/",
 			Pattern.DOTALL);
 	private static final Pattern NAME_PATTERN = Pattern
 			.compile("[a-zA-Z_][0-9a-zA-Z_]*");
-	private static final int MAX_IDENTIFIER_LENGTH = 30;
 
 	private final String name;
 	private final String quotedName;
@@ -36,12 +40,22 @@ abstract class NamedElement {
 			throw new ParseException(String.format("Invalid identifier: '%s'.",
 					name));
 		if (name.length() > MAX_IDENTIFIER_LENGTH)
-			throw new ParseException(
-					String.format(
-							"Identifier '%s' is too long. Identifiers in Celesta must be %d characters long or shorter.",
-							name, MAX_IDENTIFIER_LENGTH));
+			throw new ParseException(String.format(
+					"Identifier '%s' is longer than %d characters.", name,
+					MAX_IDENTIFIER_LENGTH));
 		this.name = name;
 		this.quotedName = String.format("\"%s\"", name);
+	}
+
+	static String limitName(String value) {
+		String result = value;
+		if (result.length() > NamedElement.MAX_IDENTIFIER_LENGTH) {
+			result = String
+					.format("%s%08X", result.substring(0,
+							NamedElement.MAX_IDENTIFIER_LENGTH - 8), result
+							.hashCode());
+		}
+		return result;
 	}
 
 	/**

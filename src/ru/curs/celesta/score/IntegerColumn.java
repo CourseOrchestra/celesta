@@ -52,11 +52,6 @@ public final class IntegerColumn extends Column {
 	}
 
 	@Override
-	public String pythonDefaultValue() {
-		return "0";
-	}
-
-	@Override
 	public String jdbcGetterName() {
 		return "getInt";
 	}

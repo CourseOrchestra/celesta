@@ -13,7 +13,6 @@ import java.util.Map;
  */
 public class ForeignKey {
 
-	private static final int MAX_CONSTRAINT_NAME = 30;
 	private final Table parentTable;
 	private Table referencedTable;
 	private FKRule deleteRule = FKRule.NO_ACTION;
@@ -330,11 +329,7 @@ public class ForeignKey {
 				.getGrain().getName(), referencedTable.getName(), columns
 				.getElements().keySet().iterator().next());
 
-		if (result.length() > MAX_CONSTRAINT_NAME) {
-			result = String.format("%s%08X",
-					result.substring(0, MAX_CONSTRAINT_NAME - 8),
-					result.hashCode());
-		}
+		result = NamedElement.limitName(result);
 		// System.out.println(result);
 		return result;
 	}
@@ -343,10 +338,10 @@ public class ForeignKey {
 		// This is because Oracle supports only 30-characters-long names
 		// but we need extra 4 characters for trigger prefixes
 		if (constraintName != null
-				&& constraintName.length() > MAX_CONSTRAINT_NAME)
+				&& constraintName.length() > NamedElement.MAX_IDENTIFIER_LENGTH)
 			throw new ParseException(String.format(
 					"Foreign key name '%s' is longer than %d characters.",
-					constraintName, MAX_CONSTRAINT_NAME));
+					constraintName, NamedElement.MAX_IDENTIFIER_LENGTH));
 		this.constraintName = constraintName;
 	}
 

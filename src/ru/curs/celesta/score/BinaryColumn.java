@@ -30,11 +30,6 @@ public final class BinaryColumn extends Column {
 	}
 
 	@Override
-	public String pythonDefaultValue() {
-		return "None";
-	}
-
-	@Override
 	public String jdbcGetterName() {
 		return "getBlob";
 	}

@@ -52,11 +52,6 @@ public final class BooleanColumn extends Column {
 	}
 
 	@Override
-	public String pythonDefaultValue() {
-		return "False";
-	}
-
-	@Override
 	public String jdbcGetterName() {
 		return "getBoolean";
 	}

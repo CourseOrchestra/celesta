@@ -16,8 +16,6 @@ public final class Table extends GrainElement {
 	private static final String YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO = "Table '%s.%s', "
 			+ "field '%s': you cannot drop a column that belongs to ";
 
-	private static final int MAX_CONSTRAINT_NAME = 30;
-
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
 		String getErrorMsg(String name) {
@@ -242,7 +240,8 @@ public final class Table extends GrainElement {
 	 * Возвращает имя ограничения PK (или null, если оно не задано).
 	 */
 	public String getPkConstraintName() {
-		return pkConstraintName == null ? "pk_" + getName() : pkConstraintName;
+		return pkConstraintName == null ? limitName("pk_" + getName())
+				: pkConstraintName;
 	}
 
 	/**
@@ -256,10 +255,10 @@ public final class Table extends GrainElement {
 	public void setPkConstraintName(String pkConstraintName)
 			throws ParseException {
 		if (pkConstraintName != null
-				&& pkConstraintName.length() > MAX_CONSTRAINT_NAME)
+				&& pkConstraintName.length() > MAX_IDENTIFIER_LENGTH)
 			throw new ParseException(String.format(
 					"Primary key name '%s' is longer than %d characters.",
-					pkConstraintName, MAX_CONSTRAINT_NAME));
+					pkConstraintName, MAX_IDENTIFIER_LENGTH));
 		this.pkConstraintName = pkConstraintName;
 	}
 
