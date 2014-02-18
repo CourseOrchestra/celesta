@@ -35,6 +35,7 @@ import ru.curs.celesta.score.View;
  */
 final class MSSQLAdaptor extends DBAdaptor {
 
+	private static final int DOUBLE_PRECISION = 53;
 	private static final String WHERE_S = " where %s;";
 
 	/**
@@ -78,7 +79,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 			@Override
 			String dbFieldType() {
-				return "real";
+				return "float(" + DOUBLE_PRECISION + ")";
 			}
 
 			@Override
@@ -535,6 +536,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 					} else if ("int".equalsIgnoreCase(typeName)) {
 						result.setType(IntegerColumn.class);
 						result.setIdentity(checkForIncrementTrigger(conn, c));
+					} else if ("float".equalsIgnoreCase(typeName)
+							&& rs.getInt("COLUMN_SIZE") == DOUBLE_PRECISION) {
+						result.setType(FloatingColumn.class);
 					} else {
 						for (Class<?> cc : COLUMN_CLASSES)
 							if (TYPES_DICT.get(cc).dbFieldType()

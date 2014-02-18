@@ -9,6 +9,7 @@ from g1._g1_orm import testviewCursor
 import java.io.OutputStreamWriter as OutputStreamWriter
 import java.io.InputStreamReader as InputStreamReader
 import java.io.BufferedReader as BufferedReader
+import random
 
 def hello(context, arg):
     print 'Hello, world from Celesta Python procedure.'
@@ -25,9 +26,13 @@ def hello(context, arg):
         osw.append('hello, blob field!')
     finally:
         osw.close()
+    c.doublefield = 12 + 0.14 # random.random()
+    print c.doublefield
     c.longtext = 'Привет, длинное текстовое поле'
     c.insert()
     insertedId = c.idc
+    c.update()
+    
     
     print '>>>> id: %d, %d' % (c.idc, c.bbb)    
     c.first()
@@ -128,6 +133,12 @@ def hello(context, arg):
         print '%s - %s - %s' % (testview.fieldAlias, testview.checksum, testview.f1)
     
   
+    c.reset()
+    c.setFilter('doublefield', ">12")
+    #c.setRange('doublefield', 12.14)
+    for c in c.iterate():
+        print c.doublefield
+        
     print 'Python procedure finished.'
     
 def testTrigger(rec):
