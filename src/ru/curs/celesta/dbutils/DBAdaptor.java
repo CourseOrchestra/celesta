@@ -625,9 +625,10 @@ public abstract class DBAdaptor {
 			GrainElement t, Map<String, AbstractFilter> filters)
 			throws CelestaException {
 		String whereClause = getWhereClause(t, filters);
-		String sql = String.format("select count(*) from " + tableTemplate()
-				+ ("".equals(whereClause) ? "" : " where " + whereClause), t
-				.getGrain().getName(), t.getName());
+		String sql = "select count(*) from "
+				+ String.format(tableTemplate(), t.getGrain().getName(),
+						t.getName())
+				+ ("".equals(whereClause) ? "" : " where " + whereClause);
 		PreparedStatement result = prepareStatement(conn, sql);
 		fillSetQueryParameters(filters, result);
 		return result;
