@@ -254,11 +254,8 @@ public final class Table extends GrainElement {
 	 */
 	public void setPkConstraintName(String pkConstraintName)
 			throws ParseException {
-		if (pkConstraintName != null
-				&& pkConstraintName.length() > MAX_IDENTIFIER_LENGTH)
-			throw new ParseException(String.format(
-					"Primary key name '%s' is longer than %d characters.",
-					pkConstraintName, MAX_IDENTIFIER_LENGTH));
+		if (pkConstraintName != null)
+			validateIdentifier(pkConstraintName);
 		this.pkConstraintName = pkConstraintName;
 	}
 

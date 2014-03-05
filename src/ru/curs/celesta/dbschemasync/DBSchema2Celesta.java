@@ -174,6 +174,7 @@ public final class DBSchema2Celesta {
 	private static void updateFK(Element fk, Table t) throws ParseException {
 		String toSchema = fk.getAttribute("to_schema");
 		String toTable = fk.getAttribute("to_table");
+		String name = fk.getAttribute("name");
 
 		Table referencedTable = t.getGrain().getScore().getGrain(toSchema)
 				.getTable(toTable);
@@ -189,6 +190,9 @@ public final class DBSchema2Celesta {
 		}
 		ForeignKey fkey = new ForeignKey(t, referencedTable,
 				columns.toArray(new String[0]));
+
+		if (!name.isEmpty())
+			fkey.setConstraintName(name);
 
 		String deleteRule = fk.getAttribute("delete_action");
 		if ("cascade".equals(deleteRule)) {

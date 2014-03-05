@@ -18,7 +18,7 @@ abstract class NamedElement {
 	/**
 	 * Максимальная длина идентификатора Celesta.
 	 */
-	public static final int MAX_IDENTIFIER_LENGTH = 30;
+	private static final int MAX_IDENTIFIER_LENGTH = 30;
 
 	private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/",
 			Pattern.DOTALL);
@@ -35,6 +35,12 @@ abstract class NamedElement {
 		// что name != null.
 		if (name == null)
 			throw new IllegalArgumentException();
+		validateIdentifier(name);
+		this.name = name;
+		this.quotedName = String.format("\"%s\"", name);
+	}
+
+	static void validateIdentifier(String name) throws ParseException {
 		Matcher m = NAME_PATTERN.matcher(name);
 		if (!m.matches())
 			throw new ParseException(String.format("Invalid identifier: '%s'.",
@@ -43,8 +49,6 @@ abstract class NamedElement {
 			throw new ParseException(String.format(
 					"Identifier '%s' is longer than %d characters.", name,
 					MAX_IDENTIFIER_LENGTH));
-		this.name = name;
-		this.quotedName = String.format("\"%s\"", name);
 	}
 
 	static String limitName(String value) {

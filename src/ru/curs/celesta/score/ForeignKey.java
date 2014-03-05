@@ -334,14 +334,17 @@ public class ForeignKey {
 		return result;
 	}
 
-	void setConstraintName(String constraintName) throws ParseException {
-		// This is because Oracle supports only 30-characters-long names
-		// but we need extra 4 characters for trigger prefixes
-		if (constraintName != null
-				&& constraintName.length() > NamedElement.MAX_IDENTIFIER_LENGTH)
-			throw new ParseException(String.format(
-					"Foreign key name '%s' is longer than %d characters.",
-					constraintName, NamedElement.MAX_IDENTIFIER_LENGTH));
+	/**
+	 * Устанавливает имя ограничения FK.
+	 * 
+	 * @param constraintName
+	 *            новое имя ограничения.
+	 * @throws ParseException
+	 *             неверное имя ограничения.
+	 */
+	public void setConstraintName(String constraintName) throws ParseException {
+		if (constraintName != null)
+			NamedElement.validateIdentifier(constraintName);
 		this.constraintName = constraintName;
 	}
 
