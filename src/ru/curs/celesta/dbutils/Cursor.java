@@ -116,8 +116,10 @@ public abstract class Cursor extends BasicCursor {
 		try {
 			ResultSet rs = get.executeQuery();
 			try {
-				if (rs.next())
+				if (rs.next()) {
+					getXRec()._parseResult(rs);
 					return false;
+				}
 			} finally {
 				rs.close();
 			}
@@ -194,8 +196,8 @@ public abstract class Cursor extends BasicCursor {
 				// Прочитали из базы данных значения -- обновляем xRec
 				if (xRec == null) {
 					xRec = _getBufferCopy();
-					//Вопрос на будущее: эта строчка должна быть здесь или за фигурной скобкой?
-					//(проблема совместной работы над базой)
+					// Вопрос на будущее: эта строчка должна быть здесь или за
+					// фигурной скобкой? (проблема совместной работы над базой)
 					xRec._parseResult(rs);
 				}
 			} finally {
@@ -467,6 +469,7 @@ public abstract class Cursor extends BasicCursor {
 	 */
 	public final void init() {
 		_clearBuffer(false);
+		xRec = null;
 	}
 
 	/**
@@ -541,6 +544,12 @@ public abstract class Cursor extends BasicCursor {
 			}
 		}
 		return sb.toString();
+	}
+
+	@Override
+	public final void clear() throws CelestaException {
+		super.clear();
+		xRec = null;
 	}
 
 	/**

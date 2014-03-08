@@ -410,7 +410,7 @@ public abstract class BasicCursor {
 	 * @throws CelestaException
 	 *             SQL-ошибка.
 	 */
-	public final void clear() throws CelestaException {
+	public  void clear() throws CelestaException {
 		_clearBuffer(true);
 		filters.clear();
 		orderBy = null;
