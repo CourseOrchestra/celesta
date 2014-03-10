@@ -35,7 +35,7 @@ fff int foreign key references aa(idaa) --первая часть кругово
  primary key (postalcode, building, flat)
  );
  
- /**view description*/
+ /**view description */
 create view testview as 
  select distinct grainid as fieldAlias , ta.tablename, grains.checksum ,
    ta.tablename || grains.checksum as f1

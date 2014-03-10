@@ -491,26 +491,6 @@ public abstract class Cursor extends BasicCursor {
 		return meta;
 	}
 
-	private static void quoteFieldForCSV(String fieldValue, StringBuilder sb) {
-		boolean needQuotes = false;
-		for (int i = 0; !needQuotes && i < fieldValue.length(); i++) {
-			char c = fieldValue.charAt(i);
-			needQuotes = c == '"' || c == ',';
-		}
-		if (needQuotes) {
-			sb.append('"');
-			for (int i = 0; i < fieldValue.length(); i++) {
-				char c = fieldValue.charAt(i);
-				sb.append(c);
-				if (c == '"')
-					sb.append('"');
-			}
-			sb.append('"');
-		} else {
-			sb.append(fieldValue);
-		}
-
-	}
 
 	@Override
 	final void appendPK(StringBuilder orderByClause, boolean needComma,
@@ -525,25 +505,6 @@ public abstract class Cursor extends BasicCursor {
 				orderByClause.append(String.format("\"%s\"", colName));
 				nc = true;
 			}
-	}
-
-	/**
-	 * Возвращает текущее состояние курсора в виде CSV-строки с
-	 * разделителями-запятыми.
-	 */
-	public final String asCSVLine() {
-		Object[] values = _currentValues();
-		StringBuilder sb = new StringBuilder();
-		for (Object value : values) {
-			if (sb.length() > 0)
-				sb.append(",");
-			if (value == null)
-				sb.append("NULL");
-			else {
-				quoteFieldForCSV(value.toString(), sb);
-			}
-		}
-		return sb.toString();
 	}
 
 	@Override
@@ -586,8 +547,6 @@ public abstract class Cursor extends BasicCursor {
 	protected abstract Cursor _getBufferCopy() throws CelestaException;
 
 	protected abstract Object[] _currentKeyValues();
-
-	protected abstract Object[] _currentValues();
 
 	protected abstract void _setAutoIncrement(int val);
 

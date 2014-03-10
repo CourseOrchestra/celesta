@@ -11,6 +11,7 @@ import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,6 +35,7 @@ import ru.curs.celesta.score.ViewColumnType;
  */
 public final class ORMCompiler {
 
+	private static final String RETURN_ARRAY_S_OBJECT = "        return array([%s], Object)";
 	private static final String SELF_S_EQUALS_NONE = "        self.%s = None";
 	private static final Pattern SIGNATURE = Pattern
 			.compile("len=([0-9]+), crc32=([0-9A-F]+)\\.");
@@ -153,10 +155,11 @@ public final class ORMCompiler {
 		compileParseResult(w, columns);
 		// Очистка буфера
 		compileClearBuffer(w, columns);
+		// Текущие значения всех полей
+		compileCurrentValues(w, columns);
 		// Итерация в Python-стиле
 		compileIterate(w);
 		w.newLine();
-
 	}
 
 	private static void compileClearBuffer(BufferedWriter w,
@@ -333,8 +336,19 @@ public final class ORMCompiler {
 		for (Column c : columns)
 			addValue(sb, c);
 
-		w.write(String.format("        return array([%s], Object)",
-				sb.toString()));
+		w.write(String.format(RETURN_ARRAY_S_OBJECT, sb.toString()));
+		w.newLine();
+	}
+
+	private static void compileCurrentValues(BufferedWriter w,
+			Map<String, ViewColumnType> columns) throws IOException {
+		w.write("    def _currentValues(self):");
+		w.newLine();
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, ViewColumnType> c : columns.entrySet())
+			addValue(sb, c);
+
+		w.write(String.format(RETURN_ARRAY_S_OBJECT, sb.toString()));
 		w.newLine();
 	}
 
@@ -362,6 +376,27 @@ public final class ORMCompiler {
 		}
 	}
 
+	private static void addValue(StringBuilder sb,
+			Entry<String, ViewColumnType> c) {
+		if (sb.length() > 0)
+			sb.append(", ");
+		if (c.getValue() == ViewColumnType.BIT)
+			sb.append(String.format(
+					"None if self.%s == None else bool(self.%s)", c.getKey(),
+					c.getKey()));
+		else if (c.getValue() == ViewColumnType.NUMERIC)
+			sb.append(String.format(
+					"None if self.%s == None else float(self.%s)", c.getKey(),
+					c.getKey()));
+		else if (c.getValue() == ViewColumnType.TEXT)
+			sb.append(String.format(
+					"None if self.%s == None else unicode(self.%s)",
+					c.getKey(), c.getKey()));
+		else {
+			sb.append(String.format("self.%s", c.getKey()));
+		}
+	}
+
 	private static void compileCurrentKeyValues(BufferedWriter w, Set<Column> pk)
 			throws IOException {
 		w.write("    def _currentKeyValues(self):");
@@ -370,8 +405,7 @@ public final class ORMCompiler {
 		for (Column c : pk)
 			addValue(sb, c);
 
-		w.write(String.format("        return array([%s], Object)",
-				sb.toString()));
+		w.write(String.format(RETURN_ARRAY_S_OBJECT, sb.toString()));
 		w.newLine();
 	}
 

@@ -221,6 +221,46 @@ public abstract class BasicCursor {
 	}
 
 	/**
+	 * Возвращает текущее состояние курсора в виде CSV-строки с
+	 * разделителями-запятыми.
+	 */
+	public final String asCSVLine() {
+		Object[] values = _currentValues();
+		StringBuilder sb = new StringBuilder();
+		for (Object value : values) {
+			if (sb.length() > 0)
+				sb.append(",");
+			if (value == null)
+				sb.append("NULL");
+			else {
+				quoteFieldForCSV(value.toString(), sb);
+			}
+		}
+		return sb.toString();
+	}
+
+	private static void quoteFieldForCSV(String fieldValue, StringBuilder sb) {
+		boolean needQuotes = false;
+		for (int i = 0; !needQuotes && i < fieldValue.length(); i++) {
+			char c = fieldValue.charAt(i);
+			needQuotes = c == '"' || c == ',';
+		}
+		if (needQuotes) {
+			sb.append('"');
+			for (int i = 0; i < fieldValue.length(); i++) {
+				char c = fieldValue.charAt(i);
+				sb.append(c);
+				if (c == '"')
+					sb.append('"');
+			}
+			sb.append('"');
+		} else {
+			sb.append(fieldValue);
+		}
+
+	}
+
+	/**
 	 * Переходит к следующей записи в отсортированном наборе. Возвращает false,
 	 * если достигнут конец набора.
 	 * 
@@ -410,7 +450,7 @@ public abstract class BasicCursor {
 	 * @throws CelestaException
 	 *             SQL-ошибка.
 	 */
-	public  void clear() throws CelestaException {
+	public void clear() throws CelestaException {
 		_clearBuffer(true);
 		filters.clear();
 		orderBy = null;
@@ -456,6 +496,7 @@ public abstract class BasicCursor {
 
 	protected abstract void _parseResult(ResultSet rs) throws SQLException;
 
+	protected abstract Object[] _currentValues();
 	// CHECKSTYLE:ON
 
 }

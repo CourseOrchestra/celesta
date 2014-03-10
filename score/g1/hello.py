@@ -110,6 +110,8 @@ def hello(context, arg):
     adresses.building = '11'
     adresses.flat = '2'
     adresses.delete()
+
+    
     adresses.init()
     adresses.country = 'Россия'
     adresses.city = 'Москва'
@@ -130,8 +132,17 @@ def hello(context, arg):
     testview.orderBy("f1")
     testview.limit(2, 2)
     for testview in testview.iterate():
+        print testview.asCSVLine()
         print '%s - %s - %s' % (testview.fieldAlias, testview.checksum, testview.f1)
+    testview.limit(0, 0)
     
+    print('---')
+    
+    testview.setFilter('fieldAlias', "%'g1'%")
+    for testview in testview.iterate():
+        print '%s - %s - %s' % (testview.fieldAlias, testview.checksum, testview.f1)
+    print testview.count()
+
   
     c.reset()
     c.setFilter('doublefield', ">12")
