@@ -252,23 +252,23 @@ public final class DBSchema2Celesta {
 				defaultVal = ((Element) n).getTextContent();
 			}
 		}
-		if (BinaryColumn.CELESTA_TYPE.equals(celestaType)) {
+		if (BinaryColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
 			BinaryColumn bc = new BinaryColumn(t, columnName);
 			bc.setNullableAndDefault(isNullable, defaultVal);
 			bc.setCelestaDoc(celestaDoc);
-		} else if (BooleanColumn.CELESTA_TYPE.equals(celestaType)) {
+		} else if (BooleanColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
 			BooleanColumn bc = new BooleanColumn(t, columnName);
 			bc.setNullableAndDefault(isNullable, defaultVal);
 			bc.setCelestaDoc(celestaDoc);
-		} else if (DateTimeColumn.CELESTA_TYPE.equals(celestaType)) {
+		} else if (DateTimeColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
 			DateTimeColumn dc = new DateTimeColumn(t, columnName);
 			dc.setNullableAndDefault(isNullable, defaultVal);
 			dc.setCelestaDoc(celestaDoc);
-		} else if (FloatingColumn.CELESTA_TYPE.equals(celestaType)) {
+		} else if (FloatingColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
 			FloatingColumn fc = new FloatingColumn(t, columnName);
 			fc.setNullableAndDefault(isNullable, defaultVal);
 			fc.setCelestaDoc(celestaDoc);
-		} else if (IntegerColumn.CELESTA_TYPE.equals(celestaType)) {
+		} else if (IntegerColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
 			IntegerColumn ic = new IntegerColumn(t, columnName);
 			if ("y".equals(column.getAttribute("autoincrement"))) {
 				ic.setNullableAndDefault(isNullable, "IDENTITY");
@@ -276,12 +276,12 @@ public final class DBSchema2Celesta {
 				ic.setNullableAndDefault(isNullable, defaultVal);
 			}
 			ic.setCelestaDoc(celestaDoc);
-		} else if (StringColumn.VARCHAR.equals(celestaType)) {
+		} else if (StringColumn.VARCHAR.equalsIgnoreCase(celestaType)) {
 			StringColumn sc = new StringColumn(t, columnName);
 			sc.setLength(column.getAttribute("length"));
 			sc.setNullableAndDefault(isNullable, defaultVal);
 			sc.setCelestaDoc(celestaDoc);
-		} else if ((StringColumn.TEXT).equals(celestaType)) {
+		} else if ((StringColumn.TEXT).equalsIgnoreCase(celestaType)) {
 			StringColumn sc = new StringColumn(t, columnName);
 			sc.setLength("MAX");
 			sc.setNullableAndDefault(isNullable, defaultVal);
