@@ -38,6 +38,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -252,8 +254,11 @@ public final class Celesta {
 						// пользователю.
 						sqlErr = ". SQL error:" + e1.getMessage();
 					}
+					StringWriter sw = new StringWriter();
+					e.fillInStackTrace().printStackTrace(new PrintWriter(sw));
 					throw new CelestaException(String.format(
-							"Python error: %s:%s%s", e.type, e.value, sqlErr));
+							"Python error: %s:%s%n%s%n%s", e.type, e.value,
+							sw.toString(), sqlErr));
 				}
 			} finally {
 				returnPythonInterpreter(interp);
