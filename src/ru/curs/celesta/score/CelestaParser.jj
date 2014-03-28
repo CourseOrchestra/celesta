@@ -1,6 +1,6 @@
 options{
     IGNORE_CASE=true ;
-	UNICODE_INPUT=true;
+    UNICODE_INPUT=true;
     STATIC=false;
     FORCE_LA_CHECK=true;
     SUPPORT_CLASS_VISIBILITY_PUBLIC=false;

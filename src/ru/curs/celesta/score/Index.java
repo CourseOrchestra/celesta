@@ -74,7 +74,7 @@ public class Index extends GrainElement {
 			throw new ParseException(
 					String.format(
 							"Error while creating index '%s': column '%s' in table '%s' is "
-									+ "of varchar(max) type and therefore cannot be a part of an index.",
+									+ "of TEXT type and therefore cannot be a part of an index.",
 							getName(), columnName, table.getName()));
 
 		columns.addElement(c);
