@@ -79,7 +79,7 @@ public final class PermissionsCursor extends SysCursor {
 	/**
 	 * Возвращает идентификатор роли.
 	 */
-	public String getRoleId() {
+	public String getRoleid() {
 		return roleId;
 	}
 
@@ -89,14 +89,14 @@ public final class PermissionsCursor extends SysCursor {
 	 * @param roleId
 	 *            идентификатор
 	 */
-	public void setRoleId(String roleId) {
+	public void setRoleid(String roleId) {
 		this.roleId = roleId;
 	}
 
 	/**
 	 * Возвращает идентификатор гранулы.
 	 */
-	public String getGrainId() {
+	public String getGrainid() {
 		return grainId;
 	}
 
@@ -106,7 +106,7 @@ public final class PermissionsCursor extends SysCursor {
 	 * @param grainId
 	 *            идентификатор
 	 */
-	public void setGrainId(String grainId) {
+	public void setGrainid(String grainId) {
 		this.grainId = grainId;
 	}
 
