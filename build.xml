@@ -14,6 +14,8 @@
 		<javac destdir="build/classes" includeantruntime="false" encoding="UTF-8">
 			<classpath>
 				<pathelement path="lib/jython.jar" />
+			    <pathelement path="lib/gson-1.7.1.jar"/>
+				<pathelement path="lib/java-json.jar"/>
 			</classpath>
 			<src>
 				<pathelement path="src" />
