@@ -59,7 +59,7 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 
 	private final Stack<Item> stack;
 	private final Item result;
-	private String tagValue;
+	private StringBuilder tagValue;
 
 	public XMLToJSONConverterSaxHandler() {
 		this.stack = new Stack<Item>();
@@ -97,24 +97,20 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 
 	@Override
 	public void characters(final char[] ch, final int start, final int length) {
-		tagValue = new String(ch, start, length);
-		if (tagValue != null && !tagValue.isEmpty()) {
-			tagValue = tagValue.replaceAll("\\t|\\r", "");
-			tagValue = tagValue.trim();
+		if (tagValue == null) {
+			tagValue = new StringBuilder();
 		}
-		if (tagValue.isEmpty()) {
-			tagValue = null;
-		}
+		tagValue.append(ch, start, length);
 	}
 
 	@Override
 	public void endElement(final String uri, final String localName, final String qName)
 			throws SAXException {
 		Item item = stack.pop();
-		if (tagValue != null) {
-			item.value = tagValue;
-			tagValue = null;
+		if (tagValue != null && tagValue.length() != 0) {
+			item.value = tagValue.toString().replaceAll("\\t|\\r", "").trim();
 		}
+		tagValue = null;
 	}
 
 	private JsonElement getJsonElement(final Item parentItem) {
