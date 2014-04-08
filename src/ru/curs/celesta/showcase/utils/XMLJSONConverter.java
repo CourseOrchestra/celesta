@@ -3,8 +3,12 @@ package ru.curs.celesta.showcase.utils;
 import java.io.*;
 
 import javax.xml.parsers.*;
+import javax.xml.transform.TransformerException;
 
+import org.json.JSONException;
 import org.xml.sax.SAXException;
+
+import ru.curs.showcase.util.JSONToXMLParser;
 
 import com.google.gson.JsonElement;
 
@@ -56,9 +60,13 @@ public final class XMLJSONConverter {
 	 *            - JSON строка
 	 * @return xml строка.
 	 */
-	public static String jsonToXml(final String json) {
-		return null;
+	public static String jsonToXml(final String json) throws JSONException, TransformerException,
+			ParserConfigurationException {
+		// return null;
 		// throw new NotImplementedYetException();
+		JSONToXMLParser jtxParser = new JSONToXMLParser(json);
+		String result = jtxParser.outPrint();
+		return result;
 	}
 
 	/**
