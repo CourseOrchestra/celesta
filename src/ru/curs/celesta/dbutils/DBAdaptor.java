@@ -297,8 +297,10 @@ public abstract class DBAdaptor {
 						e.getKey()));
 			else if (e.getValue() instanceof Filter) {
 				Object c = t.getColumns().get(e.getKey());
+				whereClause.append("(");
 				whereClause.append(((Filter) e.getValue()).makeWhereClause("\""
 						+ e.getKey() + "\"", c));
+				whereClause.append(")");
 			}
 		}
 		return whereClause.toString();
