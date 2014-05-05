@@ -71,6 +71,7 @@ public final class ConnectionPool {
 			}
 		} catch (SQLException | CelestaException e) {
 			// do something to make CheckStyle happy ))
+			e.printStackTrace();
 			return;
 		}
 	}

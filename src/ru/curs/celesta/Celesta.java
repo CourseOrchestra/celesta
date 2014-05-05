@@ -99,7 +99,9 @@ public final class Celesta {
 		// Т. к. на данном этапе уже используется метаинформация, то theCelesta
 		// необходимо проинициализировать.
 		theCelesta = this;
-		DBUpdator.updateDB(score);
+
+		if (!AppSettings.getSkipDBUpdate())
+			DBUpdator.updateDB(score);
 	}
 
 	/**

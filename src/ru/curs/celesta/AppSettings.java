@@ -16,6 +16,7 @@ public final class AppSettings {
 	private final String databaseConnection;
 	private final Logger logger;
 	private final String pylibPath;
+	private final boolean skipDBUpdate;
 	{
 		logger = Logger.getLogger("ru.curs.flute");
 		logger.setLevel(Level.INFO);
@@ -27,7 +28,7 @@ public final class AppSettings {
 
 		// Читаем настройки и проверяем их насколько возможно на данном этапе.
 
-		scorePath = settings.getProperty("score.path", "");
+		scorePath = settings.getProperty("score.path", "").trim();
 		if ("".equals(scorePath))
 			sb.append("No score path given (score.path).\n");
 		else {
@@ -39,11 +40,12 @@ public final class AppSettings {
 			}
 		}
 
-		dbClassName = settings.getProperty("database.classname", "");
+		dbClassName = settings.getProperty("database.classname", "").trim();
 		if ("".equals(dbClassName))
 			sb.append("No JDBC driver class name given (database.classname).\n");
 
-		databaseConnection = settings.getProperty("database.connection", "");
+		databaseConnection = settings.getProperty("database.connection", "")
+				.trim();
 		if ("".equals(databaseConnection))
 			sb.append("No JDBC URL given (database.connection).\n");
 		if (internalGetDBType() == DBType.UNKNOWN)
@@ -63,6 +65,9 @@ public final class AppSettings {
 		File pylibPathFile = new File(pylibPath);
 		if (!pylibPathFile.exists())
 			sb.append("Invalid pylib.path entry: " + pylibPath + '\n');
+
+		skipDBUpdate = Boolean.parseBoolean(settings.getProperty(
+				"skip.dbupdate", "").trim());
 
 		if (sb.length() > 0)
 			throw new CelestaException(sb.toString());
@@ -151,5 +156,12 @@ public final class AppSettings {
 	 */
 	public static String getPylibPath() {
 		return theSettings.pylibPath;
+	}
+
+	/**
+	 * Значение параметра "пропускать фазу обновления базы данных".
+	 */
+	public static Boolean getSkipDBUpdate() {
+		return theSettings.skipDBUpdate;
 	}
 }
