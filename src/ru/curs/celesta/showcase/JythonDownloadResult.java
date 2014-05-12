@@ -35,14 +35,29 @@ public class JythonDownloadResult {
 		this.error = aError;
 	}
 
+	/**
+	 * Функция-getter для переменной inputStream.
+	 * 
+	 * @return inputStream
+	 */
 	public InputStream getInputStream() {
 		return inputStream;
 	}
 
+	/**
+	 * Функция-getter для переменной fileName.
+	 * 
+	 * @return fileName
+	 */
 	public String getFileName() {
 		return fileName;
 	}
 
+	/**
+	 * Функция-getter для переменной error.
+	 * 
+	 * @return error
+	 */
 	public JythonErrorResult getError() {
 		return error;
 	}

@@ -22,11 +22,31 @@ public class JSONToXMLParser {
 	private final JSONTokener jt;
 	private final JSONObject jo;
 
-	public JSONToXMLParser(final String json) throws JSONException {
-		String inJson = json.replaceAll("u\"", "\"");
-		jt = new JSONTokener(inJson);
+	public JSONToXMLParser(String json) throws JSONException {
+		String json1 = json;
+		if (json.contains("u\"")) {
+			json1 = json.replaceAll("u\"", "\"");
+		}
+		String json2 = json1;
+		if (json1.contains("u \'")) {
+			json2 = json1.replaceAll("u \'", "\'");
+		}
+		jt = new JSONTokener(json2);
 		jo = new JSONObject(jt);
 	}
+
+	/**
+	 * Функция, выдающая результирующую xml-строку.
+	 * 
+	 * @return выходная xml-строка
+	 * @throws TransformerException
+	 *             вызывется в случае ошибки построениея DOM-модели документа,
+	 *             используемой в данном методе.
+	 * @throws ParserConfigurationException
+	 *             вызываtется в случае ошибки парсинга.
+	 * @throws JSONException
+	 *             вызывается в случае ошибки парсинга json-объекта.
+	 */
 
 	public String outPrint() throws TransformerException, JSONException,
 			ParserConfigurationException {

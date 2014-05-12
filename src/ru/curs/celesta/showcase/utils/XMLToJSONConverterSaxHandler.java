@@ -143,10 +143,18 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 		} else {
 			return new JsonPrimitive(
 					parentItem.value != null && !parentItem.value.isEmpty() ? parentItem.value
-							: "None");
+							: "");
+			// : "None");
 		}
 		return parent;
 	}
+
+	/**
+	 * Функция, возврщающая результирующий JsonElement, преобразовать который в
+	 * стороковый вид затем можно с помощью метода toString().
+	 * 
+	 * @return resultElement
+	 */
 
 	public JsonElement getResult() {
 		JsonElement resultElement = getJsonElement(result);

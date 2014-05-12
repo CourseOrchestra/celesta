@@ -35,9 +35,20 @@ public class ResultSelectorData {
 		this.count = aCount;
 	}
 
+	/**
+	 * Функция-getter для списочного параметра dataRecordList.
+	 * 
+	 * @return dataRecordList
+	 */
 	public List<DataRecord> getDataRecordList() {
 		return dataRecordList;
 	}
+
+	/**
+	 * Функция-getter для целочисленного параметра count.
+	 * 
+	 * @return count
+	 */
 
 	public int getCount() {
 		return count;

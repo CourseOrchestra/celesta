@@ -21,10 +21,20 @@ public class JythonErrorResult {
 		this.errorCode = aErrorCode;
 	}
 
+	/**
+	 * Функция-getter для строкового параметра message.
+	 * 
+	 * @return message
+	 */
 	public String getMessage() {
 		return message;
 	}
 
+	/**
+	 * Функция-getter для целочисленного параметра errorCode.
+	 * 
+	 * @return errorCode
+	 */
 	public int getErrorCode() {
 		return errorCode;
 	}
