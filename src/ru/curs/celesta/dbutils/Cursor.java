@@ -123,6 +123,7 @@ public abstract class Cursor extends BasicCursor {
 			} finally {
 				rs.close();
 			}
+			_preInsert();
 			Object[] values = _currentValues();
 			boolean[] myMask = new boolean[values.length];
 			for (int i = 0; i < values.length; i++)
@@ -131,14 +132,12 @@ public abstract class Cursor extends BasicCursor {
 				insert = db().getInsertRecordStatement(conn(), meta(), myMask);
 				insertMask = myMask;
 			}
-
 			int j = 1;
 			for (int i = 0; i < values.length; i++)
 				if (!myMask[i]) {
 					DBAdaptor.setParam(insert, j, values[i]);
 					j++;
 				}
-			_preInsert();
 			insert.execute();
 			LOGGING_MGR.log(this, Action.INSERT);
 			for (Column c : meta().getColumns().values())
@@ -203,6 +202,8 @@ public abstract class Cursor extends BasicCursor {
 			} finally {
 				rs.close();
 			}
+
+			_preUpdate();
 			Object[] values = _currentValues();
 			Object[] xValues = getXRec()._currentValues();
 			// Маска: true для тех случаев, когда поле не было изменено
@@ -222,7 +223,6 @@ public abstract class Cursor extends BasicCursor {
 			}
 
 			Object[] keyValues = _currentKeyValues();
-
 			// Заполняем параметры присвоения (set ...)
 			int j = 1;
 			int i = 0;
@@ -237,7 +237,6 @@ public abstract class Cursor extends BasicCursor {
 			for (i = 0; i < keyValues.length; i++)
 				DBAdaptor.setParam(update, i + j, keyValues[i]);
 
-			_preUpdate();
 			update.execute();
 			LOGGING_MGR.log(this, Action.MODIFY);
 			initXRec();
@@ -490,7 +489,6 @@ public abstract class Cursor extends BasicCursor {
 			}
 		return meta;
 	}
-
 
 	@Override
 	final void appendPK(StringBuilder orderByClause, boolean needComma,
