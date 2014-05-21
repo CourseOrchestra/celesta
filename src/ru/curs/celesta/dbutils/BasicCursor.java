@@ -7,9 +7,9 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,7 +37,7 @@ public abstract class BasicCursor {
 	private ResultSet cursor = null;
 
 	// Поля фильтров и сортировок
-	private Map<String, AbstractFilter> filters = new HashMap<>();
+	private final Map<String, AbstractFilter> filters = new HashMap<>();
 	private String orderBy = null;
 	private long offset = 0;
 	private long rowCount = 0;
@@ -439,6 +439,7 @@ public abstract class BasicCursor {
 		appendPK(orderByClause, needComma, colNames);
 
 		orderBy = orderByClause.toString();
+		closeSet();
 	}
 
 	abstract void appendPK(StringBuilder orderByClause, boolean needComma,
@@ -480,6 +481,46 @@ public abstract class BasicCursor {
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * Получает копию фильтров, а также значений limit (offset и rowcount) из
+	 * курсора того же типа.
+	 * 
+	 * @param c
+	 *            Курсор, фильтры которого нужно скопировать.
+	 * @throws CelestaException
+	 *             неверный тип курсора
+	 */
+	public final void copyFiltersFrom(BasicCursor c) throws CelestaException {
+		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(
+				_tableName())))
+			throw new CelestaException(
+					"Cannot assign filters from cursor for %s.%s to cursor for %s.%s.",
+					c._grainName(), c._tableName(), _grainName(), _tableName());
+		filters.clear();
+		filters.putAll(c.filters);
+		offset = c.offset;
+		rowCount = c.rowCount;
+		closeSet();
+	}
+
+	/**
+	 * Получает копию сортировок из курсора того же типа.
+	 * 
+	 * @param c
+	 *            Курсор, фильтры которого нужно скопировать.
+	 * @throws CelestaException
+	 *             неверный тип курсора
+	 */
+	public final void copyOrderFrom(BasicCursor c) throws CelestaException {
+		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(
+				_tableName())))
+			throw new CelestaException(
+					"Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
+					c._grainName(), c._tableName(), _grainName(), _tableName());
+		orderBy = c.orderBy;
+		closeSet();
 	}
 
 	// CHECKSTYLE:OFF
