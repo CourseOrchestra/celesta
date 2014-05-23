@@ -41,6 +41,11 @@ public final class XMLJSONConverter {
 	 *             ошибок ввода-вывода.
 	 */
 	public static String xmlToJson(final String xml) throws SAXException, IOException {
+
+		if (xml == null || xml.isEmpty()) {
+			return "";
+		}
+
 		SAXParser parser = createSAXParser();
 		XMLToJSONConverterSaxHandler handler = new XMLToJSONConverterSaxHandler();
 		InputStream in = stringToStream(xml);
@@ -138,7 +143,9 @@ public final class XMLJSONConverter {
 
 	public static InputStream stringToStream(final String str) {
 		try {
-			return new ByteArrayInputStream(str.getBytes("UTF-8"));
+			if (str != null) {
+				return new ByteArrayInputStream(str.getBytes("UTF-8"));
+			}
 		} catch (UnsupportedEncodingException e) {
 			System.out.println(e.getMessage());
 		}
