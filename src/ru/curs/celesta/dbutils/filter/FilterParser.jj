@@ -13,6 +13,8 @@ import java.io.StringReader;
 import ru.curs.celesta.CelestaException;
 
 public class FilterParser{
+   private static final String INVALID_QUOTED_FORMAT = "Invalid quoted string format.";
+
    public static enum FilterType { NUMERIC , TEXT ,  OTHER };
    private FilterType filterType;
    private String fieldName;
@@ -31,17 +33,51 @@ public class FilterParser{
      }
    }
    
-   private String leftPercent(String val){
-		return "'%" + val.substring(1);
-   }
-   
-   private String rightPercent(String val){
-		return val.substring(0, val.length()-1) + "%'";
-   }
-   
-   private String bothPercent(String val){
-		return "'%" + val.substring(1, val.length()-1) + "%'";
-   }
+	public static String quoteString(String lexvalue) {
+		StringBuilder sb = new StringBuilder();
+		sb.append('\'');
+		for (int i = 0; i < lexvalue.length(); i++) {
+			char c = lexvalue.charAt(i);
+			sb.append(c);
+			if (c == '\'')
+				sb.append('\'');
+		}
+		sb.append('\'');
+		return sb.toString();
+	}
+	public static String unquoteString(String lexvalue) throws ParseException {
+		StringBuilder sb = new StringBuilder();
+		int state = 0;
+		for (int i = 0; i < lexvalue.length(); i++) {
+			char c = lexvalue.charAt(i);
+			switch (state) {
+			case 0:
+				if (c == '\'') {
+					state = 1;
+				} else {
+					throw new ParseException(INVALID_QUOTED_FORMAT);
+				}
+				break;
+			case 1:
+				if (c == '\'') {
+					state = 2;
+				} else {
+					sb.append(c);
+				}
+				break;
+			case 2:
+				if (c == '\'') {
+					sb.append('\'');
+					state = 1;
+				} else {
+					throw new ParseException(INVALID_QUOTED_FORMAT);
+				}
+			default:
+			}
+		}
+		return sb.toString();
+	}
+
    
 }
 PARSER_END(FilterParser)
@@ -147,13 +183,26 @@ String textTerm(): {String val1; String val2; boolean ci = false; String fn = fi
      (">"  val1 = text(ci) {return String.format("%s > %s", fn, val1);})
    | ("<"  val1 = text(ci) {return String.format("%s < %s", fn, val1);})
    | (".." val1 = text(ci) {return String.format("%s <= %s", fn, val1);})
-   | ("%"  val1 = text(ci) ["%" {return String.format("%s like %s", fn,  bothPercent(val1));}]{return String.format("%s like %s", fn,  leftPercent(val1));})   
+   | val1 = likeFilter(ci) {return String.format("%s like %s", fn,  quoteString(val1));}   
    | (val1 = text(ci) 
         [  (".." [val2 = text(ci) {return String.format("%s between %s and %s", fn, val1, val2);}] {return String.format("%s >= %s", fn, val1);})
-         | ("%"  {return String.format("%s like %s", fn,  rightPercent(val1));})
+        |  val2 = likeFilter(ci) {return String.format("%s like %s", fn,  quoteString(unquoteString(val1) + val2));}
         ] 
         {return String.format("%s = %s", fn, val1);})
 	)
+}
+
+String likeFilter(boolean ci):
+{
+StringBuilder sb = new StringBuilder();
+String val;
+}
+{   (
+    "%" {sb.append('%');}
+    [ val = text(ci) {sb.append (unquoteString(val));} 
+      [val = likeFilter(ci) {sb.append (val);}]
+    ]
+    ){return sb.toString();}
 }
 
 String text(boolean ci): {Token tok;}{

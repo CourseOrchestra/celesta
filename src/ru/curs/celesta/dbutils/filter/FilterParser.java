@@ -5,6 +5,8 @@ import java.io.StringReader;
 import ru.curs.celesta.CelestaException;
 
 public class FilterParser implements FilterParserConstants {
+   private static final String INVALID_QUOTED_FORMAT = "Invalid quoted string format.";
+
    public static enum FilterType { NUMERIC , TEXT ,  OTHER };
    private FilterType filterType;
    private String fieldName;
@@ -23,17 +25,50 @@ public class FilterParser implements FilterParserConstants {
      }
    }
 
-   private String leftPercent(String val){
-                return "'%" + val.substring(1);
-   }
-
-   private String rightPercent(String val){
-                return val.substring(0, val.length()-1) + "%'";
-   }
-
-   private String bothPercent(String val){
-                return "'%" + val.substring(1, val.length()-1) + "%'";
-   }
+        public static String quoteString(String lexvalue) {
+                StringBuilder sb = new StringBuilder();
+                sb.append('\u005c'');
+                for (int i = 0; i < lexvalue.length(); i++) {
+                        char c = lexvalue.charAt(i);
+                        sb.append(c);
+                        if (c == '\u005c'')
+                                sb.append('\u005c'');
+                }
+                sb.append('\u005c'');
+                return sb.toString();
+        }
+        public static String unquoteString(String lexvalue) throws ParseException {
+                StringBuilder sb = new StringBuilder();
+                int state = 0;
+                for (int i = 0; i < lexvalue.length(); i++) {
+                        char c = lexvalue.charAt(i);
+                        switch (state) {
+                        case 0:
+                                if (c == '\u005c'') {
+                                        state = 1;
+                                } else {
+                                        throw new ParseException(INVALID_QUOTED_FORMAT);
+                                }
+                                break;
+                        case 1:
+                                if (c == '\u005c'') {
+                                        state = 2;
+                                } else {
+                                        sb.append(c);
+                                }
+                                break;
+                        case 2:
+                                if (c == '\u005c'') {
+                                        sb.append('\u005c'');
+                                        state = 1;
+                                } else {
+                                        throw new ParseException(INVALID_QUOTED_FORMAT);
+                                }
+                        default:
+                        }
+                }
+                return sb.toString();
+        }
 
   final public String filterExpr(FilterType filterType, String fieldName) throws ParseException {
   this.filterType = filterType;
@@ -276,18 +311,8 @@ public class FilterParser implements FilterParserConstants {
                             {if (true) return String.format("%s <= %s", fn, val1);}
       break;
     case 16:
-      jj_consume_token(16);
-      val1 = text(ci);
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 16:
-        jj_consume_token(16);
-                                 {if (true) return String.format("%s like %s", fn,  bothPercent(val1));}
-        break;
-      default:
-        jj_la1[12] = jj_gen;
-        ;
-      }
-                                                                                               {if (true) return String.format("%s like %s", fn,  leftPercent(val1));}
+      val1 = likeFilter(ci);
+                            {if (true) return String.format("%s like %s", fn,  quoteString(val1));}
       break;
     case S_CHAR_LITERAL:
       val1 = text(ci);
@@ -303,32 +328,59 @@ public class FilterParser implements FilterParserConstants {
                                    {if (true) return String.format("%s between %s and %s", fn, val1, val2);}
             break;
           default:
-            jj_la1[13] = jj_gen;
+            jj_la1[12] = jj_gen;
             ;
           }
                                                                                                     {if (true) return String.format("%s >= %s", fn, val1);}
           break;
         case 16:
-          jj_consume_token(16);
-                  {if (true) return String.format("%s like %s", fn,  rightPercent(val1));}
+          val2 = likeFilter(ci);
+                                  {if (true) return String.format("%s like %s", fn,  quoteString(unquoteString(val1) + val2));}
           break;
         default:
-          jj_la1[14] = jj_gen;
+          jj_la1[13] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[15] = jj_gen;
+        jj_la1[14] = jj_gen;
         ;
       }
          {if (true) return String.format("%s = %s", fn, val1);}
       break;
     default:
-      jj_la1[16] = jj_gen;
+      jj_la1[15] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public String likeFilter(boolean ci) throws ParseException {
+StringBuilder sb = new StringBuilder();
+String val;
+    jj_consume_token(16);
+         sb.append('%');
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case S_CHAR_LITERAL:
+      val = text(ci);
+                      sb.append (unquoteString(val));
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case 16:
+        val = likeFilter(ci);
+                             sb.append (val);
+        break;
+      default:
+        jj_la1[16] = jj_gen;
+        ;
+      }
+      break;
+    default:
+      jj_la1[17] = jj_gen;
+      ;
+    }
+      {if (true) return sb.toString();}
     throw new Error("Missing return statement in function");
   }
 
@@ -344,6 +396,57 @@ public class FilterParser implements FilterParserConstants {
     try { return !jj_3_1(); }
     catch(LookaheadSuccess ls) { return true; }
     finally { jj_save(0, xla); }
+  }
+
+  private boolean jj_3R_13() {
+    if (jj_scan_token(15)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_8() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_13()) jj_scanpos = xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_14()) {
+    jj_scanpos = xsp;
+    if (jj_3R_15()) {
+    jj_scanpos = xsp;
+    if (jj_3R_16()) {
+    jj_scanpos = xsp;
+    if (jj_3R_17()) {
+    jj_scanpos = xsp;
+    if (jj_3R_18()) return true;
+    }
+    }
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_23() {
+    if (jj_scan_token(S_DOUBLE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_22() {
+    if (jj_scan_token(S_INTEGER)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_19() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_22()) {
+    jj_scanpos = xsp;
+    if (jj_3R_23()) return true;
+    }
+    return false;
+  }
+
+  private boolean jj_3R_12() {
+    if (jj_3R_19()) return true;
+    return false;
   }
 
   private boolean jj_3R_11() {
@@ -374,6 +477,11 @@ public class FilterParser implements FilterParserConstants {
     }
     }
     }
+    return false;
+  }
+
+  private boolean jj_3R_21() {
+    if (jj_scan_token(S_CHAR_LITERAL)) return true;
     return false;
   }
 
@@ -412,7 +520,7 @@ public class FilterParser implements FilterParserConstants {
   }
 
   private boolean jj_3R_20() {
-    if (jj_scan_token(S_CHAR_LITERAL)) return true;
+    if (jj_scan_token(16)) return true;
     return false;
   }
 
@@ -422,12 +530,12 @@ public class FilterParser implements FilterParserConstants {
   }
 
   private boolean jj_3R_18() {
-    if (jj_3R_20()) return true;
+    if (jj_3R_21()) return true;
     return false;
   }
 
   private boolean jj_3R_17() {
-    if (jj_scan_token(16)) return true;
+    if (jj_3R_20()) return true;
     return false;
   }
 
@@ -446,57 +554,6 @@ public class FilterParser implements FilterParserConstants {
     return false;
   }
 
-  private boolean jj_3R_13() {
-    if (jj_scan_token(15)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_8() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_13()) jj_scanpos = xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_14()) {
-    jj_scanpos = xsp;
-    if (jj_3R_15()) {
-    jj_scanpos = xsp;
-    if (jj_3R_16()) {
-    jj_scanpos = xsp;
-    if (jj_3R_17()) {
-    jj_scanpos = xsp;
-    if (jj_3R_18()) return true;
-    }
-    }
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_22() {
-    if (jj_scan_token(S_DOUBLE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_21() {
-    if (jj_scan_token(S_INTEGER)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_19() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_21()) {
-    jj_scanpos = xsp;
-    if (jj_3R_22()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3R_12() {
-    if (jj_3R_19()) return true;
-    return false;
-  }
-
   /** Generated Token Manager. */
   public FilterParserTokenManager token_source;
   SimpleCharStream jj_input_stream;
@@ -511,13 +568,13 @@ public class FilterParser implements FilterParserConstants {
   private boolean jj_lookingAhead = false;
   private boolean jj_semLA;
   private int jj_gen;
-  final private int[] jj_la1 = new int[17];
+  final private int[] jj_la1 = new int[18];
   static private int[] jj_la1_0;
   static {
       jj_la1_init_0();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0xc0,0x100,0x200,0x300,0x300,0x480,0x40,0xc,0x4000,0x700c,0xc,0x8000,0x10000,0x20,0x14000,0x14000,0x17020,};
+      jj_la1_0 = new int[] {0xc0,0x100,0x200,0x300,0x300,0x480,0x40,0xc,0x4000,0x700c,0xc,0x8000,0x20,0x14000,0x14000,0x17020,0x10000,0x20,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[1];
   private boolean jj_rescan = false;
@@ -534,7 +591,7 @@ public class FilterParser implements FilterParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -549,7 +606,7 @@ public class FilterParser implements FilterParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -560,7 +617,7 @@ public class FilterParser implements FilterParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -571,7 +628,7 @@ public class FilterParser implements FilterParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -581,7 +638,7 @@ public class FilterParser implements FilterParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -591,7 +648,7 @@ public class FilterParser implements FilterParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 17; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 18; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -708,7 +765,7 @@ public class FilterParser implements FilterParserConstants {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 17; i++) {
+    for (int i = 0; i < 18; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {

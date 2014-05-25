@@ -17,7 +17,8 @@ public class FilterParserTest {
 
 		result = FilterParser.translateFilter(FilterType.NUMERIC, "foo",
 				"(5 |> 6 |!3)&!null");
-		assertEquals("(foo = 5 or foo > 6 or not (foo = 3)) and not (foo is null)",
+		assertEquals(
+				"(foo = 5 or foo > 6 or not (foo = 3)) and not (foo is null)",
 				result);
 
 		result = FilterParser.translateFilter(FilterType.NUMERIC, "foo",
@@ -60,5 +61,19 @@ public class FilterParserTest {
 			itWas = true;
 		}
 		assertTrue(itWas);
+	}
+
+	@Test
+	public void test3() throws CelestaException {
+		String result;
+		result = FilterParser.translateFilter(FilterType.TEXT, "foo",
+				"'abc'%'ef'%'g''h'");
+		assertEquals("foo like 'abc%ef%g''h'", result);
+		result = FilterParser.translateFilter(FilterType.TEXT, "foo",
+				"%'.'%'.'%");
+		assertEquals("foo like '%.%.%'", result);
+		result = FilterParser.translateFilter(FilterType.TEXT, "foo",
+				"%'asdf'%'g''h'%");
+		assertEquals("foo like '%asdf%g''h%'", result);
 	}
 }
