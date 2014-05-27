@@ -17,7 +17,7 @@ public final class BLOB {
 	/**
 	 * Пустой (NULL) BLOB.
 	 */
-	BLOB() {
+	public BLOB() {
 	}
 
 	/**
