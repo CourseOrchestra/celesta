@@ -1,7 +1,5 @@
 package ru.curs.celesta.showcase;
 
-import ru.curs.showcase.app.api.UserMessage;
-
 /**
  * DTO класс с сырыми данными для элементов Showcase: навигатора, инф. панели
  * или ее элементов. Данные передаются в виде строк.
