@@ -1,4 +1,6 @@
 eclipse.preferences.version=1
+encoding//brs/dbo/_dbo_orm.py=UTF-8
+encoding//brs/dbo/calcrating.py=UTF-8
 encoding//score/g1/_g1.sql=UTF-8
 encoding//score/g1/_g1_orm.py=UTF-8
 encoding//score/g1/hello.py=UTF-8

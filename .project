@@ -26,4 +26,11 @@
 		<nature>net.sf.eclipsecs.core.CheckstyleNature</nature>
 		<nature>org.python.pydev.pythonNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>brs</name>
+			<type>2</type>
+			<location>C:/temp/brs</location>
+		</link>
+	</linkedResources>
 </projectDescription>

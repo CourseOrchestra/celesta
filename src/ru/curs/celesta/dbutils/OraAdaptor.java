@@ -30,6 +30,7 @@ import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.NamedElement;
 import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
@@ -40,6 +41,12 @@ import ru.curs.celesta.score.View;
  * Адаптер Oracle Database.
  */
 final class OraAdaptor extends DBAdaptor {
+	private static final String CSC = "csc_";
+
+	private static final String SNL = "snl_";
+
+	private static final String DROP_TRIGGER = "drop trigger \"";
+
 	private static final String TABLE_TEMPLATE = "\"%s_%s\"";
 
 	private static final int LENGTHFORMAX = 4000;
@@ -53,9 +60,6 @@ final class OraAdaptor extends DBAdaptor {
 			.compile("([a-zA-Z][a-zA-Z0-9]*)_([a-zA-Z_][a-zA-Z0-9_]*)");
 
 	private static final Map<Class<? extends Column>, OraColumnDefiner> TYPES_DICT = new HashMap<>();
-
-	private static final int MAX_CONSTRAINT_NAME = 30;
-	private static final int HASH_MASK = 0xFFFF;
 
 	/**
 	 * Определитель колонок для Oracle, учитывающий тот факт, что в Oracle
@@ -447,12 +451,6 @@ final class OraAdaptor extends DBAdaptor {
 		}
 	}
 
-	private String getSequenceName(Table table) {
-		String sequenceName = String.format("\"%s_%s_inc\"", table.getGrain()
-				.getName(), table.getName());
-		return sequenceName;
-	}
-
 	@Override
 	public String tableTemplate() {
 		return TABLE_TEMPLATE;
@@ -461,7 +459,8 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
 		String sequenceName = getSequenceName(t);
-		String sql = String.format("SELECT %s.CURRVAL FROM DUAL", sequenceName);
+		String sql = String.format("SELECT \"%s\".CURRVAL FROM DUAL",
+				sequenceName);
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -495,16 +494,19 @@ final class OraAdaptor extends DBAdaptor {
 
 	private boolean checkForBoolean(Connection conn, Column c)
 			throws SQLException {
-		PreparedStatement checkForBool = conn.prepareStatement(String.format(
+		String sql = String.format(
 				"SELECT SEARCH_CONDITION FROM ALL_CONSTRAINTS WHERE "
 						+ "OWNER = sys_context('userenv','session_user')"
 						+ " AND TABLE_NAME = '%s_%s'"
 						+ "AND CONSTRAINT_TYPE = 'C'", c.getParentTable()
-						.getGrain().getName(), c.getParentTable().getName()));
+						.getGrain().getName(), c.getParentTable().getName());
+		// System.out.println(sql);
+		PreparedStatement checkForBool = conn.prepareStatement(sql);
 		try {
 			ResultSet rs = checkForBool.executeQuery();
 			while (rs.next()) {
-				Matcher m = BOOLEAN_CHECK.matcher(rs.getString(1));
+				String buf = rs.getString(1);
+				Matcher m = BOOLEAN_CHECK.matcher(buf);
 				if (m.find() && m.group(1).equals(c.getName()))
 					return true;
 			}
@@ -517,14 +519,14 @@ final class OraAdaptor extends DBAdaptor {
 
 	private boolean checkForIncrementTrigger(Connection conn, Column c)
 			throws SQLException {
-		PreparedStatement checkForTrigger = conn
-				.prepareStatement(String
-						.format("select TRIGGER_BODY  from all_triggers where owner = sys_context('userenv','session_user') "
-								+ "and table_name = '%s_%s' and trigger_name = '%s_%s_inc' and triggering_event = 'INSERT'",
-								c.getParentTable().getGrain().getName(), c
-										.getParentTable().getName(), c
-										.getParentTable().getGrain().getName(),
-								c.getParentTable().getName()));
+		String sql = String
+				.format("select TRIGGER_BODY  from all_triggers where owner = sys_context('userenv','session_user') "
+						+ "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'INSERT'",
+						c.getParentTable().getGrain().getName(), c
+								.getParentTable().getName(), getSequenceName(c
+								.getParentTable()));
+		// System.out.println(sql);
+		PreparedStatement checkForTrigger = conn.prepareStatement(sql);
 		try {
 			ResultSet rs = checkForTrigger.executeQuery();
 			if (rs.next()) {
@@ -652,7 +654,7 @@ final class OraAdaptor extends DBAdaptor {
 
 		if (actual.getType() == BooleanColumn.class
 				&& !(c instanceof BooleanColumn)) {
-			// Тип Boolean меняется на что-то другое, надо сброить constraint
+			// Тип Boolean меняется на что-то другое, надо сбросить constraint
 			String check = String.format(ALTER_TABLE + tableTemplate()
 					+ " drop constraint %s", c.getParentTable().getGrain()
 					.getName(), c.getParentTable().getName(),
@@ -708,15 +710,24 @@ final class OraAdaptor extends DBAdaptor {
 			}
 	}
 
+	private static String getFKTriggerName(String prefix, String fkName) {
+		String result = prefix + fkName;
+		result = NamedElement.limitName(result);
+		return result;
+	}
+
 	private static String getBooleanCheckName(Column c) {
-		String result = String.format("\"chk_%s_%s_%s\"", c.getParentTable()
+		String result = String.format("chk_%s_%s_%s", c.getParentTable()
 				.getGrain().getName(), c.getParentTable().getName(),
 				c.getName());
-		if (result.length() > MAX_CONSTRAINT_NAME) {
-			result = String.format("%s%04X",
-					result.substring(0, MAX_CONSTRAINT_NAME - 4),
-					result.hashCode() & HASH_MASK);
-		}
+		result = NamedElement.limitName(result);
+		return "\"" + result + "\"";
+	}
+
+	private static String getSequenceName(Table table) {
+		String result = String.format("%s_%s_inc", table.getGrain().getName(),
+				table.getName());
+		result = NamedElement.limitName(result);
 		return result;
 	}
 
@@ -725,7 +736,7 @@ final class OraAdaptor extends DBAdaptor {
 		// 1. Firstly, we have to clean up table from any auto-increment
 		// triggers
 		String sequenceName = getSequenceName(t);
-		String sql = String.format("drop trigger %s", sequenceName);
+		String sql = String.format(DROP_TRIGGER + "%s\"", sequenceName);
 		PreparedStatement stmt = conn.prepareStatement(sql);
 		try {
 			stmt.executeUpdate();
@@ -753,8 +764,8 @@ final class OraAdaptor extends DBAdaptor {
 		stmt = conn
 				.prepareStatement(String
 						.format("select count(*) from all_sequences where sequence_owner = "
-								+ "sys_context('userenv','session_user') and sequence_name = '%s_%s_inc'",
-								t.getGrain().getName(), t.getName()));
+								+ "sys_context('userenv','session_user') and sequence_name = '%s'",
+								sequenceName));
 		ResultSet rs = stmt.executeQuery();
 		try {
 			hasSequence = rs.next() && rs.getInt(1) > 0;
@@ -763,7 +774,7 @@ final class OraAdaptor extends DBAdaptor {
 		}
 		if (!hasSequence) {
 			sql = String
-					.format("CREATE SEQUENCE %s"
+					.format("CREATE SEQUENCE \"%s\""
 							+ " START WITH 1 INCREMENT BY 1 MINVALUE 1 NOCACHE NOCYCLE",
 							sequenceName);
 			stmt = conn.prepareStatement(sql);
@@ -775,10 +786,10 @@ final class OraAdaptor extends DBAdaptor {
 		}
 
 		// 3. Now we have to create or replace the auto-increment trigger
-		sql = String.format("CREATE OR REPLACE TRIGGER " + sequenceName
-				+ " BEFORE INSERT ON " + tableTemplate()
-				+ " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT "
-				+ sequenceName + ".NEXTVAL INTO :new.%s FROM dual; END;", t
+		sql = String.format("CREATE OR REPLACE TRIGGER \"" + sequenceName
+				+ "\" BEFORE INSERT ON " + tableTemplate()
+				+ " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT \""
+				+ sequenceName + "\".NEXTVAL INTO :new.%s FROM dual; END;", t
 				.getGrain().getName(), t.getName(), ic.getQuotedName(), ic
 				.getQuotedName());
 		Statement s = conn.createStatement();
@@ -793,7 +804,7 @@ final class OraAdaptor extends DBAdaptor {
 	void dropAutoIncrement(Connection conn, Table t) throws SQLException {
 		// Удаление Sequence
 		String sequenceName = getSequenceName(t);
-		String sql = "DROP SEQUENCE " + sequenceName;
+		String sql = "DROP SEQUENCE \"" + sequenceName + "\"";
 		Statement stmt = conn.createStatement();
 		try {
 			stmt.execute(sql);
@@ -947,16 +958,17 @@ final class OraAdaptor extends DBAdaptor {
 		String sql = String
 				.format("select trigger_name from all_triggers "
 						+ "where owner = sys_context('userenv','session_user') "
-						+ "and table_name = '%s' and trigger_name like '%%_%s' and triggering_event = 'UPDATE'",
-						tableName, fkName);
+						+ "and table_name = '%s' and trigger_name in ('%s', '%s') and triggering_event = 'UPDATE'",
+						tableName, getFKTriggerName(SNL, fkName),
+						getFKTriggerName(CSC, fkName));
 		Statement stmt = conn.createStatement();
 		try {
 			ResultSet rs = stmt.executeQuery(sql);
 			if (rs.next()) {
 				sql = rs.getString("TRIGGER_NAME");
-				if (sql.startsWith("csc_"))
+				if (sql.startsWith(CSC))
 					return FKRule.CASCADE;
-				else if (sql.startsWith("snl_"))
+				else if (sql.startsWith(SNL))
 					return FKRule.SET_NULL;
 			}
 			return FKRule.NO_ACTION;
@@ -972,25 +984,25 @@ final class OraAdaptor extends DBAdaptor {
 		// Clean up unwanted triggers
 		switch (fk.getUpdateRule()) {
 		case CASCADE:
-			sb = new StringBuilder("drop trigger \"snl_");
-			sb.append(fk.getConstraintName());
+			sb = new StringBuilder(DROP_TRIGGER);
+			sb.append(getFKTriggerName(SNL, fk.getConstraintName()));
 			sb.append("\"");
 			sql.add(sb);
 			break;
 		case SET_NULL:
-			sb = new StringBuilder("drop trigger \"csc_");
-			sb.append(fk.getConstraintName());
+			sb = new StringBuilder(DROP_TRIGGER);
+			sb.append(getFKTriggerName(CSC, fk.getConstraintName()));
 			sb.append("\"");
 			sql.add(sb);
 			break;
 		case NO_ACTION:
 		default:
-			sb = new StringBuilder("drop trigger \"snl_");
-			sb.append(fk.getConstraintName());
+			sb = new StringBuilder(DROP_TRIGGER);
+			sb.append(getFKTriggerName(SNL, fk.getConstraintName()));
 			sb.append("\"");
 			sql.add(sb);
-			sb = new StringBuilder("drop trigger \"csc_");
-			sb.append(fk.getConstraintName());
+			sb = new StringBuilder(DROP_TRIGGER);
+			sb.append(getFKTriggerName(CSC, fk.getConstraintName()));
 			sb.append("\"");
 			sql.add(sb);
 			return;
@@ -999,12 +1011,10 @@ final class OraAdaptor extends DBAdaptor {
 		sb = new StringBuilder();
 		sb.append("create or replace trigger \"");
 		if (fk.getUpdateRule() == FKRule.CASCADE) {
-			sb.append("csc_");
+			sb.append(getFKTriggerName(CSC, fk.getConstraintName()));
 		} else {
-			sb.append("snl_");
+			sb.append(getFKTriggerName(SNL, fk.getConstraintName()));
 		}
-
-		sb.append(fk.getConstraintName());
 		sb.append("\" after update of ");
 		Table t = fk.getReferencedTable();
 		boolean needComma = false;
@@ -1051,9 +1061,11 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	void processDropUpdateRule(LinkedList<String> sqlQueue, String fkName) {
-		String sql = String.format("drop trigger \"snl_%s\"", fkName);
+		String sql = String.format(DROP_TRIGGER + "%s\"",
+				getFKTriggerName(SNL, fkName));
 		sqlQueue.add(sql);
-		sql = String.format("drop trigger \"csc_%s\"", fkName);
+		sql = String.format(DROP_TRIGGER + "%s\"",
+				getFKTriggerName(CSC, fkName));
 		sqlQueue.add(sql);
 	}
 

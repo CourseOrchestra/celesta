@@ -57,7 +57,7 @@ public class ScoreTest {
 		Grain g1 = s.getGrain("g1");
 		View v = g1.getView("testview");
 		assertEquals("testview", v.getName());
-		assertEquals("view description", v.getCelestaDoc());
+		assertEquals("view description ", v.getCelestaDoc());
 		assertTrue(v.isDistinct());
 
 		assertEquals(4, v.getColumns().size());
@@ -310,12 +310,11 @@ public class ScoreTest {
 	public void fknameTest() throws ParseException, CelestaException {
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
-		Table t = g.getTable("test2");
+		Table t = g.getTable("aLongIdentityTableNaaame");
 		ForeignKey[] ff = t.getForeignKeys().toArray(new ForeignKey[0]);
 		assertEquals(2, ff.length);
 		assertEquals(30, ff[0].getConstraintName().length());
 		assertEquals(30, ff[1].getConstraintName().length());
-		assertFalse(ff[0].getConstraintName().equals(
-				ff[1].getConstraintName().length()));
+		assertFalse(ff[0].getConstraintName().equals(ff[1].getConstraintName()));
 	}
 }

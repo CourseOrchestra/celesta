@@ -773,7 +773,7 @@ public abstract class AbstractAdaptorTest {
 		Grain g = score.getGrain(GRAIN_NAME);
 		Table t2 = g.getTable("refTo");
 		ForeignKey fk = t.getForeignKeys().iterator().next();
-		assertEquals("fk_testName", fk.getConstraintName());
+		assertEquals("fk_testNameVeryVeryLongLonName", fk.getConstraintName());
 		try {
 			dba.createTable(conn, t);
 			try {
@@ -793,7 +793,7 @@ public abstract class AbstractAdaptorTest {
 			l = dba.getFKInfo(conn, g);
 			assertEquals(1, l.size());
 			DBFKInfo info = l.get(0);
-			assertEquals("fk_testName", info.getName());
+			assertEquals("fk_testNameVeryVeryLongLonName", info.getName());
 			String[] expected = { "attrVarchar", "attrInt" };
 			String[] actual = info.getColumnNames().toArray(new String[0]);
 
@@ -829,6 +829,25 @@ public abstract class AbstractAdaptorTest {
 			conn.rollback();
 			dba.dropTable(conn, t);
 			dba.dropTable(conn, t2);
+		}
+	}
+
+	@Test
+	public void additionalCreateTableTest() throws ParseException,
+			CelestaException {
+		Grain g = score.getGrain(GRAIN_NAME);
+		Table t3 = g.getTable("aLongIdentityTableNaaame");
+		try {
+			dba.createTable(conn, t3);
+			DBColumnInfo c = dba.getColumnInfo(conn, t3.getColumn("f1"));
+			assertTrue(c.isIdentity());
+			c = dba.getColumnInfo(conn, t3.getColumn("field2"));
+			assertSame(BooleanColumn.class, c.getType());
+			assertFalse(c.isIdentity());
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			dba.dropTable(conn, t3);
 		}
 	}
 

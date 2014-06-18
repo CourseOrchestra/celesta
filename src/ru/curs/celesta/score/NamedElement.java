@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  * должен иметь уникальное имя-идентификатор.
  * 
  */
-abstract class NamedElement {
+public abstract class NamedElement {
 
 	/**
 	 * Максимальная длина идентификатора Celesta.
@@ -51,7 +51,15 @@ abstract class NamedElement {
 					MAX_IDENTIFIER_LENGTH));
 	}
 
-	static String limitName(String value) {
+	/**
+	 * Ограничивает длину идентификатора максимальным числом символов.
+	 * 
+	 * @param value
+	 *            Идентификатор произвольной длины.
+	 * @return "Подрезанный" идентификатор, последние 8 символов занимает
+	 *         хэш-код исходного идентификатора.
+	 */
+	public static String limitName(String value) {
 		String result = value;
 		if (result.length() > NamedElement.MAX_IDENTIFIER_LENGTH) {
 			result = String
