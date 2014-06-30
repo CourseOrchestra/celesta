@@ -95,7 +95,8 @@ public final class Celesta {
 		System.out.println("done.");
 
 		// 2. Перекомпиляция ORM-модулей, где это необходимо.
-		System.out.print("Celesta initialization: phase 2/3 data access classes compiling...");
+		System.out
+				.print("Celesta initialization: phase 2/3 data access classes compiling...");
 		ORMCompiler.compile(score);
 		System.out.println("done.");
 
@@ -105,11 +106,13 @@ public final class Celesta {
 		theCelesta = this;
 
 		if (!AppSettings.getSkipDBUpdate()) {
-			System.out.print("Celesta initialization: phase 3/3 database upgrade...");
+			System.out
+					.print("Celesta initialization: phase 3/3 database upgrade...");
 			DBUpdator.updateDB(score);
 			System.out.println("done.");
 		} else {
-			System.out.println("Celesta initialization: phase 3/3 database upgrade...skipped.");
+			System.out
+					.println("Celesta initialization: phase 3/3 database upgrade...skipped.");
 		}
 	}
 
@@ -241,7 +244,7 @@ public final class Celesta {
 
 			PythonInterpreter interp = getPythonInterpreter();
 			Connection conn = ConnectionPool.get();
-			CallContext context = new CallContext(conn, userId, this);
+			CallContext context = new CallContext(conn, userId);
 			try {
 				interp.set("context", context);
 				for (int i = 0; i < param.length; i++)

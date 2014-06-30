@@ -89,7 +89,7 @@ final class LoggingManager {
 		if (a == Action.READ)
 			throw new IllegalArgumentException();
 		CallContext sysContext = new CallContext(c.callContext().getConn(),
-				BasicCursor.SYSTEMUSERID, null);
+				BasicCursor.SYSTEMUSERID);
 		if (!isLoggingNeeded(sysContext, c.meta(), a))
 			return;
 		LogCursor log = new LogCursor(sysContext);

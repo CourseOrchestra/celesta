@@ -80,8 +80,7 @@ public final class DBUpdator {
 		if (dba == null)
 			dba = DBAdaptor.getAdaptor();
 		Connection conn = ConnectionPool.get();
-		CallContext context = new CallContext(conn, BasicCursor.SYSTEMUSERID,
-				null);
+		CallContext context = new CallContext(conn, BasicCursor.SYSTEMUSERID);
 		try {
 			grain = new GrainsCursor(context);
 			table = new TablesCursor(context);
