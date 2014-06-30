@@ -90,18 +90,27 @@ public final class Celesta {
 	private Celesta() throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
 		// 1. Разбор описания гранул.
+		System.out.print("Celesta initialization: phase 1/3 score parsing...");
 		score = new Score(AppSettings.getScorePath());
+		System.out.println("done.");
 
 		// 2. Перекомпиляция ORM-модулей, где это необходимо.
+		System.out.print("Celesta initialization: phase 2/3 data access classes compiling...");
 		ORMCompiler.compile(score);
+		System.out.println("done.");
 
 		// 3. Обновление структуры базы данных.
 		// Т. к. на данном этапе уже используется метаинформация, то theCelesta
 		// необходимо проинициализировать.
 		theCelesta = this;
 
-		if (!AppSettings.getSkipDBUpdate())
+		if (!AppSettings.getSkipDBUpdate()) {
+			System.out.print("Celesta initialization: phase 3/3 database upgrade...");
 			DBUpdator.updateDB(score);
+			System.out.println("done.");
+		} else {
+			System.out.println("Celesta initialization: phase 3/3 database upgrade...skipped.");
+		}
 	}
 
 	/**

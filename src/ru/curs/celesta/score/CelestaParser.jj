@@ -34,7 +34,7 @@ TOKEN: /* SQL keywords */
 |   <K_DEFAULT:    "DEFAULT">
 |   <K_NOT:        "NOT">
 |   <K_NULL:       "NULL">
-|   <K_MAX:        "MAX">
+/*|   <K_MAX:        "MAX">*/
 |   <K_TEXT:       "TEXT">
 |   <K_IDENTITY:   "IDENTITY">
 |   <K_GETDATE:    "GETDATE">

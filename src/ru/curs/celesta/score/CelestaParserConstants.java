@@ -27,105 +27,103 @@ interface CelestaParserConstants {
   /** RegularExpression Id. */
   int K_NULL = 12;
   /** RegularExpression Id. */
-  int K_MAX = 13;
+  int K_TEXT = 13;
   /** RegularExpression Id. */
-  int K_TEXT = 14;
+  int K_IDENTITY = 14;
   /** RegularExpression Id. */
-  int K_IDENTITY = 15;
+  int K_GETDATE = 15;
   /** RegularExpression Id. */
-  int K_GETDATE = 16;
+  int K_PRIMARY = 16;
   /** RegularExpression Id. */
-  int K_PRIMARY = 17;
+  int K_FOREIGN = 17;
   /** RegularExpression Id. */
-  int K_FOREIGN = 18;
+  int K_KEY = 18;
   /** RegularExpression Id. */
-  int K_KEY = 19;
+  int K_REFERENCES = 19;
   /** RegularExpression Id. */
-  int K_REFERENCES = 20;
+  int K_ON = 20;
   /** RegularExpression Id. */
-  int K_ON = 21;
+  int K_UPDATE = 21;
   /** RegularExpression Id. */
-  int K_UPDATE = 22;
+  int K_DELETE = 22;
   /** RegularExpression Id. */
-  int K_DELETE = 23;
+  int K_NO = 23;
   /** RegularExpression Id. */
-  int K_NO = 24;
+  int K_ACTION = 24;
   /** RegularExpression Id. */
-  int K_ACTION = 25;
+  int K_SET = 25;
   /** RegularExpression Id. */
-  int K_SET = 26;
+  int K_CASCADE = 26;
   /** RegularExpression Id. */
-  int K_CASCADE = 27;
+  int K_ALTER = 27;
   /** RegularExpression Id. */
-  int K_ALTER = 28;
+  int K_ADD = 28;
   /** RegularExpression Id. */
-  int K_ADD = 29;
+  int K_CONSTRAINT = 29;
   /** RegularExpression Id. */
-  int K_CONSTRAINT = 30;
+  int K_IN = 30;
   /** RegularExpression Id. */
-  int K_IN = 31;
+  int K_OR = 31;
   /** RegularExpression Id. */
-  int K_OR = 32;
+  int K_AND = 32;
   /** RegularExpression Id. */
-  int K_AND = 33;
+  int K_LIKE = 33;
   /** RegularExpression Id. */
-  int K_LIKE = 34;
+  int K_BETWEEN = 34;
   /** RegularExpression Id. */
-  int K_BETWEEN = 35;
+  int K_IS = 35;
   /** RegularExpression Id. */
-  int K_IS = 36;
+  int K_SELECT = 36;
   /** RegularExpression Id. */
-  int K_SELECT = 37;
+  int K_DISTINCT = 37;
   /** RegularExpression Id. */
-  int K_DISTINCT = 38;
+  int K_FROM = 38;
   /** RegularExpression Id. */
-  int K_FROM = 39;
+  int K_INNER = 39;
   /** RegularExpression Id. */
-  int K_INNER = 40;
+  int K_LEFT = 40;
   /** RegularExpression Id. */
-  int K_LEFT = 41;
+  int K_RIGHT = 41;
   /** RegularExpression Id. */
-  int K_RIGHT = 42;
+  int K_FULL = 42;
   /** RegularExpression Id. */
-  int K_FULL = 43;
+  int K_JOIN = 43;
   /** RegularExpression Id. */
-  int K_JOIN = 44;
+  int K_WHERE = 44;
   /** RegularExpression Id. */
-  int K_WHERE = 45;
+  int K_INT = 45;
   /** RegularExpression Id. */
-  int K_INT = 46;
+  int K_REAL = 46;
   /** RegularExpression Id. */
-  int K_REAL = 47;
+  int K_VARCHAR = 47;
   /** RegularExpression Id. */
-  int K_VARCHAR = 48;
+  int K_BLOB = 48;
   /** RegularExpression Id. */
-  int K_BLOB = 49;
+  int K_DATETIME = 49;
   /** RegularExpression Id. */
-  int K_DATETIME = 50;
+  int K_BIT = 50;
   /** RegularExpression Id. */
-  int K_BIT = 51;
+  int S_DOUBLE = 51;
   /** RegularExpression Id. */
-  int S_DOUBLE = 52;
+  int S_INTEGER = 52;
   /** RegularExpression Id. */
-  int S_INTEGER = 53;
+  int DIGIT = 53;
   /** RegularExpression Id. */
-  int DIGIT = 54;
+  int S_BINARY_LITERAL = 54;
   /** RegularExpression Id. */
-  int S_BINARY_LITERAL = 55;
+  int S_IDENTIFIER = 55;
   /** RegularExpression Id. */
-  int S_IDENTIFIER = 56;
+  int LETTER = 56;
   /** RegularExpression Id. */
-  int LETTER = 57;
+  int S_CHAR_LITERAL = 57;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 58;
+  int S_QUOTED_IDENTIFIER = 58;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 59;
+  int CELESTA_DOC = 59;
   /** RegularExpression Id. */
-  int CELESTA_DOC = 60;
+  int LINE_COMMENT = 60;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 61;
-  /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 62;
+  int MULTI_LINE_COMMENT = 61;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -145,7 +143,6 @@ interface CelestaParserConstants {
     "\"DEFAULT\"",
     "\"NOT\"",
     "\"NULL\"",
-    "\"MAX\"",
     "\"TEXT\"",
     "\"IDENTITY\"",
     "\"GETDATE\"",
