@@ -40,15 +40,13 @@ public final class AppSettings {
 			}
 		}
 
-		dbClassName = settings.getProperty("database.classname", "").trim();
-		if ("".equals(dbClassName))
-			sb.append("No JDBC driver class name given (database.classname).\n");
-
 		databaseConnection = settings.getProperty("database.connection", "")
 				.trim();
 		if ("".equals(databaseConnection))
 			sb.append("No JDBC URL given (database.connection).\n");
-		if (internalGetDBType() == DBType.UNKNOWN)
+
+		dbClassName = internalGetDBType().getDriverClassName();
+		if (dbClassName.isEmpty())
 			sb.append("Cannot recognize RDBMS type.");
 
 		String lf = settings.getProperty("log.file");
@@ -107,20 +105,49 @@ public final class AppSettings {
 		/**
 		 * Postgre.
 		 */
-		POSTGRES, /**
+		POSTGRES {
+			@Override
+			String getDriverClassName() {
+				return "org.postgresql.Driver";
+			}
+		},
+		/**
 		 * MS SQL.
 		 */
-		MSSQL, /**
+		MSSQL {
+			@Override
+			String getDriverClassName() {
+				return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+			}
+		},
+		/**
 		 * ORACLE.
 		 */
-		ORACLE,
+		ORACLE {
+			@Override
+			String getDriverClassName() {
+				return "oracle.jdbc.driver.OracleDriver";
+			}
+		},
 		/**
 		 * MySQL.
 		 */
-		MYSQL, /**
+		MYSQL {
+			@Override
+			String getDriverClassName() {
+				return "com.mysql.jdbc.Driver";
+			}
+		},
+		/**
 		 * Неизвестный тип.
 		 */
-		UNKNOWN
+		UNKNOWN {
+			@Override
+			String getDriverClassName() {
+				return "";
+			}
+		};
+		abstract String getDriverClassName();
 	}
 
 	private DBType internalGetDBType() {
