@@ -12,8 +12,10 @@ public final class AppSettings {
 	private static AppSettings theSettings;
 
 	private final String scorePath;
-	private final String dbClassName;
+	private final DBType dbType;
 	private final String databaseConnection;
+	private final String login;
+	private final String password;
 	private final Logger logger;
 	private final String pylibPath;
 	private final boolean skipDBUpdate;
@@ -40,14 +42,18 @@ public final class AppSettings {
 			}
 		}
 
-		databaseConnection = settings.getProperty("database.connection", "")
-				.trim();
-		if ("".equals(databaseConnection))
-			sb.append("No JDBC URL given (database.connection).\n");
+		String url = settings.getProperty("database.connection", "").trim();
+		if ("".equals(url))
+			url = settings.getProperty("rdbms.connection.url", "").trim();
+		databaseConnection = url;
+		login = settings.getProperty("rdbms.connection.username", "").trim();
+		password = settings.getProperty("rdbms.connection.password", "").trim();
 
-		dbClassName = internalGetDBType().getDriverClassName();
-		if (dbClassName.isEmpty())
-			sb.append("Cannot recognize RDBMS type.");
+		if ("".equals(databaseConnection))
+			sb.append("No JDBC URL given (rdbms.connection.url).\n");
+		dbType = internalGetDBType(url);
+		if (dbType == DBType.UNKNOWN)
+			sb.append("Cannot recognize RDBMS type or unsupported database.");
 
 		String lf = settings.getProperty("log.file");
 		if (lf != null)
@@ -74,27 +80,6 @@ public final class AppSettings {
 
 	static void init(Properties settings) throws CelestaException {
 		theSettings = new AppSettings(settings);
-	}
-
-	/**
-	 * Значение параметра "score.path".
-	 */
-	public static String getScorePath() {
-		return theSettings.scorePath;
-	}
-
-	/**
-	 * Значение параметра "Класс JDBC-подключения".
-	 */
-	public static String getDbClassName() {
-		return theSettings.dbClassName;
-	}
-
-	/**
-	 * Значение параметра "Строка JDBC-подключения".
-	 */
-	public static String getDatabaseConnection() {
-		return theSettings.databaseConnection;
 	}
 
 	/**
@@ -150,14 +135,14 @@ public final class AppSettings {
 		abstract String getDriverClassName();
 	}
 
-	private DBType internalGetDBType() {
-		if (databaseConnection.startsWith("jdbc:sqlserver")) {
+	private static DBType internalGetDBType(String url) {
+		if (url.startsWith("jdbc:sqlserver")) {
 			return DBType.MSSQL;
-		} else if (databaseConnection.startsWith("jdbc:postgresql")) {
+		} else if (url.startsWith("jdbc:postgresql")) {
 			return DBType.POSTGRES;
-		} else if (databaseConnection.startsWith("jdbc:oracle")) {
+		} else if (url.startsWith("jdbc:oracle")) {
 			return DBType.ORACLE;
-		} else if (databaseConnection.startsWith("jdbc:mysql")) {
+		} else if (url.startsWith("jdbc:mysql")) {
 			return DBType.MYSQL;
 		} else {
 			return DBType.UNKNOWN;
@@ -168,7 +153,7 @@ public final class AppSettings {
 	 * Возвращает тип базы данных на основе JDBC-строки подключения.
 	 */
 	public static DBType getDBType() {
-		return theSettings.internalGetDBType();
+		return theSettings.dbType;
 	}
 
 	/**
@@ -191,4 +176,40 @@ public final class AppSettings {
 	public static Boolean getSkipDBUpdate() {
 		return theSettings.skipDBUpdate;
 	}
+
+	/**
+	 * Значение параметра "score.path".
+	 */
+	public static String getScorePath() {
+		return theSettings.scorePath;
+	}
+
+	/**
+	 * Значение параметра "Класс JDBC-подключения".
+	 */
+	public static String getDbClassName() {
+		return theSettings.dbType.getDriverClassName();
+	}
+
+	/**
+	 * Значение параметра "Строка JDBC-подключения".
+	 */
+	public static String getDatabaseConnection() {
+		return theSettings.databaseConnection;
+	}
+
+	/**
+	 * Логин к базе данных.
+	 */
+	public static String getDBLogin() {
+		return theSettings.login;
+	}
+
+	/**
+	 * Пароль к базе данных.
+	 */
+	public static String getDBPassword() {
+		return theSettings.password;
+	}
+
 }
