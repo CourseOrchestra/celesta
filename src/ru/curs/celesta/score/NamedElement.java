@@ -18,7 +18,7 @@ public abstract class NamedElement {
 	/**
 	 * Максимальная длина идентификатора Celesta.
 	 */
-	private static final int MAX_IDENTIFIER_LENGTH = 40;
+	private static final int MAX_IDENTIFIER_LENGTH = 30;
 
 	private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/",
 			Pattern.DOTALL);
