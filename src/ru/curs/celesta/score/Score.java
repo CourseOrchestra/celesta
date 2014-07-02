@@ -74,7 +74,7 @@ public class Score {
 	 *             определения гранулы с одним и тем же именем.
 	 */
 	public Score(String scorePath) throws CelestaException {
-		for (String entry : scorePath.split(";")) {
+		for (String entry : scorePath.split(File.pathSeparator)) {
 			File path = new File(entry.trim());
 			if (!path.exists())
 				throw new CelestaException(
