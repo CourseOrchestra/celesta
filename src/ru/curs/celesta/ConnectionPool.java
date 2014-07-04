@@ -43,8 +43,14 @@ public final class ConnectionPool {
 		}
 		try {
 			Class.forName(AppSettings.getDbClassName());
-			c = DriverManager
-					.getConnection(AppSettings.getDatabaseConnection());
+			if (AppSettings.getDBLogin().isEmpty()) {
+				c = DriverManager.getConnection(AppSettings
+						.getDatabaseConnection());
+			} else {
+				c = DriverManager.getConnection(
+						AppSettings.getDatabaseConnection(),
+						AppSettings.getDBLogin(), AppSettings.getDBPassword());
+			}
 			c.setAutoCommit(false);
 			return c;
 		} catch (SQLException | ClassNotFoundException e) {
