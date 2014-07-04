@@ -48,10 +48,19 @@ public final class XMLJSONConverter {
 
 		SAXParser parser = createSAXParser();
 		XMLToJSONConverterSaxHandler handler = new XMLToJSONConverterSaxHandler();
-		InputStream in = stringToStream(xml);
+		// Данный код вставлен для разрешения случая, когда в xml-файле имеется
+		// несколько корневых эелементов, тогда как на вход SaxParser
+		// должен подаваться xml-файл только с одним корневым элементом.
+		String newXml = "<tempRootForResolvingProblem>" + xml + "</tempRootForResolvingProblem>";
+		InputStream in = stringToStream(newXml);
 		parser.parse(in, handler);
 		JsonElement result = handler.getResult();
-		return result.toString();
+		String str = result.toString();
+		int ind = str.indexOf(':');
+		str = str.substring(ind + 1);
+		ind = str.lastIndexOf("}");
+		str = str.substring(0, ind);
+		return str;
 	}
 
 	/**
