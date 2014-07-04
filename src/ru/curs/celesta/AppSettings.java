@@ -34,7 +34,7 @@ public final class AppSettings {
 		if ("".equals(scorePath))
 			sb.append("No score path given (score.path).\n");
 		else {
-			for (String pathEntry : scorePath.split(";")) {
+			for (String pathEntry : scorePath.split(File.pathSeparator)) {
 				File path = new File(pathEntry);
 				if (!(path.isDirectory() && path.canRead())) {
 					sb.append("Invalid score.path entry: " + pathEntry + '\n');
