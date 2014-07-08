@@ -1,5 +1,8 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.GrainElement;
@@ -27,7 +30,9 @@ final class PermissionManager {
 	/**
 	 * Размер кэша (в записях). ДОЛЖЕН БЫТЬ СТЕПЕНЬЮ ДВОЙКИ!!
 	 */
-	private static final int CACHE_SIZE = 2048;
+	private static final int CACHE_SIZE = 8192;
+
+	private static final int ROLE_CACHE_SIZE = 2048;
 	/**
 	 * "Срок годности" записи кэша (в миллисекундах).
 	 */
@@ -37,31 +42,43 @@ final class PermissionManager {
 			| Action.INSERT.getMask() | Action.MODIFY.getMask()
 			| Action.DELETE.getMask();
 
-	private CacheEntry[] cache = new CacheEntry[CACHE_SIZE];
+	private PermissionCacheEntry[] cache = new PermissionCacheEntry[CACHE_SIZE];
+	private RoleCacheEntry[] rolesCache = new RoleCacheEntry[ROLE_CACHE_SIZE];
+
+	/**
+	 * Базовый класс элемента кэша менеджера пермиссий.
+	 * 
+	 */
+	private static class BaseCacheEntry {
+		private final long expirationTime;
+
+		BaseCacheEntry() {
+			expirationTime = System.currentTimeMillis()
+					+ CACHE_ENTRY_SHELF_LIFE;
+		}
+
+		public boolean isExpired() {
+			return System.currentTimeMillis() > expirationTime;
+		}
+	}
 
 	/**
 	 * Запись во внутреннем кэше.
 	 * 
 	 */
-	private static class CacheEntry {
-
+	private static class PermissionCacheEntry extends BaseCacheEntry {
 		private final String userName;
 		private final GrainElement table;
-
 		private final int permissionMask;
 
-		private final long expirationTime;
-
-		public CacheEntry(String userName, GrainElement table,
+		public PermissionCacheEntry(String userName, GrainElement table,
 				int permissionMask) {
+			super();
 			if (userName == null)
 				throw new IllegalArgumentException();
 			this.userName = userName;
 			this.table = table;
 			this.permissionMask = permissionMask;
-
-			expirationTime = System.currentTimeMillis()
-					+ CACHE_ENTRY_SHELF_LIFE;
 		}
 
 		public static int hash(String userName, GrainElement table) {
@@ -69,14 +86,23 @@ final class PermissionManager {
 					.getName()).hashCode();
 		}
 
-		public boolean isExpired() {
-			return System.currentTimeMillis() > expirationTime;
-		}
-
 		public boolean isActionPermitted(Action a) {
 			return (permissionMask & a.getMask()) != 0;
 		}
 
+	}
+
+	/**
+	 * Запись в кэше ролей пользователя.
+	 */
+	private static class RoleCacheEntry extends BaseCacheEntry {
+		private final String userId;
+		private final List<String> roles = new ArrayList<>();
+
+		RoleCacheEntry(String userId) {
+			super();
+			this.userId = userId;
+		}
 	}
 
 	/**
@@ -100,11 +126,12 @@ final class PermissionManager {
 			return true;
 
 		// Вычисляем местоположение данных в кэше.
-		int index = CacheEntry.hash(c.getUserId(), t) & (CACHE_SIZE - 1);
+		int index = PermissionCacheEntry.hash(c.getUserId(), t)
+				& (CACHE_SIZE - 1);
 
 		// Прежде всего смотрим, нет ли в кэше подходящей непросроченной записи
 		// (в противном случае -- обновляем кэш).
-		CacheEntry ce = cache[index];
+		PermissionCacheEntry ce = cache[index];
 		if (ce == null || ce.isExpired() || ce.table != t
 				|| !ce.userName.equals(c.getUserId())) {
 			ce = refreshPermissions(c, t);
@@ -113,27 +140,41 @@ final class PermissionManager {
 		return ce.isActionPermitted(a);
 	}
 
-	private CacheEntry refreshPermissions(CallContext c, GrainElement t)
+	private RoleCacheEntry getRce(String userID, CallContext sysContext)
 			throws CelestaException {
+		int index = userID.hashCode() & (ROLE_CACHE_SIZE - 1);
+		RoleCacheEntry rce = rolesCache[index];
+		if (rce == null || rce.isExpired() || !rce.userId.equals(userID)) {
+			rce = new RoleCacheEntry(userID);
+			UserRolesCursor userRoles = new UserRolesCursor(sysContext);
+			userRoles.setRange("userid", userID);
+			while (userRoles.next()) {
+				rce.roles.add(userRoles.getRoleid());
+			}
+			rolesCache[index] = rce;
+		}
+		return rce;
+	}
+
+	private PermissionCacheEntry refreshPermissions(CallContext c,
+			GrainElement t) throws CelestaException {
 		CallContext sysContext = new CallContext(c.getConn(),
 				BasicCursor.SYSTEMUSERID);
-		UserRolesCursor userRoles = new UserRolesCursor(sysContext);
+
+		RoleCacheEntry rce = getRce(c.getUserId(), sysContext);
 		PermissionsCursor permissions = new PermissionsCursor(sysContext);
-		userRoles.setRange("userid", c.getUserId());
-
 		int permissionsMask = 0;
-
-		while (userRoles.next() && permissionsMask != FULL_RIGHTS) {
-			if (READER.equals(userRoles.getRoleid())
-					|| (t.getGrain().getName() + '.' + READER).equals(userRoles
-							.getRoleid())) {
+		for (String roleId : rce.roles) {
+			if (permissionsMask == FULL_RIGHTS)
+				break;
+			if (READER.equals(roleId)
+					|| (t.getGrain().getName() + '.' + READER).equals(roleId)) {
 				permissionsMask |= Action.READ.getMask();
-			} else if (EDITOR.equals(userRoles.getRoleid())
-					|| (t.getGrain().getName() + '.' + EDITOR).equals(userRoles
-							.getRoleid())) {
+			} else if (EDITOR.equals(roleId)
+					|| (t.getGrain().getName() + '.' + EDITOR).equals(roleId)) {
 				permissionsMask = FULL_RIGHTS;
-			} else if (permissions.tryGet(userRoles.getRoleid(), t.getGrain()
-					.getName(), t.getName())) {
+			} else if (permissions.tryGet(roleId, t.getGrain().getName(),
+					t.getName())) {
 				permissionsMask |= permissions.isR() ? Action.READ.getMask()
 						: 0;
 				permissionsMask |= permissions.isI() ? Action.INSERT.getMask()
@@ -144,6 +185,6 @@ final class PermissionManager {
 						: 0;
 			}
 		}
-		return new CacheEntry(c.getUserId(), t, permissionsMask);
+		return new PermissionCacheEntry(c.getUserId(), t, permissionsMask);
 	}
 }
