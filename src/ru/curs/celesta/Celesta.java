@@ -67,6 +67,7 @@ import org.python.core.codecs;
 import org.python.util.PythonInterpreter;
 
 import ru.curs.celesta.dbutils.DBUpdator;
+import ru.curs.celesta.dbutils.SessionLogManager;
 import ru.curs.celesta.ormcompiler.ORMCompiler;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.ParseException;
@@ -220,9 +221,22 @@ public final class Celesta {
 	 *            Имя сессии.
 	 * @param userId
 	 *            Имя пользователя.
+	 * @throws CelestaException
+	 *             Сбой взаимодействия с базой данных.
 	 */
-	public void login(String sessionId, String userId) {
-		sessions.put(sessionId, new SessionContext(userId, sessionId));
+	public void login(String sessionId, String userId) throws CelestaException {
+		if (sessionId == null)
+			throw new IllegalArgumentException("Session id is null.");
+		if (userId == null)
+			throw new IllegalArgumentException("User id is null.");
+		// Создавать новый SessionContext имеет смысл лишь в случае, когда
+		// нет старого.
+		SessionContext oldSession = sessions.get(sessionId);
+		if (oldSession == null || !userId.equals(oldSession.getUserId())) {
+			SessionContext session = new SessionContext(userId, sessionId);
+			sessions.put(sessionId, session);
+			SessionLogManager.logLogin(session);
+		}
 	}
 
 	/**
@@ -232,11 +246,16 @@ public final class Celesta {
 	 *            имя сессии.
 	 * @param timeout
 	 *            признак разлогинивания по таймауту.
+	 * @throws CelestaException
+	 *             Ошибка взаимодействия с БД.
 	 * 
 	 */
-	public void logout(String sessionId, boolean timeout) {
-		sessions.remove(sessionId);
-		// TODO в логирование сессий добавить признак
+	public void logout(String sessionId, boolean timeout)
+			throws CelestaException {
+		SessionContext sc = sessions.remove(sessionId);
+		// Очищаем сессионные данные, дабы облегчить работу сборщика мусора.
+		sc.getData().clear();
+		SessionLogManager.logLogout(sc, timeout);
 	}
 
 	/**

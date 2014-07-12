@@ -34,7 +34,7 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.03';
+create grain celesta version '1.04';
 
 /**Active grains list.*/
 create table grains(
@@ -131,6 +131,8 @@ create table log(
   entry_time datetime not null default getdate(),
   /**user id*/
   userid varchar(250) not null,
+  /**session id**/
+  sessionid varchar(250) not null,
   /**grain id*/
   grainid varchar(16) not null,
   /**table name*/
@@ -161,3 +163,14 @@ create table sequences(
   constraint pk_sequences primary key (grainid, tablename),
   constraint fk_sequences_grains foreign key(grainid) references grains(id)
 );
+
+create table sessionlog (
+  entryno int identity not null primary key,
+  sessionid varchar(250) not null,
+  userid varchar(250) not null,
+  logintime datetime not null default getdate(),
+  logoutime datetime,
+  timeout bit not null default 0
+);
+
+create index ixsessionlog on sessionlog (sessionid, userid, entryno);

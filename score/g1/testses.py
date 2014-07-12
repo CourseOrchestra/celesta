@@ -14,6 +14,13 @@ import random
 def proc1(context):
     print "Hello from proc1!"
     context.data['myvalue'] = 'some shared text data value'
+    aa = aaCursor(context)
+    aa.deleteAll()
+    for i in range(1, 4):
+        aa.idaa = i 
+        aa.idc = i * i
+        if not aa.tryInsert():
+            aa.update()
 
 def proc2(context):
     print "Hello from proc2!"

@@ -25,6 +25,9 @@ import ru.curs.celesta.score.GrainElement;
 public abstract class BasicCursor {
 	static final String SYSTEMUSERID = String.format("SYS%08X",
 			(new Random()).nextInt());
+	static final SessionContext SYSTEMSESSION = new SessionContext(
+			SYSTEMUSERID, "CELESTA");
+
 	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
 	private static final Pattern COLUMN_NAME = Pattern
 			.compile("([a-zA-Z_][a-zA-Z0-9_]*)"
@@ -67,12 +70,6 @@ public abstract class BasicCursor {
 			throw new CelestaException(e.getMessage());
 		}
 		db = DBAdaptor.getAdaptor();
-	}
-
-	static CallContext produceSysContext(CallContext context) {
-		SessionContext s = new SessionContext(SYSTEMUSERID,
-				context.getSessionId());
-		return new CallContext(context.getConn(), s);
 	}
 
 	@Override

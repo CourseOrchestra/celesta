@@ -88,12 +88,14 @@ final class LoggingManager {
 	public void log(Cursor c, Action a) throws CelestaException {
 		if (a == Action.READ)
 			throw new IllegalArgumentException();
-		CallContext sysContext = BasicCursor.produceSysContext(c.callContext());
+		CallContext sysContext = new CallContext(c.callContext().getConn(),
+				BasicCursor.SYSTEMSESSION);
 		if (!isLoggingNeeded(sysContext, c.meta(), a))
 			return;
 		LogCursor log = new LogCursor(sysContext);
 		log.init();
 		log.setUserid(c.callContext().getUserId());
+		log.setSessionid(c.callContext().getSessionId());
 		log.setGrainid(c._grainName());
 		log.setTablename(c._tableName());
 		log.setAction_type(a.shortId());

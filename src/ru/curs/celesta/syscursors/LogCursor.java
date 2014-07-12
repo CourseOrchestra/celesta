@@ -15,6 +15,7 @@ public final class LogCursor extends SysCursor {
 
 	private Integer entryno;
 	private String userid;
+	private String sessionid;
 	private String grainid;
 	private String tablename;
 	private String pkvalue1;
@@ -55,6 +56,7 @@ public final class LogCursor extends SysCursor {
 		pkvalue3 = rs.getString("pkvalue3");
 		oldvalues = rs.getString("oldvalues");
 		newvalues = rs.getString("newvalues");
+		sessionid = rs.getString("sessionid");
 	}
 
 	@Override
@@ -73,6 +75,7 @@ public final class LogCursor extends SysCursor {
 		pkvalue3 = null;
 		oldvalues = null;
 		newvalues = null;
+		sessionid = null;
 	}
 
 	@Override
@@ -87,8 +90,9 @@ public final class LogCursor extends SysCursor {
 	// CHECKSTYLE:OFF
 	protected Object[] _currentValues() {
 		// CHECKSTYLE:ON
-		Object[] result = { entryno, entry_time, userid, grainid, tablename,
-				action_type, pkvalue1, pkvalue2, pkvalue3, oldvalues, newvalues };
+		Object[] result = { entryno, entry_time, userid, sessionid, grainid,
+				tablename, action_type, pkvalue1, pkvalue2, pkvalue3,
+				oldvalues, newvalues };
 		return result;
 	}
 
@@ -301,6 +305,7 @@ public final class LogCursor extends SysCursor {
 		pkvalue3 = from.pkvalue3;
 		oldvalues = from.oldvalues;
 		newvalues = from.newvalues;
+		sessionid = from.sessionid;
 	}
 
 	@Override
@@ -317,6 +322,23 @@ public final class LogCursor extends SysCursor {
 	protected void _setAutoIncrement(int val) {
 		// CHECKSTYLE:ON
 		entryno = val;
+	}
+
+	/**
+	 * Возвращает id сессии.
+	 */
+	public String getSessionid() {
+		return sessionid;
+	}
+
+	/**
+	 * Устанавливает id сессии.
+	 * 
+	 * @param sessionid
+	 *            новое значение.
+	 */
+	public void setSessionid(String sessionid) {
+		this.sessionid = sessionid;
 	}
 
 }

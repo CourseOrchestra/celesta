@@ -16,7 +16,6 @@ import java.util.Set;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.SessionContext;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
@@ -81,8 +80,7 @@ public final class DBUpdator {
 		if (dba == null)
 			dba = DBAdaptor.getAdaptor();
 		Connection conn = ConnectionPool.get();
-		CallContext context = new CallContext(conn, new SessionContext(
-				BasicCursor.SYSTEMUSERID, "CELESTA"));
+		CallContext context = new CallContext(conn, BasicCursor.SYSTEMSESSION);
 		try {
 			grain = new GrainsCursor(context);
 			table = new TablesCursor(context);
