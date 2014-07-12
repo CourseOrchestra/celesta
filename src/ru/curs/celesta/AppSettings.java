@@ -19,6 +19,7 @@ public final class AppSettings {
 	private final Logger logger;
 	private final String pylibPath;
 	private final boolean skipDBUpdate;
+	private final boolean logLogins;
 	{
 		logger = Logger.getLogger("ru.curs.flute");
 		logger.setLevel(Level.INFO);
@@ -72,6 +73,8 @@ public final class AppSettings {
 
 		skipDBUpdate = Boolean.parseBoolean(settings.getProperty(
 				"skip.dbupdate", "").trim());
+		logLogins = Boolean.parseBoolean(settings.getProperty("log.logins", "")
+				.trim());
 
 		if (sb.length() > 0)
 			throw new CelestaException(sb.toString());
@@ -173,8 +176,15 @@ public final class AppSettings {
 	/**
 	 * Значение параметра "пропускать фазу обновления базы данных".
 	 */
-	public static Boolean getSkipDBUpdate() {
+	public static boolean getSkipDBUpdate() {
 		return theSettings.skipDBUpdate;
+	}
+
+	/**
+	 * Значение параметра "логировать входы и выходы пользователей".
+	 */
+	public static boolean getLogLogins() {
+		return theSettings.logLogins;
 	}
 
 	/**

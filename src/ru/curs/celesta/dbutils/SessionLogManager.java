@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils;
 import java.sql.Connection;
 import java.util.Date;
 
+import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
@@ -26,16 +27,19 @@ public final class SessionLogManager {
 	 *             Ошибка взаимодействия с БД.
 	 */
 	public static void logLogin(SessionContext session) throws CelestaException {
-		Connection conn = ConnectionPool.get();
-		CallContext context = new CallContext(conn, BasicCursor.SYSTEMSESSION);
-		try {
-			SessionLogCursor sl = new SessionLogCursor(context);
-			sl.init();
-			sl.setSessionid(session.getSessionId());
-			sl.setUserid(session.getUserId());
-			sl.insert();
-		} finally {
-			ConnectionPool.putBack(conn);
+		if (AppSettings.getLogLogins()) {
+			Connection conn = ConnectionPool.get();
+			CallContext context = new CallContext(conn,
+					BasicCursor.SYSTEMSESSION);
+			try {
+				SessionLogCursor sl = new SessionLogCursor(context);
+				sl.init();
+				sl.setSessionid(session.getSessionId());
+				sl.setUserid(session.getUserId());
+				sl.insert();
+			} finally {
+				ConnectionPool.putBack(conn);
+			}
 		}
 	}
 
@@ -51,21 +55,24 @@ public final class SessionLogManager {
 	 */
 	public static void logLogout(SessionContext session, boolean timeout)
 			throws CelestaException {
-		Connection conn = ConnectionPool.get();
-		CallContext context = new CallContext(conn, BasicCursor.SYSTEMSESSION);
-		try {
-			SessionLogCursor sl = new SessionLogCursor(context);
-			sl.init();
-			sl.setRange("sessionid", session.getSessionId());
-			sl.setRange("userid", session.getUserId());
-			sl.orderBy("entryno DESC");
-			if (sl.tryFirst()) {
-				sl.setLogoutime(new Date());
-				sl.setTimeout(timeout);
-				sl.update();
+		if (AppSettings.getLogLogins()) {
+			Connection conn = ConnectionPool.get();
+			CallContext context = new CallContext(conn,
+					BasicCursor.SYSTEMSESSION);
+			try {
+				SessionLogCursor sl = new SessionLogCursor(context);
+				sl.init();
+				sl.setRange("sessionid", session.getSessionId());
+				sl.setRange("userid", session.getUserId());
+				sl.orderBy("entryno DESC");
+				if (sl.tryFirst()) {
+					sl.setLogoutime(new Date());
+					sl.setTimeout(timeout);
+					sl.update();
+				}
+			} finally {
+				ConnectionPool.putBack(conn);
 			}
-		} finally {
-			ConnectionPool.putBack(conn);
 		}
 	}
 }
