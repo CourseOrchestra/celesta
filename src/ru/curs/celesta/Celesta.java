@@ -253,9 +253,11 @@ public final class Celesta {
 	public void logout(String sessionId, boolean timeout)
 			throws CelestaException {
 		SessionContext sc = sessions.remove(sessionId);
-		// Очищаем сессионные данные, дабы облегчить работу сборщика мусора.
-		sc.getData().clear();
-		SessionLogManager.logLogout(sc, timeout);
+		if (sc != null) {
+			// Очищаем сессионные данные, дабы облегчить работу сборщика мусора.
+			sc.getData().clear();
+			SessionLogManager.logLogout(sc, timeout);
+		}
 	}
 
 	/**
