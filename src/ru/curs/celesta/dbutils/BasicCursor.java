@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
+import ru.curs.celesta.SessionContext;
 import ru.curs.celesta.score.GrainElement;
 
 /**
@@ -66,6 +67,12 @@ public abstract class BasicCursor {
 			throw new CelestaException(e.getMessage());
 		}
 		db = DBAdaptor.getAdaptor();
+	}
+
+	static CallContext produceSysContext(CallContext context) {
+		SessionContext s = new SessionContext(SYSTEMUSERID,
+				context.getSessionId());
+		return new CallContext(context.getConn(), s);
 	}
 
 	@Override

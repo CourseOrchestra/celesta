@@ -48,11 +48,13 @@ import java.security.PrivilegedAction;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -86,6 +88,7 @@ public final class Celesta {
 	private final Score score;
 	private List<String> pyPathList;
 	private final Queue<PythonInterpreter> interpreterPool = new LinkedList<>();
+	private final HashMap<String, SessionContext> sessions = new HashMap<>();
 
 	private Celesta() throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
@@ -141,7 +144,12 @@ public final class Celesta {
 				for (int i = 2; i < args.length; i++)
 					params[i - 2] = args[i];
 
-				getInstance().runPython(args[0], args[1], params);
+				String userId = args[0];
+				String sesId = String.format("TEMP%08X",
+						(new Random()).nextInt());
+				getInstance().login(sesId, userId);
+				getInstance().runPython(sesId, args[1], params);
+				getInstance().logout(sesId, false);
 
 			} catch (CelestaException e) {
 				System.out
@@ -206,9 +214,35 @@ public final class Celesta {
 	}
 
 	/**
+	 * Связывает идентификатор сессии и идентификатор пользователя.
+	 * 
+	 * @param sessionId
+	 *            Имя сессии.
+	 * @param userId
+	 *            Имя пользователя.
+	 */
+	public void login(String sessionId, String userId) {
+		sessions.put(sessionId, new SessionContext(userId, sessionId));
+	}
+
+	/**
+	 * Завершает сессию (удаляет связанные с ней данные).
+	 * 
+	 * @param sessionId
+	 *            имя сессии.
+	 * @param timeout
+	 *            признак разлогинивания по таймауту.
+	 * 
+	 */
+	public void logout(String sessionId, boolean timeout) {
+		sessions.remove(sessionId);
+		// TODO в логирование сессий добавить признак
+	}
+
+	/**
 	 * Запуск питоновской процедуры.
 	 * 
-	 * @param userId
+	 * @param sesId
 	 *            идентификатор пользователя, от имени которого производится
 	 *            изменение
 	 * 
@@ -221,7 +255,7 @@ public final class Celesta {
 	 *             В случае, если процедура не найдена или в случае ошибки
 	 *             выполненения процедуры.
 	 */
-	public PyObject runPython(String userId, String proc, Object... param)
+	public PyObject runPython(String sesId, String proc, Object... param)
 			throws CelestaException {
 		Matcher m = PROCNAME.matcher(proc);
 
@@ -243,8 +277,12 @@ public final class Celesta {
 				sb.append(String.format(", arg%d", i));
 
 			PythonInterpreter interp = getPythonInterpreter();
+			SessionContext sesContext = sessions.get(sesId);
+			if (sesContext == null)
+				throw new CelestaException("Session ID=%s is not logged in",
+						sesId);
 			Connection conn = ConnectionPool.get();
-			CallContext context = new CallContext(conn, userId);
+			CallContext context = new CallContext(conn, sesContext);
 			try {
 				interp.set("context", context);
 				for (int i = 0; i < param.length; i++)

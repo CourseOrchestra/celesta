@@ -31,7 +31,8 @@ public class InitTest {
 	@Test
 	public void testSysCursors() throws CelestaException {
 		Connection conn = ConnectionPool.get();
-		CallContext ctxt = new CallContext(conn, "user");
+		SessionContext sc = new SessionContext("user", "S");
+		CallContext ctxt = new CallContext(conn, sc);
 		try {
 			GrainsCursor g = new GrainsCursor(ctxt);
 			assertEquals("grains", g.meta().getName());
@@ -49,7 +50,8 @@ public class InitTest {
 	@Test
 	public void testSysCursors2() throws CelestaException {
 		Connection conn = ConnectionPool.get();
-		CallContext ctxt = new CallContext(conn, "user");
+		SessionContext sc = new SessionContext("user", "S");
+		CallContext ctxt = new CallContext(conn, sc);
 		try {
 			LogCursor l = new LogCursor(ctxt);
 			assertEquals("log", l.meta().getName());

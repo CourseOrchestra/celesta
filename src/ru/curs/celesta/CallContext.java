@@ -1,6 +1,9 @@
 package ru.curs.celesta;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import org.python.core.PyDictionary;
 
 /**
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
@@ -9,11 +12,11 @@ import java.sql.*;
 public final class CallContext {
 
 	private final Connection conn;
-	private final String userId;
+	private final SessionContext sesContext;
 
-	public CallContext(Connection conn, String userId) {
+	public CallContext(Connection conn, SessionContext sesContext) {
 		this.conn = conn;
-		this.userId = userId;
+		this.sesContext = sesContext;
 	}
 
 	/**
@@ -27,7 +30,21 @@ public final class CallContext {
 	 * Идентификатор пользователя.
 	 */
 	public String getUserId() {
-		return userId;
+		return sesContext.getUserId();
+	}
+
+	/**
+	 * Идентификатор сессии.
+	 */
+	public String getSessionId() {
+		return sesContext.getSessionId();
+	}
+
+	/**
+	 * Данные сессии.
+	 */
+	public PyDictionary getData() {
+		return sesContext.getData();
 	}
 
 	/**
