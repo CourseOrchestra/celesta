@@ -670,7 +670,7 @@ else {
                                                                  view.finalizeParsing();
   }
 
-  final public Expr sqlExpression(View v) throws ParseException {
+  final public Expr sqlExpression(GrainElement v) throws ParseException {
   Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
     result = sqlAndExpression(v);
@@ -689,11 +689,11 @@ else {
       result = sqlAndExpression(v);
                                         operands.add(result);
     }
-         {if (true) return operands.size() == 1? result : new BinaryLogicalOp(v, BinaryLogicalOp.OR, operands);}
+         {if (true) return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.OR, operands);}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlAndExpression(View v) throws ParseException {
+  final public Expr sqlAndExpression(GrainElement v) throws ParseException {
   Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
     result = sqlUnaryLogicalExpression(v);
@@ -712,11 +712,11 @@ else {
       result = sqlUnaryLogicalExpression(v);
                                                   operands.add(result);
     }
-         {if (true) return operands.size() == 1? result : new BinaryLogicalOp(v, BinaryLogicalOp.AND, operands);}
+         {if (true) return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.AND, operands);}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlUnaryLogicalExpression(View v) throws ParseException {
+  final public Expr sqlUnaryLogicalExpression(GrainElement v) throws ParseException {
   boolean isNot = false;
   Expr result;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -729,11 +729,11 @@ else {
       ;
     }
     result = sqlRelationalExpression(v);
-   {if (true) return isNot? new NotExpr(v, result) : result;}
+   {if (true) return isNot? new NotExpr(result) : result;}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlRelationalExpression(View v) throws ParseException {
+  final public Expr sqlRelationalExpression(GrainElement v) throws ParseException {
   Expr result;
   Expr buf1;
   Expr buf2;
@@ -754,7 +754,7 @@ else {
       case 70:
         relop = relop();
         buf1 = sqlTermExpr(v);
-                                                                          result = new Relop(v, result, buf1, relop);
+                                                                          result = new Relop(result, buf1, relop);
         break;
       case K_IN:
         jj_consume_token(K_IN);
@@ -776,24 +776,24 @@ else {
                                                                                             operands.add(buf1);
         }
         jj_consume_token(65);
-                                                                             result = new In(v, result, operands);
+                                                                             result = new In(result, operands);
         break;
       case K_BETWEEN:
         jj_consume_token(K_BETWEEN);
         buf1 = sqlTermExpr(v);
         jj_consume_token(K_AND);
         buf2 = sqlTermExpr(v);
-                                                                           result = new Between(v, result, buf1, buf2);
+                                                                           result = new Between(result, buf1, buf2);
         break;
       case K_LIKE:
         jj_consume_token(K_LIKE);
         buf1 = sqlTermExpr(v);
-                                                                          result = new Relop(v, result, buf1, Relop.LIKE);
+                                                                          result = new Relop(result, buf1, Relop.LIKE);
         break;
       case K_IS:
         jj_consume_token(K_IS);
         jj_consume_token(K_NULL);
-                                                                         result = new IsNull(v, result);
+                                                                         result = new IsNull(result);
         break;
       default:
         jj_la1[44] = jj_gen;
@@ -864,7 +864,7 @@ else {
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlTermExpr(View v) throws ParseException {
+  final public Expr sqlTermExpr(GrainElement v) throws ParseException {
   Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
   int operator = -1;
@@ -903,11 +903,11 @@ else {
       result = sqlMultiplicativeExpression(v);
                                                                            operands.add(result);
     }
-     {if (true) return operands.size() == 1? result : new BinaryTermOp(v, operator, operands);}
+     {if (true) return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlMultiplicativeExpression(View v) throws ParseException {
+  final public Expr sqlMultiplicativeExpression(GrainElement v) throws ParseException {
   Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
   int operator = -1;
@@ -941,11 +941,11 @@ else {
       result = sqlUnaryExpression(v);
                                                              operands.add(result);
     }
-         {if (true) return operands.size() == 1? result : new BinaryTermOp(v, operator, operands);}
+         {if (true) return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlUnaryExpression(View v) throws ParseException {
+  final public Expr sqlUnaryExpression(GrainElement v) throws ParseException {
  Expr result;
 boolean isMinus = false;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -958,31 +958,31 @@ boolean isMinus = false;
       ;
     }
     result = sqlPrimaryExpression(v);
-     {if (true) return isMinus? new UnaryMinus(v, result) : result;}
+     {if (true) return isMinus? new UnaryMinus(result) : result;}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlPrimaryExpression(View v) throws ParseException {
+  final public Expr sqlPrimaryExpression(GrainElement v) throws ParseException {
  Expr result;
 Token t = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case S_INTEGER:
       t = jj_consume_token(S_INTEGER);
-                              result = new NumericLiteral(v, t.toString());
+                              result = new NumericLiteral(t.toString());
       break;
     case S_DOUBLE:
       t = jj_consume_token(S_DOUBLE);
-                              result = new NumericLiteral(v, t.toString());
+                              result = new NumericLiteral(t.toString());
       break;
     case S_CHAR_LITERAL:
       t = jj_consume_token(S_CHAR_LITERAL);
-                              result = new TextLiteral(v, t.toString());
+                              result = new TextLiteral(t.toString());
       break;
     case 63:
       jj_consume_token(63);
       result = sqlExpression(v);
       jj_consume_token(65);
-                                         result = new ParenthesizedExpr(v, result);
+                                         result = new ParenthesizedExpr(result);
       break;
     case S_IDENTIFIER:
       result = fieldReference(v);
@@ -996,7 +996,7 @@ Token t = null;
     throw new Error("Missing return statement in function");
   }
 
-  final public FieldRef fieldReference(View v) throws ParseException {
+  final public FieldRef fieldReference(GrainElement v) throws ParseException {
   String tableName = null;
   String fieldName;
   Token t;
@@ -1012,7 +1012,7 @@ Token t = null;
       jj_la1[56] = jj_gen;
       ;
     }
-   {if (true) return new FieldRef(v, tableName, fieldName);}
+   {if (true) return new FieldRef(tableName, fieldName);}
     throw new Error("Missing return statement in function");
   }
 

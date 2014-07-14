@@ -4,15 +4,6 @@ import java.util.List;
 
 /** Скалярное выражение SQL. */
 abstract class Expr {
-	private final View v;
-
-	Expr(View v) {
-		this.v = v;
-	}
-
-	final View getView() {
-		return v;
-	}
 
 	final void assertType(ViewColumnType t) throws ParseException {
 		if (getType() != t)
@@ -44,8 +35,7 @@ abstract class Expr {
 	 * @throws ParseException
 	 *             в случае, если ссылка не может быть разрешена.
 	 */
-	final void resolveFieldRefs(List<TableRef> tables)
-			throws ParseException {
+	final void resolveFieldRefs(List<TableRef> tables) throws ParseException {
 		FieldResolver r = new FieldResolver(tables);
 		accept(r);
 	}
@@ -80,8 +70,7 @@ abstract class Expr {
 final class ParenthesizedExpr extends Expr {
 	private final Expr parenthesized;
 
-	public ParenthesizedExpr(View v, Expr parenthesized) {
-		super(v);
+	public ParenthesizedExpr(Expr parenthesized) {
 		this.parenthesized = parenthesized;
 	}
 
@@ -145,8 +134,7 @@ final class Relop extends Expr {
 	private final Expr right;
 	private final int relop;
 
-	public Relop(View v, Expr left, Expr right, int relop) {
-		super(v);
+	public Relop(Expr left, Expr right, int relop) {
 		if (relop < 0 || relop >= OPS.length)
 			throw new IllegalArgumentException();
 		this.left = left;
@@ -195,8 +183,7 @@ final class In extends Expr {
 	private final Expr left;
 	private final List<Expr> operands;
 
-	In(View v, Expr left, List<Expr> operands) {
-		super(v);
+	In(Expr left, List<Expr> operands) {
 		this.operands = operands;
 		this.left = left;
 	}
@@ -238,8 +225,7 @@ final class Between extends Expr {
 	private final Expr right1;
 	private final Expr right2;
 
-	public Between(View v, Expr left, Expr right1, Expr right2) {
-		super(v);
+	public Between(Expr left, Expr right1, Expr right2) {
 		this.left = left;
 		this.right1 = right1;
 		this.right2 = right2;
@@ -287,8 +273,7 @@ final class Between extends Expr {
 final class IsNull extends Expr {
 	private final Expr expr;
 
-	IsNull(View v, Expr expr) throws ParseException {
-		super(v);
+	IsNull(Expr expr) throws ParseException {
 		if (expr.getType() == ViewColumnType.LOGIC)
 			throw new ParseException(
 					String.format(
@@ -322,8 +307,7 @@ final class IsNull extends Expr {
 final class NotExpr extends Expr {
 	private final Expr expr;
 
-	NotExpr(View v, Expr expr) throws ParseException {
-		super(v);
+	NotExpr(Expr expr) throws ParseException {
 		if (expr.getType() != ViewColumnType.LOGIC)
 			throw new ParseException(String.format(
 					"Expression '%s' is expected to be logical condition.",
@@ -361,9 +345,8 @@ final class BinaryLogicalOp extends Expr {
 	private final int operator;
 	private final List<Expr> operands;
 
-	BinaryLogicalOp(View v, int operator, List<Expr> operands)
+	BinaryLogicalOp(int operator, List<Expr> operands)
 			throws ParseException {
-		super(v);
 		if (operator < 0 || operator >= OPS.length)
 			throw new IllegalArgumentException();
 		if (operands.isEmpty())
@@ -419,8 +402,7 @@ final class BinaryTermOp extends Expr {
 	private final int operator;
 	private final List<Expr> operands;
 
-	BinaryTermOp(View v, int operator, List<Expr> operands) {
-		super(v);
+	BinaryTermOp(int operator, List<Expr> operands) {
 		if (operator < 0 || operator >= OPS.length)
 			throw new IllegalArgumentException();
 		if (operands.isEmpty())
@@ -446,7 +428,8 @@ final class BinaryTermOp extends Expr {
 
 	@Override
 	public ViewColumnType getType() {
-		return operator == CONCAT ? ViewColumnType.TEXT : ViewColumnType.NUMERIC;
+		return operator == CONCAT ? ViewColumnType.TEXT
+				: ViewColumnType.NUMERIC;
 	}
 
 	@Override
@@ -463,8 +446,7 @@ final class BinaryTermOp extends Expr {
 final class UnaryMinus extends Expr {
 	private final Expr arg;
 
-	public UnaryMinus(View v, Expr arg) {
-		super(v);
+	public UnaryMinus(Expr arg) {
 		this.arg = arg;
 	}
 
@@ -490,8 +472,7 @@ final class UnaryMinus extends Expr {
 final class NumericLiteral extends Expr {
 	private final String lexValue;
 
-	NumericLiteral(View v, String lexValue) {
-		super(v);
+	NumericLiteral(String lexValue) {
 		this.lexValue = lexValue;
 	}
 
@@ -519,8 +500,7 @@ final class NumericLiteral extends Expr {
 final class TextLiteral extends Expr {
 	private final String lexValue;
 
-	TextLiteral(View v, String lexValue) {
-		super(v);
+	TextLiteral(String lexValue) {
 		this.lexValue = lexValue;
 	}
 
@@ -551,9 +531,8 @@ final class FieldRef extends Expr {
 	private final String columnName;
 	private Column column = null;
 
-	public FieldRef(View v, String tableNameOrAlias, String columnName)
+	public FieldRef(String tableNameOrAlias, String columnName)
 			throws ParseException {
-		super(v);
 		if (columnName == null)
 			throw new IllegalArgumentException();
 		this.tableNameOrAlias = tableNameOrAlias;
