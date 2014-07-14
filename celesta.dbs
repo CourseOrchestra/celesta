@@ -32,6 +32,7 @@
 				<defo>getdate()</defo>
 			</column>
 			<column name="userid" type="nvarchar" length="250" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="sessionid" type="nvarchar" length="250" jt="12" mandatory="y" regexp_nulls="0" />
 			<column name="action_type" type="nvarchar" length="1" jt="12" mandatory="y" regexp_nulls="0" />
 			<index name="Pk_log" unique="PRIMARY_KEY" >
 				<column name="entryno" />
@@ -106,6 +107,26 @@
 				<fk_column name="grainid" pk="id" />
 			</fk>
 		</table>
+		<table name="sessionlog" >
+			<column name="entryno" type="int" length="10" jt="4" mandatory="y" regexp_nulls="0" />
+			<column name="sessionid" type="nvarchar" length="250" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="userid" type="nvarchar" length="250" jt="12" mandatory="y" regexp_nulls="0" />
+			<column name="logintime" type="datetime" length="23" decimal="3" jt="93" mandatory="y" regexp_nulls="0" >
+				<defo>getdate()</defo>
+			</column>
+			<column name="logoutime" type="datetime" length="23" decimal="3" jt="93" />
+			<column name="timeout" type="bit" length="1" jt="-7" mandatory="y" regexp_nulls="0" >
+				<defo>&#039;false&#039;</defo>
+			</column>
+			<index name="pk_sessionlog" unique="PRIMARY_KEY" >
+				<column name="entryno" />
+			</index>
+			<index name="ixsessionlog" unique="NORMAL" >
+				<column name="sessionid" />
+				<column name="userid" />
+				<column name="entryno" />
+			</index>
+		</table>
 		<table name="tables" >
 			<column name="grainid" type="nvarchar" length="16" jt="12" mandatory="y" regexp_nulls="0" />
 			<column name="tablename" type="nvarchar" length="100" jt="12" mandatory="y" regexp_nulls="0" />
@@ -144,6 +165,7 @@
     entryno int not null identity,
     "entry_time" datetime not null default getdate(),
     "userid" nvarchar(250) not null,
+    "sessionid" nvarchar(250) null,
     "grainid" nvarchar(16) not null,
     "tablename" nvarchar(100) not null,
     "action_type" nvarchar(1) not null,
@@ -153,10 +175,32 @@
     "oldvalues" nvarchar(3999) null,
     "newvalues" nvarchar(3999) null
   );
-  insert into @tmp ("entry_time", "userid", "grainid", "tablename", "action_type", "pkvalue1", "pkvalue2", "pkvalue3", "oldvalues", "newvalues") select "entry_time", "userid", "grainid", "tablename", "action_type", "pkvalue1", "pkvalue2", "pkvalue3", "oldvalues", "newvalues" from inserted;
+  insert into @tmp ("entry_time", "userid", "sessionid", "grainid", "tablename", "action_type", "pkvalue1", "pkvalue2", "pkvalue3", "oldvalues", "newvalues") select "entry_time", "userid", "sessionid", "grainid", "tablename", "action_type", "pkvalue1", "pkvalue2", "pkvalue3", "oldvalues", "newvalues" from inserted;
   select @id = seqvalue from celesta.sequences where grainid = 'celesta' and tablename = 'log';
   update celesta.sequences set seqvalue = @id + @@IDENTITY where grainid = 'celesta' and tablename = 'log';
-  insert into "celesta"."log" ("entryno", "entry_time", "userid", "grainid", "tablename", "action_type", "pkvalue1", "pkvalue2", "pkvalue3", "oldvalues", "newvalues") select @id + "entryno", "entry_time", "userid", "grainid", "tablename", "action_type", "pkvalue1", "pkvalue2", "pkvalue3", "oldvalues", "newvalues" from @tmp;
+  insert into "celesta"."log" ("entryno", "entry_time", "userid", "sessionid", "grainid", "tablename", "action_type", "pkvalue1", "pkvalue2", "pkvalue3", "oldvalues", "newvalues") select @id + "entryno", "entry_time", "userid", "sessionid", "grainid", "tablename", "action_type", "pkvalue1", "pkvalue2", "pkvalue3", "oldvalues", "newvalues" from @tmp;
+  commit transaction;
+end;
+]]></string>
+		</trigger>
+		<trigger name="sessionlog_inc" id="Trigger1386061" isSystem="false" >
+			<string><![CDATA[create trigger "celesta"."sessionlog_inc" on "celesta"."sessionlog" instead of insert as begin
+  /*IDENTITY entryno*/
+  set nocount on;
+  begin transaction;
+  declare @id int;
+  declare @tmp table (
+    entryno int not null identity,
+    "sessionid" nvarchar(250) not null,
+    "userid" nvarchar(250) not null,
+    "logintime" datetime not null default getdate(),
+    "logoutime" datetime null,
+    "timeout" bit not null default 'false'
+  );
+  insert into @tmp ("sessionid", "userid", "logintime", "logoutime", "timeout") select "sessionid", "userid", "logintime", "logoutime", "timeout" from inserted;
+  select @id = seqvalue from celesta.sequences where grainid = 'celesta' and tablename = 'sessionlog';
+  update celesta.sequences set seqvalue = @id + @@IDENTITY where grainid = 'celesta' and tablename = 'sessionlog';
+  insert into "celesta"."sessionlog" ("entryno", "sessionid", "userid", "logintime", "logoutime", "timeout") select @id + "entryno", "sessionid", "userid", "logintime", "logoutime", "timeout" from @tmp;
   commit transaction;
 end;
 ]]></string>
@@ -166,12 +210,13 @@ end;
 	<layout id="Layout1064123" name="celesta" show_relation_columns="y" >
 		<entity schema="celesta" name="roles" color="c0d4f3" x="525" y="225" />
 		<entity schema="celesta" name="logsetup" color="c0d4f3" x="45" y="75" />
-		<entity schema="celesta" name="log" color="c0d4f3" x="45" y="285" />
 		<entity schema="celesta" name="permissions" color="c0d4f3" x="435" y="360" />
 		<entity schema="celesta" name="userroles" color="c0d4f3" x="705" y="360" />
 		<entity schema="celesta" name="sequences" color="c6d9f6" x="615" y="90" />
 		<entity schema="celesta" name="grains" color="c0d4f3" x="405" y="60" />
 		<entity schema="celesta" name="tables" color="c0d4f3" x="255" y="240" />
+		<entity schema="celesta" name="log" color="c0d4f3" x="45" y="285" />
+		<entity schema="celesta" name="sessionlog" color="c6d9f6" x="165" y="375" />
 		<script name="log" id="SQL8622334" >
 			<string><![CDATA[SELECT * 
 FROM

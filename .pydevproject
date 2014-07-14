@@ -5,6 +5,5 @@
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
 <path>/celesta/score</path>
 <path>/celesta/build/celesta.jar</path>
-<path>/celesta/consoletest</path>
 </pydev_pathproperty>
 </pydev_project>
