@@ -51,7 +51,11 @@ public final class XMLJSONConverter {
 		// Данный код вставлен для разрешения случая, когда в xml-файле имеется
 		// несколько корневых эелементов, тогда как на вход SaxParser
 		// должен подаваться xml-файл только с одним корневым элементом.
-		String newXml = "<tempRootForResolvingProblem>" + xml + "</tempRootForResolvingProblem>";
+		String newXml = xml;
+		if (newXml.startsWith("<?xml")) {
+			newXml = newXml.replaceFirst("<[?]xml(.)*[?]>", "");
+		}
+		newXml = "<tempRootForResolvingProblem>" + newXml + "</tempRootForResolvingProblem>";
 		InputStream in = stringToStream(newXml);
 		parser.parse(in, handler);
 		JsonElement result = handler.getResult();
