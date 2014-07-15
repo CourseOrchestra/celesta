@@ -2,8 +2,10 @@ package ru.curs.celesta.score;
 
 import java.util.List;
 
+import ru.curs.celesta.dbutils.DBAdaptor;
+
 /** Скалярное выражение SQL. */
-abstract class Expr {
+public abstract class Expr {
 
 	final void assertType(ViewColumnType t) throws ParseException {
 		if (getType() != t)
@@ -16,8 +18,19 @@ abstract class Expr {
 	/**
 	 * Возвращает Celesta-SQL представление выражения.
 	 */
-	final String getCSQL() {
+	public final String getCSQL() {
 		SQLGenerator gen = new SQLGenerator();
+		return gen.generateSQL(this);
+	}
+
+	/**
+	 * Возвращает SQL-представление выражения в диалекте текущей БД.
+	 * 
+	 * @param dba
+	 *            Адаптер БД.
+	 */
+	public final String getSQL(DBAdaptor dba) {
+		SQLGenerator gen = dba.getViewSQLGenerator();
 		return gen.generateSQL(this);
 	}
 
@@ -38,6 +51,20 @@ abstract class Expr {
 	final void resolveFieldRefs(List<TableRef> tables) throws ParseException {
 		FieldResolver r = new FieldResolver(tables);
 		accept(r);
+	}
+
+	/**
+	 * Разрешает ссылки на поля таблиц, используя контекст текущего объекта
+	 * партитуры.
+	 * 
+	 * @param ge
+	 *            таблица или представление.
+	 * @throws ParseException
+	 *             в случае, если ссылка не может быть разрешена.
+	 */
+	public final void resolveFieldRefs(GrainElement ge) throws ParseException {
+		FilterFieldResolver fr = new FilterFieldResolver(ge);
+		accept(fr);
 	}
 
 	/**
@@ -345,8 +372,7 @@ final class BinaryLogicalOp extends Expr {
 	private final int operator;
 	private final List<Expr> operands;
 
-	BinaryLogicalOp(int operator, List<Expr> operands)
-			throws ParseException {
+	BinaryLogicalOp(int operator, List<Expr> operands) throws ParseException {
 		if (operator < 0 || operator >= OPS.length)
 			throw new IllegalArgumentException();
 		if (operands.isEmpty())

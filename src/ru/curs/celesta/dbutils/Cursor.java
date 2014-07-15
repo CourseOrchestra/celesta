@@ -309,7 +309,7 @@ public abstract class Cursor extends BasicCursor {
 					Action.DELETE);
 
 		PreparedStatement stmt = db().deleteRecordSetStatement(conn(), meta(),
-				getFilters());
+				getFilters(), getComplexFilterExpr());
 		try {
 			try {
 				stmt.executeUpdate();

@@ -2,6 +2,8 @@
 package ru.curs.celesta.score;
 import java.util.List;
 import java.util.ArrayList;
+import java.io.StringReader;
+import ru.curs.celesta.CelestaException;
 
 /** Token Manager. */
 class CelestaParserTokenManager implements CelestaParserConstants

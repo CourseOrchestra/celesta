@@ -23,6 +23,7 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
@@ -409,8 +410,8 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters) throws CelestaException {
-		String whereClause = getWhereClause(t, filters);
+			Map<String, AbstractFilter> filters, Expr complexFilter) throws CelestaException {
+		String whereClause = getWhereClause(t, filters, complexFilter);
 		String sql = String.format("delete from " + tableTemplate() + " %s", t
 				.getGrain().getName(), t.getName(),
 				!whereClause.isEmpty() ? "where " + whereClause : "");
@@ -1174,7 +1175,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	SQLGenerator getViewSQLGenerator() {
+	public SQLGenerator getViewSQLGenerator() {
 		return new SQLGenerator() {
 
 			@Override

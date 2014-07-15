@@ -3,8 +3,24 @@ package ru.curs.celesta.score;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.io.StringReader;
+import ru.curs.celesta.CelestaException;
+
 //CHECKSTYLE:OFF
 public class CelestaParser implements CelestaParserConstants {
+    public static Expr parseComplexFilter(String filter) throws CelestaException {
+         StringReader sr = new StringReader(filter);
+         try {
+                 CelestaParser parser = new CelestaParser(sr);
+                 try {
+                      return parser.sqlExpression();
+                 } catch (ParseException e) {
+                    throw new CelestaException("Invalid complex filter '%s': %s", filter, e.getMessage());
+                 }
+     } finally {
+         sr.close();
+     }
+   }
 
 /*Metamodel. Root rule.*/
   final public Grain grain(Score s, String name) throws ParseException {
@@ -670,11 +686,11 @@ else {
                                                                  view.finalizeParsing();
   }
 
-  final public Expr sqlExpression(GrainElement v) throws ParseException {
+  final public Expr sqlExpression() throws ParseException {
   Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
-    result = sqlAndExpression(v);
-                                    operands.add(result);
+    result = sqlAndExpression();
+                                   operands.add(result);
     label_7:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -686,18 +702,18 @@ else {
         break label_7;
       }
       jj_consume_token(K_OR);
-      result = sqlAndExpression(v);
-                                        operands.add(result);
+      result = sqlAndExpression();
+                                       operands.add(result);
     }
          {if (true) return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.OR, operands);}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlAndExpression(GrainElement v) throws ParseException {
+  final public Expr sqlAndExpression() throws ParseException {
   Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
-    result = sqlUnaryLogicalExpression(v);
-                                              operands.add(result);
+    result = sqlUnaryLogicalExpression();
+                                             operands.add(result);
     label_8:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -709,14 +725,14 @@ else {
         break label_8;
       }
       jj_consume_token(K_AND);
-      result = sqlUnaryLogicalExpression(v);
-                                                  operands.add(result);
+      result = sqlUnaryLogicalExpression();
+                                                 operands.add(result);
     }
          {if (true) return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.AND, operands);}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlUnaryLogicalExpression(GrainElement v) throws ParseException {
+  final public Expr sqlUnaryLogicalExpression() throws ParseException {
   boolean isNot = false;
   Expr result;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -728,18 +744,18 @@ else {
       jj_la1[42] = jj_gen;
       ;
     }
-    result = sqlRelationalExpression(v);
+    result = sqlRelationalExpression();
    {if (true) return isNot? new NotExpr(result) : result;}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlRelationalExpression(GrainElement v) throws ParseException {
+  final public Expr sqlRelationalExpression() throws ParseException {
   Expr result;
   Expr buf1;
   Expr buf2;
   List<Expr> operands = new ArrayList<Expr>(5);
   int relop;
-    result = sqlTermExpr(v);
+    result = sqlTermExpr();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_IN:
     case K_LIKE:
@@ -753,14 +769,14 @@ else {
       case 69:
       case 70:
         relop = relop();
-        buf1 = sqlTermExpr(v);
-                                                                          result = new Relop(result, buf1, relop);
+        buf1 = sqlTermExpr();
+                                                                         result = new Relop(result, buf1, relop);
         break;
       case K_IN:
         jj_consume_token(K_IN);
         jj_consume_token(63);
-        buf1 = sqlTermExpr(v);
-                                           operands.add(buf1);
+        buf1 = sqlTermExpr();
+                                          operands.add(buf1);
         label_9:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -772,23 +788,23 @@ else {
             break label_9;
           }
           jj_consume_token(64);
-          buf1 = sqlTermExpr(v);
-                                                                                            operands.add(buf1);
+          buf1 = sqlTermExpr();
+                                                                                          operands.add(buf1);
         }
         jj_consume_token(65);
                                                                              result = new In(result, operands);
         break;
       case K_BETWEEN:
         jj_consume_token(K_BETWEEN);
-        buf1 = sqlTermExpr(v);
+        buf1 = sqlTermExpr();
         jj_consume_token(K_AND);
-        buf2 = sqlTermExpr(v);
-                                                                           result = new Between(result, buf1, buf2);
+        buf2 = sqlTermExpr();
+                                                                         result = new Between(result, buf1, buf2);
         break;
       case K_LIKE:
         jj_consume_token(K_LIKE);
-        buf1 = sqlTermExpr(v);
-                                                                          result = new Relop(result, buf1, Relop.LIKE);
+        buf1 = sqlTermExpr();
+                                                                         result = new Relop(result, buf1, Relop.LIKE);
         break;
       case K_IS:
         jj_consume_token(K_IS);
@@ -864,12 +880,12 @@ else {
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlTermExpr(GrainElement v) throws ParseException {
+  final public Expr sqlTermExpr() throws ParseException {
   Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
   int operator = -1;
-    result = sqlMultiplicativeExpression(v);
-                                             operands.add(result);
+    result = sqlMultiplicativeExpression();
+                                            operands.add(result);
     label_10:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -885,7 +901,7 @@ else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 71:
         jj_consume_token(71);
-                                                                             operator = BinaryTermOp.PLUS;
+                                                                            operator = BinaryTermOp.PLUS;
         break;
       case 66:
         jj_consume_token(66);
@@ -900,19 +916,19 @@ else {
         jj_consume_token(-1);
         throw new ParseException();
       }
-      result = sqlMultiplicativeExpression(v);
-                                                                           operands.add(result);
+      result = sqlMultiplicativeExpression();
+                                                                          operands.add(result);
     }
      {if (true) return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlMultiplicativeExpression(GrainElement v) throws ParseException {
+  final public Expr sqlMultiplicativeExpression() throws ParseException {
   Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
   int operator = -1;
-    result = sqlUnaryExpression(v);
-                                    operands.add(result);
+    result = sqlUnaryExpression();
+                                   operands.add(result);
     label_11:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -927,25 +943,25 @@ else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 73:
         jj_consume_token(73);
-                                                                    operator = BinaryTermOp.TIMES;
+                                                                   operator = BinaryTermOp.TIMES;
         break;
       case 74:
         jj_consume_token(74);
-                                                                                                           operator = BinaryTermOp.OVER;
+                                                                                                          operator = BinaryTermOp.OVER;
         break;
       default:
         jj_la1[53] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-      result = sqlUnaryExpression(v);
-                                                             operands.add(result);
+      result = sqlUnaryExpression();
+                                                            operands.add(result);
     }
          {if (true) return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlUnaryExpression(GrainElement v) throws ParseException {
+  final public Expr sqlUnaryExpression() throws ParseException {
  Expr result;
 boolean isMinus = false;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -957,12 +973,12 @@ boolean isMinus = false;
       jj_la1[54] = jj_gen;
       ;
     }
-    result = sqlPrimaryExpression(v);
+    result = sqlPrimaryExpression();
      {if (true) return isMinus? new UnaryMinus(result) : result;}
     throw new Error("Missing return statement in function");
   }
 
-  final public Expr sqlPrimaryExpression(GrainElement v) throws ParseException {
+  final public Expr sqlPrimaryExpression() throws ParseException {
  Expr result;
 Token t = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -980,12 +996,12 @@ Token t = null;
       break;
     case 63:
       jj_consume_token(63);
-      result = sqlExpression(v);
+      result = sqlExpression();
       jj_consume_token(65);
-                                         result = new ParenthesizedExpr(result);
+                                        result = new ParenthesizedExpr(result);
       break;
     case S_IDENTIFIER:
-      result = fieldReference(v);
+      result = fieldReference();
       break;
     default:
       jj_la1[55] = jj_gen;
@@ -996,7 +1012,7 @@ Token t = null;
     throw new Error("Missing return statement in function");
   }
 
-  final public FieldRef fieldReference(GrainElement v) throws ParseException {
+  final public FieldRef fieldReference() throws ParseException {
   String tableName = null;
   String fieldName;
   Token t;
@@ -1047,8 +1063,8 @@ Token t = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_WHERE:
       jj_consume_token(K_WHERE);
-      where = sqlExpression(v);
-                                         v.setWhereCondition(where);
+      where = sqlExpression();
+                                        v.setWhereCondition(where);
       break;
     default:
       jj_la1[59] = jj_gen;
@@ -1060,7 +1076,7 @@ Token t = null;
   Token aliasToken = null;
   String alias = "";
   Expr expr;
-    expr = sqlTermExpr(v);
+    expr = sqlTermExpr();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_AS:
       jj_consume_token(K_AS);
@@ -1072,7 +1088,7 @@ Token t = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case S_IDENTIFIER:
       aliasToken = jj_consume_token(S_IDENTIFIER);
-                                                                 alias = aliasToken.toString();
+                                                                alias = aliasToken.toString();
       break;
     default:
       jj_la1[61] = jj_gen;
@@ -1174,7 +1190,7 @@ Token t = null;
     jj_consume_token(K_JOIN);
     tRef = tableReference(v);
     jj_consume_token(K_ON);
-    onExpr = sqlExpression(v);
+    onExpr = sqlExpression();
      tRef.setJoinType(jt);
      tRef.setOnExpr(onExpr);
          {if (true) return tRef;}

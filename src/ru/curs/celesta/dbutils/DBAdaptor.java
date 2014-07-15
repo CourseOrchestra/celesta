@@ -27,6 +27,7 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
@@ -283,7 +284,8 @@ public abstract class DBAdaptor {
 	 *             в случае некорректного фильтра
 	 */
 	final String getWhereClause(GrainElement t,
-			Map<String, AbstractFilter> filters) throws CelestaException {
+			Map<String, AbstractFilter> filters, Expr complexFilter)
+			throws CelestaException {
 		if (filters == null)
 			throw new IllegalArgumentException();
 		StringBuilder whereClause = new StringBuilder();
@@ -302,6 +304,13 @@ public abstract class DBAdaptor {
 						+ e.getKey() + "\"", c));
 				whereClause.append(")");
 			}
+		}
+		if (complexFilter != null) {
+			if (whereClause.length() > 0)
+				whereClause.append(" and ");
+			whereClause.append("(");
+			whereClause.append(complexFilter.getSQL(this));
+			whereClause.append(")");
 		}
 		return whereClause.toString();
 	}
@@ -552,11 +561,12 @@ public abstract class DBAdaptor {
 	// CHECKSTYLE:OFF 6 parameters
 	public final PreparedStatement getRecordSetStatement(Connection conn,
 			GrainElement t, Map<String, AbstractFilter> filters,
-			String orderBy, long offset, long rowCount) throws CelestaException {
+			Expr complexFilter, String orderBy, long offset, long rowCount)
+			throws CelestaException {
 		// CHECKSTYLE:ON
 		String sql;
 		// Готовим условие where
-		String whereClause = getWhereClause(t, filters);
+		String whereClause = getWhereClause(t, filters, complexFilter);
 
 		if (offset == 0 && rowCount == 0) {
 			// Запрос не лимитированный -- одинаков для всех СУБД
@@ -624,9 +634,9 @@ public abstract class DBAdaptor {
 	}
 
 	final PreparedStatement getSetCountStatement(Connection conn,
-			GrainElement t, Map<String, AbstractFilter> filters)
+			GrainElement t, Map<String, AbstractFilter> filters, Expr complexFilter)
 			throws CelestaException {
-		String whereClause = getWhereClause(t, filters);
+		String whereClause = getWhereClause(t, filters, complexFilter);
 		String sql = "select count(*) from "
 				+ String.format(tableTemplate(), t.getGrain().getName(),
 						t.getName())
@@ -782,7 +792,7 @@ public abstract class DBAdaptor {
 			throws CelestaException;
 
 	abstract PreparedStatement deleteRecordSetStatement(Connection conn,
-			Table t, Map<String, AbstractFilter> filters)
+			Table t, Map<String, AbstractFilter> filters, Expr complexFilter)
 			throws CelestaException;
 
 	abstract PreparedStatement getInsertRecordStatement(Connection conn,
@@ -959,7 +969,10 @@ public abstract class DBAdaptor {
 
 	}
 
-	abstract SQLGenerator getViewSQLGenerator();
+	/**
+	 * Возвращает транслятор из языка CelestaSQL в язык нужного диалекта БД.
+	 */
+	public abstract SQLGenerator getViewSQLGenerator();
 
 	/**
 	 * Удаление представления.

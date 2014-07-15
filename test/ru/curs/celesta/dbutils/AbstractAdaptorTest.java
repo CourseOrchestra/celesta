@@ -75,7 +75,7 @@ public abstract class AbstractAdaptorTest {
 
 	private int getCount(Connection conn, Table t) throws Exception {
 		PreparedStatement stmt = dba.getSetCountStatement(conn, t,
-				Collections.<String, AbstractFilter> emptyMap());
+				Collections.<String, AbstractFilter> emptyMap(), null);
 		try {
 			ResultSet rs = stmt.executeQuery();
 			rs.next();
@@ -266,7 +266,7 @@ public abstract class AbstractAdaptorTest {
 		insertRow(conn, t, 1);
 		assertEquals(2, getCount(conn, t));
 		PreparedStatement pstmt = dba.deleteRecordSetStatement(conn, t,
-				Collections.<String, AbstractFilter> emptyMap());
+				Collections.<String, AbstractFilter> emptyMap(), null);
 		assertNotNull(pstmt);
 		int rowCount = pstmt.executeUpdate();
 		assertEquals(2, rowCount);

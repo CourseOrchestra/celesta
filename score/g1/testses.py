@@ -10,6 +10,7 @@ import java.io.OutputStreamWriter as OutputStreamWriter
 import java.io.InputStreamReader as InputStreamReader
 import java.io.BufferedReader as BufferedReader
 import random
+import ru.curs.celesta.syscursors.GrainsCursor as GrainsCursor
 
 def proc1(context):
     print "Hello from proc1!"
@@ -25,3 +26,8 @@ def proc1(context):
 def proc2(context):
     print "Hello from proc2!"
     print context.data['myvalue']
+    aa = aaCursor(context)
+    aa.setComplexFilter('idc > idaa')
+    for aa in aa.iterate():
+        print aa.idc
+    

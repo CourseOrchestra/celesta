@@ -64,7 +64,7 @@ class Range extends AbstractFilter {
 }
 
 /**
- * Сложный фильтр.
+ * Фильтр по одному полю.
  */
 class Filter extends AbstractFilter {
 

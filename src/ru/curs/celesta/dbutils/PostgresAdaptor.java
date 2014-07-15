@@ -22,6 +22,7 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.GrainElement;
@@ -350,9 +351,9 @@ final class PostgresAdaptor extends DBAdaptor {
 
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters) throws CelestaException {
+			Map<String, AbstractFilter> filters, Expr complexFilter) throws CelestaException {
 		// Готовим условие where
-		String whereClause = getWhereClause(t, filters);
+		String whereClause = getWhereClause(t, filters, complexFilter);
 
 		// Готовим запрос на удаление
 		String sql = String.format("delete from " + tableTemplate() + " %s;", t
@@ -893,7 +894,7 @@ final class PostgresAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	SQLGenerator getViewSQLGenerator() {
+	public SQLGenerator getViewSQLGenerator() {
 		return new SQLGenerator();
 	}
 }

@@ -17,7 +17,10 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
 import ru.curs.celesta.SessionContext;
+import ru.curs.celesta.score.CelestaParser;
+import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.GrainElement;
+import ru.curs.celesta.score.ParseException;
 
 /**
  * Базовый класс курсора для чтения данных из представлений.
@@ -45,6 +48,7 @@ public abstract class BasicCursor {
 	private String orderBy = null;
 	private long offset = 0;
 	private long rowCount = 0;
+	private Expr complexFilter;
 
 	public BasicCursor(CallContext context) throws CelestaException {
 		if (context == null)
@@ -80,6 +84,10 @@ public abstract class BasicCursor {
 
 	final Map<String, AbstractFilter> getFilters() {
 		return filters;
+	}
+
+	final Expr getComplexFilterExpr() {
+		return complexFilter;
 	}
 
 	final DBAdaptor db() {
@@ -182,8 +190,8 @@ public abstract class BasicCursor {
 					Action.READ);
 
 		if (set == null)
-			set = db.getRecordSetStatement(conn, meta(), filters, getOrderBy(),
-					offset, rowCount);
+			set = db.getRecordSetStatement(conn, meta(), filters,
+					complexFilter, getOrderBy(), offset, rowCount);
 		boolean result = false;
 		try {
 			if (cursor != null)
@@ -368,6 +376,33 @@ public abstract class BasicCursor {
 	}
 
 	/**
+	 * Устанавливает сложное условие на набор данных.
+	 * 
+	 * @param condition
+	 *            Условие, соответствующее выражению where.
+	 * @throws CelestaException
+	 *             Ошибка разбора выражения.
+	 */
+	public final void setComplexFilter(String condition)
+			throws CelestaException {
+		Expr buf = CelestaParser.parseComplexFilter(condition);
+		try {
+			buf.resolveFieldRefs(meta());
+		} catch (ParseException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		complexFilter = buf;
+	}
+
+	/**
+	 * Возвращает (переформатированное) выражение сложного фильтра в диалекте
+	 * CelestaSQL.
+	 */
+	public final String getComplexFilter() {
+		return complexFilter == null ? null : complexFilter.getCSQL();
+	}
+
+	/**
 	 * Устанавливает фильтр на диапазон возвращаемых курсором записей.
 	 * 
 	 * @param offset
@@ -399,7 +434,10 @@ public abstract class BasicCursor {
 	 */
 	public final void reset() throws CelestaException {
 		filters.clear();
+		complexFilter = null;
 		orderBy = null;
+		offset = 0;
+		rowCount = 0;
 		closeSet();
 	}
 
@@ -458,7 +496,10 @@ public abstract class BasicCursor {
 	public void clear() throws CelestaException {
 		_clearBuffer(true);
 		filters.clear();
+		complexFilter = null;
 		orderBy = null;
+		offset = 0;
+		rowCount = 0;
 		closeSet();
 	}
 
@@ -470,7 +511,8 @@ public abstract class BasicCursor {
 	 */
 	public final int count() throws CelestaException {
 		int result;
-		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters);
+		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters,
+				complexFilter);
 		try {
 			ResultSet rs = stmt.executeQuery();
 			rs.next();
@@ -504,6 +546,7 @@ public abstract class BasicCursor {
 					c._grainName(), c._tableName(), _grainName(), _tableName());
 		filters.clear();
 		filters.putAll(c.filters);
+		complexFilter = c.complexFilter;
 		offset = c.offset;
 		rowCount = c.rowCount;
 		closeSet();
