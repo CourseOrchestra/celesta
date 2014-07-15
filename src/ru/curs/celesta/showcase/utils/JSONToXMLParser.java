@@ -105,7 +105,7 @@ public class JSONToXMLParser {
 					String[] arCell = JSONObject.getNames(jObjCell);
 					Element elemCell = doc.createElement(arCell[0]);
 					root.appendChild(elemCell);
-					elemCell.setAttribute("sorted", "True");
+					// elemCell.setAttribute("sorted", "True");
 					Object valueCell = jObjCell.get(arCell[0]);
 
 					comparison(doc, elemCell, valueCell);
