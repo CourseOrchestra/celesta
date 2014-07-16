@@ -48,10 +48,12 @@ import java.security.PrivilegedAction;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.Random;
@@ -89,7 +91,8 @@ public final class Celesta {
 	private final Score score;
 	private List<String> pyPathList;
 	private final Queue<PythonInterpreter> interpreterPool = new LinkedList<>();
-	private final HashMap<String, SessionContext> sessions = new HashMap<>();
+	private final Map<String, SessionContext> sessions = Collections
+			.synchronizedMap(new HashMap<String, SessionContext>());
 
 	private Celesta() throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
