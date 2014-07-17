@@ -22,6 +22,7 @@ public class JSONToXMLParser {
 	private final JSONTokener jt;
 	private final JSONObject jo;
 	private StringBuffer sbuf;
+	private Boolean vBool = false;
 
 	public JSONToXMLParser(String json) throws JSONException {
 		String json1 = json;
@@ -32,7 +33,11 @@ public class JSONToXMLParser {
 		if (json1.contains("u \'")) {
 			json2 = json1.replaceAll("u \'", "\'");
 		}
-		jt = new JSONTokener(json2);
+		String newJson = json2;
+		if (newJson.contains("{}")) {
+			newJson = newJson.replaceAll("[{][}]", "{\"myTagForResolvingProblem\"=\"2\"}");
+		}
+		jt = new JSONTokener(newJson);
 		jo = new JSONObject(jt);
 	}
 
@@ -64,11 +69,10 @@ public class JSONToXMLParser {
 		t = TransformerFactory.newInstance().newTransformer();
 		t.setOutputProperty(OutputKeys.INDENT, "yes");
 		t.transform(new DOMSource(doc), streamRes);
-
 		String outString = strWriter.toString();
 		// outString = outString.replaceFirst("<[?]xml(.)*[?]>", "");
 		outString = outString.replace(" standalone=\"no\"", "");
-		outString = outString.replaceFirst("[?]>", "?>\r\n");
+		// outString = outString.replaceFirst("[?]>", "?>\r\n");
 		outString = outString.trim();
 
 		if (sbuf != null) {
@@ -76,6 +80,26 @@ public class JSONToXMLParser {
 			sBufStr = sBufStr.replaceAll("<[?]xml(.)*[?]>", "");
 			return sBufStr;
 		}
+
+		if (outString.contains("xmlns2") && vBool) {
+			outString = outString.replaceFirst("xmlns2", "xmnls");
+		}
+
+		while (outString.contains("myTagForResolvingProblem")) {
+			// outString =
+			// outString.replaceAll("<myTagForResolvingProblem>2</myTagForResolvingProblem>",
+			// "");
+			final int number = 34;
+			int ind = outString.indexOf("<myTagForResolvingProblem>");
+			int ind1 = outString.indexOf("</myTagForResolvingProblem>");
+			String str1 = outString.substring(0, ind - 10);
+			String str2 = outString.substring(ind1 + number);
+			outString = str1 + str2;
+		}
+
+		outString = outString.replaceFirst("<[?]xml(.)*[?]>", "");
+		outString = outString.trim();
+
 		return outString;
 	}
 
@@ -247,6 +271,11 @@ public class JSONToXMLParser {
 			root.setAttribute(key, change);
 		} else if ("None".equalsIgnoreCase(value.toString())) {
 			root.setAttribute(key, "");
+		} else if ("xmlns".equals(key)) {
+			String key1 = key;
+			key1 = key1 + "2";
+			vBool = true;
+			root.setAttribute(key1, value.toString());
 		} else {
 			root.setAttribute(key, value.toString());
 		}
