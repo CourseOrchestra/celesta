@@ -298,6 +298,15 @@ public class JSONToXMLParser {
 
 	private void comparison2(final Document doc, final Element root, final Object value,
 			final String key) throws JSONException {
+		Object t = null;
+
+		if (value.equals(t)) {
+			Element elem = doc.createElement(key);
+			root.appendChild(elem);
+			Text text = doc.createTextNode("");
+			elem.appendChild(text);
+		}
+
 		if (value.getClass() == String.class || value.getClass() == Integer.class
 				|| value.getClass() == Double.class || value.getClass() == Boolean.class) {
 
