@@ -82,7 +82,7 @@ public class JSONToXMLParser {
 		}
 
 		if (outString.contains("xmlns2") && vBool) {
-			outString = outString.replaceFirst("xmlns2", "xmnls");
+			outString = outString.replaceFirst("xmlns2", "xmlns");
 		}
 
 		while (outString.contains("myTagForResolvingProblem")) {
