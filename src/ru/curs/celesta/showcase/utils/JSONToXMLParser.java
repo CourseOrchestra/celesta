@@ -327,7 +327,7 @@ public class JSONToXMLParser {
 
 	private void comparison3(final Document doc, final Element root, final Object value) {
 		if (root.hasChildNodes()) {
-			Text text = doc.createTextNode("\n" + value.toString() + "\n");
+			Text text = doc.createTextNode(value.toString());
 			root.insertBefore(text, root.getFirstChild());
 		} else {
 			Text text = doc.createTextNode(value.toString());
