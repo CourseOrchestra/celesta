@@ -106,7 +106,11 @@ public final class XMLJSONConverter {
 		int ind2 = result.indexOf("</tempRootForResolvingProblem>");
 		result = result.substring(fstr.length(), ind2 - 1);
 		result = result.trim();
-		result = result.replaceAll("\\s", "");
+		result = result.replaceAll("\\n", "");
+		result = result.replaceAll("\\r", "");
+		result = result.replaceAll("\\t", "");
+		result = result.replaceAll(">[ ]+<", "><");
+		result = result.replaceAll("[ ]+<", "<");
 		return result;
 	}
 
