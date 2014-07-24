@@ -56,12 +56,13 @@ public class ParserTest {
 		assertEquals("описание гранулы: * grain celestadoc", g.getCelestaDoc());
 
 		Map<String, Table> s = g.getTables();
-		assertEquals(3, s.size());
+		assertEquals(6, s.size());
 
 		Iterator<Table> i = s.values().iterator();
 		// Первая таблица
 		Table t = i.next();
 		assertEquals("table1", t.getName());
+		assertNull(t.getCelestaDoc());
 
 		Iterator<Column> ic = t.getColumns().values().iterator();
 		Column c = ic.next();
@@ -119,9 +120,7 @@ public class ParserTest {
 				Integer.valueOf(((IntegerColumn) c).getDefaultValue()));
 		c = ic.next();
 		assertEquals("f2", c.getName());
-		assertEquals(5.5,
-				((FloatingColumn) c).getDefaultValue(), .00001);
-		
+		assertEquals(5.5, ((FloatingColumn) c).getDefaultValue(), .00001);
 
 		Map<String, Column> key = t.getPrimaryKey();
 		ic = key.values().iterator();
@@ -190,6 +189,21 @@ public class ParserTest {
 
 		t = g.getTable("employees");
 		assertNull(t.getCelestaDoc());
+		assertTrue(t.isVersioned());
+		assertFalse(t.isReadOnly());
+
+		// Проверка дополнительных возможностей
+		t = g.getTable("ttt1");
+		assertTrue(t.isReadOnly());
+		assertFalse(t.isVersioned());
+
+		t = g.getTable("ttt2");
+		assertTrue(t.isVersioned());
+		assertFalse(t.isReadOnly());
+
+		t = g.getTable("ttt3");
+		assertFalse(t.isVersioned());
+		assertFalse(t.isReadOnly());
 	}
 
 	@Test

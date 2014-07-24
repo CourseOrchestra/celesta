@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 
@@ -18,6 +19,8 @@ import org.junit.Test;
 import ru.curs.celesta.CelestaException;
 
 public class ScoreTest {
+	public static final Score S = new Score();
+
 	@Test
 	public void test1() throws CelestaException, ParseException {
 		Score s = new Score("score;test");
@@ -303,6 +306,37 @@ public class ScoreTest {
 		assertEquals("TEXT", t.getColumn("f6").getCelestaType());
 		assertEquals("DATETIME", t.getColumn("f8").getCelestaType());
 		assertEquals("BLOB", t.getColumn("f10").getCelestaType());
+
+	}
+
+	@Test
+	public void saveTest2() throws ParseException, IOException {
+		// Проверяется функциональность записи динамически изменённых объектов с
+		// опциями (Read Only, Version Check).
+		Score s = new Score();
+		InputStream input = ParserTest.class.getResourceAsStream("test.sql");
+		CelestaParser cp = new CelestaParser(input, "utf-8");
+		Grain g = cp.grain(s, "test1");
+		StringWriter sw = new StringWriter();
+		BufferedWriter bw = new BufferedWriter(sw);
+
+		Table t = g.getTable("ttt1");
+		t.save(bw);
+		t = g.getTable("ttt2");
+		t.save(bw);
+		t = g.getTable("ttt3");
+		t.save(bw);
+		t = g.getTable("table1");
+		t.save(bw);
+		bw.flush();
+		// System.out.println(sw);
+
+		String[] actual = sw.toString().split("\r?\n");
+		BufferedReader r = new BufferedReader(new InputStreamReader(
+				ScoreTest.class.getResourceAsStream("expectedsave2.sql"),
+				"utf-8"));
+		for (String l : actual)
+			assertEquals(r.readLine(), l);
 
 	}
 

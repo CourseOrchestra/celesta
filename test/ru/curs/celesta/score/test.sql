@@ -45,3 +45,15 @@ CREATE TABLE employees
 );
 
 CREATE INDEX table2_idx2 ON table2 (column3, column2);
+
+CREATE TABLE ttt1(
+id int
+) with read only;
+
+CREATE TABLE ttt2(
+id int not null primary key
+) with version check;
+
+CREATE TABLE ttt3(
+id int not null primary key
+) with no version check;

@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +39,10 @@ public final class Table extends GrainElement {
 	private final Set<ForeignKey> fKeys = new LinkedHashSet<>();
 
 	private boolean pkFinalized = false;
+
+	private boolean isReadOnly = false;
+
+	private boolean isVersioned = true;
 
 	private String pkConstraintName;
 
@@ -223,10 +228,83 @@ public final class Table extends GrainElement {
 	 *             Если первичный ключ пуст.
 	 */
 	void finalizePK() throws ParseException {
-		if (pk.isEmpty())
+		if (pk.isEmpty() && !isReadOnly)
 			throw new ParseException(String.format(
 					"No primary key defined for table %s!", getName()));
 		pkFinalized = true;
+	}
+
+	private void throwPE(String option) throws ParseException {
+		throw new ParseException(
+				String.format(
+						"Invalid option for table '%s': %s. One of 'WITH READ ONLY', "
+								+ "'WITH VERSION CHECK', 'WITH NO VERSION CHECK expected'.",
+						getName(), option));
+	}
+
+	// CHECKSTYLE:OFF for cyclomatic complexity: this is finite state machine
+	void finalizePK(List<String> options) throws ParseException {
+		// CHECKSTYLE:ON
+		int state = 0;
+		for (String option : options)
+			switch (state) {
+			// beginning
+			case 0:
+				if ("with".equalsIgnoreCase(option)) {
+					state = 1;
+				} else {
+					throwPE(option);
+				}
+				break;
+			// 'with' read
+			case 1:
+				if ("read".equalsIgnoreCase(option)) {
+					isReadOnly = true;
+					isVersioned = false;
+					state = 2;
+				} else if ("version".equalsIgnoreCase(option)) {
+					isReadOnly = false;
+					isVersioned = true;
+					state = 3;
+				} else if ("no".equalsIgnoreCase(option)) {
+					isReadOnly = false;
+					isVersioned = false;
+					state = 4;
+				} else {
+					throwPE(option);
+				}
+				break;
+			case 2:
+				if ("only".equalsIgnoreCase(option)) {
+					state = 5;
+				} else {
+					throwPE(option);
+				}
+				break;
+			case 3:
+				if ("check".equalsIgnoreCase(option)) {
+					state = 5;
+				} else {
+					throwPE(option);
+				}
+				break;
+			case 4:
+				if ("version".equalsIgnoreCase(option)) {
+					state = 3;
+				} else {
+					throwPE(option);
+				}
+				break;
+			case 5:
+				throwPE(option);
+			default:
+				break;
+			}
+		if (state == 0 || state == 5) {
+			finalizePK();
+		} else {
+			throwPE("");
+		}
 	}
 
 	/**
@@ -283,25 +361,78 @@ public final class Table extends GrainElement {
 			comma = true;
 		}
 
-		if (comma)
-			bw.write(",");
-
-		bw.newLine();
-		bw.write("  CONSTRAINT ");
-		bw.write(getPkConstraintName());
-		bw.write(" PRIMARY KEY (");
-		comma = false;
-		for (Column c : getPrimaryKey().values()) {
+		// Здесь мы пишем PK
+		if (!getPrimaryKey().isEmpty()) {
 			if (comma)
-				bw.write(", ");
-			bw.write(c.getName());
-			comma = true;
+				bw.write(",");
+			bw.newLine();
+			bw.write("  CONSTRAINT ");
+			bw.write(getPkConstraintName());
+			bw.write(" PRIMARY KEY (");
+			comma = false;
+			for (Column c : getPrimaryKey().values()) {
+				if (comma)
+					bw.write(", ");
+				bw.write(c.getName());
+				comma = true;
+			}
+			bw.write(")");
+			bw.newLine();
 		}
-		bw.write(")");
-		bw.newLine();
 
-		bw.write(");");
+		bw.write(")");
+		if (isReadOnly)
+			bw.write(" WITH READ ONLY");
+		else if (!isVersioned) {
+			bw.write(" WITH NO VERSION CHECK");
+		}
+		bw.write(";");
 		bw.newLine();
 		bw.newLine();
+	}
+
+	/**
+	 * Является ли таблица таблицей только на чтение (WITH READ ONLY).
+	 */
+	public boolean isReadOnly() {
+		return isReadOnly;
+	}
+
+	/**
+	 * @param isReadOnly
+	 * @throws ParseException
+	 */
+	void setReadOnly(boolean isReadOnly) throws ParseException {
+		if (isReadOnly && isVersioned)
+			throw new ParseException(
+					String.format(
+							"Method setReadOnly(true) failed: table %s should be either versioned or read only.",
+							getName()));
+
+		this.isReadOnly = isReadOnly;
+	}
+
+	/**
+	 * Является ли таблица версионированной (WITH VERSION CHECK).
+	 */
+	public boolean isVersioned() {
+		return isVersioned;
+	}
+
+	/**
+	 * Устанавливает признак версионности таблицы.
+	 * 
+	 * @param isVersioned
+	 *            Признак версионности.
+	 * @throws ParseException
+	 *             Если таблица read only.
+	 */
+	public void setVersioned(boolean isVersioned) throws ParseException {
+		if (isReadOnly && isVersioned)
+			throw new ParseException(
+					String.format(
+							"Method setVersioned(true) failed: table %s should be either versioned or read only.",
+							getName()));
+		this.isVersioned = isVersioned;
 	}
 }

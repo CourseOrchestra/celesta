@@ -134,7 +134,7 @@ Grain grain(Score s, String name):
    Token doc = null;
 }
 { 
-   [doc = <CELESTA_DOC> {g.setCelestaDocLexem(doc.toString());}]
+   [doc = <CELESTA_DOC> {g.setCelestaDocLexem(doc.toString()); doc = null;}]
    <K_CREATE> 
    t = <S_IDENTIFIER> {if (!"GRAIN".equalsIgnoreCase(t.toString())) 
       throw new ParseException(String.format(
@@ -159,17 +159,19 @@ Grain grain(Score s, String name):
 void createTable(Grain g, String doc):
 {
 	Table table = null;
-	Token tableName = null;
+	Token t = null;
+    List<String> options = new ArrayList<String>(5);
 }
 {
     <K_TABLE>
-	tableName = <S_IDENTIFIER> {table = new Table(g, tableName.toString());
+	t = <S_IDENTIFIER> {table = new Table(g, t.toString());
 	                            table.setCelestaDocLexem(doc);}
 	"("
 		tableConstituent(table)	("," tableConstituent(table))*
 	")"
+    [ ((t = <S_IDENTIFIER> | t = <K_NO>) {options.add(t.toString());} )+ ]
 	{
-	  table.finalizePK();
+	  table.finalizePK(options);
     }
 }
 

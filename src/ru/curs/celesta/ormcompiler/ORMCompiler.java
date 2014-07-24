@@ -35,6 +35,9 @@ import ru.curs.celesta.score.ViewColumnType;
  */
 public final class ORMCompiler {
 
+	private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
+	private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
+	private static final String SELF_CONTEXT_CONTEXT = "        self.context = context";
 	private static final String RETURN_ARRAY_S_OBJECT = "        return array([%s], Object)";
 	private static final String SELF_S_EQUALS_NONE = "        self.%s = None";
 	private static final Pattern SIGNATURE = Pattern
@@ -131,7 +134,11 @@ public final class ORMCompiler {
 		}
 
 		for (Table t : g.getTables().values())
-			compileTable(t, w);
+			if (t.isReadOnly()) {
+				compileROTable(t, w);
+			} else {
+				compileTable(t, w);
+			}
 
 		for (View v : g.getViews().values())
 			compileView(v, w);
@@ -164,7 +171,7 @@ public final class ORMCompiler {
 
 	private static void compileClearBuffer(BufferedWriter w,
 			Map<String, ViewColumnType> columns) throws IOException {
-		w.write("    def _clearBuffer(self, withKeys):");
+		w.write(DEF_CLEAR_BUFFER_SELF_WITH_KEYS);
 		w.newLine();
 		for (String c : columns.keySet()) {
 			w.write(String.format(SELF_S_EQUALS_NONE, c));
@@ -192,8 +199,31 @@ public final class ORMCompiler {
 
 	}
 
-	private static void compileTable(Table t, BufferedWriter w)
-			throws IOException {
+	static void compileROTable(Table t, BufferedWriter w) throws IOException {
+		String className = t.getName() + "Cursor";
+
+		Collection<Column> columns = t.getColumns().values();
+
+		w.write(String.format("class %s(ReadOnlyTableCursor):", className));
+		w.newLine();
+		// Конструктор
+		compileROTableInit(w, columns);
+		// Имя гранулы
+		compileGrainName(t, w);
+		// Имя таблицы
+		compileTableName(t, w);
+		// Разбор строки по переменным
+		compileParseResult(w, columns);
+		// Очистка буфера
+		compileClearBuffer(w, columns);
+		// Текущие значения всех полей
+		compileCurrentValues(w, columns);
+		// Итерация в Python-стиле
+		compileIterate(w);
+		w.newLine();
+	}
+
+	static void compileTable(Table t, BufferedWriter w) throws IOException {
 
 		Collection<Column> columns = t.getColumns().values();
 		Set<Column> pk = new LinkedHashSet<>(t.getPrimaryKey().values());
@@ -411,7 +441,7 @@ public final class ORMCompiler {
 
 	private static void compileClearBuffer(BufferedWriter w,
 			Collection<Column> columns, Set<Column> pk) throws IOException {
-		w.write("    def _clearBuffer(self, withKeys):");
+		w.write(DEF_CLEAR_BUFFER_SELF_WITH_KEYS);
 		w.newLine();
 		w.write("        if withKeys:");
 		w.newLine();
@@ -424,6 +454,16 @@ public final class ORMCompiler {
 				w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
 				w.newLine();
 			}
+	}
+
+	private static void compileClearBuffer(BufferedWriter w,
+			Collection<Column> columns) throws IOException {
+		w.write(DEF_CLEAR_BUFFER_SELF_WITH_KEYS);
+		w.newLine();
+		for (Column c : columns) {
+			w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
+			w.newLine();
+		}
 	}
 
 	private static void compileParseResult(BufferedWriter w,
@@ -478,7 +518,7 @@ public final class ORMCompiler {
 
 	private static void compileTableInit(BufferedWriter w,
 			Collection<Column> columns) throws IOException {
-		w.write("    def __init__(self, context):");
+		w.write(DEF_INIT_SELF_CONTEXT);
 		w.newLine();
 		w.write("        Cursor.__init__(self, context)");
 		w.newLine();
@@ -486,13 +526,27 @@ public final class ORMCompiler {
 			w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
 			w.newLine();
 		}
-		w.write("        self.context = context");
+		w.write(SELF_CONTEXT_CONTEXT);
+		w.newLine();
+	}
+
+	private static void compileROTableInit(BufferedWriter w,
+			Collection<Column> columns) throws IOException {
+		w.write(DEF_INIT_SELF_CONTEXT);
+		w.newLine();
+		w.write("        ViewCursor.__init__(self, context)");
+		w.newLine();
+		for (Column c : columns) {
+			w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
+			w.newLine();
+		}
+		w.write(SELF_CONTEXT_CONTEXT);
 		w.newLine();
 	}
 
 	private static void compileViewInit(BufferedWriter w,
 			Map<String, ViewColumnType> columns) throws IOException {
-		w.write("    def __init__(self, context):");
+		w.write(DEF_INIT_SELF_CONTEXT);
 		w.newLine();
 		w.write("        ViewCursor.__init__(self, context)");
 		w.newLine();
@@ -500,7 +554,7 @@ public final class ORMCompiler {
 			w.write(String.format(SELF_S_EQUALS_NONE, c));
 			w.newLine();
 		}
-		w.write("        self.context = context");
+		w.write(SELF_CONTEXT_CONTEXT);
 		w.newLine();
 	}
 }

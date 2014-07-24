@@ -1,0 +1,84 @@
+class ttt1Cursor(ReadOnlyTableCursor):
+    def __init__(self, context):
+        ViewCursor.__init__(self, context)
+        self.id = None
+        self.context = context
+    def _grainName(self):
+        return 'test1'
+    def _tableName(self):
+        return 'ttt1'
+    def _parseResult(self, rs):
+        self.id = rs.getInt('id')
+        if rs.wasNull():
+            self.id = None
+    def _clearBuffer(self, withKeys):
+        self.id = None
+    def _currentValues(self):
+        return array([None if self.id == None else int(self.id)], Object)
+    def iterate(self):
+        if self.tryFirst():
+            while True:
+                yield self
+                if not self.next():
+                    break
+
+class ttt2Cursor(Cursor):
+    onPreDelete  = []
+    onPostDelete = []
+    onPreInsert  = []
+    onPostInsert = []
+    onPreUpdate  = []
+    onPostUpdate = []
+    def __init__(self, context):
+        Cursor.__init__(self, context)
+        self.id = None
+        self.context = context
+    def _grainName(self):
+        return 'test1'
+    def _tableName(self):
+        return 'ttt2'
+    def _parseResult(self, rs):
+        self.id = rs.getInt('id')
+        if rs.wasNull():
+            self.id = None
+    def _clearBuffer(self, withKeys):
+        if withKeys:
+            self.id = None
+    def _currentKeyValues(self):
+        return array([None if self.id == None else int(self.id)], Object)
+    def _currentValues(self):
+        return array([None if self.id == None else int(self.id)], Object)
+    def _setAutoIncrement(self, val):
+        pass
+    def _preDelete(self):
+        for f in ttt2Cursor.onPreDelete:
+            f(self)
+    def _postDelete(self):
+        for f in ttt2Cursor.onPostDelete:
+            f(self)
+    def _preInsert(self):
+        for f in ttt2Cursor.onPreInsert:
+            f(self)
+    def _postInsert(self):
+        for f in ttt2Cursor.onPostInsert:
+            f(self)
+    def _preUpdate(self):
+        for f in ttt2Cursor.onPreUpdate:
+            f(self)
+    def _postUpdate(self):
+        for f in ttt2Cursor.onPostUpdate:
+            f(self)
+    def _getBufferCopy(self):
+        result = ttt2Cursor(self.callContext())
+        result.copyFieldsFrom(self)
+        return result
+    def copyFieldsFrom(self, c):
+        self.id = c.id
+    def iterate(self):
+        if self.tryFirst():
+            while True:
+                yield self
+                if not self.next():
+                    break
+
+

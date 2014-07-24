@@ -2,7 +2,6 @@
 CREATE GRAIN test1 VERSION '2.0';
 
 -- *** TABLES ***
-/**описание гранулы: * grain celestadoc*/
 CREATE TABLE table1(
   column1 INT NOT NULL IDENTITY,
   column2 REAL NOT NULL DEFAULT -12323.2,
@@ -37,6 +36,19 @@ CREATE TABLE employees(
   emp_mgr VARCHAR(30),
   CONSTRAINT pk_employees PRIMARY KEY (emp_id)
 );
+
+CREATE TABLE ttt1(
+  id INT) WITH READ ONLY;
+
+CREATE TABLE ttt2(
+  id INT NOT NULL,
+  CONSTRAINT pk_ttt2 PRIMARY KEY (id)
+);
+
+CREATE TABLE ttt3(
+  id INT NOT NULL,
+  CONSTRAINT pk_ttt3 PRIMARY KEY (id)
+) WITH NO VERSION CHECK;
 
 -- *** FOREIGN KEYS ***
 -- *** INDICES ***
