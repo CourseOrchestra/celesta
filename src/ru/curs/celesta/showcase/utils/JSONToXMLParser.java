@@ -25,15 +25,15 @@ public class JSONToXMLParser {
 	private Boolean vBool = false;
 
 	public JSONToXMLParser(String json) throws JSONException {
-		String json1 = json;
-		if (json.contains("u\"")) {
-			json1 = json.replaceAll("u\"", "\"");
-		}
-		String json2 = json1;
-		if (json1.contains("u \'")) {
-			json2 = json1.replaceAll("u \'", "\'");
-		}
-		String newJson = json2;
+		// String json1 = json;
+		// if (json.contains("u\"")) {
+		// json1 = json.replaceAll("u\"", "\"");
+		// }
+		// String json2 = json1;
+		// if (json1.contains("u \'")) {
+		// json2 = json1.replaceAll("u \'", "\'");
+		// }
+		String newJson = json;
 		if (newJson.contains("{}")) {
 			newJson = newJson.replaceAll("[{][}]", "{\"myTagForResolvingProblem\"=\"2\"}");
 		}
