@@ -1,16 +1,12 @@
 package ru.curs.celesta.showcase;
 
-import javax.xml.bind.annotation.*;
-
-import ru.beta2.extra.gwt.ui.SerializableElement;
+import java.io.Serializable;
 
 /**
  * Класс для результатов сохранения отредактированных данных в гриде.
  * 
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
-public class GridSaveResult implements SerializableElement {
+public class GridSaveResult implements Serializable {
 	private static final long serialVersionUID = 830182167624371725L;
 
 	/**

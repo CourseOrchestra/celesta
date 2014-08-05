@@ -1,16 +1,12 @@
 package ru.curs.celesta.showcase;
 
-import javax.xml.bind.annotation.*;
-
-import ru.beta2.extra.gwt.ui.SerializableElement;
+import java.io.Serializable;
 
 /**
  * Класс для результатов добавления записи в гриде.
  * 
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
-public class GridAddRecordResult implements SerializableElement {
+public class GridAddRecordResult implements Serializable {
 	private static final long serialVersionUID = 4793925085602167821L;
 
 	/**
