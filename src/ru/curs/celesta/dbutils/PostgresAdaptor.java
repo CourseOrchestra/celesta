@@ -834,7 +834,7 @@ final class PostgresAdaptor extends DBAdaptor {
 					+ String.format(" limit all offset %d", offset);
 		else {
 			sql = getSelectFromOrderBy(t, whereClause, orderBy)
-					+ String.format(" limit %d offset %d", offset, rowCount);
+					+ String.format(" limit %d offset %d", rowCount, offset);
 		}
 		return sql;
 	}
