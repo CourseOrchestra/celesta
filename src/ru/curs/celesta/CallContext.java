@@ -1,7 +1,6 @@
 package ru.curs.celesta;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
 
 import org.python.core.PyDictionary;
 
@@ -57,8 +56,21 @@ public final class CallContext {
 		try {
 			conn.commit();
 		} catch (SQLException e) {
-			throw new CelestaException("Commit unsuccessful: %s",
-					e.getMessage());
+			throw new CelestaException("Commit unsuccessful: %s", e.getMessage());
+		}
+	}
+
+	/**
+	 * Откатывает транзакцию.
+	 * 
+	 * @throws CelestaException
+	 *             в случае проблемы с БД.
+	 */
+	public void rollback() throws CelestaException {
+		try {
+			conn.rollback();
+		} catch (SQLException e) {
+			throw new CelestaException("Rollback unsuccessful: %s", e.getMessage());
 		}
 	}
 

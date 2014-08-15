@@ -1,12 +1,8 @@
 package ru.curs.celesta;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.sql.*;
+import java.util.*;
+import java.util.regex.*;
 
 import ru.curs.celesta.dbutils.DBAdaptor;
 
@@ -44,20 +40,18 @@ public final class ConnectionPool {
 		try {
 			Class.forName(AppSettings.getDbClassName());
 			if (AppSettings.getDBLogin().isEmpty()) {
-				c = DriverManager.getConnection(AppSettings
-						.getDatabaseConnection());
+				c = DriverManager.getConnection(AppSettings.getDatabaseConnection());
 			} else {
-				c = DriverManager.getConnection(
-						AppSettings.getDatabaseConnection(),
-						AppSettings.getDBLogin(), AppSettings.getDBPassword());
+				c =
+					DriverManager.getConnection(AppSettings.getDatabaseConnection(),
+							AppSettings.getDBLogin(), AppSettings.getDBPassword());
 			}
 			c.setAutoCommit(false);
 			return c;
 		} catch (SQLException | ClassNotFoundException e) {
-			throw new CelestaException(
-					"Could not connect to %s with error: %s",
-					PasswordHider.maskPassword(AppSettings
-							.getDatabaseConnection()), e.getMessage());
+			throw new CelestaException("Could not connect to %s with error: %s",
+					PasswordHider.maskPassword(AppSettings.getDatabaseConnection()),
+					e.getMessage());
 		}
 	}
 
@@ -99,6 +93,22 @@ public final class ConnectionPool {
 	}
 
 	/**
+	 * Выполняет команду rollback на коннекшне, не выдавая исключения.
+	 * 
+	 * @param conn
+	 *            соединение для выполнения rollback.
+	 */
+	public static void rollback(Connection conn) {
+		try {
+			if (conn != null)
+				conn.rollback();
+		} catch (SQLException e) {
+			// do something to make CheckStyle happy ))
+			return;
+		}
+	}
+
+	/**
 	 * Очищает пул.
 	 */
 	public static synchronized void clear() {
@@ -124,14 +134,13 @@ final class PasswordHider {
 	private static final Pattern ORA_PATTERN = Pattern.compile("/[^@]+@");
 	// В MS SQL всё продумано и если пароль содержит ;, она меняется на {;}
 	private static final Pattern MSSQL_PATTERN = Pattern.compile(
-			"(password)=([^{;]|(\\{(;\\})|[^;]?))+(;|$)",
-			Pattern.CASE_INSENSITIVE);
+			"(password)=([^{;]|(\\{(;\\})|[^;]?))+(;|$)", Pattern.CASE_INSENSITIVE);
 	// В MySQL JDBC-URL не сработает правильно, если пароль содержит &
-	private static final Pattern MYSQL_PATTERN = Pattern.compile(
-			"(password)=[^&]+(&|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern MYSQL_PATTERN = Pattern.compile("(password)=[^&]+(&|$)",
+			Pattern.CASE_INSENSITIVE);
 	// А это на случай неизвестного науке JDBC-драйвера
-	private static final Pattern GENERIC_PATTERN = Pattern.compile(
-			"(password)=.+$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern GENERIC_PATTERN = Pattern.compile("(password)=.+$",
+			Pattern.CASE_INSENSITIVE);
 
 	private PasswordHider() {
 
