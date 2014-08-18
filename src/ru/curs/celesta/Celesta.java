@@ -287,13 +287,13 @@ public final class Celesta {
 					// ERROR
 					if (pyObj != null) {
 						Object obj = pyObj.__tojava__(Object.class);
-						if ("UserMessage".equalsIgnoreCase(obj.getClass().getSimpleName())) {
-							if ("ERROR".equalsIgnoreCase(obj.toString())) {
-								try {
-									conn.rollback();
-								} catch (SQLException e) {
-									return null;
-								}
+						if ((obj != null)
+								&& "UserMessage".equalsIgnoreCase(obj.getClass().getSimpleName())
+								&& "ERROR".equalsIgnoreCase(obj.toString())) {
+							try {
+								conn.rollback();
+							} catch (SQLException e) {
+								return null;
 							}
 						}
 					}
