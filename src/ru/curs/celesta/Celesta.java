@@ -285,13 +285,15 @@ public final class Celesta {
 
 					// Откат транзакции в случае возврата UserMessage с типом
 					// ERROR
-					Object obj = pyObj.__tojava__(Object.class);
-					if ("UserMessage".equalsIgnoreCase(obj.getClass().getSimpleName())) {
-						if ("ERROR".equalsIgnoreCase(obj.toString())) {
-							try {
-								conn.rollback();
-							} catch (SQLException e) {
-								return null;
+					if (pyObj != null) {
+						Object obj = pyObj.__tojava__(Object.class);
+						if ("UserMessage".equalsIgnoreCase(obj.getClass().getSimpleName())) {
+							if ("ERROR".equalsIgnoreCase(obj.toString())) {
+								try {
+									conn.rollback();
+								} catch (SQLException e) {
+									return null;
+								}
 							}
 						}
 					}
