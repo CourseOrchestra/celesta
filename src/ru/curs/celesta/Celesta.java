@@ -120,7 +120,7 @@ public final class Celesta {
 				String userId = args[0];
 				String sesId = String.format("TEMP%08X", (new Random()).nextInt());
 				getInstance().login(sesId, userId);
-				getInstance().runPython(sesId, args[1], params);
+				getInstance().runPython(sesId, args[1], null, params);
 				getInstance().logout(sesId, false);
 
 			} catch (CelestaException e) {
@@ -245,7 +245,8 @@ public final class Celesta {
 	 *             В случае, если процедура не найдена или в случае ошибки
 	 *             выполненения процедуры.
 	 */
-	public PyObject runPython(String sesId, String proc, Object... param) throws CelestaException {
+	public PyObject runPython(String sesId, String proc, RunPythonCallbackFunctions funcs,
+			Object... param) throws CelestaException {
 		Matcher m = PROCNAME.matcher(proc);
 
 		if (m.matches()) {
@@ -283,17 +284,13 @@ public final class Celesta {
 						String.format("%s%s.%s(%s)", grainName, unitName, procName, sb.toString());
 					PyObject pyObj = interp.eval(line);
 
-					// Откат транзакции в случае возврата UserMessage с типом
-					// ERROR
-					if (pyObj != null) {
-						Object obj = pyObj.__tojava__(Object.class);
-						if ((obj != null)
-								&& "UserMessage".equalsIgnoreCase(obj.getClass().getSimpleName())
-								&& "ERROR".equalsIgnoreCase(obj.toString())) {
+					// Откат транзакции в случае необходимости
+					if (funcs != null) {
+						if (funcs.needRollbackTransaction(pyObj)) {
 							try {
 								conn.rollback();
 							} catch (SQLException e) {
-								return null;
+								throw new CelestaException("SQL error:" + e.getMessage());
 							}
 						}
 					}
