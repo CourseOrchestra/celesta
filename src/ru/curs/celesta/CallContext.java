@@ -56,22 +56,42 @@ public final class CallContext {
 		try {
 			conn.commit();
 		} catch (SQLException e) {
-			throw new CelestaException("Commit unsuccessful: %s", e.getMessage());
+			throw new CelestaException("Commit unsuccessful: %s",
+					e.getMessage());
 		}
 	}
 
 	/**
-	 * Откатывает транзакцию.
+	 * Записывает информационное сообщение в очередь сообщений.
 	 * 
-	 * @throws CelestaException
-	 *             в случае проблемы с БД.
+	 * @param msg
+	 *            текст сообщения
 	 */
-	public void rollback() throws CelestaException {
-		try {
-			conn.rollback();
-		} catch (SQLException e) {
-			throw new CelestaException("Rollback unsuccessful: %s", e.getMessage());
-		}
+	public void info(String msg) {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg));
+	}
+
+	/**
+	 * Записывает предупреждение в очередь сообщений.
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 */
+	public void warning(String msg) {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.WARNING, msg));
+	}
+
+	/**
+	 * Записывает ошибку в очередь сообщений и вызывает исключение.
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 * @throws CelestaException
+	 *             во всех случаях, при этом с переданным текстом
+	 */
+	public void error(String msg) throws CelestaException {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg));
+		throw new CelestaException("ERROR: %s", msg);
 	}
 
 	/**

@@ -93,22 +93,6 @@ public final class ConnectionPool {
 	}
 
 	/**
-	 * Выполняет команду rollback на коннекшне, не выдавая исключения.
-	 * 
-	 * @param conn
-	 *            соединение для выполнения rollback.
-	 */
-	public static void rollback(Connection conn) {
-		try {
-			if (conn != null)
-				conn.rollback();
-		} catch (SQLException e) {
-			// do something to make CheckStyle happy ))
-			return;
-		}
-	}
-
-	/**
 	 * Очищает пул.
 	 */
 	public static synchronized void clear() {

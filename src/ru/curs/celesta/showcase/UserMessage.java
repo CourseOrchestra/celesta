@@ -80,5 +80,4 @@ public class UserMessage implements Serializable {
 	public void setId(final String aId) {
 		id = aId;
 	}
-
 }
