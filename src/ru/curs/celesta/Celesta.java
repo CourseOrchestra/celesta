@@ -300,13 +300,15 @@ public final class Celesta {
 			for (int i = 0; i < param.length; i++)
 				sb.append(String.format(", arg%d", i));
 
-			PythonInterpreter interp = getPythonInterpreter();
+			
 			SessionContext sesContext = sessions.get(sesId);
 			if (sesContext == null)
 				throw new CelestaException("Session ID=%s is not logged in",
 						sesId);
+
 			Connection conn = ConnectionPool.get();
 			CallContext context = new CallContext(conn, sesContext);
+			PythonInterpreter interp = getPythonInterpreter();
 			try {
 				interp.set("context", context);
 				for (int i = 0; i < param.length; i++)
