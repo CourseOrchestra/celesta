@@ -387,7 +387,10 @@ final class MySQLAdaptor extends DBAdaptor {
 			Statement stmt = conn.createStatement();
 			try {
 				ResultSet rs = stmt.executeQuery(sql);
-				rs.next();
+				if (!rs.next())
+					throw new CelestaException(
+							"Celesta sequense for %s.%s is not initialized.", t
+									.getGrain().getName(), t.getName());
 				return rs.getInt(1);
 			} finally {
 				stmt.close();
