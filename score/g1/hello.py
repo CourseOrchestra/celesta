@@ -9,6 +9,7 @@ from g1._g1_orm import testviewCursor
 import java.io.OutputStreamWriter as OutputStreamWriter
 import java.io.InputStreamReader as InputStreamReader
 import java.io.BufferedReader as BufferedReader
+import ru.curs.celesta.CelestaException as CelestaException
 import random
 
 def hello(context, arg):
@@ -26,7 +27,7 @@ def hello(context, arg):
         osw.append('hello, blob field!')
     finally:
         osw.close()
-    c.doublefield = 12 + 0.14 # random.random()
+    c.doublefield = 12 + 0.14  # random.random()
     print c.doublefield
     c.longtext = 'Привет, длинное текстовое поле'
     c.insert()
@@ -91,6 +92,11 @@ def hello(context, arg):
 
     aa.idaa = 1
     aa.delete()  
+
+    aa.limit(3, 1)
+    for aa in aa.iterate():  # while aa.next():
+        print "%s : %s" % (aa.idaa , aa.idc)
+    print '---'
     
     aa.limit(5, 5)
     for aa in aa.iterate():  # while aa.next():
@@ -127,6 +133,15 @@ def hello(context, arg):
     adresses.get('11111', '11', '2')
     print adresses.asCSVLine()    
     
+    adresses2 = adressesCursor(context)
+    adresses2.copyFieldsFrom(adresses)
+    adresses2.city = 'bbbbb'
+    adresses2.update()
+    
+    # comment the line below to check version check failure
+    #adresses.get('11111', '11', '2')
+    adresses.city = 'bbcc'
+    adresses.update()
     
     testview = testviewCursor(context)
     testview.orderBy("f1")
@@ -146,7 +161,7 @@ def hello(context, arg):
   
     c.reset()
     c.setFilter('doublefield', ">12")
-    #c.setRange('doublefield', 12.14)
+    # c.setRange('doublefield', 12.14)
     for c in c.iterate():
         print c.doublefield
         

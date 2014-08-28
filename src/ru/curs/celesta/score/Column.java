@@ -14,10 +14,32 @@ public abstract class Column extends NamedElement {
 
 	Column(Table parentTable, String name) throws ParseException {
 		super(name);
+		if (Table.RECVERSION.equals(name))
+			throw new ParseException(String.format(
+					"Column name '%s' is reserved for system needs.",
+					Table.RECVERSION));
 		if (parentTable == null)
 			throw new IllegalArgumentException();
 		this.parentTable = parentTable;
 		parentTable.addColumn(this);
+	}
+
+	/**
+	 * Специальная версия конструктора для того, чтобы сконструировать поле
+	 * recversion.
+	 * 
+	 * @param parentTable
+	 *            Родительская таблица (не добавляется в перечень колонок)
+	 * @throws ParseException
+	 *             Не должно возникать.
+	 */
+	Column(Table parentTable) throws ParseException {
+		super(Table.RECVERSION);
+		if (parentTable == null)
+			throw new IllegalArgumentException();
+		this.parentTable = parentTable;
+		nullable = false;
+		setDefault("1");
 	}
 
 	/**

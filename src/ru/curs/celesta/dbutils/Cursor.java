@@ -70,6 +70,7 @@ public abstract class Cursor extends BasicCursor {
 	private PreparedStatement delete = null;
 
 	private Cursor xRec;
+	private int recversion;
 
 	public Cursor(CallContext context) throws CelestaException {
 		super(context);
@@ -181,7 +182,9 @@ public abstract class Cursor extends BasicCursor {
 	 * @throws CelestaException
 	 *             ошибка БД
 	 */
+	//CHECKSTYLE:OFF for cyclomatic complexity
 	public final boolean tryUpdate() throws CelestaException {
+		//CHECKSTYLE:ON
 		if (!canModify())
 			throw new PermissionDeniedException(callContext(), meta(),
 					Action.MODIFY);
@@ -217,15 +220,20 @@ public abstract class Cursor extends BasicCursor {
 			// необходимости
 			if (notChanged)
 				return true;
+
 			if (!Arrays.equals(myMask, updateMask)) {
 				update = db().getUpdateRecordStatement(conn(), meta(), myMask);
 				updateMask = myMask;
 			}
 
 			Object[] keyValues = _currentKeyValues();
-			// Заполняем параметры присвоения (set ...)
 			int j = 1;
 			int i = 0;
+			// Для версионированной таблицы заполняем параметр с версией
+			if (meta().isVersioned())
+				DBAdaptor.setParam(update, j++, recversion);
+
+			// Заполняем параметры присвоения (set ...)
 			for (String c : meta().getColumns().keySet()) {
 				if (!(myMask[i] || meta().getPrimaryKey().containsKey(c))) {
 					DBAdaptor.setParam(update, j, values[i]);
@@ -239,11 +247,23 @@ public abstract class Cursor extends BasicCursor {
 
 			update.execute();
 			LOGGING_MGR.log(this, Action.MODIFY);
+			if (meta().isVersioned())
+				recversion++;
 			initXRec();
 			_postUpdate();
 
 		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
+			if (e.getMessage().contains("record version check failure")) {
+				throw new CelestaException(
+						"Can not update %s.%s(%s): this record has been already modified"
+								+ " by someone. Please start updating again.",
+						meta().getGrain().getName(), meta().getName(),
+						Arrays.toString(_currentKeyValues()));
+			} else {
+				throw new CelestaException("Update of %s.%s (%s) failure: %s",
+						meta().getGrain().getName(), meta().getName(),
+						Arrays.toString(_currentKeyValues()), e.getMessage());
+			}
 		}
 		return true;
 	}
@@ -391,6 +411,23 @@ public abstract class Cursor extends BasicCursor {
 		for (int i = 0; i < values.length; i++)
 			DBAdaptor.setParam(get, i + 1, values[i]);
 
+	}
+
+	/**
+	 * Устанавливает версию записи.
+	 * 
+	 * @param v
+	 *            новая версия.
+	 */
+	public final void setRecversion(int v) {
+		recversion = v;
+	}
+
+	/**
+	 * Читает версию записи.
+	 */
+	public final int getRecversion() {
+		return recversion;
 	}
 
 	/**

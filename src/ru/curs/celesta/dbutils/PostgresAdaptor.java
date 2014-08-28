@@ -311,26 +311,6 @@ final class PostgresAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getUpdateRecordStatement(Connection conn, Table t,
-			boolean[] equalsMask) throws CelestaException {
-		StringBuilder setClause = new StringBuilder();
-		int i = 0;
-		for (String c : t.getColumns().keySet()) {
-			// Пропускаем ключевые поля и поля, не изменившие своего значения
-			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
-				padComma(setClause);
-				setClause.append(String.format("\"%s\" = ?", c));
-			}
-			i++;
-		}
-
-		String sql = String.format("update " + tableTemplate()
-				+ " set %s where %s", t.getGrain().getName(), t.getName(),
-				setClause.toString(), getRecordWhereClause(t));
-		return prepareStatement(conn, sql);
-	}
-
-	@Override
 	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException {
 		String sql = String.format("delete from " + tableTemplate()
@@ -351,7 +331,8 @@ final class PostgresAdaptor extends DBAdaptor {
 
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, Expr complexFilter) throws CelestaException {
+			Map<String, AbstractFilter> filters, Expr complexFilter)
+			throws CelestaException {
 		// Готовим условие where
 		String whereClause = getWhereClause(t, filters, complexFilter);
 
@@ -718,8 +699,9 @@ final class PostgresAdaptor extends DBAdaptor {
 	@Override
 	void dropPK(Connection conn, Table t, String pkName)
 			throws CelestaException {
-		String sql = String.format("alter table %s.%s drop constraint \"%s\" cascade",
-				t.getGrain().getQuotedName(), t.getQuotedName(), pkName);
+		String sql = String.format(
+				"alter table %s.%s drop constraint \"%s\" cascade", t
+						.getGrain().getQuotedName(), t.getQuotedName(), pkName);
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -896,5 +878,80 @@ final class PostgresAdaptor extends DBAdaptor {
 	@Override
 	public SQLGenerator getViewSQLGenerator() {
 		return new SQLGenerator();
+	}
+
+	@Override
+	public void createSysObjects(Connection conn) throws CelestaException {
+		String sql = "CREATE OR REPLACE FUNCTION celesta.recversion_check()"
+				+ "  RETURNS trigger AS $BODY$ BEGIN\n"
+				+ "    IF (OLD.recversion = NEW.recversion) THEN\n"
+				+ "       NEW.recversion = NEW.recversion + 1;\n     ELSE\n"
+				+ "       RAISE EXCEPTION 'record version check failure';\n"
+				+ "    END IF;" + "    RETURN NEW; END; $BODY$\n"
+				+ "  LANGUAGE plpgsql VOLATILE COST 100;";
+
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Could not create or replace celesta.recversion_check() function: %s",
+					e.getMessage());
+		}
+	}
+
+	@Override
+	public void updateVersioningTrigger(Connection conn, Table t)
+			throws CelestaException {
+		// First of all, we are about to check if trigger exists
+		String sql = String
+				.format("select count(*) from information_schema.triggers where "
+						+ "		event_object_schema = '%s' and event_object_table= '%s'"
+						+ "		and trigger_name = 'versioncheck'", t.getGrain()
+						.getName(), t.getName());
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				rs.next();
+				boolean triggerExists = rs.getInt(1) > 0;
+				rs.close();
+				if (t.isVersioned()) {
+					if (triggerExists) {
+						return;
+					} else {
+						// CREATE TRIGGER
+						sql = String
+								.format("CREATE TRIGGER \"versioncheck\""
+										+ " BEFORE UPDATE ON "
+										+ tableTemplate()
+										+ " FOR EACH ROW EXECUTE PROCEDURE celesta.recversion_check();",
+										t.getGrain().getName(), t.getName());
+						stmt.executeUpdate(sql);
+					}
+				} else {
+					if (triggerExists) {
+						// DROP TRIGGER
+						sql = String.format("DROP TRIGGER \"versioncheck\" ON "
+								+ tableTemplate(), t.getGrain().getName(),
+								t.getName());
+						stmt.executeUpdate(sql);
+					} else {
+						return;
+					}
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Could not update version check trigger on %s.%s: %s", t
+							.getGrain().getName(), t.getName(), e.getMessage());
+		}
+
 	}
 }

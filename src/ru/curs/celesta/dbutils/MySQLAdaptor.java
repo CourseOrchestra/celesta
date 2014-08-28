@@ -331,25 +331,6 @@ final class MySQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getUpdateRecordStatement(Connection conn, Table t,
-			boolean[] equalsMask) throws CelestaException {
-		StringBuilder setClause = new StringBuilder();
-		int i = 0;
-		for (String c : t.getColumns().keySet()) {
-			// Пропускаем ключевые поля и поля, не изменившие своего значения
-			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
-				padComma(setClause);
-				setClause.append(String.format("%s = ?", c));
-			}
-			i++;
-		}
-		String sql = String.format("update " + tableTemplate()
-				+ " set %s where %s", t.getGrain().getName(), t.getName(),
-				setClause.toString(), getRecordWhereClause(t));
-		return prepareStatement(conn, sql);
-	}
-
-	@Override
 	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException {
 		String sql = String.format("delete from " + tableTemplate()
@@ -360,7 +341,8 @@ final class MySQLAdaptor extends DBAdaptor {
 
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, Expr complexFilter) throws CelestaException {
+			Map<String, AbstractFilter> filters, Expr complexFilter)
+			throws CelestaException {
 		// Готовим условие where
 		String whereClause = getWhereClause(t, filters, complexFilter);
 
@@ -669,6 +651,7 @@ final class MySQLAdaptor extends DBAdaptor {
 			body.append("  end if;\n");
 		}
 		body.append("end");
+
 		// System.out.println(body.toString());
 
 		stmt = conn.createStatement();
@@ -979,5 +962,60 @@ final class MySQLAdaptor extends DBAdaptor {
 				result.append(")");
 			}
 		};
+	}
+
+	@Override
+	public void updateVersioningTrigger(Connection conn, Table t)
+			throws CelestaException {
+		// First of all, we are about to check if trigger exists
+		String sql = String.format("show create trigger %s.\"%s_upd\"", t
+				.getGrain().getQuotedName(), t.getName());
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				boolean triggerExists = false;
+				try {
+					ResultSet rs = stmt.executeQuery(sql);
+					triggerExists = rs.next();
+					rs.close();
+				} catch (SQLException e) {
+					triggerExists = false;
+				}
+
+				if (t.isVersioned()) {
+					if (triggerExists) {
+						return;
+					} else {
+						// CREATE TRIGGER
+						sql = String
+								.format("CREATE trigger \"%s\".\"%s_upd\" before update "
+										+ "on \"%s\".\"%s\" for each row\nbegin\n"
+										+ "  /*version check*/\n "
+										+ "  if old.\"recversion\" <> new.\"recversion\" THEN  \n"
+										+ "     SIGNAL SQLSTATE '02000' SET MESSAGE_TEXT = 'record version check failure';\n"
+										+ "  end if;\n  set new.\"recversion\" = new.\"recversion\" + 1;\nend",
+										t.getGrain().getName(), t.getName(), t
+												.getGrain().getName(), t
+												.getName());
+						stmt.executeUpdate(sql);
+					}
+				} else {
+					if (triggerExists) {
+						// DROP TRIGGER
+						sql = String.format("DROP TRIGGER \"%s\".\"%s_upd\"", t
+								.getGrain().getName(), t.getName());
+						stmt.executeUpdate(sql);
+					} else {
+						return;
+					}
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Could not update version check trigger on %s.%s: %s", t
+							.getGrain().getName(), t.getName(), e.getMessage());
+		}
 	}
 }

@@ -99,6 +99,7 @@ public final class DBUpdator {
 					dba.createTable(conn, sys.getTable("tables"));
 					dba.createTable(conn, sys.getTable("logsetup"));
 					dba.createTable(conn, sys.getTable("sequences"));
+					dba.createSysObjects(conn);
 					insertGrainRec(sys);
 					updateGrain(sys);
 				} catch (ParseException e) {
@@ -452,11 +453,24 @@ public final class DBUpdator {
 				dba.createColumn(conn, e.getValue());
 			}
 		}
+
+		// Для версионированных таблиц синхронизируем поле recversion
+		if (t.isVersioned())
+			if (dbColumns.contains(Table.RECVERSION)) {
+				DBColumnInfo ci = dba.getColumnInfo(conn,
+						t.getRecVersionField());
+				if (!ci.reflects(t.getRecVersionField()))
+					dba.updateColumn(conn, t.getRecVersionField(), ci);
+			} else {
+				dba.createColumn(conn, t.getRecVersionField());
+			}
+
 		// Ещё раз проверяем первичный ключ и при необходимости создаём.
 		pkInfo = dba.getPKInfo(conn, t);
 		if (pkInfo.isEmpty())
 			dba.createPK(conn, t);
 
+		dba.updateVersioningTrigger(conn, t);
 	}
 
 }

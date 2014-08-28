@@ -19,7 +19,7 @@ ida int identity not null primary key,
 /** описание поля*/
 descr varchar(2),
 parent int foreign key references a(ida), --ссылка на саму себя
-fff int foreign key references aa(idaa) --первая часть круговой ссылки
+fff int foreign key references aa(idaa) on delete cascade --первая часть круговой ссылки
 );
 
 --alter table aa add constraint fk1 foreign key (idc) references a(ida); --вторая часть круговой ссылки

@@ -88,10 +88,20 @@ final class LoggingManager {
 	public void log(Cursor c, Action a) throws CelestaException {
 		if (a == Action.READ)
 			throw new IllegalArgumentException();
+		// No logging for celesta.grains (this is needed for smooth update from
+		// versions having no recversion fields).
+		if ("celesta".equals(c.meta().getGrain().getName())
+				&& "grains".equals(c.meta().getName()))
+			return;
 		CallContext sysContext = new CallContext(c.callContext().getConn(),
 				BasicCursor.SYSTEMSESSION);
 		if (!isLoggingNeeded(sysContext, c.meta(), a))
 			return;
+		writeToLog(c, a, sysContext);
+	}
+
+	private void writeToLog(Cursor c, Action a, CallContext sysContext)
+			throws CelestaException {
 		LogCursor log = new LogCursor(sysContext);
 		log.init();
 		log.setUserid(c.callContext().getUserId());

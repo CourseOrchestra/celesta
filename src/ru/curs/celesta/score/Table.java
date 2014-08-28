@@ -14,6 +14,11 @@ import java.util.Set;
  */
 public final class Table extends GrainElement {
 
+	/**
+	 * Имя системного поля, содержащего версию записи.
+	 */
+	public static final String RECVERSION = "recversion";
+
 	private static final String YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO = "Table '%s.%s', "
 			+ "field '%s': you cannot drop a column that belongs to ";
 
@@ -37,6 +42,8 @@ public final class Table extends GrainElement {
 	};
 
 	private final Set<ForeignKey> fKeys = new LinkedHashSet<>();
+
+	private final IntegerColumn recVersion = new IntegerColumn(this);
 
 	private boolean pkFinalized = false;
 
@@ -113,7 +120,7 @@ public final class Table extends GrainElement {
 	 *             в случае, когда передаётся пустой перечень
 	 */
 	public void setPK(String... columnNames) throws ParseException {
-		if (columnNames == null || columnNames.length == 0)
+		if (columnNames == null || (columnNames.length == 0 && !isReadOnly))
 			throw new ParseException(String.format(
 					"Primary key for table %s.%s cannot be empty.", getGrain()
 							.getName(), getName()));
@@ -143,6 +150,9 @@ public final class Table extends GrainElement {
 	}
 
 	private Column validatePKColumn(String name) throws ParseException {
+		if (RECVERSION.equals(name))
+			throw new ParseException(String.format(
+					"Column '%s' is not allowed for primary key.", name));
 		Column c = columns.get(name);
 		if (c == null)
 			throw new ParseException(String.format(
@@ -399,8 +409,12 @@ public final class Table extends GrainElement {
 	}
 
 	/**
+	 * Устанавливает опцию таблицы "только для чтения".
+	 * 
 	 * @param isReadOnly
+	 *            только для чтения.
 	 * @throws ParseException
+	 *             Если данная опция включается вместе с versioned.
 	 */
 	void setReadOnly(boolean isReadOnly) throws ParseException {
 		if (isReadOnly && isVersioned)
@@ -434,5 +448,12 @@ public final class Table extends GrainElement {
 							"Method setVersioned(true) failed: table %s should be either versioned or read only.",
 							getName()));
 		this.isVersioned = isVersioned;
+	}
+
+	/**
+	 * Возвращает описание поля recversion.
+	 */
+	public IntegerColumn getRecVersionField() {
+		return recVersion;
 	}
 }

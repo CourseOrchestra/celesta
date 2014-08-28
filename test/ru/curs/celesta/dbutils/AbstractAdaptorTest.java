@@ -177,12 +177,65 @@ public abstract class AbstractAdaptorTest {
 				true, true, true, true, true };
 
 		PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask);
+
+		// System.out.println(pstmt.toString());
+
 		assertNotNull(pstmt);
-		DBAdaptor.setParam(pstmt, 1, 2); // field value
-		DBAdaptor.setParam(pstmt, 2, 1); // key value
+		DBAdaptor.setParam(pstmt, 1, 1); // version value
+		DBAdaptor.setParam(pstmt, 2, 2); // field value
+		DBAdaptor.setParam(pstmt, 3, 1); // key value
 		int rowCount = pstmt.executeUpdate();
 		assertEquals(1, rowCount);
 		assertEquals(1, getCount(conn, t));
+	}
+
+	@Test
+	public void lostUpdatesTest() throws Exception {
+		dba.createSysObjects(conn);
+		insertRow(conn, t, 1);
+		PreparedStatement pstmt = dba.getOneRecordStatement(conn, t);
+		DBAdaptor.setParam(pstmt, 1, 1); // key value
+		ResultSet rs = pstmt.executeQuery();
+		rs.next();
+		assertEquals(1, rs.getInt("recversion"));
+		rs.close();
+
+		boolean[] mask = { true, true, false, true, true, true, true, true,
+				true, true, true, true, true, false };
+		PreparedStatement pstmt2 = dba.getUpdateRecordStatement(conn, t, mask);
+
+		// System.out.println(pstmt2.toString());
+		assertNotNull(pstmt2);
+		DBAdaptor.setParam(pstmt2, 1, 1); // version value
+		DBAdaptor.setParam(pstmt2, 2, 22); // field value
+		DBAdaptor.setParam(pstmt2, 3, 1); // key value
+		pstmt2.executeUpdate();
+
+		rs = pstmt.executeQuery();
+		rs.next();
+		assertEquals(2, rs.getInt("recversion"));
+		rs.close();
+
+		DBAdaptor.setParam(pstmt2, 1, 2); // version value
+		DBAdaptor.setParam(pstmt2, 2, 23); // field value
+		pstmt2.executeUpdate();
+		rs = pstmt.executeQuery();
+		rs.next();
+		assertEquals(3, rs.getInt("recversion"));
+		rs.close();
+
+		DBAdaptor.setParam(pstmt2, 2, 23); // field value
+
+		boolean itWas = false;
+		try {
+			pstmt2.executeUpdate();
+		} catch (SQLException e) {
+			// System.out.println(e.getMessage());
+			itWas = true;
+			assertTrue(e.getMessage().contains("record version check failure"));
+		}
+		assertTrue(itWas);
+
 	}
 
 	@Test
@@ -202,7 +255,7 @@ public abstract class AbstractAdaptorTest {
 	public void getColumns() throws Exception {
 		Set<String> columnSet = dba.getColumns(conn, t);
 		assertNotNull(columnSet);
-		assertEquals(13, columnSet.size());
+		assertEquals(14, columnSet.size());
 		assertTrue(columnSet.contains("f4"));
 		assertFalse(columnSet.contains("nonExistentColumn"));
 		// String[] columnNames = { "id", "attrVarchar", "attrInt", "f1",

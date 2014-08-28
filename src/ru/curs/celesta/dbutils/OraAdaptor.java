@@ -357,27 +357,6 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getUpdateRecordStatement(Connection conn, Table t,
-			boolean[] equalsMask) throws CelestaException {
-		StringBuilder setClause = new StringBuilder();
-		int i = 0;
-		for (String c : t.getColumns().keySet()) {
-			// Пропускаем ключевые поля и поля, не изменившие своего значения
-			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
-				if (setClause.length() > 0)
-					setClause.append(", ");
-				setClause.append(String.format("\"%s\" = ?", c));
-			}
-			i++;
-		}
-
-		String sql = String.format("update " + tableTemplate()
-				+ " set %s where %s", t.getGrain().getName(), t.getName(),
-				setClause.toString(), getRecordWhereClause(t));
-		return prepareStatement(conn, sql);
-	}
-
-	@Override
 	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException {
 		String sql = String.format("delete " + tableTemplate() + " where %s", t
@@ -410,7 +389,8 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, Expr complexFilter) throws CelestaException {
+			Map<String, AbstractFilter> filters, Expr complexFilter)
+			throws CelestaException {
 		String whereClause = getWhereClause(t, filters, complexFilter);
 		String sql = String.format("delete from " + tableTemplate() + " %s", t
 				.getGrain().getName(), t.getName(),
@@ -793,6 +773,8 @@ final class OraAdaptor extends DBAdaptor {
 				+ sequenceName + "\".NEXTVAL INTO :new.%s FROM dual; END;", t
 				.getGrain().getName(), t.getName(), ic.getQuotedName(), ic
 				.getQuotedName());
+
+		// System.out.println(sql);
 		Statement s = conn.createStatement();
 		try {
 			s.execute(sql);
@@ -1192,5 +1174,69 @@ final class OraAdaptor extends DBAdaptor {
 			}
 
 		};
+	}
+
+	private static String getUpdTriggerName(Table table) {
+		String result = String.format("%s_%s_upd", table.getGrain().getName(),
+				table.getName());
+		result = NamedElement.limitName(result);
+		return result;
+	}
+
+	@Override
+	public void updateVersioningTrigger(Connection conn, Table t)
+			throws CelestaException {
+		// TODO Auto-generated method stub
+
+		// First of all, we are about to check if trigger exists
+		String triggerName = getUpdTriggerName(t);
+		String sql = String
+				.format("select TRIGGER_BODY  from all_triggers where owner = sys_context('userenv','session_user') "
+						+ "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'UPDATE'",
+						t.getGrain().getName(), t.getName(), triggerName);
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				boolean triggerExists = false;
+
+				ResultSet rs = stmt.executeQuery(sql);
+				triggerExists = rs.next();
+				rs.close();
+
+				if (t.isVersioned()) {
+					if (triggerExists) {
+						return;
+					} else {
+						// CREATE TRIGGER
+						sql = String
+								.format("CREATE OR REPLACE TRIGGER \"%s\" BEFORE UPDATE ON \"%s_%s\" FOR EACH ROW\n"
+										+ "BEGIN\n"
+										+ "  IF :new.\"recversion\" <> :old.\"recversion\" THEN\n"
+										+ "    raise_application_error( -20001, 'record version check failure' );\n"
+										+ "  END IF;\n"
+										+ "  :new.\"recversion\" := :new.\"recversion\" + 1;\n"
+										+ "END;", triggerName, t.getGrain()
+										.getName(), t.getName());
+						// System.out.println(sql);
+						stmt.executeUpdate(sql);
+					}
+				} else {
+					if (triggerExists) {
+						// DROP TRIGGER
+						sql = String.format(DROP_TRIGGER + "%s\"", triggerName);
+						stmt.executeUpdate(sql);
+					} else {
+						return;
+					}
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Could not update version check trigger on %s.%s: %s", t
+							.getGrain().getName(), t.getName(), e.getMessage());
+		}
+
 	}
 }

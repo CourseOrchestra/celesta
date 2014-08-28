@@ -207,6 +207,7 @@ public abstract class DBAdaptor {
 			}
 			manageAutoIncrement(conn, table);
 			ConnectionPool.commit(conn);
+			updateVersioningTrigger(conn, table);
 		} catch (SQLException e) {
 			throw new CelestaException("creating %s: %s", table.getName(),
 					e.getMessage());
@@ -241,6 +242,28 @@ public abstract class DBAdaptor {
 			throw new CelestaException("creating %s.%s: %s", c.getParentTable()
 					.getName(), c.getName(), e.getMessage());
 		}
+	}
+
+	final PreparedStatement getUpdateRecordStatement(Connection conn, Table t,
+			boolean[] equalsMask) throws CelestaException {
+		StringBuilder setClause = new StringBuilder();
+		if (t.isVersioned())
+			setClause.append(String.format("\"%s\" = ?", Table.RECVERSION));
+
+		int i = 0;
+		for (String c : t.getColumns().keySet()) {
+			// Пропускаем ключевые поля и поля, не изменившие своего значения
+			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
+				padComma(setClause);
+				setClause.append(String.format("\"%s\" = ?", c));
+			}
+			i++;
+		}
+
+		String sql = String.format("update " + tableTemplate()
+				+ " set %s where %s", t.getGrain().getName(), t.getName(),
+				setClause.toString(), getRecordWhereClause(t));
+		return prepareStatement(conn, sql);
 	}
 
 	/**
@@ -575,6 +598,8 @@ public abstract class DBAdaptor {
 			sql = getSelectFromOrderBy(t, whereClause, orderBy);
 		} else {
 			sql = getLimitedSQL(t, whereClause, orderBy, offset, rowCount);
+
+			System.out.println(sql);
 		}
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
@@ -606,6 +631,10 @@ public abstract class DBAdaptor {
 			multiple = true;
 		}
 		sb.append(",\n");
+		// У версионированных таблиц - колонка recversion
+		if (table.isVersioned())
+			sb.append("  " + columnDef(table.getRecVersionField()) + ",\n");
+
 		// Определение первичного ключа (он у нас всегда присутствует)
 		sb.append(String.format("  constraint \"%s\" primary key (",
 				table.getPkConstraintName()));
@@ -634,8 +663,8 @@ public abstract class DBAdaptor {
 	}
 
 	final PreparedStatement getSetCountStatement(Connection conn,
-			GrainElement t, Map<String, AbstractFilter> filters, Expr complexFilter)
-			throws CelestaException {
+			GrainElement t, Map<String, AbstractFilter> filters,
+			Expr complexFilter) throws CelestaException {
 		String whereClause = getWhereClause(t, filters, complexFilter);
 		String sql = "select count(*) from "
 				+ String.format(tableTemplate(), t.getGrain().getName(),
@@ -675,6 +704,12 @@ public abstract class DBAdaptor {
 			if (!(e.getValue() instanceof BinaryColumn || e.getValue() == ViewColumnType.BLOB))
 				flds.add(e.getKey());
 		}
+
+		// К перечню полей версионированных таблиц обязательно добавляем
+		// recversion
+		if (t instanceof Table && ((Table) t).isVersioned())
+			flds.add(Table.RECVERSION);
+
 		return getFieldList(flds);
 	}
 
@@ -800,9 +835,6 @@ public abstract class DBAdaptor {
 
 	abstract int getCurrentIdent(Connection conn, Table t)
 			throws CelestaException;
-
-	abstract PreparedStatement getUpdateRecordStatement(Connection conn,
-			Table t, boolean[] equalsMask) throws CelestaException;
 
 	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException;
@@ -1002,6 +1034,32 @@ public abstract class DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 	}
+
+	/**
+	 * Создаёт или пересоздаёт прочие системные объекты (хранимые процедуры,
+	 * функции), необходимые для функционирования Celesta на текущей СУБД.
+	 * 
+	 * @param conn
+	 *            Соединение.
+	 * @throws CelestaException
+	 *             Ошибка создания объектов.
+	 */
+	public void createSysObjects(Connection conn) throws CelestaException {
+
+	}
+
+	/**
+	 * Обновляет триггер контроля версий на таблице.
+	 * 
+	 * @param conn
+	 *            Соединение.
+	 * @param t
+	 *            Таблица (версионируемая или не версионируемая).
+	 * @throws CelestaException
+	 *             Ошибка создания или удаления триггера.
+	 */
+	public abstract void updateVersioningTrigger(Connection conn, Table t)
+			throws CelestaException;
 }
 
 /**

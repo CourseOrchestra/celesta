@@ -34,7 +34,7 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.04';
+create grain celesta version '1.05';
 
 /**Active grains list.*/
 create table grains(
@@ -52,7 +52,7 @@ create table grains(
   lastmodified datetime not null default getdate(), 
   /**comment (e. g. error message for the last failed auto-update)*/
   message text not null default '' 
-);
+) with no version check;
 
 /**Tables and views list.*/
 create table tables(
@@ -66,7 +66,7 @@ create table tables(
   orphaned bit not null default 0,
   constraint pk_tables primary key (grainid, tablename),
   constraint fk_tables_grains foreign key (grainid) references grains(id)
-);
+) with no version check;
 
 /**Roles list.*/
 create table roles(
@@ -150,7 +150,7 @@ create table log(
   /**new values in csv format*/
   newvalues varchar(3999), -- we need definite max length and it must be different from varchar(max) in oracle
   constraint fk_log_tables foreign key(grainid, tablename) references tables(grainid, tablename)
-);
+) with no version check;
 
 /**This table emulates sequences functionality for MS SQL Server and MySQL.*/
 create table sequences(
@@ -162,7 +162,7 @@ create table sequences(
   seqvalue int not null default 0,
   constraint pk_sequences primary key (grainid, tablename),
   constraint fk_sequences_grains foreign key(grainid) references grains(id)
-);
+) with no version check;
 
 create table sessionlog (
   entryno int identity not null primary key,
@@ -171,6 +171,6 @@ create table sessionlog (
   logintime datetime not null default getdate(),
   logoutime datetime,
   timeout bit not null default 0
-);
+) with no version check;
 
 create index ixsessionlog on sessionlog (sessionid, userid, entryno);

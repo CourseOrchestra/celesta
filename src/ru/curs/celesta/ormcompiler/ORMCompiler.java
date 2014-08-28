@@ -244,6 +244,11 @@ public final class ORMCompiler {
 		compileTableName(t, w);
 		// Разбор строки по переменным
 		compileParseResult(w, columns);
+		if (t.isVersioned()) {
+			w.append("        self.recversion = rs.getInt('recversion')");
+			w.newLine();
+		}
+
 		// Очистка буфера
 		compileClearBuffer(w, columns, pk);
 		// Текущие значения ключевых полей
@@ -258,6 +263,11 @@ public final class ORMCompiler {
 		compileTriggers(w, className);
 		// Клонирование
 		compileCopying(w, columns, className);
+		if (t.isVersioned()) {
+			w.append("        self.recversion = c.recversion");
+			w.newLine();
+		}
+		
 		// Итерация в Python-стиле
 		compileIterate(w);
 		w.newLine();

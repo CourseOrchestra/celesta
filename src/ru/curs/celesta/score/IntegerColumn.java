@@ -19,6 +19,10 @@ public final class IntegerColumn extends Column {
 		super(table, name);
 	}
 
+	IntegerColumn(Table table) throws ParseException {
+		super(table);
+	}
+
 	@Override
 	protected void setDefault(String lexvalue) throws ParseException {
 		if (lexvalue == null) {

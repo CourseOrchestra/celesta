@@ -371,25 +371,6 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getUpdateRecordStatement(Connection conn, Table t,
-			boolean[] equalsMask) throws CelestaException {
-		StringBuilder setClause = new StringBuilder();
-		int i = 0;
-		for (String c : t.getColumns().keySet()) {
-			// Пропускаем ключевые поля и поля, не изменившие своего значения
-			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
-				padComma(setClause);
-				setClause.append(String.format("\"%s\" = ?", c));
-			}
-			i++;
-		}
-		String sql = String.format("update " + tableTemplate()
-				+ " set %s where %s", t.getGrain().getName(), t.getName(),
-				setClause.toString(), getRecordWhereClause(t));
-		return prepareStatement(conn, sql);
-	}
-
-	@Override
 	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
 			throws CelestaException {
 		String sql = String.format("delete " + tableTemplate() + WHERE_S, t
@@ -975,5 +956,84 @@ final class MSSQLAdaptor extends DBAdaptor {
 			}
 
 		};
+	}
+
+	@Override
+	public void updateVersioningTrigger(Connection conn, Table t)
+			throws CelestaException {
+
+		// First of all, we are about to check if trigger exists
+		String sql = String.format("SELECT COUNT(*) FROM sys.triggers tr "
+				+ "INNER JOIN sys.tables t ON tr.parent_id = t.object_id "
+				+ "WHERE t.schema_id = SCHEMA_ID('%s') and tr.name = '%s_upd'",
+				t.getGrain().getName(), t.getName());
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery(sql);
+				rs.next();
+				boolean triggerExists = rs.getInt(1) > 0;
+				rs.close();
+				if (t.isVersioned()) {
+					if (triggerExists) {
+						return;
+					} else {
+						StringBuilder sb = new StringBuilder();
+						sb.append(String
+								.format("create trigger \"%s\".\"%s_upd\" on \"%s\".\"%s\" for update as begin\n",
+										t.getGrain().getName(), t.getName(), t
+												.getGrain().getName(), t
+												.getName()));
+						sb.append("IF  exists (select * from inserted inner join deleted on \n");
+						addPKJoin(sb, "inserted", "deleted", t);
+						sb.append("where inserted.recversion <> deleted.recversion) BEGIN\n");
+						sb.append("  RAISERROR ('record version check failure', 16, 1);\n");
+
+						sb.append("END\n");
+						sb.append(String
+								.format("update \"%s\".\"%s\" set recversion = recversion + 1 where\n",
+										t.getGrain().getName(), t.getName()));
+						sb.append("exists (select * from inserted where \n");
+
+						addPKJoin(sb, "inserted", String.format(
+								"\"%s\".\"%s\"", t.getGrain().getName(),
+								t.getName()), t);
+
+						sb.append(");\nend\n");
+						// CREATE TRIGGER
+						// System.out.println(sb.toString());
+
+						stmt.executeUpdate(sb.toString());
+					}
+				} else {
+					if (triggerExists) {
+						// DROP TRIGGER
+						sql = String.format("drop trigger \"%s\".\"%s_upd\"", t
+								.getGrain().getName(), t.getName());
+						stmt.executeUpdate(sql);
+					} else {
+						return;
+					}
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Could not update version check trigger on %s.%s: %s", t
+							.getGrain().getName(), t.getName(), e.getMessage());
+		}
+
+	}
+
+	private void addPKJoin(StringBuilder sb, String left, String right, Table t) {
+		boolean needAnd = false;
+		for (String s : t.getPrimaryKey().keySet()) {
+			if (needAnd)
+				sb.append(" AND ");
+			sb.append(String.format("  %s.\"%s\" = %s.\"%s\"\n", left, s,
+					right, s));
+			needAnd = true;
+		}
 	}
 }
