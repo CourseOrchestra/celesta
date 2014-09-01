@@ -62,7 +62,7 @@ public final class CallContext {
 	}
 
 	/**
-	 * Записывает информационное сообщение в очередь сообщений.
+	 * Инициирует информационное сообщение.
 	 * 
 	 * @param msg
 	 *            текст сообщения
@@ -72,7 +72,17 @@ public final class CallContext {
 	}
 
 	/**
-	 * Записывает предупреждение в очередь сообщений.
+	 * Инициирует информационное сообщение (синоним метода info()).
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 */
+	public void message(String msg) {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg));
+	}
+
+	/**
+	 * Инициирует предупреждение.
 	 * 
 	 * @param msg
 	 *            текст сообщения
@@ -82,7 +92,7 @@ public final class CallContext {
 	}
 
 	/**
-	 * Записывает ошибку в очередь сообщений и вызывает исключение.
+	 * Инициирует ошибку и вызывает исключение.
 	 * 
 	 * @param msg
 	 *            текст сообщения
