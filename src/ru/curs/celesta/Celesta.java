@@ -269,7 +269,6 @@ public final class Celesta {
 	 * @param sesId
 	 *            идентификатор пользователя, от имени которого производится
 	 *            изменение
-	 * 
 	 * @param proc
 	 *            Имя процедуры в формате <grain>.<module>.<proc>
 	 * @param param
@@ -281,6 +280,29 @@ public final class Celesta {
 	 */
 	public PyObject runPython(String sesId, String proc, Object... param)
 			throws CelestaException {
+		return runPython(sesId, null, proc, param);
+
+	}
+
+	/**
+	 * Запуск питоновской процедуры.
+	 * 
+	 * @param sesId
+	 *            идентификатор пользователя, от имени которого производится
+	 *            изменение
+	 * @param rec
+	 *            приёмник сообщений.
+	 * @param proc
+	 *            Имя процедуры в формате <grain>.<module>.<proc>
+	 * @param param
+	 *            Параметры для передачи процедуры.
+	 * @return PyObject
+	 * @throws CelestaException
+	 *             В случае, если процедура не найдена или в случае ошибки
+	 *             выполненения процедуры.
+	 */
+	public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec,
+			String proc, Object... param) throws CelestaException {
 		Matcher m = PROCNAME.matcher(proc);
 
 		if (m.matches()) {
@@ -300,11 +322,11 @@ public final class Celesta {
 			for (int i = 0; i < param.length; i++)
 				sb.append(String.format(", arg%d", i));
 
-			
 			SessionContext sesContext = sessions.get(sesId);
 			if (sesContext == null)
 				throw new CelestaException("Session ID=%s is not logged in",
 						sesId);
+			sesContext.setMessageReceiver(rec);
 
 			Connection conn = ConnectionPool.get();
 			CallContext context = new CallContext(conn, sesContext);
@@ -349,23 +371,6 @@ public final class Celesta {
 							+ "note that grain name should not contain underscores.",
 					proc);
 		}
-	}
-
-	/**
-	 * Извлекает очередное (первое по очереди) сообщение из очереди сообщений
-	 * пользовательской сессии.
-	 * 
-	 * @param sesId
-	 *            Идентификатор сессии.
-	 * @return Сообщение или null, если больше сообщений нет.
-	 * @throws CelestaException
-	 *             В случае, если передан неправильный идентификатор сессии.
-	 */
-	public CelestaMessage pollMessage(String sesId) throws CelestaException {
-		SessionContext sesContext = sessions.get(sesId);
-		if (sesContext == null)
-			throw new CelestaException("Session ID=%s is not logged in", sesId);
-		return sesContext.pollMessage();
 	}
 
 	/**

@@ -8,6 +8,19 @@ import java.util.Date;
 public class CelestaMessage {
 
 	/**
+	 * Интерфейс получателя сообщений.
+	 */
+	public interface MessageReceiver {
+		/**
+		 * Получить сообщение.
+		 * 
+		 * @param msg
+		 *            сообщение.
+		 */
+		void receive(CelestaMessage msg);
+	}
+
+	/**
 	 * Вид сообщения "информация".
 	 */
 	public static final int INFO = 0;

@@ -1,18 +1,15 @@
 package ru.curs.celesta;
 
-import java.util.LinkedList;
-
 import org.python.core.PyDictionary;
 
 /**
  * Контекст сессии.
  */
 public final class SessionContext {
-	private static final int MAX_MESSAGE_COUNT = 16;
 	private final String userId;
 	private final String sessionId;
 	private final PyDictionary data = new PyDictionary();
-	private final LinkedList<CelestaMessage> messages = new LinkedList<>();
+	private CelestaMessage.MessageReceiver receiver = null;
 
 	public SessionContext(String userId, String sessionId) {
 		this.userId = userId;
@@ -20,14 +17,18 @@ public final class SessionContext {
 	}
 
 	void addMessage(CelestaMessage msg) {
-		messages.add(msg);
-		while (messages.size() > MAX_MESSAGE_COUNT) {
-			messages.poll();
-		}
+		if (receiver != null)
+			receiver.receive(msg);
 	}
 
-	CelestaMessage pollMessage() {
-		return messages.poll();
+	/**
+	 * Устанавливает приёмник сообщений.
+	 * 
+	 * @param receiver
+	 *            приёмник сообщений.
+	 */
+	public void setMessageReceiver(CelestaMessage.MessageReceiver receiver) {
+		this.receiver = receiver;
 	}
 
 	/**
