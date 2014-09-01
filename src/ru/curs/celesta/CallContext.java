@@ -67,16 +67,6 @@ public final class CallContext {
 	 * @param msg
 	 *            текст сообщения
 	 */
-	public void info(String msg) {
-		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg));
-	}
-
-	/**
-	 * Инициирует информационное сообщение (синоним метода info()).
-	 * 
-	 * @param msg
-	 *            текст сообщения
-	 */
 	public void message(String msg) {
 		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg));
 	}
