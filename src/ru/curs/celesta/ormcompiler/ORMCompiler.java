@@ -48,6 +48,7 @@ public final class ORMCompiler {
 			"DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.", "\"\"\"",
 			"import ru.curs.celesta.dbutils.Cursor as Cursor",
 			"import ru.curs.celesta.dbutils.ViewCursor as ViewCursor",
+			"import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor",
 			"from java.lang import Object", "from jarray import array", "" };
 
 	private static final String[] TABLE_HEADER = { "    onPreDelete  = []",
@@ -544,7 +545,7 @@ public final class ORMCompiler {
 			Collection<Column> columns) throws IOException {
 		w.write(DEF_INIT_SELF_CONTEXT);
 		w.newLine();
-		w.write("        ViewCursor.__init__(self, context)");
+		w.write("        ReadOnlyTableCursor.__init__(self, context)");
 		w.newLine();
 		for (Column c : columns) {
 			w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
