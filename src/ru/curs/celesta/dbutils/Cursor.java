@@ -119,6 +119,12 @@ public abstract class Cursor extends BasicCursor {
 			try {
 				if (rs.next()) {
 					getXRec()._parseResult(rs);
+					/*
+					 * transmit recversion from xRec to rec for possible future
+					 * record update
+					 */
+					if (getRecversion() == 0)
+						setRecversion(xRec.getRecversion());
 					return false;
 				}
 			} finally {
@@ -182,9 +188,9 @@ public abstract class Cursor extends BasicCursor {
 	 * @throws CelestaException
 	 *             ошибка БД
 	 */
-	//CHECKSTYLE:OFF for cyclomatic complexity
+	// CHECKSTYLE:OFF for cyclomatic complexity
 	public final boolean tryUpdate() throws CelestaException {
-		//CHECKSTYLE:ON
+		// CHECKSTYLE:ON
 		if (!canModify())
 			throw new PermissionDeniedException(callContext(), meta(),
 					Action.MODIFY);
