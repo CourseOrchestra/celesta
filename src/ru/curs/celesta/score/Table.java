@@ -252,8 +252,16 @@ public final class Table extends GrainElement {
 						getName(), option));
 	}
 
+	/**
+	 * Финализирует таблицу с перечнем WITH-опций.
+	 * 
+	 * @param options
+	 *            Перечень опций.
+	 * @throws ParseException
+	 *             Ошибка определения таблицы.
+	 */
 	// CHECKSTYLE:OFF for cyclomatic complexity: this is finite state machine
-	void finalizePK(List<String> options) throws ParseException {
+	public void finalizePK(List<String> options) throws ParseException {
 		// CHECKSTYLE:ON
 		int state = 0;
 		for (String option : options)

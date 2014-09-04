@@ -1,17 +1,33 @@
 package ru.curs.celesta.dbschemasync;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.Iterator;
+import java.util.Random;
 
-import javax.xml.parsers.*;
-import javax.xml.stream.*;
-import javax.xml.transform.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.ForeignKey;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.Table;
 
 /**
  * Класс-преобразователь Score в DBS-файл.
@@ -223,6 +239,25 @@ public final class Celesta2DBSchema {
 					index.appendChild(column);
 				}
 			}
+
+		// Writing storage options
+		writeOptions(t, doc, table);
+	}
+
+	private static void writeOptions(Table t, Document doc, Element table) {
+		Element storage = doc.createElement("storage");
+		String options;
+		if (t.isVersioned()) {
+			options = "WITH VERSION CHECK";
+		} else {
+			if (t.isReadOnly()) {
+				options = "WITH READ ONLY";
+			} else {
+				options = "WITH NO VERSION CHECK";
+			}
+		}
+		storage.appendChild(doc.createCDATASection(options));
+		table.appendChild(storage);
 	}
 
 }

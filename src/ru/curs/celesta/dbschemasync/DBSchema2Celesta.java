@@ -2,6 +2,8 @@ package ru.curs.celesta.dbschemasync;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -157,6 +159,7 @@ public final class DBSchema2Celesta {
 
 	private static void updateTable(Element table, Table t) throws Exception {
 		NodeList l = table.getChildNodes();
+		List<String> options = Collections.emptyList();
 		for (int i = 0; i < l.getLength(); i++) {
 			Node n = l.item(i);
 			if ("comment".equals(n.getNodeName())) {
@@ -167,8 +170,12 @@ public final class DBSchema2Celesta {
 			} else if ("index".equals(n.getNodeName())) {
 				Element index = (Element) n;
 				updateIndex(index, t);
+			} else if ("storage".equals(n.getNodeName())) {
+				Element storage = (Element) n;
+				options = Arrays.asList(extractComment(storage).split("\\s+"));
 			}
 		}
+		t.finalizePK(options);
 	}
 
 	private static void updateFK(Element fk, Table t) throws ParseException {
