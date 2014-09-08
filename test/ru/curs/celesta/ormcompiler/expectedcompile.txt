@@ -1,6 +1,6 @@
 class ttt1Cursor(ReadOnlyTableCursor):
     def __init__(self, context):
-        ViewCursor.__init__(self, context)
+        ReadOnlyTableCursor.__init__(self, context)
         self.id = None
         self.context = context
     def _grainName(self):

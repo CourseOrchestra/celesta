@@ -391,11 +391,15 @@ public final class Celesta {
 			throws CelestaException {
 		if (theCelesta != null)
 			throw new CelestaException(CELESTA_IS_ALREADY_INITIALIZED);
-
+		
+		System.out.print("Celesta pre-initialization: phase 1/2 system settings reading...");
 		AppSettings.init(settings);
+		System.out.println("done.");
 
 		// Инициализация ClassLoader для нужд Jython-интерпретатора
+		System.out.print("Celesta pre-initialization: phase 2/2 Jython initialization...");
 		initCL();
+		System.out.println("done.");
 
 		new Celesta();
 	}

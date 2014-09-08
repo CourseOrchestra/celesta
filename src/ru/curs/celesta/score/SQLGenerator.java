@@ -131,7 +131,12 @@ public class SQLGenerator extends ExprVisitor {
 	}
 
 	final void visitTextLiteral(TextLiteral expr) throws ParseException {
-		stack.push(expr.getLexValue());
+		String val = checkForDate(expr.getLexValue());
+		stack.push(val);
+	}
+
+	protected String checkForDate(String lexValue) {
+		return lexValue;
 	}
 
 	final void visitUnaryMinus(UnaryMinus expr) throws ParseException {

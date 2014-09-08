@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -32,6 +33,7 @@ import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.NamedElement;
+import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
@@ -1171,6 +1173,18 @@ final class OraAdaptor extends DBAdaptor {
 				Table t = tRef.getTable();
 				return String.format(TABLE_TEMPLATE + " \"%s\"", t.getGrain()
 						.getName(), t.getName(), tRef.getAlias());
+			}
+
+			@Override
+			protected String checkForDate(String lexValue) {
+				try {
+					Date d = DateTimeColumn.parseISODate(lexValue);
+					DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+					return String.format("date '%s'", df.format(d));
+				} catch (ParseException e) {
+					// This is not a date...
+					return lexValue;
+				}
 			}
 
 		};
