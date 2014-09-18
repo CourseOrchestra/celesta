@@ -43,6 +43,7 @@ public final class PermissionsCursor extends SysCursor {
 		i = rs.getBoolean("i");
 		m = rs.getBoolean("m");
 		d = rs.getBoolean("d");
+		setRecversion(rs.getInt("recversion"));
 	}
 
 	@Override
@@ -205,6 +206,7 @@ public final class PermissionsCursor extends SysCursor {
 		i = from.i;
 		m = from.m;
 		d = from.d;
+		setRecversion(from.getRecversion());
 	}
 
 	@Override

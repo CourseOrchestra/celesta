@@ -32,6 +32,7 @@ public final class RolesCursor extends SysCursor {
 		// CHECKSTYLE:ON
 		id = rs.getString("id");
 		description = rs.getString("description");
+		setRecversion(rs.getInt("recversion"));
 	}
 
 	@Override
@@ -98,6 +99,7 @@ public final class RolesCursor extends SysCursor {
 		RolesCursor from = (RolesCursor) c;
 		id = from.id;
 		description = from.description;
+		setRecversion(from.getRecversion());
 	}
 
 	@Override
