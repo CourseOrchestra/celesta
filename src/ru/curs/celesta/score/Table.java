@@ -51,6 +51,8 @@ public final class Table extends GrainElement {
 
 	private boolean isVersioned = true;
 
+	private boolean autoUpdate = true;
+
 	private String pkConstraintName;
 
 	public Table(Grain grain, String name) throws ParseException {
@@ -247,8 +249,8 @@ public final class Table extends GrainElement {
 	private void throwPE(String option) throws ParseException {
 		throw new ParseException(
 				String.format(
-						"Invalid option for table '%s': %s. One of 'WITH READ ONLY', "
-								+ "'WITH VERSION CHECK', 'WITH NO VERSION CHECK expected'.",
+						"Invalid option for table '%s': '%s'. 'READ ONLY', "
+								+ "'VERSION CHECK', 'NO VERSION CHECK', and/or 'NO AUTOUPDATE' expected.",
 						getName(), option));
 	}
 
@@ -285,8 +287,6 @@ public final class Table extends GrainElement {
 					isVersioned = true;
 					state = 3;
 				} else if ("no".equalsIgnoreCase(option)) {
-					isReadOnly = false;
-					isVersioned = false;
 					state = 4;
 				} else {
 					throwPE(option);
@@ -307,18 +307,40 @@ public final class Table extends GrainElement {
 				}
 				break;
 			case 4:
+				// 'no' read for the first time
 				if ("version".equalsIgnoreCase(option)) {
 					state = 3;
+					isReadOnly = false;
+					isVersioned = false;
+				} else if ("autoupdate".equalsIgnoreCase(option)) {
+					state = 7;
+					autoUpdate = false;
 				} else {
 					throwPE(option);
 				}
 				break;
 			case 5:
+				if ("no".equalsIgnoreCase(option)) {
+					state = 6;
+				} else {
+					throwPE(option);
+				}
+				break;
+			case 6:
+				if ("autoupdate".equalsIgnoreCase(option)) {
+					state = 7;
+					autoUpdate = false;
+				} else {
+					throwPE(option);
+				}
+				break;
+			case 7:
 				throwPE(option);
+				break;
 			default:
 				break;
 			}
-		if (state == 0 || state == 5) {
+		if (state == 0 || state == 5 || state == 7) {
 			finalizePK();
 		} else {
 			throwPE("");
@@ -463,5 +485,25 @@ public final class Table extends GrainElement {
 	 */
 	public IntegerColumn getRecVersionField() {
 		return recVersion;
+	}
+
+	/**
+	 * Значение false yказывает на то, что таблица создана с опцией WITH NO
+	 * STRUCTURE UPDATE и не будет участвовать в автообновлении базы данных. По
+	 * умолчанию - true.
+	 */
+	public boolean isAutoUpdate() {
+		return autoUpdate;
+	}
+
+	/**
+	 * Устанавливает или сбрасывает опцию WITH NO STRUCTURE UPDATE.
+	 * 
+	 * @param autoUpdate
+	 *            true, если таблица автоматически обновляется, false - в
+	 *            обратном случае.
+	 */
+	public void setAutoUpdate(boolean autoUpdate) {
+		this.autoUpdate = autoUpdate;
 	}
 }

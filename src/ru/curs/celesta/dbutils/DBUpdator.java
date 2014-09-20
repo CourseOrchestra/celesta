@@ -422,6 +422,11 @@ public final class DBUpdator {
 	}
 
 	private static void updateTable(Table t) throws CelestaException {
+		// Если таблица скомпилирована с опцией NO AUTOUPDATE, то ничего не
+		// делаем с ней
+		if (!t.isAutoUpdate())
+			return;
+
 		final Connection conn = grain.callContext().getConn();
 
 		if (!dba.tableExists(conn, t.getGrain().getName(), t.getName())) {

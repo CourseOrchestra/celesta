@@ -196,14 +196,17 @@ public class ParserTest {
 		t = g.getTable("ttt1");
 		assertTrue(t.isReadOnly());
 		assertFalse(t.isVersioned());
+		assertTrue(t.isAutoUpdate());
 
 		t = g.getTable("ttt2");
 		assertTrue(t.isVersioned());
 		assertFalse(t.isReadOnly());
-
+		assertTrue(t.isAutoUpdate());
+		
 		t = g.getTable("ttt3");
 		assertFalse(t.isVersioned());
 		assertFalse(t.isReadOnly());
+		assertFalse(t.isAutoUpdate());
 	}
 
 	@Test

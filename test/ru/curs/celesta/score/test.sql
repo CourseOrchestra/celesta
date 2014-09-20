@@ -56,4 +56,4 @@ id int not null primary key
 
 CREATE TABLE ttt3(
 id int not null primary key
-) with no version check;
+) with no version check no autoupdate;
