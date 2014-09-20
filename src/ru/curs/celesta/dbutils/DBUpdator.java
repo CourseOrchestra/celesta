@@ -97,9 +97,11 @@ public final class DBUpdator {
 					dba.createSchemaIfNotExists("celesta");
 					dba.createTable(conn, sys.getTable("grains"));
 					dba.createTable(conn, sys.getTable("tables"));
-					dba.createTable(conn, sys.getTable("logsetup"));
 					dba.createTable(conn, sys.getTable("sequences"));
 					dba.createSysObjects(conn);
+					// logsetup -- версионированная таблица, поэтому для её
+					// создания уже могут понадобиться системные объекты
+					dba.createTable(conn, sys.getTable("logsetup"));
 					insertGrainRec(sys);
 					updateGrain(sys);
 				} catch (ParseException e) {
@@ -428,31 +430,8 @@ public final class DBUpdator {
 			return;
 		}
 
-		// Таблица существует в базе данных, определяем: надо ли удалить
-		// первичный ключ
-		DBPKInfo pkInfo = dba.getPKInfo(conn, t);
-		if (!(pkInfo.isEmpty() || pkInfo.reflects(t)))
-			dba.dropPK(conn, t, pkInfo.getName());
-
-		Set<String> dbColumns = dba.getColumns(conn, t);
-		for (Entry<String, Column> e : t.getColumns().entrySet()) {
-			if (dbColumns.contains(e.getKey())) {
-				// Таблица содержит колонку с таким именем, надо проверить
-				// все её атрибуты и при необходимости -- попытаться
-				// обновить.
-				DBColumnInfo ci = dba.getColumnInfo(conn, e.getValue());
-				if (!ci.reflects(e.getValue())) {
-					// Если колонка, требующая обновления, входит в первичный
-					// ключ -- сбрасываем первичный ключ.
-					if (t.getPrimaryKey().containsKey(e.getKey()))
-						dba.dropPK(conn, t, pkInfo.getName());
-					dba.updateColumn(conn, e.getValue(), ci);
-				}
-			} else {
-				// Таблица не содержит колонку с таким именем, добавляем
-				dba.createColumn(conn, e.getValue());
-			}
-		}
+		DBPKInfo pkInfo;
+		Set<String> dbColumns = updatePK(t, conn);
 
 		// Для версионированных таблиц синхронизируем поле recversion
 		if (t.isVersioned())
@@ -471,6 +450,37 @@ public final class DBUpdator {
 			dba.createPK(conn, t);
 
 		dba.updateVersioningTrigger(conn, t);
+	}
+
+	private static Set<String> updatePK(Table t, final Connection conn)
+			throws CelestaException {
+		// Таблица существует в базе данных, определяем: надо ли удалить
+		// первичный ключ
+		DBPKInfo pkInfo = dba.getPKInfo(conn, t);
+		if (!(pkInfo.isEmpty() || pkInfo.reflects(t)))
+			dba.dropPK(conn, t, pkInfo.getName());
+
+		Set<String> dbColumns = dba.getColumns(conn, t);
+		for (Entry<String, Column> e : t.getColumns().entrySet()) {
+			if (dbColumns.contains(e.getKey())) {
+				// Таблица содержит колонку с таким именем, надо проверить
+				// все её атрибуты и при необходимости -- попытаться
+				// обновить.
+				DBColumnInfo ci = dba.getColumnInfo(conn, e.getValue());
+				if (!ci.reflects(e.getValue())) {
+					// Если колонка, требующая обновления, входит в первичный
+					// ключ -- сбрасываем первичный ключ.
+					if (t.getPrimaryKey().containsKey(e.getKey())
+							&& !pkInfo.isEmpty())
+						dba.dropPK(conn, t, pkInfo.getName());
+					dba.updateColumn(conn, e.getValue(), ci);
+				}
+			} else {
+				// Таблица не содержит колонку с таким именем, добавляем
+				dba.createColumn(conn, e.getValue());
+			}
+		}
+		return dbColumns;
 	}
 
 }
