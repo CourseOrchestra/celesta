@@ -237,7 +237,6 @@ public abstract class DBAdaptor {
 			} finally {
 				stmt.close();
 			}
-			manageAutoIncrement(conn, c.getParentTable());
 		} catch (SQLException e) {
 			throw new CelestaException("creating %s.%s: %s", c.getParentTable()
 					.getName(), c.getName(), e.getMessage());

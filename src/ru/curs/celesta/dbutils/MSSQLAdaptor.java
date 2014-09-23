@@ -585,17 +585,6 @@ final class MSSQLAdaptor extends DBAdaptor {
 							.getName(), def, c.getQuotedName());
 			runUpdateColumnSQL(conn, c, sql);
 		}
-
-		if (c instanceof IntegerColumn)
-			try {
-				manageAutoIncrement(conn, c.getParentTable());
-			} catch (SQLException e) {
-				throw new CelestaException(
-						"Failed to update field %s.%s.%s: %s", c
-								.getParentTable().getGrain().getName(), c
-								.getParentTable().getName(), c.getName(),
-						e.getMessage());
-			}
 	}
 
 	@Override

@@ -436,36 +436,52 @@ public final class DBUpdator {
 		}
 
 		DBPKInfo pkInfo;
-		Set<String> dbColumns = updatePK(t, conn);
+		Set<String> dbColumns = dba.getColumns(conn, t);
+		boolean modified = updateColumns(t, conn, dbColumns);
 
 		// Для версионированных таблиц синхронизируем поле recversion
 		if (t.isVersioned())
 			if (dbColumns.contains(Table.RECVERSION)) {
 				DBColumnInfo ci = dba.getColumnInfo(conn,
 						t.getRecVersionField());
-				if (!ci.reflects(t.getRecVersionField()))
+				if (!ci.reflects(t.getRecVersionField())) {
 					dba.updateColumn(conn, t.getRecVersionField(), ci);
+					modified = true;
+				}
 			} else {
 				dba.createColumn(conn, t.getRecVersionField());
+				modified = true;
 			}
 
-		// Ещё раз проверяем первичный ключ и при необходимости создаём.
+		// Ещё раз проверяем первичный ключ и при необходимости (если его нет
+		// или он был сброшен) создаём.
 		pkInfo = dba.getPKInfo(conn, t);
 		if (pkInfo.isEmpty())
 			dba.createPK(conn, t);
 
+		if (modified)
+			try {
+				dba.manageAutoIncrement(conn, t);
+			} catch (SQLException e) {
+				throw new CelestaException("Updating table %s.%s failed: %s.",
+						t.getGrain().getName(), t.getName(), e.getMessage());
+			}
+
 		dba.updateVersioningTrigger(conn, t);
 	}
 
-	private static Set<String> updatePK(Table t, final Connection conn)
-			throws CelestaException {
+	private static boolean updateColumns(Table t, final Connection conn,
+			Set<String> dbColumns) throws CelestaException {
 		// Таблица существует в базе данных, определяем: надо ли удалить
 		// первичный ключ
 		DBPKInfo pkInfo = dba.getPKInfo(conn, t);
-		if (!(pkInfo.isEmpty() || pkInfo.reflects(t)))
+		boolean result = false;
+		boolean keyDropped = pkInfo.isEmpty();
+		if (!(pkInfo.reflects(t) || keyDropped)) {
 			dba.dropPK(conn, t, pkInfo.getName());
+			keyDropped = true;
+		}
 
-		Set<String> dbColumns = dba.getColumns(conn, t);
 		for (Entry<String, Column> e : t.getColumns().entrySet()) {
 			if (dbColumns.contains(e.getKey())) {
 				// Таблица содержит колонку с таким именем, надо проверить
@@ -476,16 +492,20 @@ public final class DBUpdator {
 					// Если колонка, требующая обновления, входит в первичный
 					// ключ -- сбрасываем первичный ключ.
 					if (t.getPrimaryKey().containsKey(e.getKey())
-							&& !pkInfo.isEmpty())
+							&& !keyDropped) {
 						dba.dropPK(conn, t, pkInfo.getName());
+						keyDropped = true;
+					}
 					dba.updateColumn(conn, e.getValue(), ci);
+					result = true;
 				}
 			} else {
 				// Таблица не содержит колонку с таким именем, добавляем
 				dba.createColumn(conn, e.getValue());
+				result = true;
 			}
 		}
-		return dbColumns;
+		return result;
 	}
 
 }

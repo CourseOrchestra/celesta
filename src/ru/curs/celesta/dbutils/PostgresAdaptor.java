@@ -513,7 +513,6 @@ final class PostgresAdaptor extends DBAdaptor {
 				stmt.close();
 			}
 
-			manageAutoIncrement(conn, c.getParentTable());
 		} catch (SQLException e) {
 			throw new CelestaException(
 					"Cannot modify column %s on table %s.%s: %s", c.getName(),

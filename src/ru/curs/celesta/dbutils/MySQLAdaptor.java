@@ -558,6 +558,7 @@ final class MySQLAdaptor extends DBAdaptor {
 		String sql = String.format("ALTER TABLE " + tableTemplate()
 				+ " MODIFY COLUMN %s", c.getParentTable().getGrain().getName(),
 				c.getParentTable().getName(), def);
+		// System.out.println(sql);
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -565,7 +566,6 @@ final class MySQLAdaptor extends DBAdaptor {
 			} finally {
 				stmt.close();
 			}
-			manageAutoIncrement(conn, c.getParentTable());
 		} catch (SQLException e) {
 			throw new CelestaException(
 					"Cannot modify column %s on table %s.%s: %s", c.getName(),

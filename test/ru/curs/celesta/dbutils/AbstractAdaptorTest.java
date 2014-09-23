@@ -567,6 +567,7 @@ public abstract class AbstractAdaptorTest {
 		assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
 		col.setNullableAndDefault(false, "0xBBCC");
 		dba.updateColumn(conn, col, c);
+		dba.manageAutoIncrement(conn, t);
 		c = dba.getColumnInfo(conn, col);
 		assertEquals("0xBBCC", c.getDefaultValue());
 		assertFalse(c.isNullable());
@@ -590,6 +591,7 @@ public abstract class AbstractAdaptorTest {
 		col.setNullableAndDefault(false, null);
 		assertFalse(col.isIdentity());
 		dba.updateColumn(conn, col, c);
+		dba.manageAutoIncrement(conn, t);
 		c = dba.getColumnInfo(conn, col);
 		assertFalse(c.isIdentity());
 		assertFalse(c.isNullable());
@@ -599,12 +601,14 @@ public abstract class AbstractAdaptorTest {
 		assertFalse(c.isIdentity());
 		col.setNullableAndDefault(true, "identity");
 		dba.updateColumn(conn, col, c);
+		dba.manageAutoIncrement(conn, t);
 		c = dba.getColumnInfo(conn, col);
 		assertTrue(c.isIdentity());
 		assertTrue(c.isNullable());
 
 		col.setNullableAndDefault(true, null);
 		dba.updateColumn(conn, col, c);
+		dba.manageAutoIncrement(conn, t);
 		c = dba.getColumnInfo(conn, col);
 		assertFalse(c.isIdentity());
 		assertTrue(c.isNullable());
@@ -617,6 +621,7 @@ public abstract class AbstractAdaptorTest {
 
 		col.setNullableAndDefault(false, "identity");
 		dba.updateColumn(conn, col, c);
+		dba.manageAutoIncrement(conn, t);
 		c = dba.getColumnInfo(conn, col);
 		assertTrue(c.isIdentity());
 		assertFalse(c.isNullable());
@@ -680,12 +685,14 @@ public abstract class AbstractAdaptorTest {
 
 		col.setNullableAndDefault(false, "0xABABAB");
 		dba.updateColumn(conn, col, c);
+		dba.manageAutoIncrement(conn, t);
 		c = dba.getColumnInfo(conn, col);
 		assertFalse(c.isNullable());
 		assertEquals("0xABABAB", c.getDefaultValue());
 
 		col.setNullableAndDefault(false, null);
 		dba.updateColumn(conn, col, c);
+		dba.manageAutoIncrement(conn, t);
 		c = dba.getColumnInfo(conn, col);
 		assertFalse(c.isNullable());
 		assertEquals("", c.getDefaultValue());
