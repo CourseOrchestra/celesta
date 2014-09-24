@@ -34,12 +34,12 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.05';
+create grain celesta version '1.06';
 
 /**Active grains list.*/
 create table grains(
   /**grain prefix (id)*/
-  id varchar(16) not null primary key, 
+  id varchar(30) not null primary key, 
   /**grain version tag*/
   version  text not null,
   /**grain creation script length in bytes*/
@@ -57,9 +57,9 @@ create table grains(
 /**Tables and views list.*/
 create table tables(
   /**grain id */
-  grainid varchar(16) not null,
+  grainid varchar(30) not null,
   /**table name*/
-  tablename varchar(100) not null,
+  tablename varchar(30) not null,
   /**table type: t for table, v for view*/
   tabletype varchar(1) not null default 'T',
   /**true if this table is no longer in Celesta metadata */
@@ -73,7 +73,7 @@ create table roles(
   /**role id*/
   id varchar(16) not null primary key,
   /**role description*/
-  description varchar(20)
+  description varchar(250)
 );
 
 /**Links users to their roles.*/
@@ -91,9 +91,9 @@ create table permissions(
   /**role id from roles table*/
   roleid varchar(16) not null,
   /**grain id */
-  grainid varchar(16) not null,
+  grainid varchar(30) not null,
   /**table name*/
-  tablename varchar(100) not null,
+  tablename varchar(30) not null,
   /**can read*/
   r bit not null default 'FALSE',
   /**can insert*/
@@ -110,9 +110,9 @@ create table permissions(
 /**Change-logging system setup.*/
 create table logsetup(
   /**grain id */
-  grainid varchar(16) not null,
+  grainid varchar(30) not null,
   /**table name*/
-  tablename varchar(100) not null,
+  tablename varchar(30) not null,
   /**log insertion*/
   i bit,
   /**log modification*/
@@ -134,9 +134,9 @@ create table log(
   /**session id**/
   sessionid varchar(250) not null,
   /**grain id*/
-  grainid varchar(16) not null,
+  grainid varchar(30) not null,
   /**table name*/
-  tablename varchar(100) not null,
+  tablename varchar(30) not null,
   /**logged action (i for insertion, m for modification, d for deletion)*/
   action_type varchar(1) not null,
   /**primary key field 1 value*/
@@ -155,9 +155,9 @@ create table log(
 /**This table emulates sequences functionality for MS SQL Server and MySQL.*/
 create table sequences(
   /**grain id*/
-  grainid varchar(16) not null,
+  grainid varchar(30) not null,
   /**table name*/
-  tablename varchar(100) not null,
+  tablename varchar(30) not null,
   /**current sequence value*/
   seqvalue int not null default 0,
   constraint pk_sequences primary key (grainid, tablename),

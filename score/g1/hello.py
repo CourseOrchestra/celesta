@@ -139,7 +139,7 @@ def hello(context, arg):
     adresses2.update()
     
     # comment the line below to check version check failure
-    #adresses.get('11111', '11', '2')
+    adresses.get('11111', '11', '2')
     adresses.city = 'bbcc'
     adresses.update()
     

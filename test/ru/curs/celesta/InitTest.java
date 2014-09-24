@@ -37,7 +37,7 @@ public class InitTest {
 			GrainsCursor g = new GrainsCursor(ctxt);
 			assertEquals("grains", g.meta().getName());
 			assertEquals(8, g.getMaxStrLen("checksum"));
-			assertEquals(16, g.getMaxStrLen("id"));
+			assertEquals(30, g.getMaxStrLen("id"));
 			assertEquals(-1, g.getMaxStrLen("message"));
 			g.reset();
 			g.init();

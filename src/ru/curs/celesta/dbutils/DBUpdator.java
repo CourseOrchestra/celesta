@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -241,11 +242,11 @@ public final class DBUpdator {
 			dropOrphanedGrainIndices(g);
 
 			// Сбрасываем внешние ключи, более не включённые в метаданные
-			dropOrphanedGrainFKeys(g);
+			List<DBFKInfo> dbFKeys = dropOrphanedGrainFKeys(g);
 
 			// Обновляем все таблицы.
 			for (Table t : g.getTables().values())
-				updateTable(t);
+				updateTable(t, dbFKeys);
 
 			// Обновляем все индексы.
 			updateGrainIndices(g);
@@ -349,20 +350,25 @@ public final class DBUpdator {
 			}
 	}
 
-	private static void dropOrphanedGrainFKeys(Grain g) throws CelestaException {
+	private static List<DBFKInfo> dropOrphanedGrainFKeys(Grain g)
+			throws CelestaException {
 		Connection conn = grain.callContext().getConn();
 		List<DBFKInfo> dbFKeys = dba.getFKInfo(conn, g);
 		Map<String, ForeignKey> fKeys = new HashMap<>();
 		for (Table t : g.getTables().values())
 			for (ForeignKey fk : t.getForeignKeys())
 				fKeys.put(fk.getConstraintName(), fk);
-		for (DBFKInfo dbFKey : dbFKeys) {
+		Iterator<DBFKInfo> i = dbFKeys.iterator();
+		while (i.hasNext()) {
+			DBFKInfo dbFKey = i.next();
 			ForeignKey fKey = fKeys.get(dbFKey.getName());
 			if (fKey == null || !dbFKey.reflects(fKey)) {
 				dba.dropFK(conn, g.getName(), dbFKey.getTableName(),
 						dbFKey.getName());
+				i.remove();
 			}
 		}
+		return dbFKeys;
 	}
 
 	private static void dropOrphanedGrainIndices(Grain g)
@@ -421,7 +427,8 @@ public final class DBUpdator {
 		}
 	}
 
-	private static void updateTable(Table t) throws CelestaException {
+	private static void updateTable(Table t, List<DBFKInfo> dbFKeys)
+			throws CelestaException {
 		// Если таблица скомпилирована с опцией NO AUTOUPDATE, то ничего не
 		// делаем с ней
 		if (!t.isAutoUpdate())
@@ -437,7 +444,7 @@ public final class DBUpdator {
 
 		DBPKInfo pkInfo;
 		Set<String> dbColumns = dba.getColumns(conn, t);
-		boolean modified = updateColumns(t, conn, dbColumns);
+		boolean modified = updateColumns(t, conn, dbColumns, dbFKeys);
 
 		// Для версионированных таблиц синхронизируем поле recversion
 		if (t.isVersioned())
@@ -470,14 +477,30 @@ public final class DBUpdator {
 		dba.updateVersioningTrigger(conn, t);
 	}
 
+	private static void dropReferencedFKs(Table t, Connection conn,
+			List<DBFKInfo> dbFKeys) throws CelestaException {
+		Iterator<DBFKInfo> i = dbFKeys.iterator();
+		while (i.hasNext()) {
+			DBFKInfo dbFKey = i.next();
+			if (t.getGrain().getName().equals(dbFKey.getRefGrainName())
+					&& t.getName().equals(dbFKey.getRefTableName())) {
+				dba.dropFK(conn, t.getGrain().getName(), dbFKey.getTableName(),
+						dbFKey.getName());
+				i.remove();
+			}
+		}
+	}
+
 	private static boolean updateColumns(Table t, final Connection conn,
-			Set<String> dbColumns) throws CelestaException {
+			Set<String> dbColumns, List<DBFKInfo> dbFKeys)
+			throws CelestaException {
 		// Таблица существует в базе данных, определяем: надо ли удалить
 		// первичный ключ
 		DBPKInfo pkInfo = dba.getPKInfo(conn, t);
 		boolean result = false;
 		boolean keyDropped = pkInfo.isEmpty();
 		if (!(pkInfo.reflects(t) || keyDropped)) {
+			dropReferencedFKs(t, conn, dbFKeys);
 			dba.dropPK(conn, t, pkInfo.getName());
 			keyDropped = true;
 		}
@@ -493,6 +516,7 @@ public final class DBUpdator {
 					// ключ -- сбрасываем первичный ключ.
 					if (t.getPrimaryKey().containsKey(e.getKey())
 							&& !keyDropped) {
+						dropReferencedFKs(t, conn, dbFKeys);
 						dba.dropPK(conn, t, pkInfo.getName());
 						keyDropped = true;
 					}

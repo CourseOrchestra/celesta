@@ -1,5 +1,5 @@
 create table "celesta"."grains"(
-  "id" varchar(16) not null,
+  "id" varchar(30) not null,
   "version" varchar(4000) not null,
   "length" int not null,
   "checksum" varchar(8) not null,
@@ -9,8 +9,8 @@ create table "celesta"."grains"(
   constraint "pk_grains" primary key ("id")
 )
 create table "celesta"."tables"(
-  "grainid" varchar(16) not null,
-  "tablename" varchar(100) not null,
+  "grainid" varchar(30) not null,
+  "tablename" varchar(30) not null,
   "tabletype" varchar(1) not null default 'T',
   "orphaned" bit not null default b'0',
   constraint "pk_tables" primary key ("grainid", "tablename")

@@ -1,5 +1,5 @@
 create table "celesta_grains"(
-  "id" varchar2(16) not null,
+  "id" varchar2(30) not null,
   "version" varchar2(4000) not null,
   "length" number not null,
   "checksum" varchar2(8) not null,
@@ -9,8 +9,8 @@ create table "celesta_grains"(
   constraint "pk_grains" primary key ("id")
 )
 create table "celesta_tables"(
-  "grainid" varchar2(16) not null,
-  "tablename" varchar2(100) not null,
+  "grainid" varchar2(30) not null,
+  "tablename" varchar2(30) not null,
   "tabletype" varchar2(1) default 'T' not null,
   "orphaned" number default 0 not null constraint "chk_celesta_tables_orphaned" check ("orphaned" in (0, 1)),
   constraint "pk_tables" primary key ("grainid", "tablename")
