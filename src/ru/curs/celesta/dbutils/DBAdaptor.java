@@ -474,7 +474,7 @@ public abstract class DBAdaptor {
 	}
 
 	/**
-	 * Удаляет первичный ключ из базы данных.
+	 * Удаляет внешний ключ из базы данных.
 	 * 
 	 * @param conn
 	 *            Соединение с БД
@@ -483,7 +483,7 @@ public abstract class DBAdaptor {
 	 * @param tableName
 	 *            Имя таблицы, на которой определён первичный ключ.
 	 * @param fkName
-	 *            Имя первичного ключа.
+	 *            Имя внешнего ключа.
 	 * @throws CelestaException
 	 *             В случае сбоя в базе данных.
 	 */
