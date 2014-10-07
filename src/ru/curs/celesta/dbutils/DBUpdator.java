@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
@@ -89,7 +90,8 @@ public final class DBUpdator {
 			// Проверяем наличие главной системной таблицы.
 			if (!dba.tableExists(conn, "celesta", "grains")) {
 				// Если главной таблицы нет, а другие таблицы есть -- ошибка.
-				if (dba.userTablesExist())
+				if (dba.userTablesExist()
+						&& !AppSettings.getForceDBInitialize())
 					throw new CelestaException(
 							"No celesta.grains table found in non-empty database.");
 				// Если база вообще пустая, то создаём системные таблицы.

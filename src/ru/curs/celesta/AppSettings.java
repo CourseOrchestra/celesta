@@ -19,6 +19,7 @@ public final class AppSettings {
 	private final Logger logger;
 	private final String pylibPath;
 	private final boolean skipDBUpdate;
+	private final boolean forceDBInitialize;
 	private final boolean logLogins;
 	{
 		logger = Logger.getLogger("ru.curs.flute");
@@ -73,6 +74,8 @@ public final class AppSettings {
 
 		skipDBUpdate = Boolean.parseBoolean(settings.getProperty(
 				"skip.dbupdate", "").trim());
+		forceDBInitialize = Boolean.parseBoolean(settings.getProperty(
+				"force.dbinitialize", "").trim());
 		logLogins = Boolean.parseBoolean(settings.getProperty("log.logins", "")
 				.trim());
 
@@ -178,6 +181,13 @@ public final class AppSettings {
 	 */
 	public static boolean getSkipDBUpdate() {
 		return theSettings.skipDBUpdate;
+	}
+
+	/**
+	 * Значение параметра "заставлять обновлять непустую базу данных".
+	 */
+	public static boolean getForceDBInitialize() {
+		return theSettings.forceDBInitialize;
 	}
 
 	/**
