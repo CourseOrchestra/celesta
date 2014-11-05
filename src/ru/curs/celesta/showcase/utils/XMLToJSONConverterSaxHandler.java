@@ -23,6 +23,7 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 		private final String name;
 		private String value;
 		private Map<String, List<Item>> children;
+		private Boolean bool = false;
 
 		public Item(final String sName) {
 			this.name = sName;
@@ -33,13 +34,13 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 			this.value = sValue;
 		}
 
-		private Item add(final String sName, final String sValue) {
+		private Item add(final String sName, final String sValue, final Boolean aBool) {
 			Item item = new Item(sName, sValue);
-			add(item);
+			add(item, aBool);
 			return item;
 		}
 
-		private void add(final Item item) {
+		private void add(final Item item, final Boolean aBool) {
 			if (children == null) {
 				children = new HashMap<String, List<Item>>();
 			}
@@ -48,6 +49,7 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 				list = new LinkedList<Item>();
 				children.put(item.name, list);
 			}
+			item.bool = aBool;
 			list.add(item);
 		}
 
@@ -79,7 +81,13 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 				if ("sorted".equalsIgnoreCase(attrName)) {
 					isSorted = true;
 				} else {
-					item.add("@" + attrName, attrs.getValue(i));
+					if ("urlparam".equals(qName) && "value".equals(attrName)
+							&& attrs.getValue(i).startsWith("[")
+							&& attrs.getValue(i).endsWith("]")) {
+						item.add("@" + attrName, attrs.getValue(i), true);
+					} else {
+						item.add("@" + attrName, attrs.getValue(i), item.bool);
+					}
 				}
 			}
 		}
@@ -87,10 +95,10 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 		Item head = stack.peek();
 		if (isSorted) {
 			Item itemSorted = new Item("#sorted");
-			itemSorted.add(item);
-			head.add(itemSorted);
+			itemSorted.add(item, item.bool);
+			head.add(itemSorted, item.bool);
 		} else {
-			head.add(item);
+			head.add(item, item.bool);
 		}
 		stack.push(item);
 	}
@@ -111,6 +119,21 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 			item.value = tagValue.toString().replaceAll("\\t|\\r", "").trim();
 		}
 		tagValue = null;
+	}
+
+	JsonArray parseStringToJsonArray(final String aStr) {
+		String str = aStr;
+		if (str.trim().startsWith("[") && str.trim().endsWith("]")) {
+			JsonArray jAr = new JsonArray();
+			str = str.trim().replace("[", "").replace("]", "");
+			String[] strAr = str.split(",");
+			for (String s : strAr) {
+				jAr.add(new JsonPrimitive(s));
+			}
+			return jAr;
+		} else {
+			return null;
+		}
 	}
 
 	private JsonElement getJsonElement(final Item parentItem) {
@@ -141,6 +164,11 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 				parent.addProperty("#text", parentItem.value);
 			}
 		} else {
+			JsonArray jArray = parseStringToJsonArray(parentItem.value);
+			if (parentItem.name.equals("@value") && parentItem.bool && jArray != null
+					&& jArray.size() > 0) {
+				return jArray;
+			}
 			return new JsonPrimitive(
 					parentItem.value != null && !parentItem.value.isEmpty() ? parentItem.value
 							: "");
