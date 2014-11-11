@@ -118,7 +118,10 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 		if (tagValue != null && tagValue.length() != 0) {
 			item.value = tagValue.toString().replaceAll("\\t|\\r", "").trim();
 		}
-		tagValue = null;
+		// tagValue = null;
+		else {
+			item.value = "";
+		}
 	}
 
 	JsonArray parseStringToJsonArray(final String aStr) {
