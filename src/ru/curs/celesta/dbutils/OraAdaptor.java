@@ -44,6 +44,9 @@ import ru.curs.celesta.score.View;
  * Адаптер Oracle Database.
  */
 final class OraAdaptor extends DBAdaptor {
+	private static final String SELECT_TRIGGER_BODY = "select TRIGGER_BODY  from all_triggers "
+			+ "where owner = sys_context('userenv','session_user') ";
+
 	private static final String CSC = "csc_";
 
 	private static final String SNL = "snl_";
@@ -51,8 +54,6 @@ final class OraAdaptor extends DBAdaptor {
 	private static final String DROP_TRIGGER = "drop trigger \"";
 
 	private static final String TABLE_TEMPLATE = "\"%s_%s\"";
-
-	private static final int LENGTHFORMAX = 4000;
 
 	private static final Pattern BOOLEAN_CHECK = Pattern
 			.compile("\"([^\"]+)\" *[iI][nN] *\\( *0 *, *1 *\\)");
@@ -137,7 +138,7 @@ final class OraAdaptor extends DBAdaptor {
 
 			@Override
 			String dbFieldType() {
-				return "varchar2";
+				return "nvarchar2";
 			}
 
 			// Пустая DEFAULT-строка не сочетается с NOT NULL в Oracle.
@@ -151,13 +152,8 @@ final class OraAdaptor extends DBAdaptor {
 			@Override
 			String getInternalDefinition(Column c) {
 				StringColumn ic = (StringColumn) c;
-				// See
-				// http://stackoverflow.com/questions/414817/what-is-the-equivalent-of-varcharmax-in-oracle
-				String fieldType = String.format(
-						"%s(%s)",
-						dbFieldType(),
-						ic.isMax() ? Integer.toString(LENGTHFORMAX) : ic
-								.getLength());
+				String fieldType = ic.isMax() ? "nclob" : String.format(
+						"%s(%s)", dbFieldType(), ic.getLength());
 				return join(c.getQuotedName(), fieldType);
 			}
 
@@ -503,7 +499,7 @@ final class OraAdaptor extends DBAdaptor {
 	private boolean checkForIncrementTrigger(Connection conn, Column c)
 			throws SQLException {
 		String sql = String
-				.format("select TRIGGER_BODY  from all_triggers where owner = sys_context('userenv','session_user') "
+				.format(SELECT_TRIGGER_BODY
 						+ "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'INSERT'",
 						c.getParentTable().getGrain().getName(), c
 								.getParentTable().getName(), getSequenceName(c
@@ -543,9 +539,12 @@ final class OraAdaptor extends DBAdaptor {
 
 					if (typeName.startsWith("TIMESTAMP")) {
 						result.setType(DateTimeColumn.class);
-					} else if ("float".equalsIgnoreCase(typeName))
+					} else if ("float".equalsIgnoreCase(typeName)) {
 						result.setType(FloatingColumn.class);
-					else {
+					} else if ("nclob".equalsIgnoreCase(typeName)) {
+						result.setType(StringColumn.class);
+						result.setMax(true);
+					} else {
 						for (Class<?> cc : COLUMN_CLASSES)
 							if (TYPES_DICT.get(cc).dbFieldType()
 									.equalsIgnoreCase(typeName)) {
@@ -569,7 +568,6 @@ final class OraAdaptor extends DBAdaptor {
 					result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
 					if (result.getType() == StringColumn.class) {
 						result.setLength(rs.getInt("COLUMN_SIZE"));
-						result.setMax(result.getLength() >= LENGTHFORMAX);
 					}
 
 				} else {
@@ -631,10 +629,14 @@ final class OraAdaptor extends DBAdaptor {
 		}
 	}
 
+	private boolean isNclob(Column c) {
+		return c instanceof StringColumn && ((StringColumn) c).isMax();
+	}
+
 	@Override
 	void updateColumn(Connection conn, Column c, DBColumnInfo actual)
 			throws CelestaException {
-
+		dropVersioningTrigger(conn, c.getParentTable());
 		if (actual.getType() == BooleanColumn.class
 				&& !(c instanceof BooleanColumn)) {
 			// Тип Boolean меняется на что-то другое, надо сбросить constraint
@@ -667,11 +669,44 @@ final class OraAdaptor extends DBAdaptor {
 		if (actual.isNullable() != c.isNullable())
 			def = OraColumnDefiner.join(def, definer.nullable(c));
 
-		String sql = String.format(ALTER_TABLE + tableTemplate()
-				+ " modify (%s)", c.getParentTable().getGrain().getName(), c
-				.getParentTable().getName(), def);
-		runUpdateColumnSQL(conn, c, sql);
+		// Перенос из NCLOB и в NCLOB надо производить с осторожностью
 
+		if (fromOrToNClob(c, actual)) {
+
+			String tempName = "\"" + c.getName() + "2\"";
+			String sql = String.format(ALTER_TABLE + tableTemplate()
+					+ " add %s", c.getParentTable().getGrain().getName(), c
+					.getParentTable().getName(), columnDef(c));
+			sql = sql.replace(c.getQuotedName(), tempName);
+			// System.out.println(sql);
+			runUpdateColumnSQL(conn, c, sql);
+			sql = String.format("update " + tableTemplate()
+					+ " set %s = \"%s\"", c.getParentTable().getGrain()
+					.getName(), c.getParentTable().getName(), tempName,
+					c.getName());
+			// System.out.println(sql);
+			runUpdateColumnSQL(conn, c, sql);
+			sql = String
+					.format(ALTER_TABLE + tableTemplate() + " drop column %s",
+							c.getParentTable().getGrain().getName(), c
+									.getParentTable().getName(), c
+									.getQuotedName());
+			// System.out.println(sql);
+			runUpdateColumnSQL(conn, c, sql);
+			sql = String.format(ALTER_TABLE + tableTemplate()
+					+ " rename column %s to %s", c.getParentTable().getGrain()
+					.getName(), c.getParentTable().getName(), tempName,
+					c.getQuotedName());
+			// System.out.println(sql);
+			runUpdateColumnSQL(conn, c, sql);
+		} else {
+
+			String sql = String.format(ALTER_TABLE + tableTemplate()
+					+ " modify (%s)", c.getParentTable().getGrain().getName(),
+					c.getParentTable().getName(), def);
+
+			runUpdateColumnSQL(conn, c, sql);
+		}
 		if (c instanceof BooleanColumn
 				&& actual.getType() != BooleanColumn.class) {
 			// Тип поменялся на Boolean, надо добавить constraint
@@ -681,7 +716,12 @@ final class OraAdaptor extends DBAdaptor {
 					.getName(), getBooleanCheckName(c), c.getQuotedName());
 			runUpdateColumnSQL(conn, c, check);
 
-		} 
+		}
+	}
+
+	public boolean fromOrToNClob(Column c, DBColumnInfo actual) {
+		return (actual.isMax() || isNclob(c))
+				&& !(actual.isMax() && isNclob(c));
 	}
 
 	private static String getFKTriggerName(String prefix, String fkName) {
@@ -1188,15 +1228,48 @@ final class OraAdaptor extends DBAdaptor {
 		return result;
 	}
 
-	@Override
-	public void updateVersioningTrigger(Connection conn, Table t)
+	private void dropVersioningTrigger(Connection conn, Table t)
 			throws CelestaException {
-		// TODO Auto-generated method stub
-
 		// First of all, we are about to check if trigger exists
 		String triggerName = getUpdTriggerName(t);
 		String sql = String
-				.format("select TRIGGER_BODY  from all_triggers where owner = sys_context('userenv','session_user') "
+				.format(SELECT_TRIGGER_BODY
+						+ "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'UPDATE'",
+						t.getGrain().getName(), t.getName(), triggerName);
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				boolean triggerExists = false;
+
+				ResultSet rs = stmt.executeQuery(sql);
+				triggerExists = rs.next();
+				rs.close();
+
+				if (triggerExists) {
+					// DROP TRIGGER
+					sql = String.format(DROP_TRIGGER + "%s\"", triggerName);
+					stmt.executeUpdate(sql);
+				} else {
+					return;
+				}
+
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Could not update version check trigger on %s.%s: %s", t
+							.getGrain().getName(), t.getName(), e.getMessage());
+		}
+	}
+
+	@Override
+	public void updateVersioningTrigger(Connection conn, Table t)
+			throws CelestaException {
+		// First of all, we are about to check if trigger exists
+		String triggerName = getUpdTriggerName(t);
+		String sql = String
+				.format(SELECT_TRIGGER_BODY
 						+ "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'UPDATE'",
 						t.getGrain().getName(), t.getName(), triggerName);
 		try {

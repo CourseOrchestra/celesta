@@ -598,7 +598,7 @@ public abstract class DBAdaptor {
 		} else {
 			sql = getLimitedSQL(t, whereClause, orderBy, offset, rowCount);
 
-			//System.out.println(sql);
+			// System.out.println(sql);
 		}
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);

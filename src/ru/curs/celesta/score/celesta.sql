@@ -34,14 +34,14 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.06';
+create grain celesta version '1.07';
 
 /**Active grains list.*/
 create table grains(
   /**grain prefix (id)*/
   id varchar(30) not null primary key, 
   /**grain version tag*/
-  version  text not null,
+  version varchar(2000) not null,
   /**grain creation script length in bytes*/
   length int not null,
   /**grain creation script CRC32 value*/
@@ -146,9 +146,9 @@ create table log(
   /**primary key field 3 value*/
   pkvalue3 varchar(100),
   /**old values in csv format*/
-  oldvalues varchar(3999), -- there is wisdom in this number (3999), do not modify.
+  oldvalues varchar(2000), 
   /**new values in csv format*/
-  newvalues varchar(3999), -- we need definite max length and it must be different from varchar(max) in oracle
+  newvalues varchar(2000), 
   constraint fk_log_tables foreign key(grainid, tablename) references tables(grainid, tablename)
 ) with no version check;
 

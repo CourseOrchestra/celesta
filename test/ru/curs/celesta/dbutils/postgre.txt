@@ -1,6 +1,6 @@
 create table "celesta"."grains"(
   "id" varchar(30) not null,
-  "version" text not null,
+  "version" varchar(2000) not null,
   "length" int4 not null,
   "checksum" varchar(8) not null,
   "state" int4 not null default 3,

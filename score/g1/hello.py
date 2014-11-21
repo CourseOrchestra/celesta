@@ -29,7 +29,8 @@ def hello(context, arg):
         osw.close()
     c.doublefield = 12 + 0.14  # random.random()
     print c.doublefield
-    c.longtext = 'Привет, длинное текстовое поле'
+    c.aaa = 'тексттекст' #ТЕКСТ2--должно вставляться
+    c.longtext = 'Привет, очень-очень длинное-сверхдлинное русское текстовое поле'
     c.insert()
     insertedId = c.idc
     c.update()
@@ -40,7 +41,7 @@ def hello(context, arg):
     c.get(insertedId)
     c.calcdat()
     ins = BufferedReader(InputStreamReader(c.dat.getInStream(), 'utf-8'))
-    print '%s ... %s' % (ins.readLine(), c.longtext)
+    print '%s ... %s ... %s' % (ins.readLine(), c.aaa, c.longtext)
 
     os = c.dat.getOutStream()
     osw = OutputStreamWriter(os, 'utf-8')

@@ -1,6 +1,6 @@
 create table "celesta"."grains"(
   "id" nvarchar(30) not null,
-  "version" nvarchar(max) not null,
+  "version" nvarchar(2000) not null,
   "length" int not null,
   "checksum" nvarchar(8) not null,
   "state" int not null constraint "def_grains_state" default 3,
