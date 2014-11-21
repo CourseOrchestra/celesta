@@ -639,6 +639,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 		body.append("  set nocount on;\n");
 		body.append("  begin transaction;\n");
 		body.append("  declare @id int;\n");
+		body.append("  declare @idt table (id int);\n");
 		body.append("  declare @tmp table (\n");
 
 		StringBuilder selectList = new StringBuilder();
@@ -672,12 +673,12 @@ final class MSSQLAdaptor extends DBAdaptor {
 		body.append(String.format(
 				"  insert into @tmp (%s) select %s from inserted;\n",
 				selectList, selectList));
+
 		body.append(String
-				.format("  select @id = seqvalue from celesta.sequences where grainid = '%s' and tablename = '%s';\n",
+				.format("  update celesta.sequences set seqvalue = seqvalue + @@IDENTITY "
+						+ "output deleted.seqvalue into @idt where grainid = '%s' and tablename = '%s';\n",
 						t.getGrain().getName(), t.getName()));
-		body.append(String
-				.format("  update celesta.sequences set seqvalue = @id + @@IDENTITY where grainid = '%s' and tablename = '%s';\n",
-						t.getGrain().getName(), t.getName()));
+		body.append("  select @id = id from @idt;\n");
 		body.append(String.format(
 				"  insert into %s.%s (%s) select %s from @tmp;\n", t.getGrain()
 						.getQuotedName(), t.getQuotedName(), fullList,
