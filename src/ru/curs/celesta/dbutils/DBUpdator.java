@@ -28,8 +28,10 @@ import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.VersionString;
 import ru.curs.celesta.score.View;
 import ru.curs.celesta.syscursors.GrainsCursor;
+import ru.curs.celesta.syscursors.RolesCursor;
 import ru.curs.celesta.syscursors.TablesCursor;
 import ru.curs.celesta.syscursors.TablesCursor.TableType;
+import ru.curs.celesta.syscursors.UserRolesCursor;
 
 /**
  * Класс, выполняющий процедуру обновления базы данных.
@@ -107,6 +109,7 @@ public final class DBUpdator {
 					dba.createTable(conn, sys.getTable("logsetup"));
 					insertGrainRec(sys);
 					updateGrain(sys);
+					initSecurity(context);
 				} catch (ParseException e) {
 					throw new CelestaException(
 							"No 'celesta' grain definition found.");
@@ -164,6 +167,30 @@ public final class DBUpdator {
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
+	}
+
+	/**
+	 * Инициализация записей в security-таблицах. Производится один раз при
+	 * создании системной гранулы.
+	 * @throws CelestaException 
+	 */
+	private static void initSecurity(CallContext context) throws CelestaException {
+		RolesCursor roles = new RolesCursor(context);
+		roles.clear();
+		roles.setId("editor");
+		roles.setDescription("full read-write access");
+		roles.tryInsert();
+		
+		roles.clear();
+		roles.setId("reader");
+		roles.setDescription("full read-only access");
+		roles.tryInsert();
+
+		UserRolesCursor userRoles = new UserRolesCursor(context);
+		userRoles.clear();
+		userRoles.setRoleid("editor");
+		userRoles.setUserid("super");
+		userRoles.tryInsert();
 	}
 
 	private static void insertGrainRec(Grain g) throws CelestaException {
