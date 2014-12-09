@@ -226,9 +226,9 @@ public abstract class BasicCursor {
 					sb.append(", ");
 				sb.append(String.format("%s=%s", e.getKey(), e.getValue()
 						.toString()));
-				throw new CelestaException("There is no %s (%s).",
-						_tableName(), sb.toString());
 			}
+			throw new CelestaException("There is no %s (%s).", _tableName(),
+					sb.toString());
 		}
 	}
 
