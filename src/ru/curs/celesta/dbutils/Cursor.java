@@ -81,6 +81,12 @@ public abstract class Cursor extends BasicCursor {
 		super.finalize();
 		if (get != null)
 			get.close();
+		if (insert != null)
+			insert.close();
+		if (delete != null)
+			delete.close();
+		if (update != null)
+			update.close();
 	}
 
 	/**
