@@ -409,8 +409,10 @@ public abstract class BasicCursor {
 	 */
 	public final void setRange(String name) throws CelestaException {
 		validateColumName(name);
-		filters.remove(name);
-		closeSet();
+		// Если фильтр присутствовал на поле -- сбрасываем набор. Если не
+		// присутствовал -- не сбрасываем.
+		if (filters.remove(name) != null)
+			closeSet();
 	}
 
 	/**
@@ -426,8 +428,15 @@ public abstract class BasicCursor {
 	public final void setRange(String name, Object value)
 			throws CelestaException {
 		validateColumName(name);
-		filters.put(name, new SingleValue(value));
-		closeSet();
+		AbstractFilter oldFilter = filters.put(name, new SingleValue(value));
+		// Если один SingleValue меняется на другой SingleValue -- то
+		// необязательно закрывать набор, можно использовать старый.
+		if (oldFilter instanceof SingleValue) {
+			if (set != null)
+				db().fillSetQueryParameters(filters, set);
+		} else {
+			closeSet();
+		}
 	}
 
 	/**
@@ -445,8 +454,16 @@ public abstract class BasicCursor {
 	public final void setRange(String name, Object valueFrom, Object valueTo)
 			throws CelestaException {
 		validateColumName(name);
-		filters.put(name, new Range(valueFrom, valueTo));
-		closeSet();
+		AbstractFilter oldFilter = filters.put(name, new Range(valueFrom,
+				valueTo));
+		// Если один Range меняется на другой Range -- то
+		// необязательно закрывать набор, можно использовать старый.
+		if (oldFilter instanceof Range) {
+			if (set != null)
+				db().fillSetQueryParameters(filters, set);
+		} else {
+			closeSet();
+		}
 	}
 
 	/**
@@ -467,8 +484,10 @@ public abstract class BasicCursor {
 					"Filter for column %s is null or empty. "
 							+ "Use setrange(fieldname) to remove any filters from the column.",
 					name);
-		filters.put(name, new Filter(value));
-		closeSet();
+		AbstractFilter oldFilter = filters.put(name, new Filter(value));
+		// Если заменили фильтр на тот же самый -- ничего делать не надо.
+		if (!(oldFilter instanceof Filter && value.equals(oldFilter.toString())))
+			closeSet();
 	}
 
 	/**
