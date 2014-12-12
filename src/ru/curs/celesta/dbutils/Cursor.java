@@ -549,6 +549,16 @@ public abstract class Cursor extends BasicCursor {
 	}
 
 	@Override
+	String getNavigationWhereClause(char op) throws CelestaException {
+		if (op == '=') {
+			db();
+			return "(" + DBAdaptor.getRecordWhereClause(meta()) + ")";
+		} else {
+			return super.getNavigationWhereClause(op);
+		}
+	}
+
+	@Override
 	public final void clear() throws CelestaException {
 		super.clear();
 		xRec = null;

@@ -144,6 +144,10 @@ def hello(context, arg):
     adresses.city = 'bbcc'
     adresses.update()
     
+    #adresses.setFilter('country', "!null|'ss'")
+    #adresses.setRange('building', 1, 5)
+    #adresses.first()
+    
     testview = testviewCursor(context)
     testview.orderBy("f1")
     testview.limit(2, 2)

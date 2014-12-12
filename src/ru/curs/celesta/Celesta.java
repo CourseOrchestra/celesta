@@ -248,6 +248,18 @@ public final class Celesta {
 	}
 
 	/**
+	 * Фиксирует (при наличии включённой настройки log.logins) неудачный логин.
+	 * 
+	 * @param userId
+	 *            Имя пользователя, под которым производился вход.
+	 * @throws CelestaException
+	 *             Ошибка работы с базой данных.
+	 */
+	public void failedLogin(String userId) throws CelestaException {
+		SessionLogManager.logFailedLogin(userId);
+	}
+
+	/**
 	 * Завершает сессию (удаляет связанные с ней данные).
 	 * 
 	 * @param sessionId

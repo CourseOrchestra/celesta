@@ -44,6 +44,31 @@ public final class SessionLogManager {
 	}
 
 	/**
+	 * Записывает информацию о неудачном логине.
+	 * 
+	 * @param userId
+	 *            Имя пользователя.
+	 * @throws CelestaException
+	 *             Если не удалось связаться с БД.
+	 */
+	public static void logFailedLogin(String userId) throws CelestaException {
+		if (AppSettings.getLogLogins()) {
+			Connection conn = ConnectionPool.get();
+			CallContext context = new CallContext(conn,
+					BasicCursor.SYSTEMSESSION);
+			try {
+				SessionLogCursor sl = new SessionLogCursor(context);
+				sl.init();
+				sl.setUserid(userId);
+				sl.setFailedlogin(true);
+				sl.insert();
+			} finally {
+				ConnectionPool.putBack(conn);
+			}
+		}
+	}
+
+	/**
 	 * Записывает данные в лог о выходе из сессии.
 	 * 
 	 * @param session

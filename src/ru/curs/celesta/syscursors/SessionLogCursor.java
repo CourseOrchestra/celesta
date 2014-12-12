@@ -19,6 +19,7 @@ public class SessionLogCursor extends SysCursor {
 	private Date logintime;
 	private Date logoutime;
 	private Boolean timeout;
+	private Boolean failedlogin;
 
 	public SessionLogCursor(CallContext context) throws CelestaException {
 		super(context);
@@ -33,7 +34,7 @@ public class SessionLogCursor extends SysCursor {
 		logintime = from.logintime;
 		logoutime = from.logoutime;
 		timeout = from.timeout;
-
+		failedlogin = from.failedlogin;
 	}
 
 	@Override
@@ -64,6 +65,7 @@ public class SessionLogCursor extends SysCursor {
 		logintime = null;
 		logoutime = null;
 		timeout = null;
+		failedlogin = null;
 	}
 
 	@Override
@@ -83,6 +85,7 @@ public class SessionLogCursor extends SysCursor {
 		logintime = rs.getDate("logintime");
 		logoutime = rs.getDate("logoutime");
 		timeout = rs.getBoolean("timeout");
+		failedlogin = rs.getBoolean("failedlogin");
 	}
 
 	@Override
@@ -90,7 +93,7 @@ public class SessionLogCursor extends SysCursor {
 	protected Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { entryno, sessionid, userid, logintime, logoutime,
-				timeout };
+				timeout, failedlogin };
 		return result;
 	}
 
@@ -196,4 +199,20 @@ public class SessionLogCursor extends SysCursor {
 		this.logoutime = logoutime;
 	}
 
+	/**
+	 * Указывает на неудачный логин.
+	 */
+	public Boolean getFailedlogin() {
+		return failedlogin;
+	}
+
+	/**
+	 * Неудачный логин.
+	 * 
+	 * @param failedlogin
+	 *            неудачный логин.
+	 */
+	public void setFailedlogin(boolean failedlogin) {
+		this.failedlogin = failedlogin;
+	}
 }

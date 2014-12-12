@@ -1,3 +1,38 @@
+/*
+   (с) 2013 ООО "КУРС-ИТ"  
+
+   Этот файл — часть КУРС:Celesta.
+   
+   КУРС:Celesta — свободная программа: вы можете перераспространять ее и/или изменять
+   ее на условиях Стандартной общественной лицензии GNU в том виде, в каком
+   она была опубликована Фондом свободного программного обеспечения; либо
+   версии 3 лицензии, либо (по вашему выбору) любой более поздней версии.
+
+   Эта программа распространяется в надежде, что она будет полезной,
+   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
+   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
+   общественной лицензии GNU.
+
+   Вы должны были получить копию Стандартной общественной лицензии GNU
+   вместе с этой программой. Если это не так, см. http://www.gnu.org/licenses/.
+
+   
+   Copyright 2013, COURSE-IT Ltd.
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see http://www.gnu.org/licenses/.
+
+ */
+
 package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
@@ -35,7 +70,8 @@ public abstract class BasicCursor {
 	private static final Pattern COLUMN_NAME = Pattern
 			.compile("([a-zA-Z_][a-zA-Z0-9_]*)"
 					+ "( +([Aa]|[Dd][Ee])[Ss][Cc])?");
-
+	private static final Pattern QUOTED_COLUMN_NAME = Pattern
+			.compile("(\"[a-zA-Z_][a-zA-Z0-9_]*\")( desc)?");
 	private final DBAdaptor db;
 	private final Connection conn;
 	private final CallContext context;
@@ -169,10 +205,70 @@ public abstract class BasicCursor {
 		}
 	}
 
-	private String getOrderBy() throws CelestaException {
+	String getOrderBy() throws CelestaException {
 		if (orderBy == null)
 			orderBy();
 		return orderBy;
+	}
+
+	String getReversedOrderBy() throws CelestaException {
+		Matcher m = QUOTED_COLUMN_NAME.matcher(getOrderBy());
+		StringBuilder sb = new StringBuilder();
+		while (m.find()) {
+			if (sb.length() > 0)
+				sb.append(", ");
+			sb.append(m.group(1));
+			sb.append(m.group(2) == null ? " desc" : "");
+		}
+		return sb.toString();
+	}
+
+	String getNavigationWhereClause(char op) throws CelestaException {
+		boolean invert = false;
+		switch (op) {
+		case '>':
+			invert = false;
+			break;
+		case '<':
+			invert = true;
+			break;
+		case '=':
+			StringBuilder sb = new StringBuilder("(");
+			Matcher m = QUOTED_COLUMN_NAME.matcher(getOrderBy());
+			while (m.find()) {
+				if (sb.length() > 1)
+					sb.append(" and ");
+				sb.append(m.group(1));
+				sb.append(" = ?");
+			}
+			sb.append(")");
+			return sb.toString();
+		default:
+			throw new CelestaException("Invalid navigation operator: %s", op);
+		}
+
+		String[] names = getOrderBy().split(",");
+		char[] ops = new char[names.length];
+		for (int i = 0; i < names.length; i++) {
+			Matcher m = QUOTED_COLUMN_NAME.matcher(names[i]);
+			m.find();
+			names[i] = m.group(1);
+			ops[i] = (invert ^ (m.group(2) != null)) ? '<' : '>';
+		}
+		return getNavigationWhereClause(0, names, ops);
+	}
+
+	private static String getNavigationWhereClause(int i, String[] names,
+			char[] ops) {
+		String result;
+		if (names.length - 1 > i) {
+			result = String.format("((%s %s ?) or ((%s = ?) and %s)", names[i],
+					ops[i], names[i],
+					getNavigationWhereClause(i + 1, names, ops));
+		} else {
+			result = String.format("(%s %s ?)", names[i], ops[i]);
+		}
+		return result;
 	}
 
 	/**
