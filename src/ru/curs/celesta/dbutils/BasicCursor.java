@@ -66,18 +66,27 @@ public abstract class BasicCursor {
 	static final SessionContext SYSTEMSESSION = new SessionContext(
 			SYSTEMUSERID, "CELESTA");
 
+	private static final String DATABASE_CLOSING_ERROR = "Database error when closing recordset for table '%s': %s";
+
 	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
 	private static final Pattern COLUMN_NAME = Pattern
 			.compile("([a-zA-Z_][a-zA-Z0-9_]*)"
 					+ "( +([Aa]|[Dd][Ee])[Ss][Cc])?");
 	private static final Pattern QUOTED_COLUMN_NAME = Pattern
 			.compile("(\"[a-zA-Z_][a-zA-Z0-9_]*\")( desc)?");
+	private static final Pattern NAVIGATION = Pattern.compile("[+-<>=]+");
 	private final DBAdaptor db;
 	private final Connection conn;
 	private final CallContext context;
 
 	private PreparedStatement set = null;
 	private ResultSet cursor = null;
+
+	private PreparedStatement forwards = null;
+	private PreparedStatement backwards = null;
+	private PreparedStatement here = null;
+	private PreparedStatement first = null;
+	private PreparedStatement last = null;
 
 	// Поля фильтров и сортировок
 	private final Map<String, AbstractFilter> filters = new HashMap<>();
@@ -116,6 +125,16 @@ public abstract class BasicCursor {
 	protected void finalize() throws Throwable {
 		if (set != null)
 			set.close();
+		if (forwards != null)
+			forwards.close();
+		if (backwards != null)
+			backwards.close();
+		if (here != null)
+			here.close();
+		if (first != null)
+			first.close();
+		if (last != null)
+			last.close();
 	}
 
 	final Map<String, AbstractFilter> getFilters() {
@@ -191,17 +210,36 @@ public abstract class BasicCursor {
 		return context;
 	}
 
+	private void closeStmt(PreparedStatement stmt) throws CelestaException {
+		try {
+			stmt.close();
+		} catch (SQLException e) {
+			throw new CelestaException(DATABASE_CLOSING_ERROR, _tableName(),
+					e.getMessage());
+		}
+	}
+
 	private void closeSet() throws CelestaException {
 		cursor = null;
 		if (set != null) {
-			try {
-				set.close();
-			} catch (SQLException e) {
-				throw new CelestaException(
-						"Database error when closing recordset for table '%s': %s",
-						_tableName(), e.getMessage());
-			}
+			closeStmt(set);
 			set = null;
+		}
+		if (forwards != null) {
+			closeStmt(forwards);
+			forwards = null;
+		}
+		if (backwards != null) {
+			closeStmt(backwards);
+			backwards = null;
+		}
+		if (first != null) {
+			closeStmt(first);
+			first = null;
+		}
+		if (last != null) {
+			closeStmt(last);
+			last = null;
 		}
 	}
 
@@ -393,6 +431,86 @@ public abstract class BasicCursor {
 		return result;
 	}
 
+	/**
+	 * Метод навигации (пошагового перехода в отфильтрованном и отсортированном
+	 * наборе).
+	 * 
+	 * @param command
+	 *            Команда, состоящая из последовательности символов:
+	 *            <ul>
+	 *            <li>=
+	 *            обновить текущую запись (если она имеется в отфильтрованном
+	 *            наборе)</li>
+	 *            <li>
+	 *            &gt; перейти к следующей записи в отфильтрованном наборе</li>
+	 *            <li>
+	 *            &lt; перейти к предыдущей записи в отфильтрованном наборе</li>
+	 *            <li>
+	 *            - перейти к первой записи в отфильтрованном наборе</li>
+	 *            <li>
+	 *            + перейти к последней записи в отфильтрованном наборе</li>
+	 *            </ul>
+	 * @return true, если запись найдена и переход совершился, false — в
+	 *         противном случае.
+	 * @throws CelestaException
+	 *             некорректный формат команды или сбой при работе с БД.
+	 */
+	public boolean navigate(String command) throws CelestaException {
+		if (!canRead())
+			throw new PermissionDeniedException(callContext(), meta(),
+					Action.READ);
+
+		Matcher m = NAVIGATION.matcher(command);
+		if (!m.matches())
+			throw new CelestaException(
+					"Invalid navigation command: '%s', should consist of '+', '-', '>', '<' and '=' only!",
+					command);
+		for (int i = 0; i < command.length(); i++) {
+			char c = command.charAt(i);
+			// PreparedStatement navigator =
+			chooseNavigator(c);
+			// TODO
+		}
+		System.out.println("navigation called");
+		return false;
+	}
+
+	private PreparedStatement chooseNavigator(char c) throws CelestaException {
+		switch (c) {
+		case '<':
+			if (backwards == null)
+				backwards = db().getNavigationStatement(conn, meta(), filters,
+						complexFilter, getReversedOrderBy(),
+						getNavigationWhereClause('<'));
+			return backwards;
+		case '>':
+			if (forwards == null)
+				forwards = db().getNavigationStatement(conn, meta(), filters,
+						complexFilter, getOrderBy(),
+						getNavigationWhereClause('>'));
+			return forwards;
+		case '=':
+			if (here == null)
+				here = db().getNavigationStatement(conn, meta(), filters,
+						complexFilter, getOrderBy(),
+						getNavigationWhereClause('='));
+			return here;
+		case '-':
+			if (first == null)
+				first = db().getNavigationStatement(conn, meta(), filters,
+						complexFilter, getOrderBy(), "");
+			return first;
+		case '+':
+			if (last == null)
+				last = db().getNavigationStatement(conn, meta(), filters,
+						complexFilter, getReversedOrderBy(), "");
+			return last;
+		default:
+			// THIS WILL NEVER EVER HAPPEN, WE'VE ALREADY CHECKED
+			return null;
+		}
+	}
+
 	final void validateColumName(String name) throws CelestaException {
 		if (!meta().getColumns().containsKey(name))
 			throw new CelestaException("No column %s exists in table %s.",
@@ -506,6 +624,8 @@ public abstract class BasicCursor {
 		} catch (ParseException e) {
 			throw new CelestaException(e.getMessage());
 		}
+		// пересоздаём набор
+		closeSet();
 		complexFilter = buf;
 	}
 
