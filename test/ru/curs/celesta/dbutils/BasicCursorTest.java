@@ -53,10 +53,10 @@ public class BasicCursorTest {
 	public void testWhere() throws CelestaException {
 
 		assertEquals(
-				"((\"grainid\" < ?) or ((\"grainid\" = ?) and (\"tablename\" < ?))",
+				"((\"grainid\" < ?) or ((\"grainid\" = ?) and (\"tablename\" < ?)))",
 				c.getNavigationWhereClause('<'));
 		assertEquals(
-				"((\"grainid\" > ?) or ((\"grainid\" = ?) and (\"tablename\" > ?))",
+				"((\"grainid\" > ?) or ((\"grainid\" = ?) and (\"tablename\" > ?)))",
 				c.getNavigationWhereClause('>'));
 		assertEquals("((\"grainid\" = ?) and (\"tablename\" = ?))",
 				c.getNavigationWhereClause('='));
@@ -72,10 +72,10 @@ public class BasicCursorTest {
 				c.getReversedOrderBy());
 
 		assertEquals(
-				"((\"d\" > ?) or ((\"d\" = ?) and ((\"i\" > ?) or ((\"i\" = ?) and ((\"m\" < ?) or ((\"m\" = ?) and ((\"grainid\" > ?) or ((\"grainid\" = ?) and (\"tablename\" > ?)))))",
+				"((\"d\" > ?) or ((\"d\" = ?) and ((\"i\" > ?) or ((\"i\" = ?) and ((\"m\" < ?) or ((\"m\" = ?) and ((\"grainid\" > ?) or ((\"grainid\" = ?) and (\"tablename\" > ?)))))))))",
 				c.getNavigationWhereClause('>'));
 		assertEquals(
-				"((\"d\" < ?) or ((\"d\" = ?) and ((\"i\" < ?) or ((\"i\" = ?) and ((\"m\" > ?) or ((\"m\" = ?) and ((\"grainid\" < ?) or ((\"grainid\" = ?) and (\"tablename\" < ?)))))",
+				"((\"d\" < ?) or ((\"d\" = ?) and ((\"i\" < ?) or ((\"i\" = ?) and ((\"m\" > ?) or ((\"m\" = ?) and ((\"grainid\" < ?) or ((\"grainid\" = ?) and (\"tablename\" < ?)))))))))",
 				c.getNavigationWhereClause('<'));
 		assertEquals("((\"grainid\" = ?) and (\"tablename\" = ?))",
 				c.getNavigationWhereClause('='));
@@ -85,10 +85,10 @@ public class BasicCursorTest {
 		assertEquals("\"grainid\" desc, \"m\", \"tablename\" desc",
 				c.getReversedOrderBy());
 		assertEquals(
-				"((\"grainid\" > ?) or ((\"grainid\" = ?) and ((\"m\" < ?) or ((\"m\" = ?) and (\"tablename\" > ?)))",
+				"((\"grainid\" > ?) or ((\"grainid\" = ?) and ((\"m\" < ?) or ((\"m\" = ?) and (\"tablename\" > ?)))))",
 				c.getNavigationWhereClause('>'));
 		assertEquals(
-				"((\"grainid\" < ?) or ((\"grainid\" = ?) and ((\"m\" > ?) or ((\"m\" = ?) and (\"tablename\" < ?)))",
+				"((\"grainid\" < ?) or ((\"grainid\" = ?) and ((\"m\" > ?) or ((\"m\" = ?) and (\"tablename\" < ?)))))",
 				c.getNavigationWhereClause('<'));
 		assertEquals("((\"grainid\" = ?) and (\"tablename\" = ?))",
 				c.getNavigationWhereClause('='));
@@ -97,6 +97,13 @@ public class BasicCursorTest {
 
 	@Test
 	public void test2() throws CelestaException {
+		c.setFilter("grainid", "'b'%");
+		LogSetupCursor c2 = (LogSetupCursor) c;
+		c2.setGrainid("grainval");
+		c2.setTablename("tablenameval");
+		c2.setI(true);
+		c2.setM(false);
+		c2.setD(true);
 		boolean itWas = false;
 		try {
 			c.navigate("=s><+-");

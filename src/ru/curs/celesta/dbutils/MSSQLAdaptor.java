@@ -1,3 +1,38 @@
+/*
+   (с) 2013 ООО "КУРС-ИТ"  
+
+   Этот файл — часть КУРС:Celesta.
+   
+   КУРС:Celesta — свободная программа: вы можете перераспространять ее и/или изменять
+   ее на условиях Стандартной общественной лицензии GNU в том виде, в каком
+   она была опубликована Фондом свободного программного обеспечения; либо
+   версии 3 лицензии, либо (по вашему выбору) любой более поздней версии.
+
+   Эта программа распространяется в надежде, что она будет полезной,
+   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
+   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
+   общественной лицензии GNU.
+
+   Вы должны были получить копию Стандартной общественной лицензии GNU
+   вместе с этой программой. Если это не так, см. http://www.gnu.org/licenses/.
+
+   
+   Copyright 2013, COURSE-IT Ltd.
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see http://www.gnu.org/licenses/.
+
+ */
+
 package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
@@ -36,8 +71,9 @@ import ru.curs.celesta.score.View;
  */
 final class MSSQLAdaptor extends DBAdaptor {
 
-	private static final int DOUBLE_PRECISION = 53;
+	private static final String SELECT_TOP_1 = "select top 1 %s from ";
 	private static final String WHERE_S = " where %s;";
+	private static final int DOUBLE_PRECISION = 53;
 
 	/**
 	 * Определитель колонок для MSSQL.
@@ -327,18 +363,18 @@ final class MSSQLAdaptor extends DBAdaptor {
 	PreparedStatement getOneFieldStatement(Connection conn, Column c)
 			throws CelestaException {
 		Table t = c.getParentTable();
-		String sql = String.format("select top 1 %s from " + tableTemplate()
-				+ WHERE_S, c.getQuotedName(), t.getGrain().getName(),
-				t.getName(), getRecordWhereClause(t));
+		String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S,
+				c.getQuotedName(), t.getGrain().getName(), t.getName(),
+				getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
 	PreparedStatement getOneRecordStatement(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format("select top 1 %s from " + tableTemplate()
-				+ WHERE_S, getTableFieldsListExceptBLOBs(t), t.getGrain()
-				.getName(), t.getName(), getRecordWhereClause(t));
+		String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S,
+				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
+				t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
@@ -1025,5 +1061,29 @@ final class MSSQLAdaptor extends DBAdaptor {
 					right, s));
 			needAnd = true;
 		}
+	}
+
+	@Override
+	// CHECKSTYLE:OFF 6 params
+	PreparedStatement getNavigationStatement(Connection conn, GrainElement t,
+			Map<String, AbstractFilter> filters, Expr complexFilter,
+			String orderBy, String navigationWhereClause)
+			throws CelestaException {
+		// CHECKSTYLE:ON
+		if (navigationWhereClause == null)
+			throw new IllegalArgumentException();
+		StringBuilder w = new StringBuilder(getWhereClause(t, filters,
+				complexFilter));
+		if (w.length() > 0 && navigationWhereClause.length() > 0)
+			w.append(" and ");
+		w.append(navigationWhereClause);
+		boolean useWhere = w.length() > 0;
+		if (orderBy.length() > 0)
+			w.append(" order by " + orderBy);
+		String sql = String.format(SELECT_TOP_1 + tableTemplate() + "%s;",
+				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
+				t.getName(), useWhere ? " where " + w : w);
+		// System.out.println(sql);
+		return prepareStatement(conn, sql);
 	}
 }

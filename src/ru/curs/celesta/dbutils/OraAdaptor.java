@@ -1,3 +1,38 @@
+/*
+   (с) 2013 ООО "КУРС-ИТ"  
+
+   Этот файл — часть КУРС:Celesta.
+   
+   КУРС:Celesta — свободная программа: вы можете перераспространять ее и/или изменять
+   ее на условиях Стандартной общественной лицензии GNU в том виде, в каком
+   она была опубликована Фондом свободного программного обеспечения; либо
+   версии 3 лицензии, либо (по вашему выбору) любой более поздней версии.
+
+   Эта программа распространяется в надежде, что она будет полезной,
+   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
+   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
+   общественной лицензии GNU.
+
+   Вы должны были получить копию Стандартной общественной лицензии GNU
+   вместе с этой программой. Если это не так, см. http://www.gnu.org/licenses/.
+
+   
+   Copyright 2013, COURSE-IT Ltd.
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see http://www.gnu.org/licenses/.
+
+ */
+
 package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
@@ -44,6 +79,8 @@ import ru.curs.celesta.score.View;
  * Адаптер Oracle Database.
  */
 final class OraAdaptor extends DBAdaptor {
+	private static final String SELECT_S_FROM = "select %s from ";
+
 	private static final String SELECT_TRIGGER_BODY = "select TRIGGER_BODY  from all_triggers "
 			+ "where owner = sys_context('userenv','session_user') ";
 
@@ -311,7 +348,7 @@ final class OraAdaptor extends DBAdaptor {
 	PreparedStatement getOneFieldStatement(Connection conn, Column c)
 			throws CelestaException {
 		Table t = c.getParentTable();
-		String sql = String.format("select %s from " + tableTemplate()
+		String sql = String.format(SELECT_S_FROM + tableTemplate()
 				+ " where %s and rownum = 1", c.getQuotedName(), t.getGrain()
 				.getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
@@ -320,7 +357,7 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	PreparedStatement getOneRecordStatement(Connection conn, Table t)
 			throws CelestaException {
-		String sql = String.format("select %s from " + tableTemplate()
+		String sql = String.format(SELECT_S_FROM + tableTemplate()
 				+ " where %s and rownum = 1", getTableFieldsListExceptBLOBs(t),
 				t.getGrain().getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
@@ -1317,4 +1354,33 @@ final class OraAdaptor extends DBAdaptor {
 		}
 
 	}
+
+	@Override
+	// CHECKSTYLE:OFF 6 params
+	PreparedStatement getNavigationStatement(Connection conn, GrainElement t,
+			Map<String, AbstractFilter> filters, Expr complexFilter,
+			String orderBy, String navigationWhereClause)
+			throws CelestaException {
+		// CHECKSTYLE:ON
+		if (navigationWhereClause == null)
+			throw new IllegalArgumentException();
+
+		StringBuilder w = new StringBuilder("where ");
+		w.append(getWhereClause(t, filters, complexFilter));
+		if (w.length() > 0 && navigationWhereClause.length() > 0)
+			w.append(" and ");
+		w.append(navigationWhereClause);
+		if (w.length() > 0)
+			w.append(" and ");
+		w.append("rownum = 1");
+
+		if (orderBy.length() > 0)
+			w.append(" order by " + orderBy);
+		String sql = String.format(SELECT_S_FROM + tableTemplate() + "  %s;",
+				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
+				t.getName(), w);
+		// System.out.println(sql);
+		return prepareStatement(conn, sql);
+	}
+
 }

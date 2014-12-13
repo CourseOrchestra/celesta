@@ -373,14 +373,15 @@ public abstract class DBAdaptor {
 	}
 
 	/**
-	 * Устанавливает параметры на запрос по фильтрам.
+	 * Устанавливает параметры на запрос по фильтрам. Возвращает индекс
+	 * следующего параметра, после установки всех параметров.
 	 * 
 	 * @param filters
 	 *            Фильтры, с которыми вызывался getWhereClause
 	 * @throws CelestaException
 	 *             в случае сбоя JDBC
 	 */
-	final void fillSetQueryParameters(Map<String, AbstractFilter> filters,
+	final int fillSetQueryParameters(Map<String, AbstractFilter> filters,
 			PreparedStatement result) throws CelestaException {
 		int i = 1;
 		for (AbstractFilter f : filters.values()) {
@@ -390,10 +391,8 @@ public abstract class DBAdaptor {
 				setParam(result, i++, ((Range) f).getValueFrom());
 				setParam(result, i++, ((Range) f).getValueTo());
 			}
-			// Пока что фильтры параметров не требуют
-			// else if (f instanceof Filter)
-			// throw new RuntimeException(NOT_IMPLEMENTED_YET);
 		}
+		return i;
 	}
 
 	/**
@@ -645,36 +644,6 @@ public abstract class DBAdaptor {
 		}
 	}
 
-	/**
-	 * Возвращает навигационный PreparedStatement по фильтрованному набору
-	 * записей.
-	 * 
-	 * @param conn
-	 *            Соединение.
-	 * @param meta
-	 *            Таблица.
-	 * @param filters
-	 *            Фильтры на таблице.
-	 * @param complexFilter
-	 *            Супер-гибкий фильтр.
-	 * @param orderBy
-	 *            Порядок сортировки (прямой или обратный).
-	 * @param navigationWhereClause
-	 *            Условие навигационного набора (от текущей записи).
-	 */
-	// CHECKSTYLE:OFF 6 parameters
-	public final PreparedStatement getNavigationStatement(Connection conn,
-			GrainElement meta, Map<String, AbstractFilter> filters,
-			Expr complexFilter, String orderBy, String navigationWhereClause) {
-		// CHECKSTYLE:ON
-
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	abstract String getLimitedSQL(GrainElement t, String whereClause,
-			String orderBy, long offset, long rowCount);
-
 	final String columnDef(Column c) {
 		return getColumnDefiner(c).getFullDefinition(c);
 	}
@@ -864,6 +833,34 @@ public abstract class DBAdaptor {
 		}
 		return result;
 	}
+
+	/**
+	 * Возвращает навигационный PreparedStatement по фильтрованному набору
+	 * записей.
+	 * 
+	 * @param conn
+	 *            Соединение.
+	 * @param meta
+	 *            Таблица.
+	 * @param filters
+	 *            Фильтры на таблице.
+	 * @param complexFilter
+	 *            Супер-гибкий фильтр.
+	 * @param orderBy
+	 *            Порядок сортировки (прямой или обратный).
+	 * @param navigationWhereClause
+	 *            Условие навигационного набора (от текущей записи).
+	 */
+	// CHECKSTYLE:OFF 6 parameters
+	abstract PreparedStatement getNavigationStatement(Connection conn,
+			GrainElement meta, Map<String, AbstractFilter> filters,
+			Expr complexFilter, String orderBy, String navigationWhereClause)
+			throws CelestaException;
+
+	// CHECKSTYLE:ON
+
+	abstract String getLimitedSQL(GrainElement t, String whereClause,
+			String orderBy, long offset, long rowCount);
 
 	abstract ColumnDefiner getColumnDefiner(Column c);
 
