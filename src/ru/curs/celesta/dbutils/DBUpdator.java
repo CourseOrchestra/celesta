@@ -121,7 +121,7 @@ public final class DBUpdator {
 			// что
 			// хранится в таблице grains.
 			Map<String, GrainInfo> dbGrains = new HashMap<>();
-			while (grain.next()) {
+			while (grain.nextInSet()) {
 
 				if (!(EXPECTED_STATUSES.contains(grain.getState())))
 					throw new CelestaException(
@@ -288,7 +288,7 @@ public final class DBUpdator {
 
 			// Обновляем справочник celesta.tables.
 			table.setRange("grainid", g.getName());
-			while (table.next()) {
+			while (table.nextInSet()) {
 				switch (table.getTabletype()) {
 				case TABLE:
 					table.setOrphaned(!g.getTables().containsKey(

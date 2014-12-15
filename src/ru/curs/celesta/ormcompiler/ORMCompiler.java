@@ -528,13 +528,13 @@ public final class ORMCompiler {
 	private static void compileIterate(BufferedWriter w) throws IOException {
 		w.write("    def iterate(self):");
 		w.newLine();
-		w.write("        if self.tryFirst():");
+		w.write("        if self.tryFindSet():");
 		w.newLine();
 		w.write("            while True:");
 		w.newLine();
 		w.write("                yield self");
 		w.newLine();
-		w.write("                if not self.next():");
+		w.write("                if not self.nextInSet():");
 		w.newLine();
 		w.write("                    break");
 		w.newLine();

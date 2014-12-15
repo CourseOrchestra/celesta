@@ -318,7 +318,7 @@ public abstract class BasicCursor {
 	 * @throws CelestaException
 	 *             Ошибка связи с базой данных
 	 */
-	public final boolean tryFirst() throws CelestaException {
+	public final boolean tryFindSet() throws CelestaException {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(),
 					Action.READ);
@@ -342,6 +342,80 @@ public abstract class BasicCursor {
 		return result;
 	}
 
+	/**
+	 * То же, что navigate("-").
+	 * 
+	 * @throws CelestaException
+	 *             Ошибка взаимодействия с БД.
+	 */
+	public final boolean tryFirst() throws CelestaException {
+		return navigate("-");
+	}
+
+	/**
+	 * То же, что tryFirst(), но вызывает ошибку, если запись не найдена.
+	 * 
+	 * @throws CelestaException
+	 *             Запись не найдена или ошибка БД.
+	 */
+	public final void first() throws CelestaException {
+		if (!navigate("-"))
+			raiseNotFound();
+	}
+
+	/**
+	 * То же, что navigate("+").
+	 * 
+	 * @throws CelestaException
+	 *             Ошибка взаимодействия с БД.
+	 */
+	public final boolean tryLast() throws CelestaException {
+		return navigate("+");
+	}
+
+	/**
+	 * То же, что tryLast(), но вызывает ошибку, если запись не найдена.
+	 * 
+	 * @throws CelestaException
+	 *             Запись не найдена или ошибка БД.
+	 */
+	public final void last() throws CelestaException {
+		if (!navigate("+"))
+			raiseNotFound();
+	}
+
+	/**
+	 * То же, что navigate("&gt;").
+	 * 
+	 * @throws CelestaException
+	 *             Ошибка взаимодействия с БД.
+	 */
+	public final boolean next() throws CelestaException {
+		return navigate(">");
+	}
+
+	/**
+	 * То же, что navigate("&lt").
+	 * 
+	 * @throws CelestaException
+	 *             Ошибка взаимодействия с БД.
+	 */
+	public final boolean previous() throws CelestaException {
+		return navigate("<");
+	}
+
+	private void raiseNotFound() throws CelestaException {
+		StringBuilder sb = new StringBuilder();
+		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
+			if (sb.length() > 0)
+				sb.append(", ");
+			sb.append(String.format("%s=%s", e.getKey(), e.getValue()
+					.toString()));
+		}
+		throw new CelestaException("There is no %s (%s).", _tableName(),
+				sb.toString());
+	}
+
 	void initXRec() throws CelestaException {
 	}
 
@@ -352,18 +426,9 @@ public abstract class BasicCursor {
 	 * @throws CelestaException
 	 *             в случае, если записей в наборе нет.
 	 */
-	public final void first() throws CelestaException {
-		if (!tryFirst()) {
-			StringBuilder sb = new StringBuilder();
-			for (Entry<String, AbstractFilter> e : filters.entrySet()) {
-				if (sb.length() > 0)
-					sb.append(", ");
-				sb.append(String.format("%s=%s", e.getKey(), e.getValue()
-						.toString()));
-			}
-			throw new CelestaException("There is no %s (%s).", _tableName(),
-					sb.toString());
-		}
+	public final void findSet() throws CelestaException {
+		if (!tryFindSet())
+			raiseNotFound();
 	}
 
 	/**
@@ -413,11 +478,11 @@ public abstract class BasicCursor {
 	 * @throws CelestaException
 	 *             в случае ошибки БД
 	 */
-	public final boolean next() throws CelestaException {
+	public final boolean nextInSet() throws CelestaException {
 		boolean result = false;
 		try {
 			if (cursor == null)
-				result = tryFirst();
+				result = tryFindSet();
 			else {
 				result = cursor.next();
 			}

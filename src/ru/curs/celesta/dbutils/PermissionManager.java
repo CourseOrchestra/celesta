@@ -148,7 +148,7 @@ final class PermissionManager {
 			rce = new RoleCacheEntry(userID);
 			UserRolesCursor userRoles = new UserRolesCursor(sysContext);
 			userRoles.setRange("userid", userID);
-			while (userRoles.next()) {
+			while (userRoles.nextInSet()) {
 				rce.roles.add(userRoles.getRoleid());
 			}
 			rolesCache[index] = rce;
