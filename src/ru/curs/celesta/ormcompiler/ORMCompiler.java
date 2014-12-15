@@ -35,17 +35,25 @@ import ru.curs.celesta.score.ViewColumnType;
  */
 public final class ORMCompiler {
 
+	/**
+	 * Версия компилятора. Данную константу следует инкрементировать, когда
+	 * необходимо инициировать автоматическое пересоздание orm-скриптов.
+	 */
+	private static final int COMPILERVER = 2;
+
 	private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
 	private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
 	private static final String SELF_CONTEXT_CONTEXT = "        self.context = context";
 	private static final String RETURN_ARRAY_S_OBJECT = "        return array([%s], Object)";
 	private static final String SELF_S_EQUALS_NONE = "        self.%s = None";
+
 	private static final Pattern SIGNATURE = Pattern
-			.compile("len=([0-9]+), crc32=([0-9A-F]+)\\.");
+			.compile("len=([0-9]+), crc32=([0-9A-F]+)(; compiler=([0-9]+))?\\.");
 	private static final String[] HEADER = {
 			"\"\"\"",
 			"THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.",
-			"DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.", "\"\"\"",
+			"DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.",
+			"\"\"\"",
 			"import ru.curs.celesta.dbutils.Cursor as Cursor",
 			"import ru.curs.celesta.dbutils.ViewCursor as ViewCursor",
 			"import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor",
@@ -80,6 +88,7 @@ public final class ORMCompiler {
 					if (ormFile.exists() && ormFile.canRead()) {
 						int len = 0;
 						int crc32 = 0;
+						int compiler = 0;
 						BufferedReader r = new BufferedReader(
 								new InputStreamReader(new FileInputStream(
 										ormFile), "utf-8"));
@@ -91,6 +100,8 @@ public final class ORMCompiler {
 									len = Integer.parseInt(m.group(1));
 									crc32 = (int) Long
 											.parseLong(m.group(2), 16);
+									compiler = m.group(4) == null ? 0 : Integer
+											.parseInt(m.group(4));
 									break;
 								}
 								l = r.readLine();
@@ -99,7 +110,8 @@ public final class ORMCompiler {
 							r.close();
 						}
 
-						if (g.getLength() == len && g.getChecksum() == crc32)
+						if (g.getLength() == len && g.getChecksum() == crc32
+								&& compiler >= COMPILERVER)
 							continue;
 					}
 
@@ -125,9 +137,10 @@ public final class ORMCompiler {
 			throws IOException {
 		w.write("# coding=UTF-8");
 		w.newLine();
-		w.write(String.format(
-				"# Source grain parameters: version=%s, len=%d, crc32=%08X.",
-				g.getVersion(), g.getLength(), g.getChecksum()));
+		w.write(String
+				.format("# Source grain parameters: version=%s, len=%d, crc32=%08X; compiler=%d.",
+						g.getVersion(), g.getLength(), g.getChecksum(),
+						COMPILERVER));
 		w.newLine();
 		for (String s : HEADER) {
 			w.write(s);
@@ -268,7 +281,7 @@ public final class ORMCompiler {
 			w.append("        self.recversion = c.recversion");
 			w.newLine();
 		}
-		
+
 		// Итерация в Python-стиле
 		compileIterate(w);
 		w.newLine();

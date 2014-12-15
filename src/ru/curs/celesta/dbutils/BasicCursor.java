@@ -424,6 +424,9 @@ public abstract class BasicCursor {
 			if (result) {
 				_parseResult(cursor);
 				initXRec();
+			} else {
+				cursor.close();
+				cursor = null;
 			}
 		} catch (SQLException e) {
 			result = false;
