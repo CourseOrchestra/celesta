@@ -327,8 +327,9 @@ public final class Celesta {
 			String unitName = m.group(2);
 			String procName = m.group(4);
 
+			Grain grain;
 			try {
-				getScore().getGrain(grainName);
+				grain = getScore().getGrain(grainName);
 			} catch (ParseException e) {
 				throw new CelestaException(
 						"Invalid procedure name: %s, grain %s is unknown for the system.",
@@ -346,7 +347,7 @@ public final class Celesta {
 			sesContext.setMessageReceiver(rec);
 
 			Connection conn = ConnectionPool.get();
-			CallContext context = new CallContext(conn, sesContext);
+			CallContext context = new CallContext(conn, sesContext, grain);
 			PythonInterpreter interp = getPythonInterpreter();
 			try {
 				interp.set("context", context);

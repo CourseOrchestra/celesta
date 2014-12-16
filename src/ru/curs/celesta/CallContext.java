@@ -1,8 +1,11 @@
 package ru.curs.celesta;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.python.core.PyDictionary;
+
+import ru.curs.celesta.score.Grain;
 
 /**
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
@@ -11,11 +14,20 @@ import org.python.core.PyDictionary;
 public final class CallContext {
 
 	private final Connection conn;
+	private final Grain grain;
 	private final SessionContext sesContext;
 
 	public CallContext(Connection conn, SessionContext sesContext) {
 		this.conn = conn;
 		this.sesContext = sesContext;
+		this.grain = null;
+	}
+
+	public CallContext(Connection conn, SessionContext sesContext,
+			Grain curGrain) {
+		this.conn = conn;
+		this.sesContext = sesContext;
+		this.grain = curGrain;
 	}
 
 	/**
@@ -103,6 +115,13 @@ public final class CallContext {
 	 */
 	public Celesta getCelesta() throws CelestaException {
 		return Celesta.getInstance();
+	}
+
+	/**
+	 * Возвращает текущую гранулу (к которой относится вызываемая функция).
+	 */
+	public Grain getGrain() {
+		return grain;
 	}
 
 }
