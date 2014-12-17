@@ -121,11 +121,6 @@ public final class Celesta {
 			System.out
 					.println("Celesta initialization: phase 3/3 database upgrade...skipped.");
 		}
-
-		System.out
-				.print("Celesta post-initialization: phase 1/1 first Jython interpreter initialization...");
-		returnPythonInterpreter(getPythonInterpreter());
-		System.out.println("done.");
 	}
 
 	/**
@@ -404,9 +399,13 @@ public final class Celesta {
 	 * @throws CelestaException
 	 *             в случае ошибки при инициализации.
 	 */
-
 	public static synchronized void initialize(Properties settings)
 			throws CelestaException {
+		initialize(settings, true);
+	}
+
+	private static synchronized void initialize(Properties settings,
+			boolean initPython) throws CelestaException {
 		if (theCelesta != null)
 			throw new CelestaException(CELESTA_IS_ALREADY_INITIALIZED);
 
@@ -422,6 +421,14 @@ public final class Celesta {
 		System.out.println("done.");
 
 		new Celesta();
+
+		if (initPython) {
+			System.out
+					.print("Celesta post-initialization: phase 1/1 first Jython interpreter initialization...");
+			theCelesta.returnPythonInterpreter(theCelesta
+					.getPythonInterpreter());
+			System.out.println("done.");
+		}
 	}
 
 	private static void initCL() {
@@ -473,7 +480,13 @@ public final class Celesta {
 	 *             в случае ошибки при инициализации, а также в случае, если
 	 *             Celesta уже была проинициализирована.
 	 */
+
 	public static synchronized void initialize() throws CelestaException {
+		initialize(true);
+	}
+
+	private static synchronized void initialize(boolean initPython)
+			throws CelestaException {
 		if (theCelesta != null)
 			throw new CelestaException(CELESTA_IS_ALREADY_INITIALIZED);
 
@@ -502,7 +515,7 @@ public final class Celesta {
 					e.getMessage()));
 		}
 
-		initialize(settings);
+		initialize(settings, initPython);
 	}
 
 	/**
@@ -530,6 +543,21 @@ public final class Celesta {
 	public static synchronized Celesta getInstance() throws CelestaException {
 		if (theCelesta == null)
 			initialize();
+		return theCelesta;
+	}
+
+	/**
+	 * Возвращает объект-синглетон Celesta, при этом не инициализируя один из
+	 * питоновских интерпретаторов в пуле. Метод предназначен для использования
+	 * в пошаговой отладке.
+	 * 
+	 * @throws CelestaException
+	 *             в случае ошибки при инициализации.
+	 */
+	public static synchronized Celesta getDebugInstance()
+			throws CelestaException {
+		if (theCelesta == null)
+			initialize(false);
 		return theCelesta;
 	}
 
