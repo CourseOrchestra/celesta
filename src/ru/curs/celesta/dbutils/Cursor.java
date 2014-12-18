@@ -189,6 +189,24 @@ public abstract class Cursor extends BasicCursor {
 	}
 
 	/**
+	 * Устанавливает значение поля по его имени. Необходимо для косвенного
+	 * заполнения данными курсора из Java (в Python, естественно, для этой цели
+	 * есть процедура setattr(...)).
+	 * 
+	 * @param name
+	 *            Имя поля.
+	 * @param value
+	 *            Значение поля.
+	 * @throws CelestaException
+	 *             Если поле не найдено по имени.
+	 */
+	public final void setValue(String name, Object value)
+			throws CelestaException {
+		validateColumName(name);
+		_setFieldValue(name, value);
+	}
+
+	/**
 	 * Осуществляет сохранение содержимого курсора в БД.
 	 * 
 	 * @throws CelestaException
@@ -390,6 +408,20 @@ public abstract class Cursor extends BasicCursor {
 			throw new PermissionDeniedException(callContext(), meta(),
 					Action.READ);
 		return internalGet(values);
+	}
+
+	/**
+	 * Получает из базы данных запись, соответствующую полям текущего первичного
+	 * ключа.
+	 * 
+	 * @throws CelestaException
+	 *             Ошибка доступа или взаимодействия с БД.
+	 */
+	public final boolean tryGetCurrent() throws CelestaException {
+		if (!canRead())
+			throw new PermissionDeniedException(callContext(), meta(),
+					Action.READ);
+		return internalGet(_currentKeyValues());
 	}
 
 	private boolean internalGet(Object... values) throws CelestaException {
@@ -600,6 +632,8 @@ public abstract class Cursor extends BasicCursor {
 	 * имена protected-методов начинаются с underscore. Использование методов
 	 * без underscore приводит к конфликтам с именами атрибутов.
 	 */
+
+	protected abstract void _setFieldValue(String name, Object value);
 
 	protected abstract Cursor _getBufferCopy() throws CelestaException;
 

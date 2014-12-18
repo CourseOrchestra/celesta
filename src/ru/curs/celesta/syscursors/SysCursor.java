@@ -1,5 +1,7 @@
 package ru.curs.celesta.syscursors;
 
+import java.lang.reflect.Field;
+
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.Cursor;
@@ -62,6 +64,20 @@ public abstract class SysCursor extends Cursor {
 	protected void _setAutoIncrement(int val) {
 		// CHECKSTYLE:ON
 		// do nothing by default
+	}
+
+	@Override
+	// CHECKSTYLE:OFF
+	protected void _setFieldValue(String name, Object value) {
+		// CHECKSTYLE:ON
+		try {
+			Field f = getClass().getDeclaredField(name);
+			
+			f.setAccessible(true);
+			f.set(this, value);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }

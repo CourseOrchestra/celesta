@@ -169,7 +169,8 @@ def hello(context, arg):
     # c.setRange('doublefield', 12.14)
     for c in c.iterate():
         print c.doublefield
-        
+    c.setValue('doublefield', 3.14)
+    print c.doublefield
     print 'Python procedure finished.'
     
 def testTrigger(rec):

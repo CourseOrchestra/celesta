@@ -39,7 +39,7 @@ public final class ORMCompiler {
 	 * Версия компилятора. Данную константу следует инкрементировать, когда
 	 * необходимо инициировать автоматическое пересоздание orm-скриптов.
 	 */
-	private static final int COMPILERVER = 2;
+	private static final int COMPILERVER = 3;
 
 	private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
 	private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -262,6 +262,8 @@ public final class ORMCompiler {
 			w.append("        self.recversion = rs.getInt('recversion')");
 			w.newLine();
 		}
+		// Динамическая установка значения поля
+		compileSetFieldValue(w);
 
 		// Очистка буфера
 		compileClearBuffer(w, columns, pk);
@@ -284,6 +286,15 @@ public final class ORMCompiler {
 
 		// Итерация в Python-стиле
 		compileIterate(w);
+
+		w.newLine();
+	}
+
+	private static void compileSetFieldValue(BufferedWriter w)
+			throws IOException {
+		w.write("    def _setFieldValue(self, name, value):");
+		w.newLine();
+		w.write("        setattr(self, name, value)");
 		w.newLine();
 	}
 
