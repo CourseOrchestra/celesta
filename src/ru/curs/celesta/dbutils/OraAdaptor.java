@@ -36,7 +36,6 @@
 package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -406,8 +405,12 @@ final class OraAdaptor extends DBAdaptor {
 		try {
 			String tableName = String.format("%s_%s", t.getGrain().getName(),
 					t.getName());
-			DatabaseMetaData metaData = conn.getMetaData();
-			ResultSet rs = metaData.getColumns(null, null, tableName, null);
+			String sql = String
+					.format("SELECT column_name FROM user_tab_cols WHERE table_name = '%s' order by column_id",
+							tableName);
+			// System.out.println(sql);
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
 			try {
 				while (rs.next()) {
 					String rColumnName = rs.getString(COLUMN_NAME);
@@ -416,6 +419,7 @@ final class OraAdaptor extends DBAdaptor {
 			} finally {
 				rs.close();
 			}
+			stmt.close();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
@@ -564,15 +568,19 @@ final class OraAdaptor extends DBAdaptor {
 		try {
 			String tableName = String.format("%s_%s", c.getParentTable()
 					.getGrain().getName(), c.getParentTable().getName());
-			DatabaseMetaData metaData = conn.getMetaData();
-			ResultSet rs = metaData.getColumns(null, null, tableName,
-					c.getName());
+			String sql = String
+					.format("SELECT COLUMN_NAME, DATA_TYPE, NULLABLE, CHAR_LENGTH "
+							+ "FROM user_tab_cols	WHERE table_name = '%s' and COLUMN_NAME = '%s'",
+							tableName, c.getName());
+			// System.out.println(sql);
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
 			DBColumnInfo result;
 			try {
 				if (rs.next()) {
 					result = new DBColumnInfo();
 					result.setName(rs.getString(COLUMN_NAME));
-					String typeName = rs.getString("TYPE_NAME");
+					String typeName = rs.getString("DATA_TYPE");
 
 					if (typeName.startsWith("TIMESTAMP")) {
 						result.setType(DateTimeColumn.class);
@@ -602,9 +610,10 @@ final class OraAdaptor extends DBAdaptor {
 						else if (checkForIncrementTrigger(conn, c))
 							result.setIdentity(true);
 					}
-					result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
+					result.setNullable("Y".equalsIgnoreCase(rs
+							.getString("NULLABLE")));
 					if (result.getType() == StringColumn.class) {
-						result.setLength(rs.getInt("COLUMN_SIZE"));
+						result.setLength(rs.getInt("CHAR_LENGTH"));
 					}
 
 				} else {
@@ -612,10 +621,9 @@ final class OraAdaptor extends DBAdaptor {
 				}
 			} finally {
 				rs.close();
+				stmt.close();
 			}
-			// В Oracle JDBC не работает штатное поле для значения DEFAULT
-			// ("COLUMN_DEF"),
-			// поэтому извлекаем его самостоятельно.
+			// Извлекаем значение DEFAULT отдельно.
 			processDefaults(conn, c, result);
 
 			return result;
