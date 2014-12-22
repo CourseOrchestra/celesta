@@ -1365,7 +1365,7 @@ final class OraAdaptor extends DBAdaptor {
 		if (navigationWhereClause == null)
 			throw new IllegalArgumentException();
 
-		StringBuilder w = new StringBuilder("where ");
+		StringBuilder w = new StringBuilder();
 		w.append(getWhereClause(t, filters, complexFilter));
 		if (w.length() > 0 && navigationWhereClause.length() > 0)
 			w.append(" and ");
@@ -1376,9 +1376,9 @@ final class OraAdaptor extends DBAdaptor {
 
 		if (orderBy.length() > 0)
 			w.append(" order by " + orderBy);
-		String sql = String.format(SELECT_S_FROM + tableTemplate() + "  %s;",
+		String sql = String.format(SELECT_S_FROM + tableTemplate() + "  %s",
 				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
-				t.getName(), w);
+				t.getName(), "where " + w);
 		// System.out.println(sql);
 		return prepareStatement(conn, sql);
 	}
