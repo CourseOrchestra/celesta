@@ -374,6 +374,7 @@ public final class Celesta {
 							sw.toString(), sqlErr));
 				}
 			} finally {
+				context.closeCursors();
 				returnPythonInterpreter(interp);
 				ConnectionPool.putBack(conn);
 			}

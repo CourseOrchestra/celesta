@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import org.python.core.PyDictionary;
 
+import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.score.Grain;
 
 /**
@@ -16,6 +17,8 @@ public final class CallContext {
 	private final Connection conn;
 	private final Grain grain;
 	private final SessionContext sesContext;
+
+	private BasicCursor lastCursor;
 
 	public CallContext(Connection conn, SessionContext sesContext) {
 		this.conn = conn;
@@ -124,4 +127,29 @@ public final class CallContext {
 		return grain;
 	}
 
+	/**
+	 * Установка последнего курсора в контексте.
+	 * 
+	 * @param c
+	 *            Курсор.
+	 */
+	public void setLastCursor(BasicCursor c) {
+		lastCursor = c;
+	}
+
+	/**
+	 * Получает последний курсор.
+	 */
+	public BasicCursor getLastCursor() {
+		return lastCursor;
+	}
+
+	/**
+	 * Закрытие всех курсоров.
+	 */
+	public void closeCursors() {
+		while (lastCursor != null) {
+			lastCursor.close();
+		}
+	}
 }

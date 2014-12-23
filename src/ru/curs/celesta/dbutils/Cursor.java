@@ -77,8 +77,13 @@ public abstract class Cursor extends BasicCursor {
 	}
 
 	@Override
-	public void close() {
+	public final void close() {
 		super.close();
+		close(get, insert, delete, update);
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
 		close(get, insert, delete, update);
 	}
 
@@ -337,7 +342,11 @@ public abstract class Cursor extends BasicCursor {
 
 	@Override
 	final void initXRec() throws CelestaException {
-		xRec = _getBufferCopy();
+		if (xRec == null) {
+			xRec = _getBufferCopy();
+		} else {
+			xRec.copyFieldsFrom(this);
+		}
 	}
 
 	/**

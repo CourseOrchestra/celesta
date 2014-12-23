@@ -38,6 +38,7 @@ public final class SessionLogManager {
 				sl.setUserid(session.getUserId());
 				sl.insert();
 			} finally {
+				context.closeCursors();
 				ConnectionPool.putBack(conn);
 			}
 		}
@@ -63,6 +64,7 @@ public final class SessionLogManager {
 				sl.setFailedlogin(true);
 				sl.insert();
 			} finally {
+				context.closeCursors();
 				ConnectionPool.putBack(conn);
 			}
 		}
@@ -96,6 +98,7 @@ public final class SessionLogManager {
 					sl.update();
 				}
 			} finally {
+				context.closeCursors();
 				ConnectionPool.putBack(conn);
 			}
 		}

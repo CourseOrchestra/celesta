@@ -185,6 +185,7 @@ final class PermissionManager {
 						: 0;
 			}
 		}
+		sysContext.closeCursors();
 		return new PermissionCacheEntry(c.getUserId(), t, permissionsMask);
 	}
 }

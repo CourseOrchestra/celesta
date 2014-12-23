@@ -98,6 +98,9 @@ public abstract class BasicCursor {
 	private Expr complexFilter;
 	private boolean closed = false;
 
+	private BasicCursor previousCursor;
+	private BasicCursor nextCursor;
+
 	public BasicCursor(CallContext context) throws CelestaException {
 		if (context == null)
 			throw new CelestaException(
@@ -113,6 +116,12 @@ public abstract class BasicCursor {
 					this.getClass().getName());
 
 		this.context = context;
+
+		previousCursor = context.getLastCursor();
+		if (previousCursor != null)
+			previousCursor.nextCursor = this;
+		context.setLastCursor(this);
+
 		conn = context.getConn();
 		try {
 			if (conn.isClosed())
@@ -128,7 +137,7 @@ public abstract class BasicCursor {
 		closed = true;
 		for (PreparedStatement stmt : stmts) {
 			try {
-				if (stmt != null)
+				if (!(stmt == null || stmt.isClosed()))
 					stmt.close();
 			} catch (SQLException e) {
 				e = null;
@@ -141,12 +150,18 @@ public abstract class BasicCursor {
 	 * невозможным к дальнейшему использованию.
 	 */
 	public void close() {
+		if (this == context.getLastCursor())
+			context.setLastCursor(previousCursor);
+		if (previousCursor != null)
+			previousCursor.nextCursor = nextCursor;
+		if (nextCursor != null)
+			nextCursor.previousCursor = previousCursor;
 		close(set, forwards, backwards, here, first, last);
 	}
 
 	@Override
 	protected void finalize() throws Throwable {
-		close();
+		close(set, forwards, backwards, here, first, last);
 	}
 
 	final Map<String, AbstractFilter> getFilters() {

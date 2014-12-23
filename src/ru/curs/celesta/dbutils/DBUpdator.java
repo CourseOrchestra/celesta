@@ -165,6 +165,7 @@ public final class DBUpdator {
 				throw new CelestaException(
 						"Not all grains were updated successfully, see celesta.grains table data for details.");
 		} finally {
+			context.closeCursors();
 			ConnectionPool.putBack(conn);
 		}
 	}
@@ -172,15 +173,17 @@ public final class DBUpdator {
 	/**
 	 * Инициализация записей в security-таблицах. Производится один раз при
 	 * создании системной гранулы.
-	 * @throws CelestaException 
+	 * 
+	 * @throws CelestaException
 	 */
-	private static void initSecurity(CallContext context) throws CelestaException {
+	private static void initSecurity(CallContext context)
+			throws CelestaException {
 		RolesCursor roles = new RolesCursor(context);
 		roles.clear();
 		roles.setId("editor");
 		roles.setDescription("full read-write access");
 		roles.tryInsert();
-		
+
 		roles.clear();
 		roles.setId("reader");
 		roles.setDescription("full read-only access");

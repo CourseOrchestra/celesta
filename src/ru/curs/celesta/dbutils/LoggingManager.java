@@ -98,6 +98,7 @@ final class LoggingManager {
 		if (!isLoggingNeeded(sysContext, c.meta(), a))
 			return;
 		writeToLog(c, a, sysContext);
+		sysContext.closeCursors();
 	}
 
 	private void writeToLog(Cursor c, Action a, CallContext sysContext)
