@@ -61,12 +61,14 @@ import ru.curs.celesta.score.ParseException;
  * Базовый класс курсора для чтения данных из представлений.
  */
 public abstract class BasicCursor {
+
 	static final String SYSTEMUSERID = String.format("SYS%08X",
 			(new Random()).nextInt());
 	static final SessionContext SYSTEMSESSION = new SessionContext(
 			SYSTEMUSERID, "CELESTA");
 
 	private static final String DATABASE_CLOSING_ERROR = "Database error when closing recordset for table '%s': %s";
+	private static final String CURSOR_IS_CLOSED = "Cursor is closed.";
 
 	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
 	private static final Pattern COLUMN_NAME = Pattern
@@ -94,6 +96,7 @@ public abstract class BasicCursor {
 	private long offset = 0;
 	private long rowCount = 0;
 	private Expr complexFilter;
+	private boolean closed = false;
 
 	public BasicCursor(CallContext context) throws CelestaException {
 		if (context == null)
@@ -121,20 +124,29 @@ public abstract class BasicCursor {
 		db = DBAdaptor.getAdaptor();
 	}
 
+	final void close(PreparedStatement... stmts) {
+		closed = true;
+		for (PreparedStatement stmt : stmts) {
+			try {
+				if (stmt != null)
+					stmt.close();
+			} catch (SQLException e) {
+				e = null;
+			}
+		}
+	}
+
+	/**
+	 * Закрывает курсор, высвобождает все его PreparedStatements и делает курсор
+	 * невозможным к дальнейшему использованию.
+	 */
+	public void close() {
+		close(set, forwards, backwards, here, first, last);
+	}
+
 	@Override
 	protected void finalize() throws Throwable {
-		if (set != null)
-			set.close();
-		if (forwards != null)
-			forwards.close();
-		if (backwards != null)
-			backwards.close();
-		if (here != null)
-			here.close();
-		if (first != null)
-			first.close();
-		if (last != null)
-			last.close();
+		close();
 	}
 
 	final Map<String, AbstractFilter> getFilters() {
@@ -170,6 +182,8 @@ public abstract class BasicCursor {
 	 *             ошибка базы данных.
 	 */
 	public final boolean canRead() throws CelestaException {
+		if (closed)
+			throw new CelestaException(CURSOR_IS_CLOSED);
 		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.READ);
 	}
 
@@ -180,6 +194,8 @@ public abstract class BasicCursor {
 	 *             ошибка базы данных.
 	 */
 	public final boolean canInsert() throws CelestaException {
+		if (closed)
+			throw new CelestaException(CURSOR_IS_CLOSED);
 		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.INSERT);
 	}
 
@@ -190,6 +206,8 @@ public abstract class BasicCursor {
 	 *             ошибка базы данных.
 	 */
 	public final boolean canModify() throws CelestaException {
+		if (closed)
+			throw new CelestaException(CURSOR_IS_CLOSED);
 		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.MODIFY);
 	}
 
@@ -200,6 +218,8 @@ public abstract class BasicCursor {
 	 *             ошибка базы данных.
 	 */
 	public final boolean canDelete() throws CelestaException {
+		if (closed)
+			throw new CelestaException(CURSOR_IS_CLOSED);
 		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.DELETE);
 	}
 

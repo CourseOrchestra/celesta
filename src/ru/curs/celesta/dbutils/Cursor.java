@@ -77,16 +77,9 @@ public abstract class Cursor extends BasicCursor {
 	}
 
 	@Override
-	protected void finalize() throws Throwable {
-		super.finalize();
-		if (get != null)
-			get.close();
-		if (insert != null)
-			insert.close();
-		if (delete != null)
-			delete.close();
-		if (update != null)
-			update.close();
+	public void close() {
+		super.close();
+		close(get, insert, delete, update);
 	}
 
 	/**
