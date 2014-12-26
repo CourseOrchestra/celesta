@@ -24,6 +24,8 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 		private String value;
 		private Map<String, List<Item>> children;
 		private Boolean bool = false;
+		private Boolean boolForQuotes = false;
+		private Boolean boolForJson = false;
 
 		public Item(final String sName) {
 			this.name = sName;
@@ -62,6 +64,7 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 	private final Stack<Item> stack;
 	private final Item result;
 	private StringBuilder tagValue;
+	private final List<String> l = new ArrayList<String>();
 
 	public XMLToJSONConverterSaxHandler() {
 		this.stack = new Stack<Item>();
@@ -85,6 +88,14 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 							&& attrs.getValue(i).startsWith("[")
 							&& attrs.getValue(i).endsWith("]")) {
 						item.add("@" + attrName, attrs.getValue(i), true);
+					} else if ("withoutQuotes".equalsIgnoreCase(attrName)) {
+						if ("true".equalsIgnoreCase(attrs.getValue(attrName))) {
+							item.boolForQuotes = true;
+						}
+					} else if ("toJsonArray".equalsIgnoreCase(attrName)) {
+						if ("true".equalsIgnoreCase(attrs.getValue(attrName))) {
+							item.boolForJson = true;
+						}
 					} else {
 						item.add("@" + attrName, attrs.getValue(i), item.bool);
 					}
@@ -117,15 +128,17 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 		Item item = stack.pop();
 		if (tagValue != null && tagValue.length() != 0) {
 			item.value = tagValue.toString().replaceAll("\\t|\\r", "").trim();
+			if (item.boolForQuotes) {
+				l.add(item.value);
+			}
 		}
 		tagValue = null;
 	}
 
 	JsonArray parseStringToJsonArray(final String aStr) {
 		String str = aStr;
-		if (str == null) {
+		if (str == null)
 			str = "";
-		}
 		if (str.trim().startsWith("[") && str.trim().endsWith("]")) {
 			JsonArray jAr = new JsonArray();
 			str = str.trim().replace("[", "").replace("]", "");
@@ -150,6 +163,11 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 					JsonArray array = new JsonArray();
 					for (Item item : list) {
 						JsonElement childJson = getJsonElement(item);
+						if (item.boolForJson) {
+							JsonArray jAr = new JsonArray();
+							jAr.add(childJson);
+							childJson = jAr;
+						}
 						if (childJson != null) {
 							array.add(childJson);
 						}
@@ -158,12 +176,17 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 				} else {
 					Item item = list.get(0);
 					element = getJsonElement(item);
+					if (item.boolForJson) {
+						JsonArray jAr2 = new JsonArray();
+						jAr2.add(element);
+						element = jAr2;
+					}
 				}
 				if (element != null) {
 					parent.add(property, element);
 				}
 			}
-			if (parentItem.value != null) {
+			if (parentItem.value != null && !("".equals(parentItem.value))) {
 				parent.addProperty("#text", parentItem.value);
 			}
 		} else {
@@ -171,24 +194,23 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 			if (parentItem.name.equals("@value") && parentItem.bool && jArray != null
 					&& jArray.size() > 0) {
 				return jArray;
+			} else {
+				return new JsonPrimitive(
+						parentItem.value != null && !parentItem.value.isEmpty() ? parentItem.value
+								: "");
 			}
-			return new JsonPrimitive(
-					parentItem.value != null && !parentItem.value.isEmpty() ? parentItem.value
-							: "");
-			// : "None");
+			// : "None");}
 		}
+
 		return parent;
 	}
-
-	/**
-	 * Функция, возврщающая результирующий JsonElement, преобразовать который в
-	 * стороковый вид затем можно с помощью метода toString().
-	 * 
-	 * @return resultElement
-	 */
 
 	public JsonElement getResult() {
 		JsonElement resultElement = getJsonElement(result);
 		return resultElement;
+	}
+
+	public List<String> getQuoteList() {
+		return l;
 	}
 }

@@ -1,6 +1,7 @@
 package ru.curs.celesta.showcase.utils;
 
 import java.io.*;
+import java.util.List;
 
 import javax.xml.parsers.*;
 import javax.xml.transform.TransformerException;
@@ -67,6 +68,11 @@ public final class XMLJSONConverter {
 		str = str.substring(ind + 1);
 		ind = str.lastIndexOf("}");
 		str = str.substring(0, ind);
+
+		List<String> quoteList = handler.getQuoteList();
+		for (String s : quoteList) {
+			str = str.replace("\"" + s + "\"", s);
+		}
 		return str;
 	}
 
