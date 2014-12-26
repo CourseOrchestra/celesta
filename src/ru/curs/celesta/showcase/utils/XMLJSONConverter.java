@@ -69,11 +69,11 @@ public final class XMLJSONConverter {
 		ind = str.lastIndexOf("}");
 		str = str.substring(0, ind);
 
+		while (str.contains("\\\"")) {
+			str = str.replace("\\\"", "\"");
+		}
 		List<String> quoteList = handler.getQuoteList();
 		for (String s : quoteList) {
-			while (str.contains("\\\"")) {
-				str = str.replace("\\\"", "\"");
-			}
 			str = str.replace("\"" + s + "\"", s);
 		}
 		return str;
