@@ -3,6 +3,9 @@ package ru.curs.celesta.dbutils;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map.Entry;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -17,11 +20,14 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DateTimeColumn;
 
 /**
  * Класс для сериализации и десериализации содержимого курсора в XML.
  */
 public final class XMLSerializer {
+
+	private static final String XML_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
 	private XMLSerializer() {
 
@@ -68,6 +74,8 @@ public final class XMLSerializer {
 	 */
 	public static void serialize(Cursor c, OutputStream outputStream)
 			throws CelestaException {
+		SimpleDateFormat sdf = null;
+
 		try {
 			XMLStreamWriter xmlWriter = XMLOutputFactory.newInstance()
 					.createXMLStreamWriter(
@@ -86,7 +94,15 @@ public final class XMLSerializer {
 				xmlWriter.writeAttribute("type", column.getValue()
 						.getCelestaType());
 				xmlWriter.writeAttribute("null", Boolean.toString(val == null));
-				xmlWriter.writeCharacters(val == null ? "" : val.toString());
+				if (val instanceof Date) {
+					if (sdf == null)
+						sdf = new SimpleDateFormat(XML_DATE_FORMAT);
+					xmlWriter.writeCharacters(val == null ? "" : sdf
+							.format(val));
+				} else {
+					xmlWriter
+							.writeCharacters(val == null ? "" : val.toString());
+				}
 				xmlWriter.writeEndElement();
 			}
 			xmlWriter.writeEndDocument();
@@ -101,11 +117,14 @@ public final class XMLSerializer {
 	 * SAX-парсер сериализованного курсора.
 	 */
 	private static final class FormDataParser extends DefaultHandler {
+
 		private final Cursor c;
 		private final StringBuilder sb = new StringBuilder();
 		private String key;
 		private int status = 0;
 		private boolean isNull = false;
+		private String type = null;
+		private SimpleDateFormat sdf = null;
 
 		FormDataParser(Cursor c) {
 			this.c = c;
@@ -125,6 +144,7 @@ public final class XMLSerializer {
 			case 1:
 				key = localName;
 				isNull = Boolean.parseBoolean(attributes.getValue("null"));
+				type = attributes.getValue("type");
 				status = 2;
 				sb.setLength(0);
 			default:
@@ -147,8 +167,19 @@ public final class XMLSerializer {
 				if (isNull && sb.length() == 0) {
 					c.setValue(key, null);
 				} else {
-
-					c.setValue(key, sb.toString());
+					String buf = sb.toString();
+					if (DateTimeColumn.CELESTA_TYPE.equals(type)) {
+						if (sdf == null)
+							sdf = new SimpleDateFormat(XML_DATE_FORMAT);
+						try {
+							Date d = sdf.parse(buf);
+							c.setValue(key, d);
+						} catch (ParseException e) {
+							e = null;
+						}
+					} else {
+						c.setValue(key, buf);
+					}
 				}
 			} catch (CelestaException e) {
 				throw new SAXException(e.getMessage());
