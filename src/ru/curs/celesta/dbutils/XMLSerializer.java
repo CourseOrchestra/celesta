@@ -19,6 +19,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 
@@ -177,6 +178,8 @@ public final class XMLSerializer {
 						} catch (ParseException e) {
 							e = null;
 						}
+					} else if (BooleanColumn.CELESTA_TYPE.equals(type)) {
+						c.setValue(key, Boolean.valueOf(buf));
 					} else {
 						c.setValue(key, buf);
 					}
