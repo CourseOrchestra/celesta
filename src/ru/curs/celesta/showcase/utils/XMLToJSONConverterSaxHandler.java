@@ -142,13 +142,9 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 		if (str.trim().startsWith("[") && str.trim().endsWith("]")) {
 			JsonArray jAr = new JsonArray();
 			str = str.trim().replace("[", "").replace("]", "");
-			if (str.contains(",")) {
-				String[] strAr = str.split(",");
-				for (String s : strAr) {
-					jAr.add(new JsonPrimitive(s));
-				}
-			} else {
-				jAr.add(new JsonPrimitive(""));
+			String[] strAr = str.split(",");
+			for (String s : strAr) {
+				jAr.add(new JsonPrimitive(s));
 			}
 			return jAr;
 		} else {
