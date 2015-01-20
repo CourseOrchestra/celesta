@@ -326,11 +326,15 @@ public class JSONToXMLParser {
 	}
 
 	private void comparison3(final Document doc, final Element root, final Object value) {
+		Text text = null;
+		if ("None".equalsIgnoreCase(value.toString()) || "null".equalsIgnoreCase(value.toString())) {
+			text = doc.createTextNode("");
+		} else {
+			text = doc.createTextNode(value.toString());
+		}
 		if (root.hasChildNodes()) {
-			Text text = doc.createTextNode(value.toString());
 			root.insertBefore(text, root.getFirstChild());
 		} else {
-			Text text = doc.createTextNode(value.toString());
 			root.appendChild(text);
 		}
 	}
