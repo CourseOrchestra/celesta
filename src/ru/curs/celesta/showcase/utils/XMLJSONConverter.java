@@ -77,7 +77,6 @@ public final class XMLJSONConverter {
 				// while(s.contains("\"")) {
 				s = s.replace("\"", "\\\"");
 				// }
-				System.out.println(s);
 				str = str.replace("\"" + s + "\"", s);
 			} else {
 				str = str.replace("\"" + s + "\"", s);
