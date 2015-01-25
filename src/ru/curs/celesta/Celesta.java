@@ -163,7 +163,8 @@ public final class Celesta {
 			}
 	}
 
-	private synchronized PythonInterpreter getPythonInterpreter() {
+	private synchronized PythonInterpreter getPythonInterpreter()
+			throws CelestaException {
 		// Для начала, пытаемся достать готовый интерпретатор из пула.
 		PythonInterpreter interp = interpreterPool.poll();
 		if (interp != null)
@@ -177,12 +178,25 @@ public final class Celesta {
 		interp = new PythonInterpreter(null, state);
 		codecs.setDefaultEncoding("UTF-8");
 
-		// Инициализация пакетов гранул
-		for (Grain g : theCelesta.getScore().getGrains().values())
-			if (!"celesta".equals(g.getName())) {
-				String line = String.format("import %s", g.getName());
-				interp.exec(line);
-			}
+		SessionContext scontext = new SessionContext("super", "celesta_init");
+		Connection conn = ConnectionPool.get();
+		CallContext context = new CallContext(conn, scontext);
+		try {
+			interp.set("_ic", context);
+			interp.exec("import sys");
+			interp.exec("sys.modules['initcontext'] = lambda: _ic");
+			// Инициализация пакетов гранул
+			for (Grain g : theCelesta.getScore().getGrains().values())
+				if (!"celesta".equals(g.getName())) {
+					String line = String.format("import %s", g.getName());
+					interp.exec(line);
+				}
+		} finally {
+			context.closeCursors();
+			ConnectionPool.putBack(conn);
+		}
+		interp.set("_ic",
+				"You can't use initcontext() outside the initialization code!");
 		return interp;
 	}
 

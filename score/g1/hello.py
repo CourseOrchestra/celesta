@@ -1,6 +1,8 @@
 # coding=UTF-8
 print "hello unit called"
-
+import initcontext
+print initcontext()
+    
 from g1._g1_orm import aaCursor 
 from g1._g1_orm import adressesCursor
 from g2._g2_orm import bCursor
@@ -12,8 +14,12 @@ import java.io.BufferedReader as BufferedReader
 import ru.curs.celesta.CelestaException as CelestaException
 import random
 
+
+
 def hello(context, arg):
     print 'Hello, world from Celesta Python procedure.'
+    print initcontext()
+    
     print 'user %s' % context.userId
     print 'Argument passed was "%s".' % arg
     
