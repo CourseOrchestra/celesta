@@ -56,6 +56,18 @@ public final class XMLJSONConverter {
 		if (newXml.startsWith("<?xml")) {
 			newXml = newXml.replaceFirst("<[?]xml(.)*[?]>", "");
 		}
+
+		if (newXml.contains("&gt;")) {
+			while (newXml.contains("&gt;")) {
+				newXml = newXml.replace("&gt;", "&amp;gt;");
+			}
+		}
+		if (newXml.contains("&lt;")) {
+			while (newXml.contains("&lt;")) {
+				newXml = newXml.replace("&lt;", "&amp;lt;");
+			}
+		}
+
 		final String tempRootForResolvingProblem = "tempRootForResolvingProblem";
 		newXml =
 			"<" + tempRootForResolvingProblem + ">" + newXml + "</" + tempRootForResolvingProblem
@@ -87,6 +99,11 @@ public final class XMLJSONConverter {
 			str = str.replace("\"[", "'[");
 			str = str.replace("]\"", "]'");
 		}
+
+		while (str.contains("\\\\"))
+			str = str.replace("\\\\", "\\");
+		while (str.contains("\\'"))
+			str = str.replace("\\'", "'");
 
 		return str;
 	}

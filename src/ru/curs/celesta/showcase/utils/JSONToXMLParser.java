@@ -23,6 +23,8 @@ public class JSONToXMLParser {
 	private final JSONObject jo;
 	private StringBuffer sbuf;
 	private Boolean vBool = false;
+	private boolean bLeft = false;
+	private boolean bRight = false;
 
 	public JSONToXMLParser(String json) throws JSONException {
 		// String json1 = json;
@@ -34,6 +36,15 @@ public class JSONToXMLParser {
 		// json2 = json1.replaceAll("u \'", "\'");
 		// }
 		String newJson = json;
+
+		if (newJson.contains("&lt;")) {
+			bLeft = true;
+		}
+
+		if (newJson.contains("&gt;")) {
+			bRight = true;
+		}
+
 		if (newJson.contains("{}")) {
 			newJson = newJson.replaceAll("[{][}]", "{\"myTagForResolvingProblem\"=\"2\"}");
 		}
@@ -96,6 +107,17 @@ public class JSONToXMLParser {
 
 		outString = outString.replaceFirst("<[?]xml(.)*[?]>", "");
 		outString = outString.trim();
+
+		if (bLeft) {
+			while (outString.contains("&amp;lt;")) {
+				outString = outString.replace("&amp;lt;", "&lt;");
+			}
+		}
+		if (bRight) {
+			while (outString.contains("&amp;gt;")) {
+				outString = outString.replace("&amp;gt;", "&gt;");
+			}
+		}
 
 		return outString;
 	}
