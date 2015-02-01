@@ -172,6 +172,7 @@ def hello(context, arg):
   
     c.reset()
     c.setFilter('doublefield', ">12")
+    c.setFilter('datefield', "'20150201'..")
     # c.setRange('doublefield', 12.14)
     for c in c.iterate():
         print c.doublefield

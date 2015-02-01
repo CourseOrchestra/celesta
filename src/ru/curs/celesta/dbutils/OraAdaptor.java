@@ -1254,11 +1254,9 @@ final class OraAdaptor extends DBAdaptor {
 			@Override
 			protected String checkForDate(String lexValue) {
 				try {
-					Date d = DateTimeColumn.parseISODate(lexValue);
-					DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-					return String.format("date '%s'", df.format(d));
-				} catch (ParseException e) {
-					// This is not a date...
+					return translateDate(lexValue);
+				} catch (CelestaException e) {
+					// This is not a date
 					return lexValue;
 				}
 			}
@@ -1389,6 +1387,18 @@ final class OraAdaptor extends DBAdaptor {
 				t.getName(), "where " + w);
 		// System.out.println(sql);
 		return prepareStatement(conn, sql);
+	}
+
+	@Override
+	public String translateDate(String date) throws CelestaException {
+		try {
+			Date d = DateTimeColumn.parseISODate(date);
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+			return String.format("date '%s'", df.format(d));
+		} catch (ParseException e) {
+			throw new CelestaException(e.getMessage());
+		}
+
 	}
 
 }

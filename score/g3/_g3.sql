@@ -10,7 +10,8 @@ dat blob,
 longtext text,
 test int not null default 0,
 primary key (idc),
-doublefield real
+doublefield real,
+datefield datetime not null default getdate()
 --, test2 int not null 
 );
 

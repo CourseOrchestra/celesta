@@ -16,10 +16,10 @@ class ttt1Cursor(ReadOnlyTableCursor):
     def _currentValues(self):
         return array([None if self.id == None else int(self.id)], Object)
     def iterate(self):
-        if self.tryFirst():
+        if self.tryFindSet():
             while True:
                 yield self
-                if not self.next():
+                if not self.nextInSet():
                     break
 
 class ttt2Cursor(Cursor):
@@ -42,6 +42,8 @@ class ttt2Cursor(Cursor):
         if rs.wasNull():
             self.id = None
         self.recversion = rs.getInt('recversion')
+    def _setFieldValue(self, name, value):
+        setattr(self, name, value)
     def _clearBuffer(self, withKeys):
         if withKeys:
             self.id = None
@@ -77,10 +79,10 @@ class ttt2Cursor(Cursor):
         self.id = c.id
         self.recversion = c.recversion
     def iterate(self):
-        if self.tryFirst():
+        if self.tryFindSet():
             while True:
                 yield self
-                if not self.next():
+                if not self.nextInSet():
                     break
 
 

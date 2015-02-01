@@ -9,30 +9,51 @@ options{
 PARSER_BEGIN(FilterParser)
 package ru.curs.celesta.dbutils.filter;
 
+import java.util.Date;
 import java.io.StringReader;
 import ru.curs.celesta.CelestaException;
 
 public class FilterParser{
    private static final String INVALID_QUOTED_FORMAT = "Invalid quoted string format.";
 
-   public static enum FilterType { NUMERIC , TEXT ,  OTHER };
+   public static enum FilterType { NUMERIC , TEXT , DATETIME , OTHER };
+
+   public interface SQLTranslator {
+       String translateDate(String date) throws CelestaException;
+   }
+
    private FilterType filterType;
    private String fieldName;
+   private SQLTranslator tr;
    
-   public static String translateFilter(FilterType fieldType, String fieldName, String filter) throws CelestaException {
+   FilterParser(StringReader sr, SQLTranslator tr) {
+        this(sr);
+        this.tr = tr;
+   }
+
+   public static String translateFilter(FilterType fieldType, String fieldName, String filter, SQLTranslator tr) throws CelestaException {
 	 StringReader sr = new StringReader(filter);
      try {
-		 FilterParser parser = new FilterParser(sr);
+		 FilterParser parser = new FilterParser(sr, tr);
 		 try {
             return parser.filterExpr(fieldType, fieldName);
 		 } catch (ParseException e) {
 		    throw new CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
-         }		 
+         }
      } finally {
          sr.close();
      }
    }
    
+   private String translateDate(String dateLiteral) throws ParseException {
+        try{
+            return tr.translateDate(dateLiteral);  
+        } catch (CelestaException e) {
+            throw new ParseException(e.getMessage());
+        }
+   }
+
+
 	public static String quoteString(String lexvalue) {
 		StringBuilder sb = new StringBuilder();
 		sb.append('\'');
@@ -159,6 +180,7 @@ String term():
   ( 
   tok = <S_NULL>                              { result = String.format("%s is null", fieldName);}
   | LOOKAHEAD({filterType == FilterType.NUMERIC}) result = numTerm()
+  | LOOKAHEAD({filterType == FilterType.DATETIME})    result = dateTerm() 
   | LOOKAHEAD({filterType == FilterType.TEXT})    result = textTerm() 
   )
   {return result;}
@@ -176,6 +198,20 @@ String number(): {Token tok;}{
      tok = <S_INTEGER> {return tok.toString();}
    | tok = <S_DOUBLE>  {return tok.toString();}
 }
+
+
+String dateTerm(): {String val1; String val2;}{ 
+     (">" val1 = date()  {return String.format("%s > %s", fieldName, val1);})
+   | ("<" val1 = date()  {return String.format("%s < %s", fieldName, val1);})
+   | (".." val1 = date() {return String.format("%s <= %s", fieldName, val1);})  
+   | (val1 = date() [".." [val2 = date() {return String.format("%s between %s and %s", fieldName, val1, val2);}] {return String.format("%s >= %s", fieldName, val1);}] 
+   {return String.format("%s = %s", fieldName, val1);})
+}
+
+String date(): {Token tok;}{
+     tok = <S_CHAR_LITERAL> {return translateDate(tok.toString());}
+}
+
 
 String textTerm(): {String val1; String val2; boolean ci = false; String fn = fieldName;}{
    ["@" {ci = true; fn = "UPPER(" + fn + ")";}]

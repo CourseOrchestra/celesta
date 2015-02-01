@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.FilterParser;
 import ru.curs.celesta.dbutils.filter.FilterParser.FilterType;
+import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
@@ -79,18 +80,28 @@ class Filter extends AbstractFilter {
 		return String.format("%s", value);
 	}
 
-	public String makeWhereClause(String quotedName, Object c)
-			throws CelestaException {
+	public String makeWhereClause(String quotedName, Object c,
+			final DBAdaptor dba) throws CelestaException {
 		FilterType ft;
 		if (c instanceof IntegerColumn || c instanceof FloatingColumn
 				|| c == ViewColumnType.NUMERIC)
 			ft = FilterType.NUMERIC;
+		else if (c instanceof DateTimeColumn)
+			ft = FilterType.DATETIME;
 		else if (c instanceof StringColumn || c == ViewColumnType.TEXT)
 			ft = FilterType.TEXT;
 		else {
 			ft = FilterType.OTHER;
 		}
-		String result = FilterParser.translateFilter(ft, quotedName, value);
+
+		FilterParser.SQLTranslator tr = new FilterParser.SQLTranslator() {
+			@Override
+			public String translateDate(String date) throws CelestaException {
+				return dba.translateDate(date);
+			}
+
+		};
+		String result = FilterParser.translateFilter(ft, quotedName, value, tr);
 		return result;
 	}
 }

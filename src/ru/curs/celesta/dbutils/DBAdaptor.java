@@ -70,6 +70,7 @@ import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
@@ -358,7 +359,7 @@ public abstract class DBAdaptor {
 				Object c = t.getColumns().get(e.getKey());
 				whereClause.append("(");
 				whereClause.append(((Filter) e.getValue()).makeWhereClause("\""
-						+ e.getKey() + "\"", c));
+						+ e.getKey() + "\"", c, this));
 				whereClause.append(")");
 			}
 		}
@@ -1118,6 +1119,24 @@ public abstract class DBAdaptor {
 	 */
 	public abstract void updateVersioningTrigger(Connection conn, Table t)
 			throws CelestaException;
+
+	/**
+	 * Транслирует литерал даты Celesta в литерал даты, специфический для базы
+	 * данных.
+	 * 
+	 * @param date
+	 *            Литерал даты.
+	 * @throws CelestaException
+	 *             ошибка парсинга.
+	 */
+	public String translateDate(String date) throws CelestaException {
+		try {
+			DateTimeColumn.parseISODate(date);
+		} catch (ParseException e) {
+			throw new CelestaException(e.getMessage());
+		}
+		return date;
+	}
 
 }
 

@@ -62,7 +62,7 @@ public final class DateTimeColumn extends Column {
 		if (!m.matches())
 			throw new ParseException(
 					String.format(
-							"Invalid default datetime value %s. It should match 'YYYYMMDD' pattern.",
+							"Invalid datetime value %s. It should match 'YYYYMMDD' pattern.",
 							lexvalue));
 		int y = Integer.parseInt(m.group(1));
 		int mo = Integer.parseInt(m.group(2));
