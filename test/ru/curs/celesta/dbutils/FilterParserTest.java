@@ -70,6 +70,14 @@ public class FilterParserTest {
 	}
 
 	@Test
+	public void test15() throws CelestaException {
+		String result;
+		result = FilterParser.translateFilter(FilterType.NUMERIC, "baz",
+				"-5 .. 10&!-3.5", tr);
+		assertEquals("baz between -5 and 10 and not (baz = -3.5)", result);
+	}
+
+	@Test
 	public void test2() throws CelestaException {
 		boolean itWas = false;
 		try {
