@@ -112,7 +112,9 @@ public abstract class Cursor extends BasicCursor {
 	 * @throws CelestaException
 	 *             ошибка БД
 	 */
+	//CHECKSTYLE:OFF for cyclomatic complexity: yes, it is that complex
 	public final boolean tryInsert() throws CelestaException {
+		//CHECKSTYLE:ON
 		if (!canInsert())
 			throw new PermissionDeniedException(callContext(), meta(),
 					Action.INSERT);
@@ -140,6 +142,8 @@ public abstract class Cursor extends BasicCursor {
 			for (int i = 0; i < values.length; i++)
 				myMask[i] = values[i] == null;
 			if (!Arrays.equals(myMask, insertMask)) {
+				if (insert != null)
+					insert.close();
 				insert = db().getInsertRecordStatement(conn(), meta(), myMask);
 				insertMask = myMask;
 			}
@@ -250,6 +254,8 @@ public abstract class Cursor extends BasicCursor {
 				return true;
 
 			if (!Arrays.equals(myMask, updateMask)) {
+				if (update != null)
+					update.close();
 				update = db().getUpdateRecordStatement(conn(), meta(), myMask);
 				updateMask = myMask;
 			}
