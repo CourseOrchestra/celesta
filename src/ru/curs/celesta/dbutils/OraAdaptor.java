@@ -808,12 +808,7 @@ final class OraAdaptor extends DBAdaptor {
 
 		// 2. Check if table has IDENTITY field, if it doesn't, no need to
 		// proceed.
-		IntegerColumn ic = null;
-		for (Column c : t.getColumns().values())
-			if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
-				ic = (IntegerColumn) c;
-				break;
-			}
+		IntegerColumn ic = findIdentityField(t);
 		if (ic == null)
 			return;
 
@@ -1401,4 +1396,31 @@ final class OraAdaptor extends DBAdaptor {
 
 	}
 
+	@Override
+	public void resetIdentity(Connection conn, Table t, int i)
+			throws SQLException {
+		String sequenceName = getSequenceName(t);
+		Statement stmt = conn.createStatement();
+		try {
+			String sql = String.format("select \"%s\".nextval from dual",
+					sequenceName);
+			ResultSet rs = stmt.executeQuery(sql);
+			rs.next();
+			int curVal = rs.getInt(1);
+			rs.close();
+			sql = String.format(
+					"alter sequence \"%s\" increment by %d minvalue 1",
+					sequenceName, i - curVal - 1);
+			stmt.executeUpdate(sql);
+			sql = String
+					.format("select \"%s\".nextval from dual", sequenceName);
+			stmt.executeQuery(sql).close();
+			sql = String.format(
+					"alter sequence \"%s\" increment by 1 minvalue 1",
+					sequenceName);
+			stmt.executeUpdate(sql);
+		} finally {
+			stmt.close();
+		}
+	}
 }

@@ -944,4 +944,23 @@ public abstract class AbstractAdaptorTest {
 		}
 	}
 
+	@Test
+	public void resetIdentityTest() throws IOException, CelestaException,
+			SQLException {
+		insertRow(conn, t, 110);
+		PreparedStatement pstmt = dba.getOneRecordStatement(conn, t);
+		assertNotNull(pstmt);
+		DBAdaptor.setParam(pstmt, 1, 555);// key value
+		ResultSet rs = pstmt.executeQuery();
+		assertFalse(rs.next());
+		rs.close();
+		dba.resetIdentity(conn, t, 555);
+		insertRow(conn, t, 110);
+		assertEquals(555, dba.getCurrentIdent(conn, t));
+		rs = pstmt.executeQuery();
+		assertTrue(rs.next());
+		insertRow(conn, t, 110);
+		assertEquals(556, dba.getCurrentIdent(conn, t));
+	}
+
 }

@@ -112,9 +112,9 @@ public abstract class Cursor extends BasicCursor {
 	 * @throws CelestaException
 	 *             ошибка БД
 	 */
-	//CHECKSTYLE:OFF for cyclomatic complexity: yes, it is that complex
+	// CHECKSTYLE:OFF for cyclomatic complexity: yes, it is that complex
 	public final boolean tryInsert() throws CelestaException {
-		//CHECKSTYLE:ON
+		// CHECKSTYLE:ON
 		if (!canInsert())
 			throw new PermissionDeniedException(callContext(), meta(),
 					Action.INSERT);
@@ -624,6 +624,38 @@ public abstract class Cursor extends BasicCursor {
 			}
 		}
 		return xRec;
+	}
+
+	/**
+	 * Устанавливает текущее значение счётчика IDENTITY на таблице (если он
+	 * есть). Этот метод предназначен для реализации механизмов экспорта-импорта
+	 * данных из таблицы. Его следует применять с осторожностью, т.к. сбой в
+	 * отсчёте IDENTIY-счётчика может привести к нарушению первичного ключа.
+	 * Кроме того, как минимум в Oracle, в силу особенностей реализации, не
+	 * гарантируется надёжная работа этого метода в условиях конкурретного
+	 * доступа к таблице.
+	 * 
+	 * @param newValue
+	 *            значение, которое должно принять поле IDENITITY при следующей
+	 *            вставке.
+	 * @throws CelestaException
+	 *             Если таблица не содержит IDENTITY-поля или в случае сбоя
+	 *             работы с базой данных.
+	 * */
+	public final void resetIdentity(int newValue) throws CelestaException {
+		IntegerColumn ic = DBAdaptor.findIdentityField(meta());
+		if (ic == null)
+			throw new CelestaException(
+					"Cannot reset identity: there is no IDENTITY field defined for table %s.%s.",
+					_grainName(), _tableName());
+
+		try {
+			db().resetIdentity(conn(), meta(), newValue);
+		} catch (SQLException e) {
+			throw new CelestaException(
+					"Cannot reset identity for table %s.%s with message '%s'.",
+					_grainName(), _tableName(), e.getMessage());
+		}
 	}
 
 	/**

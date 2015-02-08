@@ -642,12 +642,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 		// 2. Check if table has IDENTITY field, if it doesn't, no need to
 		// proceed.
-		IntegerColumn ic = null;
-		for (Column c : t.getColumns().values())
-			if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
-				ic = (IntegerColumn) c;
-				break;
-			}
+		IntegerColumn ic = findIdentityField(t);
 		if (ic == null)
 			return;
 

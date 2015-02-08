@@ -1015,4 +1015,18 @@ final class PostgresAdaptor extends DBAdaptor {
 		return prepareStatement(conn, sql);
 	}
 
+	@Override
+	public void resetIdentity(Connection conn, Table t, int i)
+			throws SQLException {
+		Statement stmt = conn.createStatement();
+		try {
+			String sql = String.format(
+					"alter sequence \"%s\".\"%s_seq\" restart with %d", t
+							.getGrain().getName(), t.getName(), i);
+			stmt.executeUpdate(sql);
+		} finally {
+			stmt.close();
+		}
+	}
+
 }

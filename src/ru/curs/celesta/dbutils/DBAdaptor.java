@@ -279,6 +279,16 @@ public abstract class DBAdaptor {
 		}
 	}
 
+	static IntegerColumn findIdentityField(Table t) {
+		IntegerColumn ic = null;
+		for (Column c : t.getColumns().values())
+			if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
+				ic = (IntegerColumn) c;
+				break;
+			}
+		return ic;
+	}
+
 	final PreparedStatement getUpdateRecordStatement(Connection conn, Table t,
 			boolean[] equalsMask) throws CelestaException {
 		StringBuilder setClause = new StringBuilder();
@@ -1138,6 +1148,44 @@ public abstract class DBAdaptor {
 		return date;
 	}
 
+	/**
+	 * Сбрасывает счётчик IDENTITY на таблице (если он есть).
+	 * 
+	 * @param conn
+	 *            Соединение с БД
+	 * 
+	 * @param t
+	 *            Таблица.
+	 * @param i
+	 *            Новое значение счётчика IDENTITY.
+	 * @throws SQLException
+	 *             Ошибка соединения с БД.
+	 * 
+	 */
+	public void resetIdentity(Connection conn, Table t, int i)
+			throws SQLException {
+
+		Statement stmt = conn.createStatement();
+		try {
+			String sql = String
+					.format("update \"celesta\".\"sequences\" set \"seqvalue\" = %d "
+							+ "where \"grainid\" = '%s' and \"tablename\" = '%s'",
+							i - 1, t.getGrain().getName(), t.getName());
+
+			// System.out.println(sql);
+			int v = stmt.executeUpdate(sql);
+			if (v == 0) {
+				sql = String
+						.format("insert into \"celesta\".\"sequences\" (\"grainid\", \"tablename\" , \"seqvalue\") "
+								+ "values ('%s', '%s', %d)", t.getGrain()
+								.getName(), t.getName(), i - 1);
+				// System.out.println(sql);
+				stmt.executeUpdate(sql);
+			}
+		} finally {
+			stmt.close();
+		}
+	}
 }
 
 /**
