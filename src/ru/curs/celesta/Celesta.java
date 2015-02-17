@@ -544,8 +544,10 @@ public final class Celesta {
 	public static synchronized void reInitialize() throws CelestaException {
 		if (theCelesta == null)
 			throw new CelestaException(CELESTA_IS_NOT_INITIALIZED);
+		Map<String, SessionContext> sessions = theCelesta.sessions;
 		theCelesta = null;
 		new Celesta();
+		theCelesta.sessions.putAll(sessions);
 	}
 
 	/**
