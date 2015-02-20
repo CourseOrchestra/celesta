@@ -68,7 +68,7 @@
 			</manifest>
 		</jar>
 
-		<jar destfile="build/celestautils.jar">
+		<jar destfile="build/showcaseutils.jar">
 			<fileset dir="build/classes" includes="ru/curs/celesta/showcase/utils/*" />
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
