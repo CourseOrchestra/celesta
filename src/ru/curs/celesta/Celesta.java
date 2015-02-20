@@ -191,6 +191,11 @@ public final class Celesta {
 					String line = String.format("import %s", g.getName());
 					interp.exec(line);
 				}
+
+		} catch (Throwable e) {
+			System.out.println("Python interpreter initialization error:");
+			e.printStackTrace(System.out);
+			throw e;
 		} finally {
 			context.closeCursors();
 			ConnectionPool.putBack(conn);
