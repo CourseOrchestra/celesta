@@ -85,4 +85,13 @@
 		    <fileset dir="dbschemasetup"/>
 		</zip>
 	</target>
+
+	<target name="ci.generate.artifacts" depends="jar">
+		<delete dir="build/artifacts" />	
+		<mkdir dir="build/artifacts" />
+		<copy verbose="true" file="build/celesta.jar" tofile="build/artifacts/celesta.jar" />
+		<copy verbose="true" file="build/showcaseutils.jar" tofile="build/artifacts/showcaseutils.jar" />
+		<copy verbose="true" file="build/schemasync.jar" tofile="build/artifacts/schemasync.jar" />
+		<copy verbose="true" file="build/dbschemasetup.zip" tofile="build/artifacts/dbschemasetup.zip" />		
+	</target>		
 </project>
