@@ -2,32 +2,38 @@
 <project name="celesta" default="jar">
 	<target name="javacc">
 		<echo>Compiling Celesta parser</echo>
-		<javacc target="src/ru/curs/celesta/score/CelestaParser.jj" outputdirectory="src/ru/curs/celesta/score/" javacchome="javacc-5.0" />
+		<javacc target="src/ru/curs/celesta/score/CelestaParser.jj"
+			outputdirectory="src/ru/curs/celesta/score/" javacchome="javacc-5.0" />
 	</target>
 	<target name="javacc2">
 		<echo>Compiling complex filter parser</echo>
-		<javacc target="src/ru/curs/celesta/dbutils/filter/FilterParser.jj" outputdirectory="src/ru/curs/celesta/dbutils/filter" javacchome="javacc-5.0" />
+		<javacc target="src/ru/curs/celesta/dbutils/filter/FilterParser.jj"
+			outputdirectory="src/ru/curs/celesta/dbutils/filter" javacchome="javacc-5.0" />
 	</target>
-	
+
 	<target name="compile" depends="javacc,javacc2">
 		<echo>Compile the source files</echo>
-		<javac destdir="build/classes" includeantruntime="false" encoding="UTF-8">
+		<javac destdir="build/classes" includeantruntime="false"
+			encoding="UTF-8">
 			<classpath>
 				<pathelement path="lib/jython.jar" />
-			    <pathelement path="lib/gson-1.7.1.jar"/>
-				<pathelement path="lib/java-json.jar"/>
+				<pathelement path="lib/gson-1.7.1.jar" />
+				<pathelement path="lib/java-json.jar" />
 			</classpath>
 			<src>
 				<pathelement path="src" />
 			</src>
 		</javac>
-		<copy tofile="build/classes/ru/curs/celesta/score/celesta.sql" file="src/ru/curs/celesta/score/celesta.sql" />
+		<copy tofile="build/classes/ru/curs/celesta/score/celesta.sql"
+			file="src/ru/curs/celesta/score/celesta.sql" />
 	</target>
+	
 	<target name="jar" depends="compile">
-		<echo>Building the jar file</echo>
+		<echo>Building jar files</echo>
 		<jar destfile="build/celesta.jar" filesetmanifest="merge">
 			<fileset dir="build/classes">
-				<exclude name="**/dbschemasync/*" />
+				<exclude name="**/dbschemasync/" />
+				<exclude name="**/showcase/utils/" />
 			</fileset>
 			<zipfileset src="lib/sqljdbc4.jar" excludes="META-INF/MSFTSIG.*" />
 			<zipfileset src="lib/ojdbc6.jar" />
@@ -47,15 +53,25 @@
 		</jar>
 
 		<jar destfile="build/schemasync.jar">
-			<fileset dir="build/classes">
-				<exclude name="**/dbutils/*" />
-				<exclude name="**/ormcompiler/*" />
-				<exclude name="**/showcase/*" />
-				<exclude name="**/syscursors/*" />
-			</fileset>
+			<fileset dir="build/classes"
+				includes="ru/curs/celesta/dbschemasync/*,ru/curs/celesta/score/*" />
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
-				<attribute name="Main-Class" value="ru.curs.celesta.dbschemasync.DBSchemaSync" />
+				<attribute name="Main-Class"
+					value="ru.curs.celesta.dbschemasync.DBSchemaSync" />
+				<attribute name="Specification-Title" value="Celesta" />
+				<attribute name="Specification-Version" value="" />
+				<attribute name="Specification-Vendor" value="www.curs.ru" />
+				<attribute name="Implementation-Title" value="Celesta" />
+				<attribute name="Implementation-Version" value="" />
+				<attribute name="Implementation-Vendor" value="www.curs.ru" />
+			</manifest>
+		</jar>
+
+		<jar destfile="build/celestautils.jar">
+			<fileset dir="build/classes" includes="ru/curs/celesta/showcase/utils/*" />
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Specification-Title" value="Celesta" />
 				<attribute name="Specification-Version" value="" />
 				<attribute name="Specification-Vendor" value="www.curs.ru" />
