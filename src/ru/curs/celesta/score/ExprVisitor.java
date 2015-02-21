@@ -91,7 +91,8 @@ final class TypeChecker extends ExprVisitor {
 	void visitBetween(Between expr) throws ParseException {
 		ViewColumnType t = expr.getLeft().getType();
 		// Сравнивать можно не все типы.
-		if (t == ViewColumnType.DATE || t == ViewColumnType.NUMERIC || t == ViewColumnType.TEXT) {
+		if (t == ViewColumnType.DATE || t == ViewColumnType.NUMERIC
+				|| t == ViewColumnType.TEXT) {
 			// все операнды должны быть однотипны
 			expr.getRight1().assertType(t);
 			expr.getRight2().assertType(t);
@@ -114,7 +115,8 @@ final class TypeChecker extends ExprVisitor {
 	void visitIn(In expr) throws ParseException {
 		ViewColumnType t = expr.getLeft().getType();
 		// Сравнивать можно не все типы.
-		if (t == ViewColumnType.DATE || t == ViewColumnType.NUMERIC || t == ViewColumnType.TEXT) {
+		if (t == ViewColumnType.DATE || t == ViewColumnType.NUMERIC
+				|| t == ViewColumnType.TEXT) {
 			// все операнды должны быть однотипны
 			for (Expr operand : expr.getOperands()) {
 				operand.assertType(t);
@@ -131,12 +133,20 @@ final class TypeChecker extends ExprVisitor {
 	void visitRelop(Relop expr) throws ParseException {
 		ViewColumnType t = expr.getLeft().getType();
 		// Сравнивать можно не все типы.
-		if (t == ViewColumnType.DATE || t == ViewColumnType.NUMERIC || t == ViewColumnType.TEXT) {
+		if (t == ViewColumnType.DATE || t == ViewColumnType.NUMERIC
+				|| t == ViewColumnType.TEXT) {
 			// сравнивать можно только однотипные термы
 			expr.getRight().assertType(t);
 			// при этом like действует только на строковых термах
 			if (expr.getRelop() == Relop.LIKE)
 				expr.getLeft().assertType(ViewColumnType.TEXT);
+		} else if (t == ViewColumnType.BIT && expr.getRelop() == Relop.EQ) {
+			if (expr.getRight().getType() != ViewColumnType.BIT) {
+				throw new ParseException(
+						String.format(
+								"Wrong expression '%s': BIT field can be compared with another BIT field only.",
+								expr.getCSQL()));
+			}
 		} else {
 			throw new ParseException(
 					String.format(
