@@ -103,6 +103,10 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 			}
 		}
 
+		pushItem(item, isSorted);
+	}
+
+	private void pushItem(Item item, boolean isSorted) {
 		Item head = stack.peek();
 		if (isSorted) {
 			Item itemSorted = new Item("#sorted");
@@ -155,40 +159,7 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 	private JsonElement getJsonElement(final Item parentItem) {
 		JsonObject parent = new JsonObject();
 		if (!parentItem.isLeaf()) {
-			for (Entry<String, List<Item>> el : parentItem.children.entrySet()) {
-				String property = el.getKey();
-				List<Item> list = el.getValue();
-				JsonElement element;
-				if (list.size() > 1) {
-					JsonArray array = new JsonArray();
-					for (Item item : list) {
-						JsonElement childJson = getJsonElement(item);
-						if (item.boolForJson) {
-							JsonArray jAr = new JsonArray();
-							jAr.add(childJson);
-							childJson = jAr;
-						}
-						if (childJson != null) {
-							array.add(childJson);
-						}
-					}
-					element = array;
-				} else {
-					Item item = list.get(0);
-					element = getJsonElement(item);
-					if (item.boolForJson) {
-						JsonArray jAr2 = new JsonArray();
-						jAr2.add(element);
-						element = jAr2;
-					}
-				}
-				if (element != null) {
-					parent.add(property, element);
-				}
-			}
-			if (parentItem.value != null && !("".equals(parentItem.value))) {
-				parent.addProperty("#text", parentItem.value);
-			}
+			getLeafJSON(parentItem, parent);
 		} else {
 			JsonArray jArray = parseStringToJsonArray(parentItem.value);
 			if (parentItem.name.equals("@value") && parentItem.bool && jArray != null
@@ -205,12 +176,49 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 		return parent;
 	}
 
-	public JsonElement getResult() {
+	private void getLeafJSON(final Item parentItem, JsonObject parent) {
+		for (Entry<String, List<Item>> el : parentItem.children.entrySet()) {
+			String property = el.getKey();
+			List<Item> list = el.getValue();
+			JsonElement element;
+			if (list.size() > 1) {
+				JsonArray array = new JsonArray();
+				for (Item item : list) {
+					JsonElement childJson = getJsonElement(item);
+					if (item.boolForJson) {
+						JsonArray jAr = new JsonArray();
+						jAr.add(childJson);
+						childJson = jAr;
+					}
+					if (childJson != null) {
+						array.add(childJson);
+					}
+				}
+				element = array;
+			} else {
+				Item item = list.get(0);
+				element = getJsonElement(item);
+				if (item.boolForJson) {
+					JsonArray jAr2 = new JsonArray();
+					jAr2.add(element);
+					element = jAr2;
+				}
+			}
+			if (element != null) {
+				parent.add(property, element);
+			}
+		}
+		if (parentItem.value != null && !("".equals(parentItem.value))) {
+			parent.addProperty("#text", parentItem.value);
+		}
+	}
+
+	JsonElement getResult() {
 		JsonElement resultElement = getJsonElement(result);
 		return resultElement;
 	}
 
-	public List<String> getQuoteList() {
+	List<String> getQuoteList() {
 		return l;
 	}
 }

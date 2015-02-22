@@ -46,7 +46,8 @@ public class JSONToXMLParser {
 		}
 
 		if (newJson.contains("{}")) {
-			newJson = newJson.replaceAll("[{][}]", "{\"myTagForResolvingProblem\"=\"2\"}");
+			newJson = newJson.replaceAll("[{][}]",
+					"{\"myTagForResolvingProblem\"=\"2\"}");
 		}
 		jt = new JSONTokener(newJson);
 		jo = new JSONObject(jt);
@@ -101,7 +102,8 @@ public class JSONToXMLParser {
 			int ind = outString.indexOf("<myTagForResolvingProblem>");
 			int ind1 = outString.indexOf("</myTagForResolvingProblem>");
 			String str1 = outString.substring(0, ind).trim();
-			String str2 = outString.substring(ind1 + str.length(), outString.length()).trim();
+			String str2 = outString.substring(ind1 + str.length(),
+					outString.length()).trim();
 			outString = str1 + str2;
 		}
 
@@ -122,8 +124,8 @@ public class JSONToXMLParser {
 		return outString;
 	}
 
-	private Document buildDoc(final Document doc, final Element root, final JSONObject jsonObj)
-			throws JSONException {
+	private Document buildDoc(final Document doc, final Element root,
+			final JSONObject jsonObj) throws JSONException {
 		String[] ar = JSONObject.getNames(jsonObj);
 		String[] newAr = new String[ar.length];
 		newAr[0] = ar[ar.length - 1];
@@ -154,7 +156,8 @@ public class JSONToXMLParser {
 					comparison(doc, elemCell, valueCell);
 
 					if (valueCell.getClass() == JSONArray.class) {
-						buildArSortedDoc(doc, root, (JSONArray) valueCell, elemCell);
+						buildArSortedDoc(doc, root, (JSONArray) valueCell,
+								elemCell);
 					}
 				}
 			} else {
@@ -170,8 +173,8 @@ public class JSONToXMLParser {
 		return doc;
 	}
 
-	private Document buildArDoc(final Document doc, final Element root, final JSONArray jsonArray,
-			final String key) throws JSONException {
+	private Document buildArDoc(final Document doc, final Element root,
+			final JSONArray jsonArray, final String key) throws JSONException {
 		Object cell;
 
 		for (int j = 0; j < jsonArray.length(); j++) {
@@ -210,7 +213,8 @@ public class JSONToXMLParser {
 		return doc;
 	}
 
-	private void buildArMultiDoc(JSONObject jsonObj) throws TransformerException, JSONException {
+	private void buildArMultiDoc(JSONObject jsonObj)
+			throws TransformerException, JSONException {
 		String[] ar = JSONObject.getNames(jsonObj);
 		sbuf = new StringBuffer();
 		JSONArray jsonArray = (JSONArray) jsonObj.get(ar[0]);
@@ -279,7 +283,8 @@ public class JSONToXMLParser {
 		return text;
 	}
 
-	private void settingAttribute(final String key, final Element root, final Object value) {
+	private void settingAttribute(final String key, final Element root,
+			final Object value) {
 		if (value.getClass() == Boolean.class) {
 			String change = value.toString();
 			if (change.startsWith("t")) {
@@ -302,10 +307,12 @@ public class JSONToXMLParser {
 		}
 	}
 
-	private void comparison(final Document doc, final Element elem, final Object value)
-			throws JSONException {
-		if (value.getClass() == String.class || value.getClass() == Integer.class
-				|| value.getClass() == Double.class || value.getClass() == Boolean.class) {
+	private void comparison(final Document doc, final Element elem,
+			final Object value) throws JSONException {
+		if (value.getClass() == String.class
+				|| value.getClass() == Integer.class
+				|| value.getClass() == Double.class
+				|| value.getClass() == Boolean.class) {
 
 			Text text = settingTextNode(doc, value);
 			if (text != null) {
@@ -318,19 +325,20 @@ public class JSONToXMLParser {
 		}
 	}
 
-	private void comparison2(final Document doc, final Element root, final Object value,
-			final String key) throws JSONException {
-		Object t = null;
+	private void comparison2(final Document doc, final Element root,
+			final Object value, final String key) throws JSONException {
 
-		if (value.equals(t)) {
+		if (value == null) {
 			Element elem = doc.createElement(key);
 			root.appendChild(elem);
 			Text text = doc.createTextNode("");
 			elem.appendChild(text);
 		}
 
-		if (value.getClass() == String.class || value.getClass() == Integer.class
-				|| value.getClass() == Double.class || value.getClass() == Boolean.class) {
+		if (value.getClass() == String.class
+				|| value.getClass() == Integer.class
+				|| value.getClass() == Double.class
+				|| value.getClass() == Boolean.class) {
 
 			Element elem = doc.createElement(key);
 			root.appendChild(elem);
@@ -347,9 +355,11 @@ public class JSONToXMLParser {
 		}
 	}
 
-	private void comparison3(final Document doc, final Element root, final Object value) {
+	private void comparison3(final Document doc, final Element root,
+			final Object value) {
 		Text text = null;
-		if ("None".equalsIgnoreCase(value.toString()) || "null".equalsIgnoreCase(value.toString())) {
+		if ("None".equalsIgnoreCase(value.toString())
+				|| "null".equalsIgnoreCase(value.toString())) {
 			text = doc.createTextNode("");
 		} else {
 			text = doc.createTextNode(value.toString());

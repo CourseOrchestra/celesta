@@ -94,22 +94,11 @@ public final class XMLJSONConverter {
 				str = str.replace("\"" + s + "\"", s);
 			}
 		}
-
-		// while (str.contains("\"[") && str.contains("]\"")) {
-		// str = str.replace("\"[", "'[");
-		// str = str.replace("]\"", "]'");
-		// }
-		//
-		// while (str.contains("\\\\"))
-		// str = str.replace("\\\\", "\\");
-		// while (str.contains("\\'"))
-		// str = str.replace("\\'", "'");
-
 		return str;
 	}
 
 	/**
-	 * Преобразование JSON в XML. Все атрибуты имена которох начинаются с
+	 * Преобразование JSON в XML. Все атрибуты, имена которох начинаются с
 	 * префикса @ переносятся в xml в виде соответствующего атрибута тега. В
 	 * случа если встречен атрибут с именем #sorted, то все дочернии элементы
 	 * переносятся в xml с сохранением порядка элементов в json
