@@ -227,7 +227,7 @@ public final class Celesta {
 			if (pathEntry.exists() && pathEntry.isDirectory()) {
 				pyPathList.add(pathEntry.getAbsolutePath());
 			}
-			for (String entry : AppSettings.getScorePath().split(";")) {
+			for (String entry : AppSettings.getScorePath().split(File.pathSeparator)) {
 				pathEntry = new File(entry.trim());
 				if (pathEntry.exists() && pathEntry.isDirectory()) {
 					pyPathList.add(pathEntry.getAbsolutePath());
