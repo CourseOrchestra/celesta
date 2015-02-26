@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class-diagram version="1.1.2" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
+  associations="true" dependencies="false" nesting-relationships="true">  
+  <class id="1" language="java" name="ru.curs.celesta.score.Column" project="celesta" 
+    file="/celesta/src/ru/curs/celesta/score/Column.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="733" y="407"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false"/>      
+      <operations public="true" package="false" protected="false" private="false"/>    
+    </display>  
+  </class>  
+  <class id="2" language="java" name="ru.curs.celesta.score.BinaryColumn" project="celesta" 
+    file="/celesta/src/ru/curs/celesta/score/BinaryColumn.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="961" y="732"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false"/>      
+      <operations public="true" package="false" protected="false" private="false"/>    
+    </display>  
+  </class>  
+  <class id="3" language="java" name="ru.curs.celesta.score.BooleanColumn" project="celesta" 
+    file="/celesta/src/ru/curs/celesta/score/BooleanColumn.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="421" y="103"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false"/>      
+      <operations public="true" package="false" protected="false" private="false"/>    
+    </display>  
+  </class>  
+  <class id="4" language="java" name="ru.curs.celesta.score.DateTimeColumn" project="celesta" 
+    file="/celesta/src/ru/curs/celesta/score/DateTimeColumn.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="267" y="402"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="false"/>      
+      <operations public="true" package="false" protected="false" private="false"/>    
+    </display>  
+  </class>  
+  <class id="5" language="java" name="ru.curs.celesta.score.FloatingColumn" project="celesta" 
+    file="/celesta/src/ru/curs/celesta/score/FloatingColumn.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1156" y="422"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false"/>      
+      <operations public="true" package="false" protected="false" private="false"/>    
+    </display>  
+  </class>  
+  <class id="6" language="java" name="ru.curs.celesta.score.IntegerColumn" project="celesta" 
+    file="/celesta/src/ru/curs/celesta/score/IntegerColumn.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1051" y="104"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false"/>      
+      <operations public="true" package="false" protected="false" private="false"/>    
+    </display>  
+  </class>  
+  <class id="7" language="java" name="ru.curs.celesta.score.StringColumn" project="celesta" 
+    file="/celesta/src/ru/curs/celesta/score/StringColumn.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="466" y="811"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false"/>      
+      <operations public="true" package="false" protected="false" private="false"/>    
+    </display>  
+  </class>  
+  <generalization id="8">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <generalization id="9">    
+    <end type="SOURCE" refId="6"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <generalization id="10">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <generalization id="11">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <generalization id="12">    
+    <end type="SOURCE" refId="7"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <generalization id="13">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+    accessors="true" visibility="true">    
+    <attributes public="true" package="true" protected="true" private="true"/>    
+    <operations public="true" package="true" protected="true" private="true"/>  
+  </classifier-display>  
+  <association-display labels="true" multiplicity="true"/>
+</class-diagram>
