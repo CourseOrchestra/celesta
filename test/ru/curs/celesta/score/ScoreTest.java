@@ -351,4 +351,26 @@ public class ScoreTest {
 		assertEquals(30, ff[1].getConstraintName().length());
 		assertFalse(ff[0].getConstraintName().equals(ff[1].getConstraintName()));
 	}
+
+	@Test
+	public void viewTest() throws ParseException, CelestaException {
+		Score s = new Score("testScore");
+		Grain g = s.getGrain("gtest");
+
+		View v = g.getView("testview");
+		String exp;
+		assertFalse(v.isDistinct());
+		assertEquals(3, v.getColumns().size());
+		exp = String
+				.format("  select id as id, descr as descr, descr || 'foo' as descr2%n"
+						+ "  from test as test%n"
+						+ "    INNER join refTo as refTo on attrVarchar = k1 AND attrInt = k2");
+		assertEquals(exp, v.getCelestaQueryString());
+		v = g.getView("testview2");
+		exp = String
+				.format("  select id as id, descr as descr%n"
+						+ "  from test as t1%n"
+						+ "    INNER join refTo as t2 on attrVarchar = k1 AND NOT t2.descr IS NULL AND attrInt = k2");
+		assertEquals(exp, v.getCelestaQueryString());
+	}
 }
