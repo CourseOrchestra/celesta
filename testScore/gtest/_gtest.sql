@@ -42,3 +42,6 @@ alter table test add constraint fk_testNameVeryVeryLongLonName
  
 create view testview as 
   select id, descr, descr || 'foo' as descr2 from test inner join refTo on attrVarchar = k1 and attrInt = k2;
+  
+create view testview2 as 
+  select id, descr from test t1 inner join refTo t2 on attrVarchar = k1 and not t2.descr is null and attrInt = k2;  
