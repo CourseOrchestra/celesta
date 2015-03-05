@@ -30,6 +30,7 @@
 	
 	<target name="test" depends="compile">
 		<echo>Compile and run unit tests</echo>
+		<mkdir dir="build/tests" />
 		<javac destdir="build/tests" encoding="UTF-8">
 			<classpath>
 				<pathelement path="lib/junit-4.10.jar"/>
