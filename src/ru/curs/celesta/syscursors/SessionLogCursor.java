@@ -82,8 +82,8 @@ public class SessionLogCursor extends SysCursor {
 		entryno = rs.getInt("entryno");
 		sessionid = rs.getString("sessionid");
 		userid = rs.getString("userid");
-		logintime = rs.getDate("logintime");
-		logoutime = rs.getDate("logoutime");
+		logintime = rs.getTimestamp("logintime");
+		logoutime = rs.getTimestamp("logoutime");
 		timeout = rs.getBoolean("timeout");
 		failedlogin = rs.getBoolean("failedlogin");
 	}

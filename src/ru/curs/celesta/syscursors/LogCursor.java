@@ -46,7 +46,7 @@ public final class LogCursor extends SysCursor {
 	protected void _parseResult(ResultSet rs) throws SQLException {
 		// CHECKSTYLE:ON
 		entryno = rs.getInt("entryno");
-		entry_time = rs.getDate("entry_time");
+		entry_time = rs.getTimestamp("entry_time");
 		userid = rs.getString("userid");
 		grainid = rs.getString("grainid");
 		tablename = rs.getString("tablename");
