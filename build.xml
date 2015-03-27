@@ -28,7 +28,50 @@
 			file="src/ru/curs/celesta/score/celesta.sql" />
 	</target>
 	
-	<target name="jar" depends="compile">
+	<target name="test" depends="compile">
+		<echo>Compile and run unit tests</echo>
+		<mkdir dir="build/tests" />
+		<javac destdir="build/tests" encoding="UTF-8">
+			<classpath>
+				<pathelement path="lib/junit-4.10.jar"/>
+				<pathelement path="build/classes" />
+			</classpath>
+			<src>
+				<pathelement path="test" />
+			</src>
+		</javac>
+		<copy todir="build/tests/ru/curs/celesta/ormcompiler">
+		    <fileset dir="test/ru/curs/celesta/ormcompiler">
+		      <exclude name="**/*.java"/>
+		    </fileset>
+		</copy>
+		<copy todir="build/tests/ru/curs/celesta/score">
+		    <fileset dir="test/ru/curs/celesta/score">
+		      <exclude name="**/*.java"/>
+		    </fileset>
+		</copy>
+		<junit printsummary="yes" haltonfailure="yes">
+			<classpath>
+				<pathelement location="lib/junit-4.10.jar"/>
+				<pathelement location="lib/hamcrest-core-1.3.jar"/>
+				<pathelement path="build/tests"/>
+				<pathelement path="build/classes" />
+			</classpath>
+			<formatter type="xml"/>
+			<batchtest fork="yes" todir="testresults">
+				<fileset dir="test">
+					<include name="**/ormcompiler/*.java"/>
+					<include name="**/score/*.java"/>
+					<include name="**/dbutils/BLOBTest.java"/>
+					<include name="**/dbutils/FilterParserTest.java"/>
+				</fileset>
+			</batchtest>
+
+		</junit>
+	</target>
+
+	
+	<target name="jar" depends="compile, test">
 		<echo>Building jar files</echo>
 		<jar destfile="build/celesta.jar" filesetmanifest="merge">
 			<fileset dir="build/classes">
@@ -85,7 +128,7 @@
 		    <fileset dir="dbschemasetup"/>
 		</zip>
 	</target>
-
+	
 	<target name="ci.generate.artifacts" depends="jar">
 		<delete dir="build/artifacts" />	
 		<mkdir dir="build/artifacts" />

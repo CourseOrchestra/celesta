@@ -177,7 +177,7 @@ public final class GrainsCursor extends SysCursor {
 		length = rs.getInt("length");
 		checksum = rs.getString("checksum");
 		state = rs.getInt("state");
-		lastmodified = rs.getDate("lastmodified");
+		lastmodified = rs.getTimestamp("lastmodified");
 		message = rs.getString("message");
 
 	}

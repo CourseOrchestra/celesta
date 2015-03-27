@@ -507,8 +507,13 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
-		String sql = String.format("DROP INDEX " + tableTemplate(),
-				g.getName(), dBIndexInfo.getIndexName());
+		String sql;
+		if (dBIndexInfo.getIndexName().startsWith("##"))
+			sql = String.format("DROP INDEX %s", dBIndexInfo.getIndexName()
+					.substring(2));
+		else
+			sql = String.format("DROP INDEX " + tableTemplate(), g.getName(),
+					dBIndexInfo.getIndexName());
 		return sql;
 	}
 
@@ -1184,8 +1189,19 @@ final class OraAdaptor extends DBAdaptor {
 					tabName = m.group(2);
 					String indName = rs.getString("INDEX_NAME");
 					m = TABLE_PATTERN.matcher(indName);
-					m.find();
-					indName = m.group(2);
+					if (m.find())
+						indName = m.group(2);
+					else
+						/*
+						 * Если название индекса не соответствует ожидаемому
+						 * шаблону, то это -- индекс, добавленный вне Celesta и
+						 * его следует удалить. Мы добавляем знаки ## перед
+						 * именем индекса. Далее система, не найдя индекс с
+						 * такими метаданными, поставит такой индекс на
+						 * удаление. Метод удаления, обнаружив ## в начале имени
+						 * индекса, удалит их.
+						 */
+						indName = "##" + indName;
 
 					if (i == null || !i.getTableName().equals(tabName)
 							|| !i.getIndexName().equals(indName)) {

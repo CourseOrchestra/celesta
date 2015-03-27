@@ -112,7 +112,7 @@ public class SQLGenerator extends ExprVisitor {
 	}
 
 	final void visitNotExpr(NotExpr expr) throws ParseException {
-		stack.push("NOT " + expr.getCSQL());
+		stack.push("NOT " + stack.pop());
 	}
 
 	final void visitNumericLiteral(NumericLiteral expr) throws ParseException {
