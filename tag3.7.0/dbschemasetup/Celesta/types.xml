@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<database name="Celesta" >
+	<types >
+		<type name="REAL" java="8" precision="NONE" />
+		<type name="VARCHAR" java="12" precision="LENGTH" />
+		<type name="BLOB" java="-2" precision="NONE" />
+		<type name="DATETIME" java="93" precision="NONE" />
+		<type name="BIT" java="-7" precision="NONE" />
+		<type name="INT" java="4" precision="NONE" />
+		<type name="TEXT" java="12" precision="NONE" />
+	</types>
+</database>
