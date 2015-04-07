@@ -1,0 +1,17 @@
+create table "celesta"."grains"(
+  "id" varchar(30) not null,
+  "version" varchar(2000) not null,
+  "length" int not null,
+  "checksum" varchar(8) not null,
+  "state" int not null default 3,
+  "lastmodified" datetime not null default CURRENT_TIMESTAMP,
+  "message" varchar(4000) not null default '',
+  constraint "pk_grains" primary key ("id")
+)
+create table "celesta"."tables"(
+  "grainid" varchar(30) not null,
+  "tablename" varchar(30) not null,
+  "tabletype" varchar(1) not null default 'T',
+  "orphaned" bit not null default b'0',
+  constraint "pk_tables" primary key ("grainid", "tablename")
+)
