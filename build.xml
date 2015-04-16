@@ -97,7 +97,7 @@
 
 		<jar destfile="build/schemasync.jar">
 			<fileset dir="build/classes"
-				includes="ru/curs/celesta/dbschemasync/*,ru/curs/celesta/score/*" />
+				includes="ru/curs/celesta/dbschemasync/*,ru/curs/celesta/score/*,ru/curs/celesta/CelestaException.class" />
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Main-Class"
