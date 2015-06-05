@@ -256,6 +256,9 @@ public final class Celesta2DBSchema {
 				options = "WITH NO VERSION CHECK";
 			}
 		}
+		if (!t.isAutoUpdate()) {
+			options += " NO AUTOUPDATE";
+		}
 		storage.appendChild(doc.createCDATASection(options));
 		table.appendChild(storage);
 	}
