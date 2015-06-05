@@ -421,10 +421,18 @@ public final class Table extends GrainElement {
 		}
 
 		bw.write(")");
-		if (isReadOnly)
+		boolean withEmitted = false;
+		if (isReadOnly) {
 			bw.write(" WITH READ ONLY");
-		else if (!isVersioned) {
+			withEmitted = true;
+		} else if (!isVersioned) {
 			bw.write(" WITH NO VERSION CHECK");
+			withEmitted = true;
+		}
+		if (!autoUpdate) {
+			if (!withEmitted)
+				bw.write(" WITH");
+			bw.write(" NO AUTOUPDATE");
 		}
 		bw.write(";");
 		bw.newLine();
