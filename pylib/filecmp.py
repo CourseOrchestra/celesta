@@ -11,7 +11,6 @@ Functions:
 
 import os
 import stat
-import warnings
 from itertools import ifilter, ifilterfalse, imap, izip
 
 __all__ = ["cmp","dircmp","cmpfiles"]
@@ -49,11 +48,12 @@ def cmp(f1, f2, shallow=1):
     if s1[1] != s2[1]:
         return False
 
-    result = _cache.get((f1, f2))
-    if result and (s1, s2) == result[:2]:
-        return result[2]
-    outcome = _do_cmp(f1, f2)
-    _cache[f1, f2] = s1, s2, outcome
+    outcome = _cache.get((f1, f2, s1, s2))
+    if outcome is None:
+        outcome = _do_cmp(f1, f2)
+        if len(_cache) > 100:      # limit the maximum size of the cache
+            _cache.clear()
+        _cache[f1, f2, s1, s2] = outcome
     return outcome
 
 def _sig(st):
@@ -63,9 +63,7 @@ def _sig(st):
 
 def _do_cmp(f1, f2):
     bufsize = BUFSIZE
-    fp1 = open(f1, 'rb')
-    fp2 = open(f2, 'rb')
-    try:
+    with open(f1, 'rb') as fp1, open(f2, 'rb') as fp2:
         while True:
             b1 = fp1.read(bufsize)
             b2 = fp2.read(bufsize)
@@ -73,9 +71,6 @@ def _do_cmp(f1, f2):
                 return False
             if not b1:
                 return True
-    finally:
-        fp1.close()
-        fp2.close()
 
 # Directory comparison class.
 #
@@ -136,9 +131,9 @@ class dircmp:
     def phase1(self): # Compute common names
         a = dict(izip(imap(os.path.normcase, self.left_list), self.left_list))
         b = dict(izip(imap(os.path.normcase, self.right_list), self.right_list))
-        self.common = map(a.__getitem__, ifilter(b.has_key, a))
-        self.left_only = map(a.__getitem__, ifilterfalse(b.has_key, a))
-        self.right_only = map(b.__getitem__, ifilterfalse(a.has_key, b))
+        self.common = map(a.__getitem__, ifilter(b.__contains__, a))
+        self.left_only = map(a.__getitem__, ifilterfalse(b.__contains__, a))
+        self.right_only = map(b.__getitem__, ifilterfalse(a.__contains__, b))
 
     def phase2(self): # Distinguish files, directories, funnies
         self.common_dirs = []

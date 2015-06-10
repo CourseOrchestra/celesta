@@ -10,8 +10,12 @@ is raised if the entry asked for cannot be found.
 
 __all__ = ['getpwuid', 'getpwnam', 'getpwall']
 
-from os import _name, _posix_impl
-from org.python.core.Py import newString
+try:
+    from os import _name, _posix_impl
+    from org.python.core.Py import newStringOrUnicode
+except:
+    raise ImportError
+import sys
 
 if _name == 'nt':
     raise ImportError, 'pwd module not supported on Windows'
@@ -29,9 +33,9 @@ class struct_passwd(tuple):
              'pw_dir', 'pw_shell']
 
     def __new__(cls, pwd):
-        pwd = (newString(pwd.loginName), newString(pwd.password), int(pwd.UID),
-               int(pwd.GID), newString(pwd.GECOS), newString(pwd.home),
-               newString(pwd.shell))
+        pwd = (newStringOrUnicode(pwd.loginName), newStringOrUnicode(pwd.password), int(pwd.UID),
+               int(pwd.GID), newStringOrUnicode(pwd.GECOS), newStringOrUnicode(pwd.home),
+               newStringOrUnicode(pwd.shell))
         return tuple.__new__(cls, pwd)
 
     def __getattr__(self, attr):
@@ -48,6 +52,8 @@ def getpwuid(uid):
     Return the password database entry for the given numeric user ID.
     See pwd.__doc__ for more on password database entries.
     """
+    if uid > sys.maxint or uid < 0:
+        raise KeyError(uid)
     entry = _posix_impl.getpwuid(uid)
     if not entry:
         raise KeyError(uid)

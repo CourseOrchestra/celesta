@@ -54,7 +54,7 @@ Here's the new type at work:
     {1: 3.25}
     >>> print a[1]                      # show the new item
     3.25
-    >>> print a[0]                      # a non-existant item
+    >>> print a[0]                      # a non-existent item
     0.0
     >>> a.merge({1:100, 2:200})         # use a dict method
     >>> print sortdict(a)               # show the result
@@ -66,7 +66,7 @@ dictionaries, such as the locals/globals dictionaries for the exec
 statement or the built-in function eval():
 
     >>> def sorted(seq):
-    ...     seq.sort()
+    ...     seq.sort(key=str)
     ...     return seq
     >>> print sorted(a.keys())
     [1, 2]
@@ -182,7 +182,9 @@ Instead, you can get the same information from the list type:
      '__delitem__',
      '__delslice__',
      '__doc__',
+     '__ensure_finalizer__',
      '__eq__',
+     '__format__',
      '__ge__',
      '__getattribute__',
      '__getitem__',
@@ -203,11 +205,13 @@ Instead, you can get the same information from the list type:
      '__reduce__',
      '__reduce_ex__',
      '__repr__',
+     '__reversed__',
      '__rmul__',
      '__setattr__',
      '__setitem__',
      '__setslice__',
      '__str__',
+     '__subclasshook__',
      'append',
      'count',
      'extend',

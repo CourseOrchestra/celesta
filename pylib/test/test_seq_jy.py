@@ -44,7 +44,6 @@ class SeqTestCase(unittest.TestCase):
                     return False
             l = type2test(['bar', 'baz'])
             foo = Foo(l)
-            self.assertNotEqual(l, foo)
             self.assertEqual(cmp(l, foo), 1)
             self.assertEqual(cmp(foo, foo), 0)
 

@@ -9,6 +9,7 @@ __all__ = [
     'add_codec',
     ]
 
+import codecs
 import email.base64mime
 import email.quoprimime
 
@@ -46,6 +47,7 @@ CHARSETS = {
     'iso-8859-13': (QP,        QP,      None),
     'iso-8859-14': (QP,        QP,      None),
     'iso-8859-15': (QP,        QP,      None),
+    'iso-8859-16': (QP,        QP,      None),
     'windows-1252':(QP,        QP,      None),
     'viscii':      (QP,        QP,      None),
     'us-ascii':    (None,      None,    None),
@@ -81,6 +83,8 @@ ALIASES = {
     'latin-8': 'iso-8859-14',
     'latin_9': 'iso-8859-15',
     'latin-9': 'iso-8859-15',
+    'latin_10':'iso-8859-16',
+    'latin-10':'iso-8859-16',
     'cp949':   'ks_c_5601-1987',
     'euc_jp':  'euc-jp',
     'euc_kr':  'euc-kr',
@@ -205,8 +209,13 @@ class Charset:
                 input_charset = unicode(input_charset, 'ascii')
         except UnicodeError:
             raise errors.CharsetError(input_charset)
-        input_charset = input_charset.lower()
-        # Set the input charset after filtering through the aliases
+        input_charset = input_charset.lower().encode('ascii')
+        # Set the input charset after filtering through the aliases and/or codecs
+        if not (input_charset in ALIASES or input_charset in CHARSETS):
+            try:
+                input_charset = codecs.lookup(input_charset).name
+            except LookupError:
+                pass
         self.input_charset = ALIASES.get(input_charset, input_charset)
         # We can try to guess which encoding and conversion to use by the
         # charset_map dictionary.  Try that first, but let the user override
@@ -250,7 +259,7 @@ class Charset:
         Returns "base64" if self.body_encoding is BASE64.
         Returns "7bit" otherwise.
         """
-        assert self.body_encoding <> SHORTEST
+        assert self.body_encoding != SHORTEST
         if self.body_encoding == QP:
             return 'quoted-printable'
         elif self.body_encoding == BASE64:
@@ -260,7 +269,7 @@ class Charset:
 
     def convert(self, s):
         """Convert a string from the input_codec to the output_codec."""
-        if self.input_codec <> self.output_codec:
+        if self.input_codec != self.output_codec:
             return unicode(s, self.input_codec).encode(self.output_codec)
         else:
             return s

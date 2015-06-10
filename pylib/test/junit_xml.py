@@ -168,6 +168,14 @@ class Tee(StringIO):
         StringIO.flush(self)
         self.stream.flush()
 
+    # Equalities to ensure that Tee(stream) == stream
+
+    def __eq__(self, other):
+        return self is other or self.stream == other
+
+    def __ne__(self, other):
+        return self is not other and self.stream != other
+
 
 def write_testsuite_xml(stream, tests, errors, failures, skipped, name, took):
     """Write the XML header (<testsuite/>)"""
@@ -248,8 +256,8 @@ def exc_message(exc_info):
     exc = exc_info[1]
     if exc is None:
         return safe_str(exc_info[0])
-    if isinstance(exc, BaseException) and isinstance(exc.message, unicode):
-        return safe_str(exc.message)
+    if isinstance(exc, BaseException) and isinstance(exc.args[0], unicode):
+        return safe_str(exc.args[0])
     try:
         return safe_str(str(exc))
     except UnicodeEncodeError:

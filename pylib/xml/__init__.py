@@ -13,8 +13,6 @@ sax -- The Simple API for XML, developed by XML-Dev, led by David
 
 __all__ = ['dom', 'sax']
 
-__version__ = "7290"
-
 
 _MINIMUM_XMLPLUS_VERSION = (0, 8, 5)
 

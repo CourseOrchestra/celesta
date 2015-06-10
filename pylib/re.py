@@ -141,28 +141,30 @@ def search(pattern, string, flags=0):
     a match object, or None if no match was found."""
     return _compile(pattern, flags).search(string)
 
-def sub(pattern, repl, string, count=0):
+def sub(pattern, repl, string, count=0, flags=0):
     """Return the string obtained by replacing the leftmost
     non-overlapping occurrences of the pattern in string by the
     replacement repl.  repl can be either a string or a callable;
-    if a callable, it's passed the match object and must return
+    if a string, backslash escapes in it are processed.  If it is
+    a callable, it's passed the match object and must return
     a replacement string to be used."""
-    return _compile(pattern, 0).sub(repl, string, count)
+    return _compile(pattern, flags).sub(repl, string, count)
 
-def subn(pattern, repl, string, count=0):
+def subn(pattern, repl, string, count=0, flags=0):
     """Return a 2-tuple containing (new_string, number).
     new_string is the string obtained by replacing the leftmost
     non-overlapping occurrences of the pattern in the source
     string by the replacement repl.  number is the number of
     substitutions that were made. repl can be either a string or a
-    callable; if a callable, it's passed the match object and must
+    callable; if a string, backslash escapes in it are processed.
+    If it is a callable, it's passed the match object and must
     return a replacement string to be used."""
-    return _compile(pattern, 0).subn(repl, string, count)
+    return _compile(pattern, flags).subn(repl, string, count)
 
-def split(pattern, string, maxsplit=0):
+def split(pattern, string, maxsplit=0, flags=0):
     """Split the source string by the occurrences of the pattern,
     returning a list containing the resulting substrings."""
-    return _compile(pattern, 0).split(string, maxsplit)
+    return _compile(pattern, flags).split(string, maxsplit)
 
 def findall(pattern, string, flags=0):
     """Return a list of all non-overlapping matches in the string.
@@ -196,17 +198,14 @@ def template(pattern, flags=0):
     "Compile a template pattern, returning a pattern object"
     return _compile(pattern, flags|T)
 
-_alphanum = {}
-for c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890':
-    _alphanum[c] = 1
-del c
+_alphanum = frozenset(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 def escape(pattern):
     "Escape all non-alphanumeric characters in pattern."
     s = list(pattern)
     alphanum = _alphanum
-    for i in range(len(pattern)):
-        c = pattern[i]
+    for i, c in enumerate(pattern):
         if c not in alphanum:
             if c == "\000":
                 s[i] = "\\000"
@@ -232,6 +231,8 @@ def _compile(*key):
         return p
     pattern, flags = key
     if isinstance(pattern, _pattern_type):
+        if flags:
+            raise ValueError('Cannot process flags argument with a compiled pattern')
         return pattern
     if not sre_compile.isstring(pattern):
         raise TypeError, "first argument must be string or compiled pattern"
@@ -314,7 +315,7 @@ class Scanner:
             if i == j:
                 break
             action = self.lexicon[m.lastindex-1][1]
-            if callable(action):
+            if hasattr(action, '__call__'):
                 self.match = m
                 action = action(self, m.group())
             if action is not None:

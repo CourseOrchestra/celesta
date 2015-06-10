@@ -62,7 +62,7 @@ class CommonTest(unittest.TestCase):
                 pass
             object = subtype(object)
             realresult = getattr(object, methodname)(*args)
-            self.assert_(object is not realresult)
+            self.assertTrue(object is not realresult)
 
     # check that object.method(*args) raises exc
     def checkraises(self, exc, object, methodname, *args):
@@ -120,6 +120,14 @@ class CommonTest(unittest.TestCase):
         self.checkequal(2, 'aaa', 'count', '', -1)
         self.checkequal(4, 'aaa', 'count', '', -10)
 
+        self.checkequal(1, '', 'count', '')
+        self.checkequal(0, '', 'count', '', 1, 1)
+        self.checkequal(0, '', 'count', '', sys.maxint, 0)
+
+        self.checkequal(0, '', 'count', 'xx')
+        self.checkequal(0, '', 'count', 'xx', 1, 1)
+        self.checkequal(0, '', 'count', 'xx', sys.maxint, 0)
+
         self.checkraises(TypeError, 'hello', 'count')
         self.checkraises(TypeError, 'hello', 'count', 42)
 
@@ -150,6 +158,32 @@ class CommonTest(unittest.TestCase):
                     self.assertEqual(rem, 0, '%s != 0 for %s' % (rem, i))
                     self.assertEqual(r1, r2, '%s != %s for %s' % (r1, r2, i))
 
+        # Repeat some tests with buffer argument (Jython addition)
+        ba = buffer('a')
+        self.checkequal(3, 'aaa', 'count', ba)
+        self.checkequal(0, 'aaa', 'count', buffer('b'))
+        self.checkequal(2, 'aaa', 'count', ba, 1)
+        self.checkequal(0, 'aaa', 'count', ba, 10)
+        self.checkequal(1, 'aaa', 'count', ba, 0, 1)
+        self.checkequal(3, 'aaa', 'count', ba, 0, 10)
+        b = buffer('')
+        self.checkequal(3, 'aaa', 'count', b, 1)
+        self.checkequal(4, 'aaa', 'count', b, -10)
+
+        # Repeat some tests with memoryview argument (Jython addition)
+        if test_support.is_jython:
+            # CPython does not support until v3.2
+            with memoryview('a') as ma:
+                self.checkequal(3, 'aaa', 'count', ma)
+                self.checkequal(0, 'aaa', 'count', memoryview('b'))
+                self.checkequal(2, 'aaa', 'count', ma, 1)
+                self.checkequal(0, 'aaa', 'count', ma, 10)
+                self.checkequal(1, 'aaa', 'count', ma, 0, 1)
+                self.checkequal(3, 'aaa', 'count', ma, 0, 10)
+            with memoryview('') as m:
+                self.checkequal(3, 'aaa', 'count', m, 1)
+                self.checkequal(4, 'aaa', 'count', m, -10)
+
     def test_find(self):
         self.checkequal(0, 'abcdefghiabc', 'find', 'abc')
         self.checkequal(9, 'abcdefghiabc', 'find', 'abc', 1)
@@ -159,8 +193,23 @@ class CommonTest(unittest.TestCase):
         self.checkequal(3, 'abc', 'find', '', 3)
         self.checkequal(-1, 'abc', 'find', '', 4)
 
+        # to check the ability to pass None as defaults
+        self.checkequal( 2, 'rrarrrrrrrrra', 'find', 'a')
+        self.checkequal(12, 'rrarrrrrrrrra', 'find', 'a', 4)
+        self.checkequal(-1, 'rrarrrrrrrrra', 'find', 'a', 4, 6)
+        self.checkequal(12, 'rrarrrrrrrrra', 'find', 'a', 4, None)
+        self.checkequal( 2, 'rrarrrrrrrrra', 'find', 'a', None, 6)
+
         self.checkraises(TypeError, 'hello', 'find')
         self.checkraises(TypeError, 'hello', 'find', 42)
+
+        self.checkequal(0, '', 'find', '')
+        self.checkequal(-1, '', 'find', '', 1, 1)
+        self.checkequal(-1, '', 'find', '', sys.maxint, 0)
+
+        self.checkequal(-1, '', 'find', 'xx')
+        self.checkequal(-1, '', 'find', 'xx', 1, 1)
+        self.checkequal(-1, '', 'find', 'xx', sys.maxint, 0)
 
         # For a variety of combinations,
         #    verify that str.find() matches __contains__
@@ -182,10 +231,31 @@ class CommonTest(unittest.TestCase):
                 loc = i.find(j)
                 r1 = (loc != -1)
                 r2 = j in i
-                if r1 != r2:
-                    self.assertEqual(r1, r2)
+                self.assertEqual(r1, r2)
                 if loc != -1:
                     self.assertEqual(i[loc:loc+len(j)], j)
+
+        # issue 7458
+        self.checkequal(-1, 'ab', 'find', 'xxx', sys.maxsize + 1, 0)
+
+        # Repeat some tests with buffer argument (Jython addition)
+        self.checkequal(0, 'abcdefghiabc', 'find', buffer('abc'))
+        self.checkequal(9, 'abcdefghiabc', 'find', buffer('abc'), 1)
+        self.checkequal(-1, 'abcdefghiabc', 'find', buffer('def'), 4)
+        self.checkequal(12, 'rrarrrrrrrrra', 'find', buffer('a'), 4, None)
+        self.checkequal( 2, 'rrarrrrrrrrra', 'find', buffer('a'), None, 6)
+
+        # Repeat some tests with memoryview argument (Jython addition)
+        if test_support.is_jython:
+            # CPython does not support until v3.2
+            with memoryview('abc') as m:
+                self.checkequal(0, 'abcdefghiabc', 'find', m)
+                self.checkequal(9, 'abcdefghiabc', 'find', m, 1)
+            with memoryview('def') as m:
+                self.checkequal(-1, 'abcdefghiabc', 'find', m, 4)
+            with memoryview('a') as m:
+                self.checkequal(12, 'rrarrrrrrrrra', 'find', m, 4, None)
+                self.checkequal( 2, 'rrarrrrrrrrra', 'find', m, None, 6)
 
     def test_rfind(self):
         self.checkequal(9,  'abcdefghiabc', 'rfind', 'abc')
@@ -197,8 +267,61 @@ class CommonTest(unittest.TestCase):
         self.checkequal(3, 'abc', 'rfind', '', 3)
         self.checkequal(-1, 'abc', 'rfind', '', 4)
 
+        # to check the ability to pass None as defaults
+        self.checkequal(12, 'rrarrrrrrrrra', 'rfind', 'a')
+        self.checkequal(12, 'rrarrrrrrrrra', 'rfind', 'a', 4)
+        self.checkequal(-1, 'rrarrrrrrrrra', 'rfind', 'a', 4, 6)
+        self.checkequal(12, 'rrarrrrrrrrra', 'rfind', 'a', 4, None)
+        self.checkequal( 2, 'rrarrrrrrrrra', 'rfind', 'a', None, 6)
+
         self.checkraises(TypeError, 'hello', 'rfind')
         self.checkraises(TypeError, 'hello', 'rfind', 42)
+
+        # For a variety of combinations,
+        #    verify that str.rfind() matches __contains__
+        #    and that the found substring is really at that location
+        charset = ['', 'a', 'b', 'c']
+        digits = 5
+        base = len(charset)
+        teststrings = set()
+        for i in xrange(base ** digits):
+            entry = []
+            for j in xrange(digits):
+                i, m = divmod(i, base)
+                entry.append(charset[m])
+            teststrings.add(''.join(entry))
+        teststrings = list(teststrings)
+        for i in teststrings:
+            i = self.fixtype(i)
+            for j in teststrings:
+                loc = i.rfind(j)
+                r1 = (loc != -1)
+                r2 = j in i
+                self.assertEqual(r1, r2)
+                if loc != -1:
+                    self.assertEqual(i[loc:loc+len(j)], self.fixtype(j))
+
+        # issue 7458
+        self.checkequal(-1, 'ab', 'rfind', 'xxx', sys.maxsize + 1, 0)
+
+        # Repeat some tests with buffer argument (Jython addition)
+        self.checkequal(9,  'abcdefghiabc', 'rfind', buffer('abc'))
+        self.checkequal(12, 'abcdefghiabc', 'rfind', buffer(''))
+        self.checkequal(0, 'abcdefghiabc', 'rfind', buffer('abcd'))
+        self.checkequal(-1, 'abcdefghiabc', 'rfind', buffer('abcz'))
+        self.checkequal(12, 'rrarrrrrrrrra', 'rfind', buffer('a'), 4, None)
+        self.checkequal( 2, 'rrarrrrrrrrra', 'rfind', buffer('a'), None, 6)
+
+        # Repeat some tests with memoryview argument (Jython addition)
+        if test_support.is_jython:
+            # CPython does not support until v3.2
+            self.checkequal(9,  'abcdefghiabc', 'rfind', memoryview('abc'))
+            self.checkequal(12, 'abcdefghiabc', 'rfind', memoryview(''))
+            self.checkequal(0, 'abcdefghiabc', 'rfind', memoryview('abcd'))
+            self.checkequal(-1, 'abcdefghiabc', 'rfind', memoryview('abcz'))
+            with memoryview('a') as m:
+                self.checkequal(12, 'rrarrrrrrrrra', 'rfind', m, 4, None)
+                self.checkequal( 2, 'rrarrrrrrrrra', 'rfind', m, None, 6)
 
     def test_index(self):
         self.checkequal(0, 'abcdefghiabc', 'index', '')
@@ -210,6 +333,13 @@ class CommonTest(unittest.TestCase):
         self.checkraises(ValueError, 'abcdefghiab', 'index', 'abc', 1)
         self.checkraises(ValueError, 'abcdefghi', 'index', 'ghi', 8)
         self.checkraises(ValueError, 'abcdefghi', 'index', 'ghi', -1)
+
+        # to check the ability to pass None as defaults
+        self.checkequal( 2, 'rrarrrrrrrrra', 'index', 'a')
+        self.checkequal(12, 'rrarrrrrrrrra', 'index', 'a', 4)
+        self.checkraises(ValueError, 'rrarrrrrrrrra', 'index', 'a', 4, 6)
+        self.checkequal(12, 'rrarrrrrrrrra', 'index', 'a', 4, None)
+        self.checkequal( 2, 'rrarrrrrrrrra', 'index', 'a', None, 6)
 
         self.checkraises(TypeError, 'hello', 'index')
         self.checkraises(TypeError, 'hello', 'index', 42)
@@ -225,6 +355,13 @@ class CommonTest(unittest.TestCase):
         self.checkraises(ValueError, 'defghiabc', 'rindex', 'abc', 0, -1)
         self.checkraises(ValueError, 'abcdefghi', 'rindex', 'ghi', 0, 8)
         self.checkraises(ValueError, 'abcdefghi', 'rindex', 'ghi', 0, -1)
+
+        # to check the ability to pass None as defaults
+        self.checkequal(12, 'rrarrrrrrrrra', 'rindex', 'a')
+        self.checkequal(12, 'rrarrrrrrrrra', 'rindex', 'a', 4)
+        self.checkraises(ValueError, 'rrarrrrrrrrra', 'rindex', 'a', 4, 6)
+        self.checkequal(12, 'rrarrrrrrrrra', 'rindex', 'a', 4, None)
+        self.checkequal( 2, 'rrarrrrrrrrra', 'rindex', 'a', None, 6)
 
         self.checkraises(TypeError, 'hello', 'rindex')
         self.checkraises(TypeError, 'hello', 'rindex', 42)
@@ -251,11 +388,7 @@ class CommonTest(unittest.TestCase):
 
         self.checkraises(TypeError, 'hello', 'expandtabs', 42, 42)
         # This test is only valid when sizeof(int) == sizeof(void*) == 4.
-
-        # Jython uses a different algorithm for which overflows cannot occur;
-        # but memory exhaustion of course can. So not applicable.
-        if (sys.maxint < (1 << 32) and not test_support.is_jython
-            and struct.calcsize('P') == 4):
+        if sys.maxint < (1 << 32) and struct.calcsize('P') == 4:
             self.checkraises(OverflowError,
                              '\ta\n\tb', 'expandtabs', sys.maxint)
 
@@ -335,6 +468,17 @@ class CommonTest(unittest.TestCase):
         self.checkequal(['a']*20, ('aBLAH'*20)[:-4], 'split', 'BLAH', 19)
         self.checkequal(['a']*18 + ['aBLAHa'], ('aBLAH'*20)[:-4],
                         'split', 'BLAH', 18)
+
+        # by buffer (Jython addition)
+        self.checkequal(['a', 'b', 'c', 'd'], 'a//b//c//d', 'split', buffer('//'))
+        self.checkequal(['a', 'b', 'c//d'], 'a//b//c//d', 'split', buffer('//'), 2)
+
+        # by memoryview (Jython addition)
+        if test_support.is_jython:
+            # CPython does not support until v3.2
+            with memoryview('//') as target:
+                self.checkequal(['a', 'b', 'c', 'd'], 'a//b//c//d', 'split', target)
+                self.checkequal(['a', 'b', 'c//d'], 'a//b//c//d', 'split', target, 2)
 
         # mixed use of str and unicode
         self.checkequal([u'a', u'b', u'c d'], 'a b c d', 'split', u' ', 2)
@@ -426,6 +570,17 @@ class CommonTest(unittest.TestCase):
         self.checkequal(['aBLAHa'] + ['a']*18, ('aBLAH'*20)[:-4],
                         'rsplit', 'BLAH', 18)
 
+        # by buffer (Jython addition)
+        self.checkequal(['a', 'b', 'c', 'd'], 'a//b//c//d', 'rsplit', buffer('//'))
+        self.checkequal(['a//b', 'c', 'd'], 'a//b//c//d', 'rsplit', buffer('//'), 2)
+
+        # by memoryview (Jython addition)
+        if test_support.is_jython:
+            # CPython does not support until v3.2
+            with memoryview('//') as target:
+                self.checkequal(['a', 'b', 'c', 'd'], 'a//b//c//d', 'rsplit', target)
+                self.checkequal(['a//b', 'c', 'd'], 'a//b//c//d', 'rsplit', target, 2)
+
         # mixed use of str and unicode
         self.checkequal([u'a b', u'c', u'd'], 'a b c d', 'rsplit', u' ', 2)
 
@@ -462,8 +617,25 @@ class CommonTest(unittest.TestCase):
                  'lstrip', unicode('xyz', 'ascii'))
             self.checkequal(unicode('xyzzyhello', 'ascii'), 'xyzzyhelloxyzzy',
                  'rstrip', unicode('xyz', 'ascii'))
-            self.checkequal(unicode('hello', 'ascii'), 'hello',
-                 'strip', unicode('xyz', 'ascii'))
+            # Not a Jython skip: str passes but bytearray fails this check
+            # in both Jython 2.7 and CPython 2.7.5
+            #self.checkequal(unicode('hello', 'ascii'), 'hello',
+            #     'strip', unicode('xyz', 'ascii'))
+
+        # strip/lstrip/rstrip with buffer or memoryview arg (Jython addition)
+        if test_support.is_jython and self.__class__.type2test in (str, bytearray):
+            b = buffer('xyz')
+            self.checkequal('hello', 'xyzzyhelloxyzzy', 'strip', b)
+            self.checkequal('helloxyzzy', 'xyzzyhelloxyzzy', 'lstrip', b)
+            self.checkequal('xyzzyhello', 'xyzzyhelloxyzzy', 'rstrip', b)
+            self.checkequal('hello', 'hello', 'strip', b)
+
+            # CPython does not support until v3.2
+            with memoryview('xyz') as m:
+                self.checkequal('hello', 'xyzzyhelloxyzzy', 'strip', m)
+                self.checkequal('helloxyzzy', 'xyzzyhelloxyzzy', 'lstrip', m)
+                self.checkequal('xyzzyhello', 'xyzzyhelloxyzzy', 'rstrip', m)
+                self.checkequal('hello', 'hello', 'strip', m)
 
         self.checkraises(TypeError, 'hello', 'strip', 42, 42)
         self.checkraises(TypeError, 'hello', 'lstrip', 42, 42)
@@ -645,13 +817,12 @@ class CommonTest(unittest.TestCase):
         EQ("bobobXbobob", "bobobobXbobobob", "replace", "bobob", "bob")
         EQ("BOBOBOB", "BOBOBOB", "replace", "bob", "bobby")
 
-        # XXX - Jython does not support the buffer protocol; perhaps
-        # it's possible for things like strings. Not likely to be in 2.5
+        with test_support.check_py3k_warnings():
+            ba = buffer('a')
+            bb = buffer('b')
+        EQ("bbc", "abc", "replace", ba, bb)
+        EQ("aac", "abc", "replace", bb, ba)
 
-        # ba = buffer('a')
-        # bb = buffer('b')
-        # EQ("bbc", "abc", "replace", ba, bb)
-        # EQ("aac", "abc", "replace", bb, ba)
         #
         self.checkequal('one@two!three!', 'one!two!three!', 'replace', '!', '@', 1)
         self.checkequal('onetwothree', 'one!two!three!', 'replace', '!', '')
@@ -680,9 +851,43 @@ class CommonTest(unittest.TestCase):
         self.checkraises(TypeError, 'hello', 'replace', 42, 'h')
         self.checkraises(TypeError, 'hello', 'replace', 'h', 42)
 
+        # Repeat some tests including buffer API objects (Jython addition)
+        if test_support.is_jython:
+            for buftype in (buffer, memoryview, bytearray):
+                # Buffer type as sought argument
+                EQ("", "", "replace", buftype(""), "")
+                EQ("", "", "replace", buftype("A"), "A")
+                EQ("*-A*-A*-", "AA", "replace", buftype(""), "*-")
+                EQ("", "AAA", "replace", buftype("A"), "")
+                EQ("BCD", "ABCADAA", "replace", buftype("A"), "")
+                EQ("ater", "theater", "replace", buftype("the"), "")
+                EQ("", "thethethethe", "replace", buftype("the"), "")
+                EQ("aaaa", "theatheatheathea", "replace", buftype("the"), "")
+                EQ("WhO gOes there?", "Who goes there?", "replace", buftype("o"), "O")
+                EQ("Th** ** a t**sue", "This is a tissue", "replace", buftype("is"), "**")
+                EQ("cobobXcobocob", "bobobXbobobob", "replace", buftype("bob"), "cob")
+                EQ("ReyKKjaviKK", "Reykjavik", "replace", buftype("k"), "KK")
+                EQ("ham, ham, eggs and ham", "spam, spam, eggs and spam",
+                   "replace", buftype("spam"), "ham")
+                # Buffer type as replacement argument
+                EQ("", "", "replace", "", buftype(""))
+                EQ("", "", "replace", "A", buftype("A"))
+                EQ("*-A*-A*-", "AA", "replace", "", buftype("*-"))
+                EQ("", "AAA", "replace", "A", buftype(""))
+                EQ("BCD", "ABCADAA", "replace", "A", buftype(""))
+                EQ("ater", "theater", "replace", "the", buftype(""))
+                EQ("", "thethethethe", "replace", "the", buftype(""))
+                EQ("aaaa", "theatheatheathea", "replace", "the", buftype(""))
+                EQ("WhO gOes there?", "Who goes there?", "replace", "o", buftype("O"))
+                EQ("Th** ** a t**sue", "This is a tissue", "replace", "is", buftype("**"))
+                EQ("cobobXcobocob", "bobobXbobobob", "replace", "bob", buftype("cob"))
+                EQ("ReyKKjaviKK", "Reykjavik", "replace", "k", buftype("KK"))
+                EQ("ham, ham, eggs and ham", "spam, spam, eggs and spam",
+                   "replace", "spam", buftype("ham"))
+
     def test_replace_overflow(self):
         # Check for overflow checking on 32 bit machines
-        if sys.maxint != 2147483647 or test_support.is_jython or struct.calcsize("P") > 4:
+        if sys.maxint != 2147483647 or struct.calcsize("P") > 4:
             return
         A2_16 = "A" * (2**16)
         self.checkraises(OverflowError, A2_16, "replace", "", A2_16)
@@ -704,6 +909,9 @@ class CommonTest(unittest.TestCase):
         self.checkequal('0034', '34', 'zfill', 4)
 
         self.checkraises(TypeError, '123', 'zfill')
+
+# XXX alias for py3k forward compatibility
+BaseTest = CommonTest
 
 class MixinStrUnicodeUserStringTest:
     # additional tests that only work for
@@ -850,6 +1058,23 @@ class MixinStrUnicodeUserStringTest:
 
         self.checkraises(TypeError, 'hello', 'startswith', (42,))
 
+        # Repeat some tests including buffer API objects (Jython addition)
+        if test_support.is_jython:
+            for buftype in (buffer, memoryview, bytearray):
+                self.checkequal(True, 'hello', 'startswith', buftype('he'))
+                self.checkequal(True, 'hello', 'startswith', buftype(''))
+                self.checkequal(False, 'hello', 'startswith', buftype('ello'))
+                self.checkequal(True, 'hello', 'startswith', buftype('ello'), 1)
+                self.checkequal(True, 'helloworld', 'startswith', buftype('lowo'), 3, 7)
+                self.checkequal(True, 'hello', 'startswith', buftype('he'), 0, -1)
+                self.checkequal(True, 'hello', 'startswith', buftype('ello'), -4)
+                self.checkequal(True, 'hello', 'startswith', buftype('o'), -1)
+                self.checkequal(True, 'hello', 'startswith', (buftype('he'), 'ha'))
+                self.checkequal(True, 'helloworld', 'startswith', (buftype('hellowo'),
+                                                            'rld', buftype('lowo')), 3)
+                self.checkequal(True, 'hello', 'startswith', ('lo', buftype('he')), 0, -1)
+                self.checkequal(True, 'hello', 'startswith', (buftype('he'), 'hel'), 0, 2)
+
     def test_endswith(self):
         self.checkequal(True, 'hello', 'endswith', 'lo')
         self.checkequal(False, 'hello', 'endswith', 'he')
@@ -899,16 +1124,30 @@ class MixinStrUnicodeUserStringTest:
 
         self.checkraises(TypeError, 'hello', 'endswith', (42,))
 
+        # Repeat some tests including buffer API objects (Jython addition)
+        if test_support.is_jython:
+            for buftype in (buffer, memoryview, bytearray):
+                self.checkequal(True, 'hello', 'endswith', buftype('lo'))
+                self.checkequal(False, 'hello', 'endswith', buftype('he'))
+                self.checkequal(True, 'hello', 'endswith', buftype(''))
+                self.checkequal(True, 'helloworld', 'endswith', buftype('worl'), 3, 9)
+                self.checkequal(True, 'helloworld', 'endswith', buftype('worl'), -5, -1)
+                self.checkequal(True, 'hello', 'endswith', (buftype('lo'), buftype('llo')))
+                self.checkequal(True, 'helloworld', 'endswith', ('hellowo',
+                                                            buftype('rld'), buftype('lowo')), 3)
+                self.checkequal(True, 'hello', 'endswith', ('hell', buftype('ell')), 0, -1)
+                self.checkequal(True, 'hello', 'endswith', ('he', buftype('hell')), 0, 4)
+
     def test___contains__(self):
-        self.checkequal(True, '', '__contains__', '')         # vereq('' in '', True)
-        self.checkequal(True, 'abc', '__contains__', '')      # vereq('' in 'abc', True)
-        self.checkequal(False, 'abc', '__contains__', '\0')   # vereq('\0' in 'abc', False)
-        self.checkequal(True, '\0abc', '__contains__', '\0')  # vereq('\0' in '\0abc', True)
-        self.checkequal(True, 'abc\0', '__contains__', '\0')  # vereq('\0' in 'abc\0', True)
-        self.checkequal(True, '\0abc', '__contains__', 'a')   # vereq('a' in '\0abc', True)
-        self.checkequal(True, 'asdf', '__contains__', 'asdf') # vereq('asdf' in 'asdf', True)
-        self.checkequal(False, 'asd', '__contains__', 'asdf') # vereq('asdf' in 'asd', False)
-        self.checkequal(False, '', '__contains__', 'asdf')    # vereq('asdf' in '', False)
+        self.checkequal(True, '', '__contains__', '')
+        self.checkequal(True, 'abc', '__contains__', '')
+        self.checkequal(False, 'abc', '__contains__', '\0')
+        self.checkequal(True, '\0abc', '__contains__', '\0')
+        self.checkequal(True, 'abc\0', '__contains__', '\0')
+        self.checkequal(True, '\0abc', '__contains__', 'a')
+        self.checkequal(True, 'asdf', '__contains__', 'asdf')
+        self.checkequal(False, 'asd', '__contains__', 'asdf')
+        self.checkequal(False, '', '__contains__', 'asdf')
 
     def test_subscript(self):
         self.checkequal(u'a', 'abc', '__getitem__', 0)
@@ -917,10 +1156,7 @@ class MixinStrUnicodeUserStringTest:
         self.checkequal(u'abc', 'abc', '__getitem__', slice(0, 3))
         self.checkequal(u'abc', 'abc', '__getitem__', slice(0, 1000))
         self.checkequal(u'a', 'abc', '__getitem__', slice(0, 1))
-        self.checkequal(u'a', 'abc', '__getitem__', slice(0, 1L))
         self.checkequal(u'', 'abc', '__getitem__', slice(0, 0))
-        self.checkequal(u'', 'abc', '__getitem__', slice(0L, 0L))
-        # FIXME What about negative indices? This is handled differently by [] and __getitem__(slice)
 
         self.checkraises(TypeError, 'abc', '__getitem__', 'def')
 
@@ -934,9 +1170,20 @@ class MixinStrUnicodeUserStringTest:
         self.checkequal('', 'abc', '__getslice__', 1000, 1000)
         self.checkequal('', 'abc', '__getslice__', 2000, 1000)
         self.checkequal('', 'abc', '__getslice__', 2, 1)
-        # FIXME What about negative indizes? This is handled differently by [] and __getslice__
 
         self.checkraises(TypeError, 'abc', '__getslice__', 'def')
+
+    def test_extended_getslice(self):
+        # Test extended slicing by comparing with list slicing.
+        s = string.ascii_letters + string.digits
+        indices = (0, None, 1, 3, 41, -1, -2, -37)
+        for start in indices:
+            for stop in indices:
+                # Skip step 0 (invalid)
+                for step in indices[1:]:
+                    L = list(s)[start:stop:step]
+                    self.checkequal(u"".join(L), s, '__getitem__',
+                                    slice(start, stop, step))
 
     def test_mul(self):
         self.checkequal('', 'abc', '__mul__', -1)
@@ -944,12 +1191,11 @@ class MixinStrUnicodeUserStringTest:
         self.checkequal('abc', 'abc', '__mul__', 1)
         self.checkequal('abcabcabc', 'abc', '__mul__', 3)
         self.checkraises(TypeError, 'abc', '__mul__')
-        # CPython specific; pypy tests via the operator module instead
+
+        #FIXME: Jython currently returns a NotImplemented singleton for these.
+        #       I'm betting this is *very* outdated behavior.
         if not test_support.is_jython:
             self.checkraises(TypeError, 'abc', '__mul__', '')
-        else:
-            import operator
-            self.checkraises(TypeError, operator, '__mul__', 'abc', '')
         # XXX: on a 64-bit system, this doesn't raise an overflow error,
         # but either raises a MemoryError, or succeeds (if you have 54TiB)
         #self.checkraises(OverflowError, 10000*'abc', '__mul__', 2000000000)
@@ -1008,7 +1254,14 @@ class MixinStrUnicodeUserStringTest:
             # unicode raises ValueError, str raises OverflowError
             self.checkraises((ValueError, OverflowError), '%c', '__mod__', ordinal)
 
+        longvalue = sys.maxint + 10L
+        slongvalue = str(longvalue)
+        if slongvalue[-1] in ("L","l"): slongvalue = slongvalue[:-1]
         self.checkequal(' 42', '%3ld', '__mod__', 42)
+        self.checkequal('42', '%d', '__mod__', 42L)
+        self.checkequal('42', '%d', '__mod__', 42.0)
+        self.checkequal(slongvalue, '%d', '__mod__', longvalue)
+        self.checkcall('%d', '__mod__', float(longvalue))
         self.checkequal('0042.00', '%07.2f', '__mod__', 42)
         self.checkequal('0042.00', '%07.2F', '__mod__', 42)
 
@@ -1018,6 +1271,8 @@ class MixinStrUnicodeUserStringTest:
         self.checkraises(TypeError, '%c', '__mod__', (None,))
         self.checkraises(ValueError, '%(foo', '__mod__', {})
         self.checkraises(TypeError, '%(foo)s %(bar)s', '__mod__', ('foo', 42))
+        self.checkraises(TypeError, '%d', '__mod__', "42") # not numeric
+        self.checkraises(TypeError, '%d', '__mod__', (42+0j)) # no int/long conversion provided
 
         # argument names with properly nested brackets are supported
         self.checkequal('bar', '%((foo))s', '__mod__', {'(foo)': 'bar'})
@@ -1035,15 +1290,8 @@ class MixinStrUnicodeUserStringTest:
             format = '%%.%if' % prec
             value = 0.01
             for x in xrange(60):
-                value = value * 3.141592655 / 3.0 * 10.0
-                # The formatfloat() code in stringobject.c and
-                # unicodeobject.c uses a 120 byte buffer and switches from
-                # 'f' formatting to 'g' at precision 50, so we expect
-                # OverflowErrors for the ranges x < 50 and prec >= 67.
-                if not test_support.is_jython and x < 50 and prec >= 67:
-                    self.checkraises(OverflowError, format, "__mod__", value)
-                else:
-                    self.checkcall(format, "__mod__", value)
+                value = value * 3.14159265359 / 3.0 * 10.0
+                self.checkcall(format, "__mod__", value)
 
     def test_inplace_rewrites(self):
         # Check that strings don't copy and modify cached single-character strings
@@ -1079,6 +1327,29 @@ class MixinStrUnicodeUserStringTest:
         self.checkraises(ValueError, S, 'partition', '')
         self.checkraises(TypeError, S, 'partition', None)
 
+        # mixed use of str and unicode
+        self.assertEqual('a/b/c'.partition(u'/'), ('a', '/', 'b/c'))
+
+        # with buffer arg (Jython addition)
+        b = buffer('ti')
+        if self.__class__.type2test is unicode:
+            self.checkequal(('this is the par', u'ti', 'tion method'),
+                'this is the partition method', 'partition', b)
+        else:
+            self.checkequal(('this is the par', b, 'tion method'),
+                'this is the partition method', 'partition', b)
+
+        # with memoryview arg (Jython addition)
+        if test_support.is_jython:
+            # CPython does not support until v3.2
+            with memoryview('ti') as m:
+                if self.__class__.type2test is unicode:
+                    self.checkequal(('this is the par', u'ti', 'tion method'),
+                        'this is the partition method', 'partition', m)
+                else:
+                    self.checkequal(('this is the par', m, 'tion method'),
+                        'this is the partition method', 'partition', m)
+
     def test_rpartition(self):
 
         self.checkequal(('this is the rparti', 'ti', 'on method'),
@@ -1094,6 +1365,85 @@ class MixinStrUnicodeUserStringTest:
         self.checkraises(ValueError, S, 'rpartition', '')
         self.checkraises(TypeError, S, 'rpartition', None)
 
+        # mixed use of str and unicode
+        self.assertEqual('a/b/c'.rpartition(u'/'), ('a/b', '/', 'c'))
+
+        # with buffer arg (Jython addition)
+        b = buffer('ti')
+        if self.__class__.type2test is unicode:
+            self.checkequal(('this is the parti', u'ti', 'on method'),
+                'this is the partition method', 'rpartition', b)
+        else:
+            self.checkequal(('this is the parti', b, 'on method'),
+                'this is the partition method', 'rpartition', b)
+
+        # with memoryview arg (Jython addition)
+        if test_support.is_jython:
+            # CPython does not support until v3.2
+            with memoryview('ti') as m:
+                if self.__class__.type2test is unicode:
+                    self.checkequal(('this is the parti', u'ti', 'on method'),
+                        'this is the partition method', 'rpartition', m)
+                else:
+                    self.checkequal(('this is the parti', m, 'on method'),
+                        'this is the partition method', 'rpartition', m)
+
+    def test_none_arguments(self):
+        # issue 11828
+        s = 'hello'
+        self.checkequal(2, s, 'find', 'l', None)
+        self.checkequal(3, s, 'find', 'l', -2, None)
+        self.checkequal(2, s, 'find', 'l', None, -2)
+        self.checkequal(0, s, 'find', 'h', None, None)
+
+        self.checkequal(3, s, 'rfind', 'l', None)
+        self.checkequal(3, s, 'rfind', 'l', -2, None)
+        self.checkequal(2, s, 'rfind', 'l', None, -2)
+        self.checkequal(0, s, 'rfind', 'h', None, None)
+
+        self.checkequal(2, s, 'index', 'l', None)
+        self.checkequal(3, s, 'index', 'l', -2, None)
+        self.checkequal(2, s, 'index', 'l', None, -2)
+        self.checkequal(0, s, 'index', 'h', None, None)
+
+        self.checkequal(3, s, 'rindex', 'l', None)
+        self.checkequal(3, s, 'rindex', 'l', -2, None)
+        self.checkequal(2, s, 'rindex', 'l', None, -2)
+        self.checkequal(0, s, 'rindex', 'h', None, None)
+
+        self.checkequal(2, s, 'count', 'l', None)
+        self.checkequal(1, s, 'count', 'l', -2, None)
+        self.checkequal(1, s, 'count', 'l', None, -2)
+        self.checkequal(0, s, 'count', 'x', None, None)
+
+        self.checkequal(True, s, 'endswith', 'o', None)
+        self.checkequal(True, s, 'endswith', 'lo', -2, None)
+        self.checkequal(True, s, 'endswith', 'l', None, -2)
+        self.checkequal(False, s, 'endswith', 'x', None, None)
+
+        self.checkequal(True, s, 'startswith', 'h', None)
+        self.checkequal(True, s, 'startswith', 'l', -2, None)
+        self.checkequal(True, s, 'startswith', 'h', None, -2)
+        self.checkequal(False, s, 'startswith', 'x', None, None)
+
+    def test_find_etc_raise_correct_error_messages(self):
+        # issue 11828
+        s = 'hello'
+        x = 'x'
+        self.assertRaisesRegexp(TypeError, r'\bfind\b', s.find,
+                                x, None, None, None)
+        self.assertRaisesRegexp(TypeError, r'\brfind\b', s.rfind,
+                                x, None, None, None)
+        self.assertRaisesRegexp(TypeError, r'\bindex\b', s.index,
+                                x, None, None, None)
+        self.assertRaisesRegexp(TypeError, r'\brindex\b', s.rindex,
+                                x, None, None, None)
+        self.assertRaisesRegexp(TypeError, r'^count\(', s.count,
+                                x, None, None, None)
+        self.assertRaisesRegexp(TypeError, r'^startswith\(', s.startswith,
+                                x, None, None, None)
+        self.assertRaisesRegexp(TypeError, r'^endswith\(', s.endswith,
+                                x, None, None, None)
 
 class MixinStrStringUserStringTest:
     # Additional tests for 8bit strings, i.e. str, UserString and
@@ -1110,10 +1460,19 @@ class MixinStrStringUserStringTest:
         table = string.maketrans('abc', 'xyz')
         self.checkequal('xyzxyz', 'xyzabcdef', 'translate', table, 'def')
 
+        # Repeat using buffer API objects (Jython addition)
+        if test_support.is_jython:
+            for buftype in (buffer, memoryview, bytearray):
+                self.checkequal('xyzxyz', 'xyzabcdef', 'translate', buftype(table), 'def')
+                self.checkequal('xyzxyz', 'xyzabcdef', 'translate', table, buftype('def'))
+
         table = string.maketrans('a', 'A')
         self.checkequal('Abc', 'abc', 'translate', table)
         self.checkequal('xyz', 'xyz', 'translate', table)
         self.checkequal('yz', 'xyz', 'translate', table, 'x')
+        self.checkequal('yx', 'zyzzx', 'translate', None, 'z')
+        self.checkequal('zyzzx', 'zyzzx', 'translate', None, '')
+        self.checkequal('zyzzx', 'zyzzx', 'translate', None)
         self.checkraises(ValueError, 'xyz', 'translate', 'too short', 'strip')
         self.checkraises(ValueError, 'xyz', 'translate', 'too short')
 
@@ -1158,34 +1517,34 @@ class MixinStrUnicodeTest:
             pass
         s1 = subclass("abcd")
         s2 = t().join([s1])
-        self.assert_(s1 is not s2)
-        self.assert_(type(s2) is t)
+        self.assertTrue(s1 is not s2)
+        self.assertTrue(type(s2) is t)
 
         s1 = t("abcd")
         s2 = t().join([s1])
-        self.assert_(s1 is s2)
+        self.assertTrue(s1 is s2)
 
         # Should also test mixed-type join.
         if t is unicode:
             s1 = subclass("abcd")
             s2 = "".join([s1])
-            self.assert_(s1 is not s2)
-            self.assert_(type(s2) is t)
+            self.assertTrue(s1 is not s2)
+            self.assertTrue(type(s2) is t)
 
             s1 = t("abcd")
             s2 = "".join([s1])
-            self.assert_(s1 is s2)
+            self.assertTrue(s1 is s2)
 
         elif t is str:
             s1 = subclass("abcd")
             s2 = u"".join([s1])
-            self.assert_(s1 is not s2)
-            self.assert_(type(s2) is unicode) # promotes!
+            self.assertTrue(s1 is not s2)
+            self.assertTrue(type(s2) is unicode) # promotes!
 
             s1 = t("abcd")
             s2 = u"".join([s1])
-            self.assert_(s1 is not s2)
-            self.assert_(type(s2) is unicode) # promotes!
+            self.assertTrue(s1 is not s2)
+            self.assertTrue(type(s2) is unicode) # promotes!
 
         else:
             self.fail("unexpected type for MixinStrUnicodeTest %r" % t)

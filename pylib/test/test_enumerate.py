@@ -100,7 +100,8 @@ class EnumerateTestCase(unittest.TestCase):
     def test_argumentcheck(self):
         self.assertRaises(TypeError, self.enum) # no arguments
         self.assertRaises(TypeError, self.enum, 1) # wrong type (not iterable)
-        self.assertRaises(TypeError, self.enum, 'abc', 2) # too many arguments
+        self.assertRaises(TypeError, self.enum, 'abc', 'a') # wrong type
+        self.assertRaises(TypeError, self.enum, 'abc', 2, 3) # too many arguments
 
     def test_tuple_reuse(self):
         # Tests an implementation detail where tuple is reused
@@ -201,7 +202,6 @@ def test_main(verbose=None):
         # XXX: CPython implementation details
         del EnumerateTestCase.test_tuple_reuse
         del TestReversed.test_len
-        del TestReversed.test_xrange_optimization
     testclasses = (EnumerateTestCase, SubclassTestCase, TestEmpty, TestBig,
                    TestReversed)
     test_support.run_unittest(*testclasses)

@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2006 Python Software Foundation
+# Copyright (C) 2001-2010 Python Software Foundation
 # Author: Barry Warsaw
 # Contact: email-sig@python.org
 
@@ -13,6 +13,7 @@ __all__ = [
     'formatdate',
     'getaddresses',
     'make_msgid',
+    'mktime_tz',
     'parseaddr',
     'parsedate',
     'parsedate_tz',
@@ -27,7 +28,6 @@ import random
 import socket
 import urllib
 import warnings
-from cStringIO import StringIO
 
 from email._parseaddr import quote
 from email._parseaddr import AddressList as _AddressList
@@ -60,19 +60,20 @@ def _identity(s):
 
 
 def _bdecode(s):
-    # We can't quite use base64.encodestring() since it tacks on a "courtesy
-    # newline".  Blech!
+    """Decodes a base64 string.
+
+    This function is equivalent to base64.decodestring and it's retained only
+    for backward compatibility. It used to remove the last \\n of the decoded
+    string, if it had any (see issue 7143).
+    """
     if not s:
         return s
-    value = base64.decodestring(s)
-    if not s.endswith('\n') and value.endswith('\n'):
-        return value[:-1]
-    return value
+    return base64.decodestring(s)
 
 
 
 def fix_eols(s):
-    """Replace all line-ending characters with \r\n."""
+    """Replace all line-ending characters with \\r\\n."""
     # Fix newlines with no preceding carriage return
     s = re.sub(r'(?<!\r)\n', CRLF, s)
     # Fix carriage returns with no following newline

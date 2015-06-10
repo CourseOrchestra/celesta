@@ -53,8 +53,9 @@ class AdhocRegrtest(unittest.TestCase):
             # use subprocess asap
             'test_types_pyc',
             'test_exceptions_pyc'):
-            ok = runtest(test, generate=False, verbose=False, quiet=True, testdir=None,
-                         huntrleaks=False, junit_xml=None)
+            test_times = []
+            ok = runtest(test, False, True, test_times)
+            print "got", ok
             self.assertTrue(ok > 0)
 
     def tearDown(self):
@@ -65,7 +66,10 @@ class AdhocRegrtest(unittest.TestCase):
 
 
 def test_main():
-    test_support.run_unittest(PyBytecodeTest, AdhocRegrtest)
+    test_support.run_unittest(
+        PyBytecodeTest,
+        # AdhocRegrtest   # reinstate once we have Python bytecode compilation, too hard to coordinate otherwise
+    )
 
 if __name__ == "__main__":
     test_main()

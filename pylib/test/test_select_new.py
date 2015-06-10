@@ -10,24 +10,19 @@ import unittest
 import socket
 import select
 
-SERVER_ADDRESS = ("localhost", 54321)
+SERVER_ADDRESS = ("localhost", 0)
 
 DATA_CHUNK_SIZE = 1000
 DATA_CHUNK = "." * DATA_CHUNK_SIZE
 
 #
-# The timing of these tests depends on the how the unerlying OS socket library
+# The timing of these tests depends on the how the underlying OS socket library
 # handles buffering. These values may need tweaking for different platforms
 #
 # The fundamental problem is that there is no reliable way to fill a socket with bytes
-#
+# To address this for running on Netty, we arbitrarily send 10000 bytes
 
-if test_support.is_jython:
-    SELECT_TIMEOUT = 0
-else:
-    # zero select timeout fails these tests on cpython (on windows 2003 anyway)
-    SELECT_TIMEOUT = 0.001
-
+SELECT_TIMEOUT = 0
 READ_TIMEOUT = 5
 
 class AsynchronousServer:
@@ -38,10 +33,11 @@ class AsynchronousServer:
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind(SERVER_ADDRESS)
         self.server_socket.listen(5)
+        self.server_addr = self.server_socket.getsockname()
         try:
             self.server_socket.accept()
-        except socket.error:
-            pass
+        except socket.error, e:
+            pass  # at this point, always gets EWOULDBLOCK - nothing to accept
 
     def select_acceptable(self):
         return select.select([self.server_socket], [self.server_socket], [], SELECT_TIMEOUT)[0]
@@ -86,6 +82,9 @@ class AsynchronousHandler:
                 if self.select_writable():
                     bytes_sent = self.socket.send(DATA_CHUNK)
                     total_bytes += bytes_sent
+                    if test_support.is_jython and total_bytes > 10000:
+                        # Netty will buffer indefinitely, so just pick an arbitrary cutoff
+                        return total_bytes
                 else:
                     return total_bytes
             except socket.error, se:
@@ -142,16 +141,18 @@ class AsynchronousHandler:
 
 class AsynchronousClient(AsynchronousHandler):
 
-    def __init__(self):
+    def __init__(self, server_addr):
+        self.server_addr = server_addr
         AsynchronousHandler.__init__(self, socket.socket(socket.AF_INET, socket.SOCK_STREAM))
         self.connected = 0
 
     def start_connect(self):
-        result = self.socket.connect_ex(SERVER_ADDRESS)
+        result = self.socket.connect_ex(self.server_addr)
         if result == errno.EISCONN:
-            self.connected = 1
+            self.connected = True
         else:
-            assert result == errno.EINPROGRESS
+            assert result in [errno.EINPROGRESS, errno.ENOTCONN], \
+                "connect_ex returned %s (%s)" % (result, errno.errorcode.get(result, "Unknown errno"))
 
     def finish_connect(self):
         if self.connected:
@@ -168,9 +169,10 @@ class AsynchronousClient(AsynchronousHandler):
 class TestSelectOnAccept(unittest.TestCase):
     def setUp(self):
         self.server = AsynchronousServer()
-        self.client = AsynchronousClient()
+        self.client = AsynchronousClient(self.server.server_addr)
         self.handler = None
 
+    @test_support.retry(Exception)
     def testSelectOnAccept(self):
         self.server.verify_not_acceptable()
         self.client.start_connect()
@@ -186,9 +188,10 @@ class TestSelectOnAccept(unittest.TestCase):
         self.server.close()
 
 class TestSelect(unittest.TestCase):
+    @test_support.retry(Exception)
     def setUp(self):
         self.server = AsynchronousServer()
-        self.client = AsynchronousClient()
+        self.client = AsynchronousClient(self.server.server_addr)
         self.client.start_connect()
         self.handler = self.server.accept()
         self.client.finish_connect()
@@ -198,19 +201,21 @@ class TestSelect(unittest.TestCase):
         self.handler.close()
         self.server.close()
 
+    @test_support.retry(Exception)
     def testClientOut(self):
         self.client.verify_only_writable()
         self.handler.verify_only_writable()
 
         written = self.client.write()
         self.handler.verify_readable()
-
+            
         self.handler.read(written/2)
         self.handler.verify_readable()
 
         self.handler.read(written/2)
         self.handler.verify_not_readable()
 
+    @test_support.retry(Exception)
     def testHandlerOut(self):
         written = self.handler.write()
         self.client.verify_readable()
@@ -221,6 +226,7 @@ class TestSelect(unittest.TestCase):
         self.client.read(written/2)
         self.client.verify_not_readable()
 
+    @test_support.retry(Exception)
     def testBothOut(self):
         client_written = self.client.write()
         handler_written = self.handler.write()
@@ -238,9 +244,7 @@ class TestSelect(unittest.TestCase):
         self.handler.verify_only_writable()
 
 def test_main():
-    tests = [TestSelect, TestSelectOnAccept]
-    suites = [unittest.makeSuite(klass, 'test') for klass in tests]
-    test_support.run_suite(unittest.TestSuite(suites))    
+    test_support.run_unittest(__name__)    
 
 if __name__ == "__main__":
     test_main()

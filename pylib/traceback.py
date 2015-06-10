@@ -64,7 +64,7 @@ def print_tb(tb, limit=None, file=None):
         filename = co.co_filename
         name = co.co_name
         _print(file,
-               '  File "%s", line %d, in %s' % (filename,lineno,name))
+               '  File "%s", line %d, in %s' % (filename, lineno, name))
         linecache.checkcache(filename)
         line = linecache.getline(filename, lineno, f.f_globals)
         if line: _print(file, '    ' + line.strip())
@@ -124,9 +124,8 @@ def print_exception(etype, value, tb, limit=None, file=None):
         _print(file, 'Traceback (most recent call last):')
         print_tb(tb, limit, file)
     lines = format_exception_only(etype, value)
-    for line in lines[:-1]:
-        _print(file, line, ' ')
-    _print(file, lines[-1], '')
+    for line in lines:
+        _print(file, line, '')
 
 def format_exception(etype, value, tb, limit = None):
     """Format a stack trace and the exception information.
@@ -167,7 +166,7 @@ def format_exception_only(etype, value):
     # >>> raise string1, string2  # deprecated
     #
     # Clear these out first because issubtype(string1, SyntaxError)
-    # would throw another exception and mask the original problem.
+    # would raise another exception and mask the original problem.
     if (isinstance(etype, BaseException) or
         isinstance(etype, types.InstanceType) or
         etype is None or type(etype) is str):
@@ -181,7 +180,7 @@ def format_exception_only(etype, value):
     # It was a syntax error; show exactly where the problem was found.
     lines = []
     try:
-        msg, (filename, lineno, offset, badline) = value
+        msg, (filename, lineno, offset, badline) = value.args
     except Exception:
         pass
     else:
@@ -190,12 +189,12 @@ def format_exception_only(etype, value):
         if badline is not None:
             lines.append('    %s\n' % badline.strip())
             if offset is not None:
-                caretspace = badline[:offset].lstrip()
+                caretspace = badline.rstrip('\n')[:offset].lstrip()
                 # non-space whitespace (likes tabs) must be kept for alignment
                 caretspace = ((c.isspace() and c or ' ') for c in caretspace)
                 # only three spaces to account for offset1 == pos 0
                 lines.append('   %s^\n' % ''.join(caretspace))
-            value = msg
+        value = msg
 
     lines.append(_format_final_exc_line(stype, value))
     return lines
@@ -212,8 +211,14 @@ def _format_final_exc_line(etype, value):
 def _some_str(value):
     try:
         return str(value)
-    except:
-        return '<unprintable %s object>' % type(value).__name__
+    except Exception:
+        pass
+    try:
+        value = unicode(value)
+        return value.encode("ascii", "backslashreplace")
+    except Exception:
+        pass
+    return '<unprintable %s object>' % type(value).__name__
 
 
 def print_exc(limit=None, file=None):
@@ -241,6 +246,8 @@ def format_exc(limit=None):
 def print_last(limit=None, file=None):
     """This is a shorthand for 'print_exception(sys.last_type,
     sys.last_value, sys.last_traceback, limit, file)'."""
+    if not hasattr(sys, "last_type"):
+        raise ValueError("no last exception")
     if file is None:
         file = sys.stderr
     print_exception(sys.last_type, sys.last_value, sys.last_traceback,
