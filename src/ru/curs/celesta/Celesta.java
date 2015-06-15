@@ -488,6 +488,8 @@ public final class Celesta {
 		Properties postProperties = new Properties();
 		postProperties.setProperty("python.packages.directories",
 				"java.ext.dirs,celesta.lib");
+		postProperties.setProperty("python.console.encoding",
+				"UTF-8");
 		PythonInterpreter.initialize(System.getProperties(), postProperties,
 				null);
 		// codecs.setDefaultEncoding("UTF-8");
