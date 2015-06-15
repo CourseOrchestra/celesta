@@ -11,6 +11,8 @@ public final class AppSettings {
 	private static final String DEFAULT_PYLIB_PATH = "pylib";
 	private static AppSettings theSettings;
 
+	private final Properties properties;
+
 	private final String scorePath;
 	private final DBType dbType;
 	private final String databaseConnection;
@@ -27,6 +29,7 @@ public final class AppSettings {
 	}
 
 	private AppSettings(Properties settings) throws CelestaException {
+		properties = settings;
 
 		StringBuffer sb = new StringBuffer();
 
@@ -230,6 +233,15 @@ public final class AppSettings {
 	 */
 	public static String getDBPassword() {
 		return theSettings.password;
+	}
+
+	/**
+	 * Возвращает свойства, с которыми была инициализирована Челеста. Внимание:
+	 * данный объект имеет смысл использовать только на чтение, динамическое
+	 * изменение этих свойств не приводит ни к чему.
+	 */
+	public static Properties getSetupProperties() {
+		return theSettings.properties;
 	}
 
 }

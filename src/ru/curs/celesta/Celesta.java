@@ -605,4 +605,13 @@ public final class Celesta {
 	public Score getScore() {
 		return score;
 	}
+
+	/**
+	 * Возвращает свойства, с которыми была инициализирована Челеста. Внимание:
+	 * данный объект имеет смысл использовать только на чтение, динамическое
+	 * изменение этих свойств не приводит ни к чему.
+	 */
+	public Properties getSetupProperties() {
+		return AppSettings.getSetupProperties();
+	}
 }
