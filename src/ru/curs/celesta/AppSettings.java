@@ -20,9 +20,11 @@ public final class AppSettings {
 	private final String password;
 	private final Logger logger;
 	private final String pylibPath;
+	private final String javalibPath;
 	private final boolean skipDBUpdate;
 	private final boolean forceDBInitialize;
 	private final boolean logLogins;
+
 	{
 		logger = Logger.getLogger("ru.curs.flute");
 		logger.setLevel(Level.INFO);
@@ -74,6 +76,14 @@ public final class AppSettings {
 		File pylibPathFile = new File(pylibPath);
 		if (!pylibPathFile.exists())
 			sb.append("Invalid pylib.path entry: " + pylibPath + '\n');
+		
+		javalibPath = settings.getProperty("javalib.path", "").trim();
+		for (String pathEntry : javalibPath.split(File.pathSeparator)) {
+			File path = new File(pathEntry);
+			if (!(path.isDirectory() && path.canRead())) {
+				sb.append("Invalid javalib.path entry: " + pathEntry + '\n');
+			}
+		}
 
 		skipDBUpdate = Boolean.parseBoolean(settings.getProperty(
 				"skip.dbupdate", "").trim());
@@ -178,6 +188,14 @@ public final class AppSettings {
 	public static String getPylibPath() {
 		return theSettings.pylibPath;
 	}
+	
+	/**
+	 * Значение параметра "javalib.path".
+	 */
+
+	public static String getJavalibPath() {
+		return theSettings.javalibPath;
+	}
 
 	/**
 	 * Значение параметра "пропускать фазу обновления базы данных".
@@ -243,5 +261,6 @@ public final class AppSettings {
 	public static Properties getSetupProperties() {
 		return theSettings.properties;
 	}
+
 
 }

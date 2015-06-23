@@ -223,13 +223,15 @@ public final class Celesta {
 			if (pathEntry.exists() && pathEntry.isDirectory()) {
 				pyPathList.add(pathEntry.getAbsolutePath());
 			}
-			for (String entry : AppSettings.getPylibPath().split(File.pathSeparator)) {
+			for (String entry : AppSettings.getPylibPath().split(
+					File.pathSeparator)) {
 				pathEntry = new File(entry);
 				if (pathEntry.exists() && pathEntry.isDirectory()) {
 					pyPathList.add(pathEntry.getAbsolutePath());
 				}
 			}
-			for (String entry : AppSettings.getScorePath().split(File.pathSeparator)) {
+			for (String entry : AppSettings.getScorePath().split(
+					File.pathSeparator)) {
 				pathEntry = new File(entry.trim());
 				if (pathEntry.exists() && pathEntry.isDirectory()) {
 					pyPathList.add(pathEntry.getAbsolutePath());
@@ -394,10 +396,8 @@ public final class Celesta {
 					StringWriter sw = new StringWriter();
 					e.fillInStackTrace().printStackTrace(new PrintWriter(sw));
 					throw new CelestaException(String.format(
-							"Python error while executing '%s': %s:%s%n%s%n%s", 
-							lastPyCmd,
-							e.type, e.value,
-							sw.toString(), sqlErr));
+							"Python error while executing '%s': %s:%s%n%s%n%s",
+							lastPyCmd, e.type, e.value, sw.toString(), sqlErr));
 				}
 			} finally {
 				context.closeCursors();
@@ -459,27 +459,19 @@ public final class Celesta {
 	}
 
 	private static void initCL() {
-		File lib = new File(getMyPath() + "lib");
-		if (lib.exists() && lib.isDirectory() && lib.canRead()) {
-			// Construct the "class path" for this class loader
-			Set<URL> set = new LinkedHashSet<URL>();
+		Set<URL> urlSet = new LinkedHashSet<URL>();
 
-			String[] filenames = lib.list();
-			for (String filename : filenames) {
-				if (!filename.toLowerCase().endsWith(".jar"))
-					continue;
-				File file = new File(lib, filename);
-				URL url;
-				try {
-					url = file.toURI().toURL();
-					set.add(url);
-				} catch (MalformedURLException e) {
-					// This can't happen
-					e.printStackTrace();
-				}
-			}
-			// Construct the class loader itself
-			final URL[] array = set.toArray(new URL[set.size()]);
+		File lib = new File(getMyPath() + "lib");
+		addLibEntry(lib, urlSet);
+		for (String pathEntry : AppSettings.getJavalibPath().split(
+				File.pathSeparator)) {
+			lib = new File(pathEntry);
+			addLibEntry(lib, urlSet);
+		}
+
+		// Construct the class loader itself
+		if (urlSet.size() > 0) {
+			final URL[] array = urlSet.toArray(new URL[urlSet.size()]);
 			ClassLoader classLoader = AccessController
 					.doPrivileged(new PrivilegedAction<URLClassLoader>() {
 						@Override
@@ -489,15 +481,33 @@ public final class Celesta {
 					});
 			Thread.currentThread().setContextClassLoader(classLoader);
 		}
-
 		Properties postProperties = new Properties();
 		postProperties.setProperty("python.packages.directories",
 				"java.ext.dirs,celesta.lib");
-		postProperties.setProperty("python.console.encoding",
-				"UTF-8");
+		postProperties.setProperty("python.console.encoding", "UTF-8");
 		PythonInterpreter.initialize(System.getProperties(), postProperties,
 				null);
 		// codecs.setDefaultEncoding("UTF-8");
+	}
+
+	private static void addLibEntry(File lib, Set<URL> urlSet) {
+		if (lib.exists() && lib.isDirectory() && lib.canRead()) {
+			// Construct the "class path" for this class loader
+			String[] filenames = lib.list();
+			for (String filename : filenames) {
+				if (!filename.toLowerCase().endsWith(".jar"))
+					continue;
+				File file = new File(lib, filename);
+				URL url;
+				try {
+					url = file.toURI().toURL();
+					urlSet.add(url);
+				} catch (MalformedURLException e) {
+					// This can't happen
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 	/**
