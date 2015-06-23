@@ -370,12 +370,15 @@ public final class Celesta {
 				for (int i = 0; i < param.length; i++)
 					interp.set(String.format("arg%d", i), param[i]);
 
+				String lastPyCmd = "";
 				try {
 					String line = String.format("import %s%s", grainName,
 							unitName);
+					lastPyCmd = line;
 					interp.exec(line);
 					line = String.format("%s%s.%s(%s)", grainName, unitName,
 							procName, sb.toString());
+					lastPyCmd = line;
 					PyObject pyObj = interp.eval(line);
 					return pyObj;
 				} catch (PyException e) {
@@ -391,7 +394,9 @@ public final class Celesta {
 					StringWriter sw = new StringWriter();
 					e.fillInStackTrace().printStackTrace(new PrintWriter(sw));
 					throw new CelestaException(String.format(
-							"Python error: %s:%s%n%s%n%s", e.type, e.value,
+							"Python error while executing '%s': %s:%s%n%s%n%s", 
+							lastPyCmd,
+							e.type, e.value,
 							sw.toString(), sqlErr));
 				}
 			} finally {
