@@ -76,14 +76,15 @@ public final class AppSettings {
 		File pylibPathFile = new File(pylibPath);
 		if (!pylibPathFile.exists())
 			sb.append("Invalid pylib.path entry: " + pylibPath + '\n');
-		
+
 		javalibPath = settings.getProperty("javalib.path", "").trim();
-		for (String pathEntry : javalibPath.split(File.pathSeparator)) {
-			File path = new File(pathEntry);
-			if (!(path.isDirectory() && path.canRead())) {
-				sb.append("Invalid javalib.path entry: " + pathEntry + '\n');
+		if (!javalibPath.isEmpty())
+			for (String pathEntry : javalibPath.split(File.pathSeparator)) {
+				File path = new File(pathEntry);
+				if (!(path.isDirectory() && path.canRead())) {
+					sb.append("Invalid javalib.path entry: " + pathEntry + '\n');
+				}
 			}
-		}
 
 		skipDBUpdate = Boolean.parseBoolean(settings.getProperty(
 				"skip.dbupdate", "").trim());
@@ -188,7 +189,7 @@ public final class AppSettings {
 	public static String getPylibPath() {
 		return theSettings.pylibPath;
 	}
-	
+
 	/**
 	 * Значение параметра "javalib.path".
 	 */
@@ -261,6 +262,5 @@ public final class AppSettings {
 	public static Properties getSetupProperties() {
 		return theSettings.properties;
 	}
-
 
 }

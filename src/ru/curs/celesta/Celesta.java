@@ -463,11 +463,12 @@ public final class Celesta {
 
 		File lib = new File(getMyPath() + "lib");
 		addLibEntry(lib, urlSet);
-		for (String pathEntry : AppSettings.getJavalibPath().split(
-				File.pathSeparator)) {
-			lib = new File(pathEntry);
-			addLibEntry(lib, urlSet);
-		}
+		if (!AppSettings.getJavalibPath().isEmpty())
+			for (String pathEntry : AppSettings.getJavalibPath().split(
+					File.pathSeparator)) {
+				lib = new File(pathEntry);
+				addLibEntry(lib, urlSet);
+			}
 
 		// Construct the class loader itself
 		if (urlSet.size() > 0) {
