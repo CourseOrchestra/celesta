@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.GrainElement;
@@ -39,7 +40,7 @@ public final class ORMCompiler {
 	 * Версия компилятора. Данную константу следует инкрементировать, когда
 	 * необходимо инициировать автоматическое пересоздание orm-скриптов.
 	 */
-	private static final int COMPILERVER = 3;
+	private static final int COMPILERVER = 4;
 
 	private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
 	private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -57,7 +58,24 @@ public final class ORMCompiler {
 			"import ru.curs.celesta.dbutils.Cursor as Cursor",
 			"import ru.curs.celesta.dbutils.ViewCursor as ViewCursor",
 			"import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor",
-			"from java.lang import Object", "from jarray import array", "" };
+			"from java.lang import Object",
+			"from jarray import array",
+			"from java.util import Calendar, GregorianCalendar",
+			"from java.sql import Timestamp",
+			"import datetime",
+			"",
+			"def _to_timestamp(d):",
+			"    if isinstance(d, datetime.datetime):",
+			"        calendar = GregorianCalendar()",
+			"        calendar.set(d.year, d.month - 1, d.day, d.hour, d.minute, d.second)",
+			"        ts = Timestamp(calendar.getTimeInMillis())",
+			"        ts.setNanos(d.microsecond * 1000)", 
+			"        return ts",
+			"    else:",
+			"        return d",
+			""
+
+	};
 
 	private static final String[] TABLE_HEADER = { "    onPreDelete  = []",
 			"    onPostDelete = []", "    onPreInsert  = []",
@@ -436,6 +454,8 @@ public final class ORMCompiler {
 			sb.append(String.format(
 					"None if self.%s == None else unicode(self.%s)",
 					c.getName(), c.getName()));
+		else if (c instanceof DateTimeColumn)
+			sb.append(String.format("_to_timestamp(self.%s)", c.getName()));
 		else {
 			sb.append(String.format("self.%s", c.getName()));
 		}
