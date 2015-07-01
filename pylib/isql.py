@@ -8,8 +8,6 @@ Isql works in conjunction with dbexts to provide an interactive environment
 for database work.
 """
 
-__version__ = "7290"
-
 class IsqlExit(Exception): pass
 
 class Prompt:

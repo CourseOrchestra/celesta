@@ -47,8 +47,6 @@ import os, re
 from types import StringType
 
 __author__ = "brian zimmer (bzimmer@ziclix.com)"
-__version__ = "7290"
-
 __OS__ = os.name
 
 choose = lambda bool, a, b: (bool and [a] or [b])[0]

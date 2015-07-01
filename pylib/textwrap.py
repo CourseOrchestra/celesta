@@ -9,15 +9,23 @@ __revision__ = "$Id$"
 
 import string, re
 
+try:
+    _unicode = unicode
+except NameError:
+    # If Python is built without Unicode support, the unicode type
+    # will not exist. Fake one.
+    class _unicode(object):
+        pass
+
 # Do the right thing with boolean values for all known Python versions
 # (so this module can be copied to projects that don't depend on Python
-# 2.3, e.g. Optik and Docutils).
-try:
-    True, False
-except NameError:
-    (True, False) = (1, 0)
+# 2.3, e.g. Optik and Docutils) by uncommenting the block of code below.
+#try:
+#    True, False
+#except NameError:
+#    (True, False) = (1, 0)
 
-__all__ = ['TextWrapper', 'wrap', 'fill']
+__all__ = ['TextWrapper', 'wrap', 'fill', 'dedent']
 
 # Hardcode the recognized whitespace characters to the US-ASCII
 # whitespace characters.  The main reason for doing this is that in
@@ -63,6 +71,12 @@ class TextWrapper:
       break_long_words (default: true)
         Break words longer than 'width'.  If false, those words will not
         be broken, and some lines might be longer than 'width'.
+      break_on_hyphens (default: true)
+        Allow breaking hyphenated words. If true, wrapping will occur
+        preferably on whitespaces and right after hyphens part of
+        compound words.
+      drop_whitespace (default: true)
+        Drop leading and trailing whitespace from lines.
     """
 
     whitespace_trans = string.maketrans(_whitespace, ' ' * len(_whitespace))
@@ -80,14 +94,21 @@ class TextWrapper:
     # (after stripping out empty strings).
     wordsep_re = re.compile(
         r'(\s+|'                                  # any whitespace
-        r'[^\s\w]*\w+[a-zA-Z]-(?=\w+[a-zA-Z])|'   # hyphenated words
+        r'[^\s\w]*\w+[^0-9\W]-(?=\w+[^0-9\W])|'   # hyphenated words
         r'(?<=[\w\!\"\'\&\.\,\?])-{2,}(?=\w))')   # em-dash
+
+    # This less funky little regex just split on recognized spaces. E.g.
+    #   "Hello there -- you goof-ball, use the -b option!"
+    # splits into
+    #   Hello/ /there/ /--/ /you/ /goof-ball,/ /use/ /the/ /-b/ /option!/
+    wordsep_simple_re = re.compile(r'(\s+)')
 
     # XXX this is not locale- or charset-aware -- string.lowercase
     # is US-ASCII only (and therefore English-only)
     sentence_end_re = re.compile(r'[%s]'              # lowercase letter
                                  r'[\.\!\?]'          # sentence-ending punct.
                                  r'[\"\']?'           # optional end-of-quote
+                                 r'\Z'                # end of chunk
                                  % string.lowercase)
 
 
@@ -98,7 +119,9 @@ class TextWrapper:
                  expand_tabs=True,
                  replace_whitespace=True,
                  fix_sentence_endings=False,
-                 break_long_words=True):
+                 break_long_words=True,
+                 drop_whitespace=True,
+                 break_on_hyphens=True):
         self.width = width
         self.initial_indent = initial_indent
         self.subsequent_indent = subsequent_indent
@@ -106,6 +129,15 @@ class TextWrapper:
         self.replace_whitespace = replace_whitespace
         self.fix_sentence_endings = fix_sentence_endings
         self.break_long_words = break_long_words
+        self.drop_whitespace = drop_whitespace
+        self.break_on_hyphens = break_on_hyphens
+
+        # recompile the regexes for Unicode mode -- done in this clumsy way for
+        # backwards compatibility because it's rather common to monkey-patch
+        # the TextWrapper class' wordsep_re attribute.
+        self.wordsep_re_uni = re.compile(self.wordsep_re.pattern, re.U)
+        self.wordsep_simple_re_uni = re.compile(
+            self.wordsep_simple_re.pattern, re.U)
 
 
     # -- Private methods -----------------------------------------------
@@ -123,7 +155,7 @@ class TextWrapper:
         if self.replace_whitespace:
             if isinstance(text, str):
                 text = text.translate(self.whitespace_trans)
-            elif isinstance(text, unicode):
+            elif isinstance(text, _unicode):
                 text = text.translate(self.unicode_whitespace_trans)
         return text
 
@@ -132,15 +164,29 @@ class TextWrapper:
         """_split(text : string) -> [string]
 
         Split the text to wrap into indivisible chunks.  Chunks are
-        not quite the same as words; see wrap_chunks() for full
+        not quite the same as words; see _wrap_chunks() for full
         details.  As an example, the text
           Look, goof-ball -- use the -b option!
         breaks into the following chunks:
           'Look,', ' ', 'goof-', 'ball', ' ', '--', ' ',
           'use', ' ', 'the', ' ', '-b', ' ', 'option!'
+        if break_on_hyphens is True, or in:
+          'Look,', ' ', 'goof-ball', ' ', '--', ' ',
+          'use', ' ', 'the', ' ', '-b', ' ', option!'
+        otherwise.
         """
-        chunks = self.wordsep_re.split(text)
-        chunks = filter(None, chunks)
+        if isinstance(text, _unicode):
+            if self.break_on_hyphens:
+                pat = self.wordsep_re_uni
+            else:
+                pat = self.wordsep_simple_re_uni
+        else:
+            if self.break_on_hyphens:
+                pat = self.wordsep_re
+            else:
+                pat = self.wordsep_simple_re
+        chunks = pat.split(text)
+        chunks = filter(None, chunks)  # remove empty chunks
         return chunks
 
     def _fix_sentence_endings(self, chunks):
@@ -153,9 +199,9 @@ class TextWrapper:
         space to two.
         """
         i = 0
-        pat = self.sentence_end_re
+        patsearch = self.sentence_end_re.search
         while i < len(chunks)-1:
-            if chunks[i+1] == " " and pat.search(chunks[i]):
+            if chunks[i+1] == " " and patsearch(chunks[i]):
                 chunks[i+1] = "  "
                 i += 2
             else:
@@ -169,7 +215,12 @@ class TextWrapper:
         Handle a chunk of text (most likely a word, not whitespace) that
         is too long to fit in any line.
         """
-        space_left = max(width - cur_len, 1)
+        # Figure out when indent is larger than the specified width, and make
+        # sure at least one character is stripped off on every pass
+        if width < 1:
+            space_left = 1
+        else:
+            space_left = width - cur_len
 
         # If we're allowed to break long words, then do so: put as much
         # of the next chunk onto the current line as will fit.
@@ -228,7 +279,7 @@ class TextWrapper:
 
             # First chunk on line is whitespace -- drop it, unless this
             # is the very beginning of the text (ie. no lines started yet).
-            if chunks[-1].strip() == '' and lines:
+            if self.drop_whitespace and chunks[-1].strip() == '' and lines:
                 del chunks[-1]
 
             while chunks:
@@ -249,7 +300,7 @@ class TextWrapper:
                 self._handle_long_word(chunks, cur_line, cur_len, width)
 
             # If the last chunk on this line is all whitespace, drop it.
-            if cur_line and cur_line[-1].strip() == '':
+            if self.drop_whitespace and cur_line and cur_line[-1].strip() == '':
                 del cur_line[-1]
 
             # Convert current line back to a string and store it in list

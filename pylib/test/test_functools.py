@@ -123,6 +123,9 @@ class TestPartial(unittest.TestCase):
             del p.__dict__
         except TypeError:
             pass
+        except AttributeError:
+            #In some cases Jython raises AttributeError here.
+            pass
         else:
             self.fail('partial object allowed __dict__ to be deleted')
 

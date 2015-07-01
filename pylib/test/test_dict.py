@@ -1,52 +1,74 @@
 import unittest
 from test import test_support
+from java.util import Map
+from java.util.concurrent import ConcurrentMap
 
-import sys, UserDict, cStringIO
+import UserDict, random, string
+import gc, weakref
 
 
 class DictTest(unittest.TestCase):
+
+    _class = None
+
+    def _make_dict(self, pydict):
+        return pydict if not self._class else self._class(pydict)
+
     def test_constructor(self):
         # calling built-in types without argument must return empty
-        self.assertEqual(dict(), {})
-        self.assert_(dict() is not {})
+        self.assertEqual(self._make_dict(dict()), {})
+        self.assertIsNot(self._make_dict(dict()), {})
+
+    def test_literal_constructor(self):
+        # check literal constructor for different sized dicts
+        # (to exercise the BUILD_MAP oparg).
+        for n in (0, 1, 6, 256, 400):
+            items = [(''.join(random.sample(string.letters, 8)), i)
+                     for i in range(n)]
+            random.shuffle(items)
+            formatted_items = ('{!r}: {:d}'.format(k, v) for k, v in items)
+            dictliteral = '{' + ', '.join(formatted_items) + '}'
+            self.assertEqual(self._make_dict(eval(dictliteral)), dict(items))
 
     def test_bool(self):
-        self.assert_(not {})
-        self.assert_({1: 2})
-        self.assert_(bool({}) is False)
-        self.assert_(bool({1: 2}) is True)
+        self.assertIs(not self._make_dict({}), True)
+        self.assertTrue(self._make_dict({1: 2}))
+        self.assertIs(bool(self._make_dict({})), False)
+        self.assertIs(bool(self._make_dict({1: 2})), True)
 
     def test_keys(self):
-        d = {}
+        d = self._make_dict({})
         self.assertEqual(d.keys(), [])
         d = {'a': 1, 'b': 2}
         k = d.keys()
-        self.assert_(d.has_key('a'))
-        self.assert_(d.has_key('b'))
+        self.assertTrue(d.has_key('a'))
+        self.assertTrue(d.has_key('b'))
 
         self.assertRaises(TypeError, d.keys, None)
 
     def test_values(self):
-        d = {}
+        d = self._make_dict({})
         self.assertEqual(d.values(), [])
-        d = {1:2}
+
+        d = self._make_dict({1:2})
         self.assertEqual(d.values(), [2])
 
         self.assertRaises(TypeError, d.values, None)
 
     def test_items(self):
-        d = {}
+        d = self._make_dict({})
         self.assertEqual(d.items(), [])
 
-        d = {1:2}
+        d = self._make_dict({1:2})
         self.assertEqual(d.items(), [(1, 2)])
 
         self.assertRaises(TypeError, d.items, None)
 
     def test_has_key(self):
-        d = {}
-        self.assert_(not d.has_key('a'))
-        d = {'a': 1, 'b': 2}
+        d = self._make_dict({})
+        self.assertFalse(d.has_key('a'))
+
+        d = self._make_dict({'a': 1, 'b': 2})
         k = d.keys()
         k.sort()
         self.assertEqual(k, ['a', 'b'])
@@ -54,24 +76,27 @@ class DictTest(unittest.TestCase):
         self.assertRaises(TypeError, d.has_key)
 
     def test_contains(self):
-        d = {}
-        self.assert_(not ('a' in d))
-        self.assert_('a' not in d)
-        d = {'a': 1, 'b': 2}
-        self.assert_('a' in d)
-        self.assert_('b' in d)
-        self.assert_('c' not in d)
+        d = self._make_dict({})
+        self.assertNotIn('a', d)
+        self.assertFalse('a' in d)
+        self.assertTrue('a' not in d)
+
+        d = self._make_dict({'a': 1, 'b': 2})
+        self.assertIn('a', d)
+        self.assertIn('b', d)
+        self.assertNotIn('c', d)
 
         self.assertRaises(TypeError, d.__contains__)
 
     def test_len(self):
-        d = {}
+        d = self._make_dict({})
         self.assertEqual(len(d), 0)
-        d = {'a': 1, 'b': 2}
+
+        d = self._make_dict({'a': 1, 'b': 2})
         self.assertEqual(len(d), 2)
 
     def test_getitem(self):
-        d = {'a': 1, 'b': 2}
+        d = self._make_dict({'a': 1, 'b': 2})
         self.assertEqual(d['a'], 1)
         self.assertEqual(d['b'], 2)
         d['c'] = 3
@@ -86,8 +111,10 @@ class DictTest(unittest.TestCase):
         class BadEq(object):
             def __eq__(self, other):
                 raise Exc()
+            def __hash__(self):
+                return 24
 
-        d = {}
+        d = self._make_dict({})
         d[BadEq()] = 42
         self.assertRaises(KeyError, d.__getitem__, 23)
 
@@ -107,14 +134,14 @@ class DictTest(unittest.TestCase):
         self.assertRaises(Exc, d.__getitem__, x)
 
     def test_clear(self):
-        d = {1:1, 2:2, 3:3}
+        d = self._make_dict({1:1, 2:2, 3:3})
         d.clear()
         self.assertEqual(d, {})
 
         self.assertRaises(TypeError, d.clear, None)
 
     def test_update(self):
-        d = {}
+        d = self._make_dict({})
         d.update({1:100})
         d.update({2:20})
         d.update({1:1, 2:2, 3:3})
@@ -185,14 +212,14 @@ class DictTest(unittest.TestCase):
             def next(self):
                 raise Exc()
 
-        self.assertRaises(Exc, {}.update, badseq())
-
-        self.assertRaises(ValueError, {}.update, [(1, 2, 3)])
+        d = self._make_dict({})
+        self.assertRaises(Exc, d.update, badseq())
+        self.assertRaises(ValueError, d.update, [(1, 2, 3)])
 
     def test_fromkeys(self):
         self.assertEqual(dict.fromkeys('abc'), {'a':None, 'b':None, 'c':None})
-        d = {}
-        self.assert_(not(d.fromkeys('abc') is d))
+        d = self._make_dict({})
+        self.assertIsNot(d.fromkeys('abc'), d)
         self.assertEqual(d.fromkeys('abc'), {'a':None, 'b':None, 'c':None})
         self.assertEqual(d.fromkeys((4,5),0), {4:0, 5:0})
         self.assertEqual(d.fromkeys([]), {})
@@ -203,14 +230,14 @@ class DictTest(unittest.TestCase):
         class dictlike(dict): pass
         self.assertEqual(dictlike.fromkeys('a'), {'a':None})
         self.assertEqual(dictlike().fromkeys('a'), {'a':None})
-        self.assert_(type(dictlike.fromkeys('a')) is dictlike)
-        self.assert_(type(dictlike().fromkeys('a')) is dictlike)
+        self.assertIsInstance(dictlike.fromkeys('a'), dictlike)
+        self.assertIsInstance(dictlike().fromkeys('a'), dictlike)
         class mydict(dict):
             def __new__(cls):
                 return UserDict.UserDict()
         ud = mydict.fromkeys('ab')
         self.assertEqual(ud, {'a':None, 'b':None})
-        self.assert_(isinstance(ud, UserDict.UserDict))
+        self.assertIsInstance(ud, UserDict.UserDict)
         self.assertRaises(TypeError, dict.fromkeys)
 
         class Exc(Exception): pass
@@ -235,18 +262,23 @@ class DictTest(unittest.TestCase):
 
         self.assertRaises(Exc, baddict2.fromkeys, [1])
 
+        # test fast path for dictionary inputs
+        d = dict(zip(range(6), range(6)))
+        self.assertEqual(dict.fromkeys(d, 0), dict(zip(range(6), [0]*6)))
+
     def test_copy(self):
-        d = {1:1, 2:2, 3:3}
+        d = self._make_dict({1:1, 2:2, 3:3})
         self.assertEqual(d.copy(), {1:1, 2:2, 3:3})
-        self.assertEqual({}.copy(), {})
+        self.assertEqual(self._make_dict({}).copy(), {})
         self.assertRaises(TypeError, d.copy, None)
 
     def test_get(self):
-        d = {}
-        self.assert_(d.get('c') is None)
+        d = self._make_dict({})
+        self.assertIs(d.get('c'), None)
         self.assertEqual(d.get('c', 3), 3)
-        d = {'a' : 1, 'b' : 2}
-        self.assert_(d.get('c') is None)
+
+        d = self._make_dict({'a': 1, 'b': 2})
+        self.assertIs(d.get('c'), None)
         self.assertEqual(d.get('c', 3), 3)
         self.assertEqual(d.get('a'), 1)
         self.assertEqual(d.get('a', 3), 1)
@@ -255,10 +287,10 @@ class DictTest(unittest.TestCase):
 
     def test_setdefault(self):
         # dict.setdefault()
-        d = {}
-        self.assert_(d.setdefault('key0') is None)
+        d = self._make_dict({})
+        self.assertIs(d.setdefault('key0'), None)
         d.setdefault('key0', [])
-        self.assert_(d.setdefault('key0') is None)
+        self.assertIs(d.setdefault('key0'), None)
         d.setdefault('key', []).append(3)
         self.assertEqual(d['key'][0], 3)
         d.setdefault('key', []).append(4)
@@ -280,6 +312,32 @@ class DictTest(unittest.TestCase):
         x.fail = True
         self.assertRaises(Exc, d.setdefault, x, [])
 
+    def test_setdefault_atomic(self):
+        # Issue #13521: setdefault() calls __hash__ and __eq__ only once.
+        class Hashed(object):
+            def __init__(self):
+                self.hash_count = 0
+                self.eq_count = 0
+            def __hash__(self):
+                self.hash_count += 1
+                return 42
+            def __eq__(self, other):
+                self.eq_count += 1
+                return id(self) == id(other)
+        hashed1 = Hashed()
+        y = self._make_dict({hashed1: 5})
+        if isinstance(y, Map) and not isinstance(y, ConcurrentMap):
+            raise unittest.SkipTest("java.util.Map objects that do not implement ConcurrentMap have no concurrency guarantees")
+        # given that there are potentially multiple copies of the
+        # above dict in self._make_dict, record the hash_count so it
+        # can be subtracted out
+        setup_hash_count = hashed1.hash_count
+        hashed2 = Hashed()
+        y.setdefault(hashed2, [])
+        self.assertEqual(hashed1.hash_count, setup_hash_count)
+        self.assertEqual(hashed2.hash_count, 1)
+        self.assertEqual(hashed1.eq_count + hashed2.eq_count, 1)
+
     def test_popitem(self):
         # dict.popitem()
         for copymode in -1, +1:
@@ -300,16 +358,16 @@ class DictTest(unittest.TestCase):
                     self.assertEqual(va, int(ka))
                     kb, vb = tb = b.popitem()
                     self.assertEqual(vb, int(kb))
-                    self.assert_(not(copymode < 0 and ta != tb))
-                self.assert_(not a)
-                self.assert_(not b)
+                    self.assertFalse(copymode < 0 and ta != tb)
+                self.assertFalse(a)
+                self.assertFalse(b)
 
-        d = {}
+        d = self._make_dict({})
         self.assertRaises(KeyError, d.popitem)
 
     def test_pop(self):
         # Tests for pop with specified key
-        d = {}
+        d = self._make_dict({})
         k, v = 'abc', 'def'
         d[k] = v
         self.assertRaises(KeyError, d.pop, 'ghi')
@@ -319,11 +377,11 @@ class DictTest(unittest.TestCase):
 
         self.assertRaises(KeyError, d.pop, k)
 
-        # verify longs/ints get same value when key > 32 bits (for 64-bit archs)
-        # see SF bug #689659
+        # verify longs/ints get same value when key > 32 bits
+        # (for 64-bit archs).  See SF bug #689659.
         x = 4503599627370496L
         y = 4503599627370496
-        h = {x: 'anything', y: 'something else'}
+        h = self._make_dict({x: 'anything', y: 'something else'})
         self.assertEqual(h[x], h[y])
 
         self.assertEqual(d.pop(k, v), v)
@@ -347,23 +405,22 @@ class DictTest(unittest.TestCase):
         x.fail = True
         self.assertRaises(Exc, d.pop, x)
 
+    @unittest.skipIf(test_support.is_jython, "Weakly consistent iteration is compatible with mutation") 
     def test_mutatingiteration(self):
-        d = {}
+        # changing dict size during iteration
+        d = self._make_dict({})
         d[1] = 1
-        try:
+        with self.assertRaises(RuntimeError):
             for i in d:
                 d[i+1] = 1
-        except RuntimeError:
-            pass
-        else:
-            self.fail("changing dict size during iteration doesn't raise Error")
 
     def test_repr(self):
-        d = {}
+        d = self._make_dict({})
         self.assertEqual(repr(d), '{}')
         d[1] = 2
         self.assertEqual(repr(d), '{1: 2}')
-        d = {}
+
+        d = self._make_dict({})
         d[1] = d
         self.assertEqual(repr(d), '{1: {...}}')
 
@@ -373,32 +430,31 @@ class DictTest(unittest.TestCase):
             def __repr__(self):
                 raise Exc()
 
-        d = {1: BadRepr()}
+        d = self._make_dict({1: BadRepr()})
         self.assertRaises(Exc, repr, d)
 
     def test_le(self):
-        self.assert_(not ({} < {}))
-        self.assert_(not ({1: 2} < {1L: 2L}))
+        self.assertFalse(self._make_dict({}) < {})
+        self.assertFalse(self._make_dict({1: 2}) < {1L: 2L})
 
         class Exc(Exception): pass
 
         class BadCmp(object):
             def __eq__(self, other):
                 raise Exc()
+            def __hash__(self):
+                return 42
 
-        d1 = {BadCmp(): 1}
-        d2 = {1: 1}
-        try:
+        d1 = self._make_dict({BadCmp(): 1})
+        d2 = self._make_dict({1: 1})
+
+        with self.assertRaises(Exc):
             d1 < d2
-        except Exc:
-            pass
-        else:
-            self.fail("< didn't raise Exc")
 
     def test_missing(self):
         # Make sure dict doesn't have a __missing__ method
-        self.assertEqual(hasattr(dict, "__missing__"), False)
-        self.assertEqual(hasattr({}, "__missing__"), False)
+        self.assertFalse(hasattr(dict, "__missing__"))
+        self.assertFalse(hasattr(self._make_dict({}), "__missing__"))
         # Test several cases:
         # (D) subclass defines __missing__ method returning a value
         # (E) subclass defines __missing__ method raising RuntimeError
@@ -410,60 +466,236 @@ class DictTest(unittest.TestCase):
         d = D({1: 2, 3: 4})
         self.assertEqual(d[1], 2)
         self.assertEqual(d[3], 4)
-        self.assert_(2 not in d)
-        self.assert_(2 not in d.keys())
+        self.assertNotIn(2, d)
+        self.assertNotIn(2, d.keys())
         self.assertEqual(d[2], 42)
+
         class E(dict):
             def __missing__(self, key):
                 raise RuntimeError(key)
         e = E()
-        try:
+        with self.assertRaises(RuntimeError) as c:
             e[42]
-        except RuntimeError, err:
-            self.assertEqual(err.args, (42,))
-        else:
-            self.fail("e[42] didn't raise RuntimeError")
+        self.assertEqual(c.exception.args, (42,))
+
         class F(dict):
             def __init__(self):
                 # An instance variable __missing__ should have no effect
                 self.__missing__ = lambda key: None
         f = F()
-        try:
+        with self.assertRaises(KeyError) as c:
             f[42]
-        except KeyError, err:
-            self.assertEqual(err.args, (42,))
-        else:
-            self.fail("f[42] didn't raise KeyError")
+        self.assertEqual(c.exception.args, (42,))
+
         class G(dict):
             pass
         g = G()
-        try:
+        with self.assertRaises(KeyError) as c:
             g[42]
-        except KeyError, err:
-            self.assertEqual(err.args, (42,))
-        else:
-            self.fail("g[42] didn't raise KeyError")
+        self.assertEqual(c.exception.args, (42,))
 
     def test_tuple_keyerror(self):
         # SF #1576657
-        d = {}
-        try:
+        d = self._make_dict({})
+        with self.assertRaises(KeyError) as c:
             d[(1,)]
-        except KeyError, e:
-            self.assertEqual(e.args, ((1,),))
-        else:
-            self.fail("missing KeyError")
+        self.assertEqual(c.exception.args, ((1,),))
+
+    def test_bad_key(self):
+        # Dictionary lookups should fail if __cmp__() raises an exception.
+        class CustomException(Exception):
+            pass
+
+        class BadDictKey:
+            def __hash__(self):
+                return hash(self.__class__)
+
+            def __cmp__(self, other):
+                if isinstance(other, self.__class__):
+                    raise CustomException
+                return other
+
+        d = self._make_dict({})
+        x1 = BadDictKey()
+        x2 = BadDictKey()
+        d[x1] = 1
+        for stmt in ['d[x2] = 2',
+                     'z = d[x2]',
+                     'x2 in d',
+                     'd.has_key(x2)',
+                     'd.get(x2)',
+                     'd.setdefault(x2, 42)',
+                     'd.pop(x2)',
+                     'd.update({x2: 2})']:
+            with self.assertRaises(CustomException):
+                exec stmt in locals()
+
+    def test_resize1(self):
+        # Dict resizing bug, found by Jack Jansen in 2.2 CVS development.
+        # This version got an assert failure in debug build, infinite loop in
+        # release build.  Unfortunately, provoking this kind of stuff requires
+        # a mix of inserts and deletes hitting exactly the right hash codes in
+        # exactly the right order, and I can't think of a randomized approach
+        # that would be *likely* to hit a failing case in reasonable time.
+
+        d = self._make_dict({})
+        for i in range(5):
+            d[i] = i
+        for i in range(5):
+            del d[i]
+        for i in range(5, 9):  # i==8 was the problem
+            d[i] = i
+
+    def test_resize2(self):
+        # Another dict resizing bug (SF bug #1456209).
+        # This caused Segmentation faults or Illegal instructions.
+
+        class X(object):
+            def __hash__(self):
+                return 5
+            def __eq__(self, other):
+                if resizing:
+                    d.clear()
+                return False
+        d = self._make_dict({})
+        resizing = False
+        d[X()] = 1
+        d[X()] = 2
+        d[X()] = 3
+        d[X()] = 4
+        d[X()] = 5
+        # now trigger a resize
+        resizing = True
+        d[9] = 6
 
     def test_empty_presized_dict_in_freelist(self):
         # Bug #3537: if an empty but presized dict with a size larger
         # than 7 was in the freelist, it triggered an assertion failure
-        try:
-            d = {'a': 1/0,  'b': None, 'c': None, 'd': None, 'e': None,
-                 'f': None, 'g': None, 'h': None}
-        except ZeroDivisionError:
-            pass
+        with self.assertRaises(ZeroDivisionError):
+            d = self._make_dict(
+                    {'a': 1 // 0, 'b': None, 'c': None, 'd': None, 'e': None,
+                        'f': None, 'g': None, 'h': None})
         d = {}
 
+    def test_container_iterator(self):
+        # Bug #3680: tp_traverse was not implemented for dictiter objects
+        class C(object):
+            pass
+        iterators = (dict.iteritems, dict.itervalues, dict.iterkeys)
+        for i in iterators:
+            obj = C()
+            ref = weakref.ref(obj)
+            container = {obj: 1}
+            obj.x = i(container)
+            del obj, container
+            gc.collect()
+            self.assertIs(ref(), None, "Cycle was not collected")
+
+    def _not_tracked(self, t):
+        # Nested containers can take several collections to untrack
+        gc.collect()
+        gc.collect()
+        self.assertFalse(gc.is_tracked(t), t)
+
+    def _tracked(self, t):
+        self.assertTrue(gc.is_tracked(t), t)
+        gc.collect()
+        gc.collect()
+        self.assertTrue(gc.is_tracked(t), t)
+
+    @test_support.cpython_only
+    def test_track_literals(self):
+        # Test GC-optimization of dict literals
+        x, y, z, w = 1.5, "a", (1, None), []
+
+        self._not_tracked({})
+        self._not_tracked({x:(), y:x, z:1})
+        self._not_tracked({1: "a", "b": 2})
+        self._not_tracked({1: 2, (None, True, False, ()): int})
+        self._not_tracked({1: object()})
+
+        # Dicts with mutable elements are always tracked, even if those
+        # elements are not tracked right now.
+        self._tracked({1: []})
+        self._tracked({1: ([],)})
+        self._tracked({1: {}})
+        self._tracked({1: set()})
+
+    @test_support.cpython_only
+    def test_track_dynamic(self):
+        # Test GC-optimization of dynamically-created dicts
+        class MyObject(object):
+            pass
+        x, y, z, w, o = 1.5, "a", (1, object()), [], MyObject()
+
+        d = dict()
+        self._not_tracked(d)
+        d[1] = "a"
+        self._not_tracked(d)
+        d[y] = 2
+        self._not_tracked(d)
+        d[z] = 3
+        self._not_tracked(d)
+        self._not_tracked(d.copy())
+        d[4] = w
+        self._tracked(d)
+        self._tracked(d.copy())
+        d[4] = None
+        self._not_tracked(d)
+        self._not_tracked(d.copy())
+
+        # dd isn't tracked right now, but it may mutate and therefore d
+        # which contains it must be tracked.
+        d = dict()
+        dd = dict()
+        d[1] = dd
+        self._not_tracked(dd)
+        self._tracked(d)
+        dd[1] = d
+        self._tracked(dd)
+
+        d = dict.fromkeys([x, y, z])
+        self._not_tracked(d)
+        dd = dict()
+        dd.update(d)
+        self._not_tracked(dd)
+        d = dict.fromkeys([x, y, z, o])
+        self._tracked(d)
+        dd = dict()
+        dd.update(d)
+        self._tracked(dd)
+
+        d = dict(x=x, y=y, z=z)
+        self._not_tracked(d)
+        d = dict(x=x, y=y, z=z, w=w)
+        self._tracked(d)
+        d = dict()
+        d.update(x=x, y=y, z=z)
+        self._not_tracked(d)
+        d.update(w=w)
+        self._tracked(d)
+
+        d = dict([(x, y), (z, 1)])
+        self._not_tracked(d)
+        d = dict([(x, y), (z, w)])
+        self._tracked(d)
+        d = dict()
+        d.update([(x, y), (z, 1)])
+        self._not_tracked(d)
+        d.update([(x, y), (z, w)])
+        self._tracked(d)
+
+    @test_support.cpython_only
+    def test_track_subtypes(self):
+        # Dict subtypes are always tracked
+        class MyDict(dict):
+            pass
+        self._tracked(MyDict())
+
+    def test_list_equality(self):
+        class A(dict): pass
+        for dtype in (A, dict):
+            self.assertEquals([dtype()], [dict()])
 
 
 from test import mapping_tests
@@ -478,11 +710,14 @@ class SubclassMappingTests(mapping_tests.BasicTestMappingProtocol):
     type2test = Dict
 
 def test_main():
-    test_support.run_unittest(
-        DictTest,
-        GeneralMappingTests,
-        SubclassMappingTests,
-    )
+    with test_support.check_py3k_warnings(
+        ('dict(.has_key..| inequality comparisons) not supported in 3.x',
+         DeprecationWarning)):
+        test_support.run_unittest(
+            DictTest,
+            GeneralMappingTests,
+            SubclassMappingTests,
+        )
 
 if __name__ == "__main__":
     test_main()

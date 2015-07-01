@@ -30,9 +30,13 @@ Class HtmlDiff:
 
 __all__ = ['get_close_matches', 'ndiff', 'restore', 'SequenceMatcher',
            'Differ','IS_CHARACTER_JUNK', 'IS_LINE_JUNK', 'context_diff',
-           'unified_diff', 'HtmlDiff']
+           'unified_diff', 'HtmlDiff', 'Match']
 
 import heapq
+from collections import namedtuple as _namedtuple
+from functools import reduce
+
+Match = _namedtuple('Match', 'a b size')
 
 def _calculate_ratio(matches, length):
     if length:
@@ -147,7 +151,7 @@ class SequenceMatcher:
         Return an upper bound on ratio() very quickly.
     """
 
-    def __init__(self, isjunk=None, a='', b=''):
+    def __init__(self, isjunk=None, a='', b='', autojunk=True):
         """Construct a SequenceMatcher.
 
         Optional arg isjunk is None (the default), or a one-argument
@@ -165,6 +169,10 @@ class SequenceMatcher:
         Optional arg b is the second of two sequences to be compared.  By
         default, an empty string.  The elements of b must be hashable. See
         also .set_seqs() and .set_seq2().
+
+        Optional arg autojunk should be set to False to disable the
+        "automatic junk heuristic" that treats popular elements as junk
+        (see module documentation for more information).
         """
 
         # Members:
@@ -199,15 +207,17 @@ class SequenceMatcher:
         #      DON'T USE!  Only __chain_b uses this.  Use isbjunk.
         # isbjunk
         #      for x in b, isbjunk(x) == isjunk(x) but much faster;
-        #      it's really the has_key method of a hidden dict.
+        #      it's really the __contains__ method of a hidden dict.
         #      DOES NOT WORK for x in a!
         # isbpopular
         #      for x in b, isbpopular(x) is true iff b is reasonably long
-        #      (at least 200 elements) and x accounts for more than 1% of
-        #      its elements.  DOES NOT WORK for x in a!
+        #      (at least 200 elements) and x accounts for more than 1 + 1% of
+        #      its elements (when autojunk is enabled).
+        #      DOES NOT WORK for x in a!
 
         self.isjunk = isjunk
         self.a = self.b = None
+        self.autojunk = autojunk
         self.set_seqs(a, b)
 
     def set_seqs(self, a, b):
@@ -284,7 +294,7 @@ class SequenceMatcher:
     # from starting any matching block at a junk element ...
     # also creates the fast isbjunk function ...
     # b2j also does not contain entries for "popular" elements, meaning
-    # elements that account for more than 1% of the total elements, and
+    # elements that account for more than 1 + 1% of the total elements, and
     # when the sequence is reasonably large (>= 200 elements); this can
     # be viewed as an adaptive notion of semi-junk, and yields an enormous
     # speedup when, e.g., comparing program files with hundreds of
@@ -305,44 +315,37 @@ class SequenceMatcher:
         # out the junk later is much cheaper than building b2j "right"
         # from the start.
         b = self.b
-        n = len(b)
         self.b2j = b2j = {}
-        populardict = {}
+
         for i, elt in enumerate(b):
-            if elt in b2j:
-                indices = b2j[elt]
-                if n >= 200 and len(indices) * 100 > n:
-                    populardict[elt] = 1
-                    del indices[:]
-                else:
-                    indices.append(i)
-            else:
-                b2j[elt] = [i]
+            indices = b2j.setdefault(elt, [])
+            indices.append(i)
 
-        # Purge leftover indices for popular elements.
-        for elt in populardict:
-            del b2j[elt]
-
-        # Now b2j.keys() contains elements uniquely, and especially when
-        # the sequence is a string, that's usually a good deal smaller
-        # than len(string).  The difference is the number of isjunk calls
-        # saved.
+        # Purge junk elements
+        junk = set()
         isjunk = self.isjunk
-        junkdict = {}
         if isjunk:
-            for d in populardict, b2j:
-                for elt in d.keys():
-                    if isjunk(elt):
-                        junkdict[elt] = 1
-                        del d[elt]
+            for elt in list(b2j.keys()):  # using list() since b2j is modified
+                if isjunk(elt):
+                    junk.add(elt)
+                    del b2j[elt]
 
-        # Now for x in b, isjunk(x) == x in junkdict, but the
-        # latter is much faster.  Note too that while there may be a
-        # lot of junk in the sequence, the number of *unique* junk
-        # elements is probably small.  So the memory burden of keeping
-        # this dict alive is likely trivial compared to the size of b2j.
-        self.isbjunk = junkdict.has_key
-        self.isbpopular = populardict.has_key
+        # Purge popular elements that are not junk
+        popular = set()
+        n = len(b)
+        if self.autojunk and n >= 200:
+            ntest = n // 100 + 1
+            for elt, idxs in list(b2j.items()):
+                if len(idxs) > ntest:
+                    popular.add(elt)
+                    del b2j[elt]
+
+        # Now for x in b, isjunk(x) == x in junk, but the latter is much faster.
+        # Sicne the number of *unique* junk elements is probably small, the
+        # memory burden of keeping this set alive is likely trivial compared to
+        # the size of b2j.
+        self.isbjunk = junk.__contains__
+        self.isbpopular = popular.__contains__
 
     def find_longest_match(self, alo, ahi, blo, bhi):
         """Find longest matching block in a[alo:ahi] and b[blo:bhi].
@@ -363,7 +366,7 @@ class SequenceMatcher:
 
         >>> s = SequenceMatcher(None, " abcd", "abcd abcd")
         >>> s.find_longest_match(0, 5, 0, 9)
-        (0, 4, 5)
+        Match(a=0, b=4, size=5)
 
         If isjunk is defined, first the longest matching block is
         determined as above, but with the additional restriction that no
@@ -379,13 +382,13 @@ class SequenceMatcher:
 
         >>> s = SequenceMatcher(lambda x: x==" ", " abcd", "abcd abcd")
         >>> s.find_longest_match(0, 5, 0, 9)
-        (1, 0, 4)
+        Match(a=1, b=0, size=4)
 
         If no blocks match, return (alo, blo, 0).
 
         >>> s = SequenceMatcher(None, "ab", "c")
         >>> s.find_longest_match(0, 2, 0, 1)
-        (0, 0, 0)
+        Match(a=0, b=0, size=0)
         """
 
         # CAUTION:  stripping common prefix or suffix would be incorrect.
@@ -452,7 +455,7 @@ class SequenceMatcher:
               a[besti+bestsize] == b[bestj+bestsize]:
             bestsize = bestsize + 1
 
-        return besti, bestj, bestsize
+        return Match(besti, bestj, bestsize)
 
     def get_matching_blocks(self):
         """Return list of triples describing matching subsequences.
@@ -470,7 +473,7 @@ class SequenceMatcher:
 
         >>> s = SequenceMatcher(None, "abxcd", "abcd")
         >>> s.get_matching_blocks()
-        [(0, 0, 2), (3, 2, 2), (5, 4, 0)]
+        [Match(a=0, b=0, size=2), Match(a=3, b=2, size=2), Match(a=5, b=4, size=0)]
         """
 
         if self.matching_blocks is not None:
@@ -523,7 +526,7 @@ class SequenceMatcher:
 
         non_adjacent.append( (la, lb, 0) )
         self.matching_blocks = non_adjacent
-        return self.matching_blocks
+        return map(Match._make, self.matching_blocks)
 
     def get_opcodes(self):
         """Return list of 5-tuples describing how to turn a into b.
@@ -674,7 +677,7 @@ class SequenceMatcher:
         # avail[x] is the number of times x appears in 'b' less the
         # number of times we've seen it in 'a' so far ... kinda
         avail = {}
-        availhas, matches = avail.has_key, 0
+        availhas, matches = avail.__contains__, 0
         for elt in self.a:
             if availhas(elt):
                 numb = avail[elt]
@@ -1057,20 +1060,21 @@ class Differ:
         Example:
 
         >>> d = Differ()
-        >>> results = d._qformat('\tabcDefghiJkl\n', '\t\tabcdefGhijkl\n',
-        ...                      '  ^ ^  ^      ', '+  ^ ^  ^      ')
+        >>> results = d._qformat('\tabcDefghiJkl\n', '\tabcdefGhijkl\n',
+        ...                      '  ^ ^  ^      ', '  ^ ^  ^      ')
         >>> for line in results: print repr(line)
         ...
         '- \tabcDefghiJkl\n'
         '? \t ^ ^  ^\n'
-        '+ \t\tabcdefGhijkl\n'
-        '? \t  ^ ^  ^\n'
+        '+ \tabcdefGhijkl\n'
+        '? \t ^ ^  ^\n'
         """
 
         # Can hurt, but will probably help most of the time.
         common = min(_count_leading(aline, "\t"),
                      _count_leading(bline, "\t"))
         common = min(common, _count_leading(atags[:common], " "))
+        common = min(common, _count_leading(btags[:common], " "))
         atags = atags[common:].rstrip()
         btags = btags[common:].rstrip()
 
@@ -1136,6 +1140,21 @@ def IS_CHARACTER_JUNK(ch, ws=" \t"):
     return ch in ws
 
 
+########################################################################
+###  Unified Diff
+########################################################################
+
+def _format_range_unified(start, stop):
+    'Convert range to the "ed" format'
+    # Per the diff spec at http://www.unix.org/single_unix_specification/
+    beginning = start + 1     # lines start numbering with one
+    length = stop - start
+    if length == 1:
+        return '{}'.format(beginning)
+    if not length:
+        beginning -= 1        # empty ranges begin at line just before the range
+    return '{},{}'.format(beginning, length)
+
 def unified_diff(a, b, fromfile='', tofile='', fromfiledate='',
                  tofiledate='', n=3, lineterm='\n'):
     r"""
@@ -1156,18 +1175,18 @@ def unified_diff(a, b, fromfile='', tofile='', fromfiledate='',
 
     The unidiff format normally has a header for filenames and modification
     times.  Any or all of these may be specified using strings for
-    'fromfile', 'tofile', 'fromfiledate', and 'tofiledate'.  The modification
-    times are normally expressed in the format returned by time.ctime().
+    'fromfile', 'tofile', 'fromfiledate', and 'tofiledate'.
+    The modification times are normally expressed in the ISO 8601 format.
 
     Example:
 
     >>> for line in unified_diff('one two three four'.split(),
     ...             'zero one tree four'.split(), 'Original', 'Current',
-    ...             'Sat Jan 26 23:30:50 1991', 'Fri Jun 06 10:20:52 2003',
+    ...             '2005-01-26 23:30:50', '2010-04-02 10:20:52',
     ...             lineterm=''):
-    ...     print line
-    --- Original Sat Jan 26 23:30:50 1991
-    +++ Current Fri Jun 06 10:20:52 2003
+    ...     print line                  # doctest: +NORMALIZE_WHITESPACE
+    --- Original        2005-01-26 23:30:50
+    +++ Current         2010-04-02 10:20:52
     @@ -1,4 +1,4 @@
     +zero
      one
@@ -1180,22 +1199,44 @@ def unified_diff(a, b, fromfile='', tofile='', fromfiledate='',
     started = False
     for group in SequenceMatcher(None,a,b).get_grouped_opcodes(n):
         if not started:
-            yield '--- %s %s%s' % (fromfile, fromfiledate, lineterm)
-            yield '+++ %s %s%s' % (tofile, tofiledate, lineterm)
             started = True
-        i1, i2, j1, j2 = group[0][1], group[-1][2], group[0][3], group[-1][4]
-        yield "@@ -%d,%d +%d,%d @@%s" % (i1+1, i2-i1, j1+1, j2-j1, lineterm)
+            fromdate = '\t{}'.format(fromfiledate) if fromfiledate else ''
+            todate = '\t{}'.format(tofiledate) if tofiledate else ''
+            yield '--- {}{}{}'.format(fromfile, fromdate, lineterm)
+            yield '+++ {}{}{}'.format(tofile, todate, lineterm)
+
+        first, last = group[0], group[-1]
+        file1_range = _format_range_unified(first[1], last[2])
+        file2_range = _format_range_unified(first[3], last[4])
+        yield '@@ -{} +{} @@{}'.format(file1_range, file2_range, lineterm)
+
         for tag, i1, i2, j1, j2 in group:
             if tag == 'equal':
                 for line in a[i1:i2]:
                     yield ' ' + line
                 continue
-            if tag == 'replace' or tag == 'delete':
+            if tag in ('replace', 'delete'):
                 for line in a[i1:i2]:
                     yield '-' + line
-            if tag == 'replace' or tag == 'insert':
+            if tag in ('replace', 'insert'):
                 for line in b[j1:j2]:
                     yield '+' + line
+
+
+########################################################################
+###  Context Diff
+########################################################################
+
+def _format_range_context(start, stop):
+    'Convert range to the "ed" format'
+    # Per the diff spec at http://www.unix.org/single_unix_specification/
+    beginning = start + 1     # lines start numbering with one
+    length = stop - start
+    if not length:
+        beginning -= 1        # empty ranges begin at line just before the range
+    if length <= 1:
+        return '{}'.format(beginning)
+    return '{},{}'.format(beginning, beginning + length - 1)
 
 # See http://www.unix.org/single_unix_specification/
 def context_diff(a, b, fromfile='', tofile='',
@@ -1219,16 +1260,15 @@ def context_diff(a, b, fromfile='', tofile='',
     The context diff format normally has a header for filenames and
     modification times.  Any or all of these may be specified using
     strings for 'fromfile', 'tofile', 'fromfiledate', and 'tofiledate'.
-    The modification times are normally expressed in the format returned
-    by time.ctime().  If not specified, the strings default to blanks.
+    The modification times are normally expressed in the ISO 8601 format.
+    If not specified, the strings default to blanks.
 
     Example:
 
     >>> print ''.join(context_diff('one\ntwo\nthree\nfour\n'.splitlines(1),
-    ...       'zero\none\ntree\nfour\n'.splitlines(1), 'Original', 'Current',
-    ...       'Sat Jan 26 23:30:50 1991', 'Fri Jun 06 10:22:46 2003')),
-    *** Original Sat Jan 26 23:30:50 1991
-    --- Current Fri Jun 06 10:22:46 2003
+    ...       'zero\none\ntree\nfour\n'.splitlines(1), 'Original', 'Current')),
+    *** Original
+    --- Current
     ***************
     *** 1,4 ****
       one
@@ -1242,36 +1282,36 @@ def context_diff(a, b, fromfile='', tofile='',
       four
     """
 
+    prefix = dict(insert='+ ', delete='- ', replace='! ', equal='  ')
     started = False
-    prefixmap = {'insert':'+ ', 'delete':'- ', 'replace':'! ', 'equal':'  '}
     for group in SequenceMatcher(None,a,b).get_grouped_opcodes(n):
         if not started:
-            yield '*** %s %s%s' % (fromfile, fromfiledate, lineterm)
-            yield '--- %s %s%s' % (tofile, tofiledate, lineterm)
             started = True
+            fromdate = '\t{}'.format(fromfiledate) if fromfiledate else ''
+            todate = '\t{}'.format(tofiledate) if tofiledate else ''
+            yield '*** {}{}{}'.format(fromfile, fromdate, lineterm)
+            yield '--- {}{}{}'.format(tofile, todate, lineterm)
 
-        yield '***************%s' % (lineterm,)
-        if group[-1][2] - group[0][1] >= 2:
-            yield '*** %d,%d ****%s' % (group[0][1]+1, group[-1][2], lineterm)
-        else:
-            yield '*** %d ****%s' % (group[-1][2], lineterm)
-        visiblechanges = [e for e in group if e[0] in ('replace', 'delete')]
-        if visiblechanges:
+        first, last = group[0], group[-1]
+        yield '***************' + lineterm
+
+        file1_range = _format_range_context(first[1], last[2])
+        yield '*** {} ****{}'.format(file1_range, lineterm)
+
+        if any(tag in ('replace', 'delete') for tag, _, _, _, _ in group):
             for tag, i1, i2, _, _ in group:
                 if tag != 'insert':
                     for line in a[i1:i2]:
-                        yield prefixmap[tag] + line
+                        yield prefix[tag] + line
 
-        if group[-1][4] - group[0][3] >= 2:
-            yield '--- %d,%d ----%s' % (group[0][3]+1, group[-1][4], lineterm)
-        else:
-            yield '--- %d ----%s' % (group[-1][4], lineterm)
-        visiblechanges = [e for e in group if e[0] in ('replace', 'insert')]
-        if visiblechanges:
+        file2_range = _format_range_context(first[3], last[4])
+        yield '--- {} ----{}'.format(file2_range, lineterm)
+
+        if any(tag in ('replace', 'insert') for tag, _, _, _, _ in group):
             for tag, _, _, j1, j2 in group:
                 if tag != 'delete':
                     for line in b[j1:j2]:
-                        yield prefixmap[tag] + line
+                        yield prefix[tag] + line
 
 def ndiff(a, b, linejunk=None, charjunk=IS_CHARACTER_JUNK):
     r"""
@@ -1325,7 +1365,7 @@ def _mdiff(fromlines, tolines, context=None, linejunk=None,
     (from line tuple, to line tuple, boolean flag)
 
     from/to line tuple -- (line num, line text)
-        line num -- integer or None (to indicate a context seperation)
+        line num -- integer or None (to indicate a context separation)
         line text -- original line text with following markers inserted:
             '\0+' -- marks start of added text
             '\0-' -- marks start of deleted text
@@ -1707,7 +1747,7 @@ class HtmlDiff(object):
             line = line.replace(' ','\0')
             # expand tabs into spaces
             line = line.expandtabs(self._tabsize)
-            # relace spaces from expanded tabs back into tab characters
+            # replace spaces from expanded tabs back into tab characters
             # (we'll replace them with markup after we do differencing)
             line = line.replace(' ','\t')
             return line.replace('\0',' ').rstrip('\n')

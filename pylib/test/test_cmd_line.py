@@ -5,6 +5,15 @@ import popen2
 import subprocess
 
 class CmdLineTest(unittest.TestCase):
+
+    @classmethod
+    def tearDownClass(cls):
+        if test.test_support.is_jython:
+            # GC is not immediate, so if Popen.__del__ may be delayed.
+            # Try to force any Popen.__del__ errors within scope of test.
+            from test_weakref import extra_collect
+            extra_collect()
+
     def start_python(self, cmd_line):
         outfp, infp = popen2.popen4('"%s" %s' % (sys.executable, cmd_line))
         infp.close()
@@ -55,7 +64,9 @@ class CmdLineTest(unittest.TestCase):
     def test_version(self):
         prefix = 'J' if test.test_support.is_jython else 'P'
         version = prefix + 'ython %d.%d' % sys.version_info[:2]
-        self.assertTrue(self.start_python('-V').startswith(version))
+        start = self.start_python('-V')
+        self.assertTrue(start.startswith(version),
+            "%s does not start with %s" % (start, version))
 
     def test_run_module(self):
         # Test expected operation of the '-m' switch

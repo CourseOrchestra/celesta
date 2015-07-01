@@ -1,9 +1,20 @@
-from __future__ import with_statement
 import os.path
 import sys
 from warnings import warn
 
-import java.lang.reflect.Array
+try:
+    _console = sys._jy_console
+    _reader = _console.reader
+except AttributeError:
+    raise ImportError("Cannot access JLine2 setup")
+
+try:
+    # jarjar-ed version
+    from org.python.jline.console.history import MemoryHistory
+except ImportError:
+    # dev version from extlibs
+    from jline.console.history import MemoryHistory
+
 
 __all__ = ['add_history', 'clear_history', 'get_begidx', 'get_completer',
            'get_completer_delims', 'get_current_history_length',
@@ -13,11 +24,6 @@ __all__ = ['add_history', 'clear_history', 'get_begidx', 'get_completer',
            'remove_history_item', 'set_completer', 'set_completer_delims',
            'set_history_length', 'set_pre_input_hook', 'set_startup_hook',
            'write_history_file']
-
-try:    
-    _reader = sys._jy_interpreter.reader
-except AttributeError:
-    raise ImportError("Cannot access JLineConsole")
 
 _history_list = None
 
@@ -33,68 +39,35 @@ class SecurityWarning(ImportWarning):
     """Security manager prevents access to private field"""
 
 
-def _setup_history():
-    # This is obviously not desirable, but avoids O(n) workarounds to
-    # modify the history (ipython uses the function
-    # remove_history_item to mutate the history relatively frequently)
-    global _history_list
-    
-    history = _reader.history
-    try:
-        history_list_field = history.class.getDeclaredField("history")
-        history_list_field.setAccessible(True)
-        _history_list = history_list_field.get(history)
-    except:
-        pass
-
-_setup_history()
-
 def parse_and_bind(string):
-    if string == "tab: complete":
-        try:
-            keybindings_field = _reader.class.getDeclaredField("keybindings")
-            keybindings_field.setAccessible(True)
-            keybindings = keybindings_field.get(_reader)
-            COMPLETE = _reader.KEYMAP_NAMES.get('COMPLETE')
-            if java.lang.reflect.Array.getShort(keybindings, 9) != COMPLETE:
-                java.lang.reflect.Array.setShort(keybindings, 9, COMPLETE)
-        except:
-            warn("Cannot bind tab key to complete. You need to do this in a .jlinebindings.properties file instead", SecurityWarning, stacklevel=2)
-    else:
-        warn("Cannot bind key %s. You need to do this in a .jlinebindings.properties file instead" % (string,), NotImplementedWarning, stacklevel=2)
+    pass
 
 def get_line_buffer():
     return str(_reader.cursorBuffer.buffer)
 
 def insert_text(string):
     _reader.putString(string)
-    
+
 def read_init_file(filename=None):
     warn("read_init_file: %s" % (filename,), NotImplementedWarning, "module", 2)
 
 def read_history_file(filename="~/.history"):
-    print "Reading history:", filename
     expanded = os.path.expanduser(filename)
-    new_history = _reader.getHistory().getClass()()
-    # new_history.clear()
     with open(expanded) as f:
-        for line in f:
-            new_history.addToHistory(line.rstrip())
-    _reader.history = new_history
-    _setup_history()
+        _reader.history.load(f)
 
 def write_history_file(filename="~/.history"):
     expanded = os.path.expanduser(filename)
     with open(expanded, 'w') as f:
-        for line in _reader.history.historyList:
-            f.write(line)
+        for line in _reader.history.entries():
+            f.write(line.value().encode("utf-8"))
             f.write("\n")
 
 def clear_history():
     _reader.history.clear()
 
 def add_history(line):
-    _reader.addToHistory(line)
+    _reader.history.add(line)
 
 def get_history_length():
     return _reader.history.maxSize
@@ -103,23 +76,27 @@ def set_history_length(length):
     _reader.history.maxSize = length
 
 def get_current_history_length():
-    return len(_reader.history.historyList)
+    return _reader.history.size()
 
 def get_history_item(index):
-    return _reader.history.historyList[index]
+    # JLine indexes from 0 while readline indexes from 1 (at least in test_readline)
+    if index>0:
+        return _reader.history.get(index-1)
+    else:
+        return None
 
 def remove_history_item(pos):
-    if _history_list:
-        _history_list.remove(pos)
-    else:
-        warn("Cannot remove history item at position: %s" % (pos,), SecurityWarning, stacklevel=2)
+    _reader.history.remove(pos)
+
+def replace_history_item(pos, line):
+    _reader.history.set(pos, line)
 
 def redisplay():
     _reader.redrawLine()
 
 def set_startup_hook(function=None):
-    sys._jy_interpreter.startupHook = function
-    
+    _console.startup_hook = function
+
 def set_pre_input_hook(function=None):
     warn("set_pre_input_hook %s" % (function,), NotImplementedWarning, stacklevel=2)
 
@@ -138,7 +115,27 @@ def set_completer(function=None):
     def complete_handler(buffer, cursor, candidates):
         start = _get_delimited(buffer, cursor)[0]
         delimited = buffer[start:cursor]
-        for state in xrange(100): # TODO arbitrary, what's the number used by gnu readline?
+
+        if _reader.prompt == sys.ps2 and (not delimited or delimited.isspace()):
+            # Insert tab (as expanded to 4 spaces), but only if if
+            # preceding is whitespace/empty and in console
+            # continuation; this is a planned featue for Python 3 per
+            # http://bugs.python.org/issue5845
+            #
+            # Ideally this would not expand tabs, in case of mixed
+            # copy&paste of tab-indented code, however JLine2 gets
+            # confused as to the cursor position if certain, but not
+            # all, subsequent editing if the tab is backspaced
+            candidates.add(" " * 4)
+            return start
+
+        # TODO: if there are a reasonably large number of completions
+        # (need to get specific numbers), CPython 3.4 will show a
+        # message like so:
+        # >>>
+        # Display all 186 possibilities? (y or n)
+        # Currently Jython arbitrarily limits this to 100 and displays them
+        for state in xrange(100):
             completion = None
             try:
                 completion = function(delimited, state)
@@ -150,8 +147,8 @@ def set_completer(function=None):
                 break
         return start
 
-    _reader.addCompletor(complete_handler)
-    
+    _reader.addCompleter(complete_handler)
+
 
 def get_completer():
     return _completer_function

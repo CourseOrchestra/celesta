@@ -357,13 +357,12 @@ class UnicodeTest(
         self.assertEqual(u"%s, %s, %i, %f, %5.2f" % (u"abc", "abc", -1, -2, 3.5), u'abc, abc, -1, -2.000000,  3.50')
         self.assertEqual(u"%s, %s, %i, %f, %5.2f" % (u"abc", "abc", -1, -2, 3.57), u'abc, abc, -1, -2.000000,  3.57')
         self.assertEqual(u"%s, %s, %i, %f, %5.2f" % (u"abc", "abc", -1, -2, 1003.57), u'abc, abc, -1, -2.000000, 1003.57')
-        if not sys.platform.startswith('java'):
-            self.assertEqual(u"%r, %r" % (u"abc", "abc"), u"u'abc', 'abc'")
+        self.assertEqual(u"%r, %r" % (u"abc", "abc"), u"u'abc', 'abc'")
         self.assertEqual(u"%(x)s, %(y)s" % {'x':u"abc", 'y':"def"}, u'abc, def')
         self.assertEqual(u"%(x)s, %(\xfc)s" % {'x':u"abc", u'\xfc':"def"}, u'abc, def')
 
-        # self.assertEqual(u'%c' % 0x1234, u'\u1234')
-        # self.assertRaises(OverflowError, u"%c".__mod__, (sys.maxunicode+1,))
+        self.assertEqual(u'%c' % 0x1234, u'\u1234')
+        self.assertRaises(OverflowError, u"%c".__mod__, (sys.maxunicode+1,))
 
         # formatting jobs delegated from the string implementation:
         self.assertEqual('...%(foo)s...' % {'foo':u"abc"}, u'...abc...')
@@ -452,15 +451,10 @@ class UnicodeTest(
             u'strings are decoded to unicode'
         )
 
-        if not sys.platform.startswith('java'):
-            self.assertEqual(
-                unicode(
-                    buffer('character buffers are decoded to unicode'),
-                    'utf-8',
-                    'strict'
-                ),
-                u'character buffers are decoded to unicode'
-            )
+        self.assertEqual(
+            unicode('strings are decoded to unicode', 'utf-8', 'strict'),
+            u'strings are decoded to unicode'
+        )
 
         self.assertRaises(TypeError, unicode, 42, 42, 42)
 
@@ -483,14 +477,17 @@ class UnicodeTest(
         for (x, y) in utfTests:
             self.assertEqual(x.encode('utf-7'), y)
 
-        # surrogates not supported
+        # Lone/misordered surrogates are an error
         self.assertRaises(UnicodeError, unicode, '+3ADYAA-', 'utf-7')
 
-        self.assertEqual(unicode('+3ADYAA-', 'utf-7', 'replace'), u'\ufffd')
+        # Jython (and some CPython versions): two misplaced surrogates => two replacements
+        self.assertEqual(unicode('+3ADYAA-', 'utf-7', 'replace'), u'\ufffd\ufffd')
+        # self.assertEqual(unicode('+3ADYAA-', 'utf-7', 'replace'), u'\ufffd')
 
     def test_codecs_utf8(self):
         self.assertEqual(u''.encode('utf-8'), '')
         self.assertEqual(u'\u20ac'.encode('utf-8'), '\xe2\x82\xac')
+        # Jython will not compile Unicode literals with surrogate units
         #self.assertEqual(u'\ud800\udc02'.encode('utf-8'), '\xf0\x90\x80\x82')
         #self.assertEqual(u'\ud84d\udc56'.encode('utf-8'), '\xf0\xa3\x91\x96')
         #self.assertEqual(u'\ud800'.encode('utf-8'), '\xed\xa0\x80')
@@ -712,9 +709,6 @@ class UnicodeTest(
         self.assertEqual(x, y)
 
 def test_main():
-    if test_support.is_jython:
-        # http://bugs.jython.org/issue1153
-        del UnicodeTest.test_codecs_idna
     test_support.run_unittest(UnicodeTest)
 
 if __name__ == "__main__":

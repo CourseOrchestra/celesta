@@ -25,6 +25,7 @@ public class JSONToXMLParser {
 	private Boolean vBool = false;
 	private boolean bLeft = false;
 	private boolean bRight = false;
+	private boolean bCenter = false;
 
 	public JSONToXMLParser(String json) throws JSONException {
 		// String json1 = json;
@@ -43,6 +44,10 @@ public class JSONToXMLParser {
 
 		if (newJson.contains("&gt;")) {
 			bRight = true;
+		}
+
+		if (newJson.contains("&nbsp;")) {
+			bCenter = true;
 		}
 
 		if (newJson.contains("{}")) {
@@ -118,6 +123,11 @@ public class JSONToXMLParser {
 		if (bRight) {
 			while (outString.contains("&amp;gt;")) {
 				outString = outString.replace("&amp;gt;", "&gt;");
+			}
+		}
+		if (bCenter) {
+			while (outString.contains("&amp;nbsp;")) {
+				outString = outString.replace("&amp;nbsp;", "&nbsp;");
 			}
 		}
 

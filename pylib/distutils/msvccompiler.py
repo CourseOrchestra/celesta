@@ -8,16 +8,15 @@ for the Microsoft Visual Studio.
 # hacked by Robin Becker and Thomas Heller to do a better job of
 #   finding DevStudio (through the registry)
 
-# This module should be kept compatible with Python 2.1.
-
 __revision__ = "$Id$"
 
-import sys, os, string
-from distutils.errors import \
-     DistutilsExecError, DistutilsPlatformError, \
-     CompileError, LibError, LinkError
-from distutils.ccompiler import \
-     CCompiler, gen_preprocess_options, gen_lib_options
+import sys
+import os
+import string
+
+from distutils.errors import (DistutilsExecError, DistutilsPlatformError,
+                              CompileError, LibError, LinkError)
+from distutils.ccompiler import CCompiler, gen_lib_options
 from distutils import log
 
 _can_read_reg = 0
@@ -129,7 +128,7 @@ class MacroExpander:
                 self.set_macro("FrameworkSDKDir", net, "sdkinstallrootv1.1")
             else:
                 self.set_macro("FrameworkSDKDir", net, "sdkinstallroot")
-        except KeyError, exc: #
+        except KeyError:
             raise DistutilsPlatformError, \
                   ("""Python was built with Visual Studio 2003;
 extensions must be built with a compiler than can generate compatible binaries.
@@ -252,7 +251,7 @@ class MSVCCompiler (CCompiler) :
 
     def initialize(self):
         self.__paths = []
-        if os.environ.has_key("DISTUTILS_USE_SDK") and os.environ.has_key("MSSdk") and self.find_exe("cl.exe"):
+        if "DISTUTILS_USE_SDK" in os.environ and "MSSdk" in os.environ and self.find_exe("cl.exe"):
             # Assume that the SDK set up everything alright; don't try to be
             # smarter
             self.cc = "cl.exe"
@@ -650,3 +649,11 @@ class MSVCCompiler (CCompiler) :
             p = self.get_msvc_paths(name)
         if p:
             os.environ[name] = string.join(p, ';')
+
+
+if get_build_version() >= 8.0:
+    log.debug("Importing new compiler from distutils.msvc9compiler")
+    OldMSVCCompiler = MSVCCompiler
+    from distutils.msvc9compiler import MSVCCompiler
+    # get_build_architecture not really relevant now we support cross-compile
+    from distutils.msvc9compiler import MacroExpander

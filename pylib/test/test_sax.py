@@ -1,9 +1,7 @@
-# -*- coding: iso-8859-1 -*-
-# regression test for SAX 2.0
-# $Id: test_sax.py,v 1.13 2004/03/20 07:46:04 fdrake Exp $
+# regression test for SAX 2.0            -*- coding: utf-8 -*-
+# $Id$
 
-import urllib
-from xml.sax import handler, make_parser, ContentHandler, \
+from xml.sax import make_parser, ContentHandler, \
                     SAXException, SAXReaderNotAvailable, SAXParseException
 try:
     make_parser()
@@ -11,29 +9,89 @@ except SAXReaderNotAvailable:
     # don't try to test this module if we cannot create a parser
     raise ImportError("no XML parsers available")
 from xml.sax.saxutils import XMLGenerator, escape, unescape, quoteattr, \
-                             XMLFilterBase, Location
+                             XMLFilterBase
+from xml.sax.expatreader import create_parser
+from xml.sax.handler import feature_namespaces
 from xml.sax.xmlreader import InputSource, AttributesImpl, AttributesNSImpl
 from cStringIO import StringIO
-from test.test_support import is_jython, verbose, TestFailed, findfile
+import io
+import os.path
+import shutil
+import test.test_support as support
+from test.test_support import findfile, run_unittest
+import unittest
 
-# ===== Utilities
+TEST_XMLFILE = findfile("test.xml", subdir="xmltestdata")
+TEST_XMLFILE_OUT = findfile("test.xml.out", subdir="xmltestdata")
 
-tests = 0
-failures = []
-
-def confirm(outcome, name):
-    global tests
-
-    tests = tests + 1
-    if outcome:
-        if verbose:
-            print "Passed", name
-    else:
-        print "Failed", name
-        failures.append(name)
-
-def test_make_parser2():
+supports_unicode_filenames = True
+if not os.path.supports_unicode_filenames:
     try:
+        support.TESTFN_UNICODE.encode(support.TESTFN_ENCODING)
+    except (AttributeError, UnicodeError, TypeError):
+        # Either the file system encoding is None, or the file name
+        # cannot be encoded in the file system encoding.
+        supports_unicode_filenames = False
+requires_unicode_filenames = unittest.skipUnless(
+        supports_unicode_filenames,
+        'Requires unicode filenames support')
+
+ns_uri = "http://www.python.org/xml-ns/saxtest/"
+
+class XmlTestBase(unittest.TestCase):
+    def verify_empty_attrs(self, attrs):
+        self.assertRaises(KeyError, attrs.getValue, "attr")
+        self.assertRaises(KeyError, attrs.getValueByQName, "attr")
+        self.assertRaises(KeyError, attrs.getNameByQName, "attr")
+        self.assertRaises(KeyError, attrs.getQNameByName, "attr")
+        self.assertRaises(KeyError, attrs.__getitem__, "attr")
+        self.assertEqual(attrs.getLength(), 0)
+        self.assertEqual(attrs.getNames(), [])
+        self.assertEqual(attrs.getQNames(), [])
+        self.assertEqual(len(attrs), 0)
+        self.assertFalse(attrs.has_key("attr"))
+        self.assertEqual(attrs.keys(), [])
+        self.assertEqual(attrs.get("attrs"), None)
+        self.assertEqual(attrs.get("attrs", 25), 25)
+        self.assertEqual(attrs.items(), [])
+        self.assertEqual(attrs.values(), [])
+
+    def verify_empty_nsattrs(self, attrs):
+        self.assertRaises(KeyError, attrs.getValue, (ns_uri, "attr"))
+        self.assertRaises(KeyError, attrs.getValueByQName, "ns:attr")
+        self.assertRaises(KeyError, attrs.getNameByQName, "ns:attr")
+        self.assertRaises(KeyError, attrs.getQNameByName, (ns_uri, "attr"))
+        self.assertRaises(KeyError, attrs.__getitem__, (ns_uri, "attr"))
+        self.assertEqual(attrs.getLength(), 0)
+        self.assertEqual(attrs.getNames(), [])
+        self.assertEqual(attrs.getQNames(), [])
+        self.assertEqual(len(attrs), 0)
+        self.assertFalse(attrs.has_key((ns_uri, "attr")))
+        self.assertEqual(attrs.keys(), [])
+        self.assertEqual(attrs.get((ns_uri, "attr")), None)
+        self.assertEqual(attrs.get((ns_uri, "attr"), 25), 25)
+        self.assertEqual(attrs.items(), [])
+        self.assertEqual(attrs.values(), [])
+
+    def verify_attrs_wattr(self, attrs):
+        self.assertEqual(attrs.getLength(), 1)
+        self.assertEqual(attrs.getNames(), ["attr"])
+        self.assertEqual(attrs.getQNames(), ["attr"])
+        self.assertEqual(len(attrs), 1)
+        self.assertTrue(attrs.has_key("attr"))
+        self.assertEqual(attrs.keys(), ["attr"])
+        self.assertEqual(attrs.get("attr"), "val")
+        self.assertEqual(attrs.get("attr", 25), "val")
+        self.assertEqual(attrs.items(), [("attr", "val")])
+        self.assertEqual(attrs.values(), ["val"])
+        self.assertEqual(attrs.getValue("attr"), "val")
+        self.assertEqual(attrs.getValueByQName("attr"), "val")
+        self.assertEqual(attrs.getNameByQName("attr"), "attr")
+        self.assertEqual(attrs["attr"], "val")
+        self.assertEqual(attrs.getQNameByName("attr"), "attr")
+
+class MakeParserTest(unittest.TestCase):
+    def test_make_parser2(self):
         # Creating parsers several times in a row should succeed.
         # Testing this because there have been failures of this kind
         # before.
@@ -49,10 +107,6 @@ def test_make_parser2():
         p = make_parser()
         from xml.sax import make_parser
         p = make_parser()
-    except:
-        return 0
-    else:
-        return p
 
 
 # ===========================================================================
@@ -61,220 +115,339 @@ def test_make_parser2():
 #
 # ===========================================================================
 
-# ===== escape
+class SaxutilsTest(unittest.TestCase):
+    # ===== escape
+    def test_escape_basic(self):
+        self.assertEqual(escape("Donald Duck & Co"), "Donald Duck &amp; Co")
 
-def test_escape_basic():
-    return escape("Donald Duck & Co") == "Donald Duck &amp; Co"
+    def test_escape_all(self):
+        self.assertEqual(escape("<Donald Duck & Co>"),
+                         "&lt;Donald Duck &amp; Co&gt;")
 
-def test_escape_all():
-    return escape("<Donald Duck & Co>") == "&lt;Donald Duck &amp; Co&gt;"
+    def test_escape_extra(self):
+        self.assertEqual(escape("Hei pÃ¥ deg", {"Ã¥" : "&aring;"}),
+                         "Hei p&aring; deg")
 
-def test_escape_extra():
-    return escape("Hei på deg", {"å" : "&aring;"}) == "Hei p&aring; deg"
+    # ===== unescape
+    def test_unescape_basic(self):
+        self.assertEqual(unescape("Donald Duck &amp; Co"), "Donald Duck & Co")
 
-# ===== unescape
+    def test_unescape_all(self):
+        self.assertEqual(unescape("&lt;Donald Duck &amp; Co&gt;"),
+                         "<Donald Duck & Co>")
 
-def test_unescape_basic():
-    return unescape("Donald Duck &amp; Co") == "Donald Duck & Co"
+    def test_unescape_extra(self):
+        self.assertEqual(unescape("Hei pÃ¥ deg", {"Ã¥" : "&aring;"}),
+                         "Hei p&aring; deg")
 
-def test_unescape_all():
-    return unescape("&lt;Donald Duck &amp; Co&gt;") == "<Donald Duck & Co>"
+    def test_unescape_amp_extra(self):
+        self.assertEqual(unescape("&amp;foo;", {"&foo;": "splat"}), "&foo;")
 
-def test_unescape_extra():
-    return unescape("Hei på deg", {"å" : "&aring;"}) == "Hei p&aring; deg"
+    # ===== quoteattr
+    def test_quoteattr_basic(self):
+        self.assertEqual(quoteattr("Donald Duck & Co"),
+                         '"Donald Duck &amp; Co"')
 
-def test_unescape_amp_extra():
-    return unescape("&amp;foo;", {"&foo;": "splat"}) == "&foo;"
+    def test_single_quoteattr(self):
+        self.assertEqual(quoteattr('Includes "double" quotes'),
+                         '\'Includes "double" quotes\'')
 
-# ===== quoteattr
+    def test_double_quoteattr(self):
+        self.assertEqual(quoteattr("Includes 'single' quotes"),
+                         "\"Includes 'single' quotes\"")
 
-def test_quoteattr_basic():
-    return quoteattr("Donald Duck & Co") == '"Donald Duck &amp; Co"'
+    def test_single_double_quoteattr(self):
+        self.assertEqual(quoteattr("Includes 'single' and \"double\" quotes"),
+                         "\"Includes 'single' and &quot;double&quot; quotes\"")
 
-def test_single_quoteattr():
-    return (quoteattr('Includes "double" quotes')
-            == '\'Includes "double" quotes\'')
-
-def test_double_quoteattr():
-    return (quoteattr("Includes 'single' quotes")
-            == "\"Includes 'single' quotes\"")
-
-def test_single_double_quoteattr():
-    return (quoteattr("Includes 'single' and \"double\" quotes")
-            == "\"Includes 'single' and &quot;double&quot; quotes\"")
-
-# ===== make_parser
-
-def test_make_parser():
-    try:
+    # ===== make_parser
+    def test_make_parser(self):
         # Creating a parser should succeed - it should fall back
         # to the expatreader
         p = make_parser(['xml.parsers.no_such_parser'])
-    except:
-        return 0
-    else:
-        return p
 
 
 # ===== XMLGenerator
 
 start = '<?xml version="1.0" encoding="iso-8859-1"?>\n'
 
-def test_xmlgen_basic():
-    result = StringIO()
-    gen = XMLGenerator(result)
-    gen.startDocument()
-    gen.startElement("doc", {})
-    gen.endElement("doc")
-    gen.endDocument()
+class XmlgenTest:
+    def test_xmlgen_basic(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
+        gen.startDocument()
+        gen.startElement("doc", {})
+        gen.endElement("doc")
+        gen.endDocument()
 
-    return result.getvalue() == start + "<doc></doc>"
+        self.assertEqual(result.getvalue(), start + "<doc></doc>")
 
-def test_xmlgen_content():
-    result = StringIO()
-    gen = XMLGenerator(result)
+    def test_xmlgen_content(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
 
-    gen.startDocument()
-    gen.startElement("doc", {})
-    gen.characters("huhei")
-    gen.endElement("doc")
-    gen.endDocument()
+        gen.startDocument()
+        gen.startElement("doc", {})
+        gen.characters("huhei")
+        gen.endElement("doc")
+        gen.endDocument()
 
-    return result.getvalue() == start + "<doc>huhei</doc>"
+        self.assertEqual(result.getvalue(), start + "<doc>huhei</doc>")
 
-def test_xmlgen_escaped_content():
-    result = StringIO()
-    gen = XMLGenerator(result)
+    def test_xmlgen_pi(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
 
-    gen.startDocument()
-    gen.startElement("doc", {})
-    gen.characters(unicode("\xa0\\u3042", "unicode-escape"))
-    gen.endElement("doc")
-    gen.endDocument()
+        gen.startDocument()
+        gen.processingInstruction("test", "data")
+        gen.startElement("doc", {})
+        gen.endElement("doc")
+        gen.endDocument()
 
-    return result.getvalue() == start + "<doc>\xa0&#12354;</doc>"
+        self.assertEqual(result.getvalue(), start + "<?test data?><doc></doc>")
 
-def test_xmlgen_escaped_attr():
-    result = StringIO()
-    gen = XMLGenerator(result)
+    def test_xmlgen_content_escape(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
 
-    gen.startDocument()
-    gen.startElement("doc", {"x": unicode("\\u3042", "unicode-escape")})
-    gen.endElement("doc")
-    gen.endDocument()
+        gen.startDocument()
+        gen.startElement("doc", {})
+        gen.characters("<huhei&")
+        gen.endElement("doc")
+        gen.endDocument()
 
-    return result.getvalue() == start + '<doc x="&#12354;"></doc>'
+        self.assertEqual(result.getvalue(),
+            start + "<doc>&lt;huhei&amp;</doc>")
 
-def test_xmlgen_pi():
-    result = StringIO()
-    gen = XMLGenerator(result)
+    def test_xmlgen_attr_escape(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
 
-    gen.startDocument()
-    gen.processingInstruction("test", "data")
-    gen.startElement("doc", {})
-    gen.endElement("doc")
-    gen.endDocument()
+        gen.startDocument()
+        gen.startElement("doc", {"a": '"'})
+        gen.startElement("e", {"a": "'"})
+        gen.endElement("e")
+        gen.startElement("e", {"a": "'\""})
+        gen.endElement("e")
+        gen.startElement("e", {"a": "\n\r\t"})
+        gen.endElement("e")
+        gen.endElement("doc")
+        gen.endDocument()
 
-    return result.getvalue() == start + "<?test data?><doc></doc>"
+        self.assertEqual(result.getvalue(), start +
+            ("<doc a='\"'><e a=\"'\"></e>"
+             "<e a=\"'&quot;\"></e>"
+             "<e a=\"&#10;&#13;&#9;\"></e></doc>"))
 
-def test_xmlgen_content_escape():
-    result = StringIO()
-    gen = XMLGenerator(result)
+    def test_xmlgen_encoding(self):
+        encodings = ('iso-8859-15', 'utf-8',
+                     'utf-16be', 'utf-16le',
+                     'utf-32be', 'utf-32le')
+        for encoding in encodings:
+            result = self.ioclass()
+            gen = XMLGenerator(result, encoding=encoding)
 
-    gen.startDocument()
-    gen.startElement("doc", {})
-    gen.characters("<huhei&")
-    gen.endElement("doc")
-    gen.endDocument()
+            gen.startDocument()
+            gen.startElement("doc", {"a": u'\u20ac'})
+            gen.characters(u"\u20ac")
+            gen.endElement("doc")
+            gen.endDocument()
 
-    return result.getvalue() == start + "<doc>&lt;huhei&amp;</doc>"
+            self.assertEqual(result.getvalue(), (
+                u'<?xml version="1.0" encoding="%s"?>\n'
+                u'<doc a="\u20ac">\u20ac</doc>' % encoding
+                ).encode(encoding, 'xmlcharrefreplace'))
 
-def test_xmlgen_attr_escape():
-    result = StringIO()
-    gen = XMLGenerator(result)
+    def test_xmlgen_unencodable(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result, encoding='ascii')
 
-    gen.startDocument()
-    gen.startElement("doc", {"a": '"'})
-    gen.startElement("e", {"a": "'"})
-    gen.endElement("e")
-    gen.startElement("e", {"a": "'\""})
-    gen.endElement("e")
-    gen.endElement("doc")
-    gen.endDocument()
+        gen.startDocument()
+        gen.startElement("doc", {"a": u'\u20ac'})
+        gen.characters(u"\u20ac")
+        gen.endElement("doc")
+        gen.endDocument()
 
-    return result.getvalue() == start \
-           + "<doc a='\"'><e a=\"'\"></e><e a=\"'&quot;\"></e></doc>"
+        self.assertEqual(result.getvalue(),
+                '<?xml version="1.0" encoding="ascii"?>\n'
+                '<doc a="&#8364;">&#8364;</doc>')
 
-def test_xmlgen_attr_escape_manydouble():
-    result = StringIO()
-    gen = XMLGenerator(result)
+    def test_xmlgen_ignorable(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
 
-    gen.startDocument()
-    gen.startElement("doc", {"a": '"\'"'})
-    gen.endElement("doc")
-    gen.endDocument()
+        gen.startDocument()
+        gen.startElement("doc", {})
+        gen.ignorableWhitespace(" ")
+        gen.endElement("doc")
+        gen.endDocument()
 
-    return result.getvalue() == start + "<doc a='\"&apos;\"'></doc>"
+        self.assertEqual(result.getvalue(), start + "<doc> </doc>")
 
-def test_xmlgen_attr_escape_manysingle():
-    result = StringIO()
-    gen = XMLGenerator(result)
+    def test_xmlgen_ns(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
 
-    gen.startDocument()
-    gen.startElement("doc", {"a": "'\"'"})
-    gen.endElement("doc")
-    gen.endDocument()
+        gen.startDocument()
+        gen.startPrefixMapping("ns1", ns_uri)
+        gen.startElementNS((ns_uri, "doc"), "ns1:doc", {})
+        # add an unqualified name
+        gen.startElementNS((None, "udoc"), None, {})
+        gen.endElementNS((None, "udoc"), None)
+        gen.endElementNS((ns_uri, "doc"), "ns1:doc")
+        gen.endPrefixMapping("ns1")
+        gen.endDocument()
 
-    return result.getvalue() == start + '<doc a="\'&quot;\'"></doc>'
-
-def test_xmlgen_ignorable():
-    result = StringIO()
-    gen = XMLGenerator(result)
-
-    gen.startDocument()
-    gen.startElement("doc", {})
-    gen.ignorableWhitespace(" ")
-    gen.endElement("doc")
-    gen.endDocument()
-
-    return result.getvalue() == start + "<doc> </doc>"
-
-ns_uri = "http://www.python.org/xml-ns/saxtest/"
-
-def test_xmlgen_ns():
-    result = StringIO()
-    gen = XMLGenerator(result)
-
-    gen.startDocument()
-    gen.startPrefixMapping("ns1", ns_uri)
-    gen.startElementNS((ns_uri, "doc"), "ns1:doc", {})
-    # add an unqualified name
-    gen.startElementNS((None, "udoc"), None, {})
-    gen.endElementNS((None, "udoc"), None)
-    gen.endElementNS((ns_uri, "doc"), "ns1:doc")
-    gen.endPrefixMapping("ns1")
-    gen.endDocument()
-
-    return result.getvalue() == start + \
+        self.assertEqual(result.getvalue(), start + \
            ('<ns1:doc xmlns:ns1="%s"><udoc></udoc></ns1:doc>' %
-                                         ns_uri)
+                                         ns_uri))
 
-# ===== XMLFilterBase
+    def test_1463026_1(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
 
-def test_filter_basic():
-    result = StringIO()
-    gen = XMLGenerator(result)
-    filter = XMLFilterBase()
-    filter.setContentHandler(gen)
+        gen.startDocument()
+        gen.startElementNS((None, 'a'), 'a', {(None, 'b'):'c'})
+        gen.endElementNS((None, 'a'), 'a')
+        gen.endDocument()
 
-    filter.startDocument()
-    filter.startElement("doc", {})
-    filter.characters("content")
-    filter.ignorableWhitespace(" ")
-    filter.endElement("doc")
-    filter.endDocument()
+        self.assertEqual(result.getvalue(), start+'<a b="c"></a>')
 
-    return result.getvalue() == start + "<doc>content </doc>"
+    def test_1463026_2(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
+
+        gen.startDocument()
+        gen.startPrefixMapping(None, 'qux')
+        gen.startElementNS(('qux', 'a'), 'a', {})
+        gen.endElementNS(('qux', 'a'), 'a')
+        gen.endPrefixMapping(None)
+        gen.endDocument()
+
+        self.assertEqual(result.getvalue(), start+'<a xmlns="qux"></a>')
+
+    def test_1463026_3(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
+
+        gen.startDocument()
+        gen.startPrefixMapping('my', 'qux')
+        gen.startElementNS(('qux', 'a'), 'a', {(None, 'b'):'c'})
+        gen.endElementNS(('qux', 'a'), 'a')
+        gen.endPrefixMapping('my')
+        gen.endDocument()
+
+        self.assertEqual(result.getvalue(),
+            start+'<my:a xmlns:my="qux" b="c"></my:a>')
+
+    def test_5027_1(self):
+        # The xml prefix (as in xml:lang below) is reserved and bound by
+        # definition to http://www.w3.org/XML/1998/namespace.  XMLGenerator had
+        # a bug whereby a KeyError is raised because this namespace is missing
+        # from a dictionary.
+        #
+        # This test demonstrates the bug by parsing a document.
+        test_xml = StringIO(
+            '<?xml version="1.0"?>'
+            '<a:g1 xmlns:a="http://example.com/ns">'
+             '<a:g2 xml:lang="en">Hello</a:g2>'
+            '</a:g1>')
+
+        parser = make_parser()
+        parser.setFeature(feature_namespaces, True)
+        result = self.ioclass()
+        gen = XMLGenerator(result)
+        parser.setContentHandler(gen)
+        parser.parse(test_xml)
+
+        self.assertEqual(result.getvalue(),
+                         start + (
+                         '<a:g1 xmlns:a="http://example.com/ns">'
+                          '<a:g2 xml:lang="en">Hello</a:g2>'
+                         '</a:g1>'))
+
+    def test_5027_2(self):
+        # The xml prefix (as in xml:lang below) is reserved and bound by
+        # definition to http://www.w3.org/XML/1998/namespace.  XMLGenerator had
+        # a bug whereby a KeyError is raised because this namespace is missing
+        # from a dictionary.
+        #
+        # This test demonstrates the bug by direct manipulation of the
+        # XMLGenerator.
+        result = self.ioclass()
+        gen = XMLGenerator(result)
+
+        gen.startDocument()
+        gen.startPrefixMapping('a', 'http://example.com/ns')
+        gen.startElementNS(('http://example.com/ns', 'g1'), 'g1', {})
+        lang_attr = {('http://www.w3.org/XML/1998/namespace', 'lang'): 'en'}
+        gen.startElementNS(('http://example.com/ns', 'g2'), 'g2', lang_attr)
+        gen.characters('Hello')
+        gen.endElementNS(('http://example.com/ns', 'g2'), 'g2')
+        gen.endElementNS(('http://example.com/ns', 'g1'), 'g1')
+        gen.endPrefixMapping('a')
+        gen.endDocument()
+
+        self.assertEqual(result.getvalue(),
+                         start + (
+                         '<a:g1 xmlns:a="http://example.com/ns">'
+                          '<a:g2 xml:lang="en">Hello</a:g2>'
+                         '</a:g1>'))
+
+    def test_no_close_file(self):
+        result = self.ioclass()
+        def func(out):
+            gen = XMLGenerator(out)
+            gen.startDocument()
+            gen.startElement("doc", {})
+        func(result)
+        self.assertFalse(result.closed)
+
+    def test_xmlgen_fragment(self):
+        result = self.ioclass()
+        gen = XMLGenerator(result)
+
+        # Don't call gen.startDocument()
+        gen.startElement("foo", {"a": "1.0"})
+        gen.characters("Hello")
+        gen.endElement("foo")
+        gen.startElement("bar", {"b": "2.0"})
+        gen.endElement("bar")
+        # Don't call gen.endDocument()
+
+        self.assertEqual(result.getvalue(),
+                         '<foo a="1.0">Hello</foo><bar b="2.0"></bar>')
+
+class StringXmlgenTest(XmlgenTest, unittest.TestCase):
+    ioclass = StringIO
+
+class BytesIOXmlgenTest(XmlgenTest, unittest.TestCase):
+    ioclass = io.BytesIO
+
+class WriterXmlgenTest(XmlgenTest, unittest.TestCase):
+    class ioclass(list):
+        write = list.append
+        closed = False
+
+        def getvalue(self):
+            return b''.join(self)
+
+
+class XMLFilterBaseTest(unittest.TestCase):
+    def test_filter_basic(self):
+        result = StringIO()
+        gen = XMLGenerator(result)
+        filter = XMLFilterBase()
+        filter.setContentHandler(gen)
+
+        filter.startDocument()
+        filter.startElement("doc", {})
+        filter.characters("content")
+        filter.ignorableWhitespace(" ")
+        filter.endElement("doc")
+        filter.endDocument()
+
+        self.assertEqual(result.getvalue(), start + "<doc>content </doc>")
 
 # ===========================================================================
 #
@@ -282,232 +455,278 @@ def test_filter_basic():
 #
 # ===========================================================================
 
-# ===== XMLReader support
+xml_test_out = open(TEST_XMLFILE_OUT).read()
 
-def test_expat_file():
-    parser = make_parser()
-    result = StringIO()
-    xmlgen = XMLGenerator(result)
+class ExpatReaderTest(XmlTestBase):
 
-    parser.setContentHandler(xmlgen)
-    parser.parse(open(findfile("test.xml")))
+    # ===== XMLReader support
 
-    return result.getvalue() == xml_test_out
+    def test_expat_file(self):
+        parser = create_parser()
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
 
-# ===== DTDHandler support
+        parser.setContentHandler(xmlgen)
+        parser.parse(open(TEST_XMLFILE))
 
-class TestDTDHandler:
+        self.assertEqual(result.getvalue(), xml_test_out)
 
-    def __init__(self):
-        self._notations = []
-        self._entities  = []
+    @requires_unicode_filenames
+    def test_expat_file_unicode(self):
+        fname = support.TESTFN_UNICODE
+        shutil.copyfile(TEST_XMLFILE, fname)
+        self.addCleanup(support.unlink, fname)
 
-    def notationDecl(self, name, publicId, systemId):
-        self._notations.append((name, publicId, systemId))
+        parser = create_parser()
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
 
-    def unparsedEntityDecl(self, name, publicId, systemId, ndata):
-        self._entities.append((name, publicId, systemId, ndata))
+        parser.setContentHandler(xmlgen)
+        parser.parse(open(fname))
 
-def test_expat_dtdhandler():
-    parser = make_parser()
-    handler = TestDTDHandler()
-    parser.setDTDHandler(handler)
+        self.assertEqual(result.getvalue(), xml_test_out)
 
-    parser.parse(StringIO('''<!DOCTYPE doc [
-  <!ENTITY img SYSTEM "expat.gif" NDATA GIF>
-  <!NOTATION GIF PUBLIC "-//CompuServe//NOTATION Graphics Interchange Format 89a//EN">
-]>
-<doc></doc>'''))
-    if len(handler._entities) != 1 or len(handler._entities[0]) != 4:
-        return 0
-    name, pubId, sysId, ndata = handler._entities[0]
-    if name != 'img' or not pubId is None or not sysId.endswith('expat.gif') or ndata != 'GIF':
-        return 0
-    return handler._notations == [("GIF", "-//CompuServe//NOTATION Graphics Interchange Format 89a//EN", None)]
+    # ===== DTDHandler support
 
-# ===== EntityResolver support
+    class TestDTDHandler:
 
-class TestEntityResolver:
+        def __init__(self):
+            self._notations = []
+            self._entities  = []
 
-    def resolveEntity(self, publicId, systemId):
+        def notationDecl(self, name, publicId, systemId):
+            self._notations.append((name, publicId, systemId))
+
+        def unparsedEntityDecl(self, name, publicId, systemId, ndata):
+            self._entities.append((name, publicId, systemId, ndata))
+
+    def test_expat_dtdhandler(self):
+        parser = create_parser()
+        handler = self.TestDTDHandler()
+        parser.setDTDHandler(handler)
+
+        parser.feed('<!DOCTYPE doc [\n')
+        parser.feed('  <!ENTITY img SYSTEM "expat.gif" NDATA GIF>\n')
+        parser.feed('  <!NOTATION GIF PUBLIC "-//CompuServe//NOTATION Graphics Interchange Format 89a//EN">\n')
+        parser.feed(']>\n')
+        parser.feed('<doc></doc>')
+        parser.close()
+
+        self.assertEqual(handler._notations,
+            [("GIF", "-//CompuServe//NOTATION Graphics Interchange Format 89a//EN", None)])
+        self.assertEqual(handler._entities, [("img", None, "expat.gif", "GIF")])
+
+    # ===== EntityResolver support
+
+    class TestEntityResolver:
+
+        def resolveEntity(self, publicId, systemId):
+            inpsrc = InputSource()
+            inpsrc.setByteStream(StringIO("<entity/>"))
+            return inpsrc
+
+    def test_expat_entityresolver(self):
+        parser = create_parser()
+        parser.setEntityResolver(self.TestEntityResolver())
+        result = StringIO()
+        parser.setContentHandler(XMLGenerator(result))
+
+        parser.feed('<!DOCTYPE doc [\n')
+        parser.feed('  <!ENTITY test SYSTEM "whatever">\n')
+        parser.feed(']>\n')
+        parser.feed('<doc>&test;</doc>')
+        parser.close()
+
+        self.assertEqual(result.getvalue(), start +
+                         "<doc><entity></entity></doc>")
+
+    # ===== Attributes support
+
+    class AttrGatherer(ContentHandler):
+
+        def startElement(self, name, attrs):
+            self._attrs = attrs
+
+        def startElementNS(self, name, qname, attrs):
+            self._attrs = attrs
+
+    def test_expat_attrs_empty(self):
+        parser = create_parser()
+        gather = self.AttrGatherer()
+        parser.setContentHandler(gather)
+
+        parser.feed("<doc/>")
+        parser.close()
+
+        self.verify_empty_attrs(gather._attrs)
+
+    def test_expat_attrs_wattr(self):
+        parser = create_parser()
+        gather = self.AttrGatherer()
+        parser.setContentHandler(gather)
+
+        parser.feed("<doc attr='val'/>")
+        parser.close()
+
+        self.verify_attrs_wattr(gather._attrs)
+
+    def test_expat_nsattrs_empty(self):
+        parser = create_parser(1)
+        gather = self.AttrGatherer()
+        parser.setContentHandler(gather)
+
+        parser.feed("<doc/>")
+        parser.close()
+
+        self.verify_empty_nsattrs(gather._attrs)
+
+    def test_expat_nsattrs_wattr(self):
+        parser = create_parser(1)
+        gather = self.AttrGatherer()
+        parser.setContentHandler(gather)
+
+        parser.feed("<doc xmlns:ns='%s' ns:attr='val'/>" % ns_uri)
+        parser.close()
+
+        attrs = gather._attrs
+
+        self.assertEqual(attrs.getLength(), 1)
+        self.assertEqual(attrs.getNames(), [(ns_uri, "attr")])
+        self.assertTrue((attrs.getQNames() == [] or
+                         attrs.getQNames() == ["ns:attr"]))
+        self.assertEqual(len(attrs), 1)
+        self.assertTrue(attrs.has_key((ns_uri, "attr")))
+        self.assertEqual(attrs.get((ns_uri, "attr")), "val")
+        self.assertEqual(attrs.get((ns_uri, "attr"), 25), "val")
+        self.assertEqual(attrs.items(), [((ns_uri, "attr"), "val")])
+        self.assertEqual(attrs.values(), ["val"])
+        self.assertEqual(attrs.getValue((ns_uri, "attr")), "val")
+        self.assertEqual(attrs[(ns_uri, "attr")], "val")
+
+    # ===== InputSource support
+
+    def test_expat_inpsource_filename(self):
+        parser = create_parser()
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
+
+        parser.setContentHandler(xmlgen)
+        parser.parse(TEST_XMLFILE)
+
+        self.assertEqual(result.getvalue(), xml_test_out)
+
+    def test_expat_inpsource_sysid(self):
+        parser = create_parser()
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
+
+        parser.setContentHandler(xmlgen)
+        parser.parse(InputSource(TEST_XMLFILE))
+
+        self.assertEqual(result.getvalue(), xml_test_out)
+
+    @requires_unicode_filenames
+    def test_expat_inpsource_sysid_unicode(self):
+        fname = support.TESTFN_UNICODE
+        shutil.copyfile(TEST_XMLFILE, fname)
+        self.addCleanup(support.unlink, fname)
+
+        parser = create_parser()
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
+
+        parser.setContentHandler(xmlgen)
+        parser.parse(InputSource(fname))
+
+        self.assertEqual(result.getvalue(), xml_test_out)
+
+    def test_expat_inpsource_stream(self):
+        parser = create_parser()
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
+
+        parser.setContentHandler(xmlgen)
         inpsrc = InputSource()
-        inpsrc.setByteStream(StringIO("<entity/>"))
-        return inpsrc
+        inpsrc.setByteStream(open(TEST_XMLFILE))
+        parser.parse(inpsrc)
 
-def test_expat_entityresolver():
-    parser = make_parser()
-    parser.setEntityResolver(TestEntityResolver())
-    result = StringIO()
-    parser.setContentHandler(XMLGenerator(result))
+        self.assertEqual(result.getvalue(), xml_test_out)
 
-    parser.parse(StringIO('''<!DOCTYPE doc [
-  <!ENTITY test SYSTEM "whatever">
-]>
-<doc>&test;</doc>'''))
-    return result.getvalue() == start + "<doc><entity></entity></doc>"
+    # ===== IncrementalParser support
 
-# ===== Attributes support
+    def test_expat_incremental(self):
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
+        parser = create_parser()
+        parser.setContentHandler(xmlgen)
 
-class AttrGatherer(ContentHandler):
+        parser.feed("<doc>")
+        parser.feed("</doc>")
+        parser.close()
 
-    def startElement(self, name, attrs):
-        self._attrs = attrs
+        self.assertEqual(result.getvalue(), start + "<doc></doc>")
 
-    def startElementNS(self, name, qname, attrs):
-        self._attrs = attrs
+    def test_expat_incremental_reset(self):
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
+        parser = create_parser()
+        parser.setContentHandler(xmlgen)
 
-def test_expat_attrs_empty():
-    parser = make_parser()
-    gather = AttrGatherer()
-    parser.setContentHandler(gather)
+        parser.feed("<doc>")
+        parser.feed("text")
 
-    parser.parse(StringIO("<doc/>"))
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
+        parser.setContentHandler(xmlgen)
+        parser.reset()
 
-    return verify_empty_attrs(gather._attrs)
+        parser.feed("<doc>")
+        parser.feed("text")
+        parser.feed("</doc>")
+        parser.close()
 
-def test_expat_attrs_wattr():
-    parser = make_parser()
-    gather = AttrGatherer()
-    parser.setContentHandler(gather)
+        self.assertEqual(result.getvalue(), start + "<doc>text</doc>")
 
-    parser.parse(StringIO("<doc attr='val'/>"))
+    # ===== Locator support
 
-    return verify_attrs_wattr(gather._attrs)
+    def test_expat_locator_noinfo(self):
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
+        parser = create_parser()
+        parser.setContentHandler(xmlgen)
 
-def test_expat_nsattrs_empty():
-    parser = make_parser()
-    parser.setFeature(handler.feature_namespaces, 1)
-    gather = AttrGatherer()
-    parser.setContentHandler(gather)
+        parser.feed("<doc>")
+        parser.feed("</doc>")
+        parser.close()
 
-    parser.parse(StringIO("<doc/>"))
+        self.assertEqual(parser.getSystemId(), None)
+        self.assertEqual(parser.getPublicId(), None)
+        self.assertEqual(parser.getLineNumber(), 1)
 
-    return verify_empty_nsattrs(gather._attrs)
+    def test_expat_locator_withinfo(self):
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
+        parser = create_parser()
+        parser.setContentHandler(xmlgen)
+        parser.parse(TEST_XMLFILE)
 
-def test_expat_nsattrs_wattr():
-    parser = make_parser()
-    parser.setFeature(handler.feature_namespaces, 1)
-    gather = AttrGatherer()
-    parser.setContentHandler(gather)
+        self.assertEqual(parser.getSystemId(), TEST_XMLFILE)
+        self.assertEqual(parser.getPublicId(), None)
 
-    a_name = "id" ; a_val = "val"
-    parser.parse(StringIO("<doc xmlns:ns='%s' ns:%s='%s'/>" % (ns_uri, a_name, a_val) ))
+    @requires_unicode_filenames
+    def test_expat_locator_withinfo_unicode(self):
+        fname = support.TESTFN_UNICODE
+        shutil.copyfile(TEST_XMLFILE, fname)
+        self.addCleanup(support.unlink, fname)
 
-    attrs = gather._attrs
+        result = StringIO()
+        xmlgen = XMLGenerator(result)
+        parser = create_parser()
+        parser.setContentHandler(xmlgen)
+        parser.parse(fname)
 
-    return attrs.getLength() == 1 and \
-           attrs.getNames() == [(ns_uri, a_name)] and \
-           attrs.getQNames() == ["ns:%s" % a_name] and \
-           len(attrs) == 1 and \
-           attrs.has_key((ns_uri, a_name)) and \
-           attrs.keys() == [(ns_uri, a_name)] and \
-           attrs.get((ns_uri, a_name)) == a_val and \
-           attrs.get((ns_uri, a_name), 25) == a_val and \
-           attrs.items() == [((ns_uri, a_name), a_val)] and \
-           attrs.values() == [a_val] and \
-           attrs.getValue((ns_uri, a_name)) == a_val and \
-           attrs[(ns_uri, a_name)] == a_val
-
-def test_expat_nsattrs_no_namespace():
-    parser = make_parser()
-    parser.setFeature(handler.feature_namespaces, 1)
-    gather = AttrGatherer()
-    parser.setContentHandler(gather)
-
-    a_name = "id" ; a_val = "val"
-    parser.parse(StringIO("<doc %s='%s'/>" % (a_name, a_val) ))
-
-    attrs = gather._attrs
-
-    return attrs.getLength() == 1 and \
-           attrs.getNames() == [(None, a_name)] and \
-           attrs.getQNames() == [a_name] and \
-           len(attrs) == 1 and \
-           attrs.has_key((None, a_name)) and \
-           attrs.keys() == [(None, a_name)] and \
-           attrs.get((None, a_name)) == a_val and \
-           attrs.get((None, a_name), 25) == a_val and \
-           attrs.items() == [((None, a_name), a_val)] and \
-           attrs.values() == [a_val] and \
-           attrs.getValue((None, a_name)) == a_val and \
-           attrs[(None, a_name)] == a_val
-
-# ===== InputSource support
-
-xml_test_out = open(findfile("test.xml.out")).read()
-
-def test_expat_inpsource_filename():
-    parser = make_parser()
-    result = StringIO()
-    xmlgen = XMLGenerator(result)
-
-    parser.setContentHandler(xmlgen)
-    parser.parse(findfile("test.xml"))
-
-    return result.getvalue() == xml_test_out
-
-def test_expat_inpsource_sysid():
-    parser = make_parser()
-    result = StringIO()
-    xmlgen = XMLGenerator(result)
-
-    parser.setContentHandler(xmlgen)
-    parser.parse(InputSource(findfile("test.xml")))
-
-    return result.getvalue() == xml_test_out
-
-def test_expat_inpsource_stream():
-    parser = make_parser()
-    result = StringIO()
-    xmlgen = XMLGenerator(result)
-
-    parser.setContentHandler(xmlgen)
-    inpsrc = InputSource()
-    inpsrc.setByteStream(open(findfile("test.xml")))
-    parser.parse(inpsrc)
-
-    return result.getvalue() == xml_test_out
-
-# ===== Locator support
-
-class LocatorTest(XMLGenerator):
-    def __init__(self, out=None, encoding="iso-8859-1"):
-        XMLGenerator.__init__(self, out, encoding)
-        self.location = None
-
-    def setDocumentLocator(self, locator):
-        XMLGenerator.setDocumentLocator(self, locator)
-        self.location = Location(self._locator)
-
-def test_expat_locator_noinfo():
-    result = StringIO()
-    xmlgen = LocatorTest(result)
-    parser = make_parser()
-    parser.setContentHandler(xmlgen)
-
-    parser.parse(StringIO("<doc></doc>"))
-
-    return xmlgen.location.getSystemId() is None and \
-           xmlgen.location.getPublicId() is None and \
-           xmlgen.location.getLineNumber() == 1
-
-def test_expat_locator_withinfo():
-    result = StringIO()
-    xmlgen = LocatorTest(result)
-    parser = make_parser()
-    parser.setContentHandler(xmlgen)
-    testfile = findfile("test.xml")
-    parser.parse(testfile)
-    if is_jython:
-        # In Jython, the system id is a URL with forward slashes, and
-        # under Windows findfile returns a path with backslashes, so
-        # replace the backslashes with forward
-        testfile = testfile.replace('\\', '/')
-
-    # urllib.quote isn't the exact encoder (e.g. ':' isn't escaped)
-    expected = urllib.quote(testfile).replace('%3A', ':')
-    return xmlgen.location.getSystemId().endswith(expected) and \
-           xmlgen.location.getPublicId() is None
+        self.assertEqual(parser.getSystemId(), fname)
+        self.assertEqual(parser.getPublicId(), None)
 
 
 # ===========================================================================
@@ -516,66 +735,59 @@ def test_expat_locator_withinfo():
 #
 # ===========================================================================
 
-def test_expat_incomplete():
-    parser = make_parser()
-    parser.setContentHandler(ContentHandler()) # do nothing
-    try:
-        parser.parse(StringIO("<foo>"))
-    except SAXParseException:
-        return 1 # ok, error found
-    else:
-        return 0
+class ErrorReportingTest(unittest.TestCase):
+    def test_expat_inpsource_location(self):
+        parser = create_parser()
+        parser.setContentHandler(ContentHandler()) # do nothing
+        source = InputSource()
+        source.setByteStream(StringIO("<foo bar foobar>"))   #ill-formed
+        name = "a file name"
+        source.setSystemId(name)
+        try:
+            parser.parse(source)
+            self.fail()
+        except SAXException, e:
+            self.assertEqual(e.getSystemId(), name)
 
-def test_sax_location_str():
-    # pass various values from a locator to the SAXParseException to
-    # make sure that the __str__() doesn't fall apart when None is
-    # passed instead of an integer line and column number
-    #
-    # use "normal" values for the locator:
-    str(Location(DummyLocator(1, 1)))
-    # use None for the line number:
-    str(Location(DummyLocator(None, 1)))
-    # use None for the column number:
-    str(Location(DummyLocator(1, None)))
-    # use None for both:
-    str(Location(DummyLocator(None, None)))
-    return 1
+    def test_expat_incomplete(self):
+        parser = create_parser()
+        parser.setContentHandler(ContentHandler()) # do nothing
+        self.assertRaises(SAXParseException, parser.parse, StringIO("<foo>"))
 
-def test_sax_parse_exception_str():
-    # pass various values from a locator to the SAXParseException to
-    # make sure that the __str__() doesn't fall apart when None is
-    # passed instead of an integer line and column number
-    #
-    # use "normal" values for the locator:
-    str(SAXParseException("message", None,
-                          DummyLocator(1, 1)))
-    # use None for the line number:
-    str(SAXParseException("message", None,
-                          DummyLocator(None, 1)))
-    # use None for the column number:
-    str(SAXParseException("message", None,
-                          DummyLocator(1, None)))
-    # use None for both:
-    str(SAXParseException("message", None,
-                          DummyLocator(None, None)))
-    return 1
+    def test_sax_parse_exception_str(self):
+        # pass various values from a locator to the SAXParseException to
+        # make sure that the __str__() doesn't fall apart when None is
+        # passed instead of an integer line and column number
+        #
+        # use "normal" values for the locator:
+        str(SAXParseException("message", None,
+                              self.DummyLocator(1, 1)))
+        # use None for the line number:
+        str(SAXParseException("message", None,
+                              self.DummyLocator(None, 1)))
+        # use None for the column number:
+        str(SAXParseException("message", None,
+                              self.DummyLocator(1, None)))
+        # use None for both:
+        str(SAXParseException("message", None,
+                              self.DummyLocator(None, None)))
 
-class DummyLocator:
-    def __init__(self, lineno, colno):
-        self._lineno = lineno
-        self._colno = colno
+    class DummyLocator:
+        def __init__(self, lineno, colno):
+            self._lineno = lineno
+            self._colno = colno
 
-    def getPublicId(self):
-        return "pubid"
+        def getPublicId(self):
+            return "pubid"
 
-    def getSystemId(self):
-        return "sysid"
+        def getSystemId(self):
+            return "sysid"
 
-    def getLineNumber(self):
-        return self._lineno
+        def getLineNumber(self):
+            return self._lineno
 
-    def getColumnNumber(self):
-        return self._colno
+        def getColumnNumber(self):
+            return self._colno
 
 # ===========================================================================
 #
@@ -583,172 +795,93 @@ class DummyLocator:
 #
 # ===========================================================================
 
-# ===== AttributesImpl
+class XmlReaderTest(XmlTestBase):
 
-def verify_empty_attrs(attrs):
-    try:
-        attrs.getValue("attr")
-        gvk = 0
-    except KeyError:
-        gvk = 1
+    # ===== AttributesImpl
+    def test_attrs_empty(self):
+        self.verify_empty_attrs(AttributesImpl({}))
 
-    try:
-        attrs.getValueByQName("attr")
-        gvqk = 0
-    except KeyError:
-        gvqk = 1
+    def test_attrs_wattr(self):
+        self.verify_attrs_wattr(AttributesImpl({"attr" : "val"}))
 
-    try:
-        attrs.getNameByQName("attr")
-        gnqk = 0
-    except KeyError:
-        gnqk = 1
+    def test_nsattrs_empty(self):
+        self.verify_empty_nsattrs(AttributesNSImpl({}, {}))
 
-    try:
-        attrs.getQNameByName("attr")
-        gqnk = 0
-    except KeyError:
-        gqnk = 1
+    def test_nsattrs_wattr(self):
+        attrs = AttributesNSImpl({(ns_uri, "attr") : "val"},
+                                 {(ns_uri, "attr") : "ns:attr"})
 
-    try:
-        attrs["attr"]
-        gik = 0
-    except KeyError:
-        gik = 1
-
-    return attrs.getLength() == 0 and \
-           attrs.getNames() == [] and \
-           attrs.getQNames() == [] and \
-           len(attrs) == 0 and \
-           not attrs.has_key("attr") and \
-           attrs.keys() == [] and \
-           attrs.get("attrs") is None and \
-           attrs.get("attrs", 25) == 25 and \
-           attrs.items() == [] and \
-           attrs.values() == [] and \
-           gvk and gvqk and gnqk and gik and gqnk
-
-def verify_attrs_wattr(attrs):
-    return attrs.getLength() == 1 and \
-           attrs.getNames() == ["attr"] and \
-           attrs.getQNames() == ["attr"] and \
-           len(attrs) == 1 and \
-           attrs.has_key("attr") and \
-           attrs.keys() == ["attr"] and \
-           attrs.get("attr") == "val" and \
-           attrs.get("attr", 25) == "val" and \
-           attrs.items() == [("attr", "val")] and \
-           attrs.values() == ["val"] and \
-           attrs.getValue("attr") == "val" and \
-           attrs.getValueByQName("attr") == "val" and \
-           attrs.getNameByQName("attr") == "attr" and \
-           attrs["attr"] == "val" and \
-           attrs.getQNameByName("attr") == "attr"
-
-def test_attrs_empty():
-    return verify_empty_attrs(AttributesImpl({}))
-
-def test_attrs_wattr():
-    return verify_attrs_wattr(AttributesImpl({"attr" : "val"}))
-
-# ===== AttributesImpl
-
-def verify_empty_nsattrs(attrs):
-    try:
-        attrs.getValue((ns_uri, "attr"))
-        gvk = 0
-    except KeyError:
-        gvk = 1
-
-    try:
-        attrs.getValueByQName("ns:attr")
-        gvqk = 0
-    except KeyError:
-        gvqk = 1
-
-    try:
-        attrs.getNameByQName("ns:attr")
-        gnqk = 0
-    except KeyError:
-        gnqk = 1
-
-    try:
-        attrs.getQNameByName((ns_uri, "attr"))
-        gqnk = 0
-    except KeyError:
-        gqnk = 1
-
-    try:
-        attrs[(ns_uri, "attr")]
-        gik = 0
-    except KeyError:
-        gik = 1
-
-    return attrs.getLength() == 0 and \
-           attrs.getNames() == [] and \
-           attrs.getQNames() == [] and \
-           len(attrs) == 0 and \
-           not attrs.has_key((ns_uri, "attr")) and \
-           attrs.keys() == [] and \
-           attrs.get((ns_uri, "attr")) is None and \
-           attrs.get((ns_uri, "attr"), 25) == 25 and \
-           attrs.items() == [] and \
-           attrs.values() == [] and \
-           gvk and gvqk and gnqk and gik and gqnk
-
-def test_nsattrs_empty():
-    return verify_empty_nsattrs(AttributesNSImpl({}, {}))
-
-def test_nsattrs_wattr():
-    attrs = AttributesNSImpl({(ns_uri, "attr") : "val"},
-                             {(ns_uri, "attr") : "ns:attr"})
-
-    return attrs.getLength() == 1 and \
-           attrs.getNames() == [(ns_uri, "attr")] and \
-           attrs.getQNames() == ["ns:attr"] and \
-           len(attrs) == 1 and \
-           attrs.has_key((ns_uri, "attr")) and \
-           attrs.keys() == [(ns_uri, "attr")] and \
-           attrs.get((ns_uri, "attr")) == "val" and \
-           attrs.get((ns_uri, "attr"), 25) == "val" and \
-           attrs.items() == [((ns_uri, "attr"), "val")] and \
-           attrs.values() == ["val"] and \
-           attrs.getValue((ns_uri, "attr")) == "val" and \
-           attrs.getValueByQName("ns:attr") == "val" and \
-           attrs.getNameByQName("ns:attr") == (ns_uri, "attr") and \
-           attrs[(ns_uri, "attr")] == "val" and \
-           attrs.getQNameByName((ns_uri, "attr")) == "ns:attr"
+        self.assertEqual(attrs.getLength(), 1)
+        self.assertEqual(attrs.getNames(), [(ns_uri, "attr")])
+        self.assertEqual(attrs.getQNames(), ["ns:attr"])
+        self.assertEqual(len(attrs), 1)
+        self.assertTrue(attrs.has_key((ns_uri, "attr")))
+        self.assertEqual(attrs.keys(), [(ns_uri, "attr")])
+        self.assertEqual(attrs.get((ns_uri, "attr")), "val")
+        self.assertEqual(attrs.get((ns_uri, "attr"), 25), "val")
+        self.assertEqual(attrs.items(), [((ns_uri, "attr"), "val")])
+        self.assertEqual(attrs.values(), ["val"])
+        self.assertEqual(attrs.getValue((ns_uri, "attr")), "val")
+        self.assertEqual(attrs.getValueByQName("ns:attr"), "val")
+        self.assertEqual(attrs.getNameByQName("ns:attr"), (ns_uri, "attr"))
+        self.assertEqual(attrs[(ns_uri, "attr")], "val")
+        self.assertEqual(attrs.getQNameByName((ns_uri, "attr")), "ns:attr")
 
 
-# ===== Main program
+    # During the development of Python 2.5, an attempt to move the "xml"
+    # package implementation to a new package ("xmlcore") proved painful.
+    # The goal of this change was to allow applications to be able to
+    # obtain and rely on behavior in the standard library implementation
+    # of the XML support without needing to be concerned about the
+    # availability of the PyXML implementation.
+    #
+    # While the existing import hackery in Lib/xml/__init__.py can cause
+    # PyXML's _xmlpus package to supplant the "xml" package, that only
+    # works because either implementation uses the "xml" package name for
+    # imports.
+    #
+    # The move resulted in a number of problems related to the fact that
+    # the import machinery's "package context" is based on the name that's
+    # being imported rather than the __name__ of the actual package
+    # containment; it wasn't possible for the "xml" package to be replaced
+    # by a simple module that indirected imports to the "xmlcore" package.
+    #
+    # The following two tests exercised bugs that were introduced in that
+    # attempt.  Keeping these tests around will help detect problems with
+    # other attempts to provide reliable access to the standard library's
+    # implementation of the XML support.
 
-def make_test_output():
-    parser = make_parser()
-    result = StringIO()
-    xmlgen = XMLGenerator(result)
+    def test_sf_1511497(self):
+        # Bug report: http://www.python.org/sf/1511497
+        import sys
+        old_modules = sys.modules.copy()
+        for modname in sys.modules.keys():
+            if modname.startswith("xml."):
+                del sys.modules[modname]
+        try:
+            import xml.sax.expatreader
+            module = xml.sax.expatreader
+            self.assertEqual(module.__name__, "xml.sax.expatreader")
+        finally:
+            sys.modules.update(old_modules)
 
-    parser.setContentHandler(xmlgen)
-    parser.parse(findfile("test.xml"))
+    def test_sf_1513611(self):
+        # Bug report: http://www.python.org/sf/1513611
+        sio = StringIO("invalid")
+        parser = make_parser()
+        from xml.sax import SAXParseException
+        self.assertRaises(SAXParseException, parser.parse, sio)
 
-    outf = open(findfile("test.xml.out"), "w")
-    outf.write(result.getvalue())
-    outf.close()
 
-import sys
-java_14 = sys.platform.startswith("java1.4")
-del sys
+def test_main():
+    run_unittest(MakeParserTest,
+                 SaxutilsTest,
+                 StringXmlgenTest,
+                 BytesIOXmlgenTest,
+                 WriterXmlgenTest,
+                 ExpatReaderTest,
+                 ErrorReportingTest,
+                 XmlReaderTest)
 
-items = locals().items()
-items.sort()
-for (name, value) in items:
-    if name.startswith('test_expat') and java_14:
-        #skip expat tests on java14 since the crimson parser is so crappy
-        continue
-    if name[:5] == "test_":
-        confirm(value(), name)
-
-if verbose:
-    print "%d tests, %d failures" % (tests, len(failures))
-if failures:
-    raise TestFailed("%d of %d tests failed: %s"
-                     % (len(failures), tests, ", ".join(failures)))
+if __name__ == "__main__":
+    test_main()

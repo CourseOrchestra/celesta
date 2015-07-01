@@ -11,6 +11,8 @@ public final class AppSettings {
 	private static final String DEFAULT_PYLIB_PATH = "pylib";
 	private static AppSettings theSettings;
 
+	private final Properties properties;
+
 	private final String scorePath;
 	private final DBType dbType;
 	private final String databaseConnection;
@@ -18,15 +20,18 @@ public final class AppSettings {
 	private final String password;
 	private final Logger logger;
 	private final String pylibPath;
+	private final String javalibPath;
 	private final boolean skipDBUpdate;
 	private final boolean forceDBInitialize;
 	private final boolean logLogins;
+
 	{
 		logger = Logger.getLogger("ru.curs.flute");
 		logger.setLevel(Level.INFO);
 	}
 
 	private AppSettings(Properties settings) throws CelestaException {
+		properties = settings;
 
 		StringBuffer sb = new StringBuffer();
 
@@ -71,6 +76,15 @@ public final class AppSettings {
 		File pylibPathFile = new File(pylibPath);
 		if (!pylibPathFile.exists())
 			sb.append("Invalid pylib.path entry: " + pylibPath + '\n');
+
+		javalibPath = settings.getProperty("javalib.path", "").trim();
+		if (!javalibPath.isEmpty())
+			for (String pathEntry : javalibPath.split(File.pathSeparator)) {
+				File path = new File(pathEntry);
+				if (!(path.isDirectory() && path.canRead())) {
+					sb.append("Invalid javalib.path entry: " + pathEntry + '\n');
+				}
+			}
 
 		skipDBUpdate = Boolean.parseBoolean(settings.getProperty(
 				"skip.dbupdate", "").trim());
@@ -177,6 +191,14 @@ public final class AppSettings {
 	}
 
 	/**
+	 * Значение параметра "javalib.path".
+	 */
+
+	public static String getJavalibPath() {
+		return theSettings.javalibPath;
+	}
+
+	/**
 	 * Значение параметра "пропускать фазу обновления базы данных".
 	 */
 	public static boolean getSkipDBUpdate() {
@@ -230,6 +252,15 @@ public final class AppSettings {
 	 */
 	public static String getDBPassword() {
 		return theSettings.password;
+	}
+
+	/**
+	 * Возвращает свойства, с которыми была инициализирована Челеста. Внимание:
+	 * данный объект имеет смысл использовать только на чтение, динамическое
+	 * изменение этих свойств не приводит ни к чему.
+	 */
+	public static Properties getSetupProperties() {
+		return theSettings.properties;
 	}
 
 }

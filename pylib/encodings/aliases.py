@@ -146,6 +146,11 @@ aliases = {
     'csibm857'           : 'cp857',
     'ibm857'             : 'cp857',
 
+    # cp858 codec
+    '858'                : 'cp858',
+    'csibm858'           : 'cp858',
+    'ibm858'             : 'cp858',
+
     # cp860 codec
     '860'                : 'cp860',
     'csibm860'           : 'cp860',
@@ -301,6 +306,8 @@ aliases = {
 
     # iso8859_13 codec
     'iso_8859_13'        : 'iso8859_13',
+    'l7'                 : 'iso8859_13',
+    'latin7'             : 'iso8859_13',
 
     # iso8859_14 codec
     'iso_8859_14'        : 'iso8859_14',
@@ -312,6 +319,8 @@ aliases = {
 
     # iso8859_15 codec
     'iso_8859_15'        : 'iso8859_15',
+    'l9'                 : 'iso8859_15',
+    'latin9'             : 'iso8859_15',
 
     # iso8859_16 codec
     'iso_8859_16'        : 'iso8859_16',
@@ -438,7 +447,7 @@ aliases = {
     'csptcp154'          : 'ptcp154',
     'pt154'              : 'ptcp154',
     'cp154'              : 'ptcp154',
-    'cyrillic-asian'     : 'ptcp154',
+    'cyrillic_asian'     : 'ptcp154',
 
     # quopri_codec codec
     'quopri'             : 'quopri_codec',
@@ -485,6 +494,16 @@ aliases = {
     # utf_16_le codec
     'unicodelittleunmarked' : 'utf_16_le',
     'utf_16le'           : 'utf_16_le',
+
+    # utf_32 codec
+    'u32'                : 'utf_32',
+    'utf32'              : 'utf_32',
+
+    # utf_32_be codec
+    'utf_32be'           : 'utf_32_be',
+
+    # utf_32_le codec
+    'utf_32le'           : 'utf_32_le',
 
     # utf_7 codec
     'u7'                 : 'utf_7',

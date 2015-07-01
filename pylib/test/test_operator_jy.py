@@ -56,7 +56,7 @@ class OperatorTestCase(unittest.TestCase):
         (HasInt(), True, False, False),
         (HasFloat(), True, False, False),
         )
-    
+
     def test_isNumberType(self):
         for obj, isNumberType, _, _ in self.tests:
             self.assert_istype(operator.isNumberType, obj, isNumberType)

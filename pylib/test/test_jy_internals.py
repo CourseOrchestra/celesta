@@ -1,10 +1,9 @@
 """
  test some jython internals
 """
-import gc
 import unittest
 import time
-from test.test_support import run_suite
+from test import test_support
 
 import java
 import jarray
@@ -27,16 +26,6 @@ class MemoryLeakTests(unittest.TestCase):
         # `type`!)
         class_to_type_map = getField(type, 'class_to_type').get(None)
 
-        def make_clean():
-            # gc a few times just to be really sure, since in this
-            # case we don't really care if it takes a few cycles of GC
-            # for the garbage to be reached
-            gc.collect()
-            time.sleep(0.1)
-            gc.collect()
-            time.sleep(0.5)
-            gc.collect()
-
         def create_proxies():
             pi = PythonInterpreter()
             pi.exec("""
@@ -50,16 +39,20 @@ class Dog(Comparable):
 
 Dog().bark()
 """)
-            make_clean()
-    
         # get to steady state first, then verify we don't create new proxies
         for i in xrange(2):
             create_proxies()
-        start_size = class_to_type_map.size()
+        # Ensure the reaper thread can run and clear out weak refs, so
+        # use this supporting function
+        test_support.gc_collect()
+        # Given that taking the len (or size()) of Guava weak maps is
+        # eventually consistent, we should instead take a len of its
+        # keys.
+        start_size = len(list(class_to_type_map))
         for i in xrange(5):
             create_proxies()
-        make_clean()
-        self.assertEqual(start_size, class_to_type_map.size())
+        test_support.gc_collect()
+        self.assertEqual(start_size, len(list(class_to_type_map)))
 
 
 class WeakIdentityMapTests(unittest.TestCase):
@@ -280,26 +273,14 @@ class ModuleTest(unittest.TestCase):
         from org.python.core import PyModule, PyInstance
         test = PyModule("test", {})
         exec "a = 2" in test.__dict__
-        self.assertEquals(len(test.__dict__), 3)
+        self.assertEquals(len(test.__dict__), 4)
 
         #test = PyInstance.__tojava__(test, PyModule)
         exec "b = 3" in test.__dict__
-        self.assertEquals(len(test.__dict__), 4)
+        self.assertEquals(len(test.__dict__), 5)
 
 def test_main():
-    test_suite = unittest.TestSuite()
-    test_loader = unittest.TestLoader()
-    def suite_add(case):
-        test_suite.addTest(test_loader.loadTestsFromTestCase(case))
-    suite_add(WeakIdentityMapTests)
-    suite_add(LongAsScaledDoubleValueTests)
-    suite_add(ExtraMathTests)
-    suite_add(DatetimeTypeMappingTest)
-    suite_add(IdTest)
-    suite_add(FrameTest)
-    suite_add(ModuleTest)
-    suite_add(MemoryLeakTests)
-    run_suite(test_suite)
+    test_support.run_unittest(__name__)
 
 if __name__ == "__main__":
     test_main()

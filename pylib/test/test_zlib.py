@@ -1,48 +1,45 @@
 import unittest
-from test import test_support
-import zlib
+from test.test_support import TESTFN, run_unittest, import_module, unlink, requires
+import binascii
 import random
+from test.test_support import precisionbigmemtest, _1G, _4G, is_jython
+import sys
 
-# print test_support.TESTFN
+try:
+    import mmap
+except ImportError:
+    mmap = None
 
-def getbuf():
-    # This was in the original.  Avoid non-repeatable sources.
-    # Left here (unused) in case something wants to be done with it.
-    import imp
-    try:
-        t = imp.find_module('test_zlib')
-        file = t[0]
-    except ImportError:
-        file = open(__file__)
-    buf = file.read() * 8
-    file.close()
-    return buf
-
+zlib = import_module('zlib')
 
 
 class ChecksumTestCase(unittest.TestCase):
     # checksum test cases
     def test_crc32start(self):
         self.assertEqual(zlib.crc32(""), zlib.crc32("", 0))
-        self.assert_(zlib.crc32("abc", 0xffffffff))
+        self.assertTrue(zlib.crc32("abc", 0xffffffff))
 
     def test_crc32empty(self):
         self.assertEqual(zlib.crc32("", 0), 0)
         self.assertEqual(zlib.crc32("", 1), 1)
         self.assertEqual(zlib.crc32("", 432), 432)
 
-    def test_adler32start(self):
+    def test_adler32(self):
         self.assertEqual(zlib.adler32(""), zlib.adler32("", 1))
-        # XXX: Jython adler32 only supports start value of 1
-        if not test_support.is_jython:
-            self.assert_(zlib.adler32("abc", 0xffffffff))
+
+    @unittest.skipIf(is_jython, "jython uses java.util.zip.Adler32, \
+                which does not support a start value other than 1")
+    def test_adler32start(self):
+        self.assertTrue(zlib.adler32("abc", 0xffffffff))
 
     def test_adler32empty(self):
-        if not test_support.is_jython:
-            self.assertEqual(zlib.adler32("", 0), 0)
         self.assertEqual(zlib.adler32("", 1), 1)
-        if not test_support.is_jython:
-            self.assertEqual(zlib.adler32("", 432), 432)
+
+    @unittest.skipIf(is_jython, "jython uses java.util.zip.Adler32, \
+                which does not support a start value other than 1")
+    def test_adler32empty_start(self):
+        self.assertEqual(zlib.adler32("", 0), 0)
+        self.assertEqual(zlib.adler32("", 432), 432)
 
     def assertEqual32(self, seen, expected):
         # 32-bit values masked -- checksums on 32- vs 64- bit machines
@@ -52,40 +49,119 @@ class ChecksumTestCase(unittest.TestCase):
     def test_penguins(self):
         self.assertEqual32(zlib.crc32("penguin", 0), 0x0e5c1a120L)
         self.assertEqual32(zlib.crc32("penguin", 1), 0x43b6aa94)
-        if not test_support.is_jython:
-            self.assertEqual32(zlib.adler32("penguin", 0), 0x0bcf02f6)
         self.assertEqual32(zlib.adler32("penguin", 1), 0x0bd602f7)
 
         self.assertEqual(zlib.crc32("penguin"), zlib.crc32("penguin", 0))
         self.assertEqual(zlib.adler32("penguin"),zlib.adler32("penguin",1))
 
+    @unittest.skipIf(is_jython, "jython uses java.util.zip.Adler32, \
+                which does not support a start value other than 1")
+    def test_penguins_start(self):
+        self.assertEqual32(zlib.adler32("penguin", 0), 0x0bcf02f6)
+
+    def test_abcdefghijklmnop(self):
+        """test issue1202 compliance: signed crc32, adler32 in 2.x"""
+        foo = 'abcdefghijklmnop'
+        # explicitly test signed behavior
+        self.assertEqual(zlib.crc32(foo), -1808088941)
+        self.assertEqual(zlib.crc32('spam'), 1138425661)
+        self.assertEqual(zlib.adler32(foo+foo), -721416943)
+        self.assertEqual(zlib.adler32('spam'), 72286642)
+
+    def test_same_as_binascii_crc32(self):
+        foo = 'abcdefghijklmnop'
+        self.assertEqual(binascii.crc32(foo), zlib.crc32(foo))
+        self.assertEqual(binascii.crc32('spam'), zlib.crc32('spam'))
+
+    def test_negative_crc_iv_input(self):
+        # The range of valid input values for the crc state should be
+        # -2**31 through 2**32-1 to allow inputs artifically constrained
+        # to a signed 32-bit integer.
+        self.assertEqual(zlib.crc32('ham', -1), zlib.crc32('ham', 0xffffffffL))
+        self.assertEqual(zlib.crc32('spam', -3141593),
+                         zlib.crc32('spam',  0xffd01027L))
+        self.assertEqual(zlib.crc32('spam', -(2**31)),
+                         zlib.crc32('spam',  (2**31)))
 
 
 class ExceptionTestCase(unittest.TestCase):
     # make sure we generate some expected errors
-    def test_bigbits(self):
-        # specifying total bits too large causes an error
-        self.assertRaises(zlib.error,
-                zlib.compress, 'ERROR', zlib.MAX_WBITS + 1)
+    def test_badlevel(self):
+        # specifying compression level out of range causes an error
+        # (but -1 is Z_DEFAULT_COMPRESSION and apparently the zlib
+        # accepts 0 too)
+        self.assertRaises(zlib.error, zlib.compress, 'ERROR', 10)
 
     def test_badcompressobj(self):
         # verify failure on building compress object with bad params
         self.assertRaises(ValueError, zlib.compressobj, 1, zlib.DEFLATED, 0)
+        # specifying total bits too large causes an error
+        self.assertRaises(ValueError,
+                zlib.compressobj, 1, zlib.DEFLATED, zlib.MAX_WBITS + 1)
 
     def test_baddecompressobj(self):
         # verify failure on building decompress object with bad params
-        self.assertRaises(ValueError, zlib.decompressobj, 0)
+        self.assertRaises(ValueError, zlib.decompressobj, -1)
 
     def test_decompressobj_badflush(self):
         # verify failure on calling decompressobj.flush with bad params
         self.assertRaises(ValueError, zlib.decompressobj().flush, 0)
         self.assertRaises(ValueError, zlib.decompressobj().flush, -1)
 
-    def test_decompress_badinput(self):
-        self.assertRaises(zlib.error, zlib.decompress, 'foo')
+
+class BaseCompressTestCase(object):
+
+    def check_big_compress_buffer(self, size, compress_func):
+        _1M = 1024 * 1024
+        if not is_jython:
+            # Generate 10MB worth of random, and expand it by repeating it.
+            # The assumption is that zlib's memory is not big enough to exploit
+            # such spread out redundancy.
+            fmt = "%%0%dx" % (2 * _1M)
+            data = ''.join([binascii.a2b_hex(fmt % random.getrandbits(8 * _1M))
+                            for i in range(10)])
+            data = data * (size // len(data) + 1)
+        else:
+            #
+            # The original version of this test passes fine on cpython,
+            # but appears to hang on jython, because of the time taken to
+            # format a very large integer as a hexadecimal string.
+            # See this issue for details
+            # http://bugs.jython.org/issue2013
+            # Since testing string formatting is not the purpose of the test
+            # it is necessary to generate the random test data in a different
+            # way on jython. (There may be a better way than what I have 
+            # implemented here)
+            #
+            from java.math import BigInteger
+            from java.util import Random
+            num_bits = 8 * _1M # causes "java.lang.OutOfMemoryError: Java heap space"
+            num_bits = _1M
+            data = ''.join([str(BigInteger((num_bits), Random()).toByteArray())
+                            for i in range(10)])
+        try:
+            compress_func(data)
+        finally:
+            # Release memory
+            data = None
+
+    def check_big_decompress_buffer(self, size, decompress_func):
+        data = 'x' * size
+        try:
+            compressed = zlib.compress(data, 1)
+        finally:
+            # Release memory
+            data = None
+        data = decompress_func(compressed)
+        # Sanity check
+        try:
+            self.assertEqual(len(data), size)
+            self.assertEqual(len(data.strip('x')), 0)
+        finally:
+            data = None
 
 
-class CompressTestCase(unittest.TestCase):
+class CompressTestCase(BaseCompressTestCase, unittest.TestCase):
     # Test compression in one go (whole message compression)
     def test_speech(self):
         x = zlib.compress(HAMLET_SCENE)
@@ -97,10 +173,38 @@ class CompressTestCase(unittest.TestCase):
         x = zlib.compress(data)
         self.assertEqual(zlib.decompress(x), data)
 
+    @unittest.skipIf(is_jython, "jython uses java.util.zip.Inflater, \
+                which accepts incomplete streams without error")
+    def test_incomplete_stream(self):
+        # An useful error message is given
+        x = zlib.compress(HAMLET_SCENE)
+        self.assertRaisesRegexp(zlib.error,
+            "Error -5 while decompressing data: incomplete or truncated stream",
+            zlib.decompress, x[:-1])
+
+    # Memory use of the following functions takes into account overallocation
+
+    @precisionbigmemtest(size=_1G + 1024 * 1024, memuse=3)
+    def test_big_compress_buffer(self, size):
+        compress = lambda s: zlib.compress(s, 1)
+        self.check_big_compress_buffer(size, compress)
+
+    @precisionbigmemtest(size=_1G + 1024 * 1024, memuse=2)
+    def test_big_decompress_buffer(self, size):
+        """
+        This is NOT testing for a 'size=_1G + 1024 * 1024', because of the definition of 
+        the precisionbigmemtest decorator, which resets the value to 5147, based on 
+        the definition of test_support.real_max_memuse == 0
+        This is the case on my windows installation of python 2.7.3.
+        Python 2.7.3 (default, Apr 10 2012, 23:31:26) [MSC v.1500 32 bit (Intel)] on win32
+        And on my build of jython 2.7
+        Jython 2.7b1+ (default:d5a22e9b622a, Feb 9 2013, 20:36:27)
+        [Java HotSpot(TM) Client VM (Sun Microsystems Inc.)] on java1.6.0_29
+        """
+        self.check_big_decompress_buffer(size, zlib.decompress)
 
 
-
-class CompressObjectTestCase(unittest.TestCase):
+class CompressObjectTestCase(BaseCompressTestCase, unittest.TestCase):
     # Test compression object
     def test_pair(self):
         # straightforward compress/decompress objects
@@ -202,7 +306,7 @@ class CompressObjectTestCase(unittest.TestCase):
         while cb:
             #max_length = 1 + len(cb)//10
             chunk = dco.decompress(cb, dcx)
-            self.failIf(len(chunk) > dcx,
+            self.assertFalse(len(chunk) > dcx,
                     'chunk too big (%d>%d)' % (len(chunk), dcx))
             bufs.append(chunk)
             cb = dco.unconsumed_tail
@@ -227,7 +331,7 @@ class CompressObjectTestCase(unittest.TestCase):
         while cb:
             max_length = 1 + len(cb)//10
             chunk = dco.decompress(cb, max_length)
-            self.failIf(len(chunk) > max_length,
+            self.assertFalse(len(chunk) > max_length,
                         'chunk too big (%d>%d)' % (len(chunk),max_length))
             bufs.append(chunk)
             cb = dco.unconsumed_tail
@@ -236,7 +340,7 @@ class CompressObjectTestCase(unittest.TestCase):
         else:
             while chunk:
                 chunk = dco.decompress('', max_length)
-                self.failIf(len(chunk) > max_length,
+                self.assertFalse(len(chunk) > max_length,
                             'chunk too big (%d>%d)' % (len(chunk),max_length))
                 bufs.append(chunk)
         self.assertEqual(data, ''.join(bufs), 'Wrong data retrieved')
@@ -249,6 +353,15 @@ class CompressObjectTestCase(unittest.TestCase):
         dco = zlib.decompressobj()
         self.assertRaises(ValueError, dco.decompress, "", -1)
         self.assertEqual('', dco.unconsumed_tail)
+
+    def test_clear_unconsumed_tail(self):
+        # Issue #12050: calling decompress() without providing max_length
+        # should clear the unconsumed_tail attribute.
+        cdata = "x\x9cKLJ\x06\x00\x02M\x01"     # "abc"
+        dco = zlib.decompressobj()
+        ddata = dco.decompress(cdata, 1)
+        ddata += dco.decompress(dco.unconsumed_tail)
+        self.assertEqual(dco.unconsumed_tail, "")
 
     def test_flushes(self):
         # Test flush() with the various options, using all the
@@ -310,9 +423,32 @@ class CompressObjectTestCase(unittest.TestCase):
         # caused a core dump.)
 
         co = zlib.compressobj(zlib.Z_BEST_COMPRESSION)
-        self.failUnless(co.flush())  # Returns a zlib header
+        self.assertTrue(co.flush())  # Returns a zlib header
         dco = zlib.decompressobj()
         self.assertEqual(dco.flush(), "") # Returns nothing
+
+    def test_decompress_incomplete_stream(self):
+        # This is 'foo', deflated
+        x = 'x\x9cK\xcb\xcf\x07\x00\x02\x82\x01E'
+        # For the record
+        self.assertEqual(zlib.decompress(x), 'foo')
+        if not is_jython:
+            # There is inconsistency between cpython zlib.decompress (which does not accept 
+            # incomplete streams) and zlib.decompressobj().decompress (which does accept
+            # incomplete streams, the whole point of this test)
+            # On jython, both zlib.decompress and zlib.decompressobject().decompress behave
+            # the same way: they both accept incomplete streams.
+            # Therefore, imposing this precondition is cpython specific
+            # and not appropriate on jython, which has consistent behaviour.
+            # http://bugs.python.org/issue8672
+            # http://bugs.jython.org/issue1859
+            self.assertRaises(zlib.error, zlib.decompress, x[:-5])
+        # Omitting the stream end works with decompressor objects
+        # (see issue #8672).
+        dco = zlib.decompressobj()
+        y = dco.decompress(x[:-5])
+        y += dco.flush()
+        self.assertEqual(y, 'foo')
 
     if hasattr(zlib.compressobj(), "copy"):
         def test_compresscopy(self):
@@ -373,6 +509,31 @@ class CompressObjectTestCase(unittest.TestCase):
             d.decompress(data)
             d.flush()
             self.assertRaises(ValueError, d.copy)
+
+    # Memory use of the following functions takes into account overallocation
+
+    @precisionbigmemtest(size=_1G + 1024 * 1024, memuse=3)
+    def test_big_compress_buffer(self, size):
+        c = zlib.compressobj(1)
+        compress = lambda s: c.compress(s) + c.flush()
+        self.check_big_compress_buffer(size, compress)
+
+    @precisionbigmemtest(size=_1G + 1024 * 1024, memuse=2)
+    def test_big_decompress_buffer(self, size):
+        """
+        This is NOT testing for a 'size=_1G + 1024 * 1024', because of the definition of 
+        the precisionbigmemtest decorator, which resets the value to 5147, based on 
+        the definition of test_support.real_max_memuse == 0
+        This is the case on my windows installation of python 2.7.3.
+        Python 2.7.3 (default, Apr 10 2012, 23:31:26) [MSC v.1500 32 bit (Intel)] on win32
+        And on my build of jython 2.7
+        Jython 2.7b1+ (default:d5a22e9b622a, Feb 9 2013, 20:36:27)
+        [Java HotSpot(TM) Client VM (Sun Microsystems Inc.)] on java1.6.0_29
+        """
+        d = zlib.decompressobj()
+        decompress = lambda s: d.decompress(s) + d.flush()
+        self.check_big_decompress_buffer(size, decompress)
+
 
 def genblock(seed, length, step=1024, generator=random):
     """length-byte stream of random data from a seed (in step-byte blocks)."""
@@ -464,7 +625,7 @@ LAERTES
 
 
 def test_main():
-    test_support.run_unittest(
+    run_unittest(
         ChecksumTestCase,
         ExceptionTestCase,
         CompressTestCase,
@@ -473,21 +634,3 @@ def test_main():
 
 if __name__ == "__main__":
     test_main()
-
-def test(tests=''):
-    if not tests: tests = 'o'
-    testcases = []
-    if 'k' in tests: testcases.append(ChecksumTestCase)
-    if 'x' in tests: testcases.append(ExceptionTestCase)
-    if 'c' in tests: testcases.append(CompressTestCase)
-    if 'o' in tests: testcases.append(CompressObjectTestCase)
-    test_support.run_unittest(*testcases)
-
-if False:
-    import sys
-    sys.path.insert(1, '/Py23Src/python/dist/src/Lib/test')
-    import test_zlib as tz
-    ts, ut = tz.test_support, tz.unittest
-    su = ut.TestSuite()
-    su.addTest(ut.makeSuite(tz.CompressTestCase))
-    ts.run_suite(su)

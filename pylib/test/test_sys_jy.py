@@ -1,6 +1,8 @@
+# -*- coding: iso-8859-1 -*-
 from __future__ import with_statement
 import os
 import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -148,6 +150,12 @@ class SyspathResourceTest(unittest.TestCase):
         from pck import Main
         self.assert_(Main.getResource('Main.txt'))
 
+    def test_url_from_resource_from_syspath(self):
+        from pck import Main
+        # Need to test this doesn't fail because of '\' chars in the path
+        # Really only a problem on Windows
+        self.assert_(Main.getResource('Main.txt').toURI())
+
 
 class SyspathUnicodeTest(unittest.TestCase):
     """bug 1693: importing from a unicode path threw a unicode encoding
@@ -179,13 +187,109 @@ class SyspathUnicodeTest(unittest.TestCase):
         finally:
             os.rmdir(moduleDir)
         self.assertFalse(os.path.exists(moduleDir))        
-        
+
+class SysEncodingTest(unittest.TestCase):
+
+    # Adapted from CPython 2.7 test_sys to exercise setting Jython registry
+    # values related to encoding and error policy.
+
+    def test_ioencoding(self):  # adapted from CPython v2.7 test_sys
+        import subprocess, os
+        env = dict(os.environ)
+
+        def check(code, encoding=None, errors=None):
+            # Execute with encoding and errors optionally set via Java properties
+            command = [sys.executable]
+            if (encoding):
+                command.append('-Dpython.io.encoding={}'.format(encoding))
+            if (errors):
+                command.append('-Dpython.io.errors={}'.format(errors))
+            command.append('-c')
+            command.append('print unichr({:#x})'.format(code))
+            #print "\n   ", " ".join(command), " ... ",
+            p = subprocess.Popen(command, stdout = subprocess.PIPE, env=env)
+            return p.stdout.read().strip()
+
+        env.pop("PYTHONIOENCODING", None)
+        self.assertEqual(check(ord(u'A')), b"A")
+
+        # Test character: U+00a2 cent sign (¢) is:
+        # not representable in ASCII.
+        # xml: &#162
+        # cp1252: a2
+        # cp850: bd
+        # cp424: 4a
+        # utf-8: c2 a2
+
+        self.assertEqual(check(0xa2, "iso-8859-1"), "¢") # same as this file
+
+        # self.assertEqual(check(0xa2, "ascii"), "") # and an error message
+        self.assertEqual(check(0xa2, "ascii", "ignore"),"")
+        self.assertEqual(check(0xa2, "ascii", "replace"), "?")
+        self.assertEqual(check(0xa2, "ascii", "backslashreplace"), r"\xa2")
+        self.assertEqual(check(0xa2, "ascii", "xmlcharrefreplace"), "&#162;")
+
+        self.assertEqual(check(0xa2, "Cp1252"), "\xa2")
+        self.assertEqual(check(0xa2, "Cp424"), "\x4a")
+        self.assertEqual(check(0xa2, "utf-8"), "\xc2\xa2")
+
+        self.assertEqual(check(0xa2, "iso8859-5", "backslashreplace"), r"\xa2")
+
+        # Now check that PYTHONIOENCODING can be superseded piecemeal
+        env["PYTHONIOENCODING"] = "ascii:xmlcharrefreplace"
+        self.assertEqual(check(0xa2, "iso8859-5"), "&#162;")
+        self.assertEqual(check(0xa2, None, "backslashreplace"), r"\xa2")
+        self.assertEqual(check(0xa2, "cp850"), "\xbd")
+
+class SysArgvTest(unittest.TestCase):
+
+    @unittest.skipIf(os._name == "nt", "FIXME should work on Windows")
+    def test_unicode_argv(self):
+        """Unicode roundtrips successfully through sys.argv arguments"""
+        zhongwen = u'\u4e2d\u6587'
+        with test_support.temp_cwd(name=u"tempcwd-%s" % zhongwen):
+            p = subprocess.Popen(
+                [sys.executable, '-c',
+                 'import sys;' \
+                 'sys.stdout.write(sys.argv[1].encode("utf-8"))',
+                 zhongwen],
+                stdout=subprocess.PIPE)
+            self.assertEqual(p.stdout.read().decode("utf-8"), zhongwen)
+
+class InteractivePromptTest(unittest.TestCase):
+    # TODO ps1, ps2 being defined for interactive usage should be
+    # captured by test_doctest, however, it would be ideal to add
+    # pexpect tests (using CPython).
+
+    def test_prompts_not_defined_if_noninteractive(self):
+        p = subprocess.Popen(
+            [sys.executable, '-c',
+             'import sys;' \
+             'print hasattr(sys, "ps1");' \
+             'print hasattr(sys, "ps2");'],
+            stdout=subprocess.PIPE)
+        self.assertEqual(p.stdout.read(),
+                         os.linesep.join(['False', 'False', '']))
+
+    def test_prompts_not_printed_if_noninteractive(self):
+        p = subprocess.Popen(
+            [sys.executable],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE)
+        self.assertEqual(p.communicate('print 47'),
+                         ('47' + os.linesep, None))
+
 
 def test_main():
-    test_support.run_unittest(SysTest,
-                              ShadowingTest,
-                              SyspathResourceTest,
-                              SyspathUnicodeTest)
+    test_support.run_unittest(
+        SysTest,
+        ShadowingTest,
+        SyspathResourceTest,
+        SyspathUnicodeTest,
+        SysEncodingTest,
+        SysArgvTest,
+        InteractivePromptTest
+    )
 
 if __name__ == "__main__":
     test_main()

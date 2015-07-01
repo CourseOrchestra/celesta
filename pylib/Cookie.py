@@ -258,6 +258,11 @@ _Translator       = {
     '\033' : '\\033',  '\034' : '\\034',  '\035' : '\\035',
     '\036' : '\\036',  '\037' : '\\037',
 
+    # Because of the way browsers really handle cookies (as opposed
+    # to what the RFC says) we also encode , and ;
+
+    ',' : '\\054', ';' : '\\073',
+
     '"' : '\\"',       '\\' : '\\\\',
 
     '\177' : '\\177',  '\200' : '\\200',  '\201' : '\\201',
@@ -385,7 +390,7 @@ def _getdate(future=0, weekdayname=_weekdayname, monthname=_monthname):
     from time import gmtime, time
     now = time()
     year, month, day, hh, mm, ss, wd, y, z = gmtime(now + future)
-    return "%s, %02d-%3s-%4d %02d:%02d:%02d GMT" % \
+    return "%s, %02d %3s %4d %02d:%02d:%02d GMT" % \
            (weekdayname[wd], day, monthname[month], year, hh, mm, ss)
 
 
@@ -408,6 +413,9 @@ class Morsel(dict):
     # For historical reasons, these attributes are also reserved:
     #   expires
     #
+    # This is an extension from Microsoft:
+    #   httponly
+    #
     # This dictionary provides a mapping from the lowercase
     # variant on the left to the appropriate traditional
     # formatting on the right.
@@ -417,6 +425,7 @@ class Morsel(dict):
                    "domain"      : "Domain",
                    "max-age" : "Max-Age",
                    "secure"      : "secure",
+                   "httponly"  : "httponly",
                    "version" : "Version",
                    }
 
@@ -473,7 +482,7 @@ class Morsel(dict):
         document.cookie = \"%s\";
         // end hiding -->
         </script>
-        """ % ( self.OutputString(attrs), )
+        """ % ( self.OutputString(attrs).replace('"',r'\"'), )
     # end js_output()
 
     def OutputString(self, attrs=None):
@@ -498,6 +507,8 @@ class Morsel(dict):
             elif K == "max-age" and type(V) == type(1):
                 RA("%s=%d" % (self._reserved[K], V))
             elif K == "secure":
+                RA(str(self._reserved[K]))
+            elif K == "httponly":
                 RA(str(self._reserved[K]))
             else:
                 RA("%s=%s" % (self._reserved[K], V))
@@ -527,6 +538,8 @@ _CookiePattern = re.compile(
     r"\s*=\s*"                    # Equal Sign
     r"(?P<val>"                   # Start of group 'val'
     r'"(?:[^\\"]|\\.)*"'            # Any doublequoted string
+    r"|"                            # or
+    r"\w{3},\s[\s\w\d-]{9,11}\s[\d:]{8}\sGMT" # Special case for "expires" attr
     r"|"                            # or
     ""+ _LegalCharsPatt +"*"        # Any word or empty string
     r")"                          # End of group 'val'
@@ -618,7 +631,9 @@ class BaseCookie(dict):
         if type(rawdata) == type(""):
             self.__ParseString(rawdata)
         else:
-            self.update(rawdata)
+            # self.update() wouldn't call our custom __setitem__
+            for k, v in rawdata.items():
+                self[k] = v
         return
     # end load()
 

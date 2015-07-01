@@ -134,17 +134,13 @@ class TestPollClientSocket(unittest.TestCase):
         else:
             self.fail("Unregistering socket that is not registered should have raised KeyError")
 
-#
-# using the test_socket thread based server/client management, for convenience.
-#
-class ThreadedPollClientSocket(test_socket.ThreadedTCPSocketTest):
 
-    HOST = HOST
-    PORT = PORT
+class ThreadedPollClientSocket(test_socket.SocketConnectedTest):
 
     def testSocketRegisteredBeforeConnected(self):
-        self.cli_conn = self.serv.accept()
+        pass
 
+    @test_support.retry(Exception)
     def _testSocketRegisteredBeforeConnected(self):
         timeout = 1000 # milliseconds
         poll_object = select.poll()
@@ -152,34 +148,17 @@ class ThreadedPollClientSocket(test_socket.ThreadedTCPSocketTest):
         poll_object.register(self.cli, select.POLLOUT)
         result_list = poll_object.poll(timeout)
         result_sockets = [r[0] for r in result_list]
-        self.failIf(self.cli in result_sockets, "Unconnected client socket should not have been selectable")
+        self.assertIn(self.cli, result_sockets, "Unconnected client socket should be selectable")
         # Now connect the socket, but DO NOT register it again
         self.cli.setblocking(0)
         self.cli.connect( (self.HOST, self.PORT) )
         # Now poll again, to check that the poll object has recognised that the socket is now connected
         result_list = poll_object.poll(timeout)
         result_sockets = [r[0] for r in result_list]
-        self.failUnless(self.cli in result_sockets, "Connected client socket should have been selectable")
-
-    def testSocketMustBeNonBlocking(self):
-        self.cli_conn = self.serv.accept()
-
-    def _testSocketMustBeNonBlocking(self):
-        self.cli.setblocking(1)
-        self.cli.connect( (self.HOST, self.PORT) )
-        timeout = 1000 # milliseconds
-        poll_object = select.poll()
-        try:
-            poll_object.register(self.cli)
-        except select.error, se:
-            self.failUnlessEqual(se[0], errno.ESOCKISBLOCKING)
-        except Exception, x:
-            self.fail("Registering blocking socket should have raised select.error, not %s" % str(x))
-        else:
-            self.fail("Registering blocking socket should have raised select.error")
+        self.assertIn(self.cli, result_sockets, "Connected client socket should have been selectable")
 
     def testSelectOnSocketFileno(self):
-        self.cli_conn = self.serv.accept()
+        pass
 
     def _testSelectOnSocketFileno(self):
         self.cli.setblocking(0)
@@ -190,48 +169,24 @@ class ThreadedPollClientSocket(test_socket.ThreadedTCPSocketTest):
         except Exception, x:
             self.fail("Selecting on socket.fileno() should not have raised exception: %s" % str(x))
 
-class TestPipes(unittest.TestCase):
+class TestJythonSelect(unittest.TestCase):
+    # Normally we would have a test_select_jy for such testing, but
+    # the reality is that this test module is really that test :)
+    
+    def test_cpython_compatible_select_exists(self):
+        self.assertIs(select.cpython_compatible_select, select.select)
 
-    verbose = 1
-
-    def test(self):
-        import sys
-        from test.test_support import verbose
-        if sys.platform[:3] in ('win', 'mac', 'os2', 'riscos'):
-            if verbose:
-                print "Can't test select easily on", sys.platform
-            return
-        cmd = 'for i in 0 1 2 3 4 5 6 7 8 9; do echo testing...; sleep 1; done'
-        p = os.popen(cmd, 'r')
-        for tout in (0, 1, 2, 4, 8, 16) + (None,)*10:
-            if verbose:
-                print 'timeout =', tout
-            rfd, wfd, xfd = select.select([p], [], [], tout)
-            if (rfd, wfd, xfd) == ([], [], []):
-                continue
-            if (rfd, wfd, xfd) == ([p], [], []):
-                line = p.readline()
-                if verbose:
-                    print repr(line)
-                if not line:
-                    if verbose:
-                        print 'EOF'
-                    break
-                continue
-            self.fail('Unexpected return values from select(): %s' % str(rfd, wfd, xfd))
-        p.close()
 
 def test_main():
-    tests = [
-        TestSelectInvalidParameters,
-        TestSelectClientSocket,
-        TestPollClientSocket,
-        ThreadedPollClientSocket,
-    ]
-    if sys.platform[:4] != 'java':
-        tests.append(TestPipes)
+
+    tests = [TestSelectInvalidParameters,
+             TestSelectClientSocket,
+             TestPollClientSocket,
+             ThreadedPollClientSocket,
+             TestJythonSelect]
     suites = [unittest.makeSuite(klass, 'test') for klass in tests]
-    test_support.run_suite(unittest.TestSuite(suites))
+    test_support._run_suite(unittest.TestSuite(suites))
+
 
 if __name__ == "__main__":
     test_main()

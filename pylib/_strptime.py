@@ -22,10 +22,7 @@ try:
 except:
     from dummy_thread import allocate_lock as _thread_allocate_lock
 
-__author__ = "Brett Cannon"
-__email__ = "brett@python.org"
-
-__all__ = ['strptime']
+__all__ = []
 
 def _getlang():
     # Figure out what the current language is set to.
@@ -193,6 +190,7 @@ class TimeRE(dict):
         base.__init__({
             # The " \d" part of the regex is to make %c from ANSI C work
             'd': r"(?P<d>3[0-1]|[1-2]\d|0[1-9]|[1-9]| [1-9])",
+            'f': r"(?P<f>[0-9]{1,6})",
             'H': r"(?P<H>2[0-3]|[0-1]\d|\d)",
             'I': r"(?P<I>1[0-2]|0[1-9]|[1-9])",
             'j': r"(?P<j>36[0-6]|3[0-5]\d|[1-2]\d\d|0[1-9]\d|00[1-9]|[1-9]\d|0[1-9]|[1-9])",
@@ -294,11 +292,10 @@ def _calc_julian_from_U_or_W(year, week_of_year, day_of_week, week_starts_Mon):
         return 1 + days_to_week + day_of_week
 
 
-def strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
+def _strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
     """Return a time struct based on the input string and the format string."""
     global _TimeRE_cache, _regex_cache
-    _cache_lock.acquire()
-    try:
+    with _cache_lock:
         if _getlang() != _TimeRE_cache.locale_time.lang:
             _TimeRE_cache = TimeRE()
             _regex_cache.clear()
@@ -322,18 +319,17 @@ def strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
             except IndexError:
                 raise ValueError("stray %% in format '%s'" % format)
             _regex_cache[format] = format_regex
-    finally:
-        _cache_lock.release()
     found = format_regex.match(data_string)
     if not found:
-        raise ValueError("time data did not match format:  data=%s  fmt=%s" %
+        raise ValueError("time data %r does not match format %r" %
                          (data_string, format))
     if len(data_string) != found.end():
         raise ValueError("unconverted data remains: %s" %
                           data_string[found.end():])
-    year = 1900
+
+    year = None
     month = day = 1
-    hour = minute = second = 0
+    hour = minute = second = fraction = 0
     tz = -1
     # Default to -1 to signify that values not known; not critical to have,
     # though
@@ -390,6 +386,11 @@ def strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
             minute = int(found_dict['M'])
         elif group_key == 'S':
             second = int(found_dict['S'])
+        elif group_key == 'f':
+            s = found_dict['f']
+            # Pad to always return microseconds.
+            s += "0" * (6 - len(s))
+            fraction = int(s)
         elif group_key == 'A':
             weekday = locale_time.f_weekday.index(found_dict['A'].lower())
         elif group_key == 'a':
@@ -425,6 +426,12 @@ def strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
                     else:
                         tz = value
                         break
+    leap_year_fix = False
+    if year is None and month == 2 and day == 29:
+        year = 1904  # 1904 is first leap year of 20th century
+        leap_year_fix = True
+    elif year is None:
+        year = 1900
     # If we know the week of the year and what day of that week, we can figure
     # out the Julian day of the year.
     if julian == -1 and week_of_year != -1 and weekday != -1:
@@ -446,6 +453,15 @@ def strptime(data_string, format="%a %b %d %H:%M:%S %Y"):
         day = datetime_result.day
     if weekday == -1:
         weekday = datetime_date(year, month, day).weekday()
-    return time.struct_time((year, month, day,
-                             hour, minute, second,
-                             weekday, julian, tz))
+    if leap_year_fix:
+        # the caller didn't supply a year but asked for Feb 29th. We couldn't
+        # use the default of 1900 for computations. We set it back to ensure
+        # that February 29th is smaller than March 1st.
+        year = 1900
+
+    return (time.struct_time((year, month, day,
+                              hour, minute, second,
+                              weekday, julian, tz)), fraction)
+
+def _strptime_time(data_string, format="%a %b %d %H:%M:%S %Y"):
+    return _strptime(data_string, format)[0]

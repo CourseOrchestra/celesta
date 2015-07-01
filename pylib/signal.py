@@ -29,25 +29,29 @@
     an ImportError is raised.
 """
 
-
+from java.lang import SecurityException
 try:
     import sun.misc.Signal
 except ImportError:
     raise ImportError("signal module requires sun.misc.Signal, which is not available on this platform")
+except SecurityException, ex:
+    raise ImportError("signal module requires sun.misc.Signal, which is not allowed by your security profile: %s" % ex)
 
 import os
 import sun.misc.SignalHandler
 import sys
 import threading
 import time
-from java.lang import IllegalArgumentException
+from java.lang import RuntimeException
 from java.util.concurrent.atomic import AtomicReference
 
 debug = 0
 
 def _init_signals():
-    # install signals by checking for standard names
-    # using IllegalArgumentException to diagnose
+    # Install signals by checking for standard names, by using
+    # RuntimeException to diagnose. On some platforms like J9,
+    # RuntimeException wraps IllegalArgumentException, but it's also
+    # the superclass of IllegalArgumentException.
 
     possible_signals = """
         SIGABRT
@@ -89,7 +93,7 @@ def _init_signals():
     for signal_name in possible_signals:
         try:
             java_signal = sun.misc.Signal(signal_name[3:])
-        except IllegalArgumentException:
+        except RuntimeException:
             continue
 
         signal_number = java_signal.getNumber()
@@ -132,9 +136,9 @@ def signal(sig, action):
         raise ValueError("signal number out of range")
 
     if callable(action):
-        prev = sun.misc.Signal.handle(signal, JythonSignalHandler(action))
+        prev = _register_signal(signal, JythonSignalHandler(action))
     elif action in (SIG_IGN, SIG_DFL) or isinstance(action, sun.misc.SignalHandler):
-        prev = sun.misc.Signal.handle(signal, action)
+        prev = _register_signal(signal, action)
     else:
         raise TypeError("signal handler must be signal.SIG_IGN, signal.SIG_DFL, or a callable object")
 
@@ -142,6 +146,13 @@ def signal(sig, action):
         return prev.action
     else:
         return prev
+
+
+def _register_signal(signal, action):
+    try:
+        return sun.misc.Signal.handle(signal, action)
+    except RuntimeException, err:
+        raise ValueError(err.getMessage())
 
 
 # dangerous! don't use!
@@ -162,8 +173,8 @@ def getsignal(sig):
         signal = _signals[sig]
     except KeyError:
         raise ValueError("signal number out of range")
-    current = sun.misc.Signal.handle(signal, SIG_DFL)
-    sun.misc.Signal.handle(signal, current) # and reinstall
+    current = _register_signal(signal, SIG_DFL)
+    _register_signal(signal, current) # and reinstall
 
     if isinstance(current, JythonSignalHandler):
         return current.action
@@ -222,7 +233,10 @@ def alarm(time):
         raise NotImplementedError("alarm not implemented on this platform")
 
     def raise_alarm():
-        sun.misc.Signal.raise(_signals[SIGALRM])
+        try:
+            sun.misc.Signal.raise(_signals[SIGALRM])
+        except RuntimeException, err:
+            raise ValueError(err.getMessage())
 
     if time > 0:
         new_alarm_timer = _Alarm(time, raise_alarm)

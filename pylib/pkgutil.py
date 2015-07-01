@@ -8,6 +8,7 @@ import sys
 import imp
 import os.path
 from types import ModuleType
+from java.lang import IllegalArgumentException
 from org.python.core import imp as _imp, BytecodeLoader
 
 __all__ = [
@@ -21,9 +22,17 @@ __all__ = [
 # diff args to pass into our underlying imp implementation, as
 # accessed by _imp here
 
-def read_jython_code(fullname, file, filename):
-    data = _imp.readCode(filename, file, False)
-    return BytecodeLoader.makeCode(fullname + "$py", data, filename)
+def read_jython_code(fullname, stream, filename):
+    try:
+        data = _imp.readCode(filename, stream, False)
+        return BytecodeLoader.makeCode(fullname + "$py", data, filename)
+    except IllegalArgumentException:
+        return None
+
+def read_code(stream):
+    filename = stream.name
+    fullname = os.path.splitext(os.path.split(filename)[1])[0]
+    return read_jython_code(fullname, stream, filename)
 
 def simplegeneric(func):
     """Make a trivial single-dispatch generic function"""
@@ -205,7 +214,12 @@ class ImpImporter:
 
             if not modname and os.path.isdir(path) and '.' not in fn:
                 modname = fn
-                for fn in os.listdir(path):
+                try:
+                    dircontents = os.listdir(path)
+                except OSError:
+                    # ignore unreadable directories like import does
+                    dircontents = []
+                for fn in dircontents:
                     subname = inspect.getmodulename(fn)
                     if subname=='__init__':
                         ispkg = True
@@ -554,3 +568,40 @@ def extend_path(path, name):
                     f.close()
 
     return path
+
+def get_data(package, resource):
+    """Get a resource from a package.
+
+    This is a wrapper round the PEP 302 loader get_data API. The package
+    argument should be the name of a package, in standard module format
+    (foo.bar). The resource argument should be in the form of a relative
+    filename, using '/' as the path separator. The parent directory name '..'
+    is not allowed, and nor is a rooted name (starting with a '/').
+
+    The function returns a binary string, which is the contents of the
+    specified resource.
+
+    For packages located in the filesystem, which have already been imported,
+    this is the rough equivalent of
+
+        d = os.path.dirname(sys.modules[package].__file__)
+        data = open(os.path.join(d, resource), 'rb').read()
+
+    If the package cannot be located or loaded, or it uses a PEP 302 loader
+    which does not support get_data(), then None is returned.
+    """
+
+    loader = get_loader(package)
+    if loader is None or not hasattr(loader, 'get_data'):
+        return None
+    mod = sys.modules.get(package) or loader.load_module(package)
+    if mod is None or not hasattr(mod, '__file__'):
+        return None
+
+    # Modify the resource name to be compatible with the loader.get_data
+    # signature - an os.path format "filename" starting with the dirname of
+    # the package's __file__
+    parts = resource.split('/')
+    parts.insert(0, os.path.dirname(mod.__file__))
+    resource_name = os.path.join(*parts)
+    return loader.get_data(resource_name)

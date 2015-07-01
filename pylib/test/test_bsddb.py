@@ -3,11 +3,16 @@
    Adapted to unittest format and expanded scope by Raymond Hettinger
 """
 import os, sys
-import copy
-import bsddb
-import dbhash # Just so we know it's imported
 import unittest
 from test import test_support
+
+# Skip test if _bsddb wasn't built.
+test_support.import_module('_bsddb')
+
+bsddb = test_support.import_module('bsddb', deprecated=True)
+# Just so we know it's imported:
+test_support.import_module('dbhash', deprecated=True)
+
 
 class TestBSDDB(unittest.TestCase):
     openflag = 'c'
@@ -38,8 +43,8 @@ class TestBSDDB(unittest.TestCase):
     def test_change(self):
         self.f['r'] = 'discovered'
         self.assertEqual(self.f['r'], 'discovered')
-        self.assert_('r' in self.f.keys())
-        self.assert_('discovered' in self.f.values())
+        self.assertIn('r', self.f.keys())
+        self.assertIn('discovered', self.f.values())
 
     def test_close_and_reopen(self):
         if self.fname is None:
@@ -66,9 +71,6 @@ class TestBSDDB(unittest.TestCase):
         self.assertSetEquals(d.iteritems(), f.iteritems())
 
     def test_iter_while_modifying_values(self):
-        if not hasattr(self.f, '__iter__'):
-            return
-
         di = iter(self.d)
         while 1:
             try:
@@ -80,20 +82,62 @@ class TestBSDDB(unittest.TestCase):
         # it should behave the same as a dict.  modifying values
         # of existing keys should not break iteration.  (adding
         # or removing keys should)
+        loops_left = len(self.f)
         fi = iter(self.f)
         while 1:
             try:
                 key = fi.next()
                 self.f[key] = 'modified '+key
+                loops_left -= 1
             except StopIteration:
                 break
+        self.assertEqual(loops_left, 0)
 
         self.test_mapping_iteration_methods()
 
-    def test_iteritems_while_modifying_values(self):
-        if not hasattr(self.f, 'iteritems'):
-            return
+    def test_iter_abort_on_changed_size(self):
+        def DictIterAbort():
+            di = iter(self.d)
+            while 1:
+                try:
+                    di.next()
+                    self.d['newkey'] = 'SPAM'
+                except StopIteration:
+                    break
+        self.assertRaises(RuntimeError, DictIterAbort)
 
+        def DbIterAbort():
+            fi = iter(self.f)
+            while 1:
+                try:
+                    fi.next()
+                    self.f['newkey'] = 'SPAM'
+                except StopIteration:
+                    break
+        self.assertRaises(RuntimeError, DbIterAbort)
+
+    def test_iteritems_abort_on_changed_size(self):
+        def DictIteritemsAbort():
+            di = self.d.iteritems()
+            while 1:
+                try:
+                    di.next()
+                    self.d['newkey'] = 'SPAM'
+                except StopIteration:
+                    break
+        self.assertRaises(RuntimeError, DictIteritemsAbort)
+
+        def DbIteritemsAbort():
+            fi = self.f.iteritems()
+            while 1:
+                try:
+                    key, value = fi.next()
+                    del self.f[key]
+                except StopIteration:
+                    break
+        self.assertRaises(RuntimeError, DbIteritemsAbort)
+
+    def test_iteritems_while_modifying_values(self):
         di = self.d.iteritems()
         while 1:
             try:
@@ -105,13 +149,16 @@ class TestBSDDB(unittest.TestCase):
         # it should behave the same as a dict.  modifying values
         # of existing keys should not break iteration.  (adding
         # or removing keys should)
+        loops_left = len(self.f)
         fi = self.f.iteritems()
         while 1:
             try:
                 k, v = fi.next()
                 self.f[k] = 'modified '+v
+                loops_left -= 1
             except StopIteration:
                 break
+        self.assertEqual(loops_left, 0)
 
         self.test_mapping_iteration_methods()
 
@@ -129,7 +176,7 @@ class TestBSDDB(unittest.TestCase):
 
     def test_first_while_deleting(self):
         # Test for bug 1725856
-        self.assert_(len(self.d) >= 2, "test requires >=2 items")
+        self.assertTrue(len(self.d) >= 2, "test requires >=2 items")
         for _ in self.d:
             key = self.f.first()[0]
             del self.f[key]
@@ -137,7 +184,7 @@ class TestBSDDB(unittest.TestCase):
 
     def test_last_while_deleting(self):
         # Test for bug 1725856's evil twin
-        self.assert_(len(self.d) >= 2, "test requires >=2 items")
+        self.assertTrue(len(self.d) >= 2, "test requires >=2 items")
         for _ in self.d:
             key = self.f.last()[0]
             del self.f[key]
@@ -148,13 +195,13 @@ class TestBSDDB(unittest.TestCase):
 
     def test_contains(self):
         for k in self.d:
-            self.assert_(k in self.f)
-        self.assert_('not here' not in self.f)
+            self.assertIn(k, self.f)
+        self.assertNotIn('not here', self.f)
 
     def test_has_key(self):
         for k in self.d:
-            self.assert_(self.f.has_key(k))
-        self.assert_(not self.f.has_key('not here'))
+            self.assertTrue(self.f.has_key(k))
+        self.assertTrue(not self.f.has_key('not here'))
 
     def test_clear(self):
         self.f.clear()
@@ -177,8 +224,8 @@ class TestBSDDB(unittest.TestCase):
         # the database write and locking+threading support is enabled
         # the cursor's read lock will deadlock the write lock request..
 
-        # test the iterator interface (if present)
-        if hasattr(self.f, 'iteritems'):
+        # test the iterator interface
+        if True:
             if debug: print "D"
             i = self.f.iteritems()
             k,v = i.next()
@@ -206,22 +253,19 @@ class TestBSDDB(unittest.TestCase):
             if debug: print "K"
 
         # test the legacy cursor interface mixed with writes
-        self.assert_(self.f.first()[0] in self.d)
+        self.assertIn(self.f.first()[0], self.d)
         k = self.f.next()[0]
-        self.assert_(k in self.d)
+        self.assertIn(k, self.d)
         self.f[k] = "be gone with ye deadlocks"
-        self.assert_(self.f[k], "be gone with ye deadlocks")
+        self.assertTrue(self.f[k], "be gone with ye deadlocks")
 
     def test_for_cursor_memleak(self):
-        if not hasattr(self.f, 'iteritems'):
-            return
-
-        # do the bsddb._DBWithCursor _iter_mixin internals leak cursors?
+        # do the bsddb._DBWithCursor iterator internals leak cursors?
         nc1 = len(self.f._cursor_refs)
         # create iterator
         i = self.f.iteritems()
         nc2 = len(self.f._cursor_refs)
-        # use the iterator (should run to the first yeild, creating the cursor)
+        # use the iterator (should run to the first yield, creating the cursor)
         k, v = i.next()
         nc3 = len(self.f._cursor_refs)
         # destroy the iterator; this should cause the weakref callback
@@ -231,21 +275,21 @@ class TestBSDDB(unittest.TestCase):
 
         self.assertEqual(nc1, nc2)
         self.assertEqual(nc1, nc4)
-        self.assert_(nc3 == nc1+1)
+        self.assertTrue(nc3 == nc1+1)
 
     def test_popitem(self):
         k, v = self.f.popitem()
-        self.assert_(k in self.d)
-        self.assert_(v in self.d.values())
-        self.assert_(k not in self.f)
+        self.assertIn(k, self.d)
+        self.assertIn(v, self.d.values())
+        self.assertNotIn(k, self.f)
         self.assertEqual(len(self.d)-1, len(self.f))
 
     def test_pop(self):
         k = 'w'
         v = self.f.pop(k)
         self.assertEqual(v, self.d[k])
-        self.assert_(k not in self.f)
-        self.assert_(v not in self.f.values())
+        self.assertNotIn(k, self.f)
+        self.assertNotIn(v, self.f.values())
         self.assertEqual(len(self.d)-1, len(self.f))
 
     def test_get(self):

@@ -4,8 +4,12 @@
 #   Common Unittest Routines for CJK codecs
 #
 
-import sys, codecs, os.path
-import unittest, re
+import codecs
+import os
+import re
+import sys
+import unittest
+from httplib import HTTPException
 from test import test_support
 from StringIO import StringIO
 
@@ -18,7 +22,8 @@ class TestBase:
     roundtriptest   = 1    # set if roundtrip is possible with unicode
     has_iso10646    = 0    # set if this encoding contains whole iso10646 map
     xmlcharnametest = None # string to test xmlcharrefreplace
-    unmappedunicode = u'\udeee' # a unicode codepoint that is not mapped.
+    unmappedunicode = u'\ufffe' # a unicode codepoint that is not mapped
+                                # CPython uses an isolated surrogate, which will not work on Jython
 
     def setUp(self):
         if self.codec is None:
@@ -40,13 +45,24 @@ class TestBase:
 
     def test_errorhandle(self):
         for source, scheme, expected in self.codectests:
-            if type(source) == type(''):
+            if isinstance(source, bytes):
                 func = self.decode
             else:
                 func = self.encode
             if expected:
                 result = func(source, scheme)[0]
-                self.assertEqual(result, expected)
+                if func is self.decode:
+                    self.assertTrue(type(result) is unicode, type(result))
+                    self.assertEqual(result, expected,
+                                     '%r.decode(%r, %r)=%r != %r'
+                                     % (source, self.encoding, scheme, result,
+                                        expected))
+                else:
+                    self.assertTrue(type(result) is bytes, type(result))
+                    self.assertEqual(result, expected,
+                                     '%r.encode(%r, %r)=%r != %r'
+                                     % (source, self.encoding, scheme, result,
+                                        expected))
             else:
                 self.assertRaises(UnicodeError, func, source, scheme)
 
@@ -243,30 +259,18 @@ class TestBase:
 
                 self.assertEqual(ostream.getvalue(), self.tstring[0])
 
-if len(u'\U00012345') == 2: # ucs2 build
-    _unichr = unichr
-    def unichr(v):
-        if v >= 0x10000:
-            return _unichr(0xd800 + ((v - 0x10000) >> 10)) + \
-                   _unichr(0xdc00 + ((v - 0x10000) & 0x3ff))
-        else:
-            return _unichr(v)
-    _ord = ord
-    def ord(c):
-        if len(c) == 2:
-            return 0x10000 + ((_ord(c[0]) - 0xd800) << 10) + \
-                          (ord(c[1]) - 0xdc00)
-        else:
-            return _ord(c)
-
 class TestBase_Mapping(unittest.TestCase):
     pass_enctest = []
     pass_dectest = []
     supmaps = []
+    codectests = []
 
     def __init__(self, *args, **kw):
         unittest.TestCase.__init__(self, *args, **kw)
-        self.open_mapping_file() # test it to report the error early
+        try:
+            self.open_mapping_file().close() # test it to report the error early
+        except (IOError, HTTPException):
+            self.skipTest("Could not retrieve "+self.mapfileurl)
 
     def open_mapping_file(self):
         return test_support.open_urlresource(self.mapfileurl)
@@ -278,39 +282,42 @@ class TestBase_Mapping(unittest.TestCase):
             self._test_mapping_file_plain()
 
     def _test_mapping_file_plain(self):
-        unichrs = lambda s: u''.join(map(unichr, map(eval, s.split('+'))))
+        _unichr = lambda c: eval("u'\\U%08x'" % int(c, 16))
+        unichrs = lambda s: u''.join(_unichr(c) for c in s.split('+'))
         urt_wa = {}
 
-        for line in self.open_mapping_file():
-            if not line:
-                break
-            data = line.split('#')[0].strip().split()
-            if len(data) != 2:
-                continue
+        with self.open_mapping_file() as f:
+            for line in f:
+                if not line:
+                    break
+                data = line.split('#')[0].strip().split()
+                if len(data) != 2:
+                    continue
 
-            csetval = eval(data[0])
-            if csetval <= 0x7F:
-                csetch = chr(csetval & 0xff)
-            elif csetval >= 0x1000000:
-                csetch = chr(csetval >> 24) + chr((csetval >> 16) & 0xff) + \
-                         chr((csetval >> 8) & 0xff) + chr(csetval & 0xff)
-            elif csetval >= 0x10000:
-                csetch = chr(csetval >> 16) + \
-                         chr((csetval >> 8) & 0xff) + chr(csetval & 0xff)
-            elif csetval >= 0x100:
-                csetch = chr(csetval >> 8) + chr(csetval & 0xff)
-            else:
-                continue
+                csetval = eval(data[0])
+                if csetval <= 0x7F:
+                    csetch = chr(csetval & 0xff)
+                elif csetval >= 0x1000000:
+                    csetch = chr(csetval >> 24) + chr((csetval >> 16) & 0xff) + \
+                             chr((csetval >> 8) & 0xff) + chr(csetval & 0xff)
+                elif csetval >= 0x10000:
+                    csetch = chr(csetval >> 16) + \
+                             chr((csetval >> 8) & 0xff) + chr(csetval & 0xff)
+                elif csetval >= 0x100:
+                    csetch = chr(csetval >> 8) + chr(csetval & 0xff)
+                else:
+                    continue
 
-            unich = unichrs(data[1])
-            if ord(unich) == 0xfffd or urt_wa.has_key(unich):
-                continue
-            urt_wa[unich] = csetch
+                unich = unichrs(data[1])
+                if unich == u'\ufffd' or unich in urt_wa:
+                    continue
+                urt_wa[unich] = csetch
 
-            self._testpoint(csetch, unich)
+                self._testpoint(csetch, unich)
 
     def _test_mapping_file_ucm(self):
-        ucmdata = self.open_mapping_file().read()
+        with self.open_mapping_file() as f:
+            ucmdata = f.read()
         uc = re.findall('<a u="([A-F0-9]{4})" b="([0-9A-F ]+)"/>', ucmdata)
         for uni, coded in uc:
             unich = unichr(int(uni, 16))
@@ -323,10 +330,46 @@ class TestBase_Mapping(unittest.TestCase):
 
     def _testpoint(self, csetch, unich):
         if (csetch, unich) not in self.pass_enctest:
-            self.assertEqual(unich.encode(self.encoding), csetch)
+            try:
+                self.assertEqual(unich.encode(self.encoding), csetch)
+            except UnicodeError, exc:
+                self.fail('Encoding failed while testing %s -> %s: %s' % (
+                            repr(unich), repr(csetch), exc.reason))
         if (csetch, unich) not in self.pass_dectest:
-            self.assertEqual(unicode(csetch, self.encoding), unich)
+            try:
+                self.assertEqual(csetch.decode(self.encoding), unich)
+            except UnicodeError, exc:
+                self.fail('Decoding failed while testing %s -> %s: %s' % (
+                            repr(csetch), repr(unich), exc.reason))
 
-def load_teststring(encoding):
-    from test import cjkencodings_test
-    return cjkencodings_test.teststring[encoding]
+    def test_errorhandle(self):
+        for source, scheme, expected in self.codectests:
+            if isinstance(source, bytes):
+                func = source.decode
+            else:
+                func = source.encode
+            if expected:
+                if isinstance(source, bytes):
+                    result = func(self.encoding, scheme)
+                    self.assertTrue(type(result) is unicode, type(result))
+                    self.assertEqual(result, expected,
+                                     '%r.decode(%r, %r)=%r != %r'
+                                     % (source, self.encoding, scheme, result,
+                                        expected))
+                else:
+                    result = func(self.encoding, scheme)
+                    self.assertTrue(type(result) is bytes, type(result))
+                    self.assertEqual(result, expected,
+                                     '%r.encode(%r, %r)=%r != %r'
+                                     % (source, self.encoding, scheme, result,
+                                        expected))
+            else:
+                self.assertRaises(UnicodeError, func, self.encoding, scheme)
+
+def load_teststring(name):
+    dir = os.path.join(os.path.dirname(__file__), 'cjkencodings')
+    with open(os.path.join(dir, name + '.txt'), 'rb') as f:
+        encoded = f.read()
+    with open(os.path.join(dir, name + '-utf8.txt'), 'rb') as f:
+        utf8 = f.read()
+    return encoded, utf8

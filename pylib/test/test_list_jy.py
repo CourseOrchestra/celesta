@@ -3,6 +3,7 @@ import random
 import threading
 import time
 from test import test_support
+import test_list
 
 if test_support.is_jython:
     from java.util import ArrayList
@@ -51,6 +52,13 @@ class ListTestCase(unittest.TestCase):
 
     def test_tuple_equality(self):
         self.assertEqual([(1,), [1]].count([1]), 1) # http://bugs.jython.org/issue1317
+ 
+    def test_big_list(self):
+        """Verify that fairly large collection literals of primitives can be constructed."""
+        # use \n to separate to avoid parser problems
+        lst = eval("[" + ",\n".join((str(x) for x in xrange(64000))) +"]")
+        self.assertEqual(len(lst), 64000)
+        self.assertEqual(sum(lst), 2047968000)
 
 class ThreadSafetyTestCase(unittest.TestCase):
 
@@ -202,10 +210,37 @@ class ExtendedSliceTestCase(unittest.TestCase):
         self.assertEqual(a, expected4)
 
 
+class JavaListTestCase(test_list.ListTest):
+
+    type2test = ArrayList
+
+    def test_init(self):
+        # Iterable arg is optional
+        self.assertEqual(self.type2test([]), self.type2test())
+
+        # Unlike with builtin types, we do not guarantee objects can
+        # be overwritten; see corresponding tests
+
+        # Mutables always return a new object
+        a = self.type2test([1, 2, 3])
+        b = self.type2test(a)
+        self.assertNotEqual(id(a), id(b))
+        self.assertEqual(a, b)
+
+
+    def test_extend_java_ArrayList(self):
+        jl = ArrayList([])
+        jl.extend([1,2])
+        self.assertEqual(jl, ArrayList([1,2]))
+        jl.extend(ArrayList([3,4]))
+        self.assertEqual(jl, [1,2,3,4])
+
+
 def test_main():
     test_support.run_unittest(ListTestCase,
                               ThreadSafetyTestCase,
-                              ExtendedSliceTestCase)
+                              ExtendedSliceTestCase,
+                              JavaListTestCase)
 
 if __name__ == "__main__":
     test_main()
