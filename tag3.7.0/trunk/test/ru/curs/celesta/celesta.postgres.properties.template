@@ -1,0 +1,3 @@
+score.path = score
+database.classname=org.postgresql.Driver
+database.connection=jdbc:postgresql://127.0.0.1:5432/celesta?user=postgres&password=123

@@ -1,0 +1,17 @@
+create table "celesta_grains"(
+  "id" nvarchar2(30) not null,
+  "version" nvarchar2(2000) not null,
+  "length" number not null,
+  "checksum" nvarchar2(8) not null,
+  "state" number default 3 not null,
+  "lastmodified" timestamp default sysdate not null,
+  "message" nclob default '' null,
+  constraint "pk_grains" primary key ("id")
+)
+create table "celesta_tables"(
+  "grainid" nvarchar2(30) not null,
+  "tablename" nvarchar2(30) not null,
+  "tabletype" nvarchar2(1) default 'T' not null,
+  "orphaned" number default 0 not null constraint "chk_celesta_tables_orphaned" check ("orphaned" in (0, 1)),
+  constraint "pk_tables" primary key ("grainid", "tablename")
+)
