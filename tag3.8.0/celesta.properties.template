@@ -1,0 +1,12 @@
+#Score path entries (semicolon separated, see Celesta manual)
+score.path=score
+#Jython standard library path
+pylib.path=pylib
+# Database connection parameters
+database.classname=com.microsoft.sqlserver.jdbc.SQLServerDriver
+database.connection=jdbc:sqlserver://localhost;databaseName=celesta;user=sa;password=123
+#database.classname=org.postgresql.Driver
+#database.connection=jdbc:postgresql://127.0.0.1:5432/postgres?user=postgres&password=secret
+#database.classname=oracle.jdbc.driver.OracleDriver
+#database.connection=jdbc:oracle:thin:celesta/123@192.168.110.128:1521:XE
+
