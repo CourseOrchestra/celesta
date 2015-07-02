@@ -237,6 +237,23 @@ public final class Celesta {
 					pyPathList.add(pathEntry.getAbsolutePath());
 				}
 			}
+			if (!AppSettings.getJavalibPath().isEmpty())
+				addJars();
+		}
+	}
+
+	private void addJars() {
+		for (String entry : AppSettings.getJavalibPath().split(
+				File.pathSeparator)) {
+			File f = new File(entry);
+			if (f.exists() && f.isDirectory() && f.canRead()) {
+				for (String filename : f.list()) {
+					if (!filename.toLowerCase().endsWith(".jar"))
+						continue;
+					File pathEntry = new File(f, filename);
+					pyPathList.add(pathEntry.getAbsolutePath());
+				}
+			}
 		}
 	}
 
@@ -463,12 +480,6 @@ public final class Celesta {
 
 		File lib = new File(getMyPath() + "lib");
 		addLibEntry(lib, urlSet);
-		if (!AppSettings.getJavalibPath().isEmpty())
-			for (String pathEntry : AppSettings.getJavalibPath().split(
-					File.pathSeparator)) {
-				lib = new File(pathEntry);
-				addLibEntry(lib, urlSet);
-			}
 
 		// Construct the class loader itself
 		if (urlSet.size() > 0) {
