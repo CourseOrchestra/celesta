@@ -1,7 +1,7 @@
 package ru.curs.celesta.showcase.utils;
 
 import java.io.*;
-import java.util.List;
+import java.util.*;
 
 import javax.xml.parsers.*;
 import javax.xml.transform.TransformerException;
@@ -73,6 +73,31 @@ public final class XMLJSONConverter {
 			}
 		}
 
+		List<String> innerOfCurColIdList = new ArrayList<String>();
+		if (newXml.toUpperCase().contains("<currentColumnId>".toUpperCase())) {
+			String[] arr = newXml.toUpperCase().split("<currentColumnId>".toUpperCase());
+			String string = "";
+			int begin = 1;
+			if (newXml.toUpperCase().startsWith("<currentColumnId>".toUpperCase())) {
+				begin = 0;
+			}
+			if (arr.length > 0) {
+				for (int i = begin; i < arr.length; i++) {
+					int innerIndex = arr[i].indexOf("</currentColumnId>".toUpperCase());
+					string = arr[i].substring(0, innerIndex);
+					int outerIndex = newXml.toUpperCase().indexOf(string);
+					innerOfCurColIdList.add(newXml.substring(outerIndex,
+							outerIndex + string.length()));
+				}
+			}
+		}
+
+		int j = 0;
+		for (String content : innerOfCurColIdList) {
+			newXml = newXml.replace(content, "innerOfCurColIdList" + j);
+			j++;
+		}
+
 		final String tempRootForResolvingProblem = "tempRootForResolvingProblem";
 		newXml =
 			"<" + tempRootForResolvingProblem + ">" + newXml + "</" + tempRootForResolvingProblem
@@ -85,6 +110,12 @@ public final class XMLJSONConverter {
 		str = str.substring(ind + 1);
 		ind = str.lastIndexOf("}");
 		str = str.substring(0, ind);
+
+		j = 0;
+		for (String content : innerOfCurColIdList) {
+			str = str.replace("innerOfCurColIdList" + j, content);
+			j++;
+		}
 
 		// while(str.contains("\\\"")) {
 		// str = str.replace("\\\"","\"");}
