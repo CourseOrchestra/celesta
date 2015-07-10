@@ -20,14 +20,14 @@ public class JSONToXMLParser {
 	private DocumentBuilder builder;
 	private Transformer t;
 	private final JSONTokener jt;
-	private final JSONObject jo;
+	private JSONObject jo = null;
 	private StringBuffer sbuf;
 	private Boolean vBool = false;
 	private boolean bLeft = false;
 	private boolean bRight = false;
 	private boolean bCenter = false;
 
-	public JSONToXMLParser(String json) throws JSONException {
+	public JSONToXMLParser(String json) {
 		// String json1 = json;
 		// if (json.contains("u\"")) {
 		// json1 = json.replaceAll("u\"", "\"");
@@ -55,7 +55,12 @@ public class JSONToXMLParser {
 					"{\"myTagForResolvingProblem\"=\"2\"}");
 		}
 		jt = new JSONTokener(newJson);
-		jo = new JSONObject(jt);
+
+		try {
+			jo = new JSONObject(jt);
+		} catch (Exception e) {
+			System.out.println(e);
+		}
 	}
 
 	/**
