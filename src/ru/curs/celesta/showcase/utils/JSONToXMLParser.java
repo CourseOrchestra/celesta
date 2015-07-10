@@ -10,6 +10,9 @@ import javax.xml.transform.stream.StreamResult;
 import org.json.*;
 import org.w3c.dom.*;
 
+import celesta.ru.curs.celesta.showcase.utils.Exception;
+import celesta.ru.curs.celesta.showcase.utils.JSONObject;
+
 /**
  * Преобразование из json в xml.
  * 
@@ -20,7 +23,7 @@ public class JSONToXMLParser {
 	private DocumentBuilder builder;
 	private Transformer t;
 	private final JSONTokener jt;
-	private final JSONObject jo;
+	private JSONObject jo = null;
 	private StringBuffer sbuf;
 	private Boolean vBool = false;
 	private boolean bLeft = false;
@@ -55,7 +58,12 @@ public class JSONToXMLParser {
 					"{\"myTagForResolvingProblem\"=\"2\"}");
 		}
 		jt = new JSONTokener(newJson);
-		jo = new JSONObject(jt);
+		
+		try {
+			jo = new JSONObject(jt);
+		} catch (Exception e) {
+			System.out.println(e);
+		}
 	}
 
 	/**
