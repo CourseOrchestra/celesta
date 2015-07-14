@@ -86,7 +86,7 @@ class Filter extends AbstractFilter {
 		if (c instanceof IntegerColumn || c instanceof FloatingColumn
 				|| c == ViewColumnType.NUMERIC)
 			ft = FilterType.NUMERIC;
-		else if (c instanceof DateTimeColumn)
+		else if (c instanceof DateTimeColumn || c == ViewColumnType.DATE)
 			ft = FilterType.DATETIME;
 		else if (c instanceof StringColumn || c == ViewColumnType.TEXT)
 			ft = FilterType.TEXT;
