@@ -61,11 +61,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.python.core.PyException;
-import org.python.core.PyObject;
-import org.python.core.PyString;
-import org.python.core.PySystemState;
-import org.python.core.codecs;
+import org.python.core.*;
 import org.python.util.PythonInterpreter;
 
 import ru.curs.celesta.dbutils.DBUpdator;
@@ -172,7 +168,9 @@ public final class Celesta {
 
 		initPyPathList();
 
-		PySystemState state = new PySystemState();
+		// PySystemState state = new PySystemState();
+		PySystemState state = Py.getSystemState();
+
 		for (String path : pyPathList)
 			state.path.append(new PyString(path));
 		interp = new PythonInterpreter(null, state);
