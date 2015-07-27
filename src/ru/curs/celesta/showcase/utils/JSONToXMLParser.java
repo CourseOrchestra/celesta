@@ -166,8 +166,8 @@ public class JSONToXMLParser {
 						elemCell = doc.createElement(arCell[0]);
 						root.appendChild(elemCell);
 					} catch (Exception e) {
-						System.out.println("Не удалось добавить элемент " + arCell[0]
-								+ " в DOM-модель xml");
+						System.out.println("Не удалось добавить элемент \"" + arCell[0]
+								+ "\" в DOM-модель xml");
 					}
 					// elemCell.setAttribute("sorted", "True");
 					Object valueCell = jObjCell.get(arCell[0]);
@@ -203,7 +203,8 @@ public class JSONToXMLParser {
 			root.appendChild(childElem);
 			} catch (Exception e) {
 				System.out
-						.println("Не удалось добавить элемент " + childKey + " в DOM-модель xml");
+.println("Не удалось добавить элемент \"" + childKey
+						+ "\" в DOM-модель xml");
 			}
 			cell = jsonArray.get(j);
 
@@ -250,7 +251,8 @@ public class JSONToXMLParser {
 				root = doc1.createElement(ar[0]);
 			doc1.appendChild(root);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент " + ar[0] + " в DOM-модель xml");
+				System.out.println("Не удалось добавить элемент \"" + ar[0]
+						+ "\" в DOM-модель xml");
 			}
 			cell = (JSONObject) jsonArray.get(j);
 
@@ -279,7 +281,7 @@ public class JSONToXMLParser {
 			root = doc.createElement(ar[0]);
 		doc.appendChild(root);
 		} catch (Exception e) {
-			System.out.println("Не удалось добавить элемент " + ar[0] + " в DOM-модель xml");
+			System.out.println("Не удалось добавить элемент \"" + ar[0] + "\" в DOM-модель xml");
 		}
 		Object value = jsonObj.get(ar[0]);
 
@@ -362,7 +364,7 @@ public class JSONToXMLParser {
 				elem = doc.createElement(key);
 				root.appendChild(elem);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент " + key + " в DOM-модель xml");
+				System.out.println("Не удалось добавить элемент \"" + key + "\" в DOM-модель xml");
 			}
 			Text text = doc.createTextNode("");
 			elem.appendChild(text);
@@ -376,7 +378,7 @@ public class JSONToXMLParser {
 				elem = doc.createElement(key);
 				root.appendChild(elem);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент " + key + " в DOM-модель xml");
+				System.out.println("Не удалось добавить элемент \"" + key + "\" в DOM-модель xml");
 			}
 			Text text = settingTextNode(doc, value);
 			if (text != null) {
@@ -390,7 +392,7 @@ public class JSONToXMLParser {
 				elem = doc.createElement(key);
 				root.appendChild(elem);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент " + key + " в DOM-модель xml");
+				System.out.println("Не удалось добавить элемент \"" + key + "\" в DOM-модель xml");
 			}
 			buildDoc(doc, elem, (JSONObject) value);
 		}
