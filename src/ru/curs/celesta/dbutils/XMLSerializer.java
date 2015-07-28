@@ -82,7 +82,7 @@ public final class XMLSerializer {
 					.createXMLStreamWriter(
 							new OutputStreamWriter(outputStream, "UTF-8"));
 			xmlWriter.writeStartDocument();
-			xmlWriter.writeStartElement("data");
+			xmlWriter.writeStartElement("schema");
 			xmlWriter.writeAttribute("recversion",
 					Integer.toString(c.getRecversion()));
 
