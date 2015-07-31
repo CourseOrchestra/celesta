@@ -21,7 +21,7 @@ public class ForeignKey {
 
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
-		String getErrorMsg(String name) {
+		protected String getErrorMsg(String name) {
 			return String
 					.format("Column '%s' defined more than once in foreign key for table '%s'.",
 							name, parentTable.getName());

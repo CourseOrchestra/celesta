@@ -13,7 +13,7 @@ public class Index extends GrainElement {
 	private final Table table;
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
-		String getErrorMsg(String name) {
+		protected String getErrorMsg(String name) {
 			return String.format(
 					"Column '%s' is defined more than once in index '%s'",
 					name, getName());

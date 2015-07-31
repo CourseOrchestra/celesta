@@ -24,7 +24,7 @@ public final class Table extends GrainElement {
 
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
-		String getErrorMsg(String name) {
+		protected String getErrorMsg(String name) {
 			return String.format(
 					"Column '%s' defined more than once in table '%s'.", name,
 					getName());
@@ -33,7 +33,7 @@ public final class Table extends GrainElement {
 	};
 	private final NamedElementHolder<Column> pk = new NamedElementHolder<Column>() {
 		@Override
-		String getErrorMsg(String name) {
+		protected String getErrorMsg(String name) {
 			return String
 					.format("Column '%s' defined more than once for primary key in table '%s'.",
 							name, getName());

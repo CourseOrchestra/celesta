@@ -43,7 +43,7 @@ public final class Grain extends NamedElement {
 
 	private final NamedElementHolder<Table> tables = new NamedElementHolder<Table>() {
 		@Override
-		String getErrorMsg(String name) {
+		protected String getErrorMsg(String name) {
 			return String.format(
 					"Table '%s' defined more than once in a grain.", name);
 		}
@@ -51,7 +51,7 @@ public final class Grain extends NamedElement {
 
 	private final NamedElementHolder<View> views = new NamedElementHolder<View>() {
 		@Override
-		String getErrorMsg(String name) {
+		protected String getErrorMsg(String name) {
 			return String.format(
 					"View '%s' defined more than once in a grain.", name);
 		}
@@ -59,7 +59,7 @@ public final class Grain extends NamedElement {
 
 	private final NamedElementHolder<Index> indices = new NamedElementHolder<Index>() {
 		@Override
-		String getErrorMsg(String name) {
+		protected String getErrorMsg(String name) {
 			return String.format(
 					"Index '%s' defined more than once in a grain.", name);
 		}
