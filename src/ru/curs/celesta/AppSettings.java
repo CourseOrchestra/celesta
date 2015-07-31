@@ -24,6 +24,7 @@ public final class AppSettings {
 	private final boolean skipDBUpdate;
 	private final boolean forceDBInitialize;
 	private final boolean logLogins;
+	private final boolean jythonStateMethod;
 
 	{
 		logger = Logger.getLogger("ru.curs.flute");
@@ -92,6 +93,9 @@ public final class AppSettings {
 				"force.dbinitialize", "").trim());
 		logLogins = Boolean.parseBoolean(settings.getProperty("log.logins", "")
 				.trim());
+
+		jythonStateMethod =
+			Boolean.parseBoolean(settings.getProperty("jython.getStateMethod.isNew", "false"));
 
 		if (sb.length() > 0)
 			throw new CelestaException(sb.toString());
@@ -263,4 +267,10 @@ public final class AppSettings {
 		return theSettings.properties;
 	}
 
+	/**
+	 * Осуществляет возможность сброса пула интерпретаторов.
+	 */
+	public static Boolean getJythonStateMethod() {
+		return theSettings.jythonStateMethod;
+	}
 }
