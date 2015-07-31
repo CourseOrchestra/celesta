@@ -34,42 +34,19 @@
  */
 package ru.curs.celesta;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Queue;
-import java.util.Random;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.io.*;
+import java.net.*;
+import java.security.*;
+import java.sql.*;
+import java.util.*;
+import java.util.regex.*;
 
 import org.python.core.*;
 import org.python.util.PythonInterpreter;
 
-import ru.curs.celesta.dbutils.DBUpdator;
-import ru.curs.celesta.dbutils.SessionLogManager;
+import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.ormcompiler.ORMCompiler;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.*;
 
 /**
  * Корневой класс приложения.
@@ -168,8 +145,14 @@ public final class Celesta {
 
 		initPyPathList();
 
-		// PySystemState state = new PySystemState();
-		PySystemState state = Py.getSystemState();
+		boolean jythonStateMethod = AppSettings.getJythonStateMethod();
+		PySystemState state = null;
+		if (jythonStateMethod) {
+			state = new PySystemState();
+		} else {
+			state = Py.getSystemState();
+		}
+		// state = debugMode ? new PySystemState() : Py.getSystemState();
 
 		for (String path : pyPathList)
 			state.path.append(new PyString(path));
