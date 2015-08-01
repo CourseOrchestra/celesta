@@ -37,16 +37,21 @@ public class LyraFormData {
 		}
 	};
 	private int recversion;
+	private String formId;
+
 	private SimpleDateFormat sdf;
 
 	public LyraFormData() {
 
 	}
 
-	public LyraFormData(BasicCursor c) throws CelestaException, ParseException {
+	public LyraFormData(BasicCursor c, String formId) throws CelestaException,
+			ParseException {
 		if (c instanceof Cursor) {
 			recversion = ((Cursor) c).getRecversion();
 		}
+
+		this.formId = formId;
 		Object[] vals = c._currentValues();
 		int i = 0;
 
@@ -258,6 +263,8 @@ public class LyraFormData {
 			xmlWriter.writeStartElement("schema");
 			xmlWriter
 					.writeAttribute("recversion", Integer.toString(recversion));
+			xmlWriter.writeAttribute("formId", formId);
+
 			Iterator<LyraFieldValue> i = fields.iterator();
 			while (i.hasNext()) {
 				i.next().serialize(xmlWriter);
@@ -288,6 +295,7 @@ public class LyraFormData {
 			case 0:
 				recversion = Integer
 						.parseInt(attributes.getValue("recversion"));
+				formId = attributes.getValue("formId");
 				status = 1;
 				break;
 			case 1:
