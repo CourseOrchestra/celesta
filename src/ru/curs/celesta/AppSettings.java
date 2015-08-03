@@ -95,7 +95,8 @@ public final class AppSettings {
 				.trim());
 
 		jythonStateMethod =
-			Boolean.parseBoolean(settings.getProperty("jython.getStateMethod.isNew", "false"));
+			Boolean.parseBoolean(settings.getProperty("jython.getStateMethod.isNew", "false")
+					.trim());
 
 		if (sb.length() > 0)
 			throw new CelestaException(sb.toString());
