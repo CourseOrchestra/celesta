@@ -20,12 +20,14 @@ public final class LyraFieldValue extends NamedElement {
 
 	private final LyraFieldType lyraFieldType;
 	private final Object val;
+	private final boolean local;
 
-	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val)
-			throws ParseException {
+	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val,
+			boolean local) throws ParseException {
 		super(fieldName);
 		this.lyraFieldType = lyraFieldType;
 		this.val = val;
+		this.local = local;
 	}
 
 	/**
@@ -41,7 +43,7 @@ public final class LyraFieldValue extends NamedElement {
 	public static LyraFieldValue getValue(Column c, Object val)
 			throws ParseException {
 		return new LyraFieldValue(LyraFieldType.lookupFieldType(c),
-				c.getName(), val);
+				c.getName(), val, false);
 	}
 
 	/**
@@ -59,7 +61,7 @@ public final class LyraFieldValue extends NamedElement {
 	public static LyraFieldValue getValue(ViewColumnType c, String columnName,
 			Object val) throws ParseException {
 		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), columnName,
-				val);
+				val, false);
 	}
 
 	/**
@@ -74,6 +76,8 @@ public final class LyraFieldValue extends NamedElement {
 		xmlWriter.writeStartElement(getName());
 		xmlWriter.writeAttribute("type", lyraFieldType.toString());
 		xmlWriter.writeAttribute("null", Boolean.toString(val == null));
+		xmlWriter.writeAttribute("local", Boolean.toString(local));
+		
 		if (val instanceof Date) {
 			SimpleDateFormat sdf = new SimpleDateFormat(XML_DATE_FORMAT);
 			xmlWriter.writeCharacters(val == null ? "" : sdf.format(val));
@@ -95,5 +99,12 @@ public final class LyraFieldValue extends NamedElement {
 	 */
 	public LyraFieldType getFieldType() {
 		return lyraFieldType;
+	}
+
+	/**
+	 * Является ли значение локальным (не взятым из курсора).
+	 */
+	public boolean isLocal() {
+		return local;
 	}
 }

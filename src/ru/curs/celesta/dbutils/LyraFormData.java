@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -80,6 +82,13 @@ public class LyraFormData {
 			throw new CelestaException("XML deserialization error: %s",
 					e.getMessage());
 		}
+	}
+
+	/**
+	 * Возвращает перечень полей.
+	 */
+	public Collection<LyraFieldValue> getFields() {
+		return Collections.unmodifiableCollection(fields);
 	}
 
 	/**
@@ -160,12 +169,15 @@ public class LyraFormData {
 	 *            имя
 	 * @param value
 	 *            значение
+	 * @param local
+	 *            локальная (не взятая из курсора) переменная
 	 * @throws ParseException
 	 *             неуникальное имя или неверное значение
 	 */
-	public void addValue(String name, String value) throws ParseException {
+	public void addValue(String name, String value, boolean local)
+			throws ParseException {
 		LyraFieldValue v = new LyraFieldValue(LyraFieldType.VARCHAR, name,
-				value);
+				value, local);
 		addFieldValue(v);
 	}
 
@@ -176,11 +188,15 @@ public class LyraFormData {
 	 *            имя
 	 * @param value
 	 *            значение
+	 * @param local
+	 *            локальная (не взятая из курсора) переменная
 	 * @throws ParseException
 	 *             неуникальное имя или неверное значение
 	 */
-	public void addValue(String name, int value) throws ParseException {
-		LyraFieldValue v = new LyraFieldValue(LyraFieldType.INT, name, value);
+	public void addValue(String name, int value, boolean local)
+			throws ParseException {
+		LyraFieldValue v = new LyraFieldValue(LyraFieldType.INT, name, value,
+				local);
 		addFieldValue(v);
 	}
 
@@ -191,11 +207,15 @@ public class LyraFormData {
 	 *            имя
 	 * @param value
 	 *            значение
+	 * @param local
+	 *            локальная (не взятая из курсора) переменная
 	 * @throws ParseException
 	 *             неуникальное имя или неверное значение
 	 */
-	public void addValue(String name, double value) throws ParseException {
-		LyraFieldValue v = new LyraFieldValue(LyraFieldType.REAL, name, value);
+	public void addValue(String name, double value, boolean local)
+			throws ParseException {
+		LyraFieldValue v = new LyraFieldValue(LyraFieldType.REAL, name, value,
+				local);
 		addFieldValue(v);
 	}
 
@@ -206,11 +226,15 @@ public class LyraFormData {
 	 *            имя
 	 * @param value
 	 *            значение
+	 * @param local
+	 *            локальная (не взятая из курсора) переменная
 	 * @throws ParseException
 	 *             неуникальное имя или неверное значение
 	 */
-	public void addValue(String name, boolean value) throws ParseException {
-		LyraFieldValue v = new LyraFieldValue(LyraFieldType.BIT, name, value);
+	public void addValue(String name, boolean value, boolean local)
+			throws ParseException {
+		LyraFieldValue v = new LyraFieldValue(LyraFieldType.BIT, name, value,
+				local);
 		addFieldValue(v);
 	}
 
@@ -221,12 +245,15 @@ public class LyraFormData {
 	 *            имя
 	 * @param value
 	 *            значение
+	 * @param local
+	 *            локальная (не взятая из курсора) переменная
 	 * @throws ParseException
 	 *             неуникальное имя или неверное значение
 	 */
-	public void addValue(String name, Date value) throws ParseException {
+	public void addValue(String name, Date value, boolean local)
+			throws ParseException {
 		LyraFieldValue v = new LyraFieldValue(LyraFieldType.DATETIME, name,
-				value);
+				value, local);
 		addFieldValue(v);
 	}
 
@@ -237,12 +264,15 @@ public class LyraFormData {
 	 *            Тип поля
 	 * @param name
 	 *            имя поля
+	 * @param local
+	 *            локальная (не взятая из курсора) переменная
 	 * @throws ParseException
 	 *             неуникальное имя
+	 * 
 	 */
-	public void addNullValue(LyraFieldType t, String name)
+	public void addNullValue(LyraFieldType t, String name, boolean local)
 			throws ParseException {
-		LyraFieldValue v = new LyraFieldValue(t, name, null);
+		LyraFieldValue v = new LyraFieldValue(t, name, null, local);
 		addFieldValue(v);
 	}
 
@@ -287,6 +317,7 @@ public class LyraFormData {
 		private String key;
 		private int status = 0;
 		private boolean isNull = false;
+		private boolean local = false;
 		private LyraFieldType type = null;
 
 		@Override
@@ -302,6 +333,7 @@ public class LyraFormData {
 			case 1:
 				key = localName;
 				isNull = Boolean.parseBoolean(attributes.getValue("null"));
+				local = Boolean.parseBoolean(attributes.getValue("local"));
 				type = LyraFieldType.valueOf(attributes.getValue("type"));
 				status = 2;
 				sb.setLength(0);
@@ -323,7 +355,7 @@ public class LyraFormData {
 				status = 1;
 				try {
 					if (isNull && sb.length() == 0) {
-						addNullValue(type, key);
+						addNullValue(type, key, local);
 					} else {
 						String buf = sb.toString();
 
@@ -338,19 +370,19 @@ public class LyraFormData {
 							} catch (java.text.ParseException e) {
 								d = null;
 							}
-							addValue(key, d);
+							addValue(key, d, local);
 							break;
 						case BIT:
-							addValue(key, Boolean.valueOf(buf));
+							addValue(key, Boolean.valueOf(buf), local);
 							break;
 						case INT:
-							addValue(key, Integer.valueOf(buf));
+							addValue(key, Integer.valueOf(buf), local);
 							break;
 						case REAL:
-							addValue(key, Double.valueOf(buf));
+							addValue(key, Double.valueOf(buf), local);
 							break;
 						default:
-							addValue(key, buf);
+							addValue(key, buf, local);
 						}
 					}
 				} catch (ParseException e) {

@@ -5,10 +5,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.sql.Date;
+
+import org.python.core.PyObject;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
+import ru.curs.celesta.dbutils.LyraFieldType;
+import ru.curs.celesta.dbutils.LyraFieldValue;
 import ru.curs.celesta.dbutils.LyraFormData;
 import ru.curs.celesta.score.ParseException;
 
@@ -18,6 +23,7 @@ import ru.curs.celesta.score.ParseException;
 public abstract class BasicLyraForm {
 
 	private static final String UTF_8 = "utf-8";
+	private LyraFormData lfd;
 
 	/**
 	 * Отыскивает первую запись в наборе записей.
@@ -169,14 +175,21 @@ public abstract class BasicLyraForm {
 	private void serialize(BasicCursor c, OutputStream result)
 			throws CelestaException, ParseException {
 		_beforeSending(c);
-		LyraFormData lfd = new LyraFormData(c, _getId());
+		lfd = new LyraFormData(c, _getId());
+		// добавление полей формы
+		_serializeFields();
 		lfd.serialize(result);
 	}
 
 	private void deserialize(Cursor c, InputStream dataIS)
 			throws CelestaException {
-		LyraFormData lfd = new LyraFormData(dataIS);
+		lfd = new LyraFormData(dataIS);
 		lfd.populateFields(c);
+		for (LyraFieldValue v : lfd.getFields())
+			if (v.isLocal()) {
+				_restoreValue(v.getName(), v.getValue());
+			}
+
 		_afterReceiving(c);
 	}
 
@@ -185,6 +198,36 @@ public abstract class BasicLyraForm {
 	 * Эта группа методов именуется по правилам Python, а не Java. В Python
 	 * имена protected-методов начинаются с underscore.
 	 */
+	protected void _saveFieldValue(String celestatype, String name,
+			PyObject value, String caption) throws ParseException {
+		LyraFieldType lft = LyraFieldType.valueOf(celestatype);
+		switch (lft) {
+		case BIT:
+			Boolean b = (Boolean) value.__tojava__(Boolean.class);
+			lfd.addValue(name, b, true);
+			break;
+		case DATETIME:
+			Date d = (Date) value.__tojava__(Date.class);
+			lfd.addValue(name, d, true);
+			break;
+		case REAL:
+			Double dbl = (Double) value.__tojava__(Double.class);
+			lfd.addValue(name, dbl, true);
+			break;
+		case INT:
+			Integer i = (Integer) value.__tojava__(Integer.class);
+			lfd.addValue(name, i, true);
+			break;
+		case VARCHAR:
+			String s = (String) value.__tojava__(String.class);
+			lfd.addValue(name, s, true);
+			break;
+		default:
+			break;
+		}
+
+	}
+
 	public abstract BasicCursor _getCursor();
 
 	public abstract String _getId();
@@ -192,5 +235,9 @@ public abstract class BasicLyraForm {
 	public abstract void _beforeSending(BasicCursor c);
 
 	public abstract void _afterReceiving(Cursor c);
+
+	public abstract void _serializeFields();
+
+	public abstract void _restoreValue(String name, Object value);
 	// CHECKSTYLE:ON
 }
