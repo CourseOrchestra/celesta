@@ -2,6 +2,8 @@ package ru.curs.lyra;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 import ru.curs.celesta.CelestaException;
@@ -29,8 +31,7 @@ public abstract class BasicLyraForm {
 		BasicCursor c = _getCursor();
 		c.navigate("-");
 		ByteArrayOutputStream result = new ByteArrayOutputStream();
-		LyraFormData lfd = new LyraFormData(c, _getId());
-		lfd.serialize(result);
+		serialize(c, result);
 		try {
 			return result.toString(UTF_8);
 		} catch (UnsupportedEncodingException e) {
@@ -56,13 +57,10 @@ public abstract class BasicLyraForm {
 		ByteArrayInputStream dataIS;
 		try {
 			dataIS = new ByteArrayInputStream(data.getBytes(UTF_8));
-
-			LyraFormData lfd = new LyraFormData(dataIS);
-			lfd.populateFields(c);
+			deserialize(c, dataIS);
 			c.navigate("=<>");
 			ByteArrayOutputStream result = new ByteArrayOutputStream();
-			lfd = new LyraFormData(c, _getId());
-			lfd.serialize(result);
+			serialize(c, result);
 			return result.toString(UTF_8);
 		} catch (UnsupportedEncodingException e) {
 			return "";
@@ -91,8 +89,7 @@ public abstract class BasicLyraForm {
 		try {
 			dataIS = new ByteArrayInputStream(data.getBytes(UTF_8));
 
-			LyraFormData lfd = new LyraFormData(dataIS);
-			lfd.populateFields(c);
+			deserialize(c, dataIS);
 
 			// print c._currentValues()
 
@@ -107,8 +104,7 @@ public abstract class BasicLyraForm {
 			c.navigate(cmd);
 
 			ByteArrayOutputStream result = new ByteArrayOutputStream();
-			lfd = new LyraFormData(c, _getId());
-			lfd.serialize(result);
+			serialize(c, result);
 			return result.toString(UTF_8);
 		} catch (UnsupportedEncodingException e) {
 			return "";
@@ -128,8 +124,7 @@ public abstract class BasicLyraForm {
 		c.clear();
 		c.setRecversion(0);
 		ByteArrayOutputStream result = new ByteArrayOutputStream();
-		LyraFormData lfd = new LyraFormData(c, _getId());
-		lfd.serialize(result);
+		serialize(c, result);
 		try {
 			return result.toString(UTF_8);
 		} catch (UnsupportedEncodingException e) {
@@ -156,8 +151,7 @@ public abstract class BasicLyraForm {
 		try {
 			dataIS = new ByteArrayInputStream(data.getBytes(UTF_8));
 
-			LyraFormData lfd = new LyraFormData(dataIS);
-			lfd.populateFields(c);
+			deserialize(c, dataIS);
 
 			c.delete();
 			if (!c.navigate(">+")) {
@@ -165,12 +159,25 @@ public abstract class BasicLyraForm {
 				c.setRecversion(0);
 			}
 			ByteArrayOutputStream result = new ByteArrayOutputStream();
-			lfd = new LyraFormData(c, _getId());
-			lfd.serialize(result);
+			serialize(c, result);
 			return result.toString(UTF_8);
 		} catch (UnsupportedEncodingException e) {
 			return "";
 		}
+	}
+
+	private void serialize(BasicCursor c, OutputStream result)
+			throws CelestaException, ParseException {
+		_beforeSending(c);
+		LyraFormData lfd = new LyraFormData(c, _getId());
+		lfd.serialize(result);
+	}
+
+	private void deserialize(Cursor c, InputStream dataIS)
+			throws CelestaException {
+		LyraFormData lfd = new LyraFormData(dataIS);
+		lfd.populateFields(c);
+		_afterReceiving(c);
 	}
 
 	// CHECKSTYLE:OFF
@@ -179,7 +186,11 @@ public abstract class BasicLyraForm {
 	 * имена protected-методов начинаются с underscore.
 	 */
 	public abstract BasicCursor _getCursor();
-	
+
 	public abstract String _getId();
+
+	public abstract void _beforeSending(BasicCursor c);
+
+	public abstract void _afterReceiving(Cursor c);
 	// CHECKSTYLE:ON
 }

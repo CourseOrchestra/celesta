@@ -263,7 +263,8 @@ public class LyraFormData {
 			xmlWriter.writeStartElement("schema");
 			xmlWriter
 					.writeAttribute("recversion", Integer.toString(recversion));
-			xmlWriter.writeAttribute("formId", formId);
+			if (formId != null)
+				xmlWriter.writeAttribute("formId", formId);
 
 			Iterator<LyraFieldValue> i = fields.iterator();
 			while (i.hasNext()) {

@@ -85,7 +85,7 @@ public class SerializerTest {
 	public void test2() throws CelestaException, ParseException,
 			UnsupportedEncodingException {
 		c.get("celesta");
-		LyraFormData fd = new LyraFormData(c);
+		LyraFormData fd = new LyraFormData(c, "sdasdf");
 		fd.addValue("aa", "русский текст");
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		fd.serialize(bos);
