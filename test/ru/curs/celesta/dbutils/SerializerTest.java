@@ -61,20 +61,20 @@ public class SerializerTest {
 		LyraFormData fd = new LyraFormData();
 		Date d = new Date();
 
-		fd.addValue("z", 123);
-		fd.addValue("aa", "русский текст");
-		fd.addValue("fe", d);
-		fd.addValue("bs", true);
-		fd.addNullValue(LyraFieldType.BIT, "we");
+		fd.addValue("z", 123, true);
+		fd.addValue("aa", "русский текст", true);
+		fd.addValue("fe", d, false);
+		fd.addValue("bs", true, false);
+		fd.addNullValue(LyraFieldType.BIT, "we", false);
 
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		fd.serialize(bos);
 
 		String expected = String
 				.format("<?xml version=\"1.0\" ?><schema recversion=\"0\">"
-						+ "<z type=\"INT\" null=\"false\">123</z><aa type=\"VARCHAR\" null=\"false\">русский текст</aa>"
-						+ "<fe type=\"DATETIME\" null=\"false\">%s</fe><bs type=\"BIT\" null=\"false\">true</bs>"
-						+ "<we type=\"BIT\" null=\"true\"></we></schema>",
+						+ "<z type=\"INT\" null=\"false\" local=\"true\">123</z><aa type=\"VARCHAR\" null=\"false\" local=\"true\">русский текст</aa>"
+						+ "<fe type=\"DATETIME\" null=\"false\" local=\"false\">%s</fe><bs type=\"BIT\" null=\"false\" local=\"false\">true</bs>"
+						+ "<we type=\"BIT\" null=\"true\" local=\"false\"></we></schema>",
 						new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(d));
 
 		String actual = bos.toString("utf-8");
@@ -86,7 +86,7 @@ public class SerializerTest {
 			UnsupportedEncodingException {
 		c.get("celesta");
 		LyraFormData fd = new LyraFormData(c, "sdasdf");
-		fd.addValue("aa", "русский текст");
+		fd.addValue("aa", "русский текст", true);
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		fd.serialize(bos);
 		String buf = bos.toString("utf-8");

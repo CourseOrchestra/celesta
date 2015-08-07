@@ -229,7 +229,7 @@ public abstract class Cursor extends BasicCursor {
 					return false;
 				// Прочитали из базы данных значения -- обновляем xRec
 				if (xRec == null) {
-					xRec = _getBufferCopy();
+					xRec = (Cursor) _getBufferCopy();
 					// Вопрос на будущее: эта строчка должна быть здесь или за
 					// фигурной скобкой? (проблема совместной работы над базой)
 					xRec._parseResult(rs);
@@ -349,7 +349,7 @@ public abstract class Cursor extends BasicCursor {
 	@Override
 	final void initXRec() throws CelestaException {
 		if (xRec == null) {
-			xRec = _getBufferCopy();
+			xRec = (Cursor) _getBufferCopy();
 		} else {
 			xRec.copyFieldsFrom(this);
 		}
@@ -658,14 +658,6 @@ public abstract class Cursor extends BasicCursor {
 		}
 	}
 
-	/**
-	 * Копировать значения полей из курсора того же типа.
-	 * 
-	 * @param from
-	 *            курсор, из которого следует скопировать значения полей
-	 */
-	public abstract void copyFieldsFrom(Cursor from);
-
 	// CHECKSTYLE:OFF
 	/*
 	 * Эта группа методов именуется по правилам Python, а не Java. В Python
@@ -674,8 +666,6 @@ public abstract class Cursor extends BasicCursor {
 	 */
 
 	protected abstract void _setFieldValue(String name, Object value);
-
-	protected abstract Cursor _getBufferCopy() throws CelestaException;
 
 	protected abstract Object[] _currentKeyValues();
 

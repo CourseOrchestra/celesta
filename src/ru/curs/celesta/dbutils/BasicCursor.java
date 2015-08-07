@@ -948,12 +948,29 @@ public abstract class BasicCursor {
 		closeSet();
 	}
 
+	/**
+	 * Является ли курсор закрытым.
+	 */
+	public boolean isClosed() {
+		return closed;
+	}
+
+	/**
+	 * Копировать значения полей из курсора того же типа.
+	 * 
+	 * @param from
+	 *            курсор, из которого следует скопировать значения полей
+	 */
+	public abstract void copyFieldsFrom(BasicCursor from);
+
 	// CHECKSTYLE:OFF
 	/*
 	 * Эта группа методов именуется по правилам Python, а не Java. В Python
 	 * имена protected-методов начинаются с underscore. Использование методов
 	 * без underscore приводит к конфликтам с именами атрибутов.
 	 */
+	public abstract BasicCursor _getBufferCopy() throws CelestaException;
+
 	protected abstract void _clearBuffer(boolean withKeys);
 
 	protected abstract String _grainName();

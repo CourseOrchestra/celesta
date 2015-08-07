@@ -24,6 +24,29 @@ public abstract class BasicLyraForm {
 
 	private static final String UTF_8 = "utf-8";
 	private LyraFormData lfd;
+	private BasicCursor rec;
+
+	private boolean updateRec() throws CelestaException {
+		if (rec == null) {
+			rec = _getCursor();
+			return true;
+		} else if (rec.isClosed()) {
+			BasicCursor rec2 = _getCursor();
+			rec2.copyFieldsFrom(rec);
+			rec = rec2;
+		}
+		return false;
+	}
+
+	private Cursor getCursor() throws CelestaException {
+		updateRec();
+		if (rec instanceof Cursor) {
+			return (Cursor) rec;
+		} else {
+			throw new CelestaException("Cursor %s is not modifiable.", rec
+					.meta().getName());
+		}
+	}
 
 	/**
 	 * Отыскивает первую запись в наборе записей.
@@ -34,10 +57,14 @@ public abstract class BasicLyraForm {
 	 *             Ошибка сериализации.
 	 */
 	public String findRec() throws CelestaException, ParseException {
-		BasicCursor c = _getCursor();
-		c.navigate("-");
+		if (updateRec()) {
+			//Cursor created first time
+			rec.navigate("-");
+		} else {
+			rec.navigate("=>+");
+		}
 		ByteArrayOutputStream result = new ByteArrayOutputStream();
-		serialize(c, result);
+		serialize(rec, result);
 		try {
 			return result.toString(UTF_8);
 		} catch (UnsupportedEncodingException e) {
@@ -58,7 +85,8 @@ public abstract class BasicLyraForm {
 	 *             Ошибка сериализации.
 	 */
 	public String revert(String data) throws CelestaException, ParseException {
-		Cursor c = (Cursor) _getCursor();
+
+		Cursor c = getCursor();
 
 		ByteArrayInputStream dataIS;
 		try {
@@ -90,27 +118,25 @@ public abstract class BasicLyraForm {
 	 */
 	public String move(String cmd, String data) throws CelestaException,
 			ParseException {
-		Cursor c = (Cursor) _getCursor();
-		ByteArrayInputStream dataIS;
 		try {
-			dataIS = new ByteArrayInputStream(data.getBytes(UTF_8));
+			if (rec instanceof Cursor) {
+				Cursor c = getCursor();
+				ByteArrayInputStream dataIS = new ByteArrayInputStream(
+						data.getBytes(UTF_8));
+				deserialize(c, dataIS);
 
-			deserialize(c, dataIS);
-
-			// print c._currentValues()
-
-			Cursor c2 = (Cursor) _getCursor();
-			c2.copyFieldsFrom(c);
-			if (c2.tryGetCurrent()) {
+				Cursor c2 = getCursor();
 				c2.copyFieldsFrom(c);
-				c2.update();
-			} else {
-				c.insert();
+				if (c2.tryGetCurrent()) {
+					c2.copyFieldsFrom(c);
+					c2.update();
+				} else {
+					c.insert();
+				}
 			}
-			c.navigate(cmd);
-
+			rec.navigate(cmd);
 			ByteArrayOutputStream result = new ByteArrayOutputStream();
-			serialize(c, result);
+			serialize(rec, result);
 			return result.toString(UTF_8);
 		} catch (UnsupportedEncodingException e) {
 			return "";
@@ -126,7 +152,7 @@ public abstract class BasicLyraForm {
 	 *             Ошибка сериализации.
 	 */
 	public String newRec() throws CelestaException, ParseException {
-		Cursor c = (Cursor) _getCursor();
+		Cursor c = getCursor();
 		c.clear();
 		c.setRecversion(0);
 		ByteArrayOutputStream result = new ByteArrayOutputStream();
@@ -151,7 +177,7 @@ public abstract class BasicLyraForm {
 	 */
 	public String deleteRec(String data) throws CelestaException,
 			ParseException {
-		Cursor c = (Cursor) _getCursor();
+		Cursor c = getCursor();
 
 		ByteArrayInputStream dataIS;
 		try {

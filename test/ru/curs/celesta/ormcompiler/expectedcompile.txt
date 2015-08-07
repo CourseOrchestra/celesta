@@ -15,6 +15,12 @@ class ttt1Cursor(ReadOnlyTableCursor):
         self.id = None
     def _currentValues(self):
         return array([None if self.id == None else int(self.id)], Object)
+    def _getBufferCopy(self):
+        result = ttt1Cursor(self.callContext())
+        result.copyFieldsFrom(self)
+        return result
+    def copyFieldsFrom(self, c):
+        self.id = c.id
     def iterate(self):
         if self.tryFindSet():
             while True:

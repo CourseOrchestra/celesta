@@ -5,7 +5,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -88,7 +87,7 @@ public class LyraFormData {
 	 * Возвращает перечень полей.
 	 */
 	public Collection<LyraFieldValue> getFields() {
-		return Collections.unmodifiableCollection(fields);
+		return fields;
 	}
 
 	/**

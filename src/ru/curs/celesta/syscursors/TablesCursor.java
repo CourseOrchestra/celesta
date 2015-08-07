@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 
 /**
@@ -149,7 +150,7 @@ public final class TablesCursor extends SysCursor {
 	}
 
 	@Override
-	public void copyFieldsFrom(Cursor c) {
+	public void copyFieldsFrom(BasicCursor c) {
 		TablesCursor from = (TablesCursor) c;
 		grainid = from.grainid;
 		tablename = from.tablename;
@@ -159,7 +160,7 @@ public final class TablesCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Cursor _getBufferCopy() throws CelestaException {
+	public Cursor _getBufferCopy() throws CelestaException {
 		// CHECKSTYLE:ON
 		TablesCursor result = new TablesCursor(callContext());
 		result.copyFieldsFrom(this);
