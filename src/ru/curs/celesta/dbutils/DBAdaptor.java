@@ -99,6 +99,8 @@ public abstract class DBAdaptor {
 	static final Pattern HEXSTR = Pattern
 			.compile("0x(([0-9A-Fa-f][0-9A-Fa-f])+)");
 
+	private static DBAdaptor db;
+
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
 	 * 
@@ -107,19 +109,27 @@ public abstract class DBAdaptor {
 	 *             не поддерживаемого типа).
 	 */
 	public static DBAdaptor getAdaptor() throws CelestaException {
-		switch (AppSettings.getDBType()) {
-		case MSSQL:
-			return new MSSQLAdaptor();
-		case MYSQL:
-			return new MySQLAdaptor();
-		case ORACLE:
-			return new OraAdaptor();
-		case POSTGRES:
-			return new PostgresAdaptor();
-		case UNKNOWN:
-		default:
-			throw new CelestaException("Unknown or unsupported database type.");
+		if (db == null) {
+			switch (AppSettings.getDBType()) {
+			case MSSQL:
+				db = new MSSQLAdaptor();
+				break;
+			case MYSQL:
+				db = new MySQLAdaptor();
+				break;
+			case ORACLE:
+				db = new OraAdaptor();
+				break;
+			case POSTGRES:
+				db = new PostgresAdaptor();
+				break;
+			case UNKNOWN:
+			default:
+				throw new CelestaException(
+						"Unknown or unsupported database type.");
+			}
 		}
+		return db;
 	}
 
 	/**

@@ -29,12 +29,12 @@ public final class ConnectionPool {
 	 *             В случае, если новое соединение не удалось создать.
 	 */
 	public static synchronized Connection get() throws CelestaException {
+		DBAdaptor db = DBAdaptor.getAdaptor();
 		Connection c = POOL.poll();
 		while (c != null) {
 			try {
-				if (DBAdaptor.getAdaptor().isValidConnection(c, 1)) {
+				if (db.isValidConnection(c, 1))
 					return c;
-				}
 			} catch (CelestaException e) {
 				// do something to make CheckStyle happy ))
 				c = null;
@@ -71,11 +71,11 @@ public final class ConnectionPool {
 	public static synchronized void putBack(Connection c) {
 		// Вставляем только хорошие соединения...
 		try {
-			if (c != null && DBAdaptor.getAdaptor().isValidConnection(c, 1)) {
+			if (c != null) {
 				c.commit();
 				POOL.add(c);
 			}
-		} catch (SQLException | CelestaException e) {
+		} catch (SQLException e) {
 			// do something to make CheckStyle happy ))
 			e.printStackTrace();
 			return;

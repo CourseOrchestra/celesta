@@ -337,9 +337,16 @@ final class PostgresAdaptor extends DBAdaptor {
 			fields.append('"');
 		}
 
+		String returning = "";
+		for (Column c : t.getColumns().values())
+			if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
+				returning = " returning " + c.getQuotedName();
+				break;
+			}
+
 		String sql = String.format("insert into " + tableTemplate()
-				+ " (%s) values (%s);", t.getGrain().getName(), t.getName(),
-				fields.toString(), params.toString());
+				+ " (%s) values (%s)%s;", t.getGrain().getName(), t.getName(),
+				fields.toString(), params.toString(), returning);
 
 		// System.out.println(sql);
 

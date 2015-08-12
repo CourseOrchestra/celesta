@@ -153,16 +153,28 @@ public abstract class Cursor extends BasicCursor {
 					DBAdaptor.setParam(insert, j, values[i]);
 					j++;
 				}
-			insert.execute();
-			LOGGING_MGR.log(this, Action.INSERT);
-			for (Column c : meta().getColumns().values())
-				if (c instanceof IntegerColumn
-						&& ((IntegerColumn) c).isIdentity()) {
-					_setAutoIncrement(db().getCurrentIdent(conn(), meta()));
-					break;
-				}
+			if (insert.execute()) {
+				LOGGING_MGR.log(this, Action.INSERT);
+				ResultSet ret = insert.getResultSet();
+				ret.next();
+				int id = ret.getInt(1);
+				_setAutoIncrement(id);
+				ret.close();
+			} else {
+				// TODO: get rid of "getCurrentIdent" call where possible
+				// e. g. using INSERT.. OUTPUT clause for MSSQL
+				LOGGING_MGR.log(this, Action.INSERT);
+				for (Column c : meta().getColumns().values())
+					if (c instanceof IntegerColumn
+							&& ((IntegerColumn) c).isIdentity()) {
+						_setAutoIncrement(db().getCurrentIdent(conn(), meta()));
+						break;
+					}
+			}
+
 			internalGet(_currentKeyValues());
-			initXRec();
+			// No need: internalGet does this!
+			// initXRec();
 			_postInsert();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -682,6 +694,5 @@ public abstract class Cursor extends BasicCursor {
 	protected abstract void _preInsert();
 
 	protected abstract void _postInsert();
-
 	// CHECKSTYLE:ON
 }
