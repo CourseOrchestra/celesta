@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<database name="Celesta" >
+<database name="com.wisecoders.dbs.rdbms.RdbTypes@1acf8d6" >
 	<types >
-		<type name="REAL" java="8" precision="NONE" />
-		<type name="VARCHAR" java="12" precision="LENGTH" />
-		<type name="BLOB" java="-2" precision="NONE" />
-		<type name="DATETIME" java="93" precision="NONE" />
-		<type name="BIT" java="-7" precision="NONE" />
-		<type name="INT" java="4" precision="NONE" />
-		<type name="TEXT" java="12" precision="NONE" />
+		<type name="real" java="8" precision="NONE" />
+		<type name="varchar" java="12" precision="LENGTH" />
+		<type name="blob" java="-2" precision="NONE" />
+		<type name="datetime" java="93" precision="NONE" />
+		<type name="bit" java="-7" precision="NONE" />
+		<type name="int" java="4" precision="NONE" />
+		<type name="text" java="12" precision="NONE" />
 	</types>
 </database>
