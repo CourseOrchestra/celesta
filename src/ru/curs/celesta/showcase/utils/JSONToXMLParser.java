@@ -316,6 +316,8 @@ public class JSONToXMLParser {
 	}
 
 	private void settingAttribute(final String key, final Element root, final Object value) {
+		Object twer = null;
+
 		if (value.getClass() == Boolean.class) {
 			String change = value.toString();
 			if (change.startsWith("t")) {
@@ -325,8 +327,9 @@ public class JSONToXMLParser {
 			}
 
 			root.setAttribute(key, change);
-		} else if ("None".equalsIgnoreCase(value.toString())
-				|| "null".equalsIgnoreCase(value.toString())) {
+		} else if (value.equals(twer)) {
+			// else if ("None".equalsIgnoreCase(value.toString())
+			// || "null".equalsIgnoreCase(value.toString())) {
 			root.setAttribute(key, "");
 		} else if ("xmlns".equals(key)) {
 			String key1 = key;
