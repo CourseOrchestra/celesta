@@ -95,10 +95,13 @@ final class LoggingManager {
 			return;
 		CallContext sysContext = new CallContext(c.callContext().getConn(),
 				BasicCursor.SYSTEMSESSION);
-		if (!isLoggingNeeded(sysContext, c.meta(), a))
-			return;
-		writeToLog(c, a, sysContext);
-		sysContext.closeCursors();
+		try {
+			if (!isLoggingNeeded(sysContext, c.meta(), a))
+				return;
+			writeToLog(c, a, sysContext);
+		} finally {
+			sysContext.closeCursors();
+		}
 	}
 
 	private void writeToLog(Cursor c, Action a, CallContext sysContext)

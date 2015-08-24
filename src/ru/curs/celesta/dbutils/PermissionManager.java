@@ -160,32 +160,37 @@ final class PermissionManager {
 			GrainElement t) throws CelestaException {
 		CallContext sysContext = new CallContext(c.getConn(),
 				BasicCursor.SYSTEMSESSION);
-
-		RoleCacheEntry rce = getRce(c.getUserId(), sysContext);
-		PermissionsCursor permissions = new PermissionsCursor(sysContext);
-		int permissionsMask = 0;
-		for (String roleId : rce.roles) {
-			if (permissionsMask == FULL_RIGHTS)
-				break;
-			if (READER.equals(roleId)
-					|| (t.getGrain().getName() + '.' + READER).equals(roleId)) {
-				permissionsMask |= Action.READ.getMask();
-			} else if (EDITOR.equals(roleId)
-					|| (t.getGrain().getName() + '.' + EDITOR).equals(roleId)) {
-				permissionsMask = FULL_RIGHTS;
-			} else if (permissions.tryGet(roleId, t.getGrain().getName(),
-					t.getName())) {
-				permissionsMask |= permissions.isR() ? Action.READ.getMask()
-						: 0;
-				permissionsMask |= permissions.isI() ? Action.INSERT.getMask()
-						: 0;
-				permissionsMask |= permissions.isM() ? Action.MODIFY.getMask()
-						: 0;
-				permissionsMask |= permissions.isD() ? Action.DELETE.getMask()
-						: 0;
+		try {
+			RoleCacheEntry rce = getRce(c.getUserId(), sysContext);
+			PermissionsCursor permissions = new PermissionsCursor(sysContext);
+			int permissionsMask = 0;
+			for (String roleId : rce.roles) {
+				if (permissionsMask == FULL_RIGHTS)
+					break;
+				if (READER.equals(roleId)
+						|| (t.getGrain().getName() + '.' + READER)
+								.equals(roleId)) {
+					permissionsMask |= Action.READ.getMask();
+				} else if (EDITOR.equals(roleId)
+						|| (t.getGrain().getName() + '.' + EDITOR)
+								.equals(roleId)) {
+					permissionsMask = FULL_RIGHTS;
+				} else if (permissions.tryGet(roleId, t.getGrain().getName(),
+						t.getName())) {
+					permissionsMask |= permissions.isR() ? Action.READ
+							.getMask() : 0;
+					permissionsMask |= permissions.isI() ? Action.INSERT
+							.getMask() : 0;
+					permissionsMask |= permissions.isM() ? Action.MODIFY
+							.getMask() : 0;
+					permissionsMask |= permissions.isD() ? Action.DELETE
+							.getMask() : 0;
+				}
 			}
+			return new PermissionCacheEntry(c.getUserId(), t, permissionsMask);
+		} finally {
+			sysContext.closeCursors();
 		}
-		sysContext.closeCursors();
-		return new PermissionCacheEntry(c.getUserId(), t, permissionsMask);
+
 	}
 }
