@@ -273,7 +273,10 @@ public final class Grain extends NamedElement {
 		return dependencyOrder;
 	}
 
-	void completeParsing() {
+	/**
+	 * Указывает на то, что разбор гранулы завершен. Системный метод.
+	 */
+	public void completeParsing() {
 		parsingComplete = true;
 		modified = false;
 		orderCounter++;
