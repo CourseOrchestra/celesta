@@ -98,6 +98,33 @@ public final class XMLJSONConverter {
 			j++;
 		}
 
+		List<String> innerOfSortedColIdList = new ArrayList<String>();
+		if (newXml.contains("<sortedColumn")) {
+			String[] arr = newXml.split("<sortedColumn");
+			String string = "";
+			int begin = 1;
+			if (newXml.startsWith("<sortedColumn")) {
+				begin = 0;
+			}
+			if (arr.length > 0) {
+				for (int i = begin; i < arr.length; i++) {
+					int innerIndex = arr[i].indexOf("/>");
+					string = arr[i].substring(0, innerIndex);
+					if (string.contains("id=\"")) {
+						String[] innerArr = string.split("id=\"");
+						int outerIndex = innerArr[1].indexOf("\"");
+						innerOfSortedColIdList.add(innerArr[1].substring(0, outerIndex));
+					}
+				}
+			}
+		}
+
+		int k = 0;
+		for (String content : innerOfSortedColIdList) {
+			newXml = newXml.replace(content, "innerOfSortedColIdList" + k);
+			k++;
+		}
+
 		final String tempRootForResolvingProblem = "tempRootForResolvingProblem";
 		newXml =
 			"<" + tempRootForResolvingProblem + ">" + newXml + "</" + tempRootForResolvingProblem
@@ -115,6 +142,12 @@ public final class XMLJSONConverter {
 		for (String content : innerOfCurColIdList) {
 			str = str.replace("innerOfCurColIdList" + j, content);
 			j++;
+		}
+
+		k = 0;
+		for (String content : innerOfSortedColIdList) {
+			str = str.replace("innerOfSortedColIdList" + k, content);
+			k++;
 		}
 
 		// while(str.contains("\\\"")) {
