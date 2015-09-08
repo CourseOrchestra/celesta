@@ -607,6 +607,8 @@ public abstract class Cursor extends BasicCursor {
 	@Override
 	public final void clear() throws CelestaException {
 		super.clear();
+		if (xRec != null)
+			xRec.close();
 		xRec = null;
 	}
 
