@@ -79,6 +79,8 @@ public abstract class Cursor extends BasicCursor {
 	@Override
 	public final void close() {
 		super.close();
+		if (xRec != null)
+			xRec.close();
 		close(get, insert, delete, update);
 	}
 
@@ -569,6 +571,8 @@ public abstract class Cursor extends BasicCursor {
 	 */
 	public final void init() {
 		_clearBuffer(false);
+		if (xRec != null)
+			xRec.close();
 		xRec = null;
 	}
 
