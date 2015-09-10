@@ -14,11 +14,18 @@ import ru.curs.celesta.score.Grain;
  */
 public final class CallContext {
 
+	/**
+	 * Максимальное число курсоров, которое может быть открыто в одном
+	 * контексте.
+	 */
+	public static final int MAX_CURSORS = 1023;
+
 	private final Connection conn;
 	private final Grain grain;
 	private final SessionContext sesContext;
 
 	private BasicCursor lastCursor;
+	private int cursorCount;
 
 	public CallContext(Connection conn, SessionContext sesContext) {
 		this.conn = conn;
@@ -135,6 +142,26 @@ public final class CallContext {
 	 */
 	public void setLastCursor(BasicCursor c) {
 		lastCursor = c;
+	}
+
+	/**
+	 * Увеличивает счетчик открытых курсоров.
+	 * 
+	 * @throws CelestaException
+	 *             Если число открытых курсоров превысило критический порог.
+	 */
+	public void incCursorCount() throws CelestaException {
+		if (cursorCount > MAX_CURSORS)
+			throw new CelestaException(
+					"Too many cursors created in one Celesta procedure call. Check for leaks!");
+		cursorCount++;
+	}
+
+	/**
+	 * Уменьшает счетчик открытых курсоров.
+	 */
+	public void decCursorCount() {
+		cursorCount--;
 	}
 
 	/**

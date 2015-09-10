@@ -114,9 +114,9 @@ public abstract class BasicCursor {
 			throw new CelestaException(
 					"Invalid context passed to %s constructor: user id is null.",
 					this.getClass().getName());
+		context.incCursorCount();
 
 		this.context = context;
-
 		previousCursor = context.getLastCursor();
 		if (previousCursor != null)
 			previousCursor.nextCursor = this;
@@ -150,13 +150,16 @@ public abstract class BasicCursor {
 	 * невозможным к дальнейшему использованию.
 	 */
 	public void close() {
-		if (this == context.getLastCursor())
-			context.setLastCursor(previousCursor);
-		if (previousCursor != null)
-			previousCursor.nextCursor = nextCursor;
-		if (nextCursor != null)
-			nextCursor.previousCursor = previousCursor;
-		close(set, forwards, backwards, here, first, last);
+		if (!closed) {
+			if (this == context.getLastCursor())
+				context.setLastCursor(previousCursor);
+			if (previousCursor != null)
+				previousCursor.nextCursor = nextCursor;
+			if (nextCursor != null)
+				nextCursor.previousCursor = previousCursor;
+			context.decCursorCount();
+			close(set, forwards, backwards, here, first, last);
+		}
 	}
 
 	@Override
