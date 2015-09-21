@@ -469,7 +469,8 @@ public final class Celesta {
 					.doPrivileged(new PrivilegedAction<URLClassLoader>() {
 						@Override
 						public URLClassLoader run() {
-							return new URLClassLoader(array);
+						return new URLClassLoader(array, Thread.currentThread()
+								.getContextClassLoader());
 						}
 					});
 			Thread.currentThread().setContextClassLoader(classLoader);
