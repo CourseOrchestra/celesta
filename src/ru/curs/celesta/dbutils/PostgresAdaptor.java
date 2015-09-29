@@ -413,7 +413,21 @@ final class PostgresAdaptor extends DBAdaptor {
 
 	@Override
 	String getCreateIndexSQL(Index index) {
-		String fieldList = getFieldList(index.getColumns().keySet());
+
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, Column> c : index.getColumns().entrySet()) {
+			if (sb.length() > 0)
+				sb.append(", ");
+			sb.append('"');
+			sb.append(c.getKey());
+			sb.append('"');
+
+			if (c.getValue() instanceof StringColumn
+					&& !((StringColumn) c.getValue()).isMax())
+				sb.append(" varchar_pattern_ops");
+		}
+
+		String fieldList = sb.toString();
 		String sql = String.format("CREATE INDEX \"%s\" ON " + tableTemplate()
 				+ " (%s)", index.getName(), index.getTable().getGrain()
 				.getName(), index.getTable().getName(), fieldList);
