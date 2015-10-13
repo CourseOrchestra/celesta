@@ -29,6 +29,14 @@ public abstract class KeyManager {
 	public abstract void setOrderValue(BigInteger value);
 
 	/**
+	 * Устанавливает новое значение ключа.
+	 * 
+	 * @param value
+	 *            значение ключа.
+	 */
+	public abstract void setValue(Object value);
+
+	/**
 	 * Возвращает позицию в виде действительного числа в диапазоне [0..1].
 	 */
 	public double getPosition() {
@@ -76,4 +84,5 @@ public abstract class KeyManager {
 			throw new IllegalArgumentException();
 		}
 	}
+
 }

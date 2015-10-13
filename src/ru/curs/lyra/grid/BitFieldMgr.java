@@ -40,8 +40,13 @@ public final class BitFieldMgr extends KeyManager {
 	 * @param value
 	 *            Новое значение.
 	 */
-	public void setValue(boolean value) {
-		this.value = value;
+	@Override
+	public void setValue(Object value) {
+		if (value instanceof Boolean) {
+			this.value = (Boolean) value;
+		} else {
+			throw new IllegalArgumentException();
+		}
 	}
 
 	@Override

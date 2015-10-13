@@ -38,6 +38,11 @@ class DummyKeyMgr extends KeyManager {
 		val = value.intValue();
 	}
 
+	@Override
+	public void setValue(Object value) {
+
+	}
+
 }
 
 public class CompositeKeyMgrTest {

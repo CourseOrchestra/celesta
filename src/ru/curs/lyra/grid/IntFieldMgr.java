@@ -61,8 +61,13 @@ public final class IntFieldMgr extends KeyManager {
 	 * @param value
 	 *            Значение (целое число).
 	 */
-	public void setValue(int value) {
-		this.value = value;
+	@Override
+	public void setValue(Object value) {
+		if (value instanceof Integer) {
+			this.value = (Integer) value;
+		} else {
+			throw new IllegalArgumentException();
+		}
 	}
 
 	@Override

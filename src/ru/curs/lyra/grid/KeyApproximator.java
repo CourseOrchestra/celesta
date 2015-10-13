@@ -68,11 +68,11 @@ public class KeyApproximator {
 		if (e1.getKey() == count)
 			return e1.getValue();
 
-		BigInteger result = e1.getValue().subtract(e0.getValue())
-				.multiply(BigInteger.valueOf(count - e0.getKey()));
+		BigInteger result = e1.getValue().subtract(e0.getValue()).multiply(BigInteger.valueOf(count - e0.getKey()));
 
 		BigInteger delta = BigInteger.valueOf(e1.getKey() - e0.getKey());
 		BigInteger[] cr = result.divideAndRemainder(delta);
+		// Rounding to the closest integer using remainder!
 		if (cr[1].shiftLeft(1).compareTo(delta) > 0) {
 			result = e0.getValue().add(cr[0]).add(BigInteger.ONE);
 		} else {
@@ -87,5 +87,12 @@ public class KeyApproximator {
 	 */
 	public int getPointsCount() {
 		return data.size();
+	}
+
+	/**
+	 * Returns an (approximate) records count.
+	 */
+	public int getApproximateCount() {
+		return data.lastEntry().getKey() + 1;
 	}
 }

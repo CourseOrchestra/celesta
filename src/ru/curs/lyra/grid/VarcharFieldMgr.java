@@ -14,16 +14,20 @@ public class VarcharFieldMgr extends KeyManager {
 
 	static {
 
-//		DEFAULT_ALPHABET = (" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}"
-//				+ "~¡¢£¤¥¦§©«¬®°±µ¶·»¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŒœŠšŸŽžЁЂЃЄЅІЇЈЉЊЋЌЎЏ"
-//				+ "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяёђѓєѕіїјљњћќўџҐґ–—‘’‚“”„†‡•…‰‹›€№™")
-//				.toCharArray();
+		// DEFAULT_ALPHABET = ("
+		// !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}"
+		// +
+		// "~¡¢£¤¥¦§©«¬®°±µ¶·»¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŒœŠšŸŽžЁЂЃЄЅІЇЈЉЊЋЌЎЏ"
+		// +
+		// "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяёђѓєѕіїјљњћќўџҐґ–—‘’‚“”„†‡•…‰‹›€№™")
+		// .toCharArray();
 
 		DEFAULT_ALPHABET = (" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}"
 				+ "~¡¢£¤¥¦§©«¬®°±µ¶·»АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяё№™")
-				.toCharArray();
+						.toCharArray();
 
 	}
+
 	private final char[] alphabet;
 
 	private final int m;
@@ -133,8 +137,13 @@ public class VarcharFieldMgr extends KeyManager {
 	 * @param value
 	 *            Значение (строка).
 	 */
-	public void setValue(String value) {
-		this.value = value;
+	@Override
+	public void setValue(Object value) {
+		if (value instanceof String) {
+			this.value = (String) value;
+		} else {
+			throw new IllegalArgumentException();
+		}
 	}
 
 	@Override

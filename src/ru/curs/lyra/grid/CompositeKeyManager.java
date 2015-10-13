@@ -32,8 +32,7 @@ public final class CompositeKeyManager extends KeyManager {
 			BigInteger result = keys[0].getOrderValue();
 			for (int i = 1; i < keys.length; i++) {
 				KeyManager km = keys[i];
-				result = result.multiply(km.cardinality()).add(
-						km.getOrderValue());
+				result = result.multiply(km.cardinality()).add(km.getOrderValue());
 			}
 			return result;
 		}
@@ -63,5 +62,10 @@ public final class CompositeKeyManager extends KeyManager {
 			keys[i].setOrderValue(vr[0]);
 		}
 		keys[c.length - 1].setOrderValue(v);
+	}
+
+	@Override
+	public void setValue(Object value) {
+		// do nothing, no sense for this type of KeyManager
 	}
 }
