@@ -7,7 +7,7 @@ import java.io.IOException;
  * Базовый класс описания столбца таблицы. Наследники этого класса соответствуют
  * разным типам столбцов.
  */
-public abstract class Column extends NamedElement {
+public abstract class Column extends NamedElement implements ColumnMeta {
 
 	private final Table parentTable;
 	private boolean nullable = true;
@@ -15,9 +15,7 @@ public abstract class Column extends NamedElement {
 	Column(Table parentTable, String name) throws ParseException {
 		super(name);
 		if (Table.RECVERSION.equals(name))
-			throw new ParseException(String.format(
-					"Column name '%s' is reserved for system needs.",
-					Table.RECVERSION));
+			throw new ParseException(String.format("Column name '%s' is reserved for system needs.", Table.RECVERSION));
 		if (parentTable == null)
 			throw new IllegalArgumentException();
 		this.parentTable = parentTable;
@@ -74,8 +72,7 @@ public abstract class Column extends NamedElement {
 	 * @throws ParseException
 	 *             в случае, если значение DEFAULT имеет неверный формат.
 	 */
-	public final void setNullableAndDefault(boolean nullable,
-			String defaultValue) throws ParseException {
+	public final void setNullableAndDefault(boolean nullable, String defaultValue) throws ParseException {
 		parentTable.getGrain().modify();
 		String buf;
 		// if (defaultValue == null && !nullable) {
@@ -93,12 +90,6 @@ public abstract class Column extends NamedElement {
 	public final boolean isNullable() {
 		return nullable;
 	}
-
-	/**
-	 * Имя JDBC-геттера, подходящего для данного типа колонки. Необходимо для
-	 * процедур генерации ORM-кода.
-	 */
-	public abstract String jdbcGetterName();
 
 	/**
 	 * Удаляет колонку.
@@ -122,11 +113,6 @@ public abstract class Column extends NamedElement {
 	 * Возвращает значение по умолчанию.
 	 */
 	public abstract Object getDefaultValue();
-
-	/**
-	 * Возвращает тип данных Celesta для колонки.
-	 */
-	public abstract String getCelestaType();
 
 	/**
 	 * DEFAULT-значение поля в языке CelestaSQL.

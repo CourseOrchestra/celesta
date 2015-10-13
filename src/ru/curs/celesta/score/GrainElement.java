@@ -29,5 +29,5 @@ public abstract class GrainElement extends NamedElement {
 	/**
 	 * Перечень столбцов с именами.
 	 */
-	public abstract Map<String, ?> getColumns();
+	public abstract Map<String, ? extends ColumnMeta> getColumns();
 }
