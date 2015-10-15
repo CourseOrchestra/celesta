@@ -11,6 +11,8 @@ class ttt1Cursor(ReadOnlyTableCursor):
         self.id = rs.getInt('id')
         if rs.wasNull():
             self.id = None
+    def _setFieldValue(self, name, value):
+        setattr(self, name, value)
     def _clearBuffer(self, withKeys):
         self.id = None
     def _currentValues(self):
