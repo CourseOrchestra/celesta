@@ -65,21 +65,21 @@ public class KeyApproximator {
 		// when count > maxcount
 		if (e1 == null)
 			return data.lastEntry().getValue();
-		if (e1.getKey() == count)
-			return e1.getValue();
 
 		BigInteger result = e1.getValue().subtract(e0.getValue()).multiply(BigInteger.valueOf(count - e0.getKey()));
 
 		BigInteger delta = BigInteger.valueOf(e1.getKey() - e0.getKey());
-		BigInteger[] cr = result.divideAndRemainder(delta);
-		// Rounding to the closest integer using remainder!
-		if (cr[1].shiftLeft(1).compareTo(delta) > 0) {
-			result = e0.getValue().add(cr[0]).add(BigInteger.ONE);
-		} else {
-			result = e0.getValue().add(cr[0]);
-		}
-
+		result = e0.getValue().add(divideAndRound(result, delta));
 		return result;
+	}
+
+	private static BigInteger divideAndRound(BigInteger divident, BigInteger divisor) {
+		BigInteger[] qr = divident.divideAndRemainder(divisor);
+		if (qr[1].shiftLeft(1).compareTo(divisor) > 0) {
+			return qr[0].add(BigInteger.ONE);
+		} else {
+			return qr[0];
+		}
 	}
 
 	/**
@@ -94,5 +94,47 @@ public class KeyApproximator {
 	 */
 	public int getApproximateCount() {
 		return data.lastEntry().getKey() + 1;
+	}
+
+	/**
+	 * Returns an (approximate) position of a key in a set.
+	 * 
+	 * @param key
+	 *            Key ordinal value.
+	 */
+	public int getApproximatePosition(BigInteger key) {
+		int cmax = data.lastEntry().getKey();
+		int cmin = 0;
+		int cmid;
+		while (cmax != cmin) {
+			cmid = (cmax + cmin) >> 1;
+			Entry<Integer, BigInteger> ceiling = data.ceilingEntry(cmid);
+			int delta = ceiling.getValue().compareTo(key);
+			if (delta == 0) {
+				return ceiling.getKey();
+			} else if (delta < 0) {
+				// Ceiling is strictly lower than key: we should try higher cmin
+				cmin = ceiling.getKey();
+			} else {
+				// Ceiling is strictly greater than key!
+				Entry<Integer, BigInteger> lower = data.lowerEntry(cmid);
+				delta = lower.getValue().compareTo(key);
+				if (delta == 0)
+					return lower.getKey();
+				else if (delta > 0) {
+					// Lower entry is strictly greater than key: we should try
+					// lower cmax
+					cmax = lower.getKey();
+				} else {
+					// Lower entry is strictly lower,
+					// Ceiling is strictly greater: interpolation
+					int d = divideAndRound(BigInteger.valueOf(ceiling.getKey() - lower.getKey())
+							.multiply(key.subtract(lower.getValue())), ceiling.getValue().subtract(lower.getValue()))
+									.intValue();
+					return lower.getKey() + d;
+				}
+			}
+		}
+		return cmin;
 	}
 }

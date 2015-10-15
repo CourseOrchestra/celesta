@@ -40,7 +40,7 @@ public final class ORMCompiler {
 	 * Версия компилятора. Данную константу следует инкрементировать, когда
 	 * необходимо инициировать автоматическое пересоздание orm-скриптов.
 	 */
-	private static final int COMPILERVER = 5;
+	private static final int COMPILERVER = 6;
 
 	private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
 	private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -189,6 +189,8 @@ public final class ORMCompiler {
 		compileTableName(v, w);
 		// Разбор строки по переменным
 		compileParseResult(w, columns);
+		// Динамическая установка значения поля
+		compileSetFieldValue(w);
 		// Очистка буфера
 		compileClearBuffer(w, columns);
 		// Текущие значения всех полей
@@ -245,6 +247,8 @@ public final class ORMCompiler {
 		compileTableName(t, w);
 		// Разбор строки по переменным
 		compileParseResult(w, columns);
+		// Динамическая установка значения поля
+		compileSetFieldValue(w);
 		// Очистка буфера
 		compileClearBuffer(w, columns);
 		// Текущие значения всех полей

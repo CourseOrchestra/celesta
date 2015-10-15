@@ -205,24 +205,6 @@ public abstract class Cursor extends BasicCursor {
 	}
 
 	/**
-	 * Устанавливает значение поля по его имени. Необходимо для косвенного
-	 * заполнения данными курсора из Java (в Python, естественно, для этой цели
-	 * есть процедура setattr(...)).
-	 * 
-	 * @param name
-	 *            Имя поля.
-	 * @param value
-	 *            Значение поля.
-	 * @throws CelestaException
-	 *             Если поле не найдено по имени.
-	 */
-	public final void setValue(String name, Object value)
-			throws CelestaException {
-		validateColumName(name);
-		_setFieldValue(name, value);
-	}
-
-	/**
 	 * Осуществляет сохранение содержимого курсора в БД.
 	 * 
 	 * @throws CelestaException
@@ -632,7 +614,7 @@ public abstract class Cursor extends BasicCursor {
 	 * Возвращает копию буфера, содержащую значения, полученные при последнем
 	 * чтении данных из базы.
 	 */
-	public final Cursor getXRec() {
+	public final BasicCursor getXRec() {
 		if (xRec == null) {
 			try {
 				initXRec();
@@ -682,8 +664,6 @@ public abstract class Cursor extends BasicCursor {
 	 * имена protected-методов начинаются с underscore. Использование методов
 	 * без underscore приводит к конфликтам с именами атрибутов.
 	 */
-
-	protected abstract void _setFieldValue(String name, Object value);
 
 	protected abstract Object[] _currentKeyValues();
 
