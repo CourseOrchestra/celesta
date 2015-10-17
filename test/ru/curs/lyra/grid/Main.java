@@ -19,9 +19,9 @@ public class Main extends JFrame {
 
 	public static final int MAX = 1000;
 
-	private VarcharFieldMgr mgr1 = new VarcharFieldMgr("ваня", "маша", 4);
-	private IntFieldMgr mgr2 = new IntFieldMgr(0, 1000);
-	private CompositeKeyManager mgr = new CompositeKeyManager(mgr1, mgr2);
+	private VarcharFieldEnumerator mgr1 = new VarcharFieldEnumerator("ваня", "маша", 4);
+	private IntFieldEnumerator mgr2 = new IntFieldEnumerator(0, 1000);
+	private CompositeKeyEnumerator mgr = new CompositeKeyEnumerator(mgr1, mgr2);
 
 	public Main() {
 

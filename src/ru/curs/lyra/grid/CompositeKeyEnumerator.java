@@ -3,12 +3,12 @@ package ru.curs.lyra.grid;
 import java.math.BigInteger;
 
 /**
- * Менеджер составного первичного ключа.
+ * Нумератор составного ключа.
  */
-public final class CompositeKeyManager extends KeyManager {
-	private final KeyManager[] keys;
+public final class CompositeKeyEnumerator extends KeyEnumerator {
+	private final KeyEnumerator[] keys;
 
-	public CompositeKeyManager(KeyManager... kfm) {
+	public CompositeKeyEnumerator(KeyEnumerator... kfm) {
 		keys = kfm;
 	}
 
@@ -31,7 +31,7 @@ public final class CompositeKeyManager extends KeyManager {
 		} else {
 			BigInteger result = keys[0].getOrderValue();
 			for (int i = 1; i < keys.length; i++) {
-				KeyManager km = keys[i];
+				KeyEnumerator km = keys[i];
 				result = result.multiply(km.cardinality()).add(km.getOrderValue());
 			}
 			return result;

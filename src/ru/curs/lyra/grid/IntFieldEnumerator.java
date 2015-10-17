@@ -3,20 +3,20 @@ package ru.curs.lyra.grid;
 import java.math.BigInteger;
 
 /**
- * Менеджер целочисленного поля, входящего в первичный ключ.
+ * Нумератор целочисленного поля, входящего в ключ.
  */
-public final class IntFieldMgr extends KeyManager {
+public final class IntFieldEnumerator extends KeyEnumerator {
 
 	private long min;
 	private long max;
 	private BigInteger card;
 	private int value;
 
-	public IntFieldMgr() {
+	public IntFieldEnumerator() {
 		setBounds(Integer.MIN_VALUE, Integer.MAX_VALUE);
 	}
 
-	public IntFieldMgr(int min, int max) {
+	public IntFieldEnumerator(int min, int max) {
 		setBounds(min, max);
 	}
 

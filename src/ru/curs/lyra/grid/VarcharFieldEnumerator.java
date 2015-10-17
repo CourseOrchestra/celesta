@@ -4,10 +4,10 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
- * Менеджер ключа с типом varchar.
+ * Нумератор ключа с типом varchar.
  * 
  */
-public class VarcharFieldMgr extends KeyManager {
+public class VarcharFieldEnumerator extends KeyEnumerator {
 
 	static final char[] DEFAULT_ALPHABET;
 	static final int[] EMPTY_STRING = new int[0];
@@ -42,11 +42,11 @@ public class VarcharFieldMgr extends KeyManager {
 
 	private String value = "";
 
-	public VarcharFieldMgr(int m) {
+	public VarcharFieldEnumerator(int m) {
 		this(DEFAULT_ALPHABET, m);
 	}
 
-	public VarcharFieldMgr(char[] a, int m) {
+	public VarcharFieldEnumerator(char[] a, int m) {
 		this(a, m, true);
 		this.min = EMPTY_STRING;
 		this.max = new int[m];
@@ -56,16 +56,16 @@ public class VarcharFieldMgr extends KeyManager {
 		card = ord(max).subtract(ord(min)).add(BigInteger.ONE);
 	}
 
-	public VarcharFieldMgr(String min, String max, int m) {
+	public VarcharFieldEnumerator(String min, String max, int m) {
 		this(DEFAULT_ALPHABET, min, max, m);
 	}
 
-	public VarcharFieldMgr(char[] a, String min, String max, int m) {
+	public VarcharFieldEnumerator(char[] a, String min, String max, int m) {
 		this(a, m, true);
 		setBounds(min, max);
 	}
 
-	private VarcharFieldMgr(char[] a, int m, boolean setup) {
+	private VarcharFieldEnumerator(char[] a, int m, boolean setup) {
 		if (m <= 0)
 			throw new IllegalArgumentException();
 		// Setting up alphabet

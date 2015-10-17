@@ -6,7 +6,7 @@ import java.math.BigInteger;
 
 import org.junit.Test;
 
-class DummyKeyMgr extends KeyManager {
+class DummyKeyMgr extends KeyEnumerator {
 
 	private int card;
 	private int val;
@@ -55,7 +55,7 @@ public class CompositeKeyMgrTest {
 	@Test
 	public void test1() {
 		DummyKeyMgr km = new DummyKeyMgr(100);
-		CompositeKeyManager ckm = new CompositeKeyManager(km);
+		CompositeKeyEnumerator ckm = new CompositeKeyEnumerator(km);
 		assertEquals(BigInteger.valueOf(100), ckm.cardinality());
 		assertEquals(BigInteger.ZERO, km.getOrderValue());
 		assertEquals(BigInteger.ZERO, ckm.getOrderValue());
@@ -76,7 +76,7 @@ public class CompositeKeyMgrTest {
 		DummyKeyMgr km2 = new DummyKeyMgr(10);
 		DummyKeyMgr km3 = new DummyKeyMgr(17);
 
-		CompositeKeyManager ckm = new CompositeKeyManager(km1, km2, km3);
+		CompositeKeyEnumerator ckm = new CompositeKeyEnumerator(km1, km2, km3);
 		assertEquals(BigInteger.valueOf(1190), ckm.cardinality());
 		assertEquals(BigInteger.ZERO, ckm.getOrderValue());
 		km1.setVal(3);

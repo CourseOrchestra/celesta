@@ -5,7 +5,7 @@ import java.math.BigInteger;
 /**
  * Обратный вызов по завершению асинхронного процесса уточнения позиции движка.
  */
-public interface GridRefinementCallback {
+public interface GridCallback {
 
 	/**
 	 * Обработчик результата выполнения процесса уточнения.

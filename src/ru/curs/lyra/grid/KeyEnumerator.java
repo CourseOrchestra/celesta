@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
- * Абстрактный класс менеджера поля первичного ключа.
+ * Абстрактный класс нумератора ключа.
  */
-public abstract class KeyManager {
+public abstract class KeyEnumerator {
 	private static final int MAX_BIT_LENGTH = 1022;
 
 	/**

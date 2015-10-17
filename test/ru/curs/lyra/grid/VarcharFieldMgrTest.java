@@ -13,24 +13,24 @@ public class VarcharFieldMgrTest {
 	private static final char[] alphabet = "абвгдежзийклмнопрстуфхцчшщъыьэюя"
 			.toCharArray();
 
-	private VarcharFieldMgr getManager(String min, int len) {
+	private VarcharFieldEnumerator getManager(String min, int len) {
 
 		char[] max = new char[len];
 		for (int i = 0; i < len; i++)
 			max[i] = alphabet[alphabet.length - 1];
 
-		VarcharFieldMgr vfm = new VarcharFieldMgr(alphabet, min,
+		VarcharFieldEnumerator vfm = new VarcharFieldEnumerator(alphabet, min,
 				new String(max), len);
 		return vfm;
 	}
 
-	private VarcharFieldMgr getManager(int len) {
+	private VarcharFieldEnumerator getManager(int len) {
 		return getManager("", len);
 	}
 
 	@Test
 	public void test1() {
-		VarcharFieldMgr km;
+		VarcharFieldEnumerator km;
 
 		km = getManager(1);
 		km.setValue("");
@@ -82,7 +82,7 @@ public class VarcharFieldMgrTest {
 
 	}
 
-	private void testReverse(VarcharFieldMgr km, String test) {
+	private void testReverse(VarcharFieldEnumerator km, String test) {
 		km.setValue(test);
 		double p = km.getPosition();
 		km.setValue("");
@@ -92,7 +92,7 @@ public class VarcharFieldMgrTest {
 
 	@Test
 	public void test2() {
-		VarcharFieldMgr km;
+		VarcharFieldEnumerator km;
 		km = getManager(4);
 		testReverse(km, "а");
 		testReverse(km, "бв");
@@ -108,7 +108,7 @@ public class VarcharFieldMgrTest {
 
 	@Test
 	public void test3() {
-		VarcharFieldMgr km1, km2;
+		VarcharFieldEnumerator km1, km2;
 		km1 = getManager("ваня", 10);
 		km2 = getManager("", 10);
 		km2.setValue("яяяяяяяяяя");
@@ -143,7 +143,7 @@ public class VarcharFieldMgrTest {
 
 	@Test
 	public void test4() {
-		VarcharFieldMgr km = new VarcharFieldMgr(alphabet, "ваня", "наташа", 7);
+		VarcharFieldEnumerator km = new VarcharFieldEnumerator(alphabet, "ваня", "наташа", 7);
 		km.setValue("коля");
 		double k = km.getPosition();
 		km.setValue("маша");
@@ -167,7 +167,7 @@ public class VarcharFieldMgrTest {
 
 	@Test
 	public void test5() {
-		VarcharFieldMgr km = getManager(1);
+		VarcharFieldEnumerator km = getManager(1);
 		assertEquals("", km.getValue());
 		assertEquals(BigInteger.ZERO, km.getOrderValue());
 		km.setValue("а");

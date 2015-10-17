@@ -3,13 +3,13 @@ package ru.curs.lyra.grid;
 import java.math.BigInteger;
 
 /**
- * Менеджер битового поля, входящего в первичный ключ.
+ * Нумератор битового поля, входящего в первичный ключ.
  */
-public final class BitFieldMgr extends KeyManager {
+public final class BitFieldEnumerator extends KeyEnumerator {
 
 	private boolean value;
 
-	public BitFieldMgr() {
+	public BitFieldEnumerator() {
 
 	}
 
