@@ -581,11 +581,13 @@ public abstract class BasicCursor {
 		return false;
 	}
 
-	private void fillNavigationParams(PreparedStatement navigator, Map<String, Object> valuesMap, int k, char c)
+	void fillNavigationParams(PreparedStatement navigator, Map<String, Object> valuesMap, int k, char c)
 			throws CelestaException {
 		if (c == '-' || c == '+')
 			return;
+		
 		int j = k;
+		
 		String[] names = getOrderBy().split(",");
 		for (int i = 0; i < names.length; i++) {
 			Matcher m = QUOTED_COLUMN_NAME.matcher(names[i]);

@@ -41,6 +41,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 
 import ru.curs.celesta.CallContext;
@@ -103,8 +104,7 @@ public abstract class Cursor extends BasicCursor {
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
-			throw new CelestaException("Record %s (%s) already exists",
-					_tableName(), sb.toString());
+			throw new CelestaException("Record %s (%s) already exists", _tableName(), sb.toString());
 		}
 	}
 
@@ -118,8 +118,7 @@ public abstract class Cursor extends BasicCursor {
 	public final boolean tryInsert() throws CelestaException {
 		// CHECKSTYLE:ON
 		if (!canInsert())
-			throw new PermissionDeniedException(callContext(), meta(),
-					Action.INSERT);
+			throw new PermissionDeniedException(callContext(), meta(), Action.INSERT);
 
 		prepareGet(_currentKeyValues());
 		try {
@@ -167,8 +166,7 @@ public abstract class Cursor extends BasicCursor {
 				// e. g. using INSERT.. OUTPUT clause for MSSQL
 				LOGGING_MGR.log(this, Action.INSERT);
 				for (Column c : meta().getColumns().values())
-					if (c instanceof IntegerColumn
-							&& ((IntegerColumn) c).isIdentity()) {
+					if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
 						_setAutoIncrement(db().getCurrentIdent(conn(), meta()));
 						break;
 					}
@@ -199,8 +197,7 @@ public abstract class Cursor extends BasicCursor {
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
-			throw new CelestaException("Record %s (%s) does not exist.",
-					_tableName(), sb.toString());
+			throw new CelestaException("Record %s (%s) does not exist.", _tableName(), sb.toString());
 		}
 	}
 
@@ -214,8 +211,7 @@ public abstract class Cursor extends BasicCursor {
 	public final boolean tryUpdate() throws CelestaException {
 		// CHECKSTYLE:ON
 		if (!canModify())
-			throw new PermissionDeniedException(callContext(), meta(),
-					Action.MODIFY);
+			throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
 
 		prepareGet(_currentKeyValues());
 		try {
@@ -287,12 +283,10 @@ public abstract class Cursor extends BasicCursor {
 				throw new CelestaException(
 						"Can not update %s.%s(%s): this record has been already modified"
 								+ " by someone. Please start updating again.",
-						meta().getGrain().getName(), meta().getName(),
-						Arrays.toString(_currentKeyValues()));
+						meta().getGrain().getName(), meta().getName(), Arrays.toString(_currentKeyValues()));
 			} else {
-				throw new CelestaException("Update of %s.%s (%s) failure: %s",
-						meta().getGrain().getName(), meta().getName(),
-						Arrays.toString(_currentKeyValues()), e.getMessage());
+				throw new CelestaException("Update of %s.%s (%s) failure: %s", meta().getGrain().getName(),
+						meta().getName(), Arrays.toString(_currentKeyValues()), e.getMessage());
 			}
 		}
 		return true;
@@ -323,8 +317,7 @@ public abstract class Cursor extends BasicCursor {
 	 */
 	public final void delete() throws CelestaException {
 		if (!canDelete())
-			throw new PermissionDeniedException(callContext(), meta(),
-					Action.DELETE);
+			throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
 
 		if (delete == null)
 			delete = db().getDeleteRecordStatement(conn(), meta());
@@ -359,11 +352,9 @@ public abstract class Cursor extends BasicCursor {
 	 */
 	public final void deleteAll() throws CelestaException {
 		if (!canDelete())
-			throw new PermissionDeniedException(callContext(), meta(),
-					Action.DELETE);
+			throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
 
-		PreparedStatement stmt = db().deleteRecordSetStatement(conn(), meta(),
-				getFilters(), getComplexFilterExpr());
+		PreparedStatement stmt = db().deleteRecordSetStatement(conn(), meta(), getFilters(), getComplexFilterExpr());
 		try {
 			try {
 				stmt.executeUpdate();
@@ -392,8 +383,7 @@ public abstract class Cursor extends BasicCursor {
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
-			throw new CelestaException("There is no %s (%s).", _tableName(),
-					sb.toString());
+			throw new CelestaException("There is no %s (%s).", _tableName(), sb.toString());
 		}
 	}
 
@@ -409,8 +399,7 @@ public abstract class Cursor extends BasicCursor {
 
 	public final boolean tryGet(Object... values) throws CelestaException {
 		if (!canRead())
-			throw new PermissionDeniedException(callContext(), meta(),
-					Action.READ);
+			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 		return internalGet(values);
 	}
 
@@ -423,8 +412,7 @@ public abstract class Cursor extends BasicCursor {
 	 */
 	public final boolean tryGetCurrent() throws CelestaException {
 		if (!canRead())
-			throw new PermissionDeniedException(callContext(), meta(),
-					Action.READ);
+			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 		return internalGet(_currentKeyValues());
 	}
 
@@ -452,8 +440,7 @@ public abstract class Cursor extends BasicCursor {
 		if (get == null)
 			get = db().getOneRecordStatement(conn(), meta());
 		if (meta().getPrimaryKey().size() != values.length)
-			throw new CelestaException(
-					"Invalid number of 'get' arguments for '%s': expected %d, provided %d.",
+			throw new CelestaException("Invalid number of 'get' arguments for '%s': expected %d, provided %d.",
 					_tableName(), meta().getPrimaryKey().size(), values.length);
 
 		for (int i = 0; i < values.length; i++)
@@ -490,8 +477,7 @@ public abstract class Cursor extends BasicCursor {
 		validateColumName(name);
 		Column c = meta().getColumns().get(name);
 		if (!(c instanceof BinaryColumn))
-			throw new CelestaException("'%s' is not a BLOB column.",
-					c.getName());
+			throw new CelestaException("'%s' is not a BLOB column.", c.getName());
 		BLOB result;
 		PreparedStatement stmt = db().getOneFieldStatement(conn(), c);
 		Object[] keyVals = _currentKeyValues();
@@ -543,8 +529,7 @@ public abstract class Cursor extends BasicCursor {
 			StringColumn sc = (StringColumn) c;
 			return sc.isMax() ? -1 : sc.getLength();
 		} else {
-			throw new CelestaException("Column %s is not of string type.",
-					c.getName());
+			throw new CelestaException("Column %s is not of string type.", c.getName());
 		}
 	}
 
@@ -569,8 +554,7 @@ public abstract class Cursor extends BasicCursor {
 	public final Table meta() throws CelestaException {
 		if (meta == null)
 			try {
-				meta = Celesta.getInstance().getScore().getGrain(_grainName())
-						.getTable(_tableName());
+				meta = Celesta.getInstance().getScore().getGrain(_grainName()).getTable(_tableName());
 			} catch (ParseException e) {
 				throw new CelestaException(e.getMessage());
 			}
@@ -578,8 +562,7 @@ public abstract class Cursor extends BasicCursor {
 	}
 
 	@Override
-	final void appendPK(StringBuilder orderByClause, boolean needComma,
-			Set<String> colNames) throws CelestaException {
+	final void appendPK(StringBuilder orderByClause, boolean needComma, Set<String> colNames) throws CelestaException {
 		boolean nc = needComma;
 		// Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
 		// естественном порядке
@@ -595,10 +578,23 @@ public abstract class Cursor extends BasicCursor {
 	@Override
 	String getNavigationWhereClause(char op) throws CelestaException {
 		if (op == '=') {
-			db();
 			return "(" + DBAdaptor.getRecordWhereClause(meta()) + ")";
 		} else {
 			return super.getNavigationWhereClause(op);
+		}
+	}
+
+	@Override
+	void fillNavigationParams(PreparedStatement navigator, Map<String, Object> valuesMap, int k, char c)
+			throws CelestaException {
+		if (c == '=') {
+			int j = k;
+			for (String name : meta().getPrimaryKey().keySet()) {
+				Object value = valuesMap.get("\"" + name + "\"");
+				DBAdaptor.setParam(navigator, j++, value);
+			}
+		} else {
+			super.fillNavigationParams(navigator, valuesMap, k, c);
 		}
 	}
 
@@ -641,20 +637,18 @@ public abstract class Cursor extends BasicCursor {
 	 * @throws CelestaException
 	 *             Если таблица не содержит IDENTITY-поля или в случае сбоя
 	 *             работы с базой данных.
-	 * */
+	 */
 	public final void resetIdentity(int newValue) throws CelestaException {
 		IntegerColumn ic = DBAdaptor.findIdentityField(meta());
 		if (ic == null)
-			throw new CelestaException(
-					"Cannot reset identity: there is no IDENTITY field defined for table %s.%s.",
+			throw new CelestaException("Cannot reset identity: there is no IDENTITY field defined for table %s.%s.",
 					_grainName(), _tableName());
 
 		try {
 			db().resetIdentity(conn(), meta(), newValue);
 		} catch (SQLException e) {
-			throw new CelestaException(
-					"Cannot reset identity for table %s.%s with message '%s'.",
-					_grainName(), _tableName(), e.getMessage());
+			throw new CelestaException("Cannot reset identity for table %s.%s with message '%s'.", _grainName(),
+					_tableName(), e.getMessage());
 		}
 	}
 
