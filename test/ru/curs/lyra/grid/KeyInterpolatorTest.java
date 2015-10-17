@@ -6,12 +6,12 @@ import java.math.BigInteger;
 
 import org.junit.Test;
 
-public class KeyApproximatorTest {
+public class KeyInterpolatorTest {
 
 	@Test
 	public void test1() {
 		// FULL CODE COVERAGE FOR KeyApproximator!!
-		KeyApproximator ka = new KeyApproximator(BigInteger.valueOf(7), BigInteger.valueOf(1000), 100);
+		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(7), BigInteger.valueOf(1000), 100);
 
 		assertEquals(100, ka.getApproximateCount());
 

@@ -30,7 +30,8 @@ public final class BitFieldMgr extends KeyManager {
 	/**
 	 * Текущее значение поля.
 	 */
-	public boolean getValue() {
+	@Override
+	public Boolean getValue() {
 		return value;
 	}
 

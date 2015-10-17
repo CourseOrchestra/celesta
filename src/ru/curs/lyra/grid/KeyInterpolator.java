@@ -7,10 +7,10 @@ import java.util.TreeMap;
 /**
  * Кусочно-линейная аппроксимация распределения значений первичного ключа.
  */
-public class KeyApproximator {
+public class KeyInterpolator {
 	private final TreeMap<Integer, BigInteger> data = new TreeMap<>();
 
-	public KeyApproximator(BigInteger minOrd, BigInteger maxOrd, int count) {
+	public KeyInterpolator(BigInteger minOrd, BigInteger maxOrd, int count) {
 		data.put(0, minOrd);
 		data.put(count - 1, maxOrd);
 	}
@@ -23,7 +23,8 @@ public class KeyApproximator {
 	 * @param count
 	 *            Номер записи.
 	 */
-	public void setPoint(BigInteger ord, int count) {
+	public synchronized void setPoint(BigInteger ord, int count) {
+		// System.out.printf("+(%d:%s)%n", count, ord.toString());
 		Entry<Integer, BigInteger> e;
 		data.put(count, ord);
 		int c = count;
@@ -47,6 +48,18 @@ public class KeyApproximator {
 		}
 
 		// TODO: выбрасывать ненужные (не уточняющие) точки
+	}
+
+	/**
+	 * Exact (not approximated) point or null if no such point exist in
+	 * approximator.
+	 * 
+	 * @param count
+	 *            Record's number.
+	 * 
+	 */
+	public BigInteger getExactPoint(int count) {
+		return data.get(count);
 	}
 
 	/**

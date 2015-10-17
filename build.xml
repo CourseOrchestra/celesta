@@ -64,6 +64,7 @@
 					<include name="**/score/*.java"/>
 					<include name="**/dbutils/BLOBTest.java"/>
 					<include name="**/dbutils/FilterParserTest.java"/>
+					<!--<include name="**/grid/*Test.java"/>-->
 				</fileset>
 			</batchtest>
 

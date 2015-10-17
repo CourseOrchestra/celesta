@@ -713,13 +713,20 @@ public abstract class DBAdaptor {
 		return sqlfrom + sqlwhere + " order by " + orderBy;
 	}
 
-	final PreparedStatement getSetCountStatement(Connection conn,
-			GrainElement t, Map<String, AbstractFilter> filters,
+	final PreparedStatement getSetCountStatement(Connection conn, GrainElement t, Map<String, AbstractFilter> filters,
 			Expr complexFilter) throws CelestaException {
-		String whereClause = getWhereClause(t, filters, complexFilter);
-		String sql = "select count(*) from "
-				+ String.format(tableTemplate(), t.getGrain().getName(),
-						t.getName())
+		return getSetCountStatement(conn, t, filters, complexFilter, "");
+	}
+
+	final PreparedStatement getSetCountStatement(Connection conn, GrainElement t, Map<String, AbstractFilter> filters,
+			Expr complexFilter, String navigationFilter) throws CelestaException {
+		StringBuilder w = new StringBuilder(getWhereClause(t, filters, complexFilter));
+		if (w.length() > 0 && navigationFilter.length() > 0)
+			w.append(" and ");
+		w.append(navigationFilter);
+		String whereClause = w.toString();
+		
+		String sql = "select count(*) from " + String.format(tableTemplate(), t.getGrain().getName(), t.getName())
 				+ ("".equals(whereClause) ? "" : " where " + whereClause);
 		PreparedStatement result = prepareStatement(conn, sql);
 		fillSetQueryParameters(filters, result);

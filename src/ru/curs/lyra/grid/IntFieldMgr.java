@@ -51,7 +51,7 @@ public final class IntFieldMgr extends KeyManager {
 	/**
 	 * Текущее значение поля.
 	 */
-	public int getValue() {
+	public Integer getValue() {
 		return value;
 	}
 

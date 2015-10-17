@@ -22,9 +22,11 @@ public class VarcharFieldMgr extends KeyManager {
 		// "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяёђѓєѕіїјљњћќўџҐґ–—‘’‚“”„†‡•…‰‹›€№™")
 		// .toCharArray();
 
-		DEFAULT_ALPHABET = (" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}"
+		DEFAULT_ALPHABET = ("!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}"
 				+ "~¡¢£¤¥¦§©«¬®°±µ¶·»АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяё№™")
 						.toCharArray();
+
+		// DEFAULT_ALPHABET = ("0123456789").toCharArray();
 
 	}
 

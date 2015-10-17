@@ -37,6 +37,11 @@ public abstract class KeyManager {
 	public abstract void setValue(Object value);
 
 	/**
+	 * Возвращает значение поля.
+	 */
+	public abstract Object getValue();
+
+	/**
 	 * Возвращает позицию в виде действительного числа в диапазоне [0..1].
 	 */
 	public double getPosition() {

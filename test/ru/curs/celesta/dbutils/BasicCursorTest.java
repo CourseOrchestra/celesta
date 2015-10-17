@@ -23,7 +23,7 @@ import ru.curs.celesta.syscursors.LogSetupCursor;
 
 public class BasicCursorTest {
 	private SessionContext sc = new SessionContext("super", "foo");
-	private Cursor c;
+	private BasicCursor c;
 	private Connection conn;
 
 	@BeforeClass

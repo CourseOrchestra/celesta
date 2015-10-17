@@ -109,7 +109,7 @@ public class LyraFormData {
 		}
 	}
 
-	private void setCursorFieldValue(Cursor c, LyraFieldValue lfv)
+	private void setCursorFieldValue(BasicCursor c, LyraFieldValue lfv)
 			throws CelestaException {
 		Object val = lfv.getValue();
 		if (val == null) {

@@ -68,4 +68,10 @@ public final class CompositeKeyManager extends KeyManager {
 	public void setValue(Object value) {
 		// do nothing, no sense for this type of KeyManager
 	}
+
+	@Override
+	public Object getValue() {
+		// return nothing
+		return null;
+	}
 }

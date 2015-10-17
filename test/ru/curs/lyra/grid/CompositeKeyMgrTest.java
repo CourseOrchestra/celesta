@@ -43,6 +43,11 @@ class DummyKeyMgr extends KeyManager {
 
 	}
 
+	@Override
+	public Object getValue() {
+		return null;
+	}
+
 }
 
 public class CompositeKeyMgrTest {
