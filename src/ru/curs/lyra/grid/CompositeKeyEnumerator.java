@@ -71,7 +71,13 @@ public final class CompositeKeyEnumerator extends KeyEnumerator {
 
 	@Override
 	public Object getValue() {
-		// return nothing
-		return null;
+		StringBuilder sb = new StringBuilder("(");
+		for (int i = 0; i < keys.length; i++) {
+			if (i > 0)
+				sb.append(";");
+			sb.append(keys[i].getValue().toString());
+		}
+		sb.append(")");
+		return sb.toString();
 	}
 }
