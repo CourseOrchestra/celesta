@@ -75,7 +75,7 @@ public class LyraCollatorTest {
 
 	@Test
 	public void test3() throws CelestaException {
-		LyraCollator lc = new LyraCollator("mo<a < b,c < d,g;e,k;f,w<'~'");
+		LyraCollator lc = LyraCollator.getInstance("mo<a < b,c < d,g;e,k;f,w<'~'");
 		assertEquals(4, lc.getPrimOrderCount());
 		assertEquals(3, lc.getSecOrderCount());
 		assertEquals(2, lc.getTerOrderCount());
@@ -107,12 +107,21 @@ public class LyraCollatorTest {
 		assertEquals(0, i.tertiaryOrder());
 
 		assertFalse(i.next());
-		
-		
+
 		i = lc.getCollationElementIterator("ooo");
 		assertFalse(i.next());
 		i = lc.getCollationElementIterator("");
 		assertFalse(i.next());
 
+	}
+
+	public void test4() {
+		LyraCollator lc1 = LyraCollator.getInstance("<a<b<c");
+		LyraCollator lc2 = LyraCollator.getInstance("<d<e<f");
+		LyraCollator lc3 = LyraCollator.getInstance("<a<b<c");
+		LyraCollator lc4 = LyraCollator.getInstance("<d<e<f");
+		assertEquals(lc1, lc3);
+		assertEquals(lc2, lc4);
+		org.junit.Assert.assertNotEquals(lc1, lc2);
 	}
 }

@@ -175,7 +175,7 @@ public class VarcharFieldMgrTest {
 		km.setValue("в");
 		assertEquals(BigInteger.valueOf(3), km.getOrderValue());
 		km.setValue("я");
-		LyraCollator lc = new LyraCollator(rules);
+		LyraCollator lc = LyraCollator.getInstance(rules);
 		int alphabetLengh = lc.getPrimOrderCount();
 		assertEquals(BigInteger.valueOf(alphabetLengh), km.getOrderValue());
 

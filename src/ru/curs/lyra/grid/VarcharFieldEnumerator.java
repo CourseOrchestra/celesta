@@ -1,7 +1,6 @@
 package ru.curs.lyra.grid;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 import ru.curs.celesta.CelestaException;
 
@@ -72,7 +71,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 		if (m <= 0)
 			throw new IllegalArgumentException();
 		// Setting up collator
-		collator = new LyraCollator(rules);
+		collator = LyraCollator.getInstance(rules);
 
 		BigInteger alphabetLength = BigInteger.valueOf(collator.getPrimOrderCount());
 		this.m = m;
@@ -136,7 +135,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	public BigInteger getOrderValue() throws CelestaException {
 		int[][] arr;
 		arr = toArray(value);
-		System.out.println(Arrays.toString(arr));
+		// System.out.println(Arrays.toString(arr));
 		// TODO: full order
 		return atomicOrd(arr).subtract(minOrd);
 	}

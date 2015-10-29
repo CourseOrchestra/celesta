@@ -9,7 +9,9 @@ import ru.curs.celesta.CelestaException;
  * A Collator for Lyra needs that resembles RuleBasedCollator, but not quite it
  * is.
  */
-public class LyraCollator {
+public final class LyraCollator {
+
+	private static final HashMap<String, LyraCollator> CACHE = new HashMap<>();
 
 	private static final int BYTEMASK = 0x000000ff;
 	private static final int WORDMASK = 0x0000ffff;
@@ -26,8 +28,25 @@ public class LyraCollator {
 
 	private final HashSet<Character> ignoredElements = new HashSet<>();
 
-	public LyraCollator(String rules) {
+	private LyraCollator(String rules) {
 		parseRules(rules);
+	}
+
+	/**
+	 * Gets an instance of Lyra Collator for given rules from pool or creates a
+	 * new one.
+	 * 
+	 * @param rules
+	 *            collation rules.
+	 * 
+	 */
+	public static synchronized LyraCollator getInstance(String rules) {
+		LyraCollator result = CACHE.get(rules);
+		if (result == null) {
+			result = new LyraCollator(rules);
+			CACHE.put(rules, result);
+		}
+		return result;
 	}
 
 	private static int getElementCode(int primOrder, int secOrder, int terOrder) {
