@@ -6,6 +6,8 @@ import java.math.BigInteger;
 
 import org.junit.Test;
 
+import ru.curs.celesta.CelestaException;
+
 class DummyKeyMgr extends KeyEnumerator {
 
 	private int card;
@@ -53,7 +55,7 @@ class DummyKeyMgr extends KeyEnumerator {
 public class CompositeKeyMgrTest {
 
 	@Test
-	public void test1() {
+	public void test1() throws CelestaException {
 		DummyKeyMgr km = new DummyKeyMgr(100);
 		CompositeKeyEnumerator ckm = new CompositeKeyEnumerator(km);
 		assertEquals(BigInteger.valueOf(100), ckm.cardinality());
@@ -71,7 +73,7 @@ public class CompositeKeyMgrTest {
 	}
 
 	@Test
-	public void test2() {
+	public void test2() throws CelestaException {
 		DummyKeyMgr km1 = new DummyKeyMgr(7);
 		DummyKeyMgr km2 = new DummyKeyMgr(10);
 		DummyKeyMgr km3 = new DummyKeyMgr(17);

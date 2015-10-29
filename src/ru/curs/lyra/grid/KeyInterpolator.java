@@ -150,4 +150,8 @@ public class KeyInterpolator {
 		}
 		return cmin;
 	}
+
+	public TreeMap<Integer, BigInteger> getData() {
+		return data;
+	}
 }

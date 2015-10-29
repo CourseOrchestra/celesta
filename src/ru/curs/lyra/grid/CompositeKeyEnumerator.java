@@ -2,6 +2,8 @@ package ru.curs.lyra.grid;
 
 import java.math.BigInteger;
 
+import ru.curs.celesta.CelestaException;
+
 /**
  * Нумератор составного ключа.
  */
@@ -25,7 +27,7 @@ public final class CompositeKeyEnumerator extends KeyEnumerator {
 	}
 
 	@Override
-	public BigInteger getOrderValue() {
+	public BigInteger getOrderValue() throws CelestaException {
 		if (keys.length == 0) {
 			return BigInteger.ZERO;
 		} else {

@@ -20,34 +20,10 @@ import ru.curs.celesta.score.ParseException;
 /**
  * Базовый класс формы Lyra.
  */
-public abstract class BasicLyraForm {
+public abstract class BasicLyraForm extends BasicForm {
 
 	private static final String UTF_8 = "utf-8";
 	private LyraFormData lfd;
-	private BasicCursor rec;
-
-	private boolean updateRec() throws CelestaException {
-		if (rec == null) {
-			rec = _getCursor();
-			return true;
-		} else if (rec.isClosed()) {
-			BasicCursor rec2 = _getCursor();
-			rec2.copyFieldsFrom(rec);
-			rec = rec2;
-		}
-		return false;
-	}
-
-	private Cursor getCursor() throws CelestaException {
-		updateRec();
-		if (rec instanceof Cursor) {
-			return (Cursor) rec;
-		} else {
-			throw new CelestaException("Cursor %s is not modifiable.", rec
-					.meta().getName());
-		}
-	}
-
 	/**
 	 * Отыскивает первую запись в наборе записей.
 	 * 
@@ -254,13 +230,9 @@ public abstract class BasicLyraForm {
 
 	}
 
-	public abstract BasicCursor _getCursor();
-
-	public abstract String _getId();
-
 	public abstract void _beforeSending(BasicCursor c);
 
-	public abstract void _afterReceiving(Cursor c);
+	public abstract void _afterReceiving(BasicCursor c);
 
 	public abstract void _serializeFields();
 

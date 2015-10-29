@@ -84,9 +84,13 @@ public final class GridDriver {
 						valsMap.put(colName, vals[j++]);
 
 					j = dba.fillSetQueryParameters(filters, stmt);
+					// System.out.println(stmt.toString());
 					for (int i = 0; i < names.length; i++) {
 						Object param = valsMap.get(names[i]);
 						DBAdaptor.setParam(stmt, j++, param);
+						if (i < names.length - 1) {
+							DBAdaptor.setParam(stmt, j++, param);
+						}
 					}
 					try {
 						// System.out.println(stmt.toString());
@@ -149,6 +153,20 @@ public final class GridDriver {
 		c.navigate("+");
 		BigInteger higherOrd = getCursorOrdinal(c);
 		interpolator = new KeyInterpolator(lowerOrd, higherOrd, DEFAULT_COUNT);
+		c.findSet();
+		BigInteger oldVal = BigInteger.ZERO;
+		int j = 0;
+		do {
+			BigInteger i = getCursorOrdinal(c);
+			Object[] buf = c._currentValues();
+			System.out.printf("%s %s-%s%n", i.toString(16), buf[0], buf[2]);
+			if (i.compareTo(oldVal) <= 0)
+				throw new IllegalArgumentException();
+
+			interpolator.setPoint(i, j++);
+			oldVal = i;
+		} while (c.nextInSet());
+
 		filters = c.getFilters();
 		cfilter = c.getComplexFilterExpr();
 		// Request a total record count immediately
@@ -199,6 +217,9 @@ public final class GridDriver {
 		if (key.equals(latestRequest))
 			return;
 		latestRequest = key;
+
+		System.out.println(c.getOrderBy());
+
 		RequestTask task = new RequestTask(c.getNavigationWhereClause('<'), c._currentValues(), key, immediate);
 		if (req == null) {
 			req = new CounterThread(task);
@@ -208,7 +229,7 @@ public final class GridDriver {
 		}
 	}
 
-	private BigInteger getCursorOrdinal(BasicCursor c) {
+	private BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException {
 		int i = 0;
 		Object[] values = c._currentValues();
 		KeyEnumerator km;
@@ -283,7 +304,7 @@ public final class GridDriver {
 	/**
 	 * Returns this driver's key manager.
 	 */
-	public KeyEnumerator getKeyManager() {
+	public KeyEnumerator getKeyEnumerator() {
 		return rootKeyEnumerator;
 	}
 

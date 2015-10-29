@@ -3,6 +3,8 @@ package ru.curs.lyra.grid;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import ru.curs.celesta.CelestaException;
+
 /**
  * Абстрактный класс нумератора ключа.
  */
@@ -17,8 +19,12 @@ public abstract class KeyEnumerator {
 	/**
 	 * Порядок значения ключа в общем объёме пространства (значение от нуля до
 	 * cardinality-1).
+	 * 
+	 * @throws CelestaException
+	 *             in case it is impossible do define exact order value (e. g. a
+	 *             collator error).
 	 */
-	public abstract BigInteger getOrderValue();
+	public abstract BigInteger getOrderValue() throws CelestaException;
 
 	/**
 	 * Устанавливает порядковый номер ключа.
@@ -43,8 +49,12 @@ public abstract class KeyEnumerator {
 
 	/**
 	 * Возвращает позицию в виде действительного числа в диапазоне [0..1].
+	 * 
+	 * @throws CelestaException
+	 *             in case it's impossible to get exact position (e. g. collator
+	 *             error).
 	 */
-	public double getPosition() {
+	public double getPosition() throws CelestaException {
 		BigInteger order = getOrderValue();
 		BigInteger maxOrder = cardinality().subtract(BigInteger.ONE);
 		if (order.equals(BigInteger.ZERO)) {

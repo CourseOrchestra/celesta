@@ -6,30 +6,30 @@ import java.math.BigInteger;
 
 import org.junit.Test;
 
+import ru.curs.celesta.CelestaException;
+
 public class VarcharFieldMgrTest {
 
 	private static final double EPSILON = 1e-10;
 
-	private static final char[] alphabet = "абвгдежзийклмнопрстуфхцчшщъыьэюя"
-			.toCharArray();
+	private static final String rules = "<а<б<в<г<д<е<ж<з<и<й<к<л<м<н<о<п<р<с<т<у<ф<х<ц<ч<ш<щ<ъ<ы<ь<э<ю<я";
 
-	private VarcharFieldEnumerator getManager(String min, int len) {
+	private VarcharFieldEnumerator getManager(String min, int len) throws CelestaException {
 
 		char[] max = new char[len];
 		for (int i = 0; i < len; i++)
-			max[i] = alphabet[alphabet.length - 1];
+			max[i] = 'я';
 
-		VarcharFieldEnumerator vfm = new VarcharFieldEnumerator(alphabet, min,
-				new String(max), len);
+		VarcharFieldEnumerator vfm = new VarcharFieldEnumerator(rules, min, new String(max), len);
 		return vfm;
 	}
 
-	private VarcharFieldEnumerator getManager(int len) {
+	private VarcharFieldEnumerator getManager(int len) throws CelestaException {
 		return getManager("", len);
 	}
 
 	@Test
-	public void test1() {
+	public void test1() throws CelestaException {
 		VarcharFieldEnumerator km;
 
 		km = getManager(1);
@@ -82,7 +82,7 @@ public class VarcharFieldMgrTest {
 
 	}
 
-	private void testReverse(VarcharFieldEnumerator km, String test) {
+	private void testReverse(VarcharFieldEnumerator km, String test) throws CelestaException {
 		km.setValue(test);
 		double p = km.getPosition();
 		km.setValue("");
@@ -91,7 +91,7 @@ public class VarcharFieldMgrTest {
 	}
 
 	@Test
-	public void test2() {
+	public void test2() throws CelestaException {
 		VarcharFieldEnumerator km;
 		km = getManager(4);
 		testReverse(km, "а");
@@ -107,7 +107,7 @@ public class VarcharFieldMgrTest {
 	}
 
 	@Test
-	public void test3() {
+	public void test3() throws CelestaException {
 		VarcharFieldEnumerator km1, km2;
 		km1 = getManager("ваня", 10);
 		km2 = getManager("", 10);
@@ -142,8 +142,8 @@ public class VarcharFieldMgrTest {
 	}
 
 	@Test
-	public void test4() {
-		VarcharFieldEnumerator km = new VarcharFieldEnumerator(alphabet, "ваня", "наташа", 7);
+	public void test4() throws CelestaException {
+		VarcharFieldEnumerator km = new VarcharFieldEnumerator(rules, "ваня", "наташа", 7);
 		km.setValue("коля");
 		double k = km.getPosition();
 		km.setValue("маша");
@@ -166,7 +166,7 @@ public class VarcharFieldMgrTest {
 	}
 
 	@Test
-	public void test5() {
+	public void test5() throws CelestaException {
 		VarcharFieldEnumerator km = getManager(1);
 		assertEquals("", km.getValue());
 		assertEquals(BigInteger.ZERO, km.getOrderValue());
@@ -175,7 +175,9 @@ public class VarcharFieldMgrTest {
 		km.setValue("в");
 		assertEquals(BigInteger.valueOf(3), km.getOrderValue());
 		km.setValue("я");
-		assertEquals(BigInteger.valueOf(alphabet.length), km.getOrderValue());
+		LyraCollator lc = new LyraCollator(rules);
+		int alphabetLengh = lc.getPrimOrderCount();
+		assertEquals(BigInteger.valueOf(alphabetLengh), km.getOrderValue());
 
 		km = getManager(2);
 		assertEquals("", km.getValue());
@@ -185,15 +187,12 @@ public class VarcharFieldMgrTest {
 		km.setValue("аа");
 		assertEquals(BigInteger.valueOf(2), km.getOrderValue());
 		km.setValue("ая");
-		assertEquals(BigInteger.valueOf(alphabet.length + 1),
-				km.getOrderValue());
+		assertEquals(BigInteger.valueOf(alphabetLengh + 1), km.getOrderValue());
 		km.setValue("б");
-		assertEquals(BigInteger.valueOf(alphabet.length + 2),
-				km.getOrderValue());
+		assertEquals(BigInteger.valueOf(alphabetLengh + 2), km.getOrderValue());
 
 		km = getManager(12);
 		km.setValue("яяяяяяяяяяяю");
-		assertEquals(km.getOrderValue().add(BigInteger.valueOf(2)),
-				km.cardinality());
+		assertEquals(km.getOrderValue().add(BigInteger.valueOf(2)), km.cardinality());
 	}
 }

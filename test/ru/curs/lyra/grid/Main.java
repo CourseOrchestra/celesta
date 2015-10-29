@@ -8,6 +8,8 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import ru.curs.celesta.CelestaException;
+
 public class Main extends JFrame {
 
 	private static final long serialVersionUID = 1L;
@@ -19,7 +21,17 @@ public class Main extends JFrame {
 
 	public static final int MAX = 1000;
 
-	private VarcharFieldEnumerator mgr1 = new VarcharFieldEnumerator("ваня", "маша", 4);
+	private VarcharFieldEnumerator mgr1;
+
+	{
+		try {
+			mgr1 = new VarcharFieldEnumerator("ваня", "маша", 4);
+		} catch (CelestaException e) {
+			e.printStackTrace();
+		}
+
+	}
+
 	private IntFieldEnumerator mgr2 = new IntFieldEnumerator(0, 1000);
 	private CompositeKeyEnumerator mgr = new CompositeKeyEnumerator(mgr1, mgr2);
 
@@ -41,8 +53,7 @@ public class Main extends JFrame {
 			public void stateChanged(ChangeEvent ev) {
 				double q = sl.getValue() / (double) MAX;
 				mgr.setPosition(q);
-				lab.setText(String.format("%s-%d", mgr1.getValue(),
-						mgr2.getValue()));
+				lab.setText(String.format("%s-%d", mgr1.getValue(), mgr2.getValue()));
 			}
 		});
 	}
