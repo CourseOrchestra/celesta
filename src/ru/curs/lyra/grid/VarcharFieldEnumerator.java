@@ -28,7 +28,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	private final LyraCollator collator;
 
 	private final int m;
-	private final BigInteger[] q;
+	private final BigInteger[][] q;
 
 	private int[][] min;
 	private int[][] max;
@@ -53,8 +53,9 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 			this.max[i][1] = s;
 			this.max[i][2] = t;
 		}
-		minOrd = atomicOrd(min);
-		card = atomicOrd(max).subtract(atomicOrd(min)).add(BigInteger.ONE);
+		// TODO
+		minOrd = atomicOrd(min, 0);
+		card = atomicOrd(max, 0).subtract(atomicOrd(min, 0)).add(BigInteger.ONE);
 
 	}
 
@@ -73,15 +74,18 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 		// Setting up collator
 		collator = LyraCollator.getInstance(rules);
 
-		BigInteger alphabetLength = BigInteger.valueOf(collator.getPrimOrderCount());
+		BigInteger[] count = { BigInteger.valueOf(collator.getPrimOrderCount()),
+				BigInteger.valueOf(collator.getSecOrderCount()), BigInteger.valueOf(collator.getTerOrderCount()) };
 		this.m = m;
-		this.q = new BigInteger[m];
-		BigInteger ai = BigInteger.ONE;
-		BigInteger s = BigInteger.ZERO;
-		for (int i = m - 1; i >= 0; i--) {
-			s = s.add(ai);
-			q[i] = s;
-			ai = ai.multiply(alphabetLength);
+		this.q = new BigInteger[m][3];
+		for (int j = 0; j < 3; j++) {
+			BigInteger ai = BigInteger.ONE;
+			BigInteger s = BigInteger.ZERO;
+			for (int i = m - 1; i >= 0; i--) {
+				s = s.add(ai);
+				q[i][j] = s;
+				ai = ai.multiply(count[j]);
+			}
 		}
 	}
 
@@ -98,8 +102,9 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	public void setBounds(String min, String max) throws CelestaException {
 		this.min = toArray(min);
 		this.max = toArray(max);
-		minOrd = atomicOrd(this.min);
-		card = atomicOrd(this.max).subtract(atomicOrd(this.min)).add(BigInteger.ONE);
+		minOrd = atomicOrd(this.min, 0);
+		// TODO
+		card = atomicOrd(this.max, 0).subtract(atomicOrd(this.min, 0)).add(BigInteger.ONE);
 	}
 
 	private int[][] toArray(String str) throws CelestaException {
@@ -117,13 +122,15 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 		return result;
 	}
 
-	private BigInteger atomicOrd(int[][] s) {
-		// TODO: second int argument for order index 0..2
-		int o = 0;
+	private BigInteger atomicOrd(int[][] s, int o) {
 		BigInteger result = BigInteger.valueOf(s.length);
 		for (int i = 0; i < s.length; i++)
-			result = result.add(q[i].multiply(BigInteger.valueOf(s[i][o])));
+			result = result.add(q[i][o].multiply(BigInteger.valueOf(s[i][o])));
 		return result;
+	}
+
+	private BigInteger ord(int[][] s) {
+		return null;
 	}
 
 	@Override
@@ -137,7 +144,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 		arr = toArray(value);
 		// System.out.println(Arrays.toString(arr));
 		// TODO: full order
-		return atomicOrd(arr).subtract(minOrd);
+		return atomicOrd(arr, 0).subtract(minOrd);
 	}
 
 	/**
@@ -172,7 +179,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < m; i++) {
 			r = r.subtract(BigInteger.ONE);
-			BigInteger[] cr = r.divideAndRemainder(q[i]);
+			BigInteger[] cr = r.divideAndRemainder(q[i][0]);
 			r = cr[1];
 			int c = cr[0].intValue();
 			if (c < 0)
