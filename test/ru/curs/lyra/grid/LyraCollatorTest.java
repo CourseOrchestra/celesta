@@ -122,6 +122,6 @@ public class LyraCollatorTest {
 		LyraCollator lc4 = LyraCollator.getInstance("<d<e<f");
 		assertEquals(lc1, lc3);
 		assertEquals(lc2, lc4);
-		org.junit.Assert.assertNotEquals(lc1, lc2);
+		assertTrue(lc1 != lc2);
 	}
 }
