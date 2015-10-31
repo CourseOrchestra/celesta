@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
 
-public class VarcharFieldMgrTest {
+public class VarcharFieldEnumeratorTest {
 
 	private static final double EPSILON = 1e-10;
 

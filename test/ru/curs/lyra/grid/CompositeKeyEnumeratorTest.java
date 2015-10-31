@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
 
-class DummyKeyMgr extends KeyEnumerator {
+class DummyKeyEnumerator extends KeyEnumerator {
 
 	private int card;
 	private int val;
@@ -21,7 +21,7 @@ class DummyKeyMgr extends KeyEnumerator {
 		this.val = val;
 	}
 
-	DummyKeyMgr(int cardinality) {
+	DummyKeyEnumerator(int cardinality) {
 		this.card = cardinality;
 	}
 
@@ -52,11 +52,11 @@ class DummyKeyMgr extends KeyEnumerator {
 
 }
 
-public class CompositeKeyMgrTest {
+public class CompositeKeyEnumeratorTest {
 
 	@Test
 	public void test1() throws CelestaException {
-		DummyKeyMgr km = new DummyKeyMgr(100);
+		DummyKeyEnumerator km = new DummyKeyEnumerator(100);
 		CompositeKeyEnumerator ckm = new CompositeKeyEnumerator(km);
 		assertEquals(BigInteger.valueOf(100), ckm.cardinality());
 		assertEquals(BigInteger.ZERO, km.getOrderValue());
@@ -74,9 +74,9 @@ public class CompositeKeyMgrTest {
 
 	@Test
 	public void test2() throws CelestaException {
-		DummyKeyMgr km1 = new DummyKeyMgr(7);
-		DummyKeyMgr km2 = new DummyKeyMgr(10);
-		DummyKeyMgr km3 = new DummyKeyMgr(17);
+		DummyKeyEnumerator km1 = new DummyKeyEnumerator(7);
+		DummyKeyEnumerator km2 = new DummyKeyEnumerator(10);
+		DummyKeyEnumerator km3 = new DummyKeyEnumerator(17);
 
 		CompositeKeyEnumerator ckm = new CompositeKeyEnumerator(km1, km2, km3);
 		assertEquals(BigInteger.valueOf(1190), ckm.cardinality());
