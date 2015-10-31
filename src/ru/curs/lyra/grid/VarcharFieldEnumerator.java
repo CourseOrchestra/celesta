@@ -21,7 +21,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 				+ "<'?'<'@'<'['<'\\'<']'<'^'<'_'<'`'<'{'<'|'<'}'<'~'<'¦'<'‘'<'’'<'‚'<'“'<'”'<'„'<'‹'<'›'<'+'"
 				+ "<'<'<'='<'>'<'«'<'»'<'§'<'©'<'¬'<'®'<'°'<'†'<'‡'<'•'<'‰'<0<1<2<3<4<5<6<7<8<9"
 				+ "<a,A<b,B<c,C<d,D<e,E<f,F<g,G<h,H<i,I<j,J<k,K<l,L<m,M<n,N;№<o,O<p,P<q,Q<r,R<s,S<t,T<™<u,U<v,V<w,W<x,X<y,Y<z,Z"
-				+ "<а,А<б,Б<в,В<г,Г<д,Д<е,Е<ё,Ё<ж,Ж<з,З<и,И<й,Й<к,К<л,Л<м,М<н,Н<о,О<п,П<р,Р<с,С<т,Т<у,У<ф,Ф<х,Х<ц,Ц<ч,Ч<ш,Ш<щ,Щ"
+				+ "<а,А<б,Б<в,В<г,Г<д,Д<е,Е;ё,Ё<ж,Ж<з,З<и,И<й,Й<к,К<л,Л<м,М<н,Н<о,О<п,П<р,Р<с,С<т,Т<у,У<ф,Ф<х,Х<ц,Ц<ч,Ч<ш,Ш<щ,Щ"
 				+ "<ъ,Ъ<ы,Ы<ь,Ь<э,Э<ю,Ю<я,Я";
 	}
 
@@ -29,6 +29,8 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 
 	private final int m;
 	private final BigInteger[][] q;
+	private final BigInteger c2;
+	private final BigInteger c3;
 
 	private int[][] min;
 	private int[][] max;
@@ -53,9 +55,8 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 			this.max[i][1] = s;
 			this.max[i][2] = t;
 		}
-		// TODO
-		minOrd = atomicOrd(min, 0);
-		card = atomicOrd(max, 0).subtract(atomicOrd(min, 0)).add(BigInteger.ONE);
+		minOrd = ord(min);
+		card = ord(max).subtract(ord(min)).add(BigInteger.ONE);
 
 	}
 
@@ -79,14 +80,13 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 		this.m = m;
 		this.q = new BigInteger[m][3];
 		for (int j = 0; j < 3; j++) {
-			BigInteger ai = BigInteger.ONE;
-			BigInteger s = BigInteger.ZERO;
-			for (int i = m - 1; i >= 0; i--) {
-				s = s.add(ai);
-				q[i][j] = s;
-				ai = ai.multiply(count[j]);
+			q[m - 1][j] = BigInteger.ONE;
+			for (int i = m - 2; i >= 0; i--) {
+				q[i][j] = q[i + 1][j].multiply(count[j]).add(j == 0 ? BigInteger.ONE : BigInteger.ZERO);
 			}
 		}
+		c2 = q[0][1].multiply(count[1]);
+		c3 = q[0][2].multiply(count[2]); 
 	}
 
 	/**
@@ -102,9 +102,8 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	public void setBounds(String min, String max) throws CelestaException {
 		this.min = toArray(min);
 		this.max = toArray(max);
-		minOrd = atomicOrd(this.min, 0);
-		// TODO
-		card = atomicOrd(this.max, 0).subtract(atomicOrd(this.min, 0)).add(BigInteger.ONE);
+		minOrd = ord(this.min);
+		card = ord(this.max).subtract(ord(this.min)).add(BigInteger.ONE);
 	}
 
 	private int[][] toArray(String str) throws CelestaException {
@@ -123,14 +122,17 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	}
 
 	private BigInteger atomicOrd(int[][] s, int o) {
-		BigInteger result = BigInteger.valueOf(s.length);
+		BigInteger result = o == 0 ? BigInteger.valueOf(s.length) : BigInteger.ZERO;
 		for (int i = 0; i < s.length; i++)
 			result = result.add(q[i][o].multiply(BigInteger.valueOf(s[i][o])));
 		return result;
 	}
 
 	private BigInteger ord(int[][] s) {
-		return null;
+		BigInteger[] o = new BigInteger[3];
+		for (int i = 0; i < 3; i++)
+			o[i] = atomicOrd(s, i);
+		return o[0].multiply(c2).add(o[1]).multiply(c3).add(o[2]);
 	}
 
 	@Override
@@ -142,9 +144,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	public BigInteger getOrderValue() throws CelestaException {
 		int[][] arr;
 		arr = toArray(value);
-		// System.out.println(Arrays.toString(arr));
-		// TODO: full order
-		return atomicOrd(arr, 0).subtract(minOrd);
+		return ord(arr).subtract(minOrd);
 	}
 
 	/**
@@ -171,28 +171,46 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 
 	@Override
 	public void setOrderValue(BigInteger value) {
+		// check if we are dealing with empty string
 		BigInteger r = value.add(minOrd);
 		if (r.equals(BigInteger.ZERO)) {
 			this.value = "";
 			return;
 		}
+		// split the ordinal value into three components
+		BigInteger[] components = new BigInteger[3];
+		BigInteger[] cr = r.divideAndRemainder(c3);
+		components[2] = cr[1];
+		cr = cr[0].divideAndRemainder(c2);
+		components[1] = cr[1];
+		components[0] = cr[0];
+		// fill the array of collation elements
+		int[][] arr = new int[m][3];
+		for (int j = 0; j < 3; j++) {
+			r = components[j];
+			for (int i = 0; i < m; i++) {
+				r = r.subtract(j == 0 ? BigInteger.ONE : BigInteger.ZERO);
+				cr = r.divideAndRemainder(q[i][j]);
+				r = cr[1];
+				int c = cr[0].intValue();
+				if (c < 0)
+					c = 0;
+				else if (c >= collator.getPrimOrderCount())
+					c = collator.getPrimOrderCount() - 1;
+				arr[i][j] = c;
+				if (r.equals(BigInteger.ZERO)) {
+					if (j == 0 && i + 1 < m)
+						arr[i + 1][j] = -1;
+					break;
+				}
+			}
+		}
+		// now reconstruct the string
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < m; i++) {
-			r = r.subtract(BigInteger.ONE);
-			BigInteger[] cr = r.divideAndRemainder(q[i][0]);
-			r = cr[1];
-			int c = cr[0].intValue();
-			if (c < 0)
-				c = 0;
-			else if (c >= collator.getPrimOrderCount())
-				c = collator.getPrimOrderCount() - 1;
-			try {
-				sb.append(collator.getElement(c, 0, 0));
-			} catch (CelestaException e) {
-				// do nothing
-			}
-			if (r.equals(BigInteger.ZERO))
+			if (arr[i][0] < 0)
 				break;
+			sb.append(collator.getElement(arr[i][0], arr[i][1], arr[i][2]));
 		}
 		this.value = sb.toString();
 	}

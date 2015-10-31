@@ -106,4 +106,13 @@ public class CompositeKeyMgrTest {
 		assertEquals(16, km3.getVal());
 	}
 
+	@Test
+	public void test3() throws CelestaException {
+		CompositeKeyEnumerator ckm = new CompositeKeyEnumerator();
+		assertEquals(BigInteger.ONE, ckm.cardinality());
+		assertEquals(BigInteger.ZERO, ckm.getOrderValue());
+		ckm.setOrderValue(BigInteger.TEN);
+		assertEquals(BigInteger.ZERO, ckm.getOrderValue());
+
+	}
 }

@@ -115,6 +115,7 @@ public class LyraCollatorTest {
 
 	}
 
+	@Test
 	public void test4() {
 		LyraCollator lc1 = LyraCollator.getInstance("<a<b<c");
 		LyraCollator lc2 = LyraCollator.getInstance("<d<e<f");
@@ -123,5 +124,9 @@ public class LyraCollatorTest {
 		assertEquals(lc1, lc3);
 		assertEquals(lc2, lc4);
 		assertTrue(lc1 != lc2);
+
+		assertEquals(3, lc1.getPrimOrderCount());
+		assertEquals(1, lc1.getSecOrderCount());
+		assertEquals(1, lc1.getTerOrderCount());
 	}
 }

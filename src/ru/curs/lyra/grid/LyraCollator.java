@@ -2,6 +2,7 @@ package ru.curs.lyra.grid;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.TreeMap;
 
 import ru.curs.celesta.CelestaException;
 
@@ -23,7 +24,7 @@ public final class LyraCollator {
 	private int secOrderCount;
 	private int terOrderCount;
 
-	private final HashMap<Integer, Character> codeToElement = new HashMap<>();
+	private final TreeMap<Integer, Character> codeToElement = new TreeMap<>();
 	private final HashMap<Character, Integer> elementToCode = new HashMap<>();
 
 	private final HashSet<Character> ignoredElements = new HashSet<>();
@@ -65,12 +66,16 @@ public final class LyraCollator {
 		return e.intValue();
 	}
 
-	char getElement(int primOrder, int secOrder, int terOrder) throws CelestaException {
+	char getElement(int primOrder, int secOrder, int terOrder) {
+		if (primOrder < 0 || primOrder >= primOrderCount)
+			throw new IndexOutOfBoundsException();
+		if (secOrder < 0 || secOrder >= secOrderCount)
+			throw new IndexOutOfBoundsException();
+		if (terOrder < 0 || terOrder >= terOrderCount)
+			throw new IndexOutOfBoundsException();
+
 		int e = getElementCode(primOrder, secOrder, terOrder);
-		Character c = codeToElement.get(e);
-		if (c == null)
-			throw new CelestaException("Order signature %d-%d-%d is unknown for current collator.", primOrder, secOrder,
-					terOrder);
+		Character c = codeToElement.floorEntry(e).getValue();
 		return c.charValue();
 	}
 

@@ -1,6 +1,7 @@
 package ru.curs.lyra.grid;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 
@@ -31,8 +32,7 @@ public class VarcharFieldMgrTest {
 	@Test
 	public void test1() throws CelestaException {
 		VarcharFieldEnumerator km;
-
-		km = getManager(1);
+		km = new VarcharFieldEnumerator(rules, 1);
 		km.setValue("");
 		assertEquals(0.0, km.getPosition(), EPSILON);
 		km.setValue("а");
@@ -194,5 +194,75 @@ public class VarcharFieldMgrTest {
 		km = getManager(12);
 		km.setValue("яяяяяяяяяяяю");
 		assertEquals(km.getOrderValue().add(BigInteger.valueOf(2)), km.cardinality());
+	}
+
+	@Test
+	public void test6() throws CelestaException {
+		VarcharFieldEnumerator km = new VarcharFieldEnumerator(VarcharFieldEnumerator.POSTGRES, 10);
+		String[] test = { "А-2-А", "ая", "Ая", "ая Дачная" };
+		BigInteger[] v = new BigInteger[test.length];
+		for (int i = 0; i < test.length; i++) {
+			km.setValue(test[i]);
+			v[i] = km.getOrderValue();
+		}
+		// for (BigInteger o : v)
+		// System.out.println(o.toString(16));
+		// System.out.println("---");
+		for (int i = 1; i < v.length; i++) {
+			org.junit.Assert.assertTrue(v[i].compareTo(v[i - 1]) > 0);
+		}
+
+		for (int i = 0; i < test.length; i++) {
+			km.setOrderValue(v[i]);
+			assertEquals(test[i], km.getValue());
+		}
+	}
+
+	@Test
+	public void test7() throws CelestaException {
+		VarcharFieldEnumerator km = new VarcharFieldEnumerator(VarcharFieldEnumerator.POSTGRES, 10);
+		String[] test = { "Е", "ё", "Ё", "ее", "ёее", "ееее", "Еёее" };
+		BigInteger[] v = new BigInteger[test.length];
+		for (int i = 0; i < test.length; i++) {
+			km.setValue(test[i]);
+			v[i] = km.getOrderValue();
+		}
+
+		for (int i = 1; i < v.length; i++) {
+			org.junit.Assert.assertTrue(v[i].compareTo(v[i - 1]) > 0);
+		}
+
+		for (int i = 0; i < test.length; i++) {
+			km.setOrderValue(v[i]);
+			assertEquals(test[i], km.getValue());
+		}
+	}
+
+	@Test
+	public void test8() throws CelestaException {
+		// "Пётр" and "петр" differ only by case and accent.
+
+		VarcharFieldEnumerator fe = new VarcharFieldEnumerator(VarcharFieldEnumerator.POSTGRES, 30);
+
+		fe.setValue("Пётр");
+		BigInteger k1 = fe.getOrderValue();
+
+		fe.setValue("петр");
+		BigInteger k2 = fe.getOrderValue();
+
+		fe.setValue("");
+		assertEquals(BigInteger.ZERO, fe.getOrderValue());
+
+		assertTrue(k2.compareTo(k1) < 0);
+
+		fe.setOrderValue(k1);
+		assertEquals("Пётр", fe.getValue());
+
+		fe.setOrderValue(k2);
+		assertEquals("петр", fe.getValue());
+
+		fe.setOrderValue(BigInteger.ZERO);
+		assertEquals("", fe.getValue());
+
 	}
 }
