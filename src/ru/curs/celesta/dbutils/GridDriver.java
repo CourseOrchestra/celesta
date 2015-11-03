@@ -2,26 +2,24 @@ package ru.curs.celesta.dbutils;
 
 import java.math.BigInteger;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 
+import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.ColumnMeta;
-import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.lyra.grid.BitFieldEnumerator;
 import ru.curs.lyra.grid.CompositeKeyEnumerator;
 import ru.curs.lyra.grid.IntFieldEnumerator;
-import ru.curs.lyra.grid.KeyInterpolator;
 import ru.curs.lyra.grid.KeyEnumerator;
+import ru.curs.lyra.grid.KeyInterpolator;
 import ru.curs.lyra.grid.VarcharFieldEnumerator;
 
 /**
@@ -29,6 +27,8 @@ import ru.curs.lyra.grid.VarcharFieldEnumerator;
  * thread.
  */
 public final class GridDriver {
+
+	private static final int MAX_REFINEMENTS_COUNT = 100;
 
 	/**
 	 * The default assumption for a records count in a table.
@@ -38,10 +38,10 @@ public final class GridDriver {
 	private final KeyInterpolator interpolator;
 	private final KeyEnumerator rootKeyEnumerator;
 	private final Map<String, KeyEnumerator> keyEnumerators = new HashMap<>();
+	private final Random rnd = new Random();
 
 	private final GrainElement meta;
-	private final Map<String, AbstractFilter> filters;
-	private final Expr cfilter;
+
 	/**
 	 * Key columns' names.
 	 */
@@ -62,79 +62,90 @@ public final class GridDriver {
 	 */
 	private BigInteger topVisiblePosition;
 
+	private RequestTask task;
+
+	private final BasicCursor closedCopy;
+
+	private int refinementsCount = 0;
+
 	/**
 	 * Асинхронный запрос к базе данных на уточнение позиции.
 	 */
 	private final class CounterThread extends Thread {
-		private RequestTask task;
-
-		public CounterThread(RequestTask request) {
-			super();
-			this.task = request;
-		}
 
 		@Override
 		public void run() {
-			RequestTask myRequest = null;
-			long delta;
+
 			Connection conn = null;
+			CallContext sysContext = null;
 			try {
 				conn = ConnectionPool.get();
-				DBAdaptor dba = DBAdaptor.getAdaptor();
-				while (!(task == null || task.equals(myRequest))) {
-					while ((delta = task.getDelayBeforeRun()) > 0) {
-						Thread.sleep(delta);
-					}
-					myRequest = task;
-					PreparedStatement stmt = dba.getSetCountStatement(conn, meta, filters, cfilter,
-							myRequest.getWhereClause());
+				sysContext = new CallContext(conn, BasicCursor.SYSTEMSESSION);
+				BasicCursor c = closedCopy._getBufferCopy(sysContext);
+				c.copyFiltersFrom(closedCopy);
+				c.copyOrderFrom(closedCopy);
 
-					// getting navigation clause params
-					Map<String, Object> valsMap = new HashMap<>();
-					int j = 0;
-					Object[] vals = myRequest.getValues();
-					for (String colName : meta.getColumns().keySet())
-						valsMap.put(colName, vals[j++]);
-
-					j = dba.fillSetQueryParameters(filters, stmt);
-					// System.out.println(stmt.toString());
-					for (int i = 0; i < names.length; i++) {
-						Object param = valsMap.get(names[i]);
-						DBAdaptor.setParam(stmt, j++, param);
-						if (i < names.length - 1) {
-							DBAdaptor.setParam(stmt, j++, param);
+				while (true) {
+					RequestTask myRequest = task;
+					if (myRequest == null) {
+						if (refinementsCount > MAX_REFINEMENTS_COUNT)
+							return;
+						refinementsCount++;
+						BigInteger lav = interpolator.getLeastAccurateValue();
+						if (lav == null) {
+							// no refinements needed at all at the moment,
+							return;
+						} else {
+							// perform interpolation table refinement
+							setCursorOrdinal(c, lav);
+							if (rnd.nextBoolean()) {
+								c.navigate("=>+");
+							} else {
+								c.navigate("=<-");
+							}
+							int result = c.position();
+							BigInteger key = getCursorOrdinal(c);
+							interpolator.setPoint(key, result);
+							if (callback != null)
+								callback.run();
+							continue;
 						}
 					}
-					try {
-						// System.out.println(stmt.toString());
-						ResultSet rs = stmt.executeQuery();
-						rs.next();
-						int result = rs.getInt(1);
 
-						interpolator.setPoint(myRequest.getKey(), result);
-						if (callback != null)
-							callback.run();
-					} finally {
-						stmt.close();
+					// check if it's time to execute the request
+					long delta = myRequest.getDelayBeforeRun();
+					if (delta > 0) {
+						Thread.sleep(delta);
+						continue;
 					}
+
+					task = null;
+
+					// Execute the refinement task!
+					setCursorOrdinal(c, myRequest.getKey());
+					int result = c.position();
+					interpolator.setPoint(myRequest.getKey(), result);
+					if (callback != null)
+						callback.run();
 				}
-			} catch (SQLException | CelestaException | InterruptedException e) {
+			} catch (CelestaException | InterruptedException e) {
 				// terminate thread silently
-				e.printStackTrace();
 				return;
 			} finally {
+				if (sysContext != null)
+					sysContext.closeCursors();
 				counterThread = null;
 				ConnectionPool.putBack(conn);
 			}
 		}
-
 	}
 
 	public GridDriver(BasicCursor c, Runnable callback) throws CelestaException {
 
 		this.callback = callback;
 
-		// Getting key column names (key column here is a column included into
+		// Getting key column names ('a key column' here is a column included
+		// into
 		// ORDER BY clause)
 		names = c.getOrderBy().split(",");
 		for (int i = 0; i < names.length; i++) {
@@ -165,15 +176,18 @@ public final class GridDriver {
 		c.navigate("+");
 		BigInteger higherOrd = getCursorOrdinal(c);
 		// Request a total record count immediately
-		requestRefinement(c, true);
+		requestRefinement(higherOrd, true);
 
 		c.navigate("-");
 		BigInteger lowerOrd = getCursorOrdinal(c);
 		interpolator = new KeyInterpolator(lowerOrd, higherOrd, DEFAULT_COUNT);
 
-		filters = c.getFilters();
-		cfilter = c.getComplexFilterExpr();
 		topVisiblePosition = lowerOrd;
+
+		closedCopy = c._getBufferCopy(c.callContext());
+		closedCopy.copyFiltersFrom(c);
+		closedCopy.copyOrderFrom(c);
+		closedCopy.close();
 	}
 
 	/**
@@ -213,28 +227,25 @@ public final class GridDriver {
 		BigInteger key = interpolator.getPoint(position);
 		setCursorOrdinal(c, key);
 		c.navigate(delta >= 0 ? "=>+" : "=<-");
-		requestRefinement(c, false);
 		topVisiblePosition = getCursorOrdinal(c);
+		requestRefinement(topVisiblePosition, false);
 		return topVisiblePosition;
 	}
 
-	private void requestRefinement(BasicCursor c, boolean immediate) throws CelestaException {
-		BigInteger key = getCursorOrdinal(c);
+	private void requestRefinement(BigInteger key, boolean immediate) throws CelestaException {
 		// do not process one request twice in a row
 		if (key.equals(latestRequest))
 			return;
 		latestRequest = key;
 
-		RequestTask task = new RequestTask(c.getNavigationWhereClause('<'), c._currentValues(), key, immediate);
-		if (counterThread == null) {
-			counterThread = new CounterThread(task);
+		task = new RequestTask(key, immediate);
+		if (counterThread == null || !counterThread.isAlive()) {
+			counterThread = new CounterThread();
 			counterThread.start();
-		} else {
-			counterThread.task = task;
 		}
 	}
 
-	private BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException {
+	private synchronized BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException {
 		int i = 0;
 		Object[] values = c._currentValues();
 		KeyEnumerator km;
@@ -247,7 +258,7 @@ public final class GridDriver {
 		return rootKeyEnumerator.getOrderValue();
 	}
 
-	private void setCursorOrdinal(BasicCursor c, BigInteger key) throws CelestaException {
+	private synchronized void setCursorOrdinal(BasicCursor c, BigInteger key) throws CelestaException {
 		rootKeyEnumerator.setOrderValue(key);
 		for (Map.Entry<String, KeyEnumerator> e : keyEnumerators.entrySet()) {
 			c.setValue(e.getKey(), e.getValue().getValue());
@@ -310,7 +321,7 @@ public final class GridDriver {
 }
 
 /**
- * Параметры запроса на уточнение позиции.
+ * Position refinement request parameters.
  */
 final class RequestTask {
 	/**
@@ -318,15 +329,10 @@ final class RequestTask {
 	 * position, for the latest request to be executed.
 	 */
 	private static final long MIN_DELAY = 500;
-
-	private final String whereClause;
-	private final Object[] values;
 	private final long timeToStart;
 	private final BigInteger key;
 
-	RequestTask(String whereClause, Object[] values, BigInteger key, boolean immediate) {
-		this.whereClause = whereClause;
-		this.values = values;
+	RequestTask(BigInteger key, boolean immediate) {
 		this.timeToStart = System.currentTimeMillis() + (immediate ? 0 : MIN_DELAY);
 		this.key = key;
 	}
@@ -335,26 +341,7 @@ final class RequestTask {
 		return timeToStart - System.currentTimeMillis();
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		return super.equals(obj) || (obj instanceof RequestTask && key.equals(((RequestTask) obj).key));
-	}
-
-	@Override
-	public int hashCode() {
-		return key.hashCode();
-	}
-
-	String getWhereClause() {
-		return whereClause;
-	}
-
 	BigInteger getKey() {
 		return key;
 	}
-
-	Object[] getValues() {
-		return values;
-	}
-
 }

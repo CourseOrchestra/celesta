@@ -1,6 +1,7 @@
 package ru.curs.lyra.grid;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.math.BigInteger;
 
@@ -67,6 +68,37 @@ public class KeyInterpolatorTest {
 
 		ka.setPoint(BigInteger.valueOf(2), 0);
 		assertEquals(4, ka.getPointsCount());
+	}
+
+	@Test
+	public void test2() {
+		KeyInterpolator ki = new KeyInterpolator(BigInteger.ZERO, BigInteger.valueOf(100), 101);
+		BigInteger v = ki.getLeastAccurateValue();
+		assertEquals(BigInteger.valueOf(50), v);
+
+		ki.setPoint(BigInteger.valueOf(60), 60);
+
+		v = ki.getLeastAccurateValue();
+		assertEquals(BigInteger.valueOf(30), v);
+
+		ki.setPoint(BigInteger.valueOf(30), 30);
+
+		v = ki.getLeastAccurateValue();
+		assertEquals(BigInteger.valueOf(80), v);
+		ki.setPoint(BigInteger.valueOf(80), 80);
+
+		v = ki.getLeastAccurateValue();
+		assertEquals(BigInteger.valueOf(15), v);
+		ki.setPoint(BigInteger.valueOf(15), 15);
+
+		v = ki.getLeastAccurateValue();
+		assertEquals(BigInteger.valueOf(45), v);
+		v = ki.getLeastAccurateValue();
+		assertEquals(BigInteger.valueOf(45), v);
+		ki.setPoint(BigInteger.valueOf(45), 45);
+
+		v = ki.getLeastAccurateValue();
+		assertNull(v);
 	}
 
 }

@@ -1,6 +1,7 @@
 package ru.curs.lyra.grid;
 
 import java.math.BigInteger;
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
@@ -8,11 +9,20 @@ import java.util.TreeMap;
  * Кусочно-линейная аппроксимация распределения значений первичного ключа.
  */
 public class KeyInterpolator {
+
+	private static final int MIN_GAP_QUOTIENT = 5;
+	private static final int MIN_GAP_VALUE = 10;
+
 	private final TreeMap<Integer, BigInteger> data = new TreeMap<>();
+
+	// Least accurate value cache and its validity flag.
+	private BigInteger leastAccurateValue;
+	private boolean isLAVValid;
 
 	public KeyInterpolator(BigInteger minOrd, BigInteger maxOrd, int count) {
 		data.put(0, minOrd);
 		data.put(count - 1, maxOrd);
+		isLAVValid = false;
 	}
 
 	/**
@@ -24,6 +34,7 @@ public class KeyInterpolator {
 	 *            Номер записи.
 	 */
 	public synchronized void setPoint(BigInteger ord, int count) {
+		isLAVValid = false;
 		// System.out.printf("+(%d:%s)%n", count, ord.toString());
 		Entry<Integer, BigInteger> e;
 		data.put(count, ord);
@@ -151,7 +162,55 @@ public class KeyInterpolator {
 		return cmin;
 	}
 
-	public TreeMap<Integer, BigInteger> getData() {
-		return data;
+	/**
+	 * Gets the value that corresponds to the center of the biggest gap in this
+	 * interpolation table.
+	 * 
+	 * Returns null if there is no gap big enough.
+	 */
+	public synchronized BigInteger getLeastAccurateValue() {
+		if (isLAVValid)
+			return leastAccurateValue;
+
+		isLAVValid = true;
+		// only one point, nothing to talk about
+		if (data.size() < 2) {
+			leastAccurateValue = null;
+			return null;
+		}
+
+		// looking for biggest gap in a table
+		int deltaMax = 0;
+		int cMax = data.lastKey();
+
+		int deltaMin = cMax / MIN_GAP_QUOTIENT;
+		if (deltaMin < MIN_GAP_VALUE)
+			deltaMin = MIN_GAP_VALUE;
+
+		Iterator<Entry<Integer, BigInteger>> i = data.entrySet().iterator();
+		Entry<Integer, BigInteger> c = i.next();
+		Entry<Integer, BigInteger> cPrev;
+		BigInteger v1 = BigInteger.ZERO;
+		BigInteger v2 = BigInteger.ZERO;
+		do {
+			cPrev = c;
+			c = i.next();
+			int d = c.getKey() - cPrev.getKey();
+			if (d > deltaMax) {
+				cMax += deltaMax;
+				deltaMax = d;
+				cMax -= deltaMax;
+				v1 = cPrev.getValue();
+				v2 = c.getValue();
+			}
+		} while (c.getKey() < cMax);
+
+		if (deltaMax > deltaMin) {
+			leastAccurateValue = v1.add(v2).shiftRight(1);
+		} else {
+			leastAccurateValue = null;
+		}
+		return leastAccurateValue;
 	}
+
 }

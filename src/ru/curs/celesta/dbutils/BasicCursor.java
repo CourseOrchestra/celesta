@@ -861,8 +861,12 @@ public abstract class BasicCursor {
 	 *             в случае ошибки доступа или ошибки БД
 	 */
 	public final int count() throws CelestaException {
-		int result;
 		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters, complexFilter);
+		return count(stmt);
+	}
+
+	private int count(PreparedStatement stmt) throws CelestaException {
+		int result;
 		try {
 			ResultSet rs = stmt.executeQuery();
 			rs.next();
@@ -870,13 +874,48 @@ public abstract class BasicCursor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		} finally {
-			try {
-				stmt.close();
-			} catch (SQLException e) {
-				stmt = null;
-			}
+			closeStmt(stmt);
 		}
 		return result;
+	}
+
+	/**
+	 * A hidden method that returns total count of rows that precede the current
+	 * one in the set. This method is intended for internal use by GridDriver.
+	 * Since rows counting is a resource-consuming operation, this method should
+	 * not be public.
+	 */
+	final int position() throws CelestaException {
+		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters, complexFilter,
+				getNavigationWhereClause('<'));
+
+		// getting navigation clause params
+		Map<String, Object> valsMap = new HashMap<>();
+		int j = 0;
+		Object[] vals = _currentValues();
+		for (String colName : meta().getColumns().keySet())
+			valsMap.put(colName, vals[j++]);
+
+		j = db.fillSetQueryParameters(filters, stmt);
+		// System.out.println(stmt.toString());
+
+		String[] names = getOrderBy().split(",");
+		for (int i = 0; i < names.length; i++) {
+			Matcher m = BasicCursor.QUOTED_COLUMN_NAME.matcher(names[i]);
+			m.find();
+			String quotedName = m.group(1);
+			names[i] = quotedName.substring(1, quotedName.length() - 1);
+		}
+
+		for (int i = 0; i < names.length; i++) {
+			Object param = valsMap.get(names[i]);
+			DBAdaptor.setParam(stmt, j++, param);
+			if (i < names.length - 1) {
+				DBAdaptor.setParam(stmt, j++, param);
+			}
+		}
+		//System.out.println(stmt);
+		return count(stmt);
 	}
 
 	/**
@@ -954,7 +993,7 @@ public abstract class BasicCursor {
 	 * имена protected-методов начинаются с underscore. Использование методов
 	 * без underscore приводит к конфликтам с именами атрибутов.
 	 */
-	public abstract BasicCursor _getBufferCopy() throws CelestaException;
+	public abstract BasicCursor _getBufferCopy(CallContext context) throws CelestaException;
 
 	protected abstract void _clearBuffer(boolean withKeys);
 

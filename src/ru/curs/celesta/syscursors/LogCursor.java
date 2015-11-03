@@ -311,9 +311,9 @@ public final class LogCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	public Cursor _getBufferCopy() throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
 		// CHECKSTYLE:ON
-		LogCursor result = new LogCursor(callContext());
+		LogCursor result = new LogCursor(context);
 		result.copyFieldsFrom(this);
 		return result;
 	}

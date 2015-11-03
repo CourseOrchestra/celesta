@@ -160,9 +160,9 @@ public final class TablesCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	public Cursor _getBufferCopy() throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
 		// CHECKSTYLE:ON
-		TablesCursor result = new TablesCursor(callContext());
+		TablesCursor result = new TablesCursor(context);
 		result.copyFieldsFrom(this);
 		return result;
 	}

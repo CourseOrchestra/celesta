@@ -237,9 +237,9 @@ public final class GrainsCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	public Cursor _getBufferCopy() throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
 		// CHECKSTYLE:ON
-		GrainsCursor result = new GrainsCursor(callContext());
+		GrainsCursor result = new GrainsCursor(context);
 		result.copyFieldsFrom(this);
 		return result;
 	}

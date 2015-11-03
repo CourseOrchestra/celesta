@@ -106,9 +106,9 @@ public final class UserRolesCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	public Cursor _getBufferCopy() throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
 		// CHECKSTYLE:ON
-		UserRolesCursor result = new UserRolesCursor(callContext());
+		UserRolesCursor result = new UserRolesCursor(context);
 		result.copyFieldsFrom(this);
 		return result;
 	}

@@ -40,9 +40,9 @@ public class SessionLogCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	public Cursor _getBufferCopy() throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
 		// CHECKSTYLE:ON
-		SessionLogCursor result = new SessionLogCursor(callContext());
+		SessionLogCursor result = new SessionLogCursor(context);
 		result.copyFieldsFrom(this);
 		return result;
 	}

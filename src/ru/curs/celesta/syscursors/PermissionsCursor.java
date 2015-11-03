@@ -212,9 +212,9 @@ public final class PermissionsCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	public Cursor _getBufferCopy() throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
 		// CHECKSTYLE:ON
-		PermissionsCursor result = new PermissionsCursor(callContext());
+		PermissionsCursor result = new PermissionsCursor(context);
 		result.copyFieldsFrom(this);
 		return result;
 	}
