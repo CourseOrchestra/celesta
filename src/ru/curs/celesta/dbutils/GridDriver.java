@@ -42,12 +42,25 @@ public final class GridDriver {
 	private final GrainElement meta;
 	private final Map<String, AbstractFilter> filters;
 	private final Expr cfilter;
+	/**
+	 * Key columns' names.
+	 */
 	private final String[] names;
-	private final GridCallback callback;
 
-	private CounterThread req = null;
+	private final Runnable callback;
 
+	private CounterThread counterThread = null;
+
+	/**
+	 * Inexact primary key for latest refinement request (cached to prevent
+	 * repeated refinement of the same value).
+	 */
 	private BigInteger latestRequest;
+
+	/**
+	 * Exact primary key for the current top visible record.
+	 */
+	private BigInteger topVisiblePosition;
 
 	/**
 	 * Асинхронный запрос к базе данных на уточнение позиции.
@@ -100,7 +113,7 @@ public final class GridDriver {
 
 						interpolator.setPoint(myRequest.getKey(), result);
 						if (callback != null)
-							callback.execute(myRequest.getKey(), result);
+							callback.run();
 					} finally {
 						stmt.close();
 					}
@@ -110,14 +123,14 @@ public final class GridDriver {
 				e.printStackTrace();
 				return;
 			} finally {
-				req = null;
+				counterThread = null;
 				ConnectionPool.putBack(conn);
 			}
 		}
 
 	}
 
-	public GridDriver(BasicCursor c, GridCallback callback) throws CelestaException {
+	public GridDriver(BasicCursor c, Runnable callback) throws CelestaException {
 
 		this.callback = callback;
 
@@ -148,29 +161,19 @@ public final class GridDriver {
 			}
 			rootKeyEnumerator = new CompositeKeyEnumerator(km);
 		}
-		c.navigate("-");
-		BigInteger lowerOrd = getCursorOrdinal(c);
+
 		c.navigate("+");
 		BigInteger higherOrd = getCursorOrdinal(c);
-		interpolator = new KeyInterpolator(lowerOrd, higherOrd, DEFAULT_COUNT);
-		c.findSet();
-		BigInteger oldVal = BigInteger.ZERO;
-		int j = 0;
-		do {
-			BigInteger i = getCursorOrdinal(c);
-			Object[] buf = c._currentValues();
-			System.out.printf("%s %s-%s%n", i.toString(16), buf[0], buf[2]);
-			if (i.compareTo(oldVal) <= 0)
-				throw new IllegalArgumentException();
+		// Request a total record count immediately
+		requestRefinement(c, true);
 
-			interpolator.setPoint(i, j++);
-			oldVal = i;
-		} while (c.nextInSet());
+		c.navigate("-");
+		BigInteger lowerOrd = getCursorOrdinal(c);
+		interpolator = new KeyInterpolator(lowerOrd, higherOrd, DEFAULT_COUNT);
 
 		filters = c.getFilters();
 		cfilter = c.getComplexFilterExpr();
-		// Request a total record count immediately
-		requestRefinement(c, true);
+		topVisiblePosition = lowerOrd;
 	}
 
 	/**
@@ -182,10 +185,11 @@ public final class GridDriver {
 	 *            difference from previous position
 	 * @param c
 	 *            Alive cursor to be modified
+	 * @return The exact primary key information after positioning
 	 * @throws CelestaException
 	 *             e.g. wrong cursor
 	 */
-	public void setPosition(int position, int delta, BasicCursor c) throws CelestaException {
+	public BigInteger setPosition(int position, int delta, BasicCursor c) throws CelestaException {
 		checkMeta(c);
 
 		int absDelta = Math.abs(delta);
@@ -200,7 +204,8 @@ public final class GridDriver {
 					}
 					BigInteger ord = getCursorOrdinal(c);
 					interpolator.setPoint(ord, position);
-					return;
+					topVisiblePosition = ord;
+					return topVisiblePosition;
 				}
 			}
 		}
@@ -209,6 +214,8 @@ public final class GridDriver {
 		setCursorOrdinal(c, key);
 		c.navigate(delta >= 0 ? "=>+" : "=<-");
 		requestRefinement(c, false);
+		topVisiblePosition = getCursorOrdinal(c);
+		return topVisiblePosition;
 	}
 
 	private void requestRefinement(BasicCursor c, boolean immediate) throws CelestaException {
@@ -218,14 +225,12 @@ public final class GridDriver {
 			return;
 		latestRequest = key;
 
-		System.out.println(c.getOrderBy());
-
 		RequestTask task = new RequestTask(c.getNavigationWhereClause('<'), c._currentValues(), key, immediate);
-		if (req == null) {
-			req = new CounterThread(task);
-			req.start();
+		if (counterThread == null) {
+			counterThread = new CounterThread(task);
+			counterThread.start();
 		} else {
-			req.task = task;
+			counterThread.task = task;
 		}
 	}
 
@@ -250,17 +255,11 @@ public final class GridDriver {
 	}
 
 	/**
-	 * Gets (adjusts) knob position based on cursor values.
+	 * Gets (adjusts) knob position for current cursor value.
 	 * 
-	 * @param c
-	 *            Cursor
-	 * @throws CelestaException
-	 *             e.g. wrong cursor
 	 */
-	public int getPosition(BasicCursor c) throws CelestaException {
-		checkMeta(c);
-		BigInteger ordinal = getCursorOrdinal(c);
-		return interpolator.getApproximatePosition(ordinal);
+	public int getTopVisiblePosition() {
+		return interpolator.getApproximatePosition(topVisiblePosition);
 	}
 
 	private KeyEnumerator createFieldKeyManager(ColumnMeta m) throws CelestaException {
