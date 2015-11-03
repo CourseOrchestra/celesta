@@ -329,7 +329,13 @@ public abstract class BasicCursor {
 	private static String getNavigationWhereClause(int i, String[] names, char[] ops) {
 		String result;
 		if (names.length - 1 > i) {
-			result = String.format("((%s %s ?) or ((%s = ?) and %s))", names[i], ops[i], names[i],
+			// result = String.format("((%s %s ?) or ((%s = ?) and %s))",
+			// names[i], ops[i], names[i], getNavigationWhereClause(i + 1,
+			// names, ops));
+
+			// This is logically equivalent, but runs much faster on Postgres
+			// (apparently because of conjunction as a top logical operator)
+			result = String.format("((%s %s= ?) and ((%s %s ?) or %s))", names[i], ops[i], names[i], ops[i],
 					getNavigationWhereClause(i + 1, names, ops));
 		} else {
 			result = String.format("(%s %s ?)", names[i], ops[i]);
@@ -564,6 +570,7 @@ public abstract class BasicCursor {
 			j = db().fillSetQueryParameters(filters, navigator);
 			fillNavigationParams(navigator, valsMap, j, c);
 			try {
+				// System.out.println(navigator);
 				ResultSet rs = navigator.executeQuery();
 				try {
 					if (rs.next()) {
@@ -585,9 +592,9 @@ public abstract class BasicCursor {
 			throws CelestaException {
 		if (c == '-' || c == '+')
 			return;
-		
+
 		int j = k;
-		
+
 		String[] names = getOrderBy().split(",");
 		for (int i = 0; i < names.length; i++) {
 			Matcher m = QUOTED_COLUMN_NAME.matcher(names[i]);
