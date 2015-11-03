@@ -120,6 +120,7 @@ public abstract class Cursor extends BasicCursor {
 		if (!canInsert())
 			throw new PermissionDeniedException(callContext(), meta(), Action.INSERT);
 
+		_preInsert();
 		prepareGet(_currentKeyValues());
 		try {
 			ResultSet rs = get.executeQuery();
@@ -137,7 +138,6 @@ public abstract class Cursor extends BasicCursor {
 			} finally {
 				rs.close();
 			}
-			_preInsert();
 			Object[] values = _currentValues();
 			boolean[] myMask = new boolean[values.length];
 			for (int i = 0; i < values.length; i++)
@@ -213,6 +213,7 @@ public abstract class Cursor extends BasicCursor {
 		if (!canModify())
 			throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
 
+		_preUpdate();
 		prepareGet(_currentKeyValues());
 		try {
 			ResultSet rs = get.executeQuery();
@@ -230,7 +231,6 @@ public abstract class Cursor extends BasicCursor {
 				rs.close();
 			}
 
-			_preUpdate();
 			Object[] values = _currentValues();
 			Object[] xValues = getXRec()._currentValues();
 			// Маска: true для тех случаев, когда поле не было изменено
