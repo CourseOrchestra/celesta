@@ -121,7 +121,8 @@ public class KeyInterpolator {
 	}
 
 	/**
-	 * Returns an (approximate) position of a key in a set.
+	 * Returns an (approximate) position of a key in a set using inverse
+	 * interpolation.
 	 * 
 	 * @param key
 	 *            Key ordinal value.

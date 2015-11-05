@@ -40,14 +40,12 @@ public final class GridDriver {
 	private final Map<String, KeyEnumerator> keyEnumerators = new HashMap<>();
 	private final Random rnd = new Random();
 
-	private final GrainElement meta;
-
 	/**
 	 * Key columns' names.
 	 */
 	private final String[] names;
 
-	private final Runnable callback;
+	private final Runnable changeNotifier;
 
 	private CounterThread counterThread = null;
 
@@ -64,12 +62,15 @@ public final class GridDriver {
 
 	private RequestTask task;
 
+	/**
+	 * A closed copy of underlying cursor that handles filters and sorting.
+	 */
 	private final BasicCursor closedCopy;
 
 	private int refinementsCount = 0;
 
 	/**
-	 * Асинхронный запрос к базе данных на уточнение позиции.
+	 * Handles asynchronous interpolation table refinement requests.
 	 */
 	private final class CounterThread extends Thread {
 
@@ -106,8 +107,8 @@ public final class GridDriver {
 							int result = c.position();
 							BigInteger key = getCursorOrdinal(c);
 							interpolator.setPoint(key, result);
-							if (callback != null)
-								callback.run();
+							if (changeNotifier != null)
+								changeNotifier.run();
 							continue;
 						}
 					}
@@ -125,8 +126,8 @@ public final class GridDriver {
 					setCursorOrdinal(c, myRequest.getKey());
 					int result = c.position();
 					interpolator.setPoint(myRequest.getKey(), result);
-					if (callback != null)
-						callback.run();
+					if (changeNotifier != null)
+						changeNotifier.run();
 				}
 			} catch (CelestaException | InterruptedException e) {
 				// terminate thread silently
@@ -142,7 +143,7 @@ public final class GridDriver {
 
 	public GridDriver(BasicCursor c, Runnable callback) throws CelestaException {
 
-		this.callback = callback;
+		this.changeNotifier = callback;
 
 		// Getting key column names ('a key column' here is a column included
 		// into
@@ -155,15 +156,20 @@ public final class GridDriver {
 			names[i] = quotedName.substring(1, quotedName.length() - 1);
 		}
 
-		meta = c.meta();
-		// KeyManager factory
+		closedCopy = c._getBufferCopy(c.callContext());
+		closedCopy.copyFiltersFrom(c);
+		closedCopy.copyOrderFrom(c);
+		closedCopy.close();
+
+		// KeyEnumerator factory
+		GrainElement meta = c.meta();
 		if (names.length == 1) {
-			// Single field key manager
+			// Single field key enumerator
 			ColumnMeta m = meta.getColumns().get(names[0]);
 			rootKeyEnumerator = createFieldKeyManager(m);
 			keyEnumerators.put(names[0], rootKeyEnumerator);
 		} else {
-			// Multiple field key manager
+			// Multiple field key enumerator
 			KeyEnumerator[] km = new KeyEnumerator[names.length];
 			for (int i = 0; i < names.length; i++) {
 				ColumnMeta m = meta.getColumns().get(names[i]);
@@ -184,10 +190,6 @@ public final class GridDriver {
 
 		topVisiblePosition = lowerOrd;
 
-		closedCopy = c._getBufferCopy(c.callContext());
-		closedCopy.copyFiltersFrom(c);
-		closedCopy.copyOrderFrom(c);
-		closedCopy.close();
 	}
 
 	/**
@@ -232,6 +234,20 @@ public final class GridDriver {
 		return topVisiblePosition;
 	}
 
+	/**
+	 * Udjusts internal state for pre-positioned cursor.
+	 * 
+	 * @param c
+	 *            Cursor that is set to a certain position.
+	 * @throws CelestaException
+	 *             e. g. wrong cursor
+	 */
+	public void setPosition(BasicCursor c) throws CelestaException {
+		checkMeta(c);
+		topVisiblePosition = getCursorOrdinal(c);		
+		requestRefinement(topVisiblePosition, false);
+	}
+
 	private void requestRefinement(BigInteger key, boolean immediate) throws CelestaException {
 		// do not process one request twice in a row
 		if (key.equals(latestRequest))
@@ -249,7 +265,7 @@ public final class GridDriver {
 		int i = 0;
 		Object[] values = c._currentValues();
 		KeyEnumerator km;
-		for (String cname : meta.getColumns().keySet()) {
+		for (String cname : closedCopy.meta().getColumns().keySet()) {
 			km = keyEnumerators.get(cname);
 			if (km != null)
 				km.setValue(values[i]);
@@ -289,7 +305,7 @@ public final class GridDriver {
 	}
 
 	private void checkMeta(BasicCursor c) throws CelestaException {
-		if (c.meta() != meta)
+		if (c.meta() != closedCopy.meta())
 			throw new CelestaException("Metaobjects for cursor and cursor position specifier don't match.");
 	}
 
@@ -302,20 +318,6 @@ public final class GridDriver {
 	 */
 	public int getApproxTotalCount() {
 		return interpolator.getApproximateCount();
-	}
-
-	/**
-	 * Returns this driver's key interpolator.
-	 */
-	public KeyInterpolator getInterpolator() {
-		return interpolator;
-	}
-
-	/**
-	 * Returns this driver's key manager.
-	 */
-	public KeyEnumerator getKeyEnumerator() {
-		return rootKeyEnumerator;
 	}
 
 }
