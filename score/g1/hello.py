@@ -178,6 +178,9 @@ def hello(context, arg):
         print c.doublefield
     c.setValue('doublefield', 3.14)
     print c.doublefield
+    c.orderBy('aaa', 'bbb')
+    c.navigate('=')
+    print c.doublefield
     print 'Python procedure finished.'
     
 def testTrigger(rec):
