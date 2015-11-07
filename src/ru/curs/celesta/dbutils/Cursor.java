@@ -256,9 +256,12 @@ public abstract class Cursor extends BasicCursor {
 			int j = 1;
 			int i = 0;
 			// Для версионированной таблицы заполняем параметр с версией
-			if (meta().isVersioned())
+			if (meta().isVersioned()) {
+				// for a completely new record
+				if (getRecversion() == 0)
+					setRecversion(xRec.getRecversion());
 				DBAdaptor.setParam(update, j++, recversion);
-
+			}
 			// Заполняем параметры присвоения (set ...)
 			for (String c : meta().getColumns().keySet()) {
 				if (!(myMask[i] || meta().getPrimaryKey().containsKey(c))) {
