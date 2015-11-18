@@ -1,4 +1,4 @@
 /**
- * Классы системы конструирования форм Lyra.
+ * Classes used for building forms in Lyra.
  */
 package ru.curs.lyra;
