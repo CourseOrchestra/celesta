@@ -1,4 +1,4 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.lyra;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

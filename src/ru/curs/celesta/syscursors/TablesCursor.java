@@ -74,7 +74,7 @@ public final class TablesCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Object[] _currentValues() {
+	public Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { grainid, tablename,
 				tabletype == TableType.TABLE ? "T" : "V", orphaned };

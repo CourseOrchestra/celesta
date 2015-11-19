@@ -65,7 +65,7 @@ public final class LogSetupCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Object[] _currentValues() {
+	public Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { grainid, tablename, i, m, d };
 		return result;

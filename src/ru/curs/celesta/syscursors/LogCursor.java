@@ -89,7 +89,7 @@ public final class LogCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Object[] _currentValues() {
+	public Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { entryno, entry_time, userid, sessionid, grainid,
 				tablename, action_type, pkvalue1, pkvalue2, pkvalue3,

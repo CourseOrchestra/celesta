@@ -1,4 +1,4 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.lyra;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,6 +20,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.BasicCursor;
+import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.NamedElementHolder;
 import ru.curs.celesta.score.ParseException;

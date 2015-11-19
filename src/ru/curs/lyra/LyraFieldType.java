@@ -1,4 +1,4 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.lyra;
 
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;

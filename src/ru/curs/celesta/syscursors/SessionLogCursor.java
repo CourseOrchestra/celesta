@@ -91,7 +91,7 @@ public class SessionLogCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Object[] _currentValues() {
+	public Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { entryno, sessionid, userid, logintime, logoutime,
 				timeout, failedlogin };

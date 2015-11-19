@@ -24,6 +24,8 @@ import ru.curs.celesta.InitTest;
 import ru.curs.celesta.SessionContext;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.syscursors.GrainsCursor;
+import ru.curs.lyra.LyraFieldType;
+import ru.curs.lyra.LyraFormData;
 
 public class SerializerTest {
 

@@ -109,4 +109,11 @@ public enum ViewColumnType implements ColumnMeta {
 		}
 
 	};
+
+	@Override
+	public String getCelestaDoc() {
+		// TODO !!!! redevelop the handling of views in order to support JavaDoc
+		// for view fields!
+		return "";
+	}
 }

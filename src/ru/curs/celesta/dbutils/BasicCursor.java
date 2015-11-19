@@ -995,6 +995,8 @@ public abstract class BasicCursor {
 	 */
 	public abstract BasicCursor _getBufferCopy(CallContext context) throws CelestaException;
 
+	public abstract Object[] _currentValues();
+	
 	protected abstract void _clearBuffer(boolean withKeys);
 
 	protected abstract String _grainName();
@@ -1002,8 +1004,6 @@ public abstract class BasicCursor {
 	protected abstract String _tableName();
 
 	protected abstract void _parseResult(ResultSet rs) throws SQLException;
-
-	protected abstract Object[] _currentValues();
 
 	protected abstract void _setFieldValue(String name, Object value);
 

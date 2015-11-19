@@ -72,7 +72,7 @@ public final class PermissionsCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Object[] _currentValues() {
+	public Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { roleId, grainId, tablename, r, i, m, d };
 		return result;

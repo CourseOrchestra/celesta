@@ -15,5 +15,10 @@ public interface ColumnMeta {
 	 * Тип данных Celesta,соответствующий полю.
 	 */
 	String getCelestaType();
+	
+	/**
+	 * Column's CelestaDoc.
+	 */
+	String getCelestaDoc();
 
 }

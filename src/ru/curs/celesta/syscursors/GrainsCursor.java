@@ -207,7 +207,7 @@ public final class GrainsCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Object[] _currentValues() {
+	public Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { id, version, length, checksum, state, lastmodified,
 				message };

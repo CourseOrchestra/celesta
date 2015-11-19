@@ -12,9 +12,6 @@ import org.python.core.PyObject;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
-import ru.curs.celesta.dbutils.LyraFieldType;
-import ru.curs.celesta.dbutils.LyraFieldValue;
-import ru.curs.celesta.dbutils.LyraFormData;
 import ru.curs.celesta.score.ParseException;
 
 /**
