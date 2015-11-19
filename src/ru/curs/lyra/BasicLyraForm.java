@@ -1,5 +1,10 @@
 package ru.curs.lyra;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
@@ -11,30 +16,55 @@ import ru.curs.celesta.score.GrainElement;
  */
 public abstract class BasicLyraForm {
 
-	private BasicCursor rec;
+	private final GrainElement meta;
+	private final LinkedHashMap<String, LyraFormField> fieldsMeta = new LinkedHashMap<>();
+	private final Map<String, LyraFormField> unmodifiableMeta = Collections.unmodifiableMap(fieldsMeta);
 
-	public BasicLyraForm() {
-		super();
+	private BasicCursor rec;
+	private CallContext context;
+
+	BasicLyraForm(CallContext context) throws CelestaException {
+		this.context = context;
+		rec = _getCursor(context);
+		meta = rec.meta();
+		// TODO: fill fieldsMeta here
 	}
 
-	protected BasicCursor rec() {
+	/**
+	 * Sets call context for current form.
+	 * 
+	 * @param context
+	 *            new call context.
+	 */
+	public void setCallContext(CallContext context) {
+		this.context = context;
+	}
+
+	/**
+	 * Gets current alive cursor.
+	 * 
+	 * @throws CelestaException
+	 *             navigation error.
+	 */
+	public BasicCursor rec() throws CelestaException {
+		if (rec == null) {
+			if (context != null) {
+				rec = _getCursor(context);
+				rec.navigate("-");
+			}
+		} else {
+			if (rec.callContext() != context) {
+				BasicCursor rec2 = _getCursor(context);
+				rec2.copyFieldsFrom(rec);
+				rec = rec2;
+				rec.navigate("=>+");
+			}
+		}
 		return rec;
 	}
 
-	protected boolean updateRec() throws CelestaException {
-		if (rec == null) {
-			rec = _getCursor();
-			return true;
-		} else if (rec.isClosed()) {
-			BasicCursor rec2 = _getCursor();
-			rec2.copyFieldsFrom(rec);
-			rec = rec2;
-		}
-		return false;
-	}
-
 	protected Cursor getCursor() throws CelestaException {
-		updateRec();
+		rec = rec();
 		if (rec instanceof Cursor) {
 			return (Cursor) rec;
 		} else {
@@ -43,15 +73,17 @@ public abstract class BasicLyraForm {
 	}
 
 	/**
-	 * Retrieves cursor's record metainformation.
-	 * 
-	 * @throws CelestaException
-	 *             Error while retrieving meta (should not happen normally).
+	 * Returns form fields metadata.
 	 */
-	protected GrainElement getRecMeta() throws CelestaException {
-		if (rec == null)
-			rec = _getCursor();
-		return rec.meta();
+	public Map<String, LyraFormField> getFieldsMeta() {
+		return unmodifiableMeta;
+	}
+
+	/**
+	 * Retrieves cursor's record metainformation.
+	 */
+	protected GrainElement meta() {
+		return meta;
 	}
 
 	/*
@@ -62,7 +94,7 @@ public abstract class BasicLyraForm {
 	/**
 	 * Should return an active filtered and sorted cursor.
 	 */
-	public abstract BasicCursor _getCursor();
+	public abstract BasicCursor _getCursor(CallContext context);
 
 	/**
 	 * Should return the form's fully qualified Python class name.

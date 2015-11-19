@@ -9,6 +9,7 @@ import java.sql.Date;
 
 import org.python.core.PyObject;
 
+import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
@@ -22,6 +23,10 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	private static final String UTF_8 = "utf-8";
 	private LyraFormData lfd;
 
+	BasicCardForm(CallContext context) throws CelestaException {
+		super(context);
+	}
+
 	/**
 	 * Отыскивает первую запись в наборе записей.
 	 * 
@@ -31,12 +36,6 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 *             Ошибка сериализации.
 	 */
 	public String findRec() throws CelestaException, ParseException {
-		if (updateRec()) {
-			// Cursor created first time
-			rec().navigate("-");
-		} else {
-			rec().navigate("=>+");
-		}
 		ByteArrayOutputStream result = new ByteArrayOutputStream();
 		serialize(rec(), result);
 		try {
