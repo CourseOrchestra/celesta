@@ -8,7 +8,7 @@ import ru.curs.celesta.CelestaException;
  */
 public abstract class BasicGridForm extends BasicLyraForm {
 
-	BasicGridForm(CallContext context) throws CelestaException {
+	public BasicGridForm(CallContext context) throws CelestaException {
 		super(context);
 		// TODO Auto-generated constructor stub
 	}

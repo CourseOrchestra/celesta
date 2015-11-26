@@ -23,7 +23,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	private static final String UTF_8 = "utf-8";
 	private LyraFormData lfd;
 
-	BasicCardForm(CallContext context) throws CelestaException {
+	public BasicCardForm(CallContext context) throws CelestaException {
 		super(context);
 	}
 

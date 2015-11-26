@@ -23,7 +23,7 @@ public abstract class BasicLyraForm {
 	private BasicCursor rec;
 	private CallContext context;
 
-	BasicLyraForm(CallContext context) throws CelestaException {
+	public BasicLyraForm(CallContext context) throws CelestaException {
 		this.context = context;
 		rec = _getCursor(context);
 		meta = rec.meta();
