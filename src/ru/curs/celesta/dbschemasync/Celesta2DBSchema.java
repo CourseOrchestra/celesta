@@ -3,6 +3,7 @@ package ru.curs.celesta.dbschemasync;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -28,6 +29,8 @@ import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.ViewColumnType;
 
 /**
  * Класс-преобразователь Score в DBS-файл.
@@ -50,24 +53,20 @@ public final class Celesta2DBSchema {
 	 */
 	public static void scoreToDBS(Score s, File dbsFile) throws Exception {
 
-		DocumentBuilderFactory docFactory = DocumentBuilderFactory
-				.newInstance();
+		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 		Document doc;
 		if (!dbsFile.exists()) {
 			FileOutputStream fos = new FileOutputStream(dbsFile);
 			try {
-				XMLStreamWriter sw = XMLOutputFactory.newInstance()
-						.createXMLStreamWriter(fos, "utf-8");
+				XMLStreamWriter sw = XMLOutputFactory.newInstance().createXMLStreamWriter(fos, "utf-8");
 				sw.writeStartDocument();
 				sw.writeStartElement("project");
 				sw.writeAttribute("name", "CelestaReversed");
 				sw.writeAttribute("database", "Celesta");
-				sw.writeAttribute("id",
-						String.format("Project%d", (new Random()).nextInt()));
+				sw.writeAttribute("id", String.format("Project%d", (new Random()).nextInt()));
 				sw.writeStartElement("layout");
-				sw.writeAttribute("id",
-						String.format("Layout%d", (new Random()).nextInt()));
+				sw.writeAttribute("id", String.format("Layout%d", (new Random()).nextInt()));
 				sw.writeAttribute("name", "celesta");
 				sw.writeEndElement();
 				sw.writeEndElement();
@@ -103,18 +102,19 @@ public final class Celesta2DBSchema {
 			for (Table t : g.getTables().values())
 				writeTable(g, t, doc, schema);
 
+			for (View v : g.getViews().values())
+				writeView(g, v, doc, schema);
+
 			Element procedure = doc.createElement("procedure");
 			procedure.setAttribute("name", g.getName());
 			procedure.setAttribute("isSystem", "false");
 			schema.appendChild(procedure);
 			Element string = doc.createElement("string");
-			string.setTextContent(String.format(
-					"create grain %s version '%s';", g.getName(), g
-							.getVersion().toString()));
+			string.setTextContent(
+					String.format("create grain %s version '%s';", g.getName(), g.getVersion().toString()));
 			procedure.appendChild(string);
 		}
-		TransformerFactory transformerFactory = TransformerFactory
-				.newInstance();
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
 		Transformer transformer = transformerFactory.newTransformer();
 		transformer.setOutputProperty(OutputKeys.METHOD, "xml");
 		transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
@@ -156,8 +156,7 @@ public final class Celesta2DBSchema {
 		table.appendChild(column);
 	}
 
-	private static void writeComment(String celestaDoc, Document doc,
-			Element parent) {
+	private static void writeComment(String celestaDoc, Document doc, Element parent) {
 		if (celestaDoc != null) {
 			Element comment = doc.createElement("comment");
 			comment.appendChild(doc.createCDATASection(celestaDoc));
@@ -165,8 +164,7 @@ public final class Celesta2DBSchema {
 		}
 	}
 
-	private static void writeTable(Grain g, Table t, Document doc,
-			Element schema) {
+	private static void writeTable(Grain g, Table t, Document doc, Element schema) {
 		Element table = doc.createElement("table");
 		table.setAttribute("name", t.getName());
 		schema.appendChild(table);
@@ -192,8 +190,7 @@ public final class Celesta2DBSchema {
 			Element efk = doc.createElement("fk");
 			table.appendChild(efk);
 			efk.setAttribute("name", fk.getConstraintName());
-			efk.setAttribute("to_schema", fk.getReferencedTable().getGrain()
-					.getName());
+			efk.setAttribute("to_schema", fk.getReferencedTable().getGrain().getName());
 			efk.setAttribute("to_table", fk.getReferencedTable().getName());
 			switch (fk.getDeleteRule()) {
 			case CASCADE:
@@ -215,8 +212,7 @@ public final class Celesta2DBSchema {
 			default:
 			}
 
-			Iterator<Column> i = fk.getReferencedTable().getPrimaryKey()
-					.values().iterator();
+			Iterator<Column> i = fk.getReferencedTable().getPrimaryKey().values().iterator();
 			for (Column c : fk.getColumns().values()) {
 				Element fkColumn = doc.createElement("fk_column");
 				efk.appendChild(fkColumn);
@@ -242,6 +238,28 @@ public final class Celesta2DBSchema {
 
 		// Writing storage options
 		writeOptions(t, doc, table);
+	}
+
+	private static void writeView(Grain g, View v, Document doc, Element schema) {
+		Element view = doc.createElement("view");
+		view.setAttribute("name", v.getName());
+		schema.appendChild(view);
+		writeComment(v.getCelestaDoc(), doc, view);
+		Element viewScript = doc.createElement("view_script");
+		viewScript.appendChild(doc.createCDATASection(v.getCelestaQueryString()));
+		view.appendChild(viewScript);
+
+		// Writing columns
+		for (Map.Entry<String, ViewColumnType> c : v.getColumns().entrySet())
+			writeColumn(c, doc, view);
+
+	}
+
+	private static void writeColumn(Map.Entry<String, ViewColumnType> c, Document doc, Element view) {
+		Element column = doc.createElement("column");
+		column.setAttribute("name", c.getKey());
+		column.setAttribute("type", c.getValue().getCelestaType());
+		view.appendChild(column);
 	}
 
 	private static void writeOptions(Table t, Document doc, Element table) {
