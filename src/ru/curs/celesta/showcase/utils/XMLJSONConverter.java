@@ -57,20 +57,16 @@ public final class XMLJSONConverter {
 			newXml = newXml.replaceFirst("<[?]xml(.)*[?]>", "");
 		}
 
-		if (newXml.contains("&gt;")) {
-			while (newXml.contains("&gt;")) {
-				newXml = newXml.replace("&gt;", "&amp;gt;");
-			}
+		while (newXml.contains("&gt;")) {
+			newXml = newXml.replace("&gt;", "&amp;gt;");
 		}
-		if (newXml.contains("&lt;")) {
-			while (newXml.contains("&lt;")) {
-				newXml = newXml.replace("&lt;", "&amp;lt;");
-			}
+
+		while (newXml.contains("&lt;")) {
+			newXml = newXml.replace("&lt;", "&amp;lt;");
 		}
-		if (newXml.contains("&nbsp;")) {
-			while (newXml.contains("&nbsp;")) {
-				newXml = newXml.replace("&nbsp;", "&amp;nbsp;");
-			}
+
+		while (newXml.contains("&nbsp;")) {
+			newXml = newXml.replace("&nbsp;", "&amp;nbsp;");
 		}
 
 		List<String> innerOfCurColIdList = new ArrayList<String>();
@@ -86,8 +82,7 @@ public final class XMLJSONConverter {
 					int innerIndex = arr[i].indexOf("</currentColumnId>".toUpperCase());
 					string = arr[i].substring(0, innerIndex);
 					int outerIndex = newXml.toUpperCase().indexOf(string);
-					innerOfCurColIdList.add(newXml.substring(outerIndex,
-							outerIndex + string.length()));
+					innerOfCurColIdList.add(newXml.substring(outerIndex, outerIndex + string.length()));
 				}
 			}
 		}
@@ -126,9 +121,7 @@ public final class XMLJSONConverter {
 		}
 
 		final String tempRootForResolvingProblem = "tempRootForResolvingProblem";
-		newXml =
-			"<" + tempRootForResolvingProblem + ">" + newXml + "</" + tempRootForResolvingProblem
-					+ ">";
+		newXml = "<" + tempRootForResolvingProblem + ">" + newXml + "</" + tempRootForResolvingProblem + ">";
 		InputStream in = stringToStream(newXml);
 		parser.parse(in, handler);
 		JsonElement result = handler.getResult();
@@ -190,8 +183,8 @@ public final class XMLJSONConverter {
 	 *             метод JSONToXMLParser.outPrint() может вызывать данное
 	 *             исключение в случае ошибки парсинга.
 	 */
-	public static String jsonToXml(final String json) throws JSONException, TransformerException,
-			ParserConfigurationException {
+	public static String jsonToXml(final String json)
+			throws JSONException, TransformerException, ParserConfigurationException {
 		// return null;
 		// throw new NotImplementedYetException();
 		String newJson = "{\"tempRootForResolvingProblem\":" + json + "}";
@@ -230,8 +223,7 @@ public final class XMLJSONConverter {
 	 *             вызывается методом JSONObject(str) в случае ошибки парсинга
 	 *             json-объекта
 	 */
-	public static JSONObject xmlToJsonObject(final String xml) throws JSONException, SAXException,
-			IOException {
+	public static JSONObject xmlToJsonObject(final String xml) throws JSONException, SAXException, IOException {
 		String str = XMLJSONConverter.xmlToJson(xml);
 		JSONObject jsonObj = new JSONObject(str);
 		return jsonObj;

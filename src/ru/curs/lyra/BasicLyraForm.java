@@ -26,6 +26,7 @@ public abstract class BasicLyraForm {
 	public BasicLyraForm(CallContext context) throws CelestaException {
 		this.context = context;
 		rec = _getCursor(context);
+		rec.navigate("-");
 		meta = rec.meta();
 		// TODO: fill fieldsMeta here
 	}

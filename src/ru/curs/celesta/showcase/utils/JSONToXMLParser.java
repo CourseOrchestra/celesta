@@ -17,6 +17,7 @@ import org.w3c.dom.*;
  * 
  */
 public class JSONToXMLParser {
+	private static final String UNSUCCESSFUL = "Не удалось добавить элемент \"%s\" в DOM-модель xml%n";
 	private DocumentBuilder builder;
 	private Transformer t;
 	private final JSONTokener jt;
@@ -28,14 +29,6 @@ public class JSONToXMLParser {
 	private boolean bCenter = false;
 
 	public JSONToXMLParser(String json) {
-		// String json1 = json;
-		// if (json.contains("u\"")) {
-		// json1 = json.replaceAll("u\"", "\"");
-		// }
-		// String json2 = json1;
-		// if (json1.contains("u \'")) {
-		// json2 = json1.replaceAll("u \'", "\'");
-		// }
 		String newJson = json;
 
 		if (newJson.contains("&lt;")) {
@@ -75,8 +68,7 @@ public class JSONToXMLParser {
 	 *             вызывается в случае ошибки парсинга json-объекта.
 	 */
 
-	public String outPrint() throws TransformerException, JSONException,
-			ParserConfigurationException {
+	public String outPrint() throws TransformerException, JSONException, ParserConfigurationException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		builder = factory.newDocumentBuilder();
 		Document doc = builder.newDocument();
@@ -137,8 +129,7 @@ public class JSONToXMLParser {
 		return outString;
 	}
 
-	private Document buildDoc(final Document doc, final Element root, final JSONObject jsonObj)
-			throws JSONException {
+	private Document buildDoc(final Document doc, final Element root, final JSONObject jsonObj) throws JSONException {
 		String[] ar = JSONObject.getNames(jsonObj);
 		String[] newAr = new String[ar.length];
 		newAr[0] = ar[ar.length - 1];
@@ -166,8 +157,7 @@ public class JSONToXMLParser {
 						elemCell = doc.createElement(arCell[0]);
 						root.appendChild(elemCell);
 					} catch (Exception e) {
-						System.out.println("Не удалось добавить элемент \"" + arCell[0]
-								+ "\" в DOM-модель xml");
+						System.out.printf(UNSUCCESSFUL, arCell[0]);
 					}
 					// elemCell.setAttribute("sorted", "True");
 					Object valueCell = jObjCell.get(arCell[0]);
@@ -191,8 +181,8 @@ public class JSONToXMLParser {
 		return doc;
 	}
 
-	private Document buildArDoc(final Document doc, final Element root, final JSONArray jsonArray,
-			final String key) throws JSONException {
+	private Document buildArDoc(final Document doc, final Element root, final JSONArray jsonArray, final String key)
+			throws JSONException {
 		Object cell;
 
 		for (int j = 0; j < jsonArray.length(); j++) {
@@ -200,11 +190,9 @@ public class JSONToXMLParser {
 			Element childElem = null;
 			try {
 				childElem = doc.createElement(childKey);
-			root.appendChild(childElem);
+				root.appendChild(childElem);
 			} catch (Exception e) {
-				System.out
-.println("Не удалось добавить элемент \"" + childKey
-						+ "\" в DOM-модель xml");
+				System.out.printf(UNSUCCESSFUL, childKey);
 			}
 			cell = jsonArray.get(j);
 
@@ -214,8 +202,8 @@ public class JSONToXMLParser {
 		return doc;
 	}
 
-	private Document buildArSortedDoc(final Document doc, final Element root,
-			final JSONArray jsonArray, final Element elem) throws JSONException {
+	private Document buildArSortedDoc(final Document doc, final Element root, final JSONArray jsonArray,
+			final Element elem) throws JSONException {
 		Object cell;
 		Element childElem;
 		Element elemClone = (Element) elem.cloneNode(true);
@@ -249,10 +237,9 @@ public class JSONToXMLParser {
 			Element root = null;
 			try {
 				root = doc1.createElement(ar[0]);
-			doc1.appendChild(root);
+				doc1.appendChild(root);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент \"" + ar[0]
-						+ "\" в DOM-модель xml");
+				System.out.printf(UNSUCCESSFUL, ar[0]);
 			}
 			cell = (JSONObject) jsonArray.get(j);
 
@@ -279,9 +266,9 @@ public class JSONToXMLParser {
 		Element root = null;
 		try {
 			root = doc.createElement(ar[0]);
-		doc.appendChild(root);
+			doc.appendChild(root);
 		} catch (Exception e) {
-			System.out.println("Не удалось добавить элемент \"" + ar[0] + "\" в DOM-модель xml");
+			System.out.printf(UNSUCCESSFUL, ar[0]);
 		}
 		Object value = jsonObj.get(ar[0]);
 
@@ -305,8 +292,7 @@ public class JSONToXMLParser {
 			}
 
 			text = doc.createTextNode(change);
-		} else if ("None".equalsIgnoreCase(value.toString())
-				|| "null".equalsIgnoreCase(value.toString())) {
+		} else if ("None".equalsIgnoreCase(value.toString()) || "null".equalsIgnoreCase(value.toString())) {
 			text = null;
 		} else {
 			text = doc.createTextNode(value.toString());
@@ -341,10 +327,9 @@ public class JSONToXMLParser {
 		}
 	}
 
-	private void comparison(final Document doc, final Element elem, final Object value)
-			throws JSONException {
-		if (value.getClass() == String.class || value.getClass() == Integer.class
-				|| value.getClass() == Double.class || value.getClass() == Boolean.class) {
+	private void comparison(final Document doc, final Element elem, final Object value) throws JSONException {
+		if (value.getClass() == String.class || value.getClass() == Integer.class || value.getClass() == Double.class
+				|| value.getClass() == Boolean.class) {
 
 			Text text = settingTextNode(doc, value);
 			if (text != null) {
@@ -357,8 +342,8 @@ public class JSONToXMLParser {
 		}
 	}
 
-	private void comparison2(final Document doc, final Element root, final Object value,
-			final String key) throws JSONException {
+	private void comparison2(final Document doc, final Element root, final Object value, final String key)
+			throws JSONException {
 		Object twer = null;
 
 		if (value.equals(twer)) {
@@ -367,21 +352,21 @@ public class JSONToXMLParser {
 				elem = doc.createElement(key);
 				root.appendChild(elem);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент \"" + key + "\" в DOM-модель xml");
+				System.out.printf(UNSUCCESSFUL, key);
 			}
 			Text text = doc.createTextNode("");
 			elem.appendChild(text);
 		}
 
-		if (value.getClass() == String.class || value.getClass() == Integer.class
-				|| value.getClass() == Double.class || value.getClass() == Boolean.class) {
+		if (value.getClass() == String.class || value.getClass() == Integer.class || value.getClass() == Double.class
+				|| value.getClass() == Boolean.class) {
 
 			Element elem = null;
 			try {
 				elem = doc.createElement(key);
 				root.appendChild(elem);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент \"" + key + "\" в DOM-модель xml");
+				System.out.printf(UNSUCCESSFUL, key);
 			}
 			Text text = settingTextNode(doc, value);
 			if (text != null) {
@@ -395,7 +380,7 @@ public class JSONToXMLParser {
 				elem = doc.createElement(key);
 				root.appendChild(elem);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент \"" + key + "\" в DOM-модель xml");
+				System.out.printf(UNSUCCESSFUL, key);
 			}
 			buildDoc(doc, elem, (JSONObject) value);
 		}
