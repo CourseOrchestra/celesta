@@ -2,7 +2,7 @@ package ru.curs.lyra;
 
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
-import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.IntegerColumn;
@@ -17,20 +17,20 @@ public enum LyraFieldType {
 	 * BLOB.
 	 */
 	BLOB, /**
-	 * BIT.
-	 */
+			 * BIT.
+			 */
 	BIT, /**
-	 * DATETIME.
-	 */
+			 * DATETIME.
+			 */
 	DATETIME, /**
-	 * REAL.
-	 */
+				 * REAL.
+				 */
 	REAL, /**
-	 * INT.
-	 */
+			 * INT.
+			 */
 	INT, /**
-	 * VARCHAR.
-	 */
+			 * VARCHAR.
+			 */
 	VARCHAR;
 
 	/**
@@ -40,7 +40,7 @@ public enum LyraFieldType {
 	 *            столбец таблицы.
 	 * 
 	 */
-	public static LyraFieldType lookupFieldType(Column c) {
+	public static LyraFieldType lookupFieldType(ColumnMeta c) {
 		if (c instanceof IntegerColumn) {
 			return INT;
 		} else if (c instanceof StringColumn) {
@@ -53,9 +53,10 @@ public enum LyraFieldType {
 			return BIT;
 		} else if (c instanceof BinaryColumn) {
 			return BLOB;
+		} else if (c instanceof ViewColumnType) {
+			return lookupFieldType((ViewColumnType) c);
 		} else {
-			throw new RuntimeException(String.format(
-					"Invalid table column type: %s", c.getClass().toString()));
+			throw new RuntimeException(String.format("Invalid table column type: %s", c.getClass().toString()));
 		}
 	}
 
@@ -64,8 +65,8 @@ public enum LyraFieldType {
 	 * 
 	 * @param c
 	 *            тип столбца представления.
-	 * */
-	public static LyraFieldType lookupFieldType(ViewColumnType c) {
+	 */
+	private static LyraFieldType lookupFieldType(ViewColumnType c) {
 		switch (c) {
 		case NUMERIC:
 			return REAL;
@@ -78,8 +79,7 @@ public enum LyraFieldType {
 		case BLOB:
 			return BLOB;
 		default:
-			throw new RuntimeException(String.format(
-					"Invalid view column type: %s", c.toString()));
+			throw new RuntimeException(String.format("Invalid view column type: %s", c.toString()));
 		}
 	}
 

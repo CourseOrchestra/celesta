@@ -25,7 +25,10 @@ public abstract class NamedElementHolder<T extends NamedElement> implements
 	private final Map<String, T> namespaceReadOnly = Collections
 			.unmodifiableMap(namespace);
 
-	Map<String, T> getElements() {
+	/**
+	 * Возвращает копию словаря элементов только для чтения.
+	 */
+	public Map<String, T> getElements() {
 		return namespaceReadOnly;
 	}
 

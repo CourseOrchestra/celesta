@@ -1,14 +1,23 @@
 package ru.curs.lyra;
 
+import ru.curs.celesta.score.NamedElement;
+import ru.curs.celesta.score.ParseException;
+
 /**
  * Lyra form field metadata.
  */
-public class LyraFormField {
+public class LyraFormField extends NamedElement {
+
+
 	private LyraFieldType type;
 	private boolean editable;
 	private boolean visible;
 	private String caption;
 	private String lookup;
+	
+	public LyraFormField(String name) throws ParseException {
+		super(name);
+	}
 
 	/**
 	 * Field type.
