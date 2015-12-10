@@ -74,9 +74,14 @@ public final class AppSettings {
 			}
 
 		pylibPath = settings.getProperty("pylib.path", DEFAULT_PYLIB_PATH);
-		File pylibPathFile = new File(pylibPath);
-		if (!pylibPathFile.exists())
-			sb.append("Invalid pylib.path entry: " + pylibPath + '\n');
+		if (!pylibPath.isEmpty()) {
+			for (String pathEntry : pylibPath.split(File.pathSeparator)) {
+				File pathEntryFile = new File(pathEntry);
+				// File pylibPathFile = new File(pylibPath);
+				if (!pathEntryFile.exists())
+					sb.append("Invalid pylib.path entry: " + pylibPath + '\n');
+			}
+		}
 
 		javalibPath = settings.getProperty("javalib.path", "").trim();
 		if (!javalibPath.isEmpty())
