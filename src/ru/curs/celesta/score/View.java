@@ -163,8 +163,7 @@ public class View extends GrainElement {
 		if (whereCondition != null) {
 			List<TableRef> t = new ArrayList<>(tables.values());
 			whereCondition.resolveFieldRefs(t);
-			if (whereCondition.getType() != ViewColumnType.BIT)
-				whereCondition.assertType(ViewColumnType.LOGIC);
+			whereCondition.assertType(ViewColumnType.LOGIC);
 		}
 		this.whereCondition = whereCondition;
 	}

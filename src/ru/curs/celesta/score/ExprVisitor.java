@@ -149,8 +149,7 @@ final class TypeChecker extends ExprVisitor {
 
 	@Override
 	void visitNotExpr(NotExpr expr) throws ParseException {
-		if (expr.getExpr().getType() != ViewColumnType.BIT)
-			expr.getExpr().assertType(ViewColumnType.LOGIC);
+		expr.getExpr().assertType(ViewColumnType.LOGIC);
 	}
 
 }
