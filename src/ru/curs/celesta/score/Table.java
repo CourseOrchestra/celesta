@@ -387,6 +387,7 @@ public final class Table extends GrainElement {
 		getGrain().removeTable(this);
 	}
 
+	@Override
 	void save(BufferedWriter bw) throws IOException {
 		Grain.writeCelestaDoc(this, bw);
 		bw.write(String.format("CREATE TABLE %s(", getName()));

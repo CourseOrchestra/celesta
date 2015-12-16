@@ -129,6 +129,7 @@ public class Index extends GrainElement {
 		getGrain().removeIndex(this);
 	}
 
+	@Override
 	void save(BufferedWriter bw) throws IOException {
 		Grain.writeCelestaDoc(this, bw);
 		bw.write("CREATE INDEX ");
