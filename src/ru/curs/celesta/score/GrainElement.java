@@ -44,7 +44,9 @@ public abstract class GrainElement extends NamedElement {
 	 */
 	public String getCelestaSQL() throws IOException {
 		StringWriter sw = new StringWriter();
-		save(new BufferedWriter(sw));
+		BufferedWriter bw = new BufferedWriter(sw);
+		save(bw);
+		bw.flush();
 		return sw.toString();
 	}
 }
