@@ -17,7 +17,8 @@ import org.w3c.dom.*;
  * 
  */
 public class JSONToXMLParser {
-	private static final String UNSUCCESSFUL = "Не удалось добавить элемент \"%s\" в DOM-модель xml%n";
+	private static final String UNSUCCESSFUL =
+		"Не удалось добавить элемент \"%s\" в DOM-модель xml%n";
 	private DocumentBuilder builder;
 	private Transformer t;
 	private final JSONTokener jt;
@@ -68,7 +69,8 @@ public class JSONToXMLParser {
 	 *             вызывается в случае ошибки парсинга json-объекта.
 	 */
 
-	public String outPrint() throws TransformerException, JSONException, ParserConfigurationException {
+	public String outPrint() throws TransformerException, JSONException,
+			ParserConfigurationException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		builder = factory.newDocumentBuilder();
 		Document doc = builder.newDocument();
@@ -96,6 +98,15 @@ public class JSONToXMLParser {
 
 		if (outString.contains("xmlns2") && vBool) {
 			outString = outString.replaceFirst("xmlns2", "xmlns");
+		}
+
+		while (outString.contains("{\"myTagForResolvingProblem\"=\"2\"}")) {
+			int ind = outString.indexOf("{\"myTagForResolvingProblem\"=\"2\"}");
+			String str1 = outString.substring(0, ind + 1).trim();
+			String str2 =
+				outString.substring(ind + "{\"myTagForResolvingProblem\"=\"2\"}".length() - 1,
+						outString.length()).trim();
+			outString = str1 + str2;
 		}
 
 		while (outString.contains("myTagForResolvingProblem")) {
@@ -129,7 +140,8 @@ public class JSONToXMLParser {
 		return outString;
 	}
 
-	private Document buildDoc(final Document doc, final Element root, final JSONObject jsonObj) throws JSONException {
+	private Document buildDoc(final Document doc, final Element root, final JSONObject jsonObj)
+			throws JSONException {
 		String[] ar = JSONObject.getNames(jsonObj);
 		String[] newAr = new String[ar.length];
 		newAr[0] = ar[ar.length - 1];
@@ -181,8 +193,8 @@ public class JSONToXMLParser {
 		return doc;
 	}
 
-	private Document buildArDoc(final Document doc, final Element root, final JSONArray jsonArray, final String key)
-			throws JSONException {
+	private Document buildArDoc(final Document doc, final Element root, final JSONArray jsonArray,
+			final String key) throws JSONException {
 		Object cell;
 
 		for (int j = 0; j < jsonArray.length(); j++) {
@@ -202,8 +214,8 @@ public class JSONToXMLParser {
 		return doc;
 	}
 
-	private Document buildArSortedDoc(final Document doc, final Element root, final JSONArray jsonArray,
-			final Element elem) throws JSONException {
+	private Document buildArSortedDoc(final Document doc, final Element root,
+			final JSONArray jsonArray, final Element elem) throws JSONException {
 		Object cell;
 		Element childElem;
 		Element elemClone = (Element) elem.cloneNode(true);
@@ -292,7 +304,8 @@ public class JSONToXMLParser {
 			}
 
 			text = doc.createTextNode(change);
-		} else if ("None".equalsIgnoreCase(value.toString()) || "null".equalsIgnoreCase(value.toString())) {
+		} else if ("None".equalsIgnoreCase(value.toString())
+				|| "null".equalsIgnoreCase(value.toString())) {
 			text = null;
 		} else {
 			text = doc.createTextNode(value.toString());
@@ -327,9 +340,10 @@ public class JSONToXMLParser {
 		}
 	}
 
-	private void comparison(final Document doc, final Element elem, final Object value) throws JSONException {
-		if (value.getClass() == String.class || value.getClass() == Integer.class || value.getClass() == Double.class
-				|| value.getClass() == Boolean.class) {
+	private void comparison(final Document doc, final Element elem, final Object value)
+			throws JSONException {
+		if (value.getClass() == String.class || value.getClass() == Integer.class
+				|| value.getClass() == Double.class || value.getClass() == Boolean.class) {
 
 			Text text = settingTextNode(doc, value);
 			if (text != null) {
@@ -342,8 +356,8 @@ public class JSONToXMLParser {
 		}
 	}
 
-	private void comparison2(final Document doc, final Element root, final Object value, final String key)
-			throws JSONException {
+	private void comparison2(final Document doc, final Element root, final Object value,
+			final String key) throws JSONException {
 		Object twer = null;
 
 		if (value.equals(twer)) {
@@ -358,8 +372,8 @@ public class JSONToXMLParser {
 			elem.appendChild(text);
 		}
 
-		if (value.getClass() == String.class || value.getClass() == Integer.class || value.getClass() == Double.class
-				|| value.getClass() == Boolean.class) {
+		if (value.getClass() == String.class || value.getClass() == Integer.class
+				|| value.getClass() == Double.class || value.getClass() == Boolean.class) {
 
 			Element elem = null;
 			try {
