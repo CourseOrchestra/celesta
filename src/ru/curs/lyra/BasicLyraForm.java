@@ -49,7 +49,7 @@ public abstract class BasicLyraForm {
 		rec = _getCursor(context);
 		rec.navigate("-");
 		meta = rec.meta();
-		obtainRecordMeta();
+		_buildUnboundFieldsMeta(fieldsMeta);
 	}
 
 	/**
@@ -57,24 +57,55 @@ public abstract class BasicLyraForm {
 	 */
 	BasicLyraForm(GrainElement m) throws ParseException, CelestaException {
 		meta = m;
-		obtainRecordMeta();
+		_buildUnboundFieldsMeta(fieldsMeta);
 	}
 
-	private void obtainRecordMeta() throws ParseException, CelestaException {
+	/**
+	 * Adds all bound fields to meta information using their CelestaDoc.
+	 * 
+	 * @throws ParseException
+	 *             duplicate field names
+	 * @throws CelestaException
+	 *             JSON Error
+	 */
+	public void addAllBoundFields() throws ParseException, CelestaException {
 		for (Entry<String, ? extends ColumnMeta> e : meta.getColumns().entrySet()) {
-			LyraFormField f = new LyraFormField(e.getKey());
-			fieldsMeta.addElement(f);
-			f.setType(LyraFieldType.lookupFieldType(e.getValue()));
-			String json = extractJSON(e.getValue().getCelestaDoc());
-			try {
-				JSONObject metadata = new JSONObject(json);
-				f.setCaption(metadata.has(CAPTION) ? metadata.getString(CAPTION) : f.getName());
-				f.setEditable(metadata.has(EDITABLE) ? metadata.getBoolean(EDITABLE) : true);
-				f.setVisible(metadata.has(VISIBLE) ? metadata.getBoolean(VISIBLE) : true);
-			} catch (JSONException e1) {
-				throw new CelestaException("JSON Error: %s", e1.getMessage());
-			}
+			addBoundField(e.getKey(), e.getValue());
 		}
+	}
+
+	private void addBoundField(String name, ColumnMeta m) throws ParseException, CelestaException {
+		LyraFormField f = new LyraFormField(name);
+		fieldsMeta.addElement(f);
+		f.setType(LyraFieldType.lookupFieldType(m));
+		String json = extractJSON(m.getCelestaDoc());
+		try {
+			JSONObject metadata = new JSONObject(json);
+			f.setCaption(metadata.has(CAPTION) ? metadata.getString(CAPTION) : f.getName());
+			f.setEditable(metadata.has(EDITABLE) ? metadata.getBoolean(EDITABLE) : true);
+			f.setVisible(metadata.has(VISIBLE) ? metadata.getBoolean(VISIBLE) : true);
+		} catch (JSONException e1) {
+			throw new CelestaException("JSON Error: %s", e1.getMessage());
+		}
+
+	}
+
+	/**
+	 * Adds only specific bound field.
+	 * 
+	 * @param name
+	 *            Name of a table column.
+	 * @throws ParseException
+	 *             No column with such name found.
+	 * @throws CelestaException
+	 *             JSON error in CelestaDoc.
+	 */
+	public void addBoundField(String name) throws ParseException, CelestaException {
+		ColumnMeta m = meta.getColumns().get(name);
+		if (m == null)
+			throw new ParseException(
+					String.format("Column '%s' not found in '%s.%s'", name, meta.getGrain().getName(), meta.getName()));
+		addBoundField(name, m);
 	}
 
 	/**
@@ -197,5 +228,13 @@ public abstract class BasicLyraForm {
 	 * Should return the form's fully qualified Python class name.
 	 */
 	public abstract String _getId();
+
+	/**
+	 * Should append unbound fields meta information.
+	 * 
+	 * @param meta
+	 *            Editable meta (NB: getFieldsMeta() returns read-only meta).
+	 */
+	public abstract void _buildUnboundFieldsMeta(NamedElementHolder<LyraFormField> meta);
 	// CHECKSTYLE:ON
 }

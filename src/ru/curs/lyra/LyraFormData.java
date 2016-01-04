@@ -3,6 +3,7 @@ package ru.curs.lyra;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -30,13 +31,12 @@ import ru.curs.celesta.score.ViewColumnType;
 /**
  * Данные записи формы, состоящие из полей курсора и дополнительных полей.
  */
-public class LyraFormData {
+class LyraFormData {
 	private final NamedElementHolder<LyraFieldValue> fields = new NamedElementHolder<LyraFieldValue>() {
 
 		@Override
 		protected String getErrorMsg(String name) {
-			return String.format(
-					"Field '%s' is defined more than once in form data", name);
+			return String.format("Field '%s' is defined more than once in form data", name);
 		}
 	};
 	private int recversion;
@@ -48,8 +48,17 @@ public class LyraFormData {
 
 	}
 
-	public LyraFormData(BasicCursor c, String formId) throws CelestaException,
-			ParseException {
+	/**
+	 * Creates a serializable cursor data representation.
+	 * 
+	 * @param c
+	 *            A cursor.
+	 * @param formId
+	 *            Fully qualified form class name.
+	 * @throws CelestaException
+	 * @throws ParseException
+	 */
+	public LyraFormData(BasicCursor c, String formId) throws CelestaException, ParseException {
 		if (c instanceof Cursor) {
 			recversion = ((Cursor) c).getRecversion();
 		}
@@ -59,7 +68,7 @@ public class LyraFormData {
 		int i = 0;
 
 		for (Entry<String, ?> column : c.meta().getColumns().entrySet()) {
-			Object val = vals[i++];
+			Serializable val = (Serializable) vals[i++];
 
 			LyraFieldValue lfv;
 			if (column.getValue() instanceof Column) {
@@ -77,11 +86,9 @@ public class LyraFormData {
 		FormDataParser parser;
 		parser = new FormDataParser();
 		try {
-			TransformerFactory.newInstance().newTransformer()
-					.transform(new StreamSource(is), new SAXResult(parser));
+			TransformerFactory.newInstance().newTransformer().transform(new StreamSource(is), new SAXResult(parser));
 		} catch (Exception e) {
-			throw new CelestaException("XML deserialization error: %s",
-					e.getMessage());
+			throw new CelestaException("XML deserialization error: %s", e.getMessage());
 		}
 	}
 
@@ -111,8 +118,7 @@ public class LyraFormData {
 		}
 	}
 
-	private void setCursorFieldValue(BasicCursor c, LyraFieldValue lfv)
-			throws CelestaException {
+	private void setCursorFieldValue(BasicCursor c, LyraFieldValue lfv) throws CelestaException {
 		Object val = lfv.getValue();
 		if (val == null) {
 			c.setValue(lfv.getName(), null);
@@ -124,8 +130,7 @@ public class LyraFormData {
 					c.setValue(lfv.getName(), val);
 				else {
 					if (sdf == null)
-						sdf = new SimpleDateFormat(
-								LyraFieldValue.XML_DATE_FORMAT);
+						sdf = new SimpleDateFormat(LyraFieldValue.XML_DATE_FORMAT);
 
 					Date d;
 					try {
@@ -175,10 +180,8 @@ public class LyraFormData {
 	 * @throws ParseException
 	 *             неуникальное имя или неверное значение
 	 */
-	public void addValue(String name, String value, boolean local)
-			throws ParseException {
-		LyraFieldValue v = new LyraFieldValue(LyraFieldType.VARCHAR, name,
-				value, local);
+	public void addValue(String name, String value, boolean local) throws ParseException {
+		LyraFieldValue v = new LyraFieldValue(LyraFieldType.VARCHAR, name, value, local);
 		addFieldValue(v);
 	}
 
@@ -194,10 +197,8 @@ public class LyraFormData {
 	 * @throws ParseException
 	 *             неуникальное имя или неверное значение
 	 */
-	public void addValue(String name, int value, boolean local)
-			throws ParseException {
-		LyraFieldValue v = new LyraFieldValue(LyraFieldType.INT, name, value,
-				local);
+	public void addValue(String name, int value, boolean local) throws ParseException {
+		LyraFieldValue v = new LyraFieldValue(LyraFieldType.INT, name, value, local);
 		addFieldValue(v);
 	}
 
@@ -213,10 +214,8 @@ public class LyraFormData {
 	 * @throws ParseException
 	 *             неуникальное имя или неверное значение
 	 */
-	public void addValue(String name, double value, boolean local)
-			throws ParseException {
-		LyraFieldValue v = new LyraFieldValue(LyraFieldType.REAL, name, value,
-				local);
+	public void addValue(String name, double value, boolean local) throws ParseException {
+		LyraFieldValue v = new LyraFieldValue(LyraFieldType.REAL, name, value, local);
 		addFieldValue(v);
 	}
 
@@ -232,10 +231,8 @@ public class LyraFormData {
 	 * @throws ParseException
 	 *             неуникальное имя или неверное значение
 	 */
-	public void addValue(String name, boolean value, boolean local)
-			throws ParseException {
-		LyraFieldValue v = new LyraFieldValue(LyraFieldType.BIT, name, value,
-				local);
+	public void addValue(String name, boolean value, boolean local) throws ParseException {
+		LyraFieldValue v = new LyraFieldValue(LyraFieldType.BIT, name, value, local);
 		addFieldValue(v);
 	}
 
@@ -251,10 +248,8 @@ public class LyraFormData {
 	 * @throws ParseException
 	 *             неуникальное имя или неверное значение
 	 */
-	public void addValue(String name, Date value, boolean local)
-			throws ParseException {
-		LyraFieldValue v = new LyraFieldValue(LyraFieldType.DATETIME, name,
-				value, local);
+	public void addValue(String name, Date value, boolean local) throws ParseException {
+		LyraFieldValue v = new LyraFieldValue(LyraFieldType.DATETIME, name, value, local);
 		addFieldValue(v);
 	}
 
@@ -271,8 +266,7 @@ public class LyraFormData {
 	 *             неуникальное имя
 	 * 
 	 */
-	public void addNullValue(LyraFieldType t, String name, boolean local)
-			throws ParseException {
+	public void addNullValue(LyraFieldType t, String name, boolean local) throws ParseException {
 		LyraFieldValue v = new LyraFieldValue(t, name, null, local);
 		addFieldValue(v);
 	}
@@ -288,12 +282,10 @@ public class LyraFormData {
 	public void serialize(OutputStream outputStream) throws CelestaException {
 		try {
 			XMLStreamWriter xmlWriter = XMLOutputFactory.newInstance()
-					.createXMLStreamWriter(
-							new OutputStreamWriter(outputStream, "UTF-8"));
+					.createXMLStreamWriter(new OutputStreamWriter(outputStream, "UTF-8"));
 			xmlWriter.writeStartDocument();
 			xmlWriter.writeStartElement("schema");
-			xmlWriter
-					.writeAttribute("recversion", Integer.toString(recversion));
+			xmlWriter.writeAttribute("recversion", Integer.toString(recversion));
 			if (formId != null)
 				xmlWriter.writeAttribute("formId", formId);
 
@@ -304,8 +296,7 @@ public class LyraFormData {
 			xmlWriter.writeEndDocument();
 			xmlWriter.flush();
 		} catch (Exception e) {
-			throw new CelestaException("XML Serialization error: %s",
-					e.getMessage());
+			throw new CelestaException("XML Serialization error: %s", e.getMessage());
 		}
 	}
 
@@ -322,12 +313,11 @@ public class LyraFormData {
 		private LyraFieldType type = null;
 
 		@Override
-		public void startElement(String uri, String localName, String qName,
-				Attributes attributes) throws SAXException {
+		public void startElement(String uri, String localName, String qName, Attributes attributes)
+				throws SAXException {
 			switch (status) {
 			case 0:
-				recversion = Integer
-						.parseInt(attributes.getValue("recversion"));
+				recversion = Integer.parseInt(attributes.getValue("recversion"));
 				formId = attributes.getValue("formId");
 				status = 1;
 				break;
@@ -343,15 +333,13 @@ public class LyraFormData {
 		}
 
 		@Override
-		public void characters(char[] ch, int start, int length)
-				throws SAXException {
+		public void characters(char[] ch, int start, int length) throws SAXException {
 			if (status == 2)
 				sb.append(ch, start, length);
 		}
 
 		@Override
-		public void endElement(String uri, String localName, String qName)
-				throws SAXException {
+		public void endElement(String uri, String localName, String qName) throws SAXException {
 			if (status == 2) {
 				status = 1;
 				try {
@@ -363,8 +351,7 @@ public class LyraFormData {
 						switch (type) {
 						case DATETIME:
 							if (sdf == null)
-								sdf = new SimpleDateFormat(
-										LyraFieldValue.XML_DATE_FORMAT);
+								sdf = new SimpleDateFormat(LyraFieldValue.XML_DATE_FORMAT);
 							Date d;
 							try {
 								d = sdf.parse(buf);

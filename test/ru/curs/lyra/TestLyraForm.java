@@ -13,6 +13,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.score.CelestaParser;
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.NamedElementHolder;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.ScoreTest;
@@ -49,6 +50,7 @@ public class TestLyraForm {
 		Grain g = cp.grain(s, "testlyra");
 		Table t = g.getTable("table1");
 		BasicLyraForm blf = new BasicLyraForm(t) {
+
 			@Override
 			public BasicCursor _getCursor(CallContext context) {
 				return null;
@@ -57,6 +59,15 @@ public class TestLyraForm {
 			@Override
 			public String _getId() {
 				return null;
+			}
+
+			@Override
+			public void _buildUnboundFieldsMeta(NamedElementHolder<LyraFormField> meta) {
+				try {
+					addAllBoundFields();
+				} catch (ParseException | CelestaException e) {
+					e.printStackTrace();
+				}
 			}
 		};
 
@@ -73,7 +84,7 @@ public class TestLyraForm {
 			assertEquals(editables[i], e.getValue().isEditable());
 			i++;
 		}
-		assertEquals(i, names.length);
+		assertEquals(names.length, i);
 
 	}
 }

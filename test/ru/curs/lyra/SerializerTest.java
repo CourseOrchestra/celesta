@@ -1,4 +1,4 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.lyra;
 
 import static org.junit.Assert.assertEquals;
 

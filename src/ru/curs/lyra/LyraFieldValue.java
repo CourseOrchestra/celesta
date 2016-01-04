@@ -1,5 +1,6 @@
 package ru.curs.lyra;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -14,16 +15,15 @@ import ru.curs.celesta.score.ViewColumnType;
 /**
  * Значение поля, передаваемого в форму и обратно.
  */
-public final class LyraFieldValue extends NamedElement {
-
+public final class LyraFieldValue extends NamedElement implements Serializable {
 	static final String XML_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
-
+	private static final long serialVersionUID = 1L;
 	private final LyraFieldType lyraFieldType;
-	private final Object val;
+	private final Serializable val;
 	private final boolean local;
 
-	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val,
-			boolean local) throws ParseException {
+	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Serializable val, boolean local)
+			throws ParseException {
 		super(fieldName);
 		this.lyraFieldType = lyraFieldType;
 		this.val = val;
@@ -40,10 +40,8 @@ public final class LyraFieldValue extends NamedElement {
 	 * @throws ParseException
 	 *             неверное имя.
 	 */
-	public static LyraFieldValue getValue(Column c, Object val)
-			throws ParseException {
-		return new LyraFieldValue(LyraFieldType.lookupFieldType(c),
-				c.getName(), val, false);
+	public static LyraFieldValue getValue(Column c, Serializable val) throws ParseException {
+		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), c.getName(), val, false);
 	}
 
 	/**
@@ -58,10 +56,8 @@ public final class LyraFieldValue extends NamedElement {
 	 * @throws ParseException
 	 *             неверное имя
 	 */
-	public static LyraFieldValue getValue(ViewColumnType c, String columnName,
-			Object val) throws ParseException {
-		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), columnName,
-				val, false);
+	public static LyraFieldValue getValue(ViewColumnType c, String columnName, Serializable val) throws ParseException {
+		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), columnName, val, false);
 	}
 
 	/**
@@ -77,7 +73,7 @@ public final class LyraFieldValue extends NamedElement {
 		xmlWriter.writeAttribute("type", lyraFieldType.toString());
 		xmlWriter.writeAttribute("null", Boolean.toString(val == null));
 		xmlWriter.writeAttribute("local", Boolean.toString(local));
-		
+
 		if (val instanceof Date) {
 			SimpleDateFormat sdf = new SimpleDateFormat(XML_DATE_FORMAT);
 			xmlWriter.writeCharacters(val == null ? "" : sdf.format(val));
@@ -90,7 +86,7 @@ public final class LyraFieldValue extends NamedElement {
 	/**
 	 * Значение поля.
 	 */
-	public Object getValue() {
+	public Serializable getValue() {
 		return val;
 	}
 

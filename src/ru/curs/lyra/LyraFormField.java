@@ -1,20 +1,22 @@
 package ru.curs.lyra;
 
+import java.io.Serializable;
+
 import ru.curs.celesta.score.NamedElement;
 import ru.curs.celesta.score.ParseException;
 
 /**
  * Lyra form field metadata.
  */
-public class LyraFormField extends NamedElement {
+public class LyraFormField extends NamedElement implements Serializable {
 
-
+	private static final long serialVersionUID = 1L;
 	private LyraFieldType type;
 	private boolean editable;
 	private boolean visible;
 	private String caption;
 	private String lookup;
-	
+
 	public LyraFormField(String name) throws ParseException {
 		super(name);
 	}
