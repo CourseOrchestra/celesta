@@ -69,13 +69,16 @@ public abstract class BasicLyraForm {
 	 *             JSON Error
 	 */
 	public void addAllBoundFields() throws ParseException, CelestaException {
+		int i = 0;
 		for (Entry<String, ? extends ColumnMeta> e : meta.getColumns().entrySet()) {
-			addBoundField(e.getKey(), e.getValue());
+			addBoundField(e.getKey(), i++, e.getValue());
 		}
 	}
 
-	private void addBoundField(String name, ColumnMeta m) throws ParseException, CelestaException {
-		LyraFormField f = new LyraFormField(name);
+	private void addBoundField(String name, int index, ColumnMeta m) throws ParseException, CelestaException {
+		LyraFieldType lft = LyraFieldType.lookupFieldType(m);
+		FieldAccessor a = FieldAccessorFactory.create(index, name, lft);
+		LyraFormField f = new LyraFormField(name, true, a);
 		fieldsMeta.addElement(f);
 		f.setType(LyraFieldType.lookupFieldType(m));
 		String json = extractJSON(m.getCelestaDoc());
@@ -101,11 +104,17 @@ public abstract class BasicLyraForm {
 	 *             JSON error in CelestaDoc.
 	 */
 	public void addBoundField(String name) throws ParseException, CelestaException {
+		int index = 0;
+		for (String n : meta.getColumns().keySet()) {
+			if (n.equals(name))
+				break;
+			index++;
+		}
 		ColumnMeta m = meta.getColumns().get(name);
 		if (m == null)
 			throw new ParseException(
 					String.format("Column '%s' not found in '%s.%s'", name, meta.getGrain().getName(), meta.getName()));
-		addBoundField(name, m);
+		addBoundField(name, index, m);
 	}
 
 	/**

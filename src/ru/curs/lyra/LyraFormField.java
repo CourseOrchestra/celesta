@@ -11,14 +11,18 @@ import ru.curs.celesta.score.ParseException;
 public class LyraFormField extends NamedElement implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+	private final boolean bound;
+	private final transient FieldAccessor accessor;
 	private LyraFieldType type;
 	private boolean editable;
 	private boolean visible;
 	private String caption;
 	private String lookup;
 
-	public LyraFormField(String name) throws ParseException {
+	public LyraFormField(String name, boolean bound, FieldAccessor accessor) throws ParseException {
 		super(name);
+		this.bound = bound;
+		this.accessor = accessor;
 	}
 
 	/**
@@ -105,6 +109,20 @@ public class LyraFormField extends NamedElement implements Serializable {
 	 */
 	public void setLookup(String lookup) {
 		this.lookup = lookup;
+	}
+
+	/**
+	 * Is the field bound?
+	 */
+	public boolean isBound() {
+		return bound;
+	}
+
+	/**
+	 * Field's getter/setter.
+	 */
+	public FieldAccessor getAccessor() {
+		return accessor;
 	}
 
 }

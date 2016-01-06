@@ -1,6 +1,5 @@
 package ru.curs.lyra;
 
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -15,15 +14,13 @@ import ru.curs.celesta.score.ViewColumnType;
 /**
  * Значение поля, передаваемого в форму и обратно.
  */
-public final class LyraFieldValue extends NamedElement implements Serializable {
+final class LyraFieldValue extends NamedElement {
 	static final String XML_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
-	private static final long serialVersionUID = 1L;
 	private final LyraFieldType lyraFieldType;
-	private final Serializable val;
+	private final Object val;
 	private final boolean local;
 
-	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Serializable val, boolean local)
-			throws ParseException {
+	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val, boolean local) throws ParseException {
 		super(fieldName);
 		this.lyraFieldType = lyraFieldType;
 		this.val = val;
@@ -40,7 +37,7 @@ public final class LyraFieldValue extends NamedElement implements Serializable {
 	 * @throws ParseException
 	 *             неверное имя.
 	 */
-	public static LyraFieldValue getValue(Column c, Serializable val) throws ParseException {
+	public static LyraFieldValue getValue(Column c, Object val) throws ParseException {
 		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), c.getName(), val, false);
 	}
 
@@ -56,7 +53,7 @@ public final class LyraFieldValue extends NamedElement implements Serializable {
 	 * @throws ParseException
 	 *             неверное имя
 	 */
-	public static LyraFieldValue getValue(ViewColumnType c, String columnName, Serializable val) throws ParseException {
+	public static LyraFieldValue getValue(ViewColumnType c, String columnName, Object val) throws ParseException {
 		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), columnName, val, false);
 	}
 
@@ -86,7 +83,7 @@ public final class LyraFieldValue extends NamedElement implements Serializable {
 	/**
 	 * Значение поля.
 	 */
-	public Serializable getValue() {
+	public Object getValue() {
 		return val;
 	}
 
