@@ -88,21 +88,15 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 */
 	public String move(String cmd, String data) throws CelestaException, ParseException {
 		try {
-			if (rec() instanceof Cursor) {
-				Cursor c = getCursor();
+			BasicCursor rec = rec();
+			if (rec instanceof Cursor) {
+				Cursor c = (Cursor) rec;
 				ByteArrayInputStream dataIS = new ByteArrayInputStream(data.getBytes(UTF_8));
 				deserialize(c, dataIS);
-
-				Cursor c2 = getCursor();
-				c2.copyFieldsFrom(c);
-				if (c2.tryGetCurrent()) {
-					c2.copyFieldsFrom(c);
-					c2.update();
-				} else {
+				if (!c.tryUpdate())
 					c.insert();
-				}
 			}
-			rec().navigate(cmd);
+			rec.navigate(cmd);
 			ByteArrayOutputStream result = new ByteArrayOutputStream();
 			serialize(rec(), result);
 			return result.toString(UTF_8);

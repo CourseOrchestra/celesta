@@ -15,16 +15,18 @@ public final class UnboundFieldAccessor implements FieldAccessor {
 	private final PyObject getter;
 	private final PyObject setter;
 	private final LyraFieldType lft;
+	private final PyObject instance;
 
-	public UnboundFieldAccessor(String celestaType, PyObject getter, PyObject setter) {
+	public UnboundFieldAccessor(String celestaType, PyObject getter, PyObject setter, PyObject instance) {
 		this.getter = getter;
 		this.setter = setter;
 		this.lft = LyraFieldType.valueOf(celestaType);
+		this.instance = instance;
 	}
 
 	@Override
 	public Object getValue(Object[] c) {
-		PyObject value = getter.__call__();
+		PyObject value = getter.__call__(instance);
 		switch (lft) {
 		case BIT:
 			Boolean b = (Boolean) value.__tojava__(Boolean.class);
@@ -49,6 +51,6 @@ public final class UnboundFieldAccessor implements FieldAccessor {
 	@Override
 	public void setValue(BasicCursor c, Object newValue) throws CelestaException {
 		PyObject p = Py.java2py(newValue);
-		setter.__call__(p);
+		setter.__call__(instance, p);
 	}
 }
