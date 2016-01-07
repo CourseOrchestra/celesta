@@ -51,6 +51,10 @@ public class TestLyraForm {
 		Table t = g.getTable("table1");
 		BasicLyraForm blf = new BasicLyraForm(t) {
 
+			{
+				createAllBoundFields();
+			}
+
 			@Override
 			public BasicCursor _getCursor(CallContext context) {
 				return null;
@@ -62,12 +66,13 @@ public class TestLyraForm {
 			}
 
 			@Override
-			public void _buildUnboundFieldsMeta(NamedElementHolder<LyraFormField> meta) {
-				try {
-					addAllBoundFields();
-				} catch (ParseException | CelestaException e) {
-					e.printStackTrace();
-				}
+			public LyraFormField _createUnboundField(NamedElementHolder<LyraFormField> meta, String name) {
+				return null;
+			}
+
+			@Override
+			protected void _createAllUnboundFields(NamedElementHolder<LyraFormField> fieldsMeta) {
+				// do nothing
 			}
 		};
 

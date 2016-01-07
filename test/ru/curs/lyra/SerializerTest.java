@@ -162,7 +162,8 @@ public class SerializerTest {
 	public void test2() throws CelestaException, ParseException, UnsupportedEncodingException {
 		BasicCardForm bcf = new BasicCardForm(new CallContext(conn, sc)) {
 			{
-				addAllBoundFields();
+				createAllBoundFields();
+				createField("aab");
 			}
 
 			@Override
@@ -180,9 +181,9 @@ public class SerializerTest {
 			}
 
 			@Override
-			public void _buildUnboundFieldsMeta(NamedElementHolder<LyraFormField> meta) {
+			public LyraFormField _createUnboundField(NamedElementHolder<LyraFormField> meta, String name) {
 				try {
-					LyraFormField lff = new LyraFormField("aa", false, new FieldAccessor() {
+					LyraFormField lff = new LyraFormField(name, false, new FieldAccessor() {
 						@Override
 						public Object getValue(Object[] c) {
 							return "русский текст";
@@ -196,10 +197,12 @@ public class SerializerTest {
 					lff.setType(LyraFieldType.VARCHAR);
 
 					meta.addElement(lff);
+					return lff;
 				} catch (ParseException e) {
-
 					e.printStackTrace();
+					return null;
 				}
+
 			}
 
 			@Override
@@ -210,6 +213,11 @@ public class SerializerTest {
 			@Override
 			public void _afterReceiving(BasicCursor c) {
 
+			}
+
+			@Override
+			protected void _createAllUnboundFields(NamedElementHolder<LyraFormField> fieldsMeta) {
+				// do nothing for this test
 			}
 
 		};

@@ -49,7 +49,6 @@ public abstract class BasicLyraForm {
 		rec = _getCursor(context);
 		rec.navigate("-");
 		meta = rec.meta();
-		_buildUnboundFieldsMeta(fieldsMeta);
 	}
 
 	/**
@@ -57,7 +56,6 @@ public abstract class BasicLyraForm {
 	 */
 	BasicLyraForm(GrainElement m) throws ParseException, CelestaException {
 		meta = m;
-		_buildUnboundFieldsMeta(fieldsMeta);
 	}
 
 	/**
@@ -68,14 +66,21 @@ public abstract class BasicLyraForm {
 	 * @throws CelestaException
 	 *             JSON Error
 	 */
-	public void addAllBoundFields() throws ParseException, CelestaException {
+	public void createAllBoundFields() throws ParseException, CelestaException {
 		int i = 0;
 		for (Entry<String, ? extends ColumnMeta> e : meta.getColumns().entrySet()) {
-			addBoundField(e.getKey(), i++, e.getValue());
+			createBoundField(e.getKey(), i++, e.getValue());
 		}
 	}
+	/**
+	 * Adds all unbound fields to meta information using their decorators' parameters.
+	 */
+	public void createAllUnboundFields() {
+		_createAllUnboundFields(fieldsMeta);
+	}
 
-	private LyraFormField addBoundField(String name, int index, ColumnMeta m) throws ParseException, CelestaException {
+	private LyraFormField createBoundField(String name, int index, ColumnMeta m)
+			throws ParseException, CelestaException {
 		LyraFieldType lft = LyraFieldType.lookupFieldType(m);
 		FieldAccessor a = FieldAccessorFactory.create(index, name, lft);
 		LyraFormField f = new LyraFormField(name, true, a);
@@ -94,27 +99,35 @@ public abstract class BasicLyraForm {
 	}
 
 	/**
-	 * Adds only specific bound field.
+	 * Adds a specific field.
 	 * 
 	 * @param name
 	 *            Name of a table column.
 	 * @throws ParseException
-	 *             No column with such name found.
+	 *             No column/unbound field with such name found.
 	 * @throws CelestaException
 	 *             JSON error in CelestaDoc.
 	 */
-	public LyraFormField addBoundField(String name) throws ParseException, CelestaException {
-		int index = 0;
-		for (String n : meta.getColumns().keySet()) {
-			if (n.equals(name))
-				break;
-			index++;
-		}
+	public LyraFormField createField(String name) throws ParseException, CelestaException {
 		ColumnMeta m = meta.getColumns().get(name);
-		if (m == null)
-			throw new ParseException(
-					String.format("Column '%s' not found in '%s.%s'", name, meta.getGrain().getName(), meta.getName()));
-		return addBoundField(name, index, m);
+		if (m == null) {
+			// UNBOUND FIELD
+			LyraFormField result = _createUnboundField(fieldsMeta, name);
+			if (result == null)
+				throw new ParseException(String.format("Column '%s' not found in '%s.%s'", name,
+						meta.getGrain().getName(), meta.getName()));
+			return result;
+		} else {
+			// BOUND FIELD
+			// finding out field's index
+			int index = 0;
+			for (String n : meta.getColumns().keySet()) {
+				if (n.equals(name))
+					break;
+				index++;
+			}
+			return createBoundField(name, index, m);
+		}
 	}
 
 	/**
@@ -239,11 +252,21 @@ public abstract class BasicLyraForm {
 	public abstract String _getId();
 
 	/**
-	 * Should append unbound fields meta information.
+	 * Should append unbound field's meta information.
 	 * 
 	 * @param meta
 	 *            Editable meta (NB: getFieldsMeta() returns read-only meta).
+	 * @param name
+	 *            Name of the field to be appended to form.
 	 */
-	public abstract void _buildUnboundFieldsMeta(NamedElementHolder<LyraFormField> meta);
+	protected abstract LyraFormField _createUnboundField(NamedElementHolder<LyraFormField> meta, String name);
+
+	/**
+	 * Should create all unbound fields
+	 * 
+	 * @param fieldsMeta
+	 *            Editable meta (NB: getFieldsMeta() returns read-only meta).
+	 */
+	protected abstract void _createAllUnboundFields(NamedElementHolder<LyraFormField> fieldsMeta);
 	// CHECKSTYLE:ON
 }
