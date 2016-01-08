@@ -13,7 +13,6 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.score.CelestaParser;
 import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.NamedElementHolder;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.ScoreTest;
@@ -66,12 +65,12 @@ public class TestLyraForm {
 			}
 
 			@Override
-			public LyraFormField _createUnboundField(NamedElementHolder<LyraFormField> meta, String name) {
+			public LyraFormField _createUnboundField(LyraNamedElementHolder<LyraFormField> meta, String name) {
 				return null;
 			}
 
 			@Override
-			protected void _createAllUnboundFields(NamedElementHolder<LyraFormField> fieldsMeta) {
+			protected void _createAllUnboundFields(LyraNamedElementHolder<LyraFormField> fieldsMeta) {
 				// do nothing
 			}
 		};

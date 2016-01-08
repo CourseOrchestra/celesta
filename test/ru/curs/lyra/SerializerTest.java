@@ -25,8 +25,7 @@ import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.InitTest;
 import ru.curs.celesta.SessionContext;
 import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.score.NamedElementHolder;
-import ru.curs.celesta.score.ParseException;
+
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.TablesCursor;
 
@@ -64,7 +63,7 @@ public class SerializerTest {
 	}
 
 	@Test
-	public void test() throws ParseException, CelestaException, UnsupportedEncodingException {
+	public void test() throws CelestaException, UnsupportedEncodingException {
 
 		Map<String, LyraFormField> metaform = new LinkedHashMap<>();
 		LyraFormField lff;
@@ -159,7 +158,7 @@ public class SerializerTest {
 	}
 
 	@Test
-	public void test2() throws CelestaException, ParseException, UnsupportedEncodingException {
+	public void test2() throws CelestaException, UnsupportedEncodingException {
 		BasicCardForm bcf = new BasicCardForm(new CallContext(conn, sc)) {
 			{
 				createAllBoundFields();
@@ -181,7 +180,7 @@ public class SerializerTest {
 			}
 
 			@Override
-			public LyraFormField _createUnboundField(NamedElementHolder<LyraFormField> meta, String name) {
+			public LyraFormField _createUnboundField(LyraNamedElementHolder<LyraFormField> meta, String name) {
 				try {
 					LyraFormField lff = new LyraFormField(name, false, new FieldAccessor() {
 						@Override
@@ -198,7 +197,7 @@ public class SerializerTest {
 
 					meta.addElement(lff);
 					return lff;
-				} catch (ParseException e) {
+				} catch (CelestaException e) {
 					e.printStackTrace();
 					return null;
 				}
@@ -216,7 +215,7 @@ public class SerializerTest {
 			}
 
 			@Override
-			protected void _createAllUnboundFields(NamedElementHolder<LyraFormField> fieldsMeta) {
+			protected void _createAllUnboundFields(LyraNamedElementHolder<LyraFormField> fieldsMeta) {
 				// do nothing for this test
 			}
 
