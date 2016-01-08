@@ -41,6 +41,7 @@ final class LyraFormData implements Serializable {
 		}
 	};
 	private int recversion;
+
 	private String formId;
 
 	private SimpleDateFormat sdf;
@@ -149,6 +150,13 @@ final class LyraFormData implements Serializable {
 		} catch (Exception e) {
 			throw new CelestaException("XML Serialization error: %s", e.getMessage());
 		}
+	}
+
+	/**
+	 * Recversion of serialized data.
+	 */
+	public int getRecversion() {
+		return recversion;
 	}
 
 	/**

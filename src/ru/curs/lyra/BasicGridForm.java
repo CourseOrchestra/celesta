@@ -85,6 +85,35 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	}
 
 	/**
+	 * Sets change notifier to be run when refined grid parameters are ready.
+	 * 
+	 * @param callback
+	 *            A callback to be run.
+	 */
+	public void setChangeNotifier(Runnable callback) {
+		gd.setChangeNotifier(callback);
+	}
+
+	/**
+	 * Returns (approximate) total record count.
+	 * 
+	 * Just after creation of the form this method returns DEFAULT_COUNT value,
+	 * but it asynchronously requests total count right after constructor
+	 * execution.
+	 */
+	public int getApproxTotalCount() {
+		return gd.getApproxTotalCount();
+
+	}
+
+	/**
+	 * Returns scrollbar's knob position for current cursor value.
+	 */
+	public int getTopVisiblePosition() {
+		return gd.getTopVisiblePosition();
+	}
+
+	/**
 	 * Should return a number of rows in grid.
 	 */
 	protected abstract int getGridHeight();

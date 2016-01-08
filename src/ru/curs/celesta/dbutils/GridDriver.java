@@ -140,7 +140,7 @@ public final class GridDriver {
 			}
 		}
 	}
-	
+
 	public GridDriver(BasicCursor c, Runnable callback) throws CelestaException {
 		this(c);
 		setChangeNotifier(callback);
@@ -285,8 +285,7 @@ public final class GridDriver {
 	}
 
 	/**
-	 * Gets (adjusts) knob position for current cursor value.
-	 * 
+	 * Returns scrollbar's knob position for current cursor value.
 	 */
 	public int getTopVisiblePosition() {
 		return interpolator.getApproximatePosition(topVisiblePosition);
