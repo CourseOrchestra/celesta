@@ -1,5 +1,6 @@
 package ru.curs.lyra;
 
+import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,7 +12,8 @@ import ru.curs.celesta.CelestaException;
  * 
  * This class is valid for RPC use.
  */
-public abstract class LyraNamedElement {
+public abstract class LyraNamedElement implements Serializable {
+	private static final long serialVersionUID = 1L;
 	/**
 	 * Максимальная длина идентификатора Celesta.
 	 */

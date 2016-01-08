@@ -15,6 +15,7 @@ import ru.curs.celesta.score.ViewColumnType;
  */
 final class LyraFieldValue extends LyraNamedElement {
 	static final String XML_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+	private static final long serialVersionUID = 1L;
 	private final LyraFieldType lyraFieldType;
 	private final Object val;
 	private final boolean local;

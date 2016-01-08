@@ -1,13 +1,11 @@
 package ru.curs.lyra;
 
-import java.io.Serializable;
-
 import ru.curs.celesta.CelestaException;
 
 /**
  * Lyra form field metadata.
  */
-public class LyraFormField extends LyraNamedElement implements Serializable {
+public class LyraFormField extends LyraNamedElement {
 	private static final long serialVersionUID = 1L;
 	private final boolean bound;
 	private final transient FieldAccessor accessor;
