@@ -12,8 +12,6 @@ import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.GrainElement;
-import ru.curs.celesta.score.NamedElementHolder;
-import ru.curs.celesta.score.ParseException;
 
 /**
  * Base Java class for Lyra forms. Two classes inherited from this one are
@@ -34,7 +32,9 @@ public abstract class BasicLyraForm {
 	 */
 	public static final String CAPTION = "caption";
 	private final GrainElement meta;
-	private final NamedElementHolder<LyraFormField> fieldsMeta = new NamedElementHolder<LyraFormField>() {
+	private final LyraNamedElementHolder<LyraFormField> fieldsMeta = new LyraNamedElementHolder<LyraFormField>() {
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		protected String getErrorMsg(String name) {
 			return String.format("Field '%s' defined more than once in a form.", name);
@@ -44,7 +44,7 @@ public abstract class BasicLyraForm {
 	private BasicCursor rec;
 	private CallContext context;
 
-	public BasicLyraForm(CallContext context) throws CelestaException, ParseException {
+	public BasicLyraForm(CallContext context) throws CelestaException {
 		this.context = context;
 		rec = _getCursor(context);
 		rec.navigate("-");
@@ -54,7 +54,7 @@ public abstract class BasicLyraForm {
 	/**
 	 * A constructor for unit tests purposes only!
 	 */
-	BasicLyraForm(GrainElement m) throws ParseException, CelestaException {
+	BasicLyraForm(GrainElement m) throws CelestaException {
 		meta = m;
 	}
 
@@ -66,21 +66,22 @@ public abstract class BasicLyraForm {
 	 * @throws CelestaException
 	 *             JSON Error
 	 */
-	public void createAllBoundFields() throws ParseException, CelestaException {
+	public void createAllBoundFields() throws CelestaException {
 		int i = 0;
 		for (Entry<String, ? extends ColumnMeta> e : meta.getColumns().entrySet()) {
 			createBoundField(e.getKey(), i++, e.getValue());
 		}
 	}
+
 	/**
-	 * Adds all unbound fields to meta information using their decorators' parameters.
+	 * Adds all unbound fields to meta information using their decorators'
+	 * parameters.
 	 */
 	public void createAllUnboundFields() {
 		_createAllUnboundFields(fieldsMeta);
 	}
 
-	private LyraFormField createBoundField(String name, int index, ColumnMeta m)
-			throws ParseException, CelestaException {
+	private LyraFormField createBoundField(String name, int index, ColumnMeta m) throws CelestaException {
 		LyraFieldType lft = LyraFieldType.lookupFieldType(m);
 		FieldAccessor a = FieldAccessorFactory.create(index, name, lft);
 		LyraFormField f = new LyraFormField(name, true, a);
@@ -108,13 +109,13 @@ public abstract class BasicLyraForm {
 	 * @throws CelestaException
 	 *             JSON error in CelestaDoc.
 	 */
-	public LyraFormField createField(String name) throws ParseException, CelestaException {
+	public LyraFormField createField(String name) throws CelestaException {
 		ColumnMeta m = meta.getColumns().get(name);
 		if (m == null) {
 			// UNBOUND FIELD
 			LyraFormField result = _createUnboundField(fieldsMeta, name);
 			if (result == null)
-				throw new ParseException(String.format("Column '%s' not found in '%s.%s'", name,
+				throw new CelestaException(String.format("Column '%s' not found in '%s.%s'", name,
 						meta.getGrain().getName(), meta.getName()));
 			return result;
 		} else {
@@ -259,7 +260,7 @@ public abstract class BasicLyraForm {
 	 * @param name
 	 *            Name of the field to be appended to form.
 	 */
-	protected abstract LyraFormField _createUnboundField(NamedElementHolder<LyraFormField> meta, String name);
+	protected abstract LyraFormField _createUnboundField(LyraNamedElementHolder<LyraFormField> meta, String name);
 
 	/**
 	 * Should create all unbound fields
@@ -267,6 +268,6 @@ public abstract class BasicLyraForm {
 	 * @param fieldsMeta
 	 *            Editable meta (NB: getFieldsMeta() returns read-only meta).
 	 */
-	protected abstract void _createAllUnboundFields(NamedElementHolder<LyraFormField> fieldsMeta);
+	protected abstract void _createAllUnboundFields(LyraNamedElementHolder<LyraFormField> fieldsMeta);
 	// CHECKSTYLE:ON
 }

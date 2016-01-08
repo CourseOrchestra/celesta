@@ -2,14 +2,12 @@ package ru.curs.lyra;
 
 import java.io.Serializable;
 
-import ru.curs.celesta.score.NamedElement;
-import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.CelestaException;
 
 /**
  * Lyra form field metadata.
  */
-public class LyraFormField extends NamedElement implements Serializable {
-
+public class LyraFormField extends LyraNamedElement implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private final boolean bound;
 	private final transient FieldAccessor accessor;
@@ -19,7 +17,7 @@ public class LyraFormField extends NamedElement implements Serializable {
 	private String caption;
 	private String lookup;
 
-	public LyraFormField(String name, boolean bound, FieldAccessor accessor) throws ParseException {
+	public LyraFormField(String name, boolean bound, FieldAccessor accessor) throws CelestaException {
 		super(name);
 		this.bound = bound;
 		this.accessor = accessor;

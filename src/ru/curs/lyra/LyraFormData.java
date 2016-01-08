@@ -3,6 +3,7 @@ package ru.curs.lyra;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -24,19 +25,19 @@ import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ColumnMeta;
-import ru.curs.celesta.score.NamedElementHolder;
-import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.ViewColumnType;
 
 /**
- * Данные записи формы, состоящие из полей курсора и дополнительных полей.
+ * A serializable cursor data represention.
  */
-final class LyraFormData {
-	private final NamedElementHolder<LyraFieldValue> fields = new NamedElementHolder<LyraFieldValue>() {
+final class LyraFormData implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private final LyraNamedElementHolder<LyraFieldValue> fields = new LyraNamedElementHolder<LyraFieldValue>() {
+		private static final long serialVersionUID = 1L;
 
 		@Override
 		protected String getErrorMsg(String name) {
-			return String.format("Field '%s' is defined more than once in form data", name);
+			return "Field " + name + " is defined more than once in form data";
 		}
 	};
 	private int recversion;
@@ -53,10 +54,9 @@ final class LyraFormData {
 	 * @param formId
 	 *            Fully qualified form class name.
 	 * @throws CelestaException
-	 * @throws ParseException
+	 *             names clash
 	 */
-	public LyraFormData(BasicCursor c, Map<String, LyraFormField> map, String formId)
-			throws CelestaException, ParseException {
+	public LyraFormData(BasicCursor c, Map<String, LyraFormField> map, String formId) throws CelestaException {
 		if (c instanceof Cursor) {
 			recversion = ((Cursor) c).getRecversion();
 		}
@@ -224,42 +224,42 @@ final class LyraFormData {
 							addValue(key, buf, local);
 						}
 					}
-				} catch (ParseException e) {
+				} catch (CelestaException e) {
 					throw new SAXException(e.getMessage());
 				}
 			}
 		}
 
-		private void addFieldValue(LyraFieldValue v) throws ParseException {
+		private void addFieldValue(LyraFieldValue v) throws CelestaException {
 			fields.addElement(v);
 		}
 
-		private void addValue(String name, String value, boolean local) throws ParseException {
+		private void addValue(String name, String value, boolean local) throws CelestaException {
 			LyraFieldValue v = new LyraFieldValue(LyraFieldType.VARCHAR, name, value, local);
 			addFieldValue(v);
 		}
 
-		private void addValue(String name, int value, boolean local) throws ParseException {
+		private void addValue(String name, int value, boolean local) throws CelestaException {
 			LyraFieldValue v = new LyraFieldValue(LyraFieldType.INT, name, value, local);
 			addFieldValue(v);
 		}
 
-		private void addValue(String name, double value, boolean local) throws ParseException {
+		private void addValue(String name, double value, boolean local) throws CelestaException {
 			LyraFieldValue v = new LyraFieldValue(LyraFieldType.REAL, name, value, local);
 			addFieldValue(v);
 		}
 
-		private void addValue(String name, boolean value, boolean local) throws ParseException {
+		private void addValue(String name, boolean value, boolean local) throws CelestaException {
 			LyraFieldValue v = new LyraFieldValue(LyraFieldType.BIT, name, value, local);
 			addFieldValue(v);
 		}
 
-		private void addValue(String name, Date value, boolean local) throws ParseException {
+		private void addValue(String name, Date value, boolean local) throws CelestaException {
 			LyraFieldValue v = new LyraFieldValue(LyraFieldType.DATETIME, name, value, local);
 			addFieldValue(v);
 		}
 
-		private void addNullValue(LyraFieldType t, String name, boolean local) throws ParseException {
+		private void addNullValue(LyraFieldType t, String name, boolean local) throws CelestaException {
 			LyraFieldValue v = new LyraFieldValue(t, name, null, local);
 			addFieldValue(v);
 		}

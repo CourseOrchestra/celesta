@@ -45,7 +45,7 @@ public final class GridDriver {
 	 */
 	private final String[] names;
 
-	private final Runnable changeNotifier;
+	private Runnable changeNotifier;
 
 	private CounterThread counterThread = null;
 
@@ -140,10 +140,13 @@ public final class GridDriver {
 			}
 		}
 	}
-
+	
 	public GridDriver(BasicCursor c, Runnable callback) throws CelestaException {
+		this(c);
+		setChangeNotifier(callback);
+	}
 
-		this.changeNotifier = callback;
+	public GridDriver(BasicCursor c) throws CelestaException {
 
 		// Getting key column names ('a key column' here is a column included
 		// into
@@ -244,7 +247,7 @@ public final class GridDriver {
 	 */
 	public void setPosition(BasicCursor c) throws CelestaException {
 		checkMeta(c);
-		topVisiblePosition = getCursorOrdinal(c);		
+		topVisiblePosition = getCursorOrdinal(c);
 		requestRefinement(topVisiblePosition, false);
 	}
 
@@ -318,6 +321,17 @@ public final class GridDriver {
 	 */
 	public int getApproxTotalCount() {
 		return interpolator.getApproximateCount();
+	}
+
+	/**
+	 * Sets change notifier (a method that is being called when grid metrics
+	 * update is ready).
+	 * 
+	 * @param changeNotifier
+	 *            new change modifier.
+	 */
+	public void setChangeNotifier(Runnable changeNotifier) {
+		this.changeNotifier = changeNotifier;
 	}
 
 }

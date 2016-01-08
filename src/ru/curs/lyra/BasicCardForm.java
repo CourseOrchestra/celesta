@@ -10,7 +10,6 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
-import ru.curs.celesta.score.ParseException;
 
 /**
  * Base Java class for Lyra card form.
@@ -20,7 +19,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	private static final String UTF_8 = "utf-8";
 	private LyraFormData lfd;
 
-	public BasicCardForm(CallContext context) throws CelestaException, ParseException {
+	public BasicCardForm(CallContext context) throws CelestaException {
 		super(context);
 	}
 
@@ -32,7 +31,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             Ошибка сериализации.
 	 */
-	public String findRec() throws CelestaException, ParseException {
+	public String findRec() throws CelestaException {
 		ByteArrayOutputStream result = new ByteArrayOutputStream();
 		serialize(rec(), result);
 		try {
@@ -54,7 +53,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             Ошибка сериализации.
 	 */
-	public String revert(String data) throws CelestaException, ParseException {
+	public String revert(String data) throws CelestaException {
 
 		Cursor c = getCursor();
 
@@ -86,7 +85,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             Ошибка сериализации.
 	 */
-	public String move(String cmd, String data) throws CelestaException, ParseException {
+	public String move(String cmd, String data) throws CelestaException {
 		try {
 			BasicCursor rec = rec();
 			if (rec instanceof Cursor) {
@@ -113,7 +112,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             Ошибка сериализации.
 	 */
-	public String newRec() throws CelestaException, ParseException {
+	public String newRec() throws CelestaException {
 		Cursor c = getCursor();
 		c.clear();
 		c.setRecversion(0);
@@ -137,7 +136,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             Ошибка сериализации.
 	 */
-	public String deleteRec(String data) throws CelestaException, ParseException {
+	public String deleteRec(String data) throws CelestaException {
 		Cursor c = getCursor();
 
 		ByteArrayInputStream dataIS;
@@ -159,7 +158,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 		}
 	}
 
-	void serialize(BasicCursor c, OutputStream result) throws CelestaException, ParseException {
+	void serialize(BasicCursor c, OutputStream result) throws CelestaException {
 		_beforeSending(c);
 		lfd = new LyraFormData(c, getFieldsMeta(), _getId());
 		lfd.serialize(result);
