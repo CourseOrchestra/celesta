@@ -1,45 +1,35 @@
 package ru.curs.lyra;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Serializable;
+import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamWriter;
+import javax.xml.stream.*;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
+import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.dbutils.Cursor;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.ColumnMeta;
-import ru.curs.celesta.score.ViewColumnType;
+import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.score.*;
 
 /**
  * A serializable cursor data represention.
  */
-final class LyraFormData implements Serializable {
+public final class LyraFormData implements Serializable {
 	private static final long serialVersionUID = 1L;
-	private final LyraNamedElementHolder<LyraFieldValue> fields = new LyraNamedElementHolder<LyraFieldValue>() {
-		private static final long serialVersionUID = 1L;
+	private final LyraNamedElementHolder<LyraFieldValue> fields =
+		new LyraNamedElementHolder<LyraFieldValue>() {
+			private static final long serialVersionUID = 1L;
 
-		@Override
-		protected String getErrorMsg(String name) {
-			return "Field " + name + " is defined more than once in form data";
-		}
-	};
+			@Override
+			protected String getErrorMsg(String name) {
+				return "Field " + name + " is defined more than once in form data";
+			}
+		};
 	private int recversion;
 
 	private String formId;
@@ -57,7 +47,8 @@ final class LyraFormData implements Serializable {
 	 * @throws CelestaException
 	 *             names clash
 	 */
-	public LyraFormData(BasicCursor c, Map<String, LyraFormField> map, String formId) throws CelestaException {
+	public LyraFormData(BasicCursor c, Map<String, LyraFormField> map, String formId)
+			throws CelestaException {
 		if (c instanceof Cursor) {
 			recversion = ((Cursor) c).getRecversion();
 		}
@@ -72,7 +63,8 @@ final class LyraFormData implements Serializable {
 				ColumnMeta cmeta = c.meta().getColumns().get(lff.getName());
 
 				if (cmeta == null) {
-					throw new CelestaException("Column %s does not exists in '%s'.", lff.getName(), c.meta().getName());
+					throw new CelestaException("Column %s does not exists in '%s'.",
+							lff.getName(), c.meta().getName());
 				} else if (cmeta instanceof Column) {
 					Column meta = (Column) cmeta;
 					lfv = LyraFieldValue.getValue(meta, val);
@@ -81,7 +73,9 @@ final class LyraFormData implements Serializable {
 					lfv = LyraFieldValue.getValue(meta, lff.getName(), val);
 				}
 			} else {
-				lfv = new LyraFieldValue(lff.getType(), lff.getName(), lff.getAccessor().getValue(vals), true);
+				lfv =
+					new LyraFieldValue(lff.getType(), lff.getName(), lff.getAccessor().getValue(
+							vals), true);
 			}
 			fields.addElement(lfv);
 		}
@@ -91,7 +85,8 @@ final class LyraFormData implements Serializable {
 		FormDataParser parser;
 		parser = new FormDataParser();
 		try {
-			TransformerFactory.newInstance().newTransformer().transform(new StreamSource(is), new SAXResult(parser));
+			TransformerFactory.newInstance().newTransformer()
+					.transform(new StreamSource(is), new SAXResult(parser));
 		} catch (Exception e) {
 			throw new CelestaException("XML deserialization error: %s", e.getMessage());
 		}
@@ -133,8 +128,9 @@ final class LyraFormData implements Serializable {
 	 */
 	public void serialize(OutputStream outputStream) throws CelestaException {
 		try {
-			XMLStreamWriter xmlWriter = XMLOutputFactory.newInstance()
-					.createXMLStreamWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+			XMLStreamWriter xmlWriter =
+				XMLOutputFactory.newInstance().createXMLStreamWriter(
+						new OutputStreamWriter(outputStream, "UTF-8"));
 			xmlWriter.writeStartDocument();
 			xmlWriter.writeStartElement("schema");
 			xmlWriter.writeAttribute("recversion", Integer.toString(recversion));
@@ -172,8 +168,9 @@ final class LyraFormData implements Serializable {
 		private LyraFieldType type = null;
 
 		@Override
-		public void startElement(String uri, String localName, String qName, Attributes attributes)
-				throws SAXException {
+		public void
+				startElement(String uri, String localName, String qName, Attributes attributes)
+						throws SAXException {
 			switch (status) {
 			case 0:
 				recversion = Integer.parseInt(attributes.getValue("recversion"));
@@ -267,7 +264,8 @@ final class LyraFormData implements Serializable {
 			addFieldValue(v);
 		}
 
-		private void addNullValue(LyraFieldType t, String name, boolean local) throws CelestaException {
+		private void addNullValue(LyraFieldType t, String name, boolean local)
+				throws CelestaException {
 			LyraFieldValue v = new LyraFieldValue(t, name, null, local);
 			addFieldValue(v);
 		}
