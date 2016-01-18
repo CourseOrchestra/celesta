@@ -154,7 +154,7 @@ public abstract class BasicLyraForm {
 				rec.navigate("-");
 			}
 		} else {
-			if (rec.callContext() != context) {
+			if (rec.isClosed()) {
 				BasicCursor rec2 = _getCursor(context);
 				rec2.copyFieldsFrom(rec);
 				rec = rec2;
