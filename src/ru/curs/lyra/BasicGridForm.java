@@ -1,20 +1,16 @@
 package ru.curs.lyra;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.dbutils.Cursor;
-import ru.curs.celesta.dbutils.GridDriver;
+import ru.curs.celesta.*;
+import ru.curs.celesta.dbutils.*;
 
 /**
  * Base Java class for Lyra grid form.
  */
 public abstract class BasicGridForm extends BasicLyraForm {
 
-	private GridDriver gd;
+	private final GridDriver gd;
 
 	public BasicGridForm(CallContext context) throws CelestaException {
 		super(context);
@@ -116,5 +112,5 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	/**
 	 * Should return a number of rows in grid.
 	 */
-	protected abstract int getGridHeight();
+	public abstract int getGridHeight();
 }
