@@ -3,24 +3,23 @@ package ru.curs.lyra;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
+import javax.xml.stream.*;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.ViewColumnType;
+import ru.curs.celesta.score.*;
 
 /**
  * Значение поля, передаваемого в форму и обратно.
  */
-final class LyraFieldValue extends LyraNamedElement {
+public final class LyraFieldValue extends LyraNamedElement {
 	static final String XML_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 	private static final long serialVersionUID = 1L;
 	private final LyraFieldType lyraFieldType;
 	private final Object val;
 	private final boolean local;
 
-	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val, boolean local) throws CelestaException {
+	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val, boolean local)
+			throws CelestaException {
 		super(fieldName);
 		this.lyraFieldType = lyraFieldType;
 		this.val = val;
@@ -53,7 +52,8 @@ final class LyraFieldValue extends LyraNamedElement {
 	 * @throws ParseException
 	 *             неверное имя
 	 */
-	public static LyraFieldValue getValue(ViewColumnType c, String columnName, Object val) throws CelestaException {
+	public static LyraFieldValue getValue(ViewColumnType c, String columnName, Object val)
+			throws CelestaException {
 		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), columnName, val, false);
 	}
 
