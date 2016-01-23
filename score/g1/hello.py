@@ -181,6 +181,12 @@ def hello(context, arg):
     c.orderBy('aaa', 'bbb')
     c.navigate('=')
     print c.doublefield
+    
+    print 'USER \t| PID'
+    print '----------------'
+    for cc in context.celesta.activeContexts:
+        print '%s \t| %s' % (cc.userId, cc.getDBPid())
+    
     print 'Python procedure finished.'
     
 def testTrigger(rec):
