@@ -83,6 +83,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	private static final Map<Class<? extends Column>, MSColumnDefiner> TYPES_DICT = new HashMap<>();
+
 	static {
 		TYPES_DICT.put(IntegerColumn.class, new MSColumnDefiner() {
 			@Override
@@ -155,8 +156,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 			@Override
 			String getMainDefinition(Column c) {
 				StringColumn ic = (StringColumn) c;
-				String fieldType = String.format("%s(%s)", dbFieldType(),
-						ic.isMax() ? "max" : ic.getLength());
+				String fieldType = String.format("%s(%s)", dbFieldType(), ic.isMax() ? "max" : ic.getLength());
 				return join(c.getQuotedName(), fieldType, nullable(c));
 			}
 
@@ -165,8 +165,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				StringColumn ic = (StringColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = msSQLDefault(c)
-							+ StringColumn.quoteString(ic.getDefaultValue());
+					defaultStr = msSQLDefault(c) + StringColumn.quoteString(ic.getDefaultValue());
 				}
 				return defaultStr;
 			}
@@ -176,8 +175,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				StringColumn ic = (StringColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT
-							+ StringColumn.quoteString(ic.getDefaultValue());
+					defaultStr = DEFAULT + StringColumn.quoteString(ic.getDefaultValue());
 				}
 				return defaultStr;
 			}
@@ -239,8 +237,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 					defaultStr = msSQLDefault(c) + "getdate()";
 				} else if (ic.getDefaultValue() != null) {
 					DateFormat df = new SimpleDateFormat("yyyyMMdd");
-					defaultStr = String.format(msSQLDefault(c) + " '%s'",
-							df.format(ic.getDefaultValue()));
+					defaultStr = String.format(msSQLDefault(c) + " '%s'", df.format(ic.getDefaultValue()));
 				}
 				return defaultStr;
 			}
@@ -253,8 +250,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 					defaultStr = DEFAULT + "getdate()";
 				} else if (ic.getDefaultValue() != null) {
 					DateFormat df = new SimpleDateFormat("yyyyMMdd");
-					defaultStr = String.format(DEFAULT + " '%s'",
-							df.format(ic.getDefaultValue()));
+					defaultStr = String.format(DEFAULT + " '%s'", df.format(ic.getDefaultValue()));
 				}
 				return defaultStr;
 			}
@@ -277,8 +273,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				BooleanColumn ic = (BooleanColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = msSQLDefault(c) + "'" + ic.getDefaultValue()
-							+ "'";
+					defaultStr = msSQLDefault(c) + "'" + ic.getDefaultValue() + "'";
 				}
 				return defaultStr;
 			}
@@ -296,16 +291,13 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	private static String msSQLDefault(Column c) {
-		return String.format("constraint \"def_%s_%s\" ", c.getParentTable()
-				.getName(), c.getName())
+		return String.format("constraint \"def_%s_%s\" ", c.getParentTable().getName(), c.getName())
 				+ ColumnDefiner.DEFAULT;
 	}
 
 	@Override
-	boolean tableExists(Connection conn, String schema, String name)
-			throws CelestaException {
-		String sql = String.format("select coalesce(object_id('%s.%s'), -1)",
-				schema, name);
+	boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+		String sql = String.format("select coalesce(object_id('%s.%s'), -1)", schema, name);
 		try {
 			Statement check = conn.createStatement();
 			ResultSet rs = check.executeQuery(sql);
@@ -322,8 +314,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	@Override
 	boolean userTablesExist(Connection conn) throws SQLException {
-		PreparedStatement check = conn
-				.prepareStatement("select count(*) from sys.tables;");
+		PreparedStatement check = conn.prepareStatement("select count(*) from sys.tables;");
 		ResultSet rs = check.executeQuery();
 		try {
 			rs.next();
@@ -335,16 +326,13 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void createSchemaIfNotExists(Connection conn, String name)
-			throws SQLException {
-		PreparedStatement check = conn.prepareStatement(String.format(
-				"select coalesce(SCHEMA_ID('%s'), -1)", name));
+	void createSchemaIfNotExists(Connection conn, String name) throws SQLException {
+		PreparedStatement check = conn.prepareStatement(String.format("select coalesce(SCHEMA_ID('%s'), -1)", name));
 		ResultSet rs = check.executeQuery();
 		try {
 			rs.next();
 			if (rs.getInt(1) == -1) {
-				PreparedStatement create = conn.prepareStatement(String.format(
-						"create schema \"%s\";", name));
+				PreparedStatement create = conn.prepareStatement(String.format("create schema \"%s\";", name));
 				create.execute();
 				create.close();
 			}
@@ -360,27 +348,22 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getOneFieldStatement(Connection conn, Column c)
-			throws CelestaException {
+	PreparedStatement getOneFieldStatement(Connection conn, Column c) throws CelestaException {
 		Table t = c.getParentTable();
-		String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S,
-				c.getQuotedName(), t.getGrain().getName(), t.getName(),
-				getRecordWhereClause(t));
-		return prepareStatement(conn, sql);
-	}
-
-	@Override
-	PreparedStatement getOneRecordStatement(Connection conn, Table t)
-			throws CelestaException {
-		String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S,
-				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
+		String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S, c.getQuotedName(), t.getGrain().getName(),
 				t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement getInsertRecordStatement(Connection conn, Table t,
-			boolean[] nullsMask) throws CelestaException {
+	PreparedStatement getOneRecordStatement(Connection conn, Table t) throws CelestaException {
+		String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S, getTableFieldsListExceptBLOBs(t),
+				t.getGrain().getName(), t.getName(), getRecordWhereClause(t));
+		return prepareStatement(conn, sql);
+	}
+
+	@Override
+	PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask) throws CelestaException {
 
 		Iterator<String> columns = t.getColumns().keySet().iterator();
 		// Создаём параметризуемую часть запроса, пропуская нулевые значения.
@@ -400,30 +383,26 @@ final class MSSQLAdaptor extends DBAdaptor {
 			fields.append('"');
 		}
 
-		String sql = String.format("insert " + tableTemplate()
-				+ " (%s) values (%s);", t.getGrain().getName(), t.getName(),
-				fields.toString(), params.toString());
+		String sql = String.format("insert " + tableTemplate() + " (%s) values (%s);", t.getGrain().getName(),
+				t.getName(), fields.toString(), params.toString());
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
-			throws CelestaException {
-		String sql = String.format("delete " + tableTemplate() + WHERE_S, t
-				.getGrain().getName(), t.getName(), getRecordWhereClause(t));
+	PreparedStatement getDeleteRecordStatement(Connection conn, Table t) throws CelestaException {
+		String sql = String.format("delete " + tableTemplate() + WHERE_S, t.getGrain().getName(), t.getName(),
+				getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, Expr complexFilter)
-			throws CelestaException {
+	PreparedStatement deleteRecordSetStatement(Connection conn, Table t, Map<String, AbstractFilter> filters,
+			Expr complexFilter) throws CelestaException {
 		// Готовим условие where
 		String whereClause = getWhereClause(t, filters, complexFilter);
 
 		// Готовим запрос на удаление
-		String sql = String.format("delete " + tableTemplate() + " %s;", t
-				.getGrain().getName(), t.getName(),
+		String sql = String.format("delete " + tableTemplate() + " %s;", t.getGrain().getName(), t.getName(),
 				whereClause.length() > 0 ? "where " + whereClause : "");
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
@@ -437,17 +416,15 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	@Override
 	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
-		String sql = String
-				.format("select seqvalue from celesta.sequences where grainid = '%s' and tablename = '%s'",
-						t.getGrain().getName(), t.getName());
+		String sql = String.format("select seqvalue from celesta.sequences where grainid = '%s' and tablename = '%s'",
+				t.getGrain().getName(), t.getName());
 		try {
 			Statement stmt = conn.createStatement();
 			try {
 				ResultSet rs = stmt.executeQuery(sql);
 				if (!rs.next())
-					throw new CelestaException(
-							"Celesta sequense for %s.%s is not initialized.", t
-									.getGrain().getName(), t.getName());
+					throw new CelestaException("Celesta sequense for %s.%s is not initialized.", t.getGrain().getName(),
+							t.getName());
 				return rs.getInt(1);
 			} finally {
 				stmt.close();
@@ -460,27 +437,22 @@ final class MSSQLAdaptor extends DBAdaptor {
 	@Override
 	String getCreateIndexSQL(Index index) {
 		String fieldList = getFieldList(index.getColumns().keySet());
-		String sql = String.format("CREATE INDEX %s ON " + tableTemplate()
-				+ " (%s)", index.getQuotedName(), index.getTable().getGrain()
-				.getName(), index.getTable().getName(), fieldList);
+		String sql = String.format("CREATE INDEX %s ON " + tableTemplate() + " (%s)", index.getQuotedName(),
+				index.getTable().getGrain().getName(), index.getTable().getName(), fieldList);
 		return sql;
 	}
 
 	@Override
 	String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
-		String sql = String.format("DROP INDEX %s ON " + tableTemplate(),
-				dBIndexInfo.getIndexName(), g.getName(),
+		String sql = String.format("DROP INDEX %s ON " + tableTemplate(), dBIndexInfo.getIndexName(), g.getName(),
 				dBIndexInfo.getTableName());
 		return sql;
 	}
 
-	private boolean checkIfVarcharMax(Connection conn, Column c)
-			throws SQLException {
+	private boolean checkIfVarcharMax(Connection conn, Column c) throws SQLException {
 		PreparedStatement checkForMax = conn.prepareStatement(String.format(
-				"select max_length from sys.columns where "
-						+ "object_id  = OBJECT_ID('%s.%s') and name = '%s'", c
-						.getParentTable().getGrain().getName(), c
-						.getParentTable().getName(), c.getName()));
+				"select max_length from sys.columns where " + "object_id  = OBJECT_ID('%s.%s') and name = '%s'",
+				c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName()));
 		try {
 			ResultSet rs = checkForMax.executeQuery();
 			if (rs.next()) {
@@ -494,20 +466,15 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	}
 
-	private boolean checkForIncrementTrigger(Connection conn, Column c)
-			throws SQLException {
-		PreparedStatement checkForTrigger = conn
-				.prepareStatement(String
-						.format("select text from sys.syscomments where id = object_id('%s.\"%s_inc\"')",
-								c.getParentTable().getGrain().getQuotedName(),
-								c.getParentTable().getName()));
+	private boolean checkForIncrementTrigger(Connection conn, Column c) throws SQLException {
+		PreparedStatement checkForTrigger = conn.prepareStatement(
+				String.format("select text from sys.syscomments where id = object_id('%s.\"%s_inc\"')",
+						c.getParentTable().getGrain().getQuotedName(), c.getParentTable().getName()));
 		try {
 			ResultSet rs = checkForTrigger.executeQuery();
 			if (rs.next()) {
 				String body = rs.getString(1);
-				if (body != null
-						&& body.contains(String.format("/*IDENTITY %s*/",
-								c.getName())))
+				if (body != null && body.contains(String.format("/*IDENTITY %s*/", c.getName())))
 					return true;
 			}
 		} finally {
@@ -530,32 +497,27 @@ final class MSSQLAdaptor extends DBAdaptor {
 	// CHECKSTYLE:OFF
 	@SuppressWarnings("unchecked")
 	@Override
-	public DBColumnInfo getColumnInfo(Connection conn, Column c)
-			throws CelestaException {
+	public DBColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
 		// CHECKSTYLE:ON
 		try {
 			DatabaseMetaData metaData = conn.getMetaData();
-			ResultSet rs = metaData.getColumns(null, c.getParentTable()
-					.getGrain().getName(), c.getParentTable().getName(),
-					c.getName());
+			ResultSet rs = metaData.getColumns(null, c.getParentTable().getGrain().getName(),
+					c.getParentTable().getName(), c.getName());
 			try {
 				if (rs.next()) {
 					DBColumnInfo result = new DBColumnInfo();
 					result.setName(rs.getString(COLUMN_NAME));
 					String typeName = rs.getString("TYPE_NAME");
-					if ("varbinary".equalsIgnoreCase(typeName)
-							&& checkIfVarcharMax(conn, c)) {
+					if ("varbinary".equalsIgnoreCase(typeName) && checkIfVarcharMax(conn, c)) {
 						result.setType(BinaryColumn.class);
 					} else if ("int".equalsIgnoreCase(typeName)) {
 						result.setType(IntegerColumn.class);
 						result.setIdentity(checkForIncrementTrigger(conn, c));
-					} else if ("float".equalsIgnoreCase(typeName)
-							&& rs.getInt("COLUMN_SIZE") == DOUBLE_PRECISION) {
+					} else if ("float".equalsIgnoreCase(typeName) && rs.getInt("COLUMN_SIZE") == DOUBLE_PRECISION) {
 						result.setType(FloatingColumn.class);
 					} else {
 						for (Class<?> cc : COLUMN_CLASSES)
-							if (TYPES_DICT.get(cc).dbFieldType()
-									.equalsIgnoreCase(typeName)) {
+							if (TYPES_DICT.get(cc).dbFieldType().equalsIgnoreCase(typeName)) {
 								result.setType((Class<? extends Column>) cc);
 								break;
 							}
@@ -570,14 +532,11 @@ final class MSSQLAdaptor extends DBAdaptor {
 						int i = 0;
 						// Снимаем наружные скобки
 						while (defaultBody.charAt(i) == '('
-								&& defaultBody.charAt(defaultBody.length() - i
-										- 1) == ')') {
+								&& defaultBody.charAt(defaultBody.length() - i - 1) == ')') {
 							i++;
 						}
-						defaultBody = defaultBody.substring(i,
-								defaultBody.length() - i);
-						if (BooleanColumn.class == result.getType()
-								|| DateTimeColumn.class == result.getType())
+						defaultBody = defaultBody.substring(i, defaultBody.length() - i);
+						if (BooleanColumn.class == result.getType() || DateTimeColumn.class == result.getType())
 							defaultBody = defaultBody.toUpperCase();
 						result.setDefaultValue(defaultBody);
 					}
@@ -595,30 +554,25 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void updateColumn(Connection conn, Column c, DBColumnInfo actual)
-			throws CelestaException {
+	void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
 
 		String sql;
 		if (!"".equals(actual.getDefaultValue())) {
-			sql = String.format(ALTER_TABLE + tableTemplate()
-					+ " drop constraint \"def_%s_%s\"", c.getParentTable()
-					.getGrain().getName(), c.getParentTable().getName(), c
-					.getParentTable().getName(), c.getName());
+			sql = String.format(ALTER_TABLE + tableTemplate() + " drop constraint \"def_%s_%s\"",
+					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getParentTable().getName(),
+					c.getName());
 			runUpdateColumnSQL(conn, c, sql);
 		}
 
 		String def = getColumnDefiner(c).getMainDefinition(c);
-		sql = String.format(ALTER_TABLE + tableTemplate() + " alter column %s",
-				c.getParentTable().getGrain().getName(), c.getParentTable()
-						.getName(), def);
+		sql = String.format(ALTER_TABLE + tableTemplate() + " alter column %s", c.getParentTable().getGrain().getName(),
+				c.getParentTable().getName(), def);
 		runUpdateColumnSQL(conn, c, sql);
 
 		def = getColumnDefiner(c).getDefaultDefinition(c);
 		if (!"".equals(def)) {
-			sql = String.format(ALTER_TABLE + tableTemplate()
-					+ " add %s for %s",
-					c.getParentTable().getGrain().getName(), c.getParentTable()
-							.getName(), def, c.getQuotedName());
+			sql = String.format(ALTER_TABLE + tableTemplate() + " add %s for %s",
+					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), def, c.getQuotedName());
 			runUpdateColumnSQL(conn, c, sql);
 		}
 	}
@@ -627,8 +581,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
 		// 1. Firstly, we have to clean up table from any auto-increment
 		// triggers
-		String triggerName = String.format("\"%s\".\"%s_inc\"", t.getGrain()
-				.getName(), t.getName());
+		String triggerName = String.format("\"%s\".\"%s_inc\"", t.getGrain().getName(), t.getName());
 		String sql = String.format("drop trigger %s", triggerName);
 		PreparedStatement stmt = conn.prepareStatement(sql);
 		try {
@@ -648,9 +601,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 		// 3. Now, we know that we surely have IDENTITY field, and we must
 		// assure that we have an appropriate sequence.
-		sql = String
-				.format("insert into celesta.sequences (grainid, tablename) values ('%s', '%s')",
-						t.getGrain().getName(), t.getName());
+		sql = String.format("insert into celesta.sequences (grainid, tablename) values ('%s', '%s')",
+				t.getGrain().getName(), t.getName());
 		stmt = conn.prepareStatement(sql);
 		try {
 			stmt.executeUpdate();
@@ -663,9 +615,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 		// 4. Now we have to create the auto-increment trigger
 		StringBuilder body = new StringBuilder();
-		body.append(String.format(
-				"create trigger %s on %s.%s instead of insert as begin\n",
-				triggerName, t.getGrain().getQuotedName(), t.getQuotedName()));
+		body.append(String.format("create trigger %s on %s.%s instead of insert as begin\n", triggerName,
+				t.getGrain().getQuotedName(), t.getQuotedName()));
 		body.append(String.format("  /*IDENTITY %s*/\n", ic.getName()));
 		body.append("  set nocount on;\n");
 		body.append("  begin transaction;\n");
@@ -691,8 +642,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				insertList.append("@id + ");
 				insertList.append(c.getQuotedName());
 			} else {
-				body.append(ColumnDefiner.join(d.getMainDefinition(c),
-						d.getLightDefaultDefinition(c)));
+				body.append(ColumnDefiner.join(d.getMainDefinition(c), d.getLightDefaultDefinition(c)));
 				padComma(selectList);
 				padComma(insertList);
 				selectList.append(c.getQuotedName());
@@ -701,19 +651,15 @@ final class MSSQLAdaptor extends DBAdaptor {
 			body.append(i.hasNext() ? ",\n" : "\n");
 		}
 		body.append("  );\n");
-		body.append(String.format(
-				"  insert into @tmp (%s) select %s from inserted;\n",
-				selectList, selectList));
+		body.append(String.format("  insert into @tmp (%s) select %s from inserted;\n", selectList, selectList));
 
-		body.append(String
-				.format("  update celesta.sequences set seqvalue = seqvalue + @@IDENTITY "
-						+ "output deleted.seqvalue into @idt where grainid = '%s' and tablename = '%s';\n",
-						t.getGrain().getName(), t.getName()));
-		body.append("  select @id = id from @idt;\n");
 		body.append(String.format(
-				"  insert into %s.%s (%s) select %s from @tmp;\n", t.getGrain()
-						.getQuotedName(), t.getQuotedName(), fullList,
-				insertList));
+				"  update celesta.sequences set seqvalue = seqvalue + @@IDENTITY "
+						+ "output deleted.seqvalue into @idt where grainid = '%s' and tablename = '%s';\n",
+				t.getGrain().getName(), t.getName()));
+		body.append("  select @id = id from @idt;\n");
+		body.append(String.format("  insert into %s.%s (%s) select %s from @tmp;\n", t.getGrain().getQuotedName(),
+				t.getQuotedName(), fullList, insertList));
 		body.append("  commit transaction;\n");
 		body.append("end;\n");
 
@@ -729,9 +675,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 	@Override
 	void dropAutoIncrement(Connection conn, Table t) throws SQLException {
-		String sql = String
-				.format("delete from celesta.sequences where grainid = '%s' and tablename = '%s';\n",
-						t.getGrain().getName(), t.getName());
+		String sql = String.format("delete from celesta.sequences where grainid = '%s' and tablename = '%s';\n",
+				t.getGrain().getName(), t.getName());
 		PreparedStatement stmt = conn.prepareStatement(sql);
 		try {
 			stmt.executeUpdate();
@@ -748,15 +693,14 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 		DBPKInfo result = new DBPKInfo();
 		try {
-			String sql = String
-					.format("select cons.CONSTRAINT_NAME, cols.COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE cols "
+			String sql = String.format(
+					"select cons.CONSTRAINT_NAME, cols.COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE cols "
 							+ "inner join INFORMATION_SCHEMA.TABLE_CONSTRAINTS cons "
-							+ "on cols.TABLE_SCHEMA = cons.TABLE_SCHEMA "
-							+ "and cols.TABLE_NAME = cons.TABLE_NAME "
+							+ "on cols.TABLE_SCHEMA = cons.TABLE_SCHEMA " + "and cols.TABLE_NAME = cons.TABLE_NAME "
 							+ "and cols.CONSTRAINT_NAME = cons.CONSTRAINT_NAME "
 							+ "where cons.CONSTRAINT_TYPE = 'PRIMARY KEY' and cons.TABLE_SCHEMA = '%s' "
 							+ "and cons.TABLE_NAME = '%s' order by ORDINAL_POSITION",
-							t.getGrain().getName(), t.getName());
+					t.getGrain().getName(), t.getName());
 			// System.out.println(sql);
 			Statement check = conn.createStatement();
 			ResultSet rs = check.executeQuery(sql);
@@ -776,10 +720,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void dropPK(Connection conn, Table t, String pkName)
-			throws CelestaException {
-		String sql = String.format("alter table %s.%s drop constraint \"%s\"",
-				t.getGrain().getQuotedName(), t.getQuotedName(), pkName);
+	void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
+		String sql = String.format("alter table %s.%s drop constraint \"%s\"", t.getGrain().getQuotedName(),
+				t.getQuotedName(), pkName);
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -788,17 +731,15 @@ final class MSSQLAdaptor extends DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException("Cannot drop PK '%s': %s", pkName,
-					e.getMessage());
+			throw new CelestaException("Cannot drop PK '%s': %s", pkName, e.getMessage());
 		}
 	}
 
 	@Override
 	void createPK(Connection conn, Table t) throws CelestaException {
 		StringBuilder sql = new StringBuilder();
-		sql.append(String.format("alter table %s.%s add constraint \"%s\" "
-				+ " primary key (", t.getGrain().getQuotedName(),
-				t.getQuotedName(), t.getPkConstraintName()));
+		sql.append(String.format("alter table %s.%s add constraint \"%s\" " + " primary key (",
+				t.getGrain().getQuotedName(), t.getQuotedName(), t.getPkConstraintName()));
 		boolean multiple = false;
 		for (String s : t.getPrimaryKey().keySet()) {
 			if (multiple)
@@ -818,8 +759,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException("Cannot create PK '%s': %s",
-					t.getPkConstraintName(), e.getMessage());
+			throw new CelestaException("Cannot create PK '%s': %s", t.getPkConstraintName(), e.getMessage());
 		}
 
 	}
@@ -827,15 +767,11 @@ final class MSSQLAdaptor extends DBAdaptor {
 	@Override
 	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
 		// Full foreign key information query
-		String sql = String
-				.format("SELECT RC.CONSTRAINT_SCHEMA AS 'GRAIN'"
-						+ "   , KCU1.CONSTRAINT_NAME AS 'FK_CONSTRAINT_NAME'"
-						+ "   , KCU1.TABLE_NAME AS 'FK_TABLE_NAME'"
-						+ "   , KCU1.COLUMN_NAME AS 'FK_COLUMN_NAME'"
-						+ "   , KCU2.TABLE_SCHEMA AS 'REF_GRAIN'"
-						+ "   , KCU2.TABLE_NAME AS 'REF_TABLE_NAME'"
-						+ "   , RC.UPDATE_RULE, RC.DELETE_RULE "
-						+ "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS RC "
+		String sql = String.format(
+				"SELECT RC.CONSTRAINT_SCHEMA AS 'GRAIN'" + "   , KCU1.CONSTRAINT_NAME AS 'FK_CONSTRAINT_NAME'"
+						+ "   , KCU1.TABLE_NAME AS 'FK_TABLE_NAME'" + "   , KCU1.COLUMN_NAME AS 'FK_COLUMN_NAME'"
+						+ "   , KCU2.TABLE_SCHEMA AS 'REF_GRAIN'" + "   , KCU2.TABLE_NAME AS 'REF_TABLE_NAME'"
+						+ "   , RC.UPDATE_RULE, RC.DELETE_RULE " + "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS RC "
 						+ "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE KCU1 "
 						+ "   ON  KCU1.CONSTRAINT_CATALOG = RC.CONSTRAINT_CATALOG"
 						+ "   AND KCU1.CONSTRAINT_SCHEMA  = RC.CONSTRAINT_SCHEMA"
@@ -845,9 +781,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 						+ "   AND KCU2.CONSTRAINT_SCHEMA  = RC.UNIQUE_CONSTRAINT_SCHEMA"
 						+ "   AND KCU2.CONSTRAINT_NAME    = RC.UNIQUE_CONSTRAINT_NAME"
 						+ "   AND KCU2.ORDINAL_POSITION   = KCU1.ORDINAL_POSITION "
-						+ "WHERE RC.CONSTRAINT_SCHEMA = '%s' "
-						+ "ORDER BY KCU1.CONSTRAINT_NAME, KCU1.ORDINAL_POSITION",
-						g.getName());
+						+ "WHERE RC.CONSTRAINT_SCHEMA = '%s' " + "ORDER BY KCU1.CONSTRAINT_NAME, KCU1.ORDINAL_POSITION",
+				g.getName());
 
 		// System.out.println(sql);
 
@@ -880,8 +815,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String getLimitedSQL(GrainElement t, String whereClause, String orderBy,
-			long offset, long rowCount) {
+	String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount) {
 		if (offset == 0 && rowCount == 0)
 			throw new IllegalArgumentException();
 		String sql;
@@ -890,49 +824,33 @@ final class MSSQLAdaptor extends DBAdaptor {
 		if (offset == 0) {
 			// Запрос только с ограничением числа записей -- применяем MS SQL
 			// Server TOP-конструкцию.
-			sql = String.format("select top %d %s from %s.%s", rowCount,
-					getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
-					t.getName())
-					+ sqlwhere + " order by " + orderBy;
+			sql = String.format("select top %d %s from %s.%s", rowCount, getTableFieldsListExceptBLOBs(t),
+					t.getGrain().getName(), t.getName()) + sqlwhere + " order by " + orderBy;
 			return sql;
 			// Иначе -- запрос с пропуском начальных записей -- применяем
 			// ROW_NUMBER
 		} else if (rowCount == 0) {
 			rowFilter = String.format(">= %d", offset + 1L);
 		} else {
-			rowFilter = String.format("between %d and %d", offset + 1L, offset
-					+ rowCount);
+			rowFilter = String.format("between %d and %d", offset + 1L, offset + rowCount);
 		}
-		sql = String
-				.format("with a as "
-						+ "(select ROW_NUMBER() OVER (ORDER BY %s) as [limit_row_number], %s from %s.%s %s) "
+		sql = String.format(
+				"with a as " + "(select ROW_NUMBER() OVER (ORDER BY %s) as [limit_row_number], %s from %s.%s %s) "
 						+ " select * from a where [limit_row_number] %s",
-						orderBy, getTableFieldsListExceptBLOBs(t), t.getGrain()
-								.getName(), t.getName(), sqlwhere, rowFilter);
+				orderBy, getTableFieldsListExceptBLOBs(t), t.getGrain().getName(), t.getName(), sqlwhere, rowFilter);
 		return sql;
 	}
 
 	@Override
-	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g)
-			throws CelestaException {
-		String sql = String
-				.format("select "
-						+ "    s.name as SchemaName,"
-						+ "    o.name as TableName,"
-						+ "    i.name as IndexName,"
-						+ "    co.name as ColumnName,"
-						+ "    ic.key_ordinal as ColumnOrder "
-						+ "from sys.indexes i "
-						+ "inner join sys.objects o on i.object_id = o.object_id "
-						+ "inner join sys.index_columns ic on ic.object_id = i.object_id "
-						+ "    and ic.index_id = i.index_id "
-						+ "inner join sys.columns co on co.object_id = i.object_id "
-						+ "    and co.column_id = ic.column_id "
-						+ "inner join sys.schemas s on o.schema_id = s.schema_id "
-						+ "where i.is_primary_key = 0 and o.[type] = 'U' "
-						+ " and s.name = '%s' "
-						+ " order by o.name,  i.[name], ic.key_ordinal;",
-						g.getName());
+	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+		String sql = String.format("select " + "    s.name as SchemaName," + "    o.name as TableName,"
+				+ "    i.name as IndexName," + "    co.name as ColumnName," + "    ic.key_ordinal as ColumnOrder "
+				+ "from sys.indexes i " + "inner join sys.objects o on i.object_id = o.object_id "
+				+ "inner join sys.index_columns ic on ic.object_id = i.object_id " + "    and ic.index_id = i.index_id "
+				+ "inner join sys.columns co on co.object_id = i.object_id " + "    and co.column_id = ic.column_id "
+				+ "inner join sys.schemas s on o.schema_id = s.schema_id "
+				+ "where i.is_primary_key = 0 and o.[type] = 'U' " + " and s.name = '%s' "
+				+ " order by o.name,  i.[name], ic.key_ordinal;", g.getName());
 
 		// System.out.println(sql);
 
@@ -945,8 +863,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				while (rs.next()) {
 					String tabName = rs.getString("TableName");
 					String indName = rs.getString("IndexName");
-					if (i == null || !i.getTableName().equals(tabName)
-							|| !i.getIndexName().equals(indName)) {
+					if (i == null || !i.getTableName().equals(tabName) || !i.getIndexName().equals(indName)) {
 						i = new DBIndexInfo(tabName, indName);
 						result.put(indName, i);
 					}
@@ -956,8 +873,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException("Could not get indices information: %s",
-					e.getMessage());
+			throw new CelestaException("Could not get indices information: %s", e.getMessage());
 		}
 		return result;
 	}
@@ -980,13 +896,12 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public void updateVersioningTrigger(Connection conn, Table t)
-			throws CelestaException {
+	public void updateVersioningTrigger(Connection conn, Table t) throws CelestaException {
 
 		// First of all, we are about to check if trigger exists
-		String sql = String.format("SELECT COUNT(*) FROM sys.triggers tr "
-				+ "INNER JOIN sys.tables t ON tr.parent_id = t.object_id "
-				+ "WHERE t.schema_id = SCHEMA_ID('%s') and tr.name = '%s_upd'",
+		String sql = String.format(
+				"SELECT COUNT(*) FROM sys.triggers tr " + "INNER JOIN sys.tables t ON tr.parent_id = t.object_id "
+						+ "WHERE t.schema_id = SCHEMA_ID('%s') and tr.name = '%s_upd'",
 				t.getGrain().getName(), t.getName());
 		try {
 			Statement stmt = conn.createStatement();
@@ -1000,25 +915,21 @@ final class MSSQLAdaptor extends DBAdaptor {
 						return;
 					} else {
 						StringBuilder sb = new StringBuilder();
-						sb.append(String
-								.format("create trigger \"%s\".\"%s_upd\" on \"%s\".\"%s\" for update as begin\n",
-										t.getGrain().getName(), t.getName(), t
-												.getGrain().getName(), t
-												.getName()));
+						sb.append(
+								String.format("create trigger \"%s\".\"%s_upd\" on \"%s\".\"%s\" for update as begin\n",
+										t.getGrain().getName(), t.getName(), t.getGrain().getName(), t.getName()));
 						sb.append("IF  exists (select * from inserted inner join deleted on \n");
 						addPKJoin(sb, "inserted", "deleted", t);
 						sb.append("where inserted.recversion <> deleted.recversion) BEGIN\n");
 						sb.append("  RAISERROR ('record version check failure', 16, 1);\n");
 
 						sb.append("END\n");
-						sb.append(String
-								.format("update \"%s\".\"%s\" set recversion = recversion + 1 where\n",
-										t.getGrain().getName(), t.getName()));
+						sb.append(String.format("update \"%s\".\"%s\" set recversion = recversion + 1 where\n",
+								t.getGrain().getName(), t.getName()));
 						sb.append("exists (select * from inserted where \n");
 
-						addPKJoin(sb, "inserted", String.format(
-								"\"%s\".\"%s\"", t.getGrain().getName(),
-								t.getName()), t);
+						addPKJoin(sb, "inserted", String.format("\"%s\".\"%s\"", t.getGrain().getName(), t.getName()),
+								t);
 
 						sb.append(");\nend\n");
 						// CREATE TRIGGER
@@ -1029,8 +940,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 				} else {
 					if (triggerExists) {
 						// DROP TRIGGER
-						sql = String.format("drop trigger \"%s\".\"%s_upd\"", t
-								.getGrain().getName(), t.getName());
+						sql = String.format("drop trigger \"%s\".\"%s_upd\"", t.getGrain().getName(), t.getName());
 						stmt.executeUpdate(sql);
 					} else {
 						return;
@@ -1040,9 +950,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException(
-					"Could not update version check trigger on %s.%s: %s", t
-							.getGrain().getName(), t.getName(), e.getMessage());
+			throw new CelestaException("Could not update version check trigger on %s.%s: %s", t.getGrain().getName(),
+					t.getName(), e.getMessage());
 		}
 
 	}
@@ -1052,33 +961,47 @@ final class MSSQLAdaptor extends DBAdaptor {
 		for (String s : t.getPrimaryKey().keySet()) {
 			if (needAnd)
 				sb.append(" AND ");
-			sb.append(String.format("  %s.\"%s\" = %s.\"%s\"\n", left, s,
-					right, s));
+			sb.append(String.format("  %s.\"%s\" = %s.\"%s\"\n", left, s, right, s));
 			needAnd = true;
 		}
 	}
 
 	@Override
 	// CHECKSTYLE:OFF 6 params
-	PreparedStatement getNavigationStatement(Connection conn, GrainElement t,
-			Map<String, AbstractFilter> filters, Expr complexFilter,
-			String orderBy, String navigationWhereClause)
-			throws CelestaException {
+	PreparedStatement getNavigationStatement(Connection conn, GrainElement t, Map<String, AbstractFilter> filters,
+			Expr complexFilter, String orderBy, String navigationWhereClause) throws CelestaException {
 		// CHECKSTYLE:ON
 		if (navigationWhereClause == null)
 			throw new IllegalArgumentException();
-		StringBuilder w = new StringBuilder(getWhereClause(t, filters,
-				complexFilter));
+		StringBuilder w = new StringBuilder(getWhereClause(t, filters, complexFilter));
 		if (w.length() > 0 && navigationWhereClause.length() > 0)
 			w.append(" and ");
 		w.append(navigationWhereClause);
 		boolean useWhere = w.length() > 0;
 		if (orderBy.length() > 0)
 			w.append(" order by " + orderBy);
-		String sql = String.format(SELECT_TOP_1 + tableTemplate() + "%s;",
-				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
-				t.getName(), useWhere ? " where " + w : w);
+		String sql = String.format(SELECT_TOP_1 + tableTemplate() + "%s;", getTableFieldsListExceptBLOBs(t),
+				t.getGrain().getName(), t.getName(), useWhere ? " where " + w : w);
 		// System.out.println(sql);
 		return prepareStatement(conn, sql);
+	}
+
+	@Override
+	public int getDBPid(Connection conn) throws CelestaException {
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery("SELECT @@SPID;");
+				if (rs.next()) {
+					return rs.getInt(1);
+				} else {
+					return 0;
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
 	}
 }

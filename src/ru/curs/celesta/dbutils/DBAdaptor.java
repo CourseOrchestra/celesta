@@ -91,13 +91,11 @@ public abstract class DBAdaptor {
 	 */
 	static final String NOT_IMPLEMENTED_YET = "not implemented yet";
 
-	static final Class<?>[] COLUMN_CLASSES = { IntegerColumn.class,
-			StringColumn.class, BooleanColumn.class, FloatingColumn.class,
-			BinaryColumn.class, DateTimeColumn.class };
+	static final Class<?>[] COLUMN_CLASSES = { IntegerColumn.class, StringColumn.class, BooleanColumn.class,
+			FloatingColumn.class, BinaryColumn.class, DateTimeColumn.class };
 	static final String COLUMN_NAME = "COLUMN_NAME";
 	static final String ALTER_TABLE = "alter table ";
-	static final Pattern HEXSTR = Pattern
-			.compile("0x(([0-9A-Fa-f][0-9A-Fa-f])+)");
+	static final Pattern HEXSTR = Pattern.compile("0x(([0-9A-Fa-f][0-9A-Fa-f])+)");
 
 	private static DBAdaptor db;
 
@@ -125,8 +123,7 @@ public abstract class DBAdaptor {
 				break;
 			case UNKNOWN:
 			default:
-				throw new CelestaException(
-						"Unknown or unsupported database type.");
+				throw new CelestaException("Unknown or unsupported database type.");
 			}
 		}
 		return db;
@@ -143,8 +140,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             при возникновении ошибки работы с БД.
 	 */
-	public boolean isValidConnection(Connection conn, int timeout)
-			throws CelestaException {
+	public boolean isValidConnection(Connection conn, int timeout) throws CelestaException {
 		try {
 			return conn.isValid(timeout);
 		} catch (SQLException e) {
@@ -169,11 +165,9 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае ошибки работы с БД
 	 */
-	public final void dropTable(Connection conn, Table t)
-			throws CelestaException {
+	public final void dropTable(Connection conn, Table t) throws CelestaException {
 		try {
-			String sql = String.format("DROP TABLE " + tableTemplate(), t
-					.getGrain().getName(), t.getName());
+			String sql = String.format("DROP TABLE " + tableTemplate(), t.getGrain().getName(), t.getName());
 			Statement stmt = conn.createStatement();
 			try {
 				stmt.executeUpdate(sql);
@@ -216,14 +210,12 @@ public abstract class DBAdaptor {
 	 *             создании схемы. Не выбрасывается в случае, если схема с
 	 *             данным именем уже существует в базе данных.
 	 */
-	public final void createSchemaIfNotExists(String name)
-			throws CelestaException {
+	public final void createSchemaIfNotExists(String name) throws CelestaException {
 		Connection conn = ConnectionPool.get();
 		try {
 			createSchemaIfNotExists(conn, name);
 		} catch (SQLException e) {
-			throw new CelestaException("Cannot create schema. "
-					+ e.getMessage());
+			throw new CelestaException("Cannot create schema. " + e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -240,8 +232,7 @@ public abstract class DBAdaptor {
 	 *             В случае возникновения критического сбоя при создании
 	 *             таблицы, в том числе в случае, если такая таблица существует.
 	 */
-	public final void createTable(Connection conn, Table table)
-			throws CelestaException {
+	public final void createTable(Connection conn, Table table) throws CelestaException {
 		String def = tableDef(table);
 		try {
 			// System.out.println(def); // for debug purposes
@@ -255,8 +246,7 @@ public abstract class DBAdaptor {
 			ConnectionPool.commit(conn);
 			updateVersioningTrigger(conn, table);
 		} catch (SQLException e) {
-			throw new CelestaException("creating %s: %s", table.getName(),
-					e.getMessage());
+			throw new CelestaException("creating %s: %s", table.getName(), e.getMessage());
 		}
 	}
 
@@ -271,11 +261,9 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             при ошибке добавления колонки.
 	 */
-	public final void createColumn(Connection conn, Column c)
-			throws CelestaException {
-		String sql = String.format(ALTER_TABLE + tableTemplate() + " add %s", c
-				.getParentTable().getGrain().getName(), c.getParentTable()
-				.getName(), columnDef(c));
+	public final void createColumn(Connection conn, Column c) throws CelestaException {
+		String sql = String.format(ALTER_TABLE + tableTemplate() + " add %s", c.getParentTable().getGrain().getName(),
+				c.getParentTable().getName(), columnDef(c));
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -284,8 +272,7 @@ public abstract class DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException("creating %s.%s: %s", c.getParentTable()
-					.getName(), c.getName(), e.getMessage());
+			throw new CelestaException("creating %s.%s: %s", c.getParentTable().getName(), c.getName(), e.getMessage());
 		}
 	}
 
@@ -299,8 +286,8 @@ public abstract class DBAdaptor {
 		return ic;
 	}
 
-	final PreparedStatement getUpdateRecordStatement(Connection conn, Table t,
-			boolean[] equalsMask) throws CelestaException {
+	final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask)
+			throws CelestaException {
 		StringBuilder setClause = new StringBuilder();
 		if (t.isVersioned())
 			setClause.append(String.format("\"%s\" = ?", Table.RECVERSION));
@@ -315,9 +302,8 @@ public abstract class DBAdaptor {
 			i++;
 		}
 
-		String sql = String.format("update " + tableTemplate()
-				+ " set %s where %s", t.getGrain().getName(), t.getName(),
-				setClause.toString(), getRecordWhereClause(t));
+		String sql = String.format("update " + tableTemplate() + " set %s where %s", t.getGrain().getName(),
+				t.getName(), setClause.toString(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
@@ -332,13 +318,11 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя связи с БД.
 	 */
-	public Set<String> getColumns(Connection conn, Table t)
-			throws CelestaException {
+	public Set<String> getColumns(Connection conn, Table t) throws CelestaException {
 		Set<String> result = new LinkedHashSet<>();
 		try {
 			DatabaseMetaData metaData = conn.getMetaData();
-			ResultSet rs = metaData.getColumns(null, t.getGrain().getName(),
-					t.getName(), null);
+			ResultSet rs = metaData.getColumns(null, t.getGrain().getName(), t.getName(), null);
 			try {
 				while (rs.next()) {
 					String rColumnName = rs.getString(COLUMN_NAME);
@@ -361,8 +345,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае некорректного фильтра
 	 */
-	final String getWhereClause(GrainElement t,
-			Map<String, AbstractFilter> filters, Expr complexFilter)
+	final String getWhereClause(GrainElement t, Map<String, AbstractFilter> filters, Expr complexFilter)
 			throws CelestaException {
 		if (filters == null)
 			throw new IllegalArgumentException();
@@ -373,13 +356,11 @@ public abstract class DBAdaptor {
 			if (e.getValue() instanceof SingleValue)
 				whereClause.append(String.format("(\"%s\" = ?)", e.getKey()));
 			else if (e.getValue() instanceof Range)
-				whereClause.append(String.format("(\"%s\" between ? and ?)",
-						e.getKey()));
+				whereClause.append(String.format("(\"%s\" between ? and ?)", e.getKey()));
 			else if (e.getValue() instanceof Filter) {
 				Object c = t.getColumns().get(e.getKey());
 				whereClause.append("(");
-				whereClause.append(((Filter) e.getValue()).makeWhereClause("\""
-						+ e.getKey() + "\"", c, this));
+				whereClause.append(((Filter) e.getValue()).makeWhereClause("\"" + e.getKey() + "\"", c, this));
 				whereClause.append(")");
 			}
 		}
@@ -402,8 +383,8 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя JDBC
 	 */
-	final int fillSetQueryParameters(Map<String, AbstractFilter> filters,
-			PreparedStatement result) throws CelestaException {
+	final int fillSetQueryParameters(Map<String, AbstractFilter> filters, PreparedStatement result)
+			throws CelestaException {
 		int i = 1;
 		for (AbstractFilter f : filters.values()) {
 			if (f instanceof SingleValue) {
@@ -427,8 +408,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             Если что-то пошло не так.
 	 */
-	public final void createIndex(Connection conn, Index index)
-			throws CelestaException {
+	public final void createIndex(Connection conn, Index index) throws CelestaException {
 		String sql = getCreateIndexSQL(index);
 		try {
 			Statement stmt = conn.createStatement();
@@ -439,8 +419,7 @@ public abstract class DBAdaptor {
 			}
 			ConnectionPool.commit(conn);
 		} catch (SQLException e) {
-			throw new CelestaException("Cannot create index '%s': %s",
-					index.getName(), e.getMessage());
+			throw new CelestaException("Cannot create index '%s': %s", index.getName(), e.getMessage());
 		}
 	}
 
@@ -454,15 +433,14 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае неудачи создания ключа
 	 */
-	public final void createFK(Connection conn, ForeignKey fk)
-			throws CelestaException {
+	public final void createFK(Connection conn, ForeignKey fk) throws CelestaException {
 		LinkedList<StringBuilder> sqlQueue = new LinkedList<>();
 
 		// Строим запрос на создание FK
 		StringBuilder sql = new StringBuilder();
 		sql.append(ALTER_TABLE);
-		sql.append(String.format(tableTemplate(), fk.getParentTable()
-				.getGrain().getName(), fk.getParentTable().getName()));
+		sql.append(String.format(tableTemplate(), fk.getParentTable().getGrain().getName(),
+				fk.getParentTable().getName()));
 		sql.append(" add constraint \"");
 		sql.append(fk.getConstraintName());
 		sql.append("\" foreign key (");
@@ -476,8 +454,8 @@ public abstract class DBAdaptor {
 			needComma = true;
 		}
 		sql.append(") references ");
-		sql.append(String.format(tableTemplate(), fk.getReferencedTable()
-				.getGrain().getName(), fk.getReferencedTable().getName()));
+		sql.append(String.format(tableTemplate(), fk.getReferencedTable().getGrain().getName(),
+				fk.getReferencedTable().getName()));
 		sql.append("(");
 		needComma = false;
 		for (String name : fk.getReferencedTable().getPrimaryKey().keySet()) {
@@ -521,9 +499,8 @@ public abstract class DBAdaptor {
 				}
 			} catch (SQLException e) {
 				if (!sqlstmt.startsWith("drop"))
-					throw new CelestaException(
-							"Cannot create foreign key '%s': %s",
-							fk.getConstraintName(), e.getMessage());
+					throw new CelestaException("Cannot create foreign key '%s': %s", fk.getConstraintName(),
+							e.getMessage());
 			}
 		}
 	}
@@ -542,11 +519,10 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             В случае сбоя в базе данных.
 	 */
-	public void dropFK(Connection conn, String grainName, String tableName,
-			String fkName) throws CelestaException {
+	public void dropFK(Connection conn, String grainName, String tableName, String fkName) throws CelestaException {
 		LinkedList<String> sqlQueue = new LinkedList<>();
-		String sql = String.format("alter table " + tableTemplate()
-				+ " drop constraint \"%s\"", grainName, tableName, fkName);
+		String sql = String.format("alter table " + tableTemplate() + " drop constraint \"%s\"", grainName, tableName,
+				fkName);
 		sqlQueue.add(sql);
 		processDropUpdateRule(sqlQueue, fkName);
 		// Построили, выполняем
@@ -561,9 +537,7 @@ public abstract class DBAdaptor {
 				}
 			} catch (SQLException e) {
 				if (!sqlStmt.startsWith("drop trigger"))
-					throw new CelestaException(
-							"Cannot drop foreign key '%s': %s", fkName,
-							e.getMessage());
+					throw new CelestaException("Cannot drop foreign key '%s': %s", fkName, e.getMessage());
 			}
 		}
 	}
@@ -600,8 +574,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             Если что-то пошло не так.
 	 */
-	public final void dropIndex(Grain g, DBIndexInfo dBIndexInfo,
-			boolean suppressError) throws CelestaException {
+	public final void dropIndex(Grain g, DBIndexInfo dBIndexInfo, boolean suppressError) throws CelestaException {
 		String sql = getDropIndexSQL(g, dBIndexInfo);
 		Connection conn = ConnectionPool.get();
 		try {
@@ -610,8 +583,7 @@ public abstract class DBAdaptor {
 			stmt.close();
 		} catch (SQLException e) {
 			if (!suppressError)
-				throw new CelestaException("Cannot drop index '%s': %s ",
-						dBIndexInfo.getIndexName(), e.getMessage());
+				throw new CelestaException("Cannot drop index '%s': %s ", dBIndexInfo.getIndexName(), e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
@@ -636,10 +608,9 @@ public abstract class DBAdaptor {
 	 *             Ошибка БД или некорректный фильтр.
 	 */
 	// CHECKSTYLE:OFF 6 parameters
-	public final PreparedStatement getRecordSetStatement(Connection conn,
-			GrainElement t, Map<String, AbstractFilter> filters,
-			Expr complexFilter, String orderBy, long offset, long rowCount)
-			throws CelestaException {
+	public final PreparedStatement getRecordSetStatement(Connection conn, GrainElement t,
+			Map<String, AbstractFilter> filters, Expr complexFilter, String orderBy, long offset, long rowCount)
+					throws CelestaException {
 		// CHECKSTYLE:ON
 		String sql;
 		// Готовим условие where
@@ -672,8 +643,8 @@ public abstract class DBAdaptor {
 	final String tableDef(Table table) {
 		StringBuilder sb = new StringBuilder();
 		// Определение таблицы с колонками
-		sb.append(String.format("create table " + tableTemplate() + "(\n",
-				table.getGrain().getName(), table.getName()));
+		sb.append(
+				String.format("create table " + tableTemplate() + "(\n", table.getGrain().getName(), table.getName()));
 		boolean multiple = false;
 		for (Column c : table.getColumns().values()) {
 			if (multiple)
@@ -687,8 +658,7 @@ public abstract class DBAdaptor {
 			sb.append("  " + columnDef(table.getRecVersionField()) + ",\n");
 
 		// Определение первичного ключа (он у нас всегда присутствует)
-		sb.append(String.format("  constraint \"%s\" primary key (",
-				table.getPkConstraintName()));
+		sb.append(String.format("  constraint \"%s\" primary key (", table.getPkConstraintName()));
 		multiple = false;
 		for (String s : table.getPrimaryKey().keySet()) {
 			if (multiple)
@@ -702,11 +672,9 @@ public abstract class DBAdaptor {
 		return sb.toString();
 	}
 
-	final String getSelectFromOrderBy(GrainElement t, String whereClause,
-			String orderBy) {
-		String sqlfrom = String.format("select %s from " + tableTemplate(),
-				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
-				t.getName());
+	final String getSelectFromOrderBy(GrainElement t, String whereClause, String orderBy) {
+		String sqlfrom = String.format("select %s from " + tableTemplate(), getTableFieldsListExceptBLOBs(t),
+				t.getGrain().getName(), t.getName());
 
 		String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
 
@@ -725,7 +693,7 @@ public abstract class DBAdaptor {
 			w.append(" and ");
 		w.append(navigationFilter);
 		String whereClause = w.toString();
-		
+
 		String sql = "select count(*) from " + String.format(tableTemplate(), t.getGrain().getName(), t.getName())
 				+ ("".equals(whereClause) ? "" : " where " + whereClause);
 		PreparedStatement result = prepareStatement(conn, sql);
@@ -733,8 +701,7 @@ public abstract class DBAdaptor {
 		return result;
 	}
 
-	static PreparedStatement prepareStatement(Connection conn, String sql)
-			throws CelestaException {
+	static PreparedStatement prepareStatement(Connection conn, String sql) throws CelestaException {
 		try {
 			return conn.prepareStatement(sql);
 		} catch (SQLException e) {
@@ -771,8 +738,7 @@ public abstract class DBAdaptor {
 		return getFieldList(flds);
 	}
 
-	static void runUpdateColumnSQL(Connection conn, Column c, String sql)
-			throws CelestaException {
+	static void runUpdateColumnSQL(Connection conn, Column c, String sql) throws CelestaException {
 		// System.out.println(sql); //for debug
 		try {
 			Statement stmt = conn.createStatement();
@@ -782,17 +748,14 @@ public abstract class DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException(
-					"Cannot modify column %s on table %s.%s: %s", c.getName(),
-					c.getParentTable().getGrain().getName(), c.getParentTable()
-							.getName(), e.getMessage());
+			throw new CelestaException("Cannot modify column %s on table %s.%s: %s", c.getName(),
+					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), e.getMessage());
 
 		}
 	}
 
 	static FKRule getFKRule(String rule) {
-		if ("NO ACTION".equalsIgnoreCase(rule)
-				|| "RECTRICT".equalsIgnoreCase(rule))
+		if ("NO ACTION".equalsIgnoreCase(rule) || "RECTRICT".equalsIgnoreCase(rule))
 			return FKRule.NO_ACTION;
 		if ("SET NULL".equalsIgnoreCase(rule))
 			return FKRule.SET_NULL;
@@ -809,13 +772,11 @@ public abstract class DBAdaptor {
 	static String getRecordWhereClause(Table t) {
 		StringBuilder whereClause = new StringBuilder();
 		for (String fieldName : t.getPrimaryKey().keySet())
-			whereClause.append(String.format("%s(\"%s\" = ?)",
-					whereClause.length() > 0 ? " and " : "", fieldName));
+			whereClause.append(String.format("%s(\"%s\" = ?)", whereClause.length() > 0 ? " and " : "", fieldName));
 		return whereClause.toString();
 	}
 
-	static void setParam(PreparedStatement stmt, int i, Object v)
-			throws CelestaException {
+	static void setParam(PreparedStatement stmt, int i, Object v) throws CelestaException {
 		try {
 			if (v == null)
 				stmt.setNull(i, java.sql.Types.NULL);
@@ -831,8 +792,7 @@ public abstract class DBAdaptor {
 				Timestamp d = new Timestamp(((Date) v).getTime());
 				stmt.setTimestamp(i, d);
 			} else if (v instanceof BLOB) {
-				stmt.setBinaryStream(i, ((BLOB) v).getInStream(),
-						((BLOB) v).size());
+				stmt.setBinaryStream(i, ((BLOB) v).getInStream(), ((BLOB) v).size());
 				// createBlob is not implemented for PostgreSQL driver!
 				// Blob b = stmt.getConnection().createBlob();
 				// ((BLOB) v).saveToJDBCBlob(b);
@@ -843,8 +803,7 @@ public abstract class DBAdaptor {
 		}
 	}
 
-	static Set<String> sqlToStringSet(Connection conn, String sql)
-			throws CelestaException {
+	static Set<String> sqlToStringSet(Connection conn, String sql) throws CelestaException {
 		Set<String> result = new HashSet<String>();
 		try {
 			Statement stmt = conn.createStatement();
@@ -880,50 +839,39 @@ public abstract class DBAdaptor {
 	 *            Условие навигационного набора (от текущей записи).
 	 */
 	// CHECKSTYLE:OFF 6 parameters
-	abstract PreparedStatement getNavigationStatement(Connection conn,
-			GrainElement meta, Map<String, AbstractFilter> filters,
-			Expr complexFilter, String orderBy, String navigationWhereClause)
-			throws CelestaException;
+	abstract PreparedStatement getNavigationStatement(Connection conn, GrainElement meta,
+			Map<String, AbstractFilter> filters, Expr complexFilter, String orderBy, String navigationWhereClause)
+					throws CelestaException;
 
 	// CHECKSTYLE:ON
 
-	abstract String getLimitedSQL(GrainElement t, String whereClause,
-			String orderBy, long offset, long rowCount);
+	abstract String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount);
 
 	abstract ColumnDefiner getColumnDefiner(Column c);
 
-	abstract boolean tableExists(Connection conn, String schema, String name)
-			throws CelestaException;
+	abstract boolean tableExists(Connection conn, String schema, String name) throws CelestaException;
 
 	abstract boolean userTablesExist(Connection conn) throws SQLException;
 
-	abstract void createSchemaIfNotExists(Connection conn, String name)
-			throws SQLException;
+	abstract void createSchemaIfNotExists(Connection conn, String name) throws SQLException;
 
-	abstract void manageAutoIncrement(Connection conn, Table t)
-			throws SQLException;
+	abstract void manageAutoIncrement(Connection conn, Table t) throws SQLException;
 
-	abstract void dropAutoIncrement(Connection conn, Table t)
-			throws SQLException;
+	abstract void dropAutoIncrement(Connection conn, Table t) throws SQLException;
 
-	abstract PreparedStatement getOneRecordStatement(Connection conn, Table t)
+	abstract PreparedStatement getOneRecordStatement(Connection conn, Table t) throws CelestaException;
+
+	abstract PreparedStatement getOneFieldStatement(Connection conn, Column c) throws CelestaException;
+
+	abstract PreparedStatement deleteRecordSetStatement(Connection conn, Table t, Map<String, AbstractFilter> filters,
+			Expr complexFilter) throws CelestaException;
+
+	abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask)
 			throws CelestaException;
 
-	abstract PreparedStatement getOneFieldStatement(Connection conn, Column c)
-			throws CelestaException;
+	abstract int getCurrentIdent(Connection conn, Table t) throws CelestaException;
 
-	abstract PreparedStatement deleteRecordSetStatement(Connection conn,
-			Table t, Map<String, AbstractFilter> filters, Expr complexFilter)
-			throws CelestaException;
-
-	abstract PreparedStatement getInsertRecordStatement(Connection conn,
-			Table t, boolean[] nullsMask) throws CelestaException;
-
-	abstract int getCurrentIdent(Connection conn, Table t)
-			throws CelestaException;
-
-	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
-			throws CelestaException;
+	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t) throws CelestaException;
 
 	abstract String getCreateIndexSQL(Index index);
 
@@ -940,8 +888,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя связи с БД.
 	 */
-	abstract DBColumnInfo getColumnInfo(Connection conn, Column c)
-			throws CelestaException;
+	abstract DBColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException;
 
 	/**
 	 * Обновляет на таблице колонку.
@@ -954,8 +901,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             при ошибке обновления колонки.
 	 */
-	abstract void updateColumn(Connection conn, Column c, DBColumnInfo actual)
-			throws CelestaException;
+	abstract void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException;
 
 	/**
 	 * Возвращает информацию о первичном ключе таблицы.
@@ -968,8 +914,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя связи с БД.
 	 */
-	abstract DBPKInfo getPKInfo(Connection conn, Table t)
-			throws CelestaException;
+	abstract DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException;
 
 	/**
 	 * Удаляет первичный ключ на таблице с использованием известного имени
@@ -984,8 +929,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае сбоя связи с БД.
 	 */
-	abstract void dropPK(Connection conn, Table t, String pkName)
-			throws CelestaException;
+	abstract void dropPK(Connection conn, Table t, String pkName) throws CelestaException;
 
 	/**
 	 * Создаёт первичный ключ на таблице в соответствии с метаописанием.
@@ -1000,8 +944,7 @@ public abstract class DBAdaptor {
 	 */
 	abstract void createPK(Connection conn, Table t) throws CelestaException;
 
-	abstract List<DBFKInfo> getFKInfo(Connection conn, Grain g)
-			throws CelestaException;
+	abstract List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException;
 
 	/**
 	 * Возвращает набор индексов, связанных с таблицами, лежащими в указанной
@@ -1014,8 +957,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             В случае сбоя связи с БД.
 	 */
-	abstract Map<String, DBIndexInfo> getIndices(Connection conn, Grain g)
-			throws CelestaException;
+	abstract Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException;
 
 	/**
 	 * Возвращает перечень имён представлений в грануле.
@@ -1028,11 +970,9 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             В случае сбоя связи с БД.
 	 */
-	public List<String> getViewList(Connection conn, Grain g)
-			throws CelestaException {
-		String sql = String
-				.format("select table_name from information_schema.views where table_schema = '%s'",
-						g.getName());
+	public List<String> getViewList(Connection conn, Grain g) throws CelestaException {
+		String sql = String.format("select table_name from information_schema.views where table_schema = '%s'",
+				g.getName());
 		List<String> result = new LinkedList<>();
 		try {
 			Statement stmt = conn.createStatement();
@@ -1045,8 +985,7 @@ public abstract class DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException("Cannot get views list: %s",
-					e.toString());
+			throw new CelestaException("Cannot get views list: %s", e.toString());
 		}
 		return result;
 	}
@@ -1080,8 +1019,8 @@ public abstract class DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException | IOException e) {
-			throw new CelestaException("Error while creating view %s.%s: %s", v
-					.getGrain().getName(), v.getName(), e.getMessage());
+			throw new CelestaException("Error while creating view %s.%s: %s", v.getGrain().getName(), v.getName(),
+					e.getMessage());
 
 		}
 
@@ -1104,11 +1043,9 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             Ошибка БД.
 	 */
-	public void dropView(Connection conn, String grainName, String viewName)
-			throws CelestaException {
+	public void dropView(Connection conn, String grainName, String viewName) throws CelestaException {
 		try {
-			String sql = String.format("DROP VIEW " + tableTemplate(),
-					grainName, viewName);
+			String sql = String.format("DROP VIEW " + tableTemplate(), grainName, viewName);
 			Statement stmt = conn.createStatement();
 			try {
 				stmt.executeUpdate(sql);
@@ -1144,8 +1081,18 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             Ошибка создания или удаления триггера.
 	 */
-	public abstract void updateVersioningTrigger(Connection conn, Table t)
-			throws CelestaException;
+	public abstract void updateVersioningTrigger(Connection conn, Table t) throws CelestaException;
+
+	/**
+	 * Возвращает Process Id текущего подключения к базе данных.
+	 * 
+	 * @param conn
+	 *            Соединение с БД.
+	 * 
+	 * @throws CelestaException
+	 *             Если подключение закрылось.
+	 */
+	public abstract int getDBPid(Connection conn) throws CelestaException;
 
 	/**
 	 * Транслирует литерал даты Celesta в литерал даты, специфический для базы
@@ -1179,23 +1126,20 @@ public abstract class DBAdaptor {
 	 *             Ошибка соединения с БД.
 	 * 
 	 */
-	public void resetIdentity(Connection conn, Table t, int i)
-			throws SQLException {
+	public void resetIdentity(Connection conn, Table t, int i) throws SQLException {
 
 		Statement stmt = conn.createStatement();
 		try {
-			String sql = String
-					.format("update \"celesta\".\"sequences\" set \"seqvalue\" = %d "
+			String sql = String.format(
+					"update \"celesta\".\"sequences\" set \"seqvalue\" = %d "
 							+ "where \"grainid\" = '%s' and \"tablename\" = '%s'",
-							i - 1, t.getGrain().getName(), t.getName());
+					i - 1, t.getGrain().getName(), t.getName());
 
 			// System.out.println(sql);
 			int v = stmt.executeUpdate(sql);
 			if (v == 0) {
-				sql = String
-						.format("insert into \"celesta\".\"sequences\" (\"grainid\", \"tablename\" , \"seqvalue\") "
-								+ "values ('%s', '%s', %d)", t.getGrain()
-								.getName(), t.getName(), i - 1);
+				sql = String.format("insert into \"celesta\".\"sequences\" (\"grainid\", \"tablename\" , \"seqvalue\") "
+						+ "values ('%s', '%s', %d)", t.getGrain().getName(), t.getName(), i - 1);
 				// System.out.println(sql);
 				stmt.executeUpdate(sql);
 			}
@@ -1203,6 +1147,7 @@ public abstract class DBAdaptor {
 			stmt.close();
 		}
 	}
+
 }
 
 /**

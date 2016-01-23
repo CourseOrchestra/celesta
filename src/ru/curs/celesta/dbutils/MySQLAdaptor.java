@@ -1079,4 +1079,23 @@ final class MySQLAdaptor extends DBAdaptor {
 		// System.out.println(sql);
 		return prepareStatement(conn, sql);
 	}
+	
+	@Override
+	public int getDBPid(Connection conn) throws CelestaException {
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery("select connection_id();");
+				if (rs.next()) {
+					return rs.getInt(1);
+				} else {
+					return 0;
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
 }

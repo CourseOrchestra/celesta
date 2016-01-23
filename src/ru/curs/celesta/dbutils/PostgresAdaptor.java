@@ -1050,4 +1050,22 @@ final class PostgresAdaptor extends DBAdaptor {
 		}
 	}
 
+	@Override
+	public int getDBPid(Connection conn) throws CelestaException {
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery("select pb_backend_pid();");
+				if (rs.next()) {
+					return rs.getInt(1);
+				} else {
+					return 0;
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
 }

@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import org.python.core.PyDictionary;
 
 import ru.curs.celesta.dbutils.BasicCursor;
+import ru.curs.celesta.dbutils.DBAdaptor;
 import ru.curs.celesta.score.Grain;
 
 /**
@@ -33,8 +34,7 @@ public final class CallContext {
 		this.grain = null;
 	}
 
-	public CallContext(Connection conn, SessionContext sesContext,
-			Grain curGrain) {
+	public CallContext(Connection conn, SessionContext sesContext, Grain curGrain) {
 		this.conn = conn;
 		this.sesContext = sesContext;
 		this.grain = curGrain;
@@ -78,8 +78,7 @@ public final class CallContext {
 		try {
 			conn.commit();
 		} catch (SQLException e) {
-			throw new CelestaException("Commit unsuccessful: %s",
-					e.getMessage());
+			throw new CelestaException("Commit unsuccessful: %s", e.getMessage());
 		}
 	}
 
@@ -152,8 +151,7 @@ public final class CallContext {
 	 */
 	public void incCursorCount() throws CelestaException {
 		if (cursorCount > MAX_CURSORS)
-			throw new CelestaException(
-					"Too many cursors created in one Celesta procedure call. Check for leaks!");
+			throw new CelestaException("Too many cursors created in one Celesta procedure call. Check for leaks!");
 		cursorCount++;
 	}
 
@@ -178,5 +176,16 @@ public final class CallContext {
 		while (lastCursor != null) {
 			lastCursor.close();
 		}
+	}
+
+	/**
+	 * Возвращает Process Id текущего подключения к базе данных.
+	 * 
+	 * @throws CelestaException
+	 *             Если подключение закрылось.
+	 */
+	public int getDBPid() throws CelestaException {
+		DBAdaptor db = DBAdaptor.getAdaptor();
+		return db.getDBPid(conn);
 	}
 }
