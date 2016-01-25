@@ -23,6 +23,7 @@ public final class CallContext {
 
 	private final Connection conn;
 	private final Grain grain;
+	private final String procName;
 	private final SessionContext sesContext;
 
 	private BasicCursor lastCursor;
@@ -32,12 +33,14 @@ public final class CallContext {
 		this.conn = conn;
 		this.sesContext = sesContext;
 		this.grain = null;
+		this.procName = null;
 	}
 
-	public CallContext(Connection conn, SessionContext sesContext, Grain curGrain) {
+	public CallContext(Connection conn, SessionContext sesContext, Grain curGrain, String procName) {
 		this.conn = conn;
 		this.sesContext = sesContext;
 		this.grain = curGrain;
+		this.procName = procName;
 	}
 
 	/**
@@ -187,5 +190,12 @@ public final class CallContext {
 	public int getDBPid() throws CelestaException {
 		DBAdaptor db = DBAdaptor.getAdaptor();
 		return db.getDBPid(conn);
+	}
+
+	/**
+	 * Возвращает имя процедуры, которая была изначально вызвана.
+	 */
+	public String getProcName() {
+		return procName;
 	}
 }
