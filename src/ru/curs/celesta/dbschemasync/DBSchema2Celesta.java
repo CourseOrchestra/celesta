@@ -64,6 +64,7 @@ public final class DBSchema2Celesta {
 			if ("schema".equals(n.getNodeName())) {
 				Element schema = (Element) n;
 				String grainName = schema.getAttribute("name");
+
 				if (grainName == null || grainName.isEmpty()) {
 					throw new Exception("Empty schema name found.");
 				} else if ("celesta".equals(grainName)) {
@@ -92,6 +93,8 @@ public final class DBSchema2Celesta {
 				}
 				Grain g = refScore.getGrains().get(grainName);
 				updateGrainFK(schema, g);
+				//Only to raise "modified" flag
+				g.setVersion("'" + g.getVersion().toString() + "'");
 			}
 		}
 
