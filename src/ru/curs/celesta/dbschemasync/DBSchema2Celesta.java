@@ -93,7 +93,7 @@ public final class DBSchema2Celesta {
 				}
 				Grain g = refScore.getGrains().get(grainName);
 				updateGrainFK(schema, g);
-				//Only to raise "modified" flag
+				// Only to raise "modified" flag
 				g.setVersion("'" + g.getVersion().toString() + "'");
 			}
 		}
@@ -152,15 +152,20 @@ public final class DBSchema2Celesta {
 
 	private static void createView(Grain g, Element view) throws ParseException {
 		NodeList vl = view.getChildNodes();
+		View cview = null;
+		String celestaDoc = null;
 		for (int i = 0; i < vl.getLength(); i++) {
 			Node vn = vl.item(i);
 			if ("view_script".equals(vn.getNodeName())) {
 				Element viewScript = (Element) vn;
 				String sql = viewScript.getTextContent().trim();
-				new View(g, view.getAttribute("name"), sql);
-				return;
+				cview = new View(g, view.getAttribute("name"), sql);
+			} else if ("comment".equals(vn.getNodeName())) {
+				celestaDoc = extractComment((Element) vn);
 			}
 		}
+		if (cview != null)
+			cview.setCelestaDoc(celestaDoc);
 	}
 
 	private static void updateTableFK(Element table, Table t) throws ParseException {
