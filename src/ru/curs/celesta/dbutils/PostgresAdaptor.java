@@ -1055,7 +1055,7 @@ final class PostgresAdaptor extends DBAdaptor {
 		try {
 			Statement stmt = conn.createStatement();
 			try {
-				ResultSet rs = stmt.executeQuery("select pb_backend_pid();");
+				ResultSet rs = stmt.executeQuery("select pg_backend_pid();");
 				if (rs.next()) {
 					return rs.getInt(1);
 				} else {
