@@ -18,8 +18,7 @@ public final class LyraFieldValue extends LyraNamedElement {
 	private final Object val;
 	private final boolean local;
 
-	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val, boolean local)
-			throws CelestaException {
+	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val, boolean local) throws CelestaException {
 		super(fieldName);
 		this.lyraFieldType = lyraFieldType;
 		this.val = val;
@@ -35,6 +34,8 @@ public final class LyraFieldValue extends LyraNamedElement {
 	 *            Значение.
 	 * @throws ParseException
 	 *             неверное имя.
+	 * @throws CelestaException
+	 *             Неудачное присвоение.
 	 */
 	public static LyraFieldValue getValue(Column c, Object val) throws CelestaException {
 		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), c.getName(), val, false);
@@ -49,11 +50,10 @@ public final class LyraFieldValue extends LyraNamedElement {
 	 *            Имя поля.
 	 * @param val
 	 *            Значение.
-	 * @throws ParseException
+	 * @throws CelestaException
 	 *             неверное имя
 	 */
-	public static LyraFieldValue getValue(ViewColumnType c, String columnName, Object val)
-			throws CelestaException {
+	public static LyraFieldValue getValue(ViewColumnType c, String columnName, Object val) throws CelestaException {
 		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), columnName, val, false);
 	}
 

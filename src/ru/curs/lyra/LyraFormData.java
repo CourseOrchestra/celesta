@@ -21,15 +21,14 @@ import ru.curs.celesta.score.*;
  */
 public final class LyraFormData implements Serializable {
 	private static final long serialVersionUID = 1L;
-	private final LyraNamedElementHolder<LyraFieldValue> fields =
-		new LyraNamedElementHolder<LyraFieldValue>() {
-			private static final long serialVersionUID = 1L;
+	private final LyraNamedElementHolder<LyraFieldValue> fields = new LyraNamedElementHolder<LyraFieldValue>() {
+		private static final long serialVersionUID = 1L;
 
-			@Override
-			protected String getErrorMsg(String name) {
-				return "Field " + name + " is defined more than once in form data";
-			}
-		};
+		@Override
+		protected String getErrorMsg(String name) {
+			return "Field " + name + " is defined more than once in form data";
+		}
+	};
 	private int recversion;
 
 	private String formId;
@@ -47,8 +46,7 @@ public final class LyraFormData implements Serializable {
 	 * @throws CelestaException
 	 *             names clash
 	 */
-	public LyraFormData(BasicCursor c, Map<String, LyraFormField> map, String formId)
-			throws CelestaException {
+	public LyraFormData(BasicCursor c, Map<String, LyraFormField> map, String formId) throws CelestaException {
 		if (c instanceof Cursor) {
 			recversion = ((Cursor) c).getRecversion();
 		}
@@ -63,8 +61,7 @@ public final class LyraFormData implements Serializable {
 				ColumnMeta cmeta = c.meta().getColumns().get(lff.getName());
 
 				if (cmeta == null) {
-					throw new CelestaException("Column %s does not exists in '%s'.",
-							lff.getName(), c.meta().getName());
+					throw new CelestaException("Column %s does not exists in '%s'.", lff.getName(), c.meta().getName());
 				} else if (cmeta instanceof Column) {
 					Column meta = (Column) cmeta;
 					lfv = LyraFieldValue.getValue(meta, val);
@@ -73,9 +70,7 @@ public final class LyraFormData implements Serializable {
 					lfv = LyraFieldValue.getValue(meta, lff.getName(), val);
 				}
 			} else {
-				lfv =
-					new LyraFieldValue(lff.getType(), lff.getName(), lff.getAccessor().getValue(
-							vals), true);
+				lfv = new LyraFieldValue(lff.getType(), lff.getName(), lff.getAccessor().getValue(vals), true);
 			}
 			fields.addElement(lfv);
 		}
@@ -85,8 +80,7 @@ public final class LyraFormData implements Serializable {
 		FormDataParser parser;
 		parser = new FormDataParser();
 		try {
-			TransformerFactory.newInstance().newTransformer()
-					.transform(new StreamSource(is), new SAXResult(parser));
+			TransformerFactory.newInstance().newTransformer().transform(new StreamSource(is), new SAXResult(parser));
 		} catch (Exception e) {
 			throw new CelestaException("XML deserialization error: %s", e.getMessage());
 		}
@@ -105,6 +99,7 @@ public final class LyraFormData implements Serializable {
 	 * @param c
 	 *            Курсор.
 	 * @param map
+	 *            Набор полей.
 	 * @throws CelestaException
 	 *             ошибка Celesta
 	 */
@@ -128,9 +123,8 @@ public final class LyraFormData implements Serializable {
 	 */
 	public void serialize(OutputStream outputStream) throws CelestaException {
 		try {
-			XMLStreamWriter xmlWriter =
-				XMLOutputFactory.newInstance().createXMLStreamWriter(
-						new OutputStreamWriter(outputStream, "UTF-8"));
+			XMLStreamWriter xmlWriter = XMLOutputFactory.newInstance()
+					.createXMLStreamWriter(new OutputStreamWriter(outputStream, "UTF-8"));
 			xmlWriter.writeStartDocument();
 			xmlWriter.writeStartElement("schema");
 			xmlWriter.writeAttribute("recversion", Integer.toString(recversion));
@@ -168,9 +162,8 @@ public final class LyraFormData implements Serializable {
 		private LyraFieldType type = null;
 
 		@Override
-		public void
-				startElement(String uri, String localName, String qName, Attributes attributes)
-						throws SAXException {
+		public void startElement(String uri, String localName, String qName, Attributes attributes)
+				throws SAXException {
 			switch (status) {
 			case 0:
 				recversion = Integer.parseInt(attributes.getValue("recversion"));
@@ -264,8 +257,7 @@ public final class LyraFormData implements Serializable {
 			addFieldValue(v);
 		}
 
-		private void addNullValue(LyraFieldType t, String name, boolean local)
-				throws CelestaException {
+		private void addNullValue(LyraFieldType t, String name, boolean local) throws CelestaException {
 			LyraFieldValue v = new LyraFieldValue(t, name, null, local);
 			addFieldValue(v);
 		}

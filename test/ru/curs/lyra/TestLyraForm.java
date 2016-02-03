@@ -73,6 +73,12 @@ public class TestLyraForm {
 			protected void _createAllUnboundFields(LyraNamedElementHolder<LyraFormField> fieldsMeta) {
 				// do nothing
 			}
+
+			@Override
+			public LyraFormProperties getFormProperties() {
+				// TODO Auto-generated method stub
+				return null;
+			}
 		};
 
 		String[] names = { "column1", "column2", "column3" };

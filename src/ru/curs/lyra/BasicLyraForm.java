@@ -31,6 +31,16 @@ public abstract class BasicLyraForm {
 	 * Caption property name.
 	 */
 	public static final String CAPTION = "caption";
+
+	/**
+	 * Scale property name.
+	 */
+	public static final String SCALE = "scale";
+
+	/**
+	 * Width property name.
+	 */
+	public static final String WIDTH = "width";
 	private final GrainElement meta;
 	private final LyraNamedElementHolder<LyraFormField> fieldsMeta = new LyraNamedElementHolder<LyraFormField>() {
 		private static final long serialVersionUID = 1L;
@@ -93,6 +103,8 @@ public abstract class BasicLyraForm {
 			f.setCaption(metadata.has(CAPTION) ? metadata.getString(CAPTION) : f.getName());
 			f.setEditable(metadata.has(EDITABLE) ? metadata.getBoolean(EDITABLE) : true);
 			f.setVisible(metadata.has(VISIBLE) ? metadata.getBoolean(VISIBLE) : true);
+			f.setScale(metadata.has(SCALE) ? metadata.getInt(SCALE) : 2);
+			f.setWidth(metadata.has(WIDTH) ? metadata.getInt(WIDTH) : -1);
 		} catch (JSONException e1) {
 			throw new CelestaException("JSON Error: %s", e1.getMessage());
 		}
@@ -251,6 +263,8 @@ public abstract class BasicLyraForm {
 	 * Should return the form's fully qualified Python class name.
 	 */
 	public abstract String _getId();
+	
+	public abstract LyraFormProperties getFormProperties();
 
 	/**
 	 * Should append unbound field's meta information.

@@ -13,6 +13,8 @@ public class LyraFormField extends LyraNamedElement {
 	private boolean editable;
 	private boolean visible;
 	private String caption;
+	private int scale;
+	private int width;
 	private String lookup;
 
 	public LyraFormField(String name, boolean bound, FieldAccessor accessor) throws CelestaException {
@@ -119,6 +121,40 @@ public class LyraFormField extends LyraNamedElement {
 	 */
 	public FieldAccessor getAccessor() {
 		return accessor;
+	}
+
+	/**
+	 * Number of decimal places after dot.
+	 */
+	public int getScale() {
+		return scale;
+	}
+
+	/**
+	 * Sets number of decimal places after dot.
+	 * 
+	 * @param scale
+	 *            new value.
+	 */
+	public void setScale(int scale) {
+		this.scale = scale;
+	}
+
+	/**
+	 * Width (in pixels) of a control.
+	 */
+	public int getWidth() {
+		return width;
+	}
+
+	/**
+	 * Sets width (in pixels) for a control.
+	 * 
+	 * @param width
+	 *            width in pixels.
+	 */
+	public void setWidth(int width) {
+		this.width = width;
 	}
 
 }

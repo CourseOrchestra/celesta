@@ -219,6 +219,12 @@ public class SerializerTest {
 				// do nothing for this test
 			}
 
+			@Override
+			public LyraFormProperties getFormProperties() {
+				// do nothing for this test
+				return null;
+			}
+
 		};
 
 		c.get("celesta");
