@@ -168,21 +168,44 @@ public class View extends GrainElement {
 		this.whereCondition = whereCondition;
 	}
 
-	private void selectScript(BufferedWriter bw, SQLGenerator gen) throws IOException {
-		bw.write("  select ");
+	private void selectScript(final BufferedWriter bw, SQLGenerator gen) throws IOException {
+
+		/**
+		 * Wrapper for automatic line-breaks.
+		 */
+		class BWWrapper {
+			private static final int LINE_SIZE = 80;
+			private static final String PADDING = "    ";
+			private int l = 0;
+
+			private void append(String s) throws IOException {
+				bw.write(s);
+				l += s.length();
+				if (l >= LINE_SIZE) {
+					bw.newLine();
+					bw.write(PADDING);
+					l = PADDING.length();
+				}
+			}
+		}
+
+		BWWrapper bww = new BWWrapper();
+
+		bww.append("  select ");
 		if (distinct)
-			bw.write("distinct ");
+			bww.append("distinct ");
+
 		boolean cont = false;
 		for (Map.Entry<String, Expr> e : columns.entrySet()) {
 			if (cont)
-				bw.write(", ");
-			bw.write(gen.generateSQL(e.getValue()));
-			bw.write(" as ");
-			if (gen.quoteNames())
-				bw.write("\"");
-			bw.write(e.getKey());
-			if (gen.quoteNames())
-				bw.write("\"");
+				bww.append(", ");
+			String st = gen.generateSQL(e.getValue()) + " as ";
+			if (gen.quoteNames()) {
+				st = st + "\"" + e.getKey() + "\"";
+			} else {
+				st = st + e.getKey();
+			}
+			bww.append(st);
 			cont = true;
 		}
 		bw.newLine();
