@@ -48,7 +48,6 @@ public final class LyraFieldValue extends LyraNamedElement {
 		xmlWriter.writeAttribute("type", lyraFieldType.toString());
 		xmlWriter.writeAttribute("null", Boolean.toString(val == null));
 		xmlWriter.writeAttribute("local", Boolean.toString(local));
-		System.out.printf(">%s:%s:%d%n", getName(), lyraFieldType.toString(), scale);
 		if (scale != LyraFormField.DEFAULT_SCALE)
 			xmlWriter.writeAttribute("scale", Integer.toString(scale));
 

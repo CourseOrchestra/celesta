@@ -119,7 +119,6 @@ public abstract class BasicLyraForm {
 					f.setScale(LyraFormField.DEFAULT_SCALE);
 				}
 			}
-			System.out.printf("%s-%d%n", name, f.getScale());
 			f.setWidth(metadata.has(WIDTH) ? metadata.getInt(WIDTH) : -1);
 		} catch (JSONException e1) {
 			throw new CelestaException("JSON Error: %s", e1.getMessage());
