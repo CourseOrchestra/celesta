@@ -6,14 +6,18 @@ import ru.curs.celesta.CelestaException;
  * Lyra form field metadata.
  */
 public class LyraFormField extends LyraNamedElement {
-	private static final long serialVersionUID = 1L;
+	/**
+	 * Значение по умолчанию для числа знаков после запятой.
+	 */
+	public static final int DEFAULT_SCALE = 0;
+
 	private final boolean bound;
 	private final transient FieldAccessor accessor;
 	private LyraFieldType type;
 	private boolean editable;
 	private boolean visible;
 	private String caption;
-	private int scale;
+	private int scale = DEFAULT_SCALE;
 	private int width;
 	private String lookup;
 

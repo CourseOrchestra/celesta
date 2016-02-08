@@ -3,58 +3,36 @@ package ru.curs.lyra;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.xml.stream.*;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.*;
 
 /**
  * Значение поля, передаваемого в форму и обратно.
  */
 public final class LyraFieldValue extends LyraNamedElement {
 	static final String XML_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
-	private static final long serialVersionUID = 1L;
 	private final LyraFieldType lyraFieldType;
 	private final Object val;
 	private final boolean local;
+	private final int scale;
 
-	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val, boolean local) throws CelestaException {
+	LyraFieldValue(LyraFormField lff, Object val) throws CelestaException {
+		super(lff.getName());
+		this.lyraFieldType = lff.getType();
+		this.val = val;
+		this.local = !lff.isBound();
+		this.scale = lff.getScale();
+	}
+
+	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val, boolean local, int scale)
+			throws CelestaException {
 		super(fieldName);
 		this.lyraFieldType = lyraFieldType;
 		this.val = val;
 		this.local = local;
-	}
-
-	/**
-	 * Возвращает объект, соответствующий полю в таблице.
-	 * 
-	 * @param c
-	 *            Колонка.
-	 * @param val
-	 *            Значение.
-	 * @throws ParseException
-	 *             неверное имя.
-	 * @throws CelestaException
-	 *             Неудачное присвоение.
-	 */
-	public static LyraFieldValue getValue(Column c, Object val) throws CelestaException {
-		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), c.getName(), val, false);
-	}
-
-	/**
-	 * Возвращает объект, соответствующий полю в представлении.
-	 * 
-	 * @param c
-	 *            Тип колонки.
-	 * @param columnName
-	 *            Имя поля.
-	 * @param val
-	 *            Значение.
-	 * @throws CelestaException
-	 *             неверное имя
-	 */
-	public static LyraFieldValue getValue(ViewColumnType c, String columnName, Object val) throws CelestaException {
-		return new LyraFieldValue(LyraFieldType.lookupFieldType(c), columnName, val, false);
+		this.scale = scale;
 	}
 
 	/**
@@ -70,6 +48,9 @@ public final class LyraFieldValue extends LyraNamedElement {
 		xmlWriter.writeAttribute("type", lyraFieldType.toString());
 		xmlWriter.writeAttribute("null", Boolean.toString(val == null));
 		xmlWriter.writeAttribute("local", Boolean.toString(local));
+		System.out.printf(">%s:%s:%d%n", getName(), lyraFieldType.toString(), scale);
+		if (scale != LyraFormField.DEFAULT_SCALE)
+			xmlWriter.writeAttribute("scale", Integer.toString(scale));
 
 		if (val instanceof Date) {
 			SimpleDateFormat sdf = new SimpleDateFormat(XML_DATE_FORMAT);
@@ -100,4 +81,12 @@ public final class LyraFieldValue extends LyraNamedElement {
 	public boolean isLocal() {
 		return local;
 	}
+
+	/**
+	 * Число знаков после запятой.
+	 */
+	public int getScale() {
+		return scale;
+	}
+
 }

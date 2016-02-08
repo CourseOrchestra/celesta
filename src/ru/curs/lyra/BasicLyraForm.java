@@ -11,7 +11,9 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.GrainElement;
+import ru.curs.celesta.score.StringColumn;
 
 /**
  * Base Java class for Lyra forms. Two classes inherited from this one are
@@ -103,7 +105,21 @@ public abstract class BasicLyraForm {
 			f.setCaption(metadata.has(CAPTION) ? metadata.getString(CAPTION) : f.getName());
 			f.setEditable(metadata.has(EDITABLE) ? metadata.getBoolean(EDITABLE) : true);
 			f.setVisible(metadata.has(VISIBLE) ? metadata.getBoolean(VISIBLE) : true);
-			f.setScale(metadata.has(SCALE) ? metadata.getInt(SCALE) : 2);
+			if (metadata.has(SCALE)) {
+				f.setScale(metadata.getInt(SCALE));
+			} else {
+				if (m instanceof StringColumn && !((StringColumn) m).isMax()) {
+					StringColumn sc = (StringColumn) m;
+					f.setScale(sc.getLength());
+				} else if (m instanceof FloatingColumn) {
+					// Default for floating!
+					
+					f.setScale(2);
+				} else {
+					f.setScale(LyraFormField.DEFAULT_SCALE);
+				}
+			}
+			System.out.printf("%s-%d%n", name, f.getScale());
 			f.setWidth(metadata.has(WIDTH) ? metadata.getInt(WIDTH) : -1);
 		} catch (JSONException e1) {
 			throw new CelestaException("JSON Error: %s", e1.getMessage());
@@ -263,7 +279,7 @@ public abstract class BasicLyraForm {
 	 * Should return the form's fully qualified Python class name.
 	 */
 	public abstract String _getId();
-	
+
 	public abstract LyraFormProperties getFormProperties();
 
 	/**
