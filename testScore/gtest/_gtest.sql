@@ -45,3 +45,6 @@ create view testview as
   
 create view testview2 as 
   select id, descr from test t1 inner join refTo t2 on attrVarchar = k1 and not t2.descr is null and attrInt = k2;  
+  
+create view v3 as select 1 as a, 1 as b, 1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j, 1 as k
+  from test;
