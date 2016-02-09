@@ -11,7 +11,6 @@ public class LyraFormField extends LyraNamedElement {
 	 */
 	public static final int DEFAULT_SCALE = 0;
 
-	private final boolean bound;
 	private final transient FieldAccessor accessor;
 	private LyraFieldType type;
 	private boolean editable;
@@ -23,7 +22,6 @@ public class LyraFormField extends LyraNamedElement {
 
 	public LyraFormField(String name, boolean bound, FieldAccessor accessor) throws CelestaException {
 		super(name);
-		this.bound = bound;
 		this.accessor = accessor;
 	}
 
@@ -111,13 +109,6 @@ public class LyraFormField extends LyraNamedElement {
 	 */
 	public void setLookup(String lookup) {
 		this.lookup = lookup;
-	}
-
-	/**
-	 * Is the field bound?
-	 */
-	public boolean isBound() {
-		return bound;
 	}
 
 	/**

@@ -15,23 +15,19 @@ public final class LyraFieldValue extends LyraNamedElement {
 	static final String XML_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 	private final LyraFieldType lyraFieldType;
 	private final Object val;
-	private final boolean local;
 	private final int scale;
 
 	LyraFieldValue(LyraFormField lff, Object val) throws CelestaException {
 		super(lff.getName());
 		this.lyraFieldType = lff.getType();
 		this.val = val;
-		this.local = !lff.isBound();
 		this.scale = lff.getScale();
 	}
 
-	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val, boolean local, int scale)
-			throws CelestaException {
+	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val, int scale) throws CelestaException {
 		super(fieldName);
 		this.lyraFieldType = lyraFieldType;
 		this.val = val;
-		this.local = local;
 		this.scale = scale;
 	}
 
@@ -46,8 +42,8 @@ public final class LyraFieldValue extends LyraNamedElement {
 	public void serialize(XMLStreamWriter xmlWriter) throws XMLStreamException {
 		xmlWriter.writeStartElement(getName());
 		xmlWriter.writeAttribute("type", lyraFieldType.toString());
-		xmlWriter.writeAttribute("null", Boolean.toString(val == null));
-		xmlWriter.writeAttribute("local", Boolean.toString(local));
+		if (val == null)
+			xmlWriter.writeAttribute("null", Boolean.toString(true));
 		if (scale != LyraFormField.DEFAULT_SCALE)
 			xmlWriter.writeAttribute("scale", Integer.toString(scale));
 
@@ -72,13 +68,6 @@ public final class LyraFieldValue extends LyraNamedElement {
 	 */
 	public LyraFieldType getFieldType() {
 		return lyraFieldType;
-	}
-
-	/**
-	 * Является ли значение локальным (не взятым из курсора).
-	 */
-	public boolean isLocal() {
-		return local;
 	}
 
 	/**

@@ -151,7 +151,6 @@ public final class LyraFormData implements Serializable {
 		private String key;
 		private int status = 0;
 		private boolean isNull = false;
-		private boolean local = false;
 		private LyraFieldType type = null;
 		private int scale;
 
@@ -166,11 +165,14 @@ public final class LyraFormData implements Serializable {
 				break;
 			case 1:
 				key = localName;
-				isNull = Boolean.parseBoolean(attributes.getValue("null"));
-				local = Boolean.parseBoolean(attributes.getValue("local"));
 				type = LyraFieldType.valueOf(attributes.getValue("type"));
-				String buf = attributes.getValue("scale");
+				
+				String buf = attributes.getValue("null");
+				isNull = buf == null ? false : Boolean.parseBoolean(buf);
+
+				buf = attributes.getValue("scale");
 				scale = buf == null ? LyraFormField.DEFAULT_SCALE : Integer.parseInt(buf);
+				
 				status = 2;
 				sb.setLength(0);
 			default:
@@ -229,32 +231,32 @@ public final class LyraFormData implements Serializable {
 		}
 
 		private void addValue(String name, String value) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(LyraFieldType.VARCHAR, name, value, local, scale);
+			LyraFieldValue v = new LyraFieldValue(LyraFieldType.VARCHAR, name, value, scale);
 			addFieldValue(v);
 		}
 
 		private void addValue(String name, int value) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(LyraFieldType.INT, name, value, local, scale);
+			LyraFieldValue v = new LyraFieldValue(LyraFieldType.INT, name, value, scale);
 			addFieldValue(v);
 		}
 
 		private void addValue(String name, double value) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(LyraFieldType.REAL, name, value, local, scale);
+			LyraFieldValue v = new LyraFieldValue(LyraFieldType.REAL, name, value, scale);
 			addFieldValue(v);
 		}
 
 		private void addValue(String name, boolean value) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(LyraFieldType.BIT, name, value, local, scale);
+			LyraFieldValue v = new LyraFieldValue(LyraFieldType.BIT, name, value, scale);
 			addFieldValue(v);
 		}
 
 		private void addValue(String name, Date value) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(LyraFieldType.DATETIME, name, value, local, scale);
+			LyraFieldValue v = new LyraFieldValue(LyraFieldType.DATETIME, name, value, scale);
 			addFieldValue(v);
 		}
 
 		private void addNullValue(LyraFieldType t, String name) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(t, name, null, local, scale);
+			LyraFieldValue v = new LyraFieldValue(t, name, null, scale);
 			addFieldValue(v);
 		}
 	}
