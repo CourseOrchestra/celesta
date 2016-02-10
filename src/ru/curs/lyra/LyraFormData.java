@@ -1,5 +1,8 @@
 package ru.curs.lyra;
 
+import static ru.curs.lyra.LyraFormField.REQUIRED;
+import static ru.curs.lyra.LyraFormField.SCALE;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -171,10 +174,10 @@ public final class LyraFormData implements Serializable {
 				String buf = attributes.getValue("null");
 				isNull = buf == null ? false : Boolean.parseBoolean(buf);
 
-				buf = attributes.getValue("scale");
+				buf = attributes.getValue(SCALE);
 				scale = buf == null ? LyraFormField.DEFAULT_SCALE : Integer.parseInt(buf);
 
-				buf = attributes.getValue("required");
+				buf = attributes.getValue(REQUIRED);
 				required = buf == null ? false : Boolean.parseBoolean(buf);
 
 				status = 2;

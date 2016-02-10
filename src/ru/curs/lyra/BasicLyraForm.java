@@ -16,39 +16,13 @@ import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.StringColumn;
 
+import static ru.curs.lyra.LyraFormField.*;
+
 /**
  * Base Java class for Lyra forms. Two classes inherited from this one are
  * BasicCardForm and BasicGridForm.
  */
 public abstract class BasicLyraForm {
-
-	/**
-	 * 'Visible' property name.
-	 */
-	public static final String VISIBLE = "visible";
-	/**
-	 * 'Editable' property name.
-	 */
-	public static final String EDITABLE = "editable";
-	/**
-	 * 'Caption' property name.
-	 */
-	public static final String CAPTION = "caption";
-
-	/**
-	 * 'Scale' property name.
-	 */
-	public static final String SCALE = "scale";
-
-	/**
-	 * 'Width' property name.
-	 */
-	public static final String WIDTH = "width";
-
-	/**
-	 * 'Required' property name.
-	 */
-	public static final String REQUIRED = "required";
 	private final GrainElement meta;
 	private final LyraNamedElementHolder<LyraFormField> fieldsMeta = new LyraNamedElementHolder<LyraFormField>() {
 		private static final long serialVersionUID = 1L;

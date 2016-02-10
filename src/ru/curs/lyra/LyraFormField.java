@@ -7,6 +7,34 @@ import ru.curs.celesta.CelestaException;
  */
 public class LyraFormField extends LyraNamedElement {
 	/**
+	 * 'Visible' property name.
+	 */
+	public static final String VISIBLE = "visible";
+	/**
+	 * 'Editable' property name.
+	 */
+	public static final String EDITABLE = "editable";
+	/**
+	 * 'Caption' property name.
+	 */
+	public static final String CAPTION = "caption";
+
+	/**
+	 * 'Scale' property name.
+	 */
+	public static final String SCALE = "scale";
+
+	/**
+	 * 'Width' property name.
+	 */
+	public static final String WIDTH = "width";
+
+	/**
+	 * 'Required' property name.
+	 */
+	public static final String REQUIRED = "required";
+	
+	/**
 	 * Значение по умолчанию для числа знаков после запятой.
 	 */
 	public static final int DEFAULT_SCALE = 0;

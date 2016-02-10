@@ -1,5 +1,9 @@
 package ru.curs.lyra;
 
+import static ru.curs.lyra.LyraFormField.DEFAULT_SCALE;
+import static ru.curs.lyra.LyraFormField.REQUIRED;
+import static ru.curs.lyra.LyraFormField.SCALE;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -7,7 +11,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import ru.curs.celesta.CelestaException;
-
 /**
  * Значение поля, передаваемого в форму и обратно.
  */
@@ -40,10 +43,10 @@ public final class LyraFieldValue extends LyraNamedElement {
 		xmlWriter.writeAttribute("type", lyraFieldType.toString());
 		if (val == null)
 			xmlWriter.writeAttribute("null", Boolean.toString(true));
-		if (scale != LyraFormField.DEFAULT_SCALE)
-			xmlWriter.writeAttribute("scale", Integer.toString(scale));
+		if (scale != DEFAULT_SCALE)
+			xmlWriter.writeAttribute(SCALE, Integer.toString(scale));
 		if (required)
-			xmlWriter.writeAttribute("required", Boolean.toString(true));
+			xmlWriter.writeAttribute(REQUIRED, Boolean.toString(true));
 		
 		if (val instanceof Date) {
 			SimpleDateFormat sdf = new SimpleDateFormat(XML_DATE_FORMAT);
