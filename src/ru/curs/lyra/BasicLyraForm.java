@@ -10,6 +10,7 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
+import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.GrainElement;
@@ -22,27 +23,32 @@ import ru.curs.celesta.score.StringColumn;
 public abstract class BasicLyraForm {
 
 	/**
-	 * Visible property name.
+	 * 'Visible' property name.
 	 */
 	public static final String VISIBLE = "visible";
 	/**
-	 * Editable property name.
+	 * 'Editable' property name.
 	 */
 	public static final String EDITABLE = "editable";
 	/**
-	 * Caption property name.
+	 * 'Caption' property name.
 	 */
 	public static final String CAPTION = "caption";
 
 	/**
-	 * Scale property name.
+	 * 'Scale' property name.
 	 */
 	public static final String SCALE = "scale";
 
 	/**
-	 * Width property name.
+	 * 'Width' property name.
 	 */
 	public static final String WIDTH = "width";
+
+	/**
+	 * 'Required' property name.
+	 */
+	public static final String REQUIRED = "required";
 	private final GrainElement meta;
 	private final LyraNamedElementHolder<LyraFormField> fieldsMeta = new LyraNamedElementHolder<LyraFormField>() {
 		private static final long serialVersionUID = 1L;
@@ -93,18 +99,22 @@ public abstract class BasicLyraForm {
 		_createAllUnboundFields(fieldsMeta);
 	}
 
+	private static boolean getPropertyVal(JSONObject metadata, String propName, boolean def) throws JSONException {
+		return metadata.has(propName) ? metadata.getBoolean(propName) : def;
+	}
+
 	private LyraFormField createBoundField(String name, int index, ColumnMeta m) throws CelestaException {
 		LyraFieldType lft = LyraFieldType.lookupFieldType(m);
 		FieldAccessor a = FieldAccessorFactory.create(index, name, lft);
-		LyraFormField f = new LyraFormField(name, true, a);
+		LyraFormField f = new LyraFormField(name, a);
 		fieldsMeta.addElement(f);
 		f.setType(LyraFieldType.lookupFieldType(m));
 		String json = extractJSON(m.getCelestaDoc());
 		try {
 			JSONObject metadata = new JSONObject(json);
 			f.setCaption(metadata.has(CAPTION) ? metadata.getString(CAPTION) : f.getName());
-			f.setEditable(metadata.has(EDITABLE) ? metadata.getBoolean(EDITABLE) : true);
-			f.setVisible(metadata.has(VISIBLE) ? metadata.getBoolean(VISIBLE) : true);
+			f.setEditable(getPropertyVal(metadata, EDITABLE, true));
+			f.setVisible(getPropertyVal(metadata, VISIBLE, true));
 			if (metadata.has(SCALE)) {
 				f.setScale(metadata.getInt(SCALE));
 			} else {
@@ -113,12 +123,19 @@ public abstract class BasicLyraForm {
 					f.setScale(sc.getLength());
 				} else if (m instanceof FloatingColumn) {
 					// Default for floating!
-					
 					f.setScale(2);
 				} else {
 					f.setScale(LyraFormField.DEFAULT_SCALE);
 				}
 			}
+
+			if (m instanceof Column) {
+				boolean dbRequired = !((Column) m).isNullable();
+				f.setRequired(metadata.has(REQUIRED) ? metadata.getBoolean(REQUIRED) | dbRequired : dbRequired);
+			} else {
+				f.setRequired(getPropertyVal(metadata, REQUIRED, false));
+			}
+
 			f.setWidth(metadata.has(WIDTH) ? metadata.getInt(WIDTH) : -1);
 		} catch (JSONException e1) {
 			throw new CelestaException("JSON Error: %s", e1.getMessage());

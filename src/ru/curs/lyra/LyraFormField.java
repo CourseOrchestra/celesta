@@ -15,12 +15,18 @@ public class LyraFormField extends LyraNamedElement {
 	private LyraFieldType type;
 	private boolean editable;
 	private boolean visible;
+	private boolean required;
 	private String caption;
 	private int scale = DEFAULT_SCALE;
 	private int width;
 	private String lookup;
 
-	public LyraFormField(String name, boolean bound, FieldAccessor accessor) throws CelestaException {
+	public LyraFormField(String name) throws CelestaException {
+		super(name);
+		accessor = null;
+	}
+
+	public LyraFormField(String name, FieldAccessor accessor) throws CelestaException {
 		super(name);
 		this.accessor = accessor;
 	}
@@ -150,6 +156,23 @@ public class LyraFormField extends LyraNamedElement {
 	 */
 	public void setWidth(int width) {
 		this.width = width;
+	}
+
+	/**
+	 * Is the field required.
+	 */
+	public boolean isRequired() {
+		return required;
+	}
+
+	/**
+	 * Sets required property for a field.
+	 * 
+	 * @param required
+	 *            new value
+	 */
+	public void setRequired(boolean required) {
+		this.required = required;
 	}
 
 }

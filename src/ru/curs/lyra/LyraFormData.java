@@ -153,6 +153,7 @@ public final class LyraFormData implements Serializable {
 		private boolean isNull = false;
 		private LyraFieldType type = null;
 		private int scale;
+		private boolean required = false;
 
 		@Override
 		public void startElement(String uri, String localName, String qName, Attributes attributes)
@@ -166,13 +167,16 @@ public final class LyraFormData implements Serializable {
 			case 1:
 				key = localName;
 				type = LyraFieldType.valueOf(attributes.getValue("type"));
-				
+
 				String buf = attributes.getValue("null");
 				isNull = buf == null ? false : Boolean.parseBoolean(buf);
 
 				buf = attributes.getValue("scale");
 				scale = buf == null ? LyraFormField.DEFAULT_SCALE : Integer.parseInt(buf);
-				
+
+				buf = attributes.getValue("required");
+				required = buf == null ? false : Boolean.parseBoolean(buf);
+
 				status = 2;
 				sb.setLength(0);
 			default:
@@ -194,7 +198,9 @@ public final class LyraFormData implements Serializable {
 						addNullValue(type, key);
 					} else {
 						String buf = sb.toString();
-
+						LyraFormField lff = new LyraFormField(key);
+						lff.setScale(scale);
+						lff.setRequired(required);
 						switch (type) {
 						case DATETIME:
 							if (sdf == null)
@@ -205,19 +211,19 @@ public final class LyraFormData implements Serializable {
 							} catch (java.text.ParseException e) {
 								d = null;
 							}
-							addValue(key, d);
+							addValue(lff, d);
 							break;
 						case BIT:
-							addValue(key, Boolean.valueOf(buf));
+							addValue(lff, Boolean.valueOf(buf));
 							break;
 						case INT:
-							addValue(key, Integer.valueOf(buf));
+							addValue(lff, Integer.valueOf(buf));
 							break;
 						case REAL:
-							addValue(key, Double.valueOf(buf));
+							addValue(lff, Double.valueOf(buf));
 							break;
 						default:
-							addValue(key, buf);
+							addValue(lff, buf);
 						}
 					}
 				} catch (CelestaException e) {
@@ -230,33 +236,42 @@ public final class LyraFormData implements Serializable {
 			fields.addElement(v);
 		}
 
-		private void addValue(String name, String value) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(LyraFieldType.VARCHAR, name, value, scale);
+		private void addValue(LyraFormField lff, String value) throws CelestaException {
+			lff.setType(LyraFieldType.VARCHAR);
+			LyraFieldValue v = new LyraFieldValue(lff, value);
 			addFieldValue(v);
 		}
 
-		private void addValue(String name, int value) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(LyraFieldType.INT, name, value, scale);
+		private void addValue(LyraFormField lff, Integer value) throws CelestaException {
+			lff.setType(LyraFieldType.INT);
+			LyraFieldValue v = new LyraFieldValue(lff, value);
 			addFieldValue(v);
 		}
 
-		private void addValue(String name, double value) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(LyraFieldType.REAL, name, value, scale);
+		private void addValue(LyraFormField lff, Double value) throws CelestaException {
+			lff.setType(LyraFieldType.REAL);
+			LyraFieldValue v = new LyraFieldValue(lff, value);
 			addFieldValue(v);
 		}
 
-		private void addValue(String name, boolean value) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(LyraFieldType.BIT, name, value, scale);
+		private void addValue(LyraFormField lff, Boolean value) throws CelestaException {
+			lff.setType(LyraFieldType.BIT);
+			LyraFieldValue v = new LyraFieldValue(lff, value);
 			addFieldValue(v);
 		}
 
-		private void addValue(String name, Date value) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(LyraFieldType.DATETIME, name, value, scale);
+		private void addValue(LyraFormField lff, Date value) throws CelestaException {
+			lff.setType(LyraFieldType.DATETIME);
+			LyraFieldValue v = new LyraFieldValue(lff, value);
 			addFieldValue(v);
 		}
 
 		private void addNullValue(LyraFieldType t, String name) throws CelestaException {
-			LyraFieldValue v = new LyraFieldValue(t, name, null, scale);
+			LyraFormField lff = new LyraFormField(name);
+			lff.setScale(scale);
+			lff.setRequired(required);
+			lff.setType(t);
+			LyraFieldValue v = new LyraFieldValue(lff, null);
 			addFieldValue(v);
 		}
 	}

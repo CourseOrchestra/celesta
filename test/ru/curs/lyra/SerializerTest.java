@@ -67,7 +67,7 @@ public class SerializerTest {
 
 		Map<String, LyraFormField> metaform = new LinkedHashMap<>();
 		LyraFormField lff;
-		lff = new LyraFormField("z", false, new FieldAccessor() {
+		lff = new LyraFormField("z", new FieldAccessor() {
 			@Override
 			public Object getValue(Object[] c) {
 				return 123;
@@ -79,9 +79,10 @@ public class SerializerTest {
 			}
 		});
 		lff.setType(LyraFieldType.INT);
+		lff.setRequired(true);
 		metaform.put(lff.getName(), lff);
 
-		lff = new LyraFormField("aa", false, new FieldAccessor() {
+		lff = new LyraFormField("aa", new FieldAccessor() {
 			@Override
 			public Object getValue(Object[] c) {
 				return "русский текст";
@@ -96,7 +97,7 @@ public class SerializerTest {
 		metaform.put(lff.getName(), lff);
 
 		final Date d = new Date();
-		lff = new LyraFormField("fe", false, new FieldAccessor() {
+		lff = new LyraFormField("fe", new FieldAccessor() {
 			@Override
 			public Object getValue(Object[] c) {
 				return d;
@@ -110,7 +111,7 @@ public class SerializerTest {
 		lff.setType(LyraFieldType.DATETIME);
 		metaform.put(lff.getName(), lff);
 
-		lff = new LyraFormField("bs", false, new FieldAccessor() {
+		lff = new LyraFormField("bs", new FieldAccessor() {
 			@Override
 			public Object getValue(Object[] c) {
 				return true;
@@ -124,7 +125,7 @@ public class SerializerTest {
 		lff.setType(LyraFieldType.BIT);
 		metaform.put(lff.getName(), lff);
 
-		lff = new LyraFormField("we", false, new FieldAccessor() {
+		lff = new LyraFormField("we", new FieldAccessor() {
 			@Override
 			public Object getValue(Object[] c) {
 				return null;
@@ -145,9 +146,9 @@ public class SerializerTest {
 
 		String expected = String.format(
 				"<?xml version=\"1.0\" ?><schema recversion=\"0\" formId=\"myform\">"
-						+ "<z type=\"INT\" null=\"false\" local=\"true\">123</z><aa type=\"VARCHAR\" null=\"false\" local=\"true\">русский текст</aa>"
-						+ "<fe type=\"DATETIME\" null=\"false\" local=\"true\">%s</fe><bs type=\"BIT\" null=\"false\" local=\"true\">true</bs>"
-						+ "<we type=\"BIT\" null=\"true\" local=\"true\"></we></schema>",
+						+ "<z type=\"INT\" required=\"true\">123</z><aa type=\"VARCHAR\">русский текст</aa>"
+						+ "<fe type=\"DATETIME\">%s</fe><bs type=\"BIT\">true</bs>"
+						+ "<we type=\"BIT\" null=\"true\"></we></schema>",
 				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(d));
 
 		String actual = bos.toString("utf-8");
@@ -182,7 +183,7 @@ public class SerializerTest {
 			@Override
 			public LyraFormField _createUnboundField(LyraNamedElementHolder<LyraFormField> meta, String name) {
 				try {
-					LyraFormField lff = new LyraFormField(name, false, new FieldAccessor() {
+					LyraFormField lff = new LyraFormField(name, new FieldAccessor() {
 						@Override
 						public Object getValue(Object[] c) {
 							return "русский текст";

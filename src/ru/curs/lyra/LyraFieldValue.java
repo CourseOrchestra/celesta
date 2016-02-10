@@ -16,20 +16,16 @@ public final class LyraFieldValue extends LyraNamedElement {
 	private final LyraFieldType lyraFieldType;
 	private final Object val;
 	private final int scale;
+	private final boolean required;
 
 	LyraFieldValue(LyraFormField lff, Object val) throws CelestaException {
 		super(lff.getName());
 		this.lyraFieldType = lff.getType();
-		this.val = val;
 		this.scale = lff.getScale();
+		this.required = lff.isRequired();
+		this.val = val;
 	}
 
-	LyraFieldValue(LyraFieldType lyraFieldType, String fieldName, Object val, int scale) throws CelestaException {
-		super(fieldName);
-		this.lyraFieldType = lyraFieldType;
-		this.val = val;
-		this.scale = scale;
-	}
 
 	/**
 	 * Сериализация.
@@ -46,7 +42,9 @@ public final class LyraFieldValue extends LyraNamedElement {
 			xmlWriter.writeAttribute("null", Boolean.toString(true));
 		if (scale != LyraFormField.DEFAULT_SCALE)
 			xmlWriter.writeAttribute("scale", Integer.toString(scale));
-
+		if (required)
+			xmlWriter.writeAttribute("required", Boolean.toString(true));
+		
 		if (val instanceof Date) {
 			SimpleDateFormat sdf = new SimpleDateFormat(XML_DATE_FORMAT);
 			xmlWriter.writeCharacters(val == null ? "" : sdf.format(val));
@@ -75,6 +73,13 @@ public final class LyraFieldValue extends LyraNamedElement {
 	 */
 	public int getScale() {
 		return scale;
+	}
+
+	/**
+	 * Является ли поле обязательным.
+	 */
+	public boolean isRequired() {
+		return required;
 	}
 
 }
