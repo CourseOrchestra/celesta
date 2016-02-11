@@ -155,7 +155,7 @@ public abstract class BasicLyraForm {
 	 * @param context
 	 *            new call context.
 	 */
-	public void setCallContext(CallContext context) {
+	public synchronized void setCallContext(CallContext context) {
 		this.context = context;
 	}
 

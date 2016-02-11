@@ -53,7 +53,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             Ошибка сериализации.
 	 */
-	public String revert(String data) throws CelestaException {
+	public synchronized String revert(String data) throws CelestaException {
 
 		Cursor c = getCursor();
 
@@ -85,7 +85,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             Ошибка сериализации.
 	 */
-	public String move(String cmd, String data) throws CelestaException {
+	public synchronized String move(String cmd, String data) throws CelestaException {
 		try {
 			BasicCursor rec = rec();
 			if (rec instanceof Cursor) {
@@ -112,7 +112,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             Ошибка сериализации.
 	 */
-	public String newRec() throws CelestaException {
+	public synchronized String newRec() throws CelestaException {
 		Cursor c = getCursor();
 		c.clear();
 		c.setRecversion(0);
@@ -136,7 +136,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             Ошибка сериализации.
 	 */
-	public String deleteRec(String data) throws CelestaException {
+	public synchronized String deleteRec(String data) throws CelestaException {
 		Cursor c = getCursor();
 
 		ByteArrayInputStream dataIS;
