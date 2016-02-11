@@ -197,13 +197,15 @@ public final class LyraFormData implements Serializable {
 			if (status == 2) {
 				status = 1;
 				try {
+					LyraFieldValue v;
+					LyraFormField lff = new LyraFormField(key);
+					lff.setScale(scale);
+					lff.setRequired(required);
+					lff.setType(type);
 					if (isNull && sb.length() == 0) {
-						addNullValue(type, key);
+						v = new LyraFieldValue(lff, null);
 					} else {
 						String buf = sb.toString();
-						LyraFormField lff = new LyraFormField(key);
-						lff.setScale(scale);
-						lff.setRequired(required);
 						switch (type) {
 						case DATETIME:
 							if (sdf == null)
@@ -214,68 +216,27 @@ public final class LyraFormData implements Serializable {
 							} catch (java.text.ParseException e) {
 								d = null;
 							}
-							addValue(lff, d);
+							v = new LyraFieldValue(lff, d);
 							break;
 						case BIT:
-							addValue(lff, Boolean.valueOf(buf));
+							v = new LyraFieldValue(lff, Boolean.valueOf(buf));
 							break;
 						case INT:
-							addValue(lff, Integer.valueOf(buf));
+							v = new LyraFieldValue(lff, Integer.valueOf(buf));
 							break;
 						case REAL:
-							addValue(lff, Double.valueOf(buf));
+							v = new LyraFieldValue(lff, Double.valueOf(buf));
 							break;
 						default:
-							addValue(lff, buf);
+							v = new LyraFieldValue(lff, buf);
 						}
 					}
+					fields.addElement(v);
 				} catch (CelestaException e) {
 					throw new SAXException(e.getMessage());
 				}
 			}
 		}
 
-		private void addFieldValue(LyraFieldValue v) throws CelestaException {
-			fields.addElement(v);
-		}
-
-		private void addValue(LyraFormField lff, String value) throws CelestaException {
-			lff.setType(LyraFieldType.VARCHAR);
-			LyraFieldValue v = new LyraFieldValue(lff, value);
-			addFieldValue(v);
-		}
-
-		private void addValue(LyraFormField lff, Integer value) throws CelestaException {
-			lff.setType(LyraFieldType.INT);
-			LyraFieldValue v = new LyraFieldValue(lff, value);
-			addFieldValue(v);
-		}
-
-		private void addValue(LyraFormField lff, Double value) throws CelestaException {
-			lff.setType(LyraFieldType.REAL);
-			LyraFieldValue v = new LyraFieldValue(lff, value);
-			addFieldValue(v);
-		}
-
-		private void addValue(LyraFormField lff, Boolean value) throws CelestaException {
-			lff.setType(LyraFieldType.BIT);
-			LyraFieldValue v = new LyraFieldValue(lff, value);
-			addFieldValue(v);
-		}
-
-		private void addValue(LyraFormField lff, Date value) throws CelestaException {
-			lff.setType(LyraFieldType.DATETIME);
-			LyraFieldValue v = new LyraFieldValue(lff, value);
-			addFieldValue(v);
-		}
-
-		private void addNullValue(LyraFieldType t, String name) throws CelestaException {
-			LyraFormField lff = new LyraFormField(name);
-			lff.setScale(scale);
-			lff.setRequired(required);
-			lff.setType(t);
-			LyraFieldValue v = new LyraFieldValue(lff, null);
-			addFieldValue(v);
-		}
 	}
 }
