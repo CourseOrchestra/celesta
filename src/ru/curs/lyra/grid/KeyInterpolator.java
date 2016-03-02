@@ -90,10 +90,12 @@ public class KeyInterpolator {
 		if (e1 == null)
 			return data.lastEntry().getValue();
 
-		BigInteger result = e1.getValue().subtract(e0.getValue()).multiply(BigInteger.valueOf(count - e0.getKey()));
+		BigInteger result = (e1.getValue().subtract(e0.getValue()).subtract(BigInteger.ONE))
+				.multiply(BigInteger.valueOf(count - e0.getKey() - 1));
 
-		BigInteger delta = BigInteger.valueOf(e1.getKey() - e0.getKey());
-		result = e0.getValue().add(divideAndRound(result, delta));
+		BigInteger delta = BigInteger.valueOf(e1.getKey() - e0.getKey() - 1);
+
+		result = e0.getValue().add(divideAndRound(result, delta)).add(BigInteger.ONE);
 		return result;
 	}
 
@@ -153,9 +155,10 @@ public class KeyInterpolator {
 				} else {
 					// Lower entry is strictly lower,
 					// Ceiling is strictly greater: interpolation
-					int d = divideAndRound(BigInteger.valueOf(ceiling.getKey() - lower.getKey())
-							.multiply(key.subtract(lower.getValue())), ceiling.getValue().subtract(lower.getValue()))
-									.intValue();
+					int d = 1 + divideAndRound(
+							BigInteger.valueOf(ceiling.getKey() - lower.getKey() - 1)
+									.multiply(key.subtract(lower.getValue()).subtract(BigInteger.ONE)),
+							ceiling.getValue().subtract(lower.getValue()).subtract(BigInteger.ONE)).intValue();
 					return lower.getKey() + d;
 				}
 			}

@@ -16,15 +16,25 @@ public class KeyInterpolatorTest {
 
 		assertEquals(100, ka.getApproximateCount());
 
+		//Три крайние точки
 		assertEquals(BigInteger.valueOf(7), ka.getPoint(0));
-		// тестируем округление в одну и в другую сторону.
-		assertEquals(BigInteger.valueOf(228), ka.getPoint(22));
-
-		assertEquals(22, ka.getApproximatePosition(BigInteger.valueOf(228)));
-
-		assertEquals(BigInteger.valueOf(167), ka.getPoint(16));
+		assertEquals(BigInteger.valueOf(8), ka.getPoint(1));
 		assertEquals(BigInteger.valueOf(1000), ka.getPoint(99));
-		assertEquals(BigInteger.valueOf(559), ka.getPoint(55));
+
+		assertEquals(0, ka.getApproximatePosition(BigInteger.valueOf(7)));
+		assertEquals(1, ka.getApproximatePosition(BigInteger.valueOf(8)));
+		assertEquals(99, ka.getApproximatePosition(BigInteger.valueOf(1000)));
+		
+		// тестируем округление в одну и в другую сторону.
+		assertEquals(BigInteger.valueOf(231), ka.getPoint(23));
+		assertEquals(BigInteger.valueOf(210), ka.getPoint(21));
+		assertEquals(BigInteger.valueOf(160), ka.getPoint(16));
+		assertEquals(BigInteger.valueOf(555), ka.getPoint(55));		
+		assertEquals(BigInteger.valueOf(544), ka.getPoint(54));	
+		
+		assertEquals(23, ka.getApproximatePosition(BigInteger.valueOf(228)));
+		assertEquals(59, ka.getApproximatePosition(BigInteger.valueOf(600)));
+		assertEquals(61, ka.getApproximatePosition(BigInteger.valueOf(615)));
 
 		assertEquals(2, ka.getPointsCount());
 
@@ -32,12 +42,14 @@ public class KeyInterpolatorTest {
 		ka.setPoint(BigInteger.valueOf(500), 50);
 		ka.setPoint(BigInteger.valueOf(800), 60);
 
+		assertEquals(10, ka.getApproximatePosition(BigInteger.valueOf(100)));
 		assertEquals(50, ka.getApproximatePosition(BigInteger.valueOf(500)));
+		assertEquals(51, ka.getApproximatePosition(BigInteger.valueOf(501)));
 		assertEquals(60, ka.getApproximatePosition(BigInteger.valueOf(800)));
 		assertEquals(55, ka.getApproximatePosition(BigInteger.valueOf(650)));
 
 		assertEquals(0, ka.getApproximatePosition(BigInteger.valueOf(7)));
-		assertEquals(0, ka.getApproximatePosition(BigInteger.valueOf(8)));
+		assertEquals(1, ka.getApproximatePosition(BigInteger.valueOf(8)));
 		assertEquals(0, ka.getApproximatePosition(BigInteger.valueOf(2)));
 
 		assertEquals(99, ka.getApproximatePosition(BigInteger.valueOf(2000)));
@@ -48,20 +60,23 @@ public class KeyInterpolatorTest {
 		assertEquals(5, ka.getPointsCount());
 
 		assertEquals(BigInteger.valueOf(7), ka.getPoint(0));
-		assertEquals(BigInteger.valueOf(650), ka.getPoint(55));
+		assertEquals(BigInteger.valueOf(634), ka.getPoint(55));
 		assertEquals(BigInteger.valueOf(500), ka.getPoint(50));
 		assertEquals(BigInteger.valueOf(1000), ka.getPoint(99));
 
 		ka.setPoint(BigInteger.valueOf(900), 50);
 		assertEquals(4, ka.getPointsCount());
 
-		assertEquals(BigInteger.valueOf(910), ka.getPoint(55));
+		assertEquals(BigInteger.valueOf(909), ka.getPoint(55));
 		assertEquals(BigInteger.valueOf(955), ka.getPoint(77));
 
 		assertEquals(77, ka.getApproximatePosition(BigInteger.valueOf(955)));
 
 		ka.setPoint(BigInteger.valueOf(950), 105);
 		assertEquals(4, ka.getPointsCount());
+		assertEquals(BigInteger.valueOf(900), ka.getPoint(50));
+		assertEquals(BigInteger.valueOf(901), ka.getPoint(51));
+		assertEquals(BigInteger.valueOf(927), ka.getPoint(80));
 		assertEquals(BigInteger.valueOf(950), ka.getPoint(105));
 
 		assertEquals(106, ka.getApproximateCount());
@@ -101,4 +116,14 @@ public class KeyInterpolatorTest {
 		assertNull(v);
 	}
 
+	
+	@Test
+	public void test3() {
+		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(0), BigInteger.valueOf(60), 7);
+		assertEquals(0, ka.getApproximatePosition(BigInteger.valueOf(0)));
+		assertEquals(1, ka.getApproximatePosition(BigInteger.valueOf(1)));
+		assertEquals(2, ka.getApproximatePosition(BigInteger.valueOf(10)));
+		assertEquals(3, ka.getApproximatePosition(BigInteger.valueOf(30)));
+		assertEquals(6, ka.getApproximatePosition(BigInteger.valueOf(60)));
+	}
 }
