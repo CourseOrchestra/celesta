@@ -654,6 +654,13 @@ public abstract class Cursor extends BasicCursor {
 					_tableName(), e.getMessage());
 		}
 	}
+	
+	/**
+	 * Возвращает в массиве значения полей первичного ключа.
+	 */
+	public Object[] getCurrentKeyValues() {
+		return _currentKeyValues();
+	}
 
 	// CHECKSTYLE:OFF
 	/*

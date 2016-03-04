@@ -107,8 +107,8 @@ public final class GridDriver {
 							int result = c.position();
 							BigInteger key = getCursorOrdinal(c);
 							interpolator.setPoint(key, result);
-							if (changeNotifier != null)
-								changeNotifier.run();
+							// if (changeNotifier != null)
+							// changeNotifier.run();
 							continue;
 						}
 					}

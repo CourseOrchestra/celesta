@@ -10,7 +10,7 @@ import java.util.TreeMap;
  */
 public class KeyInterpolator {
 
-	private static final int MIN_GAP_QUOTIENT = 5;
+	private static final int MIN_GAP_QUOTIENT = 4;
 	private static final int MIN_GAP_VALUE = 10;
 
 	private final TreeMap<Integer, BigInteger> data = new TreeMap<>();
@@ -214,6 +214,8 @@ public class KeyInterpolator {
 		} else {
 			leastAccurateValue = null;
 		}
+		// System.out.printf("lav: %s%n", leastAccurateValue == null ? "null" :
+		// leastAccurateValue.toString(16));
 		return leastAccurateValue;
 	}
 
