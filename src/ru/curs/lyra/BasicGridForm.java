@@ -92,6 +92,13 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	}
 
 	/**
+	 * Returns change notifier.
+	 */
+	public Runnable getChangeNotifier() {
+		return gd.getChangeNotifier();
+	}
+
+	/**
 	 * Returns (approximate) total record count.
 	 * 
 	 * Just after creation of the form this method returns DEFAULT_COUNT value,

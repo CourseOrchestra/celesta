@@ -333,6 +333,12 @@ public final class GridDriver {
 		this.changeNotifier = changeNotifier;
 	}
 
+	/**
+	 * Gets change notifier.
+	 */
+	public Runnable getChangeNotifier() {
+		return changeNotifier;
+	}
 }
 
 /**
