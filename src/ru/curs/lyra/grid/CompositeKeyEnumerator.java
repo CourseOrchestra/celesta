@@ -44,26 +44,14 @@ public final class CompositeKeyEnumerator extends KeyEnumerator {
 	public void setOrderValue(BigInteger value) {
 		if (keys.length == 0)
 			return;
-
-		BigInteger[] c = new BigInteger[keys.length];
-		BigInteger n = BigInteger.ONE;
-		int i = keys.length - 1;
-		while (true) {
-			c[i] = n;
-			if (i == 0)
-				break;
-			n = n.multiply(keys[i].cardinality());
-			i--;
-		}
-
-		BigInteger[] vr;
+		
 		BigInteger v = value;
-		for (i = 0; i < c.length - 1; i++) {
-			vr = v.divideAndRemainder(c[i]);
-			v = vr[1];
-			keys[i].setOrderValue(vr[0]);
+		BigInteger[] vr;
+		for (int i = keys.length - 1; i >= 0; i--) {
+			vr = v.divideAndRemainder(keys[i].cardinality());
+			keys[i].setOrderValue(vr[1]);
+			v = vr[0];
 		}
-		keys[c.length - 1].setOrderValue(v);
 	}
 
 	@Override
