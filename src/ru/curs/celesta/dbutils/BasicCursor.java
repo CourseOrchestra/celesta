@@ -609,35 +609,44 @@ public abstract class BasicCursor {
 		}
 	}
 
+	private static boolean isNotValid(PreparedStatement stmt) throws CelestaException {
+		try {
+			return stmt == null || stmt.isClosed();
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
 	private PreparedStatement chooseNavigator(char c) throws CelestaException {
 		switch (c) {
 		case '<':
-			if (backwards == null)
+			if (isNotValid(backwards))
 				backwards = db().getNavigationStatement(conn, meta(), filters, complexFilter, getReversedOrderBy(),
 						getNavigationWhereClause('<'));
 			return backwards;
 		case '>':
-			if (forwards == null)
+			if (isNotValid(forwards))
 				forwards = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(),
 						getNavigationWhereClause('>'));
 			return forwards;
 		case '=':
-			if (here == null)
+			if (isNotValid(here))
 				here = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(),
 						getNavigationWhereClause('='));
 			return here;
 		case '-':
-			if (first == null)
+			if (isNotValid(first))
 				first = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(), "");
 			return first;
 		case '+':
-			if (last == null)
+			if (isNotValid(last))
 				last = db().getNavigationStatement(conn, meta(), filters, complexFilter, getReversedOrderBy(), "");
 			return last;
 		default:
 			// THIS WILL NEVER EVER HAPPEN, WE'VE ALREADY CHECKED
 			return null;
 		}
+
 	}
 
 	final void validateColumName(String name) throws CelestaException {
@@ -914,7 +923,7 @@ public abstract class BasicCursor {
 				DBAdaptor.setParam(stmt, j++, param);
 			}
 		}
-		//System.out.println(stmt);
+		// System.out.println(stmt);
 		return count(stmt);
 	}
 
@@ -996,7 +1005,7 @@ public abstract class BasicCursor {
 	public abstract BasicCursor _getBufferCopy(CallContext context) throws CelestaException;
 
 	public abstract Object[] _currentValues();
-	
+
 	protected abstract void _clearBuffer(boolean withKeys);
 
 	protected abstract String _grainName();
