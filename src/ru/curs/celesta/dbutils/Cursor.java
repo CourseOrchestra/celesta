@@ -541,6 +541,7 @@ public abstract class Cursor extends BasicCursor {
 	 */
 	public final void init() {
 		_clearBuffer(false);
+		setRecversion(0);
 		if (xRec != null)
 			xRec.close();
 		xRec = null;
@@ -604,6 +605,7 @@ public abstract class Cursor extends BasicCursor {
 	@Override
 	public final void clear() throws CelestaException {
 		super.clear();
+		setRecversion(0);
 		if (xRec != null)
 			xRec.close();
 		xRec = null;
