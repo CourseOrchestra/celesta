@@ -29,6 +29,7 @@ import ru.curs.lyra.grid.VarcharFieldEnumerator;
 public final class GridDriver {
 
 	private static final int MAX_REFINEMENTS_COUNT = 100;
+	private static final int DEFAULT_SMALL_SCROLL = 11;
 
 	/**
 	 * The default assumption for a records count in a table.
@@ -68,6 +69,8 @@ public final class GridDriver {
 	private final BasicCursor closedCopy;
 
 	private int refinementsCount = 0;
+
+	private int smallScroll = DEFAULT_SMALL_SCROLL;
 
 	/**
 	 * Handles asynchronous interpolation table refinement requests.
@@ -200,26 +203,29 @@ public final class GridDriver {
 	 * 
 	 * @param position
 	 *            scrollbar knob position
-	 * @param delta
-	 *            difference from previous position
 	 * @param c
 	 *            Alive cursor to be modified
 	 * @return The exact primary key information after positioning
 	 * @throws CelestaException
 	 *             e.g. wrong cursor
 	 */
-	public BigInteger setPosition(int position, int delta, BasicCursor c) throws CelestaException {
+	public BigInteger setPosition(int position, BasicCursor c) throws CelestaException {
 		checkMeta(c);
+		// First, we are checking if exact positioning is possible
+		final int closestPosition = interpolator.getClosestPosition(position);
+		final int absDelta = Math.abs(position - closestPosition);
 
-		int absDelta = Math.abs(delta);
-		if (absDelta < 11) {
+		if (absDelta < smallScroll) {
 			// Trying to perform exact positioning!
-			BigInteger key = interpolator.getExactPoint(position - delta);
+			BigInteger key = interpolator.getExactPoint(closestPosition);
 			if (key != null) {
 				setCursorOrdinal(c, key);
 				if (c.navigate("=")) {
+					String cmd = position > closestPosition ? ">" : "<";
 					for (int i = 0; i < absDelta; i++) {
-						c.navigate(delta > 0 ? ">" : "<");
+						// TODO: do something relevant when navigate(..) returns
+						// false
+						c.navigate(cmd);
 					}
 					BigInteger ord = getCursorOrdinal(c);
 					interpolator.setPoint(ord, position);
@@ -228,17 +234,17 @@ public final class GridDriver {
 				}
 			}
 		}
-		// too big delta or exact key not found
+		// Exact positioning is not feasible, using interpolation
 		BigInteger key = interpolator.getPoint(position);
 		setCursorOrdinal(c, key);
-		c.navigate(delta >= 0 ? "=>+" : "=<-");
+		c.navigate("=>+");
 		topVisiblePosition = getCursorOrdinal(c);
 		requestRefinement(topVisiblePosition, false);
 		return topVisiblePosition;
 	}
 
 	/**
-	 * Udjusts internal state for pre-positioned cursor.
+	 * Adjusts internal state for pre-positioned cursor.
 	 * 
 	 * @param c
 	 *            Cursor that is set to a certain position.
@@ -339,6 +345,18 @@ public final class GridDriver {
 	public Runnable getChangeNotifier() {
 		return changeNotifier;
 	}
+
+	/**
+	 * If the grid is scrolled less than for given amount of records, the exact
+	 * positioning in cycle will be used instead of interpolation.
+	 * 
+	 * @param smallScroll
+	 *            new value.
+	 */
+	public void setMaxExactScrollValue(int smallScroll) {
+		this.smallScroll = smallScroll;
+	}
+
 }
 
 /**

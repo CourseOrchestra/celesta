@@ -23,16 +23,14 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * 
 	 * @param position
 	 *            New scrollbar's position.
-	 * @param delta
-	 *            Change relative to previous state.
 	 * @throws CelestaException
 	 *             e. g. insufficient access rights
 	 * @throws ParseException
 	 *             something wrong
 	 */
-	public List<LyraFormData> getRows(int position, int delta) throws CelestaException {
+	public synchronized List<LyraFormData> getRows(int position) throws CelestaException {
 		BasicCursor c = rec();
-		gd.setPosition(position, delta, c);
+		gd.setPosition(position, c);
 		return returnRows(c);
 	}
 
@@ -47,7 +45,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             something wrong
 	 */
-	public List<LyraFormData> setPosition(Object... pk) throws CelestaException {
+	public synchronized List<LyraFormData> setPosition(Object... pk) throws CelestaException {
 		BasicCursor bc = rec();
 		if (bc instanceof Cursor) {
 			Cursor c = (Cursor) bc;
@@ -96,6 +94,17 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 */
 	public Runnable getChangeNotifier() {
 		return gd.getChangeNotifier();
+	}
+
+	/**
+	 * If the grid is scrolled less than for given amount of records, the exact
+	 * positioning in cycle will be used instead of interpolation.
+	 * 
+	 * @param val
+	 *            new value.
+	 */
+	public void setMaxExactScrollValue(int val) {
+		gd.setMaxExactScrollValue(val);
 	}
 
 	/**

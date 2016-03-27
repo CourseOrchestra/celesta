@@ -74,6 +74,22 @@ public class KeyInterpolator {
 	}
 
 	/**
+	 * The closest known position to to the given one.
+	 * 
+	 * @param count
+	 *            The ordinal number of record.
+	 */
+	public int getClosestPosition(int count) {
+		if (count < 0)
+			throw new IllegalArgumentException();
+		int e0 = data.floorKey(count);
+		if (e0 == count)
+			return e0;
+		int e1 = data.ceilingKey(count);
+		return (count - e0 < e1 - count) ? e0 : e1;
+	}
+
+	/**
 	 * Примерное значение первичного ключа по данному номеру.
 	 * 
 	 * @param count
