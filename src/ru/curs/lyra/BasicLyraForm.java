@@ -37,6 +37,9 @@ public abstract class BasicLyraForm {
 	private CallContext context;
 
 	public BasicLyraForm(CallContext context) throws CelestaException {
+		
+		_createUnboundField(fieldsMeta, "_properties_");
+		
 		this.context = context;
 		rec = _getCursor(context);
 		rec.navigate("-");

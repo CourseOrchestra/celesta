@@ -5,8 +5,8 @@ package ru.curs.lyra;
  */
 public class LyraFormProperties {
 	private String profile = null;
-	private int gridwidth = -1;
-	private int gridheight = -1;
+	private String gridwidth = null;
+	private String gridheight = null;
 	private String defaultaction = null;
 
 	/**
@@ -27,9 +27,9 @@ public class LyraFormProperties {
 	}
 
 	/**
-	 * Grid width in pixels.
+	 * Grid width in HTML units.
 	 */
-	public int getGridwidth() {
+	public String getGridwidth() {
 		return gridwidth;
 	}
 
@@ -37,26 +37,26 @@ public class LyraFormProperties {
 	 * Sets grid width.
 	 * 
 	 * @param gridwidth
-	 *            grid width in pixels.
+	 *            grid width in HTML units.
 	 */
-	public void setGridwidth(int gridwidth) {
+	public void setGridwidth(String gridwidth) {
 		this.gridwidth = gridwidth;
 	}
 
 	/**
-	 * Grid height in pixels.
+	 * Grid height in HTML units.
 	 */
-	public int getGridheight() {
+	public String getGridheight() {
 		return gridheight;
 	}
 
 	/**
-	 * Sets grid height in pixels.
+	 * Sets grid height in HTML units.
 	 * 
 	 * @param gridheight
 	 *            grid height in pixels.
 	 */
-	public void setGridheight(int gridheight) {
+	public void setGridheight(String gridheight) {
 		this.gridheight = gridheight;
 	}
 
