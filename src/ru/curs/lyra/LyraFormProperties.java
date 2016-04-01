@@ -8,6 +8,8 @@ public class LyraFormProperties {
 	private String gridwidth = null;
 	private String gridheight = null;
 	private String defaultaction = null;
+	private String footer = null;
+	private String header = null;
 
 	/**
 	 * Grid properties file.
@@ -75,6 +77,42 @@ public class LyraFormProperties {
 	 */
 	public void setDefaultaction(String defaultaction) {
 		this.defaultaction = defaultaction;
+	}
+
+	/**
+	 * Gets form's footer.
+	 */
+	public String getFooter() {
+		return footer;
+	}
+
+	/**
+	 * Set form's footer.
+	 * 
+	 * @param footer
+	 *            new form's footer.
+	 */
+	public void setFooter(String footer) {
+		this.footer = footer;
+	}
+
+	/**
+	 * Gets form's header.
+	 * 
+	 * @return form's header.
+	 */
+	public String getHeader() {
+		return header;
+	}
+
+	/**
+	 * Sets form's header.
+	 * 
+	 * @param header
+	 *            new form's header.
+	 */
+	public void setHeader(String header) {
+		this.header = header;
 	}
 
 }

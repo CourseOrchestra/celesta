@@ -33,7 +33,17 @@ public class LyraFormField extends LyraNamedElement {
 	 * 'Required' property name.
 	 */
 	public static final String REQUIRED = "required";
-	
+
+	/**
+	 * 'Subtype' property name.
+	 */
+	public static final String SUBTYPE = "subtype";
+
+	/**
+	 * 'LinkId' property name.
+	 */
+	public static final String LINKID = "linkId";
+
 	/**
 	 * Значение по умолчанию для числа знаков после запятой.
 	 */
@@ -48,6 +58,8 @@ public class LyraFormField extends LyraNamedElement {
 	private int scale = DEFAULT_SCALE;
 	private int width;
 	private String lookup;
+	private String subtype;
+	private String linkId;
 
 	public LyraFormField(String name) throws CelestaException {
 		super(name);
@@ -201,6 +213,41 @@ public class LyraFormField extends LyraNamedElement {
 	 */
 	public void setRequired(boolean required) {
 		this.required = required;
+	}
+
+	/**
+	 * Returns field's subtype.
+	 */
+	public String getSubtype() {
+		return subtype;
+	}
+
+	/**
+	 * Set field's subtype. Field's subtype defines the way the field is being
+	 * shown to the user.
+	 * 
+	 * @param subtype
+	 *            new subtype.
+	 */
+	public void setSubtype(String subtype) {
+		this.subtype = subtype;
+	}
+
+	/**
+	 * Gets field's linkID.
+	 */
+	public String getLinkId() {
+		return linkId;
+	}
+
+	/**
+	 * Set field's linkId.
+	 * 
+	 * @param linkId
+	 *            new linkId.
+	 */
+	public void setLinkId(String linkId) {
+		this.linkId = linkId;
 	}
 
 }

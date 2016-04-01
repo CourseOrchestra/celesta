@@ -37,9 +37,9 @@ public abstract class BasicLyraForm {
 	private CallContext context;
 
 	public BasicLyraForm(CallContext context) throws CelestaException {
-		
+
 		_createUnboundField(fieldsMeta, "_properties_");
-		
+
 		this.context = context;
 		rec = _getCursor(context);
 		rec.navigate("-");
@@ -114,6 +114,9 @@ public abstract class BasicLyraForm {
 			}
 
 			f.setWidth(metadata.has(WIDTH) ? metadata.getInt(WIDTH) : -1);
+			
+			f.setSubtype(metadata.has(SUBTYPE) ? metadata.getString(SUBTYPE) : null);
+			f.setLinkId(metadata.has(LINKID) ? metadata.getString(LINKID) : null);
 		} catch (JSONException e1) {
 			throw new CelestaException("JSON Error: %s", e1.getMessage());
 		}
