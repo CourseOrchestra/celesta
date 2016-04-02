@@ -185,19 +185,22 @@ public final class GridDriver {
 			rootKeyEnumerator = new CompositeKeyEnumerator(km);
 		}
 
-		c.navigate("+");
-		BigInteger higherOrd = getCursorOrdinal(c);
-		// Request a total record count immediately
-		requestRefinement(higherOrd, true);
-
-		c.navigate("-");
-		BigInteger lowerOrd = getCursorOrdinal(c);
-		interpolator = new KeyInterpolator(lowerOrd, higherOrd, DEFAULT_COUNT);
-
-		topVisiblePosition = lowerOrd;
+		if (c.navigate("+")) {
+			BigInteger higherOrd = getCursorOrdinal(c);
+			// Request a total record count immediately
+			requestRefinement(higherOrd, true);
+			c.navigate("-");
+			BigInteger lowerOrd = getCursorOrdinal(c);
+			interpolator = new KeyInterpolator(lowerOrd, higherOrd, DEFAULT_COUNT);
+			topVisiblePosition = lowerOrd;
+		} else {
+			// empty record set!
+			interpolator = new KeyInterpolator(BigInteger.ZERO, BigInteger.ZERO, 0);
+			topVisiblePosition = BigInteger.ZERO;
+		}
 
 	}
-
+	
 	/**
 	 * Fills key fields of a cursor based on scroller knob position.
 	 * 

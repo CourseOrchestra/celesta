@@ -21,7 +21,15 @@ public class KeyInterpolator {
 
 	public KeyInterpolator(BigInteger minOrd, BigInteger maxOrd, int count) {
 		data.put(0, minOrd);
-		data.put(count - 1, maxOrd);
+		if (count > 0) {
+			data.put(count - 1, maxOrd);
+			//self-testing count/maxOrd consistency for extremal cases
+		} else if (count == 0) {
+			if (!minOrd.equals(maxOrd))
+				throw new IllegalArgumentException();
+		} else {
+			throw new IllegalArgumentException();
+		}
 		isLAVValid = false;
 	}
 
@@ -34,6 +42,9 @@ public class KeyInterpolator {
 	 *            Номер записи.
 	 */
 	public synchronized void setPoint(BigInteger ord, int count) {
+		if (count < 0)
+			throw new IllegalArgumentException();
+		
 		isLAVValid = false;
 		// System.out.printf("+(%d:%s)%n", count, ord.toString());
 		Entry<Integer, BigInteger> e;
