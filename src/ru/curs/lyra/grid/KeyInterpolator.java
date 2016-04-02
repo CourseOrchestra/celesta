@@ -23,11 +23,10 @@ public class KeyInterpolator {
 		data.put(0, minOrd);
 		if (count > 0) {
 			data.put(count - 1, maxOrd);
-			//self-testing count/maxOrd consistency for extremal cases
-		} else if (count == 0) {
-			if (!minOrd.equals(maxOrd))
+			// self-testing count/maxOrd consistency for extremal cases
+			if (count == 1 && !minOrd.equals(maxOrd))
 				throw new IllegalArgumentException();
-		} else {
+		} else if (count < 0) {
 			throw new IllegalArgumentException();
 		}
 		isLAVValid = false;
@@ -44,7 +43,7 @@ public class KeyInterpolator {
 	public synchronized void setPoint(BigInteger ord, int count) {
 		if (count < 0)
 			throw new IllegalArgumentException();
-		
+
 		isLAVValid = false;
 		// System.out.printf("+(%d:%s)%n", count, ord.toString());
 		Entry<Integer, BigInteger> e;
@@ -244,6 +243,15 @@ public class KeyInterpolator {
 		// System.out.printf("lav: %s%n", leastAccurateValue == null ? "null" :
 		// leastAccurateValue.toString(16));
 		return leastAccurateValue;
+	}
+
+	/**
+	 * Resets the interpolator when all records are deleted.
+	 */
+	public synchronized void resetToEmptyTable() {
+		data.clear();
+		data.put(0, BigInteger.ZERO);
+		isLAVValid = false;
 	}
 
 }

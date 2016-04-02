@@ -200,7 +200,7 @@ public final class GridDriver {
 		}
 
 	}
-	
+
 	/**
 	 * Fills key fields of a cursor based on scroller knob position.
 	 * 
@@ -240,9 +240,15 @@ public final class GridDriver {
 		// Exact positioning is not feasible, using interpolation
 		BigInteger key = interpolator.getPoint(position);
 		setCursorOrdinal(c, key);
-		c.navigate("=>+");
-		topVisiblePosition = getCursorOrdinal(c);
-		requestRefinement(topVisiblePosition, false);
+		if (c.navigate("=>+")) {
+			topVisiblePosition = getCursorOrdinal(c);
+			requestRefinement(topVisiblePosition, false);
+		} else {
+			//table became empty!
+			c._clearBuffer(true);
+			topVisiblePosition =  BigInteger.ZERO;
+			interpolator.resetToEmptyTable();
+		}
 		return topVisiblePosition;
 	}
 
