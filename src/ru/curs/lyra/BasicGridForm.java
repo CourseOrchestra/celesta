@@ -30,8 +30,11 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 */
 	public synchronized List<LyraFormData> getRows(int position) throws CelestaException {
 		BasicCursor c = rec();
-		gd.setPosition(position, c);
-		return returnRows(c);
+		if (gd.setPosition(position, c)) {
+			return returnRows(c);
+		} else {
+			return Collections.emptyList();
+		}
 	}
 
 	/**
@@ -61,21 +64,27 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			bc.setValue(bc.meta().getColumns().keySet().iterator().next(), pk[0]);
 		}
 
-		bc.navigate("=<-");
-		gd.setPosition(bc);
-		return returnRows(bc);
+		if (bc.navigate("=<-")) {
+			gd.setPosition(bc);
+			return returnRows(bc);
+		} else {
+			return Collections.emptyList();
+		}
 	}
 
 	private List<LyraFormData> returnRows(BasicCursor c) throws CelestaException {
-		int h = getGridHeight();
-		String id = _getId();
-		List<LyraFormData> result = new ArrayList<>(h);
+		final int h = getGridHeight();
+		final String id = _getId();
+		final List<LyraFormData> result = new ArrayList<>(h);
+		final Map<String, LyraFormField> meta = getFieldsMeta();
+
 		for (int i = 0; i < h; i++) {
-			LyraFormData lfd = new LyraFormData(c, getFieldsMeta(), id);
+			LyraFormData lfd = new LyraFormData(c, meta, id);
 			result.add(lfd);
 			if (!c.next())
 				break;
 		}
+
 		return result;
 	}
 

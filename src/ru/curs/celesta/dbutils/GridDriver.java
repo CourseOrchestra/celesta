@@ -208,11 +208,11 @@ public final class GridDriver {
 	 *            scrollbar knob position
 	 * @param c
 	 *            Alive cursor to be modified
-	 * @return The exact primary key information after positioning
+	 * @return false if record set is empty
 	 * @throws CelestaException
 	 *             e.g. wrong cursor
 	 */
-	public BigInteger setPosition(int position, BasicCursor c) throws CelestaException {
+	public boolean setPosition(int position, BasicCursor c) throws CelestaException {
 		checkMeta(c);
 		// First, we are checking if exact positioning is possible
 		final int closestPosition = interpolator.getClosestPosition(position);
@@ -233,7 +233,7 @@ public final class GridDriver {
 					BigInteger ord = getCursorOrdinal(c);
 					interpolator.setPoint(ord, position);
 					topVisiblePosition = ord;
-					return topVisiblePosition;
+					return true;
 				}
 			}
 		}
@@ -243,13 +243,14 @@ public final class GridDriver {
 		if (c.navigate("=>+")) {
 			topVisiblePosition = getCursorOrdinal(c);
 			requestRefinement(topVisiblePosition, false);
+			return true;
 		} else {
 			//table became empty!
 			c._clearBuffer(true);
 			topVisiblePosition =  BigInteger.ZERO;
 			interpolator.resetToEmptyTable();
+			return false;
 		}
-		return topVisiblePosition;
 	}
 
 	/**

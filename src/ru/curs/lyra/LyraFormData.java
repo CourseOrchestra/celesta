@@ -2,6 +2,7 @@ package ru.curs.lyra;
 
 import static ru.curs.lyra.LyraFormField.REQUIRED;
 import static ru.curs.lyra.LyraFormField.SCALE;
+import static ru.curs.lyra.LyraFormField.SUBTYPE;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -157,6 +158,7 @@ public final class LyraFormData implements Serializable {
 		private LyraFieldType type = null;
 		private int scale;
 		private boolean required = false;
+		private String subtype = null;
 
 		@Override
 		public void startElement(String uri, String localName, String qName, Attributes attributes)
@@ -180,6 +182,9 @@ public final class LyraFormData implements Serializable {
 				buf = attributes.getValue(REQUIRED);
 				required = buf == null ? false : Boolean.parseBoolean(buf);
 
+				buf = attributes.getValue(SUBTYPE);
+				subtype = buf;
+				
 				status = 2;
 				sb.setLength(0);
 			default:
@@ -202,6 +207,7 @@ public final class LyraFormData implements Serializable {
 					lff.setScale(scale);
 					lff.setRequired(required);
 					lff.setType(type);
+					lff.setSubtype(subtype);
 					if (isNull && sb.length() == 0) {
 						v = new LyraFieldValue(lff, null);
 					} else {
