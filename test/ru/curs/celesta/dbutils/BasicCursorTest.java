@@ -54,10 +54,10 @@ public class BasicCursorTest {
 	public void testWhere() throws CelestaException {
 
 		assertEquals(
-				"((\"grainid\" < ?) or ((\"grainid\" = ?) and (\"tablename\" < ?)))",
+				"((\"grainid\" <= ?) and ((\"grainid\" < ?) or (\"tablename\" < ?)))",
 				c.getNavigationWhereClause('<'));
 		assertEquals(
-				"((\"grainid\" > ?) or ((\"grainid\" = ?) and (\"tablename\" > ?)))",
+				"((\"grainid\" >= ?) and ((\"grainid\" > ?) or (\"tablename\" > ?)))",
 				c.getNavigationWhereClause('>'));
 		assertEquals("((\"grainid\" = ?) and (\"tablename\" = ?))",
 				c.getNavigationWhereClause('='));
@@ -73,10 +73,10 @@ public class BasicCursorTest {
 				c.getReversedOrderBy());
 
 		assertEquals(
-				"((\"d\" > ?) or ((\"d\" = ?) and ((\"i\" > ?) or ((\"i\" = ?) and ((\"m\" < ?) or ((\"m\" = ?) and ((\"grainid\" > ?) or ((\"grainid\" = ?) and (\"tablename\" > ?)))))))))",
+				"((\"d\" >= ?) and ((\"d\" > ?) or ((\"i\" >= ?) and ((\"i\" > ?) or ((\"m\" <= ?) and ((\"m\" < ?) or ((\"grainid\" >= ?) and ((\"grainid\" > ?) or (\"tablename\" > ?)))))))))",
 				c.getNavigationWhereClause('>'));
 		assertEquals(
-				"((\"d\" < ?) or ((\"d\" = ?) and ((\"i\" < ?) or ((\"i\" = ?) and ((\"m\" > ?) or ((\"m\" = ?) and ((\"grainid\" < ?) or ((\"grainid\" = ?) and (\"tablename\" < ?)))))))))",
+				"((\"d\" <= ?) and ((\"d\" < ?) or ((\"i\" <= ?) and ((\"i\" < ?) or ((\"m\" >= ?) and ((\"m\" > ?) or ((\"grainid\" <= ?) and ((\"grainid\" < ?) or (\"tablename\" < ?)))))))))",
 				c.getNavigationWhereClause('<'));
 		assertEquals("((\"grainid\" = ?) and (\"tablename\" = ?))",
 				c.getNavigationWhereClause('='));
@@ -86,10 +86,10 @@ public class BasicCursorTest {
 		assertEquals("\"grainid\" desc, \"m\", \"tablename\" desc",
 				c.getReversedOrderBy());
 		assertEquals(
-				"((\"grainid\" > ?) or ((\"grainid\" = ?) and ((\"m\" < ?) or ((\"m\" = ?) and (\"tablename\" > ?)))))",
+				"((\"grainid\" >= ?) and ((\"grainid\" > ?) or ((\"m\" <= ?) and ((\"m\" < ?) or (\"tablename\" > ?)))))",
 				c.getNavigationWhereClause('>'));
 		assertEquals(
-				"((\"grainid\" < ?) or ((\"grainid\" = ?) and ((\"m\" > ?) or ((\"m\" = ?) and (\"tablename\" < ?)))))",
+				"((\"grainid\" <= ?) and ((\"grainid\" < ?) or ((\"m\" >= ?) and ((\"m\" > ?) or (\"tablename\" < ?)))))",
 				c.getNavigationWhereClause('<'));
 		assertEquals("((\"grainid\" = ?) and (\"tablename\" = ?))",
 				c.getNavigationWhereClause('='));

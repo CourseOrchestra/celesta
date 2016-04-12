@@ -1329,7 +1329,7 @@ final class OraAdaptor extends DBAdaptor {
 		try {
 			Statement stmt = conn.createStatement();
 			try {
-				ResultSet rs = stmt.executeQuery("select sys_context('userenv','sessionid')");
+				ResultSet rs = stmt.executeQuery("select sys_context('userenv','sessionid') from dual");
 				if (rs.next()) {
 					return rs.getInt(1);
 				} else {
