@@ -1029,7 +1029,7 @@ final class PostgresAdaptor extends DBAdaptor {
 		if (orderBy.length() > 0)
 			w.append(" order by " + orderBy);
 		String sql = String.format(SELECT_S_FROM + tableTemplate()
-				+ "%s nulls first limit 1;", getTableFieldsListExceptBLOBs(t), t
+				+ "%s  limit 1;", getTableFieldsListExceptBLOBs(t), t
 				.getGrain().getName(), t.getName(), useWhere ? " where " + w
 				: w);
 		// System.out.println(sql);
@@ -1067,12 +1067,5 @@ final class PostgresAdaptor extends DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
-	}
-	
-	@Override
-	String getSelectFromOrderBy(GrainElement t, String whereClause, String orderBy) {
-		String result = super.getSelectFromOrderBy(t, whereClause, orderBy) + " nulls first";
-		//System.out.println(result);
-		return result;
 	}
 }

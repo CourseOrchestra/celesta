@@ -623,6 +623,7 @@ public abstract class DBAdaptor {
 			sql = getSelectFromOrderBy(t, whereClause, orderBy);
 		} else {
 			sql = getLimitedSQL(t, whereClause, orderBy, offset, rowCount);
+
 			// System.out.println(sql);
 		}
 		try {
@@ -671,7 +672,7 @@ public abstract class DBAdaptor {
 		return sb.toString();
 	}
 
-	String getSelectFromOrderBy(GrainElement t, String whereClause, String orderBy) {
+	final String getSelectFromOrderBy(GrainElement t, String whereClause, String orderBy) {
 		String sqlfrom = String.format("select %s from " + tableTemplate(), getTableFieldsListExceptBLOBs(t),
 				t.getGrain().getName(), t.getName());
 
