@@ -1285,6 +1285,7 @@ final class OraAdaptor extends DBAdaptor {
 
 		if (orderBy.length() > 0)
 			w.append(" order by " + orderBy);
+		w.append(" nulls first");
 		String sql = String.format(SELECT_S_FROM + tableTemplate() + "  %s", getTableFieldsListExceptBLOBs(t),
 				t.getGrain().getName(), t.getName(), "where " + w);
 		// System.out.println(sql);
@@ -1341,5 +1342,12 @@ final class OraAdaptor extends DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
+	}
+	
+	@Override
+	String getSelectFromOrderBy(GrainElement t, String whereClause, String orderBy) {
+		String result = super.getSelectFromOrderBy(t, whereClause, orderBy) + " nulls first";
+		//System.out.println(">"+result);
+		return result;
 	}
 }

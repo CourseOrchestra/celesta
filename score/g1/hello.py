@@ -179,8 +179,12 @@ def hello(context, arg):
     c.setValue('doublefield', 3.14)
     print c.doublefield
     c.orderBy('aaa', 'bbb')
+    c.setRange('doublefield')
     c.navigate('=')
     print c.doublefield
+    print c.idc
+    c.navigate('<')
+    print c.idc
     
     print 'USER \t| PID'
     print '----------------'
