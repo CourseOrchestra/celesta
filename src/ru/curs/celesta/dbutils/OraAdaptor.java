@@ -465,23 +465,25 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String getCreateIndexSQL(Index index) {
+	String[] getCreateIndexSQL(Index index) {
 		String grainName = index.getTable().getGrain().getName();
 		String fieldList = getFieldList(index.getColumns().keySet());
 		String sql = String.format("CREATE INDEX " + tableTemplate() + " ON " + tableTemplate() + " (%s)", grainName,
 				index.getName(), grainName, index.getTable().getName(), fieldList);
-		return sql;
+		String[] result = {sql};
+		return result;
 	}
 
 	@Override
-	String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
+	String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
 		String sql;
 		if (dBIndexInfo.getIndexName().startsWith("##")) {
 			sql = String.format("DROP INDEX %s", dBIndexInfo.getIndexName().substring(2));
 		} else {
 			sql = String.format("DROP INDEX " + tableTemplate(), g.getName(), dBIndexInfo.getIndexName());
 		}
-		return sql;
+		String[] result = {sql};
+		return result;
 	}
 
 	private boolean checkForBoolean(Connection conn, Column c) throws SQLException {

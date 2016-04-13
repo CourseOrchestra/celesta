@@ -435,18 +435,21 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String getCreateIndexSQL(Index index) {
+	String[] getCreateIndexSQL(Index index) {
 		String fieldList = getFieldList(index.getColumns().keySet());
 		String sql = String.format("CREATE INDEX %s ON " + tableTemplate() + " (%s)", index.getQuotedName(),
 				index.getTable().getGrain().getName(), index.getTable().getName(), fieldList);
-		return sql;
+		String[] result = {sql};
+		return result;
+
 	}
 
 	@Override
-	String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
+	String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
 		String sql = String.format("DROP INDEX %s ON " + tableTemplate(), dBIndexInfo.getIndexName(), g.getName(),
 				dBIndexInfo.getTableName());
-		return sql;
+		String[] result = {sql};
+		return result;
 	}
 
 	private boolean checkIfVarcharMax(Connection conn, Column c) throws SQLException {

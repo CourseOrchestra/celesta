@@ -409,11 +409,12 @@ public abstract class DBAdaptor {
 	 *             Если что-то пошло не так.
 	 */
 	public final void createIndex(Connection conn, Index index) throws CelestaException {
-		String sql = getCreateIndexSQL(index);
+		String[] sql = getCreateIndexSQL(index);
 		try {
 			Statement stmt = conn.createStatement();
 			try {
-				stmt.executeUpdate(sql);
+				for (String s : sql)
+					stmt.executeUpdate(s);
 			} finally {
 				stmt.close();
 			}
@@ -575,11 +576,13 @@ public abstract class DBAdaptor {
 	 *             Если что-то пошло не так.
 	 */
 	public final void dropIndex(Grain g, DBIndexInfo dBIndexInfo, boolean suppressError) throws CelestaException {
-		String sql = getDropIndexSQL(g, dBIndexInfo);
+		String[] sql = getDropIndexSQL(g, dBIndexInfo);
 		Connection conn = ConnectionPool.get();
 		try {
 			Statement stmt = conn.createStatement();
-			stmt.executeUpdate(sql);
+			for (String s : sql) {
+				stmt.executeUpdate(s);
+			}
 			stmt.close();
 		} catch (SQLException e) {
 			if (!suppressError)
@@ -873,9 +876,9 @@ public abstract class DBAdaptor {
 
 	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t) throws CelestaException;
 
-	abstract String getCreateIndexSQL(Index index);
+	abstract String[] getCreateIndexSQL(Index index);
 
-	abstract String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo);
+	abstract String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo);
 
 	/**
 	 * Возвращает информацию о столбце.
