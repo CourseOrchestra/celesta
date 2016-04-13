@@ -181,7 +181,7 @@ public class ParserTest {
 		Index idx = g.getIndices().get("idx1");
 		assertEquals("table1", idx.getTable().getName());
 		assertEquals("описание индекса idx1", idx.getCelestaDoc());
-		assertEquals(3, idx.getColumns().size());
+		assertEquals(2, idx.getColumns().size());
 
 		idx = g.getIndices().get("table2_idx2");
 		assertEquals("table2", idx.getTable().getName());

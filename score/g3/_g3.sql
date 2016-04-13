@@ -16,4 +16,4 @@ datefield datetime not null default getdate()
 );
 
 /**описание индекса*/
-create index idxc on c (descr, aaa);
+create index idxc on c (datefield, test);

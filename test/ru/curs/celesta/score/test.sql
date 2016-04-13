@@ -33,7 +33,7 @@ CREATE TABLE table2(
 );
  
  /**описание индекса idx1*/
-CREATE INDEX idx1 ON  table1 (f, e, c3);
+CREATE INDEX idx1 ON  table1 (aaa, column2);
 
 CREATE TABLE employees
 (
@@ -44,7 +44,7 @@ CREATE TABLE employees
  emp_mgr VARCHAR(30)
 );
 
-CREATE INDEX table2_idx2 ON table2 (column3, column2);
+CREATE INDEX table2_idx2 ON table2 (column3, column1);
 
 CREATE TABLE ttt1(
 id int

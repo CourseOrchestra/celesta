@@ -16,7 +16,7 @@ f10 blob default 0xFFAAFFAAFF,
 f11 blob not null
 );
 
-create index idxTest on test (attrInt);
+create index idxTest on test (f1);
 
 create table refTo (
   k1 varchar(2) not null,

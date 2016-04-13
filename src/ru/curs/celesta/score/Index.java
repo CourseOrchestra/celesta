@@ -5,18 +5,19 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
+import ru.curs.celesta.AppSettings;
+
 /**
  * Табличный индекс. Celesta допускает создание только простых индексов, без
  * ограничения UNIQUE.
  */
 public class Index extends GrainElement {
+	private static final String INDEX_CREATION_ERROR = "Error while creating index '%s': column '%s' in table '%s' is ";
 	private final Table table;
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
 		protected String getErrorMsg(String name) {
-			return String.format(
-					"Column '%s' is defined more than once in index '%s'",
-					name, getName());
+			return String.format("Column '%s' is defined more than once in index '%s'", name, getName());
 		}
 	};
 
@@ -26,9 +27,8 @@ public class Index extends GrainElement {
 			throw new IllegalArgumentException();
 		table = grain.getTables().get(tableName);
 		if (table == null)
-			throw new ParseException(String.format(
-					"Error while creating index '%s': table '%s' not found.",
-					name, tableName));
+			throw new ParseException(
+					String.format("Error while creating index '%s': table '%s' not found.", name, tableName));
 		grain.addIndex(this);
 	}
 
@@ -61,21 +61,25 @@ public class Index extends GrainElement {
 		Column c = table.getColumns().get(columnName);
 		if (c == null)
 			throw new ParseException(
-					String.format(
-							"Error while creating index '%s': column '%s' is not defined in table '%s'",
-							getName(), columnName, table.getName()));
+					String.format(INDEX_CREATION_ERROR + "not defined.", getName(), columnName, table.getName()));
 		if (c instanceof BinaryColumn)
-			throw new ParseException(
-					String.format(
-							"Error while creating index '%s': column '%s' in table '%s' is "
-									+ "of long binary type and therefore cannot be a part of an index.",
-							getName(), columnName, table.getName()));
+			throw new ParseException(String.format(
+					INDEX_CREATION_ERROR + "of long binary type and therefore cannot be a part of an index.", getName(),
+					columnName, table.getName()));
 		if (c instanceof StringColumn && ((StringColumn) c).isMax())
 			throw new ParseException(
-					String.format(
-							"Error while creating index '%s': column '%s' in table '%s' is "
-									+ "of TEXT type and therefore cannot be a part of an index.",
+					String.format(INDEX_CREATION_ERROR + "of TEXT type and therefore cannot be a part of an index.",
 							getName(), columnName, table.getName()));
+
+		if (c.isNullable()) {
+			String err = String.format(INDEX_CREATION_ERROR + "nullable and therefore cannot be a part of an index.",
+					getName(), columnName, table.getName());
+			if (AppSettings.isIndexedNullsAllowed()) {
+				System.out.println(err);
+			} else {
+				throw new ParseException(err);
+			}
+		}
 
 		columns.addElement(c);
 	}
@@ -105,8 +109,7 @@ public class Index extends GrainElement {
 				}
 			if (coincide)
 				throw new ParseException(
-						String.format(
-								"Error while creating index '%s': it is duplicate of index '%s' for table '%s'",
+						String.format("Error while creating index '%s': it is duplicate of index '%s' for table '%s'",
 								getName(), ind.getName(), table.getName()));
 
 		}

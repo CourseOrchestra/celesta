@@ -25,6 +25,7 @@ public final class AppSettings {
 	private final boolean forceDBInitialize;
 	private final boolean logLogins;
 	private final boolean jythonStateMethod;
+	private final boolean allowIndexedNulls;
 
 	{
 		logger = Logger.getLogger("ru.curs.flute");
@@ -38,7 +39,7 @@ public final class AppSettings {
 
 		// Read the settings and check them as thoroughly as possible at this
 		// point.
-		
+
 		scorePath = settings.getProperty("score.path", "").trim();
 		if (scorePath.isEmpty())
 			sb.append("No score path given (score.path).\n");
@@ -81,6 +82,8 @@ public final class AppSettings {
 
 		jythonStateMethod = Boolean.parseBoolean(settings.getProperty("jython.getStateMethod.isNew", "false").trim());
 
+		allowIndexedNulls = Boolean.parseBoolean(settings.getProperty("allow.indexed.nulls", "false").trim());
+
 		if (sb.length() > 0)
 			throw new CelestaException(sb.toString());
 
@@ -96,7 +99,15 @@ public final class AppSettings {
 			}
 	}
 
-	static void init(Properties settings) throws CelestaException {
+	/**
+	 * Initializes AppSettings with given properties.
+	 * 
+	 * @param settings
+	 *            properties for AppSettings to initialize
+	 * @throws CelestaException
+	 *             wrong properties format
+	 */
+	public static void init(Properties settings) throws CelestaException {
 		theSettings = new AppSettings(settings);
 	}
 
@@ -266,5 +277,14 @@ public final class AppSettings {
 	 */
 	public static Boolean getJythonStateMethod() {
 		return theSettings.jythonStateMethod;
+	}
+
+	/**
+	 * Дозволяется ли индексировать NULLABLE-поля.
+	 */
+	public static Boolean isIndexedNullsAllowed() {
+		// TODO: удалить эту функциональность к лету 2016 года!!!
+		// запретить индексировать NULLABLE-поля!!
+		return theSettings.allowIndexedNulls;
 	}
 }

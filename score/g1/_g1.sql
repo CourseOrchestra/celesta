@@ -2,8 +2,8 @@ create grain g1 version '1.0';
 
 create table aa(
 idaa int not null primary key,  
-idc int ,
-textvalue varchar(10)
+idc int not null default 0,
+textvalue varchar(10) not null
 );
 
 create index aaidx on aa (idc, textvalue);
