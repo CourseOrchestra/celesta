@@ -14,15 +14,17 @@ public class KeyInterpolator {
 	private static final int MIN_GAP_VALUE = 10;
 
 	private final TreeMap<Integer, BigInteger> data = new TreeMap<>();
+	private final boolean descending;
 
 	// Least accurate value cache and its validity flag.
 	private BigInteger leastAccurateValue;
 	private boolean isLAVValid;
 
-	public KeyInterpolator(BigInteger minOrd, BigInteger maxOrd, int count) {
-		data.put(0, minOrd);
+	public KeyInterpolator(BigInteger minOrd, BigInteger maxOrd, int count, boolean descending) {
+		this.descending = descending;
+		data.put(0, negateIfDesc(minOrd));
 		if (count > 0) {
-			data.put(count - 1, maxOrd);
+			data.put(count - 1, negateIfDesc(maxOrd));
 			// self-testing count/maxOrd consistency for extremal cases
 			if (count == 1 && !minOrd.equals(maxOrd))
 				throw new IllegalArgumentException();
@@ -30,6 +32,7 @@ public class KeyInterpolator {
 			throw new IllegalArgumentException();
 		}
 		isLAVValid = false;
+		
 	}
 
 	/**
@@ -43,15 +46,16 @@ public class KeyInterpolator {
 	public synchronized void setPoint(BigInteger ord, int count) {
 		if (count < 0)
 			throw new IllegalArgumentException();
+		final BigInteger neword = negateIfDesc(ord);
 
 		isLAVValid = false;
 		// System.out.printf("+(%d:%s)%n", count, ord.toString());
 		Entry<Integer, BigInteger> e;
-		data.put(count, ord);
+		data.put(count, neword);
 		int c = count;
 		// Discarding non-congruent points
 		while ((e = data.lowerEntry(c)) != null) {
-			if (e.getValue().compareTo(ord) >= 0) {
+			if (e.getValue().compareTo(neword) >= 0) {
 				c = e.getKey();
 				data.remove(c);
 			} else {
@@ -60,7 +64,7 @@ public class KeyInterpolator {
 		}
 		c = count;
 		while ((e = data.higherEntry(c)) != null) {
-			if (e.getValue().compareTo(ord) <= 0) {
+			if (e.getValue().compareTo(neword) <= 0) {
 				c = e.getKey();
 				data.remove(c);
 			} else {
@@ -69,6 +73,10 @@ public class KeyInterpolator {
 		}
 
 		// TODO: выбрасывать ненужные (не уточняющие) точки
+	}
+
+	private BigInteger negateIfDesc(BigInteger ord) {
+		return descending ? ord.negate() : ord;
 	}
 
 	/**
@@ -80,7 +88,7 @@ public class KeyInterpolator {
 	 * 
 	 */
 	public BigInteger getExactPoint(int count) {
-		return data.get(count);
+		return negateIfDesc(data.get(count));
 	}
 
 	/**
@@ -110,11 +118,11 @@ public class KeyInterpolator {
 			throw new IllegalArgumentException();
 		Entry<Integer, BigInteger> e0 = data.floorEntry(count);
 		if (e0.getKey() == count)
-			return e0.getValue();
+			return negateIfDesc(e0.getValue());
 		Entry<Integer, BigInteger> e1 = data.ceilingEntry(count);
 		// when count > maxcount
 		if (e1 == null)
-			return data.lastEntry().getValue();
+			return negateIfDesc(data.lastEntry().getValue());
 
 		BigInteger result = (e1.getValue().subtract(e0.getValue()).subtract(BigInteger.ONE))
 				.multiply(BigInteger.valueOf(count - e0.getKey() - 1));
@@ -122,7 +130,7 @@ public class KeyInterpolator {
 		BigInteger delta = BigInteger.valueOf(e1.getKey() - e0.getKey() - 1);
 
 		result = e0.getValue().add(divideAndRound(result, delta)).add(BigInteger.ONE);
-		return result;
+		return negateIfDesc(result);
 	}
 
 	private static BigInteger divideAndRound(BigInteger divident, BigInteger divisor) {
@@ -156,13 +164,14 @@ public class KeyInterpolator {
 	 *            Key ordinal value.
 	 */
 	public int getApproximatePosition(BigInteger key) {
+		final BigInteger newkey = negateIfDesc(key);
 		int cmax = data.lastEntry().getKey();
 		int cmin = 0;
 		int cmid;
 		while (cmax != cmin) {
 			cmid = (cmax + cmin) >> 1;
 			Entry<Integer, BigInteger> ceiling = data.ceilingEntry(cmid);
-			int delta = ceiling.getValue().compareTo(key);
+			int delta = ceiling.getValue().compareTo(newkey);
 			if (delta == 0) {
 				return ceiling.getKey();
 			} else if (delta < 0) {
@@ -171,7 +180,7 @@ public class KeyInterpolator {
 			} else {
 				// Ceiling is strictly greater than key!
 				Entry<Integer, BigInteger> lower = data.lowerEntry(cmid);
-				delta = lower.getValue().compareTo(key);
+				delta = lower.getValue().compareTo(newkey);
 				if (delta == 0)
 					return lower.getKey();
 				else if (delta > 0) {
@@ -183,7 +192,7 @@ public class KeyInterpolator {
 					// Ceiling is strictly greater: interpolation
 					int d = 1 + divideAndRound(
 							BigInteger.valueOf(ceiling.getKey() - lower.getKey() - 1)
-									.multiply(key.subtract(lower.getValue()).subtract(BigInteger.ONE)),
+									.multiply(newkey.subtract(lower.getValue()).subtract(BigInteger.ONE)),
 							ceiling.getValue().subtract(lower.getValue()).subtract(BigInteger.ONE)).intValue();
 					return lower.getKey() + d;
 				}
@@ -200,7 +209,7 @@ public class KeyInterpolator {
 	 */
 	public synchronized BigInteger getLeastAccurateValue() {
 		if (isLAVValid)
-			return leastAccurateValue;
+			return negateIfDesc(leastAccurateValue);
 
 		isLAVValid = true;
 		// only one point, nothing to talk about
@@ -242,7 +251,7 @@ public class KeyInterpolator {
 		}
 		// System.out.printf("lav: %s%n", leastAccurateValue == null ? "null" :
 		// leastAccurateValue.toString(16));
-		return leastAccurateValue;
+		return negateIfDesc(leastAccurateValue);
 	}
 
 	/**
@@ -253,5 +262,4 @@ public class KeyInterpolator {
 		data.put(0, BigInteger.ZERO);
 		isLAVValid = false;
 	}
-
 }

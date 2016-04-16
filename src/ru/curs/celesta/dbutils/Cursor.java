@@ -41,6 +41,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -566,16 +567,13 @@ public abstract class Cursor extends BasicCursor {
 	}
 
 	@Override
-	final void appendPK(StringBuilder orderByClause, boolean needComma, Set<String> colNames) throws CelestaException {
-		boolean nc = needComma;
+	final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException {
 		// Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
 		// естественном порядке
 		for (String colName : meta().getPrimaryKey().keySet())
 			if (!colNames.contains(colName)) {
-				if (nc)
-					orderByClause.append(", ");
-				orderByClause.append(String.format("\"%s\"", colName));
-				nc = true;
+				l.add(String.format("\"%s\"", colName));
+				ol.add(Boolean.FALSE);
 			}
 	}
 
@@ -656,7 +654,7 @@ public abstract class Cursor extends BasicCursor {
 					_tableName(), e.getMessage());
 		}
 	}
-	
+
 	/**
 	 * Возвращает в массиве значения полей первичного ключа.
 	 */

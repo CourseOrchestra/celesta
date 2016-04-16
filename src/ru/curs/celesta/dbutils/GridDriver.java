@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.regex.Matcher;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
@@ -44,7 +43,7 @@ public final class GridDriver {
 	/**
 	 * Key columns' names.
 	 */
-	private final String[] names;
+	// private final String[] names;
 
 	private Runnable changeNotifier;
 
@@ -150,25 +149,28 @@ public final class GridDriver {
 	}
 
 	public GridDriver(BasicCursor c) throws CelestaException {
-
-		// Getting key column names ('a key column' here is a column included
-		// into
-		// ORDER BY clause)
-		names = c.getOrderBy().split(",");
-		for (int i = 0; i < names.length; i++) {
-			Matcher m = BasicCursor.QUOTED_COLUMN_NAME.matcher(names[i]);
-			m.find();
-			String quotedName = m.group(1);
-			names[i] = quotedName.substring(1, quotedName.length() - 1);
-		}
-
 		closedCopy = c._getBufferCopy(c.callContext());
 		closedCopy.copyFiltersFrom(c);
 		closedCopy.copyOrderFrom(c);
 		closedCopy.close();
 
+		// checking order
+		final boolean[] descOrders = c.descOrders();
+		final boolean desc = descOrders[0];
+		for (int i = 1; i < descOrders.length; i++) {
+			if (desc != descOrders[i])
+				throw new CelestaException(
+						"Mixed ASC/DESC ordering for grid: %s",
+						c.getOrderBy());
+		}
+
 		// KeyEnumerator factory
-		GrainElement meta = c.meta();
+		final GrainElement meta = c.meta();
+		final String[] quotedNames = c.orderByColumnNames();
+		final String[] names = new String[quotedNames.length];
+		for (int i = 0; i < quotedNames.length; i++) {
+			names[i] = quotedNames[i].substring(1, quotedNames[i].length() - 1);
+		}
 		if (names.length == 1) {
 			// Single field key enumerator
 			ColumnMeta m = meta.getColumns().get(names[0]);
@@ -191,11 +193,11 @@ public final class GridDriver {
 			requestRefinement(higherOrd, true);
 			c.navigate("-");
 			BigInteger lowerOrd = getCursorOrdinal(c);
-			interpolator = new KeyInterpolator(lowerOrd, higherOrd, DEFAULT_COUNT);
+			interpolator = new KeyInterpolator(lowerOrd, higherOrd, DEFAULT_COUNT, desc);
 			topVisiblePosition = lowerOrd;
 		} else {
 			// empty record set!
-			interpolator = new KeyInterpolator(BigInteger.ZERO, BigInteger.ZERO, 0);
+			interpolator = new KeyInterpolator(BigInteger.ZERO, BigInteger.ZERO, 0, desc);
 			topVisiblePosition = BigInteger.ZERO;
 		}
 
@@ -245,9 +247,9 @@ public final class GridDriver {
 			requestRefinement(topVisiblePosition, false);
 			return true;
 		} else {
-			//table became empty!
+			// table became empty!
 			c._clearBuffer(true);
-			topVisiblePosition =  BigInteger.ZERO;
+			topVisiblePosition = BigInteger.ZERO;
 			interpolator.resetToEmptyTable();
 			return false;
 		}

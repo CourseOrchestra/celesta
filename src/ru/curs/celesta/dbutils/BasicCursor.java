@@ -39,8 +39,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -64,14 +66,12 @@ public abstract class BasicCursor {
 
 	static final String SYSTEMUSERID = String.format("SYS%08X", (new Random()).nextInt());
 	static final SessionContext SYSTEMSESSION = new SessionContext(SYSTEMUSERID, "CELESTA");
-	static final Pattern QUOTED_COLUMN_NAME = Pattern.compile("(\"[a-zA-Z_][a-zA-Z0-9_]*\")( desc)?");
 
 	private static final String DATABASE_CLOSING_ERROR = "Database error when closing recordset for table '%s': %s";
 	private static final String CURSOR_IS_CLOSED = "Cursor is closed.";
 
 	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
-	private static final Pattern COLUMN_NAME = Pattern
-			.compile("([a-zA-Z_][a-zA-Z0-9_]*)" + "( +([Aa]|[Dd][Ee])[Ss][Cc])?");
+	private static final Pattern COLUMN_NAME = Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)( +([Aa]|[Dd][Ee])[Ss][Cc])?");
 
 	private static final Pattern NAVIGATION = Pattern.compile("[+-<>=]+");
 	private final DBAdaptor db;
@@ -89,7 +89,9 @@ public abstract class BasicCursor {
 
 	// Поля фильтров и сортировок
 	private final Map<String, AbstractFilter> filters = new HashMap<>();
-	private String orderBy = null;
+	private String[] orderByNames;
+	private boolean[] descOrders;
+
 	private long offset = 0;
 	private long rowCount = 0;
 	private Expr complexFilter;
@@ -273,26 +275,45 @@ public abstract class BasicCursor {
 		}
 	}
 
-	String getOrderBy() throws CelestaException {
-		if (orderBy == null)
+	private String getOrderBy(boolean reverse) throws CelestaException {
+		if (orderByNames == null)
 			orderBy();
-		return orderBy;
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < orderByNames.length; i++) {
+			if (i > 0)
+				sb.append(", ");
+			sb.append(orderByNames[i]);
+			if (reverse ^ descOrders[i])
+				sb.append(" desc");
+		}
+		return sb.toString();
+
+	}
+
+	String getOrderBy() throws CelestaException {
+		return getOrderBy(false);
 	}
 
 	String getReversedOrderBy() throws CelestaException {
-		Matcher m = QUOTED_COLUMN_NAME.matcher(getOrderBy());
-		StringBuilder sb = new StringBuilder();
-		while (m.find()) {
-			if (sb.length() > 0)
-				sb.append(", ");
-			sb.append(m.group(1));
-			sb.append(m.group(2) == null ? " desc" : "");
-		}
-		return sb.toString();
+		return getOrderBy(true);
 	}
 
+	String[] orderByColumnNames() throws CelestaException {
+		if (orderByNames == null)
+			orderBy();
+		return orderByNames;
+	}
+
+	boolean[] descOrders() throws CelestaException {
+		if (orderByNames == null)
+			orderBy();
+		return descOrders;
+	}
+	
 	String getNavigationWhereClause(char op) throws CelestaException {
 		boolean invert = false;
+		if (orderByNames == null)
+			orderBy();
 		switch (op) {
 		case '>':
 			invert = false;
@@ -302,11 +323,10 @@ public abstract class BasicCursor {
 			break;
 		case '=':
 			StringBuilder sb = new StringBuilder("(");
-			Matcher m = QUOTED_COLUMN_NAME.matcher(getOrderBy());
-			while (m.find()) {
-				if (sb.length() > 1)
+			for (int i = 0; i < orderByNames.length; i++) {
+				if (i > 0)
 					sb.append(" and ");
-				sb.append(m.group(1));
+				sb.append(orderByNames[i]);
 				sb.append(" = ?");
 			}
 			sb.append(")");
@@ -315,30 +335,23 @@ public abstract class BasicCursor {
 			throw new CelestaException("Invalid navigation operator: %s", op);
 		}
 
-		String[] names = getOrderBy().split(",");
-		char[] ops = new char[names.length];
-		for (int i = 0; i < names.length; i++) {
-			Matcher m = QUOTED_COLUMN_NAME.matcher(names[i]);
-			m.find();
-			names[i] = m.group(1);
-			ops[i] = (invert ^ (m.group(2) != null)) ? '<' : '>';
+		char[] ops = new char[orderByNames.length];
+		for (int i = 0; i < orderByNames.length; i++) {
+			ops[i] = (invert ^ descOrders[i]) ? '<' : '>';
 		}
-		return getNavigationWhereClause(0, names, ops);
+		return getNavigationWhereClause(0, ops);
 	}
 
-	private static String getNavigationWhereClause(int i, String[] names, char[] ops) {
+	private String getNavigationWhereClause(int i, char[] ops) {
 		String result;
-		if (names.length - 1 > i) {
-			// result = String.format("((%s %s ?) or ((%s = ?) and %s))",
-			// names[i], ops[i], names[i], getNavigationWhereClause(i + 1,
-			// names, ops));
-
-			// This is logically equivalent, but runs much faster on Postgres
-			// (apparently because of conjunction as a top logical operator)
-			result = String.format("((%s %s= ?) and ((%s %s ?) or %s))", names[i], ops[i], names[i], ops[i],
-					getNavigationWhereClause(i + 1, names, ops));
+		if (orderByNames.length - 1 > i) {
+			// This is logically equivalent to the 'obvious' formula, but runs
+			// much faster on Postgres (apparently because of conjunction as a
+			// top logical operator)
+			result = String.format("((%s %s= ?) and ((%s %s ?) or %s))", orderByNames[i], ops[i], orderByNames[i],
+					ops[i], getNavigationWhereClause(i + 1, ops));
 		} else {
-			result = String.format("(%s %s ?)", names[i], ops[i]);
+			result = String.format("(%s %s ?)", orderByNames[i], ops[i]);
 		}
 		return result;
 	}
@@ -595,14 +608,13 @@ public abstract class BasicCursor {
 
 		int j = k;
 
-		String[] names = getOrderBy().split(",");
-		for (int i = 0; i < names.length; i++) {
-			Matcher m = QUOTED_COLUMN_NAME.matcher(names[i]);
-			m.find();
-			Object value = valuesMap.get(m.group(1));
+		if (orderByNames == null)
+			orderBy();
+		for (int i = 0; i < orderByNames.length; i++) {
+			Object value = valuesMap.get(orderByNames[i]);
 			// System.out.printf("%d = %s%n", j, value);
 			DBAdaptor.setParam(navigator, j++, value);
-			if (c != '=' && i < names.length - 1) {
+			if (c != '=' && i < orderByNames.length - 1) {
 				// System.out.printf("%d = %s%n", j, value);
 				DBAdaptor.setParam(navigator, j++, value);
 			}
@@ -798,7 +810,8 @@ public abstract class BasicCursor {
 	public final void reset() throws CelestaException {
 		filters.clear();
 		complexFilter = null;
-		orderBy = null;
+		orderByNames = null;
+		descOrders = null;
 		offset = 0;
 		rowCount = 0;
 		closeSet();
@@ -813,8 +826,9 @@ public abstract class BasicCursor {
 	 *             неверное имя поля или SQL-ошибка.
 	 */
 	public final void orderBy(String... names) throws CelestaException {
-		StringBuilder orderByClause = new StringBuilder();
-		boolean needComma = false;
+
+		ArrayList<String> l = new ArrayList<>(8);
+		ArrayList<Boolean> ol = new ArrayList<>(8);
 		Set<String> colNames = new HashSet<>();
 		for (String name : names) {
 			Matcher m = COLUMN_NAME.matcher(name);
@@ -826,26 +840,24 @@ public abstract class BasicCursor {
 			if (!colNames.add(colName))
 				throw new CelestaException("Column '%s' is used more than once in orderby() call", colName);
 
-			String order;
-			if (m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim())) {
-				order = "";
-			} else {
-				order = " desc";
-			}
-			if (needComma)
-				orderByClause.append(", ");
-			orderByClause.append(String.format("\"%s\"%s", colName, order));
-			needComma = true;
+			boolean order = !(m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim()));
 
+			l.add(String.format("\"%s\"", colName));
+			ol.add(order);
 		}
-		appendPK(orderByClause, needComma, colNames);
 
-		orderBy = orderByClause.toString();
+		appendPK(l, ol, colNames);
+
+		orderByNames = new String[l.size()];
+		descOrders = new boolean[l.size()];
+		for (int i = 0; i < orderByNames.length; i++) {
+			orderByNames[i] = l.get(i);
+			descOrders[i] = ol.get(i);
+		}
 		closeSet();
 	}
 
-	abstract void appendPK(StringBuilder orderByClause, boolean needComma, Set<String> colNames)
-			throws CelestaException;
+	abstract void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException;
 
 	/**
 	 * Сброс фильтров, сортировки и полная очистка буфера.
@@ -857,7 +869,8 @@ public abstract class BasicCursor {
 		_clearBuffer(true);
 		filters.clear();
 		complexFilter = null;
-		orderBy = null;
+		orderByNames = null;
+		descOrders = null;
 		offset = 0;
 		rowCount = 0;
 		closeSet();
@@ -903,23 +916,18 @@ public abstract class BasicCursor {
 		int j = 0;
 		Object[] vals = _currentValues();
 		for (String colName : meta().getColumns().keySet())
-			valsMap.put(colName, vals[j++]);
+			valsMap.put("\"" + colName + "\"", vals[j++]);
 
 		j = db.fillSetQueryParameters(filters, stmt);
 		// System.out.println(stmt.toString());
 
-		String[] names = getOrderBy().split(",");
-		for (int i = 0; i < names.length; i++) {
-			Matcher m = BasicCursor.QUOTED_COLUMN_NAME.matcher(names[i]);
-			m.find();
-			String quotedName = m.group(1);
-			names[i] = quotedName.substring(1, quotedName.length() - 1);
-		}
+		if (orderByNames == null)
+			orderBy();
 
-		for (int i = 0; i < names.length; i++) {
-			Object param = valsMap.get(names[i]);
+		for (int i = 0; i < orderByNames.length; i++) {
+			Object param = valsMap.get(orderByNames[i]);
 			DBAdaptor.setParam(stmt, j++, param);
-			if (i < names.length - 1) {
+			if (i < orderByNames.length - 1) {
 				DBAdaptor.setParam(stmt, j++, param);
 			}
 		}
@@ -960,7 +968,8 @@ public abstract class BasicCursor {
 		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(_tableName())))
 			throw new CelestaException("Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
 					c._grainName(), c._tableName(), _grainName(), _tableName());
-		orderBy = c.orderBy;
+		orderByNames = c.orderByNames;
+		descOrders = c.descOrders;
 		closeSet();
 	}
 

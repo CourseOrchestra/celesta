@@ -12,7 +12,7 @@ public class KeyInterpolatorTest {
 	@Test
 	public void test1() {
 		// FULL CODE COVERAGE FOR KeyApproximator!!
-		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(7), BigInteger.valueOf(1000), 100);
+		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(7), BigInteger.valueOf(1000), 100, false);
 
 		assertEquals(100, ka.getApproximateCount());
 
@@ -87,7 +87,7 @@ public class KeyInterpolatorTest {
 
 	@Test
 	public void test2() {
-		KeyInterpolator ki = new KeyInterpolator(BigInteger.ZERO, BigInteger.valueOf(100), 101);
+		KeyInterpolator ki = new KeyInterpolator(BigInteger.ZERO, BigInteger.valueOf(100), 101, false);
 		BigInteger v = ki.getLeastAccurateValue();
 		assertEquals(BigInteger.valueOf(50), v);
 
@@ -119,7 +119,7 @@ public class KeyInterpolatorTest {
 	
 	@Test
 	public void test3() {
-		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(0), BigInteger.valueOf(60), 7);
+		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(0), BigInteger.valueOf(60), 7, false);
 		assertEquals(0, ka.getApproximatePosition(BigInteger.valueOf(0)));
 		assertEquals(1, ka.getApproximatePosition(BigInteger.valueOf(1)));
 		assertEquals(2, ka.getApproximatePosition(BigInteger.valueOf(10)));
@@ -129,7 +129,7 @@ public class KeyInterpolatorTest {
 	
 	@Test
 	public void test4(){
-		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(0), BigInteger.valueOf(10), 10);
+		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(0), BigInteger.valueOf(10), 10, false);
 		
 		ka.setPoint(BigInteger.valueOf(5), 6);
 		assertEquals(0, ka.getClosestPosition(0));
