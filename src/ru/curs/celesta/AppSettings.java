@@ -25,6 +25,7 @@ public final class AppSettings {
 	private final boolean forceDBInitialize;
 	private final boolean logLogins;
 	private final boolean jythonStateMethod;
+	private final boolean allowIndexedNulls;
 
 	{
 		logger = Logger.getLogger("ru.curs.flute");
@@ -36,18 +37,14 @@ public final class AppSettings {
 
 		StringBuffer sb = new StringBuffer();
 
-		// Читаем настройки и проверяем их насколько возможно на данном этапе.
+		// Read the settings and check them as thoroughly as possible at this
+		// point.
 
 		scorePath = settings.getProperty("score.path", "").trim();
-		if ("".equals(scorePath))
+		if (scorePath.isEmpty())
 			sb.append("No score path given (score.path).\n");
 		else {
-			for (String pathEntry : scorePath.split(File.pathSeparator)) {
-				File path = new File(pathEntry);
-				if (!(path.isDirectory() && path.canRead())) {
-					sb.append("Invalid score.path entry: " + pathEntry + '\n');
-				}
-			}
+			checkEntries(scorePath, "score.path", sb);
 		}
 
 		String url = settings.getProperty("database.connection", "").trim();
@@ -73,42 +70,44 @@ public final class AppSettings {
 				sb.append("Could not access or create log file " + lf + '\n');
 			}
 
-		pylibPath = settings.getProperty("pylib.path", DEFAULT_PYLIB_PATH);
-		if (!pylibPath.isEmpty()) {
-			for (String pathEntry : pylibPath.split(File.pathSeparator)) {
-				File pathEntryFile = new File(pathEntry);
-				// File pylibPathFile = new File(pylibPath);
-				if (!pathEntryFile.exists())
-					sb.append("Invalid pylib.path entry: " + pylibPath + '\n');
-			}
-		}
+		pylibPath = settings.getProperty("pylib.path", DEFAULT_PYLIB_PATH).trim();
+		checkEntries(pylibPath, "pylib.path", sb);
 
 		javalibPath = settings.getProperty("javalib.path", "").trim();
-		if (!javalibPath.isEmpty())
-			for (String pathEntry : javalibPath.split(File.pathSeparator)) {
-				File path = new File(pathEntry);
-				if (!(path.isDirectory() && path.canRead())) {
-					sb.append("Invalid javalib.path entry: " + pathEntry + '\n');
-				}
-			}
+		checkEntries(javalibPath, "javalib.path", sb);
 
-		skipDBUpdate = Boolean.parseBoolean(settings.getProperty(
-				"skip.dbupdate", "").trim());
-		forceDBInitialize = Boolean.parseBoolean(settings.getProperty(
-				"force.dbinitialize", "").trim());
-		logLogins = Boolean.parseBoolean(settings.getProperty("log.logins", "")
-				.trim());
+		skipDBUpdate = Boolean.parseBoolean(settings.getProperty("skip.dbupdate", "").trim());
+		forceDBInitialize = Boolean.parseBoolean(settings.getProperty("force.dbinitialize", "").trim());
+		logLogins = Boolean.parseBoolean(settings.getProperty("log.logins", "").trim());
 
-		jythonStateMethod =
-			Boolean.parseBoolean(settings.getProperty("jython.getStateMethod.isNew", "false")
-					.trim());
+		jythonStateMethod = Boolean.parseBoolean(settings.getProperty("jython.getStateMethod.isNew", "false").trim());
+
+		allowIndexedNulls = Boolean.parseBoolean(settings.getProperty("allow.indexed.nulls", "false").trim());
 
 		if (sb.length() > 0)
 			throw new CelestaException(sb.toString());
 
 	}
 
-	static void init(Properties settings) throws CelestaException {
+	private static void checkEntries(String path, String propertyName, StringBuffer sb) {
+		if (!path.isEmpty())
+			for (String pathEntry : path.split(File.pathSeparator)) {
+				File pathFile = new File(pathEntry);
+				if (!(pathFile.isDirectory() && pathFile.canRead())) {
+					sb.append(String.format("Invalid %s entry: %s%n", propertyName, pathEntry));
+				}
+			}
+	}
+
+	/**
+	 * Initializes AppSettings with given properties.
+	 * 
+	 * @param settings
+	 *            properties for AppSettings to initialize
+	 * @throws CelestaException
+	 *             wrong properties format
+	 */
+	public static void init(Properties settings) throws CelestaException {
 		theSettings = new AppSettings(settings);
 	}
 
@@ -278,5 +277,14 @@ public final class AppSettings {
 	 */
 	public static Boolean getJythonStateMethod() {
 		return theSettings.jythonStateMethod;
+	}
+
+	/**
+	 * Дозволяется ли индексировать NULLABLE-поля.
+	 */
+	public static Boolean isIndexedNullsAllowed() {
+		// TODO: удалить эту функциональность к лету 2016 года!!!
+		// запретить индексировать NULLABLE-поля!!
+		return theSettings.allowIndexedNulls;
 	}
 }

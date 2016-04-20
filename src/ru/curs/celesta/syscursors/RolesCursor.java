@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 
 /**
@@ -54,7 +55,7 @@ public final class RolesCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Object[] _currentValues() {
+	public Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { id, description };
 		return result;
@@ -95,7 +96,7 @@ public final class RolesCursor extends SysCursor {
 	}
 
 	@Override
-	public void copyFieldsFrom(Cursor c) {
+	public void copyFieldsFrom(BasicCursor c) {
 		RolesCursor from = (RolesCursor) c;
 		id = from.id;
 		description = from.description;
@@ -104,9 +105,9 @@ public final class RolesCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Cursor _getBufferCopy() throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
 		// CHECKSTYLE:ON
-		RolesCursor result = new RolesCursor(callContext());
+		RolesCursor result = new RolesCursor(context);
 		result.copyFieldsFrom(this);
 		return result;
 	}

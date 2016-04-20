@@ -6,6 +6,7 @@ import java.util.Date;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 
 /**
@@ -206,7 +207,7 @@ public final class GrainsCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Object[] _currentValues() {
+	public Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { id, version, length, checksum, state, lastmodified,
 				message };
@@ -222,7 +223,7 @@ public final class GrainsCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	public void copyFieldsFrom(Cursor c) {
+	public void copyFieldsFrom(BasicCursor c) {
 		// CHECKSTYLE:ON
 		GrainsCursor from = (GrainsCursor) c;
 		id = from.id;
@@ -236,9 +237,9 @@ public final class GrainsCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Cursor _getBufferCopy() throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
 		// CHECKSTYLE:ON
-		GrainsCursor result = new GrainsCursor(callContext());
+		GrainsCursor result = new GrainsCursor(context);
 		result.copyFieldsFrom(this);
 		return result;
 	}

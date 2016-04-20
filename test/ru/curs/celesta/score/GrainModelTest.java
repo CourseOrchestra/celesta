@@ -7,9 +7,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import ru.curs.celesta.AppSettings;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
@@ -26,6 +30,14 @@ import ru.curs.celesta.score.Table;
 public class GrainModelTest {
 
 	private Score s = new Score();
+	
+	@BeforeClass
+	public static void Setup() throws CelestaException{
+		Properties p = new Properties();
+		p.setProperty("score.path", ".");
+		p.setProperty("rdbms.connection.url", "jdbc:oracle:123");
+		AppSettings.init(p);
+	}
 
 	@Test
 	public void test1() throws ParseException {
@@ -34,9 +46,9 @@ public class GrainModelTest {
 
 		Table t = new Table(g, "table1");
 		(new IntegerColumn(t, "a")).setNullableAndDefault(false, "IDENTITY");
-		new IntegerColumn(t, "b");
-		new IntegerColumn(t, "c");
-		new IntegerColumn(t, "d");
+		new IntegerColumn(t, "b").setNullableAndDefault(false, "0");
+		new IntegerColumn(t, "c").setNullableAndDefault(false, "0");
+		new IntegerColumn(t, "d").setNullableAndDefault(false, "0");
 		new BinaryColumn(t, "e");
 		t.addPK("a");
 		t.finalizePK();
@@ -100,6 +112,14 @@ public class GrainModelTest {
 		}
 		assertTrue(itWas);
 		ind.addColumn("c");
+		itWas = false;
+		try {
+			//Нельзя индексировать nullable-колонки
+			ind.addColumn("e");
+		} catch (ParseException e) {
+			itWas = true;
+		}
+		
 		ind.finalizeIndex();
 		assertEquals(3, g.getIndices().size());
 		assertSame(ind, g.getIndices().get("aa_i3"));

@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 /**
  * Тип выражения.
  */
-public enum ViewColumnType {
+public enum ViewColumnType implements ColumnMeta {
 	/**
 	 * Логическое условие.
 	 */
@@ -12,6 +12,12 @@ public enum ViewColumnType {
 		public String jdbcGetterName() {
 			return null;
 		}
+
+		@Override
+		public String getCelestaType() {
+			return BooleanColumn.CELESTA_TYPE;
+		}
+
 	},
 	/**
 	 * Числовое значение.
@@ -21,6 +27,12 @@ public enum ViewColumnType {
 		public String jdbcGetterName() {
 			return "getDouble";
 		}
+
+		@Override
+		public String getCelestaType() {
+			return FloatingColumn.CELESTA_TYPE;
+		}
+
 	},
 	/**
 	 * Текстовое значение.
@@ -30,6 +42,12 @@ public enum ViewColumnType {
 		public String jdbcGetterName() {
 			return "getString";
 		}
+
+		@Override
+		public String getCelestaType() {
+			return StringColumn.VARCHAR;
+		}
+
 	},
 	/**
 	 * Дата.
@@ -39,6 +57,12 @@ public enum ViewColumnType {
 		public String jdbcGetterName() {
 			return "getTimestamp";
 		}
+
+		@Override
+		public String getCelestaType() {
+			return DateTimeColumn.CELESTA_TYPE;
+		}
+
 	},
 	/**
 	 * Булевское значение.
@@ -48,6 +72,12 @@ public enum ViewColumnType {
 		public String jdbcGetterName() {
 			return "getBoolean";
 		}
+
+		@Override
+		public String getCelestaType() {
+			return BooleanColumn.CELESTA_TYPE;
+		}
+
 	},
 	/**
 	 * Большой объект.
@@ -57,6 +87,12 @@ public enum ViewColumnType {
 		public String jdbcGetterName() {
 			return "getBlob";
 		}
+
+		@Override
+		public String getCelestaType() {
+			return BinaryColumn.CELESTA_TYPE;
+		}
+
 	},
 	/**
 	 * Неопределённое значение.
@@ -66,10 +102,18 @@ public enum ViewColumnType {
 		public String jdbcGetterName() {
 			return null;
 		}
+
+		@Override
+		public String getCelestaType() {
+			return null;
+		}
+
 	};
-	/**
-	 * Имя JDBC-геттера, подходящего для данного типа колонки. Необходимо для
-	 * процедур генерации ORM-кода.
-	 */
-	public abstract String jdbcGetterName();
+
+	@Override
+	public String getCelestaDoc() {
+		// TODO !!!! redevelop the handling of views in order to support JavaDoc
+		// for view fields!
+		return "";
+	}
 }

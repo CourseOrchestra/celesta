@@ -49,23 +49,20 @@ public abstract class AbstractAdaptorTest {
 	private Connection conn;
 	private Table t;
 
-	private int insertRow(Connection conn, Table t, int val)
-			throws IOException, CelestaException, SQLException {
+	private int insertRow(Connection conn, Table t, int val) throws IOException, CelestaException, SQLException {
 		int count = t.getColumns().size();
 		assertEquals(13, count);
-		boolean[] nullsMask = { true, false, false, false, true, false, true,
-				true, false, true, true, true, false };
+		boolean[] nullsMask = { true, false, false, false, true, false, true, true, false, true, true, true, false };
 		BLOB b = new BLOB();
 		b.getOutStream().write(new byte[] { 1, 2, 3 });
 		Object[] rowData = { "ab", val, false, 1.1, "eee", b };
-		PreparedStatement pstmt = dba.getInsertRecordStatement(conn, t,
-				nullsMask);
+		PreparedStatement pstmt = dba.getInsertRecordStatement(conn, t, nullsMask);
 		assertNotNull(pstmt);
 		int i = 1;
 		for (Object fieldVal : rowData)
 			DBAdaptor.setParam(pstmt, i++, fieldVal);
 		try {
-			int rowCount = pstmt.executeUpdate();
+			int rowCount = pstmt.execute() ? 1 : pstmt.getUpdateCount(); // pstmt.executeUpdate();
 			return rowCount;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -74,8 +71,8 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	private int getCount(Connection conn, Table t) throws Exception {
-		PreparedStatement stmt = dba.getSetCountStatement(conn, t,
-				Collections.<String, AbstractFilter> emptyMap(), null);
+		PreparedStatement stmt = dba.getSetCountStatement(conn, t, Collections.<String, AbstractFilter> emptyMap(),
+				null);
 		try {
 			ResultSet rs = stmt.executeQuery();
 			rs.next();
@@ -127,8 +124,7 @@ public abstract class AbstractAdaptorTest {
 
 	@Test
 	public void createAndDropAndExists() throws Exception {
-		boolean result = dba.tableExists(conn, t.getGrain().getName(),
-				t.getName());
+		boolean result = dba.tableExists(conn, t.getGrain().getName(), t.getName());
 		assertTrue(result);
 		// В этот момент userTablesExist точно должен возвращать true, но на
 		// false протестировать не можем, ибо также другие таблицы есть в базе
@@ -173,8 +169,7 @@ public abstract class AbstractAdaptorTest {
 		assertEquals(1, getCount(conn, t));
 
 		assertEquals(13, t.getColumns().size());
-		boolean[] mask = { true, true, false, true, true, true, true, true,
-				true, true, true, true, true };
+		boolean[] mask = { true, true, false, true, true, true, true, true, true, true, true, true, true };
 
 		PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask);
 
@@ -200,8 +195,7 @@ public abstract class AbstractAdaptorTest {
 		assertEquals(1, rs.getInt("recversion"));
 		rs.close();
 
-		boolean[] mask = { true, true, false, true, true, true, true, true,
-				true, true, true, true, true, false };
+		boolean[] mask = { true, true, false, true, true, true, true, true, true, true, true, true, true, false };
 		PreparedStatement pstmt2 = dba.getUpdateRecordStatement(conn, t, mask);
 
 		// System.out.println(pstmt2.toString());
@@ -270,8 +264,7 @@ public abstract class AbstractAdaptorTest {
 		Index i = grain.getIndices().get("idxTest");
 
 		dba.createIndex(conn, i);
-		Map<String, DBIndexInfo> indicesSet = dba
-				.getIndices(conn, t.getGrain());
+		Map<String, DBIndexInfo> indicesSet = dba.getIndices(conn, t.getGrain());
 		assertNotNull(indicesSet);
 		assertEquals(1, indicesSet.size());
 		DBIndexInfo inf = indicesSet.get("idxTest");
@@ -282,7 +275,7 @@ public abstract class AbstractAdaptorTest {
 		indicesSet = dba.getIndices(conn, t.getGrain());
 		assertNotNull(indicesSet);
 		assertEquals(0, indicesSet.size());
-		String[] cols = { "f1", "f2", "f9", "f8" };
+		String[] cols = { "f5", "f1", "f9", "id" };
 		i = new Index(t, "testName", cols);
 		dba.createIndex(conn, i);
 		indicesSet = dba.getIndices(conn, t.getGrain());
@@ -318,8 +311,8 @@ public abstract class AbstractAdaptorTest {
 		insertRow(conn, t, 1);
 		insertRow(conn, t, 1);
 		assertEquals(2, getCount(conn, t));
-		PreparedStatement pstmt = dba.deleteRecordSetStatement(conn, t,
-				Collections.<String, AbstractFilter> emptyMap(), null);
+		PreparedStatement pstmt = dba.deleteRecordSetStatement(conn, t, Collections.<String, AbstractFilter> emptyMap(),
+				null);
 		assertNotNull(pstmt);
 		int rowCount = pstmt.executeUpdate();
 		assertEquals(2, rowCount);
@@ -474,8 +467,7 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void updateColumn() throws CelestaException, ParseException,
-			IOException, SQLException {
+	public void updateColumn() throws CelestaException, ParseException, IOException, SQLException {
 		// NULL/NOT NULL и DEFAULT (простые)
 		DBColumnInfo c;
 		Column col;
@@ -575,8 +567,7 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void updateColumn2test() throws CelestaException, ParseException,
-			IOException, SQLException {
+	public void updateColumn2test() throws CelestaException, ParseException, IOException, SQLException {
 		// IDENTITY
 		DBColumnInfo c;
 		IntegerColumn col;
@@ -629,8 +620,7 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void updateColumn3test() throws CelestaException, ParseException,
-			IOException, SQLException {
+	public void updateColumn3test() throws CelestaException, ParseException, IOException, SQLException {
 		// String length
 		DBColumnInfo c;
 		StringColumn col;
@@ -670,8 +660,7 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void updateColumn4test() throws CelestaException, ParseException,
-			IOException, SQLException {
+	public void updateColumn4test() throws CelestaException, ParseException, IOException, SQLException {
 		// BLOB Default
 		DBColumnInfo c;
 		BinaryColumn col;
@@ -699,8 +688,7 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void updateColumn5test() throws CelestaException, ParseException,
-			IOException, SQLException {
+	public void updateColumn5test() throws CelestaException, ParseException, IOException, SQLException {
 		// Change data type
 		DBColumnInfo c;
 		IntegerColumn col;
@@ -787,8 +775,7 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void getPKInfo() throws CelestaException, ParseException,
-			IOException, SQLException {
+	public void getPKInfo() throws CelestaException, ParseException, IOException, SQLException {
 		DBPKInfo c;
 		insertRow(conn, t, 15);
 
@@ -797,8 +784,7 @@ public abstract class AbstractAdaptorTest {
 		assertEquals("pk_test", c.getName());
 		assertEquals(1, c.getColumnNames().size());
 		String[] expected = { "id" };
-		assertTrue(Arrays.equals(expected,
-				c.getColumnNames().toArray(new String[0])));
+		assertTrue(Arrays.equals(expected, c.getColumnNames().toArray(new String[0])));
 		assertTrue(c.reflects(t));
 		assertFalse(c.isEmpty());
 
@@ -816,16 +802,14 @@ public abstract class AbstractAdaptorTest {
 		assertEquals("pk_test", c.getName());
 		assertEquals(3, c.getColumnNames().size());
 		String[] expected2 = { "id", "f1", "f9" };
-		assertTrue(Arrays.equals(expected2,
-				c.getColumnNames().toArray(new String[0])));
+		assertTrue(Arrays.equals(expected2, c.getColumnNames().toArray(new String[0])));
 		assertTrue(c.reflects(t));
 		assertFalse(c.isEmpty());
 
 	}
 
 	@Test
-	public void getFKInfo() throws ParseException, CelestaException,
-			SQLException {
+	public void getFKInfo() throws ParseException, CelestaException, SQLException {
 		dba.dropTable(conn, t);
 		assertFalse(dba.tableExists(conn, "gtest", "test"));
 		assertFalse(dba.tableExists(conn, "gtest", "refTo"));
@@ -873,13 +857,11 @@ public abstract class AbstractAdaptorTest {
 			assertTrue(dba.getPKInfo(conn, t2).reflects(t2));
 			// Проверяем, что не отображаются "лишние" индексы (актуально для
 			// MySQL)
-			Map<String, DBIndexInfo> indicesSet = dba.getIndices(conn,
-					t.getGrain());
+			Map<String, DBIndexInfo> indicesSet = dba.getIndices(conn, t.getGrain());
 			assertNotNull(indicesSet);
 			assertEquals(0, indicesSet.size());
 
-			dba.dropFK(conn, t.getGrain().getName(), t.getName(),
-					fk.getConstraintName());
+			dba.dropFK(conn, t.getGrain().getName(), t.getName(), fk.getConstraintName());
 			l = dba.getFKInfo(conn, g);
 			assertEquals(0, l.size());
 		} catch (CelestaException e) {
@@ -893,8 +875,7 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void additionalCreateTableTest() throws ParseException,
-			CelestaException {
+	public void additionalCreateTableTest() throws ParseException, CelestaException {
 		Grain g = score.getGrain(GRAIN_NAME);
 		Table t3 = g.getTable("aLongIdentityTableNaaame");
 		try {
@@ -912,8 +893,7 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void viewTest() throws ParseException, CelestaException,
-			SQLException {
+	public void viewTest() throws ParseException, CelestaException, SQLException {
 		Grain g = score.getGrain(GRAIN_NAME);
 		Table t2 = g.getTable("refTo");
 		try {
@@ -945,8 +925,7 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	@Test
-	public void resetIdentityTest() throws IOException, CelestaException,
-			SQLException {
+	public void resetIdentityTest() throws IOException, CelestaException, SQLException {
 		insertRow(conn, t, 110);
 		PreparedStatement pstmt = dba.getOneRecordStatement(conn, t);
 		assertNotNull(pstmt);

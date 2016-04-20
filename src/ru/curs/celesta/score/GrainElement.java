@@ -1,5 +1,8 @@
 package ru.curs.celesta.score;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Map;
 
 /**
@@ -29,5 +32,21 @@ public abstract class GrainElement extends NamedElement {
 	/**
 	 * Перечень столбцов с именами.
 	 */
-	public abstract Map<String, ?> getColumns();
+	public abstract Map<String, ? extends ColumnMeta> getColumns();
+
+	abstract void save(BufferedWriter bw) throws IOException;
+
+	/**
+	 * Возвращает Celesta-SQL представление объекта.
+	 * 
+	 * @throws IOException
+	 *             ошибка ввода-вывода при сохранении.
+	 */
+	public String getCelestaSQL() throws IOException {
+		StringWriter sw = new StringWriter();
+		BufferedWriter bw = new BufferedWriter(sw);
+		save(bw);
+		bw.flush();
+		return sw.toString();
+	}
 }

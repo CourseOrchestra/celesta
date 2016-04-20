@@ -51,6 +51,7 @@ public final class DBUpdator {
 	};
 
 	private static final Set<Integer> EXPECTED_STATUSES;
+
 	static {
 		EXPECTED_STATUSES = new HashSet<>();
 		EXPECTED_STATUSES.add(GrainsCursor.READY);
@@ -92,10 +93,8 @@ public final class DBUpdator {
 			// Проверяем наличие главной системной таблицы.
 			if (!dba.tableExists(conn, "celesta", "grains")) {
 				// Если главной таблицы нет, а другие таблицы есть -- ошибка.
-				if (dba.userTablesExist()
-						&& !AppSettings.getForceDBInitialize())
-					throw new CelestaException(
-							"No celesta.grains table found in non-empty database.");
+				if (dba.userTablesExist() && !AppSettings.getForceDBInitialize())
+					throw new CelestaException("No celesta.grains table found in non-empty database.");
 				// Если база вообще пустая, то создаём системные таблицы.
 				try {
 					Grain sys = score.getGrain("celesta");
@@ -111,8 +110,7 @@ public final class DBUpdator {
 					updateGrain(sys);
 					initSecurity(context);
 				} catch (ParseException e) {
-					throw new CelestaException(
-							"No 'celesta' grain definition found.");
+					throw new CelestaException("No 'celesta' grain definition found.");
 				}
 
 			}
@@ -124,9 +122,8 @@ public final class DBUpdator {
 			while (grain.nextInSet()) {
 
 				if (!(EXPECTED_STATUSES.contains(grain.getState())))
-					throw new CelestaException(
-							"Cannot proceed with database upgrade: there are grains "
-									+ "not in 'ready', 'recover' or 'lock' state.");
+					throw new CelestaException("Cannot proceed with database upgrade: there are grains "
+							+ "not in 'ready', 'recover' or 'lock' state.");
 				GrainInfo gi = new GrainInfo();
 				gi.checksum = (int) Long.parseLong(grain.getChecksum(), 16);
 				gi.length = grain.getLength();
@@ -135,9 +132,8 @@ public final class DBUpdator {
 				try {
 					gi.version = new VersionString(grain.getVersion());
 				} catch (ParseException e) {
-					throw new CelestaException(String.format(
-							"Error while scanning celesta.grains table: %s",
-							e.getMessage()));
+					throw new CelestaException(
+							String.format("Error while scanning celesta.grains table: %s", e.getMessage()));
 				}
 				dbGrains.put(grain.getId(), gi);
 			}
@@ -176,8 +172,7 @@ public final class DBUpdator {
 	 * 
 	 * @throws CelestaException
 	 */
-	private static void initSecurity(CallContext context)
-			throws CelestaException {
+	private static void initSecurity(CallContext context) throws CelestaException {
 		RolesCursor roles = new RolesCursor(context);
 		roles.clear();
 		roles.setId("editor");
@@ -208,8 +203,7 @@ public final class DBUpdator {
 		grain.insert();
 	}
 
-	private static boolean decideToUpgrade(Grain g, GrainInfo gi)
-			throws CelestaException {
+	private static boolean decideToUpgrade(Grain g, GrainInfo gi) throws CelestaException {
 		if (gi.lock)
 			return true;
 
@@ -223,16 +217,14 @@ public final class DBUpdator {
 			throw new CelestaException(
 					"Grain '%s' version '%s' is lower than database "
 							+ "grain version '%s'. Will not proceed with auto-upgrade.",
-					g.getName(), g.getVersion().toString(), gi.version
-							.toString());
+					g.getName(), g.getVersion().toString(), gi.version.toString());
 		case INCONSISTENT:
 			// Непонятная (несовместимая) версия -- не апгрейдим,
 			// ошибка.
 			throw new CelestaException(
 					"Grain '%s' version '%s' is inconsistent with database "
 							+ "grain version '%s'. Will not proceed with auto-upgrade.",
-					g.getName(), g.getVersion().toString(), gi.version
-							.toString());
+					g.getName(), g.getVersion().toString(), gi.version.toString());
 		case GREATER:
 			// Версия выросла -- апгрейдим.
 			return updateGrain(g);
@@ -294,12 +286,10 @@ public final class DBUpdator {
 			while (table.nextInSet()) {
 				switch (table.getTabletype()) {
 				case TABLE:
-					table.setOrphaned(!g.getTables().containsKey(
-							table.getTablename()));
+					table.setOrphaned(!g.getTables().containsKey(table.getTablename()));
 					break;
 				case VIEW:
-					table.setOrphaned(!g.getViews().containsKey(
-							table.getTablename()));
+					table.setOrphaned(!g.getViews().containsKey(table.getTablename()));
 				default:
 					break;
 				}
@@ -339,9 +329,8 @@ public final class DBUpdator {
 			}
 			// Если что-то пошло не так
 			grain.setState(GrainsCursor.ERROR);
-			grain.setMessage(String.format("%s/%d/%08X: %s", g.getVersion()
-					.toString(), g.getLength(), g.getChecksum(), e.getMessage()
-					+ newMsg));
+			grain.setMessage(String.format("%s/%d/%08X: %s", g.getVersion().toString(), g.getLength(), g.getChecksum(),
+					e.getMessage() + newMsg));
 			grain.update();
 			ConnectionPool.commit(grain.callContext().getConn());
 			return false;
@@ -372,8 +361,7 @@ public final class DBUpdator {
 						// FK обнаружен в базе, апдейтим при необходимости.
 						DBFKInfo dbi = dbFKeys.get(fk.getConstraintName());
 						if (!dbi.reflects(fk)) {
-							dba.dropFK(conn, g.getName(), dbi.getTableName(),
-									dbi.getName());
+							dba.dropFK(conn, g.getName(), dbi.getTableName(), dbi.getName());
 							dba.createFK(conn, fk);
 						}
 					} else {
@@ -383,8 +371,7 @@ public final class DBUpdator {
 				}
 	}
 
-	private static List<DBFKInfo> dropOrphanedGrainFKeys(Grain g)
-			throws CelestaException {
+	private static List<DBFKInfo> dropOrphanedGrainFKeys(Grain g) throws CelestaException {
 		Connection conn = grain.callContext().getConn();
 		List<DBFKInfo> dbFKeys = dba.getFKInfo(conn, g);
 		Map<String, ForeignKey> fKeys = new HashMap<>();
@@ -396,16 +383,14 @@ public final class DBUpdator {
 			DBFKInfo dbFKey = i.next();
 			ForeignKey fKey = fKeys.get(dbFKey.getName());
 			if (fKey == null || !dbFKey.reflects(fKey)) {
-				dba.dropFK(conn, g.getName(), dbFKey.getTableName(),
-						dbFKey.getName());
+				dba.dropFK(conn, g.getName(), dbFKey.getTableName(), dbFKey.getName());
 				i.remove();
 			}
 		}
 		return dbFKeys;
 	}
 
-	private static void dropOrphanedGrainIndices(Grain g)
-			throws CelestaException {
+	private static void dropOrphanedGrainIndices(Grain g) throws CelestaException {
 		/*
 		 * В целом метод повторяет код updateGrainIndices, но только в части
 		 * удаления индексов. Зачистить все индексы, подвергшиеся удалению или
@@ -429,6 +414,16 @@ public final class DBUpdator {
 				boolean reflects = dBIndexInfo.reflects(e.getValue());
 				if (!reflects)
 					dba.dropIndex(g, dBIndexInfo, true);
+
+				// Удаление индексов на тех полях, которые подвергнутся
+				// изменению
+				for (Entry<String, Column> ee : e.getValue().getColumns().entrySet()) {
+					DBColumnInfo ci = dba.getColumnInfo(conn, ee.getValue());
+					if (ci == null || !ci.reflects(ee.getValue())) {
+						dba.dropIndex(g, dBIndexInfo, true);
+						break;
+					}
+				}
 			}
 		}
 	}
@@ -437,7 +432,8 @@ public final class DBUpdator {
 		final Connection conn = grain.callContext().getConn();
 		Map<String, DBIndexInfo> dbIndices = dba.getIndices(conn, g);
 		Map<String, Index> myIndices = g.getIndices();
-		// Начинаем с удаления ненужных индексов (ещё раз)
+		// Начинаем с удаления ненужных индексов (ещё раз, в MySQL могло
+		// остаться из-за ошибок)
 		for (DBIndexInfo dBIndexInfo : dbIndices.values())
 			if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
 				dba.dropIndex(g, dBIndexInfo, true);
@@ -460,8 +456,7 @@ public final class DBUpdator {
 		}
 	}
 
-	private static void updateTable(Table t, List<DBFKInfo> dbFKeys)
-			throws CelestaException {
+	private static void updateTable(Table t, List<DBFKInfo> dbFKeys) throws CelestaException {
 		// Если таблица скомпилирована с опцией NO AUTOUPDATE, то ничего не
 		// делаем с ней
 		if (!t.isAutoUpdate())
@@ -482,8 +477,7 @@ public final class DBUpdator {
 		// Для версионированных таблиц синхронизируем поле recversion
 		if (t.isVersioned())
 			if (dbColumns.contains(Table.RECVERSION)) {
-				DBColumnInfo ci = dba.getColumnInfo(conn,
-						t.getRecVersionField());
+				DBColumnInfo ci = dba.getColumnInfo(conn, t.getRecVersionField());
 				if (!ci.reflects(t.getRecVersionField())) {
 					dba.updateColumn(conn, t.getRecVersionField(), ci);
 					modified = true;
@@ -503,29 +497,26 @@ public final class DBUpdator {
 			try {
 				dba.manageAutoIncrement(conn, t);
 			} catch (SQLException e) {
-				throw new CelestaException("Updating table %s.%s failed: %s.",
-						t.getGrain().getName(), t.getName(), e.getMessage());
+				throw new CelestaException("Updating table %s.%s failed: %s.", t.getGrain().getName(), t.getName(),
+						e.getMessage());
 			}
 
 		dba.updateVersioningTrigger(conn, t);
 	}
 
-	private static void dropReferencedFKs(Table t, Connection conn,
-			List<DBFKInfo> dbFKeys) throws CelestaException {
+	private static void dropReferencedFKs(Table t, Connection conn, List<DBFKInfo> dbFKeys) throws CelestaException {
 		Iterator<DBFKInfo> i = dbFKeys.iterator();
 		while (i.hasNext()) {
 			DBFKInfo dbFKey = i.next();
 			if (t.getGrain().getName().equals(dbFKey.getRefGrainName())
 					&& t.getName().equals(dbFKey.getRefTableName())) {
-				dba.dropFK(conn, t.getGrain().getName(), dbFKey.getTableName(),
-						dbFKey.getName());
+				dba.dropFK(conn, t.getGrain().getName(), dbFKey.getTableName(), dbFKey.getName());
 				i.remove();
 			}
 		}
 	}
 
-	private static boolean updateColumns(Table t, final Connection conn,
-			Set<String> dbColumns, List<DBFKInfo> dbFKeys)
+	private static boolean updateColumns(Table t, final Connection conn, Set<String> dbColumns, List<DBFKInfo> dbFKeys)
 			throws CelestaException {
 		// Таблица существует в базе данных, определяем: надо ли удалить
 		// первичный ключ
@@ -547,8 +538,7 @@ public final class DBUpdator {
 				if (!ci.reflects(e.getValue())) {
 					// Если колонка, требующая обновления, входит в первичный
 					// ключ -- сбрасываем первичный ключ.
-					if (t.getPrimaryKey().containsKey(e.getKey())
-							&& !keyDropped) {
+					if (t.getPrimaryKey().containsKey(e.getKey()) && !keyDropped) {
 						dropReferencedFKs(t, conn, dbFKeys);
 						dba.dropPK(conn, t, pkInfo.getName());
 						keyDropped = true;

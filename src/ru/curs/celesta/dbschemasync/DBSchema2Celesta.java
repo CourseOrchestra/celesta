@@ -29,14 +29,14 @@ import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.View;
 
 /**
  * Переносит данные из DBSchema в Celesta.
  */
 public final class DBSchema2Celesta {
 
-	private static final Pattern VERSION = Pattern.compile(
-			"version *('[^']+') *;", Pattern.CASE_INSENSITIVE);
+	private static final Pattern VERSION = Pattern.compile("version *('[^']+') *;", Pattern.CASE_INSENSITIVE);
 
 	private DBSchema2Celesta() {
 	}
@@ -52,8 +52,7 @@ public final class DBSchema2Celesta {
 	 *             любая ошибка.
 	 */
 	public static void dBSToScore(File dbs, Score refScore) throws Exception {
-		DocumentBuilderFactory docFactory = DocumentBuilderFactory
-				.newInstance();
+		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 		Document doc;
 		doc = docBuilder.parse(dbs);
@@ -65,6 +64,7 @@ public final class DBSchema2Celesta {
 			if ("schema".equals(n.getNodeName())) {
 				Element schema = (Element) n;
 				String grainName = schema.getAttribute("name");
+
 				if (grainName == null || grainName.isEmpty()) {
 					throw new Exception("Empty schema name found.");
 				} else if ("celesta".equals(grainName)) {
@@ -93,14 +93,15 @@ public final class DBSchema2Celesta {
 				}
 				Grain g = refScore.getGrains().get(grainName);
 				updateGrainFK(schema, g);
+				// Only to raise "modified" flag
+				g.setVersion("'" + g.getVersion().toString() + "'");
 			}
 		}
 
 		refScore.save();
 	}
 
-	private static void updateGrainFK(Element schema, Grain g)
-			throws ParseException {
+	private static void updateGrainFK(Element schema, Grain g) throws ParseException {
 		NodeList l = schema.getChildNodes();
 		for (int i = 0; i < l.getLength(); i++) {
 			Node n = l.item(i);
@@ -120,6 +121,10 @@ public final class DBSchema2Celesta {
 		List<Table> tables = new ArrayList<>(g.getTables().values());
 		for (Table t : tables)
 			t.delete();
+		List<View> views = new ArrayList<>(g.getViews().values());
+		for (View v : views)
+			v.delete();
+
 		NodeList l = schema.getChildNodes();
 		for (int i = 0; i < l.getLength(); i++) {
 			Node n = l.item(i);
@@ -138,12 +143,32 @@ public final class DBSchema2Celesta {
 				Element table = (Element) n;
 				Table t = new Table(g, table.getAttribute("name"));
 				updateTable(table, t);
+			} else if ("view".equals(n.getNodeName())) {
+				Element view = (Element) n;
+				createView(g, view);
 			}
 		}
 	}
 
-	private static void updateTableFK(Element table, Table t)
-			throws ParseException {
+	private static void createView(Grain g, Element view) throws ParseException {
+		NodeList vl = view.getChildNodes();
+		View cview = null;
+		String celestaDoc = null;
+		for (int i = 0; i < vl.getLength(); i++) {
+			Node vn = vl.item(i);
+			if ("view_script".equals(vn.getNodeName())) {
+				Element viewScript = (Element) vn;
+				String sql = viewScript.getTextContent().trim();
+				cview = new View(g, view.getAttribute("name"), sql);
+			} else if ("comment".equals(vn.getNodeName())) {
+				celestaDoc = extractComment((Element) vn);
+			}
+		}
+		if (cview != null)
+			cview.setCelestaDoc(celestaDoc);
+	}
+
+	private static void updateTableFK(Element table, Table t) throws ParseException {
 		NodeList l = table.getChildNodes();
 		for (int i = 0; i < l.getLength(); i++) {
 			Node n = l.item(i);
@@ -184,8 +209,7 @@ public final class DBSchema2Celesta {
 		String toTable = fk.getAttribute("to_table");
 		String name = fk.getAttribute("name");
 
-		Table referencedTable = t.getGrain().getScore().getGrain(toSchema)
-				.getTable(toTable);
+		Table referencedTable = t.getGrain().getScore().getGrain(toSchema).getTable(toTable);
 
 		NodeList l = fk.getChildNodes();
 		List<String> columns = new ArrayList<>(l.getLength());
@@ -196,8 +220,7 @@ public final class DBSchema2Celesta {
 				columns.add(fkColumn.getAttribute("name"));
 			}
 		}
-		ForeignKey fkey = new ForeignKey(t, referencedTable,
-				columns.toArray(new String[0]));
+		ForeignKey fkey = new ForeignKey(t, referencedTable, columns.toArray(new String[0]));
 
 		if (!name.isEmpty())
 			fkey.setConstraintName(name);
@@ -217,8 +240,7 @@ public final class DBSchema2Celesta {
 		}
 	}
 
-	private static void updateIndex(Element index, Table t)
-			throws ParseException {
+	private static void updateIndex(Element index, Table t) throws ParseException {
 		NodeList l = index.getChildNodes();
 		String name = index.getAttribute("name");
 
@@ -243,8 +265,7 @@ public final class DBSchema2Celesta {
 
 	}
 
-	private static void updateColumn(Element column, Table t)
-			throws ParseException {
+	private static void updateColumn(Element column, Table t) throws ParseException {
 		String celestaType = column.getAttribute("type");
 		String columnName = column.getAttribute("name");
 		boolean isNullable = !"y".equals(column.getAttribute("mandatory"));

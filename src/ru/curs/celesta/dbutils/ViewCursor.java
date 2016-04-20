@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.List;
 import java.util.Set;
 
 import ru.curs.celesta.CallContext;
@@ -30,8 +31,7 @@ public abstract class ViewCursor extends BasicCursor {
 	public View meta() throws CelestaException {
 		if (meta == null)
 			try {
-				meta = Celesta.getInstance().getScore().getGrain(_grainName())
-						.getView(_tableName());
+				meta = Celesta.getInstance().getScore().getGrain(_grainName()).getView(_tableName());
 			} catch (ParseException e) {
 				throw new CelestaException(e.getMessage());
 			}
@@ -39,15 +39,12 @@ public abstract class ViewCursor extends BasicCursor {
 	}
 
 	@Override
-	void appendPK(StringBuilder orderByClause, boolean needComma,
-			Set<String> colNames) throws CelestaException {
+	final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException {
 		// для представлений мы сортируем всегда по первому столбцу, если
 		// сортировки нет вообще
 		if (colNames.isEmpty()) {
-			if (needComma)
-				orderByClause.append(", ");
-			orderByClause.append(String.format("\"%s\"", meta().getColumns()
-					.keySet().iterator().next()));
+			l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));
+			ol.add(Boolean.FALSE);
 		}
 
 	}

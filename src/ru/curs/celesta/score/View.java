@@ -75,14 +75,11 @@ public class View extends GrainElement {
 			throw new IllegalArgumentException();
 
 		if (alias == null || alias.isEmpty())
-			throw new ParseException(String.format(
-					"View '%s' contains a column with undefined alias.",
-					getName()));
+			throw new ParseException(String.format("View '%s' contains a column with undefined alias.", getName()));
 		if (columns.containsKey(alias))
-			throw new ParseException(
-					String.format(
-							"View '%s' already contains column with name or alias '%s'. Use unique aliases for view columns.",
-							getName(), alias));
+			throw new ParseException(String.format(
+					"View '%s' already contains column with name or alias '%s'. Use unique aliases for view columns.",
+					getName(), alias));
 
 		columns.put(alias, expr);
 	}
@@ -101,14 +98,11 @@ public class View extends GrainElement {
 
 		String alias = ref.getAlias();
 		if (alias == null || alias.isEmpty())
-			throw new ParseException(String.format(
-					"View '%s' contains a table with undefined alias.",
-					getName()));
+			throw new ParseException(String.format("View '%s' contains a table with undefined alias.", getName()));
 		if (tables.containsKey(alias))
-			throw new ParseException(
-					String.format(
-							"View '%s' already contains table with name or alias '%s'. Use unique aliases for view tables.",
-							getName(), alias));
+			throw new ParseException(String.format(
+					"View '%s' already contains table with name or alias '%s'. Use unique aliases for view tables.",
+					getName(), alias));
 
 		tables.put(alias, ref);
 
@@ -166,27 +160,52 @@ public class View extends GrainElement {
 	 *             если тип выражения неверный.
 	 */
 	void setWhereCondition(Expr whereCondition) throws ParseException {
-		if (whereCondition != null)
+		if (whereCondition != null) {
+			List<TableRef> t = new ArrayList<>(tables.values());
+			whereCondition.resolveFieldRefs(t);
 			whereCondition.assertType(ViewColumnType.LOGIC);
+		}
 		this.whereCondition = whereCondition;
 	}
 
-	private void selectScript(BufferedWriter bw, SQLGenerator gen)
-			throws IOException {
-		bw.write("  select ");
+	private void selectScript(final BufferedWriter bw, SQLGenerator gen) throws IOException {
+
+		/**
+		 * Wrapper for automatic line-breaks.
+		 */
+		class BWWrapper {
+			private static final int LINE_SIZE = 80;
+			private static final String PADDING = "    ";
+			private int l = 0;
+
+			private void append(String s) throws IOException {
+				bw.write(s);
+				l += s.length();
+				if (l >= LINE_SIZE) {
+					bw.newLine();
+					bw.write(PADDING);
+					l = PADDING.length();
+				}
+			}
+		}
+
+		BWWrapper bww = new BWWrapper();
+
+		bww.append("  select ");
 		if (distinct)
-			bw.write("distinct ");
+			bww.append("distinct ");
+
 		boolean cont = false;
 		for (Map.Entry<String, Expr> e : columns.entrySet()) {
 			if (cont)
-				bw.write(", ");
-			bw.write(gen.generateSQL(e.getValue()));
-			bw.write(" as ");
-			if (gen.quoteNames())
-				bw.write("\"");
-			bw.write(e.getKey());
-			if (gen.quoteNames())
-				bw.write("\"");
+				bww.append(", ");
+			String st = gen.generateSQL(e.getValue()) + " as ";
+			if (gen.quoteNames()) {
+				st = st + "\"" + e.getKey() + "\"";
+			} else {
+				st = st + e.getKey();
+			}
+			bww.append(st);
 			cont = true;
 		}
 		bw.newLine();
@@ -195,8 +214,7 @@ public class View extends GrainElement {
 		for (TableRef tRef : tables.values()) {
 			if (cont) {
 				bw.newLine();
-				bw.write(String
-						.format("    %s ", tRef.getJoinType().toString()));
+				bw.write(String.format("    %s ", tRef.getJoinType().toString()));
 				bw.write("join ");
 			}
 			bw.write(gen.tableName(tRef));
@@ -224,8 +242,7 @@ public class View extends GrainElement {
 	 * @throws IOException
 	 *             ошибка записи в поток
 	 */
-	public void createViewScript(BufferedWriter bw, SQLGenerator gen)
-			throws IOException {
+	public void createViewScript(BufferedWriter bw, SQLGenerator gen) throws IOException {
 		bw.write(gen.preamble(this));
 		bw.newLine();
 		selectScript(bw, gen);
@@ -251,8 +268,7 @@ public class View extends GrainElement {
 			if (t.getGrain() == getGrain()) {
 				return String.format("%s as %s", t.getName(), tRef.getAlias());
 			} else {
-				return String.format("%s.%s as %s", t.getGrain().getName(),
-						t.getName(), tRef.getAlias());
+				return String.format("%s.%s as %s", t.getGrain().getName(), t.getName(), tRef.getAlias());
 			}
 		}
 
@@ -263,6 +279,7 @@ public class View extends GrainElement {
 
 	}
 
+	@Override
 	void save(BufferedWriter bw) throws IOException {
 		SQLGenerator gen = new CelestaSQLGen();
 		Grain.writeCelestaDoc(this, bw);

@@ -91,13 +91,10 @@ final class OraAdaptor extends DBAdaptor {
 
 	private static final String TABLE_TEMPLATE = "\"%s_%s\"";
 
-	private static final Pattern BOOLEAN_CHECK = Pattern
-			.compile("\"([^\"]+)\" *[iI][nN] *\\( *0 *, *1 *\\)");
-	private static final Pattern DATE_PATTERN = Pattern
-			.compile("'(\\d\\d\\d\\d)-([01]\\d)-([0123]\\d)'");
+	private static final Pattern BOOLEAN_CHECK = Pattern.compile("\"([^\"]+)\" *[iI][nN] *\\( *0 *, *1 *\\)");
+	private static final Pattern DATE_PATTERN = Pattern.compile("'(\\d\\d\\d\\d)-([01]\\d)-([0123]\\d)'");
 	private static final Pattern HEX_STRING = Pattern.compile("'([0-9A-F]+)'");
-	private static final Pattern TABLE_PATTERN = Pattern
-			.compile("([a-zA-Z][a-zA-Z0-9]*)_([a-zA-Z_][a-zA-Z0-9_]*)");
+	private static final Pattern TABLE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9]*)_([a-zA-Z_][a-zA-Z0-9_]*)");
 
 	private static final Map<Class<? extends Column>, OraColumnDefiner> TYPES_DICT = new HashMap<>();
 
@@ -110,8 +107,7 @@ final class OraAdaptor extends DBAdaptor {
 
 		@Override
 		String getFullDefinition(Column c) {
-			return join(getInternalDefinition(c), getDefaultDefinition(c),
-					nullable(c));
+			return join(getInternalDefinition(c), getDefaultDefinition(c), nullable(c));
 		}
 
 		@Override
@@ -181,15 +177,13 @@ final class OraAdaptor extends DBAdaptor {
 			@Override
 			String nullable(Column c) {
 				StringColumn ic = (StringColumn) c;
-				return ("".equals(ic.getDefaultValue())) ? "null" : super
-						.nullable(c);
+				return ("".equals(ic.getDefaultValue())) ? "null" : super.nullable(c);
 			}
 
 			@Override
 			String getInternalDefinition(Column c) {
 				StringColumn ic = (StringColumn) c;
-				String fieldType = ic.isMax() ? "nclob" : String.format(
-						"%s(%s)", dbFieldType(), ic.getLength());
+				String fieldType = ic.isMax() ? "nclob" : String.format("%s(%s)", dbFieldType(), ic.getLength());
 				return join(c.getQuotedName(), fieldType);
 			}
 
@@ -198,8 +192,7 @@ final class OraAdaptor extends DBAdaptor {
 				StringColumn ic = (StringColumn) c;
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
-					defaultStr = DEFAULT
-							+ StringColumn.quoteString(ic.getDefaultValue());
+					defaultStr = DEFAULT + StringColumn.quoteString(ic.getDefaultValue());
 				}
 				return defaultStr;
 			}
@@ -222,8 +215,7 @@ final class OraAdaptor extends DBAdaptor {
 				String defaultStr = "";
 				if (ic.getDefaultValue() != null) {
 					// Отрезаем 0x и закавычиваем
-					defaultStr = String.format(DEFAULT + "'%s'", ic
-							.getDefaultValue().substring(2));
+					defaultStr = String.format(DEFAULT + "'%s'", ic.getDefaultValue().substring(2));
 				}
 				return defaultStr;
 			}
@@ -249,8 +241,7 @@ final class OraAdaptor extends DBAdaptor {
 					defaultStr = DEFAULT + "sysdate";
 				} else if (ic.getDefaultValue() != null) {
 					DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-					defaultStr = String.format(DEFAULT + "date '%s'",
-							df.format(ic.getDefaultValue()));
+					defaultStr = String.format(DEFAULT + "date '%s'", df.format(ic.getDefaultValue()));
 				}
 				return defaultStr;
 			}
@@ -279,27 +270,21 @@ final class OraAdaptor extends DBAdaptor {
 
 			@Override
 			String getFullDefinition(Column c) {
-				String check = String.format(
-						"constraint %s check (%s in (0, 1))",
-						getBooleanCheckName(c), c.getQuotedName());
-				return join(getInternalDefinition(c), getDefaultDefinition(c),
-						nullable(c), check);
+				String check = String.format("constraint %s check (%s in (0, 1))", getBooleanCheckName(c),
+						c.getQuotedName());
+				return join(getInternalDefinition(c), getDefaultDefinition(c), nullable(c), check);
 			}
 
 		});
 	}
 
 	@Override
-	boolean tableExists(Connection conn, String schema, String name)
-			throws CelestaException {
-		if (schema == null || schema.isEmpty() || name == null
-				|| name.isEmpty()) {
+	boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+		if (schema == null || schema.isEmpty() || name == null || name.isEmpty()) {
 			return false;
 		}
-		String sql = String
-				.format("select count(*) from all_tables where owner = "
-						+ "sys_context('userenv','session_user') and table_name = '%s_%s'",
-						schema, name);
+		String sql = String.format("select count(*) from all_tables where owner = "
+				+ "sys_context('userenv','session_user') and table_name = '%s_%s'", schema, name);
 
 		try {
 			Statement checkForTable = conn.createStatement();
@@ -319,8 +304,7 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	boolean userTablesExist(Connection conn) throws SQLException {
-		PreparedStatement pstmt = conn
-				.prepareStatement("SELECT COUNT(*) FROM USER_TABLES");
+		PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) FROM USER_TABLES");
 		ResultSet rs = pstmt.executeQuery();
 		try {
 			rs.next();
@@ -332,8 +316,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void createSchemaIfNotExists(Connection conn, String schema)
-			throws SQLException {
+	void createSchemaIfNotExists(Connection conn, String schema) throws SQLException {
 		// Ничего не делает для Oracle. Схемы имитируются префиксами на именах
 		// таблиц.
 	}
@@ -344,27 +327,22 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getOneFieldStatement(Connection conn, Column c)
-			throws CelestaException {
+	PreparedStatement getOneFieldStatement(Connection conn, Column c) throws CelestaException {
 		Table t = c.getParentTable();
-		String sql = String.format(SELECT_S_FROM + tableTemplate()
-				+ " where %s and rownum = 1", c.getQuotedName(), t.getGrain()
-				.getName(), t.getName(), getRecordWhereClause(t));
-		return prepareStatement(conn, sql);
-	}
-
-	@Override
-	PreparedStatement getOneRecordStatement(Connection conn, Table t)
-			throws CelestaException {
-		String sql = String.format(SELECT_S_FROM + tableTemplate()
-				+ " where %s and rownum = 1", getTableFieldsListExceptBLOBs(t),
+		String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1", c.getQuotedName(),
 				t.getGrain().getName(), t.getName(), getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement getInsertRecordStatement(Connection conn, Table t,
-			boolean[] nullsMask) throws CelestaException {
+	PreparedStatement getOneRecordStatement(Connection conn, Table t) throws CelestaException {
+		String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1",
+				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(), t.getName(), getRecordWhereClause(t));
+		return prepareStatement(conn, sql);
+	}
+
+	@Override
+	PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask) throws CelestaException {
 
 		Iterator<String> columns = t.getColumns().keySet().iterator();
 		// Создаём параметризуемую часть запроса, пропуская нулевые значения.
@@ -384,30 +362,25 @@ final class OraAdaptor extends DBAdaptor {
 			fields.append('"');
 		}
 
-		String sql = String.format("insert into " + tableTemplate()
-				+ " (%s) values (%s)", t.getGrain().getName(), t.getName(),
-				fields.toString(), params.toString());
+		String sql = String.format("insert into " + tableTemplate() + " (%s) values (%s)", t.getGrain().getName(),
+				t.getName(), fields.toString(), params.toString());
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement getDeleteRecordStatement(Connection conn, Table t)
-			throws CelestaException {
-		String sql = String.format("delete " + tableTemplate() + " where %s", t
-				.getGrain().getName(), t.getName(), getRecordWhereClause(t));
+	PreparedStatement getDeleteRecordStatement(Connection conn, Table t) throws CelestaException {
+		String sql = String.format("delete " + tableTemplate() + " where %s", t.getGrain().getName(), t.getName(),
+				getRecordWhereClause(t));
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	public Set<String> getColumns(Connection conn, Table t)
-			throws CelestaException {
+	public Set<String> getColumns(Connection conn, Table t) throws CelestaException {
 		Set<String> result = new LinkedHashSet<>();
 		try {
-			String tableName = String.format("%s_%s", t.getGrain().getName(),
-					t.getName());
-			String sql = String
-					.format("SELECT column_name FROM user_tab_cols WHERE table_name = '%s' order by column_id",
-							tableName);
+			String tableName = String.format("%s_%s", t.getGrain().getName(), t.getName());
+			String sql = String.format(
+					"SELECT column_name FROM user_tab_cols WHERE table_name = '%s' order by column_id", tableName);
 			// System.out.println(sql);
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
@@ -427,12 +400,10 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement deleteRecordSetStatement(Connection conn, Table t,
-			Map<String, AbstractFilter> filters, Expr complexFilter)
-			throws CelestaException {
+	PreparedStatement deleteRecordSetStatement(Connection conn, Table t, Map<String, AbstractFilter> filters,
+			Expr complexFilter) throws CelestaException {
 		String whereClause = getWhereClause(t, filters, complexFilter);
-		String sql = String.format("delete from " + tableTemplate() + " %s", t
-				.getGrain().getName(), t.getName(),
+		String sql = String.format("delete from " + tableTemplate() + " %s", t.getGrain().getName(), t.getName(),
 				!whereClause.isEmpty() ? "where " + whereClause : "");
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
@@ -446,8 +417,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public boolean isValidConnection(Connection conn, int timeout)
-			throws CelestaException {
+	public boolean isValidConnection(Connection conn, int timeout) throws CelestaException {
 		Statement stmt = null;
 		ResultSet rs = null;
 		try {
@@ -479,8 +449,7 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
 		String sequenceName = getSequenceName(t);
-		String sql = String.format("SELECT \"%s\".CURRVAL FROM DUAL",
-				sequenceName);
+		String sql = String.format("SELECT \"%s\".CURRVAL FROM DUAL", sequenceName);
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -496,35 +465,32 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String getCreateIndexSQL(Index index) {
+	String[] getCreateIndexSQL(Index index) {
 		String grainName = index.getTable().getGrain().getName();
 		String fieldList = getFieldList(index.getColumns().keySet());
-		String sql = String.format("CREATE INDEX " + tableTemplate() + " ON "
-				+ tableTemplate() + " (%s)", grainName, index.getName(),
-				grainName, index.getTable().getName(), fieldList);
-		return sql;
+		String sql = String.format("CREATE INDEX " + tableTemplate() + " ON " + tableTemplate() + " (%s)", grainName,
+				index.getName(), grainName, index.getTable().getName(), fieldList);
+		String[] result = {sql};
+		return result;
 	}
 
 	@Override
-	String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
+	String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
 		String sql;
-		if (dBIndexInfo.getIndexName().startsWith("##"))
-			sql = String.format("DROP INDEX %s", dBIndexInfo.getIndexName()
-					.substring(2));
-		else
-			sql = String.format("DROP INDEX " + tableTemplate(), g.getName(),
-					dBIndexInfo.getIndexName());
-		return sql;
+		if (dBIndexInfo.getIndexName().startsWith("##")) {
+			sql = String.format("DROP INDEX %s", dBIndexInfo.getIndexName().substring(2));
+		} else {
+			sql = String.format("DROP INDEX " + tableTemplate(), g.getName(), dBIndexInfo.getIndexName());
+		}
+		String[] result = {sql};
+		return result;
 	}
 
-	private boolean checkForBoolean(Connection conn, Column c)
-			throws SQLException {
+	private boolean checkForBoolean(Connection conn, Column c) throws SQLException {
 		String sql = String.format(
-				"SELECT SEARCH_CONDITION FROM ALL_CONSTRAINTS WHERE "
-						+ "OWNER = sys_context('userenv','session_user')"
-						+ " AND TABLE_NAME = '%s_%s'"
-						+ "AND CONSTRAINT_TYPE = 'C'", c.getParentTable()
-						.getGrain().getName(), c.getParentTable().getName());
+				"SELECT SEARCH_CONDITION FROM ALL_CONSTRAINTS WHERE " + "OWNER = sys_context('userenv','session_user')"
+						+ " AND TABLE_NAME = '%s_%s'" + "AND CONSTRAINT_TYPE = 'C'",
+				c.getParentTable().getGrain().getName(), c.getParentTable().getName());
 		// System.out.println(sql);
 		PreparedStatement checkForBool = conn.prepareStatement(sql);
 		try {
@@ -542,22 +508,19 @@ final class OraAdaptor extends DBAdaptor {
 
 	}
 
-	private boolean checkForIncrementTrigger(Connection conn, Column c)
-			throws SQLException {
-		String sql = String
-				.format(SELECT_TRIGGER_BODY
+	private boolean checkForIncrementTrigger(Connection conn, Column c) throws SQLException {
+		String sql = String.format(
+				SELECT_TRIGGER_BODY
 						+ "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'INSERT'",
-						c.getParentTable().getGrain().getName(), c
-								.getParentTable().getName(), getSequenceName(c
-								.getParentTable()));
+				c.getParentTable().getGrain().getName(), c.getParentTable().getName(),
+				getSequenceName(c.getParentTable()));
 		// System.out.println(sql);
 		PreparedStatement checkForTrigger = conn.prepareStatement(sql);
 		try {
 			ResultSet rs = checkForTrigger.executeQuery();
 			if (rs.next()) {
 				String body = rs.getString(1);
-				if (body != null && body.contains(".NEXTVAL")
-						&& body.contains("\"" + c.getName() + "\""))
+				if (body != null && body.contains(".NEXTVAL") && body.contains("\"" + c.getName() + "\""))
 					return true;
 			}
 		} finally {
@@ -568,15 +531,14 @@ final class OraAdaptor extends DBAdaptor {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public DBColumnInfo getColumnInfo(Connection conn, Column c)
-			throws CelestaException {
+	public DBColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
 		try {
-			String tableName = String.format("%s_%s", c.getParentTable()
-					.getGrain().getName(), c.getParentTable().getName());
-			String sql = String
-					.format("SELECT COLUMN_NAME, DATA_TYPE, NULLABLE, CHAR_LENGTH "
+			String tableName = String.format("%s_%s", c.getParentTable().getGrain().getName(),
+					c.getParentTable().getName());
+			String sql = String.format(
+					"SELECT COLUMN_NAME, DATA_TYPE, NULLABLE, CHAR_LENGTH "
 							+ "FROM user_tab_cols	WHERE table_name = '%s' and COLUMN_NAME = '%s'",
-							tableName, c.getName());
+					tableName, c.getName());
 			// System.out.println(sql);
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
@@ -596,8 +558,7 @@ final class OraAdaptor extends DBAdaptor {
 						result.setMax(true);
 					} else {
 						for (Class<?> cc : COLUMN_CLASSES)
-							if (TYPES_DICT.get(cc).dbFieldType()
-									.equalsIgnoreCase(typeName)) {
+							if (TYPES_DICT.get(cc).dbFieldType().equalsIgnoreCase(typeName)) {
 								result.setType((Class<? extends Column>) cc);
 								break;
 							}
@@ -615,8 +576,7 @@ final class OraAdaptor extends DBAdaptor {
 						else if (checkForIncrementTrigger(conn, c))
 							result.setIdentity(true);
 					}
-					result.setNullable("Y".equalsIgnoreCase(rs
-							.getString("NULLABLE")));
+					result.setNullable("Y".equalsIgnoreCase(rs.getString("NULLABLE")));
 					if (result.getType() == StringColumn.class) {
 						result.setLength(rs.getInt("CHAR_LENGTH"));
 					}
@@ -638,15 +598,12 @@ final class OraAdaptor extends DBAdaptor {
 
 	}
 
-	private void processDefaults(Connection conn, Column c, DBColumnInfo result)
-			throws SQLException {
+	private void processDefaults(Connection conn, Column c, DBColumnInfo result) throws SQLException {
 		ResultSet rs;
 		PreparedStatement getDefault = conn.prepareStatement(String.format(
-				"select DATA_DEFAULT from DBA_TAB_COLUMNS where "
-						+ "owner = sys_context('userenv','session_user') "
-						+ "and TABLE_NAME = '%s_%s' and COLUMN_NAME = '%s'", c
-						.getParentTable().getGrain().getName(), c
-						.getParentTable().getName(), c.getName()));
+				"select DATA_DEFAULT from DBA_TAB_COLUMNS where " + "owner = sys_context('userenv','session_user') "
+						+ "and TABLE_NAME = '%s_%s' and COLUMN_NAME = '%s'",
+				c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName()));
 		try {
 			rs = getDefault.executeQuery();
 			if (!rs.next())
@@ -662,8 +619,7 @@ final class OraAdaptor extends DBAdaptor {
 				else {
 					Matcher m = DATE_PATTERN.matcher(body);
 					if (m.find())
-						body = String.format("'%s%s%s'", m.group(1),
-								m.group(2), m.group(3));
+						body = String.format("'%s%s%s'", m.group(1), m.group(2), m.group(3));
 				}
 			} else if (BinaryColumn.class == result.getType()) {
 				Matcher m = HEX_STRING.matcher(body);
@@ -684,16 +640,12 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void updateColumn(Connection conn, Column c, DBColumnInfo actual)
-			throws CelestaException {
+	void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
 		dropVersioningTrigger(conn, c.getParentTable());
-		if (actual.getType() == BooleanColumn.class
-				&& !(c instanceof BooleanColumn)) {
+		if (actual.getType() == BooleanColumn.class && !(c instanceof BooleanColumn)) {
 			// Тип Boolean меняется на что-то другое, надо сбросить constraint
-			String check = String.format(ALTER_TABLE + tableTemplate()
-					+ " drop constraint %s", c.getParentTable().getGrain()
-					.getName(), c.getParentTable().getName(),
-					getBooleanCheckName(c));
+			String check = String.format(ALTER_TABLE + tableTemplate() + " drop constraint %s",
+					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), getBooleanCheckName(c));
 			runUpdateColumnSQL(conn, c, check);
 		}
 
@@ -710,8 +662,7 @@ final class OraAdaptor extends DBAdaptor {
 		if (actual.getType() == BinaryColumn.class && c instanceof BinaryColumn) {
 			def = OraColumnDefiner.join(c.getQuotedName(), defdef);
 		} else {
-			def = OraColumnDefiner.join(definer.getInternalDefinition(c),
-					defdef);
+			def = OraColumnDefiner.join(definer.getInternalDefinition(c), defdef);
 		}
 
 		// Явно задавать nullable в Oracle можно только если действительно надо
@@ -724,54 +675,42 @@ final class OraAdaptor extends DBAdaptor {
 		if (fromOrToNClob(c, actual)) {
 
 			String tempName = "\"" + c.getName() + "2\"";
-			String sql = String.format(ALTER_TABLE + tableTemplate()
-					+ " add %s", c.getParentTable().getGrain().getName(), c
-					.getParentTable().getName(), columnDef(c));
+			String sql = String.format(ALTER_TABLE + tableTemplate() + " add %s",
+					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), columnDef(c));
 			sql = sql.replace(c.getQuotedName(), tempName);
 			// System.out.println(sql);
 			runUpdateColumnSQL(conn, c, sql);
-			sql = String.format("update " + tableTemplate()
-					+ " set %s = \"%s\"", c.getParentTable().getGrain()
-					.getName(), c.getParentTable().getName(), tempName,
-					c.getName());
+			sql = String.format("update " + tableTemplate() + " set %s = \"%s\"",
+					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), tempName, c.getName());
 			// System.out.println(sql);
 			runUpdateColumnSQL(conn, c, sql);
-			sql = String
-					.format(ALTER_TABLE + tableTemplate() + " drop column %s",
-							c.getParentTable().getGrain().getName(), c
-									.getParentTable().getName(), c
-									.getQuotedName());
+			sql = String.format(ALTER_TABLE + tableTemplate() + " drop column %s",
+					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getQuotedName());
 			// System.out.println(sql);
 			runUpdateColumnSQL(conn, c, sql);
-			sql = String.format(ALTER_TABLE + tableTemplate()
-					+ " rename column %s to %s", c.getParentTable().getGrain()
-					.getName(), c.getParentTable().getName(), tempName,
-					c.getQuotedName());
+			sql = String.format(ALTER_TABLE + tableTemplate() + " rename column %s to %s",
+					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), tempName, c.getQuotedName());
 			// System.out.println(sql);
 			runUpdateColumnSQL(conn, c, sql);
 		} else {
 
-			String sql = String.format(ALTER_TABLE + tableTemplate()
-					+ " modify (%s)", c.getParentTable().getGrain().getName(),
-					c.getParentTable().getName(), def);
+			String sql = String.format(ALTER_TABLE + tableTemplate() + " modify (%s)",
+					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), def);
 
 			runUpdateColumnSQL(conn, c, sql);
 		}
-		if (c instanceof BooleanColumn
-				&& actual.getType() != BooleanColumn.class) {
+		if (c instanceof BooleanColumn && actual.getType() != BooleanColumn.class) {
 			// Тип поменялся на Boolean, надо добавить constraint
-			String check = String.format(ALTER_TABLE + tableTemplate()
-					+ " add constraint %s check (%s in (0, 1))", c
-					.getParentTable().getGrain().getName(), c.getParentTable()
-					.getName(), getBooleanCheckName(c), c.getQuotedName());
+			String check = String.format(ALTER_TABLE + tableTemplate() + " add constraint %s check (%s in (0, 1))",
+					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), getBooleanCheckName(c),
+					c.getQuotedName());
 			runUpdateColumnSQL(conn, c, check);
 
 		}
 	}
 
 	public boolean fromOrToNClob(Column c, DBColumnInfo actual) {
-		return (actual.isMax() || isNclob(c))
-				&& !(actual.isMax() && isNclob(c));
+		return (actual.isMax() || isNclob(c)) && !(actual.isMax() && isNclob(c));
 	}
 
 	private static String getFKTriggerName(String prefix, String fkName) {
@@ -781,16 +720,14 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	private static String getBooleanCheckName(Column c) {
-		String result = String.format("chk_%s_%s_%s", c.getParentTable()
-				.getGrain().getName(), c.getParentTable().getName(),
-				c.getName());
+		String result = String.format("chk_%s_%s_%s", c.getParentTable().getGrain().getName(),
+				c.getParentTable().getName(), c.getName());
 		result = NamedElement.limitName(result);
 		return "\"" + result + "\"";
 	}
 
 	private static String getSequenceName(Table table) {
-		String result = String.format("%s_%s_inc", table.getGrain().getName(),
-				table.getName());
+		String result = String.format("%s_%s_inc", table.getGrain().getName(), table.getName());
 		result = NamedElement.limitName(result);
 		return result;
 	}
@@ -821,9 +758,10 @@ final class OraAdaptor extends DBAdaptor {
 		// be sure that we have an appropriate sequence.
 		boolean hasSequence = false;
 		stmt = conn
-				.prepareStatement(String
-						.format("select count(*) from all_sequences where sequence_owner = "
-								+ "sys_context('userenv','session_user') and sequence_name = '%s'",
+				.prepareStatement(
+						String.format(
+								"select count(*) from all_sequences where sequence_owner = "
+										+ "sys_context('userenv','session_user') and sequence_name = '%s'",
 								sequenceName));
 		ResultSet rs = stmt.executeQuery();
 		try {
@@ -832,10 +770,8 @@ final class OraAdaptor extends DBAdaptor {
 			stmt.close();
 		}
 		if (!hasSequence) {
-			sql = String
-					.format("CREATE SEQUENCE \"%s\""
-							+ " START WITH 1 INCREMENT BY 1 MINVALUE 1 NOCACHE NOCYCLE",
-							sequenceName);
+			sql = String.format("CREATE SEQUENCE \"%s\"" + " START WITH 1 INCREMENT BY 1 MINVALUE 1 NOCACHE NOCYCLE",
+					sequenceName);
 			stmt = conn.prepareStatement(sql);
 			try {
 				stmt.executeUpdate();
@@ -845,12 +781,11 @@ final class OraAdaptor extends DBAdaptor {
 		}
 
 		// 3. Now we have to create or replace the auto-increment trigger
-		sql = String.format("CREATE OR REPLACE TRIGGER \"" + sequenceName
-				+ "\" BEFORE INSERT ON " + tableTemplate()
-				+ " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT \""
-				+ sequenceName + "\".NEXTVAL INTO :new.%s FROM dual; END;", t
-				.getGrain().getName(), t.getName(), ic.getQuotedName(), ic
-				.getQuotedName());
+		sql = String.format(
+				"CREATE OR REPLACE TRIGGER \"" + sequenceName + "\" BEFORE INSERT ON " + tableTemplate()
+						+ " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT \"" + sequenceName
+						+ "\".NEXTVAL INTO :new.%s FROM dual; END;",
+				t.getGrain().getName(), t.getName(), ic.getQuotedName(), ic.getQuotedName());
 
 		// System.out.println(sql);
 		Statement s = conn.createStatement();
@@ -883,14 +818,11 @@ final class OraAdaptor extends DBAdaptor {
 	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
 		DBPKInfo result = new DBPKInfo();
 		try {
-			String sql = String
-					.format("select cons.constraint_name, column_name from all_constraints cons "
-							+ "inner join all_cons_columns cols on cons.constraint_name = cols.constraint_name  "
-							+ "and cons.owner = cols.owner where "
-							+ "cons.owner = sys_context('userenv','session_user') "
-							+ "and cons.table_name = '%s_%s'"
-							+ " and cons.constraint_type = 'P' order by cols.position",
-							t.getGrain().getName(), t.getName());
+			String sql = String.format("select cons.constraint_name, column_name from all_constraints cons "
+					+ "inner join all_cons_columns cols on cons.constraint_name = cols.constraint_name  "
+					+ "and cons.owner = cols.owner where " + "cons.owner = sys_context('userenv','session_user') "
+					+ "and cons.table_name = '%s_%s'" + " and cons.constraint_type = 'P' order by cols.position",
+					t.getGrain().getName(), t.getName());
 			Statement check = conn.createStatement();
 			ResultSet rs = check.executeQuery(sql);
 			try {
@@ -911,11 +843,9 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void dropPK(Connection conn, Table t, String pkName)
-			throws CelestaException {
-		String sql = String.format(
-				"alter table \"%s_%s\" drop constraint \"%s\"", t.getGrain()
-						.getName(), t.getName(), pkName);
+	void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
+		String sql = String.format("alter table \"%s_%s\" drop constraint \"%s\"", t.getGrain().getName(), t.getName(),
+				pkName);
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -932,9 +862,8 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	void createPK(Connection conn, Table t) throws CelestaException {
 		StringBuilder sql = new StringBuilder();
-		sql.append(String.format("alter table \"%s_%s\" add constraint \"%s\" "
-				+ " primary key (", t.getGrain().getName(), t.getName(),
-				t.getPkConstraintName()));
+		sql.append(String.format("alter table \"%s_%s\" add constraint \"%s\" " + " primary key (",
+				t.getGrain().getName(), t.getName(), t.getPkConstraintName()));
 		boolean multiple = false;
 		for (String s : t.getPrimaryKey().keySet()) {
 			if (multiple)
@@ -961,19 +890,17 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
-		String sql = String
-				.format("select cols.constraint_name, cols.table_name table_name, "
+		String sql = String.format(
+				"select cols.constraint_name, cols.table_name table_name, "
 						+ "ref.table_name ref_table_name, cons.delete_rule, cols.column_name "
 						+ "from all_constraints cons inner join all_cons_columns cols "
 						+ "on cols.owner = cons.owner and cols.constraint_name = cons.constraint_name "
 						+ "  and cols.table_name = cons.table_name "
 						+ "inner join all_constraints ref on ref.owner = cons.owner "
-						+ "  and ref.constraint_name = cons.r_constraint_name "
-						+ "where cons.constraint_type = 'R' "
-						+ "and cons.owner = sys_context('userenv','session_user') "
-						+ "and ref.constraint_type = 'P' "
+						+ "  and ref.constraint_name = cons.r_constraint_name " + "where cons.constraint_type = 'R' "
+						+ "and cons.owner = sys_context('userenv','session_user') " + "and ref.constraint_type = 'P' "
 						+ "and  cons.table_name like '%s@_%%' escape '@' order by cols.constraint_name, cols.position",
-						g.getName());
+				g.getName());
 
 		// System.out.println(sql);
 		List<DBFKInfo> result = new LinkedList<>();
@@ -996,8 +923,7 @@ final class OraAdaptor extends DBAdaptor {
 						m.find();
 						i.setRefGrainName(m.group(1));
 						i.setRefTableName(m.group(2));
-						i.setUpdateRule(getUpdateBehaviour(conn, tableName,
-								fkName));
+						i.setUpdateRule(getUpdateBehaviour(conn, tableName, fkName));
 						i.setDeleteRule(getFKRule(rs.getString("DELETE_RULE")));
 					}
 					i.getColumnNames().add(rs.getString(COLUMN_NAME));
@@ -1012,16 +938,13 @@ final class OraAdaptor extends DBAdaptor {
 
 	}
 
-	private FKRule getUpdateBehaviour(Connection conn, String tableName,
-			String fkName) throws SQLException {
+	private FKRule getUpdateBehaviour(Connection conn, String tableName, String fkName) throws SQLException {
 		// now we are looking for triggers that define update
 		// rule
-		String sql = String
-				.format("select trigger_name from all_triggers "
-						+ "where owner = sys_context('userenv','session_user') "
+		String sql = String.format(
+				"select trigger_name from all_triggers " + "where owner = sys_context('userenv','session_user') "
 						+ "and table_name = '%s' and trigger_name in ('%s', '%s') and triggering_event = 'UPDATE'",
-						tableName, getFKTriggerName(SNL, fkName),
-						getFKTriggerName(CSC, fkName));
+				tableName, getFKTriggerName(SNL, fkName), getFKTriggerName(CSC, fkName));
 		Statement stmt = conn.createStatement();
 		try {
 			ResultSet rs = stmt.executeQuery(sql);
@@ -1085,11 +1008,9 @@ final class OraAdaptor extends DBAdaptor {
 			sb.append(c.getQuotedName());
 			needComma = true;
 		}
-		sb.append(String.format(" on \"%s_%s\"", t.getGrain().getName(),
-				t.getName()));
+		sb.append(String.format(" on \"%s_%s\"", t.getGrain().getName(), t.getName()));
 		sb.append(String.format(" for each row begin\n  update \"%s_%s\" set ",
-				fk.getParentTable().getGrain().getName(), fk.getParentTable()
-						.getName()));
+				fk.getParentTable().getGrain().getName(), fk.getParentTable().getName()));
 
 		Iterator<Column> i1 = fk.getColumns().values().iterator();
 		Iterator<Column> i2 = t.getPrimaryKey().values().iterator();
@@ -1122,57 +1043,46 @@ final class OraAdaptor extends DBAdaptor {
 
 	@Override
 	void processDropUpdateRule(LinkedList<String> sqlQueue, String fkName) {
-		String sql = String.format(DROP_TRIGGER + "%s\"",
-				getFKTriggerName(SNL, fkName));
+		String sql = String.format(DROP_TRIGGER + "%s\"", getFKTriggerName(SNL, fkName));
 		sqlQueue.add(sql);
-		sql = String.format(DROP_TRIGGER + "%s\"",
-				getFKTriggerName(CSC, fkName));
+		sql = String.format(DROP_TRIGGER + "%s\"", getFKTriggerName(CSC, fkName));
 		sqlQueue.add(sql);
 	}
 
 	@Override
-	String getLimitedSQL(GrainElement t, String whereClause, String orderBy,
-			long offset, long rowCount) {
+	String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount) {
 		if (offset == 0 && rowCount == 0)
 			throw new IllegalArgumentException();
 		String sql;
 		if (offset == 0) {
 			// No offset -- simpler query
-			sql = String.format(
-					"with a as (%s) select a.* from a where rownum <= %d",
+			sql = String.format("with a as (%s) select a.* from a where rownum <= %d",
 					getSelectFromOrderBy(t, whereClause, orderBy), rowCount);
 		} else if (rowCount == 0) {
 			// No rowCount -- simpler query
 			sql = String.format(
-					"with a as (%s) select * from (select a.*, ROWNUM rnum "
-							+ "from a) where rnum >= %d order by rnum",
+					"with a as (%s) select * from (select a.*, ROWNUM rnum " + "from a) where rnum >= %d order by rnum",
 					getSelectFromOrderBy(t, whereClause, orderBy), offset + 1L);
 
 		} else {
-			sql = String
-					.format("with a as (%s) select * from (select a.*, ROWNUM rnum "
+			sql = String.format(
+					"with a as (%s) select * from (select a.*, ROWNUM rnum "
 							+ "from a where rownum <= %d) where rnum >= %d order by rnum",
-							getSelectFromOrderBy(t, whereClause, orderBy),
-							offset + rowCount, offset + 1L);
+					getSelectFromOrderBy(t, whereClause, orderBy), offset + rowCount, offset + 1L);
 		}
 		return sql;
 	}
 
 	@Override
-	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g)
-			throws CelestaException {
+	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
 		String sql = String
 				.format("select ind.table_name TABLE_NAME, ind.index_name INDEX_NAME, cols.column_name COLUMN_NAME,"
-						+ " cols.column_position POSITION "
-						+ "from all_indexes ind "
-						+ "inner join all_ind_columns cols "
-						+ "on ind.owner = cols.index_owner "
-						+ "and ind.table_name = cols.table_name "
-						+ "and ind.index_name = cols.index_name "
+						+ " cols.column_position POSITION " + "from all_indexes ind "
+						+ "inner join all_ind_columns cols " + "on ind.owner = cols.index_owner "
+						+ "and ind.table_name = cols.table_name " + "and ind.index_name = cols.index_name "
 						+ "where ind.owner = sys_context('userenv','session_user') and ind.uniqueness = 'NONUNIQUE' "
 						+ "and ind.table_name like '%s@_%%' escape '@'"
-						+ "order by ind.table_name, ind.index_name, cols.column_position",
-						g.getName());
+						+ "order by ind.table_name, ind.index_name, cols.column_position", g.getName());
 
 		// System.out.println(sql);
 
@@ -1189,9 +1099,9 @@ final class OraAdaptor extends DBAdaptor {
 					tabName = m.group(2);
 					String indName = rs.getString("INDEX_NAME");
 					m = TABLE_PATTERN.matcher(indName);
-					if (m.find())
+					if (m.find()) {
 						indName = m.group(2);
-					else
+					} else {
 						/*
 						 * Если название индекса не соответствует ожидаемому
 						 * шаблону, то это -- индекс, добавленный вне Celesta и
@@ -1202,9 +1112,9 @@ final class OraAdaptor extends DBAdaptor {
 						 * индекса, удалит их.
 						 */
 						indName = "##" + indName;
+					}
 
-					if (i == null || !i.getTableName().equals(tabName)
-							|| !i.getIndexName().equals(indName)) {
+					if (i == null || !i.getTableName().equals(tabName) || !i.getIndexName().equals(indName)) {
 						i = new DBIndexInfo(tabName, indName);
 						result.put(indName, i);
 					}
@@ -1214,20 +1124,18 @@ final class OraAdaptor extends DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException("Could not get indices information: %s",
-					e.getMessage());
+			throw new CelestaException("Could not get indices information: %s", e.getMessage());
 		}
 		return result;
 	}
 
 	@Override
-	public List<String> getViewList(Connection conn, Grain g)
-			throws CelestaException {
+	public List<String> getViewList(Connection conn, Grain g) throws CelestaException {
 
-		String sql = String
-				.format("select view_name from all_views "
+		String sql = String.format(
+				"select view_name from all_views "
 						+ "where owner = sys_context('userenv','session_user') and view_name like '%s@_%%' escape '@'",
-						g.getName());
+				g.getName());
 		List<String> result = new LinkedList<>();
 		try {
 			Statement stmt = conn.createStatement();
@@ -1239,8 +1147,7 @@ final class OraAdaptor extends DBAdaptor {
 				result.add(m.group(2));
 			}
 		} catch (SQLException e) {
-			throw new CelestaException("Cannot get views list: %s",
-					e.toString());
+			throw new CelestaException("Cannot get views list: %s", e.toString());
 		}
 		return result;
 	}
@@ -1251,15 +1158,13 @@ final class OraAdaptor extends DBAdaptor {
 
 			@Override
 			protected String viewName(View v) {
-				return String.format(TABLE_TEMPLATE, v.getGrain().getName(),
-						v.getName());
+				return String.format(TABLE_TEMPLATE, v.getGrain().getName(), v.getName());
 			}
 
 			@Override
 			protected String tableName(TableRef tRef) {
 				Table t = tRef.getTable();
-				return String.format(TABLE_TEMPLATE + " \"%s\"", t.getGrain()
-						.getName(), t.getName(), tRef.getAlias());
+				return String.format(TABLE_TEMPLATE + " \"%s\"", t.getGrain().getName(), t.getName(), tRef.getAlias());
 			}
 
 			@Override
@@ -1276,20 +1181,18 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	private static String getUpdTriggerName(Table table) {
-		String result = String.format("%s_%s_upd", table.getGrain().getName(),
-				table.getName());
+		String result = String.format("%s_%s_upd", table.getGrain().getName(), table.getName());
 		result = NamedElement.limitName(result);
 		return result;
 	}
 
-	private void dropVersioningTrigger(Connection conn, Table t)
-			throws CelestaException {
+	private void dropVersioningTrigger(Connection conn, Table t) throws CelestaException {
 		// First of all, we are about to check if trigger exists
 		String triggerName = getUpdTriggerName(t);
-		String sql = String
-				.format(SELECT_TRIGGER_BODY
+		String sql = String.format(
+				SELECT_TRIGGER_BODY
 						+ "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'UPDATE'",
-						t.getGrain().getName(), t.getName(), triggerName);
+				t.getGrain().getName(), t.getName(), triggerName);
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -1311,21 +1214,19 @@ final class OraAdaptor extends DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException(
-					"Could not update version check trigger on %s.%s: %s", t
-							.getGrain().getName(), t.getName(), e.getMessage());
+			throw new CelestaException("Could not update version check trigger on %s.%s: %s", t.getGrain().getName(),
+					t.getName(), e.getMessage());
 		}
 	}
 
 	@Override
-	public void updateVersioningTrigger(Connection conn, Table t)
-			throws CelestaException {
+	public void updateVersioningTrigger(Connection conn, Table t) throws CelestaException {
 		// First of all, we are about to check if trigger exists
 		String triggerName = getUpdTriggerName(t);
-		String sql = String
-				.format(SELECT_TRIGGER_BODY
+		String sql = String.format(
+				SELECT_TRIGGER_BODY
 						+ "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'UPDATE'",
-						t.getGrain().getName(), t.getName(), triggerName);
+				t.getGrain().getName(), t.getName(), triggerName);
 		try {
 			Statement stmt = conn.createStatement();
 			try {
@@ -1340,15 +1241,11 @@ final class OraAdaptor extends DBAdaptor {
 						return;
 					} else {
 						// CREATE TRIGGER
-						sql = String
-								.format("CREATE OR REPLACE TRIGGER \"%s\" BEFORE UPDATE ON \"%s_%s\" FOR EACH ROW\n"
-										+ "BEGIN\n"
-										+ "  IF :new.\"recversion\" <> :old.\"recversion\" THEN\n"
-										+ "    raise_application_error( -20001, 'record version check failure' );\n"
-										+ "  END IF;\n"
-										+ "  :new.\"recversion\" := :new.\"recversion\" + 1;\n"
-										+ "END;", triggerName, t.getGrain()
-										.getName(), t.getName());
+						sql = String.format("CREATE OR REPLACE TRIGGER \"%s\" BEFORE UPDATE ON \"%s_%s\" FOR EACH ROW\n"
+								+ "BEGIN\n" + "  IF :new.\"recversion\" <> :old.\"recversion\" THEN\n"
+								+ "    raise_application_error( -20001, 'record version check failure' );\n"
+								+ "  END IF;\n" + "  :new.\"recversion\" := :new.\"recversion\" + 1;\n" + "END;",
+								triggerName, t.getGrain().getName(), t.getName());
 						// System.out.println(sql);
 						stmt.executeUpdate(sql);
 					}
@@ -1365,19 +1262,16 @@ final class OraAdaptor extends DBAdaptor {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			throw new CelestaException(
-					"Could not update version check trigger on %s.%s: %s", t
-							.getGrain().getName(), t.getName(), e.getMessage());
+			throw new CelestaException("Could not update version check trigger on %s.%s: %s", t.getGrain().getName(),
+					t.getName(), e.getMessage());
 		}
 
 	}
 
 	@Override
 	// CHECKSTYLE:OFF 6 params
-	PreparedStatement getNavigationStatement(Connection conn, GrainElement t,
-			Map<String, AbstractFilter> filters, Expr complexFilter,
-			String orderBy, String navigationWhereClause)
-			throws CelestaException {
+	PreparedStatement getNavigationStatement(Connection conn, GrainElement t, Map<String, AbstractFilter> filters,
+			Expr complexFilter, String orderBy, String navigationWhereClause) throws CelestaException {
 		// CHECKSTYLE:ON
 		if (navigationWhereClause == null)
 			throw new IllegalArgumentException();
@@ -1393,9 +1287,8 @@ final class OraAdaptor extends DBAdaptor {
 
 		if (orderBy.length() > 0)
 			w.append(" order by " + orderBy);
-		String sql = String.format(SELECT_S_FROM + tableTemplate() + "  %s",
-				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(),
-				t.getName(), "where " + w);
+		String sql = String.format(SELECT_S_FROM + tableTemplate() + "  %s", getTableFieldsListExceptBLOBs(t),
+				t.getGrain().getName(), t.getName(), "where " + w);
 		// System.out.println(sql);
 		return prepareStatement(conn, sql);
 	}
@@ -1413,30 +1306,42 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	public void resetIdentity(Connection conn, Table t, int i)
-			throws SQLException {
+	public void resetIdentity(Connection conn, Table t, int i) throws SQLException {
 		String sequenceName = getSequenceName(t);
 		Statement stmt = conn.createStatement();
 		try {
-			String sql = String.format("select \"%s\".nextval from dual",
-					sequenceName);
+			String sql = String.format("select \"%s\".nextval from dual", sequenceName);
 			ResultSet rs = stmt.executeQuery(sql);
 			rs.next();
 			int curVal = rs.getInt(1);
 			rs.close();
-			sql = String.format(
-					"alter sequence \"%s\" increment by %d minvalue 1",
-					sequenceName, i - curVal - 1);
+			sql = String.format("alter sequence \"%s\" increment by %d minvalue 1", sequenceName, i - curVal - 1);
 			stmt.executeUpdate(sql);
-			sql = String
-					.format("select \"%s\".nextval from dual", sequenceName);
+			sql = String.format("select \"%s\".nextval from dual", sequenceName);
 			stmt.executeQuery(sql).close();
-			sql = String.format(
-					"alter sequence \"%s\" increment by 1 minvalue 1",
-					sequenceName);
+			sql = String.format("alter sequence \"%s\" increment by 1 minvalue 1", sequenceName);
 			stmt.executeUpdate(sql);
 		} finally {
 			stmt.close();
+		}
+	}
+
+	@Override
+	public int getDBPid(Connection conn) throws CelestaException {
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery("select sys_context('userenv','sessionid') from dual");
+				if (rs.next()) {
+					return rs.getInt(1);
+				} else {
+					return 0;
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
 		}
 	}
 }

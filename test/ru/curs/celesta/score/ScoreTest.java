@@ -39,12 +39,9 @@ public class ScoreTest {
 		assertEquals(o + 1, g2.getDependencyOrder());
 		assertEquals(o + 2, g3.getDependencyOrder());
 
-		assertEquals("score" + File.separator + "g1", g1.getGrainPath()
-				.toString());
-		assertEquals("score" + File.separator + "g2", g2.getGrainPath()
-				.toString());
-		assertEquals("score" + File.separator + "g3", g3.getGrainPath()
-				.toString());
+		assertEquals("score" + File.separator + "g1", g1.getGrainPath().toString());
+		assertEquals("score" + File.separator + "g2", g2.getGrainPath().toString());
+		assertEquals("score" + File.separator + "g3", g3.getGrainPath().toString());
 
 		Grain sys = s.getGrain("celesta");
 		a = sys.getTable("grains");
@@ -68,8 +65,8 @@ public class ScoreTest {
 		assertArrayEquals(ref, v.getColumns().keySet().toArray(new String[0]));
 
 		String[] expected = {
-				"  select distinct grainid as fieldAlias, ta.tablename as tablename, grains.checksum as checksum, ta.tablename || grains.checksum as f1",
-				"  from celesta.tables as ta",
+				"  select distinct grainid as fieldAlias, ta.tablename as tablename, grains.checksum as checksum",
+				"    , ta.tablename || grains.checksum as f1", "  from celesta.tables as ta",
 				"    INNER join celesta.grains as grains on ta.grainid = grains.id",
 				"  where tablename >= 'aa' AND 5 BETWEEN 0 AND 6 OR '55' > '1'" };
 
@@ -135,8 +132,7 @@ public class ScoreTest {
 		assertTrue(g4.isModified());
 
 		assertEquals("1.00", g4.getVersion().toString());
-		assertEquals("score" + File.separator + "newgrain", g4.getGrainPath()
-				.toString());
+		assertEquals("score" + File.separator + "newgrain", g4.getGrainPath().toString());
 
 		g3.modify();
 		assertTrue(g3.isModified());
@@ -218,8 +214,7 @@ public class ScoreTest {
 	}
 
 	@Test
-	public void modificationTest7() throws CelestaException, ParseException,
-			IOException {
+	public void modificationTest7() throws CelestaException, ParseException, IOException {
 		Score s = new Score("score");
 		Grain g1 = s.getGrain("g1");
 		assertEquals(1, g1.getViews().size());
@@ -231,8 +226,7 @@ public class ScoreTest {
 	}
 
 	@Test
-	public void modificationTest8() throws CelestaException, ParseException,
-			IOException {
+	public void modificationTest8() throws CelestaException, ParseException, IOException {
 		Score s = new Score("score");
 		Grain g1 = s.getGrain("g1");
 		assertEquals(1, g1.getViews().size());
@@ -240,16 +234,14 @@ public class ScoreTest {
 		boolean itWas = false;
 		View nv;
 		try {
-			nv = new View(g1, "testit",
-					"select postalcode, city from adresses where flat = 5");
+			nv = new View(g1, "testit", "select postalcode, city from adresses where flat = 5");
 		} catch (ParseException e) {
 			itWas = true;
 		}
 		assertTrue(itWas);
 		assertEquals(1, g1.getViews().size());
 		assertTrue(g1.isModified());
-		nv = new View(g1, "testit",
-				"select postalcode, city from adresses where flat = '5'");
+		nv = new View(g1, "testit", "select postalcode, city from adresses where flat = '5'");
 		assertEquals(2, nv.getColumns().size());
 		assertEquals(2, g1.getViews().size());
 		assertTrue(g1.isModified());
@@ -293,9 +285,8 @@ public class ScoreTest {
 		String[] actual = sw.toString().split("\r?\n");
 		// for (String l : actual)
 		// System.out.println(l);
-		BufferedReader r = new BufferedReader(new InputStreamReader(
-				ScoreTest.class.getResourceAsStream("expectedsave.sql"),
-				"utf-8"));
+		BufferedReader r = new BufferedReader(
+				new InputStreamReader(ScoreTest.class.getResourceAsStream("expectedsave.sql"), "utf-8"));
 		for (String l : actual)
 			assertEquals(r.readLine(), l);
 
@@ -332,9 +323,8 @@ public class ScoreTest {
 		// System.out.println(sw);
 
 		String[] actual = sw.toString().split("\r?\n");
-		BufferedReader r = new BufferedReader(new InputStreamReader(
-				ScoreTest.class.getResourceAsStream("expectedsave2.sql"),
-				"utf-8"));
+		BufferedReader r = new BufferedReader(
+				new InputStreamReader(ScoreTest.class.getResourceAsStream("expectedsave2.sql"), "utf-8"));
 		for (String l : actual)
 			assertEquals(r.readLine(), l);
 
@@ -361,16 +351,24 @@ public class ScoreTest {
 		String exp;
 		assertFalse(v.isDistinct());
 		assertEquals(3, v.getColumns().size());
-		exp = String
-				.format("  select id as id, descr as descr, descr || 'foo' as descr2%n"
-						+ "  from test as test%n"
-						+ "    INNER join refTo as refTo on attrVarchar = k1 AND attrInt = k2");
+		exp = String.format("  select id as id, descr as descr, descr || 'foo' as descr2%n" + "  from test as test%n"
+				+ "    INNER join refTo as refTo on attrVarchar = k1 AND attrInt = k2");
 		assertEquals(exp, v.getCelestaQueryString());
 		v = g.getView("testview2");
-		exp = String
-				.format("  select id as id, descr as descr%n"
-						+ "  from test as t1%n"
-						+ "    INNER join refTo as t2 on attrVarchar = k1 AND NOT t2.descr IS NULL AND attrInt = k2");
+		exp = String.format("  select id as id, descr as descr%n" + "  from test as t1%n"
+				+ "    INNER join refTo as t2 on attrVarchar = k1 AND NOT t2.descr IS NULL AND attrInt = k2");
 		assertEquals(exp, v.getCelestaQueryString());
+	}
+
+	@Test
+	public void vewTest2() throws CelestaException, ParseException {
+		Score s = new Score("testScore");
+		Grain g = s.getGrain("gtest");
+		View v = g.getView("v3");
+		String[] expected = { "  select 1 as a, 1 as b, 1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j, ",
+				"    1 as k", "  from test as test" };
+
+		assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
+
 	}
 }

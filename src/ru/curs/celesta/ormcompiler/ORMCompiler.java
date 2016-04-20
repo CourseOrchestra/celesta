@@ -40,7 +40,7 @@ public final class ORMCompiler {
 	 * Версия компилятора. Данную константу следует инкрементировать, когда
 	 * необходимо инициировать автоматическое пересоздание orm-скриптов.
 	 */
-	private static final int COMPILERVER = 4;
+	private static final int COMPILERVER = 7;
 
 	private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
 	private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -69,11 +69,8 @@ public final class ORMCompiler {
 			"        calendar = GregorianCalendar()",
 			"        calendar.set(d.year, d.month - 1, d.day, d.hour, d.minute, d.second)",
 			"        ts = Timestamp(calendar.getTimeInMillis())",
-			"        ts.setNanos(d.microsecond * 1000)", 
-			"        return ts",
-			"    else:",
-			"        return d",
-			""
+			"        ts.setNanos(d.microsecond * 1000)", "        return ts",
+			"    else:", "        return d", ""
 
 	};
 
@@ -192,10 +189,14 @@ public final class ORMCompiler {
 		compileTableName(v, w);
 		// Разбор строки по переменным
 		compileParseResult(w, columns);
+		// Динамическая установка значения поля
+		compileSetFieldValue(w);
 		// Очистка буфера
 		compileClearBuffer(w, columns);
 		// Текущие значения всех полей
 		compileCurrentValues(w, columns);
+		// Клонирование
+		compileCopying(w, v.getColumns().keySet(), className);
 		// Итерация в Python-стиле
 		compileIterate(w);
 		w.newLine();
@@ -246,10 +247,14 @@ public final class ORMCompiler {
 		compileTableName(t, w);
 		// Разбор строки по переменным
 		compileParseResult(w, columns);
+		// Динамическая установка значения поля
+		compileSetFieldValue(w);
 		// Очистка буфера
 		compileClearBuffer(w, columns);
 		// Текущие значения всех полей
 		compileCurrentValues(w, columns);
+		// Клонирование
+		compileCopying(w, t.getColumns().keySet(), className);
 		// Итерация в Python-стиле
 		compileIterate(w);
 		w.newLine();
@@ -296,7 +301,7 @@ public final class ORMCompiler {
 		// Триггеры
 		compileTriggers(w, className);
 		// Клонирование
-		compileCopying(w, columns, className);
+		compileCopying(w, t.getColumns().keySet(), className);
 		if (t.isVersioned()) {
 			w.append("        self.recversion = c.recversion");
 			w.newLine();
@@ -374,10 +379,10 @@ public final class ORMCompiler {
 	}
 
 	private static void compileCopying(BufferedWriter w,
-			Collection<Column> columns, String className) throws IOException {
-		w.write("    def _getBufferCopy(self):");
+			Collection<String> columns, String className) throws IOException {
+		w.write("    def _getBufferCopy(self, context):");
 		w.newLine();
-		w.write(String.format("        result = %s(self.callContext())",
+		w.write(String.format("        result = %s(context)",
 				className));
 		w.newLine();
 		w.write("        result.copyFieldsFrom(self)");
@@ -387,9 +392,8 @@ public final class ORMCompiler {
 
 		w.write("    def copyFieldsFrom(self, c):");
 		w.newLine();
-		for (Column c : columns) {
-			w.write(String.format("        self.%s = c.%s", c.getName(),
-					c.getName()));
+		for (String c : columns) {
+			w.write(String.format("        self.%s = c.%s", c, c));
 			w.newLine();
 		}
 	}

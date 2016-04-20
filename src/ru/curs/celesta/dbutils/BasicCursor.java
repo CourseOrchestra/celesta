@@ -39,8 +39,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -62,20 +64,15 @@ import ru.curs.celesta.score.ParseException;
  */
 public abstract class BasicCursor {
 
-	static final String SYSTEMUSERID = String.format("SYS%08X",
-			(new Random()).nextInt());
-	static final SessionContext SYSTEMSESSION = new SessionContext(
-			SYSTEMUSERID, "CELESTA");
+	static final String SYSTEMUSERID = String.format("SYS%08X", (new Random()).nextInt());
+	static final SessionContext SYSTEMSESSION = new SessionContext(SYSTEMUSERID, "CELESTA");
 
 	private static final String DATABASE_CLOSING_ERROR = "Database error when closing recordset for table '%s': %s";
 	private static final String CURSOR_IS_CLOSED = "Cursor is closed.";
 
 	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
-	private static final Pattern COLUMN_NAME = Pattern
-			.compile("([a-zA-Z_][a-zA-Z0-9_]*)"
-					+ "( +([Aa]|[Dd][Ee])[Ss][Cc])?");
-	private static final Pattern QUOTED_COLUMN_NAME = Pattern
-			.compile("(\"[a-zA-Z_][a-zA-Z0-9_]*\")( desc)?");
+	private static final Pattern COLUMN_NAME = Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)( +([Aa]|[Dd][Ee])[Ss][Cc])?");
+
 	private static final Pattern NAVIGATION = Pattern.compile("[+-<>=]+");
 	private final DBAdaptor db;
 	private final Connection conn;
@@ -92,7 +89,9 @@ public abstract class BasicCursor {
 
 	// Поля фильтров и сортировок
 	private final Map<String, AbstractFilter> filters = new HashMap<>();
-	private String orderBy = null;
+	private String[] orderByNames;
+	private boolean[] descOrders;
+
 	private long offset = 0;
 	private long rowCount = 0;
 	private Expr complexFilter;
@@ -103,20 +102,17 @@ public abstract class BasicCursor {
 
 	public BasicCursor(CallContext context) throws CelestaException {
 		if (context == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: context should not be null.",
+			throw new CelestaException("Invalid context passed to %s constructor: context should not be null.",
 					this.getClass().getName());
 		if (context.getConn() == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: connection is null.",
+			throw new CelestaException("Invalid context passed to %s constructor: connection is null.",
 					this.getClass().getName());
 		if (context.getUserId() == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: user id is null.",
+			throw new CelestaException("Invalid context passed to %s constructor: user id is null.",
 					this.getClass().getName());
+		context.incCursorCount();
 
 		this.context = context;
-
 		previousCursor = context.getLastCursor();
 		if (previousCursor != null)
 			previousCursor.nextCursor = this;
@@ -125,8 +121,7 @@ public abstract class BasicCursor {
 		conn = context.getConn();
 		try {
 			if (conn.isClosed())
-				throw new CelestaException(
-						"Trying to create a cursor on closed connection.");
+				throw new CelestaException("Trying to create a cursor on closed connection.");
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
@@ -150,13 +145,16 @@ public abstract class BasicCursor {
 	 * невозможным к дальнейшему использованию.
 	 */
 	public void close() {
-		if (this == context.getLastCursor())
-			context.setLastCursor(previousCursor);
-		if (previousCursor != null)
-			previousCursor.nextCursor = nextCursor;
-		if (nextCursor != null)
-			nextCursor.previousCursor = previousCursor;
-		close(set, forwards, backwards, here, first, last);
+		if (!closed) {
+			if (this == context.getLastCursor())
+				context.setLastCursor(previousCursor);
+			if (previousCursor != null)
+				previousCursor.nextCursor = nextCursor;
+			if (nextCursor != null)
+				nextCursor.previousCursor = previousCursor;
+			context.decCursorCount();
+			close(set, forwards, backwards, here, first, last);
+		}
 	}
 
 	@Override
@@ -249,8 +247,7 @@ public abstract class BasicCursor {
 		try {
 			stmt.close();
 		} catch (SQLException e) {
-			throw new CelestaException(DATABASE_CLOSING_ERROR, _tableName(),
-					e.getMessage());
+			throw new CelestaException(DATABASE_CLOSING_ERROR, _tableName(), e.getMessage());
 		}
 	}
 
@@ -278,26 +275,45 @@ public abstract class BasicCursor {
 		}
 	}
 
-	String getOrderBy() throws CelestaException {
-		if (orderBy == null)
+	private String getOrderBy(boolean reverse) throws CelestaException {
+		if (orderByNames == null)
 			orderBy();
-		return orderBy;
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < orderByNames.length; i++) {
+			if (i > 0)
+				sb.append(", ");
+			sb.append(orderByNames[i]);
+			if (reverse ^ descOrders[i])
+				sb.append(" desc");
+		}
+		return sb.toString();
+
+	}
+
+	String getOrderBy() throws CelestaException {
+		return getOrderBy(false);
 	}
 
 	String getReversedOrderBy() throws CelestaException {
-		Matcher m = QUOTED_COLUMN_NAME.matcher(getOrderBy());
-		StringBuilder sb = new StringBuilder();
-		while (m.find()) {
-			if (sb.length() > 0)
-				sb.append(", ");
-			sb.append(m.group(1));
-			sb.append(m.group(2) == null ? " desc" : "");
-		}
-		return sb.toString();
+		return getOrderBy(true);
 	}
 
+	String[] orderByColumnNames() throws CelestaException {
+		if (orderByNames == null)
+			orderBy();
+		return orderByNames;
+	}
+
+	boolean[] descOrders() throws CelestaException {
+		if (orderByNames == null)
+			orderBy();
+		return descOrders;
+	}
+	
 	String getNavigationWhereClause(char op) throws CelestaException {
 		boolean invert = false;
+		if (orderByNames == null)
+			orderBy();
 		switch (op) {
 		case '>':
 			invert = false;
@@ -307,11 +323,10 @@ public abstract class BasicCursor {
 			break;
 		case '=':
 			StringBuilder sb = new StringBuilder("(");
-			Matcher m = QUOTED_COLUMN_NAME.matcher(getOrderBy());
-			while (m.find()) {
-				if (sb.length() > 1)
+			for (int i = 0; i < orderByNames.length; i++) {
+				if (i > 0)
 					sb.append(" and ");
-				sb.append(m.group(1));
+				sb.append(orderByNames[i]);
 				sb.append(" = ?");
 			}
 			sb.append(")");
@@ -320,26 +335,23 @@ public abstract class BasicCursor {
 			throw new CelestaException("Invalid navigation operator: %s", op);
 		}
 
-		String[] names = getOrderBy().split(",");
-		char[] ops = new char[names.length];
-		for (int i = 0; i < names.length; i++) {
-			Matcher m = QUOTED_COLUMN_NAME.matcher(names[i]);
-			m.find();
-			names[i] = m.group(1);
-			ops[i] = (invert ^ (m.group(2) != null)) ? '<' : '>';
+		char[] ops = new char[orderByNames.length];
+		for (int i = 0; i < orderByNames.length; i++) {
+			ops[i] = (invert ^ descOrders[i]) ? '<' : '>';
 		}
-		return getNavigationWhereClause(0, names, ops);
+		return getNavigationWhereClause(0, ops);
 	}
 
-	private static String getNavigationWhereClause(int i, String[] names,
-			char[] ops) {
+	private String getNavigationWhereClause(int i, char[] ops) {
 		String result;
-		if (names.length - 1 > i) {
-			result = String.format("((%s %s ?) or ((%s = ?) and %s))",
-					names[i], ops[i], names[i],
-					getNavigationWhereClause(i + 1, names, ops));
+		if (orderByNames.length - 1 > i) {
+			// This is logically equivalent to the 'obvious' formula, but runs
+			// much faster on Postgres (apparently because of conjunction as a
+			// top logical operator)
+			result = String.format("((%s %s= ?) and ((%s %s ?) or %s))", orderByNames[i], ops[i], orderByNames[i],
+					ops[i], getNavigationWhereClause(i + 1, ops));
 		} else {
-			result = String.format("(%s %s ?)", names[i], ops[i]);
+			result = String.format("(%s %s ?)", orderByNames[i], ops[i]);
 		}
 		return result;
 	}
@@ -355,12 +367,10 @@ public abstract class BasicCursor {
 	 */
 	public final boolean tryFindSet() throws CelestaException {
 		if (!canRead())
-			throw new PermissionDeniedException(callContext(), meta(),
-					Action.READ);
+			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 
 		if (set == null)
-			set = db.getRecordSetStatement(conn, meta(), filters,
-					complexFilter, getOrderBy(), offset, rowCount);
+			set = db.getRecordSetStatement(conn, meta(), filters, complexFilter, getOrderBy(), offset, rowCount);
 		boolean result = false;
 		try {
 			if (cursor != null)
@@ -444,11 +454,9 @@ public abstract class BasicCursor {
 		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
 			if (sb.length() > 0)
 				sb.append(", ");
-			sb.append(String.format("%s=%s", e.getKey(), e.getValue()
-					.toString()));
+			sb.append(String.format("%s=%s", e.getKey(), e.getValue().toString()));
 		}
-		throw new CelestaException("There is no %s (%s).", _tableName(),
-				sb.toString());
+		throw new CelestaException("There is no %s (%s).", _tableName(), sb.toString());
 	}
 
 	void initXRec() throws CelestaException {
@@ -541,17 +549,14 @@ public abstract class BasicCursor {
 	 * @param command
 	 *            Команда, состоящая из последовательности символов:
 	 *            <ul>
-	 *            <li>=
-	 *            обновить текущую запись (если она имеется в отфильтрованном
-	 *            наборе)</li>
-	 *            <li>
-	 *            &gt; перейти к следующей записи в отфильтрованном наборе</li>
-	 *            <li>
-	 *            &lt; перейти к предыдущей записи в отфильтрованном наборе</li>
-	 *            <li>
-	 *            - перейти к первой записи в отфильтрованном наборе</li>
-	 *            <li>
-	 *            + перейти к последней записи в отфильтрованном наборе</li>
+	 *            <li>= обновить текущую запись (если она имеется в
+	 *            отфильтрованном наборе)</li>
+	 *            <li>&gt; перейти к следующей записи в отфильтрованном наборе
+	 *            </li>
+	 *            <li>&lt; перейти к предыдущей записи в отфильтрованном наборе
+	 *            </li>
+	 *            <li>- перейти к первой записи в отфильтрованном наборе</li>
+	 *            <li>+ перейти к последней записи в отфильтрованном наборе</li>
 	 *            </ul>
 	 * @return true, если запись найдена и переход совершился, false — в
 	 *         противном случае.
@@ -560,14 +565,12 @@ public abstract class BasicCursor {
 	 */
 	public boolean navigate(String command) throws CelestaException {
 		if (!canRead())
-			throw new PermissionDeniedException(callContext(), meta(),
-					Action.READ);
+			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 
 		Matcher m = NAVIGATION.matcher(command);
 		if (!m.matches())
 			throw new CelestaException(
-					"Invalid navigation command: '%s', should consist of '+', '-', '>', '<' and '=' only!",
-					command);
+					"Invalid navigation command: '%s', should consist of '+', '-', '>', '<' and '=' only!", command);
 		Object[] valsArray = _currentValues();
 
 		Map<String, Object> valsMap = new HashMap<>();
@@ -580,6 +583,7 @@ public abstract class BasicCursor {
 			j = db().fillSetQueryParameters(filters, navigator);
 			fillNavigationParams(navigator, valsMap, j, c);
 			try {
+				// System.out.println(navigator);
 				ResultSet rs = navigator.executeQuery();
 				try {
 					if (rs.next()) {
@@ -591,73 +595,75 @@ public abstract class BasicCursor {
 					rs.close();
 				}
 			} catch (SQLException e) {
-				throw new CelestaException("Error while navigating cursor: %s",
-						e.getMessage());
+				throw new CelestaException("Error while navigating cursor: %s", e.getMessage());
 			}
 		}
 		return false;
 	}
 
-	private void fillNavigationParams(PreparedStatement navigator,
-			Map<String, Object> valuesMap, int k, char c)
+	void fillNavigationParams(PreparedStatement navigator, Map<String, Object> valuesMap, int k, char c)
 			throws CelestaException {
 		if (c == '-' || c == '+')
 			return;
+
 		int j = k;
-		String[] names = getOrderBy().split(",");
-		for (int i = 0; i < names.length; i++) {
-			Matcher m = QUOTED_COLUMN_NAME.matcher(names[i]);
-			m.find();
-			Object value = valuesMap.get(m.group(1));
+
+		if (orderByNames == null)
+			orderBy();
+		for (int i = 0; i < orderByNames.length; i++) {
+			Object value = valuesMap.get(orderByNames[i]);
 			// System.out.printf("%d = %s%n", j, value);
 			DBAdaptor.setParam(navigator, j++, value);
-			if (c != '=' && i < names.length - 1) {
+			if (c != '=' && i < orderByNames.length - 1) {
 				// System.out.printf("%d = %s%n", j, value);
 				DBAdaptor.setParam(navigator, j++, value);
 			}
 		}
 	}
 
+	private static boolean isNotValid(PreparedStatement stmt) throws CelestaException {
+		try {
+			return stmt == null || stmt.isClosed();
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
 	private PreparedStatement chooseNavigator(char c) throws CelestaException {
 		switch (c) {
 		case '<':
-			if (backwards == null)
-				backwards = db().getNavigationStatement(conn, meta(), filters,
-						complexFilter, getReversedOrderBy(),
+			if (isNotValid(backwards))
+				backwards = db().getNavigationStatement(conn, meta(), filters, complexFilter, getReversedOrderBy(),
 						getNavigationWhereClause('<'));
 			return backwards;
 		case '>':
-			if (forwards == null)
-				forwards = db().getNavigationStatement(conn, meta(), filters,
-						complexFilter, getOrderBy(),
+			if (isNotValid(forwards))
+				forwards = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(),
 						getNavigationWhereClause('>'));
 			return forwards;
 		case '=':
-			if (here == null)
-				here = db().getNavigationStatement(conn, meta(), filters,
-						complexFilter, getOrderBy(),
+			if (isNotValid(here))
+				here = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(),
 						getNavigationWhereClause('='));
 			return here;
 		case '-':
-			if (first == null)
-				first = db().getNavigationStatement(conn, meta(), filters,
-						complexFilter, getOrderBy(), "");
+			if (isNotValid(first))
+				first = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(), "");
 			return first;
 		case '+':
-			if (last == null)
-				last = db().getNavigationStatement(conn, meta(), filters,
-						complexFilter, getReversedOrderBy(), "");
+			if (isNotValid(last))
+				last = db().getNavigationStatement(conn, meta(), filters, complexFilter, getReversedOrderBy(), "");
 			return last;
 		default:
 			// THIS WILL NEVER EVER HAPPEN, WE'VE ALREADY CHECKED
 			return null;
 		}
+
 	}
 
 	final void validateColumName(String name) throws CelestaException {
 		if (!meta().getColumns().containsKey(name))
-			throw new CelestaException("No column %s exists in table %s.",
-					name, _tableName());
+			throw new CelestaException("No column %s exists in table %s.", name, _tableName());
 	}
 
 	/**
@@ -686,8 +692,7 @@ public abstract class BasicCursor {
 	 * @throws CelestaException
 	 *             Неверное имя поля
 	 */
-	public final void setRange(String name, Object value)
-			throws CelestaException {
+	public final void setRange(String name, Object value) throws CelestaException {
 		validateColumName(name);
 		AbstractFilter oldFilter = filters.put(name, new SingleValue(value));
 		// Если один SingleValue меняется на другой SingleValue -- то
@@ -712,11 +717,9 @@ public abstract class BasicCursor {
 	 * @throws CelestaException
 	 *             Неверное имя поля, SQL-ошибка.
 	 */
-	public final void setRange(String name, Object valueFrom, Object valueTo)
-			throws CelestaException {
+	public final void setRange(String name, Object valueFrom, Object valueTo) throws CelestaException {
 		validateColumName(name);
-		AbstractFilter oldFilter = filters.put(name, new Range(valueFrom,
-				valueTo));
+		AbstractFilter oldFilter = filters.put(name, new Range(valueFrom, valueTo));
 		// Если один Range меняется на другой Range -- то
 		// необязательно закрывать набор, можно использовать старый.
 		if (oldFilter instanceof Range) {
@@ -737,14 +740,11 @@ public abstract class BasicCursor {
 	 * @throws CelestaException
 	 *             Неверное имя поля и т. п.
 	 */
-	public final void setFilter(String name, String value)
-			throws CelestaException {
+	public final void setFilter(String name, String value) throws CelestaException {
 		validateColumName(name);
 		if (value == null || value.isEmpty())
-			throw new CelestaException(
-					"Filter for column %s is null or empty. "
-							+ "Use setrange(fieldname) to remove any filters from the column.",
-					name);
+			throw new CelestaException("Filter for column %s is null or empty. "
+					+ "Use setrange(fieldname) to remove any filters from the column.", name);
 		AbstractFilter oldFilter = filters.put(name, new Filter(value));
 		// Если заменили фильтр на тот же самый -- ничего делать не надо.
 		if (!(oldFilter instanceof Filter && value.equals(oldFilter.toString())))
@@ -759,8 +759,7 @@ public abstract class BasicCursor {
 	 * @throws CelestaException
 	 *             Ошибка разбора выражения.
 	 */
-	public final void setComplexFilter(String condition)
-			throws CelestaException {
+	public final void setComplexFilter(String condition) throws CelestaException {
 		Expr buf = CelestaParser.parseComplexFilter(condition);
 		try {
 			buf.resolveFieldRefs(meta());
@@ -794,11 +793,9 @@ public abstract class BasicCursor {
 	 */
 	public final void limit(long offset, long rowCount) throws CelestaException {
 		if (offset < 0)
-			throw new CelestaException(
-					"Negative offset (%d) in limit(...) call", offset);
+			throw new CelestaException("Negative offset (%d) in limit(...) call", offset);
 		if (rowCount < 0)
-			throw new CelestaException(
-					"Negative rowCount (%d) in limit(...) call", rowCount);
+			throw new CelestaException("Negative rowCount (%d) in limit(...) call", rowCount);
 		this.offset = offset;
 		this.rowCount = rowCount;
 		closeSet();
@@ -813,7 +810,8 @@ public abstract class BasicCursor {
 	public final void reset() throws CelestaException {
 		filters.clear();
 		complexFilter = null;
-		orderBy = null;
+		orderByNames = null;
+		descOrders = null;
 		offset = 0;
 		rowCount = 0;
 		closeSet();
@@ -828,42 +826,38 @@ public abstract class BasicCursor {
 	 *             неверное имя поля или SQL-ошибка.
 	 */
 	public final void orderBy(String... names) throws CelestaException {
-		StringBuilder orderByClause = new StringBuilder();
-		boolean needComma = false;
+
+		ArrayList<String> l = new ArrayList<>(8);
+		ArrayList<Boolean> ol = new ArrayList<>(8);
 		Set<String> colNames = new HashSet<>();
 		for (String name : names) {
 			Matcher m = COLUMN_NAME.matcher(name);
 			if (!m.matches())
-				throw new CelestaException(
-						"orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
+				throw new CelestaException("orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
 						name);
 			String colName = m.group(1);
 			validateColumName(colName);
 			if (!colNames.add(colName))
-				throw new CelestaException(
-						"Column '%s' is used more than once in orderby() call",
-						colName);
+				throw new CelestaException("Column '%s' is used more than once in orderby() call", colName);
 
-			String order;
-			if (m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim())) {
-				order = "";
-			} else {
-				order = " desc";
-			}
-			if (needComma)
-				orderByClause.append(", ");
-			orderByClause.append(String.format("\"%s\"%s", colName, order));
-			needComma = true;
+			boolean order = !(m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim()));
 
+			l.add(String.format("\"%s\"", colName));
+			ol.add(order);
 		}
-		appendPK(orderByClause, needComma, colNames);
 
-		orderBy = orderByClause.toString();
+		appendPK(l, ol, colNames);
+
+		orderByNames = new String[l.size()];
+		descOrders = new boolean[l.size()];
+		for (int i = 0; i < orderByNames.length; i++) {
+			orderByNames[i] = l.get(i);
+			descOrders[i] = ol.get(i);
+		}
 		closeSet();
 	}
 
-	abstract void appendPK(StringBuilder orderByClause, boolean needComma,
-			Set<String> colNames) throws CelestaException;
+	abstract void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException;
 
 	/**
 	 * Сброс фильтров, сортировки и полная очистка буфера.
@@ -875,7 +869,8 @@ public abstract class BasicCursor {
 		_clearBuffer(true);
 		filters.clear();
 		complexFilter = null;
-		orderBy = null;
+		orderByNames = null;
+		descOrders = null;
 		offset = 0;
 		rowCount = 0;
 		closeSet();
@@ -888,9 +883,12 @@ public abstract class BasicCursor {
 	 *             в случае ошибки доступа или ошибки БД
 	 */
 	public final int count() throws CelestaException {
+		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters, complexFilter);
+		return count(stmt);
+	}
+
+	private int count(PreparedStatement stmt) throws CelestaException {
 		int result;
-		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters,
-				complexFilter);
 		try {
 			ResultSet rs = stmt.executeQuery();
 			rs.next();
@@ -898,13 +896,43 @@ public abstract class BasicCursor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		} finally {
-			try {
-				stmt.close();
-			} catch (SQLException e) {
-				stmt = null;
-			}
+			closeStmt(stmt);
 		}
 		return result;
+	}
+
+	/**
+	 * A hidden method that returns total count of rows that precede the current
+	 * one in the set. This method is intended for internal use by GridDriver.
+	 * Since rows counting is a resource-consuming operation, this method should
+	 * not be public.
+	 */
+	final int position() throws CelestaException {
+		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters, complexFilter,
+				getNavigationWhereClause('<'));
+
+		// getting navigation clause params
+		Map<String, Object> valsMap = new HashMap<>();
+		int j = 0;
+		Object[] vals = _currentValues();
+		for (String colName : meta().getColumns().keySet())
+			valsMap.put("\"" + colName + "\"", vals[j++]);
+
+		j = db.fillSetQueryParameters(filters, stmt);
+		// System.out.println(stmt.toString());
+
+		if (orderByNames == null)
+			orderBy();
+
+		for (int i = 0; i < orderByNames.length; i++) {
+			Object param = valsMap.get(orderByNames[i]);
+			DBAdaptor.setParam(stmt, j++, param);
+			if (i < orderByNames.length - 1) {
+				DBAdaptor.setParam(stmt, j++, param);
+			}
+		}
+		// System.out.println(stmt);
+		return count(stmt);
 	}
 
 	/**
@@ -917,10 +945,8 @@ public abstract class BasicCursor {
 	 *             неверный тип курсора
 	 */
 	public final void copyFiltersFrom(BasicCursor c) throws CelestaException {
-		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(
-				_tableName())))
-			throw new CelestaException(
-					"Cannot assign filters from cursor for %s.%s to cursor for %s.%s.",
+		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(_tableName())))
+			throw new CelestaException("Cannot assign filters from cursor for %s.%s to cursor for %s.%s.",
 					c._grainName(), c._tableName(), _grainName(), _tableName());
 		filters.clear();
 		filters.putAll(c.filters);
@@ -939,14 +965,45 @@ public abstract class BasicCursor {
 	 *             неверный тип курсора
 	 */
 	public final void copyOrderFrom(BasicCursor c) throws CelestaException {
-		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(
-				_tableName())))
-			throw new CelestaException(
-					"Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
+		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(_tableName())))
+			throw new CelestaException("Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
 					c._grainName(), c._tableName(), _grainName(), _tableName());
-		orderBy = c.orderBy;
+		orderByNames = c.orderByNames;
+		descOrders = c.descOrders;
 		closeSet();
 	}
+
+	/**
+	 * Устанавливает значение поля по его имени. Необходимо для косвенного
+	 * заполнения данными курсора из Java (в Python, естественно, для этой цели
+	 * есть процедура setattr(...)).
+	 * 
+	 * @param name
+	 *            Имя поля.
+	 * @param value
+	 *            Значение поля.
+	 * @throws CelestaException
+	 *             Если поле не найдено по имени.
+	 */
+	public final void setValue(String name, Object value) throws CelestaException {
+		validateColumName(name);
+		_setFieldValue(name, value);
+	}
+
+	/**
+	 * Является ли курсор закрытым.
+	 */
+	public boolean isClosed() {
+		return closed;
+	}
+
+	/**
+	 * Копировать значения полей из курсора того же типа.
+	 * 
+	 * @param from
+	 *            курсор, из которого следует скопировать значения полей
+	 */
+	public abstract void copyFieldsFrom(BasicCursor from);
 
 	// CHECKSTYLE:OFF
 	/*
@@ -954,6 +1011,10 @@ public abstract class BasicCursor {
 	 * имена protected-методов начинаются с underscore. Использование методов
 	 * без underscore приводит к конфликтам с именами атрибутов.
 	 */
+	public abstract BasicCursor _getBufferCopy(CallContext context) throws CelestaException;
+
+	public abstract Object[] _currentValues();
+
 	protected abstract void _clearBuffer(boolean withKeys);
 
 	protected abstract String _grainName();
@@ -962,7 +1023,8 @@ public abstract class BasicCursor {
 
 	protected abstract void _parseResult(ResultSet rs) throws SQLException;
 
-	protected abstract Object[] _currentValues();
+	protected abstract void _setFieldValue(String name, Object value);
+
 	// CHECKSTYLE:ON
 
 }

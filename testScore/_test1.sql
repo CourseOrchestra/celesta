@@ -48,11 +48,11 @@ CREATE TABLE ttt2(
 CREATE TABLE ttt3(
   id INT NOT NULL,
   CONSTRAINT pk_ttt3 PRIMARY KEY (id)
-) WITH NO VERSION CHECK;
+) WITH NO VERSION CHECK NO AUTOUPDATE;
 
 -- *** FOREIGN KEYS ***
 -- *** INDICES ***
 /**описание индекса idx1*/
-CREATE INDEX idx1 ON table1(f, e, c3);
-CREATE INDEX table2_idx2 ON table2(column3, column2);
+CREATE INDEX idx1 ON table1(aaa, column2);
+CREATE INDEX table2_idx2 ON table2(column3, column1);
 -- *** VIEWS ***

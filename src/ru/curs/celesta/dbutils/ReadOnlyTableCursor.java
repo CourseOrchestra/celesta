@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.List;
 import java.util.Set;
 
 import ru.curs.celesta.CallContext;
@@ -22,8 +23,7 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
 	public final Table meta() throws CelestaException {
 		if (meta == null)
 			try {
-				meta = Celesta.getInstance().getScore().getGrain(_grainName())
-						.getTable(_tableName());
+				meta = Celesta.getInstance().getScore().getGrain(_grainName()).getTable(_tableName());
 			} catch (ParseException e) {
 				throw new CelestaException(e.getMessage());
 			}
@@ -31,24 +31,19 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
 	}
 
 	@Override
-	void appendPK(StringBuilder orderByClause, boolean needComma,
-			Set<String> colNames) throws CelestaException {
-		boolean nc = needComma;
+	final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException {
+
 		if (meta().getPrimaryKey().isEmpty() && colNames.isEmpty()) {
 			// Если никакой сортировки нет вовсе, сортируем по первому полю.
-			if (needComma)
-				orderByClause.append(", ");
-			orderByClause.append(String.format("\"%s\"", meta().getColumns()
-					.keySet().iterator().next()));
+			l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));
+			ol.add(Boolean.FALSE);
 		} else {
 			// Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
 			// естественном порядке
 			for (String colName : meta().getPrimaryKey().keySet())
 				if (!colNames.contains(colName)) {
-					if (nc)
-						orderByClause.append(", ");
-					orderByClause.append(String.format("\"%s\"", colName));
-					nc = true;
+					l.add(String.format("\"%s\"", colName));
+					ol.add(Boolean.FALSE);
 				}
 		}
 	}

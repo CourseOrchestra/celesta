@@ -34,7 +34,7 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.08';
+create grain celesta version '1.09';
 
 /**Active grains list.*/
 create table grains(
@@ -166,7 +166,7 @@ create table sequences(
 
 create table sessionlog (
   entryno int identity not null primary key,
-  sessionid varchar(250),
+  sessionid varchar(250) not null default 'n/a',
   userid varchar(250) not null,
   logintime datetime not null default getdate(),
   logoutime datetime,

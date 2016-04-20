@@ -9,10 +9,8 @@ public abstract class Expr {
 
 	final void assertType(ViewColumnType t) throws ParseException {
 		if (getType() != t)
-			throw new ParseException(
-					String.format(
-							"Expression '%s' is expected to be of %s type, but it is %s",
-							getCSQL(), t.toString(), getType().toString()));
+			throw new ParseException(String.format("Expression '%s' is expected to be of %s type, but it is %s",
+					getCSQL(), t.toString(), getType().toString()));
 	}
 
 	/**
@@ -154,8 +152,7 @@ final class Relop extends Expr {
 	 */
 	public static final int LIKE = 6;
 
-	static final String[] OPS = { " > ", " < ", " >= ", " <= ", " <> ", " = ",
-			" LIKE " };
+	static final String[] OPS = { " > ", " < ", " >= ", " <= ", " <> ", " = ", " LIKE " };
 
 	private final Expr left;
 	private final Expr right;
@@ -302,10 +299,8 @@ final class IsNull extends Expr {
 
 	IsNull(Expr expr) throws ParseException {
 		if (expr.getType() == ViewColumnType.LOGIC)
-			throw new ParseException(
-					String.format(
-							"Expression '%s' is logical condition and cannot be an argument of IS NULL operator.",
-							getCSQL()));
+			throw new ParseException(String.format(
+					"Expression '%s' is logical condition and cannot be an argument of IS NULL operator.", getCSQL()));
 		this.expr = expr;
 	}
 
@@ -335,10 +330,6 @@ final class NotExpr extends Expr {
 	private final Expr expr;
 
 	NotExpr(Expr expr) throws ParseException {
-		if (expr.getType() != ViewColumnType.LOGIC)
-			throw new ParseException(String.format(
-					"Expression '%s' is expected to be logical condition.",
-					getCSQL()));
 		this.expr = expr;
 	}
 
@@ -380,9 +371,8 @@ final class BinaryLogicalOp extends Expr {
 		// все операнды должны быть логическими
 		for (Expr e : operands)
 			if (e.getType() != ViewColumnType.LOGIC)
-				throw new ParseException(String.format(
-						"Expression '%s' is expected to be logical condition.",
-						e.getCSQL()));
+				throw new ParseException(
+						String.format("Expression '%s' is expected to be logical condition.", e.getCSQL()));
 		this.operands = operands;
 		this.operator = operator;
 	}
@@ -454,8 +444,7 @@ final class BinaryTermOp extends Expr {
 
 	@Override
 	public ViewColumnType getType() {
-		return operator == CONCAT ? ViewColumnType.TEXT
-				: ViewColumnType.NUMERIC;
+		return operator == CONCAT ? ViewColumnType.TEXT : ViewColumnType.NUMERIC;
 	}
 
 	@Override
@@ -557,8 +546,7 @@ final class FieldRef extends Expr {
 	private final String columnName;
 	private Column column = null;
 
-	public FieldRef(String tableNameOrAlias, String columnName)
-			throws ParseException {
+	public FieldRef(String tableNameOrAlias, String columnName) throws ParseException {
 		if (columnName == null)
 			throw new IllegalArgumentException();
 		this.tableNameOrAlias = tableNameOrAlias;
@@ -583,8 +571,7 @@ final class FieldRef extends Expr {
 	@Override
 	public ViewColumnType getType() {
 		if (column != null) {
-			if (column instanceof IntegerColumn
-					|| column instanceof FloatingColumn)
+			if (column instanceof IntegerColumn || column instanceof FloatingColumn)
 				return ViewColumnType.NUMERIC;
 			if (column instanceof StringColumn)
 				return ViewColumnType.TEXT;

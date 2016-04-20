@@ -73,6 +73,7 @@ def hello(context, arg):
     for i in range(1, 20):
         aa.idaa = i 
         aa.idc = i * i
+        aa.textvalue = 'abc'
         if not aa.tryInsert():
             aa.update()
 
@@ -178,6 +179,19 @@ def hello(context, arg):
         print c.doublefield
     c.setValue('doublefield', 3.14)
     print c.doublefield
+    c.orderBy('aaa', 'bbb')
+    c.setRange('doublefield')
+    c.navigate('=')
+    print c.doublefield
+    print c.idc
+    c.navigate('<')
+    print c.idc
+    
+    print 'USER \t| PID'
+    print '----------------'
+    for cc in context.celesta.activeContexts:
+        print '%s \t| %s' % (cc.userId, cc.getDBPid())
+    
     print 'Python procedure finished.'
     
 def testTrigger(rec):

@@ -132,12 +132,17 @@ public final class StringColumn extends Column {
 			this.length = 0;
 		} else {
 			max = false;
-			int newLength = Integer.parseInt(length);
+			int newLength;
+			try {
+				newLength = Integer.parseInt(length);
+			} catch (NumberFormatException e) {
+				throw new ParseException(
+						String.format("Invalid string column length '%s' for column '%s' of table '%s'", length,
+								getName(), getParentTable().getName()));
+			}
 			if (newLength <= 0)
 				throw new ParseException(
-						String.format(
-								"String column length for column '%s' must be greater than zero.",
-								getName()));
+						String.format("String column length for column '%s' must be greater than zero.", getName()));
 			getParentTable().getGrain().modify();
 			this.length = newLength;
 		}

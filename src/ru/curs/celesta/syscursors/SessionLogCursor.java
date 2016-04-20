@@ -6,6 +6,7 @@ import java.util.Date;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 
 /**
@@ -26,7 +27,7 @@ public class SessionLogCursor extends SysCursor {
 	}
 
 	@Override
-	public void copyFieldsFrom(Cursor c) {
+	public void copyFieldsFrom(BasicCursor c) {
 		SessionLogCursor from = (SessionLogCursor) c;
 		entryno = from.entryno;
 		sessionid = from.sessionid;
@@ -39,9 +40,9 @@ public class SessionLogCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Cursor _getBufferCopy() throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
 		// CHECKSTYLE:ON
-		SessionLogCursor result = new SessionLogCursor(callContext());
+		SessionLogCursor result = new SessionLogCursor(context);
 		result.copyFieldsFrom(this);
 		return result;
 	}
@@ -90,7 +91,7 @@ public class SessionLogCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	protected Object[] _currentValues() {
+	public Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { entryno, sessionid, userid, logintime, logoutime,
 				timeout, failedlogin };

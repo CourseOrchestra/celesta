@@ -17,6 +17,8 @@ import org.w3c.dom.*;
  * 
  */
 public class JSONToXMLParser {
+	private static final String UNSUCCESSFUL =
+		"Не удалось добавить элемент \"%s\" в DOM-модель xml%n";
 	private DocumentBuilder builder;
 	private Transformer t;
 	private final JSONTokener jt;
@@ -28,14 +30,6 @@ public class JSONToXMLParser {
 	private boolean bCenter = false;
 
 	public JSONToXMLParser(String json) {
-		// String json1 = json;
-		// if (json.contains("u\"")) {
-		// json1 = json.replaceAll("u\"", "\"");
-		// }
-		// String json2 = json1;
-		// if (json1.contains("u \'")) {
-		// json2 = json1.replaceAll("u \'", "\'");
-		// }
 		String newJson = json;
 
 		if (newJson.contains("&lt;")) {
@@ -106,6 +100,15 @@ public class JSONToXMLParser {
 			outString = outString.replaceFirst("xmlns2", "xmlns");
 		}
 
+		while (outString.contains("{\"myTagForResolvingProblem\"=\"2\"}")) {
+			int ind = outString.indexOf("{\"myTagForResolvingProblem\"=\"2\"}");
+			String str1 = outString.substring(0, ind + 1).trim();
+			String str2 =
+				outString.substring(ind + "{\"myTagForResolvingProblem\"=\"2\"}".length() - 1,
+						outString.length()).trim();
+			outString = str1 + str2;
+		}
+
 		while (outString.contains("myTagForResolvingProblem")) {
 			String str = "</myTagForResolvingProblem>";
 			int ind = outString.indexOf("<myTagForResolvingProblem>");
@@ -166,8 +169,7 @@ public class JSONToXMLParser {
 						elemCell = doc.createElement(arCell[0]);
 						root.appendChild(elemCell);
 					} catch (Exception e) {
-						System.out.println("Не удалось добавить элемент \"" + arCell[0]
-								+ "\" в DOM-модель xml");
+						System.out.printf(UNSUCCESSFUL, arCell[0]);
 					}
 					// elemCell.setAttribute("sorted", "True");
 					Object valueCell = jObjCell.get(arCell[0]);
@@ -200,10 +202,9 @@ public class JSONToXMLParser {
 			Element childElem = null;
 			try {
 				childElem = doc.createElement(childKey);
-			root.appendChild(childElem);
+				root.appendChild(childElem);
 			} catch (Exception e) {
-				System.out
-						.println("Не удалось добавить элемент \"" + childKey + "\" в DOM-модель xml");
+				System.out.printf(UNSUCCESSFUL, childKey);
 			}
 			cell = jsonArray.get(j);
 
@@ -248,9 +249,9 @@ public class JSONToXMLParser {
 			Element root = null;
 			try {
 				root = doc1.createElement(ar[0]);
-			doc1.appendChild(root);
+				doc1.appendChild(root);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент \"" + ar[0] + "\" в DOM-модель xml");
+				System.out.printf(UNSUCCESSFUL, ar[0]);
 			}
 			cell = (JSONObject) jsonArray.get(j);
 
@@ -277,9 +278,9 @@ public class JSONToXMLParser {
 		Element root = null;
 		try {
 			root = doc.createElement(ar[0]);
-		doc.appendChild(root);
+			doc.appendChild(root);
 		} catch (Exception e) {
-			System.out.println("Не удалось добавить элемент \"" + ar[0] + "\" в DOM-модель xml");
+			System.out.printf(UNSUCCESSFUL, ar[0]);
 		}
 		Object value = jsonObj.get(ar[0]);
 
@@ -314,6 +315,8 @@ public class JSONToXMLParser {
 	}
 
 	private void settingAttribute(final String key, final Element root, final Object value) {
+		Object twer = null;
+
 		if (value.getClass() == Boolean.class) {
 			String change = value.toString();
 			if (change.startsWith("t")) {
@@ -323,8 +326,9 @@ public class JSONToXMLParser {
 			}
 
 			root.setAttribute(key, change);
-		} else if ("None".equalsIgnoreCase(value.toString())
-				|| "null".equalsIgnoreCase(value.toString())) {
+		} else if (value.equals(twer)) {
+			// else if ("None".equalsIgnoreCase(value.toString())
+			// || "null".equalsIgnoreCase(value.toString())) {
 			root.setAttribute(key, "");
 		} else if ("xmlns".equals(key)) {
 			String key1 = key;
@@ -362,7 +366,7 @@ public class JSONToXMLParser {
 				elem = doc.createElement(key);
 				root.appendChild(elem);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент \"" + key + "\" в DOM-модель xml");
+				System.out.printf(UNSUCCESSFUL, key);
 			}
 			Text text = doc.createTextNode("");
 			elem.appendChild(text);
@@ -376,7 +380,7 @@ public class JSONToXMLParser {
 				elem = doc.createElement(key);
 				root.appendChild(elem);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент \"" + key + "\" в DOM-модель xml");
+				System.out.printf(UNSUCCESSFUL, key);
 			}
 			Text text = settingTextNode(doc, value);
 			if (text != null) {
@@ -390,7 +394,7 @@ public class JSONToXMLParser {
 				elem = doc.createElement(key);
 				root.appendChild(elem);
 			} catch (Exception e) {
-				System.out.println("Не удалось добавить элемент \"" + key + "\" в DOM-модель xml");
+				System.out.printf(UNSUCCESSFUL, key);
 			}
 			buildDoc(doc, elem, (JSONObject) value);
 		}

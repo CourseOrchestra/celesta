@@ -419,20 +419,23 @@ final class MySQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	String getCreateIndexSQL(Index index) {
+	String[] getCreateIndexSQL(Index index) {
 		String fieldList = getFieldList(index.getColumns().keySet());
 		String sql = String.format("CREATE INDEX \"%s\" ON " + tableTemplate()
 				+ " (%s)", index.getName(), index.getTable().getGrain()
 				.getName(), index.getTable().getName(), fieldList);
-		return sql;
+		String[] result = {sql};
+		return result;
+
 	}
 
 	@Override
-	String getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
+	String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
 		String sql = String.format("DROP INDEX %s ON " + tableTemplate(),
 				dBIndexInfo.getIndexName(), g.getName(),
 				dBIndexInfo.getTableName());
-		return sql;
+		String[] result = {sql};
+		return result;
 	}
 
 	private boolean checkForIncrementTrigger(Connection conn, Column c)
@@ -1078,5 +1081,24 @@ final class MySQLAdaptor extends DBAdaptor {
 				: w);
 		// System.out.println(sql);
 		return prepareStatement(conn, sql);
+	}
+	
+	@Override
+	public int getDBPid(Connection conn) throws CelestaException {
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				ResultSet rs = stmt.executeQuery("select connection_id();");
+				if (rs.next()) {
+					return rs.getInt(1);
+				} else {
+					return 0;
+				}
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
 	}
 }
