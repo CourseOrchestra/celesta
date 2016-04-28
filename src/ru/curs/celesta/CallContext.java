@@ -2,6 +2,7 @@ package ru.curs.celesta;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Date;
 
 import org.python.core.PyDictionary;
 
@@ -26,6 +27,7 @@ public final class CallContext {
 	private final String procName;
 	private final SessionContext sesContext;
 	private final int dbPid;
+	private final Date startTime = new Date();
 
 	private BasicCursor lastCursor;
 	private int cursorCount;
@@ -39,7 +41,8 @@ public final class CallContext {
 		dbPid = db.getDBPid(conn);
 	}
 
-	public CallContext(Connection conn, SessionContext sesContext, Grain curGrain, String procName) throws CelestaException {
+	public CallContext(Connection conn, SessionContext sesContext, Grain curGrain, String procName)
+			throws CelestaException {
 		this.conn = conn;
 		this.sesContext = sesContext;
 		this.grain = curGrain;
@@ -193,8 +196,8 @@ public final class CallContext {
 	 *             Если подключение закрылось.
 	 */
 	public int getDBPid() throws CelestaException {
-		
-		return dbPid; 
+
+		return dbPid;
 	}
 
 	/**
@@ -202,5 +205,12 @@ public final class CallContext {
 	 */
 	public String getProcName() {
 		return procName;
+	}
+
+	/**
+	 * Возвращает время создания контекста вызова.
+	 */
+	public Date getStartTime() {
+		return startTime;
 	}
 }
