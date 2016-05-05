@@ -439,7 +439,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 		String fieldList = getFieldList(index.getColumns().keySet());
 		String sql = String.format("CREATE INDEX %s ON " + tableTemplate() + " (%s)", index.getQuotedName(),
 				index.getTable().getGrain().getName(), index.getTable().getName(), fieldList);
-		String[] result = {sql};
+		String[] result = { sql };
 		return result;
 
 	}
@@ -448,7 +448,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
 		String sql = String.format("DROP INDEX %s ON " + tableTemplate(), dBIndexInfo.getIndexName(), g.getName(),
 				dBIndexInfo.getTableName());
-		String[] result = {sql};
+		String[] result = { sql };
 		return result;
 	}
 
@@ -895,6 +895,10 @@ final class MSSQLAdaptor extends DBAdaptor {
 				return String.format("create view %s as", viewName(view));
 			}
 
+			@Override
+			protected String boolLiteral(boolean val) {
+				return val ? "1" : "0";
+			}
 		};
 	}
 

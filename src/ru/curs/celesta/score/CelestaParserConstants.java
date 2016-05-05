@@ -91,39 +91,43 @@ interface CelestaParserConstants {
   /** RegularExpression Id. */
   int K_WHERE = 44;
   /** RegularExpression Id. */
-  int K_INT = 45;
+  int K_TRUE = 45;
   /** RegularExpression Id. */
-  int K_REAL = 46;
+  int K_FALSE = 46;
   /** RegularExpression Id. */
-  int K_VARCHAR = 47;
+  int K_INT = 47;
   /** RegularExpression Id. */
-  int K_BLOB = 48;
+  int K_REAL = 48;
   /** RegularExpression Id. */
-  int K_DATETIME = 49;
+  int K_VARCHAR = 49;
   /** RegularExpression Id. */
-  int K_BIT = 50;
+  int K_BLOB = 50;
   /** RegularExpression Id. */
-  int S_DOUBLE = 51;
+  int K_DATETIME = 51;
   /** RegularExpression Id. */
-  int S_INTEGER = 52;
+  int K_BIT = 52;
   /** RegularExpression Id. */
-  int DIGIT = 53;
+  int S_DOUBLE = 53;
   /** RegularExpression Id. */
-  int S_BINARY_LITERAL = 54;
+  int S_INTEGER = 54;
   /** RegularExpression Id. */
-  int S_IDENTIFIER = 55;
+  int DIGIT = 55;
   /** RegularExpression Id. */
-  int LETTER = 56;
+  int S_BINARY_LITERAL = 56;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 57;
+  int S_IDENTIFIER = 57;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 58;
+  int LETTER = 58;
   /** RegularExpression Id. */
-  int CELESTA_DOC = 59;
+  int S_CHAR_LITERAL = 59;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 60;
+  int S_QUOTED_IDENTIFIER = 60;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 61;
+  int CELESTA_DOC = 61;
+  /** RegularExpression Id. */
+  int LINE_COMMENT = 62;
+  /** RegularExpression Id. */
+  int MULTI_LINE_COMMENT = 63;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -175,6 +179,8 @@ interface CelestaParserConstants {
     "\"FULL\"",
     "\"JOIN\"",
     "\"WHERE\"",
+    "\"TRUE\"",
+    "\"FALSE\"",
     "\"INT\"",
     "\"REAL\"",
     "\"VARCHAR\"",

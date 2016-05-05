@@ -32,6 +32,10 @@ public abstract class ExprVisitor {
 	void visitNumericLiteral(NumericLiteral expr) throws ParseException {
 	}
 
+	void visitBooleanLiteral(BooleanLiteral expr) throws ParseException {
+
+	}
+
 	void visitParenthesizedExpr(ParenthesizedExpr expr) throws ParseException {
 	}
 
@@ -132,9 +136,10 @@ final class TypeChecker extends ExprVisitor {
 				expr.getLeft().assertType(ViewColumnType.TEXT);
 		} else if (t == ViewColumnType.BIT && expr.getRelop() == Relop.EQ) {
 			if (expr.getRight().getType() != ViewColumnType.BIT) {
-				throw new ParseException(
-						String.format("Wrong expression '%s': BIT field can be compared with another BIT field only.",
-								expr.getCSQL()));
+				throw new ParseException(String.format(
+						"Wrong expression '%s': "
+								+ "BIT field can be compared with another BIT field or TRUE/FALSE constants only.",
+						expr.getCSQL()));
 			}
 		} else {
 			throw new ParseException(String.format("Wrong expression '%s': type %s cannot be used in comparisions.",

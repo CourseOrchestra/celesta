@@ -83,6 +83,8 @@ TOKEN: /* SQL keywords */
 |   <K_FULL:       "FULL">
 |   <K_JOIN:       "JOIN">
 |   <K_WHERE:      "WHERE">
+|   <K_TRUE:       "TRUE">
+|   <K_FALSE:      "FALSE">
 }
 
 TOKEN: /* Datatypes */
@@ -225,7 +227,7 @@ void columnDefinition(Table table):
 		  [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <K_GETDATE> "(" ")")])
     |  (<K_BIT>       {column = new BooleanColumn(table, t.toString()); t = null;}) 
 	       nullable = nullable() 
-	      [<K_DEFAULT> (t = <S_CHAR_LITERAL>| t = <S_INTEGER>)])
+	      [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <S_INTEGER> | t=<K_FALSE>|t=<K_TRUE>)])
 	name = constraint(table.getGrain()) [<K_PRIMARY> <K_KEY> 
 	      {pk = true; table.setPkConstraintName(name);} name = constraint(table.getGrain())]
 	{ 
@@ -455,6 +457,8 @@ Token t = null;}
     t = <S_INTEGER>          {result = new NumericLiteral(t.toString());}
   | t = <S_DOUBLE>           {result = new NumericLiteral(t.toString());}
   | t = <S_CHAR_LITERAL>     {result = new TextLiteral(t.toString());}
+  | t = <K_TRUE>             {result = BooleanLiteral.TRUE;}
+  | t = <K_FALSE>            {result = BooleanLiteral.FALSE;}
   |  "(" result = sqlExpression() ")"  {result = new ParenthesizedExpr(result);}
   | result = fieldReference()         
   ) {return result;}

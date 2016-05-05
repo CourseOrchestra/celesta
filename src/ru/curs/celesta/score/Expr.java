@@ -510,6 +510,35 @@ final class NumericLiteral extends Expr {
 }
 
 /**
+ * Литерал TRUE или FALSE.
+ */
+final class BooleanLiteral extends Expr {
+
+	static final BooleanLiteral FALSE = new BooleanLiteral(false);
+	static final BooleanLiteral TRUE = new BooleanLiteral(true);
+	private final boolean val;
+
+	private BooleanLiteral(boolean val) {
+		this.val = val;
+	}
+
+	@Override
+	public ViewColumnType getType() {
+		return ViewColumnType.BIT;
+	}
+
+	@Override
+	public void accept(ExprVisitor visitor) throws ParseException {
+		visitor.visitBooleanLiteral(this);
+	}
+
+	public boolean getValue() {
+		return val;
+	}
+
+}
+
+/**
  * Текстовый литерал.
  */
 final class TextLiteral extends Expr {

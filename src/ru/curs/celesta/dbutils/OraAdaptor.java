@@ -1177,6 +1177,10 @@ final class OraAdaptor extends DBAdaptor {
 				}
 			}
 
+			@Override
+			protected String boolLiteral(boolean val) {
+				return val ? "1" : "0";
+			}
 		};
 	}
 
