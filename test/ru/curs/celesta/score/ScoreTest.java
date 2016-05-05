@@ -371,4 +371,15 @@ public class ScoreTest {
 		assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
 
 	}
+	
+	@Test
+	public void viewTest3() throws CelestaException, ParseException {
+		Score s = new Score("testScore");
+		Grain g = s.getGrain("gtest");
+		View v = g.getView("v4");
+		String[] expected = { "  select f1 as f1", "  from test as test", "  where f1 = true" };
+		assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
+
+	}
+
 }
