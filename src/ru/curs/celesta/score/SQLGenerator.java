@@ -26,6 +26,7 @@ public class SQLGenerator extends ExprVisitor {
 		return stack.pop();
 	}
 
+	@Override
 	final void visitBetween(Between expr) throws ParseException {
 		String right2 = stack.pop();
 		String right1 = stack.pop();
@@ -33,6 +34,7 @@ public class SQLGenerator extends ExprVisitor {
 		stack.push(String.format("%s BETWEEN %s AND %s", left, right1, right2));
 	}
 
+	@Override
 	final void visitBinaryLogicalOp(BinaryLogicalOp expr) throws ParseException {
 		StringBuilder result = new StringBuilder();
 		String op = BinaryLogicalOp.OPS[expr.getOperator()];
@@ -49,6 +51,7 @@ public class SQLGenerator extends ExprVisitor {
 		stack.push(result.toString());
 	}
 
+	@Override
 	final void visitBinaryTermOp(BinaryTermOp expr) throws ParseException {
 		StringBuilder result = new StringBuilder();
 		LinkedList<String> operands = new LinkedList<>();
@@ -70,6 +73,7 @@ public class SQLGenerator extends ExprVisitor {
 		stack.push(result.toString());
 	}
 
+	@Override
 	final void visitFieldRef(FieldRef expr) throws ParseException {
 		StringBuilder result = new StringBuilder();
 
@@ -89,6 +93,7 @@ public class SQLGenerator extends ExprVisitor {
 		stack.push(result.toString());
 	}
 
+	@Override
 	final void visitIn(In expr) throws ParseException {
 		StringBuilder result = new StringBuilder();
 		LinkedList<String> operands = new LinkedList<>();
@@ -107,32 +112,46 @@ public class SQLGenerator extends ExprVisitor {
 		stack.push(result.toString());
 	}
 
+	@Override
 	final void visitIsNull(IsNull expr) throws ParseException {
 		stack.push(stack.pop() + " IS NULL");
 	}
 
+	@Override
 	final void visitNotExpr(NotExpr expr) throws ParseException {
 		stack.push("NOT " + stack.pop());
 	}
 
+	@Override
 	final void visitNumericLiteral(NumericLiteral expr) throws ParseException {
 		stack.push(expr.getLexValue());
 	}
 
-	final void visitParenthesizedExpr(ParenthesizedExpr expr)
-			throws ParseException {
+	@Override
+	final void visitParenthesizedExpr(ParenthesizedExpr expr) throws ParseException {
 		stack.push("(" + stack.pop() + ")");
 	}
 
+	@Override
 	final void visitRelop(Relop expr) throws ParseException {
 		String right = stack.pop();
 		String left = stack.pop();
 		stack.push(left + Relop.OPS[expr.getRelop()] + right);
 	}
 
+	@Override
 	final void visitTextLiteral(TextLiteral expr) throws ParseException {
 		String val = checkForDate(expr.getLexValue());
 		stack.push(val);
+	}
+
+	@Override
+	final void visitBooleanLiteral(BooleanLiteral expr) throws ParseException {
+		stack.push(boolLiteral(expr.getValue()));
+	}
+
+	protected String boolLiteral(boolean val) {
+		return val ? "true" : "false";
 	}
 
 	protected String checkForDate(String lexValue) {
@@ -166,12 +185,12 @@ public class SQLGenerator extends ExprVisitor {
 	}
 
 	protected String viewName(View v) {
-		return String.format("%s.%s", v.getGrain().getQuotedName(),
-				v.getQuotedName());
+		return String.format("%s.%s", v.getGrain().getQuotedName(), v.getQuotedName());
 	}
 
 	protected String tableName(TableRef t) {
-		return String.format("%s.%s as \"%s\"", t.getTable().getGrain()
-				.getQuotedName(), t.getTable().getQuotedName(), t.getAlias());
+		return String.format("%s.%s as \"%s\"", t.getTable().getGrain().getQuotedName(), t.getTable().getQuotedName(),
+				t.getAlias());
 	}
+
 }

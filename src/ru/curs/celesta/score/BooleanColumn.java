@@ -35,15 +35,13 @@ public final class BooleanColumn extends Column {
 	public static Boolean parseSQLBool(String lexvalue) throws ParseException {
 		if (lexvalue == null) {
 			return null;
-		} else if ("'TRUE'".equalsIgnoreCase(lexvalue) || "1".equals(lexvalue)) {
+		} else if ("'TRUE'".equalsIgnoreCase(lexvalue) || "TRUE".equalsIgnoreCase(lexvalue) || "1".equals(lexvalue)) {
 			return true;
-		} else if ("'FALSE'".equalsIgnoreCase(lexvalue) || "0".equals(lexvalue)) {
+		} else if ("'FALSE'".equalsIgnoreCase(lexvalue) || "FALSE".equalsIgnoreCase(lexvalue) || "0".equals(lexvalue)) {
 			return false;
 		} else {
-			throw new ParseException(
-					"Default boolean value should be either 'TRUE'/1 or 'FALSE'/0.");
+			throw new ParseException("Default boolean value should be either 'TRUE'/1 or 'FALSE'/0.");
 		}
-
 	}
 
 	@Override
@@ -78,7 +76,6 @@ public final class BooleanColumn extends Column {
 
 	@Override
 	public String getCelestaDefault() {
-		return defaultvalue == null ? null : ("'"
-				+ defaultvalue.toString().toUpperCase() + "'");
+		return defaultvalue == null ? null : ("'" + defaultvalue.toString().toUpperCase() + "'");
 	}
 }

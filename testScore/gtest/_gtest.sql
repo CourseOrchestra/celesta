@@ -5,7 +5,7 @@ id int identity not null primary key,
 attrVarchar varchar(2),
 attrInt int default 3,
 f1 bit not null,
-f2 bit default 'true',
+f2 bit default true,
 f4 real,
 f5 real not null default 5.5,
 f6 text not null default 'abc',
@@ -48,3 +48,5 @@ create view testview2 as
   
 create view v3 as select 1 as a, 1 as b, 1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j, 1 as k
   from test;
+  
+create view v4 as select f1 from test where f1 = true;
