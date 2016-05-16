@@ -69,6 +69,8 @@ public final class Celesta {
 	private final Set<CallContext> contexts = Collections
 			.synchronizedSet(new LinkedHashSet<CallContext>());
 
+	private final ProfilingManager profiler = new ProfilingManager();
+
 	private Celesta() throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
 		// 1. Разбор описания гранул.
@@ -121,6 +123,7 @@ public final class Celesta {
 
 				String userId = args[0];
 				String sesId = String.format("TEMP%08X", (new Random()).nextInt());
+				// getInstance().setProfilemode(true);
 				getInstance().login(sesId, userId);
 				getInstance().runPython(sesId, args[1], params);
 				getInstance().logout(sesId, false);
@@ -381,6 +384,7 @@ public final class Celesta {
 						String.format("%s%s.%s(%s)", grainName, unitName, procName, sb.toString());
 					lastPyCmd = line;
 					PyObject pyObj = interp.eval(line);
+					profiler.logCall(context);
 					return pyObj;
 				} catch (PyException e) {
 					String sqlErr = "";
@@ -615,5 +619,23 @@ public final class Celesta {
 	 */
 	public Properties getSetupProperties() {
 		return AppSettings.getSetupProperties();
+	}
+
+	/**
+	 * Режим профилирования (записывается ли в таблицу calllog время вызовов
+	 * процедур).
+	 */
+	public boolean isProfilemode() {
+		return profiler.isProfilemode();
+	}
+
+	/**
+	 * Устанавливает режим профилирования.
+	 * 
+	 * @param profilemode
+	 *            режим профилирования.
+	 */
+	public void setProfilemode(boolean profilemode) {
+		profiler.setProfilemode(profilemode);
 	}
 }
