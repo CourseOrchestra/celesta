@@ -36,7 +36,8 @@ final class PythonSourceMonitor {
 
 		// immediate first pass
 		reRead();
-
+		//System.out.println(moduleNames);
+		//System.out.println(modules);
 		// scheduling the poller
 		t.schedule(new TimerTask() {
 			@Override
@@ -55,13 +56,16 @@ final class PythonSourceMonitor {
 		moduleNames.add(packageName);
 
 		for (String element : p.list()) {
-			//in python [sub]packages we are interested in user source files only!
+			// in python [sub]packages we are interested in user source files
+			// only!
 			f = new File(p, element);
 			if (f.isDirectory())
 				addWithSubPackages(f, packageName + "." + element);
-			else if (f.isFile() && element.endsWith(".py") && !"__init__.py".equals(element)
-					&& !element.endsWith("_orm.py")) {
-				modules.add(f);
+			else if (f.isFile() && element.endsWith(".py") && !"__init__.py".equals(element)) {
+				// we don't need to monitor ORM files, but we do need to
+				// reload'em.
+				if (!element.endsWith("_orm.py"))
+					modules.add(f);
 				moduleNames.add(packageName + "." + element.substring(0, element.length() - 3));
 			}
 		}
