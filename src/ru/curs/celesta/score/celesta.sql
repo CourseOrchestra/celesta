@@ -34,7 +34,7 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.09';
+create grain celesta version '1.10';
 
 /**Active grains list.*/
 create table grains(
@@ -172,6 +172,15 @@ create table sessionlog (
   logoutime datetime,
   timeout bit not null default 0,
   failedlogin bit not null default 0
+) with no version check;
+
+create table calllog (
+  entryno int identity not null primary key,
+  sessionid varchar(250) not null default 'n/a',
+  userid varchar(250) not null,
+  procname varchar(250) not null,
+  starttime datetime not null,
+  duration int not null
 ) with no version check;
 
 create index ixsessionlog on sessionlog (sessionid, userid, entryno);
