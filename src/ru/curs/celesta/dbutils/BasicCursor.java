@@ -309,7 +309,7 @@ public abstract class BasicCursor {
 			orderBy();
 		return descOrders;
 	}
-	
+
 	String getNavigationWhereClause(char op) throws CelestaException {
 		boolean invert = false;
 		if (orderByNames == null)
@@ -369,7 +369,7 @@ public abstract class BasicCursor {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 
-		if (set == null)
+		if (isNotValid(set))
 			set = db.getRecordSetStatement(conn, meta(), filters, complexFilter, getOrderBy(), offset, rowCount);
 		boolean result = false;
 		try {
@@ -698,7 +698,7 @@ public abstract class BasicCursor {
 		// Если один SingleValue меняется на другой SingleValue -- то
 		// необязательно закрывать набор, можно использовать старый.
 		if (oldFilter instanceof SingleValue) {
-			if (set != null)
+			if (!isNotValid(set))
 				db().fillSetQueryParameters(filters, set);
 		} else {
 			closeSet();
@@ -723,7 +723,7 @@ public abstract class BasicCursor {
 		// Если один Range меняется на другой Range -- то
 		// необязательно закрывать набор, можно использовать старый.
 		if (oldFilter instanceof Range) {
-			if (set != null)
+			if (!isNotValid(set))
 				db().fillSetQueryParameters(filters, set);
 		} else {
 			closeSet();
