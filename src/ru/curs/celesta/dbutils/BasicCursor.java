@@ -695,17 +695,21 @@ public abstract class BasicCursor {
 	 *             Неверное имя поля
 	 */
 	public final void setRange(String name, Object value) throws CelestaException {
-		validateColumName(name);
-		AbstractFilter oldFilter = filters.put(name, new SingleValue(value));
-		if (closed)
-			return;
-		// Если один SingleValue меняется на другой SingleValue -- то
-		// необязательно закрывать набор, можно использовать старый.
-		if (oldFilter instanceof SingleValue) {
-			if (!isNotValid(set))
-				db().fillSetQueryParameters(filters, set);
+		if (value == null) {
+			setFilter(name, "null");
 		} else {
-			closeSet();
+			validateColumName(name);
+			AbstractFilter oldFilter = filters.put(name, new SingleValue(value));
+			if (closed)
+				return;
+			// Если один SingleValue меняется на другой SingleValue -- то
+			// необязательно закрывать набор, можно использовать старый.
+			if (oldFilter instanceof SingleValue) {
+				if (!isNotValid(set))
+					db().fillSetQueryParameters(filters, set);
+			} else {
+				closeSet();
+			}
 		}
 	}
 
