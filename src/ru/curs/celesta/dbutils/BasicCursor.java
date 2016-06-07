@@ -676,6 +676,8 @@ public abstract class BasicCursor {
 	 */
 	public final void setRange(String name) throws CelestaException {
 		validateColumName(name);
+		if (closed)
+			return;
 		// Если фильтр присутствовал на поле -- сбрасываем набор. Если не
 		// присутствовал -- не сбрасываем.
 		if (filters.remove(name) != null)
@@ -695,6 +697,8 @@ public abstract class BasicCursor {
 	public final void setRange(String name, Object value) throws CelestaException {
 		validateColumName(name);
 		AbstractFilter oldFilter = filters.put(name, new SingleValue(value));
+		if (closed)
+			return;
 		// Если один SingleValue меняется на другой SingleValue -- то
 		// необязательно закрывать набор, можно использовать старый.
 		if (oldFilter instanceof SingleValue) {
@@ -720,6 +724,8 @@ public abstract class BasicCursor {
 	public final void setRange(String name, Object valueFrom, Object valueTo) throws CelestaException {
 		validateColumName(name);
 		AbstractFilter oldFilter = filters.put(name, new Range(valueFrom, valueTo));
+		if (closed)
+			return;
 		// Если один Range меняется на другой Range -- то
 		// необязательно закрывать набор, можно использовать старый.
 		if (oldFilter instanceof Range) {
@@ -746,6 +752,8 @@ public abstract class BasicCursor {
 			throw new CelestaException("Filter for column %s is null or empty. "
 					+ "Use setrange(fieldname) to remove any filters from the column.", name);
 		AbstractFilter oldFilter = filters.put(name, new Filter(value));
+		if (closed)
+			return;
 		// Если заменили фильтр на тот же самый -- ничего делать не надо.
 		if (!(oldFilter instanceof Filter && value.equals(oldFilter.toString())))
 			closeSet();
@@ -766,9 +774,11 @@ public abstract class BasicCursor {
 		} catch (ParseException e) {
 			throw new CelestaException(e.getMessage());
 		}
+		complexFilter = buf;
+		if (closed)
+			return;
 		// пересоздаём набор
 		closeSet();
-		complexFilter = buf;
 	}
 
 	/**
