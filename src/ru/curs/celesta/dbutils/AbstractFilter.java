@@ -51,8 +51,7 @@ class Range extends AbstractFilter {
 
 	@Override
 	public String toString() {
-		return String
-				.format("%s..%s", valueFrom.toString(), valueTo.toString());
+		return String.format("%s..%s", valueFrom.toString(), valueTo.toString());
 	}
 
 	public Object getValueFrom() {
@@ -80,11 +79,10 @@ class Filter extends AbstractFilter {
 		return String.format("%s", value);
 	}
 
-	public String makeWhereClause(String quotedName, Object c,
-			final DBAdaptor dba) throws CelestaException {
+	public String makeWhereClause(String quotedName, Object c, final DBAdaptor dba) throws CelestaException {
 		FilterType ft;
-		if (c instanceof IntegerColumn || c instanceof FloatingColumn
-				|| c == ViewColumnType.NUMERIC)
+		if (c instanceof IntegerColumn || c instanceof FloatingColumn || c == ViewColumnType.INT
+				|| c == ViewColumnType.REAL)
 			ft = FilterType.NUMERIC;
 		else if (c instanceof DateTimeColumn || c == ViewColumnType.DATE)
 			ft = FilterType.DATETIME;

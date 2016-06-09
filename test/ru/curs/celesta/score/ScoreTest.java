@@ -355,6 +355,7 @@ public class ScoreTest {
 				+ "    INNER join refTo as refTo on attrVarchar = k1 AND attrInt = k2");
 		assertEquals(exp, v.getCelestaQueryString());
 		v = g.getView("testview2");
+		assertEquals(ViewColumnType.INT, v.getColumns().get("id"));
 		exp = String.format("  select id as id, descr as descr%n" + "  from test as t1%n"
 				+ "    INNER join refTo as t2 on attrVarchar = k1 AND NOT t2.descr IS NULL AND attrInt = k2");
 		assertEquals(exp, v.getCelestaQueryString());
@@ -365,13 +366,15 @@ public class ScoreTest {
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
 		View v = g.getView("v3");
-		String[] expected = { "  select 1 as a, 1 as b, 1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j, ",
-				"    1 as k", "  from test as test" };
+		String[] expected = { "  select 1 as a, 1.4 as b, 1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j",
+				"    , 1 as k", "  from test as test" };
+		assertEquals(ViewColumnType.INT, v.getColumns().get("a"));
+		assertEquals(ViewColumnType.REAL, v.getColumns().get("b"));
 
 		assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
 
 	}
-	
+
 	@Test
 	public void viewTest3() throws CelestaException, ParseException {
 		Score s = new Score("testScore");

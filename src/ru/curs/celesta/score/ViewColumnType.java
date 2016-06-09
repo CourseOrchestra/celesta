@@ -20,9 +20,9 @@ public enum ViewColumnType implements ColumnMeta {
 
 	},
 	/**
-	 * Числовое значение.
+	 * Числовое значение с дробной частью.
 	 */
-	NUMERIC {
+	REAL {
 		@Override
 		public String jdbcGetterName() {
 			return "getDouble";
@@ -33,6 +33,20 @@ public enum ViewColumnType implements ColumnMeta {
 			return FloatingColumn.CELESTA_TYPE;
 		}
 
+	},
+	/**
+	 * Целочисленное значение.
+	 */
+	INT {
+		@Override
+		public String jdbcGetterName() {
+			return "getInt";
+		}
+
+		@Override
+		public String getCelestaType() {
+			return IntegerColumn.CELESTA_TYPE;
+		}
 	},
 	/**
 	 * Текстовое значение.

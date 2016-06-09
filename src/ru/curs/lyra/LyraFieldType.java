@@ -68,7 +68,9 @@ public enum LyraFieldType {
 	 */
 	private static LyraFieldType lookupFieldType(ViewColumnType c) {
 		switch (c) {
-		case NUMERIC:
+		case INT:
+			return INT;
+		case REAL:
 			return REAL;
 		case TEXT:
 			return VARCHAR;

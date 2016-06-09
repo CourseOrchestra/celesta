@@ -454,8 +454,8 @@ Expr sqlPrimaryExpression():
 {Expr result;
 Token t = null;}
 { (
-    t = <S_INTEGER>          {result = new NumericLiteral(t.toString());}
-  | t = <S_DOUBLE>           {result = new NumericLiteral(t.toString());}
+    t = <S_INTEGER>          {result = new IntegerLiteral(t.toString());}
+  | t = <S_DOUBLE>           {result = new RealLiteral(t.toString());}
   | t = <S_CHAR_LITERAL>     {result = new TextLiteral(t.toString());}
   | t = <K_TRUE>             {result = BooleanLiteral.TRUE;}
   | t = <K_FALSE>            {result = BooleanLiteral.FALSE;}

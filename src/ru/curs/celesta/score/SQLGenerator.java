@@ -123,10 +123,15 @@ public class SQLGenerator extends ExprVisitor {
 	}
 
 	@Override
-	final void visitNumericLiteral(NumericLiteral expr) throws ParseException {
+	final void visitRealLiteral(RealLiteral expr) throws ParseException {
 		stack.push(expr.getLexValue());
 	}
 
+	@Override
+	final void visitIntegerLiteral(IntegerLiteral expr) throws ParseException {
+		stack.push(expr.getLexValue());
+	}
+	
 	@Override
 	final void visitParenthesizedExpr(ParenthesizedExpr expr) throws ParseException {
 		stack.push("(" + stack.pop() + ")");

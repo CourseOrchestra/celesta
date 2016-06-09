@@ -40,7 +40,7 @@ public final class ORMCompiler {
 	 * Версия компилятора. Данную константу следует инкрементировать, когда
 	 * необходимо инициировать автоматическое пересоздание orm-скриптов.
 	 */
-	private static final int COMPILERVER = 7;
+	private static final int COMPILERVER = 8;
 
 	private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
 	private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -473,7 +473,11 @@ public final class ORMCompiler {
 			sb.append(String.format(
 					"None if self.%s == None else bool(self.%s)", c.getKey(),
 					c.getKey()));
-		else if (c.getValue() == ViewColumnType.NUMERIC)
+		else if (c.getValue() == ViewColumnType.INT)
+			sb.append(String.format(
+					"None if self.%s == None else int(self.%s)", c.getKey(),
+					c.getKey()));
+		else if (c.getValue() == ViewColumnType.REAL)
 			sb.append(String.format(
 					"None if self.%s == None else float(self.%s)", c.getKey(),
 					c.getKey()));

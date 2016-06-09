@@ -1024,11 +1024,11 @@ Token t = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case S_INTEGER:
       t = jj_consume_token(S_INTEGER);
-                              result = new NumericLiteral(t.toString());
+                              result = new IntegerLiteral(t.toString());
       break;
     case S_DOUBLE:
       t = jj_consume_token(S_DOUBLE);
-                              result = new NumericLiteral(t.toString());
+                              result = new RealLiteral(t.toString());
       break;
     case S_CHAR_LITERAL:
       t = jj_consume_token(S_CHAR_LITERAL);

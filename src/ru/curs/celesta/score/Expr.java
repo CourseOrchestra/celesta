@@ -8,9 +8,17 @@ import ru.curs.celesta.dbutils.DBAdaptor;
 public abstract class Expr {
 
 	final void assertType(ViewColumnType t) throws ParseException {
-		if (getType() != t)
-			throw new ParseException(String.format("Expression '%s' is expected to be of %s type, but it is %s",
-					getCSQL(), t.toString(), getType().toString()));
+		// INT and REAL are both numeric types, so they are comparable
+		if (t == ViewColumnType.INT || t == ViewColumnType.REAL) {
+			if (!(getType() == ViewColumnType.INT || getType() == ViewColumnType.REAL))
+				throw new ParseException(
+						String.format("Expression '%s' is expected to be of numeric type, but it is %s", getCSQL(),
+								getType().toString()));
+		} else {
+			if (getType() != t)
+				throw new ParseException(String.format("Expression '%s' is expected to be of %s type, but it is %s",
+						getCSQL(), t.toString(), getType().toString()));
+		}
 	}
 
 	/**
@@ -444,7 +452,18 @@ final class BinaryTermOp extends Expr {
 
 	@Override
 	public ViewColumnType getType() {
-		return operator == CONCAT ? ViewColumnType.TEXT : ViewColumnType.NUMERIC;
+		switch (operator) {
+		case CONCAT: // ||
+			return ViewColumnType.TEXT;
+		case OVER: // /
+			return ViewColumnType.REAL;
+		default: // +, -, *
+			for (Expr o : operands) {
+				if (o.getType() == ViewColumnType.REAL)
+					return ViewColumnType.REAL;
+			}
+			return ViewColumnType.INT;
+		}
 	}
 
 	@Override
@@ -471,7 +490,8 @@ final class UnaryMinus extends Expr {
 
 	@Override
 	public ViewColumnType getType() {
-		return ViewColumnType.NUMERIC;
+		// Real or Integer
+		return arg.getType();
 	}
 
 	@Override
@@ -482,12 +502,12 @@ final class UnaryMinus extends Expr {
 }
 
 /**
- * Числовой нумерал.
+ * Числовой нумерал с плавающей точкой.
  */
-final class NumericLiteral extends Expr {
+final class RealLiteral extends Expr {
 	private final String lexValue;
 
-	NumericLiteral(String lexValue) {
+	RealLiteral(String lexValue) {
 		this.lexValue = lexValue;
 	}
 
@@ -500,12 +520,40 @@ final class NumericLiteral extends Expr {
 
 	@Override
 	public ViewColumnType getType() {
-		return ViewColumnType.NUMERIC;
+		return ViewColumnType.REAL;
 	}
 
 	@Override
 	public void accept(ExprVisitor visitor) throws ParseException {
-		visitor.visitNumericLiteral(this);
+		visitor.visitRealLiteral(this);
+	}
+}
+
+/**
+ * Числовой нумерал.
+ */
+final class IntegerLiteral extends Expr {
+	private final String lexValue;
+
+	IntegerLiteral(String lexValue) {
+		this.lexValue = lexValue;
+	}
+
+	/**
+	 * Возвращает лексическое значение.
+	 */
+	public String getLexValue() {
+		return lexValue;
+	}
+
+	@Override
+	public ViewColumnType getType() {
+		return ViewColumnType.INT;
+	}
+
+	@Override
+	public void accept(ExprVisitor visitor) throws ParseException {
+		visitor.visitIntegerLiteral(this);
 	}
 }
 
@@ -600,8 +648,10 @@ final class FieldRef extends Expr {
 	@Override
 	public ViewColumnType getType() {
 		if (column != null) {
-			if (column instanceof IntegerColumn || column instanceof FloatingColumn)
-				return ViewColumnType.NUMERIC;
+			if (column instanceof IntegerColumn)
+				return ViewColumnType.INT;
+			if (column instanceof FloatingColumn)
+				return ViewColumnType.REAL;
 			if (column instanceof StringColumn)
 				return ViewColumnType.TEXT;
 			if (column instanceof BooleanColumn)
