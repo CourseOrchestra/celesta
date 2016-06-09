@@ -45,7 +45,7 @@ public class TestLyraForm {
 	public void test2() throws ParseException, CelestaException {
 		Score s = ScoreTest.S;
 		InputStream input = TestLyraForm.class.getResourceAsStream("test.sql");
-		CelestaParser cp = new CelestaParser(input);
+		CelestaParser cp = new CelestaParser(input, "utf-8");
 		Grain g = cp.grain(s, "testlyra");
 		Table t = g.getTable("table1");
 		BasicLyraForm blf = new BasicLyraForm(t) {
