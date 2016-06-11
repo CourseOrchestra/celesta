@@ -77,16 +77,11 @@ public class Score {
 		for (String entry : scorePath.split(File.pathSeparator)) {
 			File path = new File(entry.trim());
 			if (!path.exists())
-				throw new CelestaException(
-						"Score path entry '%s' does not exist.",
-						path.toString());
+				throw new CelestaException("Score path entry '%s' does not exist.", path.toString());
 			if (!path.canRead())
-				throw new CelestaException(
-						"Cannot read score path entry '%s'.", path.toString());
+				throw new CelestaException("Cannot read score path entry '%s'.", path.toString());
 			if (!path.isDirectory())
-				throw new CelestaException(
-						"Score path entry '%s' is not a directory.",
-						path.toString());
+				throw new CelestaException("Score path entry '%s' is not a directory.", path.toString());
 
 			defaultGrainPath = path;
 
@@ -97,28 +92,23 @@ public class Score {
 				}
 			})) {
 				String grainName = grainPath.getName();
-				File scriptFile = new File(String.format("%s%s_%s.sql",
-						grainPath.getPath(), File.separator, grainName));
+				File scriptFile = new File(
+						String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, grainName));
 
 				if (scriptFile.exists()) {
 					/*
 					 * Наличие sql-файла говорит о том, что мы имеем дело с
 					 * папкой гранулы, и уже требуем от неё всё подряд.
 					 */
-					File initFile = new File(String.format("%s%s__init__.py",
-							grainPath.getPath(), File.separator));
+					File initFile = new File(String.format("%s%s__init__.py", grainPath.getPath(), File.separator));
 					if (!initFile.exists())
-						throw new CelestaException(
-								"Cannot find __init__.py in grain '%s' definition folder.",
+						throw new CelestaException("Cannot find __init__.py in grain '%s' definition folder.",
 								grainName);
 
 					if (!scriptFile.canRead())
-						throw new CelestaException(
-								"Cannot read script file '%s'.", scriptFile);
+						throw new CelestaException("Cannot read script file '%s'.", scriptFile);
 					if (grainFiles.containsKey(grainName))
-						throw new CelestaException(
-								"Grain '%s' defined more than once on different paths.",
-								grainName);
+						throw new CelestaException("Grain '%s' defined more than once on different paths.", grainName);
 					grainFiles.put(grainName, scriptFile);
 				}
 
@@ -152,8 +142,6 @@ public class Score {
 			} catch (ParseException e) {
 				if (errorScript.length() > 0)
 					errorScript.append("\n\n");
-				errorScript.append(String.format("Error parsing '%s': ",
-						grainFiles.get(s)));
 				errorScript.append(e.getMessage());
 			}
 		if (errorScript.length() > 0)
@@ -164,8 +152,7 @@ public class Score {
 		if (grain.getScore() != this)
 			throw new IllegalArgumentException();
 		if (grains.containsKey(grain.getName()))
-			throw new ParseException(String.format(
-					"Grain '%s' is already defined.", grain.getName()));
+			throw new ParseException(String.format("Grain '%s' is already defined.", grain.getName()));
 		grains.put(grain.getName(), grain);
 	}
 
@@ -185,20 +172,22 @@ public class Score {
 		if (result == null) {
 			File f = grainFiles.get(name);
 			if (f == null)
-				throw new ParseException(String.format("Unknown grain '%s'.",
-						name));
+				throw new ParseException(String.format("Unknown grain '%s'.", name));
 			ChecksumInputStream is = null;
 
 			try {
 				is = new ChecksumInputStream(new FileInputStream(f));
 			} catch (FileNotFoundException e) {
-				throw new ParseException(String.format(
-						"Cannot open file '%s'.", f.toString()));
+				throw new ParseException(String.format("Cannot open file '%s'.", f.toString()));
 			}
 
 			CelestaParser parser = new CelestaParser(is, "utf-8");
 			try {
-				result = parser.grain(this, name);
+				try {
+					result = parser.grain(this, name);
+				} catch (ParseException e) {
+					throw new ParseException(String.format("Error parsing '%s': %s", f.toString(), e.getMessage()));
+				}
 				result.setChecksum(is.getCRC32());
 				result.setLength(is.getCount());
 				result.setGrainPath(f.getParentFile());
@@ -216,8 +205,7 @@ public class Score {
 	}
 
 	private void initSystemGrain() throws CelestaException {
-		ChecksumInputStream is = new ChecksumInputStream(
-				Score.class.getResourceAsStream("celesta.sql"));
+		ChecksumInputStream is = new ChecksumInputStream(Score.class.getResourceAsStream("celesta.sql"));
 
 		CelestaParser parser = new CelestaParser(is, "utf-8");
 		try {
