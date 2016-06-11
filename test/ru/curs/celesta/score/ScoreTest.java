@@ -23,7 +23,7 @@ public class ScoreTest {
 
 	@Test
 	public void test1() throws CelestaException, ParseException {
-		Score s = new Score("score;test");
+		Score s = new Score("score;pylib");
 		Grain g1 = s.getGrain("g1");
 		Grain g2 = s.getGrain("g2");
 		assertEquals("g2", g2.getName());
