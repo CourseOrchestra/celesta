@@ -139,23 +139,20 @@ public final class Celesta {
 		// Для начала, пытаемся достать готовый интерпретатор из пула.
 		InterpreterHolder h = interpreterPool.poll();
 		PythonInterpreter interp;
+		
+		long timestamp = sourceMonitor.getSourceTimestamp();
+		
 		if (h != null) {
 			interp = h.interpreter;
-			if (sourceMonitor.getSourceTimestamp() > h.sourceTimestamp) {
-				for (String moduleName : sourceMonitor.getModules()) {
-					interp.exec(String.format("sys.modules.pop('%s', None)", moduleName));
-				}
+			if (timestamp > h.sourceTimestamp) {
+
 				// re-importing grain modules
-				for (Grain g : theCelesta.getScore().getGrains().values())
-					if (!"celesta".equals(g.getName())) {
-						String line = String.format("import %s", g.getName());
-						interp.exec(line);
-					}
+				initPythonScore(interp);
+				
+				h.sourceTimestamp = timestamp;
 			}
-			h.sourceTimestamp = sourceMonitor.getSourceTimestamp();
 			return h;
 		}
-
 		initPyPathList();
 
 		PySystemState state = Py.getSystemState();
@@ -163,17 +160,23 @@ public final class Celesta {
 			state.path.append(new PyString(path));
 		interp = new PythonInterpreter(null, state);
 		codecs.setDefaultEncoding("UTF-8");
+		//initialize grain modules
+		initPythonScore(interp);
+		return new InterpreterHolder(interp, timestamp);
+	}
+
+	private void initPythonScore(PythonInterpreter interp) throws CelestaException {
 		SessionContext scontext = new SessionContext("super", "celesta_init");
 		Connection conn = ConnectionPool.get();
 		CallContext context = new CallContext(conn, scontext);
 		contexts.add(context);
-
-		long timestamp = sourceMonitor.getSourceTimestamp();
 		try {
-			interp.set("_ic", context);
 			interp.exec("import sys");
+			for (String moduleName : sourceMonitor.getModules()) {
+				interp.exec(String.format("sys.modules.pop('%s', None)", moduleName));
+			}			
+			interp.set("_ic", context);
 			interp.exec("sys.modules['initcontext'] = lambda: _ic");
-			// Инициализация пакетов гранул
 			for (Grain g : theCelesta.getScore().getGrains().values())
 				if (!"celesta".equals(g.getName())) {
 					String line = String.format("import %s", g.getName());
@@ -191,7 +194,6 @@ public final class Celesta {
 			contexts.remove(context);
 		}
 		interp.set("_ic", "You can't use initcontext() outside the initialization code!");
-		return new InterpreterHolder(interp, timestamp);
 	}
 
 	private synchronized void returnPythonInterpreter(InterpreterHolder h) {
