@@ -53,7 +53,7 @@ public final class ViewColumnMeta implements ColumnMeta {
 	 * @param nullable
 	 *            new value.
 	 */
-	public void setNullable(boolean nullable) {
+	void setNullable(boolean nullable) {
 		this.nullable = nullable;
 	}
 
@@ -65,7 +65,7 @@ public final class ViewColumnMeta implements ColumnMeta {
 	 * @throws ParseException
 	 *             wrong CelestaDoc.
 	 */
-	public void setCelestaDocLexem(String celestaDoc) throws ParseException {
+	void setCelestaDocLexem(String celestaDoc) throws ParseException {
 		if (celestaDoc == null)
 			this.celestaDoc = null;
 		else {
