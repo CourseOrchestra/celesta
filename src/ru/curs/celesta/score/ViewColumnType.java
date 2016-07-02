@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 /**
  * Тип выражения.
  */
-public enum ViewColumnType implements ColumnMeta {
+public enum ViewColumnType {
 	/**
 	 * Логическое условие.
 	 */
@@ -124,10 +124,13 @@ public enum ViewColumnType implements ColumnMeta {
 
 	};
 
-	@Override
-	public String getCelestaDoc() {
-		// TODO !!!! redevelop the handling of views in order to support JavaDoc
-		// for view fields!
-		return "";
-	}
+	/**
+	 * JDBC getter.
+	 */
+	abstract String jdbcGetterName();
+
+	/**
+	 * Celesta type.
+	 */
+	abstract String getCelestaType();
 }

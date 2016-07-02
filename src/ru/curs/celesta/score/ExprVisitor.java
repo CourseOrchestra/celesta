@@ -91,7 +91,7 @@ final class FieldResolver extends ExprVisitor {
  */
 final class TypeChecker extends ExprVisitor {
 	void visitBetween(Between expr) throws ParseException {
-		ViewColumnType t = expr.getLeft().getType();
+		final ViewColumnType t = expr.getLeft().getType().getColumnType();
 		// Сравнивать можно не все типы.
 		if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.INT
 				|| t == ViewColumnType.TEXT) {
@@ -107,13 +107,13 @@ final class TypeChecker extends ExprVisitor {
 
 	void visitBinaryTermOp(BinaryTermOp expr) throws ParseException {
 		// для CONCAT все операнды должны быть TEXT, для остальных -- NUMERIC
-		ViewColumnType t = expr.getOperator() == BinaryTermOp.CONCAT ? ViewColumnType.TEXT : ViewColumnType.REAL;
+		final ViewColumnType t = expr.getOperator() == BinaryTermOp.CONCAT ? ViewColumnType.TEXT : ViewColumnType.REAL;
 		for (Expr e : expr.getOperands())
 			e.assertType(t);
 	}
 
 	void visitIn(In expr) throws ParseException {
-		ViewColumnType t = expr.getLeft().getType();
+		final ViewColumnType t = expr.getLeft().getType().getColumnType();
 		// Сравнивать можно не все типы.
 		if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.INT
 				|| t == ViewColumnType.TEXT) {
@@ -130,7 +130,7 @@ final class TypeChecker extends ExprVisitor {
 	}
 
 	void visitRelop(Relop expr) throws ParseException {
-		ViewColumnType t = expr.getLeft().getType();
+		final ViewColumnType t = expr.getLeft().getType().getColumnType();
 		// Сравнивать можно не все типы.
 		if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.INT
 				|| t == ViewColumnType.TEXT) {
@@ -140,7 +140,7 @@ final class TypeChecker extends ExprVisitor {
 			if (expr.getRelop() == Relop.LIKE)
 				expr.getLeft().assertType(ViewColumnType.TEXT);
 		} else if (t == ViewColumnType.BIT && expr.getRelop() == Relop.EQ) {
-			if (expr.getRight().getType() != ViewColumnType.BIT) {
+			if (expr.getRight().getType().getColumnType() != ViewColumnType.BIT) {
 				throw new ParseException(String.format(
 						"Wrong expression '%s': "
 								+ "BIT field can be compared with another BIT field or TRUE/FALSE constants only.",

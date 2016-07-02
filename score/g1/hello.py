@@ -192,6 +192,15 @@ def hello(context, arg):
     for cc in context.celesta.activeContexts:
         print '%s \t| %s' % (cc.userId, cc.getDBPid())
     
+    c.reset()
+    c.setRange('idc', 5)
+    for c in c.iterate():
+        print c.asCSVLine()
+        
+    c.setRange('idc', 6)
+    for c in c.iterate():
+        print c.asCSVLine()
+    
     print 'Python procedure finished.'
     
 def testTrigger(rec):

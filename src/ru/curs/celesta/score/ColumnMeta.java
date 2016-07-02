@@ -17,6 +17,11 @@ public interface ColumnMeta {
 	String getCelestaType();
 	
 	/**
+	 * Является ли поле nullable.
+	 */
+	boolean isNullable();
+	
+	/**
 	 * Column's CelestaDoc.
 	 */
 	String getCelestaDoc();

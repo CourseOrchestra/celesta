@@ -16,7 +16,7 @@ import java.util.Map.Entry;
 public class View extends GrainElement {
 	private boolean distinct;
 	private final Map<String, Expr> columns = new LinkedHashMap<>();
-	private Map<String, ViewColumnType> columnTypes = null;
+	private Map<String, ViewColumnMeta> columnTypes = null;
 	private final Map<String, TableRef> tables = new LinkedHashMap<>();
 	private Expr whereCondition;
 	private String queryString;
@@ -116,7 +116,7 @@ public class View extends GrainElement {
 	/**
 	 * Возвращает перечень столбцов представления.
 	 */
-	public final Map<String, ViewColumnType> getColumns() {
+	public final Map<String, ViewColumnMeta> getColumns() {
 		if (columnTypes == null) {
 			columnTypes = new LinkedHashMap<>();
 			for (Entry<String, Expr> e : columns.entrySet())

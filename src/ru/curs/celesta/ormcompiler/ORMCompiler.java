@@ -29,6 +29,7 @@ import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.ViewColumnMeta;
 import ru.curs.celesta.score.ViewColumnType;
 
 /**
@@ -50,34 +51,23 @@ public final class ORMCompiler {
 
 	private static final Pattern SIGNATURE = Pattern
 			.compile("len=([0-9]+), crc32=([0-9A-F]+)(; compiler=([0-9]+))?\\.");
-	private static final String[] HEADER = {
-			"\"\"\"",
+	private static final String[] HEADER = { "\"\"\"",
 			"THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.",
-			"DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.",
-			"\"\"\"",
+			"DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.", "\"\"\"",
 			"import ru.curs.celesta.dbutils.Cursor as Cursor",
 			"import ru.curs.celesta.dbutils.ViewCursor as ViewCursor",
-			"import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor",
-			"from java.lang import Object",
-			"from jarray import array",
-			"from java.util import Calendar, GregorianCalendar",
-			"from java.sql import Timestamp",
-			"import datetime",
-			"",
-			"def _to_timestamp(d):",
-			"    if isinstance(d, datetime.datetime):",
-			"        calendar = GregorianCalendar()",
+			"import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor", "from java.lang import Object",
+			"from jarray import array", "from java.util import Calendar, GregorianCalendar",
+			"from java.sql import Timestamp", "import datetime", "", "def _to_timestamp(d):",
+			"    if isinstance(d, datetime.datetime):", "        calendar = GregorianCalendar()",
 			"        calendar.set(d.year, d.month - 1, d.day, d.hour, d.minute, d.second)",
-			"        ts = Timestamp(calendar.getTimeInMillis())",
-			"        ts.setNanos(d.microsecond * 1000)", "        return ts",
-			"    else:", "        return d", ""
+			"        ts = Timestamp(calendar.getTimeInMillis())", "        ts.setNanos(d.microsecond * 1000)",
+			"        return ts", "    else:", "        return d", ""
 
 	};
 
-	private static final String[] TABLE_HEADER = { "    onPreDelete  = []",
-			"    onPostDelete = []", "    onPreInsert  = []",
-			"    onPostInsert = []", "    onPreUpdate  = []",
-			"    onPostUpdate = []" };
+	private static final String[] TABLE_HEADER = { "    onPreDelete  = []", "    onPostDelete = []",
+			"    onPreInsert  = []", "    onPostInsert = []", "    onPreUpdate  = []", "    onPostUpdate = []" };
 	private static final String F_SELF = "            f(self)";
 
 	private ORMCompiler() {
@@ -96,8 +86,7 @@ public final class ORMCompiler {
 		for (Grain g : score.getGrains().values())
 			// Пропускаем системную гранулу.
 			if (!"celesta".equals(g.getName())) {
-				File ormFile = new File(String.format("%s%s_%s_orm.py",
-						g.getGrainPath(), File.separator, g.getName()));
+				File ormFile = new File(String.format("%s%s_%s_orm.py", g.getGrainPath(), File.separator, g.getName()));
 				try {
 					// Блок проверки: а может, перекомпилировать нет нужды?
 					if (ormFile.exists() && ormFile.canRead()) {
@@ -105,18 +94,15 @@ public final class ORMCompiler {
 						int crc32 = 0;
 						int compiler = 0;
 						BufferedReader r = new BufferedReader(
-								new InputStreamReader(new FileInputStream(
-										ormFile), "utf-8"));
+								new InputStreamReader(new FileInputStream(ormFile), "utf-8"));
 						try {
 							String l = r.readLine();
 							while (l != null) {
 								Matcher m = SIGNATURE.matcher(l);
 								if (m.find()) {
 									len = Integer.parseInt(m.group(1));
-									crc32 = (int) Long
-											.parseLong(m.group(2), 16);
-									compiler = m.group(4) == null ? 0 : Integer
-											.parseInt(m.group(4));
+									crc32 = (int) Long.parseLong(m.group(2), 16);
+									compiler = m.group(4) == null ? 0 : Integer.parseInt(m.group(4));
 									break;
 								}
 								l = r.readLine();
@@ -125,15 +111,13 @@ public final class ORMCompiler {
 							r.close();
 						}
 
-						if (g.getLength() == len && g.getChecksum() == crc32
-								&& compiler >= COMPILERVER)
+						if (g.getLength() == len && g.getChecksum() == crc32 && compiler >= COMPILERVER)
 							continue;
 					}
 
 					// Перекомпилировать надо и мы начинаем запись.
 					FileOutputStream fos = new FileOutputStream(ormFile);
-					BufferedWriter w = new BufferedWriter(
-							new OutputStreamWriter(fos, "utf-8"));
+					BufferedWriter w = new BufferedWriter(new OutputStreamWriter(fos, "utf-8"));
 					try {
 						compileGrain(g, w);
 					} finally {
@@ -141,21 +125,17 @@ public final class ORMCompiler {
 						fos.close();
 					}
 				} catch (IOException e) {
-					throw new CelestaException(
-							"Error while compiling orm classes for '%s' grain: %s",
-							g.getName(), e.getMessage());
+					throw new CelestaException("Error while compiling orm classes for '%s' grain: %s", g.getName(),
+							e.getMessage());
 				}
 			}
 	}
 
-	private static void compileGrain(Grain g, BufferedWriter w)
-			throws IOException {
+	private static void compileGrain(Grain g, BufferedWriter w) throws IOException {
 		w.write("# coding=UTF-8");
 		w.newLine();
-		w.write(String
-				.format("# Source grain parameters: version=%s, len=%d, crc32=%08X; compiler=%d.",
-						g.getVersion(), g.getLength(), g.getChecksum(),
-						COMPILERVER));
+		w.write(String.format("# Source grain parameters: version=%s, len=%d, crc32=%08X; compiler=%d.", g.getVersion(),
+				g.getLength(), g.getChecksum(), COMPILERVER));
 		w.newLine();
 		for (String s : HEADER) {
 			w.write(s);
@@ -173,11 +153,10 @@ public final class ORMCompiler {
 			compileView(v, w);
 	}
 
-	private static void compileView(View v, BufferedWriter w)
-			throws IOException {
+	private static void compileView(View v, BufferedWriter w) throws IOException {
 		String className = v.getName() + "Cursor";
 
-		Map<String, ViewColumnType> columns = v.getColumns();
+		Map<String, ViewColumnMeta> columns = v.getColumns();
 
 		w.write(String.format("class %s(ViewCursor):", className));
 		w.newLine();
@@ -202,8 +181,7 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileClearBuffer(BufferedWriter w,
-			Map<String, ViewColumnType> columns) throws IOException {
+	private static void compileClearBuffer(BufferedWriter w, Map<String, ViewColumnMeta> columns) throws IOException {
 		w.write(DEF_CLEAR_BUFFER_SELF_WITH_KEYS);
 		w.newLine();
 		for (String c : columns.keySet()) {
@@ -212,16 +190,15 @@ public final class ORMCompiler {
 		}
 	}
 
-	private static void compileParseResult(BufferedWriter w,
-			Map<String, ViewColumnType> columns) throws IOException {
+	private static void compileParseResult(BufferedWriter w, Map<String, ViewColumnMeta> columns) throws IOException {
 		w.write("    def _parseResult(self, rs):");
 		w.newLine();
-		for (Map.Entry<String, ViewColumnType> e : columns.entrySet()) {
-			if (e.getValue() == ViewColumnType.BLOB) {
+		for (Map.Entry<String, ViewColumnMeta> e : columns.entrySet()) {
+			if (e.getValue().getColumnType() == ViewColumnType.BLOB) {
 				w.write(String.format(SELF_S_EQUALS_NONE, e.getKey()));
 			} else {
-				w.write(String.format("        self.%s = rs.%s('%s')",
-						e.getKey(), e.getValue().jdbcGetterName(), e.getKey()));
+				w.write(String.format("        self.%s = rs.%s('%s')", e.getKey(), e.getValue().jdbcGetterName(),
+						e.getKey()));
 				w.newLine();
 				w.write(String.format("        if rs.wasNull():"));
 				w.newLine();
@@ -313,33 +290,27 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileSetFieldValue(BufferedWriter w)
-			throws IOException {
+	private static void compileSetFieldValue(BufferedWriter w) throws IOException {
 		w.write("    def _setFieldValue(self, name, value):");
 		w.newLine();
 		w.write("        setattr(self, name, value)");
 		w.newLine();
 	}
 
-	private static void compileCalcBLOBs(BufferedWriter w,
-			Collection<Column> columns) throws IOException {
+	private static void compileCalcBLOBs(BufferedWriter w, Collection<Column> columns) throws IOException {
 		for (Column c : columns)
 			if (c instanceof BinaryColumn) {
 				w.write(String.format("    def calc%s(self):", c.getName()));
 				w.newLine();
-				w.write(String.format("        self.%s = self.calcBlob('%s')",
-						c.getName(), c.getName()));
+				w.write(String.format("        self.%s = self.calcBlob('%s')", c.getName(), c.getName()));
 				w.newLine();
-				w.write(String.format(
-						"        self.getXRec().%s = self.%s.clone()",
-						c.getName(), c.getName()));
+				w.write(String.format("        self.getXRec().%s = self.%s.clone()", c.getName(), c.getName()));
 				w.newLine();
 			}
 
 	}
 
-	private static void compileTriggers(BufferedWriter w, String className)
-			throws IOException {
+	private static void compileTriggers(BufferedWriter w, String className) throws IOException {
 		w.write("    def _preDelete(self):");
 		w.newLine();
 		w.write(String.format("        for f in %s.onPreDelete:", className));
@@ -378,12 +349,11 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileCopying(BufferedWriter w,
-			Collection<String> columns, String className) throws IOException {
+	private static void compileCopying(BufferedWriter w, Collection<String> columns, String className)
+			throws IOException {
 		w.write("    def _getBufferCopy(self, context):");
 		w.newLine();
-		w.write(String.format("        result = %s(context)",
-				className));
+		w.write(String.format("        result = %s(context)", className));
 		w.newLine();
 		w.write("        result.copyFieldsFrom(self)");
 		w.newLine();
@@ -398,8 +368,7 @@ public final class ORMCompiler {
 		}
 	}
 
-	private static void compileSetAutoIncrement(BufferedWriter w,
-			Collection<Column> columns) throws IOException {
+	private static void compileSetAutoIncrement(BufferedWriter w, Collection<Column> columns) throws IOException {
 		w.write("    def _setAutoIncrement(self, val):");
 		w.newLine();
 		boolean hasCode = false;
@@ -415,8 +384,7 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileCurrentValues(BufferedWriter w,
-			Collection<Column> columns) throws IOException {
+	private static void compileCurrentValues(BufferedWriter w, Collection<Column> columns) throws IOException {
 		w.write("    def _currentValues(self):");
 		w.newLine();
 		StringBuilder sb = new StringBuilder();
@@ -427,12 +395,11 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileCurrentValues(BufferedWriter w,
-			Map<String, ViewColumnType> columns) throws IOException {
+	private static void compileCurrentValues(BufferedWriter w, Map<String, ViewColumnMeta> columns) throws IOException {
 		w.write("    def _currentValues(self):");
 		w.newLine();
 		StringBuilder sb = new StringBuilder();
-		for (Map.Entry<String, ViewColumnType> c : columns.entrySet())
+		for (Map.Entry<String, ViewColumnMeta> c : columns.entrySet())
 			addValue(sb, c);
 
 		w.write(String.format(RETURN_ARRAY_S_OBJECT, sb.toString()));
@@ -443,21 +410,13 @@ public final class ORMCompiler {
 		if (sb.length() > 0)
 			sb.append(", ");
 		if (c instanceof BooleanColumn)
-			sb.append(String.format(
-					"None if self.%s == None else bool(self.%s)", c.getName(),
-					c.getName()));
+			sb.append(String.format("None if self.%s == None else bool(self.%s)", c.getName(), c.getName()));
 		else if (c instanceof IntegerColumn)
-			sb.append(String.format(
-					"None if self.%s == None else int(self.%s)", c.getName(),
-					c.getName()));
+			sb.append(String.format("None if self.%s == None else int(self.%s)", c.getName(), c.getName()));
 		else if (c instanceof FloatingColumn)
-			sb.append(String.format(
-					"None if self.%s == None else float(self.%s)", c.getName(),
-					c.getName()));
+			sb.append(String.format("None if self.%s == None else float(self.%s)", c.getName(), c.getName()));
 		else if (c instanceof StringColumn)
-			sb.append(String.format(
-					"None if self.%s == None else unicode(self.%s)",
-					c.getName(), c.getName()));
+			sb.append(String.format("None if self.%s == None else unicode(self.%s)", c.getName(), c.getName()));
 		else if (c instanceof DateTimeColumn)
 			sb.append(String.format("_to_timestamp(self.%s)", c.getName()));
 		else {
@@ -465,33 +424,23 @@ public final class ORMCompiler {
 		}
 	}
 
-	private static void addValue(StringBuilder sb,
-			Entry<String, ViewColumnType> c) {
+	private static void addValue(StringBuilder sb, Entry<String, ViewColumnMeta> c) {
 		if (sb.length() > 0)
 			sb.append(", ");
-		if (c.getValue() == ViewColumnType.BIT)
-			sb.append(String.format(
-					"None if self.%s == None else bool(self.%s)", c.getKey(),
-					c.getKey()));
-		else if (c.getValue() == ViewColumnType.INT)
-			sb.append(String.format(
-					"None if self.%s == None else int(self.%s)", c.getKey(),
-					c.getKey()));
-		else if (c.getValue() == ViewColumnType.REAL)
-			sb.append(String.format(
-					"None if self.%s == None else float(self.%s)", c.getKey(),
-					c.getKey()));
-		else if (c.getValue() == ViewColumnType.TEXT)
-			sb.append(String.format(
-					"None if self.%s == None else unicode(self.%s)",
-					c.getKey(), c.getKey()));
+		if (c.getValue().getColumnType() == ViewColumnType.BIT)
+			sb.append(String.format("None if self.%s == None else bool(self.%s)", c.getKey(), c.getKey()));
+		else if (c.getValue().getColumnType() == ViewColumnType.INT)
+			sb.append(String.format("None if self.%s == None else int(self.%s)", c.getKey(), c.getKey()));
+		else if (c.getValue().getColumnType() == ViewColumnType.REAL)
+			sb.append(String.format("None if self.%s == None else float(self.%s)", c.getKey(), c.getKey()));
+		else if (c.getValue().getColumnType() == ViewColumnType.TEXT)
+			sb.append(String.format("None if self.%s == None else unicode(self.%s)", c.getKey(), c.getKey()));
 		else {
 			sb.append(String.format("self.%s", c.getKey()));
 		}
 	}
 
-	private static void compileCurrentKeyValues(BufferedWriter w, Set<Column> pk)
-			throws IOException {
+	private static void compileCurrentKeyValues(BufferedWriter w, Set<Column> pk) throws IOException {
 		w.write("    def _currentKeyValues(self):");
 		w.newLine();
 		StringBuilder sb = new StringBuilder();
@@ -502,8 +451,8 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileClearBuffer(BufferedWriter w,
-			Collection<Column> columns, Set<Column> pk) throws IOException {
+	private static void compileClearBuffer(BufferedWriter w, Collection<Column> columns, Set<Column> pk)
+			throws IOException {
 		w.write(DEF_CLEAR_BUFFER_SELF_WITH_KEYS);
 		w.newLine();
 		w.write("        if withKeys:");
@@ -519,8 +468,7 @@ public final class ORMCompiler {
 			}
 	}
 
-	private static void compileClearBuffer(BufferedWriter w,
-			Collection<Column> columns) throws IOException {
+	private static void compileClearBuffer(BufferedWriter w, Collection<Column> columns) throws IOException {
 		w.write(DEF_CLEAR_BUFFER_SELF_WITH_KEYS);
 		w.newLine();
 		for (Column c : columns) {
@@ -529,16 +477,14 @@ public final class ORMCompiler {
 		}
 	}
 
-	private static void compileParseResult(BufferedWriter w,
-			Collection<Column> columns) throws IOException {
+	private static void compileParseResult(BufferedWriter w, Collection<Column> columns) throws IOException {
 		w.write("    def _parseResult(self, rs):");
 		w.newLine();
 		for (Column c : columns) {
 			if (c instanceof BinaryColumn) {
 				w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
 			} else {
-				w.write(String.format("        self.%s = rs.%s('%s')",
-						c.getName(), c.jdbcGetterName(), c.getName()));
+				w.write(String.format("        self.%s = rs.%s('%s')", c.getName(), c.jdbcGetterName(), c.getName()));
 				w.newLine();
 				w.write(String.format("        if rs.wasNull():"));
 				w.newLine();
@@ -548,16 +494,14 @@ public final class ORMCompiler {
 		}
 	}
 
-	private static void compileTableName(GrainElement t, BufferedWriter w)
-			throws IOException {
+	private static void compileTableName(GrainElement t, BufferedWriter w) throws IOException {
 		w.write("    def _tableName(self):");
 		w.newLine();
 		w.write(String.format("        return '%s'", t.getName()));
 		w.newLine();
 	}
 
-	private static void compileGrainName(GrainElement t, BufferedWriter w)
-			throws IOException {
+	private static void compileGrainName(GrainElement t, BufferedWriter w) throws IOException {
 		w.write("    def _grainName(self):");
 		w.newLine();
 		w.write(String.format("        return '%s'", t.getGrain().getName()));
@@ -579,8 +523,7 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileTableInit(BufferedWriter w,
-			Collection<Column> columns) throws IOException {
+	private static void compileTableInit(BufferedWriter w, Collection<Column> columns) throws IOException {
 		w.write(DEF_INIT_SELF_CONTEXT);
 		w.newLine();
 		w.write("        Cursor.__init__(self, context)");
@@ -593,8 +536,7 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileROTableInit(BufferedWriter w,
-			Collection<Column> columns) throws IOException {
+	private static void compileROTableInit(BufferedWriter w, Collection<Column> columns) throws IOException {
 		w.write(DEF_INIT_SELF_CONTEXT);
 		w.newLine();
 		w.write("        ReadOnlyTableCursor.__init__(self, context)");
@@ -607,8 +549,7 @@ public final class ORMCompiler {
 		w.newLine();
 	}
 
-	private static void compileViewInit(BufferedWriter w,
-			Map<String, ViewColumnType> columns) throws IOException {
+	private static void compileViewInit(BufferedWriter w, Map<String, ViewColumnMeta> columns) throws IOException {
 		w.write(DEF_INIT_SELF_CONTEXT);
 		w.newLine();
 		w.write("        ViewCursor.__init__(self, context)");

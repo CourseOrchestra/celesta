@@ -350,15 +350,22 @@ public class ScoreTest {
 		View v = g.getView("testview");
 		String exp;
 		assertFalse(v.isDistinct());
-		assertEquals(3, v.getColumns().size());
-		exp = String.format("  select id as id, descr as descr, descr || 'foo' as descr2%n" + "  from test as test%n"
-				+ "    INNER join refTo as refTo on attrVarchar = k1 AND attrInt = k2");
+		assertEquals(4, v.getColumns().size());
+		exp = String.format("  select id as id, descr as descr, descr || 'foo' as descr2, k2 as k2%n"
+				+ "  from test as test%n" + "    INNER join refTo as refTo on attrVarchar = k1 AND attrInt = k2");
 		assertEquals(exp, v.getCelestaQueryString());
+
+		assertTrue(v.getColumns().get("descr").isNullable());
+		assertTrue(v.getColumns().get("descr2").isNullable());
+		assertFalse(v.getColumns().get("k2").isNullable());
+		assertFalse(v.getColumns().get("id").isNullable());
+		
 		v = g.getView("testview2");
-		assertEquals(ViewColumnType.INT, v.getColumns().get("id"));
+		assertEquals(ViewColumnType.INT, v.getColumns().get("id").getColumnType());
 		exp = String.format("  select id as id, descr as descr%n" + "  from test as t1%n"
 				+ "    INNER join refTo as t2 on attrVarchar = k1 AND NOT t2.descr IS NULL AND attrInt = k2");
 		assertEquals(exp, v.getCelestaQueryString());
+
 	}
 
 	@Test
@@ -368,8 +375,14 @@ public class ScoreTest {
 		View v = g.getView("v3");
 		String[] expected = { "  select 1 as a, 1.4 as b, 1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j",
 				"    , 1 as k", "  from test as test" };
-		assertEquals(ViewColumnType.INT, v.getColumns().get("a"));
-		assertEquals(ViewColumnType.REAL, v.getColumns().get("b"));
+		assertEquals(ViewColumnType.INT, v.getColumns().get("a").getColumnType());
+		assertEquals(ViewColumnType.REAL, v.getColumns().get("b").getColumnType());
+
+		assertEquals("", v.getColumns().get("a").getCelestaDoc());
+		assertFalse(v.getColumns().get("a").isNullable());
+		assertFalse(v.getColumns().get("b").isNullable());
+		assertEquals("test celestadoc", v.getColumns().get("b").getCelestaDoc());
+		assertEquals("test celestadoc2", v.getColumns().get("c").getCelestaDoc());
 
 		assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
 
@@ -380,9 +393,15 @@ public class ScoreTest {
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
 		View v = g.getView("v4");
-		String[] expected = { "  select f1 as f1", "  from test as test", "  where f1 = true" };
+		String[] expected = { "  select f1 as f1, f4 as f4, f5 as f5, f4 + f5 as s, f5 * f5 + 1 as s2", "  from test as test", "  where f1 = true" };
 		assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
 
+		//Checking nullability evaluation
+		assertFalse(v.getColumns().get("f1").isNullable());
+		assertTrue(v.getColumns().get("f4").isNullable());
+		assertFalse(v.getColumns().get("f5").isNullable());
+		assertTrue(v.getColumns().get("s").isNullable());
+		assertFalse(v.getColumns().get("s2").isNullable());
 	}
 
 }

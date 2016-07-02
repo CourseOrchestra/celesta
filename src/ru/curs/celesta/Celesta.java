@@ -633,6 +633,13 @@ public final class Celesta {
 	}
 
 	/**
+	 * Возвращает поведение NULLS FIRST текущей базы данных.
+	 */
+	public boolean nullsFirst() {
+		return AppSettings.getDBType().nullsFirst();
+	}
+
+	/**
 	 * Устанавливает режим профилирования.
 	 * 
 	 * @param profilemode
