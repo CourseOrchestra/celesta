@@ -1,47 +1,38 @@
 package ru.curs.lyra;
 
-import static ru.curs.lyra.LyraFormField.REQUIRED;
-import static ru.curs.lyra.LyraFormField.SCALE;
-import static ru.curs.lyra.LyraFormField.SUBTYPE;
+import static ru.curs.lyra.LyraFormField.*;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Serializable;
+import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamWriter;
+import javax.xml.stream.*;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
+import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.dbutils.Cursor;
+import ru.curs.celesta.dbutils.*;
 
 /**
  * A serializable cursor data represention.
  */
 public final class LyraFormData implements Serializable {
 	private static final long serialVersionUID = 1L;
-	private final LyraNamedElementHolder<LyraFieldValue> fields = new LyraNamedElementHolder<LyraFieldValue>() {
-		private static final long serialVersionUID = 1L;
+	private final LyraNamedElementHolder<LyraFieldValue> fields =
+		new LyraNamedElementHolder<LyraFieldValue>() {
+			private static final long serialVersionUID = 1L;
 
-		@Override
-		protected String getErrorMsg(String name) {
-			return "Field " + name + " is defined more than once in form data";
-		}
-	};
+			@Override
+			protected String getErrorMsg(String name) {
+				return "Field " + name + " is defined more than once in form data";
+			}
+		};
 	private int recversion;
+	private Object[] keyValues;
 
 	private String formId;
 
@@ -58,9 +49,11 @@ public final class LyraFormData implements Serializable {
 	 * @throws CelestaException
 	 *             names clash
 	 */
-	public LyraFormData(BasicCursor c, Map<String, LyraFormField> map, String formId) throws CelestaException {
+	public LyraFormData(BasicCursor c, Map<String, LyraFormField> map, String formId)
+			throws CelestaException {
 		if (c instanceof Cursor) {
 			recversion = ((Cursor) c).getRecversion();
+			keyValues = ((Cursor) c).getCurrentKeyValues();
 		}
 
 		this.formId = formId;
@@ -77,7 +70,8 @@ public final class LyraFormData implements Serializable {
 		FormDataParser parser;
 		parser = new FormDataParser();
 		try {
-			TransformerFactory.newInstance().newTransformer().transform(new StreamSource(is), new SAXResult(parser));
+			TransformerFactory.newInstance().newTransformer()
+					.transform(new StreamSource(is), new SAXResult(parser));
 		} catch (Exception e) {
 			throw new CelestaException("XML deserialization error: %s", e.getMessage());
 		}
@@ -120,8 +114,9 @@ public final class LyraFormData implements Serializable {
 	 */
 	public void serialize(OutputStream outputStream) throws CelestaException {
 		try {
-			XMLStreamWriter xmlWriter = XMLOutputFactory.newInstance()
-					.createXMLStreamWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+			XMLStreamWriter xmlWriter =
+				XMLOutputFactory.newInstance().createXMLStreamWriter(
+						new OutputStreamWriter(outputStream, "UTF-8"));
 			xmlWriter.writeStartDocument();
 			xmlWriter.writeStartElement("schema");
 			xmlWriter.writeAttribute("recversion", Integer.toString(recversion));
@@ -146,6 +141,10 @@ public final class LyraFormData implements Serializable {
 		return recversion;
 	}
 
+	public Object[] getKeyValues() {
+		return keyValues;
+	}
+
 	/**
 	 * SAX-парсер сериализованного курсора.
 	 */
@@ -161,8 +160,9 @@ public final class LyraFormData implements Serializable {
 		private String subtype = null;
 
 		@Override
-		public void startElement(String uri, String localName, String qName, Attributes attributes)
-				throws SAXException {
+		public void
+				startElement(String uri, String localName, String qName, Attributes attributes)
+						throws SAXException {
 			switch (status) {
 			case 0:
 				recversion = Integer.parseInt(attributes.getValue("recversion"));
@@ -184,7 +184,7 @@ public final class LyraFormData implements Serializable {
 
 				buf = attributes.getValue(SUBTYPE);
 				subtype = buf;
-				
+
 				status = 2;
 				sb.setLength(0);
 			default:
