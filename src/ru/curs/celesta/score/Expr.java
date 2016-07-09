@@ -9,16 +9,16 @@ public abstract class Expr {
 
 	final void assertType(ViewColumnType t) throws ParseException {
 		// INT and REAL are both numeric types, so they are comparable
-		final ViewColumnType columnType = getType().getColumnType();
+		final ViewColumnType columnType = getMeta().getColumnType();
 		if (t == ViewColumnType.INT || t == ViewColumnType.REAL) {
 			if (!(columnType == ViewColumnType.INT || columnType == ViewColumnType.REAL))
 				throw new ParseException(
 						String.format("Expression '%s' is expected to be of numeric type, but it is %s", getCSQL(),
-								getType().toString()));
+								getMeta().toString()));
 		} else {
 			if (columnType != t)
 				throw new ParseException(String.format("Expression '%s' is expected to be of %s type, but it is %s",
-						getCSQL(), t.toString(), getType().toString()));
+						getCSQL(), t.toString(), getMeta().toString()));
 		}
 	}
 
@@ -44,7 +44,7 @@ public abstract class Expr {
 	/**
 	 * Возвращает тип выражения.
 	 */
-	public abstract ViewColumnMeta getType();
+	public abstract ViewColumnMeta getMeta();
 
 	/**
 	 * Разрешает ссылки на поля таблиц, используя контекст объявленных таблиц с
@@ -116,8 +116,8 @@ final class ParenthesizedExpr extends Expr {
 	}
 
 	@Override
-	public ViewColumnMeta getType() {
-		return parenthesized.getType();
+	public ViewColumnMeta getMeta() {
+		return parenthesized.getMeta();
 	}
 
 	@Override
@@ -139,7 +139,7 @@ abstract class LogicValuedExpr extends Expr {
 	}
 
 	@Override
-	public final ViewColumnMeta getType() {
+	public final ViewColumnMeta getMeta() {
 		return META;
 	}
 
@@ -310,7 +310,7 @@ final class IsNull extends LogicValuedExpr {
 	private final Expr expr;
 
 	IsNull(Expr expr) throws ParseException {
-		if (expr.getType().getColumnType() == ViewColumnType.LOGIC)
+		if (expr.getMeta().getColumnType() == ViewColumnType.LOGIC)
 			throw new ParseException(String.format(
 					"Expression '%s' is logical condition and cannot be an argument of IS NULL operator.", getCSQL()));
 		this.expr = expr;
@@ -372,7 +372,7 @@ final class BinaryLogicalOp extends LogicValuedExpr {
 			throw new IllegalArgumentException();
 		// все операнды должны быть логическими
 		for (Expr e : operands)
-			if (e.getType().getColumnType() != ViewColumnType.LOGIC)
+			if (e.getMeta().getColumnType() != ViewColumnType.LOGIC)
 				throw new ParseException(
 						String.format("Expression '%s' is expected to be logical condition.", e.getCSQL()));
 		this.operands = operands;
@@ -442,7 +442,7 @@ final class BinaryTermOp extends Expr {
 	}
 
 	@Override
-	public ViewColumnMeta getType() {
+	public ViewColumnMeta getMeta() {
 		if (meta == null) {
 			cases: switch (operator) {
 			case CONCAT: // ||
@@ -453,7 +453,7 @@ final class BinaryTermOp extends Expr {
 				break;
 			default: // +, -, *
 				for (Expr o : operands) {
-					if (o.getType().getColumnType() == ViewColumnType.REAL) {
+					if (o.getMeta().getColumnType() == ViewColumnType.REAL) {
 						meta = new ViewColumnMeta(ViewColumnType.REAL);
 						break cases;
 					}
@@ -465,7 +465,7 @@ final class BinaryTermOp extends Expr {
 			// now checking for nullability
 			boolean n = false;
 			for (Expr o : operands) {
-				if (o.getType().isNullable()) {
+				if (o.getMeta().isNullable()) {
 					n = true;
 					break;
 				}
@@ -498,9 +498,9 @@ final class UnaryMinus extends Expr {
 	}
 
 	@Override
-	public ViewColumnMeta getType() {
+	public ViewColumnMeta getMeta() {
 		// Real or Integer
-		return arg.getType();
+		return arg.getMeta();
 	}
 
 	@Override
@@ -522,7 +522,7 @@ abstract class Literal extends Expr {
 	}
 
 	@Override
-	public final ViewColumnMeta getType() {
+	public final ViewColumnMeta getMeta() {
 		if (meta == null) {
 			meta = new ViewColumnMeta(type);
 			meta.setNullable(false);
@@ -659,7 +659,7 @@ final class FieldRef extends Expr {
 	}
 
 	@Override
-	public ViewColumnMeta getType() {
+	public ViewColumnMeta getMeta() {
 		if (meta == null) {
 			if (column != null) {
 				if (column instanceof IntegerColumn)

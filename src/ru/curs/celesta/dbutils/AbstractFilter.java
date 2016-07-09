@@ -1,13 +1,15 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.HashMap;
+
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.FilterParser;
 import ru.curs.celesta.dbutils.filter.FilterParser.FilterType;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.ViewColumnType;
 
 /**
  * Внутреннее представление фильтра на поле.
@@ -70,6 +72,16 @@ class Filter extends AbstractFilter {
 
 	private final String value;
 
+	private final static HashMap<String, FilterType> C2F = new HashMap<>();
+
+	static {
+		C2F.put(IntegerColumn.CELESTA_TYPE, FilterType.NUMERIC);
+		C2F.put(FloatingColumn.CELESTA_TYPE, FilterType.NUMERIC);
+		C2F.put(DateTimeColumn.CELESTA_TYPE, FilterType.DATETIME);
+		C2F.put(StringColumn.VARCHAR, FilterType.TEXT);
+		C2F.put(StringColumn.TEXT, FilterType.TEXT);
+	}
+
 	public Filter(String value) {
 		this.value = value;
 	}
@@ -79,18 +91,8 @@ class Filter extends AbstractFilter {
 		return String.format("%s", value);
 	}
 
-	public String makeWhereClause(String quotedName, Object c, final DBAdaptor dba) throws CelestaException {
-		FilterType ft;
-		if (c instanceof IntegerColumn || c instanceof FloatingColumn || c == ViewColumnType.INT
-				|| c == ViewColumnType.REAL)
-			ft = FilterType.NUMERIC;
-		else if (c instanceof DateTimeColumn || c == ViewColumnType.DATE)
-			ft = FilterType.DATETIME;
-		else if (c instanceof StringColumn || c == ViewColumnType.TEXT)
-			ft = FilterType.TEXT;
-		else {
-			ft = FilterType.OTHER;
-		}
+	public String makeWhereClause(String quotedName, ColumnMeta c, final DBAdaptor dba) throws CelestaException {
+		FilterType ft = C2F.getOrDefault(c.getCelestaType(), FilterType.OTHER);
 
 		FilterParser.SQLTranslator tr = new FilterParser.SQLTranslator() {
 			@Override

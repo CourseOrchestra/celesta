@@ -1154,7 +1154,7 @@ Token t = null;
      if (alias.isEmpty() && expr instanceof FieldRef)
                    alias = ((FieldRef) expr).getColumnName();
      if (doc != null)
-        expr.getType().setCelestaDocLexem(doc.toString());
+        expr.getMeta().setCelestaDocLexem(doc.toString());
      v.addColumn(alias, expr);
   }
 

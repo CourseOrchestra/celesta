@@ -120,7 +120,7 @@ public class View extends GrainElement {
 		if (columnTypes == null) {
 			columnTypes = new LinkedHashMap<>();
 			for (Entry<String, Expr> e : columns.entrySet())
-				columnTypes.put(e.getKey(), e.getValue().getType());
+				columnTypes.put(e.getKey(), e.getValue().getMeta());
 		}
 		return columnTypes;
 	}

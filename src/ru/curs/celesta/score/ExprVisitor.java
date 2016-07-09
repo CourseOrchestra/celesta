@@ -91,7 +91,7 @@ final class FieldResolver extends ExprVisitor {
  */
 final class TypeChecker extends ExprVisitor {
 	void visitBetween(Between expr) throws ParseException {
-		final ViewColumnType t = expr.getLeft().getType().getColumnType();
+		final ViewColumnType t = expr.getLeft().getMeta().getColumnType();
 		// Сравнивать можно не все типы.
 		if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.INT
 				|| t == ViewColumnType.TEXT) {
@@ -113,7 +113,7 @@ final class TypeChecker extends ExprVisitor {
 	}
 
 	void visitIn(In expr) throws ParseException {
-		final ViewColumnType t = expr.getLeft().getType().getColumnType();
+		final ViewColumnType t = expr.getLeft().getMeta().getColumnType();
 		// Сравнивать можно не все типы.
 		if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.INT
 				|| t == ViewColumnType.TEXT) {
@@ -130,7 +130,7 @@ final class TypeChecker extends ExprVisitor {
 	}
 
 	void visitRelop(Relop expr) throws ParseException {
-		final ViewColumnType t = expr.getLeft().getType().getColumnType();
+		final ViewColumnType t = expr.getLeft().getMeta().getColumnType();
 		// Сравнивать можно не все типы.
 		if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.INT
 				|| t == ViewColumnType.TEXT) {
@@ -140,7 +140,7 @@ final class TypeChecker extends ExprVisitor {
 			if (expr.getRelop() == Relop.LIKE)
 				expr.getLeft().assertType(ViewColumnType.TEXT);
 		} else if (t == ViewColumnType.BIT && expr.getRelop() == Relop.EQ) {
-			if (expr.getRight().getType().getColumnType() != ViewColumnType.BIT) {
+			if (expr.getRight().getMeta().getColumnType() != ViewColumnType.BIT) {
 				throw new ParseException(String.format(
 						"Wrong expression '%s': "
 								+ "BIT field can be compared with another BIT field or TRUE/FALSE constants only.",

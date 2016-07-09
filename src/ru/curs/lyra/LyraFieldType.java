@@ -1,5 +1,7 @@
 package ru.curs.lyra;
 
+import java.util.HashMap;
+
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.ColumnMeta;
@@ -7,7 +9,6 @@ import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.ViewColumnType;
 
 /**
  * Тип сериализуемого поля формы.
@@ -16,22 +17,44 @@ public enum LyraFieldType {
 	/**
 	 * BLOB.
 	 */
-	BLOB, /**
-			 * BIT.
-			 */
-	BIT, /**
-			 * DATETIME.
-			 */
-	DATETIME, /**
-				 * REAL.
-				 */
-	REAL, /**
-			 * INT.
-			 */
-	INT, /**
-			 * VARCHAR.
-			 */
+	BLOB,
+
+	/**
+	 * BIT.
+	 */
+	BIT,
+
+	/**
+	 * DATETIME.
+	 */
+	DATETIME,
+
+	/**
+	 * REAL.
+	 */
+	REAL,
+
+	/**
+	 * INT.
+	 */
+	INT,
+
+	/**
+	 * VARCHAR.
+	 */
 	VARCHAR;
+
+	private static final HashMap<String, LyraFieldType> C2L = new HashMap<>();
+
+	static {
+		C2L.put(IntegerColumn.CELESTA_TYPE, INT);
+		C2L.put(StringColumn.VARCHAR, VARCHAR);
+		C2L.put(StringColumn.TEXT, VARCHAR);
+		C2L.put(FloatingColumn.CELESTA_TYPE, REAL);
+		C2L.put(DateTimeColumn.CELESTA_TYPE, DATETIME);
+		C2L.put(BooleanColumn.CELESTA_TYPE, BIT);
+		C2L.put(BinaryColumn.CELESTA_TYPE, BLOB);
+	}
 
 	/**
 	 * Определяет тип поля по метаданным столбца таблицы (Table).
@@ -41,48 +64,11 @@ public enum LyraFieldType {
 	 * 
 	 */
 	public static LyraFieldType lookupFieldType(ColumnMeta c) {
-		if (c instanceof IntegerColumn) {
-			return INT;
-		} else if (c instanceof StringColumn) {
-			return VARCHAR;
-		} else if (c instanceof FloatingColumn) {
-			return REAL;
-		} else if (c instanceof DateTimeColumn) {
-			return DATETIME;
-		} else if (c instanceof BooleanColumn) {
-			return BIT;
-		} else if (c instanceof BinaryColumn) {
-			return BLOB;
-		} else if (c instanceof ViewColumnType) {
-			return lookupFieldType((ViewColumnType) c);
-		} else {
+		LyraFieldType result = C2L.get(c.getCelestaType());
+		if (result == null) {
 			throw new RuntimeException(String.format("Invalid table column type: %s", c.getClass().toString()));
 		}
-	}
-
-	/**
-	 * Определяет тип поля по типу столбца представления (View).
-	 * 
-	 * @param c
-	 *            тип столбца представления.
-	 */
-	private static LyraFieldType lookupFieldType(ViewColumnType c) {
-		switch (c) {
-		case INT:
-			return INT;
-		case REAL:
-			return REAL;
-		case TEXT:
-			return VARCHAR;
-		case DATE:
-			return DATETIME;
-		case BIT:
-			return BIT;
-		case BLOB:
-			return BLOB;
-		default:
-			throw new RuntimeException(String.format("Invalid view column type: %s", c.toString()));
-		}
+		return result;
 	}
 
 }

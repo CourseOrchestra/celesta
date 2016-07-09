@@ -36,6 +36,7 @@
 package ru.curs.celesta.dbutils;
 
 import java.io.BufferedWriter;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.sql.Connection;
@@ -61,6 +62,7 @@ import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.FKRule;
@@ -75,7 +77,6 @@ import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
-import ru.curs.celesta.score.ViewColumnType;
 
 /**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
@@ -358,7 +359,7 @@ public abstract class DBAdaptor {
 			else if (e.getValue() instanceof Range)
 				whereClause.append(String.format("(\"%s\" between ? and ?)", e.getKey()));
 			else if (e.getValue() instanceof Filter) {
-				Object c = t.getColumns().get(e.getKey());
+				ColumnMeta c = t.getColumns().get(e.getKey());
 				whereClause.append("(");
 				whereClause.append(((Filter) e.getValue()).makeWhereClause("\"" + e.getKey() + "\"", c, this));
 				whereClause.append(")");
@@ -728,11 +729,11 @@ public abstract class DBAdaptor {
 
 	static String getTableFieldsListExceptBLOBs(GrainElement t) {
 		List<String> flds = new LinkedList<>();
-		for (Map.Entry<String, ?> e : (t.getColumns()).entrySet()) {
-			if (!(e.getValue() instanceof BinaryColumn || e.getValue() == ViewColumnType.BLOB))
+		for (Map.Entry<String, ?> e : t.getColumns().entrySet()) {
+			ColumnMeta m = (ColumnMeta) e.getValue();
+			if (!BinaryColumn.CELESTA_TYPE.equals(m.getCelestaType()))
 				flds.add(e.getKey());
 		}
-
 		// К перечню полей версионированных таблиц обязательно добавляем
 		// recversion
 		if (t instanceof Table && ((Table) t).isVersioned())
