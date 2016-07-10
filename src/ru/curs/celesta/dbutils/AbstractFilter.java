@@ -70,11 +70,7 @@ class Range extends AbstractFilter {
  */
 class Filter extends AbstractFilter {
 
-	private final String value;
-	private final FilterType ftype;
-
-	private final static HashMap<String, FilterType> C2F = new HashMap<>();
-
+	private static final HashMap<String, FilterType> C2F = new HashMap<>();
 	static {
 		C2F.put(IntegerColumn.CELESTA_TYPE, FilterType.NUMERIC);
 		C2F.put(FloatingColumn.CELESTA_TYPE, FilterType.NUMERIC);
@@ -82,6 +78,9 @@ class Filter extends AbstractFilter {
 		C2F.put(StringColumn.VARCHAR, FilterType.TEXT);
 		C2F.put(StringColumn.TEXT, FilterType.TEXT);
 	}
+
+	private final String value;
+	private final FilterType ftype;
 
 	public Filter(String value, ColumnMeta c) {
 		this.value = value;
