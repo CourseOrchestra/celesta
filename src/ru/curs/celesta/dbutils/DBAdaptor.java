@@ -346,7 +346,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае некорректного фильтра
 	 */
-	final String getWhereClause(GrainElement t, Map<String, AbstractFilter> filters, Expr complexFilter)
+	final String getWhereClause(Map<String, AbstractFilter> filters, Expr complexFilter)
 			throws CelestaException {
 		if (filters == null)
 			throw new IllegalArgumentException();
@@ -359,9 +359,8 @@ public abstract class DBAdaptor {
 			else if (e.getValue() instanceof Range)
 				whereClause.append(String.format("(\"%s\" between ? and ?)", e.getKey()));
 			else if (e.getValue() instanceof Filter) {
-				ColumnMeta c = t.getColumns().get(e.getKey());
 				whereClause.append("(");
-				whereClause.append(((Filter) e.getValue()).makeWhereClause("\"" + e.getKey() + "\"", c, this));
+				whereClause.append(((Filter) e.getValue()).makeWhereClause("\"" + e.getKey() + "\"", this));
 				whereClause.append(")");
 			}
 		}
@@ -618,7 +617,7 @@ public abstract class DBAdaptor {
 		// CHECKSTYLE:ON
 		String sql;
 		// Готовим условие where
-		String whereClause = getWhereClause(t, filters, complexFilter);
+		String whereClause = getWhereClause(filters, complexFilter);
 
 		if (offset == 0 && rowCount == 0) {
 			// Запрос не лимитированный -- одинаков для всех СУБД
@@ -692,7 +691,7 @@ public abstract class DBAdaptor {
 
 	final PreparedStatement getSetCountStatement(Connection conn, GrainElement t, Map<String, AbstractFilter> filters,
 			Expr complexFilter, String navigationFilter) throws CelestaException {
-		StringBuilder w = new StringBuilder(getWhereClause(t, filters, complexFilter));
+		StringBuilder w = new StringBuilder(getWhereClause(filters, complexFilter));
 		if (w.length() > 0 && navigationFilter.length() > 0)
 			w.append(" and ");
 		w.append(navigationFilter);

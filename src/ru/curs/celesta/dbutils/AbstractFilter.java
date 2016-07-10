@@ -71,6 +71,7 @@ class Range extends AbstractFilter {
 class Filter extends AbstractFilter {
 
 	private final String value;
+	private final FilterType ftype;
 
 	private final static HashMap<String, FilterType> C2F = new HashMap<>();
 
@@ -82,8 +83,9 @@ class Filter extends AbstractFilter {
 		C2F.put(StringColumn.TEXT, FilterType.TEXT);
 	}
 
-	public Filter(String value) {
+	public Filter(String value, ColumnMeta c) {
 		this.value = value;
+		this.ftype = C2F.getOrDefault(c.getCelestaType(), FilterType.OTHER);
 	}
 
 	@Override
@@ -91,8 +93,7 @@ class Filter extends AbstractFilter {
 		return String.format("%s", value);
 	}
 
-	public String makeWhereClause(String quotedName, ColumnMeta c, final DBAdaptor dba) throws CelestaException {
-		FilterType ft = C2F.getOrDefault(c.getCelestaType(), FilterType.OTHER);
+	public String makeWhereClause(String quotedName, final DBAdaptor dba) throws CelestaException {
 
 		FilterParser.SQLTranslator tr = new FilterParser.SQLTranslator() {
 			@Override
@@ -101,7 +102,7 @@ class Filter extends AbstractFilter {
 			}
 
 		};
-		String result = FilterParser.translateFilter(ft, quotedName, value, tr);
+		String result = FilterParser.translateFilter(ftype, quotedName, value, tr);
 		return result;
 	}
 }

@@ -402,7 +402,7 @@ final class OraAdaptor extends DBAdaptor {
 	@Override
 	PreparedStatement deleteRecordSetStatement(Connection conn, Table t, Map<String, AbstractFilter> filters,
 			Expr complexFilter) throws CelestaException {
-		String whereClause = getWhereClause(t, filters, complexFilter);
+		String whereClause = getWhereClause(filters, complexFilter);
 		String sql = String.format("delete from " + tableTemplate() + " %s", t.getGrain().getName(), t.getName(),
 				!whereClause.isEmpty() ? "where " + whereClause : "");
 		try {
@@ -1281,7 +1281,7 @@ final class OraAdaptor extends DBAdaptor {
 			throw new IllegalArgumentException();
 
 		StringBuilder w = new StringBuilder();
-		w.append(getWhereClause(t, filters, complexFilter));
+		w.append(getWhereClause(filters, complexFilter));
 		if (w.length() > 0 && navigationWhereClause.length() > 0)
 			w.append(" and ");
 		w.append(navigationWhereClause);

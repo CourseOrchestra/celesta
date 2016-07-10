@@ -380,7 +380,7 @@ final class MySQLAdaptor extends DBAdaptor {
 			Map<String, AbstractFilter> filters, Expr complexFilter)
 			throws CelestaException {
 		// Готовим условие where
-		String whereClause = getWhereClause(t, filters, complexFilter);
+		String whereClause = getWhereClause(filters, complexFilter);
 
 		// Готовим запрос на удаление
 		String sql = String.format("delete from " + tableTemplate() + " %s;", t
@@ -1067,7 +1067,7 @@ final class MySQLAdaptor extends DBAdaptor {
 		// CHECKSTYLE:ON
 		if (navigationWhereClause == null)
 			throw new IllegalArgumentException();
-		StringBuilder w = new StringBuilder(getWhereClause(t, filters,
+		StringBuilder w = new StringBuilder(getWhereClause(filters,
 				complexFilter));
 		if (w.length() > 0 && navigationWhereClause.length() > 0)
 			w.append(" and ");

@@ -51,13 +51,11 @@ public abstract class BasicCursor {
 	static final String SYSTEMUSERID = String.format("SYS%08X", (new Random()).nextInt());
 	static final SessionContext SYSTEMSESSION = new SessionContext(SYSTEMUSERID, "CELESTA");
 
-	private static final String DATABASE_CLOSING_ERROR =
-		"Database error when closing recordset for table '%s': %s";
+	private static final String DATABASE_CLOSING_ERROR = "Database error when closing recordset for table '%s': %s";
 	private static final String CURSOR_IS_CLOSED = "Cursor is closed.";
 
 	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
-	private static final Pattern COLUMN_NAME = Pattern
-			.compile("([a-zA-Z_][a-zA-Z0-9_]*)( +([Aa]|[Dd][Ee])[Ss][Cc])?");
+	private static final Pattern COLUMN_NAME = Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)( +([Aa]|[Dd][Ee])[Ss][Cc])?");
 
 	private static final Pattern NAVIGATION = Pattern.compile("[+-<>=]+");
 	private final DBAdaptor db;
@@ -88,17 +86,14 @@ public abstract class BasicCursor {
 
 	public BasicCursor(CallContext context) throws CelestaException {
 		if (context == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: context should not be null.", this
-							.getClass().getName());
+			throw new CelestaException("Invalid context passed to %s constructor: context should not be null.",
+					this.getClass().getName());
 		if (context.getConn() == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: connection is null.", this
-							.getClass().getName());
+			throw new CelestaException("Invalid context passed to %s constructor: connection is null.",
+					this.getClass().getName());
 		if (context.getUserId() == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: user id is null.", this.getClass()
-							.getName());
+			throw new CelestaException("Invalid context passed to %s constructor: user id is null.",
+					this.getClass().getName());
 		context.incCursorCount();
 
 		this.context = context;
@@ -337,9 +332,8 @@ public abstract class BasicCursor {
 			// This is logically equivalent to the 'obvious' formula, but runs
 			// much faster on Postgres (apparently because of conjunction as a
 			// top logical operator)
-			result =
-				String.format("((%s %s= ?) and ((%s %s ?) or %s))", orderByNames[i], ops[i],
-						orderByNames[i], ops[i], getNavigationWhereClause(i + 1, ops));
+			result = String.format("((%s %s= ?) and ((%s %s ?) or %s))", orderByNames[i], ops[i], orderByNames[i],
+					ops[i], getNavigationWhereClause(i + 1, ops));
 		} else {
 			result = String.format("(%s %s ?)", orderByNames[i], ops[i]);
 		}
@@ -360,9 +354,7 @@ public abstract class BasicCursor {
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 
 		if (isNotValid(set))
-			set =
-				db.getRecordSetStatement(conn, meta(), filters, complexFilter, getOrderBy(),
-						offset, rowCount);
+			set = db.getRecordSetStatement(conn, meta(), filters, complexFilter, getOrderBy(), offset, rowCount);
 		boolean result = false;
 		try {
 			if (cursor != null)
@@ -543,8 +535,10 @@ public abstract class BasicCursor {
 	 *            <ul>
 	 *            <li>=обновить текущую запись (если она имеется в
 	 *            отфильтрованном наборе)</li>
-	 *            <li>&gt; перейти к следующей записи в отфильтрованном наборе</li>
-	 *            <li>&lt; перейти к предыдущей записи в отфильтрованном наборе</li>
+	 *            <li>&gt; перейти к следующей записи в отфильтрованном наборе
+	 *            </li>
+	 *            <li>&lt; перейти к предыдущей записи в отфильтрованном наборе
+	 *            </li>
 	 *            <li>- перейти к первой записи в отфильтрованном наборе</li>
 	 *            <li>+ перейти к последней записи в отфильтрованном наборе</li>
 	 *            </ul>
@@ -560,8 +554,7 @@ public abstract class BasicCursor {
 		Matcher m = NAVIGATION.matcher(command);
 		if (!m.matches())
 			throw new CelestaException(
-					"Invalid navigation command: '%s', should consist of '+', '-', '>', '<' and '=' only!",
-					command);
+					"Invalid navigation command: '%s', should consist of '+', '-', '>', '<' and '=' only!", command);
 		Object[] valsArray = _currentValues();
 
 		Map<String, Object> valsMap = new HashMap<>();
@@ -592,8 +585,8 @@ public abstract class BasicCursor {
 		return false;
 	}
 
-	void fillNavigationParams(PreparedStatement navigator, Map<String, Object> valuesMap, int k,
-			char c) throws CelestaException {
+	void fillNavigationParams(PreparedStatement navigator, Map<String, Object> valuesMap, int k, char c)
+			throws CelestaException {
 		if (c == '-' || c == '+')
 			return;
 
@@ -624,33 +617,26 @@ public abstract class BasicCursor {
 		switch (c) {
 		case '<':
 			if (isNotValid(backwards))
-				backwards =
-					db().getNavigationStatement(conn, meta(), filters, complexFilter,
-							getReversedOrderBy(), getNavigationWhereClause('<'));
+				backwards = db().getNavigationStatement(conn, meta(), filters, complexFilter, getReversedOrderBy(),
+						getNavigationWhereClause('<'));
 			return backwards;
 		case '>':
 			if (isNotValid(forwards))
-				forwards =
-					db().getNavigationStatement(conn, meta(), filters, complexFilter,
-							getOrderBy(), getNavigationWhereClause('>'));
+				forwards = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(),
+						getNavigationWhereClause('>'));
 			return forwards;
 		case '=':
 			if (isNotValid(here))
-				here =
-					db().getNavigationStatement(conn, meta(), filters, complexFilter,
-							getOrderBy(), getNavigationWhereClause('='));
+				here = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(),
+						getNavigationWhereClause('='));
 			return here;
 		case '-':
 			if (isNotValid(first))
-				first =
-					db().getNavigationStatement(conn, meta(), filters, complexFilter,
-							getOrderBy(), "");
+				first = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(), "");
 			return first;
 		case '+':
 			if (isNotValid(last))
-				last =
-					db().getNavigationStatement(conn, meta(), filters, complexFilter,
-							getReversedOrderBy(), "");
+				last = db().getNavigationStatement(conn, meta(), filters, complexFilter, getReversedOrderBy(), "");
 			return last;
 		default:
 			// THIS WILL NEVER EVER HAPPEN, WE'VE ALREADY CHECKED
@@ -723,8 +709,7 @@ public abstract class BasicCursor {
 	 * @throws CelestaException
 	 *             Неверное имя поля, SQL-ошибка.
 	 */
-	public final void setRange(String name, Object valueFrom, Object valueTo)
-			throws CelestaException {
+	public final void setRange(String name, Object valueFrom, Object valueTo) throws CelestaException {
 		validateColumName(name);
 		AbstractFilter oldFilter = filters.put(name, new Range(valueFrom, valueTo));
 		if (closed)
@@ -754,7 +739,7 @@ public abstract class BasicCursor {
 		if (value == null || value.isEmpty())
 			throw new CelestaException("Filter for column %s is null or empty. "
 					+ "Use setrange(fieldname) to remove any filters from the column.", name);
-		AbstractFilter oldFilter = filters.put(name, new Filter(value));
+		AbstractFilter oldFilter = filters.put(name, new Filter(value, meta().getColumns().get(name)));
 		if (closed)
 			return;
 		// Если заменили фильтр на тот же самый -- ничего делать не надо.
@@ -846,14 +831,12 @@ public abstract class BasicCursor {
 		for (String name : names) {
 			Matcher m = COLUMN_NAME.matcher(name);
 			if (!m.matches())
-				throw new CelestaException(
-						"orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
+				throw new CelestaException("orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
 						name);
 			String colName = m.group(1);
 			validateColumName(colName);
 			if (!colNames.add(colName))
-				throw new CelestaException("Column '%s' is used more than once in orderby() call",
-						colName);
+				throw new CelestaException("Column '%s' is used more than once in orderby() call", colName);
 
 			boolean order = !(m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim()));
 
@@ -872,8 +855,7 @@ public abstract class BasicCursor {
 		closeSet();
 	}
 
-	abstract void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames)
-			throws CelestaException;
+	abstract void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException;
 
 	/**
 	 * Сброс фильтров, сортировки и полная очистка буфера.
@@ -924,9 +906,8 @@ public abstract class BasicCursor {
 	 * not be public.
 	 */
 	final int position() throws CelestaException {
-		PreparedStatement stmt =
-			db.getSetCountStatement(conn, meta(), filters, complexFilter,
-					getNavigationWhereClause('<'));
+		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters, complexFilter,
+				getNavigationWhereClause('<'));
 
 		// getting navigation clause params
 		Map<String, Object> valsMap = new HashMap<>();
@@ -963,8 +944,7 @@ public abstract class BasicCursor {
 	 */
 	public final void copyFiltersFrom(BasicCursor c) throws CelestaException {
 		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(_tableName())))
-			throw new CelestaException(
-					"Cannot assign filters from cursor for %s.%s to cursor for %s.%s.",
+			throw new CelestaException("Cannot assign filters from cursor for %s.%s to cursor for %s.%s.",
 					c._grainName(), c._tableName(), _grainName(), _tableName());
 		filters.clear();
 		filters.putAll(c.filters);
@@ -984,8 +964,7 @@ public abstract class BasicCursor {
 	 */
 	public final void copyOrderFrom(BasicCursor c) throws CelestaException {
 		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(_tableName())))
-			throw new CelestaException(
-					"Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
+			throw new CelestaException("Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
 					c._grainName(), c._tableName(), _grainName(), _tableName());
 		orderByNames = c.orderByNames;
 		descOrders = c.descOrders;
