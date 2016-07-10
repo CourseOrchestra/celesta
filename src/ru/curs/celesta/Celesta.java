@@ -139,16 +139,16 @@ public final class Celesta {
 		// Для начала, пытаемся достать готовый интерпретатор из пула.
 		InterpreterHolder h = interpreterPool.poll();
 		PythonInterpreter interp;
-		
+
 		long timestamp = sourceMonitor.getSourceTimestamp();
-		
+
 		if (h != null) {
 			interp = h.interpreter;
 			if (timestamp > h.sourceTimestamp) {
 
 				// re-importing grain modules
 				initPythonScore(interp);
-				
+
 				h.sourceTimestamp = timestamp;
 			}
 			return h;
@@ -160,7 +160,7 @@ public final class Celesta {
 			state.path.append(new PyString(path));
 		interp = new PythonInterpreter(null, state);
 		codecs.setDefaultEncoding("UTF-8");
-		//initialize grain modules
+		// initialize grain modules
 		initPythonScore(interp);
 		return new InterpreterHolder(interp, timestamp);
 	}
@@ -174,7 +174,7 @@ public final class Celesta {
 			interp.exec("import sys");
 			for (String moduleName : sourceMonitor.getModules()) {
 				interp.exec(String.format("sys.modules.pop('%s', None)", moduleName));
-			}			
+			}
 			interp.set("_ic", context);
 			interp.exec("sys.modules['initcontext'] = lambda: _ic");
 			for (Grain g : theCelesta.getScore().getGrains().values())
@@ -634,9 +634,12 @@ public final class Celesta {
 
 	/**
 	 * Возвращает поведение NULLS FIRST текущей базы данных.
+	 * 
+	 * @throws CelestaException
+	 *             unknown database
 	 */
-	public boolean nullsFirst() {
-		return AppSettings.getDBType().nullsFirst();
+	public boolean nullsFirst() throws CelestaException {
+		return DBAdaptor.getAdaptor().nullsFirst();
 	}
 
 	/**

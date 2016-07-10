@@ -121,11 +121,6 @@ public final class AppSettings {
 			String getDriverClassName() {
 				return "org.postgresql.Driver";
 			}
-
-			@Override
-			public boolean nullsFirst() {
-				return false;
-			}
 		},
 		/**
 		 * MS SQL.
@@ -134,11 +129,6 @@ public final class AppSettings {
 			@Override
 			String getDriverClassName() {
 				return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-			}
-
-			@Override
-			public boolean nullsFirst() {
-				return true;
 			}
 		},
 		/**
@@ -149,11 +139,6 @@ public final class AppSettings {
 			String getDriverClassName() {
 				return "oracle.jdbc.driver.OracleDriver";
 			}
-
-			@Override
-			public boolean nullsFirst() {
-				return false;
-			}
 		},
 		/**
 		 * MySQL.
@@ -162,11 +147,6 @@ public final class AppSettings {
 			@Override
 			String getDriverClassName() {
 				return "com.mysql.jdbc.Driver";
-			}
-
-			@Override
-			public boolean nullsFirst() {
-				return true;
 			}
 		},
 		/**
@@ -177,18 +157,8 @@ public final class AppSettings {
 			String getDriverClassName() {
 				return "";
 			}
-
-			@Override
-			public boolean nullsFirst() {
-				return false;
-			}
 		};
 		abstract String getDriverClassName();
-		
-		/**
-		 * Default NULLS FIRST behaviour.
-		 */
-		public abstract boolean nullsFirst();
 	}
 
 	private static DBType internalGetDBType(String url) {

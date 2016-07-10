@@ -984,4 +984,9 @@ final class PostgresAdaptor extends DBAdaptor {
 		}
 	}
 
+	@Override
+	public boolean nullsFirst() {
+		return false;
+	}
+
 }

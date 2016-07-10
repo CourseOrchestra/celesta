@@ -79,10 +79,19 @@ import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
 
 /**
+ * Subset of DBAdaptor functions for literals translation.
+ */
+interface QueryBuildingHelper {
+	String translateDate(String date) throws CelestaException;
+	
+	boolean nullsFirst();
+}
+
+/**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
  * 
  */
-public abstract class DBAdaptor {
+public abstract class DBAdaptor implements QueryBuildingHelper {
 
 	/*
 	 * NB для программистов. Класс большой, во избежание хаоса здесь порядок
@@ -346,8 +355,7 @@ public abstract class DBAdaptor {
 	 * @throws CelestaException
 	 *             в случае некорректного фильтра
 	 */
-	final String getWhereClause(Map<String, AbstractFilter> filters, Expr complexFilter)
-			throws CelestaException {
+	final String getWhereClause(Map<String, AbstractFilter> filters, Expr complexFilter) throws CelestaException {
 		if (filters == null)
 			throw new IllegalArgumentException();
 		StringBuilder whereClause = new StringBuilder();

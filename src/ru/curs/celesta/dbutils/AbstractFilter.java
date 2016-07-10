@@ -92,7 +92,7 @@ class Filter extends AbstractFilter {
 		return String.format("%s", value);
 	}
 
-	public String makeWhereClause(String quotedName, final DBAdaptor dba) throws CelestaException {
+	public String makeWhereClause(String quotedName, final QueryBuildingHelper dba) throws CelestaException {
 
 		FilterParser.SQLTranslator tr = new FilterParser.SQLTranslator() {
 			@Override

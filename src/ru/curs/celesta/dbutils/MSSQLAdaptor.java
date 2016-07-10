@@ -1011,4 +1011,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 	}
+
+	@Override
+	public boolean nullsFirst() {
+		return true;
+	}
 }

@@ -1348,4 +1348,9 @@ final class OraAdaptor extends DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 	}
+
+	@Override
+	public boolean nullsFirst() {
+		return false;
+	}
 }
