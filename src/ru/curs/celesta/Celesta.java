@@ -67,7 +67,8 @@ public final class Celesta {
 	private final Queue<InterpreterHolder> interpreterPool = new LinkedList<>();
 	private final Map<String, SessionContext> sessions = Collections
 			.synchronizedMap(new HashMap<String, SessionContext>());
-	private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
+	private final Set<CallContext> contexts = Collections
+			.synchronizedSet(new LinkedHashSet<CallContext>());
 
 	private final ProfilingManager profiler = new ProfilingManager();
 
@@ -130,7 +131,8 @@ public final class Celesta {
 				getInstance().logout(sesId, false);
 				getInstance().sourceMonitor.cancel();
 			} catch (CelestaException e) {
-				System.out.println("The following problems occured while trying to execute " + args[1] + ":");
+				System.out.println("The following problems occured while trying to execute "
+						+ args[1] + ":");
 				System.out.println(e.getMessage());
 			}
 	}
@@ -351,8 +353,8 @@ public final class Celesta {
 	 *             В случае, если процедура не найдена или в случае ошибки
 	 *             выполненения процедуры.
 	 */
-	public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc, Object... param)
-			throws CelestaException {
+	public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec,
+			ShowcaseContext sc, String proc, Object... param) throws CelestaException {
 		Matcher m = PROCNAME.matcher(proc);
 
 		if (m.matches()) {
@@ -364,7 +366,8 @@ public final class Celesta {
 			try {
 				grain = getScore().getGrain(grainName);
 			} catch (ParseException e) {
-				throw new CelestaException("Invalid procedure name: %s, grain %s is unknown for the system.", proc,
+				throw new CelestaException(
+						"Invalid procedure name: %s, grain %s is unknown for the system.", proc,
 						grainName);
 			}
 
@@ -378,8 +381,8 @@ public final class Celesta {
 			sesContext.setMessageReceiver(rec);
 
 			Connection conn = ConnectionPool.get();
-			CallContext context = new CallContext(conn, sesContext, grain, proc);
-			
+			CallContext context = new CallContext(conn, sesContext, sc, grain, proc);
+
 			contexts.add(context);
 			InterpreterHolder h = getPythonInterpreter();
 			PythonInterpreter interp = h.interpreter;
@@ -393,7 +396,8 @@ public final class Celesta {
 					String line = String.format("import %s%s", grainName, unitName);
 					lastPyCmd = line;
 					interp.exec(line);
-					line = String.format("%s%s.%s(%s)", grainName, unitName, procName, sb.toString());
+					line =
+						String.format("%s%s.%s(%s)", grainName, unitName, procName, sb.toString());
 					lastPyCmd = line;
 					PyObject pyObj = interp.eval(line);
 					profiler.logCall(context);
@@ -410,8 +414,9 @@ public final class Celesta {
 					}
 					StringWriter sw = new StringWriter();
 					e.fillInStackTrace().printStackTrace(new PrintWriter(sw));
-					throw new CelestaException(String.format("Python error while executing '%s': %s:%s%n%s%n%s",
-							lastPyCmd, e.type, e.value, sw.toString(), sqlErr));
+					throw new CelestaException(String.format(
+							"Python error while executing '%s': %s:%s%n%s%n%s", lastPyCmd, e.type,
+							e.value, sw.toString(), sqlErr));
 				}
 			} finally {
 				context.closeCursors();
@@ -421,8 +426,9 @@ public final class Celesta {
 			}
 
 		} else {
-			throw new CelestaException("Invalid procedure name: %s, should match pattern <grain>.(<module>.)...<proc>, "
-					+ "note that grain name should not contain underscores.", proc);
+			throw new CelestaException(
+					"Invalid procedure name: %s, should match pattern <grain>.(<module>.)...<proc>, "
+							+ "note that grain name should not contain underscores.", proc);
 		}
 	}
 
@@ -443,7 +449,8 @@ public final class Celesta {
 		initialize(settings, true);
 	}
 
-	private static synchronized void initialize(Properties settings, boolean initPython) throws CelestaException {
+	private static synchronized void initialize(Properties settings, boolean initPython)
+			throws CelestaException {
 		if (theCelesta != null)
 			throw new CelestaException(CELESTA_IS_ALREADY_INITIALIZED);
 
@@ -459,7 +466,8 @@ public final class Celesta {
 		new Celesta();
 
 		if (initPython) {
-			System.out.print("Celesta post-initialization: phase 1/1 first Jython interpreter initialization...");
+			System.out
+					.print("Celesta post-initialization: phase 1/1 first Jython interpreter initialization...");
 			theCelesta.returnPythonInterpreter(theCelesta.getPythonInterpreter());
 			System.out.println("done.");
 		}
@@ -474,12 +482,14 @@ public final class Celesta {
 		// Construct the class loader itself
 		if (urlSet.size() > 0) {
 			final URL[] array = urlSet.toArray(new URL[urlSet.size()]);
-			ClassLoader classLoader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
-				@Override
-				public URLClassLoader run() {
-					return new URLClassLoader(array, Thread.currentThread().getContextClassLoader());
-				}
-			});
+			ClassLoader classLoader =
+				AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
+					@Override
+					public URLClassLoader run() {
+						return new URLClassLoader(array, Thread.currentThread()
+								.getContextClassLoader());
+					}
+				});
 			Thread.currentThread().setContextClassLoader(classLoader);
 		}
 		Properties postProperties = new Properties();
@@ -537,7 +547,8 @@ public final class Celesta {
 				String path = getMyPath();
 				File f = new File(path + FILE_PROPERTIES);
 				if (!f.exists())
-					throw new CelestaException(String.format("File %s cannot be found.", f.toString()));
+					throw new CelestaException(String.format("File %s cannot be found.",
+							f.toString()));
 				in = new FileInputStream(f);
 			}
 			try {
@@ -546,7 +557,8 @@ public final class Celesta {
 				in.close();
 			}
 		} catch (IOException e) {
-			throw new CelestaException(String.format("IOException while reading settings file: %s", e.getMessage()));
+			throw new CelestaException(String.format(
+					"IOException while reading settings file: %s", e.getMessage()));
 		}
 
 		initialize(settings, initPython);
