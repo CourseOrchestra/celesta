@@ -330,7 +330,7 @@ public final class Celesta {
 	 *             выполненения процедуры.
 	 */
 	public PyObject runPython(String sesId, String proc, Object... param) throws CelestaException {
-		return runPython(sesId, null, proc, param);
+		return runPython(sesId, null, null, proc, param);
 
 	}
 
@@ -351,7 +351,7 @@ public final class Celesta {
 	 *             В случае, если процедура не найдена или в случае ошибки
 	 *             выполненения процедуры.
 	 */
-	public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec, String proc, Object... param)
+	public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc, Object... param)
 			throws CelestaException {
 		Matcher m = PROCNAME.matcher(proc);
 
@@ -379,6 +379,7 @@ public final class Celesta {
 
 			Connection conn = ConnectionPool.get();
 			CallContext context = new CallContext(conn, sesContext, grain, proc);
+			
 			contexts.add(context);
 			InterpreterHolder h = getPythonInterpreter();
 			PythonInterpreter interp = h.interpreter;

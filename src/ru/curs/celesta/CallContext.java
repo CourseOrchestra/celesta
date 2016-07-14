@@ -26,6 +26,8 @@ public final class CallContext {
 	private final Grain grain;
 	private final String procName;
 	private final SessionContext sesContext;
+	private final ShowcaseContext showcaseContext;
+
 	private final int dbPid;
 	private final Date startTime = new Date();
 
@@ -33,20 +35,21 @@ public final class CallContext {
 	private int cursorCount;
 
 	public CallContext(Connection conn, SessionContext sesContext) throws CelestaException {
-		this.conn = conn;
-		this.sesContext = sesContext;
-		this.grain = null;
-		this.procName = null;
-		DBAdaptor db = DBAdaptor.getAdaptor();
-		dbPid = db.getDBPid(conn);
+		this(conn, sesContext, null, null, null);
 	}
 
 	public CallContext(Connection conn, SessionContext sesContext, Grain curGrain, String procName)
 			throws CelestaException {
+		this(conn, sesContext, null, curGrain, procName);
+	}
+
+	public CallContext(Connection conn, SessionContext sesContext, ShowcaseContext showcaseContext, Grain curGrain,
+			String procName) throws CelestaException {
 		this.conn = conn;
 		this.sesContext = sesContext;
 		this.grain = curGrain;
 		this.procName = procName;
+		this.showcaseContext = showcaseContext;
 		DBAdaptor db = DBAdaptor.getAdaptor();
 		dbPid = db.getDBPid(conn);
 	}
@@ -212,5 +215,12 @@ public final class CallContext {
 	 */
 	public Date getStartTime() {
 		return startTime;
+	}
+
+	/**
+	 * Возвращает контексты Showcase.
+	 */
+	public ShowcaseContext getShowcaseContext() {
+		return showcaseContext;
 	}
 }
