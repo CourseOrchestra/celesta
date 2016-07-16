@@ -2,7 +2,7 @@ package ru.curs.celesta.score;
 
 import java.util.List;
 
-import ru.curs.celesta.dbutils.DBAdaptor;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 
 /** Скалярное выражение SQL. */
 public abstract class Expr {
@@ -36,7 +36,7 @@ public abstract class Expr {
 	 * @param dba
 	 *            Адаптер БД.
 	 */
-	public final String getSQL(DBAdaptor dba) {
+	public final String getSQL(QueryBuildingHelper dba) {
 		SQLGenerator gen = dba.getViewSQLGenerator();
 		return gen.generateSQL(this);
 	}

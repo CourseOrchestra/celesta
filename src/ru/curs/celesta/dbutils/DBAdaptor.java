@@ -79,15 +79,6 @@ import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
 
 /**
- * Subset of DBAdaptor functions for literals translation.
- */
-interface QueryBuildingHelper {
-	String translateDate(String date) throws CelestaException;
-	
-	boolean nullsFirst();
-}
-
-/**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
  * 
  */
