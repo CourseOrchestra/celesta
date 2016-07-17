@@ -22,7 +22,7 @@ abstract class AbstractFilter {
  * Фильтр в виде единичного значения.
  */
 class SingleValue extends AbstractFilter {
-	private final Object value;
+	private Object value;
 
 	public SingleValue(Object value) {
 		this.value = value;
@@ -36,6 +36,10 @@ class SingleValue extends AbstractFilter {
 	public Object getValue() {
 		return value;
 	}
+
+	void setValue(Object value) {
+		this.value = value;
+	}
 }
 
 /**
@@ -43,8 +47,8 @@ class SingleValue extends AbstractFilter {
  * 
  */
 class Range extends AbstractFilter {
-	private final Object valueFrom;
-	private final Object valueTo;
+	private Object valueFrom;
+	private Object valueTo;
 
 	public Range(Object valueFrom, Object valueTo) {
 		this.valueFrom = valueFrom;
@@ -63,6 +67,11 @@ class Range extends AbstractFilter {
 	public Object getValueTo() {
 		return valueTo;
 	}
+
+	protected void setValues(Object valueFrom, Object valueTo) {
+		this.valueFrom = valueFrom;
+		this.valueTo = valueTo;
+	}
 }
 
 /**
@@ -71,6 +80,7 @@ class Range extends AbstractFilter {
 class Filter extends AbstractFilter {
 
 	private static final HashMap<String, FilterType> C2F = new HashMap<>();
+
 	static {
 		C2F.put(IntegerColumn.CELESTA_TYPE, FilterType.NUMERIC);
 		C2F.put(FloatingColumn.CELESTA_TYPE, FilterType.NUMERIC);
