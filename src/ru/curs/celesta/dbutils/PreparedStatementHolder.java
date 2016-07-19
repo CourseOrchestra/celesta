@@ -72,20 +72,21 @@ abstract class MaskedStatementHolder extends PreparedStmtHolder {
 
 	@Override
 	synchronized PreparedStatement getStatement(Object[] rec) throws CelestaException {
-		if (isStmtValid()) {
+		reusable: if (isStmtValid()) {
 			for (int i = 0; i < nullsMask.length; i++) {
 				if (nullsMask[i] != (rec[nullsMaskIndices[i]] == null)) {
 					close();
-					break;
+					break reusable;
 				}
 			}
-		} else {
-			nullsMaskIndices = getNullsMaskIndices();
-			nullsMask = new boolean[nullsMaskIndices.length];
-			for (int i = 0; i < nullsMask.length; i++) {
-				nullsMask[i] = rec[nullsMaskIndices[i]] == null;
-			}
+			return super.getStatement(rec);
 		}
+		nullsMaskIndices = getNullsMaskIndices();
+		nullsMask = new boolean[nullsMaskIndices.length];
+		for (int i = 0; i < nullsMask.length; i++) {
+			nullsMask[i] = rec[nullsMaskIndices[i]] == null;
+		}
+
 		return super.getStatement(rec);
 	}
 
@@ -134,7 +135,7 @@ abstract class ParameterSetter {
 	}
 
 	static ParameterSetter create(int i) {
-		return FieldParameterSetter.create(i);
+		return FieldParameterSetter.get(i);
 	}
 
 	static ParameterSetter create(SingleValue v) {
