@@ -320,4 +320,15 @@ public class View extends GrainElement {
 		queryString = sw.toString();
 		return queryString;
 	}
+
+	@Override
+	public int getColumnIndex(String name) {
+		int i = -1;
+		for (String c : columnTypes.keySet()) {
+			i++;
+			if (c.equals(name))
+				return i;
+		}
+		return i;
+	}
 }

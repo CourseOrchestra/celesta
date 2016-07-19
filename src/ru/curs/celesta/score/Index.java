@@ -150,4 +150,9 @@ public class Index extends GrainElement {
 		bw.write(");");
 		bw.newLine();
 	}
+
+	@Override
+	public int getColumnIndex(String name) {
+		return columns.getIndex(name);
+	}
 }

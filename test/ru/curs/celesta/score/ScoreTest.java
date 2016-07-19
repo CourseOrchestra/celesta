@@ -386,6 +386,8 @@ public class ScoreTest {
 
 		assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
 
+		assertEquals(3, v.getColumnIndex("d"));
+		assertEquals(1, v.getColumnIndex("b"));
 	}
 
 	@Test

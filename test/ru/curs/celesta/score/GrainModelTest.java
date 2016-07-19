@@ -30,9 +30,9 @@ import ru.curs.celesta.score.Table;
 public class GrainModelTest {
 
 	private Score s = new Score();
-	
+
 	@BeforeClass
-	public static void Setup() throws CelestaException{
+	public static void Setup() throws CelestaException {
 		Properties p = new Properties();
 		p.setProperty("score.path", ".");
 		p.setProperty("rdbms.connection.url", "jdbc:oracle:123");
@@ -53,6 +53,10 @@ public class GrainModelTest {
 		t.addPK("a");
 		t.finalizePK();
 
+		assertEquals(5, t.getColumns().size());
+		assertEquals(0, t.getColumnIndex("a"));
+		assertEquals(2, t.getColumnIndex("c"));
+		
 		Index ind = new Index(g, "table1", "aa_i1");
 		ind.addColumn("b");
 		ind.addColumn("d");
@@ -114,12 +118,12 @@ public class GrainModelTest {
 		ind.addColumn("c");
 		itWas = false;
 		try {
-			//Нельзя индексировать nullable-колонки
+			// Нельзя индексировать nullable-колонки
 			ind.addColumn("e");
 		} catch (ParseException e) {
 			itWas = true;
 		}
-		
+
 		ind.finalizeIndex();
 		assertEquals(3, g.getIndices().size());
 		assertSame(ind, g.getIndices().get("aa_i3"));
@@ -269,8 +273,7 @@ public class GrainModelTest {
 		// Установка referencedtable финализирует внешний ключ
 		fk.setReferencedTable("", "t2");
 		assertEquals(1, t1.getForeignKeys().size());
-		assertEquals(1, t1.getForeignKeys().iterator().next().getColumns()
-				.size());
+		assertEquals(1, t1.getForeignKeys().iterator().next().getColumns().size());
 		assertSame(t2, fk.getReferencedTable());
 
 		itWas = false;

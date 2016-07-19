@@ -34,6 +34,14 @@ public abstract class GrainElement extends NamedElement {
 	 */
 	public abstract Map<String, ? extends ColumnMeta> getColumns();
 
+	/**
+	 * Номер столбца в перечне столбцов.
+	 * 
+	 * @param name
+	 *            Имя столбца.
+	 */
+	public abstract int getColumnIndex(String name);
+
 	abstract void save(BufferedWriter bw) throws IOException;
 
 	/**

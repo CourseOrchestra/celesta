@@ -74,6 +74,7 @@ public abstract class BasicCursor {
 	// Поля фильтров и сортировок
 	private final Map<String, AbstractFilter> filters = new HashMap<>();
 	private String[] orderByNames;
+	private int[] orderByIndices;
 	private boolean[] descOrders;
 
 	private long offset = 0;
@@ -83,6 +84,55 @@ public abstract class BasicCursor {
 
 	private BasicCursor previousCursor;
 	private BasicCursor nextCursor;
+
+	private final WhereTermsMaker qmaker = new WhereTermsMaker(new WhereMakerParamsProvider() {
+
+		@Override
+		public void initOrderBy() throws CelestaException {
+			if (orderByNames == null)
+				orderBy();
+		}
+
+		@Override
+		public QueryBuildingHelper dba() {
+			return db;
+		}
+
+		@Override
+		public String[] sortFields() throws CelestaException {
+			return orderByNames;
+		}
+
+		@Override
+		public boolean[] descOrders() throws CelestaException {
+			return descOrders;
+		}
+
+		@Override
+		public Map<String, AbstractFilter> filters() {
+			return filters;
+		}
+
+		@Override
+		public Expr complexFilter() {
+			return complexFilter;
+		}
+
+		@Override
+		public int[] sortFieldsIndices() throws CelestaException {
+			return orderByIndices;
+		}
+
+		@Override
+		public Object[] values() throws CelestaException {
+			return _currentValues();
+		}
+
+		@Override
+		public boolean isNullable(String columnName) throws CelestaException {
+			return meta().getColumns().get(columnName).isNullable();
+		}
+	});
 
 	public BasicCursor(CallContext context) throws CelestaException {
 		if (context == null)
@@ -274,6 +324,12 @@ public abstract class BasicCursor {
 
 	}
 
+	/**
+	 * Перечень столбцов, по которым осуществляется сортировка.
+	 * 
+	 * @throws CelestaException
+	 *             ошибка доступа к метаданным.
+	 */
 	public String getOrderBy() throws CelestaException {
 		return getOrderBy(false);
 	}
@@ -827,6 +883,7 @@ public abstract class BasicCursor {
 
 		ArrayList<String> l = new ArrayList<>(8);
 		ArrayList<Boolean> ol = new ArrayList<>(8);
+		ArrayList<Integer> il = new ArrayList<>(8);
 		Set<String> colNames = new HashSet<>();
 		for (String name : names) {
 			Matcher m = COLUMN_NAME.matcher(name);
@@ -841,16 +898,19 @@ public abstract class BasicCursor {
 			boolean order = !(m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim()));
 
 			l.add(String.format("\"%s\"", colName));
+			il.add(meta().getColumnIndex(colName));
 			ol.add(order);
 		}
 
 		appendPK(l, ol, colNames);
 
 		orderByNames = new String[l.size()];
+		orderByIndices = new int[l.size()];
 		descOrders = new boolean[l.size()];
 		for (int i = 0; i < orderByNames.length; i++) {
 			orderByNames[i] = l.get(i);
 			descOrders[i] = ol.get(i);
+			orderByIndices[i] = il.get(i);
 		}
 		closeSet();
 	}
