@@ -883,7 +883,6 @@ public abstract class BasicCursor {
 
 		ArrayList<String> l = new ArrayList<>(8);
 		ArrayList<Boolean> ol = new ArrayList<>(8);
-		ArrayList<Integer> il = new ArrayList<>(8);
 		Set<String> colNames = new HashSet<>();
 		for (String name : names) {
 			Matcher m = COLUMN_NAME.matcher(name);
@@ -898,7 +897,7 @@ public abstract class BasicCursor {
 			boolean order = !(m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim()));
 
 			l.add(String.format("\"%s\"", colName));
-			il.add(meta().getColumnIndex(colName));
+
 			ol.add(order);
 		}
 
@@ -910,7 +909,7 @@ public abstract class BasicCursor {
 		for (int i = 0; i < orderByNames.length; i++) {
 			orderByNames[i] = l.get(i);
 			descOrders[i] = ol.get(i);
-			orderByIndices[i] = il.get(i);
+			orderByIndices[i] = meta().getColumnIndex(WhereTermsMaker.unquot(orderByNames[i]));
 		}
 		closeSet();
 	}
