@@ -100,7 +100,7 @@ abstract class MaskedStatementHolder extends PreparedStmtHolder {
 		return nullsMask;
 	}
 
-	protected abstract int[] getNullsMaskIndices();
+	protected abstract int[] getNullsMaskIndices() throws CelestaException;
 
 }
 
