@@ -1,6 +1,8 @@
 package ru.curs.celesta;
 
+import org.python.core.Py;
 import org.python.core.PyDictionary;
+import org.python.core.PyString;
 
 /**
  * Контекст сессии.
@@ -14,6 +16,10 @@ public final class SessionContext {
 	public SessionContext(String userId, String sessionId) {
 		this.userId = userId;
 		this.sessionId = sessionId;
+	}
+
+	void removeForms() {
+		data.pop(new PyString("_lyraForms"), Py.None);
 	}
 
 	void addMessage(CelestaMessage msg) {
