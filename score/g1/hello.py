@@ -148,12 +148,15 @@ def hello(context, arg):
     
     # comment the line below to check version check failure
     adresses.get('11111', '11', '2')
+    print adresses.asCSVLine()    
     adresses.city = 'bbcc'
     adresses.update()
     
-    #adresses.setFilter('country', "!null|'ss'")
-    #adresses.setRange('building', 1, 5)
-    #adresses.first()
+    adresses.setFilter('country', "!null|'ss'")
+    adresses.setRange('building', 1, 11)
+    adresses.first()
+    adresses.navigate('=')
+    adresses.last()
     
     testview = testviewCursor(context)
     testview.orderBy("f1")

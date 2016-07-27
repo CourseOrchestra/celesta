@@ -171,12 +171,12 @@ public class NavigationQueriesMakerTest {
 		c = new WhereTermsMaker(p);
 
 		assertEquals(
-				"((\"grainid\" >= ?) and ((\"grainid\" > ?) or (((\"m\" <= ?) or (\"m\" is null)) and (((\"m\" < ?) or (\"m\" is null)) or (\"tablename\" > ?)))))",
+				"((\"grainid\" >= ?) and ((\"grainid\" > ?) or (((\"m\" <= ?) or (\"m\" is null)) and ((\"m\" < ?) or (\"m\" is null) or (\"tablename\" > ?)))))",
 				c.getWhereTerm('>').getWhere());
 
 		p.setNullsFirst(false);
 		assertEquals(
-				"(((\"grainid\" >= ?) or (\"grainid\" is null)) and (((\"grainid\" > ?) or (\"grainid\" is null)) or ((\"m\" <= ?) and ((\"m\" < ?) or ((\"tablename\" > ?) or (\"tablename\" is null))))))",
+				"(((\"grainid\" >= ?) or (\"grainid\" is null)) and ((\"grainid\" > ?) or (\"grainid\" is null) or ((\"m\" <= ?) and ((\"m\" < ?) or (\"tablename\" > ?) or (\"tablename\" is null)))))",
 				c.getWhereTerm('>').getWhere());
 
 	}
@@ -232,14 +232,14 @@ public class NavigationQueriesMakerTest {
 
 		p.setNullsFirst(false);
 		assertEquals(
-				"(((\"A\" >= ?) or (\"A\" is null)) and (((\"A\" > ?) or (\"A\" is null)) or ((\"B\" > ?) or (\"B\" is null))))",
+				"(((\"A\" >= ?) or (\"A\" is null)) and ((\"A\" > ?) or (\"A\" is null) or (\"B\" > ?) or (\"B\" is null)))",
 				c.getWhereTerm('>').getWhere());
 		assertEquals("((\"A\" <= ?) and ((\"A\" < ?) or (\"B\" < ?)))", c.getWhereTerm('<').getWhere());
 		assertEquals("((\"A\" = ?) and (\"B\" = ?))", c.getWhereTerm('=').getWhere());
 
 		p.setNullsFirst(true);
 		assertEquals(
-				"(((\"A\" <= ?) or (\"A\" is null)) and (((\"A\" < ?) or (\"A\" is null)) or ((\"B\" < ?) or (\"B\" is null))))",
+				"(((\"A\" <= ?) or (\"A\" is null)) and ((\"A\" < ?) or (\"A\" is null) or (\"B\" < ?) or (\"B\" is null)))",
 				c.getWhereTerm('<').getWhere());
 		assertEquals("((\"A\" = ?) and (\"B\" = ?))", c.getWhereTerm('=').getWhere());
 
@@ -289,7 +289,7 @@ public class NavigationQueriesMakerTest {
 
 		filters.put("B", new SingleValue(1));
 
-		assertEquals("(((\"B\" = ?) and (\"A\" is null or \"A\" = 'foo')) and ((\"A\" > ?) or (\"A\" is null)))",
+		assertEquals("((\"B\" = ?) and (\"A\" is null or \"A\" = 'foo') and ((\"A\" > ?) or (\"A\" is null)))",
 				c.getWhereTerm('>').getWhere());
 
 	}

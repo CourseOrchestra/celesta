@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Expr;
+import ru.curs.celesta.score.Table;
 
 /**
  * The interface that provides needed information for building filter/navigation
@@ -140,7 +141,13 @@ final class AndTerm extends WhereTerm {
 
 	@Override
 	String getWhere() throws CelestaException {
-		return String.format("(%s and %s)", l.getWhere(), r.getWhere());
+		String ls = (l instanceof AndTerm) ? ((AndTerm) l).getOpenWhere() : l.getWhere();
+		String rs = (r instanceof AndTerm) ? ((AndTerm) r).getOpenWhere() : r.getWhere();
+		return String.format("(%s and %s)", ls, rs);
+	}
+
+	private String getOpenWhere() throws CelestaException {
+		return String.format("%s and %s", l.getWhere(), r.getWhere());
 	}
 
 	@Override
@@ -176,7 +183,13 @@ final class OrTerm extends WhereTerm {
 
 	@Override
 	String getWhere() throws CelestaException {
-		return String.format("(%s or %s)", l.getWhere(), r.getWhere());
+		String ls = (l instanceof OrTerm) ? ((OrTerm) l).getOpenWhere() : l.getWhere();
+		String rs = (r instanceof OrTerm) ? ((OrTerm) r).getOpenWhere() : r.getWhere();
+		return String.format("(%s or %s)", ls, rs);
+	}
+
+	private String getOpenWhere() throws CelestaException {
+		return String.format("%s or %s", l.getWhere(), r.getWhere());
 	}
 
 	@Override
@@ -260,6 +273,32 @@ final class IsNull extends WhereTerm {
 }
 
 /**
+ * Comparision of a field with a value.
+ */
+final class CompTerm extends WhereTerm {
+	// quoted column name
+	private final String fieldName;
+	private final int fieldIndex;
+	private final String op;
+
+	public CompTerm(String fieldName, int fieldIndex, String op) {
+		this.fieldName = fieldName;
+		this.fieldIndex = fieldIndex;
+		this.op = op;
+	}
+
+	@Override
+	String getWhere() {
+		return String.format("(%s %s ?)", fieldName, op);
+	}
+
+	@Override
+	void programParams(List<ParameterSetter> program) {
+		program.add(ParameterSetter.create(fieldIndex));
+	}
+}
+
+/**
  * Produces navigation queries.
  */
 class WhereTermsMaker {
@@ -285,19 +324,19 @@ class WhereTermsMaker {
 		C = new TermConstructor[40];
 		// NOT NULL, NF, REGULAR
 		C[0] = (f, i, m) -> {
-			return m.new CompTerm(f, i, ">");
+			return new CompTerm(f, i, ">");
 		};
 		C[1] = (f, i, m) -> {
-			return m.new CompTerm(f, i, ">=");
+			return new CompTerm(f, i, ">=");
 		};
 		C[2] = (f, i, m) -> {
-			return m.new CompTerm(f, i, "=");
+			return new CompTerm(f, i, "=");
 		};
 		C[3] = (f, i, m) -> {
-			return m.new CompTerm(f, i, "<=");
+			return new CompTerm(f, i, "<=");
 		};
 		C[4] = (f, i, m) -> {
-			return m.new CompTerm(f, i, "<");
+			return new CompTerm(f, i, "<");
 		};
 
 		// NOT NULL, NF, NULL
@@ -330,10 +369,10 @@ class WhereTermsMaker {
 		C[21] = C[1];
 		C[22] = C[2];
 		C[23] = (f, i, m) -> {
-			return OrTerm.construct(m.new CompTerm(f, i, "<="), new IsNull(f));
+			return OrTerm.construct(new CompTerm(f, i, "<="), new IsNull(f));
 		};
 		C[24] = (f, i, m) -> {
-			return OrTerm.construct(m.new CompTerm(f, i, "<"), new IsNull(f));
+			return OrTerm.construct(new CompTerm(f, i, "<"), new IsNull(f));
 		};
 
 		// NULLABLE, NF, NULL
@@ -349,10 +388,10 @@ class WhereTermsMaker {
 
 		// NULLABLE, NL, REGULAR
 		C[30] = (f, i, m) -> {
-			return OrTerm.construct(m.new CompTerm(f, i, ">"), new IsNull(f));
+			return OrTerm.construct(new CompTerm(f, i, ">"), new IsNull(f));
 		};
 		C[31] = (f, i, m) -> {
-			return OrTerm.construct(m.new CompTerm(f, i, ">="), new IsNull(f));
+			return OrTerm.construct(new CompTerm(f, i, ">="), new IsNull(f));
 		};
 		C[32] = C[2];
 		C[33] = C[3];
@@ -377,6 +416,47 @@ class WhereTermsMaker {
 
 	static int ind(boolean nullable, boolean nf, boolean isNull, int op) {
 		return ((nullable ? 4 : 0) + (nf ? 0 : 2) + (isNull ? 1 : 0)) * 5 + op;
+	}
+
+	/**
+	 * Gets WHERE clause for single record (by its primary key).
+	 * 
+	 * @param t
+	 *            Table meta.
+	 * @throws CelestaException
+	 *             Celesta error.
+	 */
+	public static WhereTerm getPKWhereTerm(Table t) throws CelestaException {
+		WhereTerm r = null;
+		for (String colName : t.getPrimaryKey().keySet()) {
+			WhereTerm l = new CompTerm("\"" + colName + "\"", t.getColumnIndex(colName), "=");
+			r = r == null ? l : AndTerm.construct(l, r);
+		}
+		return r == null ? AlwaysTrue.TRUE : r;
+	}
+
+	public static WhereTerm getPKWhereTermForGet(Table t) throws CelestaException {
+		WhereTerm r = null;
+		int i = 0;
+		for (String colName : t.getPrimaryKey().keySet()) {
+			WhereTerm l = new CompTerm("\"" + colName + "\"", i++, "=");
+			r = r == null ? l : AndTerm.construct(l, r);
+		}
+		return r == null ? AlwaysTrue.TRUE : r;
+	}
+
+	/**
+	 * Gets WHERE clause for single record with respect to other filters on a
+	 * record.
+	 * 
+	 * @param t
+	 *            Table meta.
+	 * 
+	 * @throws CelestaException
+	 *             Celesta error.
+	 */
+	public WhereTerm getHereWhereTerm(Table t) throws CelestaException {
+		return AndTerm.construct(getPKWhereTerm(t), getWhereTerm());
 	}
 
 	/**
@@ -520,32 +600,6 @@ class WhereTermsMaker {
 			// do nothing - no parameters
 		}
 
-	}
-
-	/**
-	 * Comparision of a field with a value.
-	 */
-	final class CompTerm extends WhereTerm {
-		// quoted column name
-		private final String fieldName;
-		private final int fieldIndex;
-		private final String op;
-
-		public CompTerm(String fieldName, int fieldIndex, String op) {
-			this.fieldName = fieldName;
-			this.fieldIndex = fieldIndex;
-			this.op = op;
-		}
-
-		@Override
-		String getWhere() {
-			return String.format("(%s %s ?)", fieldName, op);
-		}
-
-		@Override
-		void programParams(List<ParameterSetter> program) {
-			program.add(ParameterSetter.create(fieldIndex));
-		}
 	}
 
 	/**

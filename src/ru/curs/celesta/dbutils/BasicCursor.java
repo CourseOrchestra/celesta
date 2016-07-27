@@ -62,14 +62,89 @@ public abstract class BasicCursor {
 	private final Connection conn;
 	private final CallContext context;
 
-	private PreparedStatement set = null;
+	private final PreparedStmtHolder set = new PreparedStmtHolder() {
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = qmaker.getWhereTerm();
+			where.programParams(program);
+			return db.getRecordSetStatement(conn, meta(), where.getWhere(), getOrderBy(), offset, rowCount);
+		}
+	};
+
 	private ResultSet cursor = null;
 
-	private PreparedStatement forwards = null;
-	private PreparedStatement backwards = null;
-	private PreparedStatement here = null;
-	private PreparedStatement first = null;
-	private PreparedStatement last = null;
+	private final PreparedStmtHolder count = new PreparedStmtHolder() {
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = qmaker.getWhereTerm();
+			where.programParams(program);
+			return db.getSetCountStatement(conn, meta(), where.getWhere());
+		}
+	};
+
+	/**
+	 * Base holder class for a number of queries that depend on null mask on
+	 * sort fields.
+	 */
+	abstract class OrderFieldsMaskedStatementHolder extends MaskedStatementHolder {
+		@Override
+		protected final int[] getNullsMaskIndices() throws CelestaException {
+			if (orderByNames == null)
+				orderBy();
+			return orderByIndices;
+		}
+	}
+
+	private final PreparedStmtHolder position = new OrderFieldsMaskedStatementHolder() {
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = qmaker.getWhereTerm('<');
+			where.programParams(program);
+			return db.getSetCountStatement(conn, meta(), where.getWhere());
+		}
+
+	};
+
+	private final PreparedStmtHolder forwards = new OrderFieldsMaskedStatementHolder() {
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = qmaker.getWhereTerm('>');
+			where.programParams(program);
+			return db.getNavigationStatement(conn, meta(), getOrderBy(), where.getWhere());
+		}
+
+	};
+	private final PreparedStmtHolder backwards = new OrderFieldsMaskedStatementHolder() {
+
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = qmaker.getWhereTerm('<');
+			where.programParams(program);
+			return db.getNavigationStatement(conn, meta(), getReversedOrderBy(), where.getWhere());
+		}
+
+	};
+
+	private final PreparedStmtHolder here = getHereHolder();
+
+	private final PreparedStmtHolder first = new PreparedStmtHolder() {
+
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = qmaker.getWhereTerm();
+			where.programParams(program);
+			return db.getNavigationStatement(conn, meta(), getOrderBy(), where.getWhere());
+		}
+
+	};
+	private final PreparedStmtHolder last = new PreparedStmtHolder() {
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = qmaker.getWhereTerm();
+			where.programParams(program);
+			return db.getNavigationStatement(conn, meta(), getReversedOrderBy(), where.getWhere());
+		}
+	};
 
 	// Поля фильтров и сортировок
 	private final Map<String, AbstractFilter> filters = new HashMap<>();
@@ -162,15 +237,24 @@ public abstract class BasicCursor {
 		db = DBAdaptor.getAdaptor();
 	}
 
-	final void close(PreparedStatement... stmts) {
-		closed = true;
-		for (PreparedStatement stmt : stmts) {
-			try {
-				if (!(stmt == null || stmt.isClosed()))
-					stmt.close();
-			} catch (SQLException e) {
-				e = null;
+	PreparedStmtHolder getHereHolder() {
+		// To be overriden in Cursor class
+		return new OrderFieldsMaskedStatementHolder() {
+
+			@Override
+			protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+				WhereTerm where = qmaker.getWhereTerm('=');
+				where.programParams(program);
+				return db.getNavigationStatement(conn, meta(), "", where.getWhere());
 			}
+
+		};
+	}
+
+	final void close(PreparedStmtHolder... stmts) {
+		closed = true;
+		for (PreparedStmtHolder stmt : stmts) {
+			stmt.close();
 		}
 	}
 
@@ -187,13 +271,13 @@ public abstract class BasicCursor {
 			if (nextCursor != null)
 				nextCursor.previousCursor = previousCursor;
 			context.decCursorCount();
-			close(set, forwards, backwards, here, first, last);
+			close(set, forwards, backwards, here, first, last, count, position);
 		}
 	}
 
 	@Override
 	protected void finalize() throws Throwable {
-		close(set, forwards, backwards, here, first, last);
+		close(set, forwards, backwards, here, first, last, count, position);
 	}
 
 	final Map<String, AbstractFilter> getFilters() {
@@ -287,26 +371,13 @@ public abstract class BasicCursor {
 
 	private void closeSet() throws CelestaException {
 		cursor = null;
-		if (set != null) {
-			closeStmt(set);
-			set = null;
-		}
-		if (forwards != null) {
-			closeStmt(forwards);
-			forwards = null;
-		}
-		if (backwards != null) {
-			closeStmt(backwards);
-			backwards = null;
-		}
-		if (first != null) {
-			closeStmt(first);
-			first = null;
-		}
-		if (last != null) {
-			closeStmt(last);
-			last = null;
-		}
+		set.close();
+		forwards.close();
+		backwards.close();
+		first.close();
+		last.close();
+		count.close();
+		position.close();
 	}
 
 	private String getOrderBy(boolean reverse) throws CelestaException {
@@ -350,52 +421,6 @@ public abstract class BasicCursor {
 		return descOrders;
 	}
 
-	String getNavigationWhereClause(char op) throws CelestaException {
-		boolean invert = false;
-		if (orderByNames == null)
-			orderBy();
-		switch (op) {
-		case '>':
-			invert = false;
-			break;
-		case '<':
-			invert = true;
-			break;
-		case '=':
-			StringBuilder sb = new StringBuilder("(");
-			for (int i = 0; i < orderByNames.length; i++) {
-				if (i > 0)
-					sb.append(" and ");
-				sb.append(orderByNames[i]);
-				sb.append(" = ?");
-			}
-			sb.append(")");
-			return sb.toString();
-		default:
-			throw new CelestaException("Invalid navigation operator: %s", op);
-		}
-
-		char[] ops = new char[orderByNames.length];
-		for (int i = 0; i < orderByNames.length; i++) {
-			ops[i] = (invert ^ descOrders[i]) ? '<' : '>';
-		}
-		return getNavigationWhereClause(0, ops);
-	}
-
-	private String getNavigationWhereClause(int i, char[] ops) {
-		String result;
-		if (orderByNames.length - 1 > i) {
-			// This is logically equivalent to the 'obvious' formula, but runs
-			// much faster on Postgres (apparently because of conjunction as a
-			// top logical operator)
-			result = String.format("((%s %s= ?) and ((%s %s ?) or %s))", orderByNames[i], ops[i], orderByNames[i],
-					ops[i], getNavigationWhereClause(i + 1, ops));
-		} else {
-			result = String.format("(%s %s ?)", orderByNames[i], ops[i]);
-		}
-		return result;
-	}
-
 	/**
 	 * Переходит к первой записи в отфильтрованном наборе и возвращает
 	 * информацию об успешности перехода.
@@ -409,13 +434,12 @@ public abstract class BasicCursor {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 
-		if (isNotValid(set))
-			set = db.getRecordSetStatement(conn, meta(), filters, complexFilter, getOrderBy(), offset, rowCount);
+		PreparedStatement ps = set.getStatement(_currentValues(), 0);
 		boolean result = false;
 		try {
 			if (cursor != null)
 				cursor.close();
-			cursor = set.executeQuery();
+			cursor = ps.executeQuery();
 			result = cursor.next();
 			if (result) {
 				_parseResult(cursor);
@@ -611,17 +635,10 @@ public abstract class BasicCursor {
 		if (!m.matches())
 			throw new CelestaException(
 					"Invalid navigation command: '%s', should consist of '+', '-', '>', '<' and '=' only!", command);
-		Object[] valsArray = _currentValues();
 
-		Map<String, Object> valsMap = new HashMap<>();
-		int j = 0;
-		for (String colName : meta().getColumns().keySet())
-			valsMap.put('"' + colName + '"', valsArray[j++]);
 		for (int i = 0; i < command.length(); i++) {
 			char c = command.charAt(i);
 			PreparedStatement navigator = chooseNavigator(c);
-			j = db().fillSetQueryParameters(filters, navigator);
-			fillNavigationParams(navigator, valsMap, j, c);
 			try {
 				// System.out.println(navigator);
 				ResultSet rs = navigator.executeQuery();
@@ -641,64 +658,29 @@ public abstract class BasicCursor {
 		return false;
 	}
 
-	void fillNavigationParams(PreparedStatement navigator, Map<String, Object> valuesMap, int k, char c)
-			throws CelestaException {
-		if (c == '-' || c == '+')
-			return;
-
-		int j = k;
-
-		if (orderByNames == null)
-			orderBy();
-		for (int i = 0; i < orderByNames.length; i++) {
-			Object value = valuesMap.get(orderByNames[i]);
-			// System.out.printf("%d = %s%n", j, value);
-			DBAdaptor.setParam(navigator, j++, value);
-			if (c != '=' && i < orderByNames.length - 1) {
-				// System.out.printf("%d = %s%n", j, value);
-				DBAdaptor.setParam(navigator, j++, value);
-			}
-		}
-	}
-
-	private static boolean isNotValid(PreparedStatement stmt) throws CelestaException {
-		try {
-			return stmt == null || stmt.isClosed();
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-	}
-
 	private PreparedStatement chooseNavigator(char c) throws CelestaException {
+		Object[] rec = _currentValues();
+
 		switch (c) {
 		case '<':
-			if (isNotValid(backwards))
-				backwards = db().getNavigationStatement(conn, meta(), filters, complexFilter, getReversedOrderBy(),
-						getNavigationWhereClause('<'));
-			return backwards;
+			return backwards.getStatement(rec, 0);
 		case '>':
-			if (isNotValid(forwards))
-				forwards = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(),
-						getNavigationWhereClause('>'));
-			return forwards;
+			return forwards.getStatement(rec, 0);
 		case '=':
-			if (isNotValid(here))
-				here = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(),
-						getNavigationWhereClause('='));
-			return here;
+			return here.getStatement(rec, 0);
 		case '-':
-			if (isNotValid(first))
-				first = db().getNavigationStatement(conn, meta(), filters, complexFilter, getOrderBy(), "");
-			return first;
+			return first.getStatement(rec, 0);
 		case '+':
-			if (isNotValid(last))
-				last = db().getNavigationStatement(conn, meta(), filters, complexFilter, getReversedOrderBy(), "");
-			return last;
+			return last.getStatement(rec, 0);
 		default:
 			// THIS WILL NEVER EVER HAPPEN, WE'VE ALREADY CHECKED
 			return null;
 		}
 
+	}
+
+	WhereTermsMaker getQmaker() {
+		return qmaker;
 	}
 
 	final void validateColumName(String name) throws CelestaException {
@@ -739,15 +721,15 @@ public abstract class BasicCursor {
 			setFilter(name, "null");
 		} else {
 			validateColumName(name);
-			AbstractFilter oldFilter = filters.put(name, new SingleValue(value));
 			if (closed)
 				return;
+			AbstractFilter oldFilter = filters.get(name);
 			// Если один SingleValue меняется на другой SingleValue -- то
 			// необязательно закрывать набор, можно использовать старый.
 			if (oldFilter instanceof SingleValue) {
-				if (!isNotValid(set))
-					db().fillSetQueryParameters(filters, set);
+				((SingleValue) oldFilter).setValue(value);
 			} else {
+				filters.put(name, new SingleValue(value));
 				closeSet();
 			}
 		}
@@ -767,15 +749,15 @@ public abstract class BasicCursor {
 	 */
 	public final void setRange(String name, Object valueFrom, Object valueTo) throws CelestaException {
 		validateColumName(name);
-		AbstractFilter oldFilter = filters.put(name, new Range(valueFrom, valueTo));
 		if (closed)
 			return;
+		AbstractFilter oldFilter = filters.get(name);
 		// Если один Range меняется на другой Range -- то
 		// необязательно закрывать набор, можно использовать старый.
 		if (oldFilter instanceof Range) {
-			if (!isNotValid(set))
-				db().fillSetQueryParameters(filters, set);
+			((Range) oldFilter).setValues(valueFrom, valueTo);
 		} else {
+			filters.put(name, new Range(valueFrom, valueTo));
 			closeSet();
 		}
 	}
@@ -865,6 +847,7 @@ public abstract class BasicCursor {
 		filters.clear();
 		complexFilter = null;
 		orderByNames = null;
+		orderByIndices = null;
 		descOrders = null;
 		offset = 0;
 		rowCount = 0;
@@ -927,6 +910,7 @@ public abstract class BasicCursor {
 		filters.clear();
 		complexFilter = null;
 		orderByNames = null;
+		orderByIndices = null;
 		descOrders = null;
 		offset = 0;
 		rowCount = 0;
@@ -940,7 +924,22 @@ public abstract class BasicCursor {
 	 *             в случае ошибки доступа или ошибки БД
 	 */
 	public final int count() throws CelestaException {
-		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters, complexFilter);
+		PreparedStatement stmt = count.getStatement(_currentValues(), 0);
+		int result = count(stmt);
+		// we are not holding this query: it's rarely used.
+		count.close();
+		return result;
+	}
+
+	/**
+	 * A hidden method that returns total count of rows that precede the current
+	 * one in the set. This method is intended for internal use by GridDriver.
+	 * Since rows counting is a resource-consuming operation, this method should
+	 * not be public.
+	 */
+	final int position() throws CelestaException {
+		PreparedStatement stmt = position.getStatement(_currentValues(), 0);
+		// System.out.println(stmt);
 		return count(stmt);
 	}
 
@@ -956,40 +955,6 @@ public abstract class BasicCursor {
 			closeStmt(stmt);
 		}
 		return result;
-	}
-
-	/**
-	 * A hidden method that returns total count of rows that precede the current
-	 * one in the set. This method is intended for internal use by GridDriver.
-	 * Since rows counting is a resource-consuming operation, this method should
-	 * not be public.
-	 */
-	final int position() throws CelestaException {
-		PreparedStatement stmt = db.getSetCountStatement(conn, meta(), filters, complexFilter,
-				getNavigationWhereClause('<'));
-
-		// getting navigation clause params
-		Map<String, Object> valsMap = new HashMap<>();
-		int j = 0;
-		Object[] vals = _currentValues();
-		for (String colName : meta().getColumns().keySet())
-			valsMap.put("\"" + colName + "\"", vals[j++]);
-
-		j = db.fillSetQueryParameters(filters, stmt);
-		// System.out.println(stmt.toString());
-
-		if (orderByNames == null)
-			orderBy();
-
-		for (int i = 0; i < orderByNames.length; i++) {
-			Object param = valsMap.get(orderByNames[i]);
-			DBAdaptor.setParam(stmt, j++, param);
-			if (i < orderByNames.length - 1) {
-				DBAdaptor.setParam(stmt, j++, param);
-			}
-		}
-		// System.out.println(stmt);
-		return count(stmt);
 	}
 
 	/**
@@ -1026,6 +991,7 @@ public abstract class BasicCursor {
 			throw new CelestaException("Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
 					c._grainName(), c._tableName(), _grainName(), _tableName());
 		orderByNames = c.orderByNames;
+		orderByIndices = c.orderByIndices;
 		descOrders = c.descOrders;
 		closeSet();
 	}

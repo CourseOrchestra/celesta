@@ -41,22 +41,22 @@ public class PreparedStatementHolderTest {
 		A a = new A();
 		Integer[] rec = { 11, 12, 15 };
 
-		DummyPreparedStatement s = (DummyPreparedStatement) a.getStatement(rec);
-		assertEquals("[0->5][1->15][2->bar][3->foo]", s.params);
+		DummyPreparedStatement s = (DummyPreparedStatement) a.getStatement(rec, 0);
+		assertEquals("[1->5][2->15][3->bar][4->foo]", s.params);
 		a.filter.setValue(111);
 		a.filter2.setValues("vvv", "xxx");
 		rec[2] = 16;
 		s.params = "";
 
-		DummyPreparedStatement s2 = (DummyPreparedStatement) a.getStatement(rec);
+		DummyPreparedStatement s2 = (DummyPreparedStatement) a.getStatement(rec, 0);
 		assertSame(s, s2);
-		assertEquals("[0->111][1->16][2->vvv][3->xxx]", s.params);
+		assertEquals("[1->111][2->16][3->vvv][4->xxx]", s.params);
 
 		a.close();
 		rec[2] = 17;
-		s = (DummyPreparedStatement) a.getStatement(rec);
+		s = (DummyPreparedStatement) a.getStatement(rec, 0);
 		assertNotSame(s, s2);
-		assertEquals("[0->111][1->17][2->vvv][3->xxx]", s.params);
+		assertEquals("[1->111][2->17][3->vvv][4->xxx]", s.params);
 	}
 
 	@Test
@@ -64,37 +64,49 @@ public class PreparedStatementHolderTest {
 		B b = new B();
 		Integer[] rec = { 11, 12, 13, 14, 15 };
 
-		DummyPreparedStatement s = (DummyPreparedStatement) b.getStatement(rec);
+		DummyPreparedStatement s = (DummyPreparedStatement) b.getStatement(rec, 0);
 		assertTrue(Arrays.equals(new boolean[] { false, false }, b.getNullsMask()));
-		assertEquals("[0->12][1->14][2->13]", s.params);
+		assertEquals("[1->12][2->14][3->13]", s.params);
 
 		rec = new Integer[] { 11, 22, 23, 24, 15 };
 		s.params = "";
-		DummyPreparedStatement s2 = (DummyPreparedStatement) b.getStatement(rec);
+		DummyPreparedStatement s2 = (DummyPreparedStatement) b.getStatement(rec, 0);
 		assertSame(s, s2);
 		assertTrue(Arrays.equals(new boolean[] { false, false }, b.getNullsMask()));
-		assertEquals("[0->22][1->24][2->23]", s.params);
+		assertEquals("[1->22][2->24][3->23]", s.params);
 
 		rec = new Integer[] { 11, 22, 23, null, 15 };
-		s = (DummyPreparedStatement) b.getStatement(rec);
+		s = (DummyPreparedStatement) b.getStatement(rec, 0);
 		assertNotSame(s, s2);
 		assertTrue(Arrays.equals(new boolean[] { false, true }, b.getNullsMask()));
-		assertEquals("[0->22][1->NULL][2->23]", s.params);
+		assertEquals("[1->22][2->NULL][3->23]", s.params);
 
 		rec = new Integer[] { 11, 22, null, null, 15 };
 		s.params = "";
-		s2 = (DummyPreparedStatement) b.getStatement(rec);
+		s2 = (DummyPreparedStatement) b.getStatement(rec, 0);
 		assertTrue(Arrays.equals(new boolean[] { false, true }, b.getNullsMask()));
 		assertSame(s, s2);
-		assertEquals("[0->22][1->NULL][2->NULL]", s.params);
+		assertEquals("[1->22][2->NULL][3->NULL]", s.params);
 
 		rec = new Integer[] { 11, null, null, null, 15 };
 		s.params = "";
-		s = (DummyPreparedStatement) b.getStatement(rec);
+		s = (DummyPreparedStatement) b.getStatement(rec, 0);
 		assertNotSame(s, s2);
 		assertTrue(Arrays.equals(new boolean[] { true, true }, b.getNullsMask()));
-		assertEquals("[0->NULL][1->NULL][2->NULL]", s.params);
+		assertEquals("[1->NULL][2->NULL][3->NULL]", s.params);
 
+	}
+
+	@Test
+	public void test3() throws CelestaException {
+		C c = new C();
+		Double[] rec = { 23.4, 2.83, 29.3, 37.8, 6.8 };
+		DummyPreparedStatement s = (DummyPreparedStatement) c.getStatement(rec, 15);
+		assertEquals("[1->37.8][2->15]", s.params);
+		s.params = "";
+		DummyPreparedStatement s2 = (DummyPreparedStatement) c.getStatement(rec, 16);
+		assertSame(s, s2);
+		assertEquals("[1->37.8][2->16]", s2.params);
 	}
 
 	class A extends PreparedStmtHolder {
@@ -127,6 +139,16 @@ public class PreparedStatementHolderTest {
 			return new DummyPreparedStatement();
 		}
 
+	}
+
+	class C extends PreparedStmtHolder {
+
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			program.add(ParameterSetter.create(3));
+			program.add(ParameterSetter.createForRecversion());
+			return new DummyPreparedStatement();
+		}
 	}
 
 	class DummyPreparedStatement implements PreparedStatement {
@@ -434,7 +456,7 @@ public class PreparedStatementHolderTest {
 
 		@Override
 		public void setDouble(int parameterIndex, double x) throws SQLException {
-
+			params = params + String.format("[%d->%s]", parameterIndex, x);
 		}
 
 		@Override

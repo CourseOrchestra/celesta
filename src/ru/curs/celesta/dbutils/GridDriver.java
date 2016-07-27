@@ -19,6 +19,7 @@ import ru.curs.lyra.grid.CompositeKeyEnumerator;
 import ru.curs.lyra.grid.IntFieldEnumerator;
 import ru.curs.lyra.grid.KeyEnumerator;
 import ru.curs.lyra.grid.KeyInterpolator;
+import ru.curs.lyra.grid.NullableFieldEnumerator;
 import ru.curs.lyra.grid.VarcharFieldEnumerator;
 
 /**
@@ -159,9 +160,7 @@ public final class GridDriver {
 		final boolean desc = descOrders[0];
 		for (int i = 1; i < descOrders.length; i++) {
 			if (desc != descOrders[i])
-				throw new CelestaException(
-						"Mixed ASC/DESC ordering for grid: %s",
-						c.getOrderBy());
+				throw new CelestaException("Mixed ASC/DESC ordering for grid: %s", c.getOrderBy());
 		}
 
 		// KeyEnumerator factory
@@ -310,18 +309,26 @@ public final class GridDriver {
 	}
 
 	private KeyEnumerator createFieldKeyManager(ColumnMeta m) throws CelestaException {
+		KeyEnumerator result;
+
 		if (BooleanColumn.CELESTA_TYPE.equals(m.getCelestaType()))
-			return new BitFieldEnumerator();
+			result = new BitFieldEnumerator();
 		else if (IntegerColumn.CELESTA_TYPE.equals(m.getCelestaType()))
-			return new IntFieldEnumerator();
+			result = new IntFieldEnumerator();
 		else if (m instanceof StringColumn) {
 			StringColumn s = (StringColumn) m;
 			if (s.isMax())
 				throw new CelestaException("TEXT field cannot be used as a key field in a grid.");
-			return new VarcharFieldEnumerator(s.getLength());
+			result = new VarcharFieldEnumerator(s.getLength());
+		} else {
+			throw new CelestaException("The field with type '%s' cannot be used as a key field in a grid.",
+					m.getCelestaType());
 		}
-		throw new CelestaException("The field with type '%s' cannot be used as a key field in a grid.",
-				m.getCelestaType());
+
+		if (m.isNullable()) {
+			result = NullableFieldEnumerator.create(DBAdaptor.getAdaptor().nullsFirst(), result);
+		}
+		return result;
 	}
 
 	private void checkMeta(BasicCursor c) throws CelestaException {

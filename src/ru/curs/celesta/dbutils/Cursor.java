@@ -40,9 +40,9 @@ import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import ru.curs.celesta.CallContext;
@@ -64,18 +64,84 @@ public abstract class Cursor extends BasicCursor {
 	private static final LoggingManager LOGGING_MGR = new LoggingManager();
 
 	private Table meta = null;
-	private PreparedStatement get = null;
-	private boolean[] insertMask = null;
+	private final PreparedStmtHolder get = new PreparedStmtHolder() {
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = WhereTermsMaker.getPKWhereTermForGet(meta());
+			where.programParams(program);
+			return db().getOneRecordStatement(conn(), meta(), where.getWhere());
+		}
+	};
+
+	private final MaskedStatementHolder insert = new MaskedStatementHolder() {
+
+		@Override
+		protected int[] getNullsMaskIndices() throws CelestaException {
+			// we monitor all columns for nulls
+			int[] result = new int[meta().getColumns().size()];
+			for (int i = 0; i < result.length; i++)
+				result[i] = i;
+			return result;
+		}
+
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			return db().getInsertRecordStatement(conn(), meta(), getNullsMask(), program);
+		}
+
+	};
+
 	private boolean[] updateMask = null;
-	private PreparedStatement insert = null;
-	private PreparedStatement update = null;
-	private PreparedStatement delete = null;
+	private final PreparedStmtHolder update = new PreparedStmtHolder() {
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = WhereTermsMaker.getPKWhereTerm(meta());
+			PreparedStatement result = db().getUpdateRecordStatement(conn(), meta(), updateMask, program,
+					where.getWhere());
+			where.programParams(program);
+			return result;
+		}
+	};
+
+	private final PreparedStmtHolder delete = new PreparedStmtHolder() {
+
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = WhereTermsMaker.getPKWhereTerm(meta());
+			where.programParams(program);
+			return db().getDeleteRecordStatement(conn(), meta(), where.getWhere());
+		}
+
+	};
+
+	private final PreparedStmtHolder deleteAll = new PreparedStmtHolder() {
+
+		@Override
+		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			WhereTerm where = getQmaker().getWhereTerm();
+			where.programParams(program);
+			return db().deleteRecordSetStatement(conn(), meta(), where.getWhere());
+		}
+
+	};
 
 	private Cursor xRec;
 	private int recversion;
 
 	public Cursor(CallContext context) throws CelestaException {
 		super(context);
+	}
+
+	@Override
+	PreparedStmtHolder getHereHolder() {
+		return new PreparedStmtHolder() {
+			@Override
+			protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+				WhereTerm where = getQmaker().getHereWhereTerm(meta());
+				where.programParams(program);
+				return db().getNavigationStatement(conn(), meta(), "", where.getWhere());
+			}
+		};
 	}
 
 	@Override
@@ -115,16 +181,14 @@ public abstract class Cursor extends BasicCursor {
 	 * @throws CelestaException
 	 *             ошибка БД
 	 */
-	// CHECKSTYLE:OFF for cyclomatic complexity: yes, it is that complex
 	public final boolean tryInsert() throws CelestaException {
-		// CHECKSTYLE:ON
 		if (!canInsert())
 			throw new PermissionDeniedException(callContext(), meta(), Action.INSERT);
 
 		_preInsert();
-		prepareGet(_currentKeyValues());
+		PreparedStatement g = prepareGet(_currentKeyValues());
 		try {
-			ResultSet rs = get.executeQuery();
+			ResultSet rs = g.executeQuery();
 			try {
 				if (rs.next()) {
 					getXRec()._parseResult(rs);
@@ -139,25 +203,12 @@ public abstract class Cursor extends BasicCursor {
 			} finally {
 				rs.close();
 			}
-			Object[] values = _currentValues();
-			boolean[] myMask = new boolean[values.length];
-			for (int i = 0; i < values.length; i++)
-				myMask[i] = values[i] == null;
-			if (!Arrays.equals(myMask, insertMask)) {
-				if (insert != null)
-					insert.close();
-				insert = db().getInsertRecordStatement(conn(), meta(), myMask);
-				insertMask = myMask;
-			}
-			int j = 1;
-			for (int i = 0; i < values.length; i++)
-				if (!myMask[i]) {
-					DBAdaptor.setParam(insert, j, values[i]);
-					j++;
-				}
-			if (insert.execute()) {
+
+			PreparedStatement ins = insert.getStatement(_currentValues(), recversion);
+
+			if (ins.execute()) {
 				LOGGING_MGR.log(this, Action.INSERT);
-				ResultSet ret = insert.getResultSet();
+				ResultSet ret = ins.getResultSet();
 				ret.next();
 				int id = ret.getInt(1);
 				_setAutoIncrement(id);
@@ -215,9 +266,9 @@ public abstract class Cursor extends BasicCursor {
 			throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
 
 		_preUpdate();
-		prepareGet(_currentKeyValues());
+		PreparedStatement g = prepareGet(_currentKeyValues());
 		try {
-			ResultSet rs = get.executeQuery();
+			ResultSet rs = g.executeQuery();
 			try {
 				if (!rs.next())
 					return false;
@@ -247,35 +298,17 @@ public abstract class Cursor extends BasicCursor {
 				return true;
 
 			if (!Arrays.equals(myMask, updateMask)) {
-				if (update != null)
-					update.close();
-				update = db().getUpdateRecordStatement(conn(), meta(), myMask);
+				update.close();
 				updateMask = myMask;
 			}
 
-			Object[] keyValues = _currentKeyValues();
-			int j = 1;
-			int i = 0;
-			// Для версионированной таблицы заполняем параметр с версией
-			if (meta().isVersioned()) {
-				// for a completely new record
-				if (getRecversion() == 0)
-					setRecversion(xRec.getRecversion());
-				DBAdaptor.setParam(update, j++, recversion);
-			}
-			// Заполняем параметры присвоения (set ...)
-			for (String c : meta().getColumns().keySet()) {
-				if (!(myMask[i] || meta().getPrimaryKey().containsKey(c))) {
-					DBAdaptor.setParam(update, j, values[i]);
-					j++;
-				}
-				i++;
-			}
-			// Заполняем параметры поиска (where ...)
-			for (i = 0; i < keyValues.length; i++)
-				DBAdaptor.setParam(update, i + j, keyValues[i]);
+			// for a completely new record
+			if (getRecversion() == 0)
+				setRecversion(xRec.getRecversion());
 
-			update.execute();
+			PreparedStatement upd = update.getStatement(values, recversion);
+
+			upd.execute();
 			LOGGING_MGR.log(this, Action.MODIFY);
 			if (meta().isVersioned())
 				recversion++;
@@ -323,14 +356,11 @@ public abstract class Cursor extends BasicCursor {
 		if (!canDelete())
 			throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
 
-		if (delete == null)
-			delete = db().getDeleteRecordStatement(conn(), meta());
-		Object[] keyValues = _currentKeyValues();
-		for (int i = 0; i < keyValues.length; i++)
-			DBAdaptor.setParam(delete, i + 1, keyValues[i]);
+		PreparedStatement del = delete.getStatement(_currentValues(), recversion);
+
 		try {
 			_preDelete();
-			delete.execute();
+			del.execute();
 			LOGGING_MGR.log(this, Action.DELETE);
 			initXRec();
 			_postDelete();
@@ -357,13 +387,12 @@ public abstract class Cursor extends BasicCursor {
 	public final void deleteAll() throws CelestaException {
 		if (!canDelete())
 			throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
-
-		PreparedStatement stmt = db().deleteRecordSetStatement(conn(), meta(), getFilters(), getComplexFilterExpr());
+		PreparedStatement stmt = deleteAll.getStatement(_currentValues(), recversion);
 		try {
 			try {
 				stmt.executeUpdate();
 			} finally {
-				stmt.close();
+				deleteAll.close();
 			}
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -421,10 +450,10 @@ public abstract class Cursor extends BasicCursor {
 	}
 
 	private boolean internalGet(Object... values) throws CelestaException {
-		prepareGet(values);
+		PreparedStatement g = prepareGet(values);
 		boolean result = false;
 		try {
-			ResultSet rs = get.executeQuery();
+			ResultSet rs = g.executeQuery();
 			try {
 				result = rs.next();
 				if (result) {
@@ -440,16 +469,12 @@ public abstract class Cursor extends BasicCursor {
 		return result;
 	}
 
-	private void prepareGet(Object... values) throws CelestaException {
-		if (get == null)
-			get = db().getOneRecordStatement(conn(), meta());
+	private PreparedStatement prepareGet(Object... values) throws CelestaException {
 		if (meta().getPrimaryKey().size() != values.length)
 			throw new CelestaException("Invalid number of 'get' arguments for '%s': expected %d, provided %d.",
 					_tableName(), meta().getPrimaryKey().size(), values.length);
-
-		for (int i = 0; i < values.length; i++)
-			DBAdaptor.setParam(get, i + 1, values[i]);
-
+		PreparedStatement result = get.getStatement(values, recversion);
+		return result;
 	}
 
 	/**
@@ -483,10 +508,18 @@ public abstract class Cursor extends BasicCursor {
 		if (!(c instanceof BinaryColumn))
 			throw new CelestaException("'%s' is not a BLOB column.", c.getName());
 		BLOB result;
-		PreparedStatement stmt = db().getOneFieldStatement(conn(), c);
-		Object[] keyVals = _currentKeyValues();
-		for (int i = 0; i < keyVals.length; i++)
-			DBAdaptor.setParam(stmt, i + 1, keyVals[i]);
+
+		List<ParameterSetter> program = new ArrayList<>();
+
+		WhereTerm w = WhereTermsMaker.getPKWhereTerm(meta);
+		PreparedStatement stmt = db().getOneFieldStatement(conn(), c, w.getWhere());
+		int i = 1;
+		w.programParams(program);
+		Object[] rec = _currentValues();
+		for (ParameterSetter f : program) {
+			f.execute(stmt, i++, rec, recversion);
+		}
+
 		try {
 			ResultSet rs = stmt.executeQuery();
 			try {
@@ -575,29 +608,6 @@ public abstract class Cursor extends BasicCursor {
 				l.add(String.format("\"%s\"", colName));
 				ol.add(Boolean.FALSE);
 			}
-	}
-
-	@Override
-	String getNavigationWhereClause(char op) throws CelestaException {
-		if (op == '=') {
-			return "(" + DBAdaptor.getRecordWhereClause(meta()) + ")";
-		} else {
-			return super.getNavigationWhereClause(op);
-		}
-	}
-
-	@Override
-	void fillNavigationParams(PreparedStatement navigator, Map<String, Object> valuesMap, int k, char c)
-			throws CelestaException {
-		if (c == '=') {
-			int j = k;
-			for (String name : meta().getPrimaryKey().keySet()) {
-				Object value = valuesMap.get("\"" + name + "\"");
-				DBAdaptor.setParam(navigator, j++, value);
-			}
-		} else {
-			super.fillNavigationParams(navigator, valuesMap, k, c);
-		}
 	}
 
 	@Override

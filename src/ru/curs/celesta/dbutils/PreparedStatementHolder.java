@@ -33,7 +33,7 @@ abstract class PreparedStmtHolder {
 	 * @throws CelestaException
 	 *             something wrong.
 	 */
-	synchronized PreparedStatement getStatement(Object[] rec) throws CelestaException {
+	synchronized PreparedStatement getStatement(Object[] rec, int recversion) throws CelestaException {
 		if (!isStmtValid()) {
 			program.clear();
 			stmt = initStatement(program);
@@ -41,9 +41,9 @@ abstract class PreparedStmtHolder {
 			if (!isStmtValid())
 				throw new IllegalStateException();
 		}
-		int i = 0;
+		int i = 1;
 		for (ParameterSetter f : program) {
-			f.execute(stmt, i++, rec);
+			f.execute(stmt, i++, rec, recversion);
 		}
 		return stmt;
 	}
@@ -71,7 +71,7 @@ abstract class MaskedStatementHolder extends PreparedStmtHolder {
 	private boolean[] nullsMask;
 
 	@Override
-	synchronized PreparedStatement getStatement(Object[] rec) throws CelestaException {
+	synchronized PreparedStatement getStatement(Object[] rec, int recversion) throws CelestaException {
 		reusable: if (isStmtValid()) {
 			for (int i = 0; i < nullsMask.length; i++) {
 				if (nullsMask[i] != (rec[nullsMaskIndices[i]] == null)) {
@@ -79,7 +79,7 @@ abstract class MaskedStatementHolder extends PreparedStmtHolder {
 					break reusable;
 				}
 			}
-			return super.getStatement(rec);
+			return super.getStatement(rec, recversion);
 		}
 		nullsMaskIndices = getNullsMaskIndices();
 		nullsMask = new boolean[nullsMaskIndices.length];
@@ -87,7 +87,7 @@ abstract class MaskedStatementHolder extends PreparedStmtHolder {
 			nullsMask[i] = rec[nullsMaskIndices[i]] == null;
 		}
 
-		return super.getStatement(rec);
+		return super.getStatement(rec, recversion);
 	}
 
 	@Override
@@ -109,7 +109,7 @@ abstract class MaskedStatementHolder extends PreparedStmtHolder {
  */
 abstract class ParameterSetter {
 
-	abstract void execute(PreparedStatement stmt, int paramNum, Object[] rec) throws CelestaException;
+	abstract void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion) throws CelestaException;
 
 	protected static void setParam(PreparedStatement stmt, int i, Object v) throws CelestaException {
 		try {
@@ -149,6 +149,10 @@ abstract class ParameterSetter {
 	static ParameterSetter createForValueTo(Range r) {
 		return new ValueToParameterSetter(r);
 	}
+
+	public static ParameterSetter createForRecversion() {
+		return RecversionParameterSetter.THESETTER;
+	}
 }
 
 /**
@@ -162,7 +166,7 @@ final class SingleValueParameterSetter extends ParameterSetter {
 	}
 
 	@Override
-	void execute(PreparedStatement stmt, int paramNum, Object[] rec) throws CelestaException {
+	void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion) throws CelestaException {
 		setParam(stmt, paramNum, v.getValue());
 	}
 }
@@ -178,7 +182,7 @@ final class ValueFromParameterSetter extends ParameterSetter {
 	}
 
 	@Override
-	void execute(PreparedStatement stmt, int paramNum, Object[] rec) throws CelestaException {
+	void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion) throws CelestaException {
 		setParam(stmt, paramNum, r.getValueFrom());
 	}
 }
@@ -194,9 +198,30 @@ final class ValueToParameterSetter extends ParameterSetter {
 	}
 
 	@Override
-	void execute(PreparedStatement stmt, int paramNum, Object[] rec) throws CelestaException {
+	void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion) throws CelestaException {
 		setParam(stmt, paramNum, r.getValueTo());
 	}
+}
+
+/**
+ * Parameter setter for recverion parameter.
+ */
+final class RecversionParameterSetter extends ParameterSetter {
+
+	public static final RecversionParameterSetter THESETTER = new RecversionParameterSetter();
+
+	private RecversionParameterSetter() {
+	}
+
+	@Override
+	void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion) throws CelestaException {
+		try {
+			stmt.setInt(paramNum, recversion);
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
 }
 
 /**
@@ -226,7 +251,7 @@ final class FieldParameterSetter extends ParameterSetter {
 	}
 
 	@Override
-	void execute(PreparedStatement stmt, int paramNum, Object[] rec) throws CelestaException {
+	void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion) throws CelestaException {
 		setParam(stmt, paramNum, rec[fieldNum]);
 	}
 

@@ -12,8 +12,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,12 +55,18 @@ public abstract class AbstractAdaptorTest {
 		boolean[] nullsMask = { true, false, false, false, true, false, true, true, false, true, true, true, false };
 		BLOB b = new BLOB();
 		b.getOutStream().write(new byte[] { 1, 2, 3 });
-		Object[] rowData = { "ab", val, false, 1.1, "eee", b };
-		PreparedStatement pstmt = dba.getInsertRecordStatement(conn, t, nullsMask);
+		Object[] rowData = { null, "ab", val, false, null, 1.1, null, null, "eee", null, null, null, b };
+		List<ParameterSetter> program = new ArrayList<>();
+		PreparedStatement pstmt = dba.getInsertRecordStatement(conn, t, nullsMask, program);
 		assertNotNull(pstmt);
+
 		int i = 1;
-		for (Object fieldVal : rowData)
-			DBAdaptor.setParam(pstmt, i++, fieldVal);
+		for (ParameterSetter ps : program) {
+			ps.execute(pstmt, i++, rowData, 0);
+		}
+		// int i = 1;
+		// for (Object fieldVal : rowData)
+		// DBAdaptor.setParam(pstmt, i++, fieldVal);
 		try {
 			int rowCount = pstmt.execute() ? 1 : pstmt.getUpdateCount(); // pstmt.executeUpdate();
 			return rowCount;
@@ -71,8 +77,7 @@ public abstract class AbstractAdaptorTest {
 	}
 
 	private int getCount(Connection conn, Table t) throws Exception {
-		PreparedStatement stmt = dba.getSetCountStatement(conn, t, Collections.<String, AbstractFilter> emptyMap(),
-				null);
+		PreparedStatement stmt = dba.getSetCountStatement(conn, t, "");
 		try {
 			ResultSet rs = stmt.executeQuery();
 			rs.next();
@@ -170,15 +175,16 @@ public abstract class AbstractAdaptorTest {
 
 		assertEquals(13, t.getColumns().size());
 		boolean[] mask = { true, true, false, true, true, true, true, true, true, true, true, true, true };
-
-		PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask);
-
-		// System.out.println(pstmt.toString());
-
+		Integer[] rec = { 1, null, 2, null, null, null, null, null, null, null, null, null, null };
+		List<ParameterSetter> program = new ArrayList<>();
+		WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
+		PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask, program, w.getWhere());
+		w.programParams(program);
+		int i = 1;
+		for (ParameterSetter ps : program) {
+			ps.execute(pstmt, i++, rec, 1);
+		}
 		assertNotNull(pstmt);
-		DBAdaptor.setParam(pstmt, 1, 1); // version value
-		DBAdaptor.setParam(pstmt, 2, 2); // field value
-		DBAdaptor.setParam(pstmt, 3, 1); // key value
 		int rowCount = pstmt.executeUpdate();
 		assertEquals(1, rowCount);
 		assertEquals(1, getCount(conn, t));
@@ -188,38 +194,59 @@ public abstract class AbstractAdaptorTest {
 	public void lostUpdatesTest() throws Exception {
 		dba.createSysObjects(conn);
 		insertRow(conn, t, 1);
-		PreparedStatement pstmt = dba.getOneRecordStatement(conn, t);
-		DBAdaptor.setParam(pstmt, 1, 1); // key value
+		WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
+		PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere());
+
+		List<ParameterSetter> program = new ArrayList<>();
+		w.programParams(program);
+		int i = 1;
+		for (ParameterSetter ps : program) {
+			ps.execute(pstmt, i++, new Integer[] { 1 }, 1);
+		}
 		ResultSet rs = pstmt.executeQuery();
 		rs.next();
 		assertEquals(1, rs.getInt("recversion"));
 		rs.close();
 
 		boolean[] mask = { true, true, false, true, true, true, true, true, true, true, true, true, true, false };
-		PreparedStatement pstmt2 = dba.getUpdateRecordStatement(conn, t, mask);
+		Integer[] rec = { 1, null, 22, null, null, null, null, null, null, null, null, null, null };
+		program = new ArrayList<>();
+		w = WhereTermsMaker.getPKWhereTerm(t);
+
+		PreparedStatement pstmt2 = dba.getUpdateRecordStatement(conn, t, mask, program, w.getWhere());
 
 		// System.out.println(pstmt2.toString());
 		assertNotNull(pstmt2);
-		DBAdaptor.setParam(pstmt2, 1, 1); // version value
-		DBAdaptor.setParam(pstmt2, 2, 22); // field value
-		DBAdaptor.setParam(pstmt2, 3, 1); // key value
+
+		w.programParams(program);
+		i = 1;
+		for (ParameterSetter ps : program) {
+			ps.execute(pstmt2, i++, rec, 1);
+		}
+
 		pstmt2.executeUpdate();
 
 		rs = pstmt.executeQuery();
 		rs.next();
 		assertEquals(2, rs.getInt("recversion"));
+		assertEquals(22, rs.getInt("attrInt"));
 		rs.close();
 
-		DBAdaptor.setParam(pstmt2, 1, 2); // version value
-		DBAdaptor.setParam(pstmt2, 2, 23); // field value
+		rec = new Integer[] { 1, null, 23, null, null, null, null, null, null, null, null, null, null };
+		i = 1;
+		for (ParameterSetter ps : program) {
+			ps.execute(pstmt2, i++, rec, 2);
+		}
 		pstmt2.executeUpdate();
+
 		rs = pstmt.executeQuery();
 		rs.next();
 		assertEquals(3, rs.getInt("recversion"));
+		assertEquals(23, rs.getInt("attrInt"));
 		rs.close();
 
-		DBAdaptor.setParam(pstmt2, 2, 23); // field value
-
+		// we do not increment recversion value here, so we expect version check
+		// failure
 		boolean itWas = false;
 		try {
 			pstmt2.executeUpdate();
@@ -237,9 +264,18 @@ public abstract class AbstractAdaptorTest {
 		insertRow(conn, t, 1);
 		insertRow(conn, t, 10);
 		assertEquals(2, getCount(conn, t));
-		PreparedStatement pstmt = dba.getDeleteRecordStatement(conn, t);
+		WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
+		List<ParameterSetter> program = new ArrayList<>();
+
+		PreparedStatement pstmt = dba.getDeleteRecordStatement(conn, t, w.getWhere());
+		w.programParams(program);
+		int i = 1;
+		for (ParameterSetter ps : program) {
+			ps.execute(pstmt, i++, new Integer[] { 1 }, 1);
+		}
+
 		assertNotNull(pstmt);
-		DBAdaptor.setParam(pstmt, 1, 1);// key value
+
 		int rowCount = pstmt.executeUpdate();
 		assertEquals(1, rowCount);
 		assertEquals(1, getCount(conn, t));
@@ -288,9 +324,20 @@ public abstract class AbstractAdaptorTest {
 	public void getOneFieldStatement() throws Exception {
 		insertRow(conn, t, 121215);
 		Column c = t.getColumns().get("attrInt");
-		PreparedStatement pstmt = dba.getOneFieldStatement(conn, c);
+
+		WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
+		List<ParameterSetter> program = new ArrayList<>();
+
+		PreparedStatement pstmt = dba.getOneFieldStatement(conn, c, w.getWhere());
+
+		w.programParams(program);
+		int i = 1;
+		for (ParameterSetter ps : program) {
+			ps.execute(pstmt, i++, new Integer[] { 1 }, 1);
+		}
+
 		assertNotNull(pstmt);
-		DBAdaptor.setParam(pstmt, 1, 1);// key value
+
 		ResultSet rs = pstmt.executeQuery();
 		assertTrue(rs.next());
 		assertEquals(121215, rs.getInt("attrInt"));
@@ -298,12 +345,25 @@ public abstract class AbstractAdaptorTest {
 
 	@Test
 	public void getOneRecordStatement() throws Exception {
-		insertRow(conn, t, 1);
-		PreparedStatement pstmt = dba.getOneRecordStatement(conn, t);
+		insertRow(conn, t, 17);
+
+		WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
+		List<ParameterSetter> program = new ArrayList<>();
+
+		PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere());
+
+		w.programParams(program);
+		int i = 1;
+		for (ParameterSetter ps : program) {
+			ps.execute(pstmt, i++, new Integer[] { 1 }, 1);
+		}
+
 		assertNotNull(pstmt);
-		DBAdaptor.setParam(pstmt, 1, 1);// key value
+		// DBAdaptor.setParam(pstmt, 1, 1);// key value
 		ResultSet rs = pstmt.executeQuery();
 		assertTrue(rs.next());
+		assertEquals(17, rs.getInt("attrInt"));
+		assertEquals("ab", rs.getString("attrVarchar"));
 	}
 
 	@Test
@@ -311,8 +371,7 @@ public abstract class AbstractAdaptorTest {
 		insertRow(conn, t, 1);
 		insertRow(conn, t, 1);
 		assertEquals(2, getCount(conn, t));
-		PreparedStatement pstmt = dba.deleteRecordSetStatement(conn, t, Collections.<String, AbstractFilter> emptyMap(),
-				null);
+		PreparedStatement pstmt = dba.deleteRecordSetStatement(conn, t, "");
 		assertNotNull(pstmt);
 		int rowCount = pstmt.executeUpdate();
 		assertEquals(2, rowCount);
@@ -927,9 +986,18 @@ public abstract class AbstractAdaptorTest {
 	@Test
 	public void resetIdentityTest() throws IOException, CelestaException, SQLException {
 		insertRow(conn, t, 110);
-		PreparedStatement pstmt = dba.getOneRecordStatement(conn, t);
+		WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
+		PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere());
+
 		assertNotNull(pstmt);
-		DBAdaptor.setParam(pstmt, 1, 555);// key value
+
+		List<ParameterSetter> program = new ArrayList<>();
+		w.programParams(program);
+		int i = 1;
+		for (ParameterSetter ps : program) {
+			ps.execute(pstmt, i++, new Integer[] { 555 /* key value */ }, 1);
+		}
+
 		ResultSet rs = pstmt.executeQuery();
 		assertFalse(rs.next());
 		rs.close();
