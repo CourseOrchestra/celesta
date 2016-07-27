@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
-import ru.curs.celesta.AppSettings;
-
 /**
  * Табличный индекс. Celesta допускает создание только простых индексов, без
  * ограничения UNIQUE.
@@ -72,13 +70,10 @@ public class Index extends GrainElement {
 							getName(), columnName, table.getName()));
 
 		if (c.isNullable()) {
-			String err = String.format(INDEX_CREATION_ERROR + "nullable and therefore cannot be a part of an index.",
+			String err = String.format(
+					"WARNING for index '%s': column '%s' in table '%s' is nullable and this can affect performance.",
 					getName(), columnName, table.getName());
-			if (AppSettings.isIndexedNullsAllowed()) {
-				System.out.println(err);
-			} else {
-				throw new ParseException(err);
-			}
+			System.out.println(err);
 		}
 
 		columns.addElement(c);

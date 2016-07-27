@@ -352,7 +352,7 @@ public final class Celesta {
 	 *            Имя процедуры в формате <grain>.<module>.<proc>
 	 * @param param
 	 *            Параметры для передачи процедуры.
-	 * @return PyObject
+	 * @return PyObject Результат вызова питон-процедуры.
 	 * @throws CelestaException
 	 *             В случае, если процедура не найдена или в случае ошибки
 	 *             выполненения процедуры.

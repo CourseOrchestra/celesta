@@ -24,7 +24,6 @@ public final class AppSettings {
 	private final boolean skipDBUpdate;
 	private final boolean forceDBInitialize;
 	private final boolean logLogins;
-	private final boolean allowIndexedNulls;
 
 	{
 		logger = Logger.getLogger("ru.curs.flute");
@@ -78,8 +77,6 @@ public final class AppSettings {
 		skipDBUpdate = Boolean.parseBoolean(settings.getProperty("skip.dbupdate", "").trim());
 		forceDBInitialize = Boolean.parseBoolean(settings.getProperty("force.dbinitialize", "").trim());
 		logLogins = Boolean.parseBoolean(settings.getProperty("log.logins", "").trim());
-
-		allowIndexedNulls = Boolean.parseBoolean(settings.getProperty("allow.indexed.nulls", "false").trim());
 
 		if (sb.length() > 0)
 			throw new CelestaException(sb.toString());
@@ -267,14 +264,5 @@ public final class AppSettings {
 	 */
 	public static Properties getSetupProperties() {
 		return theSettings.properties;
-	}
-
-	/**
-	 * Дозволяется ли индексировать NULLABLE-поля.
-	 */
-	public static Boolean isIndexedNullsAllowed() {
-		// TODO: удалить эту функциональность к лету 2016 года!!!
-		// запретить индексировать NULLABLE-поля!!
-		return theSettings.allowIndexedNulls;
 	}
 }
