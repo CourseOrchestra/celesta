@@ -204,6 +204,10 @@ def hello(context, arg):
     for c in c.iterate():
         print c.asCSVLine()
     
+    c.setFilter('idc', '5..7')
+    for c in c.iterate():
+        print c.asCSVLine()
+    
     print 'Python procedure finished.'
     
 def testTrigger(rec):

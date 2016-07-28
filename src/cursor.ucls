@@ -3,7 +3,7 @@
   associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
   <class id="1" language="java" name="ru.curs.celesta.dbutils.Cursor" project="celesta" 
     file="/celesta/src/ru/curs/celesta/dbutils/Cursor.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="377" y="777"/>    
+    <position height="-1" width="-1" x="518" y="471"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="false" protected="false" private="false" static="true"/>      
@@ -12,16 +12,16 @@
   </class>  
   <class id="2" language="java" name="ru.curs.celesta.CallContext" project="celesta" 
     file="/celesta/src/ru/curs/celesta/CallContext.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="283" y="154"/>    
+    <position height="-1" width="-1" x="137" y="-143"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
-      <attributes public="true" package="true" protected="true" private="false" static="true"/>      
-      <operations public="true" package="false" protected="false" private="false" static="true"/>    
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
   <class id="3" language="java" name="ru.curs.celesta.dbutils.BasicCursor" project="celesta" 
     file="/celesta/src/ru/curs/celesta/dbutils/BasicCursor.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="646" y="153"/>    
+    <position height="-1" width="-1" x="153" y="328"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="false" protected="false" private="false" static="true"/>      
@@ -30,7 +30,7 @@
   </class>  
   <class id="4" language="java" name="ru.curs.celesta.dbutils.ViewCursor" project="celesta" 
     file="/celesta/src/ru/curs/celesta/dbutils/ViewCursor.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="917" y="616"/>    
+    <position height="-1" width="-1" x="498" y="11"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="false" protected="false" private="false" static="true"/>      
@@ -39,52 +39,52 @@
   </class>  
   <class id="5" language="java" name="ru.curs.celesta.dbutils.ReadOnlyTableCursor" project="celesta" 
     file="/celesta/src/ru/curs/celesta/dbutils/ReadOnlyTableCursor.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="655" y="617"/>    
+    <position height="-1" width="-1" x="514" y="164"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="false" package="false" protected="false" private="false" static="true"/>      
       <operations public="true" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <generalization id="6">    
-    <end type="SOURCE" refId="5"/>    
-    <end type="TARGET" refId="3"/>  
-  </generalization>  
-  <generalization id="7">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="3"/>  
-  </generalization>  
-  <association id="8">    
-    <end type="SOURCE" refId="3" navigable="false">      
-      <attribute id="9" name="context">        
-        <position height="0" width="0" x="0" y="0"/>      
-      </attribute>      
-      <multiplicity id="10" minimum="0" maximum="1">        
-        <position height="0" width="0" x="0" y="0"/>      
-      </multiplicity>    
-    </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <generalization id="11">    
-    <end type="SOURCE" refId="1"/>    
-    <end type="TARGET" refId="3"/>  
-  </generalization>  
-  <association id="12">    
-    <bendpoint x="464" y="1004"/>    
-    <bendpoint x="522" y="992"/>    
-    <bendpoint x="541" y="948"/>    
+  <association id="6">    
+    <bendpoint x="605" y="698"/>    
+    <bendpoint x="663" y="686"/>    
+    <bendpoint x="682" y="642"/>    
     <end type="SOURCE" refId="1" navigable="false">      
-      <attribute id="13" name="xRec">        
-        <position height="20" width="38" x="547" y="893"/>      
+      <attribute id="7" name="xRec">        
+        <position height="20" width="38" x="688" y="587"/>      
       </attribute>      
-      <multiplicity id="14" minimum="0" maximum="1">        
-        <position height="18" width="27" x="548" y="921"/>      
+      <multiplicity id="8" minimum="0" maximum="1">        
+        <position height="18" width="27" x="689" y="615"/>      
       </multiplicity>    
     </end>    
     <end type="TARGET" refId="1" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
+  <generalization id="9">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="3"/>  
+  </generalization>  
+  <association id="10">    
+    <end type="SOURCE" refId="3" navigable="false">      
+      <attribute id="11" name="context">        
+        <position height="0" width="0" x="-146" y="-297"/>      
+      </attribute>      
+      <multiplicity id="12" minimum="0" maximum="1">        
+        <position height="0" width="0" x="-146" y="-297"/>      
+      </multiplicity>    
+    </end>    
+    <end type="TARGET" refId="2" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="13">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="3"/>  
+  </generalization>  
+  <generalization id="14">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="3"/>  
+  </generalization>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
     sort-features="false" accessors="true" visibility="true">    
     <attributes public="true" package="true" protected="true" private="true" static="true"/>    

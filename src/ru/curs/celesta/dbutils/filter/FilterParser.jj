@@ -39,6 +39,8 @@ public class FilterParser{
             return parser.filterExpr(fieldType, fieldName);
 		 } catch (ParseException e) {
 		    throw new CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
+         } catch (TokenMgrError e) {
+            throw new CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
          }
      } finally {
          sr.close();

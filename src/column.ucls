@@ -1,79 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<class-diagram version="1.1.2" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
-  associations="true" dependencies="false" nesting-relationships="true">  
+<class-diagram version="1.1.9" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
+  associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
   <class id="1" language="java" name="ru.curs.celesta.score.Column" project="celesta" 
     file="/celesta/src/ru/curs/celesta/score/Column.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="733" y="407"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
-      visibility="true">      
-      <attributes public="false" package="false" protected="false" private="false"/>      
-      <operations public="true" package="false" protected="false" private="false"/>    
+    <position height="-1" width="-1" x="664" y="305"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
   <class id="2" language="java" name="ru.curs.celesta.score.BinaryColumn" project="celesta" 
     file="/celesta/src/ru/curs/celesta/score/BinaryColumn.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="961" y="732"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
-      visibility="true">      
-      <attributes public="false" package="false" protected="false" private="false"/>      
-      <operations public="true" package="false" protected="false" private="false"/>    
+    <position height="-1" width="-1" x="748" y="644"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
   <class id="3" language="java" name="ru.curs.celesta.score.BooleanColumn" project="celesta" 
     file="/celesta/src/ru/curs/celesta/score/BooleanColumn.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="421" y="103"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
-      visibility="true">      
-      <attributes public="false" package="false" protected="false" private="false"/>      
-      <operations public="true" package="false" protected="false" private="false"/>    
+    <position height="-1" width="-1" x="977" y="286"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
   <class id="4" language="java" name="ru.curs.celesta.score.DateTimeColumn" project="celesta" 
     file="/celesta/src/ru/curs/celesta/score/DateTimeColumn.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="267" y="402"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
-      visibility="true">      
-      <attributes public="true" package="true" protected="true" private="false"/>      
-      <operations public="true" package="false" protected="false" private="false"/>    
+    <position height="-1" width="-1" x="306" y="665"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="false" static="true"/>      
+      <operations public="true" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
   <class id="5" language="java" name="ru.curs.celesta.score.FloatingColumn" project="celesta" 
     file="/celesta/src/ru/curs/celesta/score/FloatingColumn.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="1156" y="422"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
-      visibility="true">      
-      <attributes public="false" package="false" protected="false" private="false"/>      
-      <operations public="true" package="false" protected="false" private="false"/>    
+    <position height="-1" width="-1" x="973" y="691"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
   <class id="6" language="java" name="ru.curs.celesta.score.IntegerColumn" project="celesta" 
     file="/celesta/src/ru/curs/celesta/score/IntegerColumn.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="1051" y="104"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
-      visibility="true">      
-      <attributes public="false" package="false" protected="false" private="false"/>      
-      <operations public="true" package="false" protected="false" private="false"/>    
+    <position height="-1" width="-1" x="970" y="480"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
   <class id="7" language="java" name="ru.curs.celesta.score.StringColumn" project="celesta" 
     file="/celesta/src/ru/curs/celesta/score/StringColumn.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="466" y="811"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
-      visibility="true">      
-      <attributes public="false" package="false" protected="false" private="false"/>      
-      <operations public="true" package="false" protected="false" private="false"/>    
+    <position height="-1" width="-1" x="538" y="682"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="true"/>      
+      <operations public="true" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <generalization id="8">    
-    <end type="SOURCE" refId="5"/>    
-    <end type="TARGET" refId="1"/>  
-  </generalization>  
-  <generalization id="9">    
-    <end type="SOURCE" refId="6"/>    
-    <end type="TARGET" refId="1"/>  
-  </generalization>  
+  <interface id="8" language="java" name="ru.curs.celesta.score.ColumnMeta" project="celesta" 
+    file="/celesta/src/ru/curs/celesta/score/ColumnMeta.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="632" y="70"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </interface>  
+  <class id="9" language="java" name="ru.curs.celesta.score.ViewColumnMeta" project="celesta" 
+    file="/celesta/src/ru/curs/celesta/score/ViewColumnMeta.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="232" y="243"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
   <generalization id="10">    
-    <end type="SOURCE" refId="2"/>    
+    <end type="SOURCE" refId="6"/>    
     <end type="TARGET" refId="1"/>  
   </generalization>  
   <generalization id="11">    
@@ -81,17 +91,33 @@
     <end type="TARGET" refId="1"/>  
   </generalization>  
   <generalization id="12">    
-    <end type="SOURCE" refId="7"/>    
+    <end type="SOURCE" refId="2"/>    
     <end type="TARGET" refId="1"/>  
   </generalization>  
   <generalization id="13">    
     <end type="SOURCE" refId="3"/>    
     <end type="TARGET" refId="1"/>  
   </generalization>  
+  <realization id="14">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="8"/>  
+  </realization>  
+  <generalization id="15">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <generalization id="16">    
+    <end type="SOURCE" refId="7"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <realization id="17">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="8"/>  
+  </realization>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
-    accessors="true" visibility="true">    
-    <attributes public="true" package="true" protected="true" private="true"/>    
-    <operations public="true" package="true" protected="true" private="true"/>  
+    sort-features="false" accessors="true" visibility="true">    
+    <attributes public="true" package="true" protected="true" private="true" static="true"/>    
+    <operations public="true" package="true" protected="true" private="true" static="true"/>  
   </classifier-display>  
   <association-display labels="true" multiplicity="true"/>
 </class-diagram>

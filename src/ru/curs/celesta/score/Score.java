@@ -185,7 +185,7 @@ public class Score {
 			try {
 				try {
 					result = parser.grain(this, name);
-				} catch (ParseException e) {
+				} catch (ParseException | TokenMgrError e) {
 					throw new ParseException(String.format("Error parsing '%s': %s", f.toString(), e.getMessage()));
 				}
 				result.setChecksum(is.getCRC32());

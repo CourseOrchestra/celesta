@@ -31,6 +31,8 @@ public class FilterParser implements FilterParserConstants {
             return parser.filterExpr(fieldType, fieldName);
                  } catch (ParseException e) {
                     throw new CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
+         } catch (TokenMgrError e) {
+            throw new CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
          }
      } finally {
          sr.close();
@@ -476,11 +478,6 @@ String val;
     finally { jj_save(0, xla); }
   }
 
-  private boolean jj_3R_5() {
-    if (jj_3R_8()) return true;
-    return false;
-  }
-
   private boolean jj_3R_4() {
     if (jj_scan_token(S_NULL)) return true;
     return false;
@@ -681,6 +678,11 @@ String val;
 
   private boolean jj_3R_6() {
     if (jj_3R_9()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_5() {
+    if (jj_3R_8()) return true;
     return false;
   }
 
