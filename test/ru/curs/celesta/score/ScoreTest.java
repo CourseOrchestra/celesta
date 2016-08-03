@@ -23,7 +23,7 @@ public class ScoreTest {
 
 	@Test
 	public void test1() throws CelestaException, ParseException {
-		Score s = new Score("score;pylib");
+		Score s = new Score("score" + File.pathSeparator + "pylib");
 		Grain g1 = s.getGrain("g1");
 		Grain g2 = s.getGrain("g2");
 		assertEquals("g2", g2.getName());
@@ -359,7 +359,7 @@ public class ScoreTest {
 		assertTrue(v.getColumns().get("descr2").isNullable());
 		assertFalse(v.getColumns().get("k2").isNullable());
 		assertFalse(v.getColumns().get("id").isNullable());
-		
+
 		v = g.getView("testview2");
 		assertEquals(ViewColumnType.INT, v.getColumns().get("id").getColumnType());
 		exp = String.format("  select id as id, descr as descr%n" + "  from test as t1%n"
@@ -395,10 +395,11 @@ public class ScoreTest {
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
 		View v = g.getView("v4");
-		String[] expected = { "  select f1 as f1, f4 as f4, f5 as f5, f4 + f5 as s, f5 * f5 + 1 as s2", "  from test as test", "  where f1 = true" };
+		String[] expected = { "  select f1 as f1, f4 as f4, f5 as f5, f4 + f5 as s, f5 * f5 + 1 as s2",
+				"  from test as test", "  where f1 = true" };
 		assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
 
-		//Checking nullability evaluation
+		// Checking nullability evaluation
 		assertFalse(v.getColumns().get("f1").isNullable());
 		assertTrue(v.getColumns().get("f4").isNullable());
 		assertFalse(v.getColumns().get("f5").isNullable());
