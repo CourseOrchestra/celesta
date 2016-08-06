@@ -155,6 +155,7 @@ public final class Grain extends NamedElement {
 	synchronized void removeIndex(Index index) throws ParseException {
 		modify();
 		indices.remove(index);
+		index.getTable().removeIndex(index);
 	}
 
 	synchronized void removeView(View view) throws ParseException {

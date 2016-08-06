@@ -28,6 +28,7 @@ public class Index extends GrainElement {
 			throw new ParseException(
 					String.format("Error while creating index '%s': table '%s' not found.", name, tableName));
 		grain.addIndex(this);
+		table.addIndex(this);
 	}
 
 	public Index(Table t, String name, String[] columns) throws ParseException {

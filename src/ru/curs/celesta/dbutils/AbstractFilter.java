@@ -15,7 +15,7 @@ import ru.curs.celesta.score.StringColumn;
  * Внутреннее представление фильтра на поле.
  */
 abstract class AbstractFilter {
-
+	abstract boolean filterEquals(AbstractFilter f);
 }
 
 /**
@@ -39,6 +39,16 @@ class SingleValue extends AbstractFilter {
 
 	void setValue(Object value) {
 		this.value = value;
+	}
+
+	@Override
+	boolean filterEquals(AbstractFilter f) {
+		if (f instanceof SingleValue) {
+			Object v2 = ((SingleValue) f).value;
+			return value == null ? v2 == null : value.equals(v2);
+		} else {
+			return false;
+		}
 	}
 }
 
@@ -72,6 +82,18 @@ class Range extends AbstractFilter {
 		this.valueFrom = valueFrom;
 		this.valueTo = valueTo;
 	}
+
+	@Override
+	boolean filterEquals(AbstractFilter f) {
+		if (f instanceof Range) {
+			Object f2 = ((Range) f).valueFrom;
+			Object t2 = ((Range) f).valueTo;
+			return (valueFrom == null ? f2 == null : valueFrom.equals(f2))
+					&& (valueTo == null ? t2 == null : valueTo.equals(t2));
+		} else {
+			return false;
+		}
+	}
 }
 
 /**
@@ -99,7 +121,7 @@ class Filter extends AbstractFilter {
 
 	@Override
 	public String toString() {
-		return String.format("%s", value);
+		return value;
 	}
 
 	public String makeWhereClause(String quotedName, final QueryBuildingHelper dba) throws CelestaException {
@@ -113,5 +135,15 @@ class Filter extends AbstractFilter {
 		};
 		String result = FilterParser.translateFilter(ftype, quotedName, value, tr);
 		return result;
+	}
+
+	@Override
+	boolean filterEquals(AbstractFilter f) {
+		if (f instanceof Filter) {
+			Object v2 = ((Filter) f).value;
+			return value == null ? v2 == null : value.equals(v2);
+		} else {
+			return false;
+		}
 	}
 }

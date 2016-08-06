@@ -10,12 +10,22 @@ import ru.curs.celesta.dbutils.*;
  */
 public abstract class BasicGridForm extends BasicLyraForm {
 
-	private final GridDriver gd;
+	private GridDriver gd;
 
 	public BasicGridForm(CallContext context) throws CelestaException {
 		super(context);
-		gd = new GridDriver(_getCursor(context));
-		// TODO Recreate GridDriver each time filtering and sorting changes!!!!
+		actuateGridDriver(_getCursor(context));
+	}
+
+	private void actuateGridDriver(BasicCursor c) throws CelestaException {
+		if (gd == null) {
+			gd = new GridDriver(c);
+		} else if (!gd.isValidFor(c)) {
+			Runnable notifier = gd.getChangeNotifier();
+			gd = new GridDriver(c);
+			gd.setChangeNotifier(notifier);
+			gd.setMaxExactScrollValue(gd.getMaxExactScrollValue());
+		}
 	}
 
 	/**
@@ -30,6 +40,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 */
 	public synchronized List<LyraFormData> getRows(int position) throws CelestaException {
 		BasicCursor c = rec();
+		actuateGridDriver(c);
 		if (gd.setPosition(position, c)) {
 			return returnRows(c);
 		} else {
@@ -50,6 +61,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 */
 	public synchronized List<LyraFormData> setPosition(Object... pk) throws CelestaException {
 		BasicCursor bc = rec();
+		actuateGridDriver(bc);
 		if (bc instanceof Cursor) {
 			Cursor c = (Cursor) bc;
 			if (c.meta().getPrimaryKey().size() != pk.length)

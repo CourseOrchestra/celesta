@@ -171,7 +171,7 @@ public abstract class BasicLyraForm {
 	 * @throws CelestaException
 	 *             navigation error.
 	 */
-	public synchronized BasicCursor rec() throws CelestaException {
+	public final synchronized BasicCursor rec() throws CelestaException {
 		if (rec == null) {
 			if (context != null) {
 				rec = _getCursor(context);

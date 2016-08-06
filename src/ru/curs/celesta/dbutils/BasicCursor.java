@@ -996,6 +996,34 @@ public abstract class BasicCursor {
 		closeSet();
 	}
 
+	boolean isEquivalent(BasicCursor c) throws CelestaException {
+		// equality of all simple filters
+		if (filters.size() != c.filters.size())
+			return false;
+		for (Map.Entry<String, AbstractFilter> e : filters.entrySet()) {
+			if (!e.getValue().filterEquals(c.filters.get(e.getKey())))
+				return false;
+		}
+		// equality of complex filter
+		if (!(complexFilter == null ? c.complexFilter == null
+				: complexFilter.getCSQL().equals(c.complexFilter.getCSQL())))
+			return false;
+		// equality of sorting
+		if (orderByNames == null)
+			orderBy();
+		if (c.orderByNames == null)
+			c.orderBy();
+		if (orderByNames.length != c.orderByNames.length)
+			return false;
+		for (int i = 0; i < orderByNames.length; i++) {
+			if (!(orderByNames[i].equals(c.orderByNames[i])))
+				return false;
+			if (descOrders[i] != c.descOrders[i])
+				return false;
+		}
+		return true;
+	}
+
 	/**
 	 * Устанавливает значение поля по его имени. Необходимо для косвенного
 	 * заполнения данными курсора из Java (в Python, естественно, для этой цели

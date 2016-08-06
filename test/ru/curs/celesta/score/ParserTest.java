@@ -182,10 +182,18 @@ public class ParserTest {
 		assertEquals("table1", idx.getTable().getName());
 		assertEquals("описание индекса idx1", idx.getCelestaDoc());
 		assertEquals(2, idx.getColumns().size());
+		
+		assertEquals(1, idx.getTable().getIndices().size());
+		assertTrue(idx.getTable().getIndices().contains(idx));
 
 		idx = g.getIndices().get("table2_idx2");
 		assertEquals("table2", idx.getTable().getName());
 		assertEquals(2, idx.getColumns().size());
+		
+		assertEquals(1, idx.getTable().getIndices().size());
+		assertTrue(idx.getTable().getIndices().contains(idx));
+		g.removeIndex(idx);
+		assertEquals(0, idx.getTable().getIndices().size());
 
 		t = g.getTable("employees");
 		assertNull(t.getCelestaDoc());

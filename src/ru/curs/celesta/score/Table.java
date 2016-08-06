@@ -3,6 +3,7 @@ package ru.curs.celesta.score;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,8 @@ public final class Table extends GrainElement {
 	};
 
 	private final Set<ForeignKey> fKeys = new LinkedHashSet<>();
+
+	private final Set<Index> indices = new HashSet<>();
 
 	private final IntegerColumn recVersion = new IntegerColumn(this);
 
@@ -331,6 +334,13 @@ public final class Table extends GrainElement {
 	}
 
 	/**
+	 * Возвращает перечень индексов таблицы.
+	 */
+	public Set<Index> getIndices() {
+		return Collections.unmodifiableSet(indices);
+	}
+
+	/**
 	 * Возвращает имя ограничения PK (или null, если оно не задано).
 	 */
 	public String getPkConstraintName() {
@@ -489,5 +499,13 @@ public final class Table extends GrainElement {
 	@Override
 	public int getColumnIndex(String name) {
 		return columns.getIndex(name);
+	}
+
+	void addIndex(Index index) {
+		indices.add(index);
+	}
+
+	void removeIndex(Index index) {
+		indices.remove(index);
 	}
 }

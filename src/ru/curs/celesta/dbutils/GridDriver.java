@@ -203,6 +203,19 @@ public final class GridDriver {
 	}
 
 	/**
+	 * Checks if this driver is valid for a given cursor with its filters and
+	 * sorting.
+	 * 
+	 * @param c
+	 *            Cursor for checking.
+	 * @throws CelestaException
+	 *             wrong ordering.
+	 */
+	public boolean isValidFor(BasicCursor c) throws CelestaException {
+		return closedCopy.isEquivalent(c);
+	}
+
+	/**
 	 * Fills key fields of a cursor based on scroller knob position.
 	 * 
 	 * @param position
@@ -374,6 +387,14 @@ public final class GridDriver {
 	 */
 	public void setMaxExactScrollValue(int smallScroll) {
 		this.smallScroll = smallScroll;
+	}
+
+	/**
+	 * If the grid is scrolled less than for returned number of records, the
+	 * exact positioning in cycle will be used instead of interpolation.
+	 */
+	public int getMaxExactScrollValue() {
+		return smallScroll;
 	}
 
 }
