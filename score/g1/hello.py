@@ -74,8 +74,19 @@ def hello(context, arg):
         aa.idaa = i 
         aa.idc = i * i
         aa.textvalue = 'abc'
+        aa.realvalue = 3.14
         if not aa.tryInsert():
             aa.update()
+    
+    aa.first()
+    aa.realvalue = None
+    aa.update()
+    aa.realvalue = 33
+    aa.update()
+    aa.realvalue = 32
+    aa.update()
+    aa.textvalue = 'bbbb'
+    aa.update()
 
     b = bCursor(context)
     b.deleteAll()
@@ -153,7 +164,7 @@ def hello(context, arg):
     adresses.update()
     
     adresses.setFilter('country', "!null|'ss'")
-    adresses.setRange('building', 1, 11)
+    adresses.setRange('building', '1', '11')
     adresses.first()
     adresses.navigate('=')
     adresses.last()

@@ -282,8 +282,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 		return ic;
 	}
 
+	// CHECKSTYLE:OFF 6 parameters
 	final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask,
-			List<ParameterSetter> program, String where) throws CelestaException {
+			boolean[] nullsMask, List<ParameterSetter> program, String where) throws CelestaException {
+		// CHECKSTYLE:ON
 		StringBuilder setClause = new StringBuilder();
 		if (t.isVersioned()) {
 			setClause.append(String.format("\"%s\" = ?", Table.RECVERSION));
@@ -295,14 +297,20 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 			// Пропускаем ключевые поля и поля, не изменившие своего значения
 			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
 				padComma(setClause);
-				setClause.append(String.format("\"%s\" = ?", c));
-				program.add(ParameterSetter.create(t.getColumnIndex(c)));
+				if (nullsMask[i]) {
+					setClause.append(String.format("\"%s\" = NULL", c));
+				} else {
+					setClause.append(String.format("\"%s\" = ?", c));
+					program.add(ParameterSetter.create(t.getColumnIndex(c)));
+				}
 			}
 			i++;
 		}
 
 		String sql = String.format("update " + tableTemplate() + " set %s where %s", t.getGrain().getName(),
 				t.getName(), setClause.toString(), where);
+
+		// System.out.println(sql);
 		return prepareStatement(conn, sql);
 	}
 

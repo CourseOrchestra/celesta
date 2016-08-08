@@ -3,7 +3,8 @@ create grain g1 version '1.0';
 create table aa(
 idaa int not null primary key,  
 idc int not null default 0,
-textvalue varchar(10) not null default ''
+textvalue varchar(10) not null default '',
+realvalue real
 );
 
 create index aaidx on aa (idc, textvalue);

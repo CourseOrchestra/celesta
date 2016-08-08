@@ -92,11 +92,12 @@ public abstract class Cursor extends BasicCursor {
 	};
 
 	private boolean[] updateMask = null;
+	private boolean[] nullUpdateMask = null;
 	private final PreparedStmtHolder update = new PreparedStmtHolder() {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
 			WhereTerm where = WhereTermsMaker.getPKWhereTerm(meta());
-			PreparedStatement result = db().getUpdateRecordStatement(conn(), meta(), updateMask, program,
+			PreparedStatement result = db().getUpdateRecordStatement(conn(), meta(), updateMask, nullUpdateMask, program,
 					where.getWhere());
 			where.programParams(program);
 			return result;
@@ -287,19 +288,22 @@ public abstract class Cursor extends BasicCursor {
 			Object[] xValues = getXRec()._currentValues();
 			// Маска: true для тех случаев, когда поле не было изменено
 			boolean[] myMask = new boolean[values.length];
+			boolean[] myNullsMask = new boolean[values.length];
 			boolean notChanged = true;
 			for (int i = 0; i < values.length; i++) {
 				myMask[i] = compareValues(values[i], xValues[i]);
 				notChanged &= myMask[i];
+				myNullsMask[i] = values[i] == null;
 			}
 			// Если ничего не изменилось -- выполнять дальнейшие действия нет
 			// необходимости
 			if (notChanged)
 				return true;
 
-			if (!Arrays.equals(myMask, updateMask)) {
+			if (!(Arrays.equals(myMask, updateMask) && Arrays.equals(myNullsMask, nullUpdateMask))) {
 				update.close();
 				updateMask = myMask;
+				nullUpdateMask = myNullsMask;
 			}
 
 			// for a completely new record
