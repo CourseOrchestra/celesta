@@ -107,6 +107,35 @@ public final class CallContext {
 	}
 
 	/**
+	 * Инициирует информационное сообщение.
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 * @param caption
+	 *            Заголовок окна.
+	 */
+	public void message(String msg, String caption) {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg, caption));
+	}
+
+	/**
+	 * Инициирует информационное сообщение.
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 * 
+	 * @param caption
+	 *            Заголовок окна.
+	 * 
+	 * @param subkind
+	 *            Субтип сообщения.
+	 * 
+	 */
+	public void message(String msg, String caption, String subkind) { 
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg, caption, subkind));
+	}
+
+	/**
 	 * Инициирует предупреждение.
 	 * 
 	 * @param msg
