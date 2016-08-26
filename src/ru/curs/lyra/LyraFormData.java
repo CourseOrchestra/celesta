@@ -141,6 +141,9 @@ public final class LyraFormData implements Serializable {
 		return recversion;
 	}
 
+	/**
+	 * Key values of serialized data.
+	 */
 	public Object[] getKeyValues() {
 		return keyValues;
 	}

@@ -219,6 +219,9 @@ public abstract class BasicCursor {
 		if (context.getUserId() == null)
 			throw new CelestaException("Invalid context passed to %s constructor: user id is null.",
 					this.getClass().getName());
+		if (context.isClosed())
+			throw new CelestaException("Cannot create %s on a closed CallContext.", this.getClass().getName());
+
 		context.incCursorCount();
 
 		this.context = context;
@@ -395,13 +398,7 @@ public abstract class BasicCursor {
 
 	}
 
-	/**
-	 * Перечень столбцов, по которым осуществляется сортировка.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка доступа к метаданным.
-	 */
-	public String getOrderBy() throws CelestaException {
+	String getOrderBy() throws CelestaException {
 		return getOrderBy(false);
 	}
 
@@ -409,13 +406,25 @@ public abstract class BasicCursor {
 		return getOrderBy(true);
 	}
 
-	String[] orderByColumnNames() throws CelestaException {
+	/**
+	 * Returns column names that are in sorting.
+	 * 
+	 * @throws CelestaException
+	 *             cannot normally occur.
+	 */
+	public String[] orderByColumnNames() throws CelestaException {
 		if (orderByNames == null)
 			orderBy();
 		return orderByNames;
 	}
 
-	boolean[] descOrders() throws CelestaException {
+	/**
+	 * Returns mask of DESC orders.
+	 * 
+	 * @throws CelestaException
+	 *             cannot normally occur.
+	 */
+	public boolean[] descOrders() throws CelestaException {
 		if (orderByNames == null)
 			orderBy();
 		return descOrders;

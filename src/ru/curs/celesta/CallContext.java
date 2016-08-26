@@ -31,6 +31,8 @@ public final class CallContext {
 
 	private BasicCursor lastCursor;
 	private int cursorCount;
+	
+	private boolean closed = false;
 
 	public CallContext(Connection conn, SessionContext sesContext) throws CelestaException {
 		this(conn, sesContext, null, null, null);
@@ -279,6 +281,7 @@ public final class CallContext {
 		while (lastCursor != null) {
 			lastCursor.close();
 		}
+		closed = true;
 	}
 
 	/**
@@ -311,5 +314,12 @@ public final class CallContext {
 	 */
 	public ShowcaseContext getShowcaseContext() {
 		return showcaseContext;
+	}
+
+	/**
+	 * Был ли контекст закрыт.
+	 */
+	public boolean isClosed() {
+		return closed;
 	}
 }
