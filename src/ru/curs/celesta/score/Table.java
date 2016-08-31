@@ -3,6 +3,7 @@ package ru.curs.celesta.score;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,23 +26,21 @@ public final class Table extends GrainElement {
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
 		protected String getErrorMsg(String name) {
-			return String.format(
-					"Column '%s' defined more than once in table '%s'.", name,
-					getName());
+			return String.format("Column '%s' defined more than once in table '%s'.", name, getName());
 		}
 
 	};
 	private final NamedElementHolder<Column> pk = new NamedElementHolder<Column>() {
 		@Override
 		protected String getErrorMsg(String name) {
-			return String
-					.format("Column '%s' defined more than once for primary key in table '%s'.",
-							name, getName());
+			return String.format("Column '%s' defined more than once for primary key in table '%s'.", name, getName());
 		}
 
 	};
 
 	private final Set<ForeignKey> fKeys = new LinkedHashSet<>();
+
+	private final Set<Index> indices = new HashSet<>();
 
 	private final IntegerColumn recVersion = new IntegerColumn(this);
 
@@ -79,9 +78,8 @@ public final class Table extends GrainElement {
 	public Column getColumn(String name) throws ParseException {
 		Column result = columns.get(name);
 		if (result == null)
-			throw new ParseException(String.format(
-					"Column '%s' not found in table '%s.%s'", name, getGrain()
-							.getName(), getName()));
+			throw new ParseException(
+					String.format("Column '%s' not found in table '%s.%s'", name, getGrain().getName(), getName()));
 		return result;
 	}
 
@@ -123,9 +121,8 @@ public final class Table extends GrainElement {
 	 */
 	public void setPK(String... columnNames) throws ParseException {
 		if (columnNames == null || (columnNames.length == 0 && !isReadOnly))
-			throw new ParseException(String.format(
-					"Primary key for table %s.%s cannot be empty.", getGrain()
-							.getName(), getName()));
+			throw new ParseException(
+					String.format("Primary key for table %s.%s cannot be empty.", getGrain().getName(), getName()));
 		for (String n : columnNames)
 			validatePKColumn(n);
 		getGrain().modify();
@@ -144,39 +141,28 @@ public final class Table extends GrainElement {
 	 */
 	void addPK(String name) throws ParseException {
 		if (pkFinalized)
-			throw new ParseException(String.format(
-					"More than one PRIMARY KEY definition in table '%s'.",
-					getName()));
+			throw new ParseException(String.format("More than one PRIMARY KEY definition in table '%s'.", getName()));
 		Column c = validatePKColumn(name);
 		pk.addElement(c);
 	}
 
 	private Column validatePKColumn(String name) throws ParseException {
 		if (RECVERSION.equals(name))
-			throw new ParseException(String.format(
-					"Column '%s' is not allowed for primary key.", name));
+			throw new ParseException(String.format("Column '%s' is not allowed for primary key.", name));
 		Column c = columns.get(name);
 		if (c == null)
-			throw new ParseException(String.format(
-					"Column '%s' is not defined in table '%s'.", name,
-					getName()));
+			throw new ParseException(String.format("Column '%s' is not defined in table '%s'.", name, getName()));
 		if (c.isNullable())
 			throw new ParseException(String.format(
-					"Column '%s' is nullable and therefore it cannot be "
-							+ "a part of a primary key in table '%s'.", name,
-					getName()));
+					"Column '%s' is nullable and therefore it cannot be " + "a part of a primary key in table '%s'.",
+					name, getName()));
 		if (c instanceof BinaryColumn)
-			throw new ParseException(
-					String.format(
-							"Column %s is of long binary type and therefore "
-									+ "it cannot a part of a primary key in table '%s'.",
-							name, getName()));
+			throw new ParseException(String.format("Column %s is of long binary type and therefore "
+					+ "it cannot a part of a primary key in table '%s'.", name, getName()));
 		if (c instanceof StringColumn && ((StringColumn) c).isMax())
-			throw new ParseException(
-					String.format(
-							"Column '%s' is of TEXT type and therefore "
-									+ "it cannot a part of a primary key in table '%s'.",
-							name, getName()));
+			throw new ParseException(String.format(
+					"Column '%s' is of TEXT type and therefore " + "it cannot a part of a primary key in table '%s'.",
+					name, getName()));
 
 		return c;
 	}
@@ -191,10 +177,8 @@ public final class Table extends GrainElement {
 					sb.append(", ");
 				sb.append(c.getName());
 			}
-			throw new ParseException(
-					String.format(
-							"Foreign key with columns %s is already defined in table '%s'",
-							sb.toString(), getName()));
+			throw new ParseException(String.format("Foreign key with columns %s is already defined in table '%s'",
+					sb.toString(), getName()));
 		}
 		getGrain().modify();
 		fKeys.add(fk);
@@ -208,19 +192,15 @@ public final class Table extends GrainElement {
 	synchronized void removeColumn(Column column) throws ParseException {
 		// Составную часть первичного ключа нельзя удалить
 		if (pk.contains(column))
-			throw new ParseException(String.format(
-					YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO
-							+ "a primary key. Change primary key first.",
-					getGrain().getName(), getName(), column.getName()));
+			throw new ParseException(
+					String.format(YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO + "a primary key. Change primary key first.",
+							getGrain().getName(), getName(), column.getName()));
 		// Составную часть индекса нельзя удалить
 		for (Index ind : getGrain().getIndices().values())
 			if (ind.getColumns().containsValue(column))
-				throw new ParseException(
-						String.format(
-								YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO
-										+ "an index. Drop or change relevant index first.",
-								getGrain().getName(), getName(),
-								column.getName()));
+				throw new ParseException(String.format(
+						YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO + "an index. Drop or change relevant index first.",
+						getGrain().getName(), getName(), column.getName()));
 		// Составную часть внешнего ключа нельзя удалить
 		for (ForeignKey fk : fKeys)
 			if (fk.getColumns().containsValue(column))
@@ -241,8 +221,7 @@ public final class Table extends GrainElement {
 	 */
 	void finalizePK() throws ParseException {
 		if (pk.isEmpty() && !isReadOnly)
-			throw new ParseException(String.format(
-					"No primary key defined for table %s!", getName()));
+			throw new ParseException(String.format("No primary key defined for table %s!", getName()));
 		pkFinalized = true;
 	}
 
@@ -355,11 +334,17 @@ public final class Table extends GrainElement {
 	}
 
 	/**
+	 * Возвращает перечень индексов таблицы.
+	 */
+	public Set<Index> getIndices() {
+		return Collections.unmodifiableSet(indices);
+	}
+
+	/**
 	 * Возвращает имя ограничения PK (или null, если оно не задано).
 	 */
 	public String getPkConstraintName() {
-		return pkConstraintName == null ? limitName("pk_" + getName())
-				: pkConstraintName;
+		return pkConstraintName == null ? limitName("pk_" + getName()) : pkConstraintName;
 	}
 
 	/**
@@ -370,8 +355,7 @@ public final class Table extends GrainElement {
 	 * @throws ParseException
 	 *             неверное имя
 	 */
-	public void setPkConstraintName(String pkConstraintName)
-			throws ParseException {
+	public void setPkConstraintName(String pkConstraintName) throws ParseException {
 		if (pkConstraintName != null)
 			validateIdentifier(pkConstraintName);
 		this.pkConstraintName = pkConstraintName;
@@ -457,10 +441,8 @@ public final class Table extends GrainElement {
 	 */
 	void setReadOnly(boolean isReadOnly) throws ParseException {
 		if (isReadOnly && isVersioned)
-			throw new ParseException(
-					String.format(
-							"Method setReadOnly(true) failed: table %s should be either versioned or read only.",
-							getName()));
+			throw new ParseException(String.format(
+					"Method setReadOnly(true) failed: table %s should be either versioned or read only.", getName()));
 
 		this.isReadOnly = isReadOnly;
 	}
@@ -482,10 +464,8 @@ public final class Table extends GrainElement {
 	 */
 	public void setVersioned(boolean isVersioned) throws ParseException {
 		if (isReadOnly && isVersioned)
-			throw new ParseException(
-					String.format(
-							"Method setVersioned(true) failed: table %s should be either versioned or read only.",
-							getName()));
+			throw new ParseException(String.format(
+					"Method setVersioned(true) failed: table %s should be either versioned or read only.", getName()));
 		this.isVersioned = isVersioned;
 	}
 
@@ -514,5 +494,18 @@ public final class Table extends GrainElement {
 	 */
 	public void setAutoUpdate(boolean autoUpdate) {
 		this.autoUpdate = autoUpdate;
+	}
+
+	@Override
+	public int getColumnIndex(String name) {
+		return columns.getIndex(name);
+	}
+
+	void addIndex(Index index) {
+		indices.add(index);
+	}
+
+	void removeIndex(Index index) {
+		indices.remove(index);
 	}
 }

@@ -74,8 +74,19 @@ def hello(context, arg):
         aa.idaa = i 
         aa.idc = i * i
         aa.textvalue = 'abc'
+        aa.realvalue = 3.14
         if not aa.tryInsert():
             aa.update()
+    
+    aa.first()
+    aa.realvalue = None
+    aa.update()
+    aa.realvalue = 33
+    aa.update()
+    aa.realvalue = 32
+    aa.update()
+    aa.textvalue = 'bbbb'
+    aa.update()
 
     b = bCursor(context)
     b.deleteAll()
@@ -148,12 +159,15 @@ def hello(context, arg):
     
     # comment the line below to check version check failure
     adresses.get('11111', '11', '2')
+    print adresses.asCSVLine()    
     adresses.city = 'bbcc'
     adresses.update()
     
-    #adresses.setFilter('country', "!null|'ss'")
-    #adresses.setRange('building', 1, 5)
-    #adresses.first()
+    adresses.setFilter('country', "!null|'ss'")
+    adresses.setRange('building', '1', '11')
+    adresses.first()
+    adresses.navigate('=')
+    adresses.last()
     
     testview = testviewCursor(context)
     testview.orderBy("f1")
@@ -191,6 +205,19 @@ def hello(context, arg):
     print '----------------'
     for cc in context.celesta.activeContexts:
         print '%s \t| %s' % (cc.userId, cc.getDBPid())
+    
+    c.reset()
+    c.setRange('idc', 5)
+    for c in c.iterate():
+        print c.asCSVLine()
+        
+    c.setRange('idc', 6)
+    for c in c.iterate():
+        print c.asCSVLine()
+    
+    c.setFilter('idc', '5..7')
+    for c in c.iterate():
+        print c.asCSVLine()
     
     print 'Python procedure finished.'
     

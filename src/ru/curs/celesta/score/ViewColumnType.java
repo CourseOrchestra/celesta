@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 /**
  * Тип выражения.
  */
-public enum ViewColumnType implements ColumnMeta {
+public enum ViewColumnType {
 	/**
 	 * Логическое условие.
 	 */
@@ -20,9 +20,9 @@ public enum ViewColumnType implements ColumnMeta {
 
 	},
 	/**
-	 * Числовое значение.
+	 * Числовое значение с дробной частью.
 	 */
-	NUMERIC {
+	REAL {
 		@Override
 		public String jdbcGetterName() {
 			return "getDouble";
@@ -33,6 +33,20 @@ public enum ViewColumnType implements ColumnMeta {
 			return FloatingColumn.CELESTA_TYPE;
 		}
 
+	},
+	/**
+	 * Целочисленное значение.
+	 */
+	INT {
+		@Override
+		public String jdbcGetterName() {
+			return "getInt";
+		}
+
+		@Override
+		public String getCelestaType() {
+			return IntegerColumn.CELESTA_TYPE;
+		}
 	},
 	/**
 	 * Текстовое значение.
@@ -110,10 +124,13 @@ public enum ViewColumnType implements ColumnMeta {
 
 	};
 
-	@Override
-	public String getCelestaDoc() {
-		// TODO !!!! redevelop the handling of views in order to support JavaDoc
-		// for view fields!
-		return "";
-	}
+	/**
+	 * JDBC getter.
+	 */
+	abstract String jdbcGetterName();
+
+	/**
+	 * Celesta type.
+	 */
+	abstract String getCelestaType();
 }

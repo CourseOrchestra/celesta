@@ -1,13 +1,11 @@
 package ru.curs.celesta;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Date;
 
 import org.python.core.PyDictionary;
 
-import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.dbutils.DBAdaptor;
+import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.score.Grain;
 
 /**
@@ -26,27 +24,32 @@ public final class CallContext {
 	private final Grain grain;
 	private final String procName;
 	private final SessionContext sesContext;
+	private final ShowcaseContext showcaseContext;
+
 	private final int dbPid;
 	private final Date startTime = new Date();
 
 	private BasicCursor lastCursor;
 	private int cursorCount;
+	
+	private boolean closed = false;
 
 	public CallContext(Connection conn, SessionContext sesContext) throws CelestaException {
-		this.conn = conn;
-		this.sesContext = sesContext;
-		this.grain = null;
-		this.procName = null;
-		DBAdaptor db = DBAdaptor.getAdaptor();
-		dbPid = db.getDBPid(conn);
+		this(conn, sesContext, null, null, null);
 	}
 
 	public CallContext(Connection conn, SessionContext sesContext, Grain curGrain, String procName)
 			throws CelestaException {
+		this(conn, sesContext, null, curGrain, procName);
+	}
+
+	public CallContext(Connection conn, SessionContext sesContext, ShowcaseContext showcaseContext,
+			Grain curGrain, String procName) throws CelestaException {
 		this.conn = conn;
 		this.sesContext = sesContext;
 		this.grain = curGrain;
 		this.procName = procName;
+		this.showcaseContext = showcaseContext;
 		DBAdaptor db = DBAdaptor.getAdaptor();
 		dbPid = db.getDBPid(conn);
 	}
@@ -104,6 +107,35 @@ public final class CallContext {
 	}
 
 	/**
+	 * Инициирует информационное сообщение.
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 * @param caption
+	 *            Заголовок окна.
+	 */
+	public void message(String msg, String caption) {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg, caption));
+	}
+
+	/**
+	 * Инициирует информационное сообщение.
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 * 
+	 * @param caption
+	 *            Заголовок окна.
+	 * 
+	 * @param subkind
+	 *            Субтип сообщения.
+	 * 
+	 */
+	public void message(String msg, String caption, String subkind) {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg, caption, subkind));
+	}
+
+	/**
 	 * Инициирует предупреждение.
 	 * 
 	 * @param msg
@@ -111,6 +143,35 @@ public final class CallContext {
 	 */
 	public void warning(String msg) {
 		sesContext.addMessage(new CelestaMessage(CelestaMessage.WARNING, msg));
+	}
+
+	/**
+	 * Инициирует предупреждение.
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 * @param caption
+	 *            Заголовок окна.
+	 */
+	public void warning(String msg, String caption) {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.WARNING, msg, caption));
+	}
+
+	/**
+	 * Инициирует предупреждение.
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 * 
+	 * @param caption
+	 *            Заголовок окна.
+	 * 
+	 * @param subkind
+	 *            Субтип сообщения.
+	 * 
+	 */
+	public void warning(String msg, String caption, String subkind) {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.WARNING, msg, caption, subkind));
 	}
 
 	/**
@@ -123,6 +184,38 @@ public final class CallContext {
 	 */
 	public void error(String msg) throws CelestaException {
 		sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg));
+		throw new CelestaException("ERROR: %s", msg);
+	}
+
+	/**
+	 * Инициирует ошибку и вызывает исключение.
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 * @param caption
+	 *            Заголовок окна.
+	 * @throws CelestaException
+	 *             во всех случаях, при этом с переданным текстом
+	 */
+	public void error(String msg, String caption) throws CelestaException {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg, caption));
+		throw new CelestaException("ERROR: %s", msg);
+	}
+
+	/**
+	 * Инициирует ошибку и вызывает исключение.
+	 * 
+	 * @param msg
+	 *            текст сообщения
+	 * @param caption
+	 *            Заголовок окна.
+	 * @param subkind
+	 *            Субтип сообщения.
+	 * @throws CelestaException
+	 *             во всех случаях, при этом с переданным текстом
+	 */
+	public void error(String msg, String caption, String subkind) throws CelestaException {
+		sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg, caption, subkind));
 		throw new CelestaException("ERROR: %s", msg);
 	}
 
@@ -162,7 +255,8 @@ public final class CallContext {
 	 */
 	public void incCursorCount() throws CelestaException {
 		if (cursorCount > MAX_CURSORS)
-			throw new CelestaException("Too many cursors created in one Celesta procedure call. Check for leaks!");
+			throw new CelestaException(
+					"Too many cursors created in one Celesta procedure call. Check for leaks!");
 		cursorCount++;
 	}
 
@@ -187,6 +281,7 @@ public final class CallContext {
 		while (lastCursor != null) {
 			lastCursor.close();
 		}
+		closed = true;
 	}
 
 	/**
@@ -212,5 +307,19 @@ public final class CallContext {
 	 */
 	public Date getStartTime() {
 		return startTime;
+	}
+
+	/**
+	 * Возвращает контексты Showcase.
+	 */
+	public ShowcaseContext getShowcaseContext() {
+		return showcaseContext;
+	}
+
+	/**
+	 * Был ли контекст закрыт.
+	 */
+	public boolean isClosed() {
+		return closed;
 	}
 }

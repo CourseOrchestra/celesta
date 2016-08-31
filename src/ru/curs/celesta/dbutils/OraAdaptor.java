@@ -58,7 +58,6 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
@@ -327,22 +326,23 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getOneFieldStatement(Connection conn, Column c) throws CelestaException {
+	PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
 		Table t = c.getParentTable();
 		String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1", c.getQuotedName(),
-				t.getGrain().getName(), t.getName(), getRecordWhereClause(t));
+				t.getGrain().getName(), t.getName(), where);
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement getOneRecordStatement(Connection conn, Table t) throws CelestaException {
+	PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException {
 		String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1",
-				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(), t.getName(), getRecordWhereClause(t));
+				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(), t.getName(), where);
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask) throws CelestaException {
+	PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+			List<ParameterSetter> program) throws CelestaException {
 
 		Iterator<String> columns = t.getColumns().keySet().iterator();
 		// Создаём параметризуемую часть запроса, пропуская нулевые значения.
@@ -360,6 +360,7 @@ final class OraAdaptor extends DBAdaptor {
 			fields.append('"');
 			fields.append(c);
 			fields.append('"');
+			program.add(ParameterSetter.create(i));
 		}
 
 		String sql = String.format("insert into " + tableTemplate() + " (%s) values (%s)", t.getGrain().getName(),
@@ -368,9 +369,9 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getDeleteRecordStatement(Connection conn, Table t) throws CelestaException {
+	PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
 		String sql = String.format("delete " + tableTemplate() + " where %s", t.getGrain().getName(), t.getName(),
-				getRecordWhereClause(t));
+				where);
 		return prepareStatement(conn, sql);
 	}
 
@@ -400,16 +401,11 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement deleteRecordSetStatement(Connection conn, Table t, Map<String, AbstractFilter> filters,
-			Expr complexFilter) throws CelestaException {
-		String whereClause = getWhereClause(t, filters, complexFilter);
+	PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
 		String sql = String.format("delete from " + tableTemplate() + " %s", t.getGrain().getName(), t.getName(),
-				!whereClause.isEmpty() ? "where " + whereClause : "");
+				where.isEmpty() ? "" : "where " + where);
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
-			if (filters != null) {
-				fillSetQueryParameters(filters, result);
-			}
 			return result;
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -470,7 +466,7 @@ final class OraAdaptor extends DBAdaptor {
 		String fieldList = getFieldList(index.getColumns().keySet());
 		String sql = String.format("CREATE INDEX " + tableTemplate() + " ON " + tableTemplate() + " (%s)", grainName,
 				index.getName(), grainName, index.getTable().getName(), fieldList);
-		String[] result = {sql};
+		String[] result = { sql };
 		return result;
 	}
 
@@ -482,7 +478,7 @@ final class OraAdaptor extends DBAdaptor {
 		} else {
 			sql = String.format("DROP INDEX " + tableTemplate(), g.getName(), dBIndexInfo.getIndexName());
 		}
-		String[] result = {sql};
+		String[] result = { sql };
 		return result;
 	}
 
@@ -1273,18 +1269,13 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	// CHECKSTYLE:OFF 6 params
-	PreparedStatement getNavigationStatement(Connection conn, GrainElement t, Map<String, AbstractFilter> filters,
-			Expr complexFilter, String orderBy, String navigationWhereClause) throws CelestaException {
-		// CHECKSTYLE:ON
+	PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
+			String navigationWhereClause) throws CelestaException {
 		if (navigationWhereClause == null)
 			throw new IllegalArgumentException();
 
-		StringBuilder w = new StringBuilder();
-		w.append(getWhereClause(t, filters, complexFilter));
-		if (w.length() > 0 && navigationWhereClause.length() > 0)
-			w.append(" and ");
-		w.append(navigationWhereClause);
+		StringBuilder w = new StringBuilder(navigationWhereClause);
+
 		if (w.length() > 0)
 			w.append(" and ");
 		w.append("rownum = 1");
@@ -1347,5 +1338,10 @@ final class OraAdaptor extends DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
+	}
+
+	@Override
+	public boolean nullsFirst() {
+		return false;
 	}
 }

@@ -1,0 +1,79 @@
+<!DOCTYPE project>
+<project name="celesta" default="pom">
+	<target name="makedirs">
+		<mkdir dir="../mvncelesta" />
+		<mkdir dir="mvncelesta" />
+		<mkdir dir="../mvncelesta/src" />
+		<mkdir dir="../mvncelesta/src/main" />
+		<mkdir dir="../mvncelesta/src/main/java" />
+		<mkdir dir="../mvncelesta/src/main/javacc" />
+		<mkdir dir="../mvncelesta/src/main/resources" />
+		<mkdir dir="../mvncelesta/src/test" />
+		<mkdir dir="../mvncelesta/src/test/java" />
+		<mkdir dir="../mvncelesta/src/test/resources" />
+	</target>
+	<target name="copysrc" depends="makedirs">
+		<copy todir="../mvncelesta/src/main/java">
+			<fileset dir="src">
+				<include name="**/*.java" />
+				<exclude name="**/CelestaParser*.java" />
+				<exclude name="**/FilterParser*.java" />
+				<exclude name="**/ParseException.java" />
+				<exclude name="**/SimpleCharStream.java" />
+				<exclude name="**/Token.java" />
+				<exclude name="**/TokenMgrError.java" />
+			</fileset>
+		</copy>
+		<copy todir="../mvncelesta/src/main/resources">
+			<fileset dir="src">
+				<include name="**/*.sql" />
+			</fileset>
+		</copy>
+		<copy todir="../mvncelesta/src/main/javacc" flatten="true">
+			<fileset dir="src">
+				<include name="**/*.jj" />
+			</fileset>
+		</copy>
+		<copy todir="../mvncelesta/pylib">
+			<fileset dir="pylib">
+				<exclude name="**/*.class" />
+			</fileset>
+		</copy>
+	</target>
+	<target name="copytest" depends="makedirs">
+		<copy todir="../mvncelesta/src/test/java">
+			<fileset dir="test">
+				<include name="**/*.java" />
+			</fileset>
+		</copy>
+		<copy todir="../mvncelesta/src/test/resources">
+			<fileset dir="test">
+				<include name="**/*.sql" />
+				<include name="**/*.txt" />
+				<include name="**/*.properties" />
+				<include name="**/*.template" />
+			</fileset>
+		</copy>
+	</target>
+	<target name="copyscores">
+		<copy todir="../mvncelesta/score">
+			<fileset dir="score">
+				<include name="**/*.py" />
+				<include name="**/*.sql" />
+				<include name="**/*.cmd" />
+			</fileset>
+		</copy>
+		<copy todir="../mvncelesta/testScore">
+			<fileset dir="testScore">
+				<include name="**/*.py" />
+				<include name="**/*.sql" />
+				<include name="**/*.cmd" />
+			</fileset>
+		</copy>
+
+	</target>
+	<target name="pom" depends="copysrc,copytest,copyscores">
+		<copy tofile="../mvncelesta/LICENSE.txt" file="gpl.txt" />
+		<copy tofile="../mvncelesta/pom.xml" file="pom.xml" />
+	</target>
+</project>

@@ -54,7 +54,6 @@ import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.GrainElement;
@@ -348,22 +347,23 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getOneFieldStatement(Connection conn, Column c) throws CelestaException {
+	PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
 		Table t = c.getParentTable();
 		String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S, c.getQuotedName(), t.getGrain().getName(),
-				t.getName(), getRecordWhereClause(t));
+				t.getName(), where);
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement getOneRecordStatement(Connection conn, Table t) throws CelestaException {
+	PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException {
 		String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S, getTableFieldsListExceptBLOBs(t),
-				t.getGrain().getName(), t.getName(), getRecordWhereClause(t));
+				t.getGrain().getName(), t.getName(), where);
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask) throws CelestaException {
+	PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+			List<ParameterSetter> program) throws CelestaException {
 
 		Iterator<String> columns = t.getColumns().keySet().iterator();
 		// Создаём параметризуемую часть запроса, пропуская нулевые значения.
@@ -381,6 +381,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 			fields.append('"');
 			fields.append(c);
 			fields.append('"');
+			program.add(ParameterSetter.create(i));
 		}
 
 		String sql = String.format("insert " + tableTemplate() + " (%s) values (%s);", t.getGrain().getName(),
@@ -389,25 +390,18 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getDeleteRecordStatement(Connection conn, Table t) throws CelestaException {
-		String sql = String.format("delete " + tableTemplate() + WHERE_S, t.getGrain().getName(), t.getName(),
-				getRecordWhereClause(t));
+	PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
+		String sql = String.format("delete " + tableTemplate() + WHERE_S, t.getGrain().getName(), t.getName(), where);
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement deleteRecordSetStatement(Connection conn, Table t, Map<String, AbstractFilter> filters,
-			Expr complexFilter) throws CelestaException {
-		// Готовим условие where
-		String whereClause = getWhereClause(t, filters, complexFilter);
-
+	PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
 		// Готовим запрос на удаление
 		String sql = String.format("delete " + tableTemplate() + " %s;", t.getGrain().getName(), t.getName(),
-				whereClause.length() > 0 ? "where " + whereClause : "");
+				where.isEmpty() ? "" : "where " + where);
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
-			// А теперь заполняем параметры
-			fillSetQueryParameters(filters, result);
 			return result;
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -974,16 +968,12 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	// CHECKSTYLE:OFF 6 params
-	PreparedStatement getNavigationStatement(Connection conn, GrainElement t, Map<String, AbstractFilter> filters,
-			Expr complexFilter, String orderBy, String navigationWhereClause) throws CelestaException {
-		// CHECKSTYLE:ON
+	PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
+			String navigationWhereClause) throws CelestaException {
 		if (navigationWhereClause == null)
 			throw new IllegalArgumentException();
-		StringBuilder w = new StringBuilder(getWhereClause(t, filters, complexFilter));
-		if (w.length() > 0 && navigationWhereClause.length() > 0)
-			w.append(" and ");
-		w.append(navigationWhereClause);
+
+		StringBuilder w = new StringBuilder(navigationWhereClause);
 		boolean useWhere = w.length() > 0;
 		if (orderBy.length() > 0)
 			w.append(" order by " + orderBy);
@@ -1010,5 +1000,10 @@ final class MSSQLAdaptor extends DBAdaptor {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
+	}
+
+	@Override
+	public boolean nullsFirst() {
+		return true;
 	}
 }

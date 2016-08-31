@@ -62,12 +62,12 @@ public final class Celesta {
 
 	private static Celesta theCelesta;
 	private final Score score;
+	private final PythonSourceMonitor sourceMonitor;
 	private List<String> pyPathList;
-	private final Queue<PythonInterpreter> interpreterPool = new LinkedList<>();
+	private final Queue<InterpreterHolder> interpreterPool = new LinkedList<>();
 	private final Map<String, SessionContext> sessions = Collections
 			.synchronizedMap(new HashMap<String, SessionContext>());
-	private final Set<CallContext> contexts = Collections
-			.synchronizedSet(new LinkedHashSet<CallContext>());
+	private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
 	private final ProfilingManager profiler = new ProfilingManager();
 
@@ -76,6 +76,7 @@ public final class Celesta {
 		// 1. Разбор описания гранул.
 		System.out.print("Celesta initialization: phase 1/3 score parsing...");
 		score = new Score(AppSettings.getScorePath());
+		sourceMonitor = new PythonSourceMonitor(score);
 		System.out.println("done.");
 
 		// 2. Перекомпиляция ORM-модулей, где это необходимо.
@@ -124,48 +125,62 @@ public final class Celesta {
 				String userId = args[0];
 				String sesId = String.format("TEMP%08X", (new Random()).nextInt());
 				// getInstance().setProfilemode(true);
-				getInstance().login(sesId, userId);
-				getInstance().runPython(sesId, args[1], params);
-				getInstance().logout(sesId, false);
-
+				theCelesta.login(sesId, userId);
+				theCelesta.runPython(sesId, args[1], params);
+				theCelesta.logout(sesId, false);
+				theCelesta.sourceMonitor.cancel();
 			} catch (CelestaException e) {
-				System.out.println("The following problems occured while trying to execute "
-						+ args[1] + ":");
+				System.out.println("The following problems occured while trying to execute " + args[1] + ":");
 				System.out.println(e.getMessage());
 			}
 	}
 
-	private synchronized PythonInterpreter getPythonInterpreter() throws CelestaException {
+	private synchronized InterpreterHolder getPythonInterpreter() throws CelestaException {
 		// Для начала, пытаемся достать готовый интерпретатор из пула.
-		PythonInterpreter interp = interpreterPool.poll();
-		if (interp != null)
-			return interp;
+		InterpreterHolder h = interpreterPool.poll();
+		PythonInterpreter interp;
 
+		long timestamp = sourceMonitor.getSourceTimestamp();
+
+		if (h != null) {
+			interp = h.interpreter;
+			if (timestamp > h.sourceTimestamp) {
+
+				// removing Lyra Forms from all call contexts
+				for (SessionContext c : sessions.values())
+					c.removeForms();
+
+				// re-importing grain modules
+				initPythonScore(interp);
+
+				h.sourceTimestamp = timestamp;
+			}
+			return h;
+		}
 		initPyPathList();
 
-		boolean jythonStateMethod = AppSettings.getJythonStateMethod();
-		PySystemState state = null;
-		if (jythonStateMethod) {
-			state = new PySystemState();
-		} else {
-			state = Py.getSystemState();
-		}
-		// state = debugMode ? new PySystemState() : Py.getSystemState();
-
+		PySystemState state = Py.getSystemState();
 		for (String path : pyPathList)
 			state.path.append(new PyString(path));
 		interp = new PythonInterpreter(null, state);
 		codecs.setDefaultEncoding("UTF-8");
+		// initialize grain modules
+		initPythonScore(interp);
+		return new InterpreterHolder(interp, timestamp);
+	}
 
+	private void initPythonScore(PythonInterpreter interp) throws CelestaException {
 		SessionContext scontext = new SessionContext("super", "celesta_init");
 		Connection conn = ConnectionPool.get();
 		CallContext context = new CallContext(conn, scontext);
 		contexts.add(context);
 		try {
-			interp.set("_ic", context);
 			interp.exec("import sys");
+			for (String moduleName : sourceMonitor.getModules()) {
+				interp.exec(String.format("sys.modules.pop('%s', None)", moduleName));
+			}
+			interp.set("_ic", context);
 			interp.exec("sys.modules['initcontext'] = lambda: _ic");
-			// Инициализация пакетов гранул
 			for (Grain g : theCelesta.getScore().getGrains().values())
 				if (!"celesta".equals(g.getName())) {
 					String line = String.format("import %s", g.getName());
@@ -175,18 +190,18 @@ public final class Celesta {
 		} catch (Throwable e) {
 			System.out.println("Python interpreter initialization error:");
 			e.printStackTrace(System.out);
-			throw e;
+			interp.close();
+			throw new CelestaException("Python interpreter initialization error. See stdout for details.");
 		} finally {
 			context.closeCursors();
 			ConnectionPool.putBack(conn);
 			contexts.remove(context);
 		}
 		interp.set("_ic", "You can't use initcontext() outside the initialization code!");
-		return interp;
 	}
 
-	private synchronized void returnPythonInterpreter(PythonInterpreter interp) {
-		interpreterPool.add(interp);
+	private synchronized void returnPythonInterpreter(InterpreterHolder h) {
+		interpreterPool.add(h);
 	}
 
 	/**
@@ -200,6 +215,7 @@ public final class Celesta {
 	/**
 	 * Очищает пул интерпретаторов Python.
 	 */
+	@Deprecated
 	public synchronized void clearInterpretersPool() {
 		interpreterPool.clear();
 	}
@@ -318,7 +334,7 @@ public final class Celesta {
 	 *             выполненения процедуры.
 	 */
 	public PyObject runPython(String sesId, String proc, Object... param) throws CelestaException {
-		return runPython(sesId, null, proc, param);
+		return runPython(sesId, null, null, proc, param);
 
 	}
 
@@ -330,16 +346,18 @@ public final class Celesta {
 	 *            изменение
 	 * @param rec
 	 *            приёмник сообщений.
+	 * @param sc
+	 *            Контекст Showcase.
 	 * @param proc
 	 *            Имя процедуры в формате <grain>.<module>.<proc>
 	 * @param param
 	 *            Параметры для передачи процедуры.
-	 * @return PyObject
+	 * @return PyObject Результат вызова питон-процедуры.
 	 * @throws CelestaException
 	 *             В случае, если процедура не найдена или в случае ошибки
 	 *             выполненения процедуры.
 	 */
-	public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec, String proc,
+	public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc,
 			Object... param) throws CelestaException {
 		Matcher m = PROCNAME.matcher(proc);
 
@@ -352,8 +370,7 @@ public final class Celesta {
 			try {
 				grain = getScore().getGrain(grainName);
 			} catch (ParseException e) {
-				throw new CelestaException(
-						"Invalid procedure name: %s, grain %s is unknown for the system.", proc,
+				throw new CelestaException("Invalid procedure name: %s, grain %s is unknown for the system.", proc,
 						grainName);
 			}
 
@@ -367,9 +384,11 @@ public final class Celesta {
 			sesContext.setMessageReceiver(rec);
 
 			Connection conn = ConnectionPool.get();
-			CallContext context = new CallContext(conn, sesContext, grain, proc);
+			CallContext context = new CallContext(conn, sesContext, sc, grain, proc);
+
 			contexts.add(context);
-			PythonInterpreter interp = getPythonInterpreter();
+			InterpreterHolder h = getPythonInterpreter();
+			PythonInterpreter interp = h.interpreter;
 			try {
 				interp.set("context", context);
 				for (int i = 0; i < param.length; i++)
@@ -380,8 +399,7 @@ public final class Celesta {
 					String line = String.format("import %s%s", grainName, unitName);
 					lastPyCmd = line;
 					interp.exec(line);
-					line =
-						String.format("%s%s.%s(%s)", grainName, unitName, procName, sb.toString());
+					line = String.format("%s%s.%s(%s)", grainName, unitName, procName, sb.toString());
 					lastPyCmd = line;
 					PyObject pyObj = interp.eval(line);
 					profiler.logCall(context);
@@ -398,21 +416,19 @@ public final class Celesta {
 					}
 					StringWriter sw = new StringWriter();
 					e.fillInStackTrace().printStackTrace(new PrintWriter(sw));
-					throw new CelestaException(String.format(
-							"Python error while executing '%s': %s:%s%n%s%n%s", lastPyCmd, e.type,
-							e.value, sw.toString(), sqlErr));
+					throw new CelestaException(String.format("Python error while executing '%s': %s:%s%n%s%n%s",
+							lastPyCmd, e.type, e.value, sw.toString(), sqlErr));
 				}
 			} finally {
 				context.closeCursors();
-				returnPythonInterpreter(interp);
+				returnPythonInterpreter(h);
 				ConnectionPool.putBack(conn);
 				contexts.remove(context);
 			}
 
 		} else {
-			throw new CelestaException(
-					"Invalid procedure name: %s, should match pattern <grain>.(<module>.)...<proc>, "
-							+ "note that grain name should not contain underscores.", proc);
+			throw new CelestaException("Invalid procedure name: %s, should match pattern <grain>.(<module>.)...<proc>, "
+					+ "note that grain name should not contain underscores.", proc);
 		}
 	}
 
@@ -433,8 +449,7 @@ public final class Celesta {
 		initialize(settings, true);
 	}
 
-	private static synchronized void initialize(Properties settings, boolean initPython)
-			throws CelestaException {
+	private static synchronized void initialize(Properties settings, boolean initPython) throws CelestaException {
 		if (theCelesta != null)
 			throw new CelestaException(CELESTA_IS_ALREADY_INITIALIZED);
 
@@ -450,8 +465,7 @@ public final class Celesta {
 		new Celesta();
 
 		if (initPython) {
-			System.out
-					.print("Celesta post-initialization: phase 1/1 first Jython interpreter initialization...");
+			System.out.print("Celesta post-initialization: phase 1/1 first Jython interpreter initialization...");
 			theCelesta.returnPythonInterpreter(theCelesta.getPythonInterpreter());
 			System.out.println("done.");
 		}
@@ -466,14 +480,12 @@ public final class Celesta {
 		// Construct the class loader itself
 		if (urlSet.size() > 0) {
 			final URL[] array = urlSet.toArray(new URL[urlSet.size()]);
-			ClassLoader classLoader =
-				AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
-					@Override
-					public URLClassLoader run() {
-						return new URLClassLoader(array, Thread.currentThread()
-								.getContextClassLoader());
-					}
-				});
+			ClassLoader classLoader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
+				@Override
+				public URLClassLoader run() {
+					return new URLClassLoader(array, Thread.currentThread().getContextClassLoader());
+				}
+			});
 			Thread.currentThread().setContextClassLoader(classLoader);
 		}
 		Properties postProperties = new Properties();
@@ -531,8 +543,7 @@ public final class Celesta {
 				String path = getMyPath();
 				File f = new File(path + FILE_PROPERTIES);
 				if (!f.exists())
-					throw new CelestaException(String.format("File %s cannot be found.",
-							f.toString()));
+					throw new CelestaException(String.format("File %s cannot be found.", f.toString()));
 				in = new FileInputStream(f);
 			}
 			try {
@@ -541,8 +552,7 @@ public final class Celesta {
 				in.close();
 			}
 		} catch (IOException e) {
-			throw new CelestaException(String.format(
-					"IOException while reading settings file: %s", e.getMessage()));
+			throw new CelestaException(String.format("IOException while reading settings file: %s", e.getMessage()));
 		}
 
 		initialize(settings, initPython);
@@ -630,6 +640,16 @@ public final class Celesta {
 	}
 
 	/**
+	 * Возвращает поведение NULLS FIRST текущей базы данных.
+	 * 
+	 * @throws CelestaException
+	 *             unknown database
+	 */
+	public boolean nullsFirst() throws CelestaException {
+		return DBAdaptor.getAdaptor().nullsFirst();
+	}
+
+	/**
 	 * Устанавливает режим профилирования.
 	 * 
 	 * @param profilemode
@@ -637,5 +657,19 @@ public final class Celesta {
 	 */
 	public void setProfilemode(boolean profilemode) {
 		profiler.setProfilemode(profilemode);
+	}
+
+	/**
+	 * Python interpreter along with the timestamp of the latest reloaded
+	 * sources.
+	 */
+	private static class InterpreterHolder {
+		private final PythonInterpreter interpreter;
+		private long sourceTimestamp;
+
+		InterpreterHolder(PythonInterpreter interpreter, long timestamp) {
+			this.interpreter = interpreter;
+			this.sourceTimestamp = timestamp;
+		}
 	}
 }

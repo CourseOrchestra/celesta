@@ -51,52 +51,6 @@ public class BasicCursorTest {
 	}
 
 	@Test
-	public void testWhere() throws CelestaException {
-
-		assertEquals(
-				"((\"grainid\" <= ?) and ((\"grainid\" < ?) or (\"tablename\" < ?)))",
-				c.getNavigationWhereClause('<'));
-		assertEquals(
-				"((\"grainid\" >= ?) and ((\"grainid\" > ?) or (\"tablename\" > ?)))",
-				c.getNavigationWhereClause('>'));
-		assertEquals("((\"grainid\" = ?) and (\"tablename\" = ?))",
-				c.getNavigationWhereClause('='));
-		assertEquals("\"grainid\", \"tablename\"", c.getOrderBy());
-		assertEquals("\"grainid\" desc, \"tablename\" desc",
-				c.getReversedOrderBy());
-
-		c.orderBy("d", "i ASC", "m DESC");
-		assertEquals("\"d\", \"i\", \"m\" desc, \"grainid\", \"tablename\"",
-				c.getOrderBy());
-		assertEquals(
-				"\"d\" desc, \"i\" desc, \"m\", \"grainid\" desc, \"tablename\" desc",
-				c.getReversedOrderBy());
-
-		assertEquals(
-				"((\"d\" >= ?) and ((\"d\" > ?) or ((\"i\" >= ?) and ((\"i\" > ?) or ((\"m\" <= ?) and ((\"m\" < ?) or ((\"grainid\" >= ?) and ((\"grainid\" > ?) or (\"tablename\" > ?)))))))))",
-				c.getNavigationWhereClause('>'));
-		assertEquals(
-				"((\"d\" <= ?) and ((\"d\" < ?) or ((\"i\" <= ?) and ((\"i\" < ?) or ((\"m\" >= ?) and ((\"m\" > ?) or ((\"grainid\" <= ?) and ((\"grainid\" < ?) or (\"tablename\" < ?)))))))))",
-				c.getNavigationWhereClause('<'));
-		assertEquals("((\"grainid\" = ?) and (\"tablename\" = ?))",
-				c.getNavigationWhereClause('='));
-
-		c.orderBy("grainid", "m DESC");
-		assertEquals("\"grainid\", \"m\" desc, \"tablename\"", c.getOrderBy());
-		assertEquals("\"grainid\" desc, \"m\", \"tablename\" desc",
-				c.getReversedOrderBy());
-		assertEquals(
-				"((\"grainid\" >= ?) and ((\"grainid\" > ?) or ((\"m\" <= ?) and ((\"m\" < ?) or (\"tablename\" > ?)))))",
-				c.getNavigationWhereClause('>'));
-		assertEquals(
-				"((\"grainid\" <= ?) and ((\"grainid\" < ?) or ((\"m\" >= ?) and ((\"m\" > ?) or (\"tablename\" < ?)))))",
-				c.getNavigationWhereClause('<'));
-		assertEquals("((\"grainid\" = ?) and (\"tablename\" = ?))",
-				c.getNavigationWhereClause('='));
-
-	}
-
-	@Test
 	public void test2() throws CelestaException {
 		c.setFilter("grainid", "'b'%");
 		LogSetupCursor c2 = (LogSetupCursor) c;

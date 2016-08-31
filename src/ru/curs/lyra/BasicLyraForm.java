@@ -114,7 +114,7 @@ public abstract class BasicLyraForm {
 			}
 
 			f.setWidth(metadata.has(WIDTH) ? metadata.getInt(WIDTH) : -1);
-			
+
 			f.setSubtype(metadata.has(SUBTYPE) ? metadata.getString(SUBTYPE) : null);
 			f.setLinkId(metadata.has(LINKID) ? metadata.getString(LINKID) : null);
 		} catch (JSONException e1) {
@@ -171,7 +171,9 @@ public abstract class BasicLyraForm {
 	 * @throws CelestaException
 	 *             navigation error.
 	 */
-	public synchronized BasicCursor rec() throws CelestaException {
+	// NB: never make this public, since we don't always have a correct
+	// CallContext here!
+	protected final synchronized BasicCursor rec() throws CelestaException {
 		if (rec == null) {
 			if (context != null) {
 				rec = _getCursor(context);
@@ -207,10 +209,32 @@ public abstract class BasicLyraForm {
 	/**
 	 * Retrieves cursor's record metainformation.
 	 */
-	protected GrainElement meta() {
+	public GrainElement meta() {
 		return meta;
 	}
 
+	/**
+	 * Returns column names that are in sorting.
+	 * 
+	 * @throws CelestaException
+	 *             cannot normally occur.
+	 */
+	public String[] orderByColumnNames() throws CelestaException {
+		return rec == null ? null : rec.orderByColumnNames();
+	}
+
+	
+	/**
+	 * Returns mask of DESC orders.
+	 * 
+	 * @throws CelestaException
+	 *             cannot normally occur.
+	 */
+	public boolean[] descOrders() throws CelestaException {
+		return rec == null ? null : rec.descOrders();
+	}
+
+	
 	// CHECKSTYLE:OFF for cyclomatic complexity
 	static String extractJSON(String celestaDoc) throws CelestaException {
 		// CHECKSTYLE:ON

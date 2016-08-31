@@ -10,6 +10,7 @@ public class CelestaMessage {
 	/**
 	 * Интерфейс получателя сообщений.
 	 */
+	@FunctionalInterface
 	public interface MessageReceiver {
 		/**
 		 * Получить сообщение.
@@ -36,12 +37,24 @@ public class CelestaMessage {
 	private final Date timestamp = new Date();
 	private final int kind;
 	private final String message;
+	private final String caption;
+	private final String subkind;
 
-	public CelestaMessage(int kind, String message) {
+	public CelestaMessage(int kind, String message, String caption, String subkind) {
 		if (!(kind == INFO || kind == WARNING || kind == ERROR))
 			throw new IllegalArgumentException("Invalid message kind value");
 		this.kind = kind;
 		this.message = message;
+		this.caption = caption;
+		this.subkind = subkind;
+	}
+
+	public CelestaMessage(int kind, String message) {
+		this(kind, message, null, null);
+	}
+
+	public CelestaMessage(int kind, String message, String caption) {
+		this(kind, message, caption, null);
 	}
 
 	/**
@@ -65,4 +78,17 @@ public class CelestaMessage {
 		return message;
 	}
 
+	/**
+	 * Заголовок окна сообщения.
+	 */
+	public String getCaption() {
+		return caption;
+	}
+
+	/**
+	 * Тип сообщения.
+	 */
+	public String getSubkind() {
+		return subkind;
+	}
 }

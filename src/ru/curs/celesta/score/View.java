@@ -16,7 +16,7 @@ import java.util.Map.Entry;
 public class View extends GrainElement {
 	private boolean distinct;
 	private final Map<String, Expr> columns = new LinkedHashMap<>();
-	private Map<String, ViewColumnType> columnTypes = null;
+	private Map<String, ViewColumnMeta> columnTypes = null;
 	private final Map<String, TableRef> tables = new LinkedHashMap<>();
 	private Expr whereCondition;
 	private String queryString;
@@ -116,11 +116,11 @@ public class View extends GrainElement {
 	/**
 	 * Возвращает перечень столбцов представления.
 	 */
-	public final Map<String, ViewColumnType> getColumns() {
+	public final Map<String, ViewColumnMeta> getColumns() {
 		if (columnTypes == null) {
 			columnTypes = new LinkedHashMap<>();
 			for (Entry<String, Expr> e : columns.entrySet())
-				columnTypes.put(e.getKey(), e.getValue().getType());
+				columnTypes.put(e.getKey(), e.getValue().getMeta());
 		}
 		return columnTypes;
 	}
@@ -319,5 +319,16 @@ public class View extends GrainElement {
 
 		queryString = sw.toString();
 		return queryString;
+	}
+
+	@Override
+	public int getColumnIndex(String name) {
+		int i = -1;
+		for (String c : columnTypes.keySet()) {
+			i++;
+			if (c.equals(name))
+				return i;
+		}
+		return i;
 	}
 }

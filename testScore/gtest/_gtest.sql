@@ -41,12 +41,12 @@ alter table test add constraint fk_testNameVeryVeryLongLonName
  on update cascade on delete set null;
  
 create view testview as 
-  select id, descr, descr || 'foo' as descr2 from test inner join refTo on attrVarchar = k1 and attrInt = k2;
+  select id, descr, descr || 'foo' as descr2, k2 from test inner join refTo on attrVarchar = k1 and attrInt = k2;
   
 create view testview2 as 
   select id, descr from test t1 inner join refTo t2 on attrVarchar = k1 and not t2.descr is null and attrInt = k2;  
   
-create view v3 as select 1 as a, 1 as b, 1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j, 1 as k
+create view v3 as select 1 as a, /**test celestadoc*/1.4 as b, /**test celestadoc2*/1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j, 1 as k
   from test;
   
-create view v4 as select f1 from test where f1 = true;
+create view v4 as select f1, f4, f5, f4 + f5 as s, f5 * f5 + 1 as s2 from test where f1 = true;

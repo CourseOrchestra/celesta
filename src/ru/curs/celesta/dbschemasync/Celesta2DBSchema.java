@@ -30,7 +30,7 @@ import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
-import ru.curs.celesta.score.ViewColumnType;
+import ru.curs.celesta.score.ViewColumnMeta;
 
 /**
  * Класс-преобразователь Score в DBS-файл.
@@ -250,12 +250,12 @@ public final class Celesta2DBSchema {
 		view.appendChild(viewScript);
 
 		// Writing columns
-		for (Map.Entry<String, ViewColumnType> c : v.getColumns().entrySet())
+		for (Map.Entry<String, ViewColumnMeta> c : v.getColumns().entrySet())
 			writeColumn(c, doc, view);
 
 	}
 
-	private static void writeColumn(Map.Entry<String, ViewColumnType> c, Document doc, Element view) {
+	private static void writeColumn(Map.Entry<String, ViewColumnMeta> c, Document doc, Element view) {
 		Element column = doc.createElement("column");
 		column.setAttribute("name", c.getKey());
 		column.setAttribute("type", c.getValue().getCelestaType());

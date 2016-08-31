@@ -19,11 +19,9 @@ import java.util.Map;
  * @param <T>
  *            Тип именованных элементов в перечне.
  */
-public abstract class NamedElementHolder<T extends NamedElement> implements
-		Collection<T> {
-	private final Map<String, T> namespace = new LinkedHashMap<>();
-	private final Map<String, T> namespaceReadOnly = Collections
-			.unmodifiableMap(namespace);
+public abstract class NamedElementHolder<T extends NamedElement> implements Collection<T> {
+	private final LinkedHashMap<String, T> namespace = new LinkedHashMap<>();
+	private final Map<String, T> namespaceReadOnly = Collections.unmodifiableMap(namespace);
 
 	/**
 	 * Возвращает копию словаря элементов только для чтения.
@@ -52,10 +50,28 @@ public abstract class NamedElementHolder<T extends NamedElement> implements
 
 	/**
 	 * Возвращает элемент по имени.
-	 * @param name Имя (идентификатор) элемента.
+	 * 
+	 * @param name
+	 *            Имя (идентификатор) элемента.
 	 */
 	public final T get(String name) {
 		return namespace.get(name);
+	}
+
+	/**
+	 * Возвращает индекс элемента по имени.
+	 * 
+	 * @param name
+	 *            Имя (идентификатор) элемента.
+	 */
+	public int getIndex(String name) {
+		int i = -1;
+		for (String c : namespace.keySet()) {
+			i++;
+			if (c.equals(name))
+				return i;
+		}
+		return i;
 	}
 
 	@Override

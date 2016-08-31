@@ -44,14 +44,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -61,8 +58,8 @@ import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.ForeignKey;
@@ -75,13 +72,12 @@ import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
-import ru.curs.celesta.score.ViewColumnType;
 
 /**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
  * 
  */
-public abstract class DBAdaptor {
+public abstract class DBAdaptor implements QueryBuildingHelper {
 
 	/*
 	 * NB для программистов. Класс большой, во избежание хаоса здесь порядок
@@ -286,24 +282,35 @@ public abstract class DBAdaptor {
 		return ic;
 	}
 
-	final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask)
-			throws CelestaException {
+	// CHECKSTYLE:OFF 6 parameters
+	final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask,
+			boolean[] nullsMask, List<ParameterSetter> program, String where) throws CelestaException {
+		// CHECKSTYLE:ON
 		StringBuilder setClause = new StringBuilder();
-		if (t.isVersioned())
+		if (t.isVersioned()) {
 			setClause.append(String.format("\"%s\" = ?", Table.RECVERSION));
+			program.add(ParameterSetter.createForRecversion());
+		}
 
 		int i = 0;
 		for (String c : t.getColumns().keySet()) {
 			// Пропускаем ключевые поля и поля, не изменившие своего значения
 			if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
 				padComma(setClause);
-				setClause.append(String.format("\"%s\" = ?", c));
+				if (nullsMask[i]) {
+					setClause.append(String.format("\"%s\" = NULL", c));
+				} else {
+					setClause.append(String.format("\"%s\" = ?", c));
+					program.add(ParameterSetter.create(t.getColumnIndex(c)));
+				}
 			}
 			i++;
 		}
 
 		String sql = String.format("update " + tableTemplate() + " set %s where %s", t.getGrain().getName(),
-				t.getName(), setClause.toString(), getRecordWhereClause(t));
+				t.getName(), setClause.toString(), where);
+
+		// System.out.println(sql);
 		return prepareStatement(conn, sql);
 	}
 
@@ -335,66 +342,6 @@ public abstract class DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 		return result;
-	}
-
-	/**
-	 * Возвращает условие where на таблице, исходя из текущих фильтров.
-	 * 
-	 * @param filters
-	 *            фильтры
-	 * @throws CelestaException
-	 *             в случае некорректного фильтра
-	 */
-	final String getWhereClause(GrainElement t, Map<String, AbstractFilter> filters, Expr complexFilter)
-			throws CelestaException {
-		if (filters == null)
-			throw new IllegalArgumentException();
-		StringBuilder whereClause = new StringBuilder();
-		for (Entry<String, AbstractFilter> e : filters.entrySet()) {
-			if (whereClause.length() > 0)
-				whereClause.append(" and ");
-			if (e.getValue() instanceof SingleValue)
-				whereClause.append(String.format("(\"%s\" = ?)", e.getKey()));
-			else if (e.getValue() instanceof Range)
-				whereClause.append(String.format("(\"%s\" between ? and ?)", e.getKey()));
-			else if (e.getValue() instanceof Filter) {
-				Object c = t.getColumns().get(e.getKey());
-				whereClause.append("(");
-				whereClause.append(((Filter) e.getValue()).makeWhereClause("\"" + e.getKey() + "\"", c, this));
-				whereClause.append(")");
-			}
-		}
-		if (complexFilter != null) {
-			if (whereClause.length() > 0)
-				whereClause.append(" and ");
-			whereClause.append("(");
-			whereClause.append(complexFilter.getSQL(this));
-			whereClause.append(")");
-		}
-		return whereClause.toString();
-	}
-
-	/**
-	 * Устанавливает параметры на запрос по фильтрам. Возвращает индекс
-	 * следующего параметра, после установки всех параметров.
-	 * 
-	 * @param filters
-	 *            Фильтры, с которыми вызывался getWhereClause
-	 * @throws CelestaException
-	 *             в случае сбоя JDBC
-	 */
-	final int fillSetQueryParameters(Map<String, AbstractFilter> filters, PreparedStatement result)
-			throws CelestaException {
-		int i = 1;
-		for (AbstractFilter f : filters.values()) {
-			if (f instanceof SingleValue) {
-				setParam(result, i++, ((SingleValue) f).getValue());
-			} else if (f instanceof Range) {
-				setParam(result, i++, ((Range) f).getValueFrom());
-				setParam(result, i++, ((Range) f).getValueTo());
-			}
-		}
-		return i;
 	}
 
 	/**
@@ -599,8 +546,6 @@ public abstract class DBAdaptor {
 	 *            Соединение.
 	 * @param t
 	 *            Таблица.
-	 * @param filters
-	 *            Фильтры на таблице.
 	 * @param orderBy
 	 *            Порядок сортировки.
 	 * @param offset
@@ -611,13 +556,10 @@ public abstract class DBAdaptor {
 	 *             Ошибка БД или некорректный фильтр.
 	 */
 	// CHECKSTYLE:OFF 6 parameters
-	public final PreparedStatement getRecordSetStatement(Connection conn, GrainElement t,
-			Map<String, AbstractFilter> filters, Expr complexFilter, String orderBy, long offset, long rowCount)
-					throws CelestaException {
+	public final PreparedStatement getRecordSetStatement(Connection conn, GrainElement t, String whereClause,
+			String orderBy, long offset, long rowCount) throws CelestaException {
 		// CHECKSTYLE:ON
 		String sql;
-		// Готовим условие where
-		String whereClause = getWhereClause(t, filters, complexFilter);
 
 		if (offset == 0 && rowCount == 0) {
 			// Запрос не лимитированный -- одинаков для всех СУБД
@@ -631,8 +573,6 @@ public abstract class DBAdaptor {
 		}
 		try {
 			PreparedStatement result = conn.prepareStatement(sql);
-			// А теперь заполняем параметры
-			fillSetQueryParameters(filters, result);
 			return result;
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -684,23 +624,11 @@ public abstract class DBAdaptor {
 		return sqlfrom + sqlwhere + " order by " + orderBy;
 	}
 
-	final PreparedStatement getSetCountStatement(Connection conn, GrainElement t, Map<String, AbstractFilter> filters,
-			Expr complexFilter) throws CelestaException {
-		return getSetCountStatement(conn, t, filters, complexFilter, "");
-	}
-
-	final PreparedStatement getSetCountStatement(Connection conn, GrainElement t, Map<String, AbstractFilter> filters,
-			Expr complexFilter, String navigationFilter) throws CelestaException {
-		StringBuilder w = new StringBuilder(getWhereClause(t, filters, complexFilter));
-		if (w.length() > 0 && navigationFilter.length() > 0)
-			w.append(" and ");
-		w.append(navigationFilter);
-		String whereClause = w.toString();
-
+	final PreparedStatement getSetCountStatement(Connection conn, GrainElement t, String whereClause)
+			throws CelestaException {
 		String sql = "select count(*) from " + String.format(tableTemplate(), t.getGrain().getName(), t.getName())
 				+ ("".equals(whereClause) ? "" : " where " + whereClause);
 		PreparedStatement result = prepareStatement(conn, sql);
-		fillSetQueryParameters(filters, result);
 		return result;
 	}
 
@@ -728,11 +656,11 @@ public abstract class DBAdaptor {
 
 	static String getTableFieldsListExceptBLOBs(GrainElement t) {
 		List<String> flds = new LinkedList<>();
-		for (Map.Entry<String, ?> e : (t.getColumns()).entrySet()) {
-			if (!(e.getValue() instanceof BinaryColumn || e.getValue() == ViewColumnType.BLOB))
+		for (Map.Entry<String, ?> e : t.getColumns().entrySet()) {
+			ColumnMeta m = (ColumnMeta) e.getValue();
+			if (!BinaryColumn.CELESTA_TYPE.equals(m.getCelestaType()))
 				flds.add(e.getKey());
 		}
-
 		// К перечню полей версионированных таблиц обязательно добавляем
 		// recversion
 		if (t instanceof Table && ((Table) t).isVersioned())
@@ -772,40 +700,6 @@ public abstract class DBAdaptor {
 			insertList.append(", ");
 	}
 
-	static String getRecordWhereClause(Table t) {
-		StringBuilder whereClause = new StringBuilder();
-		for (String fieldName : t.getPrimaryKey().keySet())
-			whereClause.append(String.format("%s(\"%s\" = ?)", whereClause.length() > 0 ? " and " : "", fieldName));
-		return whereClause.toString();
-	}
-
-	static void setParam(PreparedStatement stmt, int i, Object v) throws CelestaException {
-		try {
-			if (v == null)
-				stmt.setNull(i, java.sql.Types.NULL);
-			else if (v instanceof Integer)
-				stmt.setInt(i, (Integer) v);
-			else if (v instanceof Double)
-				stmt.setDouble(i, (Double) v);
-			else if (v instanceof String)
-				stmt.setString(i, (String) v);
-			else if (v instanceof Boolean)
-				stmt.setBoolean(i, (Boolean) v);
-			else if (v instanceof Date) {
-				Timestamp d = new Timestamp(((Date) v).getTime());
-				stmt.setTimestamp(i, d);
-			} else if (v instanceof BLOB) {
-				stmt.setBinaryStream(i, ((BLOB) v).getInStream(), ((BLOB) v).size());
-				// createBlob is not implemented for PostgreSQL driver!
-				// Blob b = stmt.getConnection().createBlob();
-				// ((BLOB) v).saveToJDBCBlob(b);
-				// stmt.setBlob(i, b);
-			}
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-	}
-
 	static Set<String> sqlToStringSet(Connection conn, String sql) throws CelestaException {
 		Set<String> result = new HashSet<String>();
 		try {
@@ -841,12 +735,8 @@ public abstract class DBAdaptor {
 	 * @param navigationWhereClause
 	 *            Условие навигационного набора (от текущей записи).
 	 */
-	// CHECKSTYLE:OFF 6 parameters
-	abstract PreparedStatement getNavigationStatement(Connection conn, GrainElement meta,
-			Map<String, AbstractFilter> filters, Expr complexFilter, String orderBy, String navigationWhereClause)
-					throws CelestaException;
-
-	// CHECKSTYLE:ON
+	abstract PreparedStatement getNavigationStatement(Connection conn, GrainElement meta, String orderBy,
+			String navigationWhereClause) throws CelestaException;
 
 	abstract String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount);
 
@@ -862,19 +752,18 @@ public abstract class DBAdaptor {
 
 	abstract void dropAutoIncrement(Connection conn, Table t) throws SQLException;
 
-	abstract PreparedStatement getOneRecordStatement(Connection conn, Table t) throws CelestaException;
+	abstract PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException;
 
-	abstract PreparedStatement getOneFieldStatement(Connection conn, Column c) throws CelestaException;
+	abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException;
 
-	abstract PreparedStatement deleteRecordSetStatement(Connection conn, Table t, Map<String, AbstractFilter> filters,
-			Expr complexFilter) throws CelestaException;
+	abstract PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException;
 
-	abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask)
-			throws CelestaException;
+	abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+			List<ParameterSetter> program) throws CelestaException;
 
 	abstract int getCurrentIdent(Connection conn, Table t) throws CelestaException;
 
-	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t) throws CelestaException;
+	abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException;
 
 	abstract String[] getCreateIndexSQL(Index index);
 
