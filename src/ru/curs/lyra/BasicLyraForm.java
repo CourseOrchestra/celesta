@@ -320,4 +320,8 @@ public abstract class BasicLyraForm {
 	 */
 	protected abstract void _createAllUnboundFields(LyraNamedElementHolder<LyraFormField> fieldsMeta);
 	// CHECKSTYLE:ON
+
+	CallContext getContext() {
+		return context;
+	}
 }

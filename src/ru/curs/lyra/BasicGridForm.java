@@ -1,5 +1,6 @@
 package ru.curs.lyra;
 
+import java.sql.Connection;
 import java.util.*;
 
 import ru.curs.celesta.*;
@@ -39,13 +40,31 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 *             something wrong
 	 */
 	public synchronized List<LyraFormData> getRows(int position) throws CelestaException {
-		BasicCursor c = rec();
-		actuateGridDriver(c);
-		if (gd.setPosition(position, c)) {
-			return returnRows(c);
-		} else {
+		if (getContext() == null)
 			return Collections.emptyList();
+		boolean closeContext = getContext().isClosed();
+		Connection conn = null;
+		
+		if (closeContext) {
+			conn = ConnectionPool.get();
+			setCallContext(getContext().getCopy(conn));
 		}
+		
+		try {
+			BasicCursor c = rec();
+			actuateGridDriver(c);
+			if (gd.setPosition(position, c)) {
+				return returnRows(c);
+			} else {
+				return Collections.emptyList();
+			}
+		} finally {
+			if (closeContext) {
+				getContext().closeCursors();
+				ConnectionPool.putBack(conn);
+			}
+		}
+
 	}
 
 	/**
