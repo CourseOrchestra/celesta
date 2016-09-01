@@ -175,10 +175,11 @@ public abstract class AbstractAdaptorTest {
 
 		assertEquals(13, t.getColumns().size());
 		boolean[] mask = { true, true, false, true, true, true, true, true, true, true, true, true, true };
+		boolean[] nullsMask = { false, false, false, false, false, false, false, false, false, false, false, false, false };
 		Integer[] rec = { 1, null, 2, null, null, null, null, null, null, null, null, null, null };
 		List<ParameterSetter> program = new ArrayList<>();
 		WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
-		PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask, program, w.getWhere());
+		PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask, nullsMask, program, w.getWhere());
 		w.programParams(program);
 		int i = 1;
 		for (ParameterSetter ps : program) {
@@ -209,11 +210,12 @@ public abstract class AbstractAdaptorTest {
 		rs.close();
 
 		boolean[] mask = { true, true, false, true, true, true, true, true, true, true, true, true, true, false };
+		boolean[] nullsMask = { false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 		Integer[] rec = { 1, null, 22, null, null, null, null, null, null, null, null, null, null };
 		program = new ArrayList<>();
 		w = WhereTermsMaker.getPKWhereTerm(t);
 
-		PreparedStatement pstmt2 = dba.getUpdateRecordStatement(conn, t, mask, program, w.getWhere());
+		PreparedStatement pstmt2 = dba.getUpdateRecordStatement(conn, t, mask, nullsMask, program, w.getWhere());
 
 		// System.out.println(pstmt2.toString());
 		assertNotNull(pstmt2);
