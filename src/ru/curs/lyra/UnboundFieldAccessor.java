@@ -25,17 +25,14 @@ public final class UnboundFieldAccessor implements FieldAccessor {
 	}
 
 	@Override
-	public Object getValue(Object[] c) {
+	public Object getValue(Object[] c) throws CelestaException {
 
 		PyObject value = null;
 		try {
 			value = getter.__call__(instance);
 		} catch (Throwable e) {
-
 			e.printStackTrace();
-
-			throw e;
-
+			throw new CelestaException("Error while getting unbound field value: %s", e.getMessage());
 		}
 
 		switch (lft) {
