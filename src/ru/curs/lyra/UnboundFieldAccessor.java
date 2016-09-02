@@ -2,8 +2,7 @@ package ru.curs.lyra;
 
 import java.sql.Date;
 
-import org.python.core.Py;
-import org.python.core.PyObject;
+import org.python.core.*;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
@@ -17,7 +16,8 @@ public final class UnboundFieldAccessor implements FieldAccessor {
 	private final LyraFieldType lft;
 	private final PyObject instance;
 
-	public UnboundFieldAccessor(String celestaType, PyObject getter, PyObject setter, PyObject instance) {
+	public UnboundFieldAccessor(String celestaType, PyObject getter, PyObject setter,
+			PyObject instance) {
 		this.getter = getter;
 		this.setter = setter;
 		this.lft = LyraFieldType.valueOf(celestaType);
@@ -26,7 +26,18 @@ public final class UnboundFieldAccessor implements FieldAccessor {
 
 	@Override
 	public Object getValue(Object[] c) {
-		PyObject value = getter.__call__(instance);
+
+		PyObject value = null;
+		try {
+			value = getter.__call__(instance);
+		} catch (Throwable e) {
+
+			e.printStackTrace();
+
+			throw e;
+
+		}
+
 		switch (lft) {
 		case BIT:
 			Boolean b = (Boolean) value.__tojava__(Boolean.class);
