@@ -32,7 +32,7 @@ public class KeyInterpolator {
 			throw new IllegalArgumentException();
 		}
 		isLAVValid = false;
-		
+
 	}
 
 	/**
@@ -76,7 +76,7 @@ public class KeyInterpolator {
 	}
 
 	private BigInteger negateIfDesc(BigInteger ord) {
-		return descending ? ord.negate() : ord;
+		return ord == null ? null : (descending ? ord.negate() : ord);
 	}
 
 	/**
@@ -249,8 +249,7 @@ public class KeyInterpolator {
 		} else {
 			leastAccurateValue = null;
 		}
-		// System.out.printf("lav: %s%n", leastAccurateValue == null ? "null" :
-		// leastAccurateValue.toString(16));
+
 		return negateIfDesc(leastAccurateValue);
 	}
 
