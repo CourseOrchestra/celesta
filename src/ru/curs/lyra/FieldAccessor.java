@@ -15,8 +15,10 @@ public interface FieldAccessor {
 	 * 
 	 * @param c
 	 *            Cursor values (ignored for unbound field).
+	 * @throws CelestaException
+	 *             Error getting the value.
 	 */
-	Object getValue(Object[] c);
+	Object getValue(Object[] c) throws CelestaException;
 
 	/**
 	 * Set field's value.

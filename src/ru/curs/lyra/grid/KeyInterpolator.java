@@ -32,7 +32,7 @@ public class KeyInterpolator {
 			throw new IllegalArgumentException();
 		}
 		isLAVValid = false;
-		
+
 	}
 
 	/**
@@ -76,7 +76,7 @@ public class KeyInterpolator {
 	}
 
 	private BigInteger negateIfDesc(BigInteger ord) {
-		return descending ? ord.negate() : ord;
+		return ord == null ? null : (descending ? ord.negate() : ord);
 	}
 
 	/**
@@ -100,10 +100,15 @@ public class KeyInterpolator {
 	public int getClosestPosition(int count) {
 		if (count < 0)
 			throw new IllegalArgumentException();
-		int e0 = data.floorKey(count);
+		if (data.isEmpty())
+			throw new IllegalStateException();
+		
+		Integer floor = data.floorKey(count);
+		int e0 = floor == null ? data.firstKey() : floor;
 		if (e0 == count)
 			return e0;
-		int e1 = data.ceilingKey(count);
+		Integer ceiling = data.ceilingKey(count);
+		int e1 = ceiling == null ? data.lastKey() : ceiling;
 		return (count - e0 < e1 - count) ? e0 : e1;
 	}
 
@@ -249,8 +254,7 @@ public class KeyInterpolator {
 		} else {
 			leastAccurateValue = null;
 		}
-		// System.out.printf("lav: %s%n", leastAccurateValue == null ? "null" :
-		// leastAccurateValue.toString(16));
+
 		return negateIfDesc(leastAccurateValue);
 	}
 

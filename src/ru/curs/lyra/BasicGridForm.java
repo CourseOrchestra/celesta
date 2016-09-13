@@ -1,5 +1,6 @@
 package ru.curs.lyra;
 
+import java.sql.Connection;
 import java.util.*;
 
 import ru.curs.celesta.*;
@@ -39,13 +40,31 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 *             something wrong
 	 */
 	public synchronized List<LyraFormData> getRows(int position) throws CelestaException {
-		BasicCursor c = rec();
-		actuateGridDriver(c);
-		if (gd.setPosition(position, c)) {
-			return returnRows(c);
-		} else {
+		if (getContext() == null)
 			return Collections.emptyList();
+		boolean closeContext = getContext().isClosed();
+		Connection conn = null;
+
+		if (closeContext) {
+			conn = ConnectionPool.get();
+			setCallContext(getContext().getCopy(conn));
 		}
+
+		try {
+			BasicCursor c = rec();
+			actuateGridDriver(c);
+			if (gd.setPosition(position, c)) {
+				return returnRows(c);
+			} else {
+				return Collections.emptyList();
+			}
+		} finally {
+			if (closeContext) {
+				getContext().closeCursors();
+				ConnectionPool.putBack(conn);
+			}
+		}
+
 	}
 
 	/**
@@ -60,27 +79,42 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 *             something wrong
 	 */
 	public synchronized List<LyraFormData> setPosition(Object... pk) throws CelestaException {
-		BasicCursor bc = rec();
-		actuateGridDriver(bc);
-		if (bc instanceof Cursor) {
-			Cursor c = (Cursor) bc;
-			if (c.meta().getPrimaryKey().size() != pk.length)
-				throw new CelestaException(
-						"Invalid number of 'setPosition' arguments for '%s': expected %d, provided %d.",
-						c.meta().getName(), c.meta().getPrimaryKey().size(), pk.length);
-			int i = 0;
-			for (String name : c.meta().getPrimaryKey().keySet()) {
-				c.setValue(name, pk[i++]);
-			}
-		} else {
-			bc.setValue(bc.meta().getColumns().keySet().iterator().next(), pk[0]);
-		}
-
-		if (bc.navigate("=<-")) {
-			gd.setPosition(bc);
-			return returnRows(bc);
-		} else {
+		if (getContext() == null)
 			return Collections.emptyList();
+		boolean closeContext = getContext().isClosed();
+		Connection conn = null;
+		if (closeContext) {
+			conn = ConnectionPool.get();
+			setCallContext(getContext().getCopy(conn));
+		}
+		try {
+			BasicCursor bc = rec();
+			actuateGridDriver(bc);
+			if (bc instanceof Cursor) {
+				Cursor c = (Cursor) bc;
+				if (c.meta().getPrimaryKey().size() != pk.length)
+					throw new CelestaException(
+							"Invalid number of 'setPosition' arguments for '%s': expected %d, provided %d.",
+							c.meta().getName(), c.meta().getPrimaryKey().size(), pk.length);
+				int i = 0;
+				for (String name : c.meta().getPrimaryKey().keySet()) {
+					c.setValue(name, pk[i++]);
+				}
+			} else {
+				bc.setValue(bc.meta().getColumns().keySet().iterator().next(), pk[0]);
+			}
+
+			if (bc.navigate("=<-")) {
+				gd.setPosition(bc);
+				return returnRows(bc);
+			} else {
+				return Collections.emptyList();
+			}
+		} finally {
+			if (closeContext) {
+				getContext().closeCursors();
+				ConnectionPool.putBack(conn);
+			}
 		}
 	}
 

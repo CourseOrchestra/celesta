@@ -10,7 +10,10 @@ public final class ShowcaseContext {
 	private final String session;
 	private final String elementId;
 
-	public ShowcaseContext(String main, String additional, String filter, String session, String elementId) {
+	private String[] orderBy = null;
+
+	public ShowcaseContext(String main, String additional, String filter, String session,
+			String elementId) {
 		this.main = main;
 		this.additional = additional;
 		this.filter = filter;
@@ -36,6 +39,14 @@ public final class ShowcaseContext {
 
 	public String getElementId() {
 		return elementId;
+	}
+
+	public String[] getOrderBy() {
+		return orderBy;
+	}
+
+	public void setOrderBy(final String[] aOrderBy) {
+		orderBy = aOrderBy;
 	}
 
 }

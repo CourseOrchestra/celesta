@@ -16,7 +16,7 @@ public class KeyInterpolatorTest {
 
 		assertEquals(100, ka.getApproximateCount());
 
-		//Три крайние точки
+		// Три крайние точки
 		assertEquals(BigInteger.valueOf(7), ka.getPoint(0));
 		assertEquals(BigInteger.valueOf(8), ka.getPoint(1));
 		assertEquals(BigInteger.valueOf(1000), ka.getPoint(99));
@@ -24,14 +24,14 @@ public class KeyInterpolatorTest {
 		assertEquals(0, ka.getApproximatePosition(BigInteger.valueOf(7)));
 		assertEquals(1, ka.getApproximatePosition(BigInteger.valueOf(8)));
 		assertEquals(99, ka.getApproximatePosition(BigInteger.valueOf(1000)));
-		
+
 		// тестируем округление в одну и в другую сторону.
 		assertEquals(BigInteger.valueOf(231), ka.getPoint(23));
 		assertEquals(BigInteger.valueOf(210), ka.getPoint(21));
 		assertEquals(BigInteger.valueOf(160), ka.getPoint(16));
-		assertEquals(BigInteger.valueOf(555), ka.getPoint(55));		
-		assertEquals(BigInteger.valueOf(544), ka.getPoint(54));	
-		
+		assertEquals(BigInteger.valueOf(555), ka.getPoint(55));
+		assertEquals(BigInteger.valueOf(544), ka.getPoint(54));
+
 		assertEquals(23, ka.getApproximatePosition(BigInteger.valueOf(228)));
 		assertEquals(59, ka.getApproximatePosition(BigInteger.valueOf(600)));
 		assertEquals(61, ka.getApproximatePosition(BigInteger.valueOf(615)));
@@ -116,7 +116,6 @@ public class KeyInterpolatorTest {
 		assertNull(v);
 	}
 
-	
 	@Test
 	public void test3() {
 		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(0), BigInteger.valueOf(60), 7, false);
@@ -126,11 +125,11 @@ public class KeyInterpolatorTest {
 		assertEquals(3, ka.getApproximatePosition(BigInteger.valueOf(30)));
 		assertEquals(6, ka.getApproximatePosition(BigInteger.valueOf(60)));
 	}
-	
+
 	@Test
-	public void test4(){
+	public void test4() {
 		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(0), BigInteger.valueOf(10), 10, false);
-		
+
 		ka.setPoint(BigInteger.valueOf(5), 6);
 		assertEquals(0, ka.getClosestPosition(0));
 		assertEquals(0, ka.getClosestPosition(1));
@@ -142,5 +141,14 @@ public class KeyInterpolatorTest {
 		assertEquals(6, ka.getClosestPosition(7));
 		assertEquals(9, ka.getClosestPosition(8));
 		assertEquals(9, ka.getClosestPosition(9));
+
+		//extreme case 1
+		assertEquals(9, ka.getClosestPosition(100));
+
+		//extreme case 2
+		ka = new KeyInterpolator(BigInteger.valueOf(5), BigInteger.valueOf(10), 10, false);
+		ka.setPoint(BigInteger.valueOf(5), 6);
+		assertEquals(6, ka.getClosestPosition(0));
+		assertEquals(6, ka.getClosestPosition(1));
 	}
 }

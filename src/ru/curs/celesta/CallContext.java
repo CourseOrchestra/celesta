@@ -20,6 +20,8 @@ public final class CallContext {
 	 */
 	public static final int MAX_CURSORS = 1023;
 
+	private static final String ERROR = "ERROR: %s";
+
 	private final Connection conn;
 	private final Grain grain;
 	private final String procName;
@@ -31,7 +33,7 @@ public final class CallContext {
 
 	private BasicCursor lastCursor;
 	private int cursorCount;
-	
+
 	private boolean closed = false;
 
 	public CallContext(Connection conn, SessionContext sesContext) throws CelestaException {
@@ -43,8 +45,8 @@ public final class CallContext {
 		this(conn, sesContext, null, curGrain, procName);
 	}
 
-	public CallContext(Connection conn, SessionContext sesContext, ShowcaseContext showcaseContext,
-			Grain curGrain, String procName) throws CelestaException {
+	public CallContext(Connection conn, SessionContext sesContext, ShowcaseContext showcaseContext, Grain curGrain,
+			String procName) throws CelestaException {
 		this.conn = conn;
 		this.sesContext = sesContext;
 		this.grain = curGrain;
@@ -52,6 +54,18 @@ public final class CallContext {
 		this.showcaseContext = showcaseContext;
 		DBAdaptor db = DBAdaptor.getAdaptor();
 		dbPid = db.getDBPid(conn);
+	}
+
+	/**
+	 * Duplicates callcontext with given JDBC connection.
+	 * 
+	 * @param c
+	 *            new connection
+	 * @throws CelestaException
+	 *             cannot create adaptor
+	 */
+	public CallContext getCopy(Connection c) throws CelestaException {
+		return new CallContext(c, sesContext, showcaseContext, grain, procName);
 	}
 
 	/**
@@ -184,7 +198,7 @@ public final class CallContext {
 	 */
 	public void error(String msg) throws CelestaException {
 		sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg));
-		throw new CelestaException("ERROR: %s", msg);
+		throw new CelestaException(ERROR, msg);
 	}
 
 	/**
@@ -199,7 +213,7 @@ public final class CallContext {
 	 */
 	public void error(String msg, String caption) throws CelestaException {
 		sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg, caption));
-		throw new CelestaException("ERROR: %s", msg);
+		throw new CelestaException(ERROR, msg);
 	}
 
 	/**
@@ -216,7 +230,7 @@ public final class CallContext {
 	 */
 	public void error(String msg, String caption, String subkind) throws CelestaException {
 		sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg, caption, subkind));
-		throw new CelestaException("ERROR: %s", msg);
+		throw new CelestaException(ERROR, msg);
 	}
 
 	/**
@@ -255,8 +269,7 @@ public final class CallContext {
 	 */
 	public void incCursorCount() throws CelestaException {
 		if (cursorCount > MAX_CURSORS)
-			throw new CelestaException(
-					"Too many cursors created in one Celesta procedure call. Check for leaks!");
+			throw new CelestaException("Too many cursors created in one Celesta procedure call. Check for leaks!");
 		cursorCount++;
 	}
 
@@ -322,4 +335,5 @@ public final class CallContext {
 	public boolean isClosed() {
 		return closed;
 	}
+
 }
