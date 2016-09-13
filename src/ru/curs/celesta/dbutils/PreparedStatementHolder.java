@@ -245,7 +245,7 @@ final class FieldParameterSetter extends ParameterSetter {
 	static FieldParameterSetter get(int i) {
 		if (i < 0)
 			throw new IllegalArgumentException();
-		if (i <= CACHE.length)
+		if (i < CACHE.length)
 			return CACHE[i];
 		return new FieldParameterSetter(i);
 	}
