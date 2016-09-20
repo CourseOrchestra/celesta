@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeMap;
 
-import ru.curs.celesta.CelestaException;
-
 /**
  * A Collator for Lyra needs that resembles RuleBasedCollator, but not quite it
  * is.
@@ -29,8 +27,11 @@ public final class LyraCollator {
 
 	private final HashSet<Character> ignoredElements = new HashSet<>();
 
-	private LyraCollator(String rules) {
+	private final String name;
+
+	private LyraCollator(String rules, String name) {
 		parseRules(rules);
+		this.name = name;
 	}
 
 	/**
@@ -39,12 +40,14 @@ public final class LyraCollator {
 	 * 
 	 * @param rules
 	 *            collation rules.
+	 * @param name
+	 *            collator name.
 	 * 
 	 */
-	public static synchronized LyraCollator getInstance(String rules) {
+	public static synchronized LyraCollator getInstance(String rules, String name) {
 		LyraCollator result = CACHE.get(rules);
 		if (result == null) {
-			result = new LyraCollator(rules);
+			result = new LyraCollator(rules, name);
 			CACHE.put(rules, result);
 		}
 		return result;
@@ -59,10 +62,10 @@ public final class LyraCollator {
 		return ignoredElements.contains(c);
 	}
 
-	int getElementCode(char c) throws CelestaException {
+	int getElementCode(char c) throws LyraCollatorException {
 		Integer e = elementToCode.get(c);
 		if (e == null)
-			throw new CelestaException("Character '%s' is unknown for current collator.", String.valueOf(c));
+			throw new LyraCollatorException(c);
 		return e.intValue();
 	}
 
@@ -192,6 +195,13 @@ public final class LyraCollator {
 	 */
 	public LyraCollationElementIterator getCollationElementIterator(String source) {
 		return new LyraCollationElementIterator(source, this);
+	}
+
+	/**
+	 * Returns collator's name.
+	 */
+	public String getName() {
+		return name;
 	}
 
 }

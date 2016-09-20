@@ -144,6 +144,8 @@ public final class DBSchema2Celesta {
 				bw.newLine();
 				bw.write("skinparam monochrome true");
 				bw.newLine();
+				bw.write("skinparam dpi 150");
+				bw.newLine();
 				bw.newLine();
 				NodeList l = layout.getChildNodes();
 				Set<Table> tables = new HashSet<>();

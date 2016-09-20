@@ -1,7 +1,5 @@
 package ru.curs.lyra.grid;
 
-import ru.curs.celesta.CelestaException;
-
 /**
  * This class is used as an iterator to walk through each character of an
  * international string. Use the iterator to return the ordering priority of the
@@ -30,10 +28,10 @@ public class LyraCollationElementIterator {
 	 * Move to the next collation element.
 	 * 
 	 * @return false if the end of the string is reached.
-	 * @throws CelestaException
+	 * @throws LyraCollatorException
 	 *             for unknown character.
 	 */
-	public boolean next() throws CelestaException {
+	public boolean next() throws LyraCollatorException {
 		while (i < source.length()) {
 			char c = source.charAt(i);
 			i++;
