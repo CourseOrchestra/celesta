@@ -175,7 +175,6 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * This methods are named in Python style, not Java style. This is why
 	 * methods meant to be protected are called starting from underscore.
 	 */
-	public abstract void _beforeSending(BasicCursor c);
 
 	public abstract void _afterReceiving(BasicCursor c);
 	// CHECKSTYLE:ON

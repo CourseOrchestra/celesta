@@ -17,15 +17,14 @@ import ru.curs.celesta.score.*;
  */
 public abstract class BasicLyraForm {
 	private final GrainElement meta;
-	private final LyraNamedElementHolder<LyraFormField> fieldsMeta =
-		new LyraNamedElementHolder<LyraFormField>() {
-			private static final long serialVersionUID = 1L;
+	private final LyraNamedElementHolder<LyraFormField> fieldsMeta = new LyraNamedElementHolder<LyraFormField>() {
+		private static final long serialVersionUID = 1L;
 
-			@Override
-			protected String getErrorMsg(String name) {
-				return String.format("Field '%s' defined more than once in a form.", name);
-			}
-		};
+		@Override
+		protected String getErrorMsg(String name) {
+			return String.format("Field '%s' defined more than once in a form.", name);
+		}
+	};
 
 	private BasicCursor rec;
 	private CallContext context;
@@ -70,13 +69,11 @@ public abstract class BasicLyraForm {
 		_createAllUnboundFields(fieldsMeta);
 	}
 
-	private static boolean getPropertyVal(JSONObject metadata, String propName, boolean def)
-			throws JSONException {
+	private static boolean getPropertyVal(JSONObject metadata, String propName, boolean def) throws JSONException {
 		return metadata.has(propName) ? metadata.getBoolean(propName) : def;
 	}
 
-	private LyraFormField createBoundField(String name, int index, ColumnMeta m)
-			throws CelestaException {
+	private LyraFormField createBoundField(String name, int index, ColumnMeta m) throws CelestaException {
 		LyraFieldType lft = LyraFieldType.lookupFieldType(m);
 		FieldAccessor a = FieldAccessorFactory.create(index, name, lft);
 		LyraFormField f = new LyraFormField(name, a);
@@ -104,8 +101,7 @@ public abstract class BasicLyraForm {
 
 			if (m instanceof Column) {
 				boolean dbRequired = !((Column) m).isNullable();
-				f.setRequired(metadata.has(REQUIRED) ? metadata.getBoolean(REQUIRED) | dbRequired
-						: dbRequired);
+				f.setRequired(metadata.has(REQUIRED) ? metadata.getBoolean(REQUIRED) | dbRequired : dbRequired);
 			} else {
 				f.setRequired(getPropertyVal(metadata, REQUIRED, false));
 			}
@@ -305,8 +301,7 @@ public abstract class BasicLyraForm {
 	 * @param name
 	 *            Name of the field to be appended to form.
 	 */
-	protected abstract LyraFormField
-			_createUnboundField(LyraNamedElementHolder<LyraFormField> meta, String name);
+	protected abstract LyraFormField _createUnboundField(LyraNamedElementHolder<LyraFormField> meta, String name);
 
 	/**
 	 * Should create all unbound fields
@@ -314,8 +309,9 @@ public abstract class BasicLyraForm {
 	 * @param fieldsMeta
 	 *            Editable meta (NB: getFieldsMeta() returns read-only meta).
 	 */
-	protected abstract void
-			_createAllUnboundFields(LyraNamedElementHolder<LyraFormField> fieldsMeta);
+	protected abstract void _createAllUnboundFields(LyraNamedElementHolder<LyraFormField> fieldsMeta);
+
+	public abstract void _beforeSending(BasicCursor c);
 	// CHECKSTYLE:ON
 
 	CallContext getContext() {
