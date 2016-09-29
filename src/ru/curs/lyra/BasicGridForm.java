@@ -144,7 +144,8 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		final String id = _getId();
 		final List<LyraFormData> result = new ArrayList<>(h);
 		final Map<String, LyraFormField> meta = getFieldsMeta();
-
+		BasicCursor copy = c._getBufferCopy(c.callContext());
+		copy.close();
 		for (int i = 0; i < h; i++) {
 			_beforeSending(c);
 			LyraFormData lfd = new LyraFormData(c, meta, id);
@@ -152,7 +153,8 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			if (!c.next())
 				break;
 		}
-
+		//return to the beginning!
+		c.copyFieldsFrom(copy);
 		return result;
 	}
 
