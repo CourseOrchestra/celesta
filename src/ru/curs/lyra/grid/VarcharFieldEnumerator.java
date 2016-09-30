@@ -5,6 +5,15 @@ import java.math.BigInteger;
 import ru.curs.celesta.CelestaException;
 
 /**
+ * Collator rules.
+ */
+interface Rules {
+	String getRules();
+
+	String getName();
+}
+
+/**
  * Нумератор ключа с типом varchar.
  * 
  */
@@ -13,17 +22,28 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	/**
 	 * Postgres collation rules.
 	 */
-	public static final String POSTGRES;
+	public static final Rules POSTGRES;
 	static final int[][] EMPTY_STRING = new int[0][0];
 
 	static {
-		POSTGRES = "<'''<'-'<'–'<'—'<' '<'!'<'\"'<'#'<'$'<'%'<'&'<'('<')'<'*'<','<'.'<'/'<':'<';'"
-				+ "<'?'<'@'<'['<'\\'<']'<'^'<'_'<'`'<'{'<'|'<'}'<'~'<'¦'<'‘'<'’'<'‚'<'“'<'”'<'„'<'‹'<'›'<'+'"
-				+ "<'<'<'='<'>'<'«'<'»'<'§'<'©'<'¬'<'®'<'°'<'†'<'‡'<'•'<'‰'<0<1<2<3<4<5<6<7<8<9"
-				+ "<a,A<b,B<c,C<d,D<e,E<f,F<g,G<h,H<i,I<j,J<k,K<l,L<m,M<n,N;№<o,O<p,P<q,Q<r,R<s,S<t,T<™<u,U<v,V<w,W<x,X<y,Y<z,Z"
-				//+ "<а,А<б,Б<в,В<г,Г<д,Д<е,Е;ё,Ё<ж,Ж<з,З<и,И<й,Й<к,К<л,Л<м,М<н,Н<о,О<п,П<р,Р<с,С<т,Т<у,У<ф,Ф<х,Х<ц,Ц<ч,Ч<ш,Ш<щ,Щ"
-				+ "<а,А<б,Б<в,В<г,Г<д,Д<е,Е;ё,Ё<ж,Ж<з,З<и,И;й,Й<к,К<л,Л<м,М<н,Н<о,О<п,П<р,Р<с,С<т,Т<у,У<ф,Ф<х,Х<ц,Ц<ч,Ч<ш,Ш<щ,Щ"
-				+ "<ъ,Ъ<ы,Ы<ь,Ь<э,Э<ю,Ю<я,Я";
+		POSTGRES = new Rules() {
+			@Override
+			public String getRules() {
+				return "<'''<'-'<'–'<'—'<' '<'!'<'\"'<'#'<'$'<'%'<'&'<'('<')'<'*'<','<'.'<'/'<':'<';'"
+						+ "<'?'<'@'<'['<'\\'<']'<'^'<'_'<'`'<'{'<'|'<'}'<'~'<'¦'<'‘'<'’'<'‚'<'“'<'”'<'„'<'‹'<'›'<'+'"
+						+ "<'<'<'='<'>'<'«'<'»'<'§'<'©'<'¬'<'®'<'°'<'†'<'‡'<'•'<'‰'<0<1<2<3<4<5<6<7<8<9"
+						+ "<a,A<b,B<c,C<d,D<e,E<f,F<g,G<h,H<i,I<j,J<k,K<l,L<m,M<n,N;№<o,O<p,P<q,Q<r,R<s,S<"
+						+ "t,T<™<u,U<v,V<w,W<x,X<y,Y<z,Z"
+						// <и,И<й,Й<
+						+ "<а,А<б,Б<в,В<г,Г<д,Д<е,Е;ё,Ё<ж,Ж<з,З<и,И;й,Й<к,К<л,Л<м,М<н,Н<о,О<п,П<р,Р<с,С<"
+						+ "т,Т<у,У<ф,Ф<х,Х<ц,Ц<ч,Ч<ш,Ш<щ,Щ<ъ,Ъ<ы,Ы<ь,Ь<э,Э<ю,Ю<я,Я";
+			}
+
+			@Override
+			public String getName() {
+				return "POSTGRES";
+			}
+		};
 	}
 
 	private final LyraCollator collator;
@@ -44,7 +64,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 		this(POSTGRES, m);
 	}
 
-	public VarcharFieldEnumerator(String rules, int m) {
+	public VarcharFieldEnumerator(Rules rules, int m) {
 		this(rules, m, true);
 		this.min = EMPTY_STRING;
 		this.max = new int[m][3];
@@ -65,16 +85,16 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 		this(POSTGRES, min, max, m);
 	}
 
-	public VarcharFieldEnumerator(String rules, String min, String max, int m) throws CelestaException {
+	public VarcharFieldEnumerator(Rules rules, String min, String max, int m) throws CelestaException {
 		this(rules, m, true);
 		setBounds(min, max);
 	}
 
-	private VarcharFieldEnumerator(String rules, int m, boolean setup) {
+	private VarcharFieldEnumerator(Rules rules, int m, boolean setup) {
 		if (m <= 0)
 			throw new IllegalArgumentException();
 		// Setting up collator
-		collator = LyraCollator.getInstance(rules);
+		collator = LyraCollator.getInstance(rules.getRules(), rules.getName());
 
 		BigInteger[] count = { BigInteger.valueOf(collator.getPrimOrderCount()),
 				BigInteger.valueOf(collator.getSecOrderCount()), BigInteger.valueOf(collator.getTerOrderCount()) };
@@ -87,7 +107,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 			}
 		}
 		c2 = q[0][1].multiply(count[1]);
-		c3 = q[0][2].multiply(count[2]); 
+		c3 = q[0][2].multiply(count[2]);
 	}
 
 	/**
@@ -113,11 +133,16 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 		int[][] result = new int[str.length()][3];
 		LyraCollationElementIterator i = collator.getCollationElementIterator(str);
 		int j = 0;
-		while (i.next()) {
-			result[j][0] = i.primaryOrder();
-			result[j][1] = i.secondaryOrder();
-			result[j][2] = i.tertiaryOrder();
-			j++;
+		try {
+			while (i.next()) {
+				result[j][0] = i.primaryOrder();
+				result[j][1] = i.secondaryOrder();
+				result[j][2] = i.tertiaryOrder();
+				j++;
+			}
+		} catch (LyraCollatorException e) {
+			throw new CelestaException("Error in string '%s': character '%s' is unknown for collator '%s'.", str,
+					String.valueOf(e.getUnknownChar()), collator.getName());
 		}
 		return result;
 	}

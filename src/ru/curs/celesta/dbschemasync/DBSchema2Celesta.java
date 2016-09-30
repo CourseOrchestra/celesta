@@ -101,6 +101,97 @@ public final class DBSchema2Celesta {
 		refScore.save();
 	}
 
+	private static void plantUml(boolean withPlantUml, File dbs, Score refScore, NodeList l) throws CelestaException {
+		if (withPlantUml) {
+			for (int i = 0; i < l.getLength(); i++) {
+				Node n = l.item(i);
+				if ("layout".equals(n.getNodeName())) {
+					Element layout = (Element) n;
+					writeADoc(dbs, layout, refScore);
+				}
+			}
+		}
+	}
+
+	private static void writeADoc(File dbs, Element layout, Score refScore) throws CelestaException {
+		String viewName = layout.getAttribute("name");
+		File docFile = new File(dbs.getAbsoluteFile().getParentFile().getAbsolutePath(),
+				String.format("%s.adoc", viewName));
+		try {
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(docFile), "utf-8"));
+			try {
+				bw.write(String.format("[uml,file=\"%s.png\"]", viewName));
+				bw.newLine();
+				bw.write("--");
+				bw.newLine();
+				bw.write("@startuml");
+				bw.newLine();
+				bw.newLine();
+				bw.write("skinparam monochrome true");
+				bw.newLine();
+				bw.write("skinparam dpi 150");
+				bw.newLine();
+				bw.newLine();
+				NodeList l = layout.getChildNodes();
+				Set<Table> tables = new HashSet<>();
+				for (int i = 0; i < l.getLength(); i++) {
+					Node n = l.item(i);
+					if ("entity".equals(n.getNodeName())) {
+						Element entity = (Element) n;
+						Grain g = refScore.getGrain(entity.getAttribute("schema"));
+						String eName = entity.getAttribute("name");
+						Table t = g.getTables().get(eName);
+						if (t != null) {
+							bw.write(String.format("class %s {%n", t.getName()));
+							for (Entry<String, Column> c : t.getColumns().entrySet()) {
+								bw.write(String.format("  %s: %s%n", c.getKey(), c.getValue().getCelestaType()));
+							}
+							bw.write("}");
+							bw.newLine();
+							bw.newLine();
+							tables.add(t);
+						} else {
+							View v = g.getViews().get(eName);
+							if (v != null) {
+								bw.write(String.format("class %s <<view>>{%n", v.getName()));
+								for (Entry<String, ViewColumnMeta> c : v.getColumns().entrySet()) {
+									bw.write(String.format("  %s: %s%n", c.getKey(), c.getValue().getCelestaType()));
+								}
+								bw.write("}");
+								bw.newLine();
+								bw.newLine();
+							}
+						}
+					}
+				}
+				// Добавляем ссылки между таблицами, присутствующими на
+				// диаграмме
+				for (Table t : tables)
+					for (ForeignKey fk : t.getForeignKeys()) {
+						Table refTable = fk.getReferencedTable();
+
+						String columns = fk.getColumns().size() == 1 ? fk.getColumns().keySet().iterator().next()
+								: fk.getColumns().keySet().toString();
+
+						if (tables.contains(refTable))
+							bw.write(String.format("%s --> %s: %s %n%n", fk.getParentTable().getName(),
+									fk.getReferencedTable().getName(), columns));
+					}
+
+				bw.write("@enduml");
+				bw.newLine();
+				bw.write("--");
+				bw.newLine();
+			} finally {
+				bw.close();
+			}
+
+		} catch (IOException | ParseException e) {
+			throw new CelestaException("Cannot save '%s': %s", docFile.getName(), e.getMessage());
+		}
+
+	}
+
 	private static void updateGrainFK(Element schema, Grain g) throws ParseException {
 		NodeList l = schema.getChildNodes();
 		for (int i = 0; i < l.getLength(); i++) {

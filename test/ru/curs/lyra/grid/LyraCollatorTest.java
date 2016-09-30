@@ -74,8 +74,8 @@ public class LyraCollatorTest {
 	}
 
 	@Test
-	public void test3() throws CelestaException {
-		LyraCollator lc = LyraCollator.getInstance("mo<a < b,c < d,g;e,k;f,w<'~'");
+	public void test3() throws CelestaException, LyraCollatorException {
+		LyraCollator lc = LyraCollator.getInstance("mo<a < b,c < d,g;e,k;f,w<'~'", "TEST");
 		assertEquals(4, lc.getPrimOrderCount());
 		assertEquals(3, lc.getSecOrderCount());
 		assertEquals(2, lc.getTerOrderCount());
@@ -117,12 +117,18 @@ public class LyraCollatorTest {
 
 	@Test
 	public void test4() {
-		LyraCollator lc1 = LyraCollator.getInstance("<a<b<c");
-		LyraCollator lc2 = LyraCollator.getInstance("<d<e<f");
-		LyraCollator lc3 = LyraCollator.getInstance("<a<b<c");
-		LyraCollator lc4 = LyraCollator.getInstance("<d<e<f");
+		LyraCollator lc1 = LyraCollator.getInstance("<a<b<c", "TEST1");
+		LyraCollator lc2 = LyraCollator.getInstance("<d<e<f", "TEST2");
+		LyraCollator lc3 = LyraCollator.getInstance("<a<b<c", "TEST3");
+		LyraCollator lc4 = LyraCollator.getInstance("<d<e<f", "TEST4");
 		assertEquals(lc1, lc3);
+		assertEquals("TEST1", lc1.getName());
+		assertEquals("TEST1", lc3.getName());
+		
 		assertEquals(lc2, lc4);
+		assertEquals("TEST2", lc2.getName());
+		assertEquals("TEST2", lc4.getName());
+		
 		assertTrue(lc1 != lc2);
 
 		assertEquals(3, lc1.getPrimOrderCount());
