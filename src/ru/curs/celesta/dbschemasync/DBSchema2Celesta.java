@@ -1,10 +1,17 @@
 package ru.curs.celesta.dbschemasync;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,8 +23,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.FloatingColumn;
@@ -30,6 +39,7 @@ import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.ViewColumnMeta;
 
 /**
  * Переносит данные из DBSchema в Celesta.
@@ -48,10 +58,12 @@ public final class DBSchema2Celesta {
 	 *            DBS-файл
 	 * @param refScore
 	 *            score.
+	 * @param withPlantUml
+	 *            также вывести PlantUml-диаграммы для каждого из View.
 	 * @throws Exception
 	 *             любая ошибка.
 	 */
-	public static void dBSToScore(File dbs, Score refScore) throws Exception {
+	public static void dBSToScore(File dbs, Score refScore, boolean withPlantUml) throws Exception {
 		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 		Document doc;
@@ -98,7 +110,10 @@ public final class DBSchema2Celesta {
 			}
 		}
 
+		plantUml(withPlantUml, dbs, refScore, l);
+
 		refScore.save();
+
 	}
 
 	private static void plantUml(boolean withPlantUml, File dbs, Score refScore, NodeList l) throws CelestaException {
