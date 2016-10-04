@@ -79,6 +79,12 @@ public class TestLyraForm {
 				// TODO Auto-generated method stub
 				return null;
 			}
+
+			@Override
+			public void _beforeSending(BasicCursor c) {
+				// TODO Auto-generated method stub
+				
+			}
 		};
 
 		String[] names = { "column1", "column2", "column3" };
