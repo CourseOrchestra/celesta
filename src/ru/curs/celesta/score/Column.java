@@ -3,12 +3,19 @@ package ru.curs.celesta.score;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import ru.curs.celesta.CelestaException;
+
 /**
  * Базовый класс описания столбца таблицы. Наследники этого класса соответствуют
  * разным типам столбцов.
  */
 public abstract class Column extends NamedElement implements ColumnMeta {
 
+	private static final String OPTION = "option";
 	private final Table parentTable;
 	private boolean nullable = true;
 
@@ -38,6 +45,32 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 		this.parentTable = parentTable;
 		nullable = false;
 		setDefault("1");
+	}
+
+	/**
+	 * Возвращает опции (значение свойства option) для данного поля. Имеет
+	 * применение только для текстовых и Integer-полей.
+	 * 
+	 * @throws CelestaException
+	 *             в случае, если опции заданы неверно.
+	 */
+	public String[] getOptions() throws CelestaException {
+		String json = getCelestaDocJSON();
+		try {
+			JSONObject metadata = new JSONObject(json);
+			if (metadata.has(OPTION)) {
+				JSONArray options = metadata.getJSONArray(OPTION);
+				String[] result = new String[options.length()];
+				for (int i = 0; i < options.length(); i++)
+					result[i] = options.getString(i);
+				return result;
+			} else {
+				return new String[0];
+			}
+		} catch (JSONException e1) {
+			throw new CelestaException("Error in CelestaDoc for %s.%s.%s: %s", getParentTable().getGrain().getName(),
+					getParentTable().getName(), getName(), e1.getMessage());
+		}
 	}
 
 	/**

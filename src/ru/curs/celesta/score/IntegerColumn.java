@@ -3,6 +3,8 @@ package ru.curs.celesta.score;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import ru.curs.celesta.CelestaException;
+
 /**
  * Целочисленная колонка.
  * 
@@ -30,11 +32,9 @@ public final class IntegerColumn extends Column {
 			identity = false;
 		} else if ("IDENTITY".equalsIgnoreCase(lexvalue)) {
 			for (Column c : getParentTable().getColumns().values())
-				if (c instanceof IntegerColumn && c != this
-						&& ((IntegerColumn) c).isIdentity())
+				if (c instanceof IntegerColumn && c != this && ((IntegerColumn) c).isIdentity())
 					throw new ParseException(
-							"More than one identity columns are defined in table "
-									+ getParentTable().getName());
+							"More than one identity columns are defined in table " + getParentTable().getName());
 			defaultvalue = null;
 			identity = true;
 		} else {
@@ -84,4 +84,16 @@ public final class IntegerColumn extends Column {
 	public String getCelestaDefault() {
 		return defaultvalue == null ? null : defaultvalue.toString();
 	}
+
+	@Override
+	public void setCelestaDoc(String celestaDoc) throws ParseException {
+		super.setCelestaDoc(celestaDoc);
+		// check options validity
+		try {
+			getOptions();
+		} catch (CelestaException e) {
+			throw new ParseException(e.getMessage());
+		}
+	}
+
 }

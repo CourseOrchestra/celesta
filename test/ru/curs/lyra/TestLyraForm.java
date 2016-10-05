@@ -12,6 +12,7 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.score.CelestaParser;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
@@ -20,25 +21,58 @@ import ru.curs.celesta.score.Table;
 
 public class TestLyraForm {
 
+	static class DummyMeta implements ColumnMeta {
+		private final String cDoc;
+
+		DummyMeta(String cDoc) {
+			this.cDoc = cDoc;
+		}
+
+		@Override
+		public String jdbcGetterName() {
+			return null;
+		}
+
+		@Override
+		public String getCelestaType() {
+			return null;
+		}
+
+		@Override
+		public boolean isNullable() {
+			return false;
+		}
+
+		@Override
+		public String getCelestaDoc() {
+			return cDoc;
+		}
+
+	}
+	
+	private static String testJSON(String test) throws CelestaException{
+		return (new DummyMeta(test)).getCelestaDocJSON();
+	}
+
 	@Test
 	public void test1() throws CelestaException {
-		assertEquals("{}", BasicLyraForm.extractJSON(""));
-		assertEquals("{}", BasicLyraForm.extractJSON(null));
-		assertEquals("{}", BasicLyraForm.extractJSON("   sfdwer фывафа "));
+		assertEquals("{}", testJSON(""));
+		assertEquals("{}", testJSON(null));
+		assertEquals("{}", testJSON("   sfdwer фывафа "));
 		boolean exception = false;
 		try {
-			assertEquals("{}", BasicLyraForm.extractJSON("   sfdwer фы{вафа "));
+			assertEquals("{}", testJSON("   sfdwer фы{вафа "));
 		} catch (Exception e) {
 			exception = true;
 		}
 		assertTrue(exception);
-		assertEquals("{ва}", BasicLyraForm.extractJSON("   sfdwer фы{ва}фа "));
-		assertEquals("{\"}\"}", BasicLyraForm.extractJSON("   sfdwer фы{\"}\"}фа "));
-		assertEquals("{\"\\\"}\"aa}", BasicLyraForm.extractJSON("   sfdwer фы{\"\\\"}\"aa}фа "));
+		assertEquals("{ва}", testJSON("   sfdwer фы{ва}фа "));
+		assertEquals("{\"}\"}", testJSON("   sfdwer фы{\"}\"}фа "));
+		assertEquals("{\"\\\"}\"aa}", testJSON("   sfdwer фы{\"\\\"}\"aa}фа "));
 		String jsonTest = "{\"object_or_array\": \"ob{j}}}e\\\"ct\",\n" + "\"empty\": false,\n"
 				+ "\"parse_time_nanoseconds\": 19608,\n" + "\"validate\": true,\n" + "\"size\": 1\n" + "}";
-		assertEquals(jsonTest, BasicLyraForm.extractJSON(jsonTest));
-		assertEquals(jsonTest, BasicLyraForm.extractJSON("foo" + jsonTest));
+		assertEquals(jsonTest, testJSON(jsonTest));
+		assertEquals(jsonTest, testJSON("foo" + jsonTest));
 	}
 
 	@Test
@@ -83,7 +117,7 @@ public class TestLyraForm {
 			@Override
 			public void _beforeSending(BasicCursor c) {
 				// TODO Auto-generated method stub
-				
+
 			}
 		};
 

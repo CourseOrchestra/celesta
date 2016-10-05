@@ -47,11 +47,14 @@ CREATE TABLE employees
 CREATE INDEX table2_idx2 ON table2 (column3, column1);
 
 CREATE TABLE ttt1(
+/**{option: [open, closed]}*/
 id int
 ) with read only;
 
 CREATE TABLE ttt2(
-id int not null primary key
+id int not null primary key,
+/**{option: [one, two, three]}*/
+descr varchar(10)
 ) with version check;
 
 CREATE TABLE ttt3(

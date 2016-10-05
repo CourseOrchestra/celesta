@@ -17,6 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
@@ -24,7 +25,6 @@ import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
@@ -41,7 +41,7 @@ public final class ORMCompiler {
 	 * Версия компилятора. Данную константу следует инкрементировать, когда
 	 * необходимо инициировать автоматическое пересоздание orm-скриптов.
 	 */
-	private static final int COMPILERVER = 8;
+	private static final int COMPILERVER = 9;
 
 	private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
 	private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -216,6 +216,8 @@ public final class ORMCompiler {
 
 		w.write(String.format("class %s(ReadOnlyTableCursor):", className));
 		w.newLine();
+		// Option-поля
+		compileOptionFields(w, columns);
 		// Конструктор
 		compileROTableInit(w, columns);
 		// Имя гранулы
@@ -250,6 +252,8 @@ public final class ORMCompiler {
 			w.write(s);
 			w.newLine();
 		}
+		// Option-поля
+		compileOptionFields(w, columns);
 		// Конструктор
 		compileTableInit(w, columns);
 		// Имя гранулы
@@ -288,6 +292,36 @@ public final class ORMCompiler {
 		compileIterate(w);
 
 		w.newLine();
+	}
+
+	private static void compileOptionFields(BufferedWriter w, Collection<Column> columns) throws IOException {
+		for (Column c : columns) {
+			if (c instanceof IntegerColumn || c instanceof StringColumn) {
+				try {
+					String[] options = c.getOptions();
+					if (options.length > 0) {
+						w.write(String.format("    class %s:", c.getName()));
+						w.newLine();
+					}
+					int j = 0;
+					for (String option : options) {
+						if (c instanceof IntegerColumn) {
+							w.write(String.format("        %s = %d", option, j++));
+						} else {
+							w.write(String.format("        %s = '%s'", option, option));
+						}
+						w.newLine();
+					}
+//					if (options.length > 0) {
+//						w.newLine();
+//					}
+				} catch (CelestaException e) {
+					// do nothing -- no options to produce
+				}
+
+			}
+		}
+
 	}
 
 	private static void compileSetFieldValue(BufferedWriter w) throws IOException {

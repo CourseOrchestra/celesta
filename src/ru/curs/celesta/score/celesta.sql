@@ -34,7 +34,7 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.10';
+create grain celesta version '1.11';
 
 /**Active grains list.*/
 create table grains(
@@ -46,7 +46,8 @@ create table grains(
   length int not null,
   /**grain creation script CRC32 value*/
   checksum varchar(8) not null,
-  /**grain status*/  
+  /**grain status
+   {option: [ready, upgrading, error, recover, lock]}*/  
   state int not null default 3,
   /**date and time of last grain status update*/
   lastmodified datetime not null default getdate(), 

@@ -1,4 +1,7 @@
 class ttt1Cursor(ReadOnlyTableCursor):
+    class id:
+        open = 0
+        closed = 1
     def __init__(self, context):
         ReadOnlyTableCursor.__init__(self, context)
         self.id = None
@@ -37,9 +40,14 @@ class ttt2Cursor(Cursor):
     onPostInsert = []
     onPreUpdate  = []
     onPostUpdate = []
+    class descr:
+        one = 'one'
+        two = 'two'
+        three = 'three'
     def __init__(self, context):
         Cursor.__init__(self, context)
         self.id = None
+        self.descr = None
         self.context = context
     def _grainName(self):
         return 'test1'
@@ -49,16 +57,20 @@ class ttt2Cursor(Cursor):
         self.id = rs.getInt('id')
         if rs.wasNull():
             self.id = None
+        self.descr = rs.getString('descr')
+        if rs.wasNull():
+            self.descr = None
         self.recversion = rs.getInt('recversion')
     def _setFieldValue(self, name, value):
         setattr(self, name, value)
     def _clearBuffer(self, withKeys):
         if withKeys:
             self.id = None
+        self.descr = None
     def _currentKeyValues(self):
         return array([None if self.id == None else int(self.id)], Object)
     def _currentValues(self):
-        return array([None if self.id == None else int(self.id)], Object)
+        return array([None if self.id == None else int(self.id), None if self.descr == None else unicode(self.descr)], Object)
     def _setAutoIncrement(self, val):
         pass
     def _preDelete(self):
@@ -85,6 +97,7 @@ class ttt2Cursor(Cursor):
         return result
     def copyFieldsFrom(self, c):
         self.id = c.id
+        self.descr = c.descr
         self.recversion = c.recversion
     def iterate(self):
         if self.tryFindSet():

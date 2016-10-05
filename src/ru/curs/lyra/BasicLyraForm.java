@@ -79,7 +79,7 @@ public abstract class BasicLyraForm {
 		LyraFormField f = new LyraFormField(name, a);
 		fieldsMeta.addElement(f);
 		f.setType(LyraFieldType.lookupFieldType(m));
-		String json = extractJSON(m.getCelestaDoc());
+		String json = m.getCelestaDocJSON();
 		try {
 			JSONObject metadata = new JSONObject(json);
 			f.setCaption(metadata.has(CAPTION) ? metadata.getString(CAPTION) : f.getName());
@@ -224,56 +224,6 @@ public abstract class BasicLyraForm {
 	 */
 	public boolean[] descOrders() throws CelestaException {
 		return rec == null ? null : rec.descOrders();
-	}
-
-	// CHECKSTYLE:OFF for cyclomatic complexity
-	static String extractJSON(String celestaDoc) throws CelestaException {
-		// CHECKSTYLE:ON
-		if (celestaDoc == null)
-			return "{}";
-		StringBuilder sb = new StringBuilder();
-		int state = 0;
-		int bracescount = 0;
-		for (int i = 0; i < celestaDoc.length(); i++) {
-			char c = celestaDoc.charAt(i);
-			switch (state) {
-			case 0:
-				if (c == '{') {
-					sb.append(c);
-					bracescount++;
-					state = 1;
-				}
-				break;
-			case 1:
-				sb.append(c);
-				if (c == '{') {
-					bracescount++;
-				} else if (c == '}') {
-					if (--bracescount == 0)
-						return sb.toString();
-				} else if (c == '"') {
-					state = 2;
-				}
-				break;
-			case 2:
-				sb.append(c);
-				if (c == '\\') {
-					state = 3;
-				} else if (c == '"') {
-					state = 1;
-				}
-				break;
-			case 3:
-				sb.append(c);
-				state = 2;
-				break;
-			default:
-			}
-		}
-		// No valid json!
-		if (state != 0)
-			throw new CelestaException("Broken or truncated JSON: %s", sb.toString());
-		return "{}";
 	}
 
 	/*

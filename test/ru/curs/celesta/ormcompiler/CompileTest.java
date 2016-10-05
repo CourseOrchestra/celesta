@@ -32,9 +32,8 @@ public class CompileTest {
 		// System.out.println(sw);
 
 		String[] actual = sw.toString().split("\r?\n");
-		BufferedReader r = new BufferedReader(new InputStreamReader(
-				CompileTest.class.getResourceAsStream("expectedcompile.txt"),
-				"utf-8"));
+		BufferedReader r = new BufferedReader(
+				new InputStreamReader(CompileTest.class.getResourceAsStream("expectedcompile.txt"), "utf-8"));
 		for (String l : actual)
 			assertEquals(r.readLine(), l);
 	}

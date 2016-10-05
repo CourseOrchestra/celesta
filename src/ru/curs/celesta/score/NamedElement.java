@@ -15,10 +15,8 @@ public abstract class NamedElement {
 	 */
 	private static final int MAX_IDENTIFIER_LENGTH = 30;
 
-	private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/",
-			Pattern.DOTALL);
-	private static final Pattern NAME_PATTERN = Pattern
-			.compile("[a-zA-Z_][0-9a-zA-Z_]*");
+	private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/", Pattern.DOTALL);
+	private static final Pattern NAME_PATTERN = Pattern.compile("[a-zA-Z_][0-9a-zA-Z_]*");
 
 	private final String name;
 	private final String quotedName;
@@ -38,12 +36,10 @@ public abstract class NamedElement {
 	static void validateIdentifier(String name) throws ParseException {
 		Matcher m = NAME_PATTERN.matcher(name);
 		if (!m.matches())
-			throw new ParseException(String.format("Invalid identifier: '%s'.",
-					name));
+			throw new ParseException(String.format("Invalid identifier: '%s'.", name));
 		if (name.length() > MAX_IDENTIFIER_LENGTH)
-			throw new ParseException(String.format(
-					"Identifier '%s' is longer than %d characters.", name,
-					MAX_IDENTIFIER_LENGTH));
+			throw new ParseException(
+					String.format("Identifier '%s' is longer than %d characters.", name, MAX_IDENTIFIER_LENGTH));
 	}
 
 	/**
@@ -57,10 +53,8 @@ public abstract class NamedElement {
 	public static String limitName(String value) {
 		String result = value;
 		if (result.length() > NamedElement.MAX_IDENTIFIER_LENGTH) {
-			result = String
-					.format("%s%08X", result.substring(0,
-							NamedElement.MAX_IDENTIFIER_LENGTH - 8), result
-							.hashCode());
+			result = String.format("%s%08X", result.substring(0, NamedElement.MAX_IDENTIFIER_LENGTH - 8),
+					result.hashCode());
 		}
 		return result;
 	}
@@ -86,8 +80,7 @@ public abstract class NamedElement {
 
 	@Override
 	public final boolean equals(Object obj) {
-		return obj instanceof NamedElement ? name.equals(((NamedElement) obj)
-				.getName()) : name.equals(obj);
+		return obj instanceof NamedElement ? name.equals(((NamedElement) obj).getName()) : name.equals(obj);
 	}
 
 	/**
@@ -111,10 +104,8 @@ public abstract class NamedElement {
 		else {
 			Matcher m = COMMENT.matcher(celestaDoc);
 			if (!m.matches())
-				throw new ParseException(
-						"Celestadoc should match pattern /**...*/, was "
-								+ celestaDoc);
-			this.celestaDoc = m.group(1);
+				throw new ParseException("Celestadoc should match pattern /**...*/, was " + celestaDoc);
+			setCelestaDoc(m.group(1));
 		}
 	}
 
@@ -123,8 +114,10 @@ public abstract class NamedElement {
 	 * 
 	 * @param celestaDoc
 	 *            новое значение.
+	 * @throws ParseException
+	 *            неверный CelestaDoc.
 	 */
-	public void setCelestaDoc(String celestaDoc) {
+	public void setCelestaDoc(String celestaDoc) throws ParseException {
 		this.celestaDoc = celestaDoc;
 	}
 }
