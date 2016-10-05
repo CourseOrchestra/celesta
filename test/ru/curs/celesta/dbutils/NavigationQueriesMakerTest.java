@@ -9,6 +9,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.CelestaParser;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.SQLGenerator;
@@ -89,7 +90,9 @@ public class NavigationQueriesMakerTest {
 
 				@Override
 				public SQLGenerator getViewSQLGenerator() {
-					return null;
+					return new SQLGenerator() {
+
+					};
 				}
 
 			};
@@ -132,11 +135,13 @@ public class NavigationQueriesMakerTest {
 
 		assertFalse(p.init);
 
-		assertEquals("((\"grainid\" <= ?) and ((\"grainid\" < ?) or (\"tablename\" < ?)))", c.getWhereTerm('<').getWhere());
+		assertEquals("((\"grainid\" <= ?) and ((\"grainid\" < ?) or (\"tablename\" < ?)))",
+				c.getWhereTerm('<').getWhere());
 
 		assertTrue(p.init);
 
-		assertEquals("((\"grainid\" >= ?) and ((\"grainid\" > ?) or (\"tablename\" > ?)))", c.getWhereTerm('>').getWhere());
+		assertEquals("((\"grainid\" >= ?) and ((\"grainid\" > ?) or (\"tablename\" > ?)))",
+				c.getWhereTerm('>').getWhere());
 		assertEquals("((\"grainid\" = ?) and (\"tablename\" = ?))", c.getWhereTerm('=').getWhere());
 	}
 
@@ -292,5 +297,30 @@ public class NavigationQueriesMakerTest {
 		assertEquals("((\"B\" = ?) and (\"A\" is null or \"A\" = 'foo') and ((\"A\" > ?) or (\"A\" is null)))",
 				c.getWhereTerm('>').getWhere());
 
+	}
+
+	@Test
+	public void test7() throws CelestaException {
+		Params p = new Params(a("A"), a(false), a(true)) {
+			@Override
+			public Expr complexFilter() {
+				Expr buf;
+				try {
+					buf = CelestaParser.parseComplexFilter("a = 1 or b = 3");
+					return buf;
+				} catch (CelestaException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		};
+		Map<String, AbstractFilter> filters = new HashMap<>();
+		filters.put("е", new SingleValue(4));
+		p.setFilters(filters);
+
+		
+		WhereTermsMaker c = new WhereTermsMaker(p);
+		
+		assertEquals("((\"е\" = ?) and (\"a\" = 1 OR \"b\" = 3))", c.getWhereTerm().getWhere());
+		
 	}
 }
