@@ -609,7 +609,7 @@ class WhereTermsMaker {
 
 		@Override
 		String getWhere() throws CelestaException {
-			return paramsProvider.complexFilter().getSQL(paramsProvider.dba());
+			return "(" + paramsProvider.complexFilter().getSQL(paramsProvider.dba()) + ")";
 		}
 
 		@Override
