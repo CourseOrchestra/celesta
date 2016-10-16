@@ -38,10 +38,13 @@ CREATE TABLE employees(
 );
 
 CREATE TABLE ttt1(
+  /**{option: [open, closed]}*/
   id INT) WITH READ ONLY;
 
 CREATE TABLE ttt2(
   id INT NOT NULL,
+  /**{option: [one, two, three]}*/
+  descr VARCHAR(10),
   CONSTRAINT pk_ttt2 PRIMARY KEY (id)
 );
 

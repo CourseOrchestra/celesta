@@ -1,15 +1,35 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>ru.curs.celesta</groupId>
+	<groupId>ru.curs</groupId>
 	<artifactId>celesta</artifactId>
-	<packaging>jar</packaging>
-	<version>4.0-SNAPSHOT</version>
+	<version>5.1</version>
 	<name>celesta</name>
+	<description>Celesta is an open source platform for Python + RDBMS business solutions development</description>
+	<packaging>jar</packaging>
 	<url>http://corchestra.ru</url>
+	<organization>
+		<name>CURS</name>
+		<url>http://corchestra.com</url>
+	</organization>
 	<licenses>
-		<license></license>
+		<license>GNU General Public License (GPL), Version 3</license>
+		<url>https://www.gnu.org/licenses/gpl-3.0.txt</url>
 	</licenses>
+	<repositories>
+		<repository>
+			<id>lib</id>
+			<name>lib</name>
+			<releases>
+				<enabled>true</enabled>
+				<checksumPolicy>ignore</checksumPolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<url>file://${project.basedir}/lib</url>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -111,7 +131,7 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-						    <Main-Class>ru.curs.celesta.Celesta</Main-Class>
+							<Main-Class>ru.curs.celesta.Celesta</Main-Class>
 						</manifestEntries>
 					</archive>
 				</configuration>
