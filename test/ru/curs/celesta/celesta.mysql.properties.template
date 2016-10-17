@@ -1,4 +1,0 @@
-score.path = score
-database.classname=com.mysql.jdbc.Driver
-database.connection=jdbc:mysql://192.168.110.128?user=celesta&password=1234
-
