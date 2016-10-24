@@ -14,6 +14,7 @@ import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.ViewColumnMeta;
 import ru.curs.lyra.grid.BitFieldEnumerator;
 import ru.curs.lyra.grid.CompositeKeyEnumerator;
 import ru.curs.lyra.grid.IntFieldEnumerator;
@@ -192,7 +193,8 @@ public final class GridDriver {
 			BigInteger lowerOrd = getCursorOrdinal(c);
 			interpolator = new KeyInterpolator(lowerOrd, higherOrd, DEFAULT_COUNT, desc);
 			topVisiblePosition = lowerOrd;
-			// Request a total record count immediately -- but after interpolator initialization
+			// Request a total record count immediately -- but after
+			// interpolator initialization
 			requestRefinement(higherOrd, true);
 		} else {
 			// empty record set!
@@ -328,11 +330,18 @@ public final class GridDriver {
 			result = new BitFieldEnumerator();
 		else if (IntegerColumn.CELESTA_TYPE.equals(m.getCelestaType()))
 			result = new IntFieldEnumerator();
-		else if (m instanceof StringColumn) {
-			StringColumn s = (StringColumn) m;
-			if (s.isMax())
-				throw new CelestaException("TEXT field cannot be used as a key field in a grid.");
-			result = new VarcharFieldEnumerator(s.getLength());
+		else if (StringColumn.VARCHAR.equals(m.getCelestaType())) {
+			if (m instanceof StringColumn) {
+				StringColumn s = (StringColumn) m;
+				result = new VarcharFieldEnumerator(s.getLength());
+			} else {
+				ViewColumnMeta vcm = (ViewColumnMeta) m;
+				if (vcm.getLength() < 0) {
+					throw new CelestaException(
+							"Undefined length for VARCHAR view field: cannot use it as a key field in a grid.");
+				}
+				result = new VarcharFieldEnumerator(vcm.getLength());
+			}
 		} else {
 			throw new CelestaException("The field with type '%s' cannot be used as a key field in a grid.",
 					m.getCelestaType());

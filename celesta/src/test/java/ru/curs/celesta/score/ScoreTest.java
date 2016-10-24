@@ -407,4 +407,28 @@ public class ScoreTest {
 		assertFalse(v.getColumns().get("s2").isNullable());
 	}
 
+	@Test
+	public void viewTest4() throws CelestaException, ParseException {
+		Score s = new Score("testScore");
+		Grain g = s.getGrain("gtest");
+		View v = g.getView("v5");
+		Table t = g.getTable("test");
+
+		ViewColumnMeta vcm = v.getColumns().get("foo");
+		assertTrue(vcm.isNullable());
+		assertEquals(StringColumn.VARCHAR, vcm.getCelestaType());
+		assertEquals(((StringColumn) t.getColumn("attrVarchar")).getLength(), vcm.getLength());
+		assertEquals(2, vcm.getLength());
+		
+		vcm = v.getColumns().get("bar");
+		assertTrue(vcm.isNullable());
+		assertEquals(StringColumn.VARCHAR, vcm.getCelestaType());
+		assertEquals(((StringColumn) t.getColumn("f7")).getLength(), vcm.getLength());
+		assertEquals(8, vcm.getLength());
+		
+		vcm = v.getColumns().get("baz");
+		assertTrue(vcm.isNullable());
+		assertEquals(StringColumn.VARCHAR, vcm.getCelestaType());
+		assertEquals(-1, vcm.getLength());
+	}
 }

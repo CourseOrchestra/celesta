@@ -13,11 +13,20 @@ public final class ViewColumnMeta implements ColumnMeta {
 	private final ViewColumnType type;
 	private String celestaDoc = "";
 	private boolean nullable = true;
+	private final int length;
 
 	public ViewColumnMeta(ViewColumnType type) {
 		if (type == null)
 			throw new IllegalArgumentException();
 		this.type = type;
+		this.length = -1;
+	}
+
+	public ViewColumnMeta(ViewColumnType type, int length) {
+		if (type == null)
+			throw new IllegalArgumentException();
+		this.type = type;
+		this.length = length;
 	}
 
 	/**
@@ -84,7 +93,13 @@ public final class ViewColumnMeta implements ColumnMeta {
 	 */
 	public void setCelestaDoc(String celestaDoc) {
 		this.celestaDoc = celestaDoc;
+	}
 
+	/**
+	 * Returns field's length (or -1 if undefined).
+	 */
+	public int getLength() {
+		return length;
 	}
 
 }

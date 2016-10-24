@@ -50,3 +50,5 @@ create view v3 as select 1 as a, /**test celestadoc*/1.4 as b, /**test celestado
   from test;
   
 create view v4 as select f1, f4, f5, f4 + f5 as s, f5 * f5 + 1 as s2 from test where f1 = true;
+
+create view v5 as select attrVarchar as foo, f7 as bar, attrVarchar || f7 as baz from test;

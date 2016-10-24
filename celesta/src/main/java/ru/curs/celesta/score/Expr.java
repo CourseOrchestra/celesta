@@ -666,9 +666,13 @@ final class FieldRef extends Expr {
 					meta = new ViewColumnMeta(ViewColumnType.INT);
 				else if (column instanceof FloatingColumn)
 					meta = new ViewColumnMeta(ViewColumnType.REAL);
-				else if (column instanceof StringColumn)
-					meta = new ViewColumnMeta(ViewColumnType.TEXT);
-				else if (column instanceof BooleanColumn)
+				else if (column instanceof StringColumn) {
+					StringColumn sc = (StringColumn) column;
+					if (sc.isMax())
+						meta = new ViewColumnMeta(ViewColumnType.TEXT);
+					else
+						meta = new ViewColumnMeta(ViewColumnType.TEXT, sc.getLength());
+				} else if (column instanceof BooleanColumn)
 					meta = new ViewColumnMeta(ViewColumnType.BIT);
 				else if (column instanceof DateTimeColumn)
 					meta = new ViewColumnMeta(ViewColumnType.DATE);
