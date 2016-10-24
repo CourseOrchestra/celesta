@@ -42,8 +42,10 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		}
 		try {
 			return f.call();
+		} catch (CelestaException e) {
+			throw e;
 		} catch (Exception e) {
-			throw (CelestaException) e;
+			throw new CelestaException("Error while retrieving grid rows:" + e.getMessage());
 		} finally {
 			if (closeContext) {
 				getContext().closeCursors();
@@ -153,7 +155,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			if (!c.next())
 				break;
 		}
-		//return to the beginning!
+		// return to the beginning!
 		c.copyFieldsFrom(copy);
 		return result;
 	}
