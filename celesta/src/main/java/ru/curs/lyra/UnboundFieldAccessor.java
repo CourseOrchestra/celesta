@@ -16,8 +16,7 @@ public final class UnboundFieldAccessor implements FieldAccessor {
 	private final LyraFieldType lft;
 	private final PyObject instance;
 
-	public UnboundFieldAccessor(String celestaType, PyObject getter, PyObject setter,
-			PyObject instance) {
+	public UnboundFieldAccessor(String celestaType, PyObject getter, PyObject setter, PyObject instance) {
 		this.getter = getter;
 		this.setter = setter;
 		this.lft = LyraFieldType.valueOf(celestaType);
@@ -32,7 +31,8 @@ public final class UnboundFieldAccessor implements FieldAccessor {
 			value = getter.__call__(instance);
 		} catch (Throwable e) {
 			e.printStackTrace();
-			throw new CelestaException("Error while getting unbound field value: %s", e.getMessage());
+			throw new CelestaException("Error %s while getting unbound field value: %s. See logs for details.",
+					e.getClass().getName(), e.getMessage());
 		}
 
 		switch (lft) {
