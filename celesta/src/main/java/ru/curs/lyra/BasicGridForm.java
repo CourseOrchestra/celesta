@@ -45,7 +45,9 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		} catch (CelestaException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new CelestaException("Error while retrieving grid rows:" + e.getMessage());
+			e.printStackTrace();
+			throw new CelestaException("Error %s while retrieving grid rows: %s", e.getClass().getName(),
+					e.getMessage());
 		} finally {
 			if (closeContext) {
 				getContext().closeCursors();
