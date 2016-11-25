@@ -1,11 +1,19 @@
 package ru.curs.lyra;
 
 import java.sql.Connection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
-import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.CallContext;
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.dbutils.BasicCursor;
+import ru.curs.celesta.dbutils.Cursor;
+import ru.curs.celesta.dbutils.GridDriver;
+import ru.curs.celesta.score.ParseException;
 
 /**
  * Base Java class for Lyra grid form.
@@ -65,19 +73,16 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 *             e. g. insufficient access rights
 	 */
 	public synchronized List<LyraFormData> getRows(int position) throws CelestaException {
-		return reconnectAndGetRows(new Callable<List<LyraFormData>>() {
-			@Override
-			public List<LyraFormData> call() throws CelestaException {
-				BasicCursor c = rec();
-				actuateGridDriver(c);
-				if (gd.setPosition(position, c)) {
-					return returnRows(c);
-				} else {
-					return Collections.emptyList();
-				}
+		return reconnectAndGetRows(() -> {
+
+			BasicCursor c = rec();
+			actuateGridDriver(c);
+			if (gd.setPosition(position, c)) {
+				return returnRows(c);
+			} else {
+				return Collections.emptyList();
 			}
 		});
-
 	}
 
 	/**
@@ -87,17 +92,14 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 *             e. g. insufficient user rights.
 	 */
 	public synchronized List<LyraFormData> getRows() throws CelestaException {
-		return reconnectAndGetRows(new Callable<List<LyraFormData>>() {
-			@Override
-			public List<LyraFormData> call() throws CelestaException {
-				BasicCursor bc = rec();
-				// TODO: optimize for reducing DB SELECT calls!
-				if (bc.navigate("=<-")) {
-					gd.setPosition(bc);
-					return returnRows(bc);
-				} else {
-					return Collections.emptyList();
-				}
+		return reconnectAndGetRows(() -> {
+			BasicCursor bc = rec();
+			// TODO: optimize for reducing DB SELECT calls!
+			if (bc.navigate("=<-")) {
+				gd.setPosition(bc);
+				return returnRows(bc);
+			} else {
+				return Collections.emptyList();
 			}
 		});
 	}
@@ -114,33 +116,33 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 *             something wrong
 	 */
 	public synchronized List<LyraFormData> setPosition(Object... pk) throws CelestaException {
-		return reconnectAndGetRows(new Callable<List<LyraFormData>>() {
-			@Override
-			public List<LyraFormData> call() throws CelestaException {
-				BasicCursor bc = rec();
-				actuateGridDriver(bc);
-				if (bc instanceof Cursor) {
-					Cursor c = (Cursor) bc;
-					if (c.meta().getPrimaryKey().size() != pk.length)
-						throw new CelestaException(
-								"Invalid number of 'setPosition' arguments for '%s': expected %d, provided %d.",
-								c.meta().getName(), c.meta().getPrimaryKey().size(), pk.length);
-					int i = 0;
-					for (String name : c.meta().getPrimaryKey().keySet()) {
-						c.setValue(name, pk[i++]);
-					}
-				} else {
-					bc.setValue(bc.meta().getColumns().keySet().iterator().next(), pk[0]);
-				}
+		return reconnectAndGetRows(() -> {
+			BasicCursor bc = rec();
+			actuateGridDriver(bc);
 
-				if (bc.navigate("=<-")) {
-					gd.setPosition(bc);
-					return returnRows(bc);
-				} else {
-					return Collections.emptyList();
+			if (bc instanceof Cursor) {
+				Cursor c = (Cursor) bc;
+				if (c.meta().getPrimaryKey().size() != pk.length)
+					throw new CelestaException(
+							"Invalid number of 'setPosition' arguments for '%s': expected %d, provided %d.",
+							c.meta().getName(), c.meta().getPrimaryKey().size(), pk.length);
+				int i = 0;
+				for (String name : c.meta().getPrimaryKey().keySet()) {
+					c.setValue(name, pk[i++]);
 				}
+			} else {
+				bc.setValue(bc.meta().getColumns().keySet().iterator().next(), pk[0]);
 			}
+
+			if (bc.navigate("=<-")) {
+				gd.setPosition(bc);
+				return returnRows(bc);
+			} else {
+				return Collections.emptyList();
+			}
+
 		});
+
 	}
 
 	private List<LyraFormData> returnRows(BasicCursor c) throws CelestaException {
@@ -159,6 +161,18 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		}
 		// return to the beginning!
 		c.copyFieldsFrom(copy);
+
+		if (result.size() < h) {
+			for (int i = result.size(); i < h; i++) {
+				if (!c.previous())
+					break;
+				_beforeSending(c);
+				LyraFormData lfd = new LyraFormData(c, meta, id);
+				result.add(0, lfd);
+
+			}
+			c.copyFieldsFrom(copy);
+		}
 		return result;
 	}
 
