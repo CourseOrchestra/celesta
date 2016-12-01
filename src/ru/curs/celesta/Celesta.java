@@ -39,6 +39,7 @@ import java.net.*;
 import java.security.*;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.*;
 
 import org.python.core.*;
@@ -64,7 +65,7 @@ public final class Celesta {
 	private final Score score;
 	private final PythonSourceMonitor sourceMonitor;
 	private List<String> pyPathList;
-	private final Queue<InterpreterHolder> interpreterPool = new LinkedList<>();
+	private final ConcurrentLinkedQueue<InterpreterHolder> interpreterPool = new ConcurrentLinkedQueue<>();
 	private final Map<String, SessionContext> sessions = Collections
 			.synchronizedMap(new HashMap<String, SessionContext>());
 	private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
@@ -135,30 +136,31 @@ public final class Celesta {
 			}
 	}
 
-	private synchronized InterpreterHolder getPythonInterpreter() throws CelestaException {
+	private InterpreterHolder getPythonInterpreter() throws CelestaException {
 		// Для начала, пытаемся достать готовый интерпретатор из пула.
 		InterpreterHolder h = interpreterPool.poll();
 		PythonInterpreter interp;
 
 		long timestamp = sourceMonitor.getSourceTimestamp();
-
 		if (h != null) {
 			interp = h.interpreter;
 			if (timestamp > h.sourceTimestamp) {
-
 				// removing Lyra Forms from all call contexts
-				for (SessionContext c : sessions.values())
-					c.removeForms();
-
+				synchronized (this) {
+					for (SessionContext c : sessions.values())
+						c.removeForms();
+				}
 				// re-importing grain modules
 				initPythonScore(interp);
-
 				h.sourceTimestamp = timestamp;
 			}
 			return h;
 		}
-		initPyPathList();
 
+		synchronized (this) {
+			if (pyPathList == null)
+				initPyPathList();
+		}
 		PySystemState state = Py.getSystemState();
 		for (String path : pyPathList)
 			state.path.append(new PyString(path));
@@ -200,7 +202,7 @@ public final class Celesta {
 		interp.set("_ic", "You can't use initcontext() outside the initialization code!");
 	}
 
-	private synchronized void returnPythonInterpreter(InterpreterHolder h) {
+	private void returnPythonInterpreter(InterpreterHolder h) {
 		interpreterPool.add(h);
 	}
 
@@ -221,29 +223,26 @@ public final class Celesta {
 	}
 
 	private void initPyPathList() {
-		if (pyPathList == null) {
-			pyPathList = new ArrayList<String>();
+		pyPathList = new ArrayList<String>();
 
-			if (!AppSettings.getJavalibPath().isEmpty())
-				addJars();
+		if (!AppSettings.getJavalibPath().isEmpty())
+			addJars();
 
-			File pathEntry = new File(getMyPath() + "pylib");
+		File pathEntry = new File(getMyPath() + "pylib");
+		if (pathEntry.exists() && pathEntry.isDirectory()) {
+			pyPathList.add(pathEntry.getAbsolutePath());
+		}
+		for (String entry : AppSettings.getPylibPath().split(File.pathSeparator)) {
+			pathEntry = new File(entry);
 			if (pathEntry.exists() && pathEntry.isDirectory()) {
 				pyPathList.add(pathEntry.getAbsolutePath());
 			}
-			for (String entry : AppSettings.getPylibPath().split(File.pathSeparator)) {
-				pathEntry = new File(entry);
-				if (pathEntry.exists() && pathEntry.isDirectory()) {
-					pyPathList.add(pathEntry.getAbsolutePath());
-				}
+		}
+		for (String entry : AppSettings.getScorePath().split(File.pathSeparator)) {
+			pathEntry = new File(entry.trim());
+			if (pathEntry.exists() && pathEntry.isDirectory()) {
+				pyPathList.add(pathEntry.getAbsolutePath());
 			}
-			for (String entry : AppSettings.getScorePath().split(File.pathSeparator)) {
-				pathEntry = new File(entry.trim());
-				if (pathEntry.exists() && pathEntry.isDirectory()) {
-					pyPathList.add(pathEntry.getAbsolutePath());
-				}
-			}
-
 		}
 	}
 
