@@ -35,6 +35,7 @@
 
 package ru.curs.celesta.dbutils;
 
+import java.io.Closeable;
 import java.sql.*;
 import java.util.*;
 import java.util.Map.Entry;
@@ -46,7 +47,7 @@ import ru.curs.celesta.score.*;
 /**
  * Базовый класс курсора для чтения данных из представлений.
  */
-public abstract class BasicCursor {
+public abstract class BasicCursor implements Closeable {
 
 	static final String SYSTEMUSERID = String.format("SYS%08X", (new Random()).nextInt());
 	static final SessionContext SYSTEMSESSION = new SessionContext(SYSTEMUSERID, "CELESTA");
