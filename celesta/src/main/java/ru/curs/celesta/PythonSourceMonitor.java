@@ -2,6 +2,7 @@ package ru.curs.celesta;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -16,6 +17,8 @@ final class PythonSourceMonitor {
 
 	private static final long POLL_INTERVAL = 10000;
 
+	private final Runnable hook;
+
 	private long timestamp = 0L;
 
 	// the flat list of monitored modules
@@ -24,7 +27,11 @@ final class PythonSourceMonitor {
 
 	private final Timer t = new Timer(true);
 
-	PythonSourceMonitor(Score s) {
+	PythonSourceMonitor(Score s, Runnable hook) {
+		if (hook == null)
+			throw new NullPointerException();
+		this.hook = hook;
+
 		// initializing the list of monitored paths
 		for (Grain g : s.getGrains().values())
 			// skipping the built-in system grain
@@ -36,8 +43,7 @@ final class PythonSourceMonitor {
 
 		// immediate first pass
 		reRead();
-		//System.out.println(moduleNames);
-		//System.out.println(modules);
+
 		// scheduling the poller
 		t.schedule(new TimerTask() {
 			@Override
@@ -45,6 +51,7 @@ final class PythonSourceMonitor {
 				reRead();
 			}
 		}, POLL_INTERVAL, POLL_INTERVAL);
+
 	}
 
 	private void addWithSubPackages(File p, String packageName) {
@@ -73,12 +80,25 @@ final class PythonSourceMonitor {
 
 	private void reRead() {
 		long max = timestamp;
+		File freshest = null;
 		for (File f : modules) {
 			long lm = f.lastModified();
-			if (lm > max)
+			if (lm > max) {
 				max = lm;
+				freshest = f;
+			}
 		}
-		timestamp = max;
+		if (timestamp != 0L && max > timestamp) {
+			Date newDate = new Date(max);
+			Date oldDate = new Date(timestamp);
+			System.out.printf("File timestamp change detected: '%s' --> %s, maximum timestamp was %s%n",
+					freshest.toString(), newDate.toString(), oldDate.toString());
+			timestamp = max;
+			hook.run();
+		} else {
+			timestamp = max;
+		}
+
 	}
 
 	public long getSourceTimestamp() {
