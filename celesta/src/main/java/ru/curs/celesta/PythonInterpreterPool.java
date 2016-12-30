@@ -48,6 +48,9 @@ public class PythonInterpreterPool {
 		List<String> pyPathList = new ArrayList<>();
 		initPyPathList(pyPathList);
 		sysState = Py.getSystemState();
+
+		sysState.getCodecState().setDefaultEncoding("UTF-8");
+
 		for (String path : pyPathList) {
 			PyString ppath = new PyString(path);
 			if (!sysState.path.contains(ppath))
