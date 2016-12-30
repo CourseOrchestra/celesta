@@ -13,6 +13,7 @@ import org.python.core.Py;
 import org.python.core.PyObject;
 import org.python.core.PyString;
 import org.python.core.PySystemState;
+import org.python.core.codecs;
 import org.python.util.PythonInterpreter;
 
 import ru.curs.celesta.score.Grain;
@@ -48,8 +49,6 @@ public class PythonInterpreterPool {
 		List<String> pyPathList = new ArrayList<>();
 		initPyPathList(pyPathList);
 		sysState = Py.getSystemState();
-
-		sysState.getCodecState().setDefaultEncoding("UTF-8");
 
 		for (String path : pyPathList) {
 			PyString ppath = new PyString(path);
@@ -92,6 +91,7 @@ public class PythonInterpreterPool {
 
 		activeInterpetersCount.incrementAndGet();
 		try (PythonInterpreter interp = new PooledPythonInterpreter(null, sysState)) {
+			codecs.setDefaultEncoding("UTF-8");
 			initPythonScore(interp);
 		}
 	}
@@ -111,6 +111,7 @@ public class PythonInterpreterPool {
 		PythonInterpreter result = interpreterPool.poll();
 		if (result == null) {
 			result = new PooledPythonInterpreter(null, sysState);
+			codecs.setDefaultEncoding("UTF-8");
 			reImportGrains(result);
 		}
 		activeInterpetersCount.incrementAndGet();
