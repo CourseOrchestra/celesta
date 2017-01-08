@@ -67,6 +67,10 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		}
 	}
 
+	public synchronized List<LyraFormData> getRows(int position) throws CelestaException {
+		return getRowsH(position, getGridHeight());
+	}
+
 	/**
 	 * Returns contents of grid given scrollbar's position.
 	 * 
@@ -75,17 +79,21 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * @throws CelestaException
 	 *             e. g. insufficient access rights
 	 */
-	public synchronized List<LyraFormData> getRows(int position) throws CelestaException {
+	public synchronized List<LyraFormData> getRowsH(int position, int h) throws CelestaException {
 		return reconnect(() -> {
 
 			BasicCursor c = rec();
 			actuateGridDriver(c);
 			if (gd.setPosition(position, c)) {
-				return returnRows(c);
+				return returnRows(c, h);
 			} else {
 				return Collections.emptyList();
 			}
 		} , Collections.emptyList());
+	}
+
+	public synchronized List<LyraFormData> getRows() throws CelestaException {
+		return getRowsH(getGridHeight());
 	}
 
 	/**
@@ -94,17 +102,21 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * @throws CelestaException
 	 *             e. g. insufficient user rights.
 	 */
-	public synchronized List<LyraFormData> getRows() throws CelestaException {
+	public synchronized List<LyraFormData> getRowsH(int h) throws CelestaException {
 		return reconnect(() -> {
 			BasicCursor bc = rec();
 			// TODO: optimize for reducing DB SELECT calls!
 			if (bc.navigate("=<-")) {
 				gd.setPosition(bc);
-				return returnRows(bc);
+				return returnRows(bc, h);
 			} else {
 				return Collections.emptyList();
 			}
 		} , Collections.emptyList());
+	}
+
+	public synchronized List<LyraFormData> setPosition(Object... pk) throws CelestaException {
+		return setPositionH(getGridHeight(), pk);
 	}
 
 	/**
@@ -118,7 +130,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * @throws ParseException
 	 *             something wrong
 	 */
-	public synchronized List<LyraFormData> setPosition(Object... pk) throws CelestaException {
+	public synchronized List<LyraFormData> setPositionH(int h, Object... pk) throws CelestaException {
 		return reconnect(() -> {
 			BasicCursor bc = rec();
 			actuateGridDriver(bc);
@@ -139,7 +151,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
 			if (bc.navigate("=<-")) {
 				gd.setPosition(bc);
-				return returnRows(bc);
+				return returnRows(bc, h);
 			} else {
 				return Collections.emptyList();
 			}
@@ -148,8 +160,8 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
 	}
 
-	private List<LyraFormData> returnRows(BasicCursor c) throws CelestaException {
-		final int h = getGridHeight();
+	private List<LyraFormData> returnRows(BasicCursor c, int h) throws CelestaException {
+
 		final String id = _getId();
 		final List<LyraFormData> result = new ArrayList<>(h);
 		final Map<String, LyraFormField> meta = getFieldsMeta();
