@@ -151,17 +151,20 @@ public class PythonInterpreterPool {
 	}
 
 	private void reImportGrains(PythonInterpreter interp) throws CelestaException {
-		try {
-			for (Grain g : score.getGrains().values())
-				if (!"celesta".equals(g.getName())) {
+		for (Grain g : score.getGrains().values())
+			if (!"celesta".equals(g.getName())) {
+				try {
 					String line = String.format("import %s", g.getName());
 					interp.exec(line);
+
+				} catch (Throwable e) {
+					System.out.println("Python interpreter initialization error:");
+					e.printStackTrace(System.out);
+					throw new CelestaException(
+							"Python interpreter initialization error: '%s' while importing grain %s. See stdout for details.",
+							e.getMessage(), g.getName());
 				}
-		} catch (Throwable e) {
-			System.out.println("Python interpreter initialization error:");
-			e.printStackTrace(System.out);
-			throw new CelestaException("Python interpreter initialization error. See stdout for details.");
-		}
+			}
 	}
 
 	private void initPythonScore(PythonInterpreter interp) throws CelestaException {
