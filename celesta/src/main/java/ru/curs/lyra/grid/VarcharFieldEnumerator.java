@@ -5,15 +5,6 @@ import java.math.BigInteger;
 import ru.curs.celesta.CelestaException;
 
 /**
- * Collator rules.
- */
-interface Rules {
-	String getRules();
-
-	String getName();
-}
-
-/**
  * Нумератор ключа с типом varchar.
  * 
  */

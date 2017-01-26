@@ -172,18 +172,17 @@ public class PythonInterpreterPool {
 		Connection conn = ConnectionPool.get();
 		CallContext context = new CallContext(conn, scontext);
 		try {
-			interp.exec("import sys");
-			interp.set("_ic", context);
-			interp.exec("sys.modules['initcontext'] = lambda: _ic");
-			for (Grain g : score.getGrains().values())
-				if (!"celesta".equals(g.getName())) {
-					String line = String.format("import %s", g.getName());
-					interp.exec(line);
-				}
-		} catch (Throwable e) {
-			System.out.println("Python interpreter initialization error:");
-			e.printStackTrace(System.out);
-			throw new CelestaException("Python interpreter initialization error. See stdout for details.");
+			try {
+				interp.exec("import sys");
+				interp.set("_ic", context);
+				interp.exec("sys.modules['initcontext'] = lambda: _ic");
+			} catch (Throwable e) {
+				System.out.println("Python interpreter initialization error:");
+				e.printStackTrace(System.out);
+				throw new CelestaException("Python interpreter initialization error: %s. See stdout for details.",
+						e.getMessage());
+			}
+			reImportGrains(interp);
 		} finally {
 			context.closeCursors();
 			ConnectionPool.putBack(conn);
