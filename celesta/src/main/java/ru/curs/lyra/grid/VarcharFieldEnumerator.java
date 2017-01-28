@@ -25,7 +25,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 						+ "<'<'<'='<'>'<'«'<'»'<'§'<'©'<'¬'<'®'<'°'<'†'<'‡'<'•'<'‰'<0<1<2<3<4<5<6<7<8<9"
 						+ "<a,A<b,B<c,C<d,D<e,E<f,F<g,G<h,H<i,I<j,J<k,K<l,L<m,M<n,N;№<o,O<p,P<q,Q<r,R<s,S<"
 						+ "t,T<™<u,U<v,V<w,W<x,X<y,Y<z,Z"
-						// <и,И<й,Й<
+				// <и,И<й,Й<
 						+ "<а,А<б,Б<в,В<г,Г<д,Д<е,Е;ё,Ё<ж,Ж<з,З<и,И;й,Й<к,К<л,Л<м,М<н,Н<о,О<п,П<р,Р<с,С<"
 						+ "т,Т<у,У<ф,Ф<х,Х<ц,Ц<ч,Ч<ш,Ш<щ,Щ<ъ,Ъ<ы,Ы<ь,Ь<э,Э<ю,Ю<я,Я";
 			}
@@ -206,7 +206,8 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 		for (int j = 0; j < 3; j++) {
 			r = components[j];
 			for (int i = 0; i < m; i++) {
-				r = r.subtract(j == 0 ? BigInteger.ONE : BigInteger.ZERO);
+				if (j == 0)
+					r = r.subtract(BigInteger.ONE);
 				cr = r.divideAndRemainder(q[i][j]);
 				r = cr[1];
 				int c = cr[0].intValue();
@@ -223,12 +224,13 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 			}
 		}
 		// now reconstruct the string
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < m; i++) {
+		char[] buf = new char[m];
+		int i;
+		for (i = 0; i < m; i++) {
 			if (arr[i][0] < 0)
 				break;
-			sb.append(collator.getElement(arr[i][0], arr[i][1], arr[i][2]));
+			buf[i] = collator.getElement(arr[i][0], arr[i][1], arr[i][2]);
 		}
-		this.value = sb.toString();
+		this.value = new String(buf, 0, i);
 	}
 }

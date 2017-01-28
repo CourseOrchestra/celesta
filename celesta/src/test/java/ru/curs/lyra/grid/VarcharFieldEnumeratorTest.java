@@ -284,4 +284,16 @@ public class VarcharFieldEnumeratorTest {
 		assertEquals("", fe.getValue());
 
 	}
+
+	@Test
+	public void test9() throws CelestaException {
+		String val = "В начале июля, в чрезвычайно жаркое время, под вечер, один молодой человек вышел из своей каморки, которую нанимал от жильцов в С — м переулке, на улицу и медленно, как бы в нерешимости, отправился к ";
+		VarcharFieldEnumerator e = new VarcharFieldEnumerator(200);
+		e.setValue(val);
+		BigInteger ord = e.getOrderValue();
+
+		VarcharFieldEnumerator e2 = new VarcharFieldEnumerator(200);
+		e2.setOrderValue(ord);
+		assertEquals(val, e2.getValue());
+	}
 }
