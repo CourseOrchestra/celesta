@@ -114,9 +114,15 @@ final class DBColumnInfo {
 
 		// Если в данных пустой default, а в метаданных -- не пустой -- то
 		// не проверяем
-		if (defaultValue.isEmpty())
-			return value.getDefaultValue() == null;
-
+		if (defaultValue.isEmpty()) {
+			if (type == DateTimeColumn.class) {
+				//do not forget DateTime's special case
+				DateTimeColumn dtc = (DateTimeColumn) value;
+				return dtc.getDefaultValue() == null && dtc.isGetdate() == false;
+			} else {
+				return value.getDefaultValue() == null;
+			}
+		}
 		// Случай непустого default-значения в данных.
 		return checkDefault(value);
 	}
@@ -125,31 +131,26 @@ final class DBColumnInfo {
 		boolean result;
 		if (type == BooleanColumn.class) {
 			try {
-				result = BooleanColumn.parseSQLBool(defaultValue).equals(
-						value.getDefaultValue());
+				result = BooleanColumn.parseSQLBool(defaultValue).equals(value.getDefaultValue());
 			} catch (ParseException e) {
 				result = false;
 			}
 		} else if (type == IntegerColumn.class) {
-			result = Integer.valueOf(defaultValue).equals(
-					value.getDefaultValue());
+			result = Integer.valueOf(defaultValue).equals(value.getDefaultValue());
 		} else if (type == FloatingColumn.class) {
-			result = Double.valueOf(defaultValue).equals(
-					value.getDefaultValue());
+			result = Double.valueOf(defaultValue).equals(value.getDefaultValue());
 		} else if (type == DateTimeColumn.class) {
 			if ("GETDATE()".equalsIgnoreCase(defaultValue))
 				result = ((DateTimeColumn) value).isGetdate();
 			else {
 				try {
-					result = DateTimeColumn.parseISODate(defaultValue).equals(
-							value.getDefaultValue());
+					result = DateTimeColumn.parseISODate(defaultValue).equals(value.getDefaultValue());
 				} catch (ParseException e) {
 					result = false;
 				}
 			}
 		} else if (type == StringColumn.class) {
-			result = defaultValue.equals(StringColumn
-					.quoteString(((StringColumn) value).getDefaultValue()));
+			result = defaultValue.equals(StringColumn.quoteString(((StringColumn) value).getDefaultValue()));
 		} else {
 			result = defaultValue.equals(value.getDefaultValue());
 		}
@@ -188,8 +189,7 @@ final class DBIndexInfo {
 	}
 
 	boolean reflects(Index ind) {
-		boolean result = ind.getName().equals(indexName)
-				&& ind.getTable().getName().equals(tableName);
+		boolean result = ind.getName().equals(indexName) && ind.getTable().getName().equals(tableName);
 		if (!result)
 			return false;
 		Collection<String> dbIndexCols = columnNames;
@@ -234,8 +234,7 @@ final class DBPKInfo {
 	}
 
 	boolean reflects(Table t) {
-		boolean result = t.getPkConstraintName().equals(name)
-				&& (columnNames.size() == t.getPrimaryKey().size());
+		boolean result = t.getPkConstraintName().equals(name) && (columnNames.size() == t.getPrimaryKey().size());
 		Iterator<String> i1 = t.getPrimaryKey().keySet().iterator();
 		Iterator<String> i2 = columnNames.iterator();
 		while (result && i1.hasNext()) {
