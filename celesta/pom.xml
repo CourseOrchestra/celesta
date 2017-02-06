@@ -21,7 +21,7 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
-			<url>file://${project.basedir}/lib</url>
+			<url>http://172.16.1.224:8081/repository/curs</url>
 		</repository>
 	</repositories>
 	<dependencies>
@@ -130,6 +130,26 @@
 					</archive>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>create library zip</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<finalName>Libraries-${project.version}.${revision.number}_build${build.number}</finalName>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>src/assembly/lib_bin.xml</descriptor>
+							</descriptors>
+							<attach>false</attach>
+						</configuration>
+					</execution>
+					</executions>	
+					</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
