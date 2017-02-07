@@ -20,7 +20,7 @@
 		<dependency>
 			<groupId>ru.curs</groupId>
 			<artifactId>celesta</artifactId>
-			<version>6.0</version>
+			<version>6.0u1</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
