@@ -4,7 +4,7 @@
 	<groupId>ru.curs</groupId>
 	<artifactId>celesta</artifactId>
 	<packaging>jar</packaging>
-	<version>6.0</version>
+	<version>6.0u1</version>
 	<name>celesta</name>
 	<url>http://corchestra.ru</url>
 	<licenses>
