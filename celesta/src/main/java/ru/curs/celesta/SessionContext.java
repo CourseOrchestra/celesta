@@ -8,14 +8,27 @@ import org.python.core.PyString;
  * Контекст сессии.
  */
 public final class SessionContext {
+	// Session expiration time (40 minutes by default)
+	private final static long EXPIRATION_TIME = 40 * 60 * 1000;
 	private final String userId;
 	private final String sessionId;
 	private final PyDictionary data = new PyDictionary();
 	private CelestaMessage.MessageReceiver receiver = null;
 
+	private long expirationTime;
+
 	public SessionContext(String userId, String sessionId) {
 		this.userId = userId;
 		this.sessionId = sessionId;
+		touch();
+	}
+
+	void touch() {
+		expirationTime = System.currentTimeMillis() + EXPIRATION_TIME;
+	}
+
+	boolean isExpired() {
+		return expirationTime < System.currentTimeMillis();
 	}
 
 	void removeForms() {

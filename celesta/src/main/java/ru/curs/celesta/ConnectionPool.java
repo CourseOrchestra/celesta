@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,7 +17,7 @@ import ru.curs.celesta.dbutils.DBAdaptor;
  */
 public final class ConnectionPool {
 
-	private static final Queue<Connection> POOL = new LinkedList<>();
+	private static final ConcurrentLinkedQueue<Connection> POOL = new ConcurrentLinkedQueue<>();
 
 	private ConnectionPool() {
 
@@ -28,8 +29,8 @@ public final class ConnectionPool {
 	 * @throws CelestaException
 	 *             В случае, если новое соединение не удалось создать.
 	 */
-	public static synchronized Connection get() throws CelestaException {
-		DBAdaptor db = DBAdaptor.getAdaptor();
+	public static Connection get() throws CelestaException {
+		final DBAdaptor db = DBAdaptor.getAdaptor();
 		Connection c = POOL.poll();
 		while (c != null) {
 			try {
@@ -44,20 +45,16 @@ public final class ConnectionPool {
 		try {
 			Class.forName(AppSettings.getDbClassName());
 			if (AppSettings.getDBLogin().isEmpty()) {
-				c = DriverManager.getConnection(AppSettings
-						.getDatabaseConnection());
+				c = DriverManager.getConnection(AppSettings.getDatabaseConnection());
 			} else {
-				c = DriverManager.getConnection(
-						AppSettings.getDatabaseConnection(),
-						AppSettings.getDBLogin(), AppSettings.getDBPassword());
+				c = DriverManager.getConnection(AppSettings.getDatabaseConnection(), AppSettings.getDBLogin(),
+						AppSettings.getDBPassword());
 			}
 			c.setAutoCommit(false);
 			return c;
 		} catch (SQLException | ClassNotFoundException e) {
-			throw new CelestaException(
-					"Could not connect to %s with error: %s",
-					PasswordHider.maskPassword(AppSettings
-							.getDatabaseConnection()), e.getMessage());
+			throw new CelestaException("Could not connect to %s with error: %s",
+					PasswordHider.maskPassword(AppSettings.getDatabaseConnection()), e.getMessage());
 		}
 	}
 
@@ -68,7 +65,7 @@ public final class ConnectionPool {
 	 * @param c
 	 *            возвращаемое соединение.
 	 */
-	public static synchronized void putBack(Connection c) {
+	public static void putBack(Connection c) {
 		// Вставляем только хорошие соединения...
 		try {
 			if (c != null) {
@@ -101,7 +98,7 @@ public final class ConnectionPool {
 	/**
 	 * Очищает пул.
 	 */
-	public static synchronized void clear() {
+	public static void clear() {
 		Connection c = POOL.poll();
 		while (c != null) {
 			try {
@@ -123,15 +120,12 @@ final class PasswordHider {
 	// Пароль Oracle всегда между / и @ (и не может содержать @).
 	private static final Pattern ORA_PATTERN = Pattern.compile("/[^@]+@");
 	// В MS SQL всё продумано и если пароль содержит ;, она меняется на {;}
-	private static final Pattern MSSQL_PATTERN = Pattern.compile(
-			"(password)=([^{;]|(\\{(;\\})|[^;]?))+(;|$)",
+	private static final Pattern MSSQL_PATTERN = Pattern.compile("(password)=([^{;]|(\\{(;\\})|[^;]?))+(;|$)",
 			Pattern.CASE_INSENSITIVE);
 	// В MySQL JDBC-URL не сработает правильно, если пароль содержит &
-	private static final Pattern MYSQL_PATTERN = Pattern.compile(
-			"(password)=[^&]+(&|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern MYSQL_PATTERN = Pattern.compile("(password)=[^&]+(&|$)", Pattern.CASE_INSENSITIVE);
 	// А это на случай неизвестного науке JDBC-драйвера
-	private static final Pattern GENERIC_PATTERN = Pattern.compile(
-			"(password)=.+$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern GENERIC_PATTERN = Pattern.compile("(password)=.+$", Pattern.CASE_INSENSITIVE);
 
 	private PasswordHider() {
 
@@ -160,8 +154,7 @@ final class PasswordHider {
 			while (m.find()) {
 				m.appendReplacement(sb, m.group(1) + "=*****" + m.group(5));
 			}
-		} else if (url.toLowerCase().startsWith("jdbc:mysql")
-				|| url.toLowerCase().startsWith("jdbc:postgresql")) {
+		} else if (url.toLowerCase().startsWith("jdbc:mysql") || url.toLowerCase().startsWith("jdbc:postgresql")) {
 			m = MYSQL_PATTERN.matcher(url);
 			while (m.find()) {
 				m.appendReplacement(sb, m.group(1) + "=*****" + m.group(2));

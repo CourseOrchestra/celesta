@@ -93,7 +93,26 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 	static final String ALTER_TABLE = "alter table ";
 	static final Pattern HEXSTR = Pattern.compile("0x(([0-9A-Fa-f][0-9A-Fa-f])+)");
 
-	private static DBAdaptor db;
+	private final static DBAdaptor db;
+	static {
+		switch (AppSettings.getDBType()) {
+		case MSSQL:
+			db = new MSSQLAdaptor();
+			break;
+		case MYSQL:
+			db = new MySQLAdaptor();
+			break;
+		case ORACLE:
+			db = new OraAdaptor();
+			break;
+		case POSTGRES:
+			db = new PostgresAdaptor();
+			break;
+		case UNKNOWN:
+		default:
+			db = null;
+		}
+	}
 
 	/**
 	 * Фабрика классов адаптеров подходящего под текущие настройки типа.
@@ -103,25 +122,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 	 *             не поддерживаемого типа).
 	 */
 	public static DBAdaptor getAdaptor() throws CelestaException {
-		if (db == null) {
-			switch (AppSettings.getDBType()) {
-			case MSSQL:
-				db = new MSSQLAdaptor();
-				break;
-			case MYSQL:
-				db = new MySQLAdaptor();
-				break;
-			case ORACLE:
-				db = new OraAdaptor();
-				break;
-			case POSTGRES:
-				db = new PostgresAdaptor();
-				break;
-			case UNKNOWN:
-			default:
-				throw new CelestaException("Unknown or unsupported database type.");
-			}
-		}
+		if (db == null)
+			throw new CelestaException("Unknown or unsupported database type.");
 		return db;
 	}
 
