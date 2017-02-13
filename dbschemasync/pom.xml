@@ -21,7 +21,7 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
-			<url>http://172.16.1.224:8081/repository/curs</url>
+			<url>http://nexus.curs.ru:8081/repository/curs</url>
 		</repository>
 	</repositories>
 	<dependencies>
