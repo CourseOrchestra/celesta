@@ -13,6 +13,12 @@
 	<properties>
 		<version>${project.version}</version>
 	</properties>
+	<distributionManagement>
+		<repository>
+			<id>curs</id>
+			<url>http://nexus.curs.ru:8081/repository/curs</url>
+		</repository>
+	</distributionManagement>
 	<repositories>
 		<repository>
 			<id>lib</id>
