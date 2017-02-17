@@ -49,8 +49,6 @@ public abstract class BasicLyraForm {
 	/**
 	 * Adds all bound fields to meta information using their CelestaDoc.
 	 * 
-	 * @throws ParseException
-	 *             duplicate field names
 	 * @throws CelestaException
 	 *             JSON Error
 	 */
@@ -121,8 +119,6 @@ public abstract class BasicLyraForm {
 	 * 
 	 * @param name
 	 *            Name of a table column.
-	 * @throws ParseException
-	 *             No column/unbound field with such name found.
 	 * @throws CelestaException
 	 *             JSON error in CelestaDoc.
 	 */

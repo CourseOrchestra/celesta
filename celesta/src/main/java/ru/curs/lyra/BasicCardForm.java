@@ -28,8 +28,6 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * 
 	 * @throws CelestaException
 	 *             Ошибка извлечения данных из базы.
-	 * @throws ParseException
-	 *             Ошибка сериализации.
 	 */
 	public String findRec() throws CelestaException {
 		ByteArrayOutputStream result = new ByteArrayOutputStream();
@@ -50,8 +48,6 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * 
 	 * @throws CelestaException
 	 *             Ошибка извлечения данных из базы.
-	 * @throws ParseException
-	 *             Ошибка сериализации.
 	 */
 	public synchronized String revert(String data) throws CelestaException {
 
@@ -74,7 +70,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * Перемещает курсор.
 	 * 
 	 * @param cmd
-	 *            Команда перемещения (комбинация знаков <, >, =, +, -, см.
+	 *            Команда перемещения (комбинация знаков &lt;, &gt;, =, +, -, см.
 	 *            документацию по методу курсора navigate)
 	 * 
 	 * @param data
@@ -82,8 +78,6 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * 
 	 * @throws CelestaException
 	 *             Ошибка извлечения данных из базы.
-	 * @throws ParseException
-	 *             Ошибка сериализации.
 	 */
 	public synchronized String move(String cmd, String data) throws CelestaException {
 		try {
@@ -109,8 +103,6 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * 
 	 * @throws CelestaException
 	 *             Ошибка извлечения данных из базы.
-	 * @throws ParseException
-	 *             Ошибка сериализации.
 	 */
 	public synchronized String newRec() throws CelestaException {
 		Cursor c = getCursor();
@@ -133,8 +125,6 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * 
 	 * @throws CelestaException
 	 *             Ошибка извлечения данных из базы.
-	 * @throws ParseException
-	 *             Ошибка сериализации.
 	 */
 	public synchronized String deleteRec(String data) throws CelestaException {
 		Cursor c = getCursor();

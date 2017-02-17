@@ -127,8 +127,6 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * 
 	 * @throws CelestaException
 	 *             e. g. insufficient access rights
-	 * @throws ParseException
-	 *             something wrong
 	 */
 	public synchronized List<LyraFormData> setPositionH(int h, Object... pk) throws CelestaException {
 		return reconnect(() -> {
