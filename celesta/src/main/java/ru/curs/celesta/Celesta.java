@@ -49,14 +49,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,9 +75,6 @@ import ru.curs.celesta.score.Score;
  * Корневой класс приложения.
  */
 public final class Celesta {
-
-	//Expired sessions check interval.
-	private static final long CHECK_INTERVAL = 15 * 60 * 1000;
 	private static final String CELESTA_IS_ALREADY_INITIALIZED = "Celesta is already initialized.";
 	private static final String CELESTA_IS_NOT_INITIALIZED = "Celesta is not initialized, use "
 			+ "one of 'initialize' methods instead.";
@@ -95,8 +89,6 @@ public final class Celesta {
 	private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
 	private final ProfilingManager profiler = new ProfilingManager();
-
-	private final Timer t = new Timer(true);
 
 	private Celesta(boolean initInterpeterPool) throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
@@ -131,24 +123,6 @@ public final class Celesta {
 			interpreterPool = null;
 			System.out.println("Celesta initialization: phase 4/4 Jython interpreters pool initialization...skipped.");
 		}
-
-		t.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				final Iterator<SessionContext> each = sessions.values().iterator();
-				while (each.hasNext()) {
-					SessionContext sc = each.next();
-					if (sc.isExpired()) {
-						each.remove();
-						try {
-							SessionLogManager.logLogout(sc, true);
-						} catch (CelestaException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			}
-		}, CHECK_INTERVAL, CHECK_INTERVAL);
 	}
 
 	/**
@@ -327,7 +301,7 @@ public final class Celesta {
 			SessionContext sesContext = sessions.get(sesId);
 			if (sesContext == null)
 				throw new CelestaException("Session ID=%s is not logged in", sesId);
-			sesContext.touch();
+
 			sesContext.setMessageReceiver(rec);
 
 			Connection conn = ConnectionPool.get();
@@ -369,7 +343,6 @@ public final class Celesta {
 				context.closeCursors();
 				ConnectionPool.putBack(conn);
 				contexts.remove(context);
-				sesContext.touch();
 				sessions.putIfAbsent(sesId, sesContext);
 			}
 
