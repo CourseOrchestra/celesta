@@ -274,6 +274,7 @@ public abstract class BasicCursor implements Closeable {
 				previousCursor.nextCursor = nextCursor;
 			if (nextCursor != null)
 				nextCursor.previousCursor = previousCursor;
+			context.removeFromCache(this);
 			context.decCursorCount();
 			close(set, forwards, backwards, here, first, last, count, position);
 		}
