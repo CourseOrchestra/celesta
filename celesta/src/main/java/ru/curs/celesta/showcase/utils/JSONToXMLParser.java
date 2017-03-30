@@ -1,6 +1,7 @@
 package ru.curs.celesta.showcase.utils;
 
 import java.io.*;
+import java.util.*;
 
 import javax.xml.parsers.*;
 import javax.xml.transform.*;
@@ -23,6 +24,7 @@ public class JSONToXMLParser {
 	private Transformer t;
 	private final JSONTokener jt;
 	private JSONObject jo = null;
+	private JSONObject templateJOInitial = new JSONObject();
 	private StringBuffer sbuf;
 	private Boolean vBool = false;
 	private boolean bLeft = false;
@@ -50,6 +52,45 @@ public class JSONToXMLParser {
 
 		if (newJson.contains("{}")) {
 			newJson = newJson.replaceAll("[{][}]", "{'myTagForResolvingProblem'='2'}");
+		}
+
+		// Обработка тега <template> для объекта Chart
+		if (newJson.contains("chartsettings") && newJson.contains("template")
+				&& newJson.contains("plot")) {
+			try {
+				JSONObject jsonSerg = new JSONObject(newJson);
+				List<String> arList = new ArrayList<>();
+				List<JSONObject> jsonList = new ArrayList<>();
+				String[] ar = JSONObject.getNames(jsonSerg);
+				arList.add(ar[0]);
+				jsonSerg = jsonSerg.getJSONObject(ar[0]);
+				ar = JSONObject.getNames(jsonSerg);
+				jsonSerg = jsonSerg.getJSONObject(ar[0]);
+				arList.add(ar[0]);
+				ar = JSONObject.getNames(jsonSerg);
+				for (String ttt : ar) {
+					arList.add(ttt);
+					jsonList.add(jsonSerg.getJSONObject(ttt));
+				}
+
+				JSONObject templateJO = new JSONObject();
+				templateJO.put("myChartTemplateTag", "sergio");
+				JSONObject newJO = new JSONObject();
+				Map<String, JSONObject> mapSerg = new HashMap<>();
+				for (int kkk = arList.size() - 1; kkk >= 2; kkk--) {
+					mapSerg.put(arList.get(kkk), jsonList.get(kkk - 2));
+					if ("template".equals(arList.get(kkk)))
+						templateJOInitial = jsonList.get(kkk - 2);
+				}
+				mapSerg.put("template", templateJO);
+				newJO.put(arList.get(1), mapSerg);
+				JSONObject newJO1 = new JSONObject();
+				newJO = newJO1.put(arList.get(0), newJO);
+				newJson = newJO.toString();
+			} catch (JSONException e1) {
+				// TODO Auto-generated catch block
+				System.out.println(e1);
+			}
 		}
 
 		jt = new JSONTokener(newJson);
@@ -131,6 +172,21 @@ public class JSONToXMLParser {
 			String str2 = outString.substring(ind1 + str.length(), outString.length()).trim();
 			outString = str1 + str2;
 		}
+
+		while (outString.contains("myChartTemplateTag")) {
+			String strstr = "<myChartTemplateTag>";
+			String str = "</myChartTemplateTag>";
+			int ind = outString.indexOf("<myChartTemplateTag>");
+			int ind1 = outString.indexOf("</myChartTemplateTag>");
+			String str100 = outString.substring(0, ind + strstr.length()).trim();
+			String str200 = outString.substring(ind1, outString.length()).trim();
+			outString = str100 + str200;
+			outString =
+				outString.replace("<myChartTemplateTag></myChartTemplateTag>",
+						templateJOInitial.toString());
+		}
+		if (outString.contains("True") || outString.contains("False"))
+			outString = outString.replace("True", "true").replace("False", "false");
 
 		outString = outString.replaceFirst("<[?]xml(.)*[?]>", "");
 		outString = outString.trim();
