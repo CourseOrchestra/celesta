@@ -185,8 +185,6 @@ public class JSONToXMLParser {
 				outString.replace("<myChartTemplateTag></myChartTemplateTag>",
 						templateJOInitial.toString());
 		}
-		if (outString.contains("True") || outString.contains("False"))
-			outString = outString.replace("True", "true").replace("False", "false");
 
 		outString = outString.replaceFirst("<[?]xml(.)*[?]>", "");
 		outString = outString.trim();
