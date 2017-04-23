@@ -1,24 +1,53 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	
 	<groupId>ru.curs</groupId>
 	<artifactId>celesta</artifactId>
-	<packaging>jar</packaging>
+	<!--<version>6.0RC1</version>-->
 	<version>6.0</version>
 	<name>celesta</name>
-	<url>http://corchestra.ru</url>
+	<description>celesta - GPL platform for business logic development</description>
+	<packaging>jar</packaging>
+	<url>https://share.curs.ru/wiki/index.php/Celesta</url>
+	
+	<organization>
+		<name>CURS</name>
+		<url>http://corchestra.com</url>
+	</organization>
+	
+	<scm>
+		<connection>https://share.curs.ru/svn/celesta/trunk/</connection>
+		<url>https://svn.code.sf.net/p/kurs-celesta/code/trunk/</url>
+	</scm>
+	
 	<licenses>
-		<license></license>
+		<license>
+		<name>GNU General Public License (GPL), Version 3</name>
+		<url>http://www.gnu.org/licenses/gpl.txt</url>
+		<distribution>repo</distribution>
+		</license>
 	</licenses>
+	
+	<developers>
+		<developer>
+			<name>Ivan Ponomarev</name>
+			<email>ponomarev@corchestra.ru</email>
+		</developer>
+	</developers>
+	
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<version>${project.version}</version>
 	</properties>
+	
 	<distributionManagement>
 		<repository>
 			<id>curs</id>
 			<url>http://nexus.curs.ru:8081/repository/curs</url>
 		</repository>
 	</distributionManagement>
+	
 	<repositories>
 		<repository>
 			<id>lib</id>
@@ -33,6 +62,57 @@
 			<url>http://nexus.curs.ru:8081/repository/curs</url>
 		</repository>
 	</repositories>
+	
+	<build>
+		<plugins>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-source-plugin</artifactId>
+			<version>2.2.1</version>
+			<configuration>
+				<attach>true</attach>
+			</configuration>
+			<executions>
+				<execution>
+					<id>attach-sources</id>
+					<goals>
+						<goal>jar</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-javadoc-plugin</artifactId>
+			<version>2.9.1</version>
+			<configuration>
+				<show>public</show>
+				<attach>true</attach>
+				<maxmemory>1024m</maxmemory>
+				<additionalparam>-Xdoclint:none</additionalparam>
+			</configuration>
+			<executions>
+				<execution>
+					<goals>
+						<goal>jar</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+		<plugin>
+			<groupId>org.sonatype.plugins</groupId>
+			<artifactId>nexus-staging-maven-plugin</artifactId>
+			<version>1.6.3</version>
+			<extensions>true</extensions>
+			<configuration>
+				<serverId>ossrh</serverId>
+				<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+				<autoReleaseAfterClose>true</autoReleaseAfterClose>
+			</configuration>
+		</plugin>
+			
+		</plugins>
+	</build>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -84,6 +164,33 @@
 		</dependency>
 	</dependencies>
 	<profiles>
+		<profile>
+			<id>release</id>
+			<activation>
+				<property>
+					<name>sign</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.4</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<profile>
 			<id>jenkins</id>
 			<build>
@@ -284,7 +391,7 @@
 							</archive>
 						</configuration>
 					</plugin>
-					<plugin>
+					<!--<plugin>
 						<artifactId>maven-assembly-plugin</artifactId>
 						<executions>
 							<execution>
@@ -302,7 +409,7 @@
 								</configuration>
 							</execution>
 						</executions>
-					</plugin>
+					</plugin>-->
 				</plugins>
 				<pluginManagement>
 					<plugins>
