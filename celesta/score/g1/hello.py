@@ -1,9 +1,7 @@
 # coding=UTF-8
 print "hello unit called"
-import initcontext
-print initcontext()
-    
-from g1._g1_orm import aaCursor 
+
+from g1._g1_orm import aaCursor
 from g1._g1_orm import adressesCursor
 from g2._g2_orm import bCursor
 from g3._g3_orm import cCursor
@@ -18,11 +16,11 @@ import random
 
 def hello(context, arg):
     print 'Hello, world from Celesta Python procedure.'
-    print initcontext()
-    
+
+
     print 'user %s' % context.userId
     print 'Argument passed was "%s".' % arg
-    
+
     c = cCursor(context)
     print 'c.count() = %d' % c.count()
     c.descr = 'ab'
@@ -40,9 +38,9 @@ def hello(context, arg):
     c.insert()
     insertedId = c.idc
     c.update()
-    
-    
-    print '>>>> id: %d, %d' % (c.idc, c.bbb)    
+
+
+    print '>>>> id: %d, %d' % (c.idc, c.bbb)
     c.first()
     c.get(insertedId)
     c.calcdat()
@@ -61,23 +59,23 @@ def hello(context, arg):
     c.get(insertedId)
     c.calcdat()
     ins = BufferedReader(InputStreamReader(c.dat.getInStream(), 'utf-8'))
-    print '%s ... %s' % (ins.readLine(), c.longtext) 
-    
+    print '%s ... %s' % (ins.readLine(), c.longtext)
+
     c.dat = None
     c.update()
-    
+
     # return
-    
+
     aa = aaCursor(context)
     aa.deleteAll()
     for i in range(1, 20):
-        aa.idaa = i 
+        aa.idaa = i
         aa.idc = i * i
         aa.textvalue = 'abc'
         aa.realvalue = 3.14
         if not aa.tryInsert():
             aa.update()
-    
+
     aa.first()
     aa.realvalue = None
     aa.update()
@@ -94,29 +92,29 @@ def hello(context, arg):
     print 'PRE B XREC: %s, REC: %s' % (b.getXRec().asCSVLine(), b.asCSVLine())
     b.insert()
     oldid = b.idb
-    
+
     print 'POST B XREC: %s, REC: %s' % (b.getXRec().asCSVLine(), b.asCSVLine())
     b.idb = None
     b.descr = 'CD'
     print 'PRE B XREC: %s, REC: %s' % (b.getXRec().asCSVLine(), b.asCSVLine())
     b.insert()
     print 'POST B XREC: %s, REC: %s' % (b.getXRec().asCSVLine(), b.asCSVLine())
-    
+
     b.get(oldid)
     b.descr = 'EF'
-#    b.ida = 1
+    #    b.ida = 1
     print 'PRE UPDATE B XREC: %s, REC: %s' % (b.getXRec().asCSVLine(), b.asCSVLine())
     b.update()
     print 'POST UPDATE B XREC: %s, REC: %s' % (b.getXRec().asCSVLine(), b.asCSVLine())
 
     aa.idaa = 1
-    aa.delete()  
+    aa.delete()
 
     aa.limit(3, 1)
     for aa in aa.iterate():  # while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)
     print '---'
-    
+
     aa.limit(5, 5)
     for aa in aa.iterate():  # while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)
@@ -129,46 +127,46 @@ def hello(context, arg):
     aa.limit(3, 0)
     for aa in aa.iterate():  # while aa.next():
         print "%s : %s" % (aa.idaa , aa.idc)
-        
+
     adresses = adressesCursor(context)
     adresses.postalcode = '11111'
     adresses.building = '11'
     adresses.flat = '2'
     adresses.delete()
 
-    
+
     adresses.init()
     adresses.country = 'Россия'
     adresses.city = 'Москва'
     adresses.street = 'Ленинский пр-т'
     adresses.insert()
     adresses.clear()
-    
+
     adresses.get('11111', '11', '2')
     print adresses.asCSVLine()
     adresses.country = 'Украина'
     adresses.update()
     print adresses.asCSVLine()
     adresses.get('11111', '11', '2')
-    print adresses.asCSVLine()    
-    
+    print adresses.asCSVLine()
+
     adresses2 = adressesCursor(context)
     adresses2.copyFieldsFrom(adresses)
     adresses2.city = 'bbbbb'
     adresses2.update()
-    
+
     # comment the line below to check version check failure
     adresses.get('11111', '11', '2')
-    print adresses.asCSVLine()    
+    print adresses.asCSVLine()
     adresses.city = 'bbcc'
     adresses.update()
-    
+
     adresses.setFilter('country', "!null|'ss'")
     adresses.setRange('building', '1', '11')
     adresses.first()
     adresses.navigate('=')
     adresses.last()
-    
+
     testview = testviewCursor(context)
     testview.orderBy("f1")
     testview.limit(2, 2)
@@ -176,15 +174,15 @@ def hello(context, arg):
         print testview.asCSVLine()
         print '%s - %s - %s' % (testview.fieldAlias, testview.checksum, testview.f1)
     testview.limit(0, 0)
-    
+
     print('---')
-    
+
     testview.setFilter('fieldAlias', "%'g1'%")
     for testview in testview.iterate():
         print '%s - %s - %s' % (testview.fieldAlias, testview.checksum, testview.f1)
     print testview.count()
 
-  
+
     c.reset()
     c.setFilter('doublefield', ">12")
     c.setFilter('datefield', "'20150201'..")
@@ -200,26 +198,26 @@ def hello(context, arg):
     print c.idc
     c.navigate('<')
     print c.idc
-    
+
     print 'USER \t| PID'
     print '----------------'
     for cc in context.celesta.activeContexts:
         print '%s \t| %s' % (cc.userId, cc.getDBPid())
-    
+
     c.reset()
     c.setRange('idc', 5)
     for c in c.iterate():
         print c.asCSVLine()
-        
+
     c.setRange('idc', 6)
     for c in c.iterate():
         print c.asCSVLine()
-    
+
     c.setFilter('idc', '5..7')
     for c in c.iterate():
         print c.asCSVLine()
-    
+
     print 'Python procedure finished.'
-    
+
 def testTrigger(rec):
     print 'Test trigger is run with idc = %s' % rec.idc

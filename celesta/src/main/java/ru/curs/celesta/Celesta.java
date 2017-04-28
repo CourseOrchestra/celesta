@@ -518,16 +518,27 @@ public final class Celesta {
 	}
 
 	static String getMyPath() {
-		String path = Celesta.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-		File f = new File(path.replace("%20", " "));
-		if (f.getAbsolutePath().toLowerCase().endsWith(".jar"))
-			return f.getParent() + File.separator;
-		else {
-			// NB второй вариант возвращает папку выше папки bin, если имеем
-			// дело с исходниками, построенными и отлаживаемыми в Eclipse
-			// return f.getAbsolutePath() + File.separator;
-			return f.getParent() + File.separator;
+
+		final String result;
+
+		String path = Celesta.class.getResource(Celesta.class.getSimpleName() + ".class").getPath();
+		path = path.replace("%20", " ");
+
+		if (path.contains(".jar")) {
+			Pattern pattern = Pattern.compile("file:(.+)[\\\\][^\\\\]+\\.jar");
+			Matcher matcher = pattern.matcher(path);
+
+			if (matcher.find()) {
+				path = matcher.group(1);
+			}
+
+			result = path + File.separator;
+		} else {
+			File f = new File(path).getParentFile();
+			result = f.getParent() + File.separator;
 		}
+
+		return result;
 	}
 
 	/**

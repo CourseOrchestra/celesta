@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<groupId>ru.curs</groupId>
 	<artifactId>celesta</artifactId>
 	<!--<version>6.0RC1</version>-->
@@ -10,17 +10,17 @@
 	<description>celesta - GPL platform for business logic development</description>
 	<packaging>jar</packaging>
 	<url>https://share.curs.ru/wiki/index.php/Celesta</url>
-	
+
 	<organization>
 		<name>CURS</name>
 		<url>http://corchestra.com</url>
 	</organization>
-	
+
 	<scm>
 		<connection>https://share.curs.ru/svn/celesta/trunk/</connection>
 		<url>https://svn.code.sf.net/p/kurs-celesta/code/trunk/</url>
 	</scm>
-	
+
 	<licenses>
 		<license>
 		<name>GNU General Public License (GPL), Version 3</name>
@@ -28,26 +28,26 @@
 		<distribution>repo</distribution>
 		</license>
 	</licenses>
-	
+
 	<developers>
 		<developer>
 			<name>Ivan Ponomarev</name>
 			<email>ponomarev@corchestra.ru</email>
 		</developer>
 	</developers>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<version>${project.version}</version>
 	</properties>
-	
+
 	<distributionManagement>
 		<repository>
 			<id>curs</id>
 			<url>http://nexus.curs.ru:8081/repository/curs</url>
 		</repository>
 	</distributionManagement>
-	
+
 	<repositories>
 		<repository>
 			<id>lib</id>
@@ -62,7 +62,7 @@
 			<url>http://nexus.curs.ru:8081/repository/curs</url>
 		</repository>
 	</repositories>
-	
+
 	<build>
 		<plugins>
 		<plugin>
@@ -110,7 +110,7 @@
 				<autoReleaseAfterClose>true</autoReleaseAfterClose>
 			</configuration>
 		</plugin>
-			
+
 		</plugins>
 	</build>
 	<dependencies>
@@ -237,7 +237,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.19.1</version>
+						<version>2.20</version>
 						<configuration>
 							<excludes>
 								<exclude>**/dbutils/*AdaptorTest.java</exclude>
@@ -282,7 +282,7 @@
 				</plugins>
 				<pluginManagement>
 					<plugins>
-						<!--This plugin's configuration is used to store Eclipse m2e settings 
+						<!--This plugin's configuration is used to store Eclipse m2e settings
 							only. It has no influence on the Maven build itself. -->
 						<plugin>
 							<groupId>org.eclipse.m2e</groupId>
@@ -369,7 +369,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.19.1</version>
+						<version>2.20</version>
 						<configuration>
 							<excludes>
 								<exclude>**/dbutils/*AdaptorTest.java</exclude>
@@ -413,7 +413,7 @@
 				</plugins>
 				<pluginManagement>
 					<plugins>
-						<!--This plugin's configuration is used to store Eclipse m2e settings 
+						<!--This plugin's configuration is used to store Eclipse m2e settings
 							only. It has no influence on the Maven build itself. -->
 						<plugin>
 							<groupId>org.eclipse.m2e</groupId>

@@ -1,7 +1,7 @@
 # coding=UTF-8
 print "hello unit called"
 
-from g1._g1_orm import aaCursor 
+from g1._g1_orm import aaCursor
 from g1._g1_orm import adressesCursor
 from g2._g2_orm import bCursor
 from g3._g3_orm import cCursor
@@ -18,7 +18,7 @@ def proc1(context):
     aa = aaCursor(context)
     aa.deleteAll()
     for i in range(1, 4):
-        aa.idaa = i 
+        aa.idaa = i
         aa.idc = i * i
         if not aa.tryInsert():
             aa.update()
