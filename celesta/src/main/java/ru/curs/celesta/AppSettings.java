@@ -138,15 +138,6 @@ public final class AppSettings {
 			}
 		},
 		/**
-		 * MySQL.
-		 */
-		MYSQL {
-			@Override
-			String getDriverClassName() {
-				return "com.mysql.jdbc.Driver";
-			}
-		},
-		/**
 		 * Неизвестный тип.
 		 */
 		UNKNOWN {
@@ -165,8 +156,6 @@ public final class AppSettings {
 			return DBType.POSTGRES;
 		} else if (url.startsWith("jdbc:oracle")) {
 			return DBType.ORACLE;
-		} else if (url.startsWith("jdbc:mysql")) {
-			return DBType.MYSQL;
 		} else {
 			return DBType.UNKNOWN;
 		}

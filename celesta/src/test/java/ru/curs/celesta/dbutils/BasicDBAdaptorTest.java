@@ -37,9 +37,6 @@ public class BasicDBAdaptorTest {
 		a = new PostgresAdaptor();
 		testCelestaScore(s, a, "postgre.txt");
 
-		a = new MySQLAdaptor();
-		testCelestaScore(s, a, "mysql.txt");
-
 		a = new OraAdaptor();
 		testCelestaScore(s, a, "ora.txt");
 	}

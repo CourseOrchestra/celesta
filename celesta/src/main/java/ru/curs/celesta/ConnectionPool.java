@@ -122,8 +122,8 @@ final class PasswordHider {
 	// В MS SQL всё продумано и если пароль содержит ;, она меняется на {;}
 	private static final Pattern MSSQL_PATTERN = Pattern.compile("(password)=([^{;]|(\\{(;\\})|[^;]?))+(;|$)",
 			Pattern.CASE_INSENSITIVE);
-	// В MySQL JDBC-URL не сработает правильно, если пароль содержит &
-	private static final Pattern MYSQL_PATTERN = Pattern.compile("(password)=[^&]+(&|$)", Pattern.CASE_INSENSITIVE);
+	// В POSTGRESQL JDBC-URL не сработает правильно, если пароль содержит &
+	private static final Pattern POSTGRESQL_PATTERN = Pattern.compile("(password)=[^&]+(&|$)", Pattern.CASE_INSENSITIVE);
 	// А это на случай неизвестного науке JDBC-драйвера
 	private static final Pattern GENERIC_PATTERN = Pattern.compile("(password)=.+$", Pattern.CASE_INSENSITIVE);
 
@@ -154,8 +154,8 @@ final class PasswordHider {
 			while (m.find()) {
 				m.appendReplacement(sb, m.group(1) + "=*****" + m.group(5));
 			}
-		} else if (url.toLowerCase().startsWith("jdbc:mysql") || url.toLowerCase().startsWith("jdbc:postgresql")) {
-			m = MYSQL_PATTERN.matcher(url);
+		} else if (url.toLowerCase().startsWith("jdbc:postgresql")) {
+			m = POSTGRESQL_PATTERN.matcher(url);
 			while (m.find()) {
 				m.appendReplacement(sb, m.group(1) + "=*****" + m.group(2));
 			}

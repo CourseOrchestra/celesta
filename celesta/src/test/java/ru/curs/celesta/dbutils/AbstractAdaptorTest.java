@@ -308,7 +308,7 @@ public abstract class AbstractAdaptorTest {
 		DBIndexInfo inf = indicesSet.get("idxTest");
 		assertTrue(inf.reflects(i));
 
-		dba.dropIndex(grain, new DBIndexInfo(t.getName(), i.getName()), false);
+		dba.dropIndex(grain, new DBIndexInfo(t.getName(), i.getName()));
 
 		indicesSet = dba.getIndices(conn, t.getGrain());
 		assertNotNull(indicesSet);
@@ -319,7 +319,7 @@ public abstract class AbstractAdaptorTest {
 		indicesSet = dba.getIndices(conn, t.getGrain());
 		inf = indicesSet.get("testName");
 		assertTrue(inf.reflects(i));
-		dba.dropIndex(grain, inf, false);
+		dba.dropIndex(grain, inf);
 	}
 
 	@Test
@@ -916,11 +916,6 @@ public abstract class AbstractAdaptorTest {
 			// (существовавший когда-то баг)
 			assertTrue(dba.getPKInfo(conn, t).reflects(t));
 			assertTrue(dba.getPKInfo(conn, t2).reflects(t2));
-			// Проверяем, что не отображаются "лишние" индексы (актуально для
-			// MySQL)
-			Map<String, DBIndexInfo> indicesSet = dba.getIndices(conn, t.getGrain());
-			assertNotNull(indicesSet);
-			assertEquals(0, indicesSet.size());
 
 			dba.dropFK(conn, t.getGrain().getName(), t.getName(), fk.getConstraintName());
 			l = dba.getFKInfo(conn, g);

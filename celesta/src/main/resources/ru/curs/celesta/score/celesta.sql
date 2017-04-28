@@ -153,7 +153,7 @@ create table log(
   constraint fk_log_tables foreign key(grainid, tablename) references tables(grainid, tablename)
 ) with no version check;
 
-/**This table emulates sequences functionality for MS SQL Server and MySQL.*/
+/**This table emulates sequences functionality for MS SQL Server.*/
 create table sequences(
   /**grain id*/
   grainid varchar(30) not null,

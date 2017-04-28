@@ -5,8 +5,9 @@ package ru.curs.celesta.score;
  */
 public class TableRef {
 	/**
-	 * Тип JOIN. Не поддерживается FULL JOIN, т. к. он не поддерживается в
-	 * MySQL, и CROSS JOIN из соображений безопасности быстродействия.
+	 * Тип JOIN. Не поддерживается FULL JOIN из исторических соображений,
+	 * возможно когда-нибудь будет добавлен
+	 * , и CROSS JOIN из соображений безопасности быстродействия.
 	 */
 	public enum JoinType {
 

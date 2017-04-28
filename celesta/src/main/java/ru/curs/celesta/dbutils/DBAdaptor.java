@@ -99,9 +99,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 		case MSSQL:
 			db = new MSSQLAdaptor();
 			break;
-		case MYSQL:
-			db = new MySQLAdaptor();
-			break;
 		case ORACLE:
 			db = new OraAdaptor();
 			break;
@@ -518,13 +515,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 	 *            Гранула
 	 * @param dBIndexInfo
 	 *            Информация об индексе
-	 * @param suppressError
-	 *            Гасить ошибку удаления индекса (актуально для MySQL, в которой
-	 *            не все индексы могут быть удалены прежде внешнего ключа).
 	 * @throws CelestaException
 	 *             Если что-то пошло не так.
 	 */
-	public final void dropIndex(Grain g, DBIndexInfo dBIndexInfo, boolean suppressError) throws CelestaException {
+	public final void dropIndex(Grain g, DBIndexInfo dBIndexInfo) throws CelestaException {
 		String[] sql = getDropIndexSQL(g, dBIndexInfo);
 		Connection conn = ConnectionPool.get();
 		try {
@@ -534,7 +528,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 			}
 			stmt.close();
 		} catch (SQLException e) {
-			if (!suppressError)
 				throw new CelestaException("Cannot drop index '%s': %s ", dBIndexInfo.getIndexName(), e.getMessage());
 		} finally {
 			ConnectionPool.putBack(conn);
@@ -728,10 +721,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 	 *            Соединение.
 	 * @param meta
 	 *            Таблица.
-	 * @param filters
-	 *            Фильтры на таблице.
-	 * @param complexFilter
-	 *            Супер-гибкий фильтр.
 	 * @param orderBy
 	 *            Порядок сортировки (прямой или обратный).
 	 * @param navigationWhereClause

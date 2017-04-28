@@ -404,7 +404,7 @@ public final class DBUpdator {
 		// Удаление несуществующих в метаданных индексов.
 		for (DBIndexInfo dBIndexInfo : dbIndices.values())
 			if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
-				dba.dropIndex(g, dBIndexInfo, true);
+				dba.dropIndex(g, dBIndexInfo);
 
 		// Удаление индексов, которые будут в дальнейшем изменены, перед
 		// обновлением таблиц.
@@ -413,14 +413,14 @@ public final class DBUpdator {
 			if (dBIndexInfo != null) {
 				boolean reflects = dBIndexInfo.reflects(e.getValue());
 				if (!reflects)
-					dba.dropIndex(g, dBIndexInfo, true);
+					dba.dropIndex(g, dBIndexInfo);
 
 				// Удаление индексов на тех полях, которые подвергнутся
 				// изменению
 				for (Entry<String, Column> ee : e.getValue().getColumns().entrySet()) {
 					DBColumnInfo ci = dba.getColumnInfo(conn, ee.getValue());
 					if (ci == null || !ci.reflects(ee.getValue())) {
-						dba.dropIndex(g, dBIndexInfo, true);
+						dba.dropIndex(g, dBIndexInfo);
 						break;
 					}
 				}
@@ -432,11 +432,6 @@ public final class DBUpdator {
 		final Connection conn = grain.callContext().getConn();
 		Map<String, DBIndexInfo> dbIndices = dba.getIndices(conn, g);
 		Map<String, Index> myIndices = g.getIndices();
-		// Начинаем с удаления ненужных индексов (ещё раз, в MySQL могло
-		// остаться из-за ошибок)
-		for (DBIndexInfo dBIndexInfo : dbIndices.values())
-			if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
-				dba.dropIndex(g, dBIndexInfo, true);
 
 		// Обновление и создание нужных индексов
 		for (Entry<String, Index> e : myIndices.entrySet()) {
@@ -446,7 +441,7 @@ public final class DBUpdator {
 				// поля и пересоздать индекс в случае необходимости.
 				boolean reflects = dBIndexInfo.reflects(e.getValue());
 				if (!reflects) {
-					dba.dropIndex(g, dBIndexInfo, false);
+					dba.dropIndex(g, dBIndexInfo);
 					dba.createIndex(conn, e.getValue());
 				}
 			} else {
