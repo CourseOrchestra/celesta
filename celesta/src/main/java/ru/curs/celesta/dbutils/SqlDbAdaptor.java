@@ -192,6 +192,8 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
 
   @Override
   void createSchemaIfNotExists(Connection conn, String name) throws SQLException {
+    // NB: starting from 9.3 version we are able to use
+    // 'create schema if not exists' synthax, but we are developing on 9.2
     String sql = String.format("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '%s';",
         name);
     Statement check = conn.createStatement();
@@ -634,6 +636,50 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
   @Override
   public SQLGenerator getViewSQLGenerator() {
     return new SQLGenerator();
+  }
+
+  @Override
+  public void updateVersioningTrigger(Connection conn, Table t) throws CelestaException {
+    // First of all, we are about to check if trigger exists
+    String sql = String.format("select count(*) from information_schema.triggers where "
+        + "		event_object_schema = '%s' and event_object_table= '%s'"
+        + "		and trigger_name = 'versioncheck'", t.getGrain().getName(), t.getName());
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        ResultSet rs = stmt.executeQuery(sql);
+        rs.next();
+        boolean triggerExists = rs.getInt(1) > 0;
+        rs.close();
+        if (t.isVersioned()) {
+          if (triggerExists) {
+            return;
+          } else {
+            // CREATE TRIGGER
+            sql = String.format(
+                "CREATE TRIGGER \"versioncheck\"" + " BEFORE UPDATE ON " + tableTemplate()
+                    + " FOR EACH ROW EXECUTE PROCEDURE celesta.recversion_check();",
+                t.getGrain().getName(), t.getName());
+            stmt.executeUpdate(sql);
+          }
+        } else {
+          if (triggerExists) {
+            // DROP TRIGGER
+            sql = String.format("DROP TRIGGER \"versioncheck\" ON " + tableTemplate(),
+                t.getGrain().getName(), t.getName());
+            stmt.executeUpdate(sql);
+          } else {
+            return;
+          }
+        }
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Could not update version check trigger on %s.%s: %s", t.getGrain().getName(),
+          t.getName(), e.getMessage());
+    }
+
   }
 
   @Override
