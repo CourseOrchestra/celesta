@@ -1,10 +1,13 @@
 package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.h2.RecVersionCheckTrigger;
 import ru.curs.celesta.score.*;
 
 import java.sql.*;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 
 /**
@@ -94,16 +97,139 @@ final public class H2Adaptor extends SqlDbAdaptor {
 
   @Override
   DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
-    return null;
+    String sql = String.format(
+        "SELECT index_name AS indexName, column_name as colName " +
+            "FROM  INFORMATION_SCHEMA.INDEXES " +
+            "WHERE table_schema = '%s' " +
+            "AND table_name = '%s' " +
+            "AND index_type_name = 'PRIMARY KEY'",
+        t.getGrain().getName(), t.getName());
+    DBPKInfo result = new DBPKInfo();
+
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        ResultSet rs = stmt.executeQuery(sql);
+
+        while (rs.next()) {
+          if (result.getName() == null) {
+            String indName = rs.getString("indexName");
+            result.setName(indName);
+          }
+
+          String colName = rs.getString("colName");
+          result.getColumnNames().add(colName);
+        }
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Could not get indices information: %s", e.getMessage());
+    }
+    return result;
   }
+
 
   @Override
   Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
-    return null;
+    Map<String, DBIndexInfo> result = new HashMap<>();
+
+    String sql = String.format(
+        "SELECT table_name as tableName, index_name as indexName, column_name as colName " +
+            "FROM  INFORMATION_SCHEMA.INDEXES " +
+            "WHERE table_schema = '%s'",
+        g.getName());
+
+    try {
+      Statement stmt = conn.createStatement();
+
+      try {
+        ResultSet rs = stmt.executeQuery(sql);
+
+        while (rs.next()) {
+          String indexName = rs.getString("indexName");
+          DBIndexInfo ii = result.get(indexName);
+
+          if (ii == null) {
+            String tableName = rs.getString("tableName");
+            ii = new DBIndexInfo(tableName, indexName);
+            result.put(indexName, ii);
+          }
+
+          String colName = rs.getString("colName");
+          ii.getColumnNames().add(colName);
+        }
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Could not get indices information: %s", e.getMessage());
+    }
+
+    return result;
+  }
+
+  @Override
+  public void updateVersioningTrigger(Connection conn, Table t) throws CelestaException {
+    // First of all, we are about to check if trigger exists
+    String sql = String.format("select count(*) from information_schema.triggers where "
+        + "		table_schema = '%s' and table_name = '%s'"
+        + "		and trigger_name = 'versioncheck'", t.getGrain().getName(), t.getName());
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        ResultSet rs = stmt.executeQuery(sql);
+        rs.next();
+        boolean triggerExists = rs.getInt(1) > 0;
+        rs.close();
+        if (t.isVersioned()) {
+          if (triggerExists) {
+            return;
+          } else {
+            // CREATE TRIGGER
+            sql = String.format(
+                "CREATE TRIGGER \"versioncheck\"" + " BEFORE UPDATE ON " + tableTemplate()
+                    + " FOR EACH ROW CALL \"%s\"",
+                t.getGrain().getName(), t.getName(), RecVersionCheckTrigger.class.getName());
+            stmt.executeUpdate(sql);
+          }
+        } else {
+          if (triggerExists) {
+            // DROP TRIGGER
+            sql = String.format("DROP TRIGGER \"versioncheck\" ON " + tableTemplate(),
+                t.getGrain().getName(), t.getName());
+            stmt.executeUpdate(sql);
+          } else {
+            return;
+          }
+        }
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Could not update version check trigger on %s.%s: %s", t.getGrain().getName(),
+          t.getName(), e.getMessage());
+    }
+
   }
 
   @Override
   public int getDBPid(Connection conn) throws CelestaException {
-    return 0;
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        ResultSet rs = stmt.executeQuery("SELECT SESSION_ID()");
+        if (rs.next()) {
+          return rs.getInt(1);
+        } else {
+          return 0;
+        }
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage());
+    }
   }
+
 }
