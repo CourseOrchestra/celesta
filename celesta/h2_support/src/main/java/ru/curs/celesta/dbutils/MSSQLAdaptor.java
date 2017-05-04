@@ -367,6 +367,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 		Iterator<String> columns = t.getColumns().keySet().iterator();
 		// Создаём параметризуемую часть запроса, пропуская нулевые значения.
+		//TODO::Код создания параметризуемой части запроса повторяется в нескольких адапторах. Вынести в утилиту.
 		StringBuilder fields = new StringBuilder();
 		StringBuilder params = new StringBuilder();
 		for (int i = 0; i < t.getColumns().size(); i++) {

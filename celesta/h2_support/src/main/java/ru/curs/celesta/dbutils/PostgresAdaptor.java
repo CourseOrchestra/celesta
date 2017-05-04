@@ -71,6 +71,108 @@ import ru.curs.celesta.score.Table;
  */
 final class PostgresAdaptor extends SqlDbAdaptor {
 
+	private static final Pattern HEX_STRING = Pattern.compile("'\\\\x([0-9A-Fa-f]+)'");
+
+	static {
+		TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
+			@Override
+			String dbFieldType() {
+				return "int4";
+			}
+
+			@Override
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
+				IntegerColumn ic = (IntegerColumn) c;
+				String defaultStr = "";
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + ic.getDefaultValue();
+				}
+				return defaultStr;
+			}
+		});
+
+		TYPES_DICT.put(StringColumn.class, new ColumnDefiner() {
+
+			@Override
+			String dbFieldType() {
+				return "varchar";
+			}
+
+			@Override
+			String getMainDefinition(Column c) {
+				StringColumn ic = (StringColumn) c;
+				String fieldType = ic.isMax() ? "text" : String.format("%s(%s)", dbFieldType(), ic.getLength());
+				return join(c.getQuotedName(), fieldType, nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
+				StringColumn ic = (StringColumn) c;
+				String defaultStr = "";
+				if (ic.getDefaultValue() != null) {
+					defaultStr = DEFAULT + StringColumn.quoteString(ic.getDefaultValue());
+				}
+				return defaultStr;
+			}
+		});
+
+		TYPES_DICT.put(BinaryColumn.class, new ColumnDefiner() {
+
+			@Override
+			String dbFieldType() {
+				return "bytea";
+			}
+
+			@Override
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
+				BinaryColumn bc = (BinaryColumn) c;
+				String defaultStr = "";
+				if (bc.getDefaultValue() != null) {
+					Matcher m = HEXSTR.matcher(bc.getDefaultValue());
+					m.matches();
+					defaultStr = DEFAULT + String.format("E'\\\\x%s'", m.group(1));
+				}
+				return defaultStr;
+			}
+		});
+
+		TYPES_DICT.put(DateTimeColumn.class, new ColumnDefiner() {
+
+			@Override
+			String dbFieldType() {
+				return "timestamp";
+			}
+
+			@Override
+			String getMainDefinition(Column c) {
+				return join(c.getQuotedName(), dbFieldType(), nullable(c));
+			}
+
+			@Override
+			String getDefaultDefinition(Column c) {
+				DateTimeColumn ic = (DateTimeColumn) c;
+				String defaultStr = "";
+				if (ic.isGetdate()) {
+					defaultStr = DEFAULT + NOW;
+				} else if (ic.getDefaultValue() != null) {
+					DateFormat df = new SimpleDateFormat("yyyyMMdd");
+					defaultStr = String.format(DEFAULT + " '%s'", df.format(ic.getDefaultValue()));
+
+				}
+				return defaultStr;
+			}
+		});
+	}
 
 	@Override
 	boolean userTablesExist(Connection conn) throws SQLException {
@@ -83,6 +185,107 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 		} finally {
 			rs.close();
 			check.close();
+		}
+	}
+
+	@Override
+	PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+																						 List<ParameterSetter> program) throws CelestaException {
+
+		Iterator<String> columns = t.getColumns().keySet().iterator();
+		// Создаём параметризуемую часть запроса, пропуская нулевые значения.
+		//TODO::Код создания параметризуемой части запроса повторяется в нескольких адапторах. Вынести в утилиту.
+		StringBuilder fields = new StringBuilder();
+		StringBuilder params = new StringBuilder();
+		for (int i = 0; i < t.getColumns().size(); i++) {
+			String c = columns.next();
+			if (nullsMask[i])
+				continue;
+			if (params.length() > 0) {
+				fields.append(", ");
+				params.append(", ");
+			}
+			params.append("?");
+			fields.append('"');
+			fields.append(c);
+			fields.append('"');
+			program.add(ParameterSetter.create(i));
+		}
+
+		String returning = "";
+		for (Column c : t.getColumns().values())
+			if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
+				returning = " returning " + c.getQuotedName();
+				break;
+			}
+
+		String sql = String.format("insert into " + tableTemplate() + " (%s) values (%s)%s;", t.getGrain().getName(),
+				t.getName(), fields.toString(), params.toString(), returning);
+
+		// System.out.println(sql);
+
+		return prepareStatement(conn, sql);
+	}
+
+
+	@Override
+	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
+		String sql;
+		Statement stmt = conn.createStatement();
+		try {
+			// 1. Firstly, we have to clean up table from any auto-increment
+			// defaults. Meanwhile we check if table has IDENTITY field, if it
+			// doesn't, no need to proceed.
+			IntegerColumn idColumn = null;
+			for (Column c : t.getColumns().values())
+				if (c instanceof IntegerColumn) {
+					IntegerColumn ic = (IntegerColumn) c;
+					if (ic.isIdentity())
+						idColumn = ic;
+					else {
+						if (ic.getDefaultValue() == null) {
+							sql = String.format("alter table %s.%s alter column %s drop default",
+									t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
+						} else {
+							sql = String.format("alter table %s.%s alter column %s set default %d",
+									t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName(),
+									ic.getDefaultValue().intValue());
+						}
+						stmt.executeUpdate(sql);
+					}
+				}
+
+			if (idColumn == null)
+				return;
+
+			// 2. Now, we know that we surely have IDENTITY field, and we have
+			// to be sure that we have an appropriate sequence.
+			boolean hasSequence = false;
+			sql = String.format(
+					"select count(*) from pg_class c inner join pg_namespace n ON n.oid = c.relnamespace "
+							+ "where n.nspname = '%s' and c.relname = '%s_seq' and c.relkind = 'S'",
+					t.getGrain().getName(), t.getName());
+			ResultSet rs = stmt.executeQuery(sql);
+			rs.next();
+			try {
+				hasSequence = rs.getInt(1) > 0;
+			} finally {
+				rs.close();
+			}
+			if (!hasSequence) {
+				sql = String.format("create sequence \"%s\".\"%s_seq\" increment 1 minvalue 1", t.getGrain().getName(),
+						t.getName());
+				stmt.executeUpdate(sql);
+			}
+
+			// 3. Now we have to create the auto-increment default
+			sql = String.format(
+					"alter table %s.%s alter column %s set default " + "nextval('\"%s\".\"%s_seq\"'::regclass);",
+					t.getGrain().getQuotedName(), t.getQuotedName(), idColumn.getQuotedName(), t.getGrain().getName(),
+					t.getName());
+			stmt.executeUpdate(sql);
+		} finally {
+			stmt.close();
 		}
 	}
 
@@ -161,54 +364,7 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 	}
 
 	@Override
-	void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
-		try {
-			String sql;
-			List<String> batch = new LinkedList<>();
-			// Начинаем с удаления default-значения
-			sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" DROP DEFAULT",
-					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName());
-			batch.add(sql);
-
-			updateColType(c, actual, batch);
-
-			// Проверяем nullability
-			if (c.isNullable() != actual.isNullable()) {
-				sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" %s",
-						c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(),
-						c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
-				batch.add(sql);
-			}
-
-			// Если в данных пустой default, а в метаданных -- не пустой -- то
-			if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate())) {
-				sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" SET %s",
-						c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(),
-						getColumnDefiner(c).getDefaultDefinition(c));
-				batch.add(sql);
-			}
-
-			Statement stmt = conn.createStatement();
-			try {
-				// System.out.println(">>batch begin>>");
-				for (String s : batch) {
-					// System.out.println(s);
-					stmt.executeUpdate(s);
-				}
-				// System.out.println("<<batch end<<");
-			} finally {
-				stmt.close();
-			}
-
-		} catch (SQLException e) {
-			throw new CelestaException("Cannot modify column %s on table %s.%s: %s", c.getName(),
-					c.getParentTable().getGrain().getName(), c.getParentTable().getName(), e.getMessage());
-
-		}
-
-	}
-
-	private void updateColType(Column c, DBColumnInfo actual, List<String> batch) {
+	protected void updateColType(Column c, DBColumnInfo actual, List<String> batch) {
 		String sql;
 		String colType;
 		if (c.getClass() == StringColumn.class) {
@@ -237,78 +393,6 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 		}
 	}
 
-	@Override
-	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
-		String sql;
-		Statement stmt = conn.createStatement();
-		try {
-			// 1. Firstly, we have to clean up table from any auto-increment
-			// defaults. Meanwhile we check if table has IDENTITY field, if it
-			// doesn't, no need to proceed.
-			IntegerColumn idColumn = null;
-			for (Column c : t.getColumns().values())
-				if (c instanceof IntegerColumn) {
-					IntegerColumn ic = (IntegerColumn) c;
-					if (ic.isIdentity())
-						idColumn = ic;
-					else {
-						if (ic.getDefaultValue() == null) {
-							sql = String.format("alter table %s.%s alter column %s drop default",
-									t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
-						} else {
-							sql = String.format("alter table %s.%s alter column %s set default %d",
-									t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName(),
-									ic.getDefaultValue().intValue());
-						}
-						stmt.executeUpdate(sql);
-					}
-				}
-
-			if (idColumn == null)
-				return;
-
-			// 2. Now, we know that we surely have IDENTITY field, and we have
-			// to be sure that we have an appropriate sequence.
-			boolean hasSequence = false;
-			sql = String.format(
-					"select count(*) from pg_class c inner join pg_namespace n ON n.oid = c.relnamespace "
-							+ "where n.nspname = '%s' and c.relname = '%s_seq' and c.relkind = 'S'",
-					t.getGrain().getName(), t.getName());
-			ResultSet rs = stmt.executeQuery(sql);
-			rs.next();
-			try {
-				hasSequence = rs.getInt(1) > 0;
-			} finally {
-				rs.close();
-			}
-			if (!hasSequence) {
-				sql = String.format("create sequence \"%s\".\"%s_seq\" increment 1 minvalue 1", t.getGrain().getName(),
-						t.getName());
-				stmt.executeUpdate(sql);
-			}
-
-			// 3. Now we have to create the auto-increment default
-			sql = String.format(
-					"alter table %s.%s alter column %s set default " + "nextval('\"%s\".\"%s_seq\"'::regclass);",
-					t.getGrain().getQuotedName(), t.getQuotedName(), idColumn.getQuotedName(), t.getGrain().getName(),
-					t.getName());
-			stmt.executeUpdate(sql);
-		} finally {
-			stmt.close();
-		}
-	}
-
-	@Override
-	void dropAutoIncrement(Connection conn, Table t) throws SQLException {
-		// Удаление Sequence
-		String sql = String.format("drop sequence if exists \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
-		Statement stmt = conn.createStatement();
-		try {
-			stmt.execute(sql);
-		} finally {
-			stmt.close();
-		}
-	}
 
 	@Override
 	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
@@ -356,116 +440,6 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 		return result;
 	}
 
-	@Override
-	void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
-		String sql = String.format("alter table %s.%s drop constraint \"%s\" cascade", t.getGrain().getQuotedName(),
-				t.getQuotedName(), pkName);
-		try {
-			Statement stmt = conn.createStatement();
-			try {
-				stmt.executeUpdate(sql);
-			} finally {
-				stmt.close();
-			}
-		} catch (SQLException e) {
-			throw new CelestaException("Cannot drop PK '%s': %s", pkName, e.getMessage());
-		}
-	}
-
-	@Override
-	void createPK(Connection conn, Table t) throws CelestaException {
-		StringBuilder sql = new StringBuilder();
-		sql.append(String.format("alter table %s.%s add constraint \"%s\" primary key (", t.getGrain().getQuotedName(),
-				t.getQuotedName(), t.getPkConstraintName()));
-		boolean multiple = false;
-		for (String s : t.getPrimaryKey().keySet()) {
-			if (multiple)
-				sql.append(", ");
-			sql.append('"');
-			sql.append(s);
-			sql.append('"');
-			multiple = true;
-		}
-		sql.append(")");
-
-		// System.out.println(sql.toString());
-		try {
-			Statement stmt = conn.createStatement();
-			try {
-				stmt.executeUpdate(sql.toString());
-			} finally {
-				stmt.close();
-			}
-		} catch (SQLException e) {
-			throw new CelestaException("Cannot create PK '%s': %s", t.getPkConstraintName(), e.getMessage());
-		}
-	}
-
-	@Override
-	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
-		// Full foreign key information query
-		String sql = String.format(
-				"SELECT RC.CONSTRAINT_SCHEMA AS GRAIN" + "   , KCU1.CONSTRAINT_NAME AS FK_CONSTRAINT_NAME"
-						+ "   , KCU1.TABLE_NAME AS FK_TABLE_NAME" + "   , KCU1.COLUMN_NAME AS FK_COLUMN_NAME"
-						+ "   , KCU2.TABLE_SCHEMA AS REF_GRAIN" + "   , KCU2.TABLE_NAME AS REF_TABLE_NAME"
-						+ "   , RC.UPDATE_RULE, RC.DELETE_RULE " + "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS RC "
-						+ "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE KCU1 "
-						+ "   ON  KCU1.CONSTRAINT_CATALOG = RC.CONSTRAINT_CATALOG"
-						+ "   AND KCU1.CONSTRAINT_SCHEMA  = RC.CONSTRAINT_SCHEMA"
-						+ "   AND KCU1.CONSTRAINT_NAME    = RC.CONSTRAINT_NAME "
-						+ "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE KCU2"
-						+ "   ON  KCU2.CONSTRAINT_CATALOG = RC.UNIQUE_CONSTRAINT_CATALOG"
-						+ "   AND KCU2.CONSTRAINT_SCHEMA  = RC.UNIQUE_CONSTRAINT_SCHEMA"
-						+ "   AND KCU2.CONSTRAINT_NAME    = RC.UNIQUE_CONSTRAINT_NAME"
-						+ "   AND KCU2.ORDINAL_POSITION   = KCU1.ORDINAL_POSITION "
-						+ "WHERE RC.CONSTRAINT_SCHEMA = '%s' " + "ORDER BY KCU1.CONSTRAINT_NAME, KCU1.ORDINAL_POSITION",
-				g.getName());
-
-		// System.out.println(sql);
-
-		List<DBFKInfo> result = new LinkedList<>();
-		try {
-			Statement stmt = conn.createStatement();
-			try {
-				DBFKInfo i = null;
-				ResultSet rs = stmt.executeQuery(sql);
-				while (rs.next()) {
-					String fkName = rs.getString("FK_CONSTRAINT_NAME");
-					if (i == null || !i.getName().equals(fkName)) {
-						i = new DBFKInfo(fkName);
-						result.add(i);
-						i.setTableName(rs.getString("FK_TABLE_NAME"));
-						i.setRefGrainName(rs.getString("REF_GRAIN"));
-						i.setRefTableName(rs.getString("REF_TABLE_NAME"));
-						i.setUpdateRule(getFKRule(rs.getString("UPDATE_RULE")));
-						i.setDeleteRule(getFKRule(rs.getString("DELETE_RULE")));
-					}
-					i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
-				}
-			} finally {
-				stmt.close();
-			}
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-		return result;
-	}
-
-	@Override
-	String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount) {
-		if (offset == 0 && rowCount == 0)
-			throw new IllegalArgumentException();
-		String sql;
-		if (offset == 0)
-			sql = getSelectFromOrderBy(t, whereClause, orderBy) + String.format(" limit %d", rowCount);
-		else if (rowCount == 0)
-			sql = getSelectFromOrderBy(t, whereClause, orderBy) + String.format(" limit all offset %d", offset);
-		else {
-			sql = getSelectFromOrderBy(t, whereClause, orderBy)
-					+ String.format(" limit %d offset %d", rowCount, offset);
-		}
-		return sql;
-	}
 
 	@Override
 	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
@@ -516,10 +490,6 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 		return result;
 	}
 
-	@Override
-	public SQLGenerator getViewSQLGenerator() {
-		return new SQLGenerator();
-	}
 
 	@Override
 	public void createSysObjects(Connection conn) throws CelestaException {
@@ -586,32 +556,6 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 
 	}
 
-	@Override
-	PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
-			String navigationWhereClause) throws CelestaException {
-		if (navigationWhereClause == null)
-			throw new IllegalArgumentException();
-		StringBuilder w = new StringBuilder(navigationWhereClause);
-		boolean useWhere = w.length() > 0;
-		if (orderBy.length() > 0)
-			w.append(" order by " + orderBy);
-		String sql = String.format(SELECT_S_FROM + tableTemplate() + "%s  limit 1;", getTableFieldsListExceptBLOBs(t),
-				t.getGrain().getName(), t.getName(), useWhere ? " where " + w : w);
-		// System.out.println(sql);
-		return prepareStatement(conn, sql);
-	}
-
-	@Override
-	public void resetIdentity(Connection conn, Table t, int i) throws SQLException {
-		Statement stmt = conn.createStatement();
-		try {
-			String sql = String.format("alter sequence \"%s\".\"%s_seq\" restart with %d", t.getGrain().getName(),
-					t.getName(), i);
-			stmt.executeUpdate(sql);
-		} finally {
-			stmt.close();
-		}
-	}
 
 	@Override
 	public int getDBPid(Connection conn) throws CelestaException {
@@ -632,9 +576,5 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 		}
 	}
 
-	@Override
-	public boolean nullsFirst() {
-		return false;
-	}
 
 }

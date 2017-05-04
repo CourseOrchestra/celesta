@@ -18,35 +18,12 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
   protected static final String SELECT_S_FROM = "select %s from ";
   protected static final String NOW = "now()";
   protected static final Pattern POSTGRESDATEPATTERN = Pattern.compile("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)");
-  protected static final Pattern HEX_STRING = Pattern.compile("'\\\\x([0-9A-Fa-f]+)'");
 
   protected static final Pattern QUOTED_NAME = Pattern.compile("\"?([^\"]+)\"?");
 
   protected static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 
   static {
-    TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
-      @Override
-      String dbFieldType() {
-        return "int4";
-      }
-
-      @Override
-      String getMainDefinition(Column c) {
-        return join(c.getQuotedName(), dbFieldType(), nullable(c));
-      }
-
-      @Override
-      String getDefaultDefinition(Column c) {
-        IntegerColumn ic = (IntegerColumn) c;
-        String defaultStr = "";
-        if (ic.getDefaultValue() != null) {
-          defaultStr = DEFAULT + ic.getDefaultValue();
-        }
-        return defaultStr;
-      }
-    });
-
     TYPES_DICT.put(FloatingColumn.class, new ColumnDefiner() {
 
       @Override
@@ -65,83 +42,6 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
           defaultStr = DEFAULT + ic.getDefaultValue();
-        }
-        return defaultStr;
-      }
-    });
-
-    TYPES_DICT.put(StringColumn.class, new ColumnDefiner() {
-
-      @Override
-      String dbFieldType() {
-        return "varchar";
-      }
-
-      @Override
-      String getMainDefinition(Column c) {
-        StringColumn ic = (StringColumn) c;
-        String fieldType = ic.isMax() ? "text" : String.format("%s(%s)", dbFieldType(), ic.getLength());
-        return join(c.getQuotedName(), fieldType, nullable(c));
-      }
-
-      @Override
-      String getDefaultDefinition(Column c) {
-        StringColumn ic = (StringColumn) c;
-        String defaultStr = "";
-        if (ic.getDefaultValue() != null) {
-          defaultStr = DEFAULT + StringColumn.quoteString(ic.getDefaultValue());
-        }
-        return defaultStr;
-      }
-    });
-
-    TYPES_DICT.put(BinaryColumn.class, new ColumnDefiner() {
-
-      @Override
-      String dbFieldType() {
-        return "bytea";
-      }
-
-      @Override
-      String getMainDefinition(Column c) {
-        return join(c.getQuotedName(), dbFieldType(), nullable(c));
-      }
-
-      @Override
-      String getDefaultDefinition(Column c) {
-        BinaryColumn bc = (BinaryColumn) c;
-        String defaultStr = "";
-        if (bc.getDefaultValue() != null) {
-          Matcher m = HEXSTR.matcher(bc.getDefaultValue());
-          m.matches();
-          defaultStr = DEFAULT + String.format("E'\\\\x%s'", m.group(1));
-        }
-        return defaultStr;
-      }
-    });
-
-    TYPES_DICT.put(DateTimeColumn.class, new ColumnDefiner() {
-
-      @Override
-      String dbFieldType() {
-        return "timestamp";
-      }
-
-      @Override
-      String getMainDefinition(Column c) {
-        return join(c.getQuotedName(), dbFieldType(), nullable(c));
-      }
-
-      @Override
-      String getDefaultDefinition(Column c) {
-        DateTimeColumn ic = (DateTimeColumn) c;
-        String defaultStr = "";
-        if (ic.isGetdate()) {
-          defaultStr = DEFAULT + NOW;
-        } else if (ic.getDefaultValue() != null) {
-          DateFormat df = new SimpleDateFormat("yyyyMMdd");
-          defaultStr = String.format(DEFAULT + " '%s'", df.format(ic.getDefaultValue()));
-
         }
         return defaultStr;
       }
@@ -223,44 +123,6 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
   PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException {
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s limit 1;",
         getTableFieldsListExceptBLOBs(t), t.getGrain().getName(), t.getName(), where);
-    return prepareStatement(conn, sql);
-  }
-
-  @Override
-  PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
-                                             List<ParameterSetter> program) throws CelestaException {
-
-    Iterator<String> columns = t.getColumns().keySet().iterator();
-    // Создаём параметризуемую часть запроса, пропуская нулевые значения.
-    StringBuilder fields = new StringBuilder();
-    StringBuilder params = new StringBuilder();
-    for (int i = 0; i < t.getColumns().size(); i++) {
-      String c = columns.next();
-      if (nullsMask[i])
-        continue;
-      if (params.length() > 0) {
-        fields.append(", ");
-        params.append(", ");
-      }
-      params.append("?");
-      fields.append('"');
-      fields.append(c);
-      fields.append('"');
-      program.add(ParameterSetter.create(i));
-    }
-
-    String returning = "";
-    for (Column c : t.getColumns().values())
-      if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
-        returning = " returning " + c.getQuotedName();
-        break;
-      }
-
-    String sql = String.format("insert into " + tableTemplate() + " (%s) values (%s)%s;", t.getGrain().getName(),
-        t.getName(), fields.toString(), params.toString(), returning);
-
-    // System.out.println(sql);
-
     return prepareStatement(conn, sql);
   }
 
@@ -356,78 +218,6 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
     return result;
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public DBColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
-    try {
-      DatabaseMetaData metaData = conn.getMetaData();
-      ResultSet rs = metaData.getColumns(null, c.getParentTable().getGrain().getName(),
-          c.getParentTable().getName(), c.getName());
-      try {
-        if (rs.next()) {
-          DBColumnInfo result = new DBColumnInfo();
-          result.setName(rs.getString(COLUMN_NAME));
-          String typeName = rs.getString("TYPE_NAME");
-          if ("serial".equalsIgnoreCase(typeName)) {
-            result.setType(IntegerColumn.class);
-            result.setIdentity(true);
-            result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
-            return result;
-          } else if ("text".equalsIgnoreCase(typeName)) {
-            result.setType(StringColumn.class);
-            result.setMax(true);
-          } else {
-            for (Class<?> cc : COLUMN_CLASSES)
-              if (TYPES_DICT.get(cc).dbFieldType().equalsIgnoreCase(typeName)) {
-                result.setType((Class<? extends Column>) cc);
-                break;
-              }
-          }
-          result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
-          if (result.getType() == StringColumn.class) {
-            result.setLength(rs.getInt("COLUMN_SIZE"));
-          }
-          String defaultBody = rs.getString("COLUMN_DEF");
-          if (defaultBody != null) {
-            defaultBody = modifyDefault(result, defaultBody);
-            result.setDefaultValue(defaultBody);
-          }
-          return result;
-        } else {
-          return null;
-        }
-      } finally {
-        rs.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
-
-  private String modifyDefault(DBColumnInfo ci, String defaultBody) {
-    String result = defaultBody;
-    if (DateTimeColumn.class == ci.getType()) {
-      if (NOW.equalsIgnoreCase(defaultBody))
-        result = "GETDATE()";
-      else {
-        Matcher m = POSTGRESDATEPATTERN.matcher(defaultBody);
-        m.find();
-        result = String.format("'%s%s%s'", m.group(1), m.group(2), m.group(3));
-      }
-    } else if (BooleanColumn.class == ci.getType()) {
-      result = "'" + defaultBody.toUpperCase() + "'";
-    } else if (StringColumn.class == ci.getType()) {
-      if (result.endsWith("::text"))
-        result = result.substring(0, result.length() - "::text".length());
-      else if (result.endsWith("::character varying"))
-        result = result.substring(0, result.length() - "::character varying".length());
-    } else if (BinaryColumn.class == ci.getType()) {
-      Matcher m = HEX_STRING.matcher(defaultBody);
-      if (m.find())
-        result = "0x" + m.group(1).toUpperCase();
-    }
-    return result;
-  }
 
   @Override
   void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
@@ -477,34 +267,7 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
 
   }
 
-  private void updateColType(Column c, DBColumnInfo actual, List<String> batch) {
-    String sql;
-    String colType;
-    if (c.getClass() == StringColumn.class) {
-      StringColumn sc = (StringColumn) c;
-      colType = sc.isMax() ? "text" : String.format("%s(%s)", getColumnDefiner(c).dbFieldType(), sc.getLength());
-    } else {
-      colType = getColumnDefiner(c).dbFieldType();
-    }
-    // Если тип не совпадает
-    if (c.getClass() != actual.getType()) {
-      sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" TYPE %s",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(), colType);
-      if (c.getClass() == IntegerColumn.class)
-        sql += String.format(" USING (%s::integer);", c.getQuotedName());
-      else if (c.getClass() == BooleanColumn.class)
-        sql += String.format(" USING (%s::boolean);", c.getQuotedName());
-
-      batch.add(sql);
-    } else if (c.getClass() == StringColumn.class) {
-      StringColumn sc = (StringColumn) c;
-      if (sc.isMax() != actual.isMax() || sc.getLength() != actual.getLength()) {
-        sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" TYPE %s",
-            c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(), colType);
-        batch.add(sql);
-      }
-    }
-  }
+  abstract protected void updateColType(Column c, DBColumnInfo actual, List<String> batch);
 
   @Override
   void dropAutoIncrement(Connection conn, Table t) throws SQLException {
