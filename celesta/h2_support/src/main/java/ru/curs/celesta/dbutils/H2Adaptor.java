@@ -7,10 +7,7 @@ import ru.curs.celesta.score.*;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,6 +34,52 @@ final public class H2Adaptor extends SqlDbAdaptor {
       @Override
       String getDefaultDefinition(Column c) {
         IntegerColumn ic = (IntegerColumn) c;
+        String defaultStr = "";
+        if (ic.getDefaultValue() != null) {
+          defaultStr = DEFAULT + ic.getDefaultValue();
+        }
+        return defaultStr;
+      }
+    });
+
+    TYPES_DICT.put(FloatingColumn.class, new ColumnDefiner() {
+
+      @Override
+      String dbFieldType() {
+        return "double"; // double precision";
+      }
+
+      @Override
+      String getMainDefinition(Column c) {
+        return join(c.getQuotedName(), dbFieldType(), nullable(c));
+      }
+
+      @Override
+      String getDefaultDefinition(Column c) {
+        FloatingColumn ic = (FloatingColumn) c;
+        String defaultStr = "";
+        if (ic.getDefaultValue() != null) {
+          defaultStr = DEFAULT + ic.getDefaultValue();
+        }
+        return defaultStr;
+      }
+    });
+
+    TYPES_DICT.put(BooleanColumn.class, new ColumnDefiner() {
+
+      @Override
+      String dbFieldType() {
+        return "boolean";
+      }
+
+      @Override
+      String getMainDefinition(Column c) {
+        return join(c.getQuotedName(), dbFieldType(), nullable(c));
+      }
+
+      @Override
+      String getDefaultDefinition(Column c) {
+        BooleanColumn ic = (BooleanColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
           defaultStr = DEFAULT + ic.getDefaultValue();
@@ -137,6 +180,24 @@ final public class H2Adaptor extends SqlDbAdaptor {
     } finally {
       check.close();
       rs.close();
+    }
+  }
+
+
+  @Override
+  int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+    String sql = String.format("select CURRVAL('\"%s\".\"%s_seq\"')", t.getGrain().getName(), t.getName());
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        ResultSet rs = stmt.executeQuery(sql);
+        rs.next();
+        return rs.getInt(1);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage());
     }
   }
 
@@ -276,7 +337,7 @@ final public class H2Adaptor extends SqlDbAdaptor {
           }
 
           if (columnDefault != null) {
-            columnDefault = modifyDefault(result, columnDefault);
+            columnDefault = modifyDefault(result, columnDefault, conn);
             result.setDefaultValue(columnDefault);
           }
           return result;
@@ -291,7 +352,7 @@ final public class H2Adaptor extends SqlDbAdaptor {
     }
   }
 
-  private String modifyDefault(DBColumnInfo ci, String defaultBody) {
+  private String modifyDefault(DBColumnInfo ci, String defaultBody, Connection conn) throws CelestaException {
     String result = defaultBody;
     if (DateTimeColumn.class == ci.getType()) {
       if (NOW.equalsIgnoreCase(defaultBody))
@@ -307,6 +368,30 @@ final public class H2Adaptor extends SqlDbAdaptor {
       Matcher m = HEX_STRING.matcher(defaultBody);
       if (m.find())
         result = "0x" + m.group(1).toUpperCase();
+    } else if (StringColumn.class == ci.getType()) {
+      if (defaultBody.contains("STRINGDECODE")) {
+        //H2 отдает default для срок в виде функции, которую нужно выполнить отдельным запросом
+        try {
+          String sql = "SELECT " + defaultBody;
+          Statement stmt = conn.createStatement();
+
+          try {
+            ResultSet rs = stmt.executeQuery(sql);
+
+            if (rs.next()) {
+              //H2 не сохраняет кавычки в default, если используется не Unicode
+              result = "'" + rs.getString(1) + "'";
+            } else {
+              throw new CelestaException("Can't decode default '" + defaultBody + "'");
+            }
+          } finally {
+            stmt.close();
+          }
+
+        } catch (SQLException e) {
+          throw new CelestaException("Can't modify default for '" + defaultBody + "'", e);
+        }
+      }
     }
 
     //TODO::если строка, то можем получить такое STRINGDECODE('\u0440\u0443\u0441\u0441\u043a\u0438\u0435 \u0431\u0443\u043a\u0432\u044b');
@@ -378,13 +463,58 @@ final public class H2Adaptor extends SqlDbAdaptor {
 
 
   @Override
+  List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+
+    String sql = "SELECT " +
+        "FK_NAME AS FK_CONSTRAINT_NAME, " +
+        "FKTABLE_NAME AS FK_TABLE_NAME, " +
+        "FKCOLUMN_NAME AS FK_COLUMN_NAME, " +
+        "PKTABLE_SCHEMA AS REF_GRAIN, " +
+        "PKTABLE_NAME AS REF_TABLE_NAME, " +
+        "UPDATE_RULE, " +
+        "DELETE_RULE " +
+        "FROM INFORMATION_SCHEMA.CROSS_REFERENCES " +
+        "WHERE FKTABLE_SCHEMA = '%s' " +
+        "ORDER BY FK_CONSTRAINT_NAME, ORDINAL_POSITION";
+    sql = String.format(sql, g.getName());
+
+    //TODO::Этот код повторяется в нескольких адапторах. Нужно как-то объединить в одной утилите
+    List<DBFKInfo> result = new LinkedList<>();
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        DBFKInfo i = null;
+        ResultSet rs = stmt.executeQuery(sql);
+        while (rs.next()) {
+          String fkName = rs.getString("FK_CONSTRAINT_NAME");
+          if (i == null || !i.getName().equals(fkName)) {
+            i = new DBFKInfo(fkName);
+            result.add(i);
+            i.setTableName(rs.getString("FK_TABLE_NAME"));
+            i.setRefGrainName(rs.getString("REF_GRAIN"));
+            i.setRefTableName(rs.getString("REF_TABLE_NAME"));
+            i.setUpdateRule(getFKRule(rs.getString("UPDATE_RULE")));
+            i.setDeleteRule(getFKRule(rs.getString("DELETE_RULE")));
+          }
+          i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
+        }
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage());
+    }
+    return result;
+  }
+
+  @Override
   Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
     Map<String, DBIndexInfo> result = new HashMap<>();
 
     String sql = String.format(
         "SELECT table_name as tableName, index_name as indexName, column_name as colName " +
             "FROM  INFORMATION_SCHEMA.INDEXES " +
-            "WHERE table_schema = '%s'",
+            "WHERE table_schema = '%s' AND primary_key <> true",
         g.getName());
 
     try {
@@ -435,9 +565,11 @@ final public class H2Adaptor extends SqlDbAdaptor {
           } else {
             // CREATE TRIGGER
             sql = String.format(
-                "CREATE TRIGGER \"versioncheck\"" + " BEFORE UPDATE ON " + tableTemplate()
+                "CREATE TRIGGER \"versioncheck_%s\"" + " BEFORE UPDATE ON " + tableTemplate()
                     + " FOR EACH ROW CALL \"%s\"",
-                t.getGrain().getName(), t.getName(), RecVersionCheckTrigger.class.getName());
+                t.getName(), t.getGrain().getName(), t.getName(),
+                RecVersionCheckTrigger.class.getName());
+
             stmt.executeUpdate(sql);
           }
         } else {
