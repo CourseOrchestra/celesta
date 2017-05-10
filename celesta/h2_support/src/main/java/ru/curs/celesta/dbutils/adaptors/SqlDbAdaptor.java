@@ -1,13 +1,12 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.meta.DBColumnInfo;
+import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.score.*;
 
 import java.sql.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -25,7 +24,7 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
 
 
   @Override
-  boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+  public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
     try {
       PreparedStatement check = conn
           .prepareStatement(String.format("SELECT table_name FROM information_schema.tables  WHERE "
@@ -64,7 +63,7 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
+  public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
     Table t = c.getParentTable();
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s limit 1;", c.getQuotedName(),
         t.getGrain().getName(), t.getName(), where);
@@ -72,14 +71,14 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException {
+  public PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException {
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s limit 1;",
         getTableFieldsListExceptBLOBs(t), t.getGrain().getName(), t.getName(), where);
     return prepareStatement(conn, sql);
   }
 
   @Override
-  PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
+  public PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
     String sql = String.format("delete from " + tableTemplate() + " where %s;", t.getGrain().getName(), t.getName(),
         where);
     return prepareStatement(conn, sql);
@@ -93,7 +92,7 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
+  public PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
     // Готовим запрос на удаление
     String sql = String.format("delete from " + tableTemplate() + " %s;", t.getGrain().getName(), t.getName(),
         where.isEmpty() ? "" : "where " + where);
@@ -155,7 +154,7 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
 
 
   @Override
-  void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
+  public void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
     try {
       String sql;
       List<String> batch = new LinkedList<>();
@@ -197,7 +196,6 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
     } catch (SQLException e) {
       throw new CelestaException("Cannot modify column %s on table %s.%s: %s", c.getName(),
           c.getParentTable().getGrain().getName(), c.getParentTable().getName(), e.getMessage());
-
     }
 
   }
@@ -216,25 +214,8 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
     }
   }
 
-
   @Override
-  void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
-    String sql = String.format("alter table %s.%s drop constraint \"%s\" cascade", t.getGrain().getQuotedName(),
-        t.getQuotedName(), pkName);
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        stmt.executeUpdate(sql);
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException("Cannot drop PK '%s': %s", pkName, e.getMessage());
-    }
-  }
-
-  @Override
-  void createPK(Connection conn, Table t) throws CelestaException {
+  public void createPK(Connection conn, Table t) throws CelestaException {
     StringBuilder sql = new StringBuilder();
     sql.append(String.format("alter table %s.%s add constraint \"%s\" primary key (", t.getGrain().getQuotedName(),
         t.getQuotedName(), t.getPkConstraintName()));
@@ -286,7 +267,7 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
+  public PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
                                            String navigationWhereClause) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();

@@ -1,8 +1,10 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.InitTest;
+import ru.curs.celesta.dbutils.adaptors.AbstractAdaptorTest;
+import ru.curs.celesta.dbutils.adaptors.H2Adaptor;
 import ru.curs.celesta.score.Score;
 
 import java.io.InputStream;

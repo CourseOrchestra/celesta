@@ -33,7 +33,7 @@
 
  */
 
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -48,21 +48,23 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.dbutils.meta.DBColumnInfo;
+import ru.curs.celesta.dbutils.meta.DBFKInfo;
+import ru.curs.celesta.dbutils.meta.DBIndexInfo;
+import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.FloatingColumn;
 import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.GrainElement;
-import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 
@@ -235,7 +237,7 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 	}
 
 	@Override
-	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+	public int getCurrentIdent(Connection conn, Table t) throws CelestaException {
 		String sql = String.format("select last_value from \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
 		try {
 			Statement stmt = conn.createStatement();
@@ -252,12 +254,11 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 	}
 
 	@Override
-	PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+	public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
 																						 List<ParameterSetter> program) throws CelestaException {
 
 		Iterator<String> columns = t.getColumns().keySet().iterator();
 		// Создаём параметризуемую часть запроса, пропуская нулевые значения.
-		//TODO::Код создания параметризуемой части запроса повторяется в нескольких адапторах. Вынести в утилиту.
 		StringBuilder fields = new StringBuilder();
 		StringBuilder params = new StringBuilder();
 		for (int i = 0; i < t.getColumns().size(); i++) {
@@ -292,7 +293,7 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 
 
 	@Override
-	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
+	public void manageAutoIncrement(Connection conn, Table t) throws SQLException {
 		String sql;
 		Statement stmt = conn.createStatement();
 		try {
@@ -458,7 +459,7 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 
 
 	@Override
-	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
+	public DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
 		String sql = String.format(
 				"SELECT i.relname AS indexname, " + "i.oid, array_length(x.indkey, 1) as colcount " + "FROM pg_index x "
 						+ "INNER JOIN pg_class c ON c.oid = x.indrelid "
@@ -504,7 +505,23 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 	}
 
 	@Override
-	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+	public void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
+		String sql = String.format("alter table %s.%s drop constraint \"%s\" cascade", t.getGrain().getQuotedName(),
+				t.getQuotedName(), pkName);
+		try {
+			Statement stmt = conn.createStatement();
+			try {
+				stmt.executeUpdate(sql);
+			} finally {
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			throw new CelestaException("Cannot drop PK '%s': %s", pkName, e.getMessage());
+		}
+	}
+
+	@Override
+	public List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
 		// Full foreign key information query
 		String sql = String.format(
 				"SELECT RC.CONSTRAINT_SCHEMA AS GRAIN" + "   , KCU1.CONSTRAINT_NAME AS FK_CONSTRAINT_NAME"
@@ -554,7 +571,7 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 	}
 
 	@Override
-	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+	public Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
 		String sql = String.format("SELECT c.relname AS tablename, i.relname AS indexname, "
 				+ "i.oid, array_length(x.indkey, 1) as colcount " + "FROM pg_index x "
 				+ "INNER JOIN pg_class c ON c.oid = x.indrelid " + "INNER JOIN pg_class i ON i.oid = x.indexrelid "

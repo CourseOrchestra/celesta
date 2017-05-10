@@ -33,7 +33,7 @@
 
  */
 
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -55,6 +55,12 @@ import java.util.regex.Pattern;
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.dbutils.meta.DBColumnInfo;
+import ru.curs.celesta.dbutils.meta.DBFKInfo;
+import ru.curs.celesta.dbutils.meta.DBIndexInfo;
+import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -257,7 +263,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     }
   }
 
-  static IntegerColumn findIdentityField(Table t) {
+  public static IntegerColumn findIdentityField(Table t) {
     IntegerColumn ic = null;
     for (Column c : t.getColumns().values())
       if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
@@ -268,7 +274,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   }
 
   // CHECKSTYLE:OFF 6 parameters
-  final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask,
+  public final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask,
                                                    boolean[] nullsMask, List<ParameterSetter> program, String where) throws CelestaException {
     // CHECKSTYLE:ON
     StringBuilder setClause = new StringBuilder();
@@ -580,7 +586,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     return sqlfrom + sqlwhere + " order by " + orderBy;
   }
 
-  final PreparedStatement getSetCountStatement(Connection conn, GrainElement t, String whereClause)
+  public final PreparedStatement getSetCountStatement(Connection conn, GrainElement t, String whereClause)
       throws CelestaException {
     String sql = "select count(*) from " + String.format(tableTemplate(), t.getGrain().getName(), t.getName())
         + ("".equals(whereClause) ? "" : " where " + whereClause);
@@ -683,35 +689,35 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param orderBy               Порядок сортировки (прямой или обратный).
    * @param navigationWhereClause Условие навигационного набора (от текущей записи).
    */
-  abstract PreparedStatement getNavigationStatement(Connection conn, GrainElement meta, String orderBy,
+  public abstract PreparedStatement getNavigationStatement(Connection conn, GrainElement meta, String orderBy,
                                                     String navigationWhereClause) throws CelestaException;
 
   abstract String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount);
 
   abstract ColumnDefiner getColumnDefiner(Column c);
 
-  abstract boolean tableExists(Connection conn, String schema, String name) throws CelestaException;
+  public abstract boolean tableExists(Connection conn, String schema, String name) throws CelestaException;
 
   abstract boolean userTablesExist(Connection conn) throws SQLException;
 
   abstract void createSchemaIfNotExists(Connection conn, String name) throws SQLException;
 
-  abstract void manageAutoIncrement(Connection conn, Table t) throws SQLException;
+  public abstract void manageAutoIncrement(Connection conn, Table t) throws SQLException;
 
   abstract void dropAutoIncrement(Connection conn, Table t) throws SQLException;
 
-  abstract PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException;
+  public abstract PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException;
 
-  abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException;
+  public abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException;
 
-  abstract PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException;
+  public abstract PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException;
 
-  abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+  public abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
                                                       List<ParameterSetter> program) throws CelestaException;
 
-  abstract int getCurrentIdent(Connection conn, Table t) throws CelestaException;
+  public abstract int getCurrentIdent(Connection conn, Table t) throws CelestaException;
 
-  abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException;
+  public abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException;
 
   abstract String[] getCreateIndexSQL(Index index);
 
@@ -724,7 +730,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param c    Столбец.
    * @throws CelestaException в случае сбоя связи с БД.
    */
-  abstract DBColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException;
+  public abstract DBColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException;
 
   /**
    * Обновляет на таблице колонку.
@@ -733,7 +739,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param c    Колонка для обновления.
    * @throws CelestaException при ошибке обновления колонки.
    */
-  abstract void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException;
+  public abstract void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException;
 
   /**
    * Возвращает информацию о первичном ключе таблицы.
@@ -743,7 +749,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    *             получить.
    * @throws CelestaException в случае сбоя связи с БД.
    */
-  abstract DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException;
+  public abstract DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException;
 
   /**
    * Удаляет первичный ключ на таблице с использованием известного имени
@@ -754,7 +760,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param pkName Имя первичного ключа.
    * @throws CelestaException в случае сбоя связи с БД.
    */
-  abstract void dropPK(Connection conn, Table t, String pkName) throws CelestaException;
+  public abstract void dropPK(Connection conn, Table t, String pkName) throws CelestaException;
 
   /**
    * Создаёт первичный ключ на таблице в соответствии с метаописанием.
@@ -764,9 +770,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @throws CelestaException неудача создания первичного ключа (например, неуникальные
    *                          записи).
    */
-  abstract void createPK(Connection conn, Table t) throws CelestaException;
+  public abstract void createPK(Connection conn, Table t) throws CelestaException;
 
-  abstract List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException;
+  public abstract List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException;
 
   /**
    * Возвращает набор индексов, связанных с таблицами, лежащими в указанной
@@ -776,7 +782,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param g    Гранула, по таблицам которой следует просматривать индексы.
    * @throws CelestaException В случае сбоя связи с БД.
    */
-  abstract Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException;
+  public abstract Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException;
 
   /**
    * Возвращает перечень имён представлений в грануле.

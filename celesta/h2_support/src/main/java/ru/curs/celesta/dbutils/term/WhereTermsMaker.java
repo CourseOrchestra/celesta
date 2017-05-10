@@ -1,307 +1,20 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.term;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.Expr;
+import ru.curs.celesta.dbutils.filter.AbstractFilter;
+import ru.curs.celesta.dbutils.filter.Filter;
+import ru.curs.celesta.dbutils.filter.Range;
+import ru.curs.celesta.dbutils.filter.SingleValue;
+import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.score.Table;
-
-/**
- * The interface that provides needed information for building filter/navigation
- * queries. This could be Cursor, but we extracted this interface for
- * testability.
- */
-interface WhereMakerParamsProvider {
-	QueryBuildingHelper dba();
-
-	void initOrderBy() throws CelestaException;
-
-	String[] sortFields() throws CelestaException;
-
-	int[] sortFieldsIndices() throws CelestaException;
-
-	boolean[] descOrders() throws CelestaException;
-
-	Object[] values() throws CelestaException;
-
-	boolean isNullable(String columnName) throws CelestaException;
-
-	Map<String, AbstractFilter> filters();
-
-	Expr complexFilter();
-}
-
-/**
- * A term of filter/navigation where clause.
- */
-abstract class WhereTerm {
-	abstract String getWhere() throws CelestaException;
-
-	abstract void programParams(List<ParameterSetter> program) throws CelestaException;
-}
-
-/**
- * TRUE constant.
- */
-final class AlwaysTrue extends WhereTerm {
-
-	public static final AlwaysTrue TRUE = new AlwaysTrue();
-
-	private AlwaysTrue() {
-	};
-
-	@Override
-	String getWhere() {
-		return "(1 = 1)";
-	}
-
-	@Override
-	void programParams(List<ParameterSetter> program) {
-		// do nothing, no parameters
-	}
-}
-
-/**
- * FALSE constant.
- */
-final class AlwaysFalse extends WhereTerm {
-
-	public static final AlwaysFalse FALSE = new AlwaysFalse();
-
-	private AlwaysFalse() {
-	};
-
-	@Override
-	String getWhere() {
-		return "(1 = 0)";
-	}
-
-	@Override
-	void programParams(List<ParameterSetter> program) {
-		// do nothing, no parameters
-	}
-}
-
-/**
- * Negation of where clause.
- */
-final class NotTerm extends WhereTerm {
-	private final WhereTerm a;
-
-	private NotTerm(WhereTerm a) {
-		this.a = a;
-	}
-
-	static WhereTerm construct(WhereTerm a) {
-		if (a instanceof AlwaysFalse) {
-			return AlwaysTrue.TRUE;
-		} else if (a instanceof AlwaysTrue) {
-			return AlwaysFalse.FALSE;
-		} else {
-			return new NotTerm(a);
-		}
-	}
-
-	@Override
-	String getWhere() throws CelestaException {
-		return String.format("(not %s)", a.getWhere());
-	}
-
-	@Override
-	void programParams(List<ParameterSetter> program) throws CelestaException {
-		a.programParams(program);
-	}
-}
-
-/**
- * Conjunction of two where clauses.
- */
-final class AndTerm extends WhereTerm {
-	private final WhereTerm l;
-	private final WhereTerm r;
-
-	private AndTerm(WhereTerm l, WhereTerm r) {
-		this.l = l;
-		this.r = r;
-	};
-
-	static WhereTerm construct(WhereTerm l, WhereTerm r) {
-		if (l instanceof AlwaysFalse || r instanceof AlwaysFalse) {
-			return AlwaysFalse.FALSE;
-		} else if (l instanceof AlwaysTrue) {
-			return r;
-		} else if (r instanceof AlwaysTrue) {
-			return l;
-		} else {
-			return new AndTerm(l, r);
-		}
-	}
-
-	@Override
-	String getWhere() throws CelestaException {
-		String ls = (l instanceof AndTerm) ? ((AndTerm) l).getOpenWhere() : l.getWhere();
-		String rs = (r instanceof AndTerm) ? ((AndTerm) r).getOpenWhere() : r.getWhere();
-		return String.format("(%s and %s)", ls, rs);
-	}
-
-	private String getOpenWhere() throws CelestaException {
-		return String.format("%s and %s", l.getWhere(), r.getWhere());
-	}
-
-	@Override
-	void programParams(List<ParameterSetter> program) throws CelestaException {
-		l.programParams(program);
-		r.programParams(program);
-	}
-}
-
-/**
- * Disjunction of two where clauses.
- */
-final class OrTerm extends WhereTerm {
-	private final WhereTerm l;
-	private final WhereTerm r;
-
-	private OrTerm(WhereTerm l, WhereTerm r) {
-		this.l = l;
-		this.r = r;
-	};
-
-	static WhereTerm construct(WhereTerm l, WhereTerm r) {
-		if (l instanceof AlwaysTrue || r instanceof AlwaysTrue) {
-			return AlwaysTrue.TRUE;
-		} else if (l instanceof AlwaysFalse) {
-			return r;
-		} else if (r instanceof AlwaysFalse) {
-			return l;
-		} else {
-			return new OrTerm(l, r);
-		}
-	}
-
-	@Override
-	String getWhere() throws CelestaException {
-		String ls = (l instanceof OrTerm) ? ((OrTerm) l).getOpenWhere() : l.getWhere();
-		String rs = (r instanceof OrTerm) ? ((OrTerm) r).getOpenWhere() : r.getWhere();
-		return String.format("(%s or %s)", ls, rs);
-	}
-
-	private String getOpenWhere() throws CelestaException {
-		return String.format("%s or %s", l.getWhere(), r.getWhere());
-	}
-
-	@Override
-	void programParams(List<ParameterSetter> program) throws CelestaException {
-		l.programParams(program);
-		r.programParams(program);
-	}
-}
-
-/**
- * 'Setrange' filter term with a single value.
- */
-final class SingleValueTerm extends WhereTerm {
-	// unquoted column name
-	private final String fieldName;
-	private final SingleValue filter;
-
-	public SingleValueTerm(String fieldName, SingleValue filter) {
-		this.fieldName = fieldName;
-		this.filter = filter;
-	}
-
-	@Override
-	String getWhere() {
-		return String.format("(\"%s\" = ?)", fieldName);
-	}
-
-	@Override
-	void programParams(List<ParameterSetter> program) {
-		program.add(ParameterSetter.create(filter));
-	}
-}
-
-/**
- * 'Setrange' filter term with 'from.. to' values.
- */
-final class RangeTerm extends WhereTerm {
-	// unquoted column name
-	private final String fieldName;
-	private final Range filter;
-
-	public RangeTerm(String fieldName, Range filter) {
-		this.fieldName = fieldName;
-		this.filter = filter;
-	}
-
-	@Override
-	String getWhere() {
-		return String.format("(\"%s\" between ? and ?)", fieldName);
-	}
-
-	@Override
-	void programParams(List<ParameterSetter> program) {
-		program.add(ParameterSetter.createForValueFrom(filter));
-		program.add(ParameterSetter.createForValueTo(filter));
-	}
-}
-
-/**
- * Comparision of a field with null.
- */
-final class IsNull extends WhereTerm {
-
-	// quoted column name
-	private final String fieldName;
-
-	public IsNull(String fieldName) {
-		this.fieldName = fieldName;
-	}
-
-	@Override
-	String getWhere() {
-		return String.format("(%s is null)", fieldName);
-	}
-
-	@Override
-	void programParams(List<ParameterSetter> program) {
-		// do nothing - no parameters
-	}
-
-}
-
-/**
- * Comparision of a field with a value.
- */
-final class CompTerm extends WhereTerm {
-	// quoted column name
-	private final String fieldName;
-	private final int fieldIndex;
-	private final String op;
-
-	public CompTerm(String fieldName, int fieldIndex, String op) {
-		this.fieldName = fieldName;
-		this.fieldIndex = fieldIndex;
-		this.op = op;
-	}
-
-	@Override
-	String getWhere() {
-		return String.format("(%s %s ?)", fieldName, op);
-	}
-
-	@Override
-	void programParams(List<ParameterSetter> program) {
-		program.add(ParameterSetter.create(fieldIndex));
-	}
-}
 
 /**
  * Produces navigation queries.
  */
-class WhereTermsMaker {
+public class WhereTermsMaker {
 	/**
 	 * Term factory constructor.
 	 */
@@ -410,7 +123,7 @@ class WhereTermsMaker {
 
 	private Object[] rec;
 
-	WhereTermsMaker(WhereMakerParamsProvider paramsProvider) {
+	public WhereTermsMaker(WhereMakerParamsProvider paramsProvider) {
 		this.paramsProvider = paramsProvider;
 	}
 
@@ -573,7 +286,7 @@ class WhereTermsMaker {
 		}
 	}
 
-	static String unquot(String name) {
+	public static String unquot(String name) {
 		return name.substring(1, name.length() - 1);
 	}
 
@@ -591,12 +304,12 @@ class WhereTermsMaker {
 		}
 
 		@Override
-		String getWhere() throws CelestaException {
+		public String getWhere() throws CelestaException {
 			return "(" + filter.makeWhereClause("\"" + fieldName + "\"", paramsProvider.dba()) + ")";
 		}
 
 		@Override
-		void programParams(List<ParameterSetter> program) {
+		public void programParams(List<ParameterSetter> program) {
 			// do nothing - no parameters
 		}
 
@@ -608,12 +321,12 @@ class WhereTermsMaker {
 	final class ComplexFilterTerm extends WhereTerm {
 
 		@Override
-		String getWhere() throws CelestaException {
+		public String getWhere() throws CelestaException {
 			return "(" + paramsProvider.complexFilter().getSQL(paramsProvider.dba()) + ")";
 		}
 
 		@Override
-		void programParams(List<ParameterSetter> program) {
+		public void programParams(List<ParameterSetter> program) {
 			// do nothing - no parameters
 		}
 

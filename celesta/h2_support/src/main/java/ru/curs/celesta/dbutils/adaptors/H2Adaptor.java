@@ -1,7 +1,12 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.h2.RecVersionCheckTrigger;
+import ru.curs.celesta.dbutils.meta.DBColumnInfo;
+import ru.curs.celesta.dbutils.meta.DBFKInfo;
+import ru.curs.celesta.dbutils.meta.DBIndexInfo;
+import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.score.*;
 
 import java.sql.*;
@@ -185,7 +190,7 @@ final public class H2Adaptor extends SqlDbAdaptor {
 
 
   @Override
-  int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+  public int getCurrentIdent(Connection conn, Table t) throws CelestaException {
     String sql = String.format("select CURRVAL('\"%s\".\"%s_seq\"')", t.getGrain().getName(), t.getName());
     try {
       Statement stmt = conn.createStatement();
@@ -203,10 +208,9 @@ final public class H2Adaptor extends SqlDbAdaptor {
 
 
   @Override
-  PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask, List<ParameterSetter> program) throws CelestaException {
+  public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask, List<ParameterSetter> program) throws CelestaException {
     Iterator<String> columns = t.getColumns().keySet().iterator();
     // Создаём параметризуемую часть запроса, пропуская нулевые значения.
-    //TODO::Код создания параметризуемой части запроса повторяется в нескольких адапторах. Вынести в утилиту.
     StringBuilder fields = new StringBuilder();
     StringBuilder params = new StringBuilder();
     for (int i = 0; i < t.getColumns().size(); i++) {
@@ -232,7 +236,7 @@ final public class H2Adaptor extends SqlDbAdaptor {
   }
 
   @Override
-  void manageAutoIncrement(Connection conn, Table t) throws SQLException {
+  public void manageAutoIncrement(Connection conn, Table t) throws SQLException {
     String sql;
     Statement stmt = conn.createStatement();
     try {
@@ -394,8 +398,6 @@ final public class H2Adaptor extends SqlDbAdaptor {
       }
     }
 
-    //TODO::если строка, то можем получить такое STRINGDECODE('\u0440\u0443\u0441\u0441\u043a\u0438\u0435 \u0431\u0443\u043a\u0432\u044b');
-    //TODO::делаем запрос на результат функции
     return result;
   }
 
@@ -428,9 +430,9 @@ final public class H2Adaptor extends SqlDbAdaptor {
 
 
   @Override
-  DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
+  public DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
     String sql = String.format(
-        "SELECT index_name AS indexName, column_name as colName " +
+        "SELECT constraint_name AS indexName, column_name as colName " +
             "FROM  INFORMATION_SCHEMA.INDEXES " +
             "WHERE table_schema = '%s' " +
             "AND table_name = '%s' " +
@@ -461,9 +463,24 @@ final public class H2Adaptor extends SqlDbAdaptor {
     return result;
   }
 
+  @Override
+  public void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
+    String sql = String.format("alter table %s.%s drop primary key", t.getGrain().getQuotedName(),
+        t.getQuotedName(), pkName);
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Cannot drop PK '%s': %s", pkName, e.getMessage());
+    }
+  }
 
   @Override
-  List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+  public List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
 
     String sql = "SELECT " +
         "FK_NAME AS FK_CONSTRAINT_NAME, " +
@@ -478,7 +495,6 @@ final public class H2Adaptor extends SqlDbAdaptor {
         "ORDER BY FK_CONSTRAINT_NAME, ORDINAL_POSITION";
     sql = String.format(sql, g.getName());
 
-    //TODO::Этот код повторяется в нескольких адапторах. Нужно как-то объединить в одной утилите
     List<DBFKInfo> result = new LinkedList<>();
     try {
       Statement stmt = conn.createStatement();
@@ -493,8 +509,11 @@ final public class H2Adaptor extends SqlDbAdaptor {
             i.setTableName(rs.getString("FK_TABLE_NAME"));
             i.setRefGrainName(rs.getString("REF_GRAIN"));
             i.setRefTableName(rs.getString("REF_TABLE_NAME"));
-            i.setUpdateRule(getFKRule(rs.getString("UPDATE_RULE")));
-            i.setDeleteRule(getFKRule(rs.getString("DELETE_RULE")));
+
+            String updateRule = resolveConstraintReferential(rs.getInt("UPDATE_RULE"));
+            i.setUpdateRule(getFKRule(updateRule));
+            String deleteRule = resolveConstraintReferential(rs.getInt("DELETE_RULE"));
+            i.setDeleteRule(getFKRule(deleteRule));
           }
           i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
         }
@@ -507,8 +526,31 @@ final public class H2Adaptor extends SqlDbAdaptor {
     return result;
   }
 
+  private String resolveConstraintReferential(int constraintReferential) {
+    final String result;
+
+    switch (constraintReferential) {
+      case DatabaseMetaData.importedKeyCascade:
+        result = "CASCADE";
+        break;
+      case DatabaseMetaData.importedKeyRestrict:
+        result = "RESTRICT";
+        break;
+      case DatabaseMetaData.importedKeySetNull:
+        result = "SET NULL";
+        break;
+      case DatabaseMetaData.importedKeyNoAction:
+        result = "NO ACTION";
+        break;
+      default:
+        result = "";
+    }
+
+    return result;
+  }
+
   @Override
-  Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+  public Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
     Map<String, DBIndexInfo> result = new HashMap<>();
 
     String sql = String.format(

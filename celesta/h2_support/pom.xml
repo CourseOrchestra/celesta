@@ -239,7 +239,7 @@
 						<version>2.20</version>
 						<configuration>
 							<excludes>
-								<exclude>**/dbutils/*AdaptorTest.java</exclude>
+								<exclude>**/adaptors/*AdaptorTest.java</exclude>
 								<exclude>**/dbutils/BasicCursorTest.java</exclude>
 								<exclude>**/InitTest.java</exclude>
 								<exclude>**/lyra/SerializerTest.java</exclude>
@@ -371,7 +371,7 @@
 						<version>2.20</version>
 						<configuration>
 							<excludes>
-								<exclude>**/dbutils/*AdaptorTest.java</exclude>
+								<exclude>**/adaptors/*AdaptorTest.java</exclude>
 								<exclude>**/dbutils/BasicCursorTest.java</exclude>
 								<exclude>**/InitTest.java</exclude>
 								<exclude>**/lyra/SerializerTest.java</exclude>

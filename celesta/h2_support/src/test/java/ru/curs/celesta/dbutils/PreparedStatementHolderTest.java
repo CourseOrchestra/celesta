@@ -33,6 +33,11 @@ import java.util.List;
 import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.filter.Range;
+import ru.curs.celesta.dbutils.filter.SingleValue;
+import ru.curs.celesta.dbutils.stmt.MaskedStatementHolder;
+import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 
 public class PreparedStatementHolderTest {
 
