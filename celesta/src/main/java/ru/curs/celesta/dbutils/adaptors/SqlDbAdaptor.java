@@ -16,7 +16,7 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
   protected static final String CONJUGATE_INDEX_POSTFIX = "__vpo";
   protected static final String SELECT_S_FROM = "select %s from ";
   protected static final String NOW = "now()";
-  protected static final Pattern POSTGRESDATEPATTERN = Pattern.compile("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)");
+  protected static final Pattern DATEPATTERN = Pattern.compile("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)");
 
   protected static final Pattern QUOTED_NAME = Pattern.compile("\"?([^\"]+)\"?");
 
@@ -102,45 +102,6 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
     } catch (SQLException e) {
       throw new CelestaException(e.getMessage());
     }
-  }
-
-  @Override
-  String[] getCreateIndexSQL(Index index) {
-
-    StringBuilder sb = new StringBuilder();
-    StringBuilder sb2 = new StringBuilder();
-    boolean conjugate = false;
-    for (Map.Entry<String, Column> c : index.getColumns().entrySet()) {
-      if (sb.length() > 0) {
-        sb.append(", ");
-        sb2.append(", ");
-      }
-      sb.append('"');
-      sb2.append('"');
-      sb.append(c.getKey());
-      sb2.append(c.getKey());
-      sb.append('"');
-      sb2.append('"');
-
-      if (c.getValue() instanceof StringColumn && !((StringColumn) c.getValue()).isMax()) {
-        sb2.append(" varchar_pattern_ops");
-        conjugate = true;
-      }
-    }
-
-    String sql = String.format("CREATE INDEX \"%s\" ON " + tableTemplate() + " (%s)", index.getName(),
-        index.getTable().getGrain().getName(), index.getTable().getName(), sb.toString());
-    if (conjugate) {
-      String sql2 = String.format("CREATE INDEX \"%s\" ON " + tableTemplate() + " (%s)",
-          index.getName() + CONJUGATE_INDEX_POSTFIX, index.getTable().getGrain().getName(),
-          index.getTable().getName(), sb2.toString());
-      String[] result = { sql, sql2 };
-      return result;
-    } else {
-      String[] result = { sql };
-      return result;
-    }
-
   }
 
   @Override
@@ -241,23 +202,6 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
     } catch (SQLException e) {
       throw new CelestaException("Cannot create PK '%s': %s", t.getPkConstraintName(), e.getMessage());
     }
-  }
-
-
-  @Override
-  String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount) {
-    if (offset == 0 && rowCount == 0)
-      throw new IllegalArgumentException();
-    String sql;
-    if (offset == 0)
-      sql = getSelectFromOrderBy(t, whereClause, orderBy) + String.format(" limit %d", rowCount);
-    else if (rowCount == 0)
-      sql = getSelectFromOrderBy(t, whereClause, orderBy) + String.format(" limit all offset %d", offset);
-    else {
-      sql = getSelectFromOrderBy(t, whereClause, orderBy)
-          + String.format(" limit %d offset %d", rowCount, offset);
-    }
-    return sql;
   }
 
 

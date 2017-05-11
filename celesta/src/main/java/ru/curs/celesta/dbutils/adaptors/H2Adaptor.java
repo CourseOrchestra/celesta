@@ -13,6 +13,7 @@ import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -362,7 +363,7 @@ final public class H2Adaptor extends SqlDbAdaptor {
       if (NOW.equalsIgnoreCase(defaultBody))
         result = "GETDATE()";
       else {
-        Matcher m = POSTGRESDATEPATTERN.matcher(defaultBody);
+        Matcher m = DATEPATTERN.matcher(defaultBody);
         m.find();
         result = String.format("'%s%s%s'", m.group(1), m.group(2), m.group(3));
       }
@@ -550,6 +551,33 @@ final public class H2Adaptor extends SqlDbAdaptor {
   }
 
   @Override
+  String[] getCreateIndexSQL(Index index) {
+    String grainName = index.getTable().getGrain().getName();
+    String fieldList = getFieldList(index.getColumns().keySet());
+    String sql = String.format("CREATE INDEX " + tableTemplate() + " ON " + tableTemplate() + " (%s)", grainName,
+        index.getName(), grainName, index.getTable().getName(), fieldList);
+    String[] result = { sql };
+    return result;
+  }
+
+
+  @Override
+  String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount) {
+    if (offset == 0 && rowCount == 0)
+      throw new IllegalArgumentException();
+    String sql;
+    if (offset == 0)
+      sql = getSelectFromOrderBy(t, whereClause, orderBy) + String.format(" limit %d", rowCount);
+    else if (rowCount == 0)
+      sql = getSelectFromOrderBy(t, whereClause, orderBy) + String.format(" limit -1 offset %d", offset);
+    else {
+      sql = getSelectFromOrderBy(t, whereClause, orderBy)
+          + String.format(" limit %d offset %d", rowCount, offset);
+    }
+    return sql;
+  }
+
+  @Override
   public Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
     Map<String, DBIndexInfo> result = new HashMap<>();
 
@@ -653,4 +681,16 @@ final public class H2Adaptor extends SqlDbAdaptor {
     }
   }
 
+
+  @Override
+  public String translateDate(String date) throws CelestaException {
+    try {
+      Date d = DateTimeColumn.parseISODate(date);
+      DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+      return String.format("date '%s'", df.format(d));
+    } catch (ParseException e) {
+      throw new CelestaException(e.getMessage());
+    }
+
+  }
 }

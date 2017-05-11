@@ -58,15 +58,7 @@ import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
-import ru.curs.celesta.score.BinaryColumn;
-import ru.curs.celesta.score.BooleanColumn;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FloatingColumn;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.*;
 
 /**
  * Адаптер Postgres.
@@ -408,7 +400,7 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 			if (NOW.equalsIgnoreCase(defaultBody))
 				result = "GETDATE()";
 			else {
-				Matcher m = POSTGRESDATEPATTERN.matcher(defaultBody);
+				Matcher m = DATEPATTERN.matcher(defaultBody);
 				m.find();
 				result = String.format("'%s%s%s'", m.group(1), m.group(2), m.group(3));
 			}
@@ -455,6 +447,63 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 				batch.add(sql);
 			}
 		}
+	}
+
+
+	@Override
+	String[] getCreateIndexSQL(Index index) {
+
+		StringBuilder sb = new StringBuilder();
+		StringBuilder sb2 = new StringBuilder();
+		boolean conjugate = false;
+		for (Map.Entry<String, Column> c : index.getColumns().entrySet()) {
+			if (sb.length() > 0) {
+				sb.append(", ");
+				sb2.append(", ");
+			}
+			sb.append('"');
+			sb2.append('"');
+			sb.append(c.getKey());
+			sb2.append(c.getKey());
+			sb.append('"');
+			sb2.append('"');
+
+			if (c.getValue() instanceof StringColumn && !((StringColumn) c.getValue()).isMax()) {
+				sb2.append(" varchar_pattern_ops");
+				conjugate = true;
+			}
+		}
+
+		String sql = String.format("CREATE INDEX \"%s\" ON " + tableTemplate() + " (%s)", index.getName(),
+				index.getTable().getGrain().getName(), index.getTable().getName(), sb.toString());
+		if (conjugate) {
+			String sql2 = String.format("CREATE INDEX \"%s\" ON " + tableTemplate() + " (%s)",
+					index.getName() + CONJUGATE_INDEX_POSTFIX, index.getTable().getGrain().getName(),
+					index.getTable().getName(), sb2.toString());
+			String[] result = { sql, sql2 };
+			return result;
+		} else {
+			String[] result = { sql };
+			return result;
+		}
+
+	}
+
+
+	@Override
+	String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount) {
+		if (offset == 0 && rowCount == 0)
+			throw new IllegalArgumentException();
+		String sql;
+		if (offset == 0)
+			sql = getSelectFromOrderBy(t, whereClause, orderBy) + String.format(" limit %d", rowCount);
+		else if (rowCount == 0)
+			sql = getSelectFromOrderBy(t, whereClause, orderBy) + String.format(" limit all offset %d", offset);
+		else {
+			sql = getSelectFromOrderBy(t, whereClause, orderBy)
+					+ String.format(" limit %d offset %d", rowCount, offset);
+		}
+		return sql;
 	}
 
 
