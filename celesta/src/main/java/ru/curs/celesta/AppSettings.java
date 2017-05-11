@@ -16,6 +16,8 @@ public final class AppSettings {
   private final String scorePath;
   private final DBType dbType;
   private final String databaseConnection;
+  private final boolean h2InMemory;
+  private final boolean h2ReferentialIntegrity;
   private final String login;
   private final String password;
   private final Logger logger;
@@ -45,16 +47,28 @@ public final class AppSettings {
       checkEntries(scorePath, "score.path", sb);
     }
 
-    String url = settings.getProperty("database.connection", "").trim();
-    if ("".equals(url))
-      url = settings.getProperty("rdbms.connection.url", "").trim();
-    databaseConnection = url;
-    login = settings.getProperty("rdbms.connection.username", "").trim();
-    password = settings.getProperty("rdbms.connection.password", "").trim();
 
-    if ("".equals(databaseConnection))
-      sb.append("No JDBC URL given (rdbms.connection.url).\n");
-    dbType = internalGetDBType(url);
+    h2ReferentialIntegrity = Boolean.parseBoolean(settings.getProperty("h2.referential.integrity", "false"));
+    h2InMemory = Boolean.parseBoolean(settings.getProperty("h2.in-memory", ""));
+
+    //Если настройка h2.in-memory установлена в true - игнорируем настройку строки jdbc подключения и вводим свою
+    if (h2InMemory) {
+      databaseConnection = "jdbc:h2:mem:celesta";
+      login = "";
+      password = "";
+    } else {
+      String url = settings.getProperty("database.connection", "").trim();
+      if ("".equals(url))
+        url = settings.getProperty("rdbms.connection.url", "").trim();
+      databaseConnection = url;
+      login = settings.getProperty("rdbms.connection.username", "").trim();
+      password = settings.getProperty("rdbms.connection.password", "").trim();
+
+      if ("".equals(databaseConnection))
+        sb.append("No JDBC URL given (rdbms.connection.url).\n");
+    }
+
+    dbType = internalGetDBType(databaseConnection);
     if (dbType == DBType.UNKNOWN)
       sb.append("Cannot recognize RDBMS type or unsupported database.");
 
@@ -239,6 +253,14 @@ public final class AppSettings {
    */
   public static String getDatabaseConnection() {
     return theSettings.databaseConnection;
+  }
+
+  /**
+   * Флаг поддержки для uniq constraint (отключение позволяет, например,
+   * вставлять записи без наличия ссылок на обязательные внешние записи)
+   */
+  public static boolean isH2ReferentialIntegrity() {
+    return theSettings.h2ReferentialIntegrity;
   }
 
   /**

@@ -118,6 +118,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       default:
         db = null;
     }
+
+    if (db != null) {
+      db.configureDb();
+    }
   }
 
   /**
@@ -275,7 +279,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   // CHECKSTYLE:OFF 6 parameters
   public final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask,
-                                                   boolean[] nullsMask, List<ParameterSetter> program, String where) throws CelestaException {
+                                                          boolean[] nullsMask, List<ParameterSetter> program, String where) throws CelestaException {
     // CHECKSTYLE:ON
     StringBuilder setClause = new StringBuilder();
     if (t.isVersioned()) {
@@ -690,7 +694,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param navigationWhereClause Условие навигационного набора (от текущей записи).
    */
   public abstract PreparedStatement getNavigationStatement(Connection conn, GrainElement meta, String orderBy,
-                                                    String navigationWhereClause) throws CelestaException;
+                                                           String navigationWhereClause) throws CelestaException;
 
   abstract String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount);
 
@@ -713,7 +717,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   public abstract PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException;
 
   public abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
-                                                      List<ParameterSetter> program) throws CelestaException;
+                                                             List<ParameterSetter> program) throws CelestaException;
 
   public abstract int getCurrentIdent(Connection conn, Table t) throws CelestaException;
 
@@ -882,6 +886,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    */
   public void createSysObjects(Connection conn) throws CelestaException {
 
+  }
+
+  public void configureDb() {
   }
 
   /**

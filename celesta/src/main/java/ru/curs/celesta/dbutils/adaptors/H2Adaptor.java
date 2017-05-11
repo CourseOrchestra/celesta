@@ -1,6 +1,8 @@
 package ru.curs.celesta.dbutils.adaptors;
 
+import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.h2.RecVersionCheckTrigger;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
@@ -170,6 +172,28 @@ final public class H2Adaptor extends SqlDbAdaptor {
         return defaultStr;
       }
     });
+  }
+
+
+  @Override
+  public void configureDb() {
+    boolean isH2ReferentialIntegrity = AppSettings.isH2ReferentialIntegrity();
+
+    try {
+      //Выполняем команду включения флага REFERENTIAL_INTEGRITY
+      Connection connection = ConnectionPool.get();
+      String sql = "SET REFERENTIAL_INTEGRITY " + String.valueOf(isH2ReferentialIntegrity);
+      Statement stmt = connection.createStatement();
+
+      try {
+        stmt.execute(sql);
+      } finally {
+        stmt.close();
+        ConnectionPool.putBack(connection);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Can't manage REFERENTIAL_INTEGRITY", e);
+    }
   }
 
   @Override
