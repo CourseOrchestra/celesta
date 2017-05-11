@@ -33,7 +33,7 @@
 
  */
 
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -50,6 +50,11 @@ import java.util.List;
 import java.util.Map;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.meta.DBColumnInfo;
+import ru.curs.celesta.dbutils.meta.DBFKInfo;
+import ru.curs.celesta.dbutils.meta.DBIndexInfo;
+import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -295,7 +300,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+	public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
 		String sql = String.format("select coalesce(object_id('%s.%s'), -1)", schema, name);
 		try {
 			Statement check = conn.createStatement();
@@ -347,7 +352,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
+	public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
 		Table t = c.getParentTable();
 		String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S, c.getQuotedName(), t.getGrain().getName(),
 				t.getName(), where);
@@ -355,14 +360,14 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException {
+	public PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException {
 		String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S, getTableFieldsListExceptBLOBs(t),
 				t.getGrain().getName(), t.getName(), where);
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+	public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
 			List<ParameterSetter> program) throws CelestaException {
 
 		Iterator<String> columns = t.getColumns().keySet().iterator();
@@ -390,13 +395,13 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
+	public PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
 		String sql = String.format("delete " + tableTemplate() + WHERE_S, t.getGrain().getName(), t.getName(), where);
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
+	public PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
 		// Готовим запрос на удаление
 		String sql = String.format("delete " + tableTemplate() + " %s;", t.getGrain().getName(), t.getName(),
 				where.isEmpty() ? "" : "where " + where);
@@ -409,7 +414,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+	public int getCurrentIdent(Connection conn, Table t) throws CelestaException {
 		String sql = String.format("select seqvalue from celesta.sequences where grainid = '%s' and tablename = '%s'",
 				t.getGrain().getName(), t.getName());
 		try {
@@ -551,7 +556,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
+	public void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
 
 		String sql;
 		if (!"".equals(actual.getDefaultValue())) {
@@ -575,7 +580,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
+	public void manageAutoIncrement(Connection conn, Table t) throws SQLException {
 		// 1. Firstly, we have to clean up table from any auto-increment
 		// triggers
 		String triggerName = String.format("\"%s\".\"%s_inc\"", t.getGrain().getName(), t.getName());
@@ -686,7 +691,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
+	public DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
 
 		DBPKInfo result = new DBPKInfo();
 		try {
@@ -717,7 +722,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
+	public void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
 		String sql = String.format("alter table %s.%s drop constraint \"%s\"", t.getGrain().getQuotedName(),
 				t.getQuotedName(), pkName);
 		try {
@@ -733,7 +738,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void createPK(Connection conn, Table t) throws CelestaException {
+	public void createPK(Connection conn, Table t) throws CelestaException {
 		StringBuilder sql = new StringBuilder();
 		sql.append(String.format("alter table %s.%s add constraint \"%s\" " + " primary key (",
 				t.getGrain().getQuotedName(), t.getQuotedName(), t.getPkConstraintName()));
@@ -762,7 +767,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+	public List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
 		// Full foreign key information query
 		String sql = String.format(
 				"SELECT RC.CONSTRAINT_SCHEMA AS 'GRAIN'" + "   , KCU1.CONSTRAINT_NAME AS 'FK_CONSTRAINT_NAME'"
@@ -839,7 +844,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+	public Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
 		String sql = String.format("select " + "    s.name as SchemaName," + "    o.name as TableName,"
 				+ "    i.name as IndexName," + "    co.name as ColumnName," + "    ic.key_ordinal as ColumnOrder "
 				+ "from sys.indexes i " + "inner join sys.objects o on i.object_id = o.object_id "
@@ -968,7 +973,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
+	public PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
 			String navigationWhereClause) throws CelestaException {
 		if (navigationWhereClause == null)
 			throw new IllegalArgumentException();

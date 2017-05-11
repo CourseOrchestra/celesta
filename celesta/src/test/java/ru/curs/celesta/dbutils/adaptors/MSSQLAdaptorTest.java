@@ -1,4 +1,4 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
 import java.lang.reflect.Method;
 import java.util.Properties;
@@ -6,6 +6,8 @@ import java.util.Properties;
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.InitTest;
+import ru.curs.celesta.dbutils.adaptors.AbstractAdaptorTest;
+import ru.curs.celesta.dbutils.adaptors.MSSQLAdaptor;
 import ru.curs.celesta.score.Score;
 
 public class MSSQLAdaptorTest extends AbstractAdaptorTest {

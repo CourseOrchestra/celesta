@@ -15,4 +15,8 @@ public class CelestaException extends Exception {
 	public CelestaException(String message, Object... args) {
 		super(String.format(message, args));
 	}
+
+	public CelestaException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

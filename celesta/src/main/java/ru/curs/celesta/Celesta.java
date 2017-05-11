@@ -62,7 +62,7 @@ import org.python.core.PyException;
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
 
-import ru.curs.celesta.dbutils.DBAdaptor;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.DBUpdator;
 import ru.curs.celesta.dbutils.ProfilingManager;
 import ru.curs.celesta.dbutils.SessionLogManager;

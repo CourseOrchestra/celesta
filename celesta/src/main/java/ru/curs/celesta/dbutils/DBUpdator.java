@@ -18,6 +18,11 @@ import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.dbutils.meta.DBColumnInfo;
+import ru.curs.celesta.dbutils.meta.DBFKInfo;
+import ru.curs.celesta.dbutils.meta.DBIndexInfo;
+import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
@@ -43,12 +48,7 @@ public final class DBUpdator {
 	private static GrainsCursor grain;
 	private static TablesCursor table;
 
-	private static final Comparator<Grain> GRAIN_COMPARATOR = new Comparator<Grain>() {
-		@Override
-		public int compare(Grain o1, Grain o2) {
-			return o1.getDependencyOrder() - o2.getDependencyOrder();
-		}
-	};
+	private static final Comparator<Grain> GRAIN_COMPARATOR = Comparator.comparingInt(Grain::getDependencyOrder);
 
 	private static final Set<Integer> EXPECTED_STATUSES;
 

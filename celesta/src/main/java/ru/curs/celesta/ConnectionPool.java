@@ -3,13 +3,11 @@ package ru.curs.celesta;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ru.curs.celesta.dbutils.DBAdaptor;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 
 /**
  * Пул соединений с базой данных.

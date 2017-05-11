@@ -33,7 +33,7 @@
 
  */
 
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -54,6 +54,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.adaptors.ColumnDefiner;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.dbutils.meta.DBColumnInfo;
+import ru.curs.celesta.dbutils.meta.DBFKInfo;
+import ru.curs.celesta.dbutils.meta.DBIndexInfo;
+import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -278,7 +285,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+	public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
 		if (schema == null || schema.isEmpty() || name == null || name.isEmpty()) {
 			return false;
 		}
@@ -326,7 +333,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
+	public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
 		Table t = c.getParentTable();
 		String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1", c.getQuotedName(),
 				t.getGrain().getName(), t.getName(), where);
@@ -334,14 +341,14 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException {
+	public PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException {
 		String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1",
 				getTableFieldsListExceptBLOBs(t), t.getGrain().getName(), t.getName(), where);
 		return prepareStatement(conn, sql);
 	}
 
 	@Override
-	PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+	public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
 			List<ParameterSetter> program) throws CelestaException {
 
 		Iterator<String> columns = t.getColumns().keySet().iterator();
@@ -369,7 +376,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
+	public PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
 		String sql = String.format("delete " + tableTemplate() + " where %s", t.getGrain().getName(), t.getName(),
 				where);
 		return prepareStatement(conn, sql);
@@ -401,7 +408,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
+	public PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
 		String sql = String.format("delete from " + tableTemplate() + " %s", t.getGrain().getName(), t.getName(),
 				where.isEmpty() ? "" : "where " + where);
 		try {
@@ -443,7 +450,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+	public int getCurrentIdent(Connection conn, Table t) throws CelestaException {
 		String sequenceName = getSequenceName(t);
 		String sql = String.format("SELECT \"%s\".CURRVAL FROM DUAL", sequenceName);
 		try {
@@ -636,7 +643,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
+	public void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
 		dropVersioningTrigger(conn, c.getParentTable());
 		if (actual.getType() == BooleanColumn.class && !(c instanceof BooleanColumn)) {
 			// Тип Boolean меняется на что-то другое, надо сбросить constraint
@@ -729,7 +736,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void manageAutoIncrement(Connection conn, Table t) throws SQLException {
+	public void manageAutoIncrement(Connection conn, Table t) throws SQLException {
 		// 1. Firstly, we have to clean up table from any auto-increment
 		// triggers
 		String sequenceName = getSequenceName(t);
@@ -811,7 +818,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
+	public DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
 		DBPKInfo result = new DBPKInfo();
 		try {
 			String sql = String.format("select cons.constraint_name, column_name from all_constraints cons "
@@ -839,7 +846,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
+	public void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
 		String sql = String.format("alter table \"%s_%s\" drop constraint \"%s\"", t.getGrain().getName(), t.getName(),
 				pkName);
 		try {
@@ -856,7 +863,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	void createPK(Connection conn, Table t) throws CelestaException {
+	public void createPK(Connection conn, Table t) throws CelestaException {
 		StringBuilder sql = new StringBuilder();
 		sql.append(String.format("alter table \"%s_%s\" add constraint \"%s\" " + " primary key (",
 				t.getGrain().getName(), t.getName(), t.getPkConstraintName()));
@@ -885,7 +892,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+	public List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
 		String sql = String.format(
 				"select cols.constraint_name, cols.table_name table_name, "
 						+ "ref.table_name ref_table_name, cons.delete_rule, cols.column_name "
@@ -1070,7 +1077,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+	public Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
 		String sql = String
 				.format("select ind.table_name TABLE_NAME, ind.index_name INDEX_NAME, cols.column_name COLUMN_NAME,"
 						+ " cols.column_position POSITION " + "from all_indexes ind "
@@ -1269,7 +1276,7 @@ final class OraAdaptor extends DBAdaptor {
 	}
 
 	@Override
-	PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
+	public PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
 			String navigationWhereClause) throws CelestaException {
 		if (navigationWhereClause == null)
 			throw new IllegalArgumentException();

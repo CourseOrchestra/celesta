@@ -1,4 +1,4 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,13 +31,13 @@ public class BasicDBAdaptorTest {
 	public void test1() throws CelestaException, ParseException, IOException {
 		Score s = new Score("score");
 
-		DBAdaptor a = new MSSQLAdaptor();
-		testCelestaScore(s, a, "mssql.txt");
+		//DBAdaptor a = new MSSQLAdaptor();
+		//testCelestaScore(s, a, "mssql.txt");
 
-		a = new PostgresAdaptor();
+		DBAdaptor a = new PostgresAdaptor();
 		testCelestaScore(s, a, "postgre.txt");
 
-		a = new OraAdaptor();
-		testCelestaScore(s, a, "ora.txt");
+		//a = new OraAdaptor();
+		//testCelestaScore(s, a, "ora.txt");
 	}
 }

@@ -9,6 +9,12 @@ import java.util.Map;
 import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.filter.AbstractFilter;
+import ru.curs.celesta.dbutils.filter.Filter;
+import ru.curs.celesta.dbutils.filter.Range;
+import ru.curs.celesta.dbutils.filter.SingleValue;
+import ru.curs.celesta.dbutils.term.WhereMakerParamsProvider;
+import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.score.CelestaParser;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.Expr;

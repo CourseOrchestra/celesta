@@ -1,22 +1,22 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Properties;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.InitTest;
+import ru.curs.celesta.dbutils.adaptors.AbstractAdaptorTest;
+import ru.curs.celesta.dbutils.adaptors.OraAdaptor;
 import ru.curs.celesta.score.Score;
 
-public class PostgresAdaptorTest extends AbstractAdaptorTest {
+public class OraAdaptorTest extends AbstractAdaptorTest {
 
-	public PostgresAdaptorTest() throws Exception {
+	public OraAdaptorTest() throws Exception {
 		ConnectionPool.clear();
 		Properties params = new Properties();
-		InputStream is = InitTest.class
-				.getResourceAsStream("celesta.postgres.properties");
-		params.load(is);
+		params.load(InitTest.class
+				.getResourceAsStream("celesta.oracle.properties"));
 		// Инициализация параметров приложения: вызов AppSettings.init(params) -
 		// метод имеет модификатор доступа "по умолчанию"
 		Method method = AppSettings.class.getDeclaredMethod("init",
@@ -24,7 +24,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
 		method.setAccessible(true);
 		method.invoke(null, params);
 
-		setDba(new PostgresAdaptor());
+		setDba(new OraAdaptor());
 		setScore(new Score(SCORE_NAME));
 	}
 

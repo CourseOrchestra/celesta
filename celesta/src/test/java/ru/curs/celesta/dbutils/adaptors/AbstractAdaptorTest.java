@@ -1,4 +1,4 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.celesta.dbutils.adaptors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,6 +24,15 @@ import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.dbutils.meta.DBColumnInfo;
+import ru.curs.celesta.dbutils.meta.DBFKInfo;
+import ru.curs.celesta.dbutils.meta.DBIndexInfo;
+import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.dbutils.term.WhereTerm;
+import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.Column;
@@ -871,7 +880,7 @@ public abstract class AbstractAdaptorTest {
 
 	@Test
 	public void getFKInfo() throws ParseException, CelestaException, SQLException {
-		dba.dropTable(conn, t);
+		dba.dropTable(conn, t	);
 		assertFalse(dba.tableExists(conn, "gtest", "test"));
 		assertFalse(dba.tableExists(conn, "gtest", "refTo"));
 

@@ -33,6 +33,6 @@
 
 */
 /**
- * Класс парсера сложных фильтров.
+ * Классы фильтров.
  */
 package ru.curs.celesta.dbutils.filter;

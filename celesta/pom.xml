@@ -156,6 +156,11 @@
 			<version>11.2.0</version>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>1.4.195</version>
+		</dependency>
 	</dependencies>
 	<profiles>
 		<profile>
@@ -234,7 +239,10 @@
 						<version>2.20</version>
 						<configuration>
 							<excludes>
-								<exclude>**/dbutils/*AdaptorTest.java</exclude>
+								<exclude>**/adaptors/MSSQLAdaptorTest.java</exclude>
+								<exclude>**/adaptors/OraAdaptorTest.java</exclude>
+								<exclude>**/adaptors/BasicDBAdaptorTest.java</exclude>
+								<exclude>**/adaptors/PostgresAdaptorTest.java</exclude>
 								<exclude>**/dbutils/BasicCursorTest.java</exclude>
 								<exclude>**/InitTest.java</exclude>
 								<exclude>**/lyra/SerializerTest.java</exclude>
@@ -366,7 +374,10 @@
 						<version>2.20</version>
 						<configuration>
 							<excludes>
-								<exclude>**/dbutils/*AdaptorTest.java</exclude>
+								<exclude>**/adaptors/MSSQLAdaptorTest.java</exclude>
+								<exclude>**/adaptors/OraAdaptorTest.java</exclude>
+								<exclude>**/adaptors/BasicDBAdaptorTest.java</exclude>
+								<exclude>**/adaptors/PostgresAdaptorTest.java</exclude>
 								<exclude>**/dbutils/BasicCursorTest.java</exclude>
 								<exclude>**/InitTest.java</exclude>
 								<exclude>**/lyra/SerializerTest.java</exclude>

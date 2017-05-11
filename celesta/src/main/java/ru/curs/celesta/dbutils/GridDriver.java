@@ -9,6 +9,7 @@ import java.util.Random;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.GrainElement;

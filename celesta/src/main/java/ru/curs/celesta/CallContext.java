@@ -11,6 +11,7 @@ import org.python.core.PyString;
 import org.python.core.PyType;
 
 import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.Grain;
 
 /**
