@@ -184,7 +184,8 @@ public abstract class AbstractAdaptorTest {
 
 		assertEquals(13, t.getColumns().size());
 		boolean[] mask = { true, true, false, true, true, true, true, true, true, true, true, true, true };
-		boolean[] nullsMask = { false, false, false, false, false, false, false, false, false, false, false, false, false };
+		boolean[] nullsMask = { false, false, false, false, false, false, false, false, false, false, false, false,
+				false };
 		Integer[] rec = { 1, null, 2, null, null, null, null, null, null, null, null, null, null };
 		List<ParameterSetter> program = new ArrayList<>();
 		WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
@@ -219,7 +220,8 @@ public abstract class AbstractAdaptorTest {
 		rs.close();
 
 		boolean[] mask = { true, true, false, true, true, true, true, true, true, true, true, true, true, false };
-		boolean[] nullsMask = { false, false, false, false, false, false, false, false, false, false, false, false, false, false };
+		boolean[] nullsMask = { false, false, false, false, false, false, false, false, false, false, false, false,
+				false, false };
 		Integer[] rec = { 1, null, 22, null, null, null, null, null, null, null, null, null, null };
 		program = new ArrayList<>();
 		w = WhereTermsMaker.getPKWhereTerm(t);
@@ -880,7 +882,7 @@ public abstract class AbstractAdaptorTest {
 
 	@Test
 	public void getFKInfo() throws ParseException, CelestaException, SQLException {
-		dba.dropTable(conn, t	);
+		dba.dropTable(conn, t);
 		assertFalse(dba.tableExists(conn, "gtest", "test"));
 		assertFalse(dba.tableExists(conn, "gtest", "refTo"));
 
@@ -1016,4 +1018,15 @@ public abstract class AbstractAdaptorTest {
 		assertEquals(556, dba.getCurrentIdent(conn, t));
 	}
 
+	@Test
+	public void createComplexIndex() throws ParseException, CelestaException {
+		Grain g = score.getGrain(GRAIN_NAME);
+		Index idx = g.getIndices().get("idxTest2");
+		dba.createIndex(conn, idx);
+		Map<String, DBIndexInfo> indicesSet = dba.getIndices(conn, t.getGrain());
+		DBIndexInfo inf = indicesSet.get("idxTest2");
+		assertEquals(2, inf.getColumnNames().size());
+		assertTrue(inf.reflects(idx));
+		dba.dropIndex(g, inf);
+	}
 }

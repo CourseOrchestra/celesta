@@ -18,6 +18,8 @@ f11 blob not null
 
 create index idxTest on test (f1);
 
+create index idxTest2 on test (f7, f1);
+
 create table refTo (
   k1 varchar(2) not null,
   k2 int not null,
