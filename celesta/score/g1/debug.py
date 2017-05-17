@@ -13,9 +13,9 @@ props = Properties()
 props.setProperty('score.path', 'E:\WorkSpace\Curs\Celesta\score')
 props.setProperty('pylib.path', 'C:\jython2.7.0\Lib')
 
-props.setProperty('rdbms.connection.url', 'jdbc:postgresql://localhost:5432/celesta')
-props.setProperty('rdbms.connection.username', 'postgres')
-props.setProperty('rdbms.connection.password', '123')
+props.setProperty('rdbms.connection.url', 'jdbc:h2:mem:celesta')
+#props.setProperty('rdbms.connection.username', 'postgres')
+#props.setProperty('rdbms.connection.password', '123')
 
 Celesta.initialize(props)
 Celesta.getDebugInstance()

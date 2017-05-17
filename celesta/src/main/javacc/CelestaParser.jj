@@ -459,7 +459,8 @@ Token t = null;}
   | t = <S_CHAR_LITERAL>     {result = new TextLiteral(t.toString());}
   | t = <K_TRUE>             {result = new BooleanLiteral(true);}
   | t = <K_FALSE>            {result = new BooleanLiteral(false);}
-  |  "(" result = sqlExpression() ")"  {result = new ParenthesizedExpr(result);}
+  | <K_GETDATE> "(" ")"      {result = new GetDate();}
+  | "(" result = sqlExpression() ")"  {result = new ParenthesizedExpr(result);}
   | result = fieldReference()         
   ) {return result;}
 }

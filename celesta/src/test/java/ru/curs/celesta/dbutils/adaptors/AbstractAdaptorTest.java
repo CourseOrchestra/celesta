@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +26,6 @@ import org.junit.Test;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.*;
-import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
@@ -33,25 +33,12 @@ import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
-import ru.curs.celesta.score.BinaryColumn;
-import ru.curs.celesta.score.BooleanColumn;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKRule;
-import ru.curs.celesta.score.FloatingColumn;
-import ru.curs.celesta.score.ForeignKey;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.Index;
-import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.Table;
-import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.*;
 
 public abstract class AbstractAdaptorTest {
   final static String GRAIN_NAME = "gtest";
   final static String SCORE_NAME = "testScore";
+
   private DBAdaptor dba;
   private Score score;
 
@@ -85,8 +72,8 @@ public abstract class AbstractAdaptorTest {
     }
   }
 
-  private int getCount(Connection conn, Table t) throws Exception {
-    PreparedStatement stmt = dba.getSetCountStatement(conn, t, "");
+  private int getCount(Connection conn, GrainElement ge) throws Exception {
+    PreparedStatement stmt = dba.getSetCountStatement(conn, ge, "");
     try {
       ResultSet rs = stmt.executeQuery();
       rs.next();
@@ -1076,5 +1063,6 @@ public abstract class AbstractAdaptorTest {
     }
 
   }
+
 
 }

@@ -627,6 +627,18 @@ final class TextLiteral extends Literal {
 
 }
 
+final class GetDate extends Expr {
+	@Override
+	public ViewColumnMeta getMeta() {
+		return new ViewColumnMeta(ViewColumnType.DATE);
+	}
+
+	@Override
+	void accept(ExprVisitor visitor) throws ParseException {
+		visitor.visitGetDate(this);
+	}
+}
+
 /**
  * Ссылка на колонку таблицы.
  */

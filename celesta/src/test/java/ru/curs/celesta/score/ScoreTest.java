@@ -34,7 +34,7 @@ public class ScoreTest {
 		assertSame(g1, a.getGrain());
 
 		Grain g3 = s.getGrain("g3");
-
+		//TODO:Топлогическая сорт-ка направленных графов
 		int o = g1.getDependencyOrder();
 		assertEquals(o + 1, g2.getDependencyOrder());
 		assertEquals(o + 2, g3.getDependencyOrder());
@@ -46,7 +46,7 @@ public class ScoreTest {
 		Grain sys = s.getGrain("celesta");
 		a = sys.getTable("grains");
 		assertEquals("grains", a.getName());
-		assertEquals(o - 1, sys.getDependencyOrder());
+		assertEquals(o - 2, sys.getDependencyOrder());
 		IntegerColumn c = (IntegerColumn) a.getColumns().get("state");
 		assertEquals(3, c.getDefaultValue().intValue());
 	}

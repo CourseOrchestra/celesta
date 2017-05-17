@@ -49,6 +49,9 @@ public abstract class ExprVisitor {
 
 	void visitUnaryMinus(UnaryMinus expr) throws ParseException {
 	}
+
+	void visitGetDate(GetDate expr) throws ParseException {
+	}
 }
 
 /**

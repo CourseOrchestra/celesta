@@ -503,17 +503,30 @@ public final class Celesta {
 		return theCelesta;
 	}
 
+
 	/**
 	 * Возвращает объект-синглетон Celesta, при этом не инициализируя один из
 	 * питоновских интерпретаторов в пуле. Метод предназначен для использования
 	 * в пошаговой отладке.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             в случае ошибки при инициализации.
 	 */
 	public static synchronized Celesta getDebugInstance() throws CelestaException {
 		if (theCelesta == null)
 			initialize(false);
+		return theCelesta;
+	}
+
+	/**
+	 * @param props настройки Celesta, записываются в ({@link AppSettings})
+	 *
+	 * @throws CelestaException
+	 *             в случае ошибки при инициализации.
+	 */
+	public static synchronized Celesta getDebugInstance(Properties props) throws CelestaException {
+		if (theCelesta == null)
+			initialize(props, false);
 		return theCelesta;
 	}
 
@@ -525,14 +538,13 @@ public final class Celesta {
 		path = path.replace("%20", " ");
 
 		if (path.contains(".jar")) {
-			Pattern pattern = Pattern.compile("file:(.+)[\\\\][^\\\\]+\\.jar");
-			Matcher matcher = pattern.matcher(path);
-
-			if (matcher.find()) {
-				path = matcher.group(1);
+			if (path.startsWith("file:")) {
+				path = path.replace("file:", "");
 			}
+			path = path.substring(0, path.indexOf("jar!"));
 
-			result = path + File.separator;
+			File f = new File(path).getParentFile();
+			result = f.getPath() + File.separator;
 		} else {
 			File f = new File(path).getParentFile();
 			result = f.getParent() + File.separator;
