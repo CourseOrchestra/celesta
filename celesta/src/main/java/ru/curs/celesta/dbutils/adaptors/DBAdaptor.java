@@ -101,26 +101,34 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   private final static DBAdaptor db;
 
   static {
-    switch (AppSettings.getDBType()) {
-      case MSSQL:
-        db = new MSSQLAdaptor();
-        break;
-      case ORACLE:
-        db = new OraAdaptor();
-        break;
-      case POSTGRES:
-        db = new PostgresAdaptor();
-        break;
-      case H2:
-        db = new H2Adaptor();
-        break;
-      case UNKNOWN:
-      default:
-        db = null;
-    }
+    try {
+      switch (AppSettings.getDBType()) {
+        case MSSQL:
+          db = new MSSQLAdaptor();
+          break;
+        case ORACLE:
+          db = new OraAdaptor();
+          break;
+        case POSTGRES:
+          db = new PostgresAdaptor();
+          break;
+        case H2:
+          db = new H2Adaptor();
+          break;
+        case UNKNOWN:
+        default:
+          db = null;
+      }
 
-    if (db != null) {
-      db.configureDb();
+      if (db != null) {
+        db.configureDb();
+      }
+    } catch (Exception e) {
+      /* Выводим здесь stacktrace, потому что подробности исключений в блоках статической инициализации
+       * проглатываются java машиной
+       */
+      e.printStackTrace();
+      throw e;
     }
   }
 

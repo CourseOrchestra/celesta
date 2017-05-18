@@ -53,7 +53,7 @@ public final class AppSettings {
 
     //Если настройка h2.in-memory установлена в true - игнорируем настройку строки jdbc подключения и вводим свою
     if (h2InMemory) {
-      databaseConnection = "jdbc:h2:mem:celesta";
+      databaseConnection = "jdbc:h2:mem:celesta;DB_CLOSE_DELAY=-1";
       login = "";
       password = "";
     } else {
