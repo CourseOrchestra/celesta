@@ -160,16 +160,6 @@ public final class XMLJSONConverter {
 			}
 		}
 
-		if (str.contains("&quot;")) {
-			str = str.replace("&quot;", "\"");
-		}
-		if (str.contains("&lt;")) {
-			str = str.replace("&lt;", "<");
-		}
-		if (str.contains("&gt;")) {
-			str = str.replace("&gt;", ">");
-		}
-
 		return str;
 	}
 
