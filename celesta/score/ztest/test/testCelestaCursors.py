@@ -8,18 +8,22 @@ from ztest._ztest_orm import tableForGetDateInViewCursor, viewWithGetDateCursor,
 
 class TestGetDate(CelestaUnit):
     def test_getdate_in_view(self):
+        print('GETDATE_TEST!!!!')
         viewCursor = viewWithGetDateCursor(self.context)
+        print('ONE!!!!')
         self.assertEqual(0, viewCursor.count())
 
         tableCursor = tableForGetDateInViewCursor(self.context)
 
         tableCursor.date = Timestamp.valueOf(LocalDateTime.now().minusDays(1))
         tableCursor.insert()
+        print('TWO!!!!')
         self.assertEqual(0, viewCursor.count())
 
         tableCursor.clear()
         tableCursor.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
         tableCursor.insert()
+        print('THREE!!!!')
         self.assertEqual(1, viewCursor.count())
         
     def test_zeroInsert(self):
