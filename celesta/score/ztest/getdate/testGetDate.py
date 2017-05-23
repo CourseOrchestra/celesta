@@ -1,10 +1,11 @@
 # coding=UTF-8
 
-from ztest.internal_celesta_unit import InternalCelestaUnit
-from ztest._ztest_orm import viewWithGetDateCursor
-from ztest._ztest_orm import tableForGetDateInViewCursor
 from java.sql import Timestamp
 from java.time import LocalDateTime
+
+from celestaunit.internal_celesta_unit import InternalCelestaUnit
+from ztest._ztest_orm import tableForGetDateInViewCursor
+from ztest._ztest_orm import viewWithGetDateCursor
 
 
 class TestGetDate(InternalCelestaUnit):
