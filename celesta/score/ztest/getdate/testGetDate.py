@@ -3,12 +3,12 @@
 from java.sql import Timestamp
 from java.time import LocalDateTime
 
-from celestaunit.internal_celesta_unit import InternalCelestaUnit
+from celestaunit.internal_celesta_unit import CelestaUnit
 from ztest._ztest_orm import tableForGetDateInViewCursor
 from ztest._ztest_orm import viewWithGetDateCursor
 
 
-class TestGetDate(InternalCelestaUnit):
+class TestGetDate(CelestaUnit):
     def test_getdate_in_view(self):
         viewCursor = viewWithGetDateCursor(self.context)
         self.assertEqual(0, viewCursor.count())
