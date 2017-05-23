@@ -4,9 +4,7 @@ from java.sql import Timestamp
 from java.time import LocalDateTime
 
 from celestaunit.internal_celesta_unit import CelestaUnit
-from ztest._ztest_orm import tableForGetDateInViewCursor
-from ztest._ztest_orm import viewWithGetDateCursor
-
+from ztest._ztest_orm import tableForGetDateInViewCursor, viewWithGetDateCursor, zeroInsertCursor
 
 class TestGetDate(CelestaUnit):
     def test_getdate_in_view(self):
@@ -23,3 +21,11 @@ class TestGetDate(CelestaUnit):
         tableCursor.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
         tableCursor.insert()
         self.assertEqual(1, viewCursor.count())
+        
+    def test_zeroInsert(self):
+        c = zeroInsertCursor(self.context)
+        c.insert()
+        print c.id
+        print c.date
+        
+        
