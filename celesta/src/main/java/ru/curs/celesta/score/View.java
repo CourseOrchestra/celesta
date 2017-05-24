@@ -4,10 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 /**
@@ -15,6 +12,7 @@ import java.util.Map.Entry;
  */
 public class View extends GrainElement {
 	private boolean distinct;
+	private AggregateType aggregateType;
 	private final Map<String, Expr> columns = new LinkedHashMap<>();
 	private Map<String, ViewColumnMeta> columnTypes = null;
 	private final Map<String, TableRef> tables = new LinkedHashMap<>();
@@ -58,6 +56,18 @@ public class View extends GrainElement {
 	 */
 	void setDistinct(boolean distinct) {
 		this.distinct = distinct;
+	}
+
+	public AggregateType getAggregateType() {
+		return aggregateType;
+	}
+
+	/**
+	 * Устанавливает тип агрегатной функции, если запррос имеет вид SELECT COUNT/SUM/MAX/MIN
+	 * @param aggregateType
+	 */
+	public void setAggregateType(AggregateType aggregateType) {
+		this.aggregateType = aggregateType;
 	}
 
 	/**

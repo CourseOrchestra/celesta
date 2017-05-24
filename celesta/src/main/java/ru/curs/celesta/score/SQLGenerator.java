@@ -189,6 +189,11 @@ public class SQLGenerator extends ExprVisitor {
     stack.push(now);
   }
 
+  @Override
+  void visitAggregate(Count expr, AggregateType type) {
+    stack.push("COUNT(*)");
+  }
+
   protected boolean quoteNames() {
     return true;
   }

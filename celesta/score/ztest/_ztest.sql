@@ -7,8 +7,23 @@ create table tableForGetDateInView (
 
 create view viewWithGetDate as
  select id from tableForGetDateInView where date > getdate();
- 
- 
+
+create table tableCountWithoutCondition (
+  id int identity not null primary key,
+  date datetime
+);
+
+create table tableCountAndGetDateCondition (
+  id int identity not null primary key,
+  date datetime
+);
+
+create view viewCountWithoutCondition as
+ select count(*) as c from tableCountWithoutCondition;
+
+create view viewCountAndGetDateCondition as
+ select count(*) as c from tableCountAndGetDateCondition where date > getdate();
+
  create table zeroInsert (
   id int identity not null primary key,
   date datetime not null default getdate()

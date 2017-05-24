@@ -639,6 +639,18 @@ final class GetDate extends Expr {
 	}
 }
 
+final class Count extends Expr {
+	@Override
+	public ViewColumnMeta getMeta() {
+		return new ViewColumnMeta(ViewColumnType.INT);
+	}
+
+	@Override
+	void accept(ExprVisitor visitor) throws ParseException {
+		visitor.visitAggregate(this, AggregateType.COUNT);
+	}
+}
+
 /**
  * Ссылка на колонку таблицы.
  */

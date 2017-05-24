@@ -42,15 +42,21 @@ SKIP:
 
 TOKEN: /* SQL keywords */ 
 {
-    <K_CREATE:     "CREATE">
+    <K_ACTION:     "ACTION">
+|   <K_ADD:        "ADD">
+|   <K_ALTER:      "ALTER">
+|   <K_AND:        "AND">
+|   <K_AS:         "AS">
+|   <K_CASCADE:    "CASCADE">
+|   <K_CONSTRAINT: "CONSTRAINT">
+|   <K_CREATE:     "CREATE">
+|   <K_DEFAULT:    "DEFAULT">
+|   <K_DELETE:     "DELETE">
 |   <K_TABLE:      "TABLE">
 |   <K_INDEX:      "INDEX">
 |   <K_VIEW:       "VIEW">
-|   <K_AS:         "AS">
-|   <K_DEFAULT:    "DEFAULT">
 |   <K_NOT:        "NOT">
 |   <K_NULL:       "NULL">
-/*|   <K_MAX:        "MAX">*/
 |   <K_TEXT:       "TEXT">
 |   <K_IDENTITY:   "IDENTITY">
 |   <K_GETDATE:    "GETDATE">
@@ -60,17 +66,10 @@ TOKEN: /* SQL keywords */
 |   <K_REFERENCES: "REFERENCES">
 |   <K_ON:         "ON">
 |   <K_UPDATE:     "UPDATE">
-|   <K_DELETE:     "DELETE">
 |   <K_NO:         "NO">
-|   <K_ACTION:     "ACTION">
 |   <K_SET:        "SET">
-|   <K_CASCADE:    "CASCADE">
-|   <K_ALTER:      "ALTER">
-|   <K_ADD:        "ADD">
-|   <K_CONSTRAINT: "CONSTRAINT">
 |   <K_IN:         "IN">
 |   <K_OR:         "OR">
-|   <K_AND:        "AND">
 |   <K_LIKE:       "LIKE">
 |   <K_BETWEEN:    "BETWEEN">
 |   <K_IS:         "IS">
@@ -85,6 +84,11 @@ TOKEN: /* SQL keywords */
 |   <K_WHERE:      "WHERE">
 |   <K_TRUE:       "TRUE">
 |   <K_FALSE:      "FALSE">
+|   <K_GROUP_BY:   "GROUP BY">
+|   <K_COUNT:      "COUNT">
+|   <K_SUM:        "SUM">
+|   <K_MIN:        "MIN">
+|   <K_MAX:        "MAX">
 }
 
 TOKEN: /* Datatypes */
@@ -480,9 +484,15 @@ FieldRef fieldReference():
 void select(View v):
 {Expr where;}
 {
-    <K_SELECT> [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
+    <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
     <K_FROM>  fromClause(v)
     [<K_WHERE> where = sqlExpression() {v.setWhereCondition(where);} ]
+}
+
+Expr aggregateFunc():
+{}
+{
+ <K_COUNT>"(*)"  {return new Count();}
 }
 
 void selectItem(View v):
@@ -493,7 +503,7 @@ void selectItem(View v):
   Expr expr;  
 }
 {
-   [doc = <CELESTA_DOC>] expr = sqlTermExpr() [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]  
+   [doc = <CELESTA_DOC>] (expr = sqlTermExpr() | expr = aggregateFunc()) [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]
    { if (alias.isEmpty() && expr instanceof FieldRef)
 		   alias = ((FieldRef) expr).getColumnName();
      if (doc != null)
