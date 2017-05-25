@@ -654,12 +654,14 @@ abstract class Aggregate extends Expr {
 
 final class Count extends Aggregate {}
 
-final class Sum extends Aggregate {
+final class ComplexAggregate extends Aggregate {
 
-	List<Expr> exprs;
+	List<Expr> terms;
+	AggregateType type;
 
-	Sum(List<Expr> exprs) {
-		this.exprs = exprs;
+	ComplexAggregate(List<Expr> terms, String typeStr) {
+		this.terms = terms;
+		this.type = AggregateType.valueOf(typeStr.toUpperCase());
 	}
 }
 

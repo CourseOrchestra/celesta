@@ -59,5 +59,22 @@ create table tableSumTwoFields (
 create view viewSumTwoFields as
   select sum(f1 + f2) as s from tableSumTwoFields;
 
+create table tableMinMax (
+  id int identity not null primary key,
+  f1 int,
+  f2 int
+);
+
+create view viewMinOneField as
+  select min(f1) as m from tableMinMax;
+
+create view viewMaxOneField as
+  select max(f1) as m from tableMinMax;
+
+create view viewMinTwoFields as
+  select min(f1 + f2) as m from tableMinMax;
+
+create view viewMaxTwoFields as
+  select max(f1 + f2) as m from tableMinMax;
 
 

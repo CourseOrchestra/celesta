@@ -500,10 +500,7 @@ Expr aggregateFunc():
       <K_COUNT>"(*)"  {return new Count();}
       | (t = <K_SUM> | t =  <K_MAX> | t = <K_MIN>)"(" term = sqlTermExpr() {terms.add(term);}
       ("," term = sqlTermExpr() {terms.add(term);} )* ")"
-      {
-        if ("SUM".equalsIgnoreCase(t.toString()))
-          return new Sum(terms);
-      }
+      { return new ComplexAggregate(terms, t.toString()); }
   )
 }
 

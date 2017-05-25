@@ -194,11 +194,13 @@ public class SQLGenerator extends ExprVisitor {
 
     if (expr instanceof Count)
       stack.push("COUNT(*)");
-    if (expr instanceof Sum) {
-      StringBuilder sb = new StringBuilder("SUM(");
-      Sum sum = (Sum) expr;
+    if (expr instanceof ComplexAggregate) {
+      ComplexAggregate agrExpr = (ComplexAggregate) expr;
 
-      for (Expr term : sum.exprs) {
+      StringBuilder sb = new StringBuilder(agrExpr.type.toString())
+          .append("(");
+
+      for (Expr term : agrExpr.terms) {
         sb.append(generateSQL(term));
       }
       sb.append(")");

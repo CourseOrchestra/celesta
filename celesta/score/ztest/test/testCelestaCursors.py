@@ -8,7 +8,8 @@ from ztest._ztest_orm import tableForGetDateInViewCursor, viewWithGetDateCursor,
 from ztest._ztest_orm import tableCountWithoutConditionCursor, tableCountAndGetDateConditionCursor\
     , viewCountWithoutConditionCursor, viewCountAndGetDateConditionCursor, tableSumOneFieldCursor\
     , viewSumOneFieldCursor, viewSumOneFieldAndNumberCursor, viewSumTwoNumbersCursor\
-    , tableSumTwoFieldsCursor, viewSumTwoFieldsCursor
+    , tableSumTwoFieldsCursor, viewSumTwoFieldsCursor, tableMinMaxCursor\
+    , viewMinOneFieldCursor, viewMaxOneFieldCursor, viewMinTwoFieldsCursor, viewMaxTwoFieldsCursor
 
 class TestGetDate(CelestaUnit):
     def test_getdate_in_view(self):
@@ -130,3 +131,45 @@ class TestGetDate(CelestaUnit):
 
         viewTwoFieldsCursor.first()
         self.assertEqual(5, viewTwoFieldsCursor.s)
+
+
+    def test_min_and_max_one_field(self):
+      tableCur = tableMinMaxCursor(self.context)
+      viewMinOneFieldCur = viewMinOneFieldCursor(self.context)
+      viewMaxOneFieldCur = viewMaxOneFieldCursor(self.context)
+      viewMinTwoFieldsCur = viewMinTwoFieldsCursor(self.context)
+      viewMaxTwoFieldsCur = viewMaxTwoFieldsCursor(self.context)
+
+      viewMinOneFieldCur.first();
+      viewMaxOneFieldCur.first();
+      viewMinTwoFieldsCur.first();
+      viewMaxTwoFieldsCur.first();
+      self.assertEqual(1, viewMinOneFieldCur.count())
+      self.assertEqual(1, viewMaxOneFieldCur.count())
+      self.assertEqual(1, viewMinTwoFieldsCur.count())
+      self.assertEqual(1, viewMaxTwoFieldsCur.count())
+      self.assertEqual(None, viewMinOneFieldCur.m)
+      self.assertEqual(None, viewMaxOneFieldCur.m)
+      self.assertEqual(None, viewMinTwoFieldsCur.m)
+      self.assertEqual(None, viewMaxTwoFieldsCur.m)
+
+      tableCur.f1 = 1
+      tableCur.f2 = 5
+      tableCur.insert()
+      tableCur.clear()
+
+      tableCur.f1 = 5
+      tableCur.f2 = 2
+      tableCur.insert()
+      tableCur.clear()
+
+      viewMinOneFieldCur.first()
+      viewMaxOneFieldCur.first()
+      viewMinTwoFieldsCur.first()
+      viewMaxTwoFieldsCur.first()
+
+
+      self.assertEqual(1, viewMinOneFieldCur.m)
+      self.assertEqual(5, viewMaxOneFieldCur.m)
+      self.assertEqual(6, viewMinTwoFieldsCur.m)
+      self.assertEqual(7, viewMaxTwoFieldsCur.m)
