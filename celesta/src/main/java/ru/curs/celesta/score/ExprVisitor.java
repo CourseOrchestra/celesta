@@ -53,7 +53,7 @@ public abstract class ExprVisitor {
 	void visitGetDate(GetDate expr) throws ParseException {
 	}
 
-	void visitAggregate(Count expr, AggregateType type) { }
+	void visitAggregate(Aggregate expr) { }
 }
 
 /**

@@ -639,7 +639,8 @@ final class GetDate extends Expr {
 	}
 }
 
-final class Count extends Expr {
+
+abstract class Aggregate extends Expr {
 	@Override
 	public ViewColumnMeta getMeta() {
 		return new ViewColumnMeta(ViewColumnType.INT);
@@ -647,7 +648,18 @@ final class Count extends Expr {
 
 	@Override
 	void accept(ExprVisitor visitor) throws ParseException {
-		visitor.visitAggregate(this, AggregateType.COUNT);
+		visitor.visitAggregate(this);
+	}
+}
+
+final class Count extends Aggregate {}
+
+final class Sum extends Aggregate {
+
+	List<Expr> exprs;
+
+	Sum(List<Expr> exprs) {
+		this.exprs = exprs;
 	}
 }
 

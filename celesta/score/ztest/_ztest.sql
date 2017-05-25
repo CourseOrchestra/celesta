@@ -35,3 +35,29 @@ CREATE TABLE simple_table(
   CONSTRAINT Pk_simple_table PRIMARY KEY (id)
 );
 
+
+create table tableSumOneField (
+  id int identity not null primary key,
+  f int
+);
+
+create view viewSumOneField as
+ select sum(f) as s from tableSumOneField;
+
+create view viewSumOneFieldAndNumber as
+ select sum(f + 1) as s from tableSumOneField;
+
+create view viewSumTwoNumbers as
+ select sum(2 + 1) as s from tableSumOneField;
+
+create table tableSumTwoFields (
+  id int identity not null primary key,
+  f1 int,
+  f2 int
+);
+
+create view viewSumTwoFields as
+  select sum(f1 + f2) as s from tableSumTwoFields;
+
+
+

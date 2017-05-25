@@ -54,6 +54,9 @@ create view testGetDateView as
 create view testCountView AS
  select count(*) as c from test;
 
+ create view testSumView AS
+ select sum(f5) as s from test;
+
 create view v3 as select 1 as a, /**test celestadoc*/1.4 as b, /**test celestadoc2*/1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j, 1 as k
   from test;
   

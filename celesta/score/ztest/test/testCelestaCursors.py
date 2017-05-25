@@ -5,7 +5,10 @@ from java.time import LocalDateTime
 
 from celestaunit.internal_celesta_unit import CelestaUnit
 from ztest._ztest_orm import tableForGetDateInViewCursor, viewWithGetDateCursor, zeroInsertCursor
-from ztest._ztest_orm import tableCountWithoutConditionCursor, tableCountAndGetDateConditionCursor, viewCountWithoutConditionCursor, viewCountAndGetDateConditionCursor
+from ztest._ztest_orm import tableCountWithoutConditionCursor, tableCountAndGetDateConditionCursor\
+    , viewCountWithoutConditionCursor, viewCountAndGetDateConditionCursor, tableSumOneFieldCursor\
+    , viewSumOneFieldCursor, viewSumOneFieldAndNumberCursor, viewSumTwoNumbersCursor\
+    , tableSumTwoFieldsCursor, viewSumTwoFieldsCursor
 
 class TestGetDate(CelestaUnit):
     def test_getdate_in_view(self):
@@ -67,3 +70,63 @@ class TestGetDate(CelestaUnit):
 
         viewCursor.first()
         self.assertEqual(1, viewCursor.c)
+
+
+    def test_sum_one_field(self):
+        tableOneFieldCursor = tableSumOneFieldCursor(self.context)
+        viewOneFieldCursor = viewSumOneFieldCursor(self.context)
+        viewOneFieldAndNumberCursor= viewSumOneFieldAndNumberCursor(self.context)
+        viewTwoNumbersCursor = viewSumTwoNumbersCursor(self.context)
+
+        self.assertEqual(1, viewOneFieldCursor.count())
+        self.assertEqual(1, viewOneFieldAndNumberCursor.count())
+        self.assertEqual(1, viewTwoNumbersCursor.count())
+
+        viewOneFieldCursor.first()
+        viewOneFieldAndNumberCursor.first()
+        viewTwoNumbersCursor.first()
+        self.assertEqual(None, viewOneFieldCursor.s)
+        self.assertEqual(None, viewOneFieldAndNumberCursor.s)
+        self.assertEqual(None, viewTwoNumbersCursor.s)
+
+        tableOneFieldCursor.f = 4
+        tableOneFieldCursor.insert()
+
+        viewOneFieldCursor.first()
+        viewOneFieldAndNumberCursor.first()
+        viewTwoNumbersCursor.first()
+        self.assertEqual(4, viewOneFieldCursor.s)
+        self.assertEqual(5, viewOneFieldAndNumberCursor.s)
+        self.assertEqual(3, viewTwoNumbersCursor.s)
+
+
+    def test_sum_two_fields(self):
+        tableTwoFieldsCursor = tableSumTwoFieldsCursor(self.context)
+        viewTwoFieldsCursor = viewSumTwoFieldsCursor(self.context)
+
+        self.assertEqual(1, viewTwoFieldsCursor.count())
+
+        viewTwoFieldsCursor.first()
+        self.assertEqual(None, viewTwoFieldsCursor.s)
+
+        tableTwoFieldsCursor.f1 = 2
+        tableTwoFieldsCursor.insert()
+        tableTwoFieldsCursor.clear()
+
+        viewTwoFieldsCursor.first()
+        self.assertEqual(None, viewTwoFieldsCursor.s)
+
+        tableTwoFieldsCursor.f2 = 2
+        tableTwoFieldsCursor.insert()
+        tableTwoFieldsCursor.clear()
+
+        viewTwoFieldsCursor.first()
+        self.assertEqual(None, viewTwoFieldsCursor.s)
+
+        tableTwoFieldsCursor.f1 = 2
+        tableTwoFieldsCursor.f2 = 3
+        tableTwoFieldsCursor.insert()
+        tableTwoFieldsCursor.clear()
+
+        viewTwoFieldsCursor.first()
+        self.assertEqual(5, viewTwoFieldsCursor.s)

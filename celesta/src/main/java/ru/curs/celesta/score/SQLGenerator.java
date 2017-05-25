@@ -190,8 +190,21 @@ public class SQLGenerator extends ExprVisitor {
   }
 
   @Override
-  void visitAggregate(Count expr, AggregateType type) {
-    stack.push("COUNT(*)");
+  void visitAggregate(Aggregate expr) {
+
+    if (expr instanceof Count)
+      stack.push("COUNT(*)");
+    if (expr instanceof Sum) {
+      StringBuilder sb = new StringBuilder("SUM(");
+      Sum sum = (Sum) expr;
+
+      for (Expr term : sum.exprs) {
+        sb.append(generateSQL(term));
+      }
+      sb.append(")");
+
+      stack.push(sb.toString());
+    }
   }
 
   protected boolean quoteNames() {
