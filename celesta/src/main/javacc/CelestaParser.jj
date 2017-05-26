@@ -84,11 +84,12 @@ TOKEN: /* SQL keywords */
 |   <K_WHERE:      "WHERE">
 |   <K_TRUE:       "TRUE">
 |   <K_FALSE:      "FALSE">
-|   <K_GROUP_BY:   "GROUP BY">
+|   <K_GROUP:      "GROUP">
 |   <K_COUNT:      "COUNT">
 |   <K_SUM:        "SUM">
 |   <K_MIN:        "MIN">
 |   <K_MAX:        "MAX">
+|   <K_BY:         "BY">
 }
 
 TOKEN: /* Datatypes */
@@ -465,7 +466,7 @@ Token t = null;}
   | t = <K_FALSE>            {result = new BooleanLiteral(false);}
   | <K_GETDATE> "(" ")"      {result = new GetDate();}
   | "(" result = sqlExpression() ")"  {result = new ParenthesizedExpr(result);}
-  | result = fieldReference()         
+  | result = fieldReference()
   ) {return result;}
 }
 
@@ -482,14 +483,25 @@ FieldRef fieldReference():
 }
 
 void select(View v):
-{Expr where;}
+{
+Expr where;
+FieldRef fr;
+}
 {
     <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
     <K_FROM>  fromClause(v)
     [<K_WHERE> where = sqlExpression() {v.setWhereCondition(where);} ]
+    [<K_GROUP> <K_BY>  groupBy(v)]
 }
 
-Expr aggregateFunc():
+void groupBy(View view):
+{ FieldRef fr; }
+{
+fr = fieldReference() {view.addGroupByColumn(fr);}
+     ("," fr = fieldReference() {view.addGroupByColumn(fr);} )*
+}
+
+Expr aggregateFunc(View v):
 {
     List<Expr> terms = new ArrayList();
     Expr term;
@@ -497,10 +509,10 @@ Expr aggregateFunc():
 }
 {
   (
-      <K_COUNT>"(*)"  {return new Count();}
+      <K_COUNT>"(*)"  {v.setAggregate(true); return new Count();}
       | (t = <K_SUM> | t =  <K_MAX> | t = <K_MIN>)"(" term = sqlTermExpr() {terms.add(term);}
       ("," term = sqlTermExpr() {terms.add(term);} )* ")"
-      { return new ComplexAggregate(terms, t.toString()); }
+      { v.setAggregate(true); return new ComplexAggregate(terms, t.toString()); }
   )
 }
 
@@ -512,7 +524,7 @@ void selectItem(View v):
   Expr expr;  
 }
 {
-   [doc = <CELESTA_DOC>] (expr = sqlTermExpr() | expr = aggregateFunc()) [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]
+   [doc = <CELESTA_DOC>] (expr = sqlTermExpr() | expr = aggregateFunc(v)) [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]
    { if (alias.isEmpty() && expr instanceof FieldRef)
 		   alias = ((FieldRef) expr).getColumnName();
      if (doc != null)

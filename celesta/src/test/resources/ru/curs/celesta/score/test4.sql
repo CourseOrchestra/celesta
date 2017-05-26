@@ -43,11 +43,11 @@ CREATE TABLE app_division_currentstatus_emp(
 
 CREATE TABLE app_division_group(
 	app_division int NOT NULL DEFAULT 0,
-	group varchar(50) NOT NULL DEFAULT '',
+	group_title varchar(50) NOT NULL DEFAULT '',
  CONSTRAINT pk_app_division_group PRIMARY KEY  
 (
 	app_division,
-	group
+	group_title
 )
 ) ;
 

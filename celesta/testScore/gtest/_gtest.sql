@@ -63,6 +63,9 @@ create view testMaxView AS
 create view testMinView AS
  select min(f5) as s from test;
 
+create view testGroupByView AS
+ select max(f5) as m, f8 from test GROUP BY f8;
+
 create view v3 as select 1 as a, /**test celestadoc*/1.4 as b, /**test celestadoc2*/1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j, 1 as k
   from test;
   

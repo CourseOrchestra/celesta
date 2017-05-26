@@ -283,7 +283,7 @@ public class ParserTest {
 		ForeignKey fk = t.getForeignKeys().iterator().next();
 		assertEquals("fk_x_rolempyees_xroles", fk.getConstraintName());
 
-		assertEquals(20755, input.getCount());
-		assertEquals(0xED0D634B, input.getCRC32());
+		assertEquals(20767, input.getCount());
+		assertEquals(0x1754E6E7, input.getCRC32());
 	}
 }

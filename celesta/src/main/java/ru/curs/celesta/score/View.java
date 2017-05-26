@@ -6,6 +6,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Объект-представление в метаданных.
@@ -14,6 +15,7 @@ public class View extends GrainElement {
 	private boolean distinct;
 	private boolean aggregate;
 	private final Map<String, Expr> columns = new LinkedHashMap<>();
+	private final Map<String, FieldRef> groupByColumns = new LinkedHashMap<>();
 	private Map<String, ViewColumnMeta> columnTypes = null;
 	private final Map<String, TableRef> tables = new LinkedHashMap<>();
 	private Expr whereCondition;
@@ -58,6 +60,14 @@ public class View extends GrainElement {
 		this.distinct = distinct;
 	}
 
+	public boolean isAggregate() {
+		return aggregate;
+	}
+
+	public void setAggregate(boolean aggregate) {
+		this.aggregate = aggregate;
+	}
+
 	/**
 	 * Добавляет колонку к представлению.
 	 * 
@@ -80,6 +90,33 @@ public class View extends GrainElement {
 					getName(), alias));
 
 		columns.put(alias, expr);
+	}
+
+
+	/**
+	 * Добавляет колонку к выражению "GROUP BY" представления.
+	 * @param fr
+	 *            Выражение колонки.
+	 * @throws ParseException
+	 *             Неуникальное имя алиаса, отсутствие колонки в выборке или иная семантическая ошибка
+	 */
+	void addGroupByColumn(FieldRef fr) throws ParseException {
+		if (fr == null)
+			throw new IllegalArgumentException();
+
+		String alias = fr.getColumnName();
+
+		if (groupByColumns.containsKey(alias))
+			throw new ParseException(String.format(
+					"View '%s' already contains column with name or alias '%s' in GROUP BY expression. Use unique aliases.",
+					getName(), alias));
+		//GROUP BY парсится после того, как объявлены столбцы для выборки. Проверяем соответствие.
+		if (columns.get(alias) == null) {
+			throw new ParseException(String.format("View '%s' doesn't contain a column with alias '%s' " +
+					"defined in GROUP BY expression", getName(), alias));
+		}
+
+		groupByColumns.put(alias, fr);
 	}
 
 	/**
@@ -140,6 +177,24 @@ public class View extends GrainElement {
 			whereCondition.resolveFieldRefs(t);
 			whereCondition.validateTypes();
 		}
+
+		//TODO: Решить оставляем так или улучшаем
+		//Проверяем, что колонки, не использованные для агрегации, перечислены в выражении GROUP BY
+		if (aggregate && columns.size() > 1) {
+			String aggregateAlias = columns.entrySet().stream()
+					.filter(e -> e.getValue() instanceof Aggregate)
+					.findFirst().get().getKey();
+
+			List<String> errorAliases = columns.keySet().stream()
+					.filter(alias -> !alias.equals(aggregateAlias) && !groupByColumns.containsKey(alias))
+					.collect(Collectors.toList());
+
+			if (!errorAliases.isEmpty()) {
+				throw new ParseException(String.format("View '%s' contains a column " +
+						"which was not specified in aggregate function and GROUP BY expression.", getName()));
+			}
+		}
+
 	}
 
 	/**
@@ -226,6 +281,20 @@ public class View extends GrainElement {
 			bw.newLine();
 			bw.write("  where ");
 			bw.write(gen.generateSQL(whereCondition));
+		}
+		if (!groupByColumns.isEmpty()) {
+			bw.newLine();
+			bw.write(" group by ");
+
+			int countOfProccessed = 0;
+			for (String alias : groupByColumns.keySet()) {
+				bw.write(alias);
+
+				if (++countOfProccessed != groupByColumns.size()) {
+					bw.write(", ");
+				}
+			}
+
 		}
 	}
 
