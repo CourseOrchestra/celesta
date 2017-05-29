@@ -1,0 +1,2 @@
+
+print "simpleCases initialization"

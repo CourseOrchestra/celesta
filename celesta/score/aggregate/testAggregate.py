@@ -4,37 +4,14 @@ from java.sql import Timestamp
 from java.time import LocalDateTime
 
 from celestaunit.internal_celesta_unit import CelestaUnit
-from ztest._ztest_orm import tableForGetDateInViewCursor, viewWithGetDateCursor, zeroInsertCursor
-from ztest._ztest_orm import tableCountWithoutConditionCursor, tableCountAndGetDateConditionCursor\
+from aggregate._aggregate_orm import tableCountWithoutConditionCursor, tableCountAndGetDateConditionCursor\
     , viewCountWithoutConditionCursor, viewCountAndGetDateConditionCursor, tableSumOneFieldCursor\
     , viewSumOneFieldCursor, viewSumOneFieldAndNumberCursor, viewSumTwoNumbersCursor\
     , tableSumTwoFieldsCursor, viewSumTwoFieldsCursor, tableMinMaxCursor\
     , viewMinOneFieldCursor, viewMaxOneFieldCursor, viewMinTwoFieldsCursor, viewMaxTwoFieldsCursor\
-    , tableGroupByCursor, viewGroupByCursor, viewCountMinMaxCursor
+    , tableGroupByCursor, viewGroupByAndAggregateCursor, viewGroupByCursor, viewCountMinMaxCursor
 
-class TestGetDate(CelestaUnit):
-    def test_getdate_in_view(self):
-        viewCursor = viewWithGetDateCursor(self.context)
-        self.assertEqual(0, viewCursor.count())
-
-        tableCursor = tableForGetDateInViewCursor(self.context)
-
-        tableCursor.date = Timestamp.valueOf(LocalDateTime.now().minusDays(1))
-        tableCursor.insert()
-        self.assertEqual(0, viewCursor.count())
-
-        tableCursor.clear()
-        tableCursor.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
-        tableCursor.insert()
-        self.assertEqual(1, viewCursor.count())
-
-
-    def test_zero_insert(self):
-        c = zeroInsertCursor(self.context)
-        c.insert()
-        print c.id
-        print c.date
-
+class TestAggregate(CelestaUnit):
 
     def test_count_without_condition(self):
         viewCursor = viewCountWithoutConditionCursor(self.context)
@@ -187,9 +164,10 @@ class TestGetDate(CelestaUnit):
 
 def testGroupBy(self):
         tableCursor = tableGroupByCursor(self.context)
-        viewCursor = viewGroupByCursor(self.context)
+        viewGroupByCur = viewGroupByCursor(self.context)
+        viewAggregateCursor = viewGroupByAndAggregateCursor(self.context)
 
-        self.assertEqual(0, viewCursor.count())
+        self.assertEqual(0, viewAggregateCursor.count())
 
         name1 = "A"
         name2 = "B"
@@ -198,6 +176,11 @@ def testGroupBy(self):
         tableCursor.cost = 100
         tableCursor.insert()
         tableCursor.clear()
+
+        viewGroupByCur.first()
+        self.assertEqual(name1, viewGroupByCur.name)
+        self.assertEqual(100, viewGroupByCur.cost)
+
         tableCursor.name = name1
         tableCursor.cost = 150
         tableCursor.insert()
@@ -207,11 +190,11 @@ def testGroupBy(self):
         tableCursor.insert()
         tableCursor.clear()
 
-        self.assertEqual(2, viewCursor.count())
-        viewCursor.first()
-        self.assertEqual(name1, viewCursor.name)
-        self.assertEqual(250, viewCursor.s)
+        self.assertEqual(2, viewAggregateCursor.count())
+        viewAggregateCursor.first()
+        self.assertEqual(name1, viewAggregateCursor.name)
+        self.assertEqual(250, viewAggregateCursor.s)
 
-        viewCursor.next()
-        self.assertEqual(name2, viewCursor.name)
-        self.assertEqual(50, viewCursor.s)
+        viewAggregateCursor.next()
+        self.assertEqual(name2, viewAggregateCursor.name)
+        self.assertEqual(50, viewAggregateCursor.s)
