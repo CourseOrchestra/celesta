@@ -189,28 +189,6 @@ public class SQLGenerator extends ExprVisitor {
     stack.push(now);
   }
 
-  
-  
-  
-  @Override
-  void visitAggregate(Aggregate expr) {
-
-    if (expr instanceof Count)
-      stack.push("COUNT(*)");
-    if (expr instanceof ComplexAggregate) {
-      ComplexAggregate agrExpr = (ComplexAggregate) expr;
-
-      StringBuilder sb = new StringBuilder(agrExpr.type.toString())
-          .append("(");
-
-      for (Expr term : agrExpr.terms) {
-        sb.append(generateSQL(term));
-      }
-      sb.append(")");
-
-      stack.push(sb.toString());
-    }
-  }
 
   protected boolean quoteNames() {
     return true;
@@ -243,28 +221,24 @@ public class SQLGenerator extends ExprVisitor {
         t.getAlias());
   }
 
-@Override
-void visitCount(Count expr) throws ParseException {
-	// TODO Auto-generated method stub
-	super.visitCount(expr);
-}
+  @Override
+  void visitCount(Count expr) throws ParseException {
+    stack.push("COUNT(*)");
+  }
 
-@Override
-void visitSum(Sum expr) throws ParseException {
-	// TODO Auto-generated method stub
-	super.visitSum(expr);
-}
+  @Override
+  void visitSum(Sum expr) throws ParseException {
+    stack.push("SUM(" + stack.pop() + ")");
+  }
 
-@Override
-void visitMax(Max expr) throws ParseException {
-	// TODO Auto-generated method stub
-	super.visitMax(expr);
-}
+  @Override
+  void visitMax(Max expr) throws ParseException {
+    stack.push("MAX(" + stack.pop() + ")");
+  }
 
-@Override
-void visitMin(Min expr) throws ParseException {
-	// TODO Auto-generated method stub
-	super.visitMin(expr);
-}
+  @Override
+  void visitMin(Min expr) throws ParseException {
+    stack.push("MIN(" + stack.pop() + ")");
+  }
 
 }

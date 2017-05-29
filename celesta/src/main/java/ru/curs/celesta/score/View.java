@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
  */
 public class View extends GrainElement {
 	private boolean distinct;
-	private boolean aggregate;
 	private final Map<String, Expr> columns = new LinkedHashMap<>();
 	private final Map<String, FieldRef> groupByColumns = new LinkedHashMap<>();
 	private Map<String, ViewColumnMeta> columnTypes = null;
@@ -58,14 +57,6 @@ public class View extends GrainElement {
 	 */
 	void setDistinct(boolean distinct) {
 		this.distinct = distinct;
-	}
-
-	public boolean isAggregate() {
-		return aggregate;
-	}
-
-	public void setAggregate(boolean aggregate) {
-		this.aggregate = aggregate;
 	}
 
 	/**

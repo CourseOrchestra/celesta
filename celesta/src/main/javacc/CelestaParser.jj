@@ -508,10 +508,10 @@ Expr aggregateFunc(View v):
 }
 {
   (
-      <K_COUNT>"(" "*" ")"                   { v.setAggregate(true); return new Count();}
-      | <K_SUM> "(" term = sqlTermExpr() ")" { v.setAggregate(true); return new Sum(term); }
-      | <K_MAX> "(" term = sqlTermExpr() ")" { v.setAggregate(true); return new Max(term); }
-      | <K_MIN> "(" term = sqlTermExpr() ")" { v.setAggregate(true); return new Min(term); }
+      <K_COUNT> "(" "*" ")"                  { return new Count(); }
+      | <K_SUM> "(" term = sqlTermExpr() ")" { return new Sum(term); }
+      | <K_MAX> "(" term = sqlTermExpr() ")" { return new Max(term); }
+      | <K_MIN> "(" term = sqlTermExpr() ")" { return new Min(term); }
   )
 }
 
