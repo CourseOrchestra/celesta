@@ -108,14 +108,9 @@ public class View extends GrainElement {
 
 		if (groupByColumns.containsKey(alias))
 			throw new ParseException(String.format(
-					"View '%s' already contains column with name or alias '%s' in GROUP BY expression. Use unique aliases.",
-					getName(), alias));
-		//GROUP BY парсится после того, как объявлены столбцы для выборки. Проверяем соответствие.
-		if (columns.get(alias) == null) {
-			throw new ParseException(String.format("View '%s' doesn't contain a column with alias '%s' " +
-					"defined in GROUP BY expression", getName(), alias));
-		}
-
+					"Duplicate column '%s' in GROUP BY expression for view '%s.%s'.",
+					alias, getGrain().getName(), getName()));
+		
 		groupByColumns.put(alias, fr);
 	}
 
@@ -180,13 +175,19 @@ public class View extends GrainElement {
 
 		//TODO: Решить оставляем так или улучшаем
 		//Проверяем, что колонки, не использованные для агрегации, перечислены в выражении GROUP BY
-		if (aggregate && columns.size() > 1) {
-			Set<String> aggregateAliases = columns.entrySet().stream()
-					.filter(e -> e.getValue() instanceof Aggregate)
-					.map(Map.Entry::getKey)
-					.collect(Collectors.toSet());
 
-			if (!aggregateAliases.containsAll(columns.keySet())) {
+		
+		Set<String> aggregateAliases = columns.entrySet().stream()
+				.filter(e -> e.getValue() instanceof Aggregate)
+				.map(Map.Entry::getKey)
+				.collect(Collectors.toSet());
+		
+		if (   (aggregateAliases.size() > 0 && aggregateAliases.size() !=  columns.size()) 
+				|| groupByColumns.size() > 0) {
+
+			{
+				//TODO пробежаться по колонкам, которые не агрегаты, и проверить, 
+				//что каждая из них присутствует в groupByColumns
 
 				List<String> errorAliases = columns.keySet().stream()
 						.filter(alias -> !aggregateAliases.contains(alias) && !groupByColumns.containsKey(alias))

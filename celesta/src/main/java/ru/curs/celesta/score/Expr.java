@@ -641,29 +641,80 @@ final class GetDate extends Expr {
 
 
 abstract class Aggregate extends Expr {
+
+}
+
+final class Count extends Aggregate {
 	@Override
 	public ViewColumnMeta getMeta() {
 		return new ViewColumnMeta(ViewColumnType.INT);
 	}
-
+	
 	@Override
 	void accept(ExprVisitor visitor) throws ParseException {
-		visitor.visitAggregate(this);
+		visitor.visitCount(this);
+	}
+	
+}
+
+final class Sum extends Aggregate {
+	Expr term;
+	
+	Sum(Expr term) {
+		this.term = term;
+	}
+	
+	@Override
+	public ViewColumnMeta getMeta() {
+		return term.getMeta();
+	}
+	
+	
+	@Override
+	void accept(ExprVisitor visitor) throws ParseException {
+		term.accept(visitor);
+		visitor.visitSum(this);
 	}
 }
 
-final class Count extends Aggregate {}
+final class Max extends Aggregate {
+	Expr term;
+	
+	Max(Expr term) {
+		this.term = term;
+	}
+	
+	@Override
+	void accept(ExprVisitor visitor) throws ParseException {
+		term.accept(visitor);
+		visitor.visitMax(this);
+	}
 
-final class ComplexAggregate extends Aggregate {
-
-	List<Expr> terms;
-	AggregateType type;
-
-	ComplexAggregate(List<Expr> terms, String typeStr) {
-		this.terms = terms;
-		this.type = AggregateType.valueOf(typeStr.toUpperCase());
+	@Override
+	public ViewColumnMeta getMeta() {
+		return term.getMeta();
 	}
 }
+
+final class Min extends Aggregate {
+	Expr term;
+	
+	Min(Expr term) {
+		this.term = term;
+	}
+	
+	@Override
+	void accept(ExprVisitor visitor) throws ParseException {
+		term.accept(visitor);
+		visitor.visitMin(this);
+	}
+
+	@Override
+	public ViewColumnMeta getMeta() {
+		return term.getMeta();
+	}
+}
+
 
 /**
  * Ссылка на колонку таблицы.

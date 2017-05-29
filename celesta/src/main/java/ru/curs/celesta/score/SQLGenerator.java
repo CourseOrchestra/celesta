@@ -189,6 +189,9 @@ public class SQLGenerator extends ExprVisitor {
     stack.push(now);
   }
 
+  
+  
+  
   @Override
   void visitAggregate(Aggregate expr) {
 
@@ -239,5 +242,29 @@ public class SQLGenerator extends ExprVisitor {
     return String.format("%s.%s as \"%s\"", t.getTable().getGrain().getQuotedName(), t.getTable().getQuotedName(),
         t.getAlias());
   }
+
+@Override
+void visitCount(Count expr) throws ParseException {
+	// TODO Auto-generated method stub
+	super.visitCount(expr);
+}
+
+@Override
+void visitSum(Sum expr) throws ParseException {
+	// TODO Auto-generated method stub
+	super.visitSum(expr);
+}
+
+@Override
+void visitMax(Max expr) throws ParseException {
+	// TODO Auto-generated method stub
+	super.visitMax(expr);
+}
+
+@Override
+void visitMin(Min expr) throws ParseException {
+	// TODO Auto-generated method stub
+	super.visitMin(expr);
+}
 
 }

@@ -503,16 +503,15 @@ fr = fieldReference() {view.addGroupByColumn(fr);}
 
 Expr aggregateFunc(View v):
 {
-    List<Expr> terms = new ArrayList();
     Expr term;
     Token t;
 }
 {
   (
-      <K_COUNT>"(*)"  {v.setAggregate(true); return new Count();}
-      | (t = <K_SUM> | t =  <K_MAX> | t = <K_MIN>)"(" term = sqlTermExpr() {terms.add(term);}
-      ("," term = sqlTermExpr() {terms.add(term);} )* ")"
-      { v.setAggregate(true); return new ComplexAggregate(terms, t.toString()); }
+      <K_COUNT>"(" "*" ")"                   { v.setAggregate(true); return new Count();}
+      | <K_SUM> "(" term = sqlTermExpr() ")" { v.setAggregate(true); return new Sum(term); }
+      | <K_MAX> "(" term = sqlTermExpr() ")" { v.setAggregate(true); return new Max(term); }
+      | <K_MIN> "(" term = sqlTermExpr() ")" { v.setAggregate(true); return new Min(term); }
   )
 }
 

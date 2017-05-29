@@ -52,8 +52,20 @@ public abstract class ExprVisitor {
 
 	void visitGetDate(GetDate expr) throws ParseException {
 	}
-
-	void visitAggregate(Aggregate expr) { }
+	
+	void visitCount(Count expr) throws ParseException {
+	}
+	
+	void visitSum(Sum expr) throws ParseException {
+	}
+	
+	void visitMax(Max expr) throws ParseException {
+	}
+	
+	void visitMin(Min expr) throws ParseException {
+	}
+	
+	
 }
 
 /**
@@ -167,4 +179,10 @@ final class TypeChecker extends ExprVisitor {
 		expr.getExpr().assertType(ViewColumnType.LOGIC);
 	}
 
+	@Override
+	void visitSum(Sum expr) throws ParseException {
+		expr.term.assertType(ViewColumnType.REAL);
+	}
+
+	
 }
