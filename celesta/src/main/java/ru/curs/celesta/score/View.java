@@ -181,17 +181,21 @@ public class View extends GrainElement {
 		//TODO: Решить оставляем так или улучшаем
 		//Проверяем, что колонки, не использованные для агрегации, перечислены в выражении GROUP BY
 		if (aggregate && columns.size() > 1) {
-			String aggregateAlias = columns.entrySet().stream()
+			Set<String> aggregateAliases = columns.entrySet().stream()
 					.filter(e -> e.getValue() instanceof Aggregate)
-					.findFirst().get().getKey();
+					.map(Map.Entry::getKey)
+					.collect(Collectors.toSet());
 
-			List<String> errorAliases = columns.keySet().stream()
-					.filter(alias -> !alias.equals(aggregateAlias) && !groupByColumns.containsKey(alias))
-					.collect(Collectors.toList());
+			if (!aggregateAliases.containsAll(columns.keySet())) {
 
-			if (!errorAliases.isEmpty()) {
-				throw new ParseException(String.format("View '%s' contains a column " +
-						"which was not specified in aggregate function and GROUP BY expression.", getName()));
+				List<String> errorAliases = columns.keySet().stream()
+						.filter(alias -> !aggregateAliases.contains(alias) && !groupByColumns.containsKey(alias))
+						.collect(Collectors.toList());
+
+				if (!errorAliases.isEmpty()) {
+					throw new ParseException(String.format("View '%s' contains a column " +
+							"which was not specified in aggregate function and GROUP BY expression.", getName()));
+				}
 			}
 		}
 
@@ -286,11 +290,11 @@ public class View extends GrainElement {
 			bw.newLine();
 			bw.write(" group by ");
 
-			int countOfProccessed = 0;
-			for (String alias : groupByColumns.keySet()) {
-				bw.write(alias);
+			int countOfProcessed = 0;
+			for (Expr field : groupByColumns.values()) {
+				bw.write(gen.generateSQL(field));
 
-				if (++countOfProccessed != groupByColumns.size()) {
+				if (++countOfProcessed != groupByColumns.size()) {
 					bw.write(", ");
 				}
 			}

@@ -9,7 +9,8 @@ from ztest._ztest_orm import tableCountWithoutConditionCursor, tableCountAndGetD
     , viewCountWithoutConditionCursor, viewCountAndGetDateConditionCursor, tableSumOneFieldCursor\
     , viewSumOneFieldCursor, viewSumOneFieldAndNumberCursor, viewSumTwoNumbersCursor\
     , tableSumTwoFieldsCursor, viewSumTwoFieldsCursor, tableMinMaxCursor\
-    , viewMinOneFieldCursor, viewMaxOneFieldCursor, viewMinTwoFieldsCursor, viewMaxTwoFieldsCursor
+    , viewMinOneFieldCursor, viewMaxOneFieldCursor, viewMinTwoFieldsCursor, viewMaxTwoFieldsCursor\
+    , tableGroupByCursor, viewGroupByCursor, viewCountMinMaxCursor
 
 class TestGetDate(CelestaUnit):
     def test_getdate_in_view(self):
@@ -139,19 +140,25 @@ class TestGetDate(CelestaUnit):
       viewMaxOneFieldCur = viewMaxOneFieldCursor(self.context)
       viewMinTwoFieldsCur = viewMinTwoFieldsCursor(self.context)
       viewMaxTwoFieldsCur = viewMaxTwoFieldsCursor(self.context)
+      viewCountMinMaxCur = viewCountMinMaxCursor(self.context)
 
-      viewMinOneFieldCur.first();
-      viewMaxOneFieldCur.first();
-      viewMinTwoFieldsCur.first();
-      viewMaxTwoFieldsCur.first();
+      viewMinOneFieldCur.first()
+      viewMaxOneFieldCur.first()
+      viewMinTwoFieldsCur.first()
+      viewMaxTwoFieldsCur.first()
+      viewCountMinMaxCur.first()
       self.assertEqual(1, viewMinOneFieldCur.count())
       self.assertEqual(1, viewMaxOneFieldCur.count())
       self.assertEqual(1, viewMinTwoFieldsCur.count())
       self.assertEqual(1, viewMaxTwoFieldsCur.count())
+      self.assertEqual(1, viewCountMinMaxCur.count())
       self.assertEqual(None, viewMinOneFieldCur.m)
       self.assertEqual(None, viewMaxOneFieldCur.m)
       self.assertEqual(None, viewMinTwoFieldsCur.m)
       self.assertEqual(None, viewMaxTwoFieldsCur.m)
+      self.assertEqual(0, viewCountMinMaxCur.countv)
+      self.assertEqual(None, viewCountMinMaxCur.maxv)
+      self.assertEqual(None, viewCountMinMaxCur.minv)
 
       tableCur.f1 = 1
       tableCur.f2 = 5
@@ -167,9 +174,44 @@ class TestGetDate(CelestaUnit):
       viewMaxOneFieldCur.first()
       viewMinTwoFieldsCur.first()
       viewMaxTwoFieldsCur.first()
-
+      viewCountMinMaxCur.first()
 
       self.assertEqual(1, viewMinOneFieldCur.m)
       self.assertEqual(5, viewMaxOneFieldCur.m)
       self.assertEqual(6, viewMinTwoFieldsCur.m)
       self.assertEqual(7, viewMaxTwoFieldsCur.m)
+      self.assertEqual(2, viewCountMinMaxCur.countv)
+      self.assertEqual(5, viewCountMinMaxCur.maxv)
+      self.assertEqual(2, viewCountMinMaxCur.minv)
+
+
+def testGroupBy(self):
+        tableCursor = tableGroupByCursor(self.context)
+        viewCursor = viewGroupByCursor(self.context)
+
+        self.assertEqual(0, viewCursor.count())
+
+        name1 = "A"
+        name2 = "B"
+
+        tableCursor.name = name1
+        tableCursor.cost = 100
+        tableCursor.insert()
+        tableCursor.clear()
+        tableCursor.name = name1
+        tableCursor.cost = 150
+        tableCursor.insert()
+        tableCursor.clear()
+        tableCursor.name = name2
+        tableCursor.cost = 50
+        tableCursor.insert()
+        tableCursor.clear()
+
+        self.assertEqual(2, viewCursor.count())
+        viewCursor.first()
+        self.assertEqual(name1, viewCursor.name)
+        self.assertEqual(250, viewCursor.s)
+
+        viewCursor.next()
+        self.assertEqual(name2, viewCursor.name)
+        self.assertEqual(50, viewCursor.s)

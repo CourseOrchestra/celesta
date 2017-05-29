@@ -77,4 +77,14 @@ create view viewMinTwoFields as
 create view viewMaxTwoFields as
   select max(f1 + f2) as m from tableMinMax;
 
+create view viewCountMinMax as
+  select count(*) as countv, max(f1) as maxv, min(f2) as minv from tableMinMax;
 
+create table tableGroupBy (
+  id int identity not null primary key,
+  name varchar(255),
+  cost int
+);
+
+create view viewGroupBy as
+  select name, sum(cost) as s from tableGroupBy group by name;
