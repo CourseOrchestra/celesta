@@ -4,15 +4,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
 
+import org.python.core.PyFunction;
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
+import ru.curs.celesta.event.TriggerType;
 
 /**
  * Курсор таблицы логирования входов и выходов из системы.
  */
 public class SessionLogCursor extends SysCursor {
+
+	public static final String TABLE_NAME = "sessionlog";
 
 	private Integer entryno;
 	private String sessionid;
@@ -73,7 +78,7 @@ public class SessionLogCursor extends SysCursor {
 	// CHECKSTYLE:OFF
 	protected String _tableName() {
 		// CHECKSTYLE:ON
-		return "sessionlog";
+		return TABLE_NAME;
 	}
 
 	@Override
@@ -215,5 +220,60 @@ public class SessionLogCursor extends SysCursor {
 	 */
 	public void setFailedlogin(boolean failedlogin) {
 		this.failedlogin = failedlogin;
+	}
+
+
+	public static void onPreDelete(PyFunction pyFunction) {
+		try {
+			Celesta.getInstance().getTriggerDispatcher()
+					.registerTrigger(TriggerType.PRE_DELETE, TABLE_NAME, pyFunction);
+		} catch (CelestaException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static void onPostDelete(PyFunction pyFunction) {
+		try {
+			Celesta.getInstance().getTriggerDispatcher()
+					.registerTrigger(TriggerType.POST_DELETE, TABLE_NAME, pyFunction);
+		} catch (CelestaException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static void onPreUpdate(PyFunction pyFunction) {
+		try {
+			Celesta.getInstance().getTriggerDispatcher()
+					.registerTrigger(TriggerType.PRE_UPDATE, TABLE_NAME, pyFunction);
+		} catch (CelestaException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static void onPostUpdate(PyFunction pyFunction) {
+		try {
+			Celesta.getInstance().getTriggerDispatcher()
+					.registerTrigger(TriggerType.POST_UPDATE, TABLE_NAME, pyFunction);
+		} catch (CelestaException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static void onPreInsert(PyFunction pyFunction) {
+		try {
+			Celesta.getInstance().getTriggerDispatcher()
+					.registerTrigger(TriggerType.PRE_INSERT, TABLE_NAME, pyFunction);
+		} catch (CelestaException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static void onPostInsert(PyFunction pyFunction) {
+		try {
+			Celesta.getInstance().getTriggerDispatcher()
+					.registerTrigger(TriggerType.POST_INSERT, TABLE_NAME, pyFunction);
+		} catch (CelestaException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

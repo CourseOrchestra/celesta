@@ -66,6 +66,7 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.DBUpdator;
 import ru.curs.celesta.dbutils.ProfilingManager;
 import ru.curs.celesta.dbutils.SessionLogManager;
+import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.ormcompiler.ORMCompiler;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.ParseException;
@@ -90,6 +91,8 @@ public final class Celesta {
 
 	private final ProfilingManager profiler = new ProfilingManager();
 
+	private TriggerDispatcher triggerDispatcher;
+
 	private Celesta(boolean initInterpeterPool) throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
 		// 1. Разбор описания гранул.
@@ -105,6 +108,7 @@ public final class Celesta {
 		// 3. Обновление структуры базы данных.
 		// Т. к. на данном этапе уже используется метаинформация, то theCelesta
 		// необходимо проинициализировать.
+		this.triggerDispatcher = new TriggerDispatcher();
 		theCelesta = this;
 
 		if (!AppSettings.getSkipDBUpdate()) {
@@ -595,5 +599,9 @@ public final class Celesta {
 	 */
 	public void setProfilemode(boolean profilemode) {
 		profiler.setProfilemode(profilemode);
+	}
+
+	public TriggerDispatcher getTriggerDispatcher() {
+		return triggerDispatcher;
 	}
 }
