@@ -4,10 +4,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.filter.AbstractFilter;
-import ru.curs.celesta.dbutils.filter.Filter;
-import ru.curs.celesta.dbutils.filter.Range;
-import ru.curs.celesta.dbutils.filter.SingleValue;
+import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.score.Table;
 
@@ -190,6 +187,8 @@ public class WhereTermsMaker {
 				l = new SingleValueTerm(e.getKey(), (SingleValue) f);
 			} else if (f instanceof Range) {
 				l = new RangeTerm(e.getKey(), (Range) f);
+			} else if (f instanceof In) {
+				l = new InTerm((In) f);
 			} else {
 				l = new FilterTerm(e.getKey(), (Filter) f);
 			}

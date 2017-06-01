@@ -43,10 +43,8 @@ import java.util.regex.*;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.filter.AbstractFilter;
-import ru.curs.celesta.dbutils.filter.Filter;
-import ru.curs.celesta.dbutils.filter.Range;
-import ru.curs.celesta.dbutils.filter.SingleValue;
+import ru.curs.celesta.dbutils.filter.*;
+import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 import ru.curs.celesta.dbutils.stmt.MaskedStatementHolder;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
@@ -54,6 +52,7 @@ import ru.curs.celesta.dbutils.term.WhereMakerParamsProvider;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.ParseException;
 
 /**
  * Базовый класс курсора для чтения данных из представлений.
@@ -782,6 +781,15 @@ public abstract class BasicCursor implements Closeable {
 			filters.put(name, new Range(valueFrom, valueTo));
 			closeSet();
 		}
+	}
+
+	public final void setIn(FieldsLookup fieldsLookup) throws CelestaException {
+		if (closed)
+			return;
+
+		String name = In.class.getName();
+		filters.put(name, new In(fieldsLookup));
+		closeSet();
 	}
 
 	/**
