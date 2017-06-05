@@ -4,22 +4,24 @@ from java.sql import Timestamp
 from java.time import LocalDateTime
 
 from celestaunit.internal_celesta_unit import CelestaUnit
-from aggregate._aggregate_orm import tableCountWithoutConditionCursor, tableCountAndGetDateConditionCursor\
-    , viewCountWithoutConditionCursor, viewCountAndGetDateConditionCursor, tableSumOneFieldCursor\
-    , viewSumOneFieldCursor, viewSumOneFieldAndNumberCursor, viewSumTwoNumbersCursor\
+from aggregate._aggregate_orm import countConditionLessCursor, countGetDateCondCursor\
+    , viewCountCondLessCursor, viewCountGetDateCondCursor, tableSumOneFieldCursor\
+    , viewSumOneFieldCursor, sumFieldAndNumberCursor, viewSumTwoNumbersCursor\
     , tableSumTwoFieldsCursor, viewSumTwoFieldsCursor, tableMinMaxCursor\
     , viewMinOneFieldCursor, viewMaxOneFieldCursor, viewMinTwoFieldsCursor, viewMaxTwoFieldsCursor\
-    , tableGroupByCursor, viewGroupByAndAggregateCursor, viewGroupByCursor, viewCountMinMaxCursor
+    , tableGroupByCursor, viewGroupByAggregateCursor, viewGroupByCursor, viewCountMinMaxCursor
 
 class TestAggregate(CelestaUnit):
 
     def test_count_without_condition(self):
-        viewCursor = viewCountWithoutConditionCursor(self.context)
+        tableCursor = countConditionLessCursor(self.context)
+        tableCursor.deleteAll()
+
+        viewCursor = viewCountCondLessCursor(self.context)
         self.assertEqual(1, viewCursor.count())
         viewCursor.first()
         self.assertEqual(0, viewCursor.c)
 
-        tableCursor = tableCountWithoutConditionCursor(self.context)
         tableCursor.insert()
         tableCursor.clear()
         tableCursor.insert()
@@ -30,14 +32,16 @@ class TestAggregate(CelestaUnit):
 
 
     def test_count_with_getdate_condition(self):
-        viewCursor = viewCountAndGetDateConditionCursor(self.context)
+        tableCursor = countGetDateCondCursor(self.context)
+        tableCursor.deleteAll()
+
+        viewCursor = viewCountGetDateCondCursor(self.context)
         viewCursor.first()
         self.assertEqual(0, viewCursor.c)
 
-        tableCursor = tableCountAndGetDateConditionCursor(self.context)
         tableCursor.insert()
         tableCursor.clear()
-        tableCursor.date = Timestamp.valueOf(LocalDateTime.now())
+        tableCursor.date = Timestamp.valueOf(LocalDateTime.now().minusSeconds(1))
         tableCursor.insert()
 
         viewCursor.first()
@@ -53,8 +57,10 @@ class TestAggregate(CelestaUnit):
 
     def test_sum_one_field(self):
         tableOneFieldCursor = tableSumOneFieldCursor(self.context)
+        tableOneFieldCursor.deleteAll()
+
         viewOneFieldCursor = viewSumOneFieldCursor(self.context)
-        viewOneFieldAndNumberCursor= viewSumOneFieldAndNumberCursor(self.context)
+        viewOneFieldAndNumberCursor= sumFieldAndNumberCursor(self.context)
         viewTwoNumbersCursor = viewSumTwoNumbersCursor(self.context)
 
         self.assertEqual(1, viewOneFieldCursor.count())
@@ -81,6 +87,8 @@ class TestAggregate(CelestaUnit):
 
     def test_sum_two_fields(self):
         tableTwoFieldsCursor = tableSumTwoFieldsCursor(self.context)
+        tableTwoFieldsCursor.deleteAll()
+
         viewTwoFieldsCursor = viewSumTwoFieldsCursor(self.context)
 
         self.assertEqual(1, viewTwoFieldsCursor.count())
@@ -113,6 +121,8 @@ class TestAggregate(CelestaUnit):
 
     def test_min_and_max_one_field(self):
       tableCur = tableMinMaxCursor(self.context)
+      tableCur.deleteAll()
+
       viewMinOneFieldCur = viewMinOneFieldCursor(self.context)
       viewMaxOneFieldCur = viewMaxOneFieldCursor(self.context)
       viewMinTwoFieldsCur = viewMinTwoFieldsCursor(self.context)
@@ -164,8 +174,10 @@ class TestAggregate(CelestaUnit):
 
 def testGroupBy(self):
         tableCursor = tableGroupByCursor(self.context)
+        tableCursor.deleteAll()
+
         viewGroupByCur = viewGroupByCursor(self.context)
-        viewAggregateCursor = viewGroupByAndAggregateCursor(self.context)
+        viewAggregateCursor = viewGroupByAggregateCursor(self.context)
 
         self.assertEqual(0, viewAggregateCursor.count())
 

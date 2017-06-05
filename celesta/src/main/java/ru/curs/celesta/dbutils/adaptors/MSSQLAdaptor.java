@@ -389,8 +389,16 @@ final class MSSQLAdaptor extends DBAdaptor {
 			program.add(ParameterSetter.create(i));
 		}
 
-		String sql = String.format("insert " + tableTemplate() + " (%s) values (%s);", t.getGrain().getName(),
-				t.getName(), fields.toString(), params.toString());
+		final String sql;
+
+		if (fields.length() == 0 && params.length() == 0) {
+			sql = String.format("insert into " + tableTemplate() + " default values;", t.getGrain().getName(),
+					t.getName());
+		} else {
+			sql = String.format("insert " + tableTemplate() + " (%s) values (%s);", t.getGrain().getName(),
+					t.getName(), fields.toString(), params.toString());
+		}
+
 		return prepareStatement(conn, sql);
 	}
 

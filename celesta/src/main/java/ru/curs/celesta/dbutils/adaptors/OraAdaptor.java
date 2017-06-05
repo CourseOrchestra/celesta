@@ -370,8 +370,21 @@ final class OraAdaptor extends DBAdaptor {
 			program.add(ParameterSetter.create(i));
 		}
 
-		String sql = String.format("insert into " + tableTemplate() + " (%s) values (%s)", t.getGrain().getName(),
-				t.getName(), fields.toString(), params.toString());
+		final String sql;
+
+		if (fields.length() == 0 && params.length() == 0) {
+			//Для выполнения пустого insert ищем любое поле, отличное от recversion
+			String columnToInsert = t.getColumns().keySet()
+					.stream()
+					.filter(k -> !Table.RECVERSION.equals(k))
+					.findFirst().get();
+
+			sql = String.format("insert into " + tableTemplate() + " (\"%s\") values (DEFAULT)", t.getGrain().getName(),
+					t.getName(), columnToInsert);
+		} else {
+			sql = String.format("insert into " + tableTemplate() + " (%s) values (%s)", t.getGrain().getName(),
+					t.getName(), fields.toString(), params.toString());
+		}
 		return prepareStatement(conn, sql);
 	}
 

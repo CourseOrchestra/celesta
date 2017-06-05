@@ -1,20 +1,20 @@
 create grain aggregate version '1.0';
 
-create table tableCountWithoutCondition (
+create table countConditionLess (
   id int identity not null primary key,
   date datetime
 );
 
-create table tableCountAndGetDateCondition (
+create table countGetDateCond (
   id int identity not null primary key,
   date datetime
 );
 
-create view viewCountWithoutCondition as
- select count(*) as c from tableCountWithoutCondition;
+create view viewCountCondLess as
+ select count(*) as c from countConditionLess;
 
-create view viewCountAndGetDateCondition as
- select count(*) as c from tableCountAndGetDateCondition where date > getdate();
+create view viewCountGetDateCond as
+ select count(*) as c from countGetDateCond where date > getdate();
 
 create table tableSumOneField (
   id int identity not null primary key,
@@ -24,7 +24,7 @@ create table tableSumOneField (
 create view viewSumOneField as
  select sum(f) as s from tableSumOneField;
 
-create view viewSumOneFieldAndNumber as
+create view sumFieldAndNumber as
  select sum(f + 1) as s from tableSumOneField;
 
 create view viewSumTwoNumbers as
@@ -66,7 +66,7 @@ create table tableGroupBy (
   cost int
 );
 
-create view viewGroupByAndAggregate as
+create view viewGroupByAggregate as
   select name, sum(cost) as s from tableGroupBy group by name;
 
 create view viewGroupBy as

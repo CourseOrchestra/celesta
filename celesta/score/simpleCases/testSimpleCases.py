@@ -5,17 +5,17 @@ from java.time import LocalDateTime
 from ru.curs.celesta.syscursors import LogCursor
 
 from celestaunit.internal_celesta_unit import CelestaUnit
-from simpleCases._simpleCases_orm import tableForGetDateInViewCursor, viewWithGetDateCursor, zeroInsertCursor
+from simpleCases._simpleCases_orm import getDateForViewCursor, viewWithGetDateCursor, zeroInsertCursor
 
 
 def preInsert(logCursor):
-    logCursor.tablename = "table1"
+    logCursor.tablename = "getDateForView"
 
 def postInsert(logCursor):
     logCursor.sessionid = "1"
 
 def preUpdate(logCursor):
-    logCursor.tablename = "table2"
+    logCursor.tablename = "zeroInsert"
 
 def postUpdate(logCursor):
     logCursor.sessionid = "2"
@@ -36,10 +36,11 @@ def postDelete(logCursor):
 
 class TestSimpleCases(CelestaUnit):
     def test_getdate_in_view(self):
+        tableCursor = getDateForViewCursor(self.context)
+        tableCursor.deleteAll()
+
         viewCursor = viewWithGetDateCursor(self.context)
         self.assertEqual(0, viewCursor.count())
-
-        tableCursor = tableForGetDateInViewCursor(self.context)
 
         tableCursor.date = Timestamp.valueOf(LocalDateTime.now().minusDays(1))
         tableCursor.insert()
@@ -53,6 +54,8 @@ class TestSimpleCases(CelestaUnit):
 
     def test_zero_insert(self):
         c = zeroInsertCursor(self.context)
+        c.deleteAll()
+
         c.insert()
         print c.id
         print c.date
@@ -70,17 +73,17 @@ class TestSimpleCases(CelestaUnit):
 
         c.userid = '1'
         c.sessionid = '0'
-        c.grainid = '1'
-        c.tablename = "table"
+        c.grainid = 'simpleCases'
+        c.tablename = "zeroInsert"
         c.action_type = "I"
         c.insert()
 
-        self.assertEqual("table1", c.tablename)
+        self.assertEqual("getDateForView", c.tablename)
         self.assertEqual("1", c.sessionid)
 
         c.update()
 
-        self.assertEqual("table2", c.tablename)
+        self.assertEqual("zeroInsert", c.tablename)
         self.assertEqual("2", c.sessionid)
 
         self.assertFalse(isPreDeleteDone)

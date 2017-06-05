@@ -36,8 +36,8 @@ public class ScoreTest {
 		Grain g3 = s.getGrain("g3");
 		//TODO:Топлогическая сорт-ка направленных графов
 		int o = g1.getDependencyOrder();
-		assertEquals(o + 2, g2.getDependencyOrder());
-		assertEquals(o + 3, g3.getDependencyOrder());
+		assertEquals(o + 3, g2.getDependencyOrder());
+		assertEquals(o + 4, g3.getDependencyOrder());
 
 		assertEquals("score" + File.separator + "g1", g1.getGrainPath().toString());
 		assertEquals("score" + File.separator + "g2", g2.getGrainPath().toString());

@@ -1,12 +1,12 @@
 create grain simpleCases version '1.0';
 
-create table tableForGetDateInView (
+create table getDateForView (
   id int identity not null primary key,
   date datetime
 );
 
 create view viewWithGetDate as
- select id from tableForGetDateInView where date > getdate();
+ select id from getDateForView where date > getdate();
 
  create table zeroInsert (
   id int identity not null primary key,

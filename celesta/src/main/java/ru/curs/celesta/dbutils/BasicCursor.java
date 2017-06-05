@@ -784,6 +784,8 @@ public abstract class BasicCursor implements Closeable {
 	}
 
 	public final void setIn(FieldsLookup fieldsLookup) throws CelestaException {
+		fieldsLookup.validate();
+
 		if (closed)
 			return;
 
