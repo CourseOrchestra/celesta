@@ -187,19 +187,20 @@ public class WhereTermsMaker {
 				l = new SingleValueTerm(e.getKey(), (SingleValue) f);
 			} else if (f instanceof Range) {
 				l = new RangeTerm(e.getKey(), (Range) f);
-			} else if (f instanceof In) {
-				l = new InTerm((In) f);
 			} else {
 				l = new FilterTerm(e.getKey(), (Filter) f);
 			}
 			r = r == null ? l : AndTerm.construct(l, r);
-
 		}
 
-		final WhereTerm l = r == null ? AlwaysTrue.TRUE : r;
+		WhereTerm l = r == null ? AlwaysTrue.TRUE : r;
 		r = paramsProvider.complexFilter() == null ? AlwaysTrue.TRUE : new ComplexFilterTerm();
-		return AndTerm.construct(l, r);
+		r = AndTerm.construct(l, r);
 
+
+		l = r == null ? AlwaysTrue.TRUE : r;
+		r = paramsProvider.inFilter() == null ? AlwaysTrue.TRUE : new InTerm(paramsProvider.inFilter());
+		return AndTerm.construct(l, r);
 	}
 
 	/**

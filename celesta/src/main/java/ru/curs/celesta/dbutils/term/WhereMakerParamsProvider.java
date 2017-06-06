@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils.term;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.AbstractFilter;
+import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.score.Expr;
 
 import java.util.Map;
@@ -30,4 +31,6 @@ public interface WhereMakerParamsProvider {
 	Map<String, AbstractFilter> filters();
 
 	Expr complexFilter();
+
+	In inFilter();
 }

@@ -207,6 +207,11 @@ public abstract class BasicCursor implements Closeable {
 		}
 
 		@Override
+		public In inFilter() {
+			return inFilter;
+		}
+
+		@Override
 		public int[] sortFieldsIndices() throws CelestaException {
 			return orderByIndices;
 		}
@@ -1044,7 +1049,9 @@ public abstract class BasicCursor implements Closeable {
 				: complexFilter.getCSQL().equals(c.complexFilter.getCSQL())))
 			return false;
 		// equality of In filter
-		// TODO
+		if (Objects.equals(inFilter, c.inFilter)) {
+			return false;
+		}
 		// equality of sorting
 		if (orderByNames == null)
 			orderBy();

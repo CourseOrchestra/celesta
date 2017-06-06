@@ -20,7 +20,8 @@ public final class In {
     return lookup;
   }
 
-  public boolean filterEquals(In o) {
+  @Override
+  public boolean equals(Object o) {
     if (this == o) {
       return true;
     }
@@ -33,23 +34,19 @@ public final class In {
 
   @Override
   public String toString() {
-    try {
       String template = "( %s ) from table %s IN ( %s ) from table %s )";
 
       String fieldsStr = String.join(",", lookup.getFields());
       String otherFieldsStr = String.join(",", lookup.getOtherFields());
 
-      Table table = lookup.getCursor().meta();
+      Table table = lookup.getTable();
       String tableStr = String.format("%s.%s", table.getGrain().getName(), table.getName());
 
-      Table otherTable = lookup.getOtherCursor().meta();
+      Table otherTable = lookup.getOtherTable();
       String otherTableStr = String.format("%s.%s", otherTable.getGrain().getName(), otherTable.getName());
 
       String result = String.format(template, fieldsStr, tableStr, otherFieldsStr, otherTableStr);
       return result;
-    } catch (CelestaException e) {
-      throw new RuntimeException(e);
-    }
   }
 
 }

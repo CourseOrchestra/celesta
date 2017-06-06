@@ -49,9 +49,9 @@ public final class InTerm extends WhereTerm {
     FieldsLookup lookup = filter.getLookup();
 
     if (AppSettings.DBType.MSSQL.equals(dbType)) {
-      Table table = lookup.getCursor().meta();
+      Table table = lookup.getTable();
       String tableStr = String.format(db.tableTemplate(), table.getGrain().getName(), table.getName());
-      Table otherTable = lookup.getOtherCursor().meta();
+      Table otherTable = lookup.getOtherTable();
       String otherTableStr = String.format(db.tableTemplate(), otherTable.getGrain().getName(), otherTable.getName());
 
       StringBuilder sb = new StringBuilder();
@@ -84,7 +84,7 @@ public final class InTerm extends WhereTerm {
             .collect(Collectors.toList())
     );
 
-    Table otherTable = lookup.getOtherCursor().meta();
+    Table otherTable = lookup.getOtherTable();
     String otherTableStr = String.format(db.tableTemplate(), otherTable.getGrain().getName(), otherTable.getName());
 
     String result = String.format(template, fieldsStr, otherFieldsStr, otherTableStr);
