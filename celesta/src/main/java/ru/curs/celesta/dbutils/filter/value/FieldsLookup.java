@@ -30,52 +30,47 @@ public final class FieldsLookup {
 
 
   public FieldsLookup add(String field, String otherField) {
+    final String tableTemplate;
+
     try {
-      String tableTemplate = DBAdaptor.getAdaptor().tableTemplate();
-
-      Table table = cursor.meta();
-      Column column = table.getColumn(field);
-      Table otherTable = otherCursor.meta();
-      Column otherColumn = otherTable.getColumn(otherField);
-
-      String errorField = "";
-      Table errorTable = null;
-      if (column == null) {
-        errorField = field;
-        errorTable = table;
-      } else if (otherColumn == null) {
-        errorField = otherField;
-        errorTable = otherTable;
-      }
-
-      if (!errorField.isEmpty()) {
-        throw new IllegalArgumentException(
-            String.format("There is no column with name \"%s\" in table " + tableTemplate,
-                errorField, errorTable.getGrain().getName(), errorTable.getName())
-        );
-      }
-
-      if (!column.getCelestaType().equals(otherColumn.getCelestaType())) {
-        throw new IllegalArgumentException(String.format("Column type of " + tableTemplate + ".\"%s\" is not equal " +
-                "to column type of " + tableTemplate + ".\"%s\"",
-            table.getGrain().getName(), table.getName(), field,
-            otherTable.getGrain().getName(), otherTable.getName(), otherField));
-      }
-
-      List<String> fieldsToValidate = new ArrayList<>(fields);
-      fieldsToValidate.add(field);
-      validateIndices(table, fieldsToValidate, true);
-
-      fieldsToValidate = new ArrayList<>(otherFields);
-      fieldsToValidate.add(otherField);
-      validateIndices(otherTable, fieldsToValidate, true);
-
-      fields.add(field);
-      otherFields.add(otherField);
-      return this;
-    } catch (CelestaException | ParseException e) {
+      tableTemplate = DBAdaptor.getAdaptor().tableTemplate();
+    } catch (CelestaException e) {
       throw new RuntimeException(e);
     }
+
+    final Table table;
+    final Column column;
+    final Table otherTable;
+    final Column otherColumn;
+
+    try {
+      table = cursor.meta();
+      column = table.getColumn(field);
+      otherTable = otherCursor.meta();
+      otherColumn = otherTable.getColumn(otherField);
+    } catch (CelestaException | ParseException e) {
+      throw new IllegalArgumentException(e);
+    }
+
+
+    if (!column.getCelestaType().equals(otherColumn.getCelestaType())) {
+      throw new IllegalArgumentException(String.format("Column type of " + tableTemplate + ".\"%s\" is not equal " +
+              "to column type of " + tableTemplate + ".\"%s\"",
+          table.getGrain().getName(), table.getName(), field,
+          otherTable.getGrain().getName(), otherTable.getName(), otherField));
+    }
+
+    List<String> fieldsToValidate = new ArrayList<>(fields);
+    fieldsToValidate.add(field);
+    validateIndices(table, fieldsToValidate, true);
+
+    fieldsToValidate = new ArrayList<>(otherFields);
+    fieldsToValidate.add(otherField);
+    validateIndices(otherTable, fieldsToValidate, true);
+
+    fields.add(field);
+    otherFields.add(otherField);
+    return this;
   }
 
   private void validateIndices(Table table, List<String> fieldList, boolean preValidation) {
@@ -95,7 +90,7 @@ public final class FieldsLookup {
     if (!index.isPresent()) {
       try {
         String tableTemplate = DBAdaptor.getAdaptor().tableTemplate();
-        throw new IllegalStateException(
+        throw new IllegalArgumentException(
             String.format("There is no index for column(s) (\"%s\") in table " + tableTemplate,
                 String.join(",", fieldSet), table.getGrain().getName(), table.getName())
         );
