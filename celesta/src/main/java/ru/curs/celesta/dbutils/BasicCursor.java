@@ -166,6 +166,8 @@ public abstract class BasicCursor implements Closeable {
 	private long offset = 0;
 	private long rowCount = 0;
 	private Expr complexFilter;
+	private In inFilter;
+
 	private boolean closed = false;
 
 	private BasicCursor previousCursor;
@@ -785,12 +787,10 @@ public abstract class BasicCursor implements Closeable {
 
 	public final void setIn(FieldsLookup fieldsLookup) throws CelestaException {
 		fieldsLookup.validate();
-
+		inFilter = new In(fieldsLookup);
 		if (closed)
 			return;
-
-		String name = In.class.getName();
-		filters.put(name, new In(fieldsLookup));
+		// пересоздаём набор
 		closeSet();
 	}
 
@@ -877,6 +877,7 @@ public abstract class BasicCursor implements Closeable {
 	 */
 	public final void reset() throws CelestaException {
 		filters.clear();
+		inFilter = null;
 		complexFilter = null;
 		orderByNames = null;
 		orderByIndices = null;
@@ -940,6 +941,7 @@ public abstract class BasicCursor implements Closeable {
 	public void clear() throws CelestaException {
 		_clearBuffer(true);
 		filters.clear();
+		inFilter = null;
 		complexFilter = null;
 		orderByNames = null;
 		orderByIndices = null;
@@ -1005,6 +1007,7 @@ public abstract class BasicCursor implements Closeable {
 		filters.clear();
 		filters.putAll(c.filters);
 		complexFilter = c.complexFilter;
+		inFilter = c.inFilter;
 		offset = c.offset;
 		rowCount = c.rowCount;
 		closeSet();
@@ -1040,6 +1043,8 @@ public abstract class BasicCursor implements Closeable {
 		if (!(complexFilter == null ? c.complexFilter == null
 				: complexFilter.getCSQL().equals(c.complexFilter.getCSQL())))
 			return false;
+		// equality of In filter
+		// TODO
 		// equality of sorting
 		if (orderByNames == null)
 			orderBy();

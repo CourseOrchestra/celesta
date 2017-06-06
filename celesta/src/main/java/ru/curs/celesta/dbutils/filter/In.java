@@ -8,7 +8,7 @@ import ru.curs.celesta.score.Table;
 /**
  * Created by ioann on 01.06.2017.
  */
-public final class In extends AbstractFilter {
+public final class In {
 
   final private FieldsLookup lookup;
 
@@ -20,8 +20,7 @@ public final class In extends AbstractFilter {
     return lookup;
   }
 
-  @Override
-  public boolean filterEquals(AbstractFilter o) {
+  public boolean filterEquals(In o) {
     if (this == o) {
       return true;
     }

@@ -10,144 +10,126 @@ import ru.curs.celesta.score.Table;
 
 import java.util.*;
 
-
 /**
  * Created by ioann on 01.06.2017.
  */
 public final class FieldsLookup {
 
-  final private Cursor cursor;
-  final private Cursor otherCursor;
+	final private Table cursor;
+	final private Table otherCursor;
 
-  final private List<String> fields = new ArrayList<>();
-  final private List<String> otherFields = new ArrayList<>();
+	final private List<String> fields = new ArrayList<>();
+	final private List<String> otherFields = new ArrayList<>();
 
-
-  public FieldsLookup(Cursor cursor, Cursor otherCursor) {
-    this.cursor = cursor;
-    this.otherCursor = otherCursor;
-  }
-
-
-  public FieldsLookup add(String field, String otherField) {
-    final String tableTemplate;
-
-    try {
-      tableTemplate = DBAdaptor.getAdaptor().tableTemplate();
-    } catch (CelestaException e) {
-      throw new RuntimeException(e);
-    }
-
-    final Table table;
-    final Column column;
-    final Table otherTable;
-    final Column otherColumn;
-
-    try {
-      table = cursor.meta();
-      column = table.getColumn(field);
-      otherTable = otherCursor.meta();
-      otherColumn = otherTable.getColumn(otherField);
-    } catch (CelestaException | ParseException e) {
-      throw new IllegalArgumentException(e);
-    }
+	public FieldsLookup(Cursor cursor, Cursor otherCursor) throws CelestaException {
+		this.cursor = cursor.meta();
+		this.otherCursor = otherCursor.meta();
+	}
+	
+	public FieldsLookup(Table table, Table otherTable) throws CelestaException {
+		this.cursor = cursor.meta();
+		this.otherCursor = otherCursor.meta();
+	}
 
 
-    if (!column.getCelestaType().equals(otherColumn.getCelestaType())) {
-      throw new IllegalArgumentException(String.format("Column type of " + tableTemplate + ".\"%s\" is not equal " +
-              "to column type of " + tableTemplate + ".\"%s\"",
-          table.getGrain().getName(), table.getName(), field,
-          otherTable.getGrain().getName(), otherTable.getName(), otherField));
-    }
+	public FieldsLookup add(String field, String otherField) throws CelestaException, ParseException {
+		final String tableTemplate;
 
-    List<String> fieldsToValidate = new ArrayList<>(fields);
-    fieldsToValidate.add(field);
-    validateIndices(table, fieldsToValidate, true);
+		tableTemplate = DBAdaptor.getAdaptor().tableTemplate();
 
-    fieldsToValidate = new ArrayList<>(otherFields);
-    fieldsToValidate.add(otherField);
-    validateIndices(otherTable, fieldsToValidate, true);
+		final Table table;
+		final Column column;
+		final Table otherTable;
+		final Column otherColumn;
 
-    fields.add(field);
-    otherFields.add(otherField);
-    return this;
-  }
+		table = cursor;
+		column = table.getColumn(field);
+		otherTable = otherCursor;
+		otherColumn = otherTable.getColumn(otherField);
 
-  private void validateIndices(Table table, List<String> fieldList, boolean preValidation) {
-    Set<String> fieldSet = new HashSet<>(fieldList);
+		if (!column.getCelestaType().equals(otherColumn.getCelestaType())) {
+			throw new CelestaException(
+					"Column type of " + tableTemplate + ".\"%s\" is not equal " + "to column type of " + tableTemplate
+							+ ".\"%s\"",
+					table.getGrain().getName(), table.getName(), field, otherTable.getGrain().getName(),
+					otherTable.getName(), otherField);
+		}
 
-    Set<Index> indexes = table.getIndices();
-    Optional<Index> index = indexes.stream()
-        .filter(i -> {
-          if (preValidation) {
-            return i.getColumns().keySet().containsAll(fieldSet);
-          } else {
-            return i.getColumns().keySet().equals(fieldSet);
-          }
-        })
-        .findFirst();
+		List<String> fieldsToValidate = new ArrayList<>(fields);
+		fieldsToValidate.add(field);
+		validateIndices(table, fieldsToValidate, true);
 
-    if (!index.isPresent()) {
-      try {
-        String tableTemplate = DBAdaptor.getAdaptor().tableTemplate();
-        throw new IllegalArgumentException(
-            String.format("There is no index for column(s) (\"%s\") in table " + tableTemplate,
-                String.join(",", fieldSet), table.getGrain().getName(), table.getName())
-        );
-      } catch (CelestaException e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
+		fieldsToValidate = new ArrayList<>(otherFields);
+		fieldsToValidate.add(otherField);
+		validateIndices(otherTable, fieldsToValidate, true);
 
+		fields.add(field);
+		otherFields.add(otherField);
+		return this;
+	}
 
-  public void validate() {
-    try {
-      validateIndices(cursor.meta(), fields, false);
-      validateIndices(otherCursor.meta(), otherFields, false);
-    } catch (CelestaException e) {
-      throw new RuntimeException(e);
-    }
-  }
+	private void validateIndices(Table table, List<String> fieldList, boolean preValidation) throws CelestaException {
+		Set<String> fieldSet = new HashSet<>(fieldList);
 
+		Set<Index> indexes = table.getIndices();
+		Optional<Index> index = indexes.stream().filter(i -> {
+			if (preValidation) {
+				return i.getColumns().keySet().containsAll(fieldSet);
+			} else {
+				return i.getColumns().keySet().equals(fieldSet);
+			}
+		}).findFirst();
 
-  public Cursor getCursor() {
-    return cursor;
-  }
+		if (!index.isPresent()) {
+			String tableTemplate = DBAdaptor.getAdaptor().tableTemplate();
+			throw new CelestaException("There is no index for column(s) (\"%s\") in table " + tableTemplate,
+					String.join(",", fieldSet), table.getGrain().getName(), table.getName());
+		}
+	}
 
-  public Cursor getOtherCursor() {
-    return otherCursor;
-  }
+	public void validate() throws CelestaException {
+		validateIndices(cursor.meta(), fields, false);
+		validateIndices(otherCursor.meta(), otherFields, false);
+	}
 
-  public List<String> getFields() {
-    return new ArrayList<>(fields);
-  }
+	public Cursor getCursor() {
+		return cursor;
+	}
 
-  public List<String> getOtherFields() {
-    return new ArrayList<>(otherFields);
-  }
+	public Cursor getOtherCursor() {
+		return otherCursor;
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (o == this) return true;
+	public List<String> getFields() {
+		return new ArrayList<>(fields);
+	}
 
-    if (!(o instanceof FieldsLookup)) return false;
+	public List<String> getOtherFields() {
+		return new ArrayList<>(otherFields);
+	}
 
-    FieldsLookup other = (FieldsLookup) o;
+	@Override
+	public boolean equals(Object o) {
+		if (o == this)
+			return true;
 
-    return Objects.equals(this.cursor.getClass().getName(), other.cursor.getClass().getName()) &&
-        Objects.equals(this.otherCursor.getClass().getName(), other.otherCursor.getClass().getName()) &&
-        this.fields.equals(other.fields) &&
-        this.otherCursor.equals(other.fields);
-  }
+		if (!(o instanceof FieldsLookup))
+			return false;
 
-  @Override
-  public int hashCode() {
-    int result = 17;
+		FieldsLookup other = (FieldsLookup) o;
 
-    result += 31 * cursor.getClass().getName().hashCode();
-    result += 31 * otherCursor.getClass().getName().hashCode();
+		return Objects.equals(this.cursor.getClass().getName(), other.cursor.getClass().getName())
+				&& Objects.equals(this.otherCursor.getClass().getName(), other.otherCursor.getClass().getName())
+				&& this.fields.equals(other.fields) && this.otherCursor.equals(other.fields);
+	}
 
-    return result;
-  }
+	@Override
+	public int hashCode() {
+		int result = 17;
+
+		result += 31 * cursor.getClass().getName().hashCode();
+		result += 31 * otherCursor.getClass().getName().hashCode();
+
+		return result;
+	}
 }

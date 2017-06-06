@@ -1,10 +1,10 @@
 from celestaunit.internal_celesta_unit import CelestaUnit
 
-from java.lang import  IllegalArgumentException
 from java.time import LocalDateTime
 from java.sql import Timestamp
 from ru.curs.celesta.dbutils.filter.value import FieldsLookup
-
+from ru.curs.celesta import CelestaException
+from ru.curs.celesta.score import ParseException
 from _filters_orm import aFilterCursor, bFilterCursor
 
 
@@ -67,20 +67,16 @@ class testFilters(CelestaUnit):
 
         lookup = FieldsLookup(a, b)
 
-        with self.assertRaises(IllegalArgumentException) as context:
+        with self.assertRaises(ParseException) as context:
             lookup.add("notExistingField", "created")
 
-        self.assertTrue(isinstance(context.exception, IllegalArgumentException))
-
-        with self.assertRaises(IllegalArgumentException) as context:
+        with self.assertRaises(ParseException) as context:
             lookup.add("date", "notExistingField")
 
-        self.assertTrue(isinstance(context.exception, IllegalArgumentException))
 
-        with self.assertRaises(IllegalArgumentException) as context:
+        with self.assertRaises(ParseException) as context:
             lookup.add("notExistingField", "notExistingField")
 
-        self.assertTrue(isinstance(context.exception, IllegalArgumentException))
 
 
     def testExceptionWhileAddingFieldsWithNotMatchesTypesToLookup(self):
@@ -89,10 +85,10 @@ class testFilters(CelestaUnit):
 
         lookup = FieldsLookup(a, b)
 
-        with self.assertRaises(IllegalArgumentException) as context:
+        with self.assertRaises(CelestaException) as context:
             lookup.add("date", "numb")
 
-        self.assertTrue(isinstance(context.exception, IllegalArgumentException))
+        self.assertTrue(isinstance(context.exception, CelestaException))
 
 
     def testExceptionWhileAddingFieldsWithoutIndexToLookup(self):
@@ -101,20 +97,20 @@ class testFilters(CelestaUnit):
 
         lookup = FieldsLookup(a, b)
 
-        with self.assertRaises(IllegalArgumentException) as context:
+        with self.assertRaises(CelestaException) as context:
             lookup.add("noIndexA", "numb")
 
-        self.assertTrue(isinstance(context.exception, IllegalArgumentException))
+        self.assertTrue(isinstance(context.exception, CelestaException))
 
-        with self.assertRaises(IllegalArgumentException) as context:
+        with self.assertRaises(CelestaException) as context:
             lookup.add("number", "noIndexB")
 
-        self.assertTrue(isinstance(context.exception, IllegalArgumentException))
+        self.assertTrue(isinstance(context.exception, CelestaException))
 
-        with self.assertRaises(IllegalArgumentException) as context:
+        with self.assertRaises(CelestaException) as context:
             lookup.add("noIndexA", "noIndexB")
 
-            self.assertTrue(isinstance(context.exception, IllegalArgumentException))
+            self.assertTrue(isinstance(context.exception, CelestaException))
 
 
     def testExceptionWhenIndexNotExists(self):
@@ -123,21 +119,21 @@ class testFilters(CelestaUnit):
 
         lookup = FieldsLookup(a, b).add("a1", "numb").add("a2", "numb")
 
-        with self.assertRaises(IllegalArgumentException) as context:
+        with self.assertRaises(CelestaException) as context:
             a.setIn(lookup)
 
-        self.assertTrue(isinstance(context.exception, IllegalArgumentException))
+        self.assertTrue(isinstance(context.exception, CelestaException))
 
         lookup = FieldsLookup(a, b).add("number", "b2").add("number", "b2")
 
-        with self.assertRaises(IllegalArgumentException) as context:
+        with self.assertRaises(CelestaException) as context:
             a.setIn(lookup)
 
-        self.assertTrue(isinstance(context.exception, IllegalArgumentException))
+        self.assertTrue(isinstance(context.exception, CelestaException))
 
         lookup = FieldsLookup(a, b).add("a1", "b2").add("a2", "b2")
 
-        with self.assertRaises(IllegalArgumentException) as context:
+        with self.assertRaises(CelestaException) as context:
             a.setIn(lookup)
 
-        self.assertTrue(isinstance(context.exception, IllegalArgumentException))
+        self.assertTrue(isinstance(context.exception, CelestaException))
