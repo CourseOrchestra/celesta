@@ -27,23 +27,25 @@ public final class InTerm extends WhereTerm {
   public String getWhere() throws CelestaException {
 
     DBAdaptor db = DBAdaptor.getAdaptor();
+    final String template = db.getInFilterClause();
+    
     AppSettings.DBType dbType = AppSettings.getDBType();
-    final String template;
-
-    switch (dbType) {
-      case H2:
-        template = "( %s ) IN (SELECT ( %s ) FROM %s )";
-        break;
-      case POSTGRES:
-      case ORACLE:
-        template = "( %s ) IN (SELECT %s FROM %s )";
-        break;
-      case MSSQL:
-        template = ("EXISTS (SELECT 1 FROM %s WHERE %s)");
-        break;
-      default:
-        throw new CelestaException("Unsupported dbType: " + dbType);
-    }
+    ;
+//
+//    switch (dbType) {
+//      case H2:
+//        template = "( %s ) IN (SELECT ( %s ) FROM %s )";
+//        break;
+//      case POSTGRES:
+//      case ORACLE:
+//        template = "( %s ) IN (SELECT %s FROM %s )";
+//        break;
+//      case MSSQL:
+//        template = ("EXISTS (SELECT 1 FROM %s WHERE %s)");
+//        break;
+//      default:
+//        throw new CelestaException("Unsupported dbType: " + dbType);
+//    }
 
 
     FieldsLookup lookup = filter.getLookup();

@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.filter;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 import ru.curs.celesta.score.Table;
 
