@@ -54,7 +54,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -90,8 +90,8 @@ public final class Celesta {
 	private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
 	private final ProfilingManager profiler = new ProfilingManager();
-
 	private TriggerDispatcher triggerDispatcher;
+	private ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	private Celesta(boolean initInterpeterPool) throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
@@ -256,7 +256,10 @@ public final class Celesta {
 	 */
 	public PyObject runPython(String sesId, String proc, Object... param) throws CelestaException {
 		return runPython(sesId, null, null, proc, param);
+	}
 
+	public Future<PyObject> runPythonAsync(String sesId, String proc, Object... param) throws CelestaException {
+		return runPythonAsync(sesId, null, null, proc, param);
 	}
 
 	/**
@@ -354,6 +357,20 @@ public final class Celesta {
 			throw new CelestaException("Invalid procedure name: %s, should match pattern <grain>.(<module>.)...<proc>, "
 					+ "note that grain name should not contain underscores.", proc);
 		}
+	}
+
+	public Future<PyObject> runPythonAsync(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc,
+																				Object... param) {
+		Callable<PyObject> callable = () -> {
+			try {
+				return runPython(sesId, rec, sc, proc, param);
+			} catch (Exception e) {
+				System.out.println("Exception while executing async task:" + e.getMessage());
+				throw e;
+			}
+		};
+
+		return executor.submit(callable);
 	}
 
 	/**
