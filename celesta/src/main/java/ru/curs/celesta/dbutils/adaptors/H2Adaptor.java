@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 /**
@@ -574,6 +575,26 @@ final public class H2Adaptor extends SqlDbAdaptor {
     return result;
   }
 
+
+  @Override
+  public String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields) {
+    String template = "( %s ) IN (SELECT ( %s ) FROM %s )";
+    String fieldsStr = String.join(",",
+        fields.stream()
+            .map(s -> "\"" + s + "\"")
+            .collect(Collectors.toList())
+    );
+    String otherFieldsStr = String.join(",",
+        otherFields.stream()
+            .map(s -> "\"" + s + "\"")
+            .collect(Collectors.toList())
+    );
+
+    String otherTableStr = String.format(tableTemplate(), otherTable.getGrain().getName(), otherTable.getName());
+    String result = String.format(template, fieldsStr, otherFieldsStr, otherTableStr);
+    return result;
+  }
+
   @Override
   String[] getCreateIndexSQL(Index index) {
     String grainName = index.getTable().getGrain().getName();
@@ -583,7 +604,6 @@ final public class H2Adaptor extends SqlDbAdaptor {
     String[] result = { sql };
     return result;
   }
-
 
   @Override
   String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount) {

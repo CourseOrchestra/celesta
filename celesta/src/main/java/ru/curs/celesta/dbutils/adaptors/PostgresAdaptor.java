@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.*;
@@ -454,6 +455,25 @@ final class PostgresAdaptor extends SqlDbAdaptor {
     }
   }
 
+
+  @Override
+  public String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields) {
+    String template = "( %s ) IN (SELECT %s FROM %s )";
+    String fieldsStr = String.join(",",
+        fields.stream()
+            .map(s -> "\"" + s + "\"")
+            .collect(Collectors.toList())
+    );
+    String otherFieldsStr = String.join(",",
+        otherFields.stream()
+            .map(s -> "\"" + s + "\"")
+            .collect(Collectors.toList())
+    );
+
+    String otherTableStr = String.format(tableTemplate(), otherTable.getGrain().getName(), otherTable.getName());
+    String result = String.format(template, fieldsStr, otherFieldsStr, otherTableStr);
+    return result;
+  }
 
   @Override
   String[] getCreateIndexSQL(Index index) {

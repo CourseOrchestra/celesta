@@ -731,7 +731,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   public abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException;
 
-  public abstract String getInFilterClause();
+  public abstract String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields);
   
   abstract String[] getCreateIndexSQL(Index index);
 

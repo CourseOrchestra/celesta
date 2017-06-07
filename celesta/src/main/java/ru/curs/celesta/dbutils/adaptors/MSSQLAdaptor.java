@@ -442,6 +442,29 @@ final class MSSQLAdaptor extends DBAdaptor {
 	}
 
 	@Override
+	public String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields) {
+		String template = "( %s ) IN (SELECT %s FROM %s )";
+
+		String tableStr = String.format(tableTemplate(), table.getGrain().getName(), table.getName());
+		String otherTableStr = String.format(tableTemplate(), otherTable.getGrain().getName(), otherTable.getName());
+
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < fields.size(); ++i) {
+			sb.append(tableStr).append(".\"").append(fields.get(i)).append("\"")
+					.append(" = ")
+					.append(otherTableStr).append(".\"").append(otherFields.get(i)).append("\"");
+
+			if (i + 1 != fields.size()) {
+				sb.append(" AND ");
+			}
+		}
+
+		String result = String.format(template, otherTableStr, sb.toString());
+		return result;
+	}
+
+	@Override
 	String[] getCreateIndexSQL(Index index) {
 		String fieldList = getFieldList(index.getColumns().keySet());
 		String sql = String.format("CREATE INDEX %s ON " + tableTemplate() + " (%s)", index.getQuotedName(),
