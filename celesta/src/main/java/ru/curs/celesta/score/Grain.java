@@ -57,6 +57,14 @@ public final class Grain extends NamedElement {
 		}
 	};
 
+	private final NamedElementHolder<MaterializedView> materializedViews = new NamedElementHolder<MaterializedView>() {
+		@Override
+		protected String getErrorMsg(String name) {
+			return String.format(
+					"Materialized view '%s' defined more than once in a grain.", name);
+		}
+	};
+
 	private final NamedElementHolder<Index> indices = new NamedElementHolder<Index>() {
 		@Override
 		protected String getErrorMsg(String name) {
@@ -87,6 +95,7 @@ public final class Grain extends NamedElement {
 	public Map<String, Table> getTables() {
 		return tables.getElements();
 	}
+
 
 	/**
 	 * Возвращает таблицу по её имени, либо исключение с сообщением о том, что
@@ -133,6 +142,11 @@ public final class Grain extends NamedElement {
 					String.format(
 							"Cannot create table '%s', a view with the same name already exists in grain '%s'.",
 							table.getName(), getName()));
+		if (materializedViews.get(table.getName()) != null)
+			throw new ParseException(
+					String.format(
+							"Cannot create table '%s', a materialized view with the same name already exists in grain '%s'.",
+							table.getName(), getName()));
 		modify();
 		tables.addElement(table);
 	}
@@ -152,6 +166,25 @@ public final class Grain extends NamedElement {
 		indices.addElement(index);
 	}
 
+	public void addMaterializedView(MaterializedView materializedView) throws ParseException {
+		if (materializedView.getGrain() != this) {
+			throw new IllegalArgumentException();
+		}
+
+		if (tables.get(materializedView.getName()) != null)
+			throw new ParseException(
+					String.format(
+							"Cannot create materialized view '%s', a table with the same name already exists in grain '%s'.",
+							materializedView.getName(), getName()));
+		if (views.get(materializedView.getName()) != null)
+			throw new ParseException(
+					String.format(
+							"Cannot create materialized view '%s', a view with the same name already exists in grain '%s'.",
+							materializedView.getName(), getName()));
+		modify();
+		materializedViews.addElement(materializedView);
+	}
+
 	synchronized void removeIndex(Index index) throws ParseException {
 		modify();
 		indices.remove(index);
@@ -161,6 +194,11 @@ public final class Grain extends NamedElement {
 	synchronized void removeView(View view) throws ParseException {
 		modify();
 		views.remove(view);
+	}
+
+	synchronized void removeMaterializedView(MaterializedView materializedView) throws ParseException {
+		modify();
+		materializedViews.remove(materializedView);
 	}
 
 	synchronized void removeTable(Table table) throws ParseException {
@@ -189,6 +227,7 @@ public final class Grain extends NamedElement {
 		// Удаляется сама таблица
 		tables.remove(table);
 	}
+
 
 	/**
 	 * Возвращает модель, к которой принадлежит гранула.
@@ -359,6 +398,10 @@ public final class Grain extends NamedElement {
 				for (View v : getViews().values())
 					v.save(bw);
 
+				bw.write("-- *** MATERIALIZED VIEWS ***");
+				bw.newLine();
+				for (MaterializedView mv : getMaterializedViews().values())
+					mv.save(bw);
 			} finally {
 				bw.close();
 			}
@@ -391,6 +434,11 @@ public final class Grain extends NamedElement {
 					String.format(
 							"Cannot create view '%s', a table with the same name already exists in grain '%s'.",
 							view.getName(), getName()));
+		if (materializedViews.get(view.getName()) != null)
+			throw new ParseException(
+					String.format(
+							"Cannot create view '%s', a materialized view with the same name already exists in grain '%s'.",
+							view.getName(), getName()));
 		modify();
 		views.addElement(view);
 	}
@@ -402,9 +450,8 @@ public final class Grain extends NamedElement {
 	 * @param name
 	 *            Имя
 	 * @throws ParseException
-	 *             Если таблица с таким именем не найдена в грануле.
+	 *             Если представление с таким именем не найдено в грануле.
 	 */
-
 	public View getView(String name) throws ParseException {
 		View result = views.get(name);
 		if (result == null)
@@ -414,10 +461,34 @@ public final class Grain extends NamedElement {
 	}
 
 	/**
+	 * Возвращает материализованное представление по его имени, либо исключение с сообщением о
+	 * том, что представление не найдено.
+	 *
+	 * @param name
+	 *            Имя
+	 * @throws ParseException
+	 *             Если материализованное представление с таким именем не найдено в грануле.
+	 */
+	public MaterializedView getMaterializedView(String name) throws ParseException {
+		MaterializedView result = materializedViews.get(name);
+		if (result == null)
+			throw new ParseException(String.format(
+					"Materialized view '%s' not found in grain '%s'", name, getName()));
+		return result;
+	}
+
+	/**
 	 * Возвращает набор представлений, определённый в грануле.
 	 */
 	public Map<String, View> getViews() {
 		return views.getElements();
+	}
+
+	/**
+	 * Возвращает набор материализованных представлений, определенных в грануле
+	 */
+	public Map<String, MaterializedView> getMaterializedViews() {
+		return materializedViews.getElements();
 	}
 
 }

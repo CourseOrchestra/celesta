@@ -312,9 +312,17 @@ public class ParserTest {
   }
 
   @Test
-  public void testParsingNotFailsWhenSyntaxIsCorrect() throws ParseException {
+  public void testParsingNotFailsWhenViewSyntaxIsCorrect() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("aggregate/testParsingNotFailsWhenSyntaxIsCorrect.sql"));
+        ParserTest.class.getResourceAsStream("aggregate/testParsingNotFailsWhenViewSyntaxIsCorrect.sql"));
+    CelestaParser cp = new CelestaParser(input);
+    cp.grain(s, "test");
+  }
+
+  @Test
+  public void testParsingNotFailsWhenMaterializedViewSyntaxIsCorrect() throws ParseException {
+    ChecksumInputStream input = new ChecksumInputStream(
+        ParserTest.class.getResourceAsStream("aggregate/testParsingNotFailsWhenMaterializedViewSyntaxIsCorrect.sql"));
     CelestaParser cp = new CelestaParser(input);
     cp.grain(s, "test");
   }

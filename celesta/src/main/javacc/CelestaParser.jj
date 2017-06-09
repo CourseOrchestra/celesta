@@ -42,54 +42,55 @@ SKIP:
 
 TOKEN: /* SQL keywords */ 
 {
-    <K_ACTION:     "ACTION">
-|   <K_ADD:        "ADD">
-|   <K_ALTER:      "ALTER">
-|   <K_AND:        "AND">
-|   <K_AS:         "AS">
-|   <K_CASCADE:    "CASCADE">
-|   <K_CONSTRAINT: "CONSTRAINT">
-|   <K_CREATE:     "CREATE">
-|   <K_DEFAULT:    "DEFAULT">
-|   <K_DELETE:     "DELETE">
-|   <K_TABLE:      "TABLE">
-|   <K_INDEX:      "INDEX">
-|   <K_VIEW:       "VIEW">
-|   <K_NOT:        "NOT">
-|   <K_NULL:       "NULL">
-|   <K_TEXT:       "TEXT">
-|   <K_IDENTITY:   "IDENTITY">
-|   <K_GETDATE:    "GETDATE">
-|   <K_PRIMARY:    "PRIMARY">
-|   <K_FOREIGN:    "FOREIGN">
-|   <K_KEY:        "KEY">
-|   <K_REFERENCES: "REFERENCES">
-|   <K_ON:         "ON">
-|   <K_UPDATE:     "UPDATE">
-|   <K_NO:         "NO">
-|   <K_SET:        "SET">
-|   <K_IN:         "IN">
-|   <K_OR:         "OR">
-|   <K_LIKE:       "LIKE">
-|   <K_BETWEEN:    "BETWEEN">
-|   <K_IS:         "IS">
-|   <K_SELECT:     "SELECT">
-|   <K_DISTINCT:   "DISTINCT">
-|   <K_FROM:       "FROM">
-|   <K_INNER:      "INNER">
-|   <K_LEFT:       "LEFT">
-|   <K_RIGHT:      "RIGHT">
-|   <K_FULL:       "FULL">
-|   <K_JOIN:       "JOIN">
-|   <K_WHERE:      "WHERE">
-|   <K_TRUE:       "TRUE">
-|   <K_FALSE:      "FALSE">
-|   <K_GROUP:      "GROUP">
-|   <K_COUNT:      "COUNT">
-|   <K_SUM:        "SUM">
-|   <K_MIN:        "MIN">
-|   <K_MAX:        "MAX">
-|   <K_BY:         "BY">
+    <K_ACTION:       "ACTION">
+|   <K_ADD:          "ADD">
+|   <K_ALTER:        "ALTER">
+|   <K_AND:          "AND">
+|   <K_AS:           "AS">
+|   <K_BETWEEN:      "BETWEEN">
+|   <K_BY:           "BY">
+|   <K_CASCADE:      "CASCADE">
+|   <K_CONSTRAINT:   "CONSTRAINT">
+|   <K_COUNT:        "COUNT">
+|   <K_CREATE:       "CREATE">
+|   <K_DEFAULT:      "DEFAULT">
+|   <K_DELETE:       "DELETE">
+|   <K_DISTINCT:     "DISTINCT">
+|   <K_FALSE:        "FALSE">
+|   <K_FOREIGN:      "FOREIGN">
+|   <K_FROM:         "FROM">
+|   <K_FULL:         "FULL">
+|   <K_GETDATE:      "GETDATE">
+|   <K_GROUP:        "GROUP">
+|   <K_IDENTITY:     "IDENTITY">
+|   <K_IN:           "IN">
+|   <K_INDEX:        "INDEX">
+|   <K_INNER:        "INNER">
+|   <K_IS:           "IS">
+|   <K_JOIN:         "JOIN">
+|   <K_KEY:          "KEY">
+|   <K_LEFT:         "LEFT">
+|   <K_LIKE:         "LIKE">
+|   <K_MATERIALIZED: "MATERIALIZED">
+|   <K_TABLE:        "TABLE">
+|   <K_VIEW:         "VIEW">
+|   <K_NOT:          "NOT">
+|   <K_NULL:         "NULL">
+|   <K_TEXT:         "TEXT">
+|   <K_PRIMARY:      "PRIMARY">
+|   <K_REFERENCES:   "REFERENCES">
+|   <K_ON:           "ON">
+|   <K_UPDATE:       "UPDATE">
+|   <K_NO:           "NO">
+|   <K_SET:          "SET">
+|   <K_OR:           "OR">
+|   <K_SELECT:       "SELECT">
+|   <K_RIGHT:        "RIGHT">
+|   <K_WHERE:        "WHERE">
+|   <K_TRUE:         "TRUE">
+|   <K_SUM:          "SUM">
+|   <K_MIN:          "MIN">
+|   <K_MAX:          "MAX">
 }
 
 TOKEN: /* Datatypes */
@@ -154,7 +155,8 @@ Grain grain(Score s, String name):
    ( ( ([doc = <CELESTA_DOC>]<K_CREATE> (
                     createTable(g, doc == null? null: doc.toString()) 
                   | createIndex(g, doc == null? null: doc.toString())
-				  | createView (g, doc == null? null: doc.toString())) {doc = null;}) 
+				  | createView(g, doc == null? null: doc.toString()))
+				  {doc = null;} )
 	 | (<K_ALTER>   alterTable(g))) ";")*
    <EOF>
    {
@@ -356,15 +358,22 @@ else {
 
 void createView(Grain g, String doc):
 {
-	View view = null;
+	AbstractView view = null;
 	Token viewName = null;
+	boolean isMaterialized = false;
 }
 {
-<K_VIEW> viewName = <S_IDENTIFIER> <K_AS> {view = new View(g, viewName.toString());
-	                            view.setCelestaDocLexem(doc);}
-								select(view)
-								{view.finalizeParsing();}
+[<K_MATERIALIZED> {isMaterialized = true;}]
+<K_VIEW> viewName = <S_IDENTIFIER> <K_AS>
+    {
+        if (isMaterialized) view = new MaterializedView(g, viewName.toString());
+        else view = new View(g, viewName.toString());
+	    view.setCelestaDocLexem(doc);
+	}
+	select(view)
+	{view.finalizeParsing();}
 }
+
 
 Expr sqlExpression():
 { Expr result;
@@ -482,7 +491,7 @@ FieldRef fieldReference():
   {return new FieldRef(tableName, fieldName);}
 }
 
-void select(View v):
+void select(AbstractView v):
 {
 Expr where;
 FieldRef fr;
@@ -494,14 +503,14 @@ FieldRef fr;
     [<K_GROUP> <K_BY>  groupBy(v)]
 }
 
-void groupBy(View view):
+void groupBy(AbstractView view):
 { FieldRef fr; }
 {
 fr = fieldReference() {view.addGroupByColumn(fr);}
      ("," fr = fieldReference() {view.addGroupByColumn(fr);} )*
 }
 
-Expr aggregateFunc(View v):
+Expr aggregateFunc(AbstractView v):
 {
     Expr term;
     Token t;
@@ -515,7 +524,7 @@ Expr aggregateFunc(View v):
   )
 }
 
-void selectItem(View v):
+void selectItem(AbstractView v):
 {
   Token doc = null;
   Token aliasToken = null;
@@ -531,7 +540,7 @@ void selectItem(View v):
      v.addColumn(alias, expr); }
 }
 
-TableRef tableReference(View v):
+TableRef tableReference(AbstractView v):
 { TableRef result;
   Token t;
   String grainName = null;
@@ -554,14 +563,14 @@ TableRef tableReference(View v):
   }
 }
 
-void fromClause(View v):
+void fromClause(AbstractView v):
 {TableRef tRef;}
 {
     tRef = tableReference(v) {v.addFromTableRef(tRef);} 
     (tRef = join(v) {v.addFromTableRef(tRef);} )*
 }
 
-TableRef join(View v):
+TableRef join(AbstractView v):
 { TableRef tRef;
   TableRef.JoinType jt;
   Expr onExpr;}
