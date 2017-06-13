@@ -44,12 +44,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import ru.curs.celesta.AppSettings;
@@ -61,23 +56,7 @@ import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
-import ru.curs.celesta.score.BinaryColumn;
-import ru.curs.celesta.score.BooleanColumn;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.ColumnMeta;
-import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKRule;
-import ru.curs.celesta.score.FloatingColumn;
-import ru.curs.celesta.score.ForeignKey;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.GrainElement;
-import ru.curs.celesta.score.Index;
-import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.SQLGenerator;
-import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.Table;
-import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.*;
 
 /**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
@@ -231,12 +210,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * Создаёт в базе данных таблицу "с нуля".
    *
    * @param conn  Соединение.
-   * @param table Таблица для создания.
+   * @param te Таблица для создания.
    * @throws CelestaException В случае возникновения критического сбоя при создании
    *                          таблицы, в том числе в случае, если такая таблица существует.
    */
-  public final void createTable(Connection conn, Table table) throws CelestaException {
-    String def = tableDef(table);
+  public final void createTable(Connection conn, TableElement te) throws CelestaException {
+    String def = tableDef(te);
     try {
       // System.out.println(def); // for debug purposes
       Statement stmt = conn.createStatement();
@@ -245,11 +224,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       } finally {
         stmt.close();
       }
-      manageAutoIncrement(conn, table);
+      manageAutoIncrement(conn, te);
       ConnectionPool.commit(conn);
-      updateVersioningTrigger(conn, table);
+      updateVersioningTrigger(conn, te);
     } catch (SQLException e) {
-      throw new CelestaException("creating %s: %s", table.getName(), e.getMessage());
+      throw new CelestaException("creating %s: %s", te.getName(), e.getMessage());
     }
   }
 
@@ -275,7 +254,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     }
   }
 
-  public static IntegerColumn findIdentityField(Table t) {
+  public static IntegerColumn findIdentityField(TableElement t) {
     IntegerColumn ic = null;
     for (Column c : t.getColumns().values())
       if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
@@ -291,7 +270,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     // CHECKSTYLE:ON
     StringBuilder setClause = new StringBuilder();
     if (t.isVersioned()) {
-      setClause.append(String.format("\"%s\" = ?", Table.RECVERSION));
+      setClause.append(String.format("\"%s\" = ?", VersionedElement.REC_VERSION));
       program.add(ParameterSetter.createForRecversion());
     }
 
@@ -557,27 +536,30 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     return getColumnDefiner(c).getFullDefinition(c);
   }
 
-  final String tableDef(Table table) {
+  final String tableDef(TableElement te) {
     StringBuilder sb = new StringBuilder();
     // Определение таблицы с колонками
     sb.append(
-        String.format("create table " + tableTemplate() + "(\n", table.getGrain().getName(), table.getName()));
+        String.format("create table " + tableTemplate() + "(\n", te.getGrain().getName(), te.getName()));
     boolean multiple = false;
-    for (Column c : table.getColumns().values()) {
+    for (Column c : te.getColumns().values()) {
       if (multiple)
         sb.append(",\n");
       sb.append("  " + columnDef(c));
       multiple = true;
     }
     sb.append(",\n");
-    // У версионированных таблиц - колонка recversion
-    if (table.isVersioned())
-      sb.append("  " + columnDef(table.getRecVersionField()) + ",\n");
 
+    if (te instanceof VersionedElement) {
+      VersionedElement ve = (VersionedElement) te;
+      // У версионированных таблиц - колонка recversion
+      if (ve.isVersioned())
+        sb.append("  " + columnDef(ve.getRecVersionField()) + ",\n");
+    }
     // Определение первичного ключа (он у нас всегда присутствует)
-    sb.append(String.format("  constraint \"%s\" primary key (", table.getPkConstraintName()));
+    sb.append(String.format("  constraint \"%s\" primary key (", te.getPkConstraintName()));
     multiple = false;
-    for (String s : table.getPrimaryKey().keySet()) {
+    for (String s : te.getPrimaryKey().keySet()) {
       if (multiple)
         sb.append(", ");
       sb.append('"');
@@ -638,7 +620,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     // К перечню полей версионированных таблиц обязательно добавляем
     // recversion
     if (t instanceof Table && ((Table) t).isVersioned())
-      flds.add(Table.RECVERSION);
+      flds.add(VersionedElement.REC_VERSION);
 
     return getFieldList(flds);
   }
@@ -714,7 +696,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   abstract void createSchemaIfNotExists(Connection conn, String name) throws SQLException;
 
-  public abstract void manageAutoIncrement(Connection conn, Table t) throws SQLException;
+  public abstract void manageAutoIncrement(Connection conn, TableElement te) throws SQLException;
 
   abstract void dropAutoIncrement(Connection conn, Table t) throws SQLException;
 
@@ -909,7 +891,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param t    Таблица (версионируемая или не версионируемая).
    * @throws CelestaException Ошибка создания или удаления триггера.
    */
-  public abstract void updateVersioningTrigger(Connection conn, Table t) throws CelestaException;
+  public abstract void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException;
 
   /**
    * Возвращает Process Id текущего подключения к базе данных.

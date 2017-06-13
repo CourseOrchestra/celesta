@@ -537,7 +537,7 @@ void selectItem(AbstractView v):
 		   alias = ((FieldRef) expr).getColumnName();
      if (doc != null)
         expr.getMeta().setCelestaDocLexem(doc.toString());
-     v.addColumn(alias, expr); }
+     v.addViewColumn(alias, expr); }
 }
 
 TableRef tableReference(AbstractView v):

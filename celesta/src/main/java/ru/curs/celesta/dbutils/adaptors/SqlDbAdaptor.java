@@ -64,7 +64,7 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
-    Table t = c.getParentTable();
+    TableElement t = c.getParentTable();
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s limit 1;", c.getQuotedName(),
         t.getGrain().getName(), t.getName(), where);
     return prepareStatement(conn, sql);

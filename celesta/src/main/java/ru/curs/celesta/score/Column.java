@@ -16,13 +16,13 @@ import ru.curs.celesta.CelestaException;
 public abstract class Column extends NamedElement implements ColumnMeta {
 
 	private static final String OPTION = "option";
-	private final Table parentTable;
+	private final TableElement parentTable;
 	private boolean nullable = true;
 
 	Column(Table parentTable, String name) throws ParseException {
 		super(name);
-		if (Table.RECVERSION.equals(name))
-			throw new ParseException(String.format("Column name '%s' is reserved for system needs.", Table.RECVERSION));
+		if (VersionedElement.REC_VERSION.equals(name))
+			throw new ParseException(String.format("Column name '%s' is reserved for system needs.", VersionedElement.REC_VERSION));
 		if (parentTable == null)
 			throw new IllegalArgumentException();
 		this.parentTable = parentTable;
@@ -39,7 +39,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 	 *             Не должно возникать.
 	 */
 	Column(Table parentTable) throws ParseException {
-		super(Table.RECVERSION);
+		super(VersionedElement.REC_VERSION);
 		if (parentTable == null)
 			throw new IllegalArgumentException();
 		this.parentTable = parentTable;
@@ -91,7 +91,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 	/**
 	 * Возвращает таблицу, к которой относится данная колонка.
 	 */
-	public final Table getParentTable() {
+	public final TableElement getParentTable() {
 		return parentTable;
 	}
 

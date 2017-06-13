@@ -43,11 +43,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -291,7 +287,7 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 
 
   @Override
-  public void manageAutoIncrement(Connection conn, Table t) throws SQLException {
+  public void manageAutoIncrement(Connection conn, TableElement t) throws SQLException {
     String sql;
     Statement stmt = conn.createStatement();
     try {
@@ -716,7 +712,7 @@ final class PostgresAdaptor extends SqlDbAdaptor {
   }
 
   @Override
-  public void updateVersioningTrigger(Connection conn, Table t) throws CelestaException {
+  public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
     // First of all, we are about to check if trigger exists
     String sql = String.format("select count(*) from information_schema.triggers where "
         + "		event_object_schema = '%s' and event_object_table= '%s'"
@@ -728,25 +724,29 @@ final class PostgresAdaptor extends SqlDbAdaptor {
         rs.next();
         boolean triggerExists = rs.getInt(1) > 0;
         rs.close();
-        if (t.isVersioned()) {
-          if (triggerExists) {
-            return;
+
+        if (t instanceof VersionedElement) {
+          VersionedElement ve = (VersionedElement) t;
+          if (ve.isVersioned()) {
+            if (triggerExists) {
+              return;
+            } else {
+              // CREATE TRIGGER
+              sql = String.format(
+                  "CREATE TRIGGER \"versioncheck\"" + " BEFORE UPDATE ON " + tableTemplate()
+                      + " FOR EACH ROW EXECUTE PROCEDURE celesta.recversion_check();",
+                  t.getGrain().getName(), t.getName());
+              stmt.executeUpdate(sql);
+            }
           } else {
-            // CREATE TRIGGER
-            sql = String.format(
-                "CREATE TRIGGER \"versioncheck\"" + " BEFORE UPDATE ON " + tableTemplate()
-                    + " FOR EACH ROW EXECUTE PROCEDURE celesta.recversion_check();",
-                t.getGrain().getName(), t.getName());
-            stmt.executeUpdate(sql);
-          }
-        } else {
-          if (triggerExists) {
-            // DROP TRIGGER
-            sql = String.format("DROP TRIGGER \"versioncheck\" ON " + tableTemplate(),
-                t.getGrain().getName(), t.getName());
-            stmt.executeUpdate(sql);
-          } else {
-            return;
+            if (triggerExists) {
+              // DROP TRIGGER
+              sql = String.format("DROP TRIGGER \"versioncheck\" ON " + tableTemplate(),
+                  t.getGrain().getName(), t.getName());
+              stmt.executeUpdate(sql);
+            } else {
+              return;
+            }
           }
         }
       } finally {

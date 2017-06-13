@@ -55,31 +55,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.adaptors.ColumnDefiner;
-import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
-import ru.curs.celesta.score.BinaryColumn;
-import ru.curs.celesta.score.BooleanColumn;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKRule;
-import ru.curs.celesta.score.FloatingColumn;
-import ru.curs.celesta.score.ForeignKey;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.GrainElement;
-import ru.curs.celesta.score.Index;
-import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.NamedElement;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.SQLGenerator;
-import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.Table;
-import ru.curs.celesta.score.TableRef;
-import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.*;
 
 /**
  * Адаптер Oracle Database.
@@ -335,7 +316,7 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
-    Table t = c.getParentTable();
+    TableElement t = c.getParentTable();
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1", c.getQuotedName(),
         t.getGrain().getName(), t.getName(), where);
     return prepareStatement(conn, sql);
@@ -377,7 +358,7 @@ final class OraAdaptor extends DBAdaptor {
       //Для выполнения пустого insert ищем любое поле, отличное от recversion
       String columnToInsert = t.getColumns().keySet()
           .stream()
-          .filter(k -> !Table.RECVERSION.equals(k))
+          .filter(k -> !VersionedElement.REC_VERSION.equals(k))
           .findFirst().get();
 
       sql = String.format("insert into " + tableTemplate() + " (\"%s\") values (DEFAULT)", t.getGrain().getName(),
@@ -762,14 +743,14 @@ final class OraAdaptor extends DBAdaptor {
     return "\"" + result + "\"";
   }
 
-  private static String getSequenceName(Table table) {
+  private static String getSequenceName(TableElement table) {
     String result = String.format("%s_%s_inc", table.getGrain().getName(), table.getName());
     result = NamedElement.limitName(result);
     return result;
   }
 
   @Override
-  public void manageAutoIncrement(Connection conn, Table t) throws SQLException {
+  public void manageAutoIncrement(Connection conn, TableElement t) throws SQLException {
     // 1. Firstly, we have to clean up table from any auto-increment
     // triggers
     String sequenceName = getSequenceName(t);
@@ -1220,13 +1201,13 @@ final class OraAdaptor extends DBAdaptor {
     };
   }
 
-  private static String getUpdTriggerName(Table table) {
+  private static String getUpdTriggerName(TableElement table) {
     String result = String.format("%s_%s_upd", table.getGrain().getName(), table.getName());
     result = NamedElement.limitName(result);
     return result;
   }
 
-  private void dropVersioningTrigger(Connection conn, Table t) throws CelestaException {
+  private void dropVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
     // First of all, we are about to check if trigger exists
     String triggerName = getUpdTriggerName(t);
     String sql = String.format(
@@ -1260,7 +1241,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void updateVersioningTrigger(Connection conn, Table t) throws CelestaException {
+  public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
     // First of all, we are about to check if trigger exists
     String triggerName = getUpdTriggerName(t);
     String sql = String.format(
@@ -1276,7 +1257,9 @@ final class OraAdaptor extends DBAdaptor {
         triggerExists = rs.next();
         rs.close();
 
-        if (t.isVersioned()) {
+        if (t instanceof VersionedElement) {
+          VersionedElement ve = (VersionedElement) t;
+          if (ve.isVersioned()) {
           if (triggerExists) {
             return;
           } else {
@@ -1298,6 +1281,7 @@ final class OraAdaptor extends DBAdaptor {
             return;
           }
         }
+      }
       } finally {
         stmt.close();
       }

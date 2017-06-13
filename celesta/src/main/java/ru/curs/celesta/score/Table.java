@@ -13,15 +13,7 @@ import java.util.Set;
  * Объект-таблица в метаданных.
  * 
  */
-public final class Table extends GrainElement {
-
-	/**
-	 * Имя системного поля, содержащего версию записи.
-	 */
-	public static final String RECVERSION = "recversion";
-
-	private static final String YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO = "Table '%s.%s', "
-			+ "field '%s': you cannot drop a column that belongs to ";
+public final class Table extends GrainElement implements TableElement, VersionedElement {
 
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
@@ -62,30 +54,23 @@ public final class Table extends GrainElement {
 	/**
 	 * Неизменяемый перечень столбцов таблицы.
 	 */
+	@Override
 	public Map<String, Column> getColumns() {
 		return columns.getElements();
 	}
 
-	/**
-	 * Возвращает столбец по его имени, либо исключение с сообщением о том, что
-	 * столбец не найден.
-	 * 
-	 * @param name
-	 *            Имя
-	 * @throws ParseException
-	 *             Если столбец с таким именем не найден в таблице.
-	 */
-	public Column getColumn(String name) throws ParseException {
-		Column result = columns.get(name);
+
+	@Override
+	public Column getColumn(String colName) throws ParseException {
+		Column result = columns.get(colName);
 		if (result == null)
 			throw new ParseException(
-					String.format("Column '%s' not found in table '%s.%s'", name, getGrain().getName(), getName()));
+					String.format("Column '%s' not found in table '%s.%s'", colName, getGrain().getName(), getName()));
 		return result;
 	}
 
-	/**
-	 * Неизменяемый перечень столбцов первичного ключа таблицы.
-	 */
+
+	@Override
 	public Map<String, Column> getPrimaryKey() {
 		return pk.getElements();
 	}
@@ -136,7 +121,7 @@ public final class Table extends GrainElement {
 	/**
 	 * Добавляет колонку первичного ключа.
 	 * 
-	 * @param string
+	 * @param name
 	 *            Имя колонки первичного ключа.
 	 */
 	void addPK(String name) throws ParseException {
@@ -147,7 +132,7 @@ public final class Table extends GrainElement {
 	}
 
 	private Column validatePKColumn(String name) throws ParseException {
-		if (RECVERSION.equals(name))
+		if (VersionedElement.REC_VERSION.equals(name))
 			throw new ParseException(String.format("Column '%s' is not allowed for primary key.", name));
 		Column c = columns.get(name);
 		if (c == null)
@@ -189,7 +174,8 @@ public final class Table extends GrainElement {
 		fKeys.remove(foreignKey);
 	}
 
-	synchronized void removeColumn(Column column) throws ParseException {
+	@Override
+	public synchronized void removeColumn(Column column) throws ParseException {
 		// Составную часть первичного ключа нельзя удалить
 		if (pk.contains(column))
 			throw new ParseException(
@@ -340,9 +326,8 @@ public final class Table extends GrainElement {
 		return Collections.unmodifiableSet(indices);
 	}
 
-	/**
-	 * Возвращает имя ограничения PK (или null, если оно не задано).
-	 */
+
+	@Override
 	public String getPkConstraintName() {
 		return pkConstraintName == null ? limitName("pk_" + getName()) : pkConstraintName;
 	}
@@ -447,31 +432,12 @@ public final class Table extends GrainElement {
 		this.isReadOnly = isReadOnly;
 	}
 
-	/**
-	 * Является ли таблица версионированной (WITH VERSION CHECK).
-	 */
+	@Override
 	public boolean isVersioned() {
 		return isVersioned;
 	}
 
-	/**
-	 * Устанавливает признак версионности таблицы.
-	 * 
-	 * @param isVersioned
-	 *            Признак версионности.
-	 * @throws ParseException
-	 *             Если таблица read only.
-	 */
-	public void setVersioned(boolean isVersioned) throws ParseException {
-		if (isReadOnly && isVersioned)
-			throw new ParseException(String.format(
-					"Method setVersioned(true) failed: table %s should be either versioned or read only.", getName()));
-		this.isVersioned = isVersioned;
-	}
-
-	/**
-	 * Возвращает описание поля recversion.
-	 */
+	@Override
 	public IntegerColumn getRecVersionField() {
 		return recVersion;
 	}

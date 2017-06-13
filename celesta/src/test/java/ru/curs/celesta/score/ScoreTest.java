@@ -361,7 +361,7 @@ public class ScoreTest {
 		assertFalse(v.getColumns().get("id").isNullable());
 
 		v = g.getView("testview2");
-		assertEquals(ViewColumnType.INT, v.getColumns().get("id").getColumnType());
+		assertEquals(ViewColumnType.INT, v.getViewColumns().get("id").getColumnType());
 		exp = String.format("  select id as id, descr as descr%n" + "  from test as t1%n"
 				+ "    INNER join refTo as t2 on attrVarchar = k1 AND NOT t2.descr IS NULL AND attrInt = k2");
 		assertEquals(exp, v.getCelestaQueryString());
@@ -375,8 +375,8 @@ public class ScoreTest {
 		View v = g.getView("v3");
 		String[] expected = { "  select 1 as a, 1.4 as b, 1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j",
 				"    , 1 as k", "  from test as test" };
-		assertEquals(ViewColumnType.INT, v.getColumns().get("a").getColumnType());
-		assertEquals(ViewColumnType.REAL, v.getColumns().get("b").getColumnType());
+		assertEquals(ViewColumnType.INT, v.getViewColumns().get("a").getColumnType());
+		assertEquals(ViewColumnType.REAL, v.getViewColumns().get("b").getColumnType());
 
 		assertEquals("", v.getColumns().get("a").getCelestaDoc());
 		assertFalse(v.getColumns().get("a").isNullable());
@@ -414,19 +414,19 @@ public class ScoreTest {
 		View v = g.getView("v5");
 		Table t = g.getTable("test");
 
-		ViewColumnMeta vcm = v.getColumns().get("foo");
+		ViewColumnMeta vcm = v.getViewColumns().get("foo");
 		assertTrue(vcm.isNullable());
 		assertEquals(StringColumn.VARCHAR, vcm.getCelestaType());
 		assertEquals(((StringColumn) t.getColumn("attrVarchar")).getLength(), vcm.getLength());
 		assertEquals(2, vcm.getLength());
 		
-		vcm = v.getColumns().get("bar");
+		vcm = v.getViewColumns().get("bar");
 		assertTrue(vcm.isNullable());
 		assertEquals(StringColumn.VARCHAR, vcm.getCelestaType());
 		assertEquals(((StringColumn) t.getColumn("f7")).getLength(), vcm.getLength());
 		assertEquals(8, vcm.getLength());
 		
-		vcm = v.getColumns().get("baz");
+		vcm = v.getViewColumns().get("baz");
 		assertTrue(vcm.isNullable());
 		assertEquals(StringColumn.VARCHAR, vcm.getCelestaType());
 		assertEquals(-1, vcm.getLength());

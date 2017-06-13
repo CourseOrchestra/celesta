@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractView extends GrainElement {
 
   boolean distinct;
-  final Map<String, Expr> columns = new LinkedHashMap<>();
+  final Map<String, Expr> viewColumns = new LinkedHashMap<>();
   private Map<String, ViewColumnMeta> columnTypes = null;
   final Map<String, FieldRef> groupByColumns = new LinkedHashMap<>();
   private final Map<String, TableRef> tables = new LinkedHashMap<>();
@@ -69,7 +69,7 @@ public abstract class AbstractView extends GrainElement {
       bww.append("distinct ");
 
     boolean cont = false;
-    for (Map.Entry<String, Expr> e : columns.entrySet()) {
+    for (Map.Entry<String, Expr> e : viewColumns.entrySet()) {
       if (cont)
         bww.append(", ");
       String st = gen.generateSQL(e.getValue()) + " as ";
@@ -125,18 +125,18 @@ public abstract class AbstractView extends GrainElement {
    * @param expr  Выражение колонки.
    * @throws ParseException Неуникальное имя алиаса или иная семантическая ошибка
    */
-  void addColumn(String alias, Expr expr) throws ParseException {
+  void addViewColumn(String alias, Expr expr) throws ParseException {
     if (expr == null)
       throw new IllegalArgumentException();
 
     if (alias == null || alias.isEmpty())
       throw new ParseException(String.format("%s '%s' contains a column with undefined alias.", viewType(), getName()));
-    if (columns.containsKey(alias))
+    if (viewColumns.containsKey(alias))
       throw new ParseException(String.format(
           "%s '%s' already contains column with name or alias '%s'. Use unique aliases for %s columns.",
           viewType(), getName(), alias, viewType()));
 
-    columns.put(alias, expr);
+    viewColumns.put(alias, expr);
   }
 
 
@@ -196,7 +196,7 @@ public abstract class AbstractView extends GrainElement {
    */
   void finalizeParsing() throws ParseException {
     List<TableRef> t = new ArrayList<>(getTables().values());
-    for (Expr e : columns.values()) {
+    for (Expr e : viewColumns.values()) {
       e.resolveFieldRefs(t);
       e.validateTypes();
     }
@@ -206,17 +206,17 @@ public abstract class AbstractView extends GrainElement {
     }
 
     //Проверяем, что колонки, не использованные для агрегации, перечислены в выражении GROUP BY
-    Set<String> aggregateAliases = columns.entrySet().stream()
+    Set<String> aggregateAliases = viewColumns.entrySet().stream()
         .filter(e -> e.getValue() instanceof Aggregate)
         .map(Map.Entry::getKey)
         .collect(Collectors.toSet());
 
-    if ((!aggregateAliases.isEmpty() && aggregateAliases.size() != columns.size())
+    if ((!aggregateAliases.isEmpty() && aggregateAliases.size() != viewColumns.size())
         || !groupByColumns.isEmpty()) {
 
       //Бежим по колонкам, которые не агрегаты, и бросаем исключение,
       // если хотя бы одна из них не присутствует в groupByColumns
-      Optional hasErrorOpt = columns.entrySet().stream()
+      Optional hasErrorOpt = viewColumns.entrySet().stream()
           .filter(e -> !(e.getValue() instanceof Aggregate) && !groupByColumns.containsKey(e.getKey()))
           .findFirst();
 
@@ -248,13 +248,18 @@ public abstract class AbstractView extends GrainElement {
   /**
    * Возвращает перечень столбцов представления.
    */
-  public final Map<String, ViewColumnMeta> getColumns() {
+  public final Map<String, ViewColumnMeta> getViewColumns() {
     if (columnTypes == null) {
       columnTypes = new LinkedHashMap<>();
-      for (Map.Entry<String, Expr> e : columns.entrySet())
+      for (Map.Entry<String, Expr> e : viewColumns.entrySet())
         columnTypes.put(e.getKey(), e.getValue().getMeta());
     }
     return columnTypes;
+  }
+
+  @Override
+  public Map<String, ? extends ColumnMeta> getColumns() {
+    return getViewColumns();
   }
 
   Map<String, TableRef> getTables() {

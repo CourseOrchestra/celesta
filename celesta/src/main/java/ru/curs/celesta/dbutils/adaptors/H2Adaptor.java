@@ -262,7 +262,7 @@ final public class H2Adaptor extends SqlDbAdaptor {
   }
 
   @Override
-  public void manageAutoIncrement(Connection conn, Table t) throws SQLException {
+  public void manageAutoIncrement(Connection conn, TableElement t) throws SQLException {
     String sql;
     Statement stmt = conn.createStatement();
     try {
@@ -661,7 +661,7 @@ final public class H2Adaptor extends SqlDbAdaptor {
   }
 
   @Override
-  public void updateVersioningTrigger(Connection conn, Table t) throws CelestaException {
+  public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
     // First of all, we are about to check if trigger exists
     String sql = String.format("select count(*) from information_schema.triggers where "
         + "		table_schema = '%s' and table_name = '%s'"
@@ -673,7 +673,11 @@ final public class H2Adaptor extends SqlDbAdaptor {
         rs.next();
         boolean triggerExists = rs.getInt(1) > 0;
         rs.close();
-        if (t.isVersioned()) {
+
+        if (t instanceof VersionedElement) {
+          VersionedElement ve = (VersionedElement) t;
+
+        if (ve.isVersioned()) {
           if (triggerExists) {
             return;
           } else {
@@ -696,6 +700,7 @@ final public class H2Adaptor extends SqlDbAdaptor {
             return;
           }
         }
+      }
       } finally {
         stmt.close();
       }
