@@ -216,8 +216,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    */
   public final void createTable(Connection conn, TableElement te) throws CelestaException {
     String def = tableDef(te);
+
     try {
-      // System.out.println(def); // for debug purposes
+      //System.out.println(def); // for debug purposes
       Statement stmt = conn.createStatement();
       try {
         stmt.executeUpdate(def);
@@ -548,26 +549,32 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       sb.append("  " + columnDef(c));
       multiple = true;
     }
-    sb.append(",\n");
 
     if (te instanceof VersionedElement) {
       VersionedElement ve = (VersionedElement) te;
       // У версионированных таблиц - колонка recversion
       if (ve.isVersioned())
-        sb.append("  " + columnDef(ve.getRecVersionField()) + ",\n");
+        sb.append(",\n").append("  " + columnDef(ve.getRecVersionField()));
     }
-    // Определение первичного ключа (он у нас всегда присутствует)
-    sb.append(String.format("  constraint \"%s\" primary key (", te.getPkConstraintName()));
-    multiple = false;
-    for (String s : te.getPrimaryKey().keySet()) {
-      if (multiple)
-        sb.append(", ");
-      sb.append('"');
-      sb.append(s);
-      sb.append('"');
-      multiple = true;
+
+    if (te.hasPrimeKey()) {
+      sb.append(",\n");
+      // Определение первичного ключа, если он должен присутствовать в таблице
+      sb.append(String.format("  constraint \"%s\" primary key (", te.getPkConstraintName()));
+      multiple = false;
+      for (String s : te.getPrimaryKey().keySet()) {
+        if (multiple)
+          sb.append(", ");
+        sb.append('"');
+        sb.append(s);
+        sb.append('"');
+        multiple = true;
+      }
+      sb.append(")");
     }
-    sb.append(")\n)");
+
+    sb.append("\n)");
+
     return sb.toString();
   }
 
@@ -746,7 +753,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    *             получить.
    * @throws CelestaException в случае сбоя связи с БД.
    */
-  public abstract DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException;
+  public abstract DBPKInfo getPKInfo(Connection conn, TableElement t) throws CelestaException;
 
   /**
    * Удаляет первичный ключ на таблице с использованием известного имени
@@ -767,7 +774,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @throws CelestaException неудача создания первичного ключа (например, неуникальные
    *                          записи).
    */
-  public abstract void createPK(Connection conn, Table t) throws CelestaException;
+  public abstract void createPK(Connection conn, TableElement t) throws CelestaException;
 
   public abstract List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException;
 

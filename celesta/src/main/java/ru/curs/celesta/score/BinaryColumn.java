@@ -15,7 +15,7 @@ public final class BinaryColumn extends Column {
 	public static final String CELESTA_TYPE = "BLOB";
 	private String defaultvalue;
 
-	public BinaryColumn(Table table, String name) throws ParseException {
+	public BinaryColumn(TableElement table, String name) throws ParseException {
 		super(table, name);
 	}
 

@@ -11,11 +11,10 @@ import java.util.stream.Collectors;
 public abstract class AbstractView extends GrainElement {
 
   boolean distinct;
-  final Map<String, Expr> viewColumns = new LinkedHashMap<>();
-  private Map<String, ViewColumnMeta> columnTypes = null;
+  final Map<String, Expr> columns = new LinkedHashMap<>();
+  Map<String, ViewColumnMeta> columnTypes = null;
   final Map<String, FieldRef> groupByColumns = new LinkedHashMap<>();
   private final Map<String, TableRef> tables = new LinkedHashMap<>();
-  Expr whereCondition;
 
 
   public AbstractView(Grain grain, String name) throws ParseException {
@@ -23,7 +22,6 @@ public abstract class AbstractView extends GrainElement {
   }
 
   abstract String viewType();
-  abstract public void createViewScript(BufferedWriter bw, SQLGenerator gen) throws IOException;
   abstract public void delete() throws ParseException;
 
   /**
@@ -32,58 +30,42 @@ public abstract class AbstractView extends GrainElement {
    * @param whereCondition условие where.
    * @throws ParseException если тип выражения неверный.
    */
-  void setWhereCondition(Expr whereCondition) throws ParseException {
-    if (whereCondition != null) {
-      List<TableRef> t = new ArrayList<>(getTables().values());
-      whereCondition.resolveFieldRefs(t);
-      whereCondition.assertType(ViewColumnType.LOGIC);
-    }
-    this.whereCondition = whereCondition;
-  }
+  abstract void setWhereCondition(Expr whereCondition) throws ParseException;
 
   void selectScript(final BufferedWriter bw, SQLGenerator gen) throws IOException {
-
-    /**
-     * Wrapper for automatic line-breaks.
-     */
-    class BWWrapper {
-      private static final int LINE_SIZE = 80;
-      private static final String PADDING = "    ";
-      private int l = 0;
-
-      private void append(String s) throws IOException {
-        bw.write(s);
-        l += s.length();
-        if (l >= LINE_SIZE) {
-          bw.newLine();
-          bw.write(PADDING);
-          l = PADDING.length();
-        }
-      }
-    }
-
     BWWrapper bww = new BWWrapper();
 
-    bww.append("  select ");
+    writeSelectPart(bw, gen, bww);
+    writeFromPart(bw, gen);
+    writeWherePart(bw, gen);
+    writeGroupByPart(bw, gen);
+  }
+
+
+  void writeSelectPart(final BufferedWriter bw, SQLGenerator gen, BWWrapper bww) throws IOException {
+    bww.append("  select ", bw);
     if (distinct)
-      bww.append("distinct ");
+      bww.append("distinct ", bw);
 
     boolean cont = false;
-    for (Map.Entry<String, Expr> e : viewColumns.entrySet()) {
+    for (Map.Entry<String, Expr> e : columns.entrySet()) {
       if (cont)
-        bww.append(", ");
+        bww.append(", ", bw);
       String st = gen.generateSQL(e.getValue()) + " as ";
       if (gen.quoteNames()) {
         st = st + "\"" + e.getKey() + "\"";
       } else {
         st = st + e.getKey();
       }
-      bww.append(st);
+      bww.append(st, bw);
       cont = true;
     }
     bw.newLine();
+  }
+
+  void writeFromPart(final BufferedWriter bw, SQLGenerator gen) throws IOException {
     bw.write("  from ");
-    cont = false;
+    boolean cont = false;
     for (TableRef tRef : getTables().values()) {
       if (cont) {
         bw.newLine();
@@ -97,11 +79,11 @@ public abstract class AbstractView extends GrainElement {
       }
       cont = true;
     }
-    if (whereCondition != null) {
-      bw.newLine();
-      bw.write("  where ");
-      bw.write(gen.generateSQL(whereCondition));
-    }
+  }
+
+  void writeWherePart(final BufferedWriter bw, SQLGenerator gen) throws IOException {}
+
+  void writeGroupByPart(final BufferedWriter bw, SQLGenerator gen) throws IOException {
     if (!groupByColumns.isEmpty()) {
       bw.newLine();
       bw.write(" group by ");
@@ -125,18 +107,18 @@ public abstract class AbstractView extends GrainElement {
    * @param expr  Выражение колонки.
    * @throws ParseException Неуникальное имя алиаса или иная семантическая ошибка
    */
-  void addViewColumn(String alias, Expr expr) throws ParseException {
+  void addColumn(String alias, Expr expr) throws ParseException {
     if (expr == null)
       throw new IllegalArgumentException();
 
     if (alias == null || alias.isEmpty())
       throw new ParseException(String.format("%s '%s' contains a column with undefined alias.", viewType(), getName()));
-    if (viewColumns.containsKey(alias))
+    if (columns.containsKey(alias))
       throw new ParseException(String.format(
           "%s '%s' already contains column with name or alias '%s'. Use unique aliases for %s columns.",
           viewType(), getName(), alias, viewType()));
 
-    viewColumns.put(alias, expr);
+    columns.put(alias, expr);
   }
 
 
@@ -194,39 +176,39 @@ public abstract class AbstractView extends GrainElement {
    *
    * @throws ParseException ошибка проверки типов или разрешения ссылок.
    */
-  void finalizeParsing() throws ParseException {
+  abstract void finalizeParsing() throws ParseException;
+
+  void finalizeColumnsParsing() throws ParseException {
     List<TableRef> t = new ArrayList<>(getTables().values());
-    for (Expr e : viewColumns.values()) {
+    for (Expr e : columns.values()) {
       e.resolveFieldRefs(t);
       e.validateTypes();
     }
-    if (whereCondition != null) {
-      whereCondition.resolveFieldRefs(t);
-      whereCondition.validateTypes();
-    }
+  }
 
+
+  void finalizeGroupByParsing() throws ParseException {
     //Проверяем, что колонки, не использованные для агрегации, перечислены в выражении GROUP BY
-    Set<String> aggregateAliases = viewColumns.entrySet().stream()
+    Set<String> aggregateAliases = columns.entrySet().stream()
         .filter(e -> e.getValue() instanceof Aggregate)
         .map(Map.Entry::getKey)
         .collect(Collectors.toSet());
 
-    if ((!aggregateAliases.isEmpty() && aggregateAliases.size() != viewColumns.size())
+    if ((!aggregateAliases.isEmpty() && aggregateAliases.size() != columns.size())
         || !groupByColumns.isEmpty()) {
 
       //Бежим по колонкам, которые не агрегаты, и бросаем исключение,
       // если хотя бы одна из них не присутствует в groupByColumns
-      Optional hasErrorOpt = viewColumns.entrySet().stream()
+      Optional hasErrorOpt = columns.entrySet().stream()
           .filter(e -> !(e.getValue() instanceof Aggregate) && !groupByColumns.containsKey(e.getKey()))
           .findFirst();
 
       if (hasErrorOpt.isPresent()) {
         throw new ParseException(String.format("%s '%s.%s' contains a column(s) " +
-            "which was not specified in aggregate function and GROUP BY expression.",
+                "which was not specified in aggregate function and GROUP BY expression.",
             viewType(), getGrain().getName(), getName()));
       }
     }
-
   }
 
   /**
@@ -248,19 +230,8 @@ public abstract class AbstractView extends GrainElement {
   /**
    * Возвращает перечень столбцов представления.
    */
-  public final Map<String, ViewColumnMeta> getViewColumns() {
-    if (columnTypes == null) {
-      columnTypes = new LinkedHashMap<>();
-      for (Map.Entry<String, Expr> e : viewColumns.entrySet())
-        columnTypes.put(e.getKey(), e.getValue().getMeta());
-    }
-    return columnTypes;
-  }
+  public abstract Map<String, ? extends ColumnMeta> getColumns();
 
-  @Override
-  public Map<String, ? extends ColumnMeta> getColumns() {
-    return getViewColumns();
-  }
 
   Map<String, TableRef> getTables() {
     return tables;
@@ -275,5 +246,25 @@ public abstract class AbstractView extends GrainElement {
         return i;
     }
     return i;
+  }
+
+
+  /**
+   * Wrapper for automatic line-breaks.
+   */
+  class BWWrapper {
+    private static final int LINE_SIZE = 80;
+    private static final String PADDING = "    ";
+    private int l = 0;
+
+    private void append(String s, BufferedWriter bw) throws IOException {
+      bw.write(s);
+      l += s.length();
+      if (l >= LINE_SIZE) {
+        bw.newLine();
+        bw.write(PADDING);
+        l = PADDING.length();
+      }
+    }
   }
 }

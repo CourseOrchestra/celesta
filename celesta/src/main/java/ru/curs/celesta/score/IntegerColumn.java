@@ -17,11 +17,11 @@ public final class IntegerColumn extends Column {
 	private Integer defaultvalue;
 	private boolean identity;
 
-	public IntegerColumn(Table table, String name) throws ParseException {
+	public IntegerColumn(TableElement table, String name) throws ParseException {
 		super(table, name);
 	}
 
-	IntegerColumn(Table table) throws ParseException {
+	IntegerColumn(TableElement table) throws ParseException {
 		super(table);
 	}
 

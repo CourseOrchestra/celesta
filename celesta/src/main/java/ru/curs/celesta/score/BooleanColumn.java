@@ -14,7 +14,7 @@ public final class BooleanColumn extends Column {
 	public static final String CELESTA_TYPE = "BIT";
 	private Boolean defaultvalue;
 
-	public BooleanColumn(Table table, String name) throws ParseException {
+	public BooleanColumn(TableElement table, String name) throws ParseException {
 		super(table, name);
 	}
 

@@ -268,6 +268,10 @@ public final class DBUpdator {
       // Создаём представления заново
       createViews(g);
 
+      // Обновляем все материализованные представления.
+      for (MaterializedView t : g.getMaterializedViews().values())
+        updateMaterializedView(t);
+
       // Обновляем справочник celesta.tables.
       table.setRange("grainid", g.getName());
       while (table.nextInSet()) {
@@ -335,6 +339,7 @@ public final class DBUpdator {
     for (String viewName : dba.getViewList(conn, g))
       dba.dropView(conn, g.getName(), viewName);
   }
+
 
   private static void updateGrainFKeys(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
@@ -488,6 +493,35 @@ public final class DBUpdator {
       }
 
     dba.updateVersioningTrigger(conn, t);
+  }
+
+  private static void updateMaterializedView(MaterializedView mv) throws CelestaException {
+    final Connection conn = grain.callContext().getConn();
+
+    if (!dba.tableExists(conn, mv.getGrain().getName(), mv.getName())) {
+      // Таблицы не существует в базе данных, создаём с нуля.
+      dba.createTable(conn, mv);
+      return;
+    }
+
+    DBPKInfo pkInfo;
+    //Set<String> dbColumns = dba.getColumns(conn, t);
+    //boolean modified = updateColumns(t, conn, dbColumns, dbFKeys);
+
+    // Ещё раз проверяем первичный ключ и при необходимости (если его нет
+    // или он был сброшен) создаём.
+    pkInfo = dba.getPKInfo(conn, mv);
+    if (pkInfo.isEmpty())
+      dba.createPK(conn, mv);
+
+    //if (modified)
+    if (true)
+      try {
+        dba.manageAutoIncrement(conn, mv);
+      } catch (SQLException e) {
+        throw new CelestaException("Updating table %s.%s failed: %s.", mv.getGrain().getName(), mv.getName(),
+            e.getMessage());
+      }
   }
 
   private static void dropReferencedFKs(Table t, Connection conn, List<DBFKInfo> dbFKeys) throws CelestaException {

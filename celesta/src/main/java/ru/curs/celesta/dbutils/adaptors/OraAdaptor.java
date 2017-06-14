@@ -832,7 +832,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
+  public DBPKInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
     DBPKInfo result = new DBPKInfo();
     try {
       String sql = String.format("select cons.constraint_name, column_name from all_constraints cons "
@@ -877,7 +877,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void createPK(Connection conn, Table t) throws CelestaException {
+  public void createPK(Connection conn, TableElement t) throws CelestaException {
     StringBuilder sql = new StringBuilder();
     sql.append(String.format("alter table \"%s_%s\" add constraint \"%s\" " + " primary key (",
         t.getGrain().getName(), t.getName(), t.getPkConstraintName()));

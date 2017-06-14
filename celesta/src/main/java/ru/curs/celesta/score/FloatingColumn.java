@@ -15,7 +15,7 @@ public final class FloatingColumn extends Column {
 
 	private Double defaultvalue;
 
-	public FloatingColumn(Table table, String name) throws ParseException {
+	public FloatingColumn(TableElement table, String name) throws ParseException {
 		super(table, name);
 	}
 

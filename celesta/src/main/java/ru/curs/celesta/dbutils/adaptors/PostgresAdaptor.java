@@ -529,7 +529,7 @@ final class PostgresAdaptor extends SqlDbAdaptor {
 
 
   @Override
-  public DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
+  public DBPKInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
     String sql = String.format(
         "SELECT i.relname AS indexname, " + "i.oid, array_length(x.indkey, 1) as colcount " + "FROM pg_index x "
             + "INNER JOIN pg_class c ON c.oid = x.indrelid "

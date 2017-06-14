@@ -456,7 +456,7 @@ final public class H2Adaptor extends SqlDbAdaptor {
 
 
   @Override
-  public DBPKInfo getPKInfo(Connection conn, Table t) throws CelestaException {
+  public DBPKInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
     String sql = String.format(
         "SELECT constraint_name AS indexName, column_name as colName " +
             "FROM  INFORMATION_SCHEMA.INDEXES " +

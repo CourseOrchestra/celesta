@@ -91,7 +91,6 @@ public final class Celesta {
 
 	private final ProfilingManager profiler = new ProfilingManager();
 	private TriggerDispatcher triggerDispatcher;
-	private ExecutorService executor = Executors.newSingleThreadExecutor();
 
 	private Celesta(boolean initInterpeterPool) throws CelestaException {
 		// CELESTA STARTUP SEQUENCE
@@ -258,8 +257,8 @@ public final class Celesta {
 		return runPython(sesId, null, null, proc, param);
 	}
 
-	public Future<PyObject> runPythonAsync(String sesId, String proc, Object... param) throws CelestaException {
-		return runPythonAsync(sesId, null, null, proc, param);
+	public Future<PyObject> runPythonAsync(String sesId, String proc, long delay, Object... param) throws CelestaException {
+		return runPythonAsync(sesId, null, null, proc, delay, param);
 	}
 
 	/**
@@ -359,18 +358,23 @@ public final class Celesta {
 		}
 	}
 
-	public Future<PyObject> runPythonAsync(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc,
-																				Object... param) {
+	public Future<PyObject> runPythonAsync(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc,
+																				 String proc, long delay, Object... param) {
+
+		final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+
 		Callable<PyObject> callable = () -> {
 			try {
-				return runPython(sesId, rec, sc, proc, param);
+				return runPython(sesId, rec, sc, proc, delay, param);
 			} catch (Exception e) {
 				System.out.println("Exception while executing async task:" + e.getMessage());
 				throw e;
+			} finally {
+				scheduledExecutor.shutdown();
 			}
 		};
 
-		return executor.submit(callable);
+		return scheduledExecutor.schedule(callable, delay, TimeUnit.SECONDS);
 	}
 
 	/**

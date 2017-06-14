@@ -176,7 +176,7 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void createPK(Connection conn, Table t) throws CelestaException {
+  public void createPK(Connection conn, TableElement t) throws CelestaException {
     StringBuilder sql = new StringBuilder();
     sql.append(String.format("alter table %s.%s add constraint \"%s\" primary key (", t.getGrain().getQuotedName(),
         t.getQuotedName(), t.getPkConstraintName()));

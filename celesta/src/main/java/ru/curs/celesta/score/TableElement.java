@@ -43,7 +43,11 @@ public interface TableElement {
    */
   <T extends ColumnMeta> T getColumn(String colName) throws ParseException;
 
+  void addColumn(Column column) throws ParseException;
+
   void removeColumn(Column column) throws ParseException;
+
+  boolean hasPrimeKey();
 
   /**
    * Возвращает имя ограничения PK (или null, если оно не задано).

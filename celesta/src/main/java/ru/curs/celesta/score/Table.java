@@ -83,7 +83,8 @@ public final class Table extends GrainElement implements TableElement, Versioned
 	 * @throws ParseException
 	 *             Если колонка с таким именем уже определена.
 	 */
-	void addColumn(Column column) throws ParseException {
+	@Override
+	public void addColumn(Column column) throws ParseException {
 		if (column.getParentTable() != this)
 			throw new IllegalArgumentException();
 		getGrain().modify();
@@ -326,6 +327,11 @@ public final class Table extends GrainElement implements TableElement, Versioned
 		return Collections.unmodifiableSet(indices);
 	}
 
+
+	@Override
+	public boolean hasPrimeKey() {
+		return true;
+	}
 
 	@Override
 	public String getPkConstraintName() {

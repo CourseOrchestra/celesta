@@ -14,4 +14,4 @@ CREATE MATERIALIZED VIEW testView2 AS
 select count(*) as countv, max(f2) as maxv, min (f1+f2) as minv from testTable;
 
 CREATE MATERIALIZED VIEW testView3 AS
-  select f1, f2 from testTable group by f1, f2;
+  select f1, f2, max(id) as id from testTable group by f1, f2;

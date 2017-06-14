@@ -27,7 +27,7 @@ public final class DateTimeColumn extends Column {
 
 	private boolean getdate;
 
-	public DateTimeColumn(Table table, String name) throws ParseException {
+	public DateTimeColumn(TableElement table, String name) throws ParseException {
 		super(table, name);
 	}
 

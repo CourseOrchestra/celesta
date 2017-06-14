@@ -23,7 +23,7 @@ public final class StringColumn extends Column {
 	private int length;
 	private boolean max;
 
-	public StringColumn(Table table, String name) throws ParseException {
+	public StringColumn(TableElement table, String name) throws ParseException {
 		super(table, name);
 	}
 

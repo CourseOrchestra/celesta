@@ -503,6 +503,8 @@ FieldRef fr;
     [<K_GROUP> <K_BY>  groupBy(v)]
 }
 
+
+
 void groupBy(AbstractView view):
 { FieldRef fr; }
 {
@@ -537,7 +539,7 @@ void selectItem(AbstractView v):
 		   alias = ((FieldRef) expr).getColumnName();
      if (doc != null)
         expr.getMeta().setCelestaDocLexem(doc.toString());
-     v.addViewColumn(alias, expr); }
+     v.addColumn(alias, expr); }
 }
 
 TableRef tableReference(AbstractView v):

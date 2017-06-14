@@ -156,7 +156,7 @@ public final class ORMCompiler {
 	private static void compileView(View v, BufferedWriter w) throws IOException {
 		String className = v.getName() + "Cursor";
 
-		Map<String, ViewColumnMeta> columns = v.getViewColumns();
+		Map<String, ViewColumnMeta> columns = v.getColumns();
 
 		w.write(String.format("class %s(ViewCursor):", className));
 		w.newLine();
