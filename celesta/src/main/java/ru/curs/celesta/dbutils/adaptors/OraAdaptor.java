@@ -378,7 +378,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public Set<String> getColumns(Connection conn, Table t) throws CelestaException {
+  public Set<String> getColumns(Connection conn, TableElement t) throws CelestaException {
     Set<String> result = new LinkedHashSet<>();
     try {
       String tableName = String.format("%s_%s", t.getGrain().getName(), t.getName());
@@ -860,7 +860,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
+  public void dropPK(Connection conn, TableElement t, String pkName) throws CelestaException {
     String sql = String.format("alter table \"%s_%s\" drop constraint \"%s\"", t.getGrain().getName(), t.getName(),
         pkName);
     try {
@@ -1174,7 +1174,7 @@ final class OraAdaptor extends DBAdaptor {
     return new SQLGenerator() {
 
       @Override
-      protected String viewName(View v) {
+      protected String viewName(AbstractView v) {
         return String.format(TABLE_TEMPLATE, v.getGrain().getName(), v.getName());
       }
 

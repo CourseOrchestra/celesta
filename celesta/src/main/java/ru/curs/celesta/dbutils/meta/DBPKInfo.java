@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.meta;
 
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.TableElement;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -33,7 +34,7 @@ public final class DBPKInfo {
     return columnNames.isEmpty();
   }
 
-  public boolean reflects(Table t) {
+  public boolean reflects(TableElement t) {
     boolean result = t.getPkConstraintName().equals(name) && (columnNames.size() == t.getPrimaryKey().size());
     Iterator<String> i1 = t.getPrimaryKey().keySet().iterator();
     Iterator<String> i2 = columnNames.iterator();

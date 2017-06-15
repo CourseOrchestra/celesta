@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 /**
  * Created by ioann on 02.05.2017.
  */
-public abstract class SqlDbAdaptor extends DBAdaptor {
+public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   protected static final String CONJUGATE_INDEX_POSTFIX = "__vpo";
   protected static final String SELECT_S_FROM = "select %s from ";
   protected static final String NOW = "now()";
@@ -85,7 +85,7 @@ public abstract class SqlDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public Set<String> getColumns(Connection conn, Table t) throws CelestaException {
+  public Set<String> getColumns(Connection conn, TableElement t) throws CelestaException {
     String sql = String.format("select column_name from information_schema.columns "
         + "where table_schema = '%s' and table_name = '%s';", t.getGrain().getName(), t.getName());
     return sqlToStringSet(conn, sql);

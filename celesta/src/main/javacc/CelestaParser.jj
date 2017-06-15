@@ -155,7 +155,8 @@ Grain grain(Score s, String name):
    ( ( ([doc = <CELESTA_DOC>]<K_CREATE> (
                     createTable(g, doc == null? null: doc.toString()) 
                   | createIndex(g, doc == null? null: doc.toString())
-				  | createView(g, doc == null? null: doc.toString()))
+				  | createView(g, doc == null? null: doc.toString())
+				  | createMaterializedView(g, doc == null? null: doc.toString()))
 				  {doc = null;} )
 	 | (<K_ALTER>   alterTable(g))) ";")*
    <EOF>
@@ -358,22 +359,33 @@ else {
 
 void createView(Grain g, String doc):
 {
-	AbstractView view = null;
+	View view = null;
 	Token viewName = null;
-	boolean isMaterialized = false;
 }
 {
-[<K_MATERIALIZED> {isMaterialized = true;}]
 <K_VIEW> viewName = <S_IDENTIFIER> <K_AS>
     {
-        if (isMaterialized) view = new MaterializedView(g, viewName.toString());
-        else view = new View(g, viewName.toString());
+        view = new View(g, viewName.toString());
 	    view.setCelestaDocLexem(doc);
 	}
 	select(view)
 	{view.finalizeParsing();}
 }
 
+void createMaterializedView(Grain g, String doc):
+{
+    MaterializedView view = null;
+    Token viewName = null;
+}
+{
+<K_MATERIALIZED> <K_VIEW> viewName = <S_IDENTIFIER> <K_AS>
+    {
+        view = new MaterializedView(g, viewName.toString());
+        view.setCelestaDocLexem(doc);
+    }
+    materializedSelect(view)
+    {view.finalizeParsing();}
+}
 
 Expr sqlExpression():
 { Expr result;
@@ -494,7 +506,6 @@ FieldRef fieldReference():
 void select(AbstractView v):
 {
 Expr where;
-FieldRef fr;
 }
 {
     <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
@@ -503,6 +514,14 @@ FieldRef fr;
     [<K_GROUP> <K_BY>  groupBy(v)]
 }
 
+void materializedSelect(MaterializedView v):
+{
+}
+{
+    <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] materializedSelectItem(v) ("," materializedSelectItem(v))*
+    <K_FROM>  fromClause(v)
+    [<K_GROUP> <K_BY>  groupBy(v)]
+}
 
 
 void groupBy(AbstractView view):
@@ -526,6 +545,19 @@ Expr aggregateFunc(AbstractView v):
   )
 }
 
+Expr materializedAggregateFunc(MaterializedView v):
+{
+    Expr term;
+    Token t;
+}
+{
+  (
+      <K_SUM> "(" term = fieldReference() ")" { return new Sum(term); }
+      | <K_MAX> "(" term = fieldReference() ")" { return new Max(term); }
+      | <K_MIN> "(" term = fieldReference() ")" { return new Min(term); }
+  )
+}
+
 void selectItem(AbstractView v):
 {
   Token doc = null;
@@ -535,6 +567,23 @@ void selectItem(AbstractView v):
 }
 {
    [doc = <CELESTA_DOC>] (expr = sqlTermExpr() | expr = aggregateFunc(v)) [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]
+   { if (alias.isEmpty() && expr instanceof FieldRef)
+		   alias = ((FieldRef) expr).getColumnName();
+     if (doc != null)
+        expr.getMeta().setCelestaDocLexem(doc.toString());
+     v.addColumn(alias, expr); }
+}
+
+void materializedSelectItem(MaterializedView v):
+{
+  Token doc = null;
+  Token aliasToken = null;
+  String alias = "";
+  Expr expr;
+}
+{
+   [doc = <CELESTA_DOC>] (expr = fieldReference() | expr = materializedAggregateFunc(v)) [<K_AS>]
+   [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]
    { if (alias.isEmpty() && expr instanceof FieldRef)
 		   alias = ((FieldRef) expr).getColumnName();
      if (doc != null)

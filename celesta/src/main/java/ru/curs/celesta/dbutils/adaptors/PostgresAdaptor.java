@@ -49,7 +49,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
@@ -60,7 +59,7 @@ import ru.curs.celesta.score.*;
 /**
  * Адаптер Postgres.
  */
-final class PostgresAdaptor extends SqlDbAdaptor {
+final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   private static final Pattern HEX_STRING = Pattern.compile("'\\\\x([0-9A-Fa-f]+)'");
 
@@ -575,7 +574,7 @@ final class PostgresAdaptor extends SqlDbAdaptor {
   }
 
   @Override
-  public void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
+  public void dropPK(Connection conn, TableElement t, String pkName) throws CelestaException {
     String sql = String.format("alter table %s.%s drop constraint \"%s\" cascade", t.getGrain().getQuotedName(),
         t.getQuotedName(), pkName);
     try {

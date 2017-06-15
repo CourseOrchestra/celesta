@@ -208,11 +208,11 @@ public class SQLGenerator extends ExprVisitor {
     }
   }
 
-  protected String preamble(View view) {
+  protected String preamble(AbstractView view) {
     return String.format("create or replace view %s as", viewName(view));
   }
 
-  protected String viewName(View v) {
+  protected String viewName(AbstractView v) {
     return String.format("%s.%s", v.getGrain().getQuotedName(), v.getQuotedName());
   }
 

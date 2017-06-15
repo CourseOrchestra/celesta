@@ -18,9 +18,7 @@ import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
 
-public class ParserTest {
-
-  private Score s = new Score();
+public class ParserTest extends AbstractParsingTest {
 
   @Test
   public void test0() throws ParseException, CelestaException, IOException {
@@ -285,46 +283,6 @@ public class ParserTest {
 
     assertEquals(20767, input.getCount());
     assertEquals(0x1754E6E7, input.getCRC32());
-  }
-
-  @Test(expected = ParseException.class)
-  public void testParsingFailsWhenStringInSum() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("aggregate/testParsingFailsWhenStringInSum.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
-  }
-
-  @Test(expected = ParseException.class)
-  public void testParsingFailsWhenGroupByContainsNotAllFieldRefs() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("aggregate/testParsingFailsWhenGroupByContainsNotAllFieldRefs.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
-  }
-
-  @Test(expected = ParseException.class)
-  public void testParsingFailsWhenAggregateExprInGroupBy() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("aggregate/testParsingFailsWhenAggregateExprInGroupBy.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
-  }
-
-  @Test
-  public void testParsingNotFailsWhenViewSyntaxIsCorrect() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("aggregate/testParsingNotFailsWhenViewSyntaxIsCorrect.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
-  }
-
-  @Test
-  public void testParsingNotFailsWhenMaterializedViewSyntaxIsCorrect() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("aggregate/testParsingNotFailsWhenMaterializedViewSyntaxIsCorrect.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
   }
 
 }

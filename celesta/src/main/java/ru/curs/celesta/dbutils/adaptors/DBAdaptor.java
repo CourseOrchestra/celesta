@@ -304,7 +304,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param t    Таблица, по которой просматривать столбцы.
    * @throws CelestaException в случае сбоя связи с БД.
    */
-  public Set<String> getColumns(Connection conn, Table t) throws CelestaException {
+  public Set<String> getColumns(Connection conn, TableElement t) throws CelestaException {
     Set<String> result = new LinkedHashSet<>();
     try {
       DatabaseMetaData metaData = conn.getMetaData();
@@ -764,7 +764,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param pkName Имя первичного ключа.
    * @throws CelestaException в случае сбоя связи с БД.
    */
-  public abstract void dropPK(Connection conn, Table t, String pkName) throws CelestaException;
+  public abstract void dropPK(Connection conn, TableElement t, String pkName) throws CelestaException;
 
   /**
    * Создаёт первичный ключ на таблице в соответствии с метаописанием.

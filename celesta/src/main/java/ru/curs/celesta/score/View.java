@@ -116,12 +116,12 @@ public class View extends AbstractView {
    */
   private class CelestaSQLGen extends SQLGenerator {
     @Override
-    protected String preamble(View view) {
+    protected String preamble(AbstractView view) {
       return String.format("create view %s as", viewName(view));
     }
 
     @Override
-    protected String viewName(View v) {
+    protected String viewName(AbstractView v) {
       return getName();
     }
 

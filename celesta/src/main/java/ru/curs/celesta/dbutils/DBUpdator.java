@@ -505,8 +505,8 @@ public final class DBUpdator {
     }
 
     DBPKInfo pkInfo;
-    //Set<String> dbColumns = dba.getColumns(conn, t);
-    //boolean modified = updateColumns(t, conn, dbColumns, dbFKeys);
+    Set<String> dbColumns = dba.getColumns(conn, mv);
+    updateColumns(mv, conn, dbColumns, Collections.emptyList());
 
     // Ещё раз проверяем первичный ключ и при необходимости (если его нет
     // или он был сброшен) создаём.
@@ -514,7 +514,6 @@ public final class DBUpdator {
     if (pkInfo.isEmpty())
       dba.createPK(conn, mv);
 
-    //if (modified)
     if (true)
       try {
         dba.manageAutoIncrement(conn, mv);
@@ -524,7 +523,7 @@ public final class DBUpdator {
       }
   }
 
-  private static void dropReferencedFKs(Table t, Connection conn, List<DBFKInfo> dbFKeys) throws CelestaException {
+  private static void dropReferencedFKs(TableElement t, Connection conn, List<DBFKInfo> dbFKeys) throws CelestaException {
     Iterator<DBFKInfo> i = dbFKeys.iterator();
     while (i.hasNext()) {
       DBFKInfo dbFKey = i.next();
@@ -536,7 +535,7 @@ public final class DBUpdator {
     }
   }
 
-  private static boolean updateColumns(Table t, final Connection conn, Set<String> dbColumns, List<DBFKInfo> dbFKeys)
+  private static boolean updateColumns(TableElement t, final Connection conn, Set<String> dbColumns, List<DBFKInfo> dbFKeys)
       throws CelestaException {
     // Таблица существует в базе данных, определяем: надо ли удалить
     // первичный ключ

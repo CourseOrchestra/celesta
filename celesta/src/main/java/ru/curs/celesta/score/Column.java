@@ -118,6 +118,17 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 	}
 
 	/**
+	 * Устанавливает свойство nullable .
+	 *
+	 * @param nullable
+	 *            свойство Nullable
+	 */
+	public final void setNullable(boolean nullable) throws ParseException {
+		parentTable.getGrain().modify();
+		this.nullable = nullable;
+	}
+
+	/**
 	 * Возвращает значение свойства Nullable.
 	 */
 	public final boolean isNullable() {

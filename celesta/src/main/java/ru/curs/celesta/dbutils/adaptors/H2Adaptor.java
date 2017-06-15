@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Created by ioann on 02.05.2017.
  */
-final public class H2Adaptor extends SqlDbAdaptor {
+final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   private static final Pattern HEX_STRING = Pattern.compile("X'([0-9A-Fa-f]+)'");
 
@@ -490,7 +490,7 @@ final public class H2Adaptor extends SqlDbAdaptor {
   }
 
   @Override
-  public void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
+  public void dropPK(Connection conn, TableElement t, String pkName) throws CelestaException {
     String sql = String.format("alter table %s.%s drop primary key", t.getGrain().getQuotedName(),
         t.getQuotedName(), pkName);
     try {

@@ -732,7 +732,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void dropPK(Connection conn, Table t, String pkName) throws CelestaException {
+  public void dropPK(Connection conn, TableElement t, String pkName) throws CelestaException {
     String sql = String.format("alter table %s.%s drop constraint \"%s\"", t.getGrain().getQuotedName(),
         t.getQuotedName(), pkName);
     try {
@@ -900,7 +900,7 @@ final class MSSQLAdaptor extends DBAdaptor {
       }
 
       @Override
-      protected String preamble(View view) {
+      protected String preamble(AbstractView view) {
         return String.format("create view %s as", viewName(view));
       }
 

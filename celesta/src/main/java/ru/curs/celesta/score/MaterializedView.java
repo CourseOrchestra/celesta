@@ -64,18 +64,35 @@ public class MaterializedView extends AbstractView implements TableElement {
       String type = vcm.getCelestaType();
 
       final Column col;
+      Column colRef;
 
-      if (IntegerColumn.CELESTA_TYPE.equals(type)) {
+      FieldRef fr = null;
+
+      if (expr instanceof FieldRef) {
+        fr = (FieldRef) expr;
+      } else if (expr instanceof Max) {
+        fr = (FieldRef) ((Max) expr).term;
+      } else if (expr instanceof Min) {
+        fr = (FieldRef) ((Min) expr).term;
+      } else if (expr instanceof Sum) {
+        fr = (FieldRef) ((Sum) expr).term;
+      }
+
+      colRef = fr.getColumn();
+
+      if (colRef instanceof IntegerColumn) {
         col = new IntegerColumn(this, alias);
-      } else if (FloatingColumn.CELESTA_TYPE.equals(type)) {
+      } else if (colRef instanceof FloatingColumn) {
         col = new FloatingColumn(this, alias);
-      } else if (BooleanColumn.CELESTA_TYPE.equals(type)) {
+      } else if (colRef instanceof BooleanColumn) {
         col = new BooleanColumn(this, alias);
-      } else if (StringColumn.VARCHAR.equals(type)) {
+      } else if (colRef instanceof StringColumn) {
         col = new StringColumn(this, alias);
-      } else if (BinaryColumn.CELESTA_TYPE.equals(type)) {
+        StringColumn strColRef = (StringColumn) colRef;
+        ((StringColumn)col).setLength(String.valueOf(strColRef.getLength()));
+      } else if (colRef instanceof BinaryColumn) {
         col = new BinaryColumn(this, alias);
-      } else if (DateTimeColumn.CELESTA_TYPE.equals(type)) {
+      } else if (colRef instanceof DateTimeColumn) {
         col = new DateTimeColumn(this, alias);
       } else {
         throw new ParseException(String.format(
@@ -83,10 +100,27 @@ public class MaterializedView extends AbstractView implements TableElement {
             type, alias, getName()));
       }
 
+
       if (!(expr instanceof Aggregate)) {
         pk.addElement(col);
+        col.setNullable(false);
       }
 
+    }
+  }
+
+  @Override
+  void finalizeGroupByParsing() throws ParseException {
+    super.finalizeGroupByParsing();
+
+    for (String alias : groupByColumns.keySet()) {
+      Column colRef = ((FieldRef)columns.get(alias)).getColumn();
+      if (colRef.isNullable()) {
+        throw new ParseException(String.format(
+            "Nullable column %s was found in GROUP BY expression for %s '%s.%s'.",
+            alias, viewType(), getGrain().getName(), getName())
+        );
+      }
     }
   }
 
@@ -94,6 +128,9 @@ public class MaterializedView extends AbstractView implements TableElement {
   void save(BufferedWriter bw) throws IOException {
     SQLGenerator gen = new CelestaSQLGen();
     Grain.writeCelestaDoc(this, bw);
+    bw.write(gen.preamble(this));
+    bw.newLine();
+    selectScript(bw, gen);
     bw.write(";");
     bw.newLine();
     bw.newLine();
@@ -171,5 +208,29 @@ public class MaterializedView extends AbstractView implements TableElement {
    */
   private class CelestaSQLGen extends SQLGenerator {
 
+    @Override
+    protected String preamble(AbstractView view) {
+      return String.format("create materialized view %s as", viewName(view));
+    }
+
+    @Override
+    protected String viewName(AbstractView v) {
+      return getName();
+    }
+
+    @Override
+    protected String tableName(TableRef tRef) {
+      Table t = tRef.getTable();
+      if (t.getGrain() == getGrain()) {
+        return String.format("%s as %s", t.getName(), tRef.getAlias());
+      } else {
+        return String.format("%s.%s as %s", t.getGrain().getName(), t.getName(), tRef.getAlias());
+      }
+    }
+
+    @Override
+    protected boolean quoteNames() {
+      return false;
+    }
   }
 }
