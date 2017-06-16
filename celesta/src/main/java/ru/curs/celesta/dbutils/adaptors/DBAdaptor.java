@@ -153,7 +153,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param t    удаляемая таблица
    * @throws CelestaException в случае ошибки работы с БД
    */
-  public final void dropTable(Connection conn, Table t) throws CelestaException {
+  public final void dropTable(Connection conn, TableElement t) throws CelestaException {
     try {
       String sql = String.format("DROP TABLE " + tableTemplate(), t.getGrain().getName(), t.getName());
       Statement stmt = conn.createStatement();
@@ -705,7 +705,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   public abstract void manageAutoIncrement(Connection conn, TableElement te) throws SQLException;
 
-  abstract void dropAutoIncrement(Connection conn, Table t) throws SQLException;
+  abstract void dropAutoIncrement(Connection conn, TableElement t) throws SQLException;
 
   public abstract PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException;
 

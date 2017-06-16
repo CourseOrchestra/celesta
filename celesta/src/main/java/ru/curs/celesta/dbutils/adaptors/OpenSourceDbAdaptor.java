@@ -164,7 +164,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   abstract protected void updateColType(Column c, DBColumnInfo actual, List<String> batch);
 
   @Override
-  void dropAutoIncrement(Connection conn, Table t) throws SQLException {
+  void dropAutoIncrement(Connection conn, TableElement t) throws SQLException {
     // Удаление Sequence
     String sql = String.format("drop sequence if exists \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
     Statement stmt = conn.createStatement();

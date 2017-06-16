@@ -814,7 +814,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  void dropAutoIncrement(Connection conn, Table t) throws SQLException {
+  void dropAutoIncrement(Connection conn, TableElement t) throws SQLException {
     // Удаление Sequence
     String sequenceName = getSequenceName(t);
     String sql = "DROP SEQUENCE \"" + sequenceName + "\"";

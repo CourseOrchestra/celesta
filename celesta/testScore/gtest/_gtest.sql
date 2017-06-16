@@ -72,3 +72,18 @@ create view v3 as select 1 as a, /**test celestadoc*/1.4 as b, /**test celestado
 create view v4 as select f1, f4, f5, f4 + f5 as s, f5 * f5 + 1 as s2 from test where f1 = true;
 
 create view v5 as select attrVarchar as foo, f7 as bar, attrVarchar || f7 as baz from test;
+
+create table tableForMatView (
+  id int identity not null primary key,
+  f1 varchar(2) not null,
+  f2 int not null default 3,
+  f3 bit not null,
+  f4 blob not null,
+  f5 real not null,
+  f6 datetime not null
+);
+
+create materialized view mView1 as
+  select sum(id) as idsum, f1, f2, f3, f4, f5, f6
+  from tableForMatView
+  group by f1, f2, f3, f4, f5, f6;

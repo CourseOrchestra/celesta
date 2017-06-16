@@ -97,7 +97,8 @@ public abstract class AbstractAdaptorTest {
     dba.createSchemaIfNotExists(conn, GRAIN_NAME);
     conn.commit();
 
-    t = score.getGrain(GRAIN_NAME).getTable("test");
+    Grain g = score.getGrain(GRAIN_NAME);
+    t = g.getTable("test");
     try {
       // Могла остаться от незавершившегося теста
       dba.dropTable(conn, t);
@@ -525,6 +526,91 @@ public abstract class AbstractAdaptorTest {
     assertEquals(false, c.isIdentity());
   }
 
+
+  @Test
+  public void testColumnInfoForMaterializedView()
+      throws CelestaException, ParseException, IOException, SQLException {
+
+    Grain g = score.getGrain(GRAIN_NAME);
+    Table tableForMatView = g.getTable("tableForMatView");
+    MaterializedView mView1 = g.getMaterializedView("mView1");
+
+    try {
+      dba.createTable(conn, tableForMatView);
+      dba.createTable(conn, mView1);
+
+      DBColumnInfo c;
+      Column col;
+
+      col = mView1.getColumn("idsum");
+      c = dba.getColumnInfo(conn, col);
+      assertEquals("idsum", c.getName());
+      assertSame(IntegerColumn.class, c.getType());
+      assertEquals(true, c.isNullable());
+      assertEquals("", c.getDefaultValue());
+      assertEquals(false, c.isIdentity());
+      assertEquals(0, c.getLength());
+
+      col = mView1.getColumn("f1");
+      c = dba.getColumnInfo(conn, col);
+      assertEquals("f1", c.getName());
+      assertSame(StringColumn.class, c.getType());
+      assertEquals(false, c.isNullable());
+      assertEquals("", c.getDefaultValue());
+      assertEquals(false, c.isIdentity());
+      assertEquals(2, c.getLength());
+
+      col = mView1.getColumn("f2");
+      c = dba.getColumnInfo(conn, col);
+      assertEquals("f2", c.getName());
+      assertSame(IntegerColumn.class, c.getType());
+      assertEquals(false, c.isNullable());
+      assertEquals("", c.getDefaultValue());
+      assertEquals(false, c.isIdentity());
+      assertEquals(0, c.getLength());
+
+      col = mView1.getColumn("f3");
+      c = dba.getColumnInfo(conn, col);
+      assertEquals("f3", c.getName());
+      assertSame(BooleanColumn.class, c.getType());
+      assertEquals(false, c.isNullable());
+      assertEquals("", c.getDefaultValue());
+      assertEquals(false, c.isIdentity());
+      assertEquals(0, c.getLength());
+
+      col = mView1.getColumn("f4");
+      c = dba.getColumnInfo(conn, col);
+      assertEquals("f4", c.getName());
+      assertSame(BinaryColumn.class, c.getType());
+      assertEquals(false, c.isNullable());
+      assertEquals("", c.getDefaultValue());
+      assertEquals(false, c.isIdentity());
+      assertEquals(0, c.getLength());
+
+      col = mView1.getColumn("f5");
+      c = dba.getColumnInfo(conn, col);
+      assertEquals("f5", c.getName());
+      assertSame(FloatingColumn.class, c.getType());
+      assertEquals(false, c.isNullable());
+      assertEquals("", c.getDefaultValue());
+      assertEquals(false, c.isIdentity());
+      assertEquals(0, c.getLength());
+
+      col = mView1.getColumn("f6");
+      c = dba.getColumnInfo(conn, col);
+      assertEquals("f6", c.getName());
+      assertSame(DateTimeColumn.class, c.getType());
+      assertEquals(false, c.isNullable());
+      assertEquals("", c.getDefaultValue());
+      assertEquals(false, c.isIdentity());
+      assertEquals(0, c.getLength());
+    } finally {
+      dba.dropTable(conn, tableForMatView);
+      dba.dropTable(conn, mView1);
+    }
+  }
+
+
   @Test
   public void updateColumn() throws CelestaException, ParseException, IOException, SQLException {
     // NULL/NOT NULL и DEFAULT (простые)
@@ -813,6 +899,7 @@ public abstract class AbstractAdaptorTest {
     assertEquals(false, c.isIdentity());
 
   }
+
 
   @Test
   public void testReflects() throws CelestaException, ParseException {

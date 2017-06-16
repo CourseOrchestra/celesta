@@ -686,7 +686,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  void dropAutoIncrement(Connection conn, Table t) throws SQLException {
+  void dropAutoIncrement(Connection conn, TableElement t) throws SQLException {
     String sql = String.format("delete from celesta.sequences where grainid = '%s' and tablename = '%s';\n",
         t.getGrain().getName(), t.getName());
     PreparedStatement stmt = conn.prepareStatement(sql);
