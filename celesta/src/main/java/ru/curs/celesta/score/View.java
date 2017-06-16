@@ -111,37 +111,6 @@ public class View extends AbstractView {
     getGrain().removeView(this);
   }
 
-  /**
-   * Генератор CelestaSQL.
-   */
-  private class CelestaSQLGen extends SQLGenerator {
-    @Override
-    protected String preamble(AbstractView view) {
-      return String.format("create view %s as", viewName(view));
-    }
-
-    @Override
-    protected String viewName(AbstractView v) {
-      return getName();
-    }
-
-    @Override
-    protected String tableName(TableRef tRef) {
-      Table t = tRef.getTable();
-      if (t.getGrain() == getGrain()) {
-        return String.format("%s as %s", t.getName(), tRef.getAlias());
-      } else {
-        return String.format("%s.%s as %s", t.getGrain().getName(), t.getName(), tRef.getAlias());
-      }
-    }
-
-    @Override
-    protected boolean quoteNames() {
-      return false;
-    }
-
-  }
-
   @Override
   void save(BufferedWriter bw) throws IOException {
     SQLGenerator gen = new CelestaSQLGen();

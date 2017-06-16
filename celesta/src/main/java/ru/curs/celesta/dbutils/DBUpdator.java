@@ -265,12 +265,13 @@ public final class DBUpdator {
       // Обновляем внешние ключи
       updateGrainFKeys(g);
 
-      // Создаём представления заново
-      createViews(g);
-
       // Обновляем все материализованные представления.
       for (MaterializedView t : g.getMaterializedViews().values())
         updateMaterializedView(t);
+
+      // Создаём представления заново
+      createViews(g);
+
 
       // Обновляем справочник celesta.tables.
       table.setRange("grainid", g.getName());
@@ -384,7 +385,7 @@ public final class DBUpdator {
 
   private static void dropOrphanedGrainIndices(Grain g) throws CelestaException {
     /*
-		 * В целом метод повторяет код updateGrainIndices, но только в части
+     * В целом метод повторяет код updateGrainIndices, но только в части
 		 * удаления индексов. Зачистить все индексы, подвергшиеся удалению или
 		 * изменению необходимо перед тем, как будет выполняться обновление
 		 * структуры таблиц, чтобы увеличить вероятность успешного результата:
@@ -462,21 +463,18 @@ public final class DBUpdator {
     boolean modified = updateColumns(t, conn, dbColumns, dbFKeys);
 
     // Для версионированных таблиц синхронизируем поле recversion
-    if (t instanceof VersionedElement) {
-      VersionedElement ve = (VersionedElement) t;
-
-      if (ve.isVersioned())
-        if (dbColumns.contains(VersionedElement.REC_VERSION)) {
-          DBColumnInfo ci = dba.getColumnInfo(conn, t.getRecVersionField());
-          if (!ci.reflects(t.getRecVersionField())) {
-            dba.updateColumn(conn, t.getRecVersionField(), ci);
-            modified = true;
-          }
-        } else {
-          dba.createColumn(conn, t.getRecVersionField());
+    if (t.isVersioned())
+      if (dbColumns.contains(VersionedElement.REC_VERSION)) {
+        DBColumnInfo ci = dba.getColumnInfo(conn, t.getRecVersionField());
+        if (!ci.reflects(t.getRecVersionField())) {
+          dba.updateColumn(conn, t.getRecVersionField(), ci);
           modified = true;
         }
-    }
+      } else {
+        dba.createColumn(conn, t.getRecVersionField());
+        modified = true;
+      }
+
 
     // Ещё раз проверяем первичный ключ и при необходимости (если его нет
     // или он был сброшен) создаём.
@@ -513,14 +511,6 @@ public final class DBUpdator {
     pkInfo = dba.getPKInfo(conn, mv);
     if (pkInfo.isEmpty())
       dba.createPK(conn, mv);
-
-    if (true)
-      try {
-        dba.manageAutoIncrement(conn, mv);
-      } catch (SQLException e) {
-        throw new CelestaException("Updating table %s.%s failed: %s.", mv.getGrain().getName(), mv.getName(),
-            e.getMessage());
-      }
   }
 
   private static void dropReferencedFKs(TableElement t, Connection conn, List<DBFKInfo> dbFKeys) throws CelestaException {

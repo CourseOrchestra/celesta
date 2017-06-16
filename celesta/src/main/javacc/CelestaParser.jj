@@ -518,7 +518,7 @@ void materializedSelect(MaterializedView v):
 {
 }
 {
-    <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] materializedSelectItem(v) ("," materializedSelectItem(v))*
+    <K_SELECT> materializedSelectItem(v) ("," materializedSelectItem(v))*
     <K_FROM>  fromClause(v)
     [<K_GROUP> <K_BY>  groupBy(v)]
 }

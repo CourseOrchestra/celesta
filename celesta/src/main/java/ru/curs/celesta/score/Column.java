@@ -107,25 +107,9 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 	 */
 	public final void setNullableAndDefault(boolean nullable, String defaultValue) throws ParseException {
 		parentTable.getGrain().modify();
-		String buf;
-		// if (defaultValue == null && !nullable) {
-		// buf = getDefaultDefault();
-		// } else {
-		buf = defaultValue;
-		// }
+		String buf = defaultValue;
 		this.nullable = nullable;
 		setDefault(buf);
-	}
-
-	/**
-	 * Устанавливает свойство nullable .
-	 *
-	 * @param nullable
-	 *            свойство Nullable
-	 */
-	public final void setNullable(boolean nullable) throws ParseException {
-		parentTable.getGrain().modify();
-		this.nullable = nullable;
 	}
 
 	/**

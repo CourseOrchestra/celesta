@@ -3,12 +3,57 @@ package ru.curs.celesta.score;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 /**
  * Created by ioann on 08.06.2017.
  */
 public class MaterializedView extends AbstractView implements TableElement {
+
+  @FunctionalInterface
+  private interface MatColFabricFunction {
+    Column apply(MaterializedView mView, Column colRef, String alias) throws ParseException;
+  }
+
+  private static final Map<Class<? extends Column>, MatColFabricFunction> COL_CLASSES_AND_FABRIC_FUNCS = new HashMap<>();
+
+  static {
+    COL_CLASSES_AND_FABRIC_FUNCS.put(IntegerColumn.class, (mView, colRef, alias) -> new IntegerColumn(mView, alias));
+    COL_CLASSES_AND_FABRIC_FUNCS.put(FloatingColumn.class, (mView, colRef, alias) -> new FloatingColumn(mView, alias));
+    COL_CLASSES_AND_FABRIC_FUNCS.put(BooleanColumn.class, (mView, colRef, alias) -> new BooleanColumn(mView, alias));
+    COL_CLASSES_AND_FABRIC_FUNCS.put(BinaryColumn.class, (mView, colRef, alias) -> new BinaryColumn(mView, alias));
+    COL_CLASSES_AND_FABRIC_FUNCS.put(DateTimeColumn.class, (mView, colRef, alias) -> new DateTimeColumn(mView, alias));
+    COL_CLASSES_AND_FABRIC_FUNCS.put(StringColumn.class, (mView, colRef, alias) -> {
+      StringColumn result = new StringColumn(mView, alias);
+      StringColumn strColRef = (StringColumn) colRef;
+      result.setLength(String.valueOf(strColRef.getLength()));
+      return result;
+    });
+  }
+
+  private static final Map<Class<? extends Expr>, Function<Expr, Column>> EXPR_CLASSES_AND_COLUMN_EXTRACTORS = new HashMap<>();
+
+  static {
+    EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(FieldRef.class, (Expr frExpr) -> {
+      FieldRef fr = (FieldRef) frExpr;
+      return fr.getColumn();
+    });
+    EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Max.class, (Expr maxExpr) -> {
+      Max max = (Max) maxExpr;
+      FieldRef fr = (FieldRef) max.term;
+      return fr.getColumn();
+    });
+    EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Min.class, (Expr minExpr) -> {
+      Min min = (Min) minExpr;
+      FieldRef fr = (FieldRef) min.term;
+      return fr.getColumn();
+    });
+    EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Sum.class, (Expr sumExpr) -> {
+      Sum sum = (Sum) sumExpr;
+      FieldRef fr = (FieldRef) sum.term;
+      return fr.getColumn();
+    });
+  }
 
   private final NamedElementHolder<Column> realColumns = new NamedElementHolder<Column>() {
     @Override
@@ -44,7 +89,7 @@ public class MaterializedView extends AbstractView implements TableElement {
 
     if (!aggregate.isPresent()) {
       throw new ParseException(String.format("%s %s.%s must have at least one aggregate column"
-      , viewType(), getGrain().getName(), getName()));
+          , viewType(), getGrain().getName(), getName()));
     }
 
     finalizeColumnsParsing();
@@ -64,46 +109,22 @@ public class MaterializedView extends AbstractView implements TableElement {
       String type = vcm.getCelestaType();
 
       final Column col;
-      Column colRef;
 
-      FieldRef fr = null;
+      Column colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
 
-      if (expr instanceof FieldRef) {
-        fr = (FieldRef) expr;
-      } else if (expr instanceof Max) {
-        fr = (FieldRef) ((Max) expr).term;
-      } else if (expr instanceof Min) {
-        fr = (FieldRef) ((Min) expr).term;
-      } else if (expr instanceof Sum) {
-        fr = (FieldRef) ((Sum) expr).term;
-      }
-
-      colRef = fr.getColumn();
-
-      if (colRef instanceof IntegerColumn) {
-        col = new IntegerColumn(this, alias);
-      } else if (colRef instanceof FloatingColumn) {
-        col = new FloatingColumn(this, alias);
-      } else if (colRef instanceof BooleanColumn) {
-        col = new BooleanColumn(this, alias);
-      } else if (colRef instanceof StringColumn) {
-        col = new StringColumn(this, alias);
-        StringColumn strColRef = (StringColumn) colRef;
-        ((StringColumn)col).setLength(String.valueOf(strColRef.getLength()));
-      } else if (colRef instanceof BinaryColumn) {
-        col = new BinaryColumn(this, alias);
-      } else if (colRef instanceof DateTimeColumn) {
-        col = new DateTimeColumn(this, alias);
-      } else {
+      MatColFabricFunction matColFabricFunction = COL_CLASSES_AND_FABRIC_FUNCS.get(colRef.getClass());
+      if (matColFabricFunction == null) {
         throw new ParseException(String.format(
             "Unsupported type '%s' of column '%s' in materialized view %s was found",
             type, alias, getName()));
+      } else {
+        col = matColFabricFunction.apply(this, colRef, alias);
       }
 
 
       if (!(expr instanceof Aggregate)) {
         pk.addElement(col);
-        col.setNullable(false);
+        col.setNullableAndDefault(false, null);
       }
 
     }
@@ -114,7 +135,7 @@ public class MaterializedView extends AbstractView implements TableElement {
     super.finalizeGroupByParsing();
 
     for (String alias : groupByColumns.keySet()) {
-      Column colRef = ((FieldRef)columns.get(alias)).getColumn();
+      Column colRef = ((FieldRef) columns.get(alias)).getColumn();
       if (colRef.isNullable()) {
         throw new ParseException(String.format(
             "Nullable column %s was found in GROUP BY expression for %s '%s.%s'.",
@@ -203,34 +224,4 @@ public class MaterializedView extends AbstractView implements TableElement {
   }
 
 
-  /**
-   * Генератор CelestaSQL.
-   */
-  private class CelestaSQLGen extends SQLGenerator {
-
-    @Override
-    protected String preamble(AbstractView view) {
-      return String.format("create materialized view %s as", viewName(view));
-    }
-
-    @Override
-    protected String viewName(AbstractView v) {
-      return getName();
-    }
-
-    @Override
-    protected String tableName(TableRef tRef) {
-      Table t = tRef.getTable();
-      if (t.getGrain() == getGrain()) {
-        return String.format("%s as %s", t.getName(), tRef.getAlias());
-      } else {
-        return String.format("%s.%s as %s", t.getGrain().getName(), t.getName(), tRef.getAlias());
-      }
-    }
-
-    @Override
-    protected boolean quoteNames() {
-      return false;
-    }
-  }
 }
