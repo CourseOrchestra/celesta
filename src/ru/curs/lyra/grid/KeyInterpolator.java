@@ -102,7 +102,7 @@ public class KeyInterpolator {
 			throw new IllegalArgumentException();
 		if (data.isEmpty())
 			throw new IllegalStateException();
-		
+
 		Integer floor = data.floorKey(count);
 		int e0 = floor == null ? data.firstKey() : floor;
 		if (e0 == count)
@@ -168,12 +168,12 @@ public class KeyInterpolator {
 	 * @param key
 	 *            Key ordinal value.
 	 */
-	public int getApproximatePosition(BigInteger key) {
+	public synchronized int getApproximatePosition(BigInteger key) {
 		final BigInteger newkey = negateIfDesc(key);
 		int cmax = data.lastEntry().getKey();
 		int cmin = 0;
 		int cmid;
-		while (cmax != cmin) {
+		while (cmax > cmin) {
 			cmid = (cmax + cmin) >> 1;
 			Entry<Integer, BigInteger> ceiling = data.ceilingEntry(cmid);
 			int delta = ceiling.getValue().compareTo(newkey);
