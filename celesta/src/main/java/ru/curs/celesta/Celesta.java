@@ -354,13 +354,13 @@ public final class Celesta {
 		}
 	}
 
-	public Future<PyObject> runPythonAsync(String sesId, ShowcaseContext sc, String proc, long delay, Object... param) {
+	public Future<PyObject> runPythonAsync(String sesId, String proc, long delay, Object... param) {
 
 		final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
 		Callable<PyObject> callable = () -> {
 			try {
-				return runPython(sesId, null, sc, proc, param);
+				return runPython(sesId, proc, param);
 			} catch (Exception e) {
 				System.out.println("Exception while executing async task:" + e.getMessage());
 				throw e;
