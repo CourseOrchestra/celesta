@@ -257,10 +257,6 @@ public final class Celesta {
 		return runPython(sesId, null, null, proc, param);
 	}
 
-	public Future<PyObject> runPythonAsync(String sesId, String proc, long delay, Object... param) throws CelestaException {
-		return runPythonAsync(sesId, null, null, proc, delay, param);
-	}
-
 	/**
 	 * Запуск питоновской процедуры.
 	 * 
@@ -358,14 +354,13 @@ public final class Celesta {
 		}
 	}
 
-	public Future<PyObject> runPythonAsync(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc,
-																				 String proc, long delay, Object... param) {
+	public Future<PyObject> runPythonAsync(String sesId, ShowcaseContext sc, String proc, long delay, Object... param) {
 
 		final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
 		Callable<PyObject> callable = () -> {
 			try {
-				return runPython(sesId, rec, sc, proc, delay, param);
+				return runPython(sesId, null, sc, proc, param);
 			} catch (Exception e) {
 				System.out.println("Exception while executing async task:" + e.getMessage());
 				throw e;
@@ -374,7 +369,7 @@ public final class Celesta {
 			}
 		};
 
-		return scheduledExecutor.schedule(callable, delay, TimeUnit.SECONDS);
+		return scheduledExecutor.schedule(callable, delay, TimeUnit.MILLISECONDS);
 	}
 
 	/**
