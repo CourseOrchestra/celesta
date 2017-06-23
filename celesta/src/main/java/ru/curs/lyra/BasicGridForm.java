@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
@@ -14,12 +13,17 @@ import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.GridDriver;
-import ru.curs.celesta.score.ParseException;
 
 /**
  * Base Java class for Lyra grid form.
  */
 public abstract class BasicGridForm extends BasicLyraForm {
+	
+	@FunctionalInterface
+	public interface ExternalAction <T> {
+		T call(BasicCursor t) throws CelestaException;		
+	}
+	
 
 	private GridDriver gd;
 
@@ -41,7 +45,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		}
 	}
 
-	private <T> T reconnect(Callable<T> f, T fallBack) throws CelestaException {
+	public <T> T externalAction(ExternalAction<T> f, T fallBack) throws CelestaException {
 		CallContext context = getContext();
 		if (context == null)
 			return fallBack;
@@ -52,7 +56,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			setCallContext(context.getCopy(conn));
 		}
 		try {
-			return f.call();
+			return f.call(rec());
 		} catch (CelestaException e) {
 			throw e;
 		} catch (Exception e) {
@@ -80,9 +84,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 *             e. g. insufficient access rights
 	 */
 	public synchronized List<LyraFormData> getRowsH(int position, int h) throws CelestaException {
-		return reconnect(() -> {
-
-			BasicCursor c = rec();
+		return externalAction(c -> {
 			actuateGridDriver(c);
 			if (gd.setPosition(position, c)) {
 				return returnRows(c, h);
@@ -103,8 +105,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 *             e. g. insufficient user rights.
 	 */
 	public synchronized List<LyraFormData> getRowsH(int h) throws CelestaException {
-		return reconnect(() -> {
-			BasicCursor bc = rec();
+		return externalAction(bc -> {
 			// TODO: optimize for reducing DB SELECT calls!
 			if (bc.navigate("=<-")) {
 				gd.setPosition(bc);
@@ -129,8 +130,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 *             e. g. insufficient access rights
 	 */
 	public synchronized List<LyraFormData> setPositionH(int h, Object... pk) throws CelestaException {
-		return reconnect(() -> {
-			BasicCursor bc = rec();
+		return externalAction(bc -> {
 			actuateGridDriver(bc);
 
 			if (bc instanceof Cursor) {
@@ -237,8 +237,8 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	}
 
 	public void saveCursorPosition() throws CelestaException {
-		reconnect(() -> {
-			BasicCursor copy = rec()._getBufferCopy(getContext());
+		externalAction(c -> {
+			BasicCursor copy = c._getBufferCopy(getContext());
 			copy.close();
 			savedPositions.push(copy);
 			return null;
@@ -246,7 +246,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	}
 
 	public void restoreCursorPosition() throws CelestaException {
-		reconnect(() -> {
+		externalAction(c -> {
 			BasicCursor copy = savedPositions.pop();
 			rec().copyFieldsFrom(copy);
 			return null;
