@@ -18,12 +18,11 @@ import ru.curs.celesta.dbutils.GridDriver;
  * Base Java class for Lyra grid form.
  */
 public abstract class BasicGridForm extends BasicLyraForm {
-	
+
 	@FunctionalInterface
-	public interface ExternalAction <T> {
-		T call(BasicCursor t) throws CelestaException;		
+	public interface ExternalAction<T> {
+		T call(BasicCursor t) throws CelestaException;
 	}
-	
 
 	private GridDriver gd;
 
@@ -43,6 +42,10 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			gd.setChangeNotifier(notifier);
 			gd.setMaxExactScrollValue(gd.getMaxExactScrollValue());
 		}
+	}
+
+	public <T> T externalAction(ExternalAction<T> f) throws CelestaException {
+		return externalAction(f, null);
 	}
 
 	public <T> T externalAction(ExternalAction<T> f, T fallBack) throws CelestaException {
@@ -91,7 +94,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			} else {
 				return Collections.emptyList();
 			}
-		} , Collections.emptyList());
+		}, Collections.emptyList());
 	}
 
 	public synchronized List<LyraFormData> getRows() throws CelestaException {
@@ -113,7 +116,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			} else {
 				return Collections.emptyList();
 			}
-		} , Collections.emptyList());
+		}, Collections.emptyList());
 	}
 
 	public synchronized List<LyraFormData> setPosition(Object... pk) throws CelestaException {
@@ -154,7 +157,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 				return Collections.emptyList();
 			}
 
-		} , Collections.emptyList());
+		}, Collections.emptyList());
 
 	}
 
@@ -242,7 +245,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			copy.close();
 			savedPositions.push(copy);
 			return null;
-		} , null);
+		}, null);
 	}
 
 	public void restoreCursorPosition() throws CelestaException {
@@ -250,7 +253,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			BasicCursor copy = savedPositions.pop();
 			rec().copyFieldsFrom(copy);
 			return null;
-		} , null);
+		}, null);
 	}
 
 	/**
