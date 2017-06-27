@@ -124,6 +124,7 @@ public final class ORMCompiler {
 						w.flush();
 						fos.close();
 					}
+					ormFile.setReadable(true, false);
 				} catch (IOException e) {
 					throw new CelestaException("Error while compiling orm classes for '%s' grain: %s", g.getName(),
 							e.getMessage());
@@ -312,9 +313,9 @@ public final class ORMCompiler {
 						}
 						w.newLine();
 					}
-//					if (options.length > 0) {
-//						w.newLine();
-//					}
+					// if (options.length > 0) {
+					// w.newLine();
+					// }
 				} catch (CelestaException e) {
 					// do nothing -- no options to produce
 				}
