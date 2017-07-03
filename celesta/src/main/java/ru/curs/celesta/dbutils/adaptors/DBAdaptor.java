@@ -56,6 +56,7 @@ import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 /**
@@ -168,6 +169,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       throw new CelestaException(e.getMessage());
     }
   }
+
+  abstract public void dropTrigger(Connection conn, TriggerQuery query) throws SQLException;
 
   /**
    * Возвращает true в том и только том случае, если база данных содержит
@@ -698,6 +701,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   abstract ColumnDefiner getColumnDefiner(Column c);
 
   public abstract boolean tableExists(Connection conn, String schema, String name) throws CelestaException;
+
+  public abstract boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException;
 
   abstract boolean userTablesExist(Connection conn) throws SQLException;
 

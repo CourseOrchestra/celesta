@@ -78,12 +78,11 @@ create table tableForMatView (
   f1 varchar(2) not null,
   f2 int not null default 3,
   f3 bit not null,
-  f4 blob not null,
-  f5 real not null,
-  f6 datetime not null
+  f4 real not null,
+  f5 datetime not null
 );
 
 create materialized view mView1 as
-  select sum(id) as idsum, f1, f2, f3, f4, f5, f6
+  select sum(id) as idsum, f1, f2, f3, f4, f5
   from tableForMatView
-  group by f1, f2, f3, f4, f5, f6;
+  group by f1, f2, f3, f4, f5;

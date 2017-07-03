@@ -2,6 +2,7 @@ package ru.curs.celesta.syscursors;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 import org.python.core.PyFunction;
 import ru.curs.celesta.CallContext;
@@ -23,10 +24,27 @@ public final class TablesCursor extends SysCursor {
 		/**
 		 * Таблица.
 		 */
-		TABLE, /**
+		TABLE("T"),
+		/**
 		 * Представление.
 		 */
-		VIEW
+		VIEW("V"),
+		/**
+		 * Материализованное представление
+		 */
+		MATERIALIZED_VIEW("MV");
+
+		TableType(String abbreviation) {
+			this.abbreviation = abbreviation;
+		}
+
+		private String abbreviation;
+
+		private static TableType getByAbbreviation(String abbreviation) {
+			return Arrays.stream(values())
+					.filter(t -> t.abbreviation.equals(abbreviation))
+			    .findFirst().get();
+		}
 	}
 
 	public static final String TABLE_NAME = "tables";
@@ -53,8 +71,7 @@ public final class TablesCursor extends SysCursor {
 		// CHECKSTYLE:ON
 		grainid = rs.getString("grainid");
 		tablename = rs.getString("tablename");
-		tabletype = "T".equals(rs.getString("tabletype")) ? TableType.TABLE
-				: TableType.VIEW;
+		tabletype = TableType.getByAbbreviation(rs.getString("tabletype"));
 		orphaned = rs.getBoolean("orphaned");
 	}
 
@@ -82,7 +99,7 @@ public final class TablesCursor extends SysCursor {
 	public Object[] _currentValues() {
 		// CHECKSTYLE:ON
 		Object[] result = { grainid, tablename,
-				tabletype == TableType.TABLE ? "T" : "V", orphaned };
+				tabletype != null ? tabletype.abbreviation : "T", orphaned };
 		return result;
 	}
 

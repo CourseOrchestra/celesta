@@ -265,13 +265,13 @@ public final class DBUpdator {
       // Обновляем внешние ключи
       updateGrainFKeys(g);
 
-      // Обновляем все материализованные представления.
-      for (MaterializedView t : g.getMaterializedViews().values())
-        updateMaterializedView(t);
-
       // Создаём представления заново
       createViews(g);
 
+
+      // Обновляем все материализованные представления.
+      for (MaterializedView t : g.getMaterializedViews().values())
+        updateMaterializedView(t);
 
       // Обновляем справочник celesta.tables.
       table.setRange("grainid", g.getName());
@@ -282,6 +282,8 @@ public final class DBUpdator {
             break;
           case VIEW:
             table.setOrphaned(!g.getViews().containsKey(table.getTablename()));
+          case MATERIALIZED_VIEW:
+            table.setOrphaned(!g.getMaterializedViews().containsKey(table.getTablename()));
           default:
             break;
         }
@@ -298,6 +300,13 @@ public final class DBUpdator {
         table.setGrainid(g.getName());
         table.setTablename(v.getName());
         table.setTabletype(TableType.VIEW);
+        table.setOrphaned(false);
+        table.tryInsert();
+      }
+      for (MaterializedView mv: g.getMaterializedViews().values()) {
+        table.setGrainid(g.getName());
+        table.setTablename(mv.getName());
+        table.setTabletype(TableType.MATERIALIZED_VIEW);
         table.setOrphaned(false);
         table.tryInsert();
       }
@@ -496,21 +505,30 @@ public final class DBUpdator {
   private static void updateMaterializedView(MaterializedView mv) throws CelestaException {
     final Connection conn = grain.callContext().getConn();
 
-    if (!dba.tableExists(conn, mv.getGrain().getName(), mv.getName())) {
+    boolean isNew = !dba.tableExists(conn, mv.getGrain().getName(), mv.getName());
+
+    if (isNew) {
       // Таблицы не существует в базе данных, создаём с нуля.
       dba.createTable(conn, mv);
       return;
     }
 
+
     DBPKInfo pkInfo;
     Set<String> dbColumns = dba.getColumns(conn, mv);
-    updateColumns(mv, conn, dbColumns, Collections.emptyList());
+    boolean columnsUpdated = updateColumns(mv, conn, dbColumns, Collections.emptyList());
 
     // Ещё раз проверяем первичный ключ и при необходимости (если его нет
     // или он был сброшен) создаём.
     pkInfo = dba.getPKInfo(conn, mv);
     if (pkInfo.isEmpty())
       dba.createPK(conn, mv);
+
+    if (columnsUpdated) {
+      //1. Удалить старые триггеры
+      //2. Проинициализировать материальное представление
+      //3. Создать новые триггеры
+    }
   }
 
   private static void dropReferencedFKs(TableElement t, Connection conn, List<DBFKInfo> dbFKeys) throws CelestaException {

@@ -581,7 +581,7 @@ public abstract class AbstractAdaptorTest {
       col = mView1.getColumn("f4");
       c = dba.getColumnInfo(conn, col);
       assertEquals("f4", c.getName());
-      assertSame(BinaryColumn.class, c.getType());
+      assertSame(FloatingColumn.class, c.getType());
       assertEquals(false, c.isNullable());
       assertEquals("", c.getDefaultValue());
       assertEquals(false, c.isIdentity());
@@ -590,15 +590,6 @@ public abstract class AbstractAdaptorTest {
       col = mView1.getColumn("f5");
       c = dba.getColumnInfo(conn, col);
       assertEquals("f5", c.getName());
-      assertSame(FloatingColumn.class, c.getType());
-      assertEquals(false, c.isNullable());
-      assertEquals("", c.getDefaultValue());
-      assertEquals(false, c.isIdentity());
-      assertEquals(0, c.getLength());
-
-      col = mView1.getColumn("f6");
-      c = dba.getColumnInfo(conn, col);
-      assertEquals("f6", c.getName());
       assertSame(DateTimeColumn.class, c.getType());
       assertEquals(false, c.isNullable());
       assertEquals("", c.getDefaultValue());

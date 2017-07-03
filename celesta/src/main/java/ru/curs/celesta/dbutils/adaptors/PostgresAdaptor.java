@@ -54,6 +54,7 @@ import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 /**
@@ -710,22 +711,42 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     }
   }
 
+
+  @Override
+  public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
+    String sql = String.format("select count(*) from information_schema.triggers where "
+        + "		event_object_schema = '%s' and event_object_table= '%s'"
+        + "		and trigger_name = '%s'", query.getSchema(), query.getTableName(), query.getName());
+
+    Statement stmt = conn.createStatement();
+    try {
+      ResultSet rs = stmt.executeQuery(sql);
+      rs.next();
+      boolean result = rs.getInt(1) > 0;
+      rs.close();
+      return result;
+    } finally {
+      stmt.close();
+    }
+
+  }
+
   @Override
   public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
     // First of all, we are about to check if trigger exists
-    String sql = String.format("select count(*) from information_schema.triggers where "
-        + "		event_object_schema = '%s' and event_object_table= '%s'"
-        + "		and trigger_name = 'versioncheck'", t.getGrain().getName(), t.getName());
+
     try {
       Statement stmt = conn.createStatement();
       try {
-        ResultSet rs = stmt.executeQuery(sql);
-        rs.next();
-        boolean triggerExists = rs.getInt(1) > 0;
-        rs.close();
+        TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
+            .withName("versioncheck")
+            .withTableName(t.getName());
+        boolean triggerExists = triggerExists(conn, query);
 
         if (t instanceof VersionedElement) {
           VersionedElement ve = (VersionedElement) t;
+
+          String sql;
           if (ve.isVersioned()) {
             if (triggerExists) {
               return;
@@ -740,9 +761,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
           } else {
             if (triggerExists) {
               // DROP TRIGGER
-              sql = String.format("DROP TRIGGER \"versioncheck\" ON " + tableTemplate(),
-                  t.getGrain().getName(), t.getName());
-              stmt.executeUpdate(sql);
+              dropTrigger(conn, query);
             } else {
               return;
             }

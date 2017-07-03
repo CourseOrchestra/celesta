@@ -1,4 +1,4 @@
-create grain mView version '1.0';
+create grain mView version '1.1';
 
 create table table1 (
   id int identity not null primary key,

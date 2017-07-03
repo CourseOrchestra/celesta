@@ -51,6 +51,7 @@ import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 /**
@@ -593,16 +594,16 @@ final class MSSQLAdaptor extends DBAdaptor {
   public void manageAutoIncrement(Connection conn, TableElement t) throws SQLException {
     // 1. Firstly, we have to clean up table from any auto-increment
     // triggers
-    String triggerName = String.format("\"%s\".\"%s_inc\"", t.getGrain().getName(), t.getName());
-    String sql = String.format("drop trigger %s", triggerName);
-    PreparedStatement stmt = conn.prepareStatement(sql);
+    String schema = t.getGrain().getName();
+    String triggerName = t.getName() + "_inc";
+    TriggerQuery query = new TriggerQuery().withSchema(schema)
+        .withName(triggerName);
+
+
     try {
-      stmt.executeUpdate();
+      dropTrigger(conn, query);
     } catch (SQLException e) {
       // do nothing
-      sql = "";
-    } finally {
-      stmt.close();
     }
 
     // 2. Check if table has IDENTITY field, if it doesn't, no need to
@@ -611,6 +612,8 @@ final class MSSQLAdaptor extends DBAdaptor {
     if (ic == null)
       return;
 
+    String sql;
+    PreparedStatement stmt;
     // 3. Now, we know that we surely have IDENTITY field, and we must
     // assure that we have an appropriate sequence.
     sql = String.format("insert into celesta.sequences (grainid, tablename) values ('%s', '%s')",
@@ -627,8 +630,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 
     // 4. Now we have to create the auto-increment trigger
     StringBuilder body = new StringBuilder();
-    body.append(String.format("create trigger %s on %s.%s instead of insert as begin\n", triggerName,
-        t.getGrain().getQuotedName(), t.getQuotedName()));
+    body.append(String.format("create trigger \"%s\".\"%s\" on %s.%s instead of insert as begin\n",
+        schema, triggerName, t.getGrain().getQuotedName(), t.getQuotedName()));
     body.append(String.format("  /*IDENTITY %s*/\n", ic.getName()));
     body.append("  set nocount on;\n");
     body.append("  begin transaction;\n");
@@ -912,23 +915,50 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
+  public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
+    String sql = String.format(
+        "SELECT COUNT(*) FROM sys.triggers tr " + "INNER JOIN sys.tables t ON tr.parent_id = t.object_id "
+            + "WHERE t.schema_id = SCHEMA_ID('%s') and tr.name = '%s'",
+        query.getSchema(), query.getName());
+
+    Statement stmt = conn.createStatement();
+    try {
+      ResultSet rs = stmt.executeQuery(sql);
+      rs.next();
+      boolean result = rs.getInt(1) > 0;
+      rs.close();
+      return result;
+    } finally {
+      stmt.close();
+    }
+  }
+
+  @Override
+  public void dropTrigger(Connection conn, TriggerQuery query) throws SQLException {
+    Statement stmt = conn.createStatement();
+
+    try {
+      String sql = String.format("drop trigger \"%s\".\"%s\"", query.getSchema(), query.getName());
+      stmt.executeUpdate(sql);
+    } finally {
+      stmt.close();
+    }
+  }
+
+  @Override
   public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
 
     // First of all, we are about to check if trigger exists
-    String sql = String.format(
-        "SELECT COUNT(*) FROM sys.triggers tr " + "INNER JOIN sys.tables t ON tr.parent_id = t.object_id "
-            + "WHERE t.schema_id = SCHEMA_ID('%s') and tr.name = '%s_upd'",
-        t.getGrain().getName(), t.getName());
     try {
       Statement stmt = conn.createStatement();
       try {
-        ResultSet rs = stmt.executeQuery(sql);
-        rs.next();
-        boolean triggerExists = rs.getInt(1) > 0;
-        rs.close();
+        TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
+            .withName(t.getName() + "_upd");
+        boolean triggerExists = triggerExists(conn, query);
 
         if (t instanceof VersionedElement) {
           VersionedElement ve = (VersionedElement) t;
+
           if (ve.isVersioned()) {
             if (triggerExists) {
               return;
@@ -959,8 +989,7 @@ final class MSSQLAdaptor extends DBAdaptor {
           } else {
             if (triggerExists) {
               // DROP TRIGGER
-              sql = String.format("drop trigger \"%s\".\"%s_upd\"", t.getGrain().getName(), t.getName());
-              stmt.executeUpdate(sql);
+              dropTrigger(conn, query);
             } else {
               return;
             }

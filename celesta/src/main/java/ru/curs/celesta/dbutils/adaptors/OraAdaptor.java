@@ -60,6 +60,8 @@ import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.event.TriggerQuery;
+import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
 /**
@@ -85,6 +87,7 @@ final class OraAdaptor extends DBAdaptor {
   private static final Pattern TABLE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9]*)_([a-zA-Z_][a-zA-Z0-9_]*)");
 
   private static final Map<Class<? extends Column>, OraColumnDefiner> TYPES_DICT = new HashMap<>();
+  private static final Map<TriggerType, String> TRIGGER_EVENT_TYPE_DICT = new HashMap<>();
 
   /**
    * Определитель колонок для Oracle, учитывающий тот факт, что в Oracle
@@ -264,6 +267,17 @@ final class OraAdaptor extends DBAdaptor {
       }
 
     });
+  }
+
+  static {
+    //В Oracle есть также BEFORE и AFTER триггеры.
+    // Но EVEN_TYPE может принимать только 3 значения: INSERT/UPDATE/DELETE
+    TRIGGER_EVENT_TYPE_DICT.put(TriggerType.PRE_INSERT, "INSERT");
+    TRIGGER_EVENT_TYPE_DICT.put(TriggerType.PRE_UPDATE, "UPDATE");
+    TRIGGER_EVENT_TYPE_DICT.put(TriggerType.PRE_DELETE, "DELETE");
+    TRIGGER_EVENT_TYPE_DICT.put(TriggerType.POST_INSERT, "INSERT");
+    TRIGGER_EVENT_TYPE_DICT.put(TriggerType.POST_UPDATE, "UPDATE");
+    TRIGGER_EVENT_TYPE_DICT.put(TriggerType.POST_DELETE, "DELETE");
   }
 
   @Override
@@ -754,15 +768,11 @@ final class OraAdaptor extends DBAdaptor {
     // 1. Firstly, we have to clean up table from any auto-increment
     // triggers
     String sequenceName = getSequenceName(t);
-    String sql = String.format(DROP_TRIGGER + "%s\"", sequenceName);
-    PreparedStatement stmt = conn.prepareStatement(sql);
+    TriggerQuery dropQuery = new TriggerQuery().withName(sequenceName);
     try {
-      stmt.executeUpdate();
+      dropTrigger(conn, dropQuery);
     } catch (SQLException e) {
       // do nothing
-      sql = "";
-    } finally {
-      stmt.close();
     }
 
     // 2. Check if table has IDENTITY field, if it doesn't, no need to
@@ -771,6 +781,8 @@ final class OraAdaptor extends DBAdaptor {
     if (ic == null)
       return;
 
+    String sql;
+    PreparedStatement stmt;
     // 2. Now, we know that we surely have IDENTITY field, and we have to
     // be sure that we have an appropriate sequence.
     boolean hasSequence = false;
@@ -1210,33 +1222,50 @@ final class OraAdaptor extends DBAdaptor {
   private void dropVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
     // First of all, we are about to check if trigger exists
     String triggerName = getUpdTriggerName(t);
+    TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
+        .withName(triggerName)
+        .withTableName(t.getName());
+
+    try {
+      boolean triggerExists = triggerExists(conn, query);
+
+      if (triggerExists)
+        dropTrigger(conn, query);
+
+    } catch (SQLException e) {
+      throw new CelestaException("Could not drop version check trigger on %s.%s: %s", t.getGrain().getName(),
+          t.getName(), e.getMessage());
+    }
+  }
+
+  @Override
+  public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
     String sql = String.format(
         SELECT_TRIGGER_BODY
-            + "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'UPDATE'",
-        t.getGrain().getName(), t.getName(), triggerName);
+            + "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = '%s'",
+        query.getSchema(), query.getTableName(), query.getName(),
+        TRIGGER_EVENT_TYPE_DICT.get(query.getType()));
+
+    Statement stmt = conn.createStatement();
     try {
-      Statement stmt = conn.createStatement();
-      try {
-        boolean triggerExists = false;
+      ResultSet rs = stmt.executeQuery(sql);
+      boolean result = rs.next();
+      rs.close();
+      return result;
+    } finally {
+      stmt.close();
+    }
+  }
 
-        ResultSet rs = stmt.executeQuery(sql);
-        triggerExists = rs.next();
-        rs.close();
+  @Override
+  public void dropTrigger(Connection conn, TriggerQuery query) throws SQLException {
+    Statement stmt = conn.createStatement();
 
-        if (triggerExists) {
-          // DROP TRIGGER
-          sql = String.format(DROP_TRIGGER + "%s\"", triggerName);
-          stmt.executeUpdate(sql);
-        } else {
-          return;
-        }
-
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException("Could not update version check trigger on %s.%s: %s", t.getGrain().getName(),
-          t.getName(), e.getMessage());
+    try {
+      String sql = String.format(DROP_TRIGGER + "%s\"", query.getName());
+      stmt.executeUpdate(sql);
+    } finally {
+      stmt.close();
     }
   }
 
@@ -1244,21 +1273,20 @@ final class OraAdaptor extends DBAdaptor {
   public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
     // First of all, we are about to check if trigger exists
     String triggerName = getUpdTriggerName(t);
-    String sql = String.format(
-        SELECT_TRIGGER_BODY
-            + "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'UPDATE'",
-        t.getGrain().getName(), t.getName(), triggerName);
+
     try {
       Statement stmt = conn.createStatement();
       try {
-        boolean triggerExists = false;
-
-        ResultSet rs = stmt.executeQuery(sql);
-        triggerExists = rs.next();
-        rs.close();
+        TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
+            .withName(triggerName)
+            .withTableName(t.getName())
+            .withType(TriggerType.PRE_UPDATE);
+        boolean triggerExists = triggerExists(conn, query);
 
         if (t instanceof VersionedElement) {
           VersionedElement ve = (VersionedElement) t;
+
+          String sql;
           if (ve.isVersioned()) {
           if (triggerExists) {
             return;
@@ -1275,8 +1303,8 @@ final class OraAdaptor extends DBAdaptor {
         } else {
           if (triggerExists) {
             // DROP TRIGGER
-            sql = String.format(DROP_TRIGGER + "%s\"", triggerName);
-            stmt.executeUpdate(sql);
+            TriggerQuery dropQuery = new TriggerQuery().withName(triggerName);
+            dropTrigger(conn, dropQuery);
           } else {
             return;
           }

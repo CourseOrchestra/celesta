@@ -34,7 +34,7 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.11';
+create grain celesta version '1.12';
 
 /**Active grains list.*/
 create table grains(
@@ -62,7 +62,7 @@ create table tables(
   /**table name*/
   tablename varchar(30) not null,
   /**table type: t for table, v for view*/
-  tabletype varchar(1) not null default 'T',
+  tabletype varchar(2) not null default 'T',
   /**true if this table is no longer in Celesta metadata */
   orphaned bit not null default 0,
   constraint pk_tables primary key (grainid, tablename),

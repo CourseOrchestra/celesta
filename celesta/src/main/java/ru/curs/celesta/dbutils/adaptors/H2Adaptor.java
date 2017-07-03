@@ -9,6 +9,7 @@ import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 import java.sql.*;
@@ -601,7 +602,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     String fieldList = getFieldList(index.getColumns().keySet());
     String sql = String.format("CREATE INDEX " + tableTemplate() + " ON " + tableTemplate() + " (%s)", grainName,
         index.getName(), grainName, index.getTable().getName(), fieldList);
-    String[] result = { sql };
+    String[] result = {sql};
     return result;
   }
 
@@ -661,46 +662,61 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
-    // First of all, we are about to check if trigger exists
+  public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
     String sql = String.format("select count(*) from information_schema.triggers where "
         + "		table_schema = '%s' and table_name = '%s'"
-        + "		and trigger_name = 'versioncheck_%s'", t.getGrain().getName(), t.getName(), t.getName());
+        + "		and trigger_name = '%s'", query.getSchema(), query.getTableName(), query.getName());
+
+    Statement stmt = conn.createStatement();
+    try {
+      ResultSet rs = stmt.executeQuery(sql);
+      rs.next();
+      boolean result = rs.getInt(1) > 0;
+      rs.close();
+      return result;
+    } finally {
+      stmt.close();
+    }
+  }
+
+  @Override
+  public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
+    // First of all, we are about to check if trigger exists
+
     try {
       Statement stmt = conn.createStatement();
       try {
-        ResultSet rs = stmt.executeQuery(sql);
-        rs.next();
-        boolean triggerExists = rs.getInt(1) > 0;
-        rs.close();
+        TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
+            .withName("versioncheck_" + t.getName())
+            .withTableName(t.getName());
+        boolean triggerExists = triggerExists(conn, query);
 
         if (t instanceof VersionedElement) {
           VersionedElement ve = (VersionedElement) t;
 
-        if (ve.isVersioned()) {
-          if (triggerExists) {
-            return;
-          } else {
-            // CREATE TRIGGER
-            sql = String.format(
-                "CREATE TRIGGER \"versioncheck_%s\"" + " BEFORE UPDATE ON " + tableTemplate()
-                    + " FOR EACH ROW CALL \"%s\"",
-                t.getName(), t.getGrain().getName(), t.getName(),
-                RecVersionCheckTrigger.class.getName());
+          String sql;
+          if (ve.isVersioned()) {
+            if (triggerExists) {
+              return;
+            } else {
+              // CREATE TRIGGER
+              sql = String.format(
+                  "CREATE TRIGGER \"versioncheck_%s\"" + " BEFORE UPDATE ON " + tableTemplate()
+                      + " FOR EACH ROW CALL \"%s\"",
+                  t.getName(), t.getGrain().getName(), t.getName(),
+                  RecVersionCheckTrigger.class.getName());
 
-            stmt.executeUpdate(sql);
-          }
-        } else {
-          if (triggerExists) {
-            // DROP TRIGGER
-            sql = String.format("DROP TRIGGER \"versioncheck_%s\" ON " + tableTemplate(),
-                t.getGrain().getName(), t.getName(), t.getName());
-            stmt.executeUpdate(sql);
+              stmt.executeUpdate(sql);
+            }
           } else {
-            return;
+            if (triggerExists) {
+              // DROP TRIGGER
+              dropTrigger(conn, query);
+            } else {
+              return;
+            }
           }
         }
-      }
       } finally {
         stmt.close();
       }

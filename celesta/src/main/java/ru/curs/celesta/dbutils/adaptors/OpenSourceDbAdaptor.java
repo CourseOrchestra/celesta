@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils.adaptors;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
+import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 import java.sql.*;
@@ -38,6 +39,19 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
       }
     } catch (SQLException e) {
       throw new CelestaException(e.getMessage());
+    }
+  }
+
+  @Override
+  public void dropTrigger(Connection conn, TriggerQuery query) throws SQLException {
+    Statement stmt = conn.createStatement();
+
+    try {
+      String sql = String.format("DROP TRIGGER \"%s\" ON " + tableTemplate(),
+          query.getName(), query.getSchema(), query.getTableName());
+      stmt.executeUpdate(sql);
+    } finally {
+      stmt.close();
     }
   }
 
