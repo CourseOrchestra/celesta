@@ -44,13 +44,10 @@ import java.util.regex.*;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.filter.*;
+import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
-import ru.curs.celesta.dbutils.stmt.MaskedStatementHolder;
-import ru.curs.celesta.dbutils.stmt.ParameterSetter;
-import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
-import ru.curs.celesta.dbutils.term.WhereMakerParamsProvider;
-import ru.curs.celesta.dbutils.term.WhereTerm;
-import ru.curs.celesta.dbutils.term.WhereTermsMaker;
+import ru.curs.celesta.dbutils.stmt.*;
+import ru.curs.celesta.dbutils.term.*;
 import ru.curs.celesta.score.*;
 import ru.curs.celesta.score.ParseException;
 
@@ -62,11 +59,13 @@ public abstract class BasicCursor implements Closeable {
 	static final String SYSTEMUSERID = String.format("SYS%08X", (new Random()).nextInt());
 	static final SessionContext SYSTEMSESSION = new SessionContext(SYSTEMUSERID, "CELESTA");
 
-	private static final String DATABASE_CLOSING_ERROR = "Database error when closing recordset for table '%s': %s";
+	private static final String DATABASE_CLOSING_ERROR =
+		"Database error when closing recordset for table '%s': %s";
 	private static final String CURSOR_IS_CLOSED = "Cursor is closed.";
 
 	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
-	private static final Pattern COLUMN_NAME = Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)( +([Aa]|[Dd][Ee])[Ss][Cc])?");
+	private static final Pattern COLUMN_NAME =
+		Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)( +([Aa]|[Dd][Ee])[Ss][Cc])?");
 
 	private static final Pattern NAVIGATION = Pattern.compile("[+-<>=]+");
 	private final DBAdaptor db;
@@ -75,10 +74,12 @@ public abstract class BasicCursor implements Closeable {
 
 	private final PreparedStmtHolder set = new PreparedStmtHolder() {
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program)
+				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm();
 			where.programParams(program);
-			return db.getRecordSetStatement(conn, meta(), where.getWhere(), getOrderBy(), offset, rowCount);
+			return db.getRecordSetStatement(conn, meta(), where.getWhere(), getOrderBy(), offset,
+					rowCount);
 		}
 	};
 
@@ -86,7 +87,8 @@ public abstract class BasicCursor implements Closeable {
 
 	private final PreparedStmtHolder count = new PreparedStmtHolder() {
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program)
+				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm();
 			where.programParams(program);
 			return db.getSetCountStatement(conn, meta(), where.getWhere());
@@ -108,7 +110,8 @@ public abstract class BasicCursor implements Closeable {
 
 	private final PreparedStmtHolder position = new OrderFieldsMaskedStatementHolder() {
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program)
+				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm('<');
 			where.programParams(program);
 			return db.getSetCountStatement(conn, meta(), where.getWhere());
@@ -118,7 +121,8 @@ public abstract class BasicCursor implements Closeable {
 
 	private final PreparedStmtHolder forwards = new OrderFieldsMaskedStatementHolder() {
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program)
+				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm('>');
 			where.programParams(program);
 			return db.getNavigationStatement(conn, meta(), getOrderBy(), where.getWhere());
@@ -128,7 +132,8 @@ public abstract class BasicCursor implements Closeable {
 	private final PreparedStmtHolder backwards = new OrderFieldsMaskedStatementHolder() {
 
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program)
+				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm('<');
 			where.programParams(program);
 			return db.getNavigationStatement(conn, meta(), getReversedOrderBy(), where.getWhere());
@@ -141,7 +146,8 @@ public abstract class BasicCursor implements Closeable {
 	private final PreparedStmtHolder first = new PreparedStmtHolder() {
 
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program)
+				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm();
 			where.programParams(program);
 			return db.getNavigationStatement(conn, meta(), getOrderBy(), where.getWhere());
@@ -150,7 +156,8 @@ public abstract class BasicCursor implements Closeable {
 	};
 	private final PreparedStmtHolder last = new PreparedStmtHolder() {
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program)
+				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm();
 			where.programParams(program);
 			return db.getNavigationStatement(conn, meta(), getReversedOrderBy(), where.getWhere());
@@ -229,16 +236,20 @@ public abstract class BasicCursor implements Closeable {
 
 	public BasicCursor(CallContext context) throws CelestaException {
 		if (context == null)
-			throw new CelestaException("Invalid context passed to %s constructor: context should not be null.",
+			throw new CelestaException(
+					"Invalid context passed to %s constructor: context should not be null.",
 					this.getClass().getName());
 		if (context.getConn() == null)
-			throw new CelestaException("Invalid context passed to %s constructor: connection is null.",
+			throw new CelestaException(
+					"Invalid context passed to %s constructor: connection is null.",
 					this.getClass().getName());
 		if (context.getUserId() == null)
-			throw new CelestaException("Invalid context passed to %s constructor: user id is null.",
+			throw new CelestaException(
+					"Invalid context passed to %s constructor: user id is null.",
 					this.getClass().getName());
 		if (context.isClosed())
-			throw new CelestaException("Cannot create %s on a closed CallContext.", this.getClass().getName());
+			throw new CelestaException("Cannot create %s on a closed CallContext.",
+					this.getClass().getName());
 
 		context.incCursorCount();
 
@@ -263,7 +274,8 @@ public abstract class BasicCursor implements Closeable {
 		return new OrderFieldsMaskedStatementHolder() {
 
 			@Override
-			protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			protected PreparedStatement initStatement(List<ParameterSetter> program)
+					throws CelestaException {
 				WhereTerm where = qmaker.getWhereTerm('=');
 				where.programParams(program);
 				return db.getNavigationStatement(conn, meta(), "", where.getWhere());
@@ -662,7 +674,8 @@ public abstract class BasicCursor implements Closeable {
 		Matcher m = NAVIGATION.matcher(command);
 		if (!m.matches())
 			throw new CelestaException(
-					"Invalid navigation command: '%s', should consist of '+', '-', '>', '<' and '=' only!", command);
+					"Invalid navigation command: '%s', should consist of '+', '-', '>', '<' and '=' only!",
+					command);
 
 		for (int i = 0; i < command.length(); i++) {
 			char c = command.charAt(i);
@@ -775,7 +788,8 @@ public abstract class BasicCursor implements Closeable {
 	 * @throws CelestaException
 	 *             Неверное имя поля, SQL-ошибка.
 	 */
-	public final void setRange(String name, Object valueFrom, Object valueTo) throws CelestaException {
+	public final void setRange(String name, Object valueFrom, Object valueTo)
+			throws CelestaException {
 		validateColumName(name);
 		if (closed)
 			return;
@@ -812,9 +826,12 @@ public abstract class BasicCursor implements Closeable {
 	public final void setFilter(String name, String value) throws CelestaException {
 		validateColumName(name);
 		if (value == null || value.isEmpty())
-			throw new CelestaException("Filter for column %s is null or empty. "
-					+ "Use setrange(fieldname) to remove any filters from the column.", name);
-		AbstractFilter oldFilter = filters.put(name, new Filter(value, meta().getColumns().get(name)));
+			throw new CelestaException(
+					"Filter for column %s is null or empty. "
+							+ "Use setrange(fieldname) to remove any filters from the column.",
+					name);
+		AbstractFilter oldFilter =
+			filters.put(name, new Filter(value, meta().getColumns().get(name)));
 		if (closed)
 			return;
 		// Если заменили фильтр на тот же самый -- ничего делать не надо.
@@ -908,12 +925,14 @@ public abstract class BasicCursor implements Closeable {
 		for (String name : names) {
 			Matcher m = COLUMN_NAME.matcher(name);
 			if (!m.matches())
-				throw new CelestaException("orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
+				throw new CelestaException(
+						"orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
 						name);
 			String colName = m.group(1);
 			validateColumName(colName);
 			if (!colNames.add(colName))
-				throw new CelestaException("Column '%s' is used more than once in orderby() call", colName);
+				throw new CelestaException("Column '%s' is used more than once in orderby() call",
+						colName);
 
 			boolean order = !(m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim()));
 
@@ -935,7 +954,8 @@ public abstract class BasicCursor implements Closeable {
 		closeSet();
 	}
 
-	abstract void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException;
+	abstract void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames)
+			throws CelestaException;
 
 	/**
 	 * Сброс фильтров, сортировки и полная очистка буфера.
@@ -1007,7 +1027,8 @@ public abstract class BasicCursor implements Closeable {
 	 */
 	public final void copyFiltersFrom(BasicCursor c) throws CelestaException {
 		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(_tableName())))
-			throw new CelestaException("Cannot assign filters from cursor for %s.%s to cursor for %s.%s.",
+			throw new CelestaException(
+					"Cannot assign filters from cursor for %s.%s to cursor for %s.%s.",
 					c._grainName(), c._tableName(), _grainName(), _tableName());
 		filters.clear();
 		filters.putAll(c.filters);
@@ -1028,7 +1049,8 @@ public abstract class BasicCursor implements Closeable {
 	 */
 	public final void copyOrderFrom(BasicCursor c) throws CelestaException {
 		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(_tableName())))
-			throw new CelestaException("Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
+			throw new CelestaException(
+					"Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
 					c._grainName(), c._tableName(), _grainName(), _tableName());
 		orderByNames = c.orderByNames;
 		orderByIndices = c.orderByIndices;
@@ -1049,7 +1071,7 @@ public abstract class BasicCursor implements Closeable {
 				: complexFilter.getCSQL().equals(c.complexFilter.getCSQL())))
 			return false;
 		// equality of In filter
-		if (Objects.equals(inFilter, c.inFilter)) {
+		if (!Objects.equals(inFilter, c.inFilter)) {
 			return false;
 		}
 		// equality of sorting

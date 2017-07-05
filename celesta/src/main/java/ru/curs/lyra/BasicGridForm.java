@@ -1,18 +1,10 @@
 package ru.curs.lyra;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.dbutils.Cursor;
-import ru.curs.celesta.dbutils.GridDriver;
+import ru.curs.celesta.*;
+import ru.curs.celesta.dbutils.*;
 
 /**
  * Base Java class for Lyra grid form.
@@ -26,7 +18,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
 	private GridDriver gd;
 
-	private LinkedList<BasicCursor> savedPositions = new LinkedList<>();
+	private final LinkedList<BasicCursor> savedPositions = new LinkedList<>();
 
 	public BasicGridForm(CallContext context) throws CelestaException {
 		super(context);
@@ -38,9 +30,10 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			gd = new GridDriver(c);
 		} else if (!gd.isValidFor(c)) {
 			Runnable notifier = gd.getChangeNotifier();
+			int maxExactScrollValue = gd.getMaxExactScrollValue();
 			gd = new GridDriver(c);
 			gd.setChangeNotifier(notifier);
-			gd.setMaxExactScrollValue(gd.getMaxExactScrollValue());
+			gd.setMaxExactScrollValue(maxExactScrollValue);
 		}
 	}
 
@@ -64,8 +57,8 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			throw e;
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new CelestaException("Error %s while retrieving grid rows: %s", e.getClass().getName(),
-					e.getMessage());
+			throw new CelestaException("Error %s while retrieving grid rows: %s",
+					e.getClass().getName(), e.getMessage());
 		} finally {
 			if (closeContext) {
 				getContext().closeCursors();
@@ -132,7 +125,8 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * @throws CelestaException
 	 *             e. g. insufficient access rights
 	 */
-	public synchronized List<LyraFormData> setPositionH(int h, Object... pk) throws CelestaException {
+	public synchronized List<LyraFormData> setPositionH(int h, Object... pk)
+			throws CelestaException {
 		return externalAction(bc -> {
 			actuateGridDriver(bc);
 
