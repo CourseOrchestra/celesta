@@ -510,7 +510,8 @@ public final class DBUpdator {
     if (isNew) {
       //1. Таблицы не существует в базе данных, создаём с нуля.
       dba.createTable(conn, mv);
-      //2. Проинициализировать материальное представление
+      //2. Проинициализировать данные материального представления
+      dba.initDataForMaterializedView(conn, mv);
       //3. Создать новые триггеры
       dba.createTriggersForMaterializedView(conn, mv);
       return;
@@ -530,7 +531,8 @@ public final class DBUpdator {
     if (columnsUpdated) {
       //1. Удалить старые триггеры
       dba.dropTriggersForMaterializedView(conn, mv);
-      //2. Переинициализировать материальное представление
+      //2. Пeрeинициализировать данные материального представления
+      dba.initDataForMaterializedView(conn, mv);
       //3. Создать новые триггеры
       dba.createTriggersForMaterializedView(conn, mv);
     }

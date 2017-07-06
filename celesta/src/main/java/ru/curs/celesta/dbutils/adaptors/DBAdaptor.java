@@ -212,8 +212,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   /**
    * Создаёт в базе данных таблицу "с нуля".
    *
-   * @param conn  Соединение.
-   * @param te Таблица для создания.
+   * @param conn Соединение.
+   * @param te   Таблица для создания.
    * @throws CelestaException В случае возникновения критического сбоя при создании
    *                          таблицы, в том числе в случае, если такая таблица существует.
    */
@@ -726,11 +726,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   public abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException;
 
   public abstract String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields);
-  
+
   abstract String[] getCreateIndexSQL(Index index);
 
   abstract String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo);
-  
+
 
   /**
    * Возвращает информацию о столбце.
@@ -964,6 +964,35 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   abstract public void dropTriggersForMaterializedView(Connection conn, MaterializedView mv)
       throws CelestaException;
+
+  public void initDataForMaterializedView(Connection conn, MaterializedView mv)
+      throws CelestaException {
+    Table t = mv.getRefTable().getTable();
+
+    String mvIdentifier = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
+
+    String deleteSql = "DELETE FROM " + mvIdentifier;
+
+    String selectScript = String.format(mv.getSelectPartOfScript()
+        + " FROM " + tableTemplate() + " "
+        + mv.getGroupByPartOfScript(), t.getGrain().getName(), t.getName());
+    String insertSql = String.format("INSERT INTO %s" + selectScript, mvIdentifier);
+
+    try {
+      Statement stmt = conn.createStatement();
+
+      try {
+        stmt.execute(deleteSql);
+        stmt.execute(insertSql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Can't init data for materialized view %s: %s",
+          mvIdentifier, e);
+    }
+  }
+
 }
 
 /**

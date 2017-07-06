@@ -940,7 +940,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             insertTriggerName, fullTableName, fullMvName, mvGroupByColumns, tGroupByColumns,
             mvColumns, selectStmtBuilder.toString());
 
-        System.out.println(sql);
+        //System.out.println(sql);
         stmt.execute(sql);
       } catch (SQLException e) {
         throw new CelestaException("Could not update insert-trigger on %s for materialized view %s: %s",
