@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
  */
 public class View extends AbstractView {
 
+  Map<String, ViewColumnMeta> columnTypes = null;
   private String queryString;
   Expr whereCondition;
 

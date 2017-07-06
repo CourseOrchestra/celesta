@@ -712,7 +712,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   abstract void dropAutoIncrement(Connection conn, TableElement t) throws SQLException;
 
-  public abstract PreparedStatement getOneRecordStatement(Connection conn, Table t, String where) throws CelestaException;
+  public abstract PreparedStatement getOneRecordStatement(Connection conn, TableElement t, String where) throws CelestaException;
 
   public abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException;
 

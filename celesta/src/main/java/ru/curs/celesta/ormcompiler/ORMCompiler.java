@@ -17,20 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.BinaryColumn;
-import ru.curs.celesta.score.BooleanColumn;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FloatingColumn;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.GrainElement;
-import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.Table;
-import ru.curs.celesta.score.View;
-import ru.curs.celesta.score.ViewColumnMeta;
-import ru.curs.celesta.score.ViewColumnType;
+import ru.curs.celesta.score.*;
 
 /**
  * Комилятор ORM-кода.
@@ -41,7 +28,7 @@ public final class ORMCompiler {
 	 * Версия компилятора. Данную константу следует инкрементировать, когда
 	 * необходимо инициировать автоматическое пересоздание orm-скриптов.
 	 */
-	private static final int COMPILERVER = 9;
+	private static final int COMPILERVER = 10;
 
 	private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
 	private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -56,7 +43,9 @@ public final class ORMCompiler {
 			"DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.", "\"\"\"",
 			"import ru.curs.celesta.dbutils.Cursor as Cursor",
 			"import ru.curs.celesta.dbutils.ViewCursor as ViewCursor",
-			"import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor", "from java.lang import Object",
+			"import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor",
+			"import ru.curs.celesta.dbutils.MaterizlizedViewCursor as MaterizlizedViewCursor",
+			"from java.lang import Object",
 			"from jarray import array", "from java.util import Calendar, GregorianCalendar",
 			"from java.sql import Timestamp", "import datetime", "", "def _to_timestamp(d):",
 			"    if isinstance(d, datetime.datetime):", "        calendar = GregorianCalendar()",
@@ -152,6 +141,9 @@ public final class ORMCompiler {
 
 		for (View v : g.getViews().values())
 			compileView(v, w);
+
+		for (MaterializedView v : g.getMaterializedViews().values())
+			compileROTable(v, w);
 	}
 
 	private static void compileView(View v, BufferedWriter w) throws IOException {
@@ -210,21 +202,26 @@ public final class ORMCompiler {
 
 	}
 
-	static void compileROTable(Table t, BufferedWriter w) throws IOException {
+	static void compileROTable(TableElement t, BufferedWriter w) throws IOException {
 		String className = t.getName() + "Cursor";
 
 		Collection<Column> columns = t.getColumns().values();
 
-		w.write(String.format("class %s(ReadOnlyTableCursor):", className));
+		if (t instanceof Table) {
+			w.write(String.format("class %s(ReadOnlyTableCursor):", className));
+		} else {
+			w.write(String.format("class %s(MaterizlizedViewCursor):", className));
+		}
+
 		w.newLine();
 		// Option-поля
 		compileOptionFields(w, columns);
 		// Конструктор
 		compileROTableInit(w, columns);
 		// Имя гранулы
-		compileGrainName(t, w);
+		compileGrainName((GrainElement) t, w);
 		// Имя таблицы
-		compileTableName(t, w);
+		compileTableName((GrainElement) t, w);
 		// Разбор строки по переменным
 		compileParseResult(w, columns);
 		// Динамическая установка значения поля

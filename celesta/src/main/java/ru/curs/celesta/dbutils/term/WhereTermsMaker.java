@@ -7,6 +7,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.TableElement;
 
 /**
  * Produces navigation queries.
@@ -145,7 +146,7 @@ public class WhereTermsMaker {
 		return r == null ? AlwaysTrue.TRUE : r;
 	}
 
-	public static WhereTerm getPKWhereTermForGet(Table t) throws CelestaException {
+	public static WhereTerm getPKWhereTermForGet(TableElement t) throws CelestaException {
 		WhereTerm r = null;
 		int i = 0;
 		for (String colName : t.getPrimaryKey().keySet()) {

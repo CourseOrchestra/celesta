@@ -1,5 +1,5 @@
 # coding=UTF-8
-# Source grain parameters: version=1.0, len=157, crc32=A4FB0F9C; compiler=9.
+# Source grain parameters: version=1.0, len=157, crc32=A4FB0F9C; compiler=10.
 """
 THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.
 DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.

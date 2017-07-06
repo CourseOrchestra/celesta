@@ -70,14 +70,9 @@ public abstract class Cursor extends BasicCursor {
 	private static final LoggingManager LOGGING_MGR = new LoggingManager();
 
 	private Table meta = null;
-	private final PreparedStmtHolder get = new PreparedStmtHolder() {
-		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
-			WhereTerm where = WhereTermsMaker.getPKWhereTermForGet(meta());
-			where.programParams(program);
-			return db().getOneRecordStatement(conn(), meta(), where.getWhere());
-		}
-	};
+	private final CursorGetHelper getHelper;
+
+
 
 	private final MaskedStatementHolder insert = new MaskedStatementHolder() {
 
@@ -137,6 +132,7 @@ public abstract class Cursor extends BasicCursor {
 
 	public Cursor(CallContext context) throws CelestaException {
 		super(context);
+		getHelper = new CursorGetHelper(db(), conn(), meta(), _tableName());
 	}
 
 	@Override
@@ -156,12 +152,12 @@ public abstract class Cursor extends BasicCursor {
 		super.close();
 		if (xRec != null)
 			xRec.close();
-		close(get, insert, delete, update);
+		close(getHelper.getHolder(), insert, delete, update);
 	}
 
 	@Override
 	protected void finalize() throws Throwable {
-		close(get, insert, delete, update);
+		close(getHelper.getHolder(), insert, delete, update);
 	}
 
 	/**
@@ -193,7 +189,7 @@ public abstract class Cursor extends BasicCursor {
 			throw new PermissionDeniedException(callContext(), meta(), Action.INSERT);
 
 		_preInsert();
-		PreparedStatement g = prepareGet(_currentKeyValues());
+		PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
 		try {
 			ResultSet rs = g.executeQuery();
 			try {
@@ -231,7 +227,11 @@ public abstract class Cursor extends BasicCursor {
 					}
 			}
 
-			internalGet(_currentKeyValues());
+
+				getHelper.internalGet((resSet) -> _parseResult(resSet), () -> initXRec(),
+						recversion, _currentKeyValues());
+
+
 			// No need: internalGet does this!
 			// initXRec();
 			_postInsert();
@@ -273,7 +273,7 @@ public abstract class Cursor extends BasicCursor {
 			throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
 
 		_preUpdate();
-		PreparedStatement g = prepareGet(_currentKeyValues());
+		PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
 		try {
 			ResultSet rs = g.executeQuery();
 			try {
@@ -439,11 +439,11 @@ public abstract class Cursor extends BasicCursor {
 	 * @throws CelestaException
 	 *             SQL-ошибка
 	 */
-
 	public final boolean tryGet(Object... values) throws CelestaException {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
-		return internalGet(values);
+		return getHelper.internalGet((resSet) -> _parseResult(resSet), () -> initXRec(),
+				recversion, values);
 	}
 
 	/**
@@ -456,36 +456,10 @@ public abstract class Cursor extends BasicCursor {
 	public final boolean tryGetCurrent() throws CelestaException {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
-		return internalGet(_currentKeyValues());
+		return getHelper.internalGet((resSet) -> _parseResult(resSet), () -> initXRec(),
+				recversion, _currentKeyValues());
 	}
 
-	private boolean internalGet(Object... values) throws CelestaException {
-		PreparedStatement g = prepareGet(values);
-		boolean result = false;
-		try {
-			ResultSet rs = g.executeQuery();
-			try {
-				result = rs.next();
-				if (result) {
-					_parseResult(rs);
-					initXRec();
-				}
-			} finally {
-				rs.close();
-			}
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-		return result;
-	}
-
-	private PreparedStatement prepareGet(Object... values) throws CelestaException {
-		if (meta().getPrimaryKey().size() != values.length)
-			throw new CelestaException("Invalid number of 'get' arguments for '%s': expected %d, provided %d.",
-					_tableName(), meta().getPrimaryKey().size(), values.length);
-		PreparedStatement result = get.getStatement(values, recversion);
-		return result;
-	}
 
 	/**
 	 * Устанавливает версию записи.

@@ -174,6 +174,7 @@ public class MaterializedView extends AbstractView implements TableElement {
     return realColumns.getElements();
   }
 
+
   public List<String> getColumnRefAliases() {
     List<String> result = new ArrayList<>();
 
@@ -265,7 +266,7 @@ public class MaterializedView extends AbstractView implements TableElement {
 
   public String getSelectPartOfScript() {
     try {
-      SQLGenerator gen = new CelestaSQLGen();
+      SQLGenerator gen = new SQLGenerator();
       StringWriter sw = new StringWriter();
       BufferedWriter bw = new BufferedWriter(sw);
       BWWrapper bww = new BWWrapper();
@@ -280,7 +281,7 @@ public class MaterializedView extends AbstractView implements TableElement {
 
   public String getGroupByPartOfScript() {
     try {
-      SQLGenerator gen = new CelestaSQLGen();
+      SQLGenerator gen = new SQLGenerator();
       StringWriter sw = new StringWriter();
       BufferedWriter bw = new BufferedWriter(sw);
 

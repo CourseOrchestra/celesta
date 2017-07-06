@@ -12,7 +12,6 @@ public abstract class AbstractView extends GrainElement {
 
   boolean distinct;
   final Map<String, Expr> columns = new LinkedHashMap<>();
-  Map<String, ViewColumnMeta> columnTypes = null;
   final Map<String, FieldRef> groupByColumns = new LinkedHashMap<>();
   private final Map<String, TableRef> tables = new LinkedHashMap<>();
 
@@ -240,7 +239,7 @@ public abstract class AbstractView extends GrainElement {
   @Override
   public int getColumnIndex(String name) {
     int i = -1;
-    for (String c : columnTypes.keySet()) {
+    for (String c : getColumns().keySet()) {
       i++;
       if (c.equals(name))
         return i;

@@ -1,0 +1,127 @@
+package ru.curs.celesta.dbutils;
+
+import ru.curs.celesta.CallContext;
+import ru.curs.celesta.Celesta;
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.PermissionDeniedException;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParseException;
+
+
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Created by ioann on 06.07.2017.
+ */
+public abstract class MaterizlizedViewCursor extends BasicCursor {
+
+  private MaterializedView meta = null;
+  private final CursorGetHelper getHelper;
+
+
+  public MaterizlizedViewCursor(CallContext context) throws CelestaException {
+    super(context);
+    getHelper = new CursorGetHelper(db(), conn(), meta(), _tableName());
+  }
+
+  /**
+   * Описание представления (метаинформация).
+   *
+   * @throws CelestaException
+   *             в случае ошибки извлечения метаинформации (в норме не должна
+   *             происходить).
+   */
+  @Override
+  public MaterializedView meta() throws CelestaException {
+    if (meta == null)
+      try {
+        meta = Celesta.getInstance().getScore().getGrain(_grainName()).getMaterializedView(_tableName());
+      } catch (ParseException e) {
+        throw new CelestaException(e.getMessage());
+      }
+    return meta;
+  }
+
+
+  @Override
+  final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException {
+    // Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
+    // естественном порядке
+    for (String colName : meta().getPrimaryKey().keySet())
+      if (!colNames.contains(colName)) {
+        l.add(String.format("\"%s\"", colName));
+        ol.add(Boolean.FALSE);
+      }
+  }
+
+  /**
+   * Осуществляет поиск записи по ключевым полям, выбрасывает исключение, если
+   * запись не найдена.
+   *
+   * @param values
+   *            значения ключевых полей
+   * @throws CelestaException
+   *             в случае, если запись не найдена
+   */
+  public final void get(Object... values) throws CelestaException {
+    if (!tryGet(values)) {
+      StringBuilder sb = new StringBuilder();
+      for (Object value : values) {
+        if (sb.length() > 0)
+          sb.append(", ");
+        sb.append(value == null ? "null" : value.toString());
+      }
+      throw new CelestaException("There is no %s (%s).", _tableName(), sb.toString());
+    }
+  }
+
+  /**
+   * Осуществляет поиск записи по ключевым полям, возвращает значение --
+   * найдена запись или нет.
+   *
+   * @param values
+   *            значения ключевых полей
+   * @throws CelestaException
+   *             SQL-ошибка
+   */
+  public final boolean tryGet(Object... values) throws CelestaException {
+    if (!canRead())
+      throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+
+    return getHelper.internalGet((resSet) -> _parseResult(resSet), () -> initXRec(),
+        0, values);
+  }
+
+
+  /**
+   * Получает из базы данных запись, соответствующую полям текущего первичного
+   * ключа.
+   *
+   * @throws CelestaException
+   *             Ошибка доступа или взаимодействия с БД.
+   */
+  public final boolean tryGetCurrent() throws CelestaException {
+    if (!canRead())
+      throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+    return getHelper.internalGet((resSet) -> _parseResult(resSet), () -> initXRec(),
+        0, _currentKeyValues());
+  }
+
+  /**
+   * Возвращает в массиве значения полей первичного ключа.
+   */
+  public Object[] getCurrentKeyValues() {
+    return _currentKeyValues();
+  }
+
+
+  // CHECKSTYLE:OFF
+	/*
+	 * Эта группа методов именуется по правилам Python, а не Java. В Python
+	 * имена protected-методов начинаются с underscore. Использование методов
+	 * без underscore приводит к конфликтам с именами атрибутов.
+	 */
+
+  protected abstract Object[] _currentKeyValues();
+}
