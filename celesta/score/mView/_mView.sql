@@ -8,6 +8,6 @@ create table table1 (
 );
 
 create materialized view mView1 as
-   select id, var, max(numb) as s
-   FROM table1
-   group by id, var;
+   select var, sum(numb) as s
+   FROM mView.table1
+   group by var;

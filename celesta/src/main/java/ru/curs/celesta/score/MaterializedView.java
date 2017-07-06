@@ -2,6 +2,7 @@ package ru.curs.celesta.score;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.*;
 import java.util.function.Function;
 
@@ -173,6 +174,26 @@ public class MaterializedView extends AbstractView implements TableElement {
     return realColumns.getElements();
   }
 
+  public List<String> getColumnRefAliases() {
+    List<String> result = new ArrayList<>();
+
+    for (Map.Entry<String, Expr> entry : columns.entrySet()) {
+      String alias = entry.getKey();
+      Expr expr = entry.getValue();
+
+      ViewColumnMeta vcm = expr.getMeta();
+
+      String type = vcm.getCelestaType();
+
+      final Column col;
+
+      Column colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
+      result.add(colRef.getName());
+    }
+
+    return result;
+  }
+
   @Override
   public Column getColumn(String colName) throws ParseException {
     Column result = realColumns.get(colName);
@@ -223,5 +244,51 @@ public class MaterializedView extends AbstractView implements TableElement {
     return pk.getElements();
   }
 
+  public TableRef getRefTable() {
+    return getTables().values().stream().findFirst().get();
+  }
 
+  public List<String> getColumnRefNames() {
+    List<String> result = new ArrayList<>();
+
+    for (Expr expr : columns.values()) {
+      Column colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
+      result.add(colRef.getName());
+    }
+
+    return result;
+  }
+
+  public boolean isGroupByColumn(String alias) {
+    return groupByColumns.containsKey(alias);
+  }
+
+  public String getSelectPartOfScript() {
+    try {
+      SQLGenerator gen = new CelestaSQLGen();
+      StringWriter sw = new StringWriter();
+      BufferedWriter bw = new BufferedWriter(sw);
+      BWWrapper bww = new BWWrapper();
+
+      writeSelectPart(bw, gen, bww);
+      bw.flush();
+      return sw.getBuffer().toString();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public String getGroupByPartOfScript() {
+    try {
+      SQLGenerator gen = new CelestaSQLGen();
+      StringWriter sw = new StringWriter();
+      BufferedWriter bw = new BufferedWriter(sw);
+
+      writeGroupByPart(bw, gen);
+      bw.flush();
+      return sw.getBuffer().toString();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

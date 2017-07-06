@@ -508,8 +508,11 @@ public final class DBUpdator {
     boolean isNew = !dba.tableExists(conn, mv.getGrain().getName(), mv.getName());
 
     if (isNew) {
-      // Таблицы не существует в базе данных, создаём с нуля.
+      //1. Таблицы не существует в базе данных, создаём с нуля.
       dba.createTable(conn, mv);
+      //2. Проинициализировать материальное представление
+      //3. Создать новые триггеры
+      dba.createTriggersForMaterializedView(conn, mv);
       return;
     }
 
@@ -526,8 +529,10 @@ public final class DBUpdator {
 
     if (columnsUpdated) {
       //1. Удалить старые триггеры
-      //2. Проинициализировать материальное представление
+      dba.dropTriggersForMaterializedView(conn, mv);
+      //2. Переинициализировать материальное представление
       //3. Создать новые триггеры
+      dba.createTriggersForMaterializedView(conn, mv);
     }
   }
 

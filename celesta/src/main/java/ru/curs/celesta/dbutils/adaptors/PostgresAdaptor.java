@@ -709,6 +709,95 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       throw new CelestaException("Could not create or replace celesta.recversion_check() function: %s",
           e.getMessage());
     }
+
+    //CREATE INSERT TRIGGER FOR MATERIALIZED VIEWS
+    sql = "CREATE OR REPLACE FUNCTION celesta.materialized_view_insert() RETURNS trigger AS $BODY$ "
+        + "DECLARE \n"
+        + "mv                 varchar; "
+        + "mvGrouByCols     varchar; "
+        + "tableGroupByCols varchar; "
+        + "mvAllCols        varchar; "
+        + "selectStmt         varchar; \n"
+        + "BEGIN \n"
+        + "mv := TG_ARGV[0]; mvGrouByCols := TG_ARGV[1]; tableGroupByCols := TG_ARGV[2]; "
+        + "mvAllCols := TG_ARGV[3]; selectStmt := TG_ARGV[4]; \n"
+        + "LOCK TABLE ONLY mv IN ROW EXCLUSIVE MODE;\n"
+        + "EXECUTE 'DELETE FROM ' || mv || ' WHERE (' || mvGrouByCols || ') IN (select ' || tableGroupByCols || ')' USING NEW; \n"
+        + "EXECUTE 'INSERT INTO ' || mv  || '(' || format('%s', mvAllCols) || ') ' || selectStmt USING NEW; \n"
+        + "RETURN NEW; END;\n $BODY$LANGUAGE plpgsql VOLATILE COST 100;";
+
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Could not create or replace celesta.materialized_view_insert function: %s",
+          e.getMessage());
+    }
+
+
+    //CREATE UPDATE TRIGGER FOR MATERIALIZED VIEWS
+    sql = "CREATE OR REPLACE FUNCTION celesta.materialized_view_insert() RETURNS trigger AS $BODY$ "
+        + "DECLARE \n"
+        + "mv                 varchar; "
+        + "mvGrouByCols     varchar; "
+        + "tableGroupByCols varchar; "
+        + "mvAllCols        varchar; "
+        + "selectStmt         varchar; \n"
+        + "BEGIN \n"
+        + "mv := TG_ARGV[0]; mvGrouByCols := TG_ARGV[1]; tableGroupByCols := TG_ARGV[2]; "
+        + "mvAllCols := TG_ARGV[3]; selectStmt := TG_ARGV[4]; \n"
+        + "LOCK TABLE ONLY mv IN ROW EXCLUSIVE MODE;\n"
+        //process OLD
+        + "EXECUTE 'DELETE FROM ' || mv || ' WHERE (' || mvGrouByCols || ') IN (select ' || tableGroupByCols || ')' USING OLD; \n"
+        + "EXECUTE 'INSERT INTO ' || mv  || '(' || format('%s', mvAllCols) || ') ' || selectStmt USING OLD; \n"
+        //process NEW
+        + "EXECUTE 'DELETE FROM ' || mv || ' WHERE (' || mvGrouByCols || ') IN (select ' || tableGroupByCols || ')' USING NEW; \n"
+        + "EXECUTE 'INSERT INTO ' || mv  || '(' || format('%s', mvAllCols) || ') ' || selectStmt USING NEW; \n"
+        + "RETURN NEW; END;\n $BODY$LANGUAGE plpgsql VOLATILE COST 100;";
+
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Could not create or replace celesta.materialized_view_update function: %s",
+          e.getMessage());
+    }
+
+    //CREATE INSERT TRIGGER FOR MATERIALIZED VIEWS
+    sql = "CREATE OR REPLACE FUNCTION celesta.materialized_view_delete() RETURNS trigger AS $BODY$ "
+        + "DECLARE \n"
+        + "mv                 varchar; "
+        + "mvGrouByCols     varchar; "
+        + "tableGroupByCols varchar; "
+        + "mvAllCols        varchar; "
+        + "selectStmt         varchar; \n"
+        + "BEGIN \n"
+        + "mv := TG_ARGV[0]; mvGrouByCols := TG_ARGV[1]; tableGroupByCols := TG_ARGV[2]; "
+        + "mvAllCols := TG_ARGV[3]; selectStmt := TG_ARGV[4]; \n"
+        + "LOCK TABLE ONLY mv IN ROW EXCLUSIVE MODE;\n"
+        + "EXECUTE 'DELETE FROM ' || mv || ' WHERE (' || mvGrouByCols || ') IN (select ' || tableGroupByCols || ')' USING OLD; \n"
+        + "EXECUTE 'INSERT INTO ' || mv  || '(' || format('%s', mvAllCols) || ') ' || selectStmt USING OLD; \n"
+        + "RETURN NEW; END;\n $BODY$LANGUAGE plpgsql VOLATILE COST 100;";
+
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Could not create or replace celesta.materialized_view_delete function: %s",
+          e.getMessage());
+    }
   }
 
 
@@ -797,5 +886,131 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     }
   }
 
+  @Override
+  public void createTriggersForMaterializedView(Connection conn, MaterializedView mv) throws CelestaException {
+    Table t = mv.getRefTable().getTable();
 
+    String fullTableName = String.format(tableTemplate(), t.getGrain().getName(), t.getName());
+    String fullMvName = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
+
+    String insertTriggerName = String.format("mvInsertFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+    String updateTriggerName = String.format("mvUpdateFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+    String deleteTriggerName = String.format("mvDeleteFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+
+    String mvGroupByColumns = mv.getColumns().keySet().stream()
+        .filter(alias -> mv.isGroupByColumn(alias))
+        .collect(Collectors.joining(", "));
+
+    String tGroupByColumns = mv.getColumns().keySet().stream()
+        .filter(alias -> mv.isGroupByColumn(alias))
+        .map(alias -> "$1." + alias)
+        .collect(Collectors.joining(", "));
+
+    String mvColumns = mv.getColumns().keySet().stream()
+        .collect(Collectors.joining(", "));
+
+    String whereCondition = mv.getColumns().keySet().stream()
+        .filter(alias -> mv.isGroupByColumn(alias))
+        .map(alias -> alias + " = $1." + alias + " ")
+        .collect(Collectors.joining(" AND "));
+
+    StringBuilder selectStmtBuilder = new StringBuilder(mv.getSelectPartOfScript())
+        .append(" FROM ").append(fullTableName).append(" ");
+    selectStmtBuilder.append(" WHERE ").append(whereCondition)
+        .append(mv.getGroupByPartOfScript());
+
+
+    String updateCondition = mv.getColumnRefNames().stream().map(
+        colName -> new StringBuilder().append("OLD.").append(colName)
+        .append(" IS DISTINCT FROM NEW.").append(colName).toString()
+    ).collect(Collectors.joining(" OR "));
+
+    String sql;
+    Statement stmt = null;
+    try {
+
+      stmt = conn.createStatement();
+      //INSERT
+      try {
+        sql = String.format("CREATE TRIGGER %s AFTER INSERT " +
+                "ON %s FOR EACH ROW EXECUTE PROCEDURE celesta.materialized_view_insert('%s', '%s', '%s', '%s', '%s')",
+            insertTriggerName, fullTableName, fullMvName, mvGroupByColumns, tGroupByColumns,
+            mvColumns, selectStmtBuilder.toString());
+
+        System.out.println(sql);
+        stmt.execute(sql);
+      } catch (SQLException e) {
+        throw new CelestaException("Could not update insert-trigger on %s for materialized view %s: %s",
+            fullTableName, fullMvName, e);
+      }
+      //UPDATE
+      try {
+        sql = String.format("CREATE TRIGGER %s AFTER UPDATE " +
+                "ON %s FOR EACH ROW " +
+                "WHEN (" + updateCondition + ") " +
+                "EXECUTE PROCEDURE celesta.materialized_view_update('%s', '%s', '%s', '%s', '%s')",
+            updateTriggerName, fullTableName, fullMvName, mvGroupByColumns, tGroupByColumns,
+            mvColumns, selectStmtBuilder.toString());
+
+        System.out.println(sql);
+        stmt.execute(sql);
+      } catch (SQLException e) {
+        throw new CelestaException("Could not update update-trigger on %s for materialized view %s: %s",
+            fullTableName, fullMvName, e);
+      }
+      //DELETE
+      try {
+        sql = String.format("CREATE TRIGGER %s AFTER DELETE " +
+                "ON %s FOR EACH ROW EXECUTE PROCEDURE celesta.materialized_view_delete('%s', '%s', '%s', '%s', '%s')",
+            deleteTriggerName, fullTableName, fullMvName, mvGroupByColumns, tGroupByColumns,
+            mvColumns, selectStmtBuilder.toString());
+
+        System.out.println(sql);
+        stmt.execute(sql);
+      } catch (SQLException e) {
+        throw new CelestaException("Could not update delete-trigger on %s for materialized view %s: %s",
+            fullTableName, fullMvName, e);
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Could not update triggers on %s for materialized view %s: %s",
+          fullTableName, fullMvName, e);
+    } finally {
+      try {
+        if (stmt != null)
+          stmt.close();
+      } catch (SQLException e) {
+        //do nothing
+      }
+    }
+  }
+
+  @Override
+  public void dropTriggersForMaterializedView(Connection conn, MaterializedView mv) throws CelestaException {
+    Table t = mv.getRefTable().getTable();
+    TriggerQuery query = new TriggerQuery()
+        .withSchema(t.getGrain().getName())
+        .withTableName(t.getName());
+
+    String insertTriggerName = String.format("mvInsertFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+    String updateTriggerName = String.format("mvUpdateFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+    String deleteTriggerName = String.format("mvDeleteFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+
+    try {
+      query.withName(insertTriggerName);
+      dropTrigger(conn, query);
+      query.withName(updateTriggerName);
+      dropTrigger(conn, query);
+      query.withName(deleteTriggerName);
+      dropTrigger(conn, query);
+    } catch (SQLException e) {
+      throw new CelestaException("Can't drop triggers for materialized view %s.%s: %s",
+          mv.getGrain().getName(), mv.getName(), e.getMessage());
+    }
+  }
 }

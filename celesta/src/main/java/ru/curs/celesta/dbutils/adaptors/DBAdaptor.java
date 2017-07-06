@@ -959,6 +959,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     }
   }
 
+  abstract public void createTriggersForMaterializedView(Connection conn, MaterializedView mv)
+      throws CelestaException;
+
+  abstract public void dropTriggersForMaterializedView(Connection conn, MaterializedView mv)
+      throws CelestaException;
 }
 
 /**

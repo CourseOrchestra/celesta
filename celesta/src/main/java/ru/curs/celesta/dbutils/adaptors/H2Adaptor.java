@@ -758,4 +758,11 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
 
   }
+
+  @Override
+  public void createTriggersForMaterializedView(Connection conn, MaterializedView mv)  throws CelestaException { }
+
+  @Override
+  public void dropTriggersForMaterializedView(Connection conn, MaterializedView mv) throws CelestaException {}
+
 }

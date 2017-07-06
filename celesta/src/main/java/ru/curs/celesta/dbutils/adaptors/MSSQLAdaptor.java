@@ -1054,4 +1054,12 @@ final class MSSQLAdaptor extends DBAdaptor {
   public boolean nullsFirst() {
     return true;
   }
+
+  @Override
+  public void createTriggersForMaterializedView(Connection conn, MaterializedView mv)  throws CelestaException { }
+
+  @Override
+  public void dropTriggersForMaterializedView(Connection conn, MaterializedView mv) throws CelestaException {
+
+  }
 }

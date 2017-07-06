@@ -1396,4 +1396,12 @@ final class OraAdaptor extends DBAdaptor {
   public boolean nullsFirst() {
     return false;
   }
+
+  @Override
+  public void createTriggersForMaterializedView(Connection conn, MaterializedView mv)  throws CelestaException {}
+
+  @Override
+  public void dropTriggersForMaterializedView(Connection conn, MaterializedView mv) throws CelestaException {
+
+  }
 }
