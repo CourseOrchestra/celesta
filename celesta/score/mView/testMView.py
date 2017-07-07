@@ -7,7 +7,7 @@ from mView._mView_orm import table1Cursor, mView1Cursor
 class TestAggregate(CelestaUnit):
 
     def test_mat_view_insert(self):
-        ''' tableCursor = table1Cursor(self.context)
+        tableCursor = table1Cursor(self.context)
         mViewCursor = mView1Cursor(self.context)
 
         tableCursor.deleteAll()
@@ -146,4 +146,4 @@ class TestAggregate(CelestaUnit):
         tableCursor.first()
         tableCursor.delete()
 
-        self.assertEqual(1, mViewCursor.count()) '''
+        self.assertEqual(1, mViewCursor.count())
