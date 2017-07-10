@@ -59,14 +59,14 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
         .map(alias -> "\"" + alias + "\"")
         .collect(Collectors.joining(", "));
 
-    List<String> columnRefAliases = mv.getColumnRefAliases();
+    List<String> columnRefNames = mv.getColumnRefNames();
 
     int curIndex = 0;
     for (String tCol : t.getColumns().keySet()) {
       if (mvGroupByColumns.contains(tCol)) {
         tGroupByColumnIndices.put(curIndex, tCol);
       }
-      if (columnRefAliases.contains(tCol)) {
+      if (columnRefNames.contains(tCol)) {
         mvColumnRefs.put(curIndex, tCol);
       }
       ++curIndex;

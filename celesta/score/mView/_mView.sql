@@ -8,6 +8,6 @@ create table table1 (
 );
 
 create materialized view mView1 as
-   select var, sum(numb) as s
+   select var, sum(numb) as s, count(*) as c
    FROM mView.table1
    group by var;

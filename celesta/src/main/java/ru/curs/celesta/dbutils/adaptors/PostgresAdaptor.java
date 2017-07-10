@@ -955,7 +955,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             updateTriggerName, fullTableName, fullMvName, mvGroupByColumns, tGroupByColumns,
             mvColumns, selectStmtBuilder.toString());
 
-        System.out.println(sql);
+        //System.out.println(sql);
         stmt.execute(sql);
       } catch (SQLException e) {
         throw new CelestaException("Could not update update-trigger on %s for materialized view %s: %s",
@@ -968,7 +968,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             deleteTriggerName, fullTableName, fullMvName, mvGroupByColumns, tGroupByColumns,
             mvColumns, selectStmtBuilder.toString());
 
-        System.out.println(sql);
+        //System.out.println(sql);
         stmt.execute(sql);
       } catch (SQLException e) {
         throw new CelestaException("Could not update delete-trigger on %s for materialized view %s: %s",

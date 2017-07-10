@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by ioann on 08.06.2017.
@@ -37,16 +38,6 @@ public class MaterializedView extends AbstractView implements TableElement {
   static {
     EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(FieldRef.class, (Expr frExpr) -> {
       FieldRef fr = (FieldRef) frExpr;
-      return fr.getColumn();
-    });
-    EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Max.class, (Expr maxExpr) -> {
-      Max max = (Max) maxExpr;
-      FieldRef fr = (FieldRef) max.term;
-      return fr.getColumn();
-    });
-    EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Min.class, (Expr minExpr) -> {
-      Min min = (Min) minExpr;
-      FieldRef fr = (FieldRef) min.term;
       return fr.getColumn();
     });
     EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Sum.class, (Expr sumExpr) -> {
@@ -110,10 +101,17 @@ public class MaterializedView extends AbstractView implements TableElement {
       String type = vcm.getCelestaType();
 
       final Column col;
+      Column colRef = null;
 
-      Column colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
+      final MatColFabricFunction matColFabricFunction;
 
-      MatColFabricFunction matColFabricFunction = COL_CLASSES_AND_FABRIC_FUNCS.get(colRef.getClass());
+      if (expr instanceof Count)
+        matColFabricFunction = COL_CLASSES_AND_FABRIC_FUNCS.get(IntegerColumn.class);
+      else {
+        colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
+        matColFabricFunction = COL_CLASSES_AND_FABRIC_FUNCS.get(colRef.getClass());
+      }
+
       if (matColFabricFunction == null) {
         throw new ParseException(String.format(
             "Unsupported type '%s' of column '%s' in materialized view %s was found",
@@ -175,24 +173,29 @@ public class MaterializedView extends AbstractView implements TableElement {
   }
 
 
-  public List<String> getColumnRefAliases() {
+  public List<String> getColumnRefNames() {
     List<String> result = new ArrayList<>();
 
     for (Map.Entry<String, Expr> entry : columns.entrySet()) {
-      String alias = entry.getKey();
       Expr expr = entry.getValue();
 
-      ViewColumnMeta vcm = expr.getMeta();
-
-      String type = vcm.getCelestaType();
-
-      final Column col;
-
-      Column colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
-      result.add(colRef.getName());
+      if (!(expr instanceof Count)) {
+        Column colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
+        result.add(colRef.getName());
+      }
     }
 
     return result;
+  }
+
+  public Map<String, Expr> getAggregateColumns() {
+    return columns.entrySet().stream()
+        .filter(e -> e.getValue() instanceof Aggregate)
+        .collect(Collectors.toMap(
+            Map.Entry::getKey, Map.Entry::getValue,
+            (o, o2) -> {
+              throw new IllegalStateException(String.format("Duplicate key %s", o));
+            }, LinkedHashMap::new));
   }
 
   @Override
@@ -202,6 +205,11 @@ public class MaterializedView extends AbstractView implements TableElement {
       throw new ParseException(
           String.format("Column '%s' not found in materialized view '%s.%s'", colName, getGrain().getName(), getName()));
     return result;
+  }
+
+  public Column getColumnRef(String colName) {
+    Expr expr = columns.get(colName);
+    return EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
   }
 
   @Override
@@ -247,17 +255,6 @@ public class MaterializedView extends AbstractView implements TableElement {
 
   public TableRef getRefTable() {
     return getTables().values().stream().findFirst().get();
-  }
-
-  public List<String> getColumnRefNames() {
-    List<String> result = new ArrayList<>();
-
-    for (Expr expr : columns.values()) {
-      Column colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
-      result.add(colRef.getName());
-    }
-
-    return result;
   }
 
   public boolean isGroupByColumn(String alias) {

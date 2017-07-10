@@ -552,9 +552,8 @@ Expr materializedAggregateFunc(MaterializedView v):
 }
 {
   (
-      <K_SUM> "(" term = fieldReference() ")" { return new Sum(term); }
-      | <K_MAX> "(" term = fieldReference() ")" { return new Max(term); }
-      | <K_MIN> "(" term = fieldReference() ")" { return new Min(term); }
+      <K_COUNT> "(" "*" ")"                     { return new Count(); }
+      | <K_SUM> "(" term = fieldReference() ")" { return new Sum(term); }
   )
 }
 

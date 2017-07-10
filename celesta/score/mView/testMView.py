@@ -4,7 +4,7 @@
 from celestaunit.internal_celesta_unit import CelestaUnit
 from mView._mView_orm import table1Cursor, mView1Cursor
 
-class TestAggregate(CelestaUnit):
+class TestMaterializedView(CelestaUnit):
 
     def test_mat_view_insert(self):
         tableCursor = table1Cursor(self.context)
@@ -49,19 +49,23 @@ class TestAggregate(CelestaUnit):
 
         mViewCursor.get("A")
         self.assertEqual(6, mViewCursor.s)
+        self.assertEqual(4, mViewCursor.c)
 
         mViewCursor.get("B")
         self.assertEqual(31, mViewCursor.s)
+        self.assertEqual(2, mViewCursor.c)
 
         mViewCursor.setRange('var', "A")
         self.assertEqual(1, mViewCursor.count())
         mViewCursor.first()
         self.assertEqual(6, mViewCursor.s)
+        self.assertEqual(4, mViewCursor.c)
 
         mViewCursor.setRange('var', "B")
         self.assertEqual(1, mViewCursor.count())
         mViewCursor.first()
         self.assertEqual(31, mViewCursor.s)
+        self.assertEqual(2, mViewCursor.c)
 
     def test_mat_view_update(self):
         tableCursor = table1Cursor(self.context)
@@ -109,9 +113,11 @@ class TestAggregate(CelestaUnit):
 
         mViewCursor.get("A")
         self.assertEqual(9, mViewCursor.s)
+        self.assertEqual(2, mViewCursor.c)
 
         mViewCursor.get("B")
         self.assertEqual(35, mViewCursor.s)
+        self.assertEqual(2, mViewCursor.c)
 
     def test_mat_view_delete(self):
         tableCursor = table1Cursor(self.context)
@@ -167,6 +173,7 @@ class TestAggregate(CelestaUnit):
 
         mViewCursor.get("A")
         self.assertEqual(5, mViewCursor.s)
+        self.assertEqual(1, mViewCursor.c)
 
         tableCursor.setRange('numb', 11)
         tableCursor.first()
@@ -175,6 +182,7 @@ class TestAggregate(CelestaUnit):
 
         mViewCursor.get("B")
         self.assertEqual(20, mViewCursor.s)
+        self.assertEqual(1, mViewCursor.c)
 
         tableCursor.setRange('var', "A")
         tableCursor.first()
