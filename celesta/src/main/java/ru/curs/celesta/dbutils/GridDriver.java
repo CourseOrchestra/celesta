@@ -12,12 +12,14 @@ import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.ViewColumnMeta;
 import ru.curs.lyra.grid.BitFieldEnumerator;
 import ru.curs.lyra.grid.CompositeKeyEnumerator;
+import ru.curs.lyra.grid.DateFieldEnumerator;
 import ru.curs.lyra.grid.IntFieldEnumerator;
 import ru.curs.lyra.grid.KeyEnumerator;
 import ru.curs.lyra.grid.KeyInterpolator;
@@ -327,11 +329,12 @@ public final class GridDriver {
 	private KeyEnumerator createFieldKeyManager(ColumnMeta m) throws CelestaException {
 		KeyEnumerator result;
 
-		if (BooleanColumn.CELESTA_TYPE.equals(m.getCelestaType()))
+		final String celestaType = m.getCelestaType();
+		if (BooleanColumn.CELESTA_TYPE.equals(celestaType))
 			result = new BitFieldEnumerator();
-		else if (IntegerColumn.CELESTA_TYPE.equals(m.getCelestaType()))
+		else if (IntegerColumn.CELESTA_TYPE.equals(celestaType))
 			result = new IntFieldEnumerator();
-		else if (StringColumn.VARCHAR.equals(m.getCelestaType())) {
+		else if (StringColumn.VARCHAR.equals(celestaType)) {
 			if (m instanceof StringColumn) {
 				StringColumn s = (StringColumn) m;
 				result = new VarcharFieldEnumerator(s.getLength());
@@ -343,9 +346,11 @@ public final class GridDriver {
 				}
 				result = new VarcharFieldEnumerator(vcm.getLength());
 			}
+		} else if (DateTimeColumn.CELESTA_TYPE.equals(celestaType)) {
+			result = new DateFieldEnumerator();
 		} else {
 			throw new CelestaException("The field with type '%s' cannot be used as a key field in a grid.",
-					m.getCelestaType());
+					celestaType);
 		}
 
 		if (m.isNullable()) {
