@@ -21,6 +21,17 @@ class TestAggregate(CelestaUnit):
         tableCursor.var = "A"
         tableCursor.insert()
         tableCursor.clear()
+        
+        tableCursor.numb = 0
+        tableCursor.var = "A"
+        tableCursor.insert()
+        tableCursor.clear()
+
+        tableCursor.numb = -1
+        tableCursor.var = "A"
+        tableCursor.insert()
+        tableCursor.clear()
+
 
         self.assertEqual(1, mViewCursor.count())
 
@@ -37,7 +48,7 @@ class TestAggregate(CelestaUnit):
         self.assertEqual(2, mViewCursor.count())
 
         mViewCursor.get("A")
-        self.assertEqual(7, mViewCursor.s)
+        self.assertEqual(6, mViewCursor.s)
 
         mViewCursor.get("B")
         self.assertEqual(31, mViewCursor.s)
@@ -45,7 +56,7 @@ class TestAggregate(CelestaUnit):
         mViewCursor.setRange('var', "A")
         self.assertEqual(1, mViewCursor.count())
         mViewCursor.first()
-        self.assertEqual(7, mViewCursor.s)
+        self.assertEqual(6, mViewCursor.s)
 
         mViewCursor.setRange('var', "B")
         self.assertEqual(1, mViewCursor.count())
@@ -57,6 +68,7 @@ class TestAggregate(CelestaUnit):
         mViewCursor = mView1Cursor(self.context)
 
         tableCursor.deleteAll()
+        self.assertEqual(0, mViewCursor.count())
 
         tableCursor.numb = 5
         tableCursor.var = "A"
@@ -67,6 +79,9 @@ class TestAggregate(CelestaUnit):
         tableCursor.var = "A"
         tableCursor.insert()
         tableCursor.clear()
+
+        mViewCursor.get("A")
+        self.assertEqual(7, mViewCursor.s)
 
         tableCursor.numb = 20
         tableCursor.var = "B"
@@ -104,15 +119,34 @@ class TestAggregate(CelestaUnit):
 
         tableCursor.deleteAll()
 
-        tableCursor.numb = 5
+        tableCursor.numb = 6
         tableCursor.var = "A"
         tableCursor.insert()
+        old_id = tableCursor.id
         tableCursor.clear()
+        
 
         tableCursor.numb = 2
         tableCursor.var = "A"
         tableCursor.insert()
         tableCursor.clear()
+                
+               
+        mViewCursor.get("A")
+        self.assertEqual(8, mViewCursor.s)
+        
+        tableCursor.get(old_id)
+        tableCursor.delete()
+        mViewCursor.get("A")
+        self.assertEqual(2, mViewCursor.s)
+        
+        tableCursor.numb = 5
+        tableCursor.var = "A"
+        tableCursor.insert()
+        tableCursor.clear()
+
+        mViewCursor.get("A")
+        self.assertEqual(7, mViewCursor.s)        
 
         tableCursor.numb = 20
         tableCursor.var = "B"
