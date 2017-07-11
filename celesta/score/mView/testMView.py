@@ -4,6 +4,12 @@
 from celestaunit.internal_celesta_unit import CelestaUnit
 from mView._mView_orm import table1Cursor, mView1Cursor
 
+from java.lang import Thread, System, String
+from java.time import LocalDateTime
+from ru.curs.celesta import SessionContext
+from ru.curs.celesta import CallContext
+from ru.curs.celesta import ConnectionPool
+
 class TestMaterializedView(CelestaUnit):
 
     def test_mat_view_insert(self):
@@ -189,3 +195,74 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.delete()
 
         self.assertEqual(1, mViewCursor.count())
+
+
+    '''
+    def testMultiThread(self):
+        tableCursor = table1Cursor(self.context)
+
+        tableCursor.deleteAll()
+
+        self.tearDown()
+
+        thread1 = TableWriterThread()
+        thread1.setName('TableWriterThread1')
+        thread2 = TableWriterThread()
+        thread2.setName('TableWriterThread2')
+        thread3 = TableWriterThread()
+        thread3.setName('TableWriterThread3')
+        thread4 = TableWriterThread()
+        thread4.setName('TableWriterThread4')
+        thread5 = TableWriterThread()
+        thread5.setName('TableWriterThread5')
+
+        thread1.start()
+        thread2.start()
+        thread3.start()
+        thread4.start()
+        thread5.start()
+
+        thread1.join()
+        thread2.join()
+        thread3.join()
+        thread4.join()
+        thread5.join()
+
+        self.setUp()
+
+
+
+class TableWriterThread(Thread):
+
+    def run(self):
+
+        end = LocalDateTime.now().plusMinutes(1)
+
+        tick = 1
+        while LocalDateTime.now().isBefore(end):
+            sessionContext = SessionContext('super', 'debug')
+            conn = ConnectionPool.get()
+            context = CallContext(conn, sessionContext)
+            tableCursor = table1Cursor(context)
+
+            tableCursor.numb = 6
+            tableCursor.var = "A"
+            tableCursor.insert()
+
+            context.closeCursors()
+            ConnectionPool.putBack(conn)
+
+            System.out.println('insert completed: tick ' + String.valueOf(tick) + ' ===>' + self.getName())
+
+            sessionContext = SessionContext('super', 'debug')
+            conn = ConnectionPool.get()
+            context = CallContext(conn, sessionContext)
+            tableCursor = table1Cursor(context)
+
+            tableCursor.deleteAll()
+
+            context.closeCursors()
+            ConnectionPool.putBack(conn)
+            System.out.println('delete completed: tick ' + String.valueOf(tick) + ' ===>' + self.getName())
+            tick = tick + 1
+'''
