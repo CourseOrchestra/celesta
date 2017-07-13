@@ -5,7 +5,7 @@ from java.time import LocalDateTime
 from ru.curs.celesta.syscursors import LogCursor
 
 from celestaunit.internal_celesta_unit import CelestaUnit
-from simpleCases._simpleCases_orm import getDateForViewCursor, viewWithGetDateCursor, zeroInsertCursor
+from simpleCases._simpleCases_orm import getDateForViewCursor, viewWithGetDateCursor, zeroInsertCursor, duplicateCursor
 
 
 def preInsert(logCursor):
@@ -93,3 +93,12 @@ class TestSimpleCases(CelestaUnit):
 
         self.assertTrue(isPreDeleteDone)
         self.assertTrue(isPostDeleteDone)
+    
+    def test_try_insert(self):
+        c = duplicateCursor(self.context)
+        c.deleteAll()
+        c.id = 10
+        self.assertTrue(c.tryInsert())
+        self.assertFalse(c.tryInsert())
+        c.id = 12
+        self.assertTrue(c.tryInsert())

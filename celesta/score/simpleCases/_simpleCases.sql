@@ -18,3 +18,8 @@ CREATE TABLE simple_table(
   name VARCHAR(255) NOT NULL,
   CONSTRAINT Pk_simple_table PRIMARY KEY (id)
 );
+
+create table duplicate(
+ id INT NOT NULL PRIMARY KEY,
+ val INT
+);
