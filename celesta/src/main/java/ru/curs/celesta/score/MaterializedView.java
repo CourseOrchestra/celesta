@@ -209,6 +209,10 @@ public class MaterializedView extends AbstractView implements TableElement {
 
   public Column getColumnRef(String colName) {
     Expr expr = columns.get(colName);
+
+    if (expr instanceof Count) {
+      return null;
+    }
     return EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
   }
 

@@ -1398,10 +1398,170 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void createTriggersForMaterializedView(Connection conn, MaterializedView mv)  throws CelestaException {}
+  public void createTriggersForMaterializedView(Connection conn, MaterializedView mv)  throws CelestaException {
+    Table t = mv.getRefTable().getTable();
+
+    String fullTableName = String.format(tableTemplate(), t.getGrain().getName(), t.getName());
+    String fullMvName = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
+
+    String insertTriggerName = NamedElement.limitName(String.format("mvInsertFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
+    String updateTriggerName = NamedElement.limitName(String.format("mvUpdateFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
+    String deleteTriggerName = NamedElement.limitName(String.format("mvDeleteFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
+
+    String lockTable = String.format("LOCK TABLE %s IN EXCLUSIVE MODE;\n", fullMvName);
+
+    String mvColumns = mv.getColumns().keySet().stream()
+        .map(alias -> "\"" + alias + "\"")
+        .collect(Collectors.joining(", "));
+
+    String selectFromRowTemplate = mv.getColumns().keySet().stream()
+        .map(alias -> {
+          Column colRef = mv.getColumnRef(alias);
+
+          if (colRef == null) {
+            Map<String, Expr> aggrCols = mv.getAggregateColumns();
+            if (aggrCols.containsKey(alias) && aggrCols.get(alias) instanceof Count) {
+              return "1 as \"" + alias + "\"";
+            }
+            return "";
+          }
+          return "%1$s.\"" + mv.getColumnRef(alias).getName() + "\" as \"" + alias + "\"";
+        })
+        .filter(str -> !str.isEmpty())
+        .collect(Collectors.joining(", "));
+
+
+    String rowColumnsTemplate = mv.getColumns().keySet().stream()
+        .map(alias -> "%1$s.\"" + alias + "\"")
+        .collect(Collectors.joining(", "));
+
+    String rowConditionTemplate = mv.getColumns().keySet().stream()
+        .filter(alias -> mv.isGroupByColumn(alias))
+        .map(alias -> "mv.\"" + alias + "\" = %1$s.\"" + alias + "\"")
+        .collect(Collectors.joining(" AND "));
+
+    String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
+        .map(e -> {
+          StringBuilder sb = new StringBuilder();
+          String alias = e.getKey();
+
+          sb.append("mv.\"").append(alias)
+              .append("\" = mv.\"").append(alias)
+              .append("\" %1$s ");
+
+          if (e.getValue() instanceof Sum) {
+            sb.append("%2$s.\"").append(alias).append("\"");
+          } else if (e.getValue() instanceof Count) {
+            sb.append("1");
+          }
+
+          return sb.toString();
+        }).collect(Collectors.joining(", "));
+
+
+    StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s mv \n")
+        .append("USING (SELECT %s FROM dual) \"inserted\" ON (%s) \n")
+        .append("WHEN MATCHED THEN \n ")
+        .append("UPDATE SET %s \n")
+        .append("WHEN NOT MATCHED THEN \n")
+        .append("INSERT (%s) VALUES (%s); \n");
+
+    String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
+        String.format(selectFromRowTemplate, ":new"), String.format(rowConditionTemplate, "\"inserted\""),
+        String.format(setStatementTemplate, "+", "\"inserted\""), mvColumns, String.format(rowColumnsTemplate, "\"inserted\""));
+
+    StringBuilder deleteSqlBuilder = new StringBuilder("MERGE INTO %s mv \n")
+        .append("USING (SELECT %s FROM dual) \"deleted\" ON (%s) \n")
+        .append("WHEN MATCHED THEN \n ")
+        .append("UPDATE SET %s \n")
+        .append("DELETE WHERE %s; \n");
+
+    String delStatement = mv.getAggregateColumns().keySet().stream()
+        .map(alias -> "mv.\"" + alias + "\" = 0")
+        .collect(Collectors.joining(" AND "));
+
+    String deleteSql = String.format(deleteSqlBuilder.toString(), fullMvName,
+        String.format(selectFromRowTemplate, ":old"), String.format(rowConditionTemplate, "\"deleted\""),
+        String.format(setStatementTemplate, "-", "\"deleted\""), delStatement);
+
+    String sql;
+    Statement stmt = null;
+
+    try {
+      stmt = conn.createStatement();
+
+      //INSERT
+      try {
+        sql = String.format("create or replace trigger \"%s\" after insert " +
+                "on %s for each row\n begin %s \n %s \n END;",
+            insertTriggerName, fullTableName, lockTable, insertSql);
+        System.out.println(sql);
+        stmt.execute(sql);
+      } catch (SQLException e) {
+        throw new CelestaException("Could not update insert-trigger on %s for materialized view %s: %s",
+            fullTableName, fullMvName, e);
+      }
+      //UPDATE
+      try {
+        sql = String.format("create or replace trigger \"%s\" after update " +
+                "on %s for each row\n begin %s \n %s\n %s\n END;",
+            updateTriggerName, fullTableName, lockTable, deleteSql, insertSql);
+
+        stmt.execute(sql);
+      } catch (SQLException e) {
+        throw new CelestaException("Could not update update-trigger on %s for materialized view %s: %s",
+            fullTableName, fullMvName, e);
+      }
+      //DELETE
+      try {
+        sql = String.format("create or replace trigger \"%s\" after delete " +
+                "on %s for each row\n begin %s \n %s\n END;",
+            deleteTriggerName, fullTableName, lockTable, deleteSql);
+
+        stmt.execute(sql);
+      } catch (SQLException e) {
+        throw new CelestaException("Could not update update-trigger on %s for materialized view %s: %s",
+            fullTableName, fullMvName, e);
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Could not update triggers on %s for materialized view %s: %s",
+          fullTableName, fullMvName, e);
+    } finally {
+      try {
+        if (stmt != null)
+          stmt.close();
+      } catch (SQLException e) {
+        //do nothing
+      }
+    }
+  }
 
   @Override
   public void dropTriggersForMaterializedView(Connection conn, MaterializedView mv) throws CelestaException {
+    Table t = mv.getRefTable().getTable();
+    TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
+        .withTableName(t.getName());
 
+    String insertTriggerName = NamedElement.limitName(String.format("mvInsertFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
+    String updateTriggerName = NamedElement.limitName(String.format("mvUpdateFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
+    String deleteTriggerName = NamedElement.limitName(String.format("mvDeleteFrom%s_%sTo%s_%s",
+        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
+
+    try {
+      query.withName(insertTriggerName);
+      dropTrigger(conn, query);
+      query.withName(updateTriggerName);
+      dropTrigger(conn, query);
+      query.withName(deleteTriggerName);
+      dropTrigger(conn, query);
+    } catch (SQLException e) {
+      throw new CelestaException("Can't drop triggers for materialized view %s.%s: %s",
+          mv.getGrain().getName(), mv.getName(), e.getMessage());
+    }
   }
 }

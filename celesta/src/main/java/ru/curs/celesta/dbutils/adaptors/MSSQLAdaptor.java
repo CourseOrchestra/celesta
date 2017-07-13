@@ -1140,8 +1140,8 @@ final class MSSQLAdaptor extends DBAdaptor {
       //UPDATE
       try {
         sql = String.format("create trigger \"%s\".\"%s\" " +
-            "on %s after delete as begin \n %s \n END;",
-            t.getGrain().getName(), deleteTriggerName, fullTableName, deleteSql);
+                "on %s after update as begin \n %s \n %s \n END;",
+            t.getGrain().getName(), updateTriggerName, fullTableName, deleteSql, insertSql);
 
         stmt.execute(sql);
       } catch (SQLException e) {
@@ -1151,8 +1151,8 @@ final class MSSQLAdaptor extends DBAdaptor {
       //DELETE
       try {
         sql = String.format("create trigger \"%s\".\"%s\" " +
-                "on %s after update as begin \n %s \n %s \n END;",
-            t.getGrain().getName(), updateTriggerName, fullTableName, deleteSql, insertSql);
+                "on %s after delete as begin \n %s \n END;",
+            t.getGrain().getName(), deleteTriggerName, fullTableName, deleteSql);
 
         stmt.execute(sql);
       } catch (SQLException e) {

@@ -195,9 +195,9 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.delete()
 
         self.assertEqual(1, mViewCursor.count())
+        '''
 
 
-    '''
     def testMultiThread(self):
         tableCursor = table1Cursor(self.context)
 
@@ -265,4 +265,4 @@ class TableWriterThread(Thread):
             ConnectionPool.putBack(conn)
             System.out.println('delete completed: tick ' + String.valueOf(tick) + ' ===>' + self.getName())
             tick = tick + 1
-'''
+            '''
