@@ -2,9 +2,9 @@
 
 
 from celestaunit.internal_celesta_unit import CelestaUnit
-from mView._mView_orm import table1Cursor, mView1Cursor
+from mView._mView_orm import table1Cursor, mView1Cursor, mView2Cursor
 
-from java.lang import Thread, System, String
+from java.lang import Thread, System, String, Exception as JavaException
 from java.time import LocalDateTime
 from ru.curs.celesta import SessionContext
 from ru.curs.celesta import CallContext
@@ -125,6 +125,39 @@ class TestMaterializedView(CelestaUnit):
         self.assertEqual(35, mViewCursor.s)
         self.assertEqual(2, mViewCursor.c)
 
+    '''
+        Этот тест необходим для гарантии того, что в materialized view останется результат SUM(), даже если он равен 0.
+    '''
+    def test_mat_view_update_when_count_is_unknown(self):
+        tableCursor = table1Cursor(self.context)
+        mViewCursor = mView2Cursor(self.context)
+
+        tableCursor.deleteAll()
+        self.assertEqual(0, mViewCursor.count())
+
+        tableCursor.numb = 5
+        tableCursor.var = "A"
+        tableCursor.insert()
+        tableCursor.clear()
+
+        tableCursor.numb = 2
+        tableCursor.var = "A"
+        tableCursor.insert()
+        tableCursor.clear()
+
+        mViewCursor.get("A")
+        self.assertEqual(7, mViewCursor.s)
+
+        tableCursor.setRange('numb', 2)
+        tableCursor.first()
+        tableCursor.numb = -5
+        tableCursor.update()
+        tableCursor.clear()
+
+        mViewCursor.get("A")
+        self.assertEqual(0, mViewCursor.s)
+
+
     def test_mat_view_delete(self):
         tableCursor = table1Cursor(self.context)
         mViewCursor = mView1Cursor(self.context)
@@ -235,34 +268,37 @@ class TestMaterializedView(CelestaUnit):
 class TableWriterThread(Thread):
 
     def run(self):
+        try:
+            end = LocalDateTime.now().plusSeconds(10)
 
-        end = LocalDateTime.now().plusMinutes(1)
+            tick = 1
+            while LocalDateTime.now().isBefore(end):
+                sessionContext = SessionContext('super', 'debug')
+                conn = ConnectionPool.get()
+                context = CallContext(conn, sessionContext)
+                tableCursor = table1Cursor(context)
 
-        tick = 1
-        while LocalDateTime.now().isBefore(end):
-            sessionContext = SessionContext('super', 'debug')
-            conn = ConnectionPool.get()
-            context = CallContext(conn, sessionContext)
-            tableCursor = table1Cursor(context)
+                tableCursor.numb = 6
+                tableCursor.var = "A"
+                tableCursor.insert()
 
-            tableCursor.numb = 6
-            tableCursor.var = "A"
-            tableCursor.insert()
+                context.closeCursors()
+                ConnectionPool.putBack(conn)
 
-            context.closeCursors()
-            ConnectionPool.putBack(conn)
+                System.out.println('insert completed: tick ' + String.valueOf(tick) + ' ===>' + self.getName())
 
-            System.out.println('insert completed: tick ' + String.valueOf(tick) + ' ===>' + self.getName())
+                sessionContext = SessionContext('super', 'debug')
+                conn = ConnectionPool.get()
+                context = CallContext(conn, sessionContext)
+                tableCursor = table1Cursor(context)
 
-            sessionContext = SessionContext('super', 'debug')
-            conn = ConnectionPool.get()
-            context = CallContext(conn, sessionContext)
-            tableCursor = table1Cursor(context)
+                tableCursor.deleteAll()
 
-            tableCursor.deleteAll()
-
-            context.closeCursors()
-            ConnectionPool.putBack(conn)
-            System.out.println('delete completed: tick ' + String.valueOf(tick) + ' ===>' + self.getName())
-            tick = tick + 1
-            '''
+                context.closeCursors()
+                ConnectionPool.putBack(conn)
+                System.out.println('delete completed: tick ' + String.valueOf(tick) + ' ===>' + self.getName())
+                tick = tick + 1
+        except JavaException, e:
+            e.printStackTrace()
+            raise e
+        '''
