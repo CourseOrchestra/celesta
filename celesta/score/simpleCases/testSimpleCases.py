@@ -102,3 +102,15 @@ class TestSimpleCases(CelestaUnit):
         self.assertFalse(c.tryInsert())
         c.id = 12
         self.assertTrue(c.tryInsert())
+        
+    def test_cursor_caching(self):
+        
+        zic1 = self.context.create(zeroInsertCursor)
+        zic2 = self.context.create(zeroInsertCursor)
+        self.assertEquals(zic1, zic2)
+        
+        zic1.close()
+        self.assertTrue(zic2.isClosed())
+        
+        zic3 = self.context.create(zeroInsertCursor)
+        self.assertNotEquals(zic1, zic3)

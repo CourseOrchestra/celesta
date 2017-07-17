@@ -1,6 +1,8 @@
 package ru.curs.celesta;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -10,8 +12,12 @@ import java.util.Properties;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import ru.curs.celesta.dbutils.BasicCursor;
+import ru.curs.celesta.syscursors.CallLogCursor;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.LogCursor;
+import ru.curs.celesta.syscursors.PermissionsCursor;
+import ru.curs.celesta.syscursors.RolesCursor;
 
 public class InitTest {
 
@@ -24,12 +30,12 @@ public class InitTest {
 	}
 
 	@Test
-	public void test1() throws CelestaException {
-		Celesta.getInstance();
+	public void testGetInstance() throws CelestaException {
+		assertNotNull(Celesta.getInstance());
 	}
 
 	@Test
-	public void testSysCursors() throws CelestaException {
+	public void grainCusrorIsCallable() throws CelestaException {
 		Connection conn = ConnectionPool.get();
 		SessionContext sc = new SessionContext("user", "S");
 		CallContext ctxt = new CallContext(conn, sc);
@@ -42,13 +48,15 @@ public class InitTest {
 			g.reset();
 			g.init();
 			g.clear();
+
+			g.close();
 		} finally {
 			ConnectionPool.putBack(conn);
 		}
 	}
 
 	@Test
-	public void testSysCursors2() throws CelestaException {
+	public void logCursorIsCallable() throws CelestaException {
 		Connection conn = ConnectionPool.get();
 		SessionContext sc = new SessionContext("user", "S");
 		CallContext ctxt = new CallContext(conn, sc);
@@ -82,4 +90,29 @@ public class InitTest {
 		}
 	}
 
+	@Test
+	public void cursorsAreClosingOnContext() throws CelestaException {
+		Connection conn = ConnectionPool.get();
+		SessionContext sc = new SessionContext("user", "S");
+		CallContext ctxt = new CallContext(conn, sc);
+		try {
+			BasicCursor a = new LogCursor(ctxt);
+			BasicCursor b = new PermissionsCursor(ctxt);
+			BasicCursor c = new RolesCursor(ctxt);
+			BasicCursor d = new CallLogCursor(ctxt);
+			assertFalse(a.isClosed());
+			assertFalse(b.isClosed());
+			assertFalse(c.isClosed());
+			assertFalse(d.isClosed());
+			
+			ctxt.closeCursors();
+			
+			assertTrue(a.isClosed());
+			assertTrue(b.isClosed());
+			assertTrue(c.isClosed());
+			assertTrue(d.isClosed());
+		} finally {
+			ConnectionPool.putBack(conn);
+		}
+	}
 }

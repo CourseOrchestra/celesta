@@ -3,6 +3,8 @@ package ru.curs.celesta;
 import java.sql.*;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import org.python.core.Py;
 import org.python.core.PyDictionary;
@@ -41,8 +43,8 @@ public final class CallContext {
 	private int cursorCount;
 
 	private boolean closed = false;
-	
-	private final HashMap<PyString, PyObject> cursorsCache = new HashMap<>(); 
+
+	private final HashMap<PyString, PyObject> cursorsCache = new HashMap<>();
 
 	public CallContext(Connection conn, SessionContext sesContext) throws CelestaException {
 		this(conn, sesContext, null, null, null);
@@ -343,39 +345,42 @@ public final class CallContext {
 	public boolean isClosed() {
 		return closed;
 	}
-	
+
 	/**
 	 * Возвращает объект курсора cursorClass.
 	 * 
 	 * Все созданные курсоры кэшируются и возвращаются при последюущем запросе
-	 * cursorClass. 
-	 * Каждый возвращаемый курсор предварительно очищается (clear()).
+	 * cursorClass. Каждый возвращаемый курсор предварительно очищается
+	 * (clear()).
 	 * 
-	 * @param cursorClass класс курсора
+	 * @param cursorClass
+	 *            класс курсора
 	 * @return объект курсора
 	 */
 	public PyObject create(final PyType cursorClass) throws CelestaException {
 		PyString classId = cursorClass.__str__();
-		PyObject cur = cursorsCache.get(classId);
-		if (cur == null) {
-			cur = cursorClass.__call__(Py.java2py(this));
-			cursorsCache.put(classId, cur);
-		}
-		
-		BasicCursor basicCur = (BasicCursor)cur.__tojava__(BasicCursor.class);
+		PyObject cur = cursorsCache.computeIfAbsent(classId, (s) -> cursorClass.__call__(Py.java2py(this)));
+		BasicCursor basicCur = (BasicCursor) cur.__tojava__(BasicCursor.class);
 		basicCur.clear();
 		return cur;
 	}
-	
+
 	/**
 	 * Удалят курсор из кэша курсоров.
 	 * 
 	 * Метод предназначен для внутреннего использования.
 	 * 
-	 * @param cursor Объект курсора.
+	 * @param cursor
+	 *            Объект курсора.
 	 */
 	public void removeFromCache(final BasicCursor cursor) {
-		PyString classId = Py.java2py(cursor).getType().__str__();
-		cursorsCache.remove(classId);
+		Iterator<Entry<PyString, PyObject>> i = cursorsCache.entrySet().iterator();
+		while (i.hasNext()) {
+			Entry<PyString, PyObject> e = i.next();
+			BasicCursor basicCur = (BasicCursor) e.getValue().__tojava__(BasicCursor.class);
+			if (cursor.equals(basicCur)) {
+				i.remove();
+			}
+		}
 	}
 }
