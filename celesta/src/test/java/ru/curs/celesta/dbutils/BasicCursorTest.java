@@ -13,11 +13,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.InitTest;
 import ru.curs.celesta.SessionContext;
 import ru.curs.celesta.syscursors.LogSetupCursor;
 
@@ -29,14 +29,15 @@ public class BasicCursorTest {
 	@BeforeClass
 	public static void init() throws IOException, CelestaException {
 		Properties params = new Properties();
-		params.load(InitTest.class.getResourceAsStream("test.properties"));// celesta.oracle.properties
+		params.setProperty("score.path", "score");
+		params.setProperty("h2.in-memory", "true");
+		AppSettings.init(params);
 		ConnectionPool.clear();
 		try {
 			Celesta.initialize(params);
 		} catch (CelestaException e) {
-			// Do nothing, celesta is initialized!
+			// do nothing, Celesta is initialized!
 		}
-
 	}
 
 	@Before
@@ -51,7 +52,7 @@ public class BasicCursorTest {
 	}
 
 	@Test
-	public void test2() throws CelestaException {
+	public void cursorIsNavigable() throws CelestaException {
 		c.setFilter("grainid", "'b'%");
 		LogSetupCursor c2 = (LogSetupCursor) c;
 		c2.setGrainid("grainval");
@@ -71,7 +72,7 @@ public class BasicCursorTest {
 	}
 
 	@Test
-	public void test3() throws CelestaException {
+	public void fieldsAreAssignable() throws CelestaException {
 		LogSetupCursor lsc = (LogSetupCursor) c;
 		assertNull(lsc.getGrainid());
 		lsc.setValue("grainid", "asdFsaf");

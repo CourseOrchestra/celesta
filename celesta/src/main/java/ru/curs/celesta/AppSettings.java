@@ -49,7 +49,7 @@ public final class AppSettings {
 
 
     h2ReferentialIntegrity = Boolean.parseBoolean(settings.getProperty("h2.referential.integrity", "false"));
-    h2InMemory = Boolean.parseBoolean(settings.getProperty("h2.in-memory", ""));
+    h2InMemory = Boolean.parseBoolean(settings.getProperty("h2.in-memory", "false"));
 
     //Если настройка h2.in-memory установлена в true - игнорируем настройку строки jdbc подключения и вводим свою
     if (h2InMemory) {

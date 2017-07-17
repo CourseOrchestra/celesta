@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
@@ -39,14 +40,15 @@ public class SerializerTest {
 	@BeforeClass
 	public static void init() throws IOException, CelestaException {
 		Properties params = new Properties();
-		params.load(InitTest.class.getResourceAsStream("test.properties"));// celesta.oracle.properties
+		params.setProperty("score.path", "score");
+		params.setProperty("h2.in-memory", "true");
 		ConnectionPool.clear();
+		AppSettings.init(params);
 		try {
 			Celesta.initialize(params);
 		} catch (CelestaException e) {
-			// Do nothing, celesta is initialized!
+			// do nothing, Celesta is initialized
 		}
-
 	}
 
 	@Before

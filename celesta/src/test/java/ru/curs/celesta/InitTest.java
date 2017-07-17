@@ -24,9 +24,15 @@ public class InitTest {
 	@BeforeClass
 	public static void init() throws IOException, CelestaException {
 		Properties params = new Properties();
-		params.load(InitTest.class.getResourceAsStream("test.properties"));// celesta.oracle.properties
+		params.setProperty("score.path", "score");
+		params.setProperty("h2.in-memory", "true");
+		AppSettings.init(params);
 		ConnectionPool.clear();
-		Celesta.initialize(params);
+		try {
+			Celesta.initialize(params);
+		} catch (CelestaException e) {
+			// do nothing
+		}
 	}
 
 	@Test
@@ -104,9 +110,9 @@ public class InitTest {
 			assertFalse(b.isClosed());
 			assertFalse(c.isClosed());
 			assertFalse(d.isClosed());
-			
+
 			ctxt.closeCursors();
-			
+
 			assertTrue(a.isClosed());
 			assertTrue(b.isClosed());
 			assertTrue(c.isClosed());

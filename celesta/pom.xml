@@ -286,9 +286,6 @@
                                 <exclude>**/adaptors/OraAdaptorTest.java</exclude>
                                 <exclude>**/adaptors/BasicDBAdaptorTest.java</exclude>
                                 <exclude>**/adaptors/PostgresAdaptorTest.java</exclude>
-                                <exclude>**/dbutils/BasicCursorTest.java</exclude>
-                                <exclude>**/InitTest.java</exclude>
-                                <exclude>**/lyra/SerializerTest.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -422,9 +419,6 @@
                                 <exclude>**/adaptors/OraAdaptorTest.java</exclude>
                                 <exclude>**/adaptors/BasicDBAdaptorTest.java</exclude>
                                 <exclude>**/adaptors/PostgresAdaptorTest.java</exclude>
-                                <exclude>**/dbutils/BasicCursorTest.java</exclude>
-                                <exclude>**/InitTest.java</exclude>
-                                <exclude>**/lyra/SerializerTest.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
