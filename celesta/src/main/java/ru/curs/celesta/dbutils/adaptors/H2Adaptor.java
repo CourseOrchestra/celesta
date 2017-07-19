@@ -763,94 +763,110 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public void createTriggersForMaterializedView(Connection conn, MaterializedView mv)  throws CelestaException {
-    Table t = mv.getRefTable().getTable();
+  public void createTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
 
-    String sql;
-    Statement stmt = null;
-    try {
+    List<MaterializedView> mvList = t.getGrain().getMaterializedViews().values().stream()
+        .filter(mv -> mv.getRefTable().getTable().equals(t))
+        .collect(Collectors.toList());
 
-      stmt = conn.createStatement();
-      //INSERT
+
+    for (MaterializedView mv : mvList) {
+
+      String sql;
+      Statement stmt = null;
       try {
-        sql = String.format(
-            "CREATE TRIGGER \"" + MaterializedViewInsertTrigger.NAME_PREFIX + "%s_%sTo%s_%s\""
-                + " AFTER INSERT ON " + tableTemplate()
-                + " FOR EACH ROW CALL \"%s\"",
-            t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(),
-            t.getGrain().getName(), t.getName(), MaterializedViewInsertTrigger.class.getName());
-        stmt.execute(sql);
+
+        stmt = conn.createStatement();
+        //INSERT
+        try {
+          sql = String.format(
+              "CREATE TRIGGER \"" + MaterializedViewInsertTrigger.NAME_PREFIX + "%s_%sTo%s_%s\""
+                  + " AFTER INSERT ON " + tableTemplate()
+                  + " FOR EACH ROW CALL \"%s\"",
+              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(),
+              t.getGrain().getName(), t.getName(), MaterializedViewInsertTrigger.class.getName());
+          stmt.execute(sql);
+        } catch (SQLException e) {
+          throw new CelestaException("Could not update insert-trigger on " + tableTemplate()
+              + " for materialized view" + tableTemplate() + ": %s",
+              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
+        }
+        //UPDATE
+        try {
+          sql = String.format(
+              "CREATE TRIGGER \"" + MaterializedViewUpdateTrigger.NAME_PREFIX + "%s_%sTo%s_%s\""
+                  + " AFTER UPDATE ON " + tableTemplate()
+                  + " FOR EACH ROW CALL \"%s\"",
+              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(),
+              t.getGrain().getName(), t.getName(), MaterializedViewUpdateTrigger.class.getName());
+          stmt.execute(sql);
+        } catch (SQLException e) {
+          throw new CelestaException("Could not update update-trigger on " + tableTemplate()
+              + " for materialized view" + tableTemplate() + ": %s",
+              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
+        }
+        //DELETE
+        try {
+          sql = String.format(
+              "CREATE TRIGGER \"" + MaterializedViewDeleteTrigger.NAME_PREFIX + "%s_%sTo%s_%s\""
+                  + " AFTER DELETE ON " + tableTemplate()
+                  + " FOR EACH ROW CALL \"%s\"",
+              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(),
+              t.getGrain().getName(), t.getName(), MaterializedViewDeleteTrigger.class.getName());
+          stmt.execute(sql);
+        } catch (SQLException e) {
+          throw new CelestaException("Could not update delete-trigger on " + tableTemplate()
+              + " for materialized view" + tableTemplate() + ": %s",
+              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
+        }
       } catch (SQLException e) {
-        throw new CelestaException("Could not update insert-trigger on " + tableTemplate()
-            + " for materialized view" + tableTemplate() + ": %s",
+        throw new CelestaException("Could not update triggers on" + tableTemplate()
+            + " for materialized view " + tableTemplate() + ": %s",
             t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
-      }
-      //UPDATE
-      try {
-        sql = String.format(
-            "CREATE TRIGGER \"" + MaterializedViewUpdateTrigger.NAME_PREFIX + "%s_%sTo%s_%s\""
-                + " AFTER UPDATE ON " + tableTemplate()
-                + " FOR EACH ROW CALL \"%s\"",
-            t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(),
-            t.getGrain().getName(), t.getName(), MaterializedViewUpdateTrigger.class.getName());
-        stmt.execute(sql);
-      } catch (SQLException e) {
-        throw new CelestaException("Could not update update-trigger on " + tableTemplate()
-            + " for materialized view" + tableTemplate() + ": %s",
-            t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
-      }
-      //DELETE
-      try {
-        sql = String.format(
-            "CREATE TRIGGER \"" + MaterializedViewDeleteTrigger.NAME_PREFIX + "%s_%sTo%s_%s\""
-                + " AFTER DELETE ON " + tableTemplate()
-                + " FOR EACH ROW CALL \"%s\"",
-            t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(),
-            t.getGrain().getName(), t.getName(), MaterializedViewDeleteTrigger.class.getName());
-        stmt.execute(sql);
-      } catch (SQLException e) {
-        throw new CelestaException("Could not update delete-trigger on " + tableTemplate()
-            + " for materialized view" + tableTemplate() + ": %s",
-            t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
-      }
-    } catch (SQLException e) {
-      throw new CelestaException("Could not update triggers on" + tableTemplate()
-          + " for materialized view " + tableTemplate() + ": %s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
-    } finally {
-      try {
-        if (stmt != null)
-          stmt.close();
-      } catch (SQLException e) {
-        //do nothing
+      } finally {
+        try {
+          if (stmt != null)
+            stmt.close();
+        } catch (SQLException e) {
+          //do nothing
+        }
       }
     }
   }
 
   @Override
-  public void dropTriggersForMaterializedView(Connection conn, MaterializedView mv) throws CelestaException {
-    Table t = mv.getRefTable().getTable();
-    TriggerQuery query = new TriggerQuery()
-        .withSchema(t.getGrain().getName())
-        .withTableName(t.getName());
+  public void dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
 
-    String insertTriggerName = String.format(MaterializedViewInsertTrigger.NAME_PREFIX + "%s_%sTo%s_%s",
-        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-    String updateTriggerName = String.format(MaterializedViewUpdateTrigger.NAME_PREFIX + "%s_%sTo%s_%s",
-        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-    String deleteTriggerName = String.format(MaterializedViewDeleteTrigger.NAME_PREFIX + "%s_%sTo%s_%s",
-        t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+    List<MaterializedView> mvList = t.getGrain().getMaterializedViews().values().stream()
+        .filter(mv -> mv.getRefTable().getTable().equals(t))
+        .collect(Collectors.toList());
 
-    try {
-      query.withName(insertTriggerName);
-      dropTrigger(conn, query);
-      query.withName(updateTriggerName);
-      dropTrigger(conn, query);
-      query.withName(deleteTriggerName);
-      dropTrigger(conn, query);
-    } catch (SQLException e) {
-      throw new CelestaException("Can't drop triggers for materialized view %s.%s: %s",
-          mv.getGrain().getName(), mv.getName(), e.getMessage());
+    for (MaterializedView mv : mvList) {
+      TriggerQuery query = new TriggerQuery()
+          .withSchema(t.getGrain().getName())
+          .withTableName(t.getName());
+
+      String insertTriggerName = String.format(MaterializedViewInsertTrigger.NAME_PREFIX + "%s_%sTo%s_%s",
+          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+      String updateTriggerName = String.format(MaterializedViewUpdateTrigger.NAME_PREFIX + "%s_%sTo%s_%s",
+          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+      String deleteTriggerName = String.format(MaterializedViewDeleteTrigger.NAME_PREFIX + "%s_%sTo%s_%s",
+          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+
+      try {
+        query.withName(insertTriggerName);
+        if (triggerExists(conn, query))
+          dropTrigger(conn, query);
+        query.withName(updateTriggerName);
+        if (triggerExists(conn, query))
+          dropTrigger(conn, query);
+        query.withName(deleteTriggerName);
+        if (triggerExists(conn, query))
+          dropTrigger(conn, query);
+      } catch (SQLException e) {
+        throw new CelestaException("Can't drop triggers for materialized view %s.%s: %s",
+            mv.getGrain().getName(), mv.getName(), e.getMessage());
+      }
     }
   }
 

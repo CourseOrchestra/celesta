@@ -46,6 +46,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
@@ -959,10 +960,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     }
   }
 
-  abstract public void createTriggersForMaterializedView(Connection conn, MaterializedView mv)
+  abstract public void createTableTriggersForMaterializedViews(Connection conn, Table t)
       throws CelestaException;
 
-  abstract public void dropTriggersForMaterializedView(Connection conn, MaterializedView mv)
+  abstract public void dropTableTriggersForMaterializedViews(Connection conn, Table t)
       throws CelestaException;
 
   public void initDataForMaterializedView(Connection conn, MaterializedView mv)
@@ -970,13 +971,18 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     Table t = mv.getRefTable().getTable();
 
     String mvIdentifier = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
+    String mvColumns = mv.getColumns().keySet().stream()
+        .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+        .map(alias -> "\"" + alias + "\"")
+        .collect(Collectors.joining(", "));
+
 
     String deleteSql = "DELETE FROM " + mvIdentifier;
 
     String selectScript = String.format(mv.getSelectPartOfScript()
         + " FROM " + tableTemplate() + " "
         + mv.getGroupByPartOfScript(), t.getGrain().getName(), t.getName());
-    String insertSql = String.format("INSERT INTO %s" + selectScript, mvIdentifier);
+    String insertSql = String.format("INSERT INTO %s (%s) "  + selectScript, mvIdentifier, mvColumns);
 
     try {
       Statement stmt = conn.createStatement();

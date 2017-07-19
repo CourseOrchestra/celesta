@@ -268,10 +268,16 @@ public final class DBUpdator {
       // Создаём представления заново
       createViews(g);
 
-
       // Обновляем все материализованные представления.
       for (MaterializedView t : g.getMaterializedViews().values())
         updateMaterializedView(t);
+
+      //Для всех таблиц обновляем триггеры материализованных представлений
+      for (Table t : g.getTables().values()) {
+        final Connection conn = grain.callContext().getConn();
+        dba.dropTableTriggersForMaterializedViews(conn, t);
+        dba.createTableTriggersForMaterializedViews(conn, t);
+      }
 
       // Обновляем справочник celesta.tables.
       table.setRange("grainid", g.getName());
@@ -512,8 +518,6 @@ public final class DBUpdator {
       dba.createTable(conn, mv);
       //2. Проинициализировать данные материального представления
       dba.initDataForMaterializedView(conn, mv);
-      //3. Создать новые триггеры
-      dba.createTriggersForMaterializedView(conn, mv);
       return;
     }
 
@@ -529,12 +533,8 @@ public final class DBUpdator {
       dba.createPK(conn, mv);
 
     if (columnsUpdated) {
-      //1. Удалить старые триггеры
-      dba.dropTriggersForMaterializedView(conn, mv);
-      //2. Пeрeинициализировать данные материального представления
+      //Пeрeинициализировать данные материального представления
       dba.initDataForMaterializedView(conn, mv);
-      //3. Создать новые триггеры
-      dba.createTriggersForMaterializedView(conn, mv);
     }
   }
 

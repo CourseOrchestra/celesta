@@ -51,6 +51,7 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
     mvFullName = String.format("\"%s\".\"%s\"", mv.getGrain().getName(), mv.getName());
 
     mvAllColumns = mv.getColumns().keySet().stream()
+        .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
         .map(v -> "\"" + v + "\"")
         .collect(Collectors.joining(", "));
 
@@ -108,13 +109,13 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
         .collect(Collectors.joining(" AND "));
 
 
-    StringBuilder selectStmtBuilder = new StringBuilder(mv.getSelectPartOfScript())
+    StringBuilder selectStmtBuilder = new StringBuilder(mv.getSelectPartOfScript() + ", COUNT(*)")
         .append(" FROM ").append(tFullName).append(" ");
     selectStmtBuilder.append(" WHERE ").append(whereCondition)
         .append(mv.getGroupByPartOfScript());
 
     String insertSql = String.format(insertSqlBuilder.toString(), mvFullName,
-        mvAllColumns, selectStmtBuilder.toString());
+        mvAllColumns + ", \"" + MaterializedView.SURROGATE_COUNT +"\"", selectStmtBuilder.toString());
 
     PreparedStatement stmt = conn.prepareStatement(insertSql);
 

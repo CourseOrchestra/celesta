@@ -12,6 +12,17 @@ import java.util.stream.Collectors;
  */
 public class MaterializedView extends AbstractView implements TableElement {
 
+  /**
+   * Имя системного поля, содержащего результат COUNT().
+   */
+  public static final String SURROGATE_COUNT = "surrogate_count";
+
+  private final IntegerColumn surrogateCount;
+
+  public IntegerColumn getSurrogateCount() {
+    return surrogateCount;
+  }
+
   @FunctionalInterface
   private interface MatColFabricFunction {
     Column apply(MaterializedView mView, Column colRef, String alias) throws ParseException;
@@ -64,6 +75,8 @@ public class MaterializedView extends AbstractView implements TableElement {
   public MaterializedView(Grain g, String name) throws ParseException {
     super(g, name);
     g.addMaterializedView(this);
+    surrogateCount = new IntegerColumn(this, SURROGATE_COUNT);
+    surrogateCount.setNullableAndDefault(false, "0");
   }
 
   @Override
@@ -292,5 +305,16 @@ public class MaterializedView extends AbstractView implements TableElement {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Override
+  void addFromTableRef(TableRef ref) throws ParseException {
+
+    if (!getGrain().equals(ref.getTable().getGrain())) {
+      throw new ParseException(String.format("%s '%s.%s' contains a table from another grain.",
+          viewType(), getGrain().getName(), getName()));
+    }
+
+    super.addFromTableRef(ref);
   }
 }
