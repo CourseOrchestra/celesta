@@ -247,7 +247,7 @@ public class Score {
 
 /**
  * Обёртка InputStream для подсчёта контрольной суммы при чтении.
- * 
+ *
  */
 final class ChecksumInputStream extends InputStream {
 	private final CRC32 checksum = new CRC32();

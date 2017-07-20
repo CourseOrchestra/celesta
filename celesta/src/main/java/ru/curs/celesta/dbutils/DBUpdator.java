@@ -2,17 +2,8 @@ package ru.curs.celesta.dbutils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CallContext;
@@ -23,6 +14,8 @@ import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.event.TriggerQuery;
+import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.RolesCursor;
@@ -255,9 +248,11 @@ public final class DBUpdator {
       // Сбрасываем внешние ключи, более не включённые в метаданные
       List<DBFKInfo> dbFKeys = dropOrphanedGrainFKeys(g);
 
+      Set<String> modifiedTablesMap = new HashSet<>();
       // Обновляем все таблицы.
       for (Table t : g.getTables().values())
-        updateTable(t, dbFKeys);
+        if (updateTable(t, dbFKeys))
+          modifiedTablesMap.add(t.getName());
 
       // Обновляем все индексы.
       updateGrainIndices(g);
@@ -269,8 +264,10 @@ public final class DBUpdator {
       createViews(g);
 
       // Обновляем все материализованные представления.
-      for (MaterializedView t : g.getMaterializedViews().values())
-        updateMaterializedView(t);
+      for (MaterializedView mv : g.getMaterializedViews().values()) {
+        String tableName = mv.getRefTable().getTable().getName();
+        updateMaterializedView(mv, modifiedTablesMap.contains(tableName));
+      }
 
       //Для всех таблиц обновляем триггеры материализованных представлений
       for (Table t : g.getTables().values()) {
@@ -309,7 +306,7 @@ public final class DBUpdator {
         table.setOrphaned(false);
         table.tryInsert();
       }
-      for (MaterializedView mv: g.getMaterializedViews().values()) {
+      for (MaterializedView mv : g.getMaterializedViews().values()) {
         table.setGrainid(g.getName());
         table.setTablename(mv.getName());
         table.setTabletype(TableType.MATERIALIZED_VIEW);
@@ -459,18 +456,18 @@ public final class DBUpdator {
     }
   }
 
-  private static void updateTable(Table t, List<DBFKInfo> dbFKeys) throws CelestaException {
+  private static boolean updateTable(Table t, List<DBFKInfo> dbFKeys) throws CelestaException {
     // Если таблица скомпилирована с опцией NO AUTOUPDATE, то ничего не
     // делаем с ней
     if (!t.isAutoUpdate())
-      return;
+      return false;
 
     final Connection conn = grain.callContext().getConn();
 
     if (!dba.tableExists(conn, t.getGrain().getName(), t.getName())) {
       // Таблицы не существует в базе данных, создаём с нуля.
       dba.createTable(conn, t);
-      return;
+      return true;
     }
 
     DBPKInfo pkInfo;
@@ -506,36 +503,47 @@ public final class DBUpdator {
       }
 
     dba.updateVersioningTrigger(conn, t);
+
+    return modified;
   }
 
-  private static void updateMaterializedView(MaterializedView mv) throws CelestaException {
+  private static void updateMaterializedView(MaterializedView mv, boolean refTableIsModified) throws CelestaException {
     final Connection conn = grain.callContext().getConn();
 
-    boolean isNew = !dba.tableExists(conn, mv.getGrain().getName(), mv.getName());
+    boolean mViewExists = dba.tableExists(conn, mv.getGrain().getName(), mv.getName());
 
-    if (isNew) {
-      //1. Таблицы не существует в базе данных, создаём с нуля.
-      dba.createTable(conn, mv);
-      //2. Проинициализировать данные материального представления
-      dba.initDataForMaterializedView(conn, mv);
-      return;
+    if (mViewExists) {
+
+      if (!refTableIsModified) {
+
+        //В теле insert-триггера должна храниться контрольная сумма.
+        String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+        TriggerQuery query = new TriggerQuery()
+            .withSchema(mv.getGrain().getName())
+            .withTableName(mv.getRefTable().getTable().getName())
+            .withName(insertTriggerName);
+
+        Optional<String> insertTriggerBody = dba.getTriggerBody(conn, query);
+
+        if (insertTriggerBody.isPresent()) {
+          boolean checksumIsMatched = insertTriggerBody.get().contains(
+              String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
+          );
+
+          if (checksumIsMatched) {
+            return;
+          }
+        }
+      }
+
+      //Удаляем materialized view
+      dba.dropTable(conn, mv);
     }
 
-
-    DBPKInfo pkInfo;
-    Set<String> dbColumns = dba.getColumns(conn, mv);
-    boolean columnsUpdated = updateColumns(mv, conn, dbColumns, Collections.emptyList());
-
-    // Ещё раз проверяем первичный ключ и при необходимости (если его нет
-    // или он был сброшен) создаём.
-    pkInfo = dba.getPKInfo(conn, mv);
-    if (pkInfo.isEmpty())
-      dba.createPK(conn, mv);
-
-    if (columnsUpdated) {
-      //Пeрeинициализировать данные материального представления
-      dba.initDataForMaterializedView(conn, mv);
-    }
+    //1. Таблицы не существует в базе данных, создаём с нуля.
+    dba.createTable(conn, mv);
+    //2. Проинициализировать данные материального представления
+    dba.initDataForMaterializedView(conn, mv);
   }
 
   private static void dropReferencedFKs(TableElement t, Connection conn, List<DBFKInfo> dbFKeys) throws CelestaException {

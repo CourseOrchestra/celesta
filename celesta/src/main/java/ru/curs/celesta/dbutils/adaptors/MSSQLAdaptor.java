@@ -53,6 +53,7 @@ import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
+import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
 /**
@@ -1085,12 +1086,8 @@ final class MSSQLAdaptor extends DBAdaptor {
     for (MaterializedView mv : mvList) {
       String fullMvName = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
 
-      String insertTriggerName = String.format("mvInsertFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-      String updateTriggerName = String.format("mvUpdateFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-      String deleteTriggerName = String.format("mvDeleteFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+      String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+      String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
       String mvColumns = mv.getColumns().keySet().stream()
           .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
@@ -1164,8 +1161,10 @@ final class MSSQLAdaptor extends DBAdaptor {
         //INSERT
         try {
           sql = String.format("create trigger \"%s\".\"%s\" " +
-                  "on %s after insert as begin \n %s \n END;",
-              t.getGrain().getName(), insertTriggerName, fullTableName, insertSql);
+                  "on %s after insert as begin \n"
+                  + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
+                  + "\n %s \n END;",
+              t.getGrain().getName(), insertTriggerName, fullTableName, mv.getChecksum(), insertSql);
           //System.out.println(sql);
           stmt.execute(sql);
         } catch (SQLException e) {
@@ -1205,7 +1204,7 @@ final class MSSQLAdaptor extends DBAdaptor {
       stmt = conn.createStatement();
       StringBuilder sb = new StringBuilder();
 
-      final String sqlPrefix = t.isVersioned() ? "alter" :  "create";
+      final String sqlPrefix = t.isVersioned() ? "alter" : "create";
 
       sb.append(
           String.format("%s trigger \"%s\".\"%s_upd\" on \"%s\".\"%s\" for update as begin\n",
@@ -1237,10 +1236,8 @@ final class MSSQLAdaptor extends DBAdaptor {
     for (MaterializedView mv : mvList) {
       TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName());
 
-      String insertTriggerName = String.format("mvInsertFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-      String deleteTriggerName = String.format("mvDeleteFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+      String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+      String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
       try {
         query.withName(insertTriggerName);
@@ -1271,4 +1268,18 @@ final class MSSQLAdaptor extends DBAdaptor {
 
   }
 
+  
+  @Override
+  String getSelectTriggerBodySql(TriggerQuery query) {
+    String sql = String.format(" SELECT OBJECT_DEFINITION (id)\n" +
+            "        FROM sysobjects\n" +
+            "    WHERE id IN(SELECT tr.object_id\n" +
+            "        FROM sys.triggers tr\n" +
+            "        INNER JOIN sys.tables t ON tr.parent_id = t.object_id\n" +
+            "        WHERE t.schema_id = SCHEMA_ID('%s')\n" +
+            "        AND tr.name = '%s');"
+        , query.getSchema(), query.getName());
+
+    return sql;
+  }
 }

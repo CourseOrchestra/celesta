@@ -1,8 +1,12 @@
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.event.TriggerType;
+
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -16,6 +20,8 @@ public class MaterializedView extends AbstractView implements TableElement {
    * Имя системного поля, содержащего результат COUNT().
    */
   public static final String SURROGATE_COUNT = "surrogate_count";
+  public static final String CHECKSUM_SEPARATOR = "CHECKSUM";
+  public static final String CHECKSUM_COMMENT_TEMPLATE = "/*" + CHECKSUM_SEPARATOR + "%s" + CHECKSUM_SEPARATOR + "*/";
 
   private final IntegerColumn surrogateCount;
 
@@ -316,5 +322,72 @@ public class MaterializedView extends AbstractView implements TableElement {
     }
 
     super.addFromTableRef(ref);
+  }
+
+  public String getChecksum() {
+    try {
+      ChecksumInputStream is = new ChecksumInputStream(
+          new ByteArrayInputStream(getCelestaSQL().getBytes(StandardCharsets.UTF_8))
+      );
+      while (is.read() != -1);
+      return String.format("%08X", is.getCRC32());
+    } catch (Exception e) {
+      throw new RuntimeException();
+    }
+  }
+
+
+  public String getTriggerName(TriggerType type) {
+    Table t = getRefTable().getTable();
+
+    TriggerNameBuilder tnb = new TriggerNameBuilder()
+        .withSchema(getGrain().getName())
+        .withTableName(t.getName())
+        .withName(getName())
+        .withType(type);
+
+    return tnb.build();
+  }
+
+  public static class TriggerNameBuilder {
+    private static final Map<TriggerType, String> TRIGGER_TYPES_TO_NAME_PARTS = new HashMap<>();
+    private static final String TEMPLATE = "mv%sFrom%s_%sTo%s_%s";
+
+    static {
+      TRIGGER_TYPES_TO_NAME_PARTS.put(TriggerType.POST_INSERT, "Insert");
+      TRIGGER_TYPES_TO_NAME_PARTS.put(TriggerType.POST_UPDATE, "Update");
+      TRIGGER_TYPES_TO_NAME_PARTS.put(TriggerType.POST_DELETE, "Delete");
+    }
+
+    private String schema;
+    private String tableName;
+    private String name;
+    private TriggerType type;
+
+    public TriggerNameBuilder withTableName(String tableName) {
+      this.tableName = tableName;
+      return this;
+    }
+
+    public TriggerNameBuilder withSchema(String schema) {
+      this.schema = schema;
+      return this;
+    }
+
+    public TriggerNameBuilder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public TriggerNameBuilder withType(TriggerType type) {
+      this.type = type;
+      return this;
+    }
+
+    public String build() {
+      String preResult = String.format(TEMPLATE, TRIGGER_TYPES_TO_NAME_PARTS.get(type),
+          schema, tableName, schema, name);
+      return NamedElement.limitName(preResult);
+    }
   }
 }

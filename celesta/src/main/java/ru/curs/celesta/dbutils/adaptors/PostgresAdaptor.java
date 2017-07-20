@@ -55,6 +55,7 @@ import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
+import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
 /**
@@ -809,13 +810,11 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     for (MaterializedView mv : mvList) {
       String fullMvName = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
 
-      String insertTriggerName = String.format("mvInsertFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-      String updateTriggerName = String.format("mvUpdateFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-      String deleteTriggerName = String.format("mvDeleteFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+      String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+      String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+      String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
+      //функции уникальны для postgres
       String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()", t.getGrain().getName(), mv.getName());
       String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()", t.getGrain().getName(), mv.getName());
       String deleteTriggerFunctionFullName = String.format("\"%s\".\"%s_deleteTriggerFunc\"()", t.getGrain().getName(), mv.getName());
@@ -902,10 +901,11 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
                   "DECLARE\n" +
                   "  updatedCount int;\n" +
                   "BEGIN \n" +
+                  MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n" +
                   "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n" +
                   "%s " +
                   "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
-              insertTriggerFunctionFullName, fullMvName, insertSql);
+              insertTriggerFunctionFullName, mv.getChecksum(), fullMvName, insertSql);
 
           //System.out.println(sql);
           stmt.execute(sql);
@@ -998,12 +998,9 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
           .withSchema(t.getGrain().getName())
           .withTableName(t.getName());
 
-      String insertTriggerName = String.format("mvInsertFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-      String updateTriggerName = String.format("mvUpdateFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-      String deleteTriggerName = String.format("mvDeleteFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+      String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+      String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+      String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
       String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()", t.getGrain().getName(), mv.getName());
       String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()", t.getGrain().getName(), mv.getName());
@@ -1054,4 +1051,20 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       }
     }
   }
+
+
+  @Override
+  String getSelectTriggerBodySql(TriggerQuery query) {
+    String sql = String.format("select DISTINCT(prosrc)\n" +
+            "  from pg_trigger, pg_proc, information_schema.triggers\n" +
+            "  where\n" +
+            "    pg_proc.oid=pg_trigger.tgfoid\n" +
+            "    and information_schema.triggers.trigger_schema='%s'\n" +
+            "    and information_schema.triggers.event_object_table='%s'" +
+            "    and pg_trigger.tgname = '%s'\n"
+        , query.getSchema(), query.getTableName(), query.getName());
+
+    return sql;
+  }
+
 }

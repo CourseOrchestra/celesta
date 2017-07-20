@@ -2,6 +2,7 @@ package ru.curs.celesta.dbutils.h2;
 
 import org.h2.api.Trigger;
 import ru.curs.celesta.Celesta;
+import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.MaterializedView;
 import ru.curs.celesta.score.Table;
@@ -17,6 +18,14 @@ import java.util.stream.Collectors;
  * Created by ioann on 07.07.2017.
  */
 abstract public class AbstractMaterializeViewTrigger implements Trigger {
+
+  private static final Map<Integer, TriggerType> TRIGGER_TYPE_MAP = new HashMap<>();
+
+  static {
+    TRIGGER_TYPE_MAP.put(1, TriggerType.POST_INSERT);
+    TRIGGER_TYPE_MAP.put(2, TriggerType.POST_UPDATE);
+    TRIGGER_TYPE_MAP.put(4, TriggerType.POST_DELETE);
+  }
 
   private Table t;
   private MaterializedView mv;
@@ -34,15 +43,12 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
 
     try {
       Map<String, Grain> grains = Celesta.getInstance().getScore().getGrains();
-      t = grains.get(schemaName).getTable(tableName);
+      Grain g = grains.get(schemaName);
+      t = g.getTable(tableName);
 
-      String mvStringToParse = triggerName.replace(getNamePrefix() + schemaName + "_" + tableName + "To", "");
-      String[] mvSplittedFullName = mvStringToParse.split("_");
-      String mvSchema = mvSplittedFullName[0];
-      String mvName = mvSplittedFullName[1];
-
-      mv = grains.get(mvSchema).getMaterializedView(mvName);
-
+      mv = g.getMaterializedViews().values().stream()
+          .filter(mv -> triggerName.equals(mv.getTriggerName(TRIGGER_TYPE_MAP.get(type))))
+          .findFirst().get();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

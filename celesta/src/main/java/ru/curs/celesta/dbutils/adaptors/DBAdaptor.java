@@ -705,6 +705,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   public abstract boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException;
 
+  abstract String getSelectTriggerBodySql(TriggerQuery query);
+
   abstract boolean userTablesExist(Connection conn) throws SQLException;
 
   abstract void createSchemaIfNotExists(Connection conn, String name) throws SQLException;
@@ -966,6 +968,30 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   abstract public void dropTableTriggersForMaterializedViews(Connection conn, Table t)
       throws CelestaException;
 
+  public Optional<String> getTriggerBody(Connection conn, TriggerQuery query) throws CelestaException {
+    String sql = getSelectTriggerBodySql(query);
+
+    try {
+      Statement stmt = conn.createStatement();
+      try {
+        Optional<String> result;
+        ResultSet rs = stmt.executeQuery(sql);
+
+        if (rs.next()) {
+          result = Optional.ofNullable(rs.getString(1));
+        } else {
+          result = Optional.empty();
+        }
+        rs.close();
+        return result;
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Could't select body of trigger %s", query.getName());
+    }
+  };
+
   public void initDataForMaterializedView(Connection conn, MaterializedView mv)
       throws CelestaException {
     Table t = mv.getRefTable().getTable();
@@ -977,11 +1003,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
         .collect(Collectors.joining(", "));
 
 
-    String deleteSql = "DELETE FROM " + mvIdentifier;
+    String deleteSql = "TRUNCATE TABLE " + mvIdentifier;
 
     String selectScript = String.format(mv.getSelectPartOfScript()
         + " FROM " + tableTemplate() + " "
-        + mv.getGroupByPartOfScript(), t.getGrain().getName(), t.getName());
+        + mv.getGroupByPartOfScript(),
+        t.getGrain().getName(), t.getName());
     String insertSql = String.format("INSERT INTO %s (%s) "  + selectScript, mvIdentifier, mvColumns);
 
     try {

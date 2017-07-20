@@ -13,6 +13,7 @@ import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
+import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
 import java.sql.*;
@@ -772,6 +773,10 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
     for (MaterializedView mv : mvList) {
 
+      String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+      String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+      String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
+
       String sql;
       Statement stmt = null;
       try {
@@ -780,11 +785,12 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         //INSERT
         try {
           sql = String.format(
-              "CREATE TRIGGER \"" + MaterializedViewInsertTrigger.NAME_PREFIX + "%s_%sTo%s_%s\""
-                  + " AFTER INSERT ON " + tableTemplate()
-                  + " FOR EACH ROW CALL \"%s\"",
-              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(),
-              t.getGrain().getName(), t.getName(), MaterializedViewInsertTrigger.class.getName());
+              "CREATE TRIGGER \"" + insertTriggerName + "\" AFTER INSERT ON "
+                  + tableTemplate() + " FOR EACH ROW CALL \n " +
+                  MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n" +
+                  "\"%s\"",
+              t.getGrain().getName(), t.getName(), mv.getChecksum(),
+              MaterializedViewInsertTrigger.class.getName());
           stmt.execute(sql);
         } catch (SQLException e) {
           throw new CelestaException("Could not update insert-trigger on " + tableTemplate()
@@ -794,11 +800,10 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         //UPDATE
         try {
           sql = String.format(
-              "CREATE TRIGGER \"" + MaterializedViewUpdateTrigger.NAME_PREFIX + "%s_%sTo%s_%s\""
-                  + " AFTER UPDATE ON " + tableTemplate()
-                  + " FOR EACH ROW CALL \"%s\"",
-              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(),
-              t.getGrain().getName(), t.getName(), MaterializedViewUpdateTrigger.class.getName());
+              "CREATE TRIGGER \"" + updateTriggerName + "\" AFTER UPDATE ON "
+                  + tableTemplate() + " FOR EACH ROW CALL \"%s\"",
+              t.getGrain().getName(), t.getName(),
+              MaterializedViewUpdateTrigger.class.getName());
           stmt.execute(sql);
         } catch (SQLException e) {
           throw new CelestaException("Could not update update-trigger on " + tableTemplate()
@@ -808,11 +813,10 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         //DELETE
         try {
           sql = String.format(
-              "CREATE TRIGGER \"" + MaterializedViewDeleteTrigger.NAME_PREFIX + "%s_%sTo%s_%s\""
-                  + " AFTER DELETE ON " + tableTemplate()
-                  + " FOR EACH ROW CALL \"%s\"",
-              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(),
-              t.getGrain().getName(), t.getName(), MaterializedViewDeleteTrigger.class.getName());
+              "CREATE TRIGGER \"" + deleteTriggerName + "\" AFTER DELETE ON "
+                  + tableTemplate() + " FOR EACH ROW CALL \"%s\"",
+              t.getGrain().getName(), t.getName(),
+              MaterializedViewDeleteTrigger.class.getName());
           stmt.execute(sql);
         } catch (SQLException e) {
           throw new CelestaException("Could not update delete-trigger on " + tableTemplate()
@@ -846,12 +850,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
           .withSchema(t.getGrain().getName())
           .withTableName(t.getName());
 
-      String insertTriggerName = String.format(MaterializedViewInsertTrigger.NAME_PREFIX + "%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-      String updateTriggerName = String.format(MaterializedViewUpdateTrigger.NAME_PREFIX + "%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
-      String deleteTriggerName = String.format(MaterializedViewDeleteTrigger.NAME_PREFIX + "%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName());
+      String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+      String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+      String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
       try {
         query.withName(insertTriggerName);
@@ -870,4 +871,12 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
   }
 
+  @Override
+  String getSelectTriggerBodySql(TriggerQuery query) {
+    String sql = String.format("select SQL from information_schema.triggers where "
+        + "		table_schema = '%s' and table_name = '%s'"
+        + "		and trigger_name = '%s'", query.getSchema(), query.getTableName(), query.getName());
+
+    return sql;
+  }
 }

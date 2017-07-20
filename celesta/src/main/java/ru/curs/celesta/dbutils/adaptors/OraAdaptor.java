@@ -42,14 +42,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -1409,12 +1402,9 @@ final class OraAdaptor extends DBAdaptor {
     for (MaterializedView mv : mvList) {
       String fullMvName = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
 
-      String insertTriggerName = NamedElement.limitName(String.format("mvInsertFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
-      String updateTriggerName = NamedElement.limitName(String.format("mvUpdateFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
-      String deleteTriggerName = NamedElement.limitName(String.format("mvDeleteFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
+      String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+      String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+      String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
       String lockTable = String.format("LOCK TABLE %s IN EXCLUSIVE MODE;\n", fullMvName);
 
@@ -1524,8 +1514,9 @@ final class OraAdaptor extends DBAdaptor {
         //INSERT
         try {
           sql = String.format("create or replace trigger \"%s\" after insert " +
-                  "on %s for each row\n begin %s \n %s \n END;",
-              insertTriggerName, fullTableName, lockTable, insertSql);
+                  "on %s for each row\n begin \n" + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
+                  + "\n %s \n %s \n END;",
+              insertTriggerName, fullTableName, mv.getChecksum(), lockTable, insertSql);
           System.out.println(sql);
           stmt.execute(sql);
         } catch (SQLException e) {
@@ -1579,12 +1570,9 @@ final class OraAdaptor extends DBAdaptor {
       TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
           .withTableName(t.getName());
 
-      String insertTriggerName = NamedElement.limitName(String.format("mvInsertFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
-      String updateTriggerName = NamedElement.limitName(String.format("mvUpdateFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
-      String deleteTriggerName = NamedElement.limitName(String.format("mvDeleteFrom%s_%sTo%s_%s",
-          t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName()));
+      String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+      String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+      String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
       try {
         query.withName(insertTriggerName);
@@ -1603,4 +1591,12 @@ final class OraAdaptor extends DBAdaptor {
     }
   }
 
+
+  @Override
+  String getSelectTriggerBodySql(TriggerQuery query) {
+    String sql = String.format(SELECT_TRIGGER_BODY + "and table_name = '%s_%s' and trigger_name = '%s'",
+        query.getSchema(), query.getTableName(), query.getName());
+
+    return sql;
+  }
 }
