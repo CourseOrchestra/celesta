@@ -14,13 +14,13 @@ import java.util.Set;
 /**
  * Created by ioann on 06.07.2017.
  */
-public abstract class MaterizlizedViewCursor extends BasicCursor {
+public abstract class MaterializedViewCursor extends BasicCursor {
 
   private MaterializedView meta = null;
   private final CursorGetHelper getHelper;
 
 
-  public MaterizlizedViewCursor(CallContext context) throws CelestaException {
+  public MaterializedViewCursor(CallContext context) throws CelestaException {
     super(context);
     getHelper = new CursorGetHelper(db(), conn(), meta(), _tableName());
   }

@@ -23,10 +23,8 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.InitTest;
 import ru.curs.celesta.SessionContext;
 import ru.curs.celesta.dbutils.BasicCursor;
-
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.TablesCursor;
 

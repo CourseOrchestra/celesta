@@ -28,7 +28,7 @@ public final class ORMCompiler {
 	 * Версия компилятора. Данную константу следует инкрементировать, когда
 	 * необходимо инициировать автоматическое пересоздание orm-скриптов.
 	 */
-	private static final int COMPILERVER = 10;
+	private static final int COMPILERVER = 11;
 
 	private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
 	private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -44,7 +44,7 @@ public final class ORMCompiler {
 			"import ru.curs.celesta.dbutils.Cursor as Cursor",
 			"import ru.curs.celesta.dbutils.ViewCursor as ViewCursor",
 			"import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor",
-			"import ru.curs.celesta.dbutils.MaterizlizedViewCursor as MaterizlizedViewCursor",
+			"import ru.curs.celesta.dbutils.MaterializedViewCursor as MaterializedViewCursor",
 			"from java.lang import Object",
 			"from jarray import array", "from java.util import Calendar, GregorianCalendar",
 			"from java.sql import Timestamp", "import datetime", "", "def _to_timestamp(d):",
@@ -210,7 +210,7 @@ public final class ORMCompiler {
 		if (t instanceof Table) {
 			w.write(String.format("class %s(ReadOnlyTableCursor):", className));
 		} else {
-			w.write(String.format("class %s(MaterizlizedViewCursor):", className));
+			w.write(String.format("class %s(MaterializedViewCursor):", className));
 		}
 
 		w.newLine();
