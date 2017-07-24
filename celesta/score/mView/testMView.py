@@ -10,10 +10,91 @@ from ru.curs.celesta import SessionContext
 from ru.curs.celesta import CallContext
 from ru.curs.celesta import ConnectionPool
 
+
 class TestMaterializedView(CelestaUnit):
+    def test_mat_view_insert(self):
+        tableCursor = table1Cursor(self.context)
+        mViewCursor = mView1Cursor(self.context)
+        self._test_mat_view_insert(tableCursor, mViewCursor)
+
+    def test_mat_view_insert_with_no_version_check(self):
+        tableCursor = table2Cursor(self.context)
+        mViewCursor = mView3Cursor(self.context)
+        self._test_mat_view_insert(tableCursor, mViewCursor)
+
+    def test_mat_view_update(self):
+        tableCursor = table1Cursor(self.context)
+        mViewCursor = mView1Cursor(self.context)
+        self._test_mat_view_update(tableCursor, mViewCursor)
+
+    def test_mat_view_update_with_no_version_check(self):
+        tableCursor = table2Cursor(self.context)
+        mViewCursor = mView3Cursor(self.context)
+        self._test_mat_view_update(tableCursor, mViewCursor)
+
+    def test_mat_view_delete(self):
+        tableCursor = table1Cursor(self.context)
+        mViewCursor = mView1Cursor(self.context)
+        self._test_mat_view_delete(tableCursor, mViewCursor)
+
+    def test_mat_view_delete_with_no_version_check(self):
+        tableCursor = table2Cursor(self.context)
+        mViewCursor = mView3Cursor(self.context)
+        self._test_mat_view_delete(tableCursor, mViewCursor)
+
+    '''
+        Этот тест необходим для гарантии того, что в materialized view останется результат SUM(), даже если он равен 0.
+    '''
+
+    def test_mat_view_update_when_count_is_unknown(self):
+        tableCursor = table1Cursor(self.context)
+        mViewCursor = mView2Cursor(self.context)
+
+        tableCursor.deleteAll()
+        self.assertEqual(0, mViewCursor.count())
+
+        tableCursor.numb = 5
+        tableCursor.var = "A"
+        tableCursor.insert()
+        id1 = tableCursor.id
+        tableCursor.clear()
+
+        tableCursor.numb = 2
+        tableCursor.var = "A"
+        tableCursor.insert()
+        tableCursor.clear()
+
+        mViewCursor.get("A")
+        self.assertEqual(7, mViewCursor.s)
+
+        tableCursor.setRange('numb', 2)
+        tableCursor.first()
+        tableCursor.numb = -5
+        tableCursor.update()
+        tableCursor.clear()
+
+        mViewCursor.get("A")
+        self.assertEqual(0, mViewCursor.s)
+
+        tableCursor.numb = 5
+        tableCursor.var = "A"
+        tableCursor.insert()
+        tableCursor.clear()
+
+        mViewCursor.get("A")
+        self.assertEqual(5, mViewCursor.s)
+
+        tableCursor.get(id1)
+        tableCursor.var = "B"
+        tableCursor.update()
+        tableCursor.clear()
+
+        mViewCursor.get("A")
+        self.assertEqual(0, mViewCursor.s)
+        mViewCursor.get("B")
+        self.assertEqual(5, mViewCursor.s)
 
     def _test_mat_view_insert(self, tableCursor, mViewCursor):
-
         tableCursor.deleteAll()
 
         tableCursor.numb = 5
@@ -119,9 +200,7 @@ class TestMaterializedView(CelestaUnit):
         self.assertEqual(35, mViewCursor.s)
         self.assertEqual(2, mViewCursor.c)
 
-
     def _test_mat_view_delete(self, tableCursor, mViewCursor):
-
         tableCursor.deleteAll()
 
         tableCursor.numb = 6
@@ -130,12 +209,10 @@ class TestMaterializedView(CelestaUnit):
         old_id = tableCursor.id
         tableCursor.clear()
 
-
         tableCursor.numb = 2
         tableCursor.var = "A"
         tableCursor.insert()
         tableCursor.clear()
-
 
         mViewCursor.get("A")
         self.assertEqual(8, mViewCursor.s)
@@ -188,90 +265,7 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.delete()
 
         self.assertEqual(1, mViewCursor.count())
-
-    def test_mat_view_insert(self):
-        tableCursor = table1Cursor(self.context)
-        mViewCursor = mView1Cursor(self.context)
-        self._test_mat_view_insert(tableCursor, mViewCursor)
-
-    def test_mat_view_insert_with_no_version_check(self):
-        tableCursor = table2Cursor(self.context)
-        mViewCursor = mView3Cursor(self.context)
-        self._test_mat_view_insert(tableCursor, mViewCursor)
-
-    def test_mat_view_update(self):
-        tableCursor = table1Cursor(self.context)
-        mViewCursor = mView1Cursor(self.context)
-        self._test_mat_view_update(tableCursor, mViewCursor)
-
-    def test_mat_view_update_with_no_version_check(self):
-        tableCursor = table2Cursor(self.context)
-        mViewCursor = mView3Cursor(self.context)
-        self._test_mat_view_update(tableCursor, mViewCursor)
-
-    def test_mat_view_delete(self):
-        tableCursor = table1Cursor(self.context)
-        mViewCursor = mView1Cursor(self.context)
-        self._test_mat_view_delete(tableCursor, mViewCursor)
-
-    def test_mat_view_delete_with_no_version_check(self):
-        tableCursor = table2Cursor(self.context)
-        mViewCursor = mView3Cursor(self.context)
-        self._test_mat_view_delete(tableCursor, mViewCursor)
-
-    '''
-        Этот тест необходим для гарантии того, что в materialized view останется результат SUM(), даже если он равен 0.
-    '''
-    def test_mat_view_update_when_count_is_unknown(self):
-        tableCursor = table1Cursor(self.context)
-        mViewCursor = mView2Cursor(self.context)
-
-        tableCursor.deleteAll()
-        self.assertEqual(0, mViewCursor.count())
-
-        tableCursor.numb = 5
-        tableCursor.var = "A"
-        tableCursor.insert()
-        id1 = tableCursor.id
-        tableCursor.clear()
-
-        tableCursor.numb = 2
-        tableCursor.var = "A"
-        tableCursor.insert()
-        tableCursor.clear()
-
-        mViewCursor.get("A")
-        self.assertEqual(7, mViewCursor.s)
-
-        tableCursor.setRange('numb', 2)
-        tableCursor.first()
-        tableCursor.numb = -5
-        tableCursor.update()
-        tableCursor.clear()
-
-        mViewCursor.get("A")
-        self.assertEqual(0, mViewCursor.s)
-
-        tableCursor.numb = 5
-        tableCursor.var = "A"
-        tableCursor.insert()
-        tableCursor.clear()
-
-        mViewCursor.get("A")
-        self.assertEqual(5, mViewCursor.s)
-
-        tableCursor.get(id1)
-        tableCursor.var = "B"
-        tableCursor.update()
-        tableCursor.clear()
-
-        mViewCursor.get("A")
-        self.assertEqual(0, mViewCursor.s)
-        mViewCursor.get("B")
-        self.assertEqual(5, mViewCursor.s)
-
         '''
-
 
     def testMultiThread(self):
         tableCursor = table1Cursor(self.context)
@@ -306,12 +300,10 @@ class TestMaterializedView(CelestaUnit):
         self.setUp()
 
 
-
 class TableWriterThread(Thread):
-
     def run(self):
         try:
-            end = LocalDateTime.now().plusSeconds(10)
+            end = LocalDateTime.now().plusMinutes(1)
 
             tick = 1
             while LocalDateTime.now().isBefore(end):
@@ -329,16 +321,18 @@ class TableWriterThread(Thread):
 
                 System.out.println('insert completed: tick ' + String.valueOf(tick) + ' ===>' + self.getName())
 
-                sessionContext = SessionContext('super', 'debug')
-                conn = ConnectionPool.get()
-                context = CallContext(conn, sessionContext)
-                tableCursor = table1Cursor(context)
+                if self.getName() == "TableWriterThread1":
+                    sessionContext = SessionContext('super', 'debug')
+                    conn = ConnectionPool.get()
+                    context = CallContext(conn, sessionContext)
+                    tableCursor = table1Cursor(context)
 
-                tableCursor.deleteAll()
+                    tableCursor.deleteAll()
 
-                context.closeCursors()
-                ConnectionPool.putBack(conn)
-                System.out.println('delete completed: tick ' + String.valueOf(tick) + ' ===>' + self.getName())
+                    context.closeCursors()
+                    ConnectionPool.putBack(conn)
+                    System.out.println('delete completed: tick ' + String.valueOf(tick) + ' ===>' + self.getName())
+
                 tick = tick + 1
         except JavaException, e:
             e.printStackTrace()

@@ -367,7 +367,7 @@
             </activation>
         </profile>
         <profile>
-            <id>eclipse</id>
+            <id>dev</id>
             <build>
                 <resources>
                     <resource>
@@ -434,25 +434,6 @@
                             </archive>
                         </configuration>
                     </plugin>
-                    <!--<plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>create library zip</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <configuration>
-                                    <appendAssemblyId>false</appendAssemblyId>
-                                    <descriptors>
-                                        <descriptor>src/assembly/lib_bin.xml</descriptor>
-                                    </descriptors>
-                                    <attach>false</attach>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>-->
                 </plugins>
                 <pluginManagement>
                     <plugins>

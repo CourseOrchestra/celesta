@@ -856,7 +856,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
       String rowConditionTemplate = mv.getColumns().keySet().stream()
           .filter(alias -> mv.isGroupByColumn(alias))
-          .map(alias -> "\"" + alias + "\" = %1$s.\"" + alias + "\"")
+          .map(alias -> "\"" + alias + "\" = %1$s.\"" + mv.getColumnRef(alias).getName() + "\"")
           .collect(Collectors.joining(" AND "));
 
       String rowColumnsTemplate = mv.getColumns().keySet().stream()

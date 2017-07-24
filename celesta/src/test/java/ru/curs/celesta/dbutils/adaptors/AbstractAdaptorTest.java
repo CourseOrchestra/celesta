@@ -536,6 +536,18 @@ public abstract class AbstractAdaptorTest {
     MaterializedView mView1 = g.getMaterializedView("mView1");
 
     try {
+      // Могли остаться от незавершившегося теста
+      try {
+        dba.dropTable(conn, tableForMatView);
+      } catch (CelestaException e) {
+        conn.rollback();
+      }
+      try {
+        dba.dropTable(conn, mView1);
+      } catch (CelestaException e) {
+        conn.rollback();
+      }
+
       dba.createTable(conn, tableForMatView);
       dba.createTable(conn, mView1);
 
@@ -1142,5 +1154,84 @@ public abstract class AbstractAdaptorTest {
 
   }
 
+  @Test
+  public void testInitDataForMaterializedView() throws Exception {
+    Grain g = score.getGrain(GRAIN_NAME);
+    Table t = g.getTable("tableForInitMvData");
+    MaterializedView mv = g.getMaterializedView("mViewForInit");
+
+    PreparedStatement pstmt = null;
+    try {
+
+      // Могли остаться от незавершившегося теста
+      try {
+        dba.dropTable(conn, t);
+      } catch (CelestaException e) {
+        conn.rollback();
+      }
+      try {
+        dba.dropTable(conn, mv);
+      } catch (CelestaException e) {
+        conn.rollback();
+      }
+
+      dba.createTable(conn, t);
+      dba.createTable(conn, mv);
+
+      boolean[] nullsMask = {true, false, false};
+      Object[] rowData = {null, "A", 5};
+
+      List<ParameterSetter> program = new ArrayList<>();
+      pstmt = dba.getInsertRecordStatement(conn, t, nullsMask, program);
+
+      int i = 1;
+      for (ParameterSetter ps : program) {
+        ps.execute(pstmt, i++, rowData, 0);
+      }
+
+      pstmt.execute();
+      pstmt.execute();
+
+      assertEquals(0, getCount(conn, mv));
+
+      Object[] secondRowData = {null, "B", 3};
+      i = 1;
+      for (ParameterSetter ps : program) {
+        ps.execute(pstmt, i++, secondRowData, 0);
+      }
+      pstmt.execute();
+
+      assertEquals(0, getCount(conn, mv));
+
+      dba.initDataForMaterializedView(conn, mv);
+      assertEquals(2, getCount(conn, mv));
+
+      dba.initDataForMaterializedView(conn, mv);
+      assertEquals(2, getCount(conn, mv));
+
+      pstmt = dba.getRecordSetStatement(conn, mv, "", "\"var\"", 0, 0);
+      ResultSet rs = pstmt.executeQuery();
+
+      rs.next();
+      assertEquals("A", rs.getString("var"));
+      assertEquals(10, rs.getInt("s"));
+      assertEquals(2, rs.getInt(MaterializedView.SURROGATE_COUNT));
+
+      rs.next();
+      assertEquals("B", rs.getString("var"));
+      assertEquals(3, rs.getInt("s"));
+      assertEquals(1, rs.getInt(MaterializedView.SURROGATE_COUNT));
+
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      if (pstmt != null) {
+        pstmt.close();
+      }
+
+      dba.dropTable(conn, t);
+      dba.dropTable(conn, mv);
+    }
+  }
 
 }

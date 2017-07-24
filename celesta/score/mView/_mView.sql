@@ -20,9 +20,9 @@ create materialized view mView1 as
    group by var;
 
 create materialized view mView2 AS
-  select var, sum(numb) as s
+  select var as v, sum(numb) as s
   FROM mView.table1
-  group by var;
+  group by v;
 
 
 create materialized view mView3 as

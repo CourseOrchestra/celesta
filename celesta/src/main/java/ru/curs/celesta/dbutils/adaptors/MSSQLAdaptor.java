@@ -389,13 +389,13 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
+  public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) throws CelestaException {
     String sql = String.format("delete " + tableTemplate() + WHERE_S, t.getGrain().getName(), t.getName(), where);
     return prepareStatement(conn, sql);
   }
 
   @Override
-  public PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
+  public PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) throws CelestaException {
     // Готовим запрос на удаление
     String sql = String.format("delete " + tableTemplate() + " %s;", t.getGrain().getName(), t.getName(),
         where.isEmpty() ? "" : "where " + where);
@@ -1100,9 +1100,15 @@ final class MSSQLAdaptor extends DBAdaptor {
           .collect(Collectors.joining(", "))
           .concat(", " + MaterializedView.SURROGATE_COUNT);
 
+
       String rowConditionTemplate = mv.getColumns().keySet().stream()
           .filter(alias -> mv.isGroupByColumn(alias))
           .map(alias -> "mv." + alias + " = %1$s." + alias + " ")
+          .collect(Collectors.joining(" AND "));
+
+      String rowConditionForExistsTemplate = mv.getColumns().keySet().stream()
+          .filter(alias -> mv.isGroupByColumn(alias))
+          .map(alias -> "mv." + alias + " = %1$s." + mv.getColumnRef(alias).getName() + " ")
           .collect(Collectors.joining(" AND "));
 
       String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
@@ -1120,8 +1126,13 @@ final class MSSQLAdaptor extends DBAdaptor {
           .concat("mv.").concat(MaterializedView.SURROGATE_COUNT).concat(" %1$s aggregate.")
           .concat(MaterializedView.SURROGATE_COUNT);
 
+      String tableGroupByColumns = mv.getColumns().values().stream()
+          .filter(v -> mv.isGroupByColumn(v.getName()))
+          .map(v -> "\"" + mv.getColumnRef(v.getName()).getName() + "\"")
+          .collect(Collectors.joining(", "));
+
       StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s WITH (HOLDLOCK) AS mv \n")
-          .append("USING (%s FROM inserted %s) AS aggregate ON %s \n")
+          .append("USING (%s FROM inserted GROUP BY %s) AS aggregate ON %s \n")
           .append("WHEN MATCHED THEN \n ")
           .append("UPDATE SET %s \n")
           .append("WHEN NOT MATCHED THEN \n")
@@ -1129,7 +1140,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 
       String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
           mv.getSelectPartOfScript() + ", COUNT(*) AS " + MaterializedView.SURROGATE_COUNT
-          , mv.getGroupByPartOfScript(), String.format(rowConditionTemplate, "aggregate"),
+          , tableGroupByColumns, String.format(rowConditionTemplate, "aggregate"),
           String.format(setStatementTemplate, "+"), mvColumns, aggregateColumns);
 
       String deleteMatchedCondTemplate = mv.getAggregateColumns().keySet().stream()
@@ -1137,16 +1148,16 @@ final class MSSQLAdaptor extends DBAdaptor {
           .collect(Collectors.joining(" %2$s "));
 
       String existsSql = "EXISTS(SELECT * FROM " + fullTableName + " AS t WHERE "
-          + String.format(rowConditionTemplate, "t") + ")";
+          + String.format(rowConditionForExistsTemplate, "t") + ")";
 
       StringBuilder deleteSqlBuilder = new StringBuilder("MERGE INTO %s WITH (HOLDLOCK) AS mv \n")
-          .append("USING (%s FROM deleted %s) AS aggregate ON %s \n")
+          .append("USING (%s FROM deleted GROUP BY %s) AS aggregate ON %s \n")
           .append("WHEN MATCHED AND %s THEN DELETE\n ")
           .append("WHEN MATCHED AND (%s) THEN \n")
           .append("UPDATE SET %s; \n");
 
       String deleteSql = String.format(deleteSqlBuilder.toString(), fullMvName,
-          mv.getSelectPartOfScript() + ", COUNT(*) AS " + MaterializedView.SURROGATE_COUNT, mv.getGroupByPartOfScript(),
+          mv.getSelectPartOfScript() + ", COUNT(*) AS " + MaterializedView.SURROGATE_COUNT, tableGroupByColumns,
           String.format(rowConditionTemplate, "aggregate"), String.format(deleteMatchedCondTemplate, "=", "AND")
               .concat(" AND NOT " + existsSql),
           String.format(deleteMatchedCondTemplate, "<>", "OR")
@@ -1180,9 +1191,10 @@ final class MSSQLAdaptor extends DBAdaptor {
                   "on %s after delete as begin \n %s \n END;",
               t.getGrain().getName(), deleteTriggerName, fullTableName, deleteSql);
 
+          System.out.println(sql);
           stmt.execute(sql);
         } catch (SQLException e) {
-          throw new CelestaException("Could not update update-trigger on %s for materialized view %s: %s",
+          throw new CelestaException("Could not update delete-trigger on %s for materialized view %s: %s",
               fullTableName, fullMvName, e);
         }
       } catch (SQLException e) {

@@ -92,7 +92,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
+  public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) throws CelestaException {
     String sql = String.format("delete from " + tableTemplate() + " where %s;", t.getGrain().getName(), t.getName(),
         where);
     return prepareStatement(conn, sql);
@@ -106,7 +106,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
+  public PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) throws CelestaException {
     // Готовим запрос на удаление
     String sql = String.format("delete from " + tableTemplate() + " %s;", t.getGrain().getName(), t.getName(),
         where.isEmpty() ? "" : "where " + where);

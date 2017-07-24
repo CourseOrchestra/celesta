@@ -70,7 +70,11 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
 
     int curIndex = 0;
     for (String tCol : t.getColumns().keySet()) {
-      if (mvGroupByColumns.contains(tCol)) {
+      Optional isGroupBy = mv.getColumns().keySet().stream()
+          .filter(v -> mv.isGroupByColumn(v) && tCol.equals(mv.getColumnRef(v).getName()))
+          .findAny();
+
+      if (isGroupBy.isPresent()) {
         tGroupByColumnIndices.put(curIndex, tCol);
       }
       if (columnRefNames.contains(tCol)) {
@@ -124,6 +128,7 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
         mvAllColumns + ", \"" + MaterializedView.SURROGATE_COUNT +"\"", selectStmtBuilder.toString());
 
     PreparedStatement stmt = conn.prepareStatement(insertSql);
+    System.out.println(insertSql);
 
     try {
       for (int i = 0; i < groupByColumnValues.size(); ++i) {

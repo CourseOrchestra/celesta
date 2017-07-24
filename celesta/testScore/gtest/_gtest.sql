@@ -86,3 +86,14 @@ create materialized view mView1 as
   select sum(id) as idsum, f1, f2, f3, f4, f5
   from tableForMatView
   group by f1, f2, f3, f4, f5;
+
+create table tableForInitMvData (
+  id int identity not null primary key,
+  var varchar(2) not null,
+  numb int
+);
+
+create materialized view mViewForInit as
+  select sum(numb) as s, var
+  from tableForInitMvData
+  group by var;

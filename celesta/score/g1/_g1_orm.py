@@ -1,5 +1,5 @@
 # coding=UTF-8
-# Source grain parameters: version=1.0, len=1325, crc32=EC09B567; compiler=10.
+# Source grain parameters: version=1.0, len=1325, crc32=EC09B567; compiler=11.
 """
 THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.
 DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.
@@ -7,6 +7,7 @@ DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.
 import ru.curs.celesta.dbutils.Cursor as Cursor
 import ru.curs.celesta.dbutils.ViewCursor as ViewCursor
 import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor
+import ru.curs.celesta.dbutils.MaterializedViewCursor as MaterializedViewCursor
 from java.lang import Object
 from jarray import array
 from java.util import Calendar, GregorianCalendar

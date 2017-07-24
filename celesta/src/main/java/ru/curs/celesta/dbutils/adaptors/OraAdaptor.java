@@ -378,7 +378,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException {
+  public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) throws CelestaException {
     String sql = String.format("delete " + tableTemplate() + " where %s", t.getGrain().getName(), t.getName(),
         where);
     return prepareStatement(conn, sql);
@@ -410,7 +410,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException {
+  public PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) throws CelestaException {
     String sql = String.format("delete from " + tableTemplate() + " %s", t.getGrain().getName(), t.getName(),
         where.isEmpty() ? "" : "where " + where);
     try {
@@ -1125,7 +1125,7 @@ final class OraAdaptor extends DBAdaptor {
             indName = m.group(2);
           } else {
             /*
-						 * Если название индекса не соответствует ожидаемому
+             * Если название индекса не соответствует ожидаемому
 						 * шаблону, то это -- индекс, добавленный вне Celesta и
 						 * его следует удалить. Мы добавляем знаки ## перед
 						 * именем индекса. Далее система, не найдя индекс с
@@ -1281,28 +1281,28 @@ final class OraAdaptor extends DBAdaptor {
 
           String sql;
           if (ve.isVersioned()) {
-          if (triggerExists) {
-            return;
+            if (triggerExists) {
+              return;
+            } else {
+              // CREATE TRIGGER
+              sql = String.format("CREATE OR REPLACE TRIGGER \"%s\" BEFORE UPDATE ON \"%s_%s\" FOR EACH ROW\n"
+                      + "BEGIN\n" + "  IF :new.\"recversion\" <> :old.\"recversion\" THEN\n"
+                      + "    raise_application_error( -20001, 'record version check failure' );\n"
+                      + "  END IF;\n" + "  :new.\"recversion\" := :new.\"recversion\" + 1;\n" + "END;",
+                  triggerName, t.getGrain().getName(), t.getName());
+              // System.out.println(sql);
+              stmt.executeUpdate(sql);
+            }
           } else {
-            // CREATE TRIGGER
-            sql = String.format("CREATE OR REPLACE TRIGGER \"%s\" BEFORE UPDATE ON \"%s_%s\" FOR EACH ROW\n"
-                    + "BEGIN\n" + "  IF :new.\"recversion\" <> :old.\"recversion\" THEN\n"
-                    + "    raise_application_error( -20001, 'record version check failure' );\n"
-                    + "  END IF;\n" + "  :new.\"recversion\" := :new.\"recversion\" + 1;\n" + "END;",
-                triggerName, t.getGrain().getName(), t.getName());
-            // System.out.println(sql);
-            stmt.executeUpdate(sql);
-          }
-        } else {
-          if (triggerExists) {
-            // DROP TRIGGER
-            TriggerQuery dropQuery = new TriggerQuery().withName(triggerName);
-            dropTrigger(conn, dropQuery);
-          } else {
-            return;
+            if (triggerExists) {
+              // DROP TRIGGER
+              TriggerQuery dropQuery = new TriggerQuery().withName(triggerName);
+              dropTrigger(conn, dropQuery);
+            } else {
+              return;
+            }
           }
         }
-      }
       } finally {
         stmt.close();
       }
@@ -1391,7 +1391,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void createTableTriggersForMaterializedViews(Connection conn, Table t)  throws CelestaException {
+  public void createTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
 
     List<MaterializedView> mvList = t.getGrain().getMaterializedViews().values().stream()
         .filter(mv -> mv.getRefTable().getTable().equals(t))
@@ -1439,6 +1439,11 @@ final class OraAdaptor extends DBAdaptor {
       String rowConditionTemplate = mv.getColumns().keySet().stream()
           .filter(alias -> mv.isGroupByColumn(alias))
           .map(alias -> "mv.\"" + alias + "\" = %1$s.\"" + alias + "\"")
+          .collect(Collectors.joining(" AND "));
+
+      String rowConditionTemplateForDelete = mv.getColumns().keySet().stream()
+          .filter(alias -> mv.isGroupByColumn(alias))
+          .map(alias -> "mv.\"" + alias + "\" = %1$s.\"" + mv.getColumnRef(alias).getName() + "\"")
           .collect(Collectors.joining(" AND "));
 
       String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
@@ -1493,14 +1498,14 @@ final class OraAdaptor extends DBAdaptor {
       String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
           String.format(selectFromRowTemplate, ":new"), String.format(rowConditionTemplate, "\"inserted\""),
           String.format(setStatementTemplate, "+", "\"inserted\""),
-          mvColumns + ", \"" + MaterializedView.SURROGATE_COUNT  + "\"",
+          mvColumns + ", \"" + MaterializedView.SURROGATE_COUNT + "\"",
           String.format(rowColumnsTemplate, "\"inserted\"") + ", 1");
 
       String delStatement = String.format("mv.\"%s\" = 0", MaterializedView.SURROGATE_COUNT);
 
       StringBuilder deleteSqlBuilder = new StringBuilder(String.format("UPDATE %s mv \n", fullMvName))
           .append("SET ").append(String.format(setStatementTemplateForDelete, "-", ":old")).append(" ")
-          .append("WHERE ").append(String.format(rowConditionTemplate, ":old")).append(";\n")
+          .append("WHERE ").append(String.format(rowConditionTemplateForDelete, ":old")).append(";\n")
           .append(String.format("DELETE FROM %s mv ", fullMvName))
           .append("WHERE ").append(delStatement).append(";\n");
 
@@ -1514,7 +1519,8 @@ final class OraAdaptor extends DBAdaptor {
         //INSERT
         try {
           sql = String.format("create or replace trigger \"%s\" after insert " +
-                  "on %s for each row\n begin \n" + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
+                  "on %s for each row\n"
+                  + "begin \n" + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
                   + "\n %s \n %s \n END;",
               insertTriggerName, fullTableName, mv.getChecksum(), lockTable, insertSql);
           System.out.println(sql);
@@ -1526,7 +1532,8 @@ final class OraAdaptor extends DBAdaptor {
         //UPDATE
         try {
           sql = String.format("create or replace trigger \"%s\" after update " +
-                  "on %s for each row\n begin %s \n %s\n %s\n END;",
+                  "on %s for each row\n"
+                  + "begin %s \n %s\n %s\n END;",
               updateTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString(), insertSql);
 
           System.out.println(sql);
@@ -1538,7 +1545,8 @@ final class OraAdaptor extends DBAdaptor {
         //DELETE
         try {
           sql = String.format("create or replace trigger \"%s\" after delete " +
-                  "on %s for each row\n begin %s \n %s\n END;",
+                  "on %s for each row\n "
+                  + " begin %s \n %s\n END;",
               deleteTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString());
 
           stmt.execute(sql);

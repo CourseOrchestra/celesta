@@ -719,14 +719,14 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   public abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException;
 
-  public abstract PreparedStatement deleteRecordSetStatement(Connection conn, Table t, String where) throws CelestaException;
+  public abstract PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) throws CelestaException;
 
   public abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
                                                              List<ParameterSetter> program) throws CelestaException;
 
   public abstract int getCurrentIdent(Connection conn, Table t) throws CelestaException;
 
-  public abstract PreparedStatement getDeleteRecordStatement(Connection conn, Table t, String where) throws CelestaException;
+  public abstract PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) throws CelestaException;
 
   public abstract String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields);
 
@@ -1000,15 +1000,19 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     String mvColumns = mv.getColumns().keySet().stream()
         .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
         .map(alias -> "\"" + alias + "\"")
-        .collect(Collectors.joining(", "));
+        .collect(Collectors.joining(", "))
+        .concat(", \"").concat(MaterializedView.SURROGATE_COUNT).concat("\"");
 
+    String tableGroupByColumns = mv.getColumns().values().stream()
+        .filter(v -> mv.isGroupByColumn(v.getName()))
+        .map(v -> "\"" + mv.getColumnRef(v.getName()).getName() + "\"")
+        .collect(Collectors.joining(", "));
 
     String deleteSql = "TRUNCATE TABLE " + mvIdentifier;
 
-    String selectScript = String.format(mv.getSelectPartOfScript()
-        + " FROM " + tableTemplate() + " "
-        + mv.getGroupByPartOfScript(),
-        t.getGrain().getName(), t.getName());
+    String selectScript = String.format(mv.getSelectPartOfScript() + ", COUNT(*)"
+        + " FROM " + tableTemplate() + " GROUP BY %s",
+        t.getGrain().getName(), t.getName(), tableGroupByColumns);
     String insertSql = String.format("INSERT INTO %s (%s) "  + selectScript, mvIdentifier, mvColumns);
 
     try {
@@ -1027,6 +1031,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   }
 
 }
+
+
 
 /**
  * Класс, ответственный за генерацию определения столбца таблицы в разных СУБД.
