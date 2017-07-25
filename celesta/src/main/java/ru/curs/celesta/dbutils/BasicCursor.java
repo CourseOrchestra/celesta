@@ -71,6 +71,7 @@ public abstract class BasicCursor implements Closeable {
 	private final DBAdaptor db;
 	private final Connection conn;
 	private final CallContext context;
+	protected List<String> fields = Collections.emptyList();
 
 	private final PreparedStmtHolder set = new PreparedStmtHolder() {
 		@Override
@@ -267,6 +268,11 @@ public abstract class BasicCursor implements Closeable {
 			throw new CelestaException(e.getMessage());
 		}
 		db = DBAdaptor.getAdaptor();
+	}
+
+	public BasicCursor(CallContext context, List<String> fields) throws CelestaException {
+		this(context);
+		this.fields = fields;
 	}
 
 	PreparedStmtHolder getHereHolder() {

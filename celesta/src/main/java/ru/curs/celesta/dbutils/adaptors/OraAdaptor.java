@@ -330,9 +330,19 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getOneRecordStatement(Connection conn, TableElement t, String where) throws CelestaException {
+  public PreparedStatement getOneRecordStatement(
+      Connection conn, TableElement t, String where, String... fields
+      ) throws CelestaException {
+
+    final String filedList;
+
+    if (fields.length == 0)
+      filedList = getTableFieldsListExceptBLOBs((GrainElement) t);
+    else
+      filedList = Arrays.stream(fields).map(f -> "\"" + f + "\"").collect(Collectors.joining(", "));
+
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1",
-        getTableFieldsListExceptBLOBs((GrainElement) t), t.getGrain().getName(), t.getName(), where);
+        filedList, t.getGrain().getName(), t.getName(), where);
     return prepareStatement(conn, sql);
   }
 

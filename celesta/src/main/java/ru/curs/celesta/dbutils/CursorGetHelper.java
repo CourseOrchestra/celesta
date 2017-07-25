@@ -13,6 +13,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -34,7 +35,8 @@ class CursorGetHelper {
   private final DBAdaptor db;
   private final Connection conn;
   private final TableElement meta;
-  private String tableName;
+  private final String tableName;
+  private final List<String> fields;
 
   private final PreparedStmtHolder get = new PreparedStmtHolder() {
     @Override
@@ -45,11 +47,13 @@ class CursorGetHelper {
     }
   };
 
-  public CursorGetHelper(DBAdaptor db, Connection conn, TableElement meta, String tableName) {
+  public CursorGetHelper(DBAdaptor db, Connection conn, TableElement meta,
+                         String tableName, List<String> fields) {
     this.db = db;
     this.conn = conn;
     this.meta = meta;
     this.tableName = tableName;
+    this.fields = fields;
   }
 
 
@@ -59,7 +63,7 @@ class CursorGetHelper {
 
 
   final boolean internalGet(ParseResultFunction parseResultFunc, InitXRecFunction initXRecFunc,
-                              int recversion, Object... values) throws CelestaException {
+                            int recversion, Object... values) throws CelestaException {
     PreparedStatement g = prepareGet(recversion, values);
     boolean result = false;
     try {
@@ -80,11 +84,50 @@ class CursorGetHelper {
   }
 
 
-  final PreparedStatement prepareGet( int recversion, Object... values) throws CelestaException {
+  final PreparedStatement prepareGet(int recversion, Object... values) throws CelestaException {
     if (meta.getPrimaryKey().size() != values.length)
       throw new CelestaException("Invalid number of 'get' arguments for '%s': expected %d, provided %d.",
           tableName, meta.getPrimaryKey().size(), values.length);
     PreparedStatement result = get.getStatement(values, recversion);
     return result;
+  }
+
+
+  static class CursorGetHelperBuilder {
+    private DBAdaptor db;
+    private Connection conn;
+    private TableElement meta;
+    private String tableName;
+    private List<String> fields = Collections.emptyList();
+
+    CursorGetHelperBuilder withDb(DBAdaptor db) {
+      this.db = db;
+      return this;
+    }
+
+    CursorGetHelperBuilder withConn(Connection conn) {
+      this.conn = conn;
+      return this;
+    }
+
+    CursorGetHelperBuilder withMeta(TableElement meta) {
+      this.meta = meta;
+      return this;
+    }
+
+    CursorGetHelperBuilder withTableName(String tableName) {
+      this.tableName = tableName;
+      return this;
+    }
+
+    CursorGetHelperBuilder withFields(List<String> fields) {
+      if (!fields.isEmpty())
+        this.fields = fields;
+      return this;
+    }
+
+    CursorGetHelper build() {
+      return new CursorGetHelper(db, conn, meta, tableName, fields);
+    }
   }
 }

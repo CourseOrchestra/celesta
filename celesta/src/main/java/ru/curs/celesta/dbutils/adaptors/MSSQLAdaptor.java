@@ -346,9 +346,19 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getOneRecordStatement(Connection conn, TableElement t, String where) throws CelestaException {
-    String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S, getTableFieldsListExceptBLOBs((GrainElement) t),
-        t.getGrain().getName(), t.getName(), where);
+  public PreparedStatement getOneRecordStatement(
+      Connection conn, TableElement t, String where, String... fields
+  ) throws CelestaException {
+
+    final String filedList;
+
+    if (fields.length == 0)
+      filedList = getTableFieldsListExceptBLOBs((GrainElement) t);
+    else
+      filedList = Arrays.stream(fields).map(f -> "\"" + f + "\"").collect(Collectors.joining(", "));
+
+    String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S,
+        filedList, t.getGrain().getName(), t.getName(), where);
     return prepareStatement(conn, sql);
   }
 

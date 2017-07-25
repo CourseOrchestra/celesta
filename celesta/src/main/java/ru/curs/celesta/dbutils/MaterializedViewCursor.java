@@ -22,7 +22,27 @@ public abstract class MaterializedViewCursor extends BasicCursor {
 
   public MaterializedViewCursor(CallContext context) throws CelestaException {
     super(context);
-    getHelper = new CursorGetHelper(db(), conn(), meta(), _tableName());
+
+    CursorGetHelper.CursorGetHelperBuilder cghb = new CursorGetHelper.CursorGetHelperBuilder();
+    cghb.withDb(db())
+        .withConn(conn())
+        .withMeta(meta())
+        .withTableName(_tableName());
+
+    getHelper = cghb.build();
+  }
+
+  public MaterializedViewCursor(CallContext context, List<String> fields) throws CelestaException {
+    super(context, fields);
+
+    CursorGetHelper.CursorGetHelperBuilder cghb = new CursorGetHelper.CursorGetHelperBuilder();
+    cghb.withDb(db())
+        .withConn(conn())
+        .withMeta(meta())
+        .withTableName(_tableName())
+        .withFields(fields);
+
+    getHelper = cghb.build();
   }
 
   /**

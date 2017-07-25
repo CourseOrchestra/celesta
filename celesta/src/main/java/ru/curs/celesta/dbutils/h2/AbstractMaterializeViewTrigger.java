@@ -128,7 +128,7 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
         mvAllColumns + ", \"" + MaterializedView.SURROGATE_COUNT +"\"", selectStmtBuilder.toString());
 
     PreparedStatement stmt = conn.prepareStatement(insertSql);
-    System.out.println(insertSql);
+    //System.out.println(insertSql);
 
     try {
       for (int i = 0; i < groupByColumnValues.size(); ++i) {

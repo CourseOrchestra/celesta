@@ -19,6 +19,10 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
 		super(context);
 	}
 
+	public ReadOnlyTableCursor(CallContext context, List<String> fields) throws CelestaException {
+		super(context, fields);
+	}
+
 	@Override
 	public final Table meta() throws CelestaException {
 		if (meta == null)

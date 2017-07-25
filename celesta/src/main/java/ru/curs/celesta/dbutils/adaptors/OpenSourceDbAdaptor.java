@@ -9,6 +9,7 @@ import ru.curs.celesta.score.*;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Created by ioann on 02.05.2017.
@@ -85,9 +86,19 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getOneRecordStatement(Connection conn, TableElement t, String where) throws CelestaException {
+  public PreparedStatement getOneRecordStatement(
+      Connection conn, TableElement t, String where, String... fields
+  ) throws CelestaException {
+
+    final String filedList;
+
+    if (fields.length == 0)
+      filedList = getTableFieldsListExceptBLOBs((GrainElement) t);
+    else
+      filedList = Arrays.stream(fields).map(f -> "\"" + f + "\"").collect(Collectors.joining(", "));
+
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s limit 1;",
-        getTableFieldsListExceptBLOBs((GrainElement) t), t.getGrain().getName(), t.getName(), where);
+        filedList, t.getGrain().getName(), t.getName(), where);
     return prepareStatement(conn, sql);
   }
 
@@ -123,7 +134,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
     String sql = String.format("DROP INDEX " + tableTemplate(), g.getName(), dBIndexInfo.getIndexName());
     String sql2 = String.format("DROP INDEX IF EXISTS " + tableTemplate(), g.getName(),
         dBIndexInfo.getIndexName() + CONJUGATE_INDEX_POSTFIX);
-    String[] result = { sql, sql2 };
+    String[] result = {sql, sql2};
     return result;
   }
 
@@ -226,7 +237,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
-                                           String navigationWhereClause) throws CelestaException {
+                                                  String navigationWhereClause) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
     StringBuilder w = new StringBuilder(navigationWhereClause);
