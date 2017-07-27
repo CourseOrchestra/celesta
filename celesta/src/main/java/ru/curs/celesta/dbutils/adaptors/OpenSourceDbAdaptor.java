@@ -131,7 +131,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   @Override
   String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
-    String sql = String.format("DROP INDEX " + tableTemplate(), g.getName(), dBIndexInfo.getIndexName());
+    String sql = String.format("DROP INDEX IF EXISTS " + tableTemplate(), g.getName(), dBIndexInfo.getIndexName());
     String sql2 = String.format("DROP INDEX IF EXISTS " + tableTemplate(), g.getName(),
         dBIndexInfo.getIndexName() + CONJUGATE_INDEX_POSTFIX);
     String[] result = {sql, sql2};
