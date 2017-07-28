@@ -40,6 +40,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.*;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
@@ -71,7 +72,8 @@ public abstract class BasicCursor implements Closeable {
 	private final DBAdaptor db;
 	private final Connection conn;
 	private final CallContext context;
-	protected List<String> fields = Collections.emptyList();
+	protected Set<String> fields = Collections.emptySet();
+	protected Set<String> fieldsForStatement = Collections.emptySet();
 
 	private final PreparedStmtHolder set = new PreparedStmtHolder() {
 		@Override
@@ -80,7 +82,7 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm();
 			where.programParams(program);
 			return db.getRecordSetStatement(conn, meta(), where.getWhere(), getOrderBy(), offset,
-					rowCount);
+					rowCount, fieldsForStatement);
 		}
 	};
 
@@ -126,7 +128,7 @@ public abstract class BasicCursor implements Closeable {
 				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm('>');
 			where.programParams(program);
-			return db.getNavigationStatement(conn, meta(), getOrderBy(), where.getWhere());
+			return db.getNavigationStatement(conn, meta(), getOrderBy(), where.getWhere(), fieldsForStatement);
 		}
 
 	};
@@ -137,7 +139,7 @@ public abstract class BasicCursor implements Closeable {
 				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm('<');
 			where.programParams(program);
-			return db.getNavigationStatement(conn, meta(), getReversedOrderBy(), where.getWhere());
+			return db.getNavigationStatement(conn, meta(), getReversedOrderBy(), where.getWhere(), fieldsForStatement);
 		}
 
 	};
@@ -151,7 +153,7 @@ public abstract class BasicCursor implements Closeable {
 				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm();
 			where.programParams(program);
-			return db.getNavigationStatement(conn, meta(), getOrderBy(), where.getWhere());
+			return db.getNavigationStatement(conn, meta(), getOrderBy(), where.getWhere(), fieldsForStatement);
 		}
 
 	};
@@ -161,7 +163,7 @@ public abstract class BasicCursor implements Closeable {
 				throws CelestaException {
 			WhereTerm where = qmaker.getWhereTerm();
 			where.programParams(program);
-			return db.getNavigationStatement(conn, meta(), getReversedOrderBy(), where.getWhere());
+			return db.getNavigationStatement(conn, meta(), getReversedOrderBy(), where.getWhere(), fieldsForStatement);
 		}
 	};
 
@@ -270,9 +272,14 @@ public abstract class BasicCursor implements Closeable {
 		db = DBAdaptor.getAdaptor();
 	}
 
-	public BasicCursor(CallContext context, List<String> fields) throws CelestaException {
+	public BasicCursor(CallContext context, Set<String> fields) throws CelestaException {
 		this(context);
+		if (!meta().getColumns().keySet().containsAll(fields)) {
+			throw new CelestaException("Not all of specified columns are existed!!!");
+		}
 		this.fields = fields;
+		prepareOrderBy();
+		fillFieldsForStatement();
 	}
 
 	PreparedStmtHolder getHereHolder() {
@@ -284,7 +291,7 @@ public abstract class BasicCursor implements Closeable {
 					throws CelestaException {
 				WhereTerm where = qmaker.getWhereTerm('=');
 				where.programParams(program);
-				return db.getNavigationStatement(conn, meta(), "", where.getWhere());
+				return db.getNavigationStatement(conn, meta(), "", where.getWhere(), fieldsForStatement);
 			}
 
 		};
@@ -924,6 +931,16 @@ public abstract class BasicCursor implements Closeable {
 	 *             неверное имя поля или SQL-ошибка.
 	 */
 	public final void orderBy(String... names) throws CelestaException {
+		prepareOrderBy(names);
+
+		if (!fieldsForStatement.isEmpty()) {
+			fillFieldsForStatement();
+		}
+
+		closeSet();
+	}
+
+	private void prepareOrderBy(String... names) throws CelestaException {
 
 		ArrayList<String> l = new ArrayList<>(8);
 		ArrayList<Boolean> ol = new ArrayList<>(8);
@@ -957,7 +974,6 @@ public abstract class BasicCursor implements Closeable {
 			descOrders[i] = ol.get(i);
 			orderByIndices[i] = meta().getColumnIndex(WhereTermsMaker.unquot(orderByNames[i]));
 		}
-		closeSet();
 	}
 
 	abstract void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames)
@@ -974,6 +990,12 @@ public abstract class BasicCursor implements Closeable {
 		filters.clear();
 		inFilter = null;
 		complexFilter = null;
+
+		if (!fieldsForStatement.isEmpty()) {
+			prepareOrderBy();
+			fillFieldsForStatement();
+		}
+
 		orderByNames = null;
 		orderByIndices = null;
 		descOrders = null;
@@ -1120,6 +1142,19 @@ public abstract class BasicCursor implements Closeable {
 		return closed;
 	}
 
+	protected boolean inRec(String field) {
+		return fieldsForStatement.isEmpty() || fieldsForStatement.contains(field);
+	}
+
+	private void fillFieldsForStatement() throws CelestaException {
+		fieldsForStatement.clear();
+		fieldsForStatement = new HashSet<>(
+				Arrays.asList(orderByColumnNames()).stream()
+						.map(f -> f.replaceAll("\"",""))
+						.collect(Collectors.toSet())
+		);
+		fieldsForStatement.addAll(fields);
+	}
 	/**
 	 * Копировать значения полей из курсора того же типа.
 	 * 

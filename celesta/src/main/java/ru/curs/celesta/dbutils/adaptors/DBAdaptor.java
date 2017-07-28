@@ -45,6 +45,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -511,11 +512,14 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param orderBy  Порядок сортировки.
    * @param offset   Количество строк для пропуска
    * @param rowCount Количество строк для возврата (limit-фильтр).
+   * @param fields   Запрашиваемые столбцы. Если не пришло, то выбираются все.
    * @throws CelestaException Ошибка БД или некорректный фильтр.
    */
   // CHECKSTYLE:OFF 6 parameters
-  public final PreparedStatement getRecordSetStatement(Connection conn, GrainElement t, String whereClause,
-                                                       String orderBy, long offset, long rowCount) throws CelestaException {
+  public final PreparedStatement getRecordSetStatement(
+      Connection conn, GrainElement t, String whereClause,
+      String orderBy, long offset, long rowCount, Set<String> fields
+  ) throws CelestaException {
     // CHECKSTYLE:ON
     String sql;
 
@@ -523,9 +527,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       // Запрос не лимитированный -- одинаков для всех СУБД
       // Соединяем полученные компоненты в стандартный запрос
       // SELECT..FROM..WHERE..ORDER BY
-      sql = getSelectFromOrderBy(t, whereClause, orderBy);
+      sql = getSelectFromOrderBy(t, whereClause, orderBy, fields);
     } else {
-      sql = getLimitedSQL(t, whereClause, orderBy, offset, rowCount);
+      sql = getLimitedSQL(t, whereClause, orderBy, offset, rowCount, fields);
 
       // System.out.println(sql);
     }
@@ -582,8 +586,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     return sb.toString();
   }
 
-  final String getSelectFromOrderBy(GrainElement t, String whereClause, String orderBy) {
-    String sqlfrom = String.format("select %s from " + tableTemplate(), getTableFieldsListExceptBLOBs(t),
+  final String getSelectFromOrderBy(
+      GrainElement t, String whereClause, String orderBy, Set<String> fields
+  ) {
+    final String fieldList = getTableFieldsListExceptBlobs(t, fields);
+    String sqlfrom = String.format("select %s from " + tableTemplate(), fieldList,
         t.getGrain().getName(), t.getName());
 
     String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
@@ -621,12 +628,20 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     return sb.toString();
   }
 
-  static String getTableFieldsListExceptBLOBs(GrainElement t) {
-    List<String> flds = new LinkedList<>();
-    for (Map.Entry<String, ?> e : t.getColumns().entrySet()) {
-      ColumnMeta m = (ColumnMeta) e.getValue();
-      if (!BinaryColumn.CELESTA_TYPE.equals(m.getCelestaType()))
-        flds.add(e.getKey());
+  static String getTableFieldsListExceptBlobs(GrainElement t, Set<String> fields) {
+    final List<String> flds;
+
+    Predicate<ColumnMeta> notBinary = c -> !BinaryColumn.CELESTA_TYPE.equals(c.getCelestaType());
+
+    if (fields.isEmpty()) {
+      flds = t.getColumns().entrySet().stream()
+          .filter(e -> notBinary.test(e.getValue()))
+          .map(Map.Entry::getKey)
+          .collect(Collectors.toList());
+    } else {
+      flds = fields.stream()
+          .filter(f -> notBinary.test(t.getColumns().get(f)))
+          .collect(Collectors.toList());
     }
     // К перечню полей версионированных таблиц обязательно добавляем
     // recversion
@@ -694,10 +709,13 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param orderBy               Порядок сортировки (прямой или обратный).
    * @param navigationWhereClause Условие навигационного набора (от текущей записи).
    */
-  public abstract PreparedStatement getNavigationStatement(Connection conn, GrainElement meta, String orderBy,
-                                                           String navigationWhereClause) throws CelestaException;
+  public abstract PreparedStatement getNavigationStatement(
+      Connection conn, GrainElement meta, String orderBy, String navigationWhereClause, Set<String> fields
+  ) throws CelestaException;
 
-  abstract String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount);
+  abstract String getLimitedSQL(
+      GrainElement t, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
+  );
 
   abstract ColumnDefiner getColumnDefiner(Column c);
 
@@ -716,7 +734,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   abstract void dropAutoIncrement(Connection conn, TableElement t) throws SQLException;
 
   public abstract PreparedStatement getOneRecordStatement(Connection conn, TableElement t,
-                                                          String where, String... fields) throws CelestaException;
+                                                          String where, Set<String> fields) throws CelestaException;
 
   public abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException;
 

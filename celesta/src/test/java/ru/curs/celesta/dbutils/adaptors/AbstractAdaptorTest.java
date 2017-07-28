@@ -12,12 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.junit.After;
 import org.junit.Before;
@@ -194,7 +189,7 @@ public abstract class AbstractAdaptorTest {
     dba.createSysObjects(conn);
     insertRow(conn, t, 1);
     WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
-    PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere());
+    PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere(), Collections.emptySet());
 
     List<ParameterSetter> program = new ArrayList<>();
     w.programParams(program);
@@ -351,7 +346,7 @@ public abstract class AbstractAdaptorTest {
     WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
     List<ParameterSetter> program = new ArrayList<>();
 
-    PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere());
+    PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere(), Collections.emptySet());
 
     w.programParams(program);
     int i = 1;
@@ -1072,7 +1067,7 @@ public abstract class AbstractAdaptorTest {
   public void resetIdentityTest() throws IOException, CelestaException, SQLException {
     insertRow(conn, t, 110);
     WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
-    PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere());
+    PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere(), Collections.emptySet());
 
     assertNotNull(pstmt);
 
@@ -1119,7 +1114,9 @@ public abstract class AbstractAdaptorTest {
       String orderBy = t.getColumn("id").getQuotedName();
       int count = 0;
 
-      stmt = dba.getRecordSetStatement(conn, t, "", orderBy, 0, 0);
+      stmt = dba.getRecordSetStatement(
+          conn, t, "", orderBy, 0, 0, Collections.emptySet()
+      );
       rs = stmt.executeQuery();
       while (rs.next()) {
         ++count;
@@ -1127,7 +1124,9 @@ public abstract class AbstractAdaptorTest {
       assertEquals(2, count);
 
       count = 0;
-      stmt = dba.getRecordSetStatement(conn, t, "", orderBy, 1, 0);
+      stmt = dba.getRecordSetStatement(
+          conn, t, "", orderBy, 1, 0, Collections.emptySet()
+      );
       rs = stmt.executeQuery();
       while (rs.next()) {
         ++count;
@@ -1135,7 +1134,9 @@ public abstract class AbstractAdaptorTest {
       assertEquals(1, count);
 
       count = 0;
-      stmt = dba.getRecordSetStatement(conn, t, "", orderBy, 0, 1);
+      stmt = dba.getRecordSetStatement(
+          conn, t, "", orderBy, 0, 1, Collections.emptySet()
+      );
       rs = stmt.executeQuery();
       while (rs.next()) {
         ++count;
@@ -1209,7 +1210,9 @@ public abstract class AbstractAdaptorTest {
       dba.initDataForMaterializedView(conn, mv);
       assertEquals(2, getCount(conn, mv));
 
-      pstmt = dba.getRecordSetStatement(conn, mv, "", "\"var\"", 0, 0);
+      pstmt = dba.getRecordSetStatement(
+          conn, mv, "", "\"var\"", 0, 0, Collections.emptySet()
+      );
       ResultSet rs = pstmt.executeQuery();
 
       rs.next();

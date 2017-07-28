@@ -6,72 +6,124 @@ from fieldslimitation._fieldslimitation_orm import aCursor, avCursor, amvCursor
 class TestFieldsLimitation(CelestaUnit):
 
     def test_get_on_table(self):
+        self._clear_table()
+        id1 = self._insert("A", 5, 1)
+        id2 = self._insert("B", 2, 4)
         tableCursor = aCursor(self.context, ['numb', 'var'])
-        tableCursor.deleteAll()
-
-        tableCursor.numb = 5
-        tableCursor.var = "A"
-        tableCursor.insert()
-        id1 = tableCursor.id
-        tableCursor.clear()
-
-        tableCursor.numb = 2
-        tableCursor.var = "B"
-        tableCursor.insert()
-        id2 = tableCursor.id
-        tableCursor.clear()
 
         tableCursor.get(id1)
-        self.assertEqual(None, tableCursor.id)
-        self.assertEqual(5, tableCursor.numb)
-        self.assertEqual("A", tableCursor.var)
-        self.assertEqual(None, tableCursor.age)
-
-        tableCursor.tryGet(id1)
-        self.assertEqual(None, tableCursor.id)
+        self.assertEqual(id1, tableCursor.id)
         self.assertEqual(5, tableCursor.numb)
         self.assertEqual("A", tableCursor.var)
         self.assertEqual(None, tableCursor.age)
 
         tableCursor.get(id2)
-        self.assertEqual(None, tableCursor.id)
-        self.assertEqual(2, tableCursor.numb)
-        self.assertEqual("B", tableCursor.var)
-        self.assertEqual(None, tableCursor.age)
-
-        tableCursor.tryGet(id2)
-        self.assertEqual(None, tableCursor.id)
+        self.assertEqual(id2, tableCursor.id)
         self.assertEqual(2, tableCursor.numb)
         self.assertEqual("B", tableCursor.var)
         self.assertEqual(None, tableCursor.age)
 
     def test_get_on_materialized_view(self):
-        tableCursor = aCursor(self.context)
-        mvCursor = amvCursor(self.context, ['s'])
-        tableCursor.deleteAll()
+        self._clear_table()
+        self._insert("A", 5, 1)
+        self._insert("B", 2, 4)
 
-        tableCursor.numb = 5
-        tableCursor.var = "A"
-        tableCursor.insert()
-        tableCursor.clear()
-
-        tableCursor.numb = 2
-        tableCursor.var = "B"
-        tableCursor.insert()
-        tableCursor.clear()
+        mvCursor = amvCursor(self.context, ['numb'])
 
         mvCursor.get("A")
-        self.assertEqual(5, mvCursor.s)
-        self.assertEqual(None, mvCursor.var)
-
-        mvCursor.tryGet("A")
-        self.assertEqual(5, mvCursor.s)
-        self.assertEqual(None, mvCursor.var)
+        self.assertEqual(None, mvCursor.id)
+        self.assertEqual(5, mvCursor.numb)
+        self.assertEqual("A", mvCursor.var)
+        self.assertEqual(None, mvCursor.age)
 
         mvCursor.get("B")
-        self.assertEqual(2, mvCursor.s)
-        self.assertEqual(None, mvCursor.var)
+        self.assertEqual(None, mvCursor.id)
+        self.assertEqual(2, mvCursor.numb)
+        self.assertEqual("B", mvCursor.var)
+        self.assertEqual(None, mvCursor.age)
 
-        mvCursor.tryGet("B")
-        self.assertEqual(2, mvCursor.s)
-        self.assertEqual(None, mvCursor.var)
+    def test_set_on_table(self):
+        tableCursor = aCursor(self.context, ['numb', 'var'])
+        self._test_set(tableCursor)
+
+    def test_set_on_view(self):
+        viewCursor = avCursor(self.context, ['numb', 'var'])
+        self._test_set(viewCursor)
+
+    def test_set_on_materialized_view(self):
+        viewCursor = avCursor(self.context, ['numb', 'var'])
+        self._test_set(viewCursor)
+
+    def test_navigation_on_table(self):
+        tableCursor = aCursor(self.context, ['numb', 'var'])
+        self._test_navigation(tableCursor)
+
+    def test_navigation_on_view(self):
+        viewCursor = avCursor(self.context, ['numb', 'var'])
+        self._test_navigation(viewCursor)
+
+    def test_navigation_on_materialized_view(self):
+        viewCursor = avCursor(self.context, ['numb', 'var'])
+        self._test_navigation(viewCursor)
+
+    def _test_set(self, cursor):
+        self._clear_table()
+        self._insert("A", 5, 1)
+        self._insert("B", 2, 4)
+
+        cursor.orderBy("numb DESC")
+        cursor.findSet()
+        self.assertEqual(5, cursor.numb)
+        self.assertEqual("A", cursor.var)
+        self.assertEqual(None, cursor.age)
+
+        cursor.nextInSet()
+        self.assertEqual(2, cursor.numb)
+        self.assertEqual("B", cursor.var)
+        self.assertEqual(None, cursor.age)
+
+    def _test_navigation(self, cursor):
+        self._clear_table()
+        self._insert("A", 5, 1)
+        self._insert("B", 2, 4)
+
+        cursor.orderBy("numb DESC")
+        cursor.first()
+        self.assertEqual(5, cursor.numb)
+        self.assertEqual("A", cursor.var)
+        self.assertEqual(None, cursor.age)
+
+        cursor.next()
+        self.assertEqual(2, cursor.numb)
+        self.assertEqual("B", cursor.var)
+        self.assertEqual(None, cursor.age)
+
+        cursor.navigate("=")
+        self.assertEqual(2, cursor.numb)
+        self.assertEqual("B", cursor.var)
+        self.assertEqual(None, cursor.age)
+
+        cursor.previous()
+        self.assertEqual(5, cursor.numb)
+        self.assertEqual("A", cursor.var)
+        self.assertEqual(None, cursor.age)
+
+        cursor.last()
+        self.assertEqual(2, cursor.numb)
+        self.assertEqual("B", cursor.var)
+        self.assertEqual(None, cursor.age)
+
+    def _clear_table(self):
+        tableCursor = aCursor(self.context)
+        tableCursor.deleteAll()
+
+    def _insert(self, var, numb, age):
+        tableCursor = aCursor(self.context)
+
+        tableCursor.var = var
+        tableCursor.numb = numb
+        tableCursor.age = age
+        tableCursor.insert()
+        id = tableCursor.id
+        tableCursor.clear()
+        return id

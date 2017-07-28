@@ -4,18 +4,17 @@ class ttt1Cursor(ReadOnlyTableCursor):
         closed = 1
     def __init__(self, context, fields = []):
         if fields:
-            ReadOnlyTableCursor.__init__(self, context, fields)
+            ReadOnlyTableCursor.__init__(self, context, HashSet(fields))
         else:
             ReadOnlyTableCursor.__init__(self, context)
         self.id = None
         self.context = context
-        self.fields = fields
     def _grainName(self):
         return 'test1'
     def _tableName(self):
         return 'ttt1'
     def _parseResult(self, rs):
-        if not self.fields or 'id' in self.fields:
+        if self.inRec('id'):
             self.id = rs.getInt('id')
             if rs.wasNull():
                 self.id = None
@@ -51,23 +50,22 @@ class ttt2Cursor(Cursor):
         three = 'three'
     def __init__(self, context, fields = []):
         if fields:
-            Cursor.__init__(self, context, fields)
+            Cursor.__init__(self, context, HashSet(fields))
         else:
             Cursor.__init__(self, context)
         self.id = None
         self.descr = None
         self.context = context
-        self.fields = fields
     def _grainName(self):
         return 'test1'
     def _tableName(self):
         return 'ttt2'
     def _parseResult(self, rs):
-        if not self.fields or 'id' in self.fields:
+        if self.inRec('id'):
             self.id = rs.getInt('id')
             if rs.wasNull():
                 self.id = None
-        if not self.fields or 'descr' in self.fields:
+        if self.inRec('descr'):
             self.descr = rs.getString('descr')
             if rs.wasNull():
                 self.descr = None

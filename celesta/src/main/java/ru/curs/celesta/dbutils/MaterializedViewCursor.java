@@ -32,7 +32,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
     getHelper = cghb.build();
   }
 
-  public MaterializedViewCursor(CallContext context, List<String> fields) throws CelestaException {
+  public MaterializedViewCursor(CallContext context, Set<String> fields) throws CelestaException {
     super(context, fields);
 
     CursorGetHelper.CursorGetHelperBuilder cghb = new CursorGetHelper.CursorGetHelperBuilder();
@@ -40,7 +40,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
         .withConn(conn())
         .withMeta(meta())
         .withTableName(_tableName())
-        .withFields(fields);
+        .withFields(fieldsForStatement);
 
     getHelper = cghb.build();
   }

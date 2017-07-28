@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +19,10 @@ public abstract class ViewCursor extends BasicCursor {
 
 	public ViewCursor(CallContext context) throws CelestaException {
 		super(context);
+	}
+
+	public ViewCursor(CallContext context, Set<String> fields) throws CelestaException {
+		super(context, fields);
 	}
 
 	/**

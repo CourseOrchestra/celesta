@@ -141,7 +141,7 @@ public abstract class Cursor extends BasicCursor {
 		getHelper = cghb.build();
 	}
 
-	public Cursor(CallContext context, List<String> fields) throws CelestaException {
+	public Cursor(CallContext context, Set<String> fields) throws CelestaException {
 		super(context, fields);
 
 		CursorGetHelper.CursorGetHelperBuilder cghb = new CursorGetHelper.CursorGetHelperBuilder();
@@ -149,7 +149,7 @@ public abstract class Cursor extends BasicCursor {
 				.withConn(conn())
 				.withMeta(meta())
 				.withTableName(_tableName())
-				.withFields(fields);
+				.withFields(fieldsForStatement);
 
 		getHelper = cghb.build();
 	}
@@ -161,7 +161,7 @@ public abstract class Cursor extends BasicCursor {
 			protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
 				WhereTerm where = getQmaker().getHereWhereTerm(meta());
 				where.programParams(program);
-				return db().getNavigationStatement(conn(), meta(), "", where.getWhere());
+				return db().getNavigationStatement(conn(), meta(), "", where.getWhere(), fieldsForStatement);
 			}
 		};
 	}

@@ -347,15 +347,10 @@ final class MSSQLAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getOneRecordStatement(
-      Connection conn, TableElement t, String where, String... fields
+      Connection conn, TableElement t, String where, Set<String> fields
   ) throws CelestaException {
 
-    final String filedList;
-
-    if (fields.length == 0)
-      filedList = getTableFieldsListExceptBLOBs((GrainElement) t);
-    else
-      filedList = Arrays.stream(fields).map(f -> "\"" + f + "\"").collect(Collectors.joining(", "));
+    final String filedList = getTableFieldsListExceptBlobs((GrainElement) t, fields);
 
     String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S,
         filedList, t.getGrain().getName(), t.getName(), where);
@@ -842,16 +837,21 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount) {
+  String getLimitedSQL(
+      GrainElement t, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
+  ) {
     if (offset == 0 && rowCount == 0)
       throw new IllegalArgumentException();
     String sql;
     String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
     String rowFilter;
+
+    final String fieldList = getTableFieldsListExceptBlobs(t, fields);
+
     if (offset == 0) {
       // Запрос только с ограничением числа записей -- применяем MS SQL
       // Server TOP-конструкцию.
-      sql = String.format("select top %d %s from %s.%s", rowCount, getTableFieldsListExceptBLOBs(t),
+      sql = String.format("select top %d %s from %s.%s", rowCount, fieldList,
           t.getGrain().getName(), t.getName()) + sqlwhere + " order by " + orderBy;
       return sql;
       // Иначе -- запрос с пропуском начальных записей -- применяем
@@ -864,7 +864,7 @@ final class MSSQLAdaptor extends DBAdaptor {
     sql = String.format(
         "with a as " + "(select ROW_NUMBER() OVER (ORDER BY %s) as [limit_row_number], %s from %s.%s %s) "
             + " select * from a where [limit_row_number] %s",
-        orderBy, getTableFieldsListExceptBLOBs(t), t.getGrain().getName(), t.getName(), sqlwhere, rowFilter);
+        orderBy, fieldList, t.getGrain().getName(), t.getName(), sqlwhere, rowFilter);
     return sql;
   }
 
@@ -1035,16 +1035,18 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
-                                                  String navigationWhereClause) throws CelestaException {
+  public PreparedStatement getNavigationStatement(
+      Connection conn, GrainElement t, String orderBy, String navigationWhereClause, Set<String> fields
+  ) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
 
     StringBuilder w = new StringBuilder(navigationWhereClause);
+    final String fieldList = getTableFieldsListExceptBlobs(t, fields);
     boolean useWhere = w.length() > 0;
     if (orderBy.length() > 0)
       w.append(" order by " + orderBy);
-    String sql = String.format(SELECT_TOP_1 + tableTemplate() + "%s;", getTableFieldsListExceptBLOBs(t),
+    String sql = String.format(SELECT_TOP_1 + tableTemplate() + "%s;", fieldList,
         t.getGrain().getName(), t.getName(), useWhere ? " where " + w : w);
     // System.out.println(sql);
     return prepareStatement(conn, sql);

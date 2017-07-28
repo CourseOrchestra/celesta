@@ -8,11 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,7 +30,6 @@ public final class ORMCompiler {
   private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
   private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context, fields = []):";
   private static final String SELF_CONTEXT_CONTEXT = "        self.context = context";
-  private static final String SELF_FIELDS_FIELDS = "        self.fields = fields";
   private static final String RETURN_ARRAY_S_OBJECT = "        return array([%s], Object)";
   private static final String SELF_S_EQUALS_NONE = "        self.%s = None";
 
@@ -47,7 +43,7 @@ public final class ORMCompiler {
       "import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor",
       "import ru.curs.celesta.dbutils.MaterializedViewCursor as MaterializedViewCursor",
       "from java.lang import Object",
-      "from jarray import array", "from java.util import Calendar, GregorianCalendar",
+      "from jarray import array", "from java.util import Calendar, GregorianCalendar, HashSet",
       "from java.sql import Timestamp", "import datetime", "", "def _to_timestamp(d):",
       "    if isinstance(d, datetime.datetime):", "        calendar = GregorianCalendar()",
       "        calendar.set(d.year, d.month - 1, d.day, d.hour, d.minute, d.second)",
@@ -189,12 +185,14 @@ public final class ORMCompiler {
       if (e.getValue().getColumnType() == ViewColumnType.BLOB) {
         w.write(String.format(SELF_S_EQUALS_NONE, e.getKey()));
       } else {
-        w.write(String.format("        self.%s = rs.%s('%s')", e.getKey(), e.getValue().jdbcGetterName(),
-            e.getKey()));
+        w.write(String.format("        if self.inRec('%s'):", e.getKey()));
         w.newLine();
-        w.write(String.format("        if rs.wasNull():"));
+        w.write(String.format("            self.%s = rs.%s('%s')",
+            e.getKey(), e.getValue().jdbcGetterName(), e.getKey()));
         w.newLine();
-        w.write(String.format("    " + SELF_S_EQUALS_NONE, e.getKey()));
+        w.write(String.format("            if rs.wasNull():"));
+        w.newLine();
+        w.write(String.format("        " + SELF_S_EQUALS_NONE, e.getKey()));
       }
       w.newLine();
     }
@@ -519,7 +517,7 @@ public final class ORMCompiler {
       if (c instanceof BinaryColumn) {
         w.write(String.format(SELF_S_EQUALS_NONE, c.getName()));
       } else {
-        w.write(String.format("        if not self.fields or '%s' in self.fields:", c.getName()));
+        w.write(String.format("        if self.inRec('%s'):", c.getName()));
         w.newLine();
         w.write(String.format("            self.%s = rs.%s('%s')", c.getName(), c.jdbcGetterName(), c.getName()));
         w.newLine();
@@ -565,7 +563,7 @@ public final class ORMCompiler {
     w.newLine();
     w.write("        if fields:");
     w.newLine();
-    w.write("            Cursor.__init__(self, context, fields)");
+    w.write("            Cursor.__init__(self, context, HashSet(fields))");
     w.newLine();
     w.write("        else:");
     w.newLine();
@@ -577,8 +575,6 @@ public final class ORMCompiler {
     }
     w.write(SELF_CONTEXT_CONTEXT);
     w.newLine();
-    w.write(SELF_FIELDS_FIELDS);
-    w.newLine();
   }
 
   private static void compileROTableInit(BufferedWriter w, Collection<Column> columns) throws IOException {
@@ -586,7 +582,7 @@ public final class ORMCompiler {
     w.newLine();
     w.write("        if fields:");
     w.newLine();
-    w.write("            ReadOnlyTableCursor.__init__(self, context, fields)");
+    w.write("            ReadOnlyTableCursor.__init__(self, context, HashSet(fields))");
     w.newLine();
     w.write("        else:");
     w.newLine();
@@ -598,8 +594,6 @@ public final class ORMCompiler {
     }
     w.write(SELF_CONTEXT_CONTEXT);
     w.newLine();
-    w.write(SELF_FIELDS_FIELDS);
-    w.newLine();
   }
 
   private static void compileMaterializedViewInit(BufferedWriter w, Collection<Column> columns) throws IOException {
@@ -607,7 +601,7 @@ public final class ORMCompiler {
     w.newLine();
     w.write("        if fields:");
     w.newLine();
-    w.write("            MaterializedViewCursor.__init__(self, context, fields)");
+    w.write("            MaterializedViewCursor.__init__(self, context, HashSet(fields))");
     w.newLine();
     w.write("        else:");
     w.newLine();
@@ -619,14 +613,18 @@ public final class ORMCompiler {
     }
     w.write(SELF_CONTEXT_CONTEXT);
     w.newLine();
-    w.write(SELF_FIELDS_FIELDS);
-    w.newLine();
   }
 
   private static void compileViewInit(BufferedWriter w, Map<String, ViewColumnMeta> columns) throws IOException {
     w.write(DEF_INIT_SELF_CONTEXT);
     w.newLine();
-    w.write("        ViewCursor.__init__(self, context)");
+    w.write("        if fields:");
+    w.newLine();
+    w.write("            ViewCursor.__init__(self, context, HashSet(fields))");
+    w.newLine();
+    w.write("        else:");
+    w.newLine();
+    w.write("            ViewCursor.__init__(self, context)");
     w.newLine();
     for (String c : columns.keySet()) {
       w.write(String.format(SELF_S_EQUALS_NONE, c));

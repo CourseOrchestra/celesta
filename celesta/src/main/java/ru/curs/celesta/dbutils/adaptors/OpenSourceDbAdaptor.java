@@ -9,7 +9,6 @@ import ru.curs.celesta.score.*;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Created by ioann on 02.05.2017.
@@ -87,19 +86,16 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getOneRecordStatement(
-      Connection conn, TableElement t, String where, String... fields
+      Connection conn, TableElement t, String where, Set<String> fields
   ) throws CelestaException {
 
-    final String filedList;
-
-    if (fields.length == 0)
-      filedList = getTableFieldsListExceptBLOBs((GrainElement) t);
-    else
-      filedList = Arrays.stream(fields).map(f -> "\"" + f + "\"").collect(Collectors.joining(", "));
-
+    final String fieldList = getTableFieldsListExceptBlobs((GrainElement) t, fields);
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s limit 1;",
-        filedList, t.getGrain().getName(), t.getName(), where);
-    return prepareStatement(conn, sql);
+        fieldList, t.getGrain().getName(), t.getName(), where);
+
+    PreparedStatement result = prepareStatement(conn, sql);
+    //System.out.println(result.toString());
+    return result;
   }
 
   @Override
@@ -236,15 +232,17 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
-                                                  String navigationWhereClause) throws CelestaException {
+  public PreparedStatement getNavigationStatement(
+      Connection conn, GrainElement t, String orderBy, String navigationWhereClause, Set<String> fields
+  ) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
     StringBuilder w = new StringBuilder(navigationWhereClause);
+    final String fieldList = getTableFieldsListExceptBlobs(t, fields);
     boolean useWhere = w.length() > 0;
     if (orderBy.length() > 0)
       w.append(" order by " + orderBy);
-    String sql = String.format(SELECT_S_FROM + tableTemplate() + "%s  limit 1;", getTableFieldsListExceptBLOBs(t),
+    String sql = String.format(SELECT_S_FROM + tableTemplate() + "%s  limit 1;", fieldList,
         t.getGrain().getName(), t.getName(), useWhere ? " where " + w : w);
     // System.out.println(sql);
     return prepareStatement(conn, sql);

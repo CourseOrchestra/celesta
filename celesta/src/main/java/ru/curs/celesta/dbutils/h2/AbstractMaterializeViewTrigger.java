@@ -96,6 +96,7 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
 
     String deleteSql = String.format(deleteSqlBuilder.toString(), mvFullName, mvGroupByColumns);
 
+    //System.out.println(deleteSql);
     PreparedStatement stmt = conn.prepareStatement(deleteSql);
 
     try {

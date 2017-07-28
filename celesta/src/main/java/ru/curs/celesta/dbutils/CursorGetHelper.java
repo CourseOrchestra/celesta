@@ -13,8 +13,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -36,19 +38,19 @@ class CursorGetHelper {
   private final Connection conn;
   private final TableElement meta;
   private final String tableName;
-  private final List<String> fields;
+  private final Set<String> fields;
 
   private final PreparedStmtHolder get = new PreparedStmtHolder() {
     @Override
     protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
       WhereTerm where = WhereTermsMaker.getPKWhereTermForGet(meta);
       where.programParams(program);
-      return db.getOneRecordStatement(conn, meta, where.getWhere());
+      return db.getOneRecordStatement(conn, meta, where.getWhere(), fields);
     }
   };
 
   public CursorGetHelper(DBAdaptor db, Connection conn, TableElement meta,
-                         String tableName, List<String> fields) {
+                         String tableName, Set<String> fields) {
     this.db = db;
     this.conn = conn;
     this.meta = meta;
@@ -65,6 +67,7 @@ class CursorGetHelper {
   final boolean internalGet(ParseResultFunction parseResultFunc, InitXRecFunction initXRecFunc,
                             int recversion, Object... values) throws CelestaException {
     PreparedStatement g = prepareGet(recversion, values);
+    //System.out.println(g.toString());
     boolean result = false;
     try {
       ResultSet rs = g.executeQuery();
@@ -98,7 +101,7 @@ class CursorGetHelper {
     private Connection conn;
     private TableElement meta;
     private String tableName;
-    private List<String> fields = Collections.emptyList();
+    private Set<String> fields = Collections.emptySet();
 
     CursorGetHelperBuilder withDb(DBAdaptor db) {
       this.db = db;
@@ -120,7 +123,7 @@ class CursorGetHelper {
       return this;
     }
 
-    CursorGetHelperBuilder withFields(List<String> fields) {
+    CursorGetHelperBuilder withFields(Set<String> fields) {
       if (!fields.isEmpty())
         this.fields = fields;
       return this;

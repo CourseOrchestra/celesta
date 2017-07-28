@@ -331,18 +331,13 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getOneRecordStatement(
-      Connection conn, TableElement t, String where, String... fields
+      Connection conn, TableElement t, String where, Set<String> fields
       ) throws CelestaException {
 
-    final String filedList;
-
-    if (fields.length == 0)
-      filedList = getTableFieldsListExceptBLOBs((GrainElement) t);
-    else
-      filedList = Arrays.stream(fields).map(f -> "\"" + f + "\"").collect(Collectors.joining(", "));
+    final String fieldList = getTableFieldsListExceptBlobs((GrainElement) t, fields);
 
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1",
-        filedList, t.getGrain().getName(), t.getName(), where);
+        fieldList, t.getGrain().getName(), t.getName(), where);
     return prepareStatement(conn, sql);
   }
 
@@ -1082,25 +1077,27 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  String getLimitedSQL(GrainElement t, String whereClause, String orderBy, long offset, long rowCount) {
+  String getLimitedSQL(
+      GrainElement t, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
+  ) {
     if (offset == 0 && rowCount == 0)
       throw new IllegalArgumentException();
     String sql;
     if (offset == 0) {
       // No offset -- simpler query
       sql = String.format("with a as (%s) select a.* from a where rownum <= %d",
-          getSelectFromOrderBy(t, whereClause, orderBy), rowCount);
+          getSelectFromOrderBy(t, whereClause, orderBy, fields), rowCount);
     } else if (rowCount == 0) {
       // No rowCount -- simpler query
       sql = String.format(
           "with a as (%s) select * from (select a.*, ROWNUM rnum " + "from a) where rnum >= %d order by rnum",
-          getSelectFromOrderBy(t, whereClause, orderBy), offset + 1L);
+          getSelectFromOrderBy(t, whereClause, orderBy, fields), offset + 1L);
 
     } else {
       sql = String.format(
           "with a as (%s) select * from (select a.*, ROWNUM rnum "
               + "from a where rownum <= %d) where rnum >= %d order by rnum",
-          getSelectFromOrderBy(t, whereClause, orderBy), offset + rowCount, offset + 1L);
+          getSelectFromOrderBy(t, whereClause, orderBy, fields), offset + rowCount, offset + 1L);
     }
     return sql;
   }
@@ -1324,20 +1321,20 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getNavigationStatement(Connection conn, GrainElement t, String orderBy,
-                                                  String navigationWhereClause) throws CelestaException {
+  public PreparedStatement getNavigationStatement(
+      Connection conn, GrainElement t, String orderBy, String navigationWhereClause, Set<String> fields
+  ) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
 
     StringBuilder w = new StringBuilder(navigationWhereClause);
-
-    if (w.length() > 0)
-      w.append(" and ");
-    w.append("rownum = 1");
+    final String fieldList = getTableFieldsListExceptBlobs(t, fields);
 
     if (orderBy.length() > 0)
       w.append(" order by " + orderBy);
-    String sql = String.format(SELECT_S_FROM + tableTemplate() + "  %s", getTableFieldsListExceptBLOBs(t),
+    String sql = String.format(SELECT_S_FROM
+            + " (" + SELECT_S_FROM + " " + tableTemplate() + "  %s)"
+            + " where rownum = 1", fieldList, fieldList,
         t.getGrain().getName(), t.getName(), "where " + w);
     // System.out.println(sql);
     return prepareStatement(conn, sql);
@@ -1533,7 +1530,7 @@ final class OraAdaptor extends DBAdaptor {
                   + "begin \n" + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
                   + "\n %s \n %s \n END;",
               insertTriggerName, fullTableName, mv.getChecksum(), lockTable, insertSql);
-          System.out.println(sql);
+          //System.out.println(sql);
           stmt.execute(sql);
         } catch (SQLException e) {
           throw new CelestaException("Could not update insert-trigger on %s for materialized view %s: %s",
@@ -1546,7 +1543,7 @@ final class OraAdaptor extends DBAdaptor {
                   + "begin %s \n %s\n %s\n END;",
               updateTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString(), insertSql);
 
-          System.out.println(sql);
+          //System.out.println(sql);
           stmt.execute(sql);
         } catch (SQLException e) {
           throw new CelestaException("Could not update update-trigger on %s for materialized view %s: %s",
