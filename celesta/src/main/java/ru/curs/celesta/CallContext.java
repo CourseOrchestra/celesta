@@ -1,9 +1,12 @@
 package ru.curs.celesta;
 
 import java.sql.*;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.Map.Entry;
 
 import org.python.core.Py;
@@ -29,6 +32,9 @@ public final class CallContext {
 	public static final int MAX_CURSORS = 1023;
 
 	private static final String ERROR = "ERROR: %s";
+
+	private static final Map<Connection, Integer> PIDSCACHE = Collections
+			.synchronizedMap(new WeakHashMap<Connection, Integer>());
 
 	private final Connection conn;
 	private final Grain grain;
@@ -63,7 +69,7 @@ public final class CallContext {
 		this.procName = procName;
 		this.showcaseContext = showcaseContext;
 		DBAdaptor db = DBAdaptor.getAdaptor();
-		dbPid = db.getDBPid(conn);
+		dbPid = PIDSCACHE.computeIfAbsent(conn, db::getDBPid);
 	}
 
 	/**

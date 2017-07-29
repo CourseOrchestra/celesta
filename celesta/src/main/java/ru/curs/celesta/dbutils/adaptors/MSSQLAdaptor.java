@@ -285,22 +285,16 @@ final class MSSQLAdaptor extends DBAdaptor {
         + ColumnDefiner.DEFAULT;
   }
 
-  @Override
-  public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
-    String sql = String.format("select coalesce(object_id('%s.%s'), -1)", schema, name);
-    try {
-      Statement check = conn.createStatement();
-      ResultSet rs = check.executeQuery(sql);
-      try {
-        rs.next();
-        return rs.getInt(1) != -1;
-      } finally {
-        check.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
+	@Override
+	public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+		String sql = String.format("select coalesce(object_id('%s.%s'), -1)", schema, name);
+		try (Statement check = conn.createStatement()) {
+			ResultSet rs = check.executeQuery(sql);
+			return rs.next() && rs.getInt(1) != -1;
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
 
   @Override
   boolean userTablesExist(Connection conn) throws SQLException {
@@ -1052,24 +1046,17 @@ final class MSSQLAdaptor extends DBAdaptor {
     return prepareStatement(conn, sql);
   }
 
-  @Override
-  public int getDBPid(Connection conn) throws CelestaException {
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        ResultSet rs = stmt.executeQuery("SELECT @@SPID;");
-        if (rs.next()) {
-          return rs.getInt(1);
-        } else {
-          return 0;
-        }
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
+	@Override
+	public int getDBPid(Connection conn) {
+		try (Statement stmt = conn.createStatement()) {
+			ResultSet rs = stmt.executeQuery("SELECT @@SPID;");
+			if (rs.next())
+				return rs.getInt(1);
+		} catch (SQLException e) {
+			// do nothing
+		}
+		return 0;
+	}
 
   @Override
   public boolean nullsFirst() {
@@ -1178,9 +1165,7 @@ final class MSSQLAdaptor extends DBAdaptor {
           String.format(setStatementTemplate, "-"));
 
       String sql;
-      Statement stmt = null;
-      try {
-        stmt = conn.createStatement();
+      try (Statement stmt = conn.createStatement()){
         //INSERT
         try {
           sql = String.format("create trigger \"%s\".\"%s\" " +
@@ -1212,20 +1197,10 @@ final class MSSQLAdaptor extends DBAdaptor {
       } catch (SQLException e) {
         throw new CelestaException("Could not update triggers on %s for materialized view %s: %s",
             fullTableName, fullMvName, e);
-      } finally {
-        try {
-          if (stmt != null)
-            stmt.close();
-        } catch (SQLException e) {
-          //do nothing
-        }
       }
     }
 
-    Statement stmt = null;
-
-    try {
-      stmt = conn.createStatement();
+    try (Statement stmt = conn.createStatement()){
       StringBuilder sb = new StringBuilder();
 
       final String sqlPrefix = t.isVersioned() ? "alter" : "create";
@@ -1240,14 +1215,7 @@ final class MSSQLAdaptor extends DBAdaptor {
     } catch (SQLException e) {
       throw new CelestaException("Could not update update-trigger on %s for materialized views: %s",
           fullTableName, e);
-    } finally {
-      try {
-        if (stmt != null)
-          stmt.close();
-      } catch (SQLException e) {
-        //do nothing
-      }
-    }
+    } 
   }
 
   @Override

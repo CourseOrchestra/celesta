@@ -23,25 +23,18 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   protected static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 
-
-  @Override
-  public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
-    try {
-      PreparedStatement check = conn
-          .prepareStatement(String.format("SELECT table_name FROM information_schema.tables  WHERE "
-              + "table_schema = '%s' AND table_name = '%s'", schema, name));
-      ResultSet rs = check.executeQuery();
-      try {
-        return rs.next();
-      } finally {
-        rs.close();
-        check.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
-
+	@Override
+	public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+		try (PreparedStatement check = conn
+				.prepareStatement(String.format("SELECT table_name FROM information_schema.tables  WHERE "
+						+ "table_schema = '%s' AND table_name = '%s'", schema, name))) {
+			ResultSet rs = check.executeQuery();
+			return rs.next();
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+	
   @Override
   public void dropTrigger(Connection conn, TriggerQuery query) throws SQLException {
     Statement stmt = conn.createStatement();

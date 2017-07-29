@@ -120,6 +120,11 @@ public abstract class AbstractAdaptorTest {
   }
 
   @Test
+  public void pidIsReturned() throws Exception {
+	assertTrue(dba.getDBPid(conn) != 0);
+  }
+  
+  @Test
   public void createAndDropAndExists() throws Exception {
     boolean result = dba.tableExists(conn, t.getGrain().getName(), t.getName());
     assertTrue(result);

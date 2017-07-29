@@ -933,7 +933,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @param conn Соединение с БД.
    * @throws CelestaException Если подключение закрылось.
    */
-  public abstract int getDBPid(Connection conn) throws CelestaException;
+  public abstract int getDBPid(Connection conn);
 
   /**
    * Транслирует литерал даты Celesta в литерал даты, специфический для базы

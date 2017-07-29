@@ -229,15 +229,10 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   @Override
   public int getCurrentIdent(Connection conn, Table t) throws CelestaException {
     String sql = String.format("select last_value from \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        ResultSet rs = stmt.executeQuery(sql);
-        rs.next();
-        return rs.getInt(1);
-      } finally {
-        stmt.close();
-      }
+    try (Statement stmt = conn.createStatement()){
+      ResultSet rs = stmt.executeQuery(sql);
+      rs.next();
+      return rs.getInt(1);
     } catch (SQLException e) {
       throw new CelestaException(e.getMessage());
     }
@@ -290,8 +285,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   @Override
   public void manageAutoIncrement(Connection conn, TableElement t) throws SQLException {
     String sql;
-    Statement stmt = conn.createStatement();
-    try {
+    try (Statement stmt = conn.createStatement()) {
       // 1. Firstly, we have to clean up table from any auto-increment
       // defaults. Meanwhile we check if table has IDENTITY field, if it
       // doesn't, no need to proceed.
@@ -343,9 +337,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
           t.getGrain().getQuotedName(), t.getQuotedName(), idColumn.getQuotedName(), t.getGrain().getName(),
           t.getName());
       stmt.executeUpdate(sql);
-    } finally {
-      stmt.close();
-    }
+    } 
   }
 
 
@@ -738,9 +730,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
     // First of all, we are about to check if trigger exists
 
-    try {
-      Statement stmt = conn.createStatement();
-      try {
+    try (Statement stmt = conn.createStatement()){
         TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
             .withName("versioncheck")
             .withTableName(t.getName());
@@ -770,9 +760,6 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             }
           }
         }
-      } finally {
-        stmt.close();
-      }
     } catch (SQLException e) {
       throw new CelestaException("Could not update version check trigger on %s.%s: %s", t.getGrain().getName(),
           t.getName(), e.getMessage());
@@ -781,24 +768,17 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
 
-  @Override
-  public int getDBPid(Connection conn) throws CelestaException {
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        ResultSet rs = stmt.executeQuery("select pg_backend_pid();");
-        if (rs.next()) {
-          return rs.getInt(1);
-        } else {
-          return 0;
-        }
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
+	@Override
+	public int getDBPid(Connection conn) {
+		try (Statement stmt = conn.createStatement()) {
+			ResultSet rs = stmt.executeQuery("select pg_backend_pid();");
+			if (rs.next())
+				return rs.getInt(1);
+		} catch (SQLException e) {
+			// do nothing
+		}
+		return 0;
+	}
 
   @Override
   public void createTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
@@ -892,10 +872,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
           String.format(rowConditionTemplate, "OLD"), fullMvName, whereForDelete);
 
       String sql;
-      Statement stmt = null;
-      try {
-
-        stmt = conn.createStatement();
+      try (Statement stmt = conn.createStatement()){
         //INSERT
         try {
 
@@ -972,16 +949,9 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
               fullTableName, fullMvName, e);
         }
       } catch (SQLException e) {
-        throw new CelestaException("Could not update triggers on %s for materialized view %s: %s",
-            fullTableName, fullMvName, e);
-      } finally {
-        try {
-          if (stmt != null)
-            stmt.close();
-        } catch (SQLException e) {
-          //do nothing
-        }
-      }
+          throw new CelestaException("Could not update triggers on %s for materialized view %s: %s",
+                  fullTableName, fullMvName, e);
+      } 
     }
   }
 
@@ -1028,9 +998,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       String sqlTemplate = "DROP FUNCTION IF EXISTS %s";
 
       String sql;
-      Statement stmt = null;
-      try {
-        stmt = conn.createStatement();
+      try (Statement stmt = conn.createStatement()){
         //INSERT
         sql = String.format(sqlTemplate, insertTriggerFunctionFullName);
         stmt.execute(sql);
@@ -1043,14 +1011,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       } catch (SQLException e) {
         throw new CelestaException("Could not drop trigger functions on %s for materialized view %s: %s",
             fullTableName, fullMvName, e);
-      } finally {
-        try {
-          if (stmt != null)
-            stmt.close();
-        } catch (SQLException e) {
-          //do nothing
-        }
-      }
+      } 
     }
   }
 

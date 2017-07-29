@@ -273,29 +273,22 @@ final class OraAdaptor extends DBAdaptor {
     TRIGGER_EVENT_TYPE_DICT.put(TriggerType.POST_DELETE, "DELETE");
   }
 
-  @Override
-  public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
-    if (schema == null || schema.isEmpty() || name == null || name.isEmpty()) {
-      return false;
-    }
-    String sql = String.format("select count(*) from all_tables where owner = "
-        + "sys_context('userenv','session_user') and table_name = '%s_%s'", schema, name);
+	@Override
+	public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+		if (schema == null || schema.isEmpty() || name == null || name.isEmpty()) {
+			return false;
+		}
+		String sql = String.format("select count(*) from all_tables where owner = "
+				+ "sys_context('userenv','session_user') and table_name = '%s_%s'", schema, name);
 
-    try {
-      Statement checkForTable = conn.createStatement();
-      ResultSet rs = checkForTable.executeQuery(sql);
-      try {
-        if (rs.next()) {
-          return rs.getInt(1) > 0;
-        }
-        return false;
-      } finally {
-        checkForTable.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
+		try (Statement checkForTable = conn.createStatement()) {
+			ResultSet rs = checkForTable.executeQuery(sql);
+			return rs.next() && rs.getInt(1) > 0;
+		} catch (SQLException e) {
+			throw new CelestaException(e.getMessage());
+		}
+	}
+
 
   @Override
   boolean userTablesExist(Connection conn) throws SQLException {
@@ -428,27 +421,12 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public boolean isValidConnection(Connection conn, int timeout) throws CelestaException {
-    Statement stmt = null;
-    ResultSet rs = null;
-    try {
-      stmt = conn.createStatement();
-      rs = stmt.executeQuery("SELECT 1 FROM Dual");
-      if (rs.next()) {
-        return true;
-      }
-      return false;
+    try (Statement stmt = conn.createStatement()){
+      ResultSet rs = stmt.executeQuery("SELECT 1 FROM Dual");
+      return rs.next();
     } catch (SQLException e) {
       return false;
-    } finally {
-      try {
-        if (stmt != null)
-          stmt.close();
-        if (rs != null)
-          rs.close();
-      } catch (SQLException e) {
-        throw new CelestaException(e.getMessage());
-      }
-    }
+    } 
   }
 
   @Override
@@ -1373,24 +1351,19 @@ final class OraAdaptor extends DBAdaptor {
     }
   }
 
-  @Override
-  public int getDBPid(Connection conn) throws CelestaException {
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        ResultSet rs = stmt.executeQuery("select sys_context('userenv','sessionid') from dual");
-        if (rs.next()) {
-          return rs.getInt(1);
-        } else {
-          return 0;
-        }
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
+
+	@Override
+	public int getDBPid(Connection conn) {
+		try (Statement stmt = conn.createStatement()) {
+			ResultSet rs = stmt.executeQuery("select sys_context('userenv','sessionid') from dual");
+			if (rs.next())
+				return rs.getInt(1);
+		} catch (SQLException e) {
+			// do nothing
+		}
+		return 0;
+	}
+
 
   @Override
   public boolean nullsFirst() {
@@ -1518,11 +1491,7 @@ final class OraAdaptor extends DBAdaptor {
 
 
       String sql;
-      Statement stmt = null;
-
-      try {
-        stmt = conn.createStatement();
-
+      try (Statement stmt = conn.createStatement()){
         //INSERT
         try {
           sql = String.format("create or replace trigger \"%s\" after insert " +
@@ -1564,14 +1533,7 @@ final class OraAdaptor extends DBAdaptor {
       } catch (SQLException e) {
         throw new CelestaException("Could not update triggers on %s for materialized view %s: %s",
             fullTableName, fullMvName, e);
-      } finally {
-        try {
-          if (stmt != null)
-            stmt.close();
-        } catch (SQLException e) {
-          //do nothing
-        }
-      }
+      } 
     }
   }
 

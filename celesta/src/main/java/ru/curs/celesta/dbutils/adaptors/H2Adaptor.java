@@ -733,24 +733,18 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   }
 
-  @Override
-  public int getDBPid(Connection conn) throws CelestaException {
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        ResultSet rs = stmt.executeQuery("SELECT SESSION_ID()");
-        if (rs.next()) {
-          return rs.getInt(1);
-        } else {
-          return 0;
-        }
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
+	@Override
+	public int getDBPid(Connection conn) {
+		try (Statement stmt = conn.createStatement()) {
+			ResultSet rs = stmt.executeQuery("SELECT SESSION_ID()");
+			if (rs.next())
+				return rs.getInt(1);
+		} catch (SQLException e) {
+			//do nothing
+		}
+		return 0;
+	}
+
 
 
   @Override
@@ -780,10 +774,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
       String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
       String sql;
-      Statement stmt = null;
-      try {
-
-        stmt = conn.createStatement();
+      try (Statement stmt = conn.createStatement()){
         //INSERT
         try {
           sql = String.format(
@@ -829,14 +820,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         throw new CelestaException("Could not update triggers on" + tableTemplate()
             + " for materialized view " + tableTemplate() + ": %s",
             t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
-      } finally {
-        try {
-          if (stmt != null)
-            stmt.close();
-        } catch (SQLException e) {
-          //do nothing
-        }
-      }
+      } 
     }
   }
 
