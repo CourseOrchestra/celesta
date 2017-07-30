@@ -109,7 +109,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
     if (!canRead())
       throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 
-    return getHelper.internalGet((resSet) -> _parseResult(resSet), () -> initXRec(),
+    return getHelper.internalGet(this::_parseResult, this::initXRec,
         0, values);
   }
 
@@ -124,7 +124,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
   public final boolean tryGetCurrent() throws CelestaException {
     if (!canRead())
       throw new PermissionDeniedException(callContext(), meta(), Action.READ);
-    return getHelper.internalGet((resSet) -> _parseResult(resSet), () -> initXRec(),
+    return getHelper.internalGet(this::_parseResult, this::initXRec,
         0, _currentKeyValues());
   }
 

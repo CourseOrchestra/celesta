@@ -208,7 +208,11 @@ public abstract class Cursor extends BasicCursor {
 			throw new PermissionDeniedException(callContext(), meta(), Action.INSERT);
 
 		_preInsert();
-		PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
+		//TODO: одно из самых нуждающихся в переделке мест.
+		// на один insert--2 select-а, что вызывает справедливое возмущение тех, кто смотрит логи
+		// 1) Если у нас автоинкремент и автоинкрементное поле в None, то первый select не нужен
+		// 2) Хорошо бы результат инсерта выдавать в одной операции как resultset 
+ 		PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
 		try {
 			ResultSet rs = g.executeQuery();
 			try {
@@ -246,13 +250,8 @@ public abstract class Cursor extends BasicCursor {
 					}
 			}
 
-
-				getHelper.internalGet((resSet) -> _parseResult(resSet), () -> initXRec(),
+				getHelper.internalGet(this::_parseResult, this::initXRec,
 						recversion, _currentKeyValues());
-
-
-			// No need: internalGet does this!
-			// initXRec();
 			_postInsert();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -461,7 +460,7 @@ public abstract class Cursor extends BasicCursor {
 	public final boolean tryGet(Object... values) throws CelestaException {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
-		return getHelper.internalGet((resSet) -> _parseResult(resSet), () -> initXRec(),
+		return getHelper.internalGet(this::_parseResult, this::initXRec,
 				recversion, values);
 	}
 
@@ -475,7 +474,7 @@ public abstract class Cursor extends BasicCursor {
 	public final boolean tryGetCurrent() throws CelestaException {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
-		return getHelper.internalGet((resSet) -> _parseResult(resSet), () -> initXRec(),
+		return getHelper.internalGet(this::_parseResult, this::initXRec,
 				recversion, _currentKeyValues());
 	}
 

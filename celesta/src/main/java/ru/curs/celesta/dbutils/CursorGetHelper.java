@@ -6,18 +6,15 @@ import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
-import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.TableElement;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * Created by ioann on 06.07.2017.
@@ -68,22 +65,17 @@ class CursorGetHelper {
                             int recversion, Object... values) throws CelestaException {
     PreparedStatement g = prepareGet(recversion, values);
     //System.out.println(g.toString());
-    boolean result = false;
-    try {
-      ResultSet rs = g.executeQuery();
-      try {
-        result = rs.next();
-        if (result) {
+    try (ResultSet rs = g.executeQuery()){
+    	boolean result = rs.next();
+    	if (result) {
           parseResultFunc.apply(rs);
           initXRecFunc.apply();
         }
-      } finally {
-        rs.close();
-      }
+    	return result;	
     } catch (SQLException e) {
       throw new CelestaException(e.getMessage());
     }
-    return result;
+    
   }
 
 
