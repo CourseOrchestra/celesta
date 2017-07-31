@@ -193,12 +193,12 @@ public abstract class AbstractView extends GrainElement {
         .map(Map.Entry::getKey)
         .collect(Collectors.toSet());
 
-    if ((!aggregateAliases.isEmpty() && aggregateAliases.size() != columns.size())
-        || !groupByColumns.isEmpty()) {
+    if (!((aggregateAliases.isEmpty() || aggregateAliases.size() == columns.size())
+        && groupByColumns.isEmpty())) {
 
       //Бежим по колонкам, которые не агрегаты, и бросаем исключение,
       // если хотя бы одна из них не присутствует в groupByColumns
-      Optional hasErrorOpt = columns.entrySet().stream()
+      Optional<Map.Entry<String, Expr>>  hasErrorOpt = columns.entrySet().stream()
           .filter(e -> !(e.getValue() instanceof Aggregate) && !groupByColumns.containsKey(e.getKey()))
           .findFirst();
 

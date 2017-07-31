@@ -94,7 +94,7 @@ public class MaterializedView extends AbstractView implements TableElement {
   void finalizeParsing() throws ParseException {
 
     //Присутствие хотя бы одного агрегатного столбца - обязательное условие
-    Optional aggregate = columns.entrySet().stream()
+    Optional<Map.Entry<String, Expr>> aggregate = columns.entrySet().stream()
         .filter(e -> e.getValue() instanceof Aggregate)
         .findFirst();
 
@@ -115,36 +115,28 @@ public class MaterializedView extends AbstractView implements TableElement {
       String alias = entry.getKey();
       Expr expr = entry.getValue();
 
-      ViewColumnMeta vcm = expr.getMeta();
-
-      String type = vcm.getCelestaType();
-
-      final Column col;
-      Column colRef = null;
-
+      final Column colRef;
       final MatColFabricFunction matColFabricFunction;
 
-      if (expr instanceof Count)
+      if (expr instanceof Count) {
+    	colRef = null;
         matColFabricFunction = COL_CLASSES_AND_FABRIC_FUNCS.get(IntegerColumn.class);
-      else {
+      } else {
         colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
         matColFabricFunction = COL_CLASSES_AND_FABRIC_FUNCS.get(colRef.getClass());
       }
-
+      
       if (matColFabricFunction == null) {
         throw new ParseException(String.format(
             "Unsupported type '%s' of column '%s' in materialized view %s was found",
-            type, alias, getName()));
+            expr.getMeta().getCelestaType(), alias, getName()));
       } else {
-        col = matColFabricFunction.apply(this, colRef, alias);
+    	Column col = matColFabricFunction.apply(this, colRef, alias);
+        if (!(expr instanceof Aggregate)) {
+          pk.addElement(col);
+          col.setNullableAndDefault(false, null);
+        }
       }
-
-
-      if (!(expr instanceof Aggregate)) {
-        pk.addElement(col);
-        col.setNullableAndDefault(false, null);
-      }
-
     }
   }
 
@@ -325,10 +317,9 @@ public class MaterializedView extends AbstractView implements TableElement {
   }
 
   public String getChecksum() {
-    try {
-      ChecksumInputStream is = new ChecksumInputStream(
+    try (ChecksumInputStream is = new ChecksumInputStream(
           new ByteArrayInputStream(getCelestaSQL().getBytes(StandardCharsets.UTF_8))
-      );
+      )){
       while (is.read() != -1);
       return String.format("%08X", is.getCRC32());
     } catch (Exception e) {

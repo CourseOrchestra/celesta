@@ -41,7 +41,7 @@ public interface TableElement {
    * @throws ParseException
    *             Если столбец с таким именем не найден в таблице.
    */
-  <T extends ColumnMeta> T getColumn(String colName) throws ParseException;
+  Column getColumn(String colName) throws ParseException;
 
   void addColumn(Column column) throws ParseException;
 
