@@ -285,16 +285,16 @@ final class MSSQLAdaptor extends DBAdaptor {
         + ColumnDefiner.DEFAULT;
   }
 
-	@Override
-	public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
-		String sql = String.format("select coalesce(object_id('%s.%s'), -1)", schema, name);
-		try (Statement check = conn.createStatement()) {
-			ResultSet rs = check.executeQuery(sql);
-			return rs.next() && rs.getInt(1) != -1;
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-	}
+  @Override
+  public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+    String sql = String.format("select coalesce(object_id('%s.%s'), -1)", schema, name);
+    try (Statement check = conn.createStatement()) {
+      ResultSet rs = check.executeQuery(sql);
+      return rs.next() && rs.getInt(1) != -1;
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage());
+    }
+  }
 
   @Override
   boolean userTablesExist(Connection conn) throws SQLException {
@@ -1046,17 +1046,17 @@ final class MSSQLAdaptor extends DBAdaptor {
     return prepareStatement(conn, sql);
   }
 
-	@Override
-	public int getDBPid(Connection conn) {
-		try (Statement stmt = conn.createStatement()) {
-			ResultSet rs = stmt.executeQuery("SELECT @@SPID;");
-			if (rs.next())
-				return rs.getInt(1);
-		} catch (SQLException e) {
-			// do nothing
-		}
-		return 0;
-	}
+  @Override
+  public int getDBPid(Connection conn) {
+    try (Statement stmt = conn.createStatement()) {
+      ResultSet rs = stmt.executeQuery("SELECT @@SPID;");
+      if (rs.next())
+        return rs.getInt(1);
+    } catch (SQLException e) {
+      // do nothing
+    }
+    return 0;
+  }
 
   @Override
   public boolean nullsFirst() {
@@ -1107,7 +1107,15 @@ final class MSSQLAdaptor extends DBAdaptor {
 
       String rowConditionForExistsTemplate = mv.getColumns().keySet().stream()
           .filter(alias -> mv.isGroupByColumn(alias))
-          .map(alias -> "mv." + alias + " = %1$s." + mv.getColumnRef(alias).getName() + " ")
+          .map(alias -> {
+            Column colRef = mv.getColumnRef(alias);
+
+            if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+              return "mv." + alias + " = cast(floor(cast(%1$s." + mv.getColumnRef(alias).getName() + " as float)) as datetime)";
+            }
+
+            return "mv." + alias + " = %1$s." + mv.getColumnRef(alias).getName() + " ";
+          })
           .collect(Collectors.joining(" AND "));
 
       String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
@@ -1127,19 +1135,54 @@ final class MSSQLAdaptor extends DBAdaptor {
 
       String tableGroupByColumns = mv.getColumns().values().stream()
           .filter(v -> mv.isGroupByColumn(v.getName()))
-          .map(v -> "\"" + mv.getColumnRef(v.getName()).getName() + "\"")
-          .collect(Collectors.joining(", "));
+          .map(v -> {
+                if (DateTimeColumn.CELESTA_TYPE.equals(v.getCelestaType())) {
+                  return "cast(floor(cast(\"" + v.getName() + "\" as float)) as datetime)";
+                }
+                return "\"" + mv.getColumnRef(v.getName()).getName() + "\"";
+              }
+          ).collect(Collectors.joining(", "));
+
+
+      String selectPartOfScript = mv.getColumns().keySet().stream()
+          .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+          .map(alias -> {
+            Column colRef = mv.getColumnRef(alias);
+
+            Map<String, Expr> aggrCols = mv.getAggregateColumns();
+            if (aggrCols.containsKey(alias)) {
+              if (colRef == null) {
+                if (aggrCols.get(alias) instanceof Count) {
+                  return "COUNT(*) as \"" + alias + "\"";
+                }
+                return "";
+              } else if (aggrCols.get(alias) instanceof Sum) {
+                return "SUM(\"" + colRef.getName() + "\") as \"" + alias + "\"";
+              } else {
+                return "";
+              }
+            }
+
+            if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+              return "cast(floor(cast(\"" + colRef.getName() + "\" as float)) as datetime) " +
+                  "as \"" + alias + "\"";
+            }
+
+            return "\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
+          })
+          .filter(str -> !str.isEmpty())
+          .collect(Collectors.joining(", "))
+          .concat(", COUNT(*) AS " + MaterializedView.SURROGATE_COUNT);
 
       StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s WITH (HOLDLOCK) AS mv \n")
-          .append("USING (%s FROM inserted GROUP BY %s) AS aggregate ON %s \n")
+          .append("USING (SELECT %s FROM inserted GROUP BY %s) AS aggregate ON %s \n")
           .append("WHEN MATCHED THEN \n ")
           .append("UPDATE SET %s \n")
           .append("WHEN NOT MATCHED THEN \n")
           .append("INSERT (%s) VALUES (%s); \n");
 
       String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
-          mv.getSelectPartOfScript() + ", COUNT(*) AS " + MaterializedView.SURROGATE_COUNT
-          , tableGroupByColumns, String.format(rowConditionTemplate, "aggregate"),
+          selectPartOfScript, tableGroupByColumns, String.format(rowConditionTemplate, "aggregate"),
           String.format(setStatementTemplate, "+"), mvColumns, aggregateColumns);
 
       String deleteMatchedCondTemplate = mv.getAggregateColumns().keySet().stream()
@@ -1150,22 +1193,21 @@ final class MSSQLAdaptor extends DBAdaptor {
           + String.format(rowConditionForExistsTemplate, "t") + ")";
 
       StringBuilder deleteSqlBuilder = new StringBuilder("MERGE INTO %s WITH (HOLDLOCK) AS mv \n")
-          .append("USING (%s FROM deleted GROUP BY %s) AS aggregate ON %s \n")
+          .append("USING (SELECT %s FROM deleted GROUP BY %s) AS aggregate ON %s \n")
           .append("WHEN MATCHED AND %s THEN DELETE\n ")
           .append("WHEN MATCHED AND (%s) THEN \n")
           .append("UPDATE SET %s; \n");
 
       String deleteSql = String.format(deleteSqlBuilder.toString(), fullMvName,
-          mv.getSelectPartOfScript() + ", COUNT(*) AS " + MaterializedView.SURROGATE_COUNT, tableGroupByColumns,
-          String.format(rowConditionTemplate, "aggregate"), String.format(deleteMatchedCondTemplate, "=", "AND")
-              .concat(" AND NOT " + existsSql),
+          selectPartOfScript, tableGroupByColumns, String.format(rowConditionTemplate, "aggregate"),
+          String.format(deleteMatchedCondTemplate, "=", "AND").concat(" AND NOT " + existsSql),
           String.format(deleteMatchedCondTemplate, "<>", "OR")
               .concat(" OR (" + String.format(deleteMatchedCondTemplate, "=", "AND")
                   .concat(" AND " + existsSql + ")")),
           String.format(setStatementTemplate, "-"));
 
       String sql;
-      try (Statement stmt = conn.createStatement()){
+      try (Statement stmt = conn.createStatement()) {
         //INSERT
         try {
           sql = String.format("create trigger \"%s\".\"%s\" " +
@@ -1200,7 +1242,7 @@ final class MSSQLAdaptor extends DBAdaptor {
       }
     }
 
-    try (Statement stmt = conn.createStatement()){
+    try (Statement stmt = conn.createStatement()) {
       StringBuilder sb = new StringBuilder();
 
       final String sqlPrefix = t.isVersioned() ? "alter" : "create";
@@ -1215,7 +1257,7 @@ final class MSSQLAdaptor extends DBAdaptor {
     } catch (SQLException e) {
       throw new CelestaException("Could not update update-trigger on %s for materialized views: %s",
           fullTableName, e);
-    } 
+    }
   }
 
   @Override
@@ -1260,7 +1302,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 
   }
 
-  
+
   @Override
   String getSelectTriggerBodySql(TriggerQuery query) {
     String sql = String.format(" SELECT OBJECT_DEFINITION (id)\n" +

@@ -77,4 +77,12 @@ public class MaterializedViewParsingTest extends AbstractParsingTest {
     cp.grain(s, "test2");
   }
 
+  @Test(expected = ParseException.class)
+  public void testParsingFailsWithDateInAggregate() throws ParseException {
+    ChecksumInputStream input = new ChecksumInputStream(
+        ParserTest.class.getResourceAsStream("materializedView/testParsingFailsWithDateInAggregate.sql"));
+    CelestaParser cp = new CelestaParser(input);
+    cp.grain(s, "test");
+  }
+
 }

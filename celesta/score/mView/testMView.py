@@ -2,7 +2,11 @@
 
 
 from celestaunit.internal_celesta_unit import CelestaUnit
-from mView._mView_orm import table1Cursor, table2Cursor, mView1Cursor, mView2Cursor, mView3Cursor
+from java.sql import Timestamp
+from java.time import LocalDateTime, LocalDate, Month
+from java.time.temporal import ChronoUnit
+from mView._mView_orm import table1Cursor, table2Cursor, table3Cursor, \
+    mView1Cursor, mView2Cursor, mView3Cursor, mView4Cursor
 
 from java.lang import Thread, System, String, Exception as JavaException
 from java.time import LocalDateTime
@@ -92,6 +96,41 @@ class TestMaterializedView(CelestaUnit):
         mViewCursor.get("A")
         self.assertEqual(0, mViewCursor.s)
         mViewCursor.get("B")
+        self.assertEqual(5, mViewCursor.s)
+
+    def test_mat_view_date_rounding(self):
+        tableCursor = table3Cursor(self.context)
+        mViewCursor = mView4Cursor(self.context)
+
+        tableCursor.deleteAll()
+        self.assertEqual(0, mViewCursor.count())
+
+        datetime1 = LocalDateTime.of(2000, Month.AUGUST, 5, 10, 5, 32)
+        date1 = datetime1.truncatedTo(ChronoUnit.DAYS)
+
+        tableCursor.numb = 5
+        tableCursor.date = Timestamp.valueOf(datetime1)
+        tableCursor.insert()
+        tableCursor.clear()
+
+        datetime2 = LocalDateTime.of(2000, Month.AUGUST, 5, 22, 5, 32)
+        tableCursor.numb = 2
+        tableCursor.date = Timestamp.valueOf(datetime2)
+        tableCursor.insert()
+        tableCursor.clear()
+
+        datetime3 = LocalDateTime.of(2000, Month.AUGUST, 6, 10, 5, 32)
+        date2 = datetime3.truncatedTo(ChronoUnit.DAYS)
+        tableCursor.numb = 5
+        tableCursor.date = Timestamp.valueOf(datetime3)
+        tableCursor.insert()
+        tableCursor.clear()
+
+        self.assertEqual(2, mViewCursor.count())
+        mViewCursor.get(Timestamp.valueOf(date1))
+        self.assertEqual(7, mViewCursor.s)
+
+        mViewCursor.get(Timestamp.valueOf(date2))
         self.assertEqual(5, mViewCursor.s)
 
     def _test_mat_view_insert(self, tableCursor, mViewCursor):

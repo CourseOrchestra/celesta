@@ -3,9 +3,7 @@ package ru.curs.celesta.dbutils.h2;
 import org.h2.api.Trigger;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.MaterializedView;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -91,12 +89,27 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
     HashMap<String, Object> groupByColumnValues = getTableRowGroupByColumns(row);
 
     deleteSqlBuilder.append("(")
-        .append(groupByColumnValues.entrySet().stream().map(v -> "?").collect(Collectors.joining(",")))
+        .append(
+            groupByColumnValues.entrySet().stream()
+                .map(v -> {
+                  try {
+                    Column colRef = t.getColumn(v.getKey());
+
+                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+                      return "TRUNC(?)";
+
+                    return "?";
+                  } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                  }
+                })
+                .collect(Collectors.joining(","))
+        )
         .append(")");
 
     String deleteSql = String.format(deleteSqlBuilder.toString(), mvFullName, mvGroupByColumns);
 
-    //System.out.println(deleteSql);
+    System.out.println(deleteSql);
     PreparedStatement stmt = conn.prepareStatement(deleteSql);
 
     try {
@@ -116,38 +129,81 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
     HashMap<String, Object> groupByColumnValues = getTableRowGroupByColumns(row);
 
     String whereCondition = groupByColumnValues.keySet().stream()
-        .map(alias -> "\"" + alias + "\" = ?")
+        .map(alias -> {
+          try {
+            Column colRef = t.getColumn(alias);
+
+            if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+              return "TRUNC(\"" + alias + "\") = TRUNC(?)";
+
+            return "\"" + alias + "\" = ?";
+          } catch(ParseException e) {
+            throw new RuntimeException(e);
+          }
+        })
         .collect(Collectors.joining(" AND "));
 
+    String selectPartOfScript = mv.getColumns().keySet().stream()
+        .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+        .map(alias -> {
+          Column colRef = mv.getColumnRef(alias);
 
-    StringBuilder selectStmtBuilder = new StringBuilder(mv.getSelectPartOfScript() + ", COUNT(*)")
-        .append(" FROM ").append(tFullName).append(" ");
-    selectStmtBuilder.append(" WHERE ").append(whereCondition)
-        .append(mv.getGroupByPartOfScript());
+          Map<String, Expr> aggrCols = mv.getAggregateColumns();
+          if (aggrCols.containsKey(alias)) {
+            if (colRef == null) {
+              if (aggrCols.get(alias) instanceof Count) {
+                return "COUNT(*) as \"" + alias + "\"";
+              }
+              return "";
+            } else if (aggrCols.get(alias) instanceof Sum) {
+              return "SUM(\"" + colRef.getName() + "\") as \"" + alias + "\"";
+            } else {
+              return "";
+            }
+          }
 
-    String insertSql = String.format(insertSqlBuilder.toString(), mvFullName,
-        mvAllColumns + ", \"" + MaterializedView.SURROGATE_COUNT +"\"", selectStmtBuilder.toString());
+          if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+            return "TRUNC(\"" + colRef.getName() + "\") as \"" + alias + "\"";
+          }
 
-    PreparedStatement stmt = conn.prepareStatement(insertSql);
-    //System.out.println(insertSql);
+          return "\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
+        })
+        .filter(str -> !str.isEmpty())
+        .collect(Collectors.joining(", "))
+        .concat(", COUNT(*) AS " + MaterializedView.SURROGATE_COUNT);
 
-    try {
-      for (int i = 0; i < groupByColumnValues.size(); ++i) {
-        stmt.setObject(i + 1, groupByColumnValues.values().toArray()[i]);
-      }
+          StringBuilder selectStmtBuilder = new StringBuilder("SELECT ")
+              .append(selectPartOfScript)
+              .append(" FROM ").append(tFullName).append(" ");
+          selectStmtBuilder.append(" WHERE ").append(whereCondition)
+              .append(mv.getGroupByPartOfScript());
 
-      stmt.execute();
-    } finally {
-      stmt.close();
+          String insertSql = String.format(insertSqlBuilder.toString(), mvFullName,
+              mvAllColumns + ", \"" + MaterializedView.SURROGATE_COUNT + "\"", selectStmtBuilder.toString());
+
+          PreparedStatement stmt = conn.prepareStatement(insertSql);
+          System.out.println(insertSql);
+
+          try {
+            for (int i = 0; i < groupByColumnValues.size(); ++i) {
+              stmt.setObject(i + 1, groupByColumnValues.values().toArray()[i]);
+            }
+
+            System.out.println(stmt.toString());
+            stmt.execute();
+          } finally {
+            stmt.close();
+          }
+        }
+
+
+    @Override
+    public void close () throws SQLException {
     }
-  }
 
-
-  @Override
-  public void close() throws SQLException { }
-
-  @Override
-  public void remove() throws SQLException { }
+    @Override
+    public void remove () throws SQLException {
+    }
 
   abstract String getNamePrefix();
 

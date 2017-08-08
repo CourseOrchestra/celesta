@@ -229,7 +229,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   @Override
   public int getCurrentIdent(Connection conn, Table t) throws CelestaException {
     String sql = String.format("select last_value from \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
-    try (Statement stmt = conn.createStatement()){
+    try (Statement stmt = conn.createStatement()) {
       ResultSet rs = stmt.executeQuery(sql);
       rs.next();
       return rs.getInt(1);
@@ -337,7 +337,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
           t.getGrain().getQuotedName(), t.getQuotedName(), idColumn.getQuotedName(), t.getGrain().getName(),
           t.getName());
       stmt.executeUpdate(sql);
-    } 
+    }
   }
 
 
@@ -730,36 +730,36 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
     // First of all, we are about to check if trigger exists
 
-    try (Statement stmt = conn.createStatement()){
-        TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
-            .withName("versioncheck")
-            .withTableName(t.getName());
-        boolean triggerExists = triggerExists(conn, query);
+    try (Statement stmt = conn.createStatement()) {
+      TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
+          .withName("versioncheck")
+          .withTableName(t.getName());
+      boolean triggerExists = triggerExists(conn, query);
 
-        if (t instanceof VersionedElement) {
-          VersionedElement ve = (VersionedElement) t;
+      if (t instanceof VersionedElement) {
+        VersionedElement ve = (VersionedElement) t;
 
-          String sql;
-          if (ve.isVersioned()) {
-            if (triggerExists) {
-              return;
-            } else {
-              // CREATE TRIGGER
-              sql = String.format(
-                  "CREATE TRIGGER \"versioncheck\"" + " BEFORE UPDATE ON " + tableTemplate()
-                      + " FOR EACH ROW EXECUTE PROCEDURE celesta.recversion_check();",
-                  t.getGrain().getName(), t.getName());
-              stmt.executeUpdate(sql);
-            }
+        String sql;
+        if (ve.isVersioned()) {
+          if (triggerExists) {
+            return;
           } else {
-            if (triggerExists) {
-              // DROP TRIGGER
-              dropTrigger(conn, query);
-            } else {
-              return;
-            }
+            // CREATE TRIGGER
+            sql = String.format(
+                "CREATE TRIGGER \"versioncheck\"" + " BEFORE UPDATE ON " + tableTemplate()
+                    + " FOR EACH ROW EXECUTE PROCEDURE celesta.recversion_check();",
+                t.getGrain().getName(), t.getName());
+            stmt.executeUpdate(sql);
+          }
+        } else {
+          if (triggerExists) {
+            // DROP TRIGGER
+            dropTrigger(conn, query);
+          } else {
+            return;
           }
         }
+      }
     } catch (SQLException e) {
       throw new CelestaException("Could not update version check trigger on %s.%s: %s", t.getGrain().getName(),
           t.getName(), e.getMessage());
@@ -768,17 +768,17 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
 
-	@Override
-	public int getDBPid(Connection conn) {
-		try (Statement stmt = conn.createStatement()) {
-			ResultSet rs = stmt.executeQuery("select pg_backend_pid();");
-			if (rs.next())
-				return rs.getInt(1);
-		} catch (SQLException e) {
-			// do nothing
-		}
-		return 0;
-	}
+  @Override
+  public int getDBPid(Connection conn) {
+    try (Statement stmt = conn.createStatement()) {
+      ResultSet rs = stmt.executeQuery("select pg_backend_pid();");
+      if (rs.next())
+        return rs.getInt(1);
+    } catch (SQLException e) {
+      // do nothing
+    }
+    return 0;
+  }
 
   @Override
   public void createTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
@@ -838,8 +838,13 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
       String rowConditionTemplate = mv.getColumns().keySet().stream()
           .filter(alias -> mv.isGroupByColumn(alias))
-          .map(alias -> "\"" + alias + "\" = %1$s.\"" + mv.getColumnRef(alias).getName() + "\"")
-          .collect(Collectors.joining(" AND "));
+          .map(alias -> {
+                Column colRef = mv.getColumnRef(alias);
+                if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+                  return "\"" + alias + "\" = date_trunc('DAY', %1$s.\"" + colRef.getName() + "\")";
+                return "\"" + alias + "\" = %1$s.\"" + colRef.getName() + "\"";
+              }
+          ).collect(Collectors.joining(" AND "));
 
       String rowColumnsTemplate = mv.getColumns().keySet().stream()
           .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
@@ -849,7 +854,12 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             if (aggrCols.containsKey(alias) && aggrCols.get(alias) instanceof Count) {
               return "1";
             } else {
+              Column colRef = mv.getColumnRef(alias);
+
+              if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+                return "date_trunc('DAY', %1$s.\"" + mv.getColumnRef(alias) + "\")";
               return "%1$s.\"" + mv.getColumnRef(alias) + "\"";
+
             }
           })
           .collect(Collectors.joining(", "));
@@ -864,7 +874,9 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
               "IF updatedCount = 0 THEN \n" +
               " INSERT INTO %s (%s) VALUES(%s); \n" +
               "END IF;\n", fullMvName, String.format(setStatementTemplate, "+", "NEW"),
-          String.format(rowConditionTemplate, "NEW"), fullMvName, mvColumns + ", " + MaterializedView.SURROGATE_COUNT, String.format(rowColumnsTemplate, "NEW") + ", 1");
+          String.format(rowConditionTemplate, "NEW"), fullMvName,
+          mvColumns + ", " + MaterializedView.SURROGATE_COUNT,
+          String.format(rowColumnsTemplate, "NEW") + ", 1");
 
       String deleteSql = String.format("UPDATE %s SET %s \n" +
               "WHERE %s ;\n" +
@@ -872,7 +884,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
           String.format(rowConditionTemplate, "OLD"), fullMvName, whereForDelete);
 
       String sql;
-      try (Statement stmt = conn.createStatement()){
+      try (Statement stmt = conn.createStatement()) {
         //INSERT
         try {
 
@@ -949,9 +961,9 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
               fullTableName, fullMvName, e);
         }
       } catch (SQLException e) {
-          throw new CelestaException("Could not update triggers on %s for materialized view %s: %s",
-                  fullTableName, fullMvName, e);
-      } 
+        throw new CelestaException("Could not update triggers on %s for materialized view %s: %s",
+            fullTableName, fullMvName, e);
+      }
     }
   }
 
@@ -998,7 +1010,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       String sqlTemplate = "DROP FUNCTION IF EXISTS %s";
 
       String sql;
-      try (Statement stmt = conn.createStatement()){
+      try (Statement stmt = conn.createStatement()) {
         //INSERT
         sql = String.format(sqlTemplate, insertTriggerFunctionFullName);
         stmt.execute(sql);
@@ -1011,7 +1023,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       } catch (SQLException e) {
         throw new CelestaException("Could not drop trigger functions on %s for materialized view %s: %s",
             fullTableName, fullMvName, e);
-      } 
+      }
     }
   }
 

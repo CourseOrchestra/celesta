@@ -1405,6 +1405,11 @@ final class OraAdaptor extends DBAdaptor {
               }
               return "";
             }
+
+            if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+              return "TRUNC(%1$s.\"" + mv.getColumnRef(alias).getName() + "\", 'DD') as \"" + alias + "\"";
+            }
+
             return "%1$s.\"" + mv.getColumnRef(alias).getName() + "\" as \"" + alias + "\"";
           })
           .filter(str -> !str.isEmpty())
@@ -1423,7 +1428,15 @@ final class OraAdaptor extends DBAdaptor {
 
       String rowConditionTemplateForDelete = mv.getColumns().keySet().stream()
           .filter(alias -> mv.isGroupByColumn(alias))
-          .map(alias -> "mv.\"" + alias + "\" = %1$s.\"" + mv.getColumnRef(alias).getName() + "\"")
+          .map(alias -> {
+            Column colRef = mv.getColumnRef(alias);
+
+            if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+              return "mv.\"" + alias + "\" = TRUNC(%1$s.\"" + mv.getColumnRef(alias).getName() + "\", 'DD')";
+            }
+
+            return "mv.\"" + alias + "\" = %1$s.\"" + mv.getColumnRef(alias).getName() + "\"";
+          })
           .collect(Collectors.joining(" AND "));
 
       String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
