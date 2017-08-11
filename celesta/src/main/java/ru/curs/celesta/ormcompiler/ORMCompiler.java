@@ -127,17 +127,17 @@ public final class ORMCompiler {
       w.newLine();
     }
 
-    for (Table t : g.getTables().values())
+    for (Table t : g.getElements(Table.class).values())
       if (t.isReadOnly()) {
         compileROTable(t, w);
       } else {
         compileTable(t, w);
       }
 
-    for (View v : g.getViews().values())
+    for (View v : g.getElements(View.class).values())
       compileView(v, w);
 
-    for (MaterializedView v : g.getMaterializedViews().values())
+    for (MaterializedView v : g.getElements(MaterializedView.class).values())
       compileROTable(v, w);
   }
 

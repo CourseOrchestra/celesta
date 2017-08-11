@@ -42,9 +42,9 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
     try {
       Map<String, Grain> grains = Celesta.getInstance().getScore().getGrains();
       Grain g = grains.get(schemaName);
-      t = g.getTable(tableName);
+      t = g.getElement(tableName, Table.class);
 
-      mv = g.getMaterializedViews().values().stream()
+      mv = g.getElements(MaterializedView.class).values().stream()
           .filter(mv -> triggerName.equals(mv.getTriggerName(TRIGGER_TYPE_MAP.get(type))))
           .findFirst().get();
     } catch (Exception e) {

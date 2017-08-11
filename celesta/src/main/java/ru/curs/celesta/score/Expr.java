@@ -74,6 +74,11 @@ public abstract class Expr {
 		accept(fr);
 	}
 
+	final void resolveParameterRefs(List<Parameter> parameters) throws ParseException {
+		ParameterResolver r = new ParameterResolver(parameters);
+		accept(r);
+	}
+
 	/**
 	 * Проверяет типы всех входящих в выражение субвыражений.
 	 * 
@@ -727,5 +732,46 @@ final class FieldRef extends Expr {
 	@Override
 	public void accept(ExprVisitor visitor) throws ParseException {
 		visitor.visitFieldRef(this);
+	}
+
+}
+
+final class ParameterRef extends Expr {
+
+	private Parameter parameter;
+	private String name;
+	private ViewColumnMeta meta;
+
+	public ParameterRef(String name) {
+		this.name = name;
+	}
+
+	@Override
+	public ViewColumnMeta getMeta() {
+		if (meta == null) {
+			if (parameter != null) {
+				meta = new ViewColumnMeta(parameter.getType());
+			} else {
+				meta = new ViewColumnMeta(ViewColumnType.UNDEFINED);
+			}
+		}
+		return meta;
+	}
+
+	@Override
+	void accept(ExprVisitor visitor) throws ParseException {
+		visitor.visitParameterRef(this);
+	}
+
+	public Parameter getParameter() {
+		return parameter;
+	}
+
+	public void setParameter(Parameter parameter) {
+		this.parameter = parameter;
+	}
+
+	public String getName() {
+		return name;
 	}
 }

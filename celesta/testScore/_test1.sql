@@ -60,3 +60,4 @@ CREATE INDEX idx1 ON table1(aaa, column2);
 CREATE INDEX table2_idx2 ON table2(column3, column1);
 -- *** VIEWS ***
 -- *** MATERIALIZED VIEWS ***
+-- *** PARAMETERIZED VIEWS ***

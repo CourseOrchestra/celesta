@@ -23,7 +23,7 @@ public class Index extends GrainElement {
 		super(grain, name);
 		if (tableName == null || name == null)
 			throw new IllegalArgumentException();
-		table = grain.getTables().get(tableName);
+		table = grain.getElement(tableName, Table.class);
 		if (table == null)
 			throw new ParseException(
 					String.format("Error while creating index '%s': table '%s' not found.", name, tableName));

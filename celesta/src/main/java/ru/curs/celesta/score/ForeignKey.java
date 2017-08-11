@@ -171,7 +171,7 @@ public class ForeignKey {
 		}
 
 		// Извлечение таблицы по имени.
-		Table t = gm.getTables().get(table);
+		Table t = gm.getElement(table, Table.class);
 		if (t == null)
 			throw new ParseException(
 					String.format(

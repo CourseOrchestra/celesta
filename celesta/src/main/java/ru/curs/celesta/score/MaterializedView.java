@@ -80,7 +80,7 @@ public class MaterializedView extends AbstractView implements TableElement {
 
   public MaterializedView(Grain g, String name) throws ParseException {
     super(g, name);
-    g.addMaterializedView(this);
+    g.addElement(this);
     surrogateCount = new IntegerColumn(this, SURROGATE_COUNT);
     surrogateCount.setNullableAndDefault(false, "0");
   }
@@ -165,11 +165,6 @@ public class MaterializedView extends AbstractView implements TableElement {
     bw.write(";");
     bw.newLine();
     bw.newLine();
-  }
-
-  @Override
-  public void delete() throws ParseException {
-    getGrain().removeMaterializedView(this);
   }
 
   @Override

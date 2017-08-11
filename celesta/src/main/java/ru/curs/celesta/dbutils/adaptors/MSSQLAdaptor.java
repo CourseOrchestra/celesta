@@ -1068,7 +1068,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 
     String fullTableName = String.format(tableTemplate(), t.getGrain().getName(), t.getName());
 
-    List<MaterializedView> mvList = t.getGrain().getMaterializedViews().values().stream()
+    List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
         .filter(mv -> mv.getRefTable().getTable().equals(t))
         .collect(Collectors.toList());
 
@@ -1263,7 +1263,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   @Override
   public void dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
 
-    List<MaterializedView> mvList = t.getGrain().getMaterializedViews().values().stream()
+    List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
         .filter(mv -> mv.getRefTable().getTable().equals(t))
         .collect(Collectors.toList());
 

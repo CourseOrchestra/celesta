@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 /**
  * Created by ioann on 08.06.2017.
  */
-public abstract class AbstractView extends GrainElement {
+public abstract class AbstractView extends DataGrainElement {
 
   boolean distinct;
   final Map<String, Expr> columns = new LinkedHashMap<>();
@@ -21,7 +21,6 @@ public abstract class AbstractView extends GrainElement {
   }
 
   abstract String viewType();
-  abstract public void delete() throws ParseException;
 
   /**
    * Устанавливает условие where для SQL-запроса.

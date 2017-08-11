@@ -11,13 +11,14 @@ import org.junit.Test;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.Table;
 
 public class BasicDBAdaptorTest {
 
 	private void testCelestaScore(Score s, DBAdaptor a, String fileName)
 			throws ParseException, IOException {
-		String[] actual = (a.tableDef(s.getGrain("celesta").getTable("grains"))
-				+ "\n" + a.tableDef(s.getGrain("celesta").getTable("tables")))
+		String[] actual = (a.tableDef(s.getGrain("celesta").getElement("grains", Table.class))
+				+ "\n" + a.tableDef(s.getGrain("celesta").getElement("tables", Table.class)))
 				.split("\n");
 		// for (String l : actual)
 		// System.out.println(l);

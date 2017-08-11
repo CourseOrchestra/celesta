@@ -27,7 +27,8 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
 	public final Table meta() throws CelestaException {
 		if (meta == null)
 			try {
-				meta = Celesta.getInstance().getScore().getGrain(_grainName()).getTable(_tableName());
+				meta = Celesta.getInstance().getScore()
+						.getGrain(_grainName()).getElement(_tableName(), Table.class);
 			} catch (ParseException e) {
 				throw new CelestaException(e.getMessage());
 			}

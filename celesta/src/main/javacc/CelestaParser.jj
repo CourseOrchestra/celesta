@@ -60,6 +60,7 @@ TOKEN: /* SQL keywords */
 |   <K_FOREIGN:      "FOREIGN">
 |   <K_FROM:         "FROM">
 |   <K_FULL:         "FULL">
+|   <K_FUNCTION:     "FUNCTION">
 |   <K_GETDATE:      "GETDATE">
 |   <K_GROUP:        "GROUP">
 |   <K_IDENTITY:     "IDENTITY">
@@ -72,33 +73,33 @@ TOKEN: /* SQL keywords */
 |   <K_LEFT:         "LEFT">
 |   <K_LIKE:         "LIKE">
 |   <K_MATERIALIZED: "MATERIALIZED">
-|   <K_TABLE:        "TABLE">
-|   <K_VIEW:         "VIEW">
+|   <K_MAX:          "MAX">
+|   <K_MIN:          "MIN">
+|   <K_NO:           "NO">
 |   <K_NOT:          "NOT">
 |   <K_NULL:         "NULL">
-|   <K_TEXT:         "TEXT">
+|   <K_ON:           "ON">
+|   <K_OR:           "OR">
 |   <K_PRIMARY:      "PRIMARY">
 |   <K_REFERENCES:   "REFERENCES">
-|   <K_ON:           "ON">
-|   <K_UPDATE:       "UPDATE">
-|   <K_NO:           "NO">
-|   <K_SET:          "SET">
-|   <K_OR:           "OR">
-|   <K_SELECT:       "SELECT">
 |   <K_RIGHT:        "RIGHT">
-|   <K_WHERE:        "WHERE">
-|   <K_TRUE:         "TRUE">
+|   <K_SELECT:       "SELECT">
+|   <K_SET:          "SET">
 |   <K_SUM:          "SUM">
-|   <K_MIN:          "MIN">
-|   <K_MAX:          "MAX">
+|   <K_TABLE:        "TABLE">
+|   <K_TEXT:         "TEXT">
+|   <K_TRUE:         "TRUE">
+|   <K_UPDATE:       "UPDATE">
+|   <K_VIEW:         "VIEW">
+|   <K_WHERE:        "WHERE">
 }
 
 TOKEN: /* Datatypes */
 {
    <K_INT:       "INT">
 |  <K_REAL:      "REAL">
-|  <K_VARCHAR:  "VARCHAR">
-|  <K_BLOB:     "BLOB">
+|  <K_VARCHAR:   "VARCHAR">
+|  <K_BLOB:      "BLOB">
 |  <K_DATETIME:  "DATETIME">
 |  <K_BIT:       "BIT">
 }
@@ -118,6 +119,7 @@ TOKEN : /* Numeric literals */
 TOKEN:
 {
 	< S_IDENTIFIER: ( <LETTER> )+ ( <DIGIT> | <LETTER> )* >
+|   < S_PARAM: "$"<S_IDENTIFIER> >
 | 	< #LETTER: ["a"-"z", "A"-"Z", "_"] >
 |   < S_CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")*>
 |   < S_QUOTED_IDENTIFIER: "\"" (~["\n","\r","\""])* "\"" | ("`" (~["\n","\r","`"])* "`") >
@@ -156,7 +158,9 @@ Grain grain(Score s, String name):
                     createTable(g, doc == null? null: doc.toString()) 
                   | createIndex(g, doc == null? null: doc.toString())
 				  | createView(g, doc == null? null: doc.toString())
-				  | createMaterializedView(g, doc == null? null: doc.toString()))
+				  | createMaterializedView(g, doc == null? null: doc.toString())
+				  | createParameterizedView(g, doc == null? null: doc.toString())
+				  )
 				  {doc = null;} )
 	 | (<K_ALTER>   alterTable(g))) ";")*
    <EOF>
@@ -337,7 +341,7 @@ void alterTable(Grain g):{
 }
 {
 <K_TABLE> t = <S_IDENTIFIER> {
-  table = g.getTable(t.toString());
+  table = g.getElement(t.toString(), Table.class);
   }
 <K_ADD> name = constraint(g) fk = foreignKey(table) {fk.setConstraintName(name);}
 }
@@ -386,6 +390,47 @@ void createMaterializedView(Grain g, String doc):
     materializedSelect(view)
     {view.finalizeParsing();}
 }
+
+void createParameterizedView(Grain g, String doc):
+{
+    ParameterizedView v = null;
+    Token viewName = null;
+}
+{
+<K_FUNCTION> viewName = <S_IDENTIFIER>
+    {
+        v = new ParameterizedView(g, viewName.toString());
+        v.setCelestaDocLexem(doc);
+    }
+"(" parameterizedViewParam(v) ("," parameterizedViewParam(v))* ")"
+    <K_AS>
+    select(v)
+	{v.finalizeParsing();}
+}
+
+void parameterizedViewParam(ParameterizedView view):
+{
+    Token doc = null;
+    Token t;
+    Parameter p;
+    String name;
+}
+{
+   [doc = <CELESTA_DOC>]
+   t = <S_IDENTIFIER> {name = t.toString();}
+    (  (<K_INT>       {p = new Parameter(name, ViewColumnType.INT); t = null; } )
+    |  (<K_REAL>      {p = new Parameter(name, ViewColumnType.REAL); t = null;} )
+    |  (<K_VARCHAR>   {p = new Parameter(name, ViewColumnType.TEXT); t = null; } )
+    |  (<K_TEXT>      {p = new Parameter(name, ViewColumnType.TEXT); t = null;} )
+    |  (<K_DATETIME>  {p = new Parameter(name, ViewColumnType.DATE); t = null;})
+    |  (<K_BIT>       {p = new Parameter(name, ViewColumnType.BIT); t = null;})
+    )
+    {
+        p.setCelestaDocLexem(doc == null? null:doc.toString());
+        view.addParameter(p);
+    }
+}
+
 
 Expr sqlExpression():
 { Expr result;
@@ -483,6 +528,7 @@ Token t = null;}
     t = <S_INTEGER>          {result = new IntegerLiteral(t.toString());}
   | t = <S_DOUBLE>           {result = new RealLiteral(t.toString());}
   | t = <S_CHAR_LITERAL>     {result = new TextLiteral(t.toString());}
+  | t = <S_PARAM>            {result = new ParameterRef(t.toString().substring(1));}
   | t = <K_TRUE>             {result = new BooleanLiteral(true);}
   | t = <K_FALSE>            {result = new BooleanLiteral(false);}
   | <K_GETDATE> "(" ")"      {result = new GetDate();}
@@ -504,6 +550,17 @@ FieldRef fieldReference():
 }
 
 void select(AbstractView v):
+{
+Expr where;
+}
+{
+    <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
+    <K_FROM>  fromClause(v)
+    [<K_WHERE> where = sqlExpression() {v.setWhereCondition(where);} ]
+    [<K_GROUP> <K_BY>  groupBy(v)]
+}
+
+void parameterizedSelect(ParameterizedView v):
 {
 Expr where;
 }
@@ -605,9 +662,9 @@ TableRef tableReference(AbstractView v):
   {
      Table tab;
      if (grainName == null) {
-	    tab = v.getGrain().getTable(tableName);
+	    tab = v.getGrain().getElement(tableName, Table.class);
 	 } else {
-	    tab = v.getGrain().getScore().getGrain(grainName).getTable(tableName);
+	    tab = v.getGrain().getScore().getGrain(grainName).getElement(tableName, Table.class);
 	 }
 	 return new TableRef(tab, alias);
   }

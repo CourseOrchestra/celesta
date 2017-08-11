@@ -37,3 +37,4 @@ ALTER TABLE b ADD CONSTRAINT fk_test2_b_test2_a_b FOREIGN KEY (b, a) REFERENCES 
 -- *** INDICES ***
 -- *** VIEWS ***
 -- *** MATERIALIZED VIEWS ***
+-- *** PARAMETERIZED VIEWS ***

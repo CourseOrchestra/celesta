@@ -81,7 +81,7 @@ public class TestLyraForm {
 		InputStream input = TestLyraForm.class.getResourceAsStream("test.sql");
 		CelestaParser cp = new CelestaParser(input, "utf-8");
 		Grain g = cp.grain(s, "testlyra");
-		Table t = g.getTable("table1");
+		Table t = g.getElement("table1", Table.class);
 		BasicLyraForm blf = new BasicLyraForm(t) {
 
 			{

@@ -38,4 +38,12 @@ public class ViewParsingTest extends AbstractParsingTest {
     CelestaParser cp = new CelestaParser(input);
     cp.grain(s, "test");
   }
+
+  @Test(expected = ParseException.class)
+  public void testParsingFailsWhenParameterIsUsed() throws ParseException {
+    ChecksumInputStream input = new ChecksumInputStream(
+        ParserTest.class.getResourceAsStream("view/testParsingFailsWhenParameterIsUsed.sql"));
+    CelestaParser cp = new CelestaParser(input);
+    cp.grain(s, "test");
+  }
 }

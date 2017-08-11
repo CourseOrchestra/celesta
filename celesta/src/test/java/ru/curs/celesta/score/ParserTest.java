@@ -53,7 +53,7 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals("1.0", g.getVersion().toString());
     assertEquals("описание гранулы: * grain celestadoc", g.getCelestaDoc());
 
-    Map<String, Table> s = g.getTables();
+    Map<String, Table> s = g.getElements(Table.class);
     assertEquals(6, s.size());
 
     Iterator<Table> i = s.values().iterator();
@@ -193,23 +193,23 @@ public class ParserTest extends AbstractParsingTest {
     g.removeIndex(idx);
     assertEquals(0, idx.getTable().getIndices().size());
 
-    t = g.getTable("employees");
+    t = g.getElement("employees", Table.class);
     assertNull(t.getCelestaDoc());
     assertTrue(t.isVersioned());
     assertFalse(t.isReadOnly());
 
     // Проверка дополнительных возможностей
-    t = g.getTable("ttt1");
+    t = g.getElement("ttt1", Table.class);
     assertTrue(t.isReadOnly());
     assertFalse(t.isVersioned());
     assertTrue(t.isAutoUpdate());
 
-    t = g.getTable("ttt2");
+    t = g.getElement("ttt2", Table.class);
     assertTrue(t.isVersioned());
     assertFalse(t.isReadOnly());
     assertTrue(t.isAutoUpdate());
 
-    t = g.getTable("ttt3");
+    t = g.getElement("ttt3", Table.class);
     assertFalse(t.isVersioned());
     assertFalse(t.isReadOnly());
     assertFalse(t.isAutoUpdate());
@@ -223,10 +223,10 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals("test2", g.getName());
     assertEquals("2.5", g.getVersion().toString());
 
-    Table d = g.getTables().get("d");
+    Table d = g.getElement("d", Table.class);
     assertEquals(0, d.getForeignKeys().size());
 
-    Table a = g.getTables().get("a");
+    Table a = g.getElement("a", Table.class);
     assertEquals(2, a.getForeignKeys().size());
     Iterator<ForeignKey> i = a.getForeignKeys().iterator();
 
@@ -246,7 +246,7 @@ public class ParserTest extends AbstractParsingTest {
     assertSame(FKRule.NO_ACTION, fk.getDeleteRule());
     assertSame(FKRule.NO_ACTION, fk.getUpdateRule());
 
-    Table b = g.getTables().get("b");
+    Table b = g.getElement("b", Table.class);
     assertEquals(1, b.getForeignKeys().size());
     i = b.getForeignKeys().iterator();
     fk = i.next();
@@ -264,7 +264,7 @@ public class ParserTest extends AbstractParsingTest {
     InputStream input = ParserTest.class.getResourceAsStream("test3.sql");
     CelestaParser cp = new CelestaParser(input);
     Grain g = cp.grain(s, "bc");
-    Table t = g.getTable("structure_subordination");
+    Table t = g.getElement("structure_subordination", Table.class);
     assertEquals(2, t.getForeignKeys().size());
   }
 
@@ -274,9 +274,9 @@ public class ParserTest extends AbstractParsingTest {
         ParserTest.class.getResourceAsStream("test4.sql"));
     CelestaParser cp = new CelestaParser(input);
     Grain g = cp.grain(s, "skk");
-    Table t = g.getTable("app_division_add_info_el");
+    Table t = g.getElement("app_division_add_info_el", Table.class);
     assertEquals("pk_app_division_add_info_el", t.getPkConstraintName());
-    t = g.getTable("x_role_employees");
+    t = g.getElement("x_role_employees", Table.class);
     assertEquals(1, t.getForeignKeys().size());
     ForeignKey fk = t.getForeignKeys().iterator().next();
     assertEquals("fk_x_rolempyees_xroles", fk.getConstraintName());

@@ -136,7 +136,7 @@ public class GrainModelTest {
 		Grain g = new Grain(s, "grain2");
 		Table t = new Table(g, "aa");
 		t = new Table(g, "bb");
-		assertEquals(2, g.getTables().size());
+		assertEquals(2, g.getElements(Table.class).size());
 		boolean itWas = false;
 		try {
 			t = new Table(g, "aa");
@@ -144,11 +144,11 @@ public class GrainModelTest {
 			itWas = true;
 		}
 		assertTrue(itWas);
-		assertEquals(2, g.getTables().size());
+		assertEquals(2, g.getElements(Table.class).size());
 
-		t = g.getTables().get("aa");
+		t = g.getElements(Table.class).get("aa");
 		assertEquals("aa", t.getName());
-		t = g.getTables().get("bb");
+		t = g.getElements(Table.class).get("bb");
 		assertEquals("bb", t.getName());
 		// Корректное и некорректное добавление поля
 		Column c = new IntegerColumn(t, "col1");
@@ -205,7 +205,7 @@ public class GrainModelTest {
 		t.finalizePK(); // вызывать можно более одного раза, если PK определён
 
 		// вызывать нельзя ни разу, если PK не определён
-		t = g.getTables().get("aa");
+		t = g.getElements(Table.class).get("aa");
 		itWas = false;
 		try {
 			t.finalizePK();
@@ -242,7 +242,7 @@ public class GrainModelTest {
 		c = new StringColumn(t2, "scol5");
 		c.setLength("5");
 
-		assertEquals(2, g.getTables().size());
+		assertEquals(2, g.getElements(Table.class).size());
 		assertSame(g, t1.getGrain());
 		assertSame(g, t2.getGrain());
 

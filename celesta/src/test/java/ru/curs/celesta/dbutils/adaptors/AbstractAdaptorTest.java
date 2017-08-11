@@ -93,7 +93,7 @@ public abstract class AbstractAdaptorTest {
     conn.commit();
 
     Grain g = score.getGrain(GRAIN_NAME);
-    t = g.getTable("test");
+    t = g.getElement("test", Table.class);
     try {
       // Могла остаться от незавершившегося теста
       dba.dropTable(conn, t);
@@ -532,8 +532,8 @@ public abstract class AbstractAdaptorTest {
       throws CelestaException, ParseException, IOException, SQLException {
 
     Grain g = score.getGrain(GRAIN_NAME);
-    Table tableForMatView = g.getTable("tableForMatView");
-    MaterializedView mView1 = g.getMaterializedView("mView1");
+    Table tableForMatView = g.getElement("tableForMatView", Table.class);
+    MaterializedView mView1 = g.getElement("mView1", MaterializedView.class);
 
     try {
       // Могли остаться от незавершившегося теста
@@ -964,7 +964,7 @@ public abstract class AbstractAdaptorTest {
     assertFalse(dba.tableExists(conn, "gtest", "refTo"));
 
     Grain g = score.getGrain(GRAIN_NAME);
-    Table t2 = g.getTable("refTo");
+    Table t2 = g.getElement("refTo", Table.class);
     ForeignKey fk = t.getForeignKeys().iterator().next();
     assertEquals("fk_testNameVeryVeryLongLonName", fk.getConstraintName());
     try {
@@ -1021,7 +1021,7 @@ public abstract class AbstractAdaptorTest {
   @Test
   public void additionalCreateTableTest() throws ParseException, CelestaException {
     Grain g = score.getGrain(GRAIN_NAME);
-    Table t3 = g.getTable("aLongIdentityTableNaaame");
+    Table t3 = g.getElement("aLongIdentityTableNaaame", Table.class);
     try {
       dba.createTable(conn, t3);
       DBColumnInfo c = dba.getColumnInfo(conn, t3.getColumn("f1"));
@@ -1039,10 +1039,10 @@ public abstract class AbstractAdaptorTest {
   @Test
   public void viewTest() throws ParseException, CelestaException, SQLException {
     Grain g = score.getGrain(GRAIN_NAME);
-    Table t2 = g.getTable("refTo");
+    Table t2 = g.getElement("refTo", Table.class);
     try {
       ForeignKey fk = t.getForeignKeys().iterator().next();
-      View v = g.getView("testview");
+      View v = g.getElement("testview", View.class);
       assertEquals("testview", v.getName());
       dba.createTable(conn, t2);
       dba.createFK(conn, fk);
@@ -1163,8 +1163,8 @@ public abstract class AbstractAdaptorTest {
   @Test
   public void testInitDataForMaterializedView() throws Exception {
     Grain g = score.getGrain(GRAIN_NAME);
-    Table t = g.getTable("tableForInitMvData");
-    MaterializedView mv = g.getMaterializedView("mViewForInit");
+    Table t = g.getElement("tableForInitMvData", Table.class);
+    MaterializedView mv = g.getElement("mViewForInit", MaterializedView.class);
 
     PreparedStatement pstmt = null;
     try {

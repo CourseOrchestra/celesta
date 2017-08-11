@@ -39,8 +39,8 @@ public class MaterializedViewParsingTest extends AbstractParsingTest {
     CelestaParser cp = new CelestaParser(input);
     Grain g = cp.grain(s, "test");
 
-    assertEquals(3, g.getMaterializedViews().size());
-    MaterializedView mv = g.getMaterializedView("testView1");
+    assertEquals(3, g.getElements(MaterializedView.class).size());
+    MaterializedView mv = g.getElement("testView1", MaterializedView.class);
 
     Column c = mv.getColumn("sumv");
     assertEquals(IntegerColumn.CELESTA_TYPE, c.getCelestaType());

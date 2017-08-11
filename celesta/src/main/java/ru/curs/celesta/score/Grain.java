@@ -5,490 +5,418 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import ru.curs.celesta.CelestaException;
 
 /**
  * Гранула.
- * 
  */
 public final class Grain extends NamedElement {
 
-	/**
-	 * Счётчик вызовов метода parsingComplete для заполнения свойства
-	 * dependencyOrder.
-	 */
-	private static int orderCounter = 0;
+  /**
+   * Счётчик вызовов метода parsingComplete для заполнения свойства
+   * dependencyOrder.
+   */
+  private static int orderCounter = 0;
 
-	private final Score score;
+  private final Score score;
 
-	private VersionString version = VersionString.DEFAULT;
+  private VersionString version = VersionString.DEFAULT;
 
-	private int length;
+  private int length;
 
-	private int checksum;
+  private int checksum;
 
-	private int dependencyOrder;
+  private int dependencyOrder;
 
-	private boolean parsingComplete = false;
+  private boolean parsingComplete = false;
 
-	private boolean modified = true;
+  private boolean modified = true;
 
-	private File grainPath;
+  private File grainPath;
 
-	private final NamedElementHolder<Table> tables = new NamedElementHolder<Table>() {
-		@Override
-		protected String getErrorMsg(String name) {
-			return String.format(
-					"Table '%s' defined more than once in a grain.", name);
-		}
-	};
+  private final Map<Class<? extends DataGrainElement>, NamedElementHolder<? extends DataGrainElement>> grainElements = new HashMap<>();
 
-	private final NamedElementHolder<View> views = new NamedElementHolder<View>() {
-		@Override
-		protected String getErrorMsg(String name) {
-			return String.format(
-					"View '%s' defined more than once in a grain.", name);
-		}
-	};
+  private final NamedElementHolder<Index> indices = new NamedElementHolder<Index>() {
+    @Override
+    protected String getErrorMsg(String name) {
+      return String.format(
+          "Index '%s' defined more than once in a grain.", name);
+    }
+  };
 
-	private final NamedElementHolder<MaterializedView> materializedViews = new NamedElementHolder<MaterializedView>() {
-		@Override
-		protected String getErrorMsg(String name) {
-			return String.format(
-					"Materialized view '%s' defined more than once in a grain.", name);
-		}
-	};
+  private final Set<String> constraintNames = new HashSet<>();
 
-	private final NamedElementHolder<Index> indices = new NamedElementHolder<Index>() {
-		@Override
-		protected String getErrorMsg(String name) {
-			return String.format(
-					"Index '%s' defined more than once in a grain.", name);
-		}
-	};
+  public Grain(Score score, String name) throws ParseException {
+    super(name);
+    if (score == null)
+      throw new IllegalArgumentException();
+    if (name.indexOf("_") >= 0)
+      throw new ParseException("Invalid grain name '" + name
+          + "'. No underscores are allowed for grain names.");
+    this.score = score;
+    score.addGrain(this);
 
-	private final Set<String> constraintNames = new HashSet<>();
-
-	public Grain(Score score, String name) throws ParseException {
-		super(name);
-		if (score == null)
-			throw new IllegalArgumentException();
-		if (name.indexOf("_") >= 0)
-			throw new ParseException("Invalid grain name '" + name
-					+ "'. No underscores are allowed for grain names.");
-		this.score = score;
-		score.addGrain(this);
-
-		grainPath = new File(String.format("%s%s%s",
-				score.getDefaultGrainPath(), File.separator, name));
-	}
-
-	/**
-	 * Возвращает набор таблиц, определённый в грануле.
-	 */
-	public Map<String, Table> getTables() {
-		return tables.getElements();
-	}
+    grainPath = new File(String.format("%s%s%s",
+        score.getDefaultGrainPath(), File.separator, name));
+  }
 
 
-	/**
-	 * Возвращает таблицу по её имени, либо исключение с сообщением о том, что
-	 * таблица не найдена.
-	 * 
-	 * @param name
-	 *            Имя
-	 * @throws ParseException
-	 *             Если таблица с таким именем не найдена в грануле.
-	 */
-	public Table getTable(String name) throws ParseException {
-		Table result = tables.get(name);
-		if (result == null)
-			throw new ParseException(String.format(
-					"Table '%s' not found in grain '%s'", name, getName()));
-		return result;
-	}
+  /**
+   * Добавляет елемент в гранулу.
+   *
+   * @param element Новый элемент гранулы.
+   * @throws ParseException В случае, если елемент с таким именем уже существует.
+   */
+  <T extends DataGrainElement> void addElement(T element) throws ParseException {
+    if (element.getGrain() != this) {
+      throw new IllegalArgumentException();
+    }
 
-	/**
-	 * Возвращает набор индексов, определённых в грануле.
-	 */
-	public Map<String, Index> getIndices() {
-		return indices.getElements();
-	}
+    Optional<String> typeNameOfElementWithSameName = grainElements.entrySet().stream()
+        //Не рассматриваем тот же тип (у его холдера своя проверка)
+        .filter(entry -> !entry.getKey().equals(element.getClass()))
+        //Сводим все Map'ы в одну
+        .map(entry -> entry.getValue().getElements().entrySet())
+        .flatMap(entrySet -> entrySet.stream())
+        //Ищем совпадения по имени
+        .filter(entry -> entry.getKey().equals(element.getName()))
+        .findFirst()
+        .map(entry -> entry.getValue().getClass().getSimpleName());
 
-	@Override
-	public String toString() {
-		return tables.getElements().toString();
-	}
+    if (typeNameOfElementWithSameName.isPresent()) {
+      throw new ParseException(
+          String.format(
+              "Cannot create table '%s', a %s with the same name already exists in grain '%s'.",
+              element.getName(), typeNameOfElementWithSameName.get(), getName()));
+    }
 
-	/**
-	 * Добавляет таблицу.
-	 * 
-	 * @param table
-	 *            Новая таблица гранулы.
-	 * @throws ParseException
-	 *             В случае, если таблица с таким именем уже существует.
-	 */
-	void addTable(Table table) throws ParseException {
-		if (table.getGrain() != this)
-			throw new IllegalArgumentException();
-		if (views.get(table.getName()) != null)
-			throw new ParseException(
-					String.format(
-							"Cannot create table '%s', a view with the same name already exists in grain '%s'.",
-							table.getName(), getName()));
-		if (materializedViews.get(table.getName()) != null)
-			throw new ParseException(
-					String.format(
-							"Cannot create table '%s', a materialized view with the same name already exists in grain '%s'.",
-							table.getName(), getName()));
-		modify();
-		tables.addElement(table);
-	}
+    modify();
+    NamedElementHolder elementsHolder = grainElements.get(element.getClass());
 
-	/**
-	 * Добавляет индекс.
-	 * 
-	 * @param index
-	 *            Новый индекс гранулы.
-	 * @throws ParseException
-	 *             В случае, если индекс с таким именем уже существует.
-	 */
-	public void addIndex(Index index) throws ParseException {
-		if (index.getGrain() != this)
-			throw new IllegalArgumentException();
-		modify();
-		indices.addElement(index);
-	}
+    if (elementsHolder == null) {
+      elementsHolder = newHolder(element.getClass());
+    }
 
-	public void addMaterializedView(MaterializedView materializedView) throws ParseException {
-		if (materializedView.getGrain() != this) {
-			throw new IllegalArgumentException();
-		}
+    elementsHolder.addElement(element);
+  }
 
-		if (tables.get(materializedView.getName()) != null)
-			throw new ParseException(
-					String.format(
-							"Cannot create materialized view '%s', a table with the same name already exists in grain '%s'.",
-							materializedView.getName(), getName()));
-		if (views.get(materializedView.getName()) != null)
-			throw new ParseException(
-					String.format(
-							"Cannot create materialized view '%s', a view with the same name already exists in grain '%s'.",
-							materializedView.getName(), getName()));
-		modify();
-		materializedViews.addElement(materializedView);
-	}
+  private <T extends DataGrainElement> NamedElementHolder newHolder(Class<T> targetClass) {
 
-	synchronized void removeIndex(Index index) throws ParseException {
-		modify();
-		indices.remove(index);
-		index.getTable().removeIndex(index);
-	}
+    NamedElementHolder<T> result = new NamedElementHolder<T>() {
+      @Override
+      protected String getErrorMsg(String name) {
+        return String.format("%s '%s' defined more than once in a grain.", targetClass.getSimpleName(), name);
+      }
+    };
 
-	synchronized void removeView(View view) throws ParseException {
-		modify();
-		views.remove(view);
-	}
+    grainElements.put(targetClass, result);
+    return result;
+  }
 
-	synchronized void removeMaterializedView(MaterializedView materializedView) throws ParseException {
-		modify();
-		materializedViews.remove(materializedView);
-	}
+  /**
+   * Возвращает набор элементов указанного типа, определённый в грануле.
+   *
+   * @param classOfElement Класс элементов из набора
+   */
+  public <T extends DataGrainElement> Map<String, T> getElements(Class<T> classOfElement) {
+    NamedElementHolder holder = grainElements.get(classOfElement);
+    return holder != null ? holder.getElements() : Collections.emptyMap();
+  }
 
-	synchronized void removeTable(Table table) throws ParseException {
-		// Проверяем, не системную ли таблицу хотим удалить
-		modify();
+  /**
+   * Возвращает набор индексов, определённых в грануле.
+   */
+  public Map<String, Index> getIndices() {
+    return indices.getElements();
+  }
 
-		// Удаляются все индексы на данной таблице
-		List<Index> indToDelete = new LinkedList<>();
-		for (Index ind : indices)
-			if (ind.getTable() == table)
-				indToDelete.add(ind);
+  /**
+   * Возвращает элемент по его имени и классу, либо исключение с сообщением о том, что
+   * элемент не найдена.
+   *
+   * @param name           Имя
+   * @param classOfElement Класс элемента
+   * @throws ParseException Если элемент с таким именем и классом не найден в грануле.
+   */
+  public <T extends DataGrainElement> T getElement(String name, Class<T> classOfElement) throws ParseException {
+    NamedElementHolder<? extends DataGrainElement> a = null;
+    NamedElementHolder<? extends DataGrainElement> holder = grainElements.get(classOfElement);
+    T result = (T) holder.get(name);
 
-		// Удаляются все внешние ключи, ссылающиеся на данную таблицу
-		List<ForeignKey> fkToDelete = new LinkedList<>();
-		for (Grain g : score.getGrains().values())
-			for (Table t : g.getTables().values())
-				for (ForeignKey fk : t.getForeignKeys())
-					if (fk.getReferencedTable() == table)
-						fkToDelete.add(fk);
+    if (result == null)
+      throw new ParseException(String.format(
+          "Table '%s' not found in grain '%s'", name, getName()));
 
-		for (Index ind : indToDelete)
-			ind.delete();
-		for (ForeignKey fk : fkToDelete)
-			fk.delete();
-
-		// Удаляется сама таблица
-		tables.remove(table);
-	}
+    return result;
+  }
 
 
-	/**
-	 * Возвращает модель, к которой принадлежит гранула.
-	 */
-	public Score getScore() {
-		return score;
-	}
+  @Override
+  public String toString() {
+    NamedElementHolder holder = grainElements.get(Table.class);
+    Map elements = (holder != null ? holder.getElements() : Collections.emptyMap());
+    return elements.toString();
+  }
 
-	/**
-	 * Возвращает номер версии гранулы.
-	 */
-	public VersionString getVersion() {
-		return version;
-	}
 
-	/**
-	 * Возвращает длину файла-скрипта, на основе которого создана гранула.
-	 */
-	public int getLength() {
-		return length;
-	}
+  /**
+   * Добавляет индекс.
+   *
+   * @param index Новый индекс гранулы.
+   * @throws ParseException В случае, если индекс с таким именем уже существует.
+   */
+  public void addIndex(Index index) throws ParseException {
+    if (index.getGrain() != this)
+      throw new IllegalArgumentException();
+    modify();
+    indices.addElement(index);
+  }
 
-	void setLength(int length) {
-		this.length = length;
-	}
 
-	/**
-	 * Возвращает контрольную сумму файла-скрипта, на основе которого создана
-	 * гранула. Совпадение версии, длины и контрольной суммы считается
-	 * достаточным условием для того, чтобы не заниматься чтением и обновлением
-	 * структуры базы данных.
-	 */
-	public int getChecksum() {
-		return checksum;
-	}
+  synchronized void removeIndex(Index index) throws ParseException {
+    modify();
+    indices.remove(index);
+    index.getTable().removeIndex(index);
+  }
 
-	void setChecksum(int checksum) {
-		this.checksum = checksum;
-	}
+  synchronized <T extends DataGrainElement> void removeElement(T element) throws ParseException {
+    if (element instanceof Table) {
+      removeTable((Table) element);
+    } else {
+      modify();
+      NamedElementHolder holder = grainElements.get(element.getClass());
 
-	/**
-	 * Устанавливает версию гранулы.
-	 * 
-	 * @param version
-	 *            Quoted-string. В процессе установки обрамляющие и двойные
-	 *            кавычки удаляются.
-	 * @throws ParseException
-	 *             в случае, если имеется неверный формат quoted string.
-	 */
-	public void setVersion(String version) throws ParseException {
-		modify();
-		this.version = new VersionString(StringColumn.unquoteString(version));
-	}
+      if (holder != null) {
+        holder.remove(element);
+      }
+    }
+  }
 
-	/**
-	 * Добавление имени ограничения (для проверерки, что оно уникальное).
-	 * 
-	 * @param name
-	 *            Имя ограничения.
-	 * @throws ParseException
-	 *             В случае, если ограничение с таким именем уже определено.
-	 */
-	void addConstraintName(String name) throws ParseException {
-		if (constraintNames.contains(name))
-			throw new ParseException(String.format(
-					"Constraint '%s' is defined more than once in a grain.",
-					name));
-		constraintNames.add(name);
-	}
+  private synchronized void removeTable(Table table) throws ParseException {
+    // Проверяем, не системную ли таблицу хотим удалить
+    modify();
 
-	/**
-	 * Указывает на то, что разбор гранулы из файла завершён.
-	 */
-	public boolean isParsingComplete() {
-		return parsingComplete;
-	}
+    // Удаляются все индексы на данной таблице
+    List<Index> indToDelete = new LinkedList<>();
+    for (Index ind : indices)
+      if (ind.getTable() == table)
+        indToDelete.add(ind);
 
-	/**
-	 * Если одна гранула имеет номер больший, чем другая, то значит, что она
-	 * может зависеть от первой.
-	 */
-	public int getDependencyOrder() {
-		return dependencyOrder;
-	}
+    // Удаляются все внешние ключи, ссылающиеся на данную таблицу
+    List<ForeignKey> fkToDelete = new LinkedList<>();
+    for (Grain g : score.getGrains().values())
+      for (Table t : g.getElements(Table.class).values())
+        for (ForeignKey fk : t.getForeignKeys())
+          if (fk.getReferencedTable() == table)
+            fkToDelete.add(fk);
 
-	/**
-	 * Указывает на то, что разбор гранулы завершен. Системный метод.
-	 */
-	public void completeParsing() {
-		parsingComplete = true;
-		modified = false;
-		orderCounter++;
-		dependencyOrder = orderCounter;
-	}
+    for (Index ind : indToDelete)
+      ind.delete();
+    for (ForeignKey fk : fkToDelete)
+      fk.delete();
 
-	/**
-	 * Возвращает путь к грануле.
-	 */
-	public File getGrainPath() {
-		return grainPath;
-	}
+    // Удаляется сама таблица
+    grainElements.get(Table.class).remove(table);
+  }
 
-	void setGrainPath(File grainPath) {
-		if (!grainPath.isDirectory())
-			throw new IllegalArgumentException();
-		this.grainPath = grainPath;
-	}
 
-	/**
-	 * Возвращает признак модификации гранулы (true, если составляющие части
-	 * гранулы были модифицированы в runtime).
-	 */
-	public boolean isModified() {
-		return modified;
-	}
+  /**
+   * Возвращает модель, к которой принадлежит гранула.
+   */
+  public Score getScore() {
+    return score;
+  }
 
-	void modify() throws ParseException {
-		if ("celesta".equals(getName()) && parsingComplete)
-			throw new ParseException("You cannot modify system grain.");
-		modified = true;
-	}
+  /**
+   * Возвращает номер версии гранулы.
+   */
+  public VersionString getVersion() {
+    return version;
+  }
 
-	/**
-	 * Сохраняет гранулу обратно в файл, расположенный в grainPath.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка ввода-вывода
-	 */
-	void save() throws CelestaException {
-		// Сохранять неизменённую гранулу нет смысла.
-		if (!modified)
-			return;
-		if (!grainPath.exists())
-			grainPath.mkdirs();
-		File scriptFile = new File(String.format("%s%s_%s.sql",
-				grainPath.getPath(), File.separator, getName()));
-		try {
-			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(scriptFile), "utf-8"));
-			try {
-				writeCelestaDoc(this, bw);
-				bw.write("CREATE GRAIN ");
-				bw.write(getName());
-				bw.write(" VERSION '");
-				bw.write(getVersion().toString());
-				bw.write("';");
-				bw.newLine();
-				bw.newLine();
-				bw.write("-- *** TABLES ***");
-				bw.newLine();
-				for (Table t : getTables().values())
-					t.save(bw);
+  /**
+   * Возвращает длину файла-скрипта, на основе которого создана гранула.
+   */
+  public int getLength() {
+    return length;
+  }
 
-				bw.write("-- *** FOREIGN KEYS ***");
-				bw.newLine();
-				int j = 1;
-				for (Table t : getTables().values())
-					for (ForeignKey fk : t.getForeignKeys())
-						fk.save(bw, j++);
+  void setLength(int length) {
+    this.length = length;
+  }
 
-				bw.write("-- *** INDICES ***");
-				bw.newLine();
-				for (Index i : getIndices().values())
-					i.save(bw);
+  /**
+   * Возвращает контрольную сумму файла-скрипта, на основе которого создана
+   * гранула. Совпадение версии, длины и контрольной суммы считается
+   * достаточным условием для того, чтобы не заниматься чтением и обновлением
+   * структуры базы данных.
+   */
+  public int getChecksum() {
+    return checksum;
+  }
 
-				bw.write("-- *** VIEWS ***");
-				bw.newLine();
-				for (View v : getViews().values())
-					v.save(bw);
+  void setChecksum(int checksum) {
+    this.checksum = checksum;
+  }
 
-				bw.write("-- *** MATERIALIZED VIEWS ***");
-				bw.newLine();
-				for (MaterializedView mv : getMaterializedViews().values())
-					mv.save(bw);
-			} finally {
-				bw.close();
-			}
+  /**
+   * Устанавливает версию гранулы.
+   *
+   * @param version Quoted-string. В процессе установки обрамляющие и двойные
+   *                кавычки удаляются.
+   * @throws ParseException в случае, если имеется неверный формат quoted string.
+   */
+  public void setVersion(String version) throws ParseException {
+    modify();
+    this.version = new VersionString(StringColumn.unquoteString(version));
+  }
 
-		} catch (IOException e) {
-			throw new CelestaException("Cannot save '%s' grain script: %s",
-					getName(), e.getMessage());
-		}
-	}
+  /**
+   * Добавление имени ограничения (для проверерки, что оно уникальное).
+   *
+   * @param name Имя ограничения.
+   * @throws ParseException В случае, если ограничение с таким именем уже определено.
+   */
+  void addConstraintName(String name) throws ParseException {
+    if (constraintNames.contains(name))
+      throw new ParseException(String.format(
+          "Constraint '%s' is defined more than once in a grain.",
+          name));
+    constraintNames.add(name);
+  }
 
-	static boolean writeCelestaDoc(NamedElement e, BufferedWriter bw)
-			throws IOException {
-		String doc = e.getCelestaDoc();
-		if (doc == null) {
-			return false;
-		} else {
-			bw.write("/**");
-			bw.write(doc);
-			bw.write("*/");
-			bw.newLine();
-			return true;
-		}
-	}
+  /**
+   * Указывает на то, что разбор гранулы из файла завершён.
+   */
+  public boolean isParsingComplete() {
+    return parsingComplete;
+  }
 
-	void addView(View view) throws ParseException {
-		if (view.getGrain() != this)
-			throw new IllegalArgumentException();
-		if (tables.get(view.getName()) != null)
-			throw new ParseException(
-					String.format(
-							"Cannot create view '%s', a table with the same name already exists in grain '%s'.",
-							view.getName(), getName()));
-		if (materializedViews.get(view.getName()) != null)
-			throw new ParseException(
-					String.format(
-							"Cannot create view '%s', a materialized view with the same name already exists in grain '%s'.",
-							view.getName(), getName()));
-		modify();
-		views.addElement(view);
-	}
+  /**
+   * Если одна гранула имеет номер больший, чем другая, то значит, что она
+   * может зависеть от первой.
+   */
+  public int getDependencyOrder() {
+    return dependencyOrder;
+  }
 
-	/**
-	 * Возвращает представление по его имени, либо исключение с сообщением о
-	 * том, что представление не найдено.
-	 * 
-	 * @param name
-	 *            Имя
-	 * @throws ParseException
-	 *             Если представление с таким именем не найдено в грануле.
-	 */
-	public View getView(String name) throws ParseException {
-		View result = views.get(name);
-		if (result == null)
-			throw new ParseException(String.format(
-					"View '%s' not found in grain '%s'", name, getName()));
-		return result;
-	}
+  /**
+   * Указывает на то, что разбор гранулы завершен. Системный метод.
+   */
+  public void completeParsing() {
+    parsingComplete = true;
+    modified = false;
+    orderCounter++;
+    dependencyOrder = orderCounter;
+  }
 
-	/**
-	 * Возвращает материализованное представление по его имени, либо исключение с сообщением о
-	 * том, что представление не найдено.
-	 *
-	 * @param name
-	 *            Имя
-	 * @throws ParseException
-	 *             Если материализованное представление с таким именем не найдено в грануле.
-	 */
-	public MaterializedView getMaterializedView(String name) throws ParseException {
-		MaterializedView result = materializedViews.get(name);
-		if (result == null)
-			throw new ParseException(String.format(
-					"Materialized view '%s' not found in grain '%s'", name, getName()));
-		return result;
-	}
+  /**
+   * Возвращает путь к грануле.
+   */
+  public File getGrainPath() {
+    return grainPath;
+  }
 
-	/**
-	 * Возвращает набор представлений, определённый в грануле.
-	 */
-	public Map<String, View> getViews() {
-		return views.getElements();
-	}
+  void setGrainPath(File grainPath) {
+    if (!grainPath.isDirectory())
+      throw new IllegalArgumentException();
+    this.grainPath = grainPath;
+  }
 
-	/**
-	 * Возвращает набор материализованных представлений, определенных в грануле
-	 */
-	public Map<String, MaterializedView> getMaterializedViews() {
-		return materializedViews.getElements();
-	}
+  /**
+   * Возвращает признак модификации гранулы (true, если составляющие части
+   * гранулы были модифицированы в runtime).
+   */
+  public boolean isModified() {
+    return modified;
+  }
+
+  void modify() throws ParseException {
+    if ("celesta".equals(getName()) && parsingComplete)
+      throw new ParseException("You cannot modify system grain.");
+    modified = true;
+  }
+
+  /**
+   * Сохраняет гранулу обратно в файл, расположенный в grainPath.
+   *
+   * @throws CelestaException ошибка ввода-вывода
+   */
+  void save() throws CelestaException {
+    // Сохранять неизменённую гранулу нет смысла.
+    if (!modified)
+      return;
+    if (!grainPath.exists())
+      grainPath.mkdirs();
+    File scriptFile = new File(String.format("%s%s_%s.sql",
+        grainPath.getPath(), File.separator, getName()));
+    try {
+      BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+          new FileOutputStream(scriptFile), "utf-8"));
+      try {
+        writeCelestaDoc(this, bw);
+        bw.write("CREATE GRAIN ");
+        bw.write(getName());
+        bw.write(" VERSION '");
+        bw.write(getVersion().toString());
+        bw.write("';");
+        bw.newLine();
+        bw.newLine();
+        bw.write("-- *** TABLES ***");
+        bw.newLine();
+        for (Table t : getElements(Table.class).values())
+          t.save(bw);
+
+        bw.write("-- *** FOREIGN KEYS ***");
+        bw.newLine();
+        int j = 1;
+        for (Table t : getElements(Table.class).values())
+          for (ForeignKey fk : t.getForeignKeys())
+            fk.save(bw, j++);
+
+        bw.write("-- *** INDICES ***");
+        bw.newLine();
+        for (Index i : getIndices().values())
+          i.save(bw);
+
+        bw.write("-- *** VIEWS ***");
+        bw.newLine();
+        for (View v : getElements(View.class).values())
+          v.save(bw);
+
+        bw.write("-- *** MATERIALIZED VIEWS ***");
+        bw.newLine();
+        for (MaterializedView mv : getElements(MaterializedView.class).values())
+          mv.save(bw);
+
+        bw.write("-- *** PARAMETERIZED VIEWS ***");
+        bw.newLine();
+        for (ParameterizedView pv : getElements(ParameterizedView.class).values())
+          pv.save(bw);
+      } finally {
+        bw.close();
+      }
+
+    } catch (IOException e) {
+      throw new CelestaException("Cannot save '%s' grain script: %s",
+          getName(), e.getMessage());
+    }
+  }
+
+  static boolean writeCelestaDoc(NamedElement e, BufferedWriter bw)
+      throws IOException {
+    String doc = e.getCelestaDoc();
+    if (doc == null) {
+      return false;
+    } else {
+      bw.write("/**");
+      bw.write(doc);
+      bw.write("*/");
+      bw.newLine();
+      return true;
+    }
+  }
 
 }

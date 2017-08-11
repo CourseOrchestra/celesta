@@ -27,7 +27,7 @@ public class ScoreTest {
 		Grain g1 = s.getGrain("g1");
 		Grain g2 = s.getGrain("g2");
 		assertEquals("g2", g2.getName());
-		Table b = g2.getTables().get("b");
+		Table b = g2.getElement("b", Table.class);
 		assertEquals(1, b.getForeignKeys().size());
 		Table a = b.getForeignKeys().iterator().next().getReferencedTable();
 		assertEquals("a", a.getName());
@@ -44,7 +44,7 @@ public class ScoreTest {
 		assertEquals("score" + File.separator + "g3", g3.getGrainPath().toString());
 
 		Grain sys = s.getGrain("celesta");
-		a = sys.getTable("grains");
+		a = sys.getElement("grains", Table.class);
 		assertEquals("grains", a.getName());
 		assertEquals(o - 2, sys.getDependencyOrder());
 		IntegerColumn c = (IntegerColumn) a.getColumns().get("state");
@@ -55,7 +55,7 @@ public class ScoreTest {
 	public void test2() throws CelestaException, ParseException, IOException {
 		Score s = new Score("score");
 		Grain g1 = s.getGrain("g1");
-		View v = g1.getView("testview");
+		View v = g1.getElement("testview", View.class);
 		assertEquals("testview", v.getName());
 		assertEquals("view description ", v.getCelestaDoc());
 		assertTrue(v.isDistinct());
@@ -84,7 +84,7 @@ public class ScoreTest {
 		assertFalse(g2.isModified());
 		assertFalse(g3.isModified());
 
-		Table b = g2.getTables().get("b");
+		Table b = g2.getElement("b", Table.class);
 		int oldSize = b.getColumns().size();
 		new StringColumn(b, "newcolumn");
 		assertEquals(oldSize + 1, b.getColumns().size());
@@ -105,7 +105,7 @@ public class ScoreTest {
 		Grain celesta = s.getGrain("celesta");
 		assertFalse(celesta.isModified());
 		// Проверяем, что модифицировать элементы системной гранулы недопустимо.
-		Table tables = celesta.getTable("tables");
+		Table tables = celesta.getElement("tables", Table.class);
 		boolean itWas = false;
 		try {
 			new StringColumn(tables, "newcolumn");
@@ -155,7 +155,7 @@ public class ScoreTest {
 		Grain g2 = s.getGrain("g2");
 		assertFalse(g2.isModified());
 
-		Table b = g2.getTables().get("b");
+		Table b = g2.getElement("b", Table.class);
 		assertEquals(1, b.getPrimaryKey().size());
 		b.getColumns().get("descr").setNullableAndDefault(false, null);
 		assertTrue(g2.isModified());
@@ -173,16 +173,16 @@ public class ScoreTest {
 		assertFalse(g2.isModified());
 		assertFalse(g3.isModified());
 
-		Table b = g2.getTable("b");
-		Table c = g3.getTable("c");
+		Table b = g2.getElement("b", Table.class);
+		Table c = g3.getElement("c", Table.class);
 
 		assertEquals(1, c.getForeignKeys().size());
 		ForeignKey fk = c.getForeignKeys().iterator().next();
 		assertSame(b, fk.getReferencedTable());
 
-		assertTrue(g2.getTables().containsKey("b"));
+		assertTrue(g2.getElements(Table.class).containsKey("b"));
 		b.delete();
-		assertFalse(g2.getTables().containsKey("b"));
+		assertFalse(g2.getElements(Table.class).containsKey("b"));
 		assertTrue(g2.isModified());
 		assertEquals(0, c.getForeignKeys().size());
 
@@ -217,11 +217,11 @@ public class ScoreTest {
 	public void modificationTest7() throws CelestaException, ParseException, IOException {
 		Score s = new Score("score");
 		Grain g1 = s.getGrain("g1");
-		assertEquals(1, g1.getViews().size());
-		View v = g1.getView("testview");
+		assertEquals(1, g1.getElements(View.class).size());
+		View v = g1.getElement("testview", View.class);
 		assertFalse(g1.isModified());
 		v.delete();
-		assertEquals(0, g1.getViews().size());
+		assertEquals(0, g1.getElements(View.class).size());
 		assertTrue(g1.isModified());
 	}
 
@@ -229,7 +229,7 @@ public class ScoreTest {
 	public void modificationTest8() throws CelestaException, ParseException, IOException {
 		Score s = new Score("score");
 		Grain g1 = s.getGrain("g1");
-		assertEquals(1, g1.getViews().size());
+		assertEquals(1, g1.getElements(View.class).size());
 		assertFalse(g1.isModified());
 		boolean itWas = false;
 		View nv;
@@ -239,11 +239,11 @@ public class ScoreTest {
 			itWas = true;
 		}
 		assertTrue(itWas);
-		assertEquals(1, g1.getViews().size());
+		assertEquals(1, g1.getElements(View.class).size());
 		assertTrue(g1.isModified());
 		nv = new View(g1, "testit", "select postalcode, city from adresses where flat = '5'");
 		assertEquals(2, nv.getColumns().size());
-		assertEquals(2, g1.getViews().size());
+		assertEquals(2, g1.getElements(View.class).size());
 		assertTrue(g1.isModified());
 
 	}
@@ -252,7 +252,7 @@ public class ScoreTest {
 	public void setCelestaDoc() throws ParseException, CelestaException {
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
-		Table t = g.getTable("test");
+		Table t = g.getElement("test", Table.class);
 		t.setCelestaDocLexem("/** бла бла бла бла*/");
 		assertEquals(" бла бла бла бла", t.getCelestaDoc());
 		// Была ошибка -- не брал многострочный комментарий
@@ -274,7 +274,7 @@ public class ScoreTest {
 		// Проверяется функциональность записи динамически изменённых объектов.
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
-		Table t = g.getTable("test");
+		Table t = g.getElement("test", Table.class);
 		StringWriter sw = new StringWriter();
 
 		BufferedWriter bw = new BufferedWriter(sw);
@@ -311,13 +311,13 @@ public class ScoreTest {
 		StringWriter sw = new StringWriter();
 		BufferedWriter bw = new BufferedWriter(sw);
 
-		Table t = g.getTable("ttt1");
+		Table t = g.getElement("ttt1", Table.class);
 		t.save(bw);
-		t = g.getTable("ttt2");
+		t = g.getElement("ttt2", Table.class);
 		t.save(bw);
-		t = g.getTable("ttt3");
+		t = g.getElement("ttt3", Table.class);
 		t.save(bw);
-		t = g.getTable("table1");
+		t = g.getElement("table1", Table.class);
 		t.save(bw);
 		bw.flush();
 		// System.out.println(sw);
@@ -334,7 +334,7 @@ public class ScoreTest {
 	public void fknameTest() throws ParseException, CelestaException {
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
-		Table t = g.getTable("aLongIdentityTableNaaame");
+		Table t = g.getElement("aLongIdentityTableNaaame", Table.class);
 		ForeignKey[] ff = t.getForeignKeys().toArray(new ForeignKey[0]);
 		assertEquals(2, ff.length);
 		assertEquals(30, ff[0].getConstraintName().length());
@@ -347,7 +347,7 @@ public class ScoreTest {
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
 
-		View v = g.getView("testview");
+		View v = g.getElement("testview", View.class);
 		String exp;
 		assertFalse(v.isDistinct());
 		assertEquals(4, v.getColumns().size());
@@ -360,7 +360,7 @@ public class ScoreTest {
 		assertFalse(v.getColumns().get("k2").isNullable());
 		assertFalse(v.getColumns().get("id").isNullable());
 
-		v = g.getView("testview2");
+		v = g.getElement("testview2", View.class);
 		assertEquals(ViewColumnType.INT, v.getColumns().get("id").getColumnType());
 		exp = String.format("  select id as id, descr as descr%n" + "  from test as t1%n"
 				+ "    INNER join refTo as t2 on attrVarchar = k1 AND NOT t2.descr IS NULL AND attrInt = k2");
@@ -372,7 +372,7 @@ public class ScoreTest {
 	public void vewTest2() throws CelestaException, ParseException {
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
-		View v = g.getView("v3");
+		View v = g.getElement("v3", View.class);
 		String[] expected = { "  select 1 as a, 1.4 as b, 1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j",
 				"    , 1 as k", "  from test as test" };
 		assertEquals(ViewColumnType.INT, v.getColumns().get("a").getColumnType());
@@ -394,7 +394,7 @@ public class ScoreTest {
 	public void viewTest3() throws CelestaException, ParseException {
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
-		View v = g.getView("v4");
+		View v = g.getElement("v4", View.class);
 		String[] expected = { "  select f1 as f1, f4 as f4, f5 as f5, f4 + f5 as s, f5 * f5 + 1 as s2",
 				"  from test as test", "  where f1 = true" };
 		assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
@@ -411,8 +411,8 @@ public class ScoreTest {
 	public void viewTest4() throws CelestaException, ParseException {
 		Score s = new Score("testScore");
 		Grain g = s.getGrain("gtest");
-		View v = g.getView("v5");
-		Table t = g.getTable("test");
+		View v = g.getElement("v5", View.class);
+		Table t = g.getElement("test", Table.class);
 
 		ViewColumnMeta vcm = v.getColumns().get("foo");
 		assertTrue(vcm.isNullable());

@@ -56,7 +56,8 @@ public abstract class MaterializedViewCursor extends BasicCursor {
   public MaterializedView meta() throws CelestaException {
     if (meta == null)
       try {
-        meta = Celesta.getInstance().getScore().getGrain(_grainName()).getMaterializedView(_tableName());
+        meta = Celesta.getInstance().getScore()
+            .getGrain(_grainName()).getElement(_tableName(), MaterializedView.class);
       } catch (ParseException e) {
         throw new CelestaException(e.getMessage());
       }

@@ -81,13 +81,13 @@ public final class DBUpdator {
         try {
           Grain sys = score.getGrain("celesta");
           dba.createSchemaIfNotExists("celesta");
-          dba.createTable(conn, sys.getTable("grains"));
-          dba.createTable(conn, sys.getTable("tables"));
-          dba.createTable(conn, sys.getTable("sequences"));
+          dba.createTable(conn, sys.getElement("grains", Table.class));
+          dba.createTable(conn, sys.getElement("tables", Table.class));
+          dba.createTable(conn, sys.getElement("sequences", Table.class));
           dba.createSysObjects(conn);
           // logsetup -- версионированная таблица, поэтому для её
           // создания уже могут понадобиться системные объекты
-          dba.createTable(conn, sys.getTable("logsetup"));
+          dba.createTable(conn, sys.getElement("logsetup", Table.class));
           insertGrainRec(sys);
           updateGrain(sys);
           initSecurity(context);
@@ -250,7 +250,7 @@ public final class DBUpdator {
 
       Set<String> modifiedTablesMap = new HashSet<>();
       // Обновляем все таблицы.
-      for (Table t : g.getTables().values())
+      for (Table t : g.getElements(Table.class).values())
         if (updateTable(t, dbFKeys))
           modifiedTablesMap.add(t.getName());
 
@@ -264,13 +264,13 @@ public final class DBUpdator {
       createViews(g);
 
       // Обновляем все материализованные представления.
-      for (MaterializedView mv : g.getMaterializedViews().values()) {
+      for (MaterializedView mv : g.getElements(MaterializedView.class).values()) {
         String tableName = mv.getRefTable().getTable().getName();
         updateMaterializedView(mv, modifiedTablesMap.contains(tableName));
       }
 
       //Для всех таблиц обновляем триггеры материализованных представлений
-      for (Table t : g.getTables().values()) {
+      for (Table t : g.getElements(Table.class).values()) {
         final Connection conn = grain.callContext().getConn();
         dba.dropTableTriggersForMaterializedViews(conn, t);
         dba.createTableTriggersForMaterializedViews(conn, t);
@@ -281,32 +281,32 @@ public final class DBUpdator {
       while (table.nextInSet()) {
         switch (table.getTabletype()) {
           case TABLE:
-            table.setOrphaned(!g.getTables().containsKey(table.getTablename()));
+            table.setOrphaned(!g.getElements(Table.class).containsKey(table.getTablename()));
             break;
           case VIEW:
-            table.setOrphaned(!g.getViews().containsKey(table.getTablename()));
+            table.setOrphaned(!g.getElements(View.class).containsKey(table.getTablename()));
           case MATERIALIZED_VIEW:
-            table.setOrphaned(!g.getMaterializedViews().containsKey(table.getTablename()));
+            table.setOrphaned(!g.getElements(MaterializedView.class).containsKey(table.getTablename()));
           default:
             break;
         }
         table.update();
       }
-      for (Table t : g.getTables().values()) {
+      for (Table t : g.getElements(Table.class).values()) {
         table.setGrainid(g.getName());
         table.setTablename(t.getName());
         table.setTabletype(TableType.TABLE);
         table.setOrphaned(false);
         table.tryInsert();
       }
-      for (View v : g.getViews().values()) {
+      for (View v : g.getElements(View.class).values()) {
         table.setGrainid(g.getName());
         table.setTablename(v.getName());
         table.setTabletype(TableType.VIEW);
         table.setOrphaned(false);
         table.tryInsert();
       }
-      for (MaterializedView mv : g.getMaterializedViews().values()) {
+      for (MaterializedView mv : g.getElements(MaterializedView.class).values()) {
         table.setGrainid(g.getName());
         table.setTablename(mv.getName());
         table.setTabletype(TableType.MATERIALIZED_VIEW);
@@ -343,7 +343,7 @@ public final class DBUpdator {
 
   private static void createViews(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
-    for (View v : g.getViews().values())
+    for (View v : g.getElements(View.class).values())
       dba.createView(conn, v);
   }
 
@@ -359,7 +359,7 @@ public final class DBUpdator {
     Map<String, DBFKInfo> dbFKeys = new HashMap<>();
     for (DBFKInfo dbi : dba.getFKInfo(conn, g))
       dbFKeys.put(dbi.getName(), dbi);
-    for (Table t : g.getTables().values())
+    for (Table t : g.getElements(Table.class).values())
       if (t.isAutoUpdate())
         for (ForeignKey fk : t.getForeignKeys()) {
           if (dbFKeys.containsKey(fk.getConstraintName())) {
@@ -380,7 +380,7 @@ public final class DBUpdator {
     Connection conn = grain.callContext().getConn();
     List<DBFKInfo> dbFKeys = dba.getFKInfo(conn, g);
     Map<String, ForeignKey> fKeys = new HashMap<>();
-    for (Table t : g.getTables().values())
+    for (Table t : g.getElements(Table.class).values())
       for (ForeignKey fk : t.getForeignKeys())
         fKeys.put(fk.getConstraintName(), fk);
     Iterator<DBFKInfo> i = dbFKeys.iterator();

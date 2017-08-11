@@ -95,6 +95,11 @@ public class SQLGenerator extends ExprVisitor {
   }
 
   @Override
+  void visitParameterRef(ParameterRef expr) throws ParseException {
+    stack.push("$" + expr.getName());
+  }
+
+  @Override
   final void visitIn(In expr) throws ParseException {
     StringBuilder result = new StringBuilder();
     LinkedList<String> operands = new LinkedList<>();

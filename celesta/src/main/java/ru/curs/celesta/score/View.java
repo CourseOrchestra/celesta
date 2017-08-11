@@ -20,7 +20,7 @@ public class View extends AbstractView {
 
   View(Grain grain, String name) throws ParseException {
     super(grain, name);
-    grain.addView(this);
+    grain.addElement(this);
   }
 
   public View(Grain grain, String name, String sql) throws ParseException {
@@ -101,16 +101,6 @@ public class View extends AbstractView {
       bw.write("  where ");
       bw.write(gen.generateSQL(whereCondition));
     }
-  }
-
-  /**
-   * Удаляет таблицу.
-   *
-   * @throws ParseException при попытке изменить системную гранулу
-   */
-  @Override
-  public void delete() throws ParseException {
-    getGrain().removeView(this);
   }
 
   @Override

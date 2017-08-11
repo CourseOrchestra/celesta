@@ -11,11 +11,7 @@ import java.io.StringWriter;
 
 import org.junit.Test;
 
-import ru.curs.celesta.score.CelestaParser;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.ParserTest;
-import ru.curs.celesta.score.ScoreTest;
+import ru.curs.celesta.score.*;
 
 public class CompileTest {
 	@Test
@@ -26,8 +22,8 @@ public class CompileTest {
 		Grain g = cp.grain(ScoreTest.S, "test1");
 		StringWriter sw = new StringWriter();
 		BufferedWriter bw = new BufferedWriter(sw);
-		ORMCompiler.compileROTable(g.getTable("ttt1"), bw);
-		ORMCompiler.compileTable(g.getTable("ttt2"), bw);
+		ORMCompiler.compileROTable(g.getElement("ttt1", Table.class), bw);
+		ORMCompiler.compileTable(g.getElement("ttt2", Table.class), bw);
 		bw.flush();
 		// System.out.println(sw);
 

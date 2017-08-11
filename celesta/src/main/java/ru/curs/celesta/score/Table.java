@@ -13,7 +13,7 @@ import java.util.Set;
  * Объект-таблица в метаданных.
  * 
  */
-public final class Table extends GrainElement implements TableElement, VersionedElement {
+public final class Table extends DataGrainElement implements TableElement, VersionedElement {
 
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
 		@Override
@@ -48,7 +48,7 @@ public final class Table extends GrainElement implements TableElement, Versioned
 
 	public Table(Grain grain, String name) throws ParseException {
 		super(grain, name);
-		grain.addTable(this);
+		grain.addElement(this);
 	}
 
 	/**
@@ -350,16 +350,6 @@ public final class Table extends GrainElement implements TableElement, Versioned
 		if (pkConstraintName != null)
 			validateIdentifier(pkConstraintName);
 		this.pkConstraintName = pkConstraintName;
-	}
-
-	/**
-	 * Удаляет таблицу.
-	 * 
-	 * @throws ParseException
-	 *             при попытке изменить системную гранулу
-	 */
-	public void delete() throws ParseException {
-		getGrain().removeTable(this);
 	}
 
 	@Override

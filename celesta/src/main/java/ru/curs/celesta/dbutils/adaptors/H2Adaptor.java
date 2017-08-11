@@ -762,7 +762,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   @Override
   public void createTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
 
-    List<MaterializedView> mvList = t.getGrain().getMaterializedViews().values().stream()
+    List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
         .filter(mv -> mv.getRefTable().getTable().equals(t))
         .collect(Collectors.toList());
 
@@ -827,7 +827,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   @Override
   public void dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
 
-    List<MaterializedView> mvList = t.getGrain().getMaterializedViews().values().stream()
+    List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
         .filter(mv -> mv.getRefTable().getTable().equals(t))
         .collect(Collectors.toList());
 
