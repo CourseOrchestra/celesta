@@ -34,6 +34,7 @@ public class ParameterizedViewParsingTest extends AbstractParsingTest {
     assertEquals("p1", p.getName());
     assertEquals(ViewColumnType.INT, p.getType());
     p = params.get("p2");
+    assertEquals("TEST", p.getCelestaDoc());
     assertEquals("p2", p.getName());
     assertEquals(ViewColumnType.TEXT, p.getType());
 

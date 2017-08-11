@@ -1,6 +1,8 @@
 package ru.curs.celesta.score;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 
@@ -74,9 +76,10 @@ public abstract class Expr {
 		accept(fr);
 	}
 
-	final void resolveParameterRefs(List<Parameter> parameters) throws ParseException {
+	final Set<String> resolveParameterRefs(Map<String, Parameter> parameters) throws ParseException {
 		ParameterResolver r = new ParameterResolver(parameters);
 		accept(r);
+		return r.getUnusedParameters();
 	}
 
 	/**

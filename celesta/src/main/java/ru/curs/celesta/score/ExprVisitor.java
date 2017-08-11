@@ -1,6 +1,9 @@
 package ru.curs.celesta.score;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Посетитель синтаксического дерева для реализации процедур контроля типов,
@@ -109,10 +112,12 @@ final class FieldResolver extends ExprVisitor {
  * Класс разрешения ссылок в контексте имеющихся параметров.
  */
 final class ParameterResolver extends ExprVisitor {
-  private final List<Parameter> parameters;
+  private final Map<String, Parameter> parameters;
+  private final Set<String> parameterNames;
 
-  public ParameterResolver(List<Parameter> parameters) {
+  public ParameterResolver(Map<String, Parameter> parameters) {
     this.parameters = parameters;
+    this.parameterNames = new HashSet<>(parameters.keySet());
   }
 
   @Override
@@ -120,16 +125,19 @@ final class ParameterResolver extends ExprVisitor {
     if (pr.getParameter() != null)
       return;
 
-    Parameter parameter = parameters.stream()
-        .filter(p -> p.getName().equals(pr.getName()))
-        .findFirst()
-        .orElseThrow(
-            () -> new ParseException(
-                String.format("Cannot resolve parameter '%s'", pr.getCSQL())
-            )
-        );
+    Parameter parameter = parameters.get(pr.getName());
+
+    if (parameter == null)
+      throw new ParseException(
+          String.format("Cannot resolve parameter '%s'", pr.getCSQL())
+      );
 
     pr.setParameter(parameter);
+    parameterNames.remove(parameter.getName());
+  }
+
+  public Set<String> getUnusedParameters() {
+    return parameterNames;
   }
 }
 

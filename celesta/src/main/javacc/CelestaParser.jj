@@ -159,7 +159,7 @@ Grain grain(Score s, String name):
                   | createIndex(g, doc == null? null: doc.toString())
 				  | createView(g, doc == null? null: doc.toString())
 				  | createMaterializedView(g, doc == null? null: doc.toString())
-				  | createParameterizedView(g, doc == null? null: doc.toString())
+				  | createFunction(g, doc == null? null: doc.toString())
 				  )
 				  {doc = null;} )
 	 | (<K_ALTER>   alterTable(g))) ";")*
@@ -391,7 +391,7 @@ void createMaterializedView(Grain g, String doc):
     {view.finalizeParsing();}
 }
 
-void createParameterizedView(Grain g, String doc):
+void createFunction(Grain g, String doc):
 {
     ParameterizedView v = null;
     Token viewName = null;
@@ -402,13 +402,13 @@ void createParameterizedView(Grain g, String doc):
         v = new ParameterizedView(g, viewName.toString());
         v.setCelestaDocLexem(doc);
     }
-"(" parameterizedViewParam(v) ("," parameterizedViewParam(v))* ")"
+"(" functionParam(v) ("," functionParam(v))* ")"
     <K_AS>
     select(v)
 	{v.finalizeParsing();}
 }
 
-void parameterizedViewParam(ParameterizedView view):
+void functionParam(ParameterizedView view):
 {
     Token doc = null;
     Token t;
@@ -418,12 +418,12 @@ void parameterizedViewParam(ParameterizedView view):
 {
    [doc = <CELESTA_DOC>]
    t = <S_IDENTIFIER> {name = t.toString();}
-    (  (<K_INT>       {p = new Parameter(name, ViewColumnType.INT); t = null; } )
-    |  (<K_REAL>      {p = new Parameter(name, ViewColumnType.REAL); t = null;} )
-    |  (<K_VARCHAR>   {p = new Parameter(name, ViewColumnType.TEXT); t = null; } )
-    |  (<K_TEXT>      {p = new Parameter(name, ViewColumnType.TEXT); t = null;} )
-    |  (<K_DATETIME>  {p = new Parameter(name, ViewColumnType.DATE); t = null;})
-    |  (<K_BIT>       {p = new Parameter(name, ViewColumnType.BIT); t = null;})
+    (  (<K_INT>       {p = new Parameter(name, ViewColumnType.INT);  })
+    |  (<K_REAL>      {p = new Parameter(name, ViewColumnType.REAL); })
+    |  (<K_VARCHAR>   {p = new Parameter(name, ViewColumnType.TEXT); })
+    |  (<K_TEXT>      {p = new Parameter(name, ViewColumnType.TEXT); })
+    |  (<K_DATETIME>  {p = new Parameter(name, ViewColumnType.DATE); })
+    |  (<K_BIT>       {p = new Parameter(name, ViewColumnType.BIT);  })
     )
     {
         p.setCelestaDocLexem(doc == null? null:doc.toString());

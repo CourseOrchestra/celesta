@@ -27,19 +27,15 @@ public class ParameterizedView extends View {
     List<TableRef> t = new ArrayList<>(getTables().values());
     if (whereCondition != null) {
       whereCondition.resolveFieldRefs(t);
-      whereCondition.resolveParameterRefs(new ArrayList<>(parameters.values()));
+      Set<String> unusedParameters = whereCondition.resolveParameterRefs(parameters);
+
+      if (!unusedParameters.isEmpty()) {
+        String unusedParametersStr = String.join(", ", unusedParameters);
+        throw new ParseException(String.format("%s '%s' contains not used parameters %s.",
+            viewType(), getName(), unusedParametersStr));
+      }
+
       whereCondition.validateTypes();
-    }
-
-    String cSql = whereCondition.getCSQL();
-
-    String notUsedParams = parameters.keySet().stream()
-        .filter(pName -> !cSql.contains("$" + pName))
-        .collect(Collectors.joining(", "));
-
-    if (!notUsedParams.isEmpty()) {
-      throw new ParseException(String.format("%s '%s' contains not used parameters %s.",
-          viewType(), getName(), notUsedParams));
     }
   }
 

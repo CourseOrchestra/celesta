@@ -20,7 +20,7 @@ CREATE FUNCTION pView1(p int) AS
   where f2 = $p
   group by f3;
 
-CREATE FUNCTION pView2(p1 int, p2 varchar) AS
+CREATE FUNCTION pView2(p1 int,/**TEST*/ p2 varchar) AS
   select f1, f2, f3 from t1
   where f2 = $p1 AND f3 = $p2;
 
