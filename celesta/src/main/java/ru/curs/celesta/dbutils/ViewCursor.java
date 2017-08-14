@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 

@@ -524,6 +524,26 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
 
   @Override
+  public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
+    return null;
+  }
+
+  @Override
+  public void dropParameterizedView(Connection conn, String grainName, String viewName) throws CelestaException {
+
+  }
+
+  @Override
+  public PreparedStatement getParameterizedViewRecordSetStatement(Connection conn, ParameterizedView pv) throws CelestaException {
+    return null;
+  }
+
+  @Override
+  public void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
+
+  }
+
+  @Override
   public DBPKInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
     String sql = String.format(
         "SELECT i.relname AS indexname, " + "i.oid, array_length(x.indkey, 1) as colcount " + "FROM pg_index x "

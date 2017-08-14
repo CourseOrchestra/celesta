@@ -843,6 +843,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     return result;
   }
 
+  abstract public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException;
+  abstract public void dropParameterizedView (Connection conn, String grainName, String viewName) throws CelestaException;
+  abstract public PreparedStatement getParameterizedViewRecordSetStatement(Connection conn, ParameterizedView pv) throws CelestaException;
+
   /**
    * Создаёт представление в базе данных на основе метаданных.
    *
@@ -875,6 +879,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     }
 
   }
+
+  public abstract void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException;
 
   /**
    * Возвращает транслятор из языка CelestaSQL в язык нужного диалекта БД.

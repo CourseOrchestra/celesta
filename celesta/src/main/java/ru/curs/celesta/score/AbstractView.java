@@ -30,7 +30,7 @@ public abstract class AbstractView extends DataGrainElement {
    */
   abstract void setWhereCondition(Expr whereCondition) throws ParseException;
 
-  void selectScript(final BufferedWriter bw, SQLGenerator gen) throws IOException {
+  public void selectScript(final BufferedWriter bw, SQLGenerator gen) throws IOException {
     BWWrapper bww = new BWWrapper();
 
     writeSelectPart(bw, gen, bww);

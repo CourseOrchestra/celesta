@@ -240,6 +240,8 @@ public final class DBUpdator {
 
       // Удаляем все представления
       dropAllViews(g);
+      // Удаляем все параметризованные представления
+      dropAllParameterizedViews(g);
 
       // Выполняем удаление ненужных индексов, чтобы облегчить задачу
       // обновления столбцов на таблицах.
@@ -261,6 +263,9 @@ public final class DBUpdator {
       updateGrainFKeys(g);
 
       // Создаём представления заново
+      createViews(g);
+
+      // Создаём параметризованные представления заново
       createViews(g);
 
       // Обновляем все материализованные представления.
@@ -287,6 +292,8 @@ public final class DBUpdator {
             table.setOrphaned(!g.getElements(View.class).containsKey(table.getTablename()));
           case MATERIALIZED_VIEW:
             table.setOrphaned(!g.getElements(MaterializedView.class).containsKey(table.getTablename()));
+          case FUNCTION:
+            table.setOrphaned(!g.getElements(MaterializedView.class).containsKey(table.getTablename()));
           default:
             break;
         }
@@ -310,6 +317,13 @@ public final class DBUpdator {
         table.setGrainid(g.getName());
         table.setTablename(mv.getName());
         table.setTabletype(TableType.MATERIALIZED_VIEW);
+        table.setOrphaned(false);
+        table.tryInsert();
+      }
+      for (ParameterizedView pv : g.getElements(ParameterizedView.class).values()) {
+        table.setGrainid(g.getName());
+        table.setTablename(pv.getName());
+        table.setTabletype(TableType.FUNCTION);
         table.setOrphaned(false);
         table.tryInsert();
       }
@@ -351,6 +365,18 @@ public final class DBUpdator {
     Connection conn = grain.callContext().getConn();
     for (String viewName : dba.getViewList(conn, g))
       dba.dropView(conn, g.getName(), viewName);
+  }
+
+  private static void createParameterizedViews(Grain g) throws CelestaException {
+    Connection conn = grain.callContext().getConn();
+    for (ParameterizedView pv : g.getElements(ParameterizedView.class).values())
+      dba.createParameterizedView(conn, pv);
+  }
+
+  private static void dropAllParameterizedViews(Grain g) throws CelestaException {
+    Connection conn = grain.callContext().getConn();
+    for (String viewName : dba.getParameterizedViewList(conn, g))
+      dba.dropParameterizedView(conn, g.getName(), viewName);
   }
 
 

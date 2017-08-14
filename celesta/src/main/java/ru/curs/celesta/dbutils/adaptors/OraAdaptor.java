@@ -1160,6 +1160,26 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
+  public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
+    return null;
+  }
+
+  @Override
+  public void dropParameterizedView(Connection conn, String grainName, String viewName) throws CelestaException {
+
+  }
+
+  @Override
+  public PreparedStatement getParameterizedViewRecordSetStatement(Connection conn, ParameterizedView pv) throws CelestaException {
+    return null;
+  }
+
+  @Override
+  public void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
+
+  }
+
+  @Override
   public SQLGenerator getViewSQLGenerator() {
     return new SQLGenerator() {
 

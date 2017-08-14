@@ -32,7 +32,11 @@ public final class TablesCursor extends SysCursor {
 		/**
 		 * Материализованное представление
 		 */
-		MATERIALIZED_VIEW("MV");
+		MATERIALIZED_VIEW("MV"),
+		/**
+		 * Параметризованное представление
+		 */
+		FUNCTION("F");
 
 		TableType(String abbreviation) {
 			this.abbreviation = abbreviation;

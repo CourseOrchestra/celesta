@@ -16,11 +16,15 @@ import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -328,6 +332,126 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
   }
 
+  @Override
+  public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
+    String sql = String.format("SELECT * FROM INFORMATION_SCHEMA.FUNCTION_ALIASES where alias_schema = '%s'",
+        g.getName());
+    List<String> result = new LinkedList<>();
+    try (Statement stmt = conn.createStatement();) {
+      ResultSet rs = stmt.executeQuery(sql);
+      while (rs.next()) {
+        result.add(rs.getString(1));
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Cannot get parameterized views list: %s", e.toString());
+    }
+    return result;
+  }
+
+  @Override
+  public void dropParameterizedView(Connection conn, String grainName, String viewName) throws CelestaException {
+    try {
+      try (Statement stmt = conn.createStatement()) {
+        String sql = String.format("DROP ALIAS IF EXISTS " + tableTemplate(),
+            grainName, viewName);
+        stmt.executeUpdate(sql);
+      }
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage(), e);
+    }
+  }
+
+  @Override
+  public PreparedStatement getParameterizedViewRecordSetStatement(Connection conn, ParameterizedView pv) throws CelestaException {
+    try {
+      return conn.prepareStatement(
+          String.format(
+              "CALL " + tableTemplate() + "(%s)",
+              pv.getGrain().getName(), pv.getName(),
+              pv.getParameters().keySet().stream()
+                  .map(p -> "?")
+                  .collect(Collectors.joining(", "))
+          )
+      );
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage(), e);
+    }
+  }
+
+  @Override
+  public void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
+    SQLGenerator gen = getViewSQLGenerator();
+    try {
+      StringWriter sw = new StringWriter();
+      BufferedWriter bw = new BufferedWriter(sw);
+
+      pv.selectScript(bw, gen);
+      bw.flush();
+
+      String selectSql = sw.toString();
+
+      String inputParams = pv.getParameters().keySet().stream()
+          .map(p -> "Object " + p)
+          .collect(Collectors.joining(", "));
+
+      List<String> paramRefsWithOrder = new ArrayList<>();
+
+      Function<String, String> getFirstParamRef = (String sql) -> {
+        for (String param : pv.getParameters().keySet()) {
+          if (sql.contains("$" + param)) {
+            return param;
+          }
+        }
+
+        return "";
+      };
+
+      String tempSelectSql = selectSql;
+
+      while (true) {
+        String param = getFirstParamRef.apply(tempSelectSql);
+        if (param.isEmpty())
+          break;
+
+        paramRefsWithOrder.add(param);
+        tempSelectSql = tempSelectSql.replace("$" + param, "");
+      }
+
+      StringBuilder paramSettingBuilder = new StringBuilder();
+
+      int settingPosition = 1;
+
+      for (String param : paramRefsWithOrder) {
+        paramSettingBuilder.append("ps.setObject(" + settingPosition + "," + param + ")");
+        ++settingPosition;
+      }
+
+      for (String pName : pv.getParameters().keySet())
+        selectSql = selectSql.replaceAll("$" + pName, pName);
+
+      String sql = String.format(
+          "CREATE ALIAS " + tableTemplate() + "AS $$ " +
+              " java.sql.ResultSet %s(java.sql.Connection conn, %s) {" +
+              "try (java.sql.PreparedStatement ps = conn.prepareStatement(%s);) {" +
+              "%s" +
+              "return ps.execute();" +
+              "}" +
+              "} $$;",
+          pv.getGrain().getName(), pv.getName(), pv.getName(),
+          inputParams, selectSql, paramSettingBuilder.toString());
+
+      Statement stmt = conn.createStatement();
+      try {
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException | IOException e) {
+      throw new CelestaException("Error while creating parameterized view %s.%s: %s",
+          pv.getGrain().getName(), pv.getName(), e.getMessage());
+
+    }
+  }
 
   @SuppressWarnings("unchecked")
   @Override
@@ -733,18 +857,17 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   }
 
-	@Override
-	public int getDBPid(Connection conn) {
-		try (Statement stmt = conn.createStatement()) {
-			ResultSet rs = stmt.executeQuery("SELECT SESSION_ID()");
-			if (rs.next())
-				return rs.getInt(1);
-		} catch (SQLException e) {
-			//do nothing
-		}
-		return 0;
-	}
-
+  @Override
+  public int getDBPid(Connection conn) {
+    try (Statement stmt = conn.createStatement()) {
+      ResultSet rs = stmt.executeQuery("SELECT SESSION_ID()");
+      if (rs.next())
+        return rs.getInt(1);
+    } catch (SQLException e) {
+      //do nothing
+    }
+    return 0;
+  }
 
 
   @Override
@@ -774,7 +897,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
       String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
       String sql;
-      try (Statement stmt = conn.createStatement()){
+      try (Statement stmt = conn.createStatement()) {
         //INSERT
         try {
           sql = String.format(
@@ -820,7 +943,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         throw new CelestaException("Could not update triggers on" + tableTemplate()
             + " for materialized view " + tableTemplate() + ": %s",
             t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
-      } 
+      }
     }
   }
 
