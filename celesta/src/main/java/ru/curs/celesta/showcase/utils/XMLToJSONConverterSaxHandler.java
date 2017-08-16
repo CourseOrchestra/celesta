@@ -65,11 +65,17 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 	private final Item result;
 	private StringBuilder tagValue;
 	private final List<String> l = new ArrayList<String>();
+	private boolean isAttributesPrefixPresented = true;
 
 	public XMLToJSONConverterSaxHandler() {
 		this.stack = new Stack<Item>();
 		result = new Item("head");
 		stack.push(result);
+	}
+
+	public XMLToJSONConverterSaxHandler(boolean attributesPrefixPresented) {
+		this();
+		this.isAttributesPrefixPresented = attributesPrefixPresented;
 	}
 
 	@Override
@@ -87,7 +93,10 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 					if ("urlparam".equals(qName) && "value".equals(attrName)
 							&& attrs.getValue(i).startsWith("[")
 							&& attrs.getValue(i).endsWith("]")) {
-						item.add("@" + attrName, attrs.getValue(i), true);
+						if (isAttributesPrefixPresented)
+							item.add("@" + attrName, attrs.getValue(i), true);
+						else
+							item.add(attrName, attrs.getValue(i), true);
 					} else if ("withoutQuotes".equalsIgnoreCase(attrName)) {
 						if ("true".equalsIgnoreCase(attrs.getValue(attrName))) {
 							item.boolForQuotes = true;
@@ -97,7 +106,11 @@ public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 							item.boolForJson = true;
 						}
 					} else {
-						item.add("@" + attrName, attrs.getValue(i), item.bool);
+						if (isAttributesPrefixPresented)
+							item.add("@" + attrName, attrs.getValue(i), item.bool);
+						else
+							item.add(attrName, attrs.getValue(i), item.bool);
+
 					}
 				}
 			}
