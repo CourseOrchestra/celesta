@@ -11,6 +11,7 @@ import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
@@ -361,21 +362,16 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
   }
 
+
   @Override
-  public PreparedStatement getParameterizedViewRecordSetStatement(Connection conn, ParameterizedView pv) throws CelestaException {
-    try {
-      return conn.prepareStatement(
-          String.format(
-              "CALL " + tableTemplate() + "(%s)",
-              pv.getGrain().getName(), pv.getName(),
-              pv.getParameters().keySet().stream()
-                  .map(p -> "?")
-                  .collect(Collectors.joining(", "))
-          )
-      );
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage(), e);
-    }
+  public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
+    return String.format(
+        tableTemplate() + "(%s)",
+        pv.getGrain().getName(), pv.getName(),
+        pv.getParameters().keySet().stream()
+            .map(p -> "?")
+            .collect(Collectors.joining(", "))
+    );
   }
 
   @Override
@@ -390,8 +386,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
       String selectSql = sw.toString();
 
-      String inputParams = pv.getParameters().keySet().stream()
-          .map(p -> "Object " + p)
+      String inputParams = pv.getParameters().values().stream()
+          .map(p -> p.getJavaClass().getName() + " " + p.getName())
           .collect(Collectors.joining(", "));
 
       List<String> paramRefsWithOrder = new ArrayList<>();
@@ -422,20 +418,22 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
       int settingPosition = 1;
 
       for (String param : paramRefsWithOrder) {
-        paramSettingBuilder.append("ps.setObject(" + settingPosition + "," + param + ")");
+        paramSettingBuilder.append("ps.setObject(" + settingPosition + "," + param + ");");
         ++settingPosition;
       }
 
       for (String pName : pv.getParameters().keySet())
-        selectSql = selectSql.replaceAll("$" + pName, pName);
+        selectSql = selectSql.replaceAll("\\$" + pName, "?");
+
+      selectSql = selectSql.replace("\"", "\\\"");
+      selectSql = selectSql.replace("\r\n", "");
 
       String sql = String.format(
-          "CREATE ALIAS " + tableTemplate() + "AS $$ " +
-              " java.sql.ResultSet %s(java.sql.Connection conn, %s) {" +
-              "try (java.sql.PreparedStatement ps = conn.prepareStatement(%s);) {" +
+          "CREATE ALIAS " + tableTemplate() + " AS $$ " +
+              " java.sql.ResultSet %s(java.sql.Connection conn, %s) throws java.sql.SQLException {" +
+              "java.sql.PreparedStatement ps = conn.prepareStatement(\"%s\");" +
               "%s" +
-              "return ps.execute();" +
-              "}" +
+              "return ps.executeQuery();" +
               "} $$;",
           pv.getGrain().getName(), pv.getName(), pv.getName(),
           inputParams, selectSql, paramSettingBuilder.toString());
@@ -449,7 +447,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     } catch (SQLException | IOException e) {
       throw new CelestaException("Error while creating parameterized view %s.%s: %s",
           pv.getGrain().getName(), pv.getName(), e.getMessage());
-
     }
   }
 
@@ -736,17 +733,17 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   @Override
   String getLimitedSQL(
-      GrainElement t, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
+      FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
   ) {
     if (offset == 0 && rowCount == 0)
       throw new IllegalArgumentException();
     String sql;
     if (offset == 0)
-      sql = getSelectFromOrderBy(t, whereClause, orderBy, fields) + String.format(" limit %d", rowCount);
+      sql = getSelectFromOrderBy(from, whereClause, orderBy, fields) + String.format(" limit %d", rowCount);
     else if (rowCount == 0)
-      sql = getSelectFromOrderBy(t, whereClause, orderBy, fields) + String.format(" limit -1 offset %d", offset);
+      sql = getSelectFromOrderBy(from, whereClause, orderBy, fields) + String.format(" limit -1 offset %d", offset);
     else {
-      sql = getSelectFromOrderBy(t, whereClause, orderBy, fields)
+      sql = getSelectFromOrderBy(from, whereClause, orderBy, fields)
           + String.format(" limit %d offset %d", rowCount, offset);
     }
     return sql;

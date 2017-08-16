@@ -1,5 +1,5 @@
 # coding=UTF-8
-# Source grain parameters: version=1.0, len=157, crc32=A4FB0F9C; compiler=11.
+# Source grain parameters: version=1.0, len=157, crc32=A4FB0F9C; compiler=12.
 """
 THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.
 DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.
@@ -8,9 +8,10 @@ import ru.curs.celesta.dbutils.Cursor as Cursor
 import ru.curs.celesta.dbutils.ViewCursor as ViewCursor
 import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor
 import ru.curs.celesta.dbutils.MaterializedViewCursor as MaterializedViewCursor
+import ru.curs.celesta.dbutils.ParameterizedViewCursor as ParameterizedViewCursor
 from java.lang import Object
 from jarray import array
-from java.util import Calendar, GregorianCalendar
+from java.util import Calendar, GregorianCalendar, HashSet, HashMap
 from java.sql import Timestamp
 import datetime
 
@@ -31,8 +32,11 @@ class bCursor(Cursor):
     onPostInsert = []
     onPreUpdate  = []
     onPostUpdate = []
-    def __init__(self, context):
-        Cursor.__init__(self, context)
+    def __init__(self, context, fields = []):
+        if fields:
+            Cursor.__init__(self, context, HashSet(fields))
+        else:
+            Cursor.__init__(self, context)
         self.idb = None
         self.descr = None
         self.ida = None
@@ -42,15 +46,18 @@ class bCursor(Cursor):
     def _tableName(self):
         return 'b'
     def _parseResult(self, rs):
-        self.idb = rs.getInt('idb')
-        if rs.wasNull():
-            self.idb = None
-        self.descr = rs.getString('descr')
-        if rs.wasNull():
-            self.descr = None
-        self.ida = rs.getInt('ida')
-        if rs.wasNull():
-            self.ida = None
+        if self.inRec('idb'):
+            self.idb = rs.getInt('idb')
+            if rs.wasNull():
+                self.idb = None
+        if self.inRec('descr'):
+            self.descr = rs.getString('descr')
+            if rs.wasNull():
+                self.descr = None
+        if self.inRec('ida'):
+            self.ida = rs.getInt('ida')
+            if rs.wasNull():
+                self.ida = None
         self.recversion = rs.getInt('recversion')
     def _setFieldValue(self, name, value):
         setattr(self, name, value)

@@ -51,7 +51,6 @@ public abstract class ViewCursor extends BasicCursor {
 			l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));
 			ol.add(Boolean.FALSE);
 		}
-
 	}
 
 }

@@ -47,6 +47,7 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
+import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.*;
 import ru.curs.celesta.dbutils.term.*;
 import ru.curs.celesta.score.*;
@@ -79,9 +80,16 @@ public abstract class BasicCursor implements Closeable {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
+			FromClause from = getFrom();
+
+			if (fromTerm == null) {
+				fromTerm = new FromTerm(from.getParameters());
+			}
+
 			WhereTerm where = qmaker.getWhereTerm();
+			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getRecordSetStatement(conn, meta(), where.getWhere(), getOrderBy(), offset,
+			return db.getRecordSetStatement(conn, getFrom(), where.getWhere(), getOrderBy(), offset,
 					rowCount, fieldsForStatement);
 		}
 	};
@@ -92,9 +100,17 @@ public abstract class BasicCursor implements Closeable {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
+			FromClause from = getFrom();
+
+			if (fromTerm == null) {
+				fromTerm = new FromTerm(from.getParameters());
+			}
+
 			WhereTerm where = qmaker.getWhereTerm();
+
+			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getSetCountStatement(conn, meta(), where.getWhere());
+			return db.getSetCountStatement(conn, from, where.getWhere());
 		}
 	};
 
@@ -115,9 +131,16 @@ public abstract class BasicCursor implements Closeable {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
+			FromClause from = getFrom();
+
+			if (fromTerm == null) {
+				fromTerm = new FromTerm(from.getParameters());
+			}
+
 			WhereTerm where = qmaker.getWhereTerm('<');
+			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getSetCountStatement(conn, meta(), where.getWhere());
+			return db.getSetCountStatement(conn, getFrom(), where.getWhere());
 		}
 
 	};
@@ -126,9 +149,16 @@ public abstract class BasicCursor implements Closeable {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
+			FromClause from = getFrom();
+
+			if (fromTerm == null) {
+				fromTerm = new FromTerm(from.getParameters());
+			}
+
 			WhereTerm where = qmaker.getWhereTerm('>');
+			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(conn, meta(), getOrderBy(), where.getWhere(), fieldsForStatement);
+			return db.getNavigationStatement(conn, getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement);
 		}
 
 	};
@@ -137,9 +167,16 @@ public abstract class BasicCursor implements Closeable {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
+			FromClause from = getFrom();
+
+			if (fromTerm == null) {
+				fromTerm = new FromTerm(from.getParameters());
+			}
+
 			WhereTerm where = qmaker.getWhereTerm('<');
+			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(conn, meta(), getReversedOrderBy(), where.getWhere(), fieldsForStatement);
+			return db.getNavigationStatement(conn, getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement);
 		}
 
 	};
@@ -151,9 +188,16 @@ public abstract class BasicCursor implements Closeable {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
+			FromClause from = getFrom();
+
+			if (fromTerm == null) {
+				fromTerm = new FromTerm(from.getParameters());
+			}
+
 			WhereTerm where = qmaker.getWhereTerm();
+			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(conn, meta(), getOrderBy(), where.getWhere(), fieldsForStatement);
+			return db.getNavigationStatement(conn, getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement);
 		}
 
 	};
@@ -161,9 +205,16 @@ public abstract class BasicCursor implements Closeable {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
+			FromClause from = getFrom();
+
+			if (fromTerm == null) {
+				fromTerm = new FromTerm(from.getParameters());
+			}
+
 			WhereTerm where = qmaker.getWhereTerm();
+			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(conn, meta(), getReversedOrderBy(), where.getWhere(), fieldsForStatement);
+			return db.getNavigationStatement(conn, getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement);
 		}
 	};
 
@@ -182,6 +233,8 @@ public abstract class BasicCursor implements Closeable {
 
 	private BasicCursor previousCursor;
 	private BasicCursor nextCursor;
+
+	protected FromTerm fromTerm;
 
 	private final WhereTermsMaker qmaker = new WhereTermsMaker(new WhereMakerParamsProvider() {
 
@@ -291,7 +344,7 @@ public abstract class BasicCursor implements Closeable {
 					throws CelestaException {
 				WhereTerm where = qmaker.getWhereTerm('=');
 				where.programParams(program);
-				return db.getNavigationStatement(conn, meta(), "", where.getWhere(), fieldsForStatement);
+				return db.getNavigationStatement(conn, getFrom(),"", where.getWhere(), fieldsForStatement);
 			}
 
 		};
@@ -1144,6 +1197,16 @@ public abstract class BasicCursor implements Closeable {
 
 	protected boolean inRec(String field) {
 		return fieldsForStatement.isEmpty() || fieldsForStatement.contains(field);
+	}
+
+	protected FromClause getFrom() throws CelestaException {
+		FromClause result = new FromClause();
+		GrainElement ge = meta();
+
+		result.setGe(ge);
+		result.setExpression(String.format(db.tableTemplate(), ge.getGrain().getName(), ge.getName()));
+
+		return result;
 	}
 
 	private void fillFieldsForStatement() throws CelestaException {

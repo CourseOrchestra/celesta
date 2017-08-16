@@ -51,6 +51,7 @@ import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
@@ -832,7 +833,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 
   @Override
   String getLimitedSQL(
-      GrainElement t, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
+      FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
   ) {
     if (offset == 0 && rowCount == 0)
       throw new IllegalArgumentException();
@@ -840,13 +841,13 @@ final class MSSQLAdaptor extends DBAdaptor {
     String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
     String rowFilter;
 
-    final String fieldList = getTableFieldsListExceptBlobs(t, fields);
+    final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
 
     if (offset == 0) {
       // Запрос только с ограничением числа записей -- применяем MS SQL
       // Server TOP-конструкцию.
-      sql = String.format("select top %d %s from %s.%s", rowCount, fieldList,
-          t.getGrain().getName(), t.getName()) + sqlwhere + " order by " + orderBy;
+      sql = String.format("select top %d %s from %s", rowCount, fieldList,
+          from.getExpression()) + sqlwhere + " order by " + orderBy;
       return sql;
       // Иначе -- запрос с пропуском начальных записей -- применяем
       // ROW_NUMBER
@@ -856,9 +857,9 @@ final class MSSQLAdaptor extends DBAdaptor {
       rowFilter = String.format("between %d and %d", offset + 1L, offset + rowCount);
     }
     sql = String.format(
-        "with a as " + "(select ROW_NUMBER() OVER (ORDER BY %s) as [limit_row_number], %s from %s.%s %s) "
+        "with a as " + "(select ROW_NUMBER() OVER (ORDER BY %s) as [limit_row_number], %s from %s %s) "
             + " select * from a where [limit_row_number] %s",
-        orderBy, fieldList, t.getGrain().getName(), t.getName(), sqlwhere, rowFilter);
+        orderBy, fieldList, from.getExpression(), sqlwhere, rowFilter);
     return sql;
   }
 
@@ -1010,7 +1011,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getParameterizedViewRecordSetStatement(Connection conn, ParameterizedView pv) throws CelestaException {
+  public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
     return null;
   }
 
@@ -1050,18 +1051,18 @@ final class MSSQLAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getNavigationStatement(
-      Connection conn, GrainElement t, String orderBy, String navigationWhereClause, Set<String> fields
+      Connection conn, FromClause from, String orderBy, String navigationWhereClause, Set<String> fields
   ) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
 
     StringBuilder w = new StringBuilder(navigationWhereClause);
-    final String fieldList = getTableFieldsListExceptBlobs(t, fields);
+    final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
     boolean useWhere = w.length() > 0;
     if (orderBy.length() > 0)
       w.append(" order by " + orderBy);
-    String sql = String.format(SELECT_TOP_1 + tableTemplate() + "%s;", fieldList,
-        t.getGrain().getName(), t.getName(), useWhere ? " where " + w : w);
+    String sql = String.format(SELECT_TOP_1 + " %s %s;", fieldList,
+        from.getExpression(), useWhere ? " where " + w : w);
     // System.out.println(sql);
     return prepareStatement(conn, sql);
   }

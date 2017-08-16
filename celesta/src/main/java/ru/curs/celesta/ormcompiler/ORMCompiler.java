@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.*;
@@ -25,10 +26,11 @@ public final class ORMCompiler {
    * Версия компилятора. Данную константу следует инкрементировать, когда
    * необходимо инициировать автоматическое пересоздание orm-скриптов.
    */
-  private static final int COMPILERVER = 11;
+  private static final int COMPILERVER = 12;
 
   private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
   private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context, fields = []):";
+  private static final String DEF_INIT_SELF_CONTEXT_PARAMS_TEMPLATE = "    def __init__(self, context, %s, fields = []):";
   private static final String SELF_CONTEXT_CONTEXT = "        self.context = context";
   private static final String RETURN_ARRAY_S_OBJECT = "        return array([%s], Object)";
   private static final String SELF_S_EQUALS_NONE = "        self.%s = None";
@@ -42,8 +44,9 @@ public final class ORMCompiler {
       "import ru.curs.celesta.dbutils.ViewCursor as ViewCursor",
       "import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor",
       "import ru.curs.celesta.dbutils.MaterializedViewCursor as MaterializedViewCursor",
+      "import ru.curs.celesta.dbutils.ParameterizedViewCursor as ParameterizedViewCursor",
       "from java.lang import Object",
-      "from jarray import array", "from java.util import Calendar, GregorianCalendar, HashSet",
+      "from jarray import array", "from java.util import Calendar, GregorianCalendar, HashSet, HashMap",
       "from java.sql import Timestamp", "import datetime", "", "def _to_timestamp(d):",
       "    if isinstance(d, datetime.datetime):", "        calendar = GregorianCalendar()",
       "        calendar.set(d.year, d.month - 1, d.day, d.hour, d.minute, d.second)",
@@ -139,6 +142,10 @@ public final class ORMCompiler {
 
     for (MaterializedView v : g.getElements(MaterializedView.class).values())
       compileROTable(v, w);
+
+    for (ParameterizedView pv : g.getElements(ParameterizedView.class).values())
+      compileParameterizedView(pv, w);
+
   }
 
   private static void compileView(View v, BufferedWriter w) throws IOException {
@@ -164,6 +171,34 @@ public final class ORMCompiler {
     compileCurrentValues(w, columns);
     // Клонирование
     compileCopying(w, v.getColumns().keySet(), className);
+    // Итерация в Python-стиле
+    compileIterate(w);
+    w.newLine();
+  }
+
+  private static void compileParameterizedView(ParameterizedView pv, BufferedWriter w) throws IOException {
+    String className = pv.getName() + "Cursor";
+
+    Map<String, ViewColumnMeta> columns = pv.getColumns();
+
+    w.write(String.format("class %s(ParameterizedViewCursor):", className));
+    w.newLine();
+    // Конструктор
+    compileParameterizedViewInit(w, columns, pv);
+    // Имя гранулы
+    compileGrainName(pv, w);
+    // Имя таблицы
+    compileTableName(pv, w);
+    // Разбор строки по переменным
+    compileParseResult(w, columns);
+    // Динамическая установка значения поля
+    compileSetFieldValue(w);
+    // Очистка буфера
+    compileClearBuffer(w, columns);
+    // Текущие значения всех полей
+    compileCurrentValues(w, columns);
+    // Клонирование
+    compileCopying(w, pv.getColumns().keySet(), className);
     // Итерация в Python-стиле
     compileIterate(w);
     w.newLine();
@@ -625,6 +660,38 @@ public final class ORMCompiler {
     w.write("        else:");
     w.newLine();
     w.write("            ViewCursor.__init__(self, context)");
+    w.newLine();
+    for (String c : columns.keySet()) {
+      w.write(String.format(SELF_S_EQUALS_NONE, c));
+      w.newLine();
+    }
+    w.write(SELF_CONTEXT_CONTEXT);
+    w.newLine();
+  }
+
+  private static void compileParameterizedViewInit(
+      BufferedWriter w,
+      Map<String, ViewColumnMeta> columns,
+      ParameterizedView pv
+  ) throws IOException {
+    String params = pv.getParameters().keySet().stream().collect(Collectors.joining(", "));
+    w.write(String.format(DEF_INIT_SELF_CONTEXT_PARAMS_TEMPLATE, params));
+    w.newLine();
+
+    w.write("        params = HashMap()");
+    for (String param : pv.getParameters().keySet()) {
+      w.newLine();
+      w.write("        params.put('" + param + "', " + param + ")");
+    }
+    w.newLine();
+
+    w.write("        if fields:");
+    w.newLine();
+    w.write("            ParameterizedViewCursor.__init__(self, context, HashSet(fields), params)");
+    w.newLine();
+    w.write("        else:");
+    w.newLine();
+    w.write("            ParameterizedViewCursor.__init__(self, context, params)");
     w.newLine();
     for (String c : columns.keySet()) {
       w.write(String.format(SELF_S_EQUALS_NONE, c));

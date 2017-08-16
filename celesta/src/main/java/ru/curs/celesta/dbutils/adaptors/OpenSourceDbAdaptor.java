@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils.adaptors;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
+import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
@@ -226,17 +227,17 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getNavigationStatement(
-      Connection conn, GrainElement t, String orderBy, String navigationWhereClause, Set<String> fields
+      Connection conn, FromClause from, String orderBy, String navigationWhereClause, Set<String> fields
   ) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
     StringBuilder w = new StringBuilder(navigationWhereClause);
-    final String fieldList = getTableFieldsListExceptBlobs(t, fields);
+    final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
     boolean useWhere = w.length() > 0;
     if (orderBy.length() > 0)
       w.append(" order by " + orderBy);
-    String sql = String.format(SELECT_S_FROM + tableTemplate() + "%s  limit 1;", fieldList,
-        t.getGrain().getName(), t.getName(), useWhere ? " where " + w : w);
+    String sql = String.format(SELECT_S_FROM + " %s %s  limit 1;", fieldList,
+        from.getExpression(), useWhere ? " where " + w : w);
     // System.out.println(sql);
     return prepareStatement(conn, sql);
   }

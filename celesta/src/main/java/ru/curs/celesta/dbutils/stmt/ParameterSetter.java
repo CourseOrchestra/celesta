@@ -59,4 +59,8 @@ public abstract class ParameterSetter {
 	public static ParameterSetter createForRecversion() {
 		return RecversionParameterSetter.THESETTER;
 	}
+
+	public static ArbitraryParameterSetter createArbitrary(Object v) {
+		return new ArbitraryParameterSetter(v);
+	}
 }

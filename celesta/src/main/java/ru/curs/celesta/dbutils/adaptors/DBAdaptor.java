@@ -57,6 +57,7 @@ import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
@@ -508,7 +509,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * Возвращает PreparedStatement, содержащий отфильтрованный набор записей.
    *
    * @param conn     Соединение.
-   * @param t        Таблица.
+   * @param from     Объект для формирования from части запроса.
    * @param orderBy  Порядок сортировки.
    * @param offset   Количество строк для пропуска
    * @param rowCount Количество строк для возврата (limit-фильтр).
@@ -517,7 +518,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    */
   // CHECKSTYLE:OFF 6 parameters
   public final PreparedStatement getRecordSetStatement(
-      Connection conn, GrainElement t, String whereClause,
+      Connection conn, FromClause from, String whereClause,
       String orderBy, long offset, long rowCount, Set<String> fields
   ) throws CelestaException {
     // CHECKSTYLE:ON
@@ -527,9 +528,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       // Запрос не лимитированный -- одинаков для всех СУБД
       // Соединяем полученные компоненты в стандартный запрос
       // SELECT..FROM..WHERE..ORDER BY
-      sql = getSelectFromOrderBy(t, whereClause, orderBy, fields);
+      sql = getSelectFromOrderBy(from, whereClause, orderBy, fields);
     } else {
-      sql = getLimitedSQL(t, whereClause, orderBy, offset, rowCount, fields);
+      sql = getLimitedSQL(from, whereClause, orderBy, offset, rowCount, fields);
 
       // System.out.println(sql);
     }
@@ -587,22 +588,23 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   }
 
   final String getSelectFromOrderBy(
-      GrainElement t, String whereClause, String orderBy, Set<String> fields
+      FromClause from, String whereClause, String orderBy, Set<String> fields
   ) {
-    final String fieldList = getTableFieldsListExceptBlobs(t, fields);
-    String sqlfrom = String.format("select %s from " + tableTemplate(), fieldList,
-        t.getGrain().getName(), t.getName());
+    final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
+    String sqlfrom = String.format("select %s from %s" , fieldList,
+        from.getExpression());
 
     String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
 
     return sqlfrom + sqlwhere + " order by " + orderBy;
   }
 
-  public final PreparedStatement getSetCountStatement(Connection conn, GrainElement t, String whereClause)
+  public final PreparedStatement getSetCountStatement(Connection conn, FromClause from, String whereClause)
       throws CelestaException {
-    String sql = "select count(*) from " + String.format(tableTemplate(), t.getGrain().getName(), t.getName())
+    String sql = "select count(*) from " + from.getExpression()
         + ("".equals(whereClause) ? "" : " where " + whereClause);
     PreparedStatement result = prepareStatement(conn, sql);
+
     return result;
   }
 
@@ -705,16 +707,15 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * записей.
    *
    * @param conn                  Соединение.
-   * @param meta                  Таблица.
    * @param orderBy               Порядок сортировки (прямой или обратный).
    * @param navigationWhereClause Условие навигационного набора (от текущей записи).
    */
   public abstract PreparedStatement getNavigationStatement(
-      Connection conn, GrainElement meta, String orderBy, String navigationWhereClause, Set<String> fields
+      Connection conn, FromClause from, String orderBy, String navigationWhereClause, Set<String> fields
   ) throws CelestaException;
 
   abstract String getLimitedSQL(
-      GrainElement t, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
+      FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
   );
 
   abstract ColumnDefiner getColumnDefiner(Column c);
@@ -845,7 +846,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   abstract public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException;
   abstract public void dropParameterizedView (Connection conn, String grainName, String viewName) throws CelestaException;
-  abstract public PreparedStatement getParameterizedViewRecordSetStatement(Connection conn, ParameterizedView pv) throws CelestaException;
+  abstract public String getCallFunctionSql(ParameterizedView pv) throws CelestaException;
+
 
   /**
    * Создаёт представление в базе данных на основе метаданных.

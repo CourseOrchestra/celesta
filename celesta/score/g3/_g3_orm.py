@@ -1,5 +1,5 @@
 # coding=UTF-8
-# Source grain parameters: version=1.0, len=434, crc32=B1DC9BE9; compiler=11.
+# Source grain parameters: version=1.0, len=434, crc32=B1DC9BE9; compiler=12.
 """
 THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.
 DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.
@@ -8,9 +8,10 @@ import ru.curs.celesta.dbutils.Cursor as Cursor
 import ru.curs.celesta.dbutils.ViewCursor as ViewCursor
 import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor
 import ru.curs.celesta.dbutils.MaterializedViewCursor as MaterializedViewCursor
+import ru.curs.celesta.dbutils.ParameterizedViewCursor as ParameterizedViewCursor
 from java.lang import Object
 from jarray import array
-from java.util import Calendar, GregorianCalendar
+from java.util import Calendar, GregorianCalendar, HashSet, HashMap
 from java.sql import Timestamp
 import datetime
 
@@ -31,8 +32,11 @@ class cCursor(Cursor):
     onPostInsert = []
     onPreUpdate  = []
     onPostUpdate = []
-    def __init__(self, context):
-        Cursor.__init__(self, context)
+    def __init__(self, context, fields = []):
+        if fields:
+            Cursor.__init__(self, context, HashSet(fields))
+        else:
+            Cursor.__init__(self, context)
         self.idc = None
         self.descr = None
         self.idb = None
@@ -49,34 +53,43 @@ class cCursor(Cursor):
     def _tableName(self):
         return 'c'
     def _parseResult(self, rs):
-        self.idc = rs.getInt('idc')
-        if rs.wasNull():
-            self.idc = None
-        self.descr = rs.getString('descr')
-        if rs.wasNull():
-            self.descr = None
-        self.idb = rs.getInt('idb')
-        if rs.wasNull():
-            self.idb = None
-        self.aaa = rs.getString('aaa')
-        if rs.wasNull():
-            self.aaa = None
-        self.bbb = rs.getInt('bbb')
-        if rs.wasNull():
-            self.bbb = None
+        if self.inRec('idc'):
+            self.idc = rs.getInt('idc')
+            if rs.wasNull():
+                self.idc = None
+        if self.inRec('descr'):
+            self.descr = rs.getString('descr')
+            if rs.wasNull():
+                self.descr = None
+        if self.inRec('idb'):
+            self.idb = rs.getInt('idb')
+            if rs.wasNull():
+                self.idb = None
+        if self.inRec('aaa'):
+            self.aaa = rs.getString('aaa')
+            if rs.wasNull():
+                self.aaa = None
+        if self.inRec('bbb'):
+            self.bbb = rs.getInt('bbb')
+            if rs.wasNull():
+                self.bbb = None
         self.dat = None
-        self.longtext = rs.getString('longtext')
-        if rs.wasNull():
-            self.longtext = None
-        self.test = rs.getInt('test')
-        if rs.wasNull():
-            self.test = None
-        self.doublefield = rs.getDouble('doublefield')
-        if rs.wasNull():
-            self.doublefield = None
-        self.datefield = rs.getTimestamp('datefield')
-        if rs.wasNull():
-            self.datefield = None
+        if self.inRec('longtext'):
+            self.longtext = rs.getString('longtext')
+            if rs.wasNull():
+                self.longtext = None
+        if self.inRec('test'):
+            self.test = rs.getInt('test')
+            if rs.wasNull():
+                self.test = None
+        if self.inRec('doublefield'):
+            self.doublefield = rs.getDouble('doublefield')
+            if rs.wasNull():
+                self.doublefield = None
+        if self.inRec('datefield'):
+            self.datefield = rs.getTimestamp('datefield')
+            if rs.wasNull():
+                self.datefield = None
         self.recversion = rs.getInt('recversion')
     def _setFieldValue(self, name, value):
         setattr(self, name, value)

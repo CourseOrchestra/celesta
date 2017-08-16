@@ -52,6 +52,7 @@ import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
@@ -1056,7 +1057,7 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   String getLimitedSQL(
-      GrainElement t, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
+      FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
   ) {
     if (offset == 0 && rowCount == 0)
       throw new IllegalArgumentException();
@@ -1064,18 +1065,18 @@ final class OraAdaptor extends DBAdaptor {
     if (offset == 0) {
       // No offset -- simpler query
       sql = String.format("with a as (%s) select a.* from a where rownum <= %d",
-          getSelectFromOrderBy(t, whereClause, orderBy, fields), rowCount);
+          getSelectFromOrderBy(from, whereClause, orderBy, fields), rowCount);
     } else if (rowCount == 0) {
       // No rowCount -- simpler query
       sql = String.format(
           "with a as (%s) select * from (select a.*, ROWNUM rnum " + "from a) where rnum >= %d order by rnum",
-          getSelectFromOrderBy(t, whereClause, orderBy, fields), offset + 1L);
+          getSelectFromOrderBy(from, whereClause, orderBy, fields), offset + 1L);
 
     } else {
       sql = String.format(
           "with a as (%s) select * from (select a.*, ROWNUM rnum "
               + "from a where rownum <= %d) where rnum >= %d order by rnum",
-          getSelectFromOrderBy(t, whereClause, orderBy, fields), offset + rowCount, offset + 1L);
+          getSelectFromOrderBy(from, whereClause, orderBy, fields), offset + rowCount, offset + 1L);
     }
     return sql;
   }
@@ -1170,7 +1171,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getParameterizedViewRecordSetStatement(Connection conn, ParameterizedView pv) throws CelestaException {
+  public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
     return null;
   }
 
@@ -1320,20 +1321,20 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getNavigationStatement(
-      Connection conn, GrainElement t, String orderBy, String navigationWhereClause, Set<String> fields
+      Connection conn, FromClause from, String orderBy, String navigationWhereClause, Set<String> fields
   ) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
 
     StringBuilder w = new StringBuilder(navigationWhereClause);
-    final String fieldList = getTableFieldsListExceptBlobs(t, fields);
+    final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
 
     if (orderBy.length() > 0)
       w.append(" order by " + orderBy);
     String sql = String.format(SELECT_S_FROM
-            + " (" + SELECT_S_FROM + " " + tableTemplate() + "  %s)"
+            + " (" + SELECT_S_FROM + " %s  %s)"
             + " where rownum = 1", fieldList, fieldList,
-        t.getGrain().getName(), t.getName(), "where " + w);
+        from.getExpression(), "where " + w);
     // System.out.println(sql);
     return prepareStatement(conn, sql);
   }

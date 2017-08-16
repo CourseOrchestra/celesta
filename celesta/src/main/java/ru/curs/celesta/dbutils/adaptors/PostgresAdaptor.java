@@ -53,6 +53,7 @@ import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
@@ -506,17 +507,17 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   @Override
   String getLimitedSQL(
-      GrainElement t, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
+      FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
   ) {
     if (offset == 0 && rowCount == 0)
       throw new IllegalArgumentException();
     String sql;
     if (offset == 0)
-      sql = getSelectFromOrderBy(t, whereClause, orderBy, fields) + String.format(" limit %d", rowCount);
+      sql = getSelectFromOrderBy(from, whereClause, orderBy, fields) + String.format(" limit %d", rowCount);
     else if (rowCount == 0)
-      sql = getSelectFromOrderBy(t, whereClause, orderBy, fields) + String.format(" limit all offset %d", offset);
+      sql = getSelectFromOrderBy(from, whereClause, orderBy, fields) + String.format(" limit all offset %d", offset);
     else {
-      sql = getSelectFromOrderBy(t, whereClause, orderBy, fields)
+      sql = getSelectFromOrderBy(from, whereClause, orderBy, fields)
           + String.format(" limit %d offset %d", rowCount, offset);
     }
     return sql;
@@ -534,7 +535,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public PreparedStatement getParameterizedViewRecordSetStatement(Connection conn, ParameterizedView pv) throws CelestaException {
+  public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
     return null;
   }
 

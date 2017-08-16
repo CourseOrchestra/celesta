@@ -25,6 +25,7 @@ import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
@@ -68,7 +69,13 @@ public abstract class AbstractAdaptorTest {
   }
 
   private int getCount(Connection conn, GrainElement ge) throws Exception {
-    PreparedStatement stmt = dba.getSetCountStatement(conn, ge, "");
+    FromClause from = new FromClause();
+    from.setGe(ge);
+    from.setExpression(String.format(dba.tableTemplate(), ge.getGrain().getName(), ge.getName()));
+    PreparedStatement stmt = dba.getSetCountStatement(
+        conn,
+        from,
+        "");
     try {
       ResultSet rs = stmt.executeQuery();
       rs.next();
@@ -1119,8 +1126,12 @@ public abstract class AbstractAdaptorTest {
       String orderBy = t.getColumn("id").getQuotedName();
       int count = 0;
 
+      FromClause from = new FromClause();
+      from.setGe(t);
+      from.setExpression(String.format(dba.tableTemplate(), t.getGrain().getName(), t.getName()));
+
       stmt = dba.getRecordSetStatement(
-          conn, t, "", orderBy, 0, 0, Collections.emptySet()
+          conn, from, "", orderBy, 0, 0, Collections.emptySet()
       );
       rs = stmt.executeQuery();
       while (rs.next()) {
@@ -1130,7 +1141,7 @@ public abstract class AbstractAdaptorTest {
 
       count = 0;
       stmt = dba.getRecordSetStatement(
-          conn, t, "", orderBy, 1, 0, Collections.emptySet()
+          conn, from, "", orderBy, 1, 0, Collections.emptySet()
       );
       rs = stmt.executeQuery();
       while (rs.next()) {
@@ -1140,7 +1151,7 @@ public abstract class AbstractAdaptorTest {
 
       count = 0;
       stmt = dba.getRecordSetStatement(
-          conn, t, "", orderBy, 0, 1, Collections.emptySet()
+          conn, from, "", orderBy, 0, 1, Collections.emptySet()
       );
       rs = stmt.executeQuery();
       while (rs.next()) {
@@ -1215,8 +1226,12 @@ public abstract class AbstractAdaptorTest {
       dba.initDataForMaterializedView(conn, mv);
       assertEquals(2, getCount(conn, mv));
 
+      FromClause from = new FromClause();
+      from.setGe(mv);
+      from.setExpression(String.format(dba.tableTemplate(), mv.getGrain().getName(), mv.getName()));
+
       pstmt = dba.getRecordSetStatement(
-          conn, mv, "", "\"var\"", 0, 0, Collections.emptySet()
+          conn, from, "", "\"var\"", 0, 0, Collections.emptySet()
       );
       ResultSet rs = pstmt.executeQuery();
 

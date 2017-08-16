@@ -109,7 +109,7 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
 
     String deleteSql = String.format(deleteSqlBuilder.toString(), mvFullName, mvGroupByColumns);
 
-    System.out.println(deleteSql);
+    //System.out.println(deleteSql);
     PreparedStatement stmt = conn.prepareStatement(deleteSql);
 
     try {
@@ -182,14 +182,14 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
               mvAllColumns + ", \"" + MaterializedView.SURROGATE_COUNT + "\"", selectStmtBuilder.toString());
 
           PreparedStatement stmt = conn.prepareStatement(insertSql);
-          System.out.println(insertSql);
+          //System.out.println(insertSql);
 
           try {
             for (int i = 0; i < groupByColumnValues.size(); ++i) {
               stmt.setObject(i + 1, groupByColumnValues.values().toArray()[i]);
             }
 
-            System.out.println(stmt.toString());
+            //System.out.println(stmt.toString());
             stmt.execute();
           } finally {
             stmt.close();

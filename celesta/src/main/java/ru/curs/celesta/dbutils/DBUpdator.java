@@ -266,7 +266,7 @@ public final class DBUpdator {
       createViews(g);
 
       // Создаём параметризованные представления заново
-      createViews(g);
+      createParameterizedViews(g);
 
       // Обновляем все материализованные представления.
       for (MaterializedView mv : g.getElements(MaterializedView.class).values()) {
