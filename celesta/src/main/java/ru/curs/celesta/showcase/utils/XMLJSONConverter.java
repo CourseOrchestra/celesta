@@ -9,6 +9,8 @@ import javax.xml.transform.TransformerException;
 import org.json.*;
 import org.xml.sax.SAXException;
 
+import ru.curs.showcase.util.XMLToJSONConverterSaxHandler2;
+
 import com.google.gson.JsonElement;
 
 /**
@@ -25,7 +27,7 @@ public final class XMLJSONConverter {
 
 	/**
 	 * Преобразование XML в JSON. Все атрибуты тега переносятся в атрибуты json,
-	 * имена которох начинаются с префикса @. В случа если встречен тег sorted,
+	 * имена которых начинаются с префикса @. В случае если встречен тег sorted,
 	 * то все подобные теги становятся элементами json массива с именем #sorted
 	 * с сохранением порядка следования в xml. Если тег содержащий атрибуты,
 	 * содержит также значение, то оно переносится в json в атрибут с именем
@@ -174,6 +176,154 @@ public final class XMLJSONConverter {
 	}
 
 	/**
+	 * Преобразования XML в JSON. Все атрибуты тега переносятся в атрибуты json,
+	 * имена которых НЕ!!! начинаются с префикса @. В случа если встречен тег
+	 * sorted, то все подобные теги становятся элементами json массива с именем
+	 * #sorted с сохранением порядка следования в xml. Если тег содержащий
+	 * атрибуты, содержит также значение, то оно переносится в json в атрибут с
+	 * именем #text
+	 * 
+	 * @param xml
+	 *            - XML строка.
+	 * @return строка в формате json.
+	 * @throws SAXException
+	 * @throws IOException
+	 */
+	public static String xmlToJson2(final String xml) throws SAXException, IOException {
+
+		if (xml == null || xml.isEmpty()) {
+			return "";
+		}
+		SAXParser parser = createSAXParser();
+		XMLToJSONConverterSaxHandler2 handler = new XMLToJSONConverterSaxHandler2();
+		// Данный код вставлен для разрешения случая, когда в xml-файле имеется
+		// несколько корневых эелементов, тогда как на вход SaxParser
+		// должен подаваться xml-файл только с одним корневым элементом.
+		String newXml = xml;
+		if (newXml.startsWith("<?xml")) {
+			newXml = newXml.replaceFirst("<[?]xml(.)*[?]>", "");
+		}
+
+		if (newXml.contains("&gt;")) {
+			while (newXml.contains("&gt;")) {
+				newXml = newXml.replace("&gt;", "&amp;gt;");
+			}
+		}
+		if (newXml.contains("&lt;")) {
+			while (newXml.contains("&lt;")) {
+				newXml = newXml.replace("&lt;", "&amp;lt;");
+			}
+		}
+		if (newXml.contains("&nbsp;")) {
+			while (newXml.contains("&nbsp;")) {
+				newXml = newXml.replace("&nbsp;", "&amp;nbsp;");
+			}
+		}
+
+		List<String> innerOfCurColIdList = new ArrayList<String>();
+		if (newXml.toUpperCase().contains("<currentColumnId>".toUpperCase())) {
+			String[] arr = newXml.toUpperCase().split("<currentColumnId>".toUpperCase());
+			String string = "";
+			int begin = 1;
+			if (newXml.toUpperCase().startsWith("<currentColumnId>".toUpperCase())) {
+				begin = 0;
+			}
+			if (arr.length > 0) {
+				for (int i = begin; i < arr.length; i++) {
+					int innerIndex = arr[i].indexOf("</currentColumnId>".toUpperCase());
+					string = arr[i].substring(0, innerIndex);
+					int outerIndex = newXml.toUpperCase().indexOf(string);
+					innerOfCurColIdList.add(newXml.substring(outerIndex,
+							outerIndex + string.length()));
+				}
+			}
+		}
+
+		int j = 0;
+		for (String content : innerOfCurColIdList) {
+			if (!" ".equals(content))
+				newXml = newXml.replace(content, "innerOfCurColIdList" + j);
+			j++;
+		}
+
+		List<String> innerOfSortedColIdList = new ArrayList<String>();
+		if (newXml.contains("<sortedColumn")) {
+			String[] arr = newXml.split("<sortedColumn");
+			String string = "";
+			int begin = 1;
+			if (newXml.startsWith("<sortedColumn")) {
+				begin = 0;
+			}
+			if (arr.length > 0) {
+				for (int i = begin; i < arr.length; i++) {
+					int innerIndex = arr[i].indexOf("/>");
+					string = arr[i].substring(0, innerIndex);
+					if (string.contains("id=\"")) {
+						String[] innerArr = string.split("id=\"");
+						int outerIndex = innerArr[1].indexOf("\"");
+						innerOfSortedColIdList.add(innerArr[1].substring(0, outerIndex));
+					}
+				}
+			}
+		}
+
+		int k = 0;
+		for (String content : innerOfSortedColIdList) {
+			newXml = newXml.replace(content, "innerOfSortedColIdList" + k);
+			k++;
+		}
+
+		newXml = "<tempRootForResolvingProblem>" + newXml + "</tempRootForResolvingProblem>";
+		newXml = newXml.replaceAll("&(?!amp;)", "xxxxxx");
+
+		InputStream in = stringToStream(newXml);
+		parser.parse(in, handler);
+		JsonElement result = handler.getResult();
+		String str = result.toString();
+		str = str.replace("xxxxxx", "&");
+
+		int ind = str.indexOf(':');
+		str = str.substring(ind + 1);
+		ind = str.lastIndexOf("}");
+		str = str.substring(0, ind);
+
+		j = 0;
+		for (String content : innerOfCurColIdList) {
+			if (!" ".equals(content))
+				str = str.replace("innerOfCurColIdList" + j, content);
+			j++;
+		}
+
+		k = 0;
+		for (String content : innerOfSortedColIdList) {
+			str = str.replace("innerOfSortedColIdList" + k, content);
+			k++;
+		}
+
+		List<String> quoteList = handler.getQuoteList();
+		for (String s : quoteList) {
+			if (!str.contains(s)) {
+				s = s.replace("\"", "\\\"");
+				str = str.replace("\"" + s + "\"", s);
+			} else {
+				str = str.replace("\"" + s + "\"", s);
+			}
+		}
+
+		if (str.contains("&quot;")) {
+			str = str.replace("&quot;", "\\\"");
+		}
+		if (str.contains("&lt;")) {
+			str = str.replace("&lt;", "<");
+		}
+		if (str.contains("&gt;")) {
+			str = str.replace("&gt;", ">");
+		}
+
+		return str;
+	}
+
+	/**
 	 * Преобразование JSON в XML. Все атрибуты, имена которох начинаются с
 	 * префикса @ переносятся в xml в виде соответствующего атрибута тега. В
 	 * случа если встречен атрибут с именем #sorted, то все дочернии элементы
@@ -220,7 +370,7 @@ public final class XMLJSONConverter {
 
 	/**
 	 * Преобразование XML в JSONObject. Все атрибуты тега переносятся в атрибуты
-	 * json, имена которох начинаются с префикса @. В случа если встречен тег
+	 * json, имена которых начинаются с префикса @. В случае если встречен тег
 	 * sorted, то все подобные теги становятся элементами json массива с именем
 	 * #sorted с сохранением порядка следования в xml. Если тег содержащий
 	 * атрибуты, содержит также значение, то оно переносится в json в атрибут с
@@ -240,6 +390,28 @@ public final class XMLJSONConverter {
 	public static JSONObject xmlToJsonObject(final String xml) throws JSONException, SAXException,
 			IOException {
 		String str = XMLJSONConverter.xmlToJson(xml);
+		JSONObject jsonObj = new JSONObject(str);
+		return jsonObj;
+	}
+
+	/**
+	 * Преобразования XML в JSONObject. Все атрибуты тега переносятся в атрибуты
+	 * json, имена которых НЕ!!! начинаются с префикса @. В случае если встречен
+	 * тег sorted, то все подобные теги становятся элементами json массива с
+	 * именем #sorted с сохранением порядка следования в xml. Если тег
+	 * содержащий атрибуты, содержит также значение, то оно переносится в json в
+	 * атрибут с именем #text
+	 * 
+	 * @param xml
+	 *            - XML строка.
+	 * @return объект JSONObject.
+	 * @throws SAXException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static JSONObject xmlToJsonObject2(final String xml) throws JSONException,
+			SAXException, IOException {
+		String str = XMLJSONConverter.xmlToJson2(xml);
 		JSONObject jsonObj = new JSONObject(str);
 		return jsonObj;
 	}
