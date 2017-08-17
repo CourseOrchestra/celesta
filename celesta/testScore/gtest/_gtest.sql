@@ -82,7 +82,7 @@ create table tableForMatView (
   f5 datetime not null
 );
 
-create materialized view mView1 as
+create materialized view mView1gTest as
   select sum(id) as idsum, f1, f2, f3, f4, f5
   from tableForMatView
   group by f1, f2, f3, f4, f5;

@@ -540,7 +540,9 @@ public abstract class AbstractAdaptorTest {
 
     Grain g = score.getGrain(GRAIN_NAME);
     Table tableForMatView = g.getElement("tableForMatView", Table.class);
-    MaterializedView mView1 = g.getElement("mView1", MaterializedView.class);
+    MaterializedView mView1gTest = g.getElement("mView1gTest", MaterializedView.class);
+
+    boolean tablesAreCreated = false;
 
     try {
       // Могли остаться от незавершившегося теста
@@ -550,18 +552,19 @@ public abstract class AbstractAdaptorTest {
         conn.rollback();
       }
       try {
-        dba.dropTable(conn, mView1);
+        dba.dropTable(conn, mView1gTest);
       } catch (CelestaException e) {
         conn.rollback();
       }
 
       dba.createTable(conn, tableForMatView);
-      dba.createTable(conn, mView1);
+      dba.createTable(conn, mView1gTest);
+      tablesAreCreated = true;
 
       DBColumnInfo c;
       Column col;
 
-      col = mView1.getColumn("idsum");
+      col = mView1gTest.getColumn("idsum");
       c = dba.getColumnInfo(conn, col);
       assertEquals("idsum", c.getName());
       assertSame(IntegerColumn.class, c.getType());
@@ -570,7 +573,7 @@ public abstract class AbstractAdaptorTest {
       assertEquals(false, c.isIdentity());
       assertEquals(0, c.getLength());
 
-      col = mView1.getColumn("f1");
+      col = mView1gTest.getColumn("f1");
       c = dba.getColumnInfo(conn, col);
       assertEquals("f1", c.getName());
       assertSame(StringColumn.class, c.getType());
@@ -579,7 +582,7 @@ public abstract class AbstractAdaptorTest {
       assertEquals(false, c.isIdentity());
       assertEquals(2, c.getLength());
 
-      col = mView1.getColumn("f2");
+      col = mView1gTest.getColumn("f2");
       c = dba.getColumnInfo(conn, col);
       assertEquals("f2", c.getName());
       assertSame(IntegerColumn.class, c.getType());
@@ -588,7 +591,7 @@ public abstract class AbstractAdaptorTest {
       assertEquals(false, c.isIdentity());
       assertEquals(0, c.getLength());
 
-      col = mView1.getColumn("f3");
+      col = mView1gTest.getColumn("f3");
       c = dba.getColumnInfo(conn, col);
       assertEquals("f3", c.getName());
       assertSame(BooleanColumn.class, c.getType());
@@ -597,7 +600,7 @@ public abstract class AbstractAdaptorTest {
       assertEquals(false, c.isIdentity());
       assertEquals(0, c.getLength());
 
-      col = mView1.getColumn("f4");
+      col = mView1gTest.getColumn("f4");
       c = dba.getColumnInfo(conn, col);
       assertEquals("f4", c.getName());
       assertSame(FloatingColumn.class, c.getType());
@@ -606,7 +609,7 @@ public abstract class AbstractAdaptorTest {
       assertEquals(false, c.isIdentity());
       assertEquals(0, c.getLength());
 
-      col = mView1.getColumn("f5");
+      col = mView1gTest.getColumn("f5");
       c = dba.getColumnInfo(conn, col);
       assertEquals("f5", c.getName());
       assertSame(DateTimeColumn.class, c.getType());
@@ -614,9 +617,13 @@ public abstract class AbstractAdaptorTest {
       assertEquals("", c.getDefaultValue());
       assertEquals(false, c.isIdentity());
       assertEquals(0, c.getLength());
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     } finally {
-      dba.dropTable(conn, tableForMatView);
-      dba.dropTable(conn, mView1);
+      if (tablesAreCreated) {
+        dba.dropTable(conn, tableForMatView);
+        dba.dropTable(conn, mView1gTest);
+      }
     }
   }
 
