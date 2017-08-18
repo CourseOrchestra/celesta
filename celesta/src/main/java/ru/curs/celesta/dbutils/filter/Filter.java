@@ -35,9 +35,7 @@ public class Filter extends AbstractFilter {
 	}
 
 	public String makeWhereClause(String quotedName, final QueryBuildingHelper dba) throws CelestaException {
-		FilterParser.SQLTranslator tr = dateStr -> dba.translateDate(dateStr);
-
-		String result = FilterParser.translateFilter(ftype, quotedName, value, tr);
+		String result = FilterParser.translateFilter(ftype, quotedName, value, dba::translateDate);
 		return result;
 	}
 

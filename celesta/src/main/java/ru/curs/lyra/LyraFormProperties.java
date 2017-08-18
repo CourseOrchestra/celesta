@@ -1,21 +1,38 @@
 package ru.curs.lyra;
 
+import java.util.Optional;
+import java.util.function.Function;
+
 /**
  * Lyra form properties.
  */
 public class LyraFormProperties {
-	private String profile = null;
-	private String gridwidth = null;
-	private String gridheight = null;
-	private String defaultaction = null;
-	private String footer = null;
-	private String header = null;
+	private Optional<String> profile = Optional.empty();
+	private Optional<String> gridwidth = Optional.empty();
+	private Optional<String> gridheight = Optional.empty();
+	private Optional<String> defaultaction = Optional.empty();
+	private Optional<String> footer = Optional.empty();
+	private Optional<String> header = Optional.empty();
+
+	private final Optional<LyraFormProperties> parent;
+
+	public LyraFormProperties() {
+		this.parent = Optional.empty();
+	}
+
+	public LyraFormProperties(LyraFormProperties parent) {
+		this.parent = Optional.ofNullable(parent);
+	}
+
+	private <T> T getValue(Optional<T> val, Function<LyraFormProperties, T> f) {
+		return val.orElse(parent.map(f).orElse(null));
+	}
 
 	/**
 	 * Grid properties file.
 	 */
 	public String getProfile() {
-		return profile;
+		return getValue(profile, LyraFormProperties::getProfile);
 	}
 
 	/**
@@ -25,14 +42,14 @@ public class LyraFormProperties {
 	 *            file name.
 	 */
 	public void setProfile(String profile) {
-		this.profile = profile;
+		this.profile = Optional.ofNullable(profile);
 	}
 
 	/**
 	 * Grid width in HTML units.
 	 */
 	public String getGridwidth() {
-		return gridwidth;
+		return getValue(gridwidth, LyraFormProperties::getGridwidth);
 	}
 
 	/**
@@ -42,14 +59,14 @@ public class LyraFormProperties {
 	 *            grid width in HTML units.
 	 */
 	public void setGridwidth(String gridwidth) {
-		this.gridwidth = gridwidth;
+		this.gridwidth = Optional.ofNullable(gridwidth);
 	}
 
 	/**
 	 * Grid height in HTML units.
 	 */
 	public String getGridheight() {
-		return gridheight;
+		return getValue(gridheight, LyraFormProperties::getGridheight);
 	}
 
 	/**
@@ -59,14 +76,14 @@ public class LyraFormProperties {
 	 *            grid height in pixels.
 	 */
 	public void setGridheight(String gridheight) {
-		this.gridheight = gridheight;
+		this.gridheight = Optional.ofNullable(gridheight);
 	}
 
 	/**
 	 * Gets default action.
 	 */
 	public String getDefaultaction() {
-		return defaultaction;
+		return getValue(defaultaction, LyraFormProperties::getDefaultaction);
 	}
 
 	/**
@@ -76,14 +93,14 @@ public class LyraFormProperties {
 	 *            default action.
 	 */
 	public void setDefaultaction(String defaultaction) {
-		this.defaultaction = defaultaction;
+		this.defaultaction = Optional.ofNullable(defaultaction);
 	}
 
 	/**
 	 * Gets form's footer.
 	 */
 	public String getFooter() {
-		return footer;
+		return getValue(footer, LyraFormProperties::getFooter);
 	}
 
 	/**
@@ -93,7 +110,7 @@ public class LyraFormProperties {
 	 *            new form's footer.
 	 */
 	public void setFooter(String footer) {
-		this.footer = footer;
+		this.footer = Optional.ofNullable(footer);
 	}
 
 	/**
@@ -102,7 +119,7 @@ public class LyraFormProperties {
 	 * @return form's header.
 	 */
 	public String getHeader() {
-		return header;
+		return getValue(header, LyraFormProperties::getHeader);
 	}
 
 	/**
@@ -112,7 +129,7 @@ public class LyraFormProperties {
 	 *            new form's header.
 	 */
 	public void setHeader(String header) {
-		this.header = header;
+		this.header = Optional.ofNullable(header);
 	}
 
 }

@@ -445,6 +445,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         stmt.close();
       }
     } catch (SQLException | IOException e) {
+      e.printStackTrace();
       throw new CelestaException("Error while creating parameterized view %s.%s: %s",
           pv.getGrain().getName(), pv.getName(), e.getMessage());
     }
