@@ -526,7 +526,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   @Override
   public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
-    return null;
+    return Collections.EMPTY_LIST;
   }
 
   @Override
