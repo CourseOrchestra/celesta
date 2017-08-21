@@ -1162,7 +1162,7 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
