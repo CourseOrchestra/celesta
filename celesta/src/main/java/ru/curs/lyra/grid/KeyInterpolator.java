@@ -43,32 +43,34 @@ public class KeyInterpolator {
 	 * @param count
 	 *            Номер записи.
 	 */
-	public synchronized void setPoint(BigInteger ord, int count) {
+	public void setPoint(BigInteger ord, int count) {
 		if (count < 0)
 			throw new IllegalArgumentException();
 		final BigInteger neword = negateIfDesc(ord);
 
-		isLAVValid = false;
-		// System.out.printf("+(%d:%s)%n", count, ord.toString());
-		Entry<Integer, BigInteger> e;
-		data.put(count, neword);
-		int c = count;
-		// Discarding non-congruent points
-		while ((e = data.lowerEntry(c)) != null) {
-			if (e.getValue().compareTo(neword) >= 0) {
-				c = e.getKey();
-				data.remove(c);
-			} else {
-				break;
+		synchronized (this) {
+			isLAVValid = false;
+			// System.out.printf("+(%d:%s)%n", count, ord.toString());
+			Entry<Integer, BigInteger> e;
+			data.put(count, neword);
+			int c = count;
+			// Discarding non-congruent points
+			while ((e = data.lowerEntry(c)) != null) {
+				if (e.getValue().compareTo(neword) >= 0) {
+					c = e.getKey();
+					data.remove(c);
+				} else {
+					break;
+				}
 			}
-		}
-		c = count;
-		while ((e = data.higherEntry(c)) != null) {
-			if (e.getValue().compareTo(neword) <= 0) {
-				c = e.getKey();
-				data.remove(c);
-			} else {
-				break;
+			c = count;
+			while ((e = data.higherEntry(c)) != null) {
+				if (e.getValue().compareTo(neword) <= 0) {
+					c = e.getKey();
+					data.remove(c);
+				} else {
+					break;
+				}
 			}
 		}
 
@@ -100,16 +102,17 @@ public class KeyInterpolator {
 	public int getClosestPosition(int count) {
 		if (count < 0)
 			throw new IllegalArgumentException();
-		if (data.isEmpty())
-			throw new IllegalStateException();
-
-		Integer floor = data.floorKey(count);
-		int e0 = floor == null ? data.firstKey() : floor;
-		if (e0 == count)
-			return e0;
-		Integer ceiling = data.ceilingKey(count);
-		int e1 = ceiling == null ? data.lastKey() : ceiling;
-		return (count - e0 < e1 - count) ? e0 : e1;
+		synchronized (this) {
+			if (data.isEmpty())
+				throw new IllegalStateException();
+			Integer floor = data.floorKey(count);
+			int e0 = floor == null ? data.firstKey() : floor;
+			if (e0 == count)
+				return e0;
+			Integer ceiling = data.ceilingKey(count);
+			int e1 = ceiling == null ? data.lastKey() : ceiling;
+			return (count - e0 < e1 - count) ? e0 : e1;
+		}
 	}
 
 	/**
@@ -121,19 +124,19 @@ public class KeyInterpolator {
 	public BigInteger getPoint(int count) {
 		if (count < 0)
 			throw new IllegalArgumentException();
-		Entry<Integer, BigInteger> e0 = data.floorEntry(count);
-		if (e0.getKey() == count)
-			return negateIfDesc(e0.getValue());
-		Entry<Integer, BigInteger> e1 = data.ceilingEntry(count);
-		// when count > maxcount
-		if (e1 == null)
-			return negateIfDesc(data.lastEntry().getValue());
-
+		Entry<Integer, BigInteger> e0, e1;
+		synchronized (this) {
+			e0 = data.floorEntry(count);
+			if (e0.getKey() == count)
+				return negateIfDesc(e0.getValue());
+			e1 = data.ceilingEntry(count);
+			// when count > maxcount
+			if (e1 == null)
+				return negateIfDesc(data.lastEntry().getValue());
+		}
 		BigInteger result = (e1.getValue().subtract(e0.getValue()).subtract(BigInteger.ONE))
 				.multiply(BigInteger.valueOf(count - e0.getKey() - 1));
-
 		BigInteger delta = BigInteger.valueOf(e1.getKey() - e0.getKey() - 1);
-
 		result = e0.getValue().add(divideAndRound(result, delta)).add(BigInteger.ONE);
 		return negateIfDesc(result);
 	}
@@ -168,38 +171,44 @@ public class KeyInterpolator {
 	 * @param key
 	 *            Key ordinal value.
 	 */
-	public synchronized int getApproximatePosition(BigInteger key) {
+	public int getApproximatePosition(BigInteger key) {
 		final BigInteger newkey = negateIfDesc(key);
-		int cmax = data.lastEntry().getKey();
 		int cmin = 0;
 		int cmid;
-		while (cmax > cmin) {
-			cmid = (cmax + cmin) >> 1;
-			Entry<Integer, BigInteger> ceiling = data.ceilingEntry(cmid);
-			int delta = ceiling.getValue().compareTo(newkey);
-			if (delta == 0) {
-				return ceiling.getKey();
-			} else if (delta < 0) {
-				// Ceiling is strictly lower than key: we should try higher cmin
-				cmin = ceiling.getKey();
-			} else {
-				// Ceiling is strictly greater than key!
-				Entry<Integer, BigInteger> lower = data.lowerEntry(cmid);
-				delta = lower.getValue().compareTo(newkey);
-				if (delta == 0)
-					return lower.getKey();
-				else if (delta > 0) {
-					// Lower entry is strictly greater than key: we should try
-					// lower cmax
-					cmax = lower.getKey();
+		synchronized (this) {
+			int cmax = data.lastEntry().getKey();
+			while (cmax > cmin) {
+				cmid = (cmax + cmin) >> 1;
+				if (cmid == cmin)
+					cmid = cmax;
+				Entry<Integer, BigInteger> ceiling = data.ceilingEntry(cmid);
+				int delta = ceiling.getValue().compareTo(newkey);
+				if (delta == 0) {
+					return ceiling.getKey();
+				} else if (delta < 0) {
+					// Ceiling is strictly lower than key: we should try higher
+					// cmin
+					cmin = ceiling.getKey();
 				} else {
-					// Lower entry is strictly lower,
-					// Ceiling is strictly greater: interpolation
-					int d = 1 + divideAndRound(
-							BigInteger.valueOf(ceiling.getKey() - lower.getKey() - 1)
-									.multiply(newkey.subtract(lower.getValue()).subtract(BigInteger.ONE)),
-							ceiling.getValue().subtract(lower.getValue()).subtract(BigInteger.ONE)).intValue();
-					return lower.getKey() + d;
+					// Ceiling is strictly greater than key!
+					Entry<Integer, BigInteger> lower = data.lowerEntry(cmid);
+					delta = lower.getValue().compareTo(newkey);
+					if (delta == 0)
+						return lower.getKey();
+					else if (delta > 0) {
+						// Lower entry is strictly greater than key: we should
+						// try
+						// lower cmax
+						cmax = lower.getKey();
+					} else {
+						// Lower entry is strictly lower,
+						// Ceiling is strictly greater: interpolation
+						int d = 1 + divideAndRound(
+								BigInteger.valueOf(ceiling.getKey() - lower.getKey() - 1)
+										.multiply(newkey.subtract(lower.getValue()).subtract(BigInteger.ONE)),
+								ceiling.getValue().subtract(lower.getValue()).subtract(BigInteger.ONE)).intValue();
+						return lower.getKey() + d;
+					}
 				}
 			}
 		}

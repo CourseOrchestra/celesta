@@ -142,13 +142,23 @@ public class KeyInterpolatorTest {
 		assertEquals(9, ka.getClosestPosition(8));
 		assertEquals(9, ka.getClosestPosition(9));
 
-		//extreme case 1
+		// extreme case 1
 		assertEquals(9, ka.getClosestPosition(100));
 
-		//extreme case 2
+		// extreme case 2
 		ka = new KeyInterpolator(BigInteger.valueOf(5), BigInteger.valueOf(10), 10, false);
 		ka.setPoint(BigInteger.valueOf(5), 6);
 		assertEquals(6, ka.getClosestPosition(0));
 		assertEquals(6, ka.getClosestPosition(1));
+	}
+
+	@Test
+	public void twoPointsCase() {
+		KeyInterpolator ka = new KeyInterpolator(BigInteger.valueOf(2), BigInteger.valueOf(10), 2, false);
+		assertEquals(0, ka.getApproximatePosition(BigInteger.valueOf(-10)));
+		assertEquals(0, ka.getApproximatePosition(BigInteger.valueOf(0)));
+		assertEquals(1, ka.getApproximatePosition(BigInteger.valueOf(3)));
+		assertEquals(1, ka.getApproximatePosition(BigInteger.valueOf(7)));
+		assertEquals(1, ka.getApproximatePosition(BigInteger.valueOf(20)));
 	}
 }
