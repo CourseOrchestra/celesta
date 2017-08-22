@@ -23,11 +23,23 @@ public final class InTerm extends WhereTerm {
   public String getWhere() throws CelestaException {
     FieldsLookup lookup = filter.getLookup();
     DBAdaptor db = DBAdaptor.getAdaptor();
-    return db.getInFilterClause(lookup.getTable(), lookup.getOtherTable(), lookup.getFields(), lookup.getOtherFields());
+
+    final String otherWhere;
+    if (filter.getOtherwhereTerm() != null) {
+      otherWhere = filter.getOtherwhereTerm().getWhere();
+    } else {
+      otherWhere = "";
+    }
+
+    return db.getInFilterClause(lookup.getTable(), lookup.getOtherTable(),
+        lookup.getFields(), lookup.getOtherFields(), otherWhere);
   }
 
   @Override
   public void programParams(List<ParameterSetter> program) throws CelestaException {
-    //DO NOTHING
+    if (filter.getOtherwhereTerm() != null) {
+      filter.getOtherwhereTerm().programParams(program);
+    }
   }
+
 }

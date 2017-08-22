@@ -872,7 +872,17 @@ public abstract class BasicCursor implements Closeable {
 
 	public final void setIn(FieldsLookup fieldsLookup) throws CelestaException {
 		fieldsLookup.validate();
-		inFilter = new In(fieldsLookup);
+		Cursor otherCursor = fieldsLookup.getOtherCursor();
+
+		final WhereTerm otherWhereTerm;
+
+		if (otherCursor != null) {
+			otherWhereTerm = otherCursor.getQmaker().getWhereTerm();
+		} else {
+			otherWhereTerm = null;
+		}
+
+		inFilter = new In(fieldsLookup, otherWhereTerm);
 		if (closed)
 			return;
 		// пересоздаём набор

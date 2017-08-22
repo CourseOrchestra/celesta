@@ -22,9 +22,12 @@ public final class FieldsLookup {
 	final private List<String> fields = new ArrayList<>();
 	final private List<String> otherFields = new ArrayList<>();
 
+	private Cursor otherCursor;
+
 	public FieldsLookup(Cursor cursor, Cursor otherCursor) throws CelestaException {
 		this.table = cursor.meta();
 		this.otherTable = otherCursor.meta();
+		this.otherCursor = otherCursor;
 	}
 
 	public FieldsLookup(Table table, Table otherTable) throws CelestaException {
@@ -120,4 +123,7 @@ public final class FieldsLookup {
 		return new ArrayList<>(otherFields);
 	}
 
+	public Cursor getOtherCursor() {
+		return otherCursor;
+	}
 }

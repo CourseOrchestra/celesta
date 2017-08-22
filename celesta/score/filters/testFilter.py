@@ -60,6 +60,115 @@ class testFilters(CelestaUnit):
         a.setIn(lookup)
         self.assertEqual(0, a.count())
 
+    def testInFilterWithRangeInMainCursor(self):
+        a = aFilterCursor(self.context)
+        b = bFilterCursor(self.context)
+
+        a.deleteAll()
+        b.deleteAll()
+
+        timestamp = Timestamp.valueOf(LocalDateTime.now())
+
+        a.date = timestamp
+        a.number1 = 5
+        a.number2 = -10
+        a.insert()
+        a.clear()
+
+        a.date = timestamp
+        a.number1 = 1
+        a.number2 = -20
+        a.insert()
+        a.clear()
+
+        a.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
+        a.number2 = -30
+        a.insert()
+        a.clear()
+
+        b.created = timestamp
+        b.numb1 = 2
+        b.numb2 = -40
+        b.insert()
+        b.clear()
+
+        b.created = timestamp
+        b.numb1 = 5
+        b.numb2 = -50
+        b.insert()
+        b.clear()
+
+        a.setRange('number1', 5)
+        lookup = FieldsLookup(a, b).add("date", "created")
+        a.setIn(lookup)
+        self.assertEqual(1, a.count())
+        a.first()
+
+    def testInFilterWithRangeInOtherCursor(self):
+        a = aFilterCursor(self.context)
+        b = bFilterCursor(self.context)
+
+        a.deleteAll()
+        b.deleteAll()
+
+        timestamp = Timestamp.valueOf(LocalDateTime.now())
+
+        a.date = timestamp
+        a.number1 = 5
+        a.number2 = -10
+        a.insert()
+        a.clear()
+
+        a.date = timestamp
+        a.number1 = 6
+        a.number2 = -20
+        a.insert()
+        a.clear()
+
+        a.date = timestamp
+        a.number1 = 1
+        a.number2 = -20
+        a.insert()
+        a.clear()
+
+        a.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
+        a.number2 = -30
+        a.insert()
+        a.clear()
+
+        b.created = timestamp
+        b.numb1 = 6
+        b.numb2 = -40
+        b.insert()
+        b.clear()
+
+        b.created = timestamp
+        b.numb1 = 5
+        b.numb2 = -40
+        b.insert()
+        b.clear()
+
+        b.created = timestamp
+        b.numb1 = 3
+        b.numb2 = -40
+        b.insert()
+        b.clear()
+
+        b.setRange('numb2', -40)
+        lookup = FieldsLookup(a, b).add("date", "created").add("number1", "numb1")
+        a.setIn(lookup)
+        self.assertEqual(2, a.count())
+
+        a.first()
+        self.assertEqual(timestamp, a.date)
+        self.assertEqual(5, a.number1)
+        self.assertEqual(-10, a.number2)
+
+        a.navigate('>')
+        self.assertEqual(timestamp, a.date)
+        self.assertEqual(6, a.number1)
+        self.assertEqual(-20, a.number2)
+
 
     def testExceptionWhileAddingNotExistedFieldsToLookup(self):
         a = aFilterCursor(self.context)
