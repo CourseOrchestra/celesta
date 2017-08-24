@@ -19,3 +19,25 @@ create table bFilter (
 );
 
 create index idxCreatedNumb1Numb2 on bFilter (created, numb1, numb2);
+
+create table cFilter (
+  id int not null primary key
+);
+
+create table dFilter (
+  id int not null primary key
+);
+
+
+create table eFilter (
+  id int not null,
+  number int not null,
+  str varchar(2) not null,
+  CONSTRAINT Pk_filters_e PRIMARY KEY (id, number, str)
+);
+
+create table fFilter (
+  id int not null,
+  numb int not null,
+  CONSTRAINT Pk_filters_d PRIMARY KEY (id, numb)
+);

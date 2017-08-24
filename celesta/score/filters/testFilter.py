@@ -5,12 +5,13 @@ from java.sql import Timestamp
 from ru.curs.celesta.dbutils.filter.value import FieldsLookup
 from ru.curs.celesta import CelestaException
 from ru.curs.celesta.score import ParseException
-from _filters_orm import aFilterCursor, bFilterCursor
+from _filters_orm import aFilterCursor, bFilterCursor, cFilterCursor, \
+    dFilterCursor, eFilterCursor, fFilterCursor
 
 
 class testFilters(CelestaUnit):
 
-    def testInFilter(self):
+    def testInFilterForIndices(self):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
 
@@ -59,6 +60,74 @@ class testFilters(CelestaUnit):
         lookup = FieldsLookup(a, b).add("date", "created").add("number1", "numb1").add("number2", "numb2")
         a.setIn(lookup)
         self.assertEqual(0, a.count())
+
+
+    def testInFilterForSimplePks(self):
+        c = cFilterCursor(self.context)
+        d = dFilterCursor(self.context)
+
+        c.deleteAll()
+        d.deleteAll()
+
+        c.id = 1
+        c.insert()
+        c.clear()
+
+        c.id = 2
+        c.insert()
+        c.clear()
+
+        c.id = 3
+        c.insert()
+        c.clear()
+
+        d.id = 1
+        d.insert()
+        d.clear()
+
+        d.id = 3
+        d.insert()
+        d.clear()
+
+        lookup = FieldsLookup(c, d).add("id", "id")
+        c.setIn(lookup)
+        self.assertEqual(2, c.count())
+
+
+    def testInFilterForComplexPks(self):
+        e = eFilterCursor(self.context)
+        f = fFilterCursor(self.context)
+
+        e.deleteAll()
+        f.deleteAll()
+
+        e.id = 1
+        e.number = 1
+        e.str = "A"
+        e.insert()
+        e.clear()
+
+        e.id = 1
+        e.number = 1
+        e.str = "B"
+        e.insert()
+        e.clear()
+
+        e.id = 1
+        e.number = 3
+        e.str = "B"
+        e.insert()
+        e.clear()
+
+        f.id = 1
+        f.numb = 1
+        f.insert()
+        f.clear()
+
+        lookup = FieldsLookup(e, f).add("id", "id").add('number', 'numb')
+        e.setIn(lookup)
+        self.assertEqual(2, e.count())
+
 
     def testInFilterWithRangeInMainCursor(self):
         a = aFilterCursor(self.context)
