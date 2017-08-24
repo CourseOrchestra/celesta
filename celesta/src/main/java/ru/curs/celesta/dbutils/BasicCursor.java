@@ -871,18 +871,23 @@ public abstract class BasicCursor implements Closeable {
 	}
 
 	public final void setIn(FieldsLookup fieldsLookup) throws CelestaException {
-		fieldsLookup.validate();
 		Cursor otherCursor = fieldsLookup.getOtherCursor();
 
-		final WhereTerm otherWhereTerm;
-
-		if (otherCursor != null) {
-			otherWhereTerm = otherCursor.getQmaker().getWhereTerm();
-		} else {
-			otherWhereTerm = null;
+		if (context != otherCursor.callContext()) {
+			throw new CelestaException("CallContexts are not matching");
 		}
 
-		inFilter = new In(fieldsLookup, otherWhereTerm);
+		fieldsLookup.validate();
+
+		final WhereTermsMaker otherWhereTermMaker;
+
+		if (otherCursor != null) {
+			otherWhereTermMaker = otherCursor.getQmaker();
+		} else {
+			otherWhereTermMaker = null;
+		}
+
+		inFilter = new In(fieldsLookup, otherWhereTermMaker);
 		if (closed)
 			return;
 		// пересоздаём набор

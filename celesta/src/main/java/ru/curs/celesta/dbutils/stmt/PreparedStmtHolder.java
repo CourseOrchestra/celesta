@@ -43,7 +43,7 @@ public abstract class PreparedStmtHolder {
 		for (ParameterSetter f : program) {
 			f.execute(stmt, i++, rec, recversion);
 		}
-		//System.out.println(stmt.toString());
+		System.out.println(stmt.toString());
 		return stmt;
 	}
 

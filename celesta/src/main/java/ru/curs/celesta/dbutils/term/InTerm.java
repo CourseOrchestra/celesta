@@ -25,8 +25,8 @@ public final class InTerm extends WhereTerm {
     DBAdaptor db = DBAdaptor.getAdaptor();
 
     final String otherWhere;
-    if (filter.getOtherwhereTerm() != null) {
-      otherWhere = filter.getOtherwhereTerm().getWhere();
+    if (filter.getOtherWhereTermMaker() != null) {
+      otherWhere = filter.getOtherWhereTermMaker().getWhereTerm().getWhere();
     } else {
       otherWhere = "";
     }
@@ -37,8 +37,8 @@ public final class InTerm extends WhereTerm {
 
   @Override
   public void programParams(List<ParameterSetter> program) throws CelestaException {
-    if (filter.getOtherwhereTerm() != null) {
-      filter.getOtherwhereTerm().programParams(program);
+    if (filter.getOtherWhereTermMaker() != null) {
+      filter.getOtherWhereTermMaker().getWhereTerm().programParams(program);
     }
   }
 

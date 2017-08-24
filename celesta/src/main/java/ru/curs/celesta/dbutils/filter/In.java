@@ -1,8 +1,7 @@
 package ru.curs.celesta.dbutils.filter;
 
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
-import ru.curs.celesta.dbutils.term.WhereTerm;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 
 
 /**
@@ -11,19 +10,19 @@ import ru.curs.celesta.score.Table;
 public final class In {
 
   final private FieldsLookup lookup;
-  final private WhereTerm otherwhereTerm;
+  final private WhereTermsMaker otherWhereTermMaker;
 
-  public In(FieldsLookup lookup, WhereTerm otherwhereTerm) {
+  public In(FieldsLookup lookup, WhereTermsMaker otherWhereTermMaker) {
     this.lookup = lookup;
-    this.otherwhereTerm = otherwhereTerm;
+    this.otherWhereTermMaker = otherWhereTermMaker;
   }
 
   public FieldsLookup getLookup() {
     return lookup;
   }
 
-  public WhereTerm getOtherwhereTerm() {
-    return otherwhereTerm;
+  public WhereTermsMaker getOtherWhereTermMaker() {
+    return otherWhereTermMaker;
   }
 
   @Override
