@@ -987,4 +987,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
     return sql;
   }
+
+  @Override
+  String truncDate(String dateStr) {
+    return "TRUNC(" + dateStr + ")";
+  }
 }

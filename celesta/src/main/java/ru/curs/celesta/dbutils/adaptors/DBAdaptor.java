@@ -1038,7 +1038,35 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
     String deleteSql = "TRUNCATE TABLE " + mvIdentifier;
 
-    String selectScript = String.format(mv.getSelectPartOfScript() + ", COUNT(*)"
+    String colsToSelect = mv.getColumns().keySet().stream()
+        .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+        .map(alias -> {
+          Column colRef = mv.getColumnRef(alias);
+          Map<String, Expr> aggrCols = mv.getAggregateColumns();
+
+          if (aggrCols.containsKey(alias)) {
+            Expr agrExpr = aggrCols.get(alias);
+            if (agrExpr instanceof Count) {
+              return "COUNT(*)";
+            } else if (agrExpr instanceof Sum) {
+              return "SUM(\"" + colRef.getName() + "\")";
+            } else {
+              throw new RuntimeException(
+                  String.format(
+                    "Aggregate func of type %s is not supported",
+                    agrExpr.getClass().getSimpleName()
+                )
+              );
+            }
+          } else {
+            if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+              return truncDate("\"" + colRef.getName() + "\"");
+            return "\"" + colRef.getName() + "\"";
+
+          }
+        }).collect(Collectors.joining(", "));
+
+    String selectScript = String.format("SELECT " + colsToSelect + ", COUNT(*)"
         + " FROM " + tableTemplate() + " GROUP BY %s",
         t.getGrain().getName(), t.getName(), tableGroupByColumns);
     String insertSql = String.format("INSERT INTO %s (%s) "  + selectScript, mvIdentifier, mvColumns);
@@ -1057,6 +1085,13 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
           mvIdentifier, e);
     }
   }
+
+  /**
+   * Возвращает sql с функцией округления timestamp до даты.
+   * @param dateStr значение, которое нужно округлить
+   * @return
+   */
+  abstract String truncDate(String dateStr);
 
 }
 

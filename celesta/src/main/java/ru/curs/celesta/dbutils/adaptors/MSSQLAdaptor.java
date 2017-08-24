@@ -1338,4 +1338,9 @@ final class MSSQLAdaptor extends DBAdaptor {
 
     return sql;
   }
+
+  @Override
+  String truncDate(String dateStr) {
+    return "cast(floor(cast(" + dateStr + " as float)) as datetime)";
+  }
 }

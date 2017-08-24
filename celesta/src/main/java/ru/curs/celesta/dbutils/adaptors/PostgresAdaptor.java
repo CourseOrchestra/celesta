@@ -1064,4 +1064,8 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     return sql;
   }
 
+  @Override
+  String truncDate(String dateStr) {
+    return "date_trunc('DAY'," + dateStr + ")";
+  }
 }

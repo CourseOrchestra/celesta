@@ -1611,4 +1611,9 @@ final class OraAdaptor extends DBAdaptor {
 
     return sql;
   }
+
+  @Override
+  String truncDate(String dateStr) {
+    return "TRUNC(" + dateStr + " , 'DD')";
+  }
 }
