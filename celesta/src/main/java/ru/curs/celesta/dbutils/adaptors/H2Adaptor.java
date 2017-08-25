@@ -410,7 +410,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
           break;
 
         paramRefsWithOrder.add(param);
-        tempSelectSql = tempSelectSql.replace("$" + param, "");
+        tempSelectSql = tempSelectSql.replaceFirst("\\$" + param, "");
       }
 
       StringBuilder paramSettingBuilder = new StringBuilder();
@@ -426,7 +426,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         selectSql = selectSql.replaceAll("\\$" + pName, "?");
 
       selectSql = selectSql.replace("\"", "\\\"");
-      selectSql = selectSql.replace("\r\n", "");
+      selectSql = selectSql.replaceAll("\\R", "");
 
       String sql = String.format(
           "CREATE ALIAS " + tableTemplate() + " AS $$ " +

@@ -23,7 +23,7 @@ CREATE FUNCTION pView1(p int) AS
 
 CREATE FUNCTION pView2(p1 int,/**TEST*/ p2 varchar) AS
   select f1, f2, f3 from t1
-  where f2 = $p1 AND f3 = $p2;
+  where f2 = $p1 AND f3 = $p2 AND f3 = $p2;
 
 CREATE FUNCTION pView3(p int) AS
   select count(*) as c from t1
