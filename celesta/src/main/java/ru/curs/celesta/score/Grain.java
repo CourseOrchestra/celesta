@@ -32,8 +32,7 @@ public final class Grain extends NamedElement {
 
 	private File grainPath;
 
-	private final Map<Class<? extends DataGrainElement>, NamedElementHolder<? extends DataGrainElement>> grainElements =
-		new HashMap<>();
+	private final Map<Class<? extends DataGrainElement>, NamedElementHolder<? extends DataGrainElement>> grainElements = new HashMap<>();
 
 	private final NamedElementHolder<Index> indices = new NamedElementHolder<Index>() {
 		@Override
@@ -49,25 +48,21 @@ public final class Grain extends NamedElement {
 		if (score == null)
 			throw new IllegalArgumentException();
 		if (name.indexOf("_") >= 0)
-			throw new ParseException("Invalid grain name '" + name
-					+ "'. No underscores are allowed for grain names.");
+			throw new ParseException("Invalid grain name '" + name + "'. No underscores are allowed for grain names.");
 		this.score = score;
 		score.addGrain(this);
 
-		grainPath =
-			new File(String.format("%s%s%s", score.getDefaultGrainPath(), File.separator, name));
+		grainPath = new File(String.format("%s%s%s", score.getDefaultGrainPath(), File.separator, name));
 	}
 
 	@SuppressWarnings("unchecked")
 	private <T extends DataGrainElement> NamedElementHolder<T> getElementsHolder(Class<T> cls) {
-		return (NamedElementHolder<T>) grainElements.computeIfAbsent(cls,
-				c -> new NamedElementHolder<T>() {
-					@Override
-					protected String getErrorMsg(String name) {
-						return String.format("%s '%s' defined more than once in a grain.",
-								c.getSimpleName(), name);
-					}
-				});
+		return (NamedElementHolder<T>) grainElements.computeIfAbsent(cls, c -> new NamedElementHolder<T>() {
+			@Override
+			protected String getErrorMsg(String name) {
+				return String.format("%s '%s' defined more than once in a grain.", c.getSimpleName(), name);
+			}
+		});
 	}
 
 	/**
@@ -88,16 +83,16 @@ public final class Grain extends NamedElement {
 				// Не рассматриваем тот же тип (у его холдера своя проверка)
 				.filter(entry -> !entry.getKey().equals(element.getClass()))
 				// Сводим все Map'ы в одну
-				.map(entry -> (Set<? extends Map.Entry<String, ? extends DataGrainElement>>) entry
-						.getValue().getElements().entrySet())
+				.map(entry -> (Set<? extends Map.Entry<String, ? extends DataGrainElement>>) entry.getValue()
+						.getElements().entrySet())
 				.flatMap(entrySet -> entrySet.stream())
 				// Ищем совпадения по имени
 				.filter(entry -> entry.getKey().equals(element.getName())).findFirst()
 				.map(entry -> entry.getValue().getClass().getSimpleName());
 		if (typeNameOfElementWithSameName.isPresent()) {
-			throw new ParseException(String.format(
-					"Cannot create table '%s', a %s with the same name already exists in grain '%s'.",
-					element.getName(), typeNameOfElementWithSameName.get(), getName()));
+			throw new ParseException(
+					String.format("Cannot create table '%s', a %s with the same name already exists in grain '%s'.",
+							element.getName(), typeNameOfElementWithSameName.get(), getName()));
 		}
 
 		modify();
@@ -153,12 +148,11 @@ public final class Grain extends NamedElement {
 	 * @throws ParseException
 	 *             Если элемент с таким именем и классом не найден в грануле.
 	 */
-	public <T extends DataGrainElement> T getElement(String name, Class<T> classOfElement)
-			throws ParseException {
+	public <T extends DataGrainElement> T getElement(String name, Class<T> classOfElement) throws ParseException {
 		T result = getElementsHolder(classOfElement).get(name);
 		if (result == null)
 			throw new ParseException(
-					String.format("Table '%s' not found in grain '%s'", name, getName()));
+					String.format("%s '%s' not found in grain '%s'", classOfElement.getSimpleName(), name, getName()));
 		return result;
 	}
 
@@ -282,8 +276,7 @@ public final class Grain extends NamedElement {
 	 */
 	void addConstraintName(String name) throws ParseException {
 		if (constraintNames.contains(name))
-			throw new ParseException(
-					String.format("Constraint '%s' is defined more than once in a grain.", name));
+			throw new ParseException(String.format("Constraint '%s' is defined more than once in a grain.", name));
 		constraintNames.add(name);
 	}
 
@@ -351,11 +344,9 @@ public final class Grain extends NamedElement {
 			return;
 		if (!grainPath.exists())
 			grainPath.mkdirs();
-		File scriptFile =
-			new File(String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, getName()));
+		File scriptFile = new File(String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, getName()));
 		try {
-			BufferedWriter bw = new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(scriptFile), "utf-8"));
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(scriptFile), "utf-8"));
 			try {
 				writeCelestaDoc(this, bw);
 				bw.write("CREATE GRAIN ");
@@ -401,8 +392,7 @@ public final class Grain extends NamedElement {
 			}
 
 		} catch (IOException e) {
-			throw new CelestaException("Cannot save '%s' grain script: %s", getName(),
-					e.getMessage());
+			throw new CelestaException("Cannot save '%s' grain script: %s", getName(), e.getMessage());
 		}
 	}
 
@@ -417,6 +407,33 @@ public final class Grain extends NamedElement {
 			bw.newLine();
 			return true;
 		}
+	}
+
+	/**
+	 * Возвращает представление по его имени, либо исключение с сообщением о
+	 * том, что представление не найдено.
+	 * 
+	 * @param name
+	 *            Имя
+	 * @throws ParseException
+	 *             Если таблица с таким именем не найдена в грануле.
+	 */
+
+	public View getView(String name) throws ParseException {
+		return getElement(name, View.class);
+	}
+
+	/**
+	 * Возвращает таблицу по её имени, либо исключение с сообщением о том, что
+	 * таблица не найдена.
+	 * 
+	 * @param name
+	 *            Имя
+	 * @throws ParseException
+	 *             Если таблица с таким именем не найдена в грануле.
+	 */
+	public Table getTable(String name) throws ParseException {
+		return getElement(name, Table.class);
 	}
 
 }
