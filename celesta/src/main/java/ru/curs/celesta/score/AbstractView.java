@@ -246,6 +246,15 @@ public abstract class AbstractView extends DataGrainElement {
     return i;
   }
 
+  public Map<String, Expr> getAggregateColumns() {
+    return columns.entrySet().stream()
+        .filter(e -> e.getValue() instanceof Aggregate)
+        .collect(Collectors.toMap(
+            Map.Entry::getKey, Map.Entry::getValue,
+            (o, o2) -> {
+              throw new IllegalStateException(String.format("Duplicate key %s", o));
+            }, LinkedHashMap::new));
+  }
 
   /**
    * Wrapper for automatic line-breaks.

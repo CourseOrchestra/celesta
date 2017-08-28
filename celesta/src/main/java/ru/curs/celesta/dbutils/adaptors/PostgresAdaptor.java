@@ -35,6 +35,9 @@
 
 package ru.curs.celesta.dbutils.adaptors;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -527,22 +530,124 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   @Override
   public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
-    return Collections.emptyList();
+    String sql = String.format("SELECT * FROM INFORMATION_SCHEMA.ROUTINES where routine_schema = '%s'",
+        g.getName());
+    List<String> result = new LinkedList<>();
+    try (Statement stmt = conn.createStatement();) {
+      ResultSet rs = stmt.executeQuery(sql);
+      while (rs.next()) {
+        result.add(rs.getString(1));
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Cannot get parameterized views list: %s", e.toString());
+    }
+    return result;
   }
 
   @Override
   public void dropParameterizedView(Connection conn, String grainName, String viewName) throws CelestaException {
+    //Sql выражение для получения от pg выражения удаления функции
+    String sql = "select format('DROP FUNCTION IF EXISTS %s(%s);',\n" +
+        "  p.oid::regproc, pg_get_function_identity_arguments(p.oid))\n" +
+        "  FROM pg_catalog.pg_proc p\n" +
+        "    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace\n" +
+        "  WHERE\n" +
+        "    p.oid::regproc::text = '" + String.format("%s.%s", grainName, viewName) + "';";
+    try {
+      try (Statement stmt = conn.createStatement()) {
+        ResultSet rs = stmt.executeQuery(sql);
 
+        if (rs.next()) {
+          sql = rs.getString(1);
+
+          stmt.executeUpdate(sql);
+        }
+      }
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage(), e);
+    }
   }
 
   @Override
   public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
-    return null;
+    return String.format(
+        tableTemplate() + "(%s)",
+        pv.getGrain().getName(), pv.getName(),
+        pv.getParameters().keySet().stream()
+            .map(p -> "?")
+            .collect(Collectors.joining(", "))
+    );
   }
 
   @Override
   public void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
+    SQLGenerator gen = getViewSQLGenerator();
+    try {
+      StringWriter sw = new StringWriter();
+      BufferedWriter bw = new BufferedWriter(sw);
 
+      pv.selectScript(bw, gen);
+      bw.flush();
+
+      String pvParams = pv.getParameters()
+          .entrySet().stream()
+          .map(e ->
+              e.getKey() + " "
+                  + TYPES_DICT.get(
+                  CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getType().getCelestaType())
+              ).dbFieldType()
+
+          ).collect(Collectors.joining(", "));
+
+      String pViewCols = pv.getColumns().entrySet().stream()
+          .map(e -> {
+                StringBuilder sb = new StringBuilder(e.getKey()).append(" ");
+
+                if (pv.getAggregateColumns().containsKey(e.getKey()))
+                  sb.append("bigint");
+                else
+                  sb.append(TYPES_DICT.get(
+                      CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType()))
+                      .dbFieldType());
+
+                return sb.toString();
+              }
+          ).collect(Collectors.joining(", "));
+
+      String selectSql = sw.toString();
+
+
+      List<String> params = new ArrayList(pv.getParameters().keySet());
+
+      //Сортируем имена параметров по длине их имени по убыванию.
+      //При таком подходе параметер с именем param не сможет затереть параметр с именем param2 во время подстановки.
+      List<String> sortedParams = params.stream()
+          .sorted(
+              Comparator.comparing(String::length).reversed()
+          ).collect(Collectors.toList());
+
+      //Подстановка параметров
+      for (String param : sortedParams) {
+        selectSql = selectSql.replace("$" + param, "$" + (params.indexOf(param) + 1));
+      }
+
+      String sql = String.format(
+          "create or replace function " + tableTemplate() + "(%s) returns TABLE(%s) AS\n"
+              + "$$\n %s $$\n"
+              + "language sql;", pv.getGrain().getName(), pv.getName(), pvParams, pViewCols, selectSql);
+
+      Statement stmt = conn.createStatement();
+      try {
+        System.out.println(sql);
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException | IOException e) {
+      e.printStackTrace();
+      throw new CelestaException("Error while creating parameterized view %s.%s: %s",
+          pv.getGrain().getName(), pv.getName(), e.getMessage());
+    }
   }
 
   @Override

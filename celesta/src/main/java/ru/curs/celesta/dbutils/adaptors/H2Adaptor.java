@@ -392,11 +392,37 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
       List<String> paramRefsWithOrder = new ArrayList<>();
 
+
+      //Сортируем имена параметров по длине их имени по убыванию.
+      //При таком подходе параметер с именем param не сможет затереть параметр с именем param2 во время подстановки.
+      List<String> sortedParams = pv.getParameters().keySet().stream()
+          .sorted(
+              Comparator.comparing(String::length).reversed()
+          ).collect(Collectors.toList());
+
+      //Выборка для подстановки параметров во внутренний preparedStatement функции
       Function<String, String> getFirstParamRef = (String sql) -> {
-        for (String param : pv.getParameters().keySet()) {
-          if (sql.contains("$" + param)) {
-            return param;
+        Map<String, Integer> entryIndices = new HashMap<>();
+
+        for (String param : sortedParams) {
+          String paramRef = "$" + param;
+          if (sql.contains(paramRef)) {
+            entryIndices.put(param, sql.indexOf(paramRef));
           }
+        }
+
+        if (!entryIndices.isEmpty()) {
+          return entryIndices.entrySet().stream().min(
+              (o1, o2) -> {
+                if (o1.getValue() > o2.getValue()) {
+                  return 1;
+                } else if (o1.getValue() < o2.getValue()) {
+                  return -1;
+                }
+
+                return Integer.compare(o2.getKey().length(), o1.getKey().length());
+              }
+          ).get().getKey();
         }
 
         return "";
@@ -422,7 +448,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         ++settingPosition;
       }
 
-      for (String pName : pv.getParameters().keySet())
+
+      //Вторичная подстановка параметров (замена параметров на ?)
+      for (String pName : sortedParams)
         selectSql = selectSql.replaceAll("\\$" + pName, "?");
 
       selectSql = selectSql.replace("\"", "\\\"");

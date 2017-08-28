@@ -77,11 +77,22 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   static final Class<?>[] COLUMN_CLASSES = {IntegerColumn.class, StringColumn.class, BooleanColumn.class,
       FloatingColumn.class, BinaryColumn.class, DateTimeColumn.class};
+  static final Map<String, Class<? extends Column>> CELESTA_TYPES_COLUMN_CLASSES = new HashMap<>();
   static final String COLUMN_NAME = "COLUMN_NAME";
   static final String ALTER_TABLE = "alter table ";
   static final Pattern HEXSTR = Pattern.compile("0x(([0-9A-Fa-f][0-9A-Fa-f])+)");
 
   private final static DBAdaptor db;
+
+
+  static {
+    CELESTA_TYPES_COLUMN_CLASSES.put(IntegerColumn.CELESTA_TYPE, IntegerColumn.class);
+    CELESTA_TYPES_COLUMN_CLASSES.put(FloatingColumn.CELESTA_TYPE, FloatingColumn.class);
+    CELESTA_TYPES_COLUMN_CLASSES.put(BooleanColumn.CELESTA_TYPE, BooleanColumn.class);
+    CELESTA_TYPES_COLUMN_CLASSES.put(StringColumn.VARCHAR, StringColumn.class);
+    CELESTA_TYPES_COLUMN_CLASSES.put(BinaryColumn.CELESTA_TYPE, BinaryColumn.class);
+    CELESTA_TYPES_COLUMN_CLASSES.put(DateTimeColumn.CELESTA_TYPE, DateTimeColumn.class);
+  }
 
   static {
     try {

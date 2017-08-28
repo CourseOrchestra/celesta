@@ -132,5 +132,5 @@ public enum ViewColumnType {
 	/**
 	 * Celesta type.
 	 */
-	abstract String getCelestaType();
+	public abstract String getCelestaType();
 }

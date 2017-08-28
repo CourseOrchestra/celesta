@@ -194,16 +194,6 @@ public class MaterializedView extends AbstractView implements TableElement {
     return result;
   }
 
-  public Map<String, Expr> getAggregateColumns() {
-    return columns.entrySet().stream()
-        .filter(e -> e.getValue() instanceof Aggregate)
-        .collect(Collectors.toMap(
-            Map.Entry::getKey, Map.Entry::getValue,
-            (o, o2) -> {
-              throw new IllegalStateException(String.format("Duplicate key %s", o));
-            }, LinkedHashMap::new));
-  }
-
   @Override
   public Column getColumn(String colName) throws ParseException {
     Column result = realColumns.get(colName);
