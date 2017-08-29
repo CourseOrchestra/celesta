@@ -364,17 +364,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
-    return String.format(
-        tableTemplate() + "(%s)",
-        pv.getGrain().getName(), pv.getName(),
-        pv.getParameters().keySet().stream()
-            .map(p -> "?")
-            .collect(Collectors.joining(", "))
-    );
-  }
-
-  @Override
   public void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
     SQLGenerator gen = getViewSQLGenerator();
     try {

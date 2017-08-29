@@ -35,6 +35,9 @@
 
 package ru.curs.celesta.dbutils.adaptors;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -1002,24 +1005,79 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
-    return Collections.emptyList();
-  }
-
-  @Override
   public void dropParameterizedView(Connection conn, String grainName, String viewName) throws CelestaException {
-
+    try {
+      String sql = String.format("DROP FUNCTION " + tableTemplate(), grainName, viewName);
+      Statement stmt = conn.createStatement();
+      try {
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+      conn.commit();
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage());
+    }
   }
 
-  @Override
-  public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
-    return null;
-  }
 
   @Override
   public void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
+    SQLGenerator gen = getViewSQLGenerator();
+    try {
+      StringWriter sw = new StringWriter();
+      BufferedWriter bw = new BufferedWriter(sw);
 
+      pv.selectScript(bw, gen);
+      bw.flush();
+
+      String inParams = pv.getParameters()
+          .entrySet().stream()
+          .map(e ->
+              "@" + e.getKey() + " "
+                  + TYPES_DICT.get(
+                  CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getType().getCelestaType())
+              ).dbFieldType()
+
+          ).collect(Collectors.joining(", "));
+
+
+      String selectSql = sw.toString();
+
+      List<String> params = new ArrayList(pv.getParameters().keySet());
+
+      //Сортируем имена параметров по длине их имени по убыванию.
+      //При таком подходе параметер с именем param не сможет затереть параметр с именем param2 во время подстановки.
+      List<String> sortedParams = params.stream()
+          .sorted(
+              Comparator.comparing(String::length).reversed()
+          ).collect(Collectors.toList());
+
+      //Подстановка параметров
+      for (String param : sortedParams) {
+        selectSql = selectSql.replace("$" + param, "@" + param);
+      }
+
+      String sql = String.format(
+          "CREATE FUNCTION "+ tableTemplate() + "(%s)\n" +
+              "  RETURNS TABLE\n" +
+              "  AS\n" +
+              "  RETURN %s", pv.getGrain().getName(), pv.getName(), inParams, selectSql);
+
+      Statement stmt = conn.createStatement();
+      try {
+        System.out.println(sql);
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException | IOException e) {
+      e.printStackTrace();
+      throw new CelestaException("Error while creating parameterized view %s.%s: %s",
+          pv.getGrain().getName(), pv.getName(), e.getMessage());
+    }
   }
+
 
   private String generateTsqlForVersioningTrigger(TableElement t) {
     StringBuilder sb = new StringBuilder();

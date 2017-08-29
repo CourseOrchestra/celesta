@@ -856,9 +856,33 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     return result;
   }
 
-  abstract public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException;
+  public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
+    String sql = String.format("SELECT routine_name FROM INFORMATION_SCHEMA.ROUTINES " +
+            "where routine_schema = '%s' AND routine_type='FUNCTION'",
+        g.getName());
+    List<String> result = new LinkedList<>();
+    try (Statement stmt = conn.createStatement();) {
+      ResultSet rs = stmt.executeQuery(sql);
+      while (rs.next()) {
+        result.add(rs.getString(1));
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Cannot get parameterized views list: %s", e.toString());
+    }
+    return result;
+  }
+
   abstract public void dropParameterizedView (Connection conn, String grainName, String viewName) throws CelestaException;
-  abstract public String getCallFunctionSql(ParameterizedView pv) throws CelestaException;
+
+  public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
+    return String.format(
+        tableTemplate() + "(%s)",
+        pv.getGrain().getName(), pv.getName(),
+        pv.getParameters().keySet().stream()
+            .map(p -> "?")
+            .collect(Collectors.joining(", "))
+    );
+  };
 
 
   /**
