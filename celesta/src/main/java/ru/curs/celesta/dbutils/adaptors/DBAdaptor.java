@@ -882,7 +882,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
             .map(p -> "?")
             .collect(Collectors.joining(", "))
     );
-  };
+  }
 
 
   /**

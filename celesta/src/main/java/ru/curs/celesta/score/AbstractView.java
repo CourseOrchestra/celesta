@@ -3,6 +3,7 @@ package ru.curs.celesta.score;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -14,7 +15,19 @@ public abstract class AbstractView extends DataGrainElement {
   final Map<String, Expr> columns = new LinkedHashMap<>();
   final Map<String, FieldRef> groupByColumns = new LinkedHashMap<>();
   private final Map<String, TableRef> tables = new LinkedHashMap<>();
+  static final Map<Class<? extends Expr>, Function<Expr, Column>> EXPR_CLASSES_AND_COLUMN_EXTRACTORS = new HashMap<>();
 
+  static {
+    EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(FieldRef.class, (Expr frExpr) -> {
+      FieldRef fr = (FieldRef) frExpr;
+      return fr.getColumn();
+    });
+    EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Sum.class, (Expr sumExpr) -> {
+      Sum sum = (Sum) sumExpr;
+      FieldRef fr = (FieldRef) sum.term;
+      return fr.getColumn();
+    });
+  }
 
   public AbstractView(Grain grain, String name) throws ParseException {
     super(grain, name);
@@ -254,6 +267,15 @@ public abstract class AbstractView extends DataGrainElement {
             (o, o2) -> {
               throw new IllegalStateException(String.format("Duplicate key %s", o));
             }, LinkedHashMap::new));
+  }
+
+  public Column getColumnRef(String colName) {
+    Expr expr = columns.get(colName);
+
+    if (expr instanceof Count) {
+      return null;
+    }
+    return EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
   }
 
   /**

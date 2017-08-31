@@ -50,20 +50,6 @@ public class MaterializedView extends AbstractView implements TableElement {
     });
   }
 
-  private static final Map<Class<? extends Expr>, Function<Expr, Column>> EXPR_CLASSES_AND_COLUMN_EXTRACTORS = new HashMap<>();
-
-  static {
-    EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(FieldRef.class, (Expr frExpr) -> {
-      FieldRef fr = (FieldRef) frExpr;
-      return fr.getColumn();
-    });
-    EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Sum.class, (Expr sumExpr) -> {
-      Sum sum = (Sum) sumExpr;
-      FieldRef fr = (FieldRef) sum.term;
-      return fr.getColumn();
-    });
-  }
-
   private final NamedElementHolder<Column> realColumns = new NamedElementHolder<Column>() {
     @Override
     protected String getErrorMsg(String name) {
@@ -201,15 +187,6 @@ public class MaterializedView extends AbstractView implements TableElement {
       throw new ParseException(
           String.format("Column '%s' not found in materialized view '%s.%s'", colName, getGrain().getName(), getName()));
     return result;
-  }
-
-  public Column getColumnRef(String colName) {
-    Expr expr = columns.get(colName);
-
-    if (expr instanceof Count) {
-      return null;
-    }
-    return EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
   }
 
   @Override

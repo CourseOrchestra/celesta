@@ -35,6 +35,9 @@
 
 package ru.curs.celesta.dbutils.adaptors;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -274,21 +277,21 @@ final class OraAdaptor extends DBAdaptor {
     TRIGGER_EVENT_TYPE_DICT.put(TriggerType.POST_DELETE, "DELETE");
   }
 
-	@Override
-	public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
-		if (schema == null || schema.isEmpty() || name == null || name.isEmpty()) {
-			return false;
-		}
-		String sql = String.format("select count(*) from all_tables where owner = "
-				+ "sys_context('userenv','session_user') and table_name = '%s_%s'", schema, name);
+  @Override
+  public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+    if (schema == null || schema.isEmpty() || name == null || name.isEmpty()) {
+      return false;
+    }
+    String sql = String.format("select count(*) from all_tables where owner = "
+        + "sys_context('userenv','session_user') and table_name = '%s_%s'", schema, name);
 
-		try (Statement checkForTable = conn.createStatement()) {
-			ResultSet rs = checkForTable.executeQuery(sql);
-			return rs.next() && rs.getInt(1) > 0;
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-	}
+    try (Statement checkForTable = conn.createStatement()) {
+      ResultSet rs = checkForTable.executeQuery(sql);
+      return rs.next() && rs.getInt(1) > 0;
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage());
+    }
+  }
 
 
   @Override
@@ -326,7 +329,7 @@ final class OraAdaptor extends DBAdaptor {
   @Override
   public PreparedStatement getOneRecordStatement(
       Connection conn, TableElement t, String where, Set<String> fields
-      ) throws CelestaException {
+  ) throws CelestaException {
 
     final String fieldList = getTableFieldsListExceptBlobs((GrainElement) t, fields);
 
@@ -422,12 +425,12 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public boolean isValidConnection(Connection conn, int timeout) throws CelestaException {
-    try (Statement stmt = conn.createStatement()){
+    try (Statement stmt = conn.createStatement()) {
       ResultSet rs = stmt.executeQuery("SELECT 1 FROM Dual");
       return rs.next();
     } catch (SQLException e) {
       return false;
-    } 
+    }
   }
 
   @Override
@@ -1140,7 +1143,6 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public List<String> getViewList(Connection conn, Grain g) throws CelestaException {
-
     String sql = String.format(
         "select view_name from all_views "
             + "where owner = sys_context('userenv','session_user') and view_name like '%s@_%%' escape '@'",
@@ -1163,22 +1165,173 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
-    return Collections.emptyList();
+    String sql = String.format(
+        "select * from all_objects\n" +
+            " where owner = sys_context('userenv','session_user')\n" +
+            " and object_type = 'FUNCTION' and object_name like '%s@_%%' escape '@'",
+        g.getName());
+    List<String> result = new LinkedList<>();
+    try {
+      Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql);
+      while (rs.next()) {
+        String buf = rs.getString(1);
+        Matcher m = TABLE_PATTERN.matcher(buf);
+        m.find();
+        result.add(m.group(2));
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Cannot get views list: %s", e.toString());
+    }
+    return result;
   }
 
   @Override
   public void dropParameterizedView(Connection conn, String grainName, String viewName) throws CelestaException {
+    //удалить pview
+    try (Statement stmt = conn.createStatement()) {
+      String sql = String.format("DROP FUNCTION " + tableTemplate(), grainName, viewName);
+      stmt.executeUpdate(sql);
 
+      ResultSet rs;
+
+      //удалить табличный тип
+      sql = String.format(
+          "select TYPE_NAME from DBA_TYPES WHERE owner = sys_context('userenv','session_user')\n" +
+              " and TYPECODE = 'COLLECTION' and TYPE_NAME = '%s_%s_t'",
+          grainName, viewName);
+      rs = stmt.executeQuery(sql);
+
+      if (rs.next()) {
+        sql = String.format(
+            "DROP TYPE \"%s_%s_t\"",
+            grainName, viewName);
+        stmt.executeUpdate(sql);
+      }
+
+      //удалить объект записи
+      sql = String.format(
+          "select TYPE_NAME from DBA_TYPES WHERE owner = sys_context('userenv','session_user')\n" +
+              " and object_type = 'OBJECT' and TYPE_NAME = '%s_%s_o'",
+          grainName, viewName);
+      rs = stmt.executeQuery(sql);
+
+      if (rs.next()) {
+        sql = String.format(
+            "DROP TYPE \"%s_%s_o\"",
+            grainName, viewName);
+        stmt.executeUpdate(sql);
+      }
+
+      conn.commit();
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage());
+    }
   }
 
   @Override
   public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
-    return null;
+    return String.format(
+        "TABLE(" + tableTemplate() + "(%s))",
+        pv.getGrain().getName(), pv.getName(),
+        pv.getParameters().keySet().stream()
+            .map(p -> "?")
+            .collect(Collectors.joining(", "))
+    );
   }
 
   @Override
   public void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
 
+    try (Statement stmt = conn.createStatement()) {
+      //Создаем тип
+      String colsDef = pv.getColumns().entrySet().stream()
+          .map(e -> {
+            StringBuilder sb = new StringBuilder("\"").append(e.getKey()).append("\" ")
+                .append(TYPES_DICT.get(
+                    CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType())
+                ).dbFieldType());
+
+            Column colRef = pv.getColumnRef(e.getKey());
+
+            if (colRef != null && StringColumn.VARCHAR.equals(colRef.getCelestaType())) {
+              StringColumn sc = (StringColumn) colRef;
+              sb.append("(").append(sc.getLength()).append(")");
+            }
+
+            return sb.toString();
+          }).collect(Collectors.joining(",\n"));
+
+      String sql = String.format("create type " + tableTemplate() + " as object\n" +
+          "(%s)", pv.getGrain().getName(), pv.getName() + "_o", colsDef);
+      //System.out.println(sql);
+      stmt.executeUpdate(sql);
+
+      //Создаем коллекцию типов
+      sql = String.format("create type " + tableTemplate() + " as TABLE OF " + tableTemplate(),
+          pv.getGrain().getName(), pv.getName() + "_t", pv.getGrain().getName(), pv.getName() + "_o");
+      //System.out.println(sql);
+      stmt.executeUpdate(sql);
+
+      //Создаем функцию
+      SQLGenerator gen = getViewSQLGenerator();
+      StringWriter sw = new StringWriter();
+      BufferedWriter bw = new BufferedWriter(sw);
+
+      pv.selectScript(bw, gen);
+      bw.flush();
+
+      String pvParams = pv.getParameters()
+          .entrySet().stream()
+          .map(e ->
+              e.getKey() + " IN "
+                  + TYPES_DICT.get(
+                  CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getType().getCelestaType())
+              ).dbFieldType()
+
+          ).collect(Collectors.joining(", "));
+
+      String selectSql = sw.toString();
+
+
+      List<String> params = new ArrayList(pv.getParameters().keySet());
+
+      //Сортируем имена параметров по длине их имени по убыванию.
+      //При таком подходе параметер с именем param не сможет затереть параметр с именем param2 во время подстановки.
+      List<String> sortedParams = params.stream()
+          .sorted(
+              Comparator.comparing(String::length).reversed()
+          ).collect(Collectors.toList());
+
+      //Подстановка параметров
+      for (String param : sortedParams) {
+        selectSql = selectSql.replace("$" + param, param);
+      }
+
+      String objectParams = pv.getColumns().keySet().stream()
+          .map(alias -> "curr.\"" + alias + "\"")
+          .collect(Collectors.joining(", "));
+
+      sql = String.format(
+          "create or replace function " + tableTemplate() + "(%s) return " + tableTemplate()
+              + " PIPELINED IS\n"
+              + "BEGIN\n"
+              + "for curr in (%s) loop \n"
+              + "pipe row (%s(%s));\n"
+              + "end loop;"
+              + "END;",
+          pv.getGrain().getName(), pv.getName(), pvParams,
+          pv.getGrain().getName(), pv.getName() + "_t",
+          selectSql, String.format(tableTemplate(), pv.getGrain().getName(), pv.getName() + "_o"),
+          objectParams);
+
+      //System.out.println(sql);
+      stmt.executeUpdate(sql);
+    } catch (SQLException | IOException e) {
+      e.printStackTrace();
+      throw new CelestaException("Error while creating parameterized view %s.%s: %s",
+          pv.getGrain().getName(), pv.getName(), e.getMessage());
+    }
   }
 
   @Override
@@ -1374,17 +1527,17 @@ final class OraAdaptor extends DBAdaptor {
   }
 
 
-	@Override
-	public int getDBPid(Connection conn) {
-		try (Statement stmt = conn.createStatement()) {
-			ResultSet rs = stmt.executeQuery("select sys_context('userenv','sessionid') from dual");
-			if (rs.next())
-				return rs.getInt(1);
-		} catch (SQLException e) {
-			// do nothing
-		}
-		return 0;
-	}
+  @Override
+  public int getDBPid(Connection conn) {
+    try (Statement stmt = conn.createStatement()) {
+      ResultSet rs = stmt.executeQuery("select sys_context('userenv','sessionid') from dual");
+      if (rs.next())
+        return rs.getInt(1);
+    } catch (SQLException e) {
+      // do nothing
+    }
+    return 0;
+  }
 
 
   @Override
@@ -1526,7 +1679,7 @@ final class OraAdaptor extends DBAdaptor {
 
 
       String sql;
-      try (Statement stmt = conn.createStatement()){
+      try (Statement stmt = conn.createStatement()) {
         //INSERT
         try {
           sql = String.format("create or replace trigger \"%s\" after insert " +
@@ -1568,7 +1721,7 @@ final class OraAdaptor extends DBAdaptor {
       } catch (SQLException e) {
         throw new CelestaException("Could not update triggers on %s for materialized view %s: %s",
             fullTableName, fullMvName, e);
-      } 
+      }
     }
   }
 
