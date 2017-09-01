@@ -527,6 +527,28 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     return sql;
   }
 
+
+  @Override
+  public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
+    String sql = String.format(
+        "SELECT r.routine_name FROM INFORMATION_SCHEMA.ROUTINES r " +
+            "where r.routine_schema = '%s' AND r.routine_type='FUNCTION' " +
+            "AND exists (select * from pg_proc p\n" +
+            "           where p.proname = r.routine_name\n" +
+            "           AND upper(pg_get_functiondef(p.oid)) like upper('%returns table%'))",
+        g.getName());
+    List<String> result = new LinkedList<>();
+    try (Statement stmt = conn.createStatement();) {
+      ResultSet rs = stmt.executeQuery(sql);
+      while (rs.next()) {
+        result.add(rs.getString(1));
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Cannot get parameterized views list: %s", e.toString());
+    }
+    return result;
+  }
+
   @Override
   public void dropParameterizedView(Connection conn, String grainName, String viewName) throws CelestaException {
     //Sql выражение для получения от pg выражения удаления функции

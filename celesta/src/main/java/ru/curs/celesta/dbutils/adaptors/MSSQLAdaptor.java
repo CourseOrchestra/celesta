@@ -1341,6 +1341,23 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
+  public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
+    String sql = String.format("SELECT routine_name FROM INFORMATION_SCHEMA.ROUTINES " +
+            "where routine_schema = '%s' AND routine_type='FUNCTION'",
+        g.getName());
+    List<String> result = new LinkedList<>();
+    try (Statement stmt = conn.createStatement();) {
+      ResultSet rs = stmt.executeQuery(sql);
+      while (rs.next()) {
+        result.add(rs.getString(1));
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Cannot get parameterized views list: %s", e.toString());
+    }
+    return result;
+  }
+
+  @Override
   public void dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
 
     List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
