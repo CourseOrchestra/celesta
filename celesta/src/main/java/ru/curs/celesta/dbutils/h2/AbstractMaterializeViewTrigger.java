@@ -68,13 +68,13 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
 
     int curIndex = 0;
     for (String tCol : t.getColumns().keySet()) {
-      Optional isGroupBy = mv.getColumns().keySet().stream()
-          .filter(v -> mv.isGroupByColumn(v) && tCol.equals(mv.getColumnRef(v).getName()))
-          .findAny();
+      boolean isGroupBy = mv.getColumns().keySet().stream()
+          .anyMatch(v -> mv.isGroupByColumn(v) && tCol.equals(mv.getColumnRef(v).getName()));
 
-      if (isGroupBy.isPresent()) {
+      if (isGroupBy) {
         tGroupByColumnIndices.put(curIndex, tCol);
       }
+      
       if (columnRefNames.contains(tCol)) {
         mvColumnRefs.put(curIndex, tCol);
       }

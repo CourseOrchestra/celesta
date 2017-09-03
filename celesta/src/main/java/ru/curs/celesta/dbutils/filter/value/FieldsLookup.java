@@ -16,141 +16,130 @@ import java.util.stream.IntStream;
  */
 public final class FieldsLookup {
 
-  final private Table table;
-  final private Table otherTable;
+	final private Table filtered;
+	final private Table filtering;
 
-  final private List<String> fields = new ArrayList<>();
-  final private List<String> otherFields = new ArrayList<>();
+	final private List<String> fields = new ArrayList<>();
+	final private List<String> otherFields = new ArrayList<>();
 
-  private Cursor otherCursor;
+	private Cursor otherCursor;
 
-  public FieldsLookup(Cursor cursor, Cursor otherCursor) throws CelestaException {
-    this.table = cursor.meta();
-    this.otherTable = otherCursor.meta();
-    this.otherCursor = otherCursor;
-  }
+	public FieldsLookup(Cursor filteredCursor, Cursor filteringCursor) throws CelestaException {
+		this.filtered = filteredCursor.meta();
+		this.filtering = filteringCursor.meta();
+		this.otherCursor = filteringCursor;
+	}
 
-  public FieldsLookup(Table table, Table otherTable) throws CelestaException {
-    this.table = table;
-    this.otherTable = otherTable;
-  }
+	public FieldsLookup(Table filtered, Table filtering) throws CelestaException {
+		this.filtered = filtered;
+		this.filtering = filtering;
+	}
 
-  public FieldsLookup add(String field, String otherField) throws CelestaException, ParseException {
-    final Column column;
-    final Column otherColumn;
+	public FieldsLookup add(String field, String otherField) throws CelestaException, ParseException {
+		final Column column;
+		final Column otherColumn;
 
-    column = table.getColumn(field);
-    otherColumn = otherTable.getColumn(otherField);
+		column = filtered.getColumn(field);
+		otherColumn = filtering.getColumn(otherField);
 
-    if (!column.getCelestaType().equals(otherColumn.getCelestaType())) {
-      throw new CelestaException("Column type of %s.%s.%s is not equal to column type of %s.%s.%s",
-          table.getGrain().getName(), table.getName(), field, otherTable.getGrain().getName(),
-          otherTable.getName(), otherField);
-    }
+		if (!column.getCelestaType().equals(otherColumn.getCelestaType())) {
+			throw new CelestaException("Column type of %s.%s.%s is not equal to column type of %s.%s.%s",
+					filtered.getGrain().getName(), filtered.getName(), field, filtering.getGrain().getName(),
+					filtering.getName(), otherField);
+		}
 
-    List<String> fieldsToValidate = new ArrayList<>(fields);
-    fieldsToValidate.add(field);
-    Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fieldsToValidate, table);
+		List<String> fieldsToValidate = new ArrayList<>(fields);
+		fieldsToValidate.add(field);
+		Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fieldsToValidate, filtered);
 
-    List<String> otherFieldsToValidate = new ArrayList<>(otherFields);
-    otherFieldsToValidate.add(otherField);
-    Set<List<Integer>> otherColumnOrdersInIndicesSet = getColumnOrdersInIndicesSet(otherFieldsToValidate,
-        otherTable);
+		List<String> otherFieldsToValidate = new ArrayList<>(otherFields);
+		otherFieldsToValidate.add(otherField);
+		Set<List<Integer>> otherColumnOrdersInIndicesSet = getColumnOrdersInIndicesSet(otherFieldsToValidate,
+				filtering);
 
-    columnOrdersInIndicesSet.retainAll(otherColumnOrdersInIndicesSet);
+		columnOrdersInIndicesSet.retainAll(otherColumnOrdersInIndicesSet);
 
-    if (columnOrdersInIndicesSet.isEmpty()) {
-      throw new CelestaException(
-          "There is no indices with the same order of column(s) (\"%s\") from table table %s.%s and (\"%s\") from table table %s.%s",
-          String.join(",", new HashSet<>(fieldsToValidate)), table.getGrain().getName(), table.getName(),
-          String.join(",", new HashSet<>(otherFieldsToValidate)), otherTable.getGrain().getName(),
-          otherTable.getName());
-    }
+		if (columnOrdersInIndicesSet.isEmpty()) {
+			throw new CelestaException(
+					"There is no indices with the same order of column(s) (\"%s\") from table table %s.%s and (\"%s\") from table table %s.%s",
+					String.join(",", new HashSet<>(fieldsToValidate)), filtered.getGrain().getName(),
+					filtered.getName(), String.join(",", new HashSet<>(otherFieldsToValidate)),
+					filtering.getGrain().getName(), filtering.getName());
+		}
 
-    fields.add(field);
-    otherFields.add(otherField);
-    return this;
-  }
+		fields.add(field);
+		otherFields.add(otherField);
+		return this;
+	}
 
-  public void validate() throws CelestaException {
-    Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fields, table);
-    Set<List<Integer>> otherColumnOrdersInIndicesSet = getColumnOrdersInIndicesSet(otherFields, otherTable);
+	public void validate() throws CelestaException {
+    Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fields, filtered);
+    Set<List<Integer>> otherColumnOrdersInIndicesSet = getColumnOrdersInIndicesSet(otherFields, filtering);
 
     columnOrdersInIndicesSet.retainAll(otherColumnOrdersInIndicesSet);
 
     columnOrdersInIndicesSet.stream().forEach(Collections::sort);
     Optional<List<Integer>> match = columnOrdersInIndicesSet.stream()
-        .filter(l -> l.equals(IntStream.range(0, l.size()).boxed().collect(Collectors.toList()))).findFirst();
+        .filter(l -> l.equals(IntStream.range(0, l.size()).boxed().collect(Collectors.toList()))).findAny();
 
-    if (!match.isPresent()) {
-      throw new CelestaException(
-          "'In' filter validation failed. Fields matched for the filter for tables %s.%s and %s.%s " +
-              "are not covered by pks or indices on these tables.",
-          table.getGrain().getName(), table.getName(), otherTable.getGrain().getName(), otherTable.getName());
-    }
-
+    match.orElseThrow(()-> new CelestaException(
+            "'In' filter validation failed. Fields matched for the filter for tables %s.%s and %s.%s " +
+                    "are not covered by pks or indices on these tables.",
+                filtered.getGrain().getName(), filtered.getName(), filtering.getGrain().getName(), filtering.getName()));
   }
 
-  private Set<List<Integer>> getColumnOrdersInIndicesSet(List<String> fieldsToValidate, Table table)
-      throws CelestaException {
+	private Set<List<Integer>> getColumnOrdersInIndicesSet(List<String> fieldsToValidate, Table table)
+			throws CelestaException {
 
-    final List<Index> indexesToValidate;
-    //Сперва определяем, есть ли указанные поля в первичном ключе
-    boolean pkContainsFields = table.getPrimaryKey().keySet().containsAll(fieldsToValidate);
+		final List<Index> indexesToValidate;
+		// Сперва определяем, есть ли указанные поля в первичном ключе
+		boolean pkContainsFields = table.getPrimaryKey().keySet().containsAll(fieldsToValidate);
 
-    if (!pkContainsFields) {
-      Set<Index> indexes = table.getIndices();
+		if (!pkContainsFields) {
+			Set<Index> indexes = table.getIndices();
 
-      indexesToValidate = indexes.stream()
-          .filter(i -> i.getColumns().keySet().containsAll(fieldsToValidate)).collect(Collectors.toList());
-    } else {
-      indexesToValidate = Collections.emptyList();
-    }
+			indexesToValidate = indexes.stream().filter(i -> i.getColumns().keySet().containsAll(fieldsToValidate))
+					.collect(Collectors.toList());
+		} else {
+			indexesToValidate = Collections.emptyList();
+		}
 
+		if (!pkContainsFields && indexesToValidate.isEmpty()) {
+			throw new CelestaException("There is no pk or index which contains column(s) (\"%s\") in table %s.%s",
+					String.join(",", new HashSet<>(fieldsToValidate)), table.getGrain().getName(), table.getName());
+		}
 
-    if (!pkContainsFields && indexesToValidate.isEmpty()) {
-      throw new CelestaException("There is no pk or index which contains column(s) (\"%s\") in table %s.%s",
-          String.join(",", new HashSet<>(fieldsToValidate)), table.getGrain().getName(), table.getName());
-    }
+		Set<List<Integer>> result = new HashSet<>();
 
-    Set<List<Integer>> result = new HashSet<>();
+		if (pkContainsFields) {
+			List<String> pkColNames = new ArrayList<>(table.getPrimaryKey().keySet());
+			result.add(fieldsToValidate.stream().map(f -> pkColNames.indexOf(f)).collect(Collectors.toList()));
+		}
 
-    if (pkContainsFields) {
-      List<String> pkColNames = new ArrayList<>(table.getPrimaryKey().keySet());
-      result.add(
-          fieldsToValidate.stream().map(f -> pkColNames.indexOf(f)).collect(Collectors.toList())
-      );
-    }
+		result.addAll(indexesToValidate.stream()
+				.map(i -> fieldsToValidate.stream().map(f -> i.getColumnIndex(f)).collect(Collectors.toList()))
+				.collect(Collectors.toSet()));
 
-    result.addAll(
-        indexesToValidate.stream()
-            .map(
-                i -> fieldsToValidate.stream()
-                    .map(f -> i.getColumnIndex(f)).collect(Collectors.toList())
-            )
-            .collect(Collectors.toSet())
-    );
+		return result;
+	}
 
-    return result;
-  }
+	public Table getTable() {
+		return filtered;
+	}
 
-  public Table getTable() {
-    return table;
-  }
+	public Table getOtherTable() {
+		return filtering;
+	}
 
-  public Table getOtherTable() {
-    return otherTable;
-  }
+	public List<String> getFields() {
+		return new ArrayList<>(fields);
+	}
 
-  public List<String> getFields() {
-    return new ArrayList<>(fields);
-  }
+	public List<String> getOtherFields() {
+		return new ArrayList<>(otherFields);
+	}
 
-  public List<String> getOtherFields() {
-    return new ArrayList<>(otherFields);
-  }
-
-  public Cursor getOtherCursor() {
-    return otherCursor;
-  }
+	public Cursor getOtherCursor() {
+		return otherCursor;
+	}
 }

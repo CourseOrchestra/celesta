@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Created by ioann on 08.06.2017.
@@ -80,11 +78,10 @@ public class MaterializedView extends AbstractView implements TableElement {
   void finalizeParsing() throws ParseException {
 
     //Присутствие хотя бы одного агрегатного столбца - обязательное условие
-    Optional<Map.Entry<String, Expr>> aggregate = columns.entrySet().stream()
-        .filter(e -> e.getValue() instanceof Aggregate)
-        .findFirst();
+    boolean aggregate = columns.entrySet().stream()
+        .anyMatch(e -> e.getValue() instanceof Aggregate);
 
-    if (!aggregate.isPresent()) {
+    if (!aggregate) {
       throw new ParseException(String.format("%s %s.%s must have at least one aggregate column"
           , viewType(), getGrain().getName(), getName()));
     }

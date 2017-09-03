@@ -18,6 +18,8 @@ public abstract class AbstractView extends DataGrainElement {
   static final Map<Class<? extends Expr>, Function<Expr, Column>> EXPR_CLASSES_AND_COLUMN_EXTRACTORS = new HashMap<>();
 
   static {
+	EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Count.class, (Expr frExpr) -> null);  
+	  
     EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(FieldRef.class, (Expr frExpr) -> {
       FieldRef fr = (FieldRef) frExpr;
       return fr.getColumn();
@@ -210,11 +212,9 @@ public abstract class AbstractView extends DataGrainElement {
 
       //Бежим по колонкам, которые не агрегаты, и бросаем исключение,
       // если хотя бы одна из них не присутствует в groupByColumns
-      Optional<Map.Entry<String, Expr>>  hasErrorOpt = columns.entrySet().stream()
-          .filter(e -> !(e.getValue() instanceof Aggregate) && !groupByColumns.containsKey(e.getKey()))
-          .findFirst();
-
-      if (hasErrorOpt.isPresent()) {
+      boolean hasErrorOpt = columns.entrySet().stream()
+          .anyMatch(e -> !(e.getValue() instanceof Aggregate) && !groupByColumns.containsKey(e.getKey()));
+      if (hasErrorOpt) {
         throw new ParseException(String.format("%s '%s.%s' contains a column(s) " +
                 "which was not specified in aggregate function and GROUP BY expression.",
             viewType(), getGrain().getName(), getName()));
@@ -271,10 +271,6 @@ public abstract class AbstractView extends DataGrainElement {
 
   public Column getColumnRef(String colName) {
     Expr expr = columns.get(colName);
-
-    if (expr instanceof Count) {
-      return null;
-    }
     return EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
   }
 

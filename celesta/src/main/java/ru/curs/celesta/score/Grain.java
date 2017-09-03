@@ -87,7 +87,7 @@ public final class Grain extends NamedElement {
 						.getElements().entrySet())
 				.flatMap(entrySet -> entrySet.stream())
 				// Ищем совпадения по имени
-				.filter(entry -> entry.getKey().equals(element.getName())).findFirst()
+				.filter(entry -> entry.getKey().equals(element.getName())).findAny()
 				.map(entry -> entry.getValue().getClass().getSimpleName());
 		if (typeNameOfElementWithSameName.isPresent()) {
 			throw new ParseException(

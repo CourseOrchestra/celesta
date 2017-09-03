@@ -550,15 +550,10 @@ public final class DBUpdator {
             .withName(insertTriggerName);
 
         Optional<String> insertTriggerBody = dba.getTriggerBody(conn, query);
-
-        if (insertTriggerBody.isPresent()) {
-          boolean checksumIsMatched = insertTriggerBody.get().contains(
-              String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
-          );
-
-          if (checksumIsMatched) {
-            return;
-          }
+        boolean checksumIsMatched = insertTriggerBody.map(b -> b.contains(
+              String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum()))).orElse(false);
+        if (checksumIsMatched) {
+          return;
         }
       }
 
