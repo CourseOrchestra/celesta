@@ -8,6 +8,7 @@ import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Table;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -22,18 +23,56 @@ public final class FieldsLookup {
 	final private List<String> fields = new ArrayList<>();
 	final private List<String> otherFields = new ArrayList<>();
 
-	private Cursor otherCursor;
+  private Cursor cursor;
+  private Cursor otherCursor;
+  private Runnable lookupChangeCallback;
+  private Function<FieldsLookup, Void> newLookupCallback;
 
-	public FieldsLookup(Cursor filteredCursor, Cursor filteringCursor) throws CelestaException {
-		this.filtered = filteredCursor.meta();
-		this.filtering = filteringCursor.meta();
-		this.otherCursor = filteringCursor;
-	}
+  public FieldsLookup(Cursor cursor, Cursor otherCursor,
+                      Runnable lookupChangeCallback,
+                      Function<FieldsLookup, Void> newLookupCallback) throws CelestaException {
+    if (cursor == null) {
+      throw new IllegalArgumentException("Argument 'cursor' can't be null");
+    }
+    if (otherCursor == null) {
+      throw new IllegalArgumentException("Argument 'otherCursor' can't be null");
+    }
 
-	public FieldsLookup(Table filtered, Table filtering) throws CelestaException {
-		this.filtered = filtered;
-		this.filtering = filtering;
-	}
+    if (cursor.callContext() != otherCursor.callContext()) {
+      throw new CelestaException("CallContexts are not matching");
+    }
+
+    this.filtered = cursor.meta();
+    this.cursor = cursor;
+    this.filtering = otherCursor.meta();
+    this.otherCursor = otherCursor;
+    this.lookupChangeCallback = lookupChangeCallback;
+    this.newLookupCallback = newLookupCallback;
+    lookupChangeCallback.run();
+  }
+
+  public FieldsLookup(
+      Table table, Table otherTable,
+      Runnable lookupChangeCallback,
+      Function<FieldsLookup, Void> newLookupCallback) throws CelestaException {
+    this.filtered = table;
+    this.filtering = otherTable;
+    this.lookupChangeCallback = lookupChangeCallback;
+    this.newLookupCallback = newLookupCallback;
+    lookupChangeCallback.run();
+  }
+
+  public FieldsLookup and(Cursor otherCursor) throws CelestaException {
+    FieldsLookup fieldsLookup = new FieldsLookup(cursor, otherCursor, lookupChangeCallback, newLookupCallback);
+    newLookupCallback.apply(fieldsLookup);
+    return fieldsLookup;
+  }
+
+  public FieldsLookup and(Table filtering) throws CelestaException {
+    FieldsLookup fieldsLookup = new FieldsLookup(filtered, filtering, lookupChangeCallback, newLookupCallback);
+    newLookupCallback.apply(fieldsLookup);
+    return fieldsLookup;
+  }
 
 	public FieldsLookup add(String field, String otherField) throws CelestaException, ParseException {
 		final Column column;
@@ -67,10 +106,14 @@ public final class FieldsLookup {
 					filtering.getGrain().getName(), filtering.getName());
 		}
 
-		fields.add(field);
-		otherFields.add(otherField);
-		return this;
-	}
+    fields.add(field);
+    otherFields.add(otherField);
+
+    validate();
+    lookupChangeCallback.run();
+
+    return this;
+  }
 
 	public void validate() throws CelestaException {
     Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fields, filtered);

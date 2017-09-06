@@ -97,3 +97,13 @@ create materialized view mViewForInit as
   select sum(numb) as s, var
   from tableForInitMvData
   group by var;
+
+create function pView(p int) as
+  select id from test
+  where id = $p;
+
+create table testInFilterClause (
+  id int identity not null primary key,
+  atVarchar varchar(2),
+  atInt int default 3
+);

@@ -1166,7 +1166,7 @@ final class OraAdaptor extends DBAdaptor {
   @Override
   public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
     String sql = String.format(
-        "select * from all_objects\n" +
+        "select OBJECT_NAME from all_objects\n" +
             " where owner = sys_context('userenv','session_user')\n" +
             " and object_type = 'FUNCTION' and object_name like '%s@_%%' escape '@'",
         g.getName());
@@ -1212,7 +1212,7 @@ final class OraAdaptor extends DBAdaptor {
       //удалить объект записи
       sql = String.format(
           "select TYPE_NAME from DBA_TYPES WHERE owner = sys_context('userenv','session_user')\n" +
-              " and object_type = 'OBJECT' and TYPE_NAME = '%s_%s_o'",
+              " and TYPECODE = 'OBJECT' and TYPE_NAME = '%s_%s_o'",
           grainName, viewName);
       rs = stmt.executeQuery(sql);
 

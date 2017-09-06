@@ -2,11 +2,10 @@ from celestaunit.internal_celesta_unit import CelestaUnit
 
 from java.time import LocalDateTime
 from java.sql import Timestamp
-from ru.curs.celesta.dbutils.filter.value import FieldsLookup
 from ru.curs.celesta import CelestaException
 from ru.curs.celesta.score import ParseException
 from _filters_orm import aFilterCursor, bFilterCursor, cFilterCursor, \
-    dFilterCursor, eFilterCursor, fFilterCursor
+    dFilterCursor, eFilterCursor, fFilterCursor, gFilterCursor
 
 
 class testFilters(CelestaUnit):
@@ -49,16 +48,13 @@ class testFilters(CelestaUnit):
         b.insert()
         b.clear()
 
-        lookup = FieldsLookup(a, b).add("date", "created")
-        a.setIn(lookup)
+        lookup = a.setIn(b).add("date", "created");
         self.assertEqual(2, a.count())
 
-        lookup = FieldsLookup(a, b).add("date", "created").add("number1", "numb1")
-        a.setIn(lookup)
+        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
         self.assertEqual(1, a.count())
 
-        lookup = FieldsLookup(a, b).add("date", "created").add("number1", "numb1").add("number2", "numb2")
-        a.setIn(lookup)
+        a.setIn(b).add("date", "created").add("number1", "numb1").add("number2", "numb2")
         self.assertEqual(0, a.count())
 
 
@@ -89,8 +85,7 @@ class testFilters(CelestaUnit):
         d.insert()
         d.clear()
 
-        lookup = FieldsLookup(c, d).add("id", "id")
-        c.setIn(lookup)
+        lookup = c.setIn(d).add("id", "id")
         self.assertEqual(2, c.count())
 
 
@@ -124,8 +119,7 @@ class testFilters(CelestaUnit):
         f.insert()
         f.clear()
 
-        lookup = FieldsLookup(e, f).add("id", "id").add('number', 'numb')
-        e.setIn(lookup)
+        lookup = e.setIn(f).add("id", "id").add('number', 'numb')
         self.assertEqual(2, e.count())
 
 
@@ -168,8 +162,7 @@ class testFilters(CelestaUnit):
         b.clear()
 
         a.setRange('number1', 5)
-        lookup = FieldsLookup(a, b).add("date", "created")
-        a.setIn(lookup)
+        lookup = a.setIn(b).add("date", "created")
         self.assertEqual(1, a.count())
         a.first()
 
@@ -185,18 +178,15 @@ class testFilters(CelestaUnit):
         self._fillTablesForTestInFilterWithRangeOnOtherCursor(a, b, timestamp)
 
         b.setRange('numb2', -40)
-        lookup = FieldsLookup(a, b).add("date", "created").add("number1", "numb1")
-        a.setIn(lookup)
+        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
 
         self.assertEqual(2, a.count())
 
         a.first()
-        self.assertEqual(timestamp, a.date)
         self.assertEqual(5, a.number1)
         self.assertEqual(-10, a.number2)
 
         a.navigate('>')
-        self.assertEqual(timestamp, a.date)
         self.assertEqual(6, a.number1)
         self.assertEqual(-20, a.number2)
 
@@ -213,29 +203,87 @@ class testFilters(CelestaUnit):
         self._fillTablesForTestInFilterWithRangeOnOtherCursor(a, b, timestamp)
 
 
-        lookup = FieldsLookup(a, b).add("date", "created").add("number1", "numb1")
-        a.setIn(lookup)
+        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
+
         self.assertEqual(3, a.count())
 
         b.setRange('numb2', -40)
         self.assertEqual(2, a.count())
 
         a.first()
-        self.assertEqual(timestamp, a.date)
         self.assertEqual(5, a.number1)
         self.assertEqual(-10, a.number2)
 
         a.navigate('>')
-        self.assertEqual(timestamp, a.date)
         self.assertEqual(6, a.number1)
         self.assertEqual(-20, a.number2)
 
+    def testInFilterWithAdditionalLookup(self):
+        a = aFilterCursor(self.context)
+        b = bFilterCursor(self.context)
+        g = gFilterCursor(self.context)
+
+        a.deleteAll()
+        b.deleteAll()
+        g.deleteAll()
+
+        timestamp = Timestamp.valueOf(LocalDateTime.now())
+
+        self._fillTablesForTestInFilterWithRangeOnOtherCursor(a, b, timestamp)
+
+        g.createDate = timestamp
+        g.num1 = 5
+        g.num2 = -30
+        g.insert()
+        g.clear()
+
+        g.createDate = timestamp
+        g.num1 = 6
+        g.num2 = -40
+        g.insert()
+        g.clear()
+
+        g.createDate = timestamp
+        g.num1 = 1
+        g.num2 = -41
+        g.insert()
+        g.clear()
+
+        g.createDate = timestamp
+        g.num1 = 1
+        g.num2 = -42
+        g.insert()
+        g.clear()
+
+
+        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
+        additionalLookup = lookup.and(g).add("date", "createDate").add("number1", "num1")
+
+        self.assertEqual(3, a.count())
+
+        b.setRange('numb2', -40)
+        self.assertEqual(2, a.count())
+
+        a.first()
+        self.assertEqual(5, a.number1)
+        self.assertEqual(-10, a.number2)
+
+        a.navigate('>')
+        self.assertEqual(6, a.number1)
+        self.assertEqual(-20, a.number2)
+
+        g.setRange('num2', -30)
+        self.assertEqual(1, a.count())
+
+        a.first()
+        self.assertEqual(5, a.number1)
+        self.assertEqual(-10, a.number2)
 
     def testExceptionWhileAddingNotExistedFieldsToLookup(self):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
 
-        lookup = FieldsLookup(a, b)
+        lookup = a.setIn(b)
 
         with self.assertRaises(ParseException):
             lookup.add("notExistingField", "created")
@@ -252,7 +300,7 @@ class testFilters(CelestaUnit):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
 
-        lookup = FieldsLookup(a, b)
+        lookup = a.setIn(b)
 
         with self.assertRaises(CelestaException) as context:
             lookup.add("date", "numb1")
@@ -264,7 +312,7 @@ class testFilters(CelestaUnit):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
 
-        lookup = FieldsLookup(a, b)
+        lookup = a.setIn(b)
 
         with self.assertRaises(CelestaException):
             lookup.add("noIndexA", "numb1")
@@ -280,7 +328,7 @@ class testFilters(CelestaUnit):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
 
-        lookup = FieldsLookup(a, b)
+        lookup = a.setIn(b)
 
         with self.assertRaises(CelestaException):
             lookup.add("number1", "numb2")
@@ -288,10 +336,9 @@ class testFilters(CelestaUnit):
         with self.assertRaises(CelestaException):
             lookup.add("number2", "numb1")
 
-        lookup.add("date", "created")
-        lookup.add("number2", "numb2")
         with self.assertRaises(CelestaException):
-            a.setIn(lookup)
+            lookup.add("date", "created")
+            lookup.add("number2", "numb2")
 
 
     def _fillTablesForTestInFilterWithRangeOnOtherCursor(self, a, b, timestamp):

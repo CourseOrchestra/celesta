@@ -8,10 +8,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 import org.junit.After;
@@ -128,9 +125,9 @@ public abstract class AbstractAdaptorTest {
 
   @Test
   public void pidIsReturned() throws Exception {
-	assertTrue(dba.getDBPid(conn) != 0);
+    assertTrue(dba.getDBPid(conn) != 0);
   }
-  
+
   @Test
   public void createAndDropAndExists() throws Exception {
     boolean result = dba.tableExists(conn, t.getGrain().getName(), t.getName());
@@ -1261,6 +1258,144 @@ public abstract class AbstractAdaptorTest {
 
       dba.dropTable(conn, t);
       dba.dropTable(conn, mv);
+    }
+  }
+
+
+  @Test
+  public void testCreateParameterizedView() throws Exception {
+    Grain g = score.getGrain(GRAIN_NAME);
+    String pViewName = "pView";
+
+    try {
+      if (dba.getParameterizedViewList(conn, g).contains(pViewName))
+        dba.dropParameterizedView(conn, g.getName(), pViewName);
+
+      List<String> list = dba.getParameterizedViewList(conn, g);
+      assertEquals(0, list.size());
+
+      ParameterizedView pView = g.getElement(pViewName, ParameterizedView.class);
+      dba.createParameterizedView(conn, pView);
+
+
+      list = dba.getParameterizedViewList(conn, g);
+      assertEquals(1, list.size());
+      assertEquals(pViewName, list.get(0));
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      if (dba.getParameterizedViewList(conn, g).contains(pViewName))
+        dba.dropParameterizedView(conn, g.getName(), pViewName);
+    }
+
+  }
+
+
+  @Test
+  public void testDropParameterizedView() throws Exception {
+    Grain g = score.getGrain(GRAIN_NAME);
+    String pViewName = "pView";
+
+    if (dba.getParameterizedViewList(conn, g).contains(pViewName))
+      dba.dropParameterizedView(conn, g.getName(), pViewName);
+
+    List<String> list = dba.getParameterizedViewList(conn, g);
+    assertEquals(0, list.size());
+
+    ParameterizedView pView = g.getElement(pViewName, ParameterizedView.class);
+    dba.createParameterizedView(conn, pView);
+
+    dba.dropParameterizedView(conn, g.getName(), pViewName);
+    assertEquals(0, list.size());
+  }
+
+
+  @Test
+  public void testGetInFilterClause() throws Exception {
+    Grain g = score.getGrain(GRAIN_NAME);
+    Table t2 = g.getElement("testInFilterClause", Table.class);
+
+    boolean tableIsCreated = false;
+    Statement stmt = conn.createStatement();
+    PreparedStatement pstmt = null;
+    try {
+      // Могла остаться от незавершившегося теста
+      try {
+        dba.dropTable(conn, t2);
+      } catch (CelestaException e) {
+        conn.rollback();
+      }
+
+      dba.createTable(conn, t2);
+      tableIsCreated = true;
+
+
+      insertRow(conn, t, 1);
+      insertRow(conn, t, 2);
+
+      List<String> tFields = Arrays.asList("attrInt");
+      List<String> t2Fields = Arrays.asList("atInt");
+      String otherWhere = "(1 = 1)";
+
+      String where = dba.getInFilterClause(t, t2, tFields, t2Fields, otherWhere);
+
+      FromClause from = new FromClause();
+      from.setGe(t);
+      from.setExpression(String.format(dba.tableTemplate(), g.getName(), t.getName()));
+
+      pstmt = dba.getSetCountStatement(conn, from, where);
+      ResultSet rs = pstmt.executeQuery();
+      rs.next();
+      assertEquals(0, rs.getInt(1));
+
+      boolean[] nullsMask = {true, false, false};
+      Object[] rowData = {null, "A", 1};
+      List<ParameterSetter> program = new ArrayList<>();
+      pstmt = dba.getInsertRecordStatement(conn, t2, nullsMask, program);
+      int i = 1;
+      for (ParameterSetter ps : program) {
+        ps.execute(pstmt, i++, rowData, 0);
+      }
+      pstmt.execute();
+
+      pstmt = dba.getSetCountStatement(conn, from, where);
+      rs = pstmt.executeQuery();
+      rs.next();
+      assertEquals(1, rs.getInt(1));
+
+      boolean[] nullsMask2 = {true, false, false};
+      Object[] rowData2 = {null, "A", 2};
+      program = new ArrayList<>();
+      pstmt = dba.getInsertRecordStatement(conn, t2, nullsMask2, program);
+      i = 1;
+      for (ParameterSetter ps : program) {
+        ps.execute(pstmt, i++, rowData2, 0);
+      }
+      pstmt.execute();
+
+      pstmt = dba.getSetCountStatement(conn, from, where);
+      rs = pstmt.executeQuery();
+      rs.next();
+      assertEquals(2, rs.getInt(1));
+
+      otherWhere = ("(\"atInt\" = 2)");
+      where = dba.getInFilterClause(t, t2, tFields, t2Fields, otherWhere);
+
+      pstmt = dba.getSetCountStatement(conn, from, where);
+      rs = pstmt.executeQuery();
+      rs.next();
+      assertEquals(1, rs.getInt(1));
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      stmt.close();
+
+      if (pstmt != null) {
+        pstmt.close();
+      }
+
+      if (tableIsCreated)
+        dba.dropTable(conn, t2);
     }
   }
 

@@ -335,7 +335,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   @Override
   public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
-    String sql = String.format("SELECT * FROM INFORMATION_SCHEMA.FUNCTION_ALIASES where alias_schema = '%s'",
+    String sql = String.format("SELECT ALIAS_NAME FROM INFORMATION_SCHEMA.FUNCTION_ALIASES where alias_schema = '%s'",
         g.getName());
     List<String> result = new LinkedList<>();
     try (Statement stmt = conn.createStatement();) {

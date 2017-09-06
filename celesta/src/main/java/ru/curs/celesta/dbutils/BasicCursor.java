@@ -227,7 +227,6 @@ public abstract class BasicCursor implements Closeable {
 	private long offset = 0;
 	private long rowCount = 0;
 	private Expr complexFilter;
-	private In inFilter;
 
 	private boolean closed = false;
 
@@ -271,7 +270,7 @@ public abstract class BasicCursor implements Closeable {
 
 		@Override
 		public In inFilter() {
-			return inFilter;
+			return getIn();
 		}
 
 		@Override
@@ -469,7 +468,7 @@ public abstract class BasicCursor implements Closeable {
 		}
 	}
 
-	private void closeSet() throws CelestaException {
+	protected void closeSet() throws CelestaException {
 		cursor = null;
 		set.close();
 		forwards.close();
@@ -870,29 +869,6 @@ public abstract class BasicCursor implements Closeable {
 		}
 	}
 
-	public final void setIn(FieldsLookup fieldsLookup) throws CelestaException {
-		Cursor otherCursor = fieldsLookup.getOtherCursor();
-
-		if (context != otherCursor.callContext()) {
-			throw new CelestaException("CallContexts are not matching");
-		}
-
-		fieldsLookup.validate();
-
-		final WhereTermsMaker otherWhereTermMaker;
-
-		if (otherCursor != null) {
-			otherWhereTermMaker = otherCursor.getQmaker();
-		} else {
-			otherWhereTermMaker = null;
-		}
-
-		inFilter = new In(fieldsLookup, otherWhereTermMaker);
-		if (closed)
-			return;
-		// пересоздаём набор
-		closeSet();
-	}
 
 	/**
 	 * Установка фильтра на поле.
@@ -980,7 +956,7 @@ public abstract class BasicCursor implements Closeable {
 	 */
 	public final void reset() throws CelestaException {
 		filters.clear();
-		inFilter = null;
+		resetSpecificState();
 		complexFilter = null;
 		orderByNames = null;
 		orderByIndices = null;
@@ -989,6 +965,8 @@ public abstract class BasicCursor implements Closeable {
 		rowCount = 0;
 		closeSet();
 	}
+
+	protected void resetSpecificState() {}
 
 	/**
 	 * Установка сортировки.
@@ -1056,7 +1034,7 @@ public abstract class BasicCursor implements Closeable {
 	public void clear() throws CelestaException {
 		_clearBuffer(true);
 		filters.clear();
-		inFilter = null;
+		clearSpecificState();
 		complexFilter = null;
 
 		if (!fieldsForStatement.isEmpty()) {
@@ -1071,6 +1049,8 @@ public abstract class BasicCursor implements Closeable {
 		rowCount = 0;
 		closeSet();
 	}
+
+	protected void clearSpecificState() {}
 
 	/**
 	 * Возвращает число записей в отфильтрованном наборе.
@@ -1129,11 +1109,13 @@ public abstract class BasicCursor implements Closeable {
 		filters.clear();
 		filters.putAll(c.filters);
 		complexFilter = c.complexFilter;
-		inFilter = c.inFilter;
+		copySpecificFiltersFrom(c);
 		offset = c.offset;
 		rowCount = c.rowCount;
 		closeSet();
 	}
+
+	protected void copySpecificFiltersFrom(BasicCursor c) {}
 
 	/**
 	 * Получает копию сортировок из курсора того же типа.
@@ -1167,7 +1149,7 @@ public abstract class BasicCursor implements Closeable {
 				: complexFilter.getCSQL().equals(c.complexFilter.getCSQL())))
 			return false;
 		// equality of In filter
-		if (!Objects.equals(inFilter, c.inFilter)) {
+		if (!isEquivalentSpecific(c)) {
 			return false;
 		}
 		// equality of sorting
@@ -1183,6 +1165,11 @@ public abstract class BasicCursor implements Closeable {
 			if (descOrders[i] != c.descOrders[i])
 				return false;
 		}
+		return true;
+	}
+
+
+	boolean isEquivalentSpecific(BasicCursor c) throws CelestaException {
 		return true;
 	}
 
@@ -1212,6 +1199,10 @@ public abstract class BasicCursor implements Closeable {
 
 	protected boolean inRec(String field) {
 		return fieldsForStatement.isEmpty() || fieldsForStatement.contains(field);
+	}
+
+	protected In getIn() {
+		return null;
 	}
 
 	protected FromClause getFrom() throws CelestaException {

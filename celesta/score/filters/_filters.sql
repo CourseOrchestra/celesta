@@ -41,3 +41,13 @@ create table fFilter (
   numb int not null,
   CONSTRAINT Pk_filters_d PRIMARY KEY (id, numb)
 );
+
+create table gFilter (
+  id int identity not null primary key,
+  createDate datetime default GETDATE(),
+  num1 int,
+  num2 int,
+  noIndexG int
+);
+
+create index idxCreateDateNum1 on gFilter (createDate, num1);
