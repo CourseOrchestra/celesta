@@ -535,7 +535,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             "where r.routine_schema = '%s' AND r.routine_type='FUNCTION' " +
             "AND exists (select * from pg_proc p\n" +
             "           where p.proname = r.routine_name\n" +
-            "           AND upper(pg_get_functiondef(p.oid)) like upper('%returns table%'))",
+            "           AND upper(pg_get_functiondef(p.oid)) like upper('%%returns table%%'))",
         g.getName());
     List<String> result = new LinkedList<>();
     try (Statement stmt = conn.createStatement();) {
