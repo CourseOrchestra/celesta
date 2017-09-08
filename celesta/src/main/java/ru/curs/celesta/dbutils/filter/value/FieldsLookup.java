@@ -137,15 +137,10 @@ public final class FieldsLookup {
 		final List<Index> indexesToValidate;
 		// Сперва определяем, есть ли указанные поля в первичном ключе
 		boolean pkContainsFields = table.getPrimaryKey().keySet().containsAll(fieldsToValidate);
-
-		if (!pkContainsFields) {
-			Set<Index> indexes = table.getIndices();
-
-			indexesToValidate = indexes.stream().filter(i -> i.getColumns().keySet().containsAll(fieldsToValidate))
+		//Затем выбираем все индексы, содержащие пришедшие поля
+		Set<Index> indexes = table.getIndices();
+		indexesToValidate = indexes.stream().filter(i -> i.getColumns().keySet().containsAll(fieldsToValidate))
 					.collect(Collectors.toList());
-		} else {
-			indexesToValidate = Collections.emptyList();
-		}
 
 		if (!pkContainsFields && indexesToValidate.isEmpty()) {
 			throw new CelestaException("There is no pk or index which contains column(s) (\"%s\") in table %s.%s",

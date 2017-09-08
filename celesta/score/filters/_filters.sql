@@ -51,3 +51,18 @@ create table gFilter (
 );
 
 create index idxCreateDateNum1 on gFilter (createDate, num1);
+
+create table hFilter (
+  id VARCHAR(36) NOT NULL,
+  CONSTRAINT pk_hFilter PRIMARY KEY (id)
+);
+
+CREATE INDEX idx_hFilter_id on hFilter(id);
+
+create table iFilter (
+  id VARCHAR(36) NOT NULL,
+  hFilterId VARCHAR(36) NOT NULL,
+  CONSTRAINT pk_iFilter PRIMARY KEY (id, hFilterId)
+);
+
+CREATE INDEX idx_iFilter_hFilterId on iFilter(hFilterId);

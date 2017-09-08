@@ -5,7 +5,7 @@ from java.sql import Timestamp
 from ru.curs.celesta import CelestaException
 from ru.curs.celesta.score import ParseException
 from _filters_orm import aFilterCursor, bFilterCursor, cFilterCursor, \
-    dFilterCursor, eFilterCursor, fFilterCursor, gFilterCursor
+    dFilterCursor, eFilterCursor, fFilterCursor, gFilterCursor, hFilterCursor, iFilterCursor
 
 
 class testFilters(CelestaUnit):
@@ -278,6 +278,30 @@ class testFilters(CelestaUnit):
         a.first()
         self.assertEqual(5, a.number1)
         self.assertEqual(-10, a.number2)
+
+
+    def testInFilterWhenTargetHasPkAndOtherHasPkWithNotSameOrderAndIndexWithSameOrder(self):
+        h = hFilterCursor(self.context)
+        i = iFilterCursor(self.context)
+
+        h.deleteAll()
+        i.deleteAll()
+
+        h.id = 'H1'
+        h.insert()
+        h.clear()
+
+        h.id = 'H2'
+        h.insert()
+        h.clear()
+
+        i.id = 'I1'
+        i.hFilterId = 'H1'
+        i.insert()
+        i.clear()
+
+        lookup = h.setIn(i).add('id', 'hFilterId')
+        self.assertEqual(1, h.count())
 
     def testExceptionWhileAddingNotExistedFieldsToLookup(self):
         a = aFilterCursor(self.context)
