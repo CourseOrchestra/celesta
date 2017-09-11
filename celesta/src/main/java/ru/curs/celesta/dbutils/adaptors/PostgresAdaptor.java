@@ -531,11 +531,11 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   @Override
   public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
     String sql = String.format(
-        "SELECT r.routine_name FROM INFORMATION_SCHEMA.ROUTINES r " +
+        " SELECT r.routine_name FROM INFORMATION_SCHEMA.ROUTINES r" +
             "where r.routine_schema = '%s' AND r.routine_type='FUNCTION' " +
             "AND exists (select * from pg_proc p\n" +
             "           where p.proname = r.routine_name\n" +
-            "           AND upper(pg_get_functiondef(p.oid)) like upper('%%returns table%%'))",
+            "           AND upper(pg_get_function_result(p.oid)) like upper('%%table%%'))",
         g.getName());
     List<String> result = new LinkedList<>();
     try (Statement stmt = conn.createStatement();) {
