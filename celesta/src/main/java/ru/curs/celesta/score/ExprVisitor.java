@@ -1,9 +1,6 @@
 package ru.curs.celesta.score;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Посетитель синтаксического дерева для реализации процедур контроля типов,
@@ -113,11 +110,12 @@ final class FieldResolver extends ExprVisitor {
  */
 final class ParameterResolver extends ExprVisitor {
   private final Map<String, Parameter> parameters;
-  private final Set<String> parameterNames;
+  private final ParameterResolverResult result;
 
   public ParameterResolver(Map<String, Parameter> parameters) {
     this.parameters = parameters;
-    this.parameterNames = new HashSet<>(parameters.keySet());
+    this.result =  new ParameterResolverResult();
+    this.result.getUnusedParameters().addAll(parameters.keySet());
   }
 
   @Override
@@ -133,11 +131,25 @@ final class ParameterResolver extends ExprVisitor {
       );
 
     pr.setParameter(parameter);
-    parameterNames.remove(parameter.getName());
+    result.getUnusedParameters().remove(parameter.getName());
+    result.getParametersWithUsageOrder().add(parameter.getName());
   }
 
+  public ParameterResolverResult getResult() {
+    return result;
+  }
+}
+
+final class ParameterResolverResult {
+  private Set<String> unusedParameters = new HashSet<>();
+  private List<String> parametersWithUsageOrder = new ArrayList<>();
+
   public Set<String> getUnusedParameters() {
-    return parameterNames;
+    return unusedParameters;
+  }
+
+  public List<String> getParametersWithUsageOrder() {
+    return parametersWithUsageOrder;
   }
 }
 

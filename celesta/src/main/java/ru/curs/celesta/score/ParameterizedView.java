@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 public class ParameterizedView extends View {
 
   private final Map<String, Parameter> parameters = new LinkedHashMap<>();
+  private final List<String> parameterRefsWithOrder = new ArrayList<>();
 
   public ParameterizedView(Grain g, String name) throws ParseException {
     super(g, name);
@@ -27,15 +28,16 @@ public class ParameterizedView extends View {
     List<TableRef> t = new ArrayList<>(getTables().values());
     if (whereCondition != null) {
       whereCondition.resolveFieldRefs(t);
-      Set<String> unusedParameters = whereCondition.resolveParameterRefs(parameters);
+      ParameterResolverResult paramResolveResult = whereCondition.resolveParameterRefs(parameters);
 
-      if (!unusedParameters.isEmpty()) {
-        String unusedParametersStr = String.join(", ", unusedParameters);
+      if (!paramResolveResult.getUnusedParameters().isEmpty()) {
+        String unusedParametersStr = String.join(", ", paramResolveResult.getUnusedParameters());
         throw new ParseException(String.format("%s '%s' contains not used parameters %s.",
             viewType(), getName(), unusedParametersStr));
       }
-
       whereCondition.validateTypes();
+
+      parameterRefsWithOrder.addAll(paramResolveResult.getParametersWithUsageOrder());
     }
   }
 
@@ -61,6 +63,10 @@ public class ParameterizedView extends View {
 
   public Map<String, Parameter> getParameters() {
     return new LinkedHashMap<>(parameters);
+  }
+
+  public List<String> getParameterRefsWithOrder() {
+    return parameterRefsWithOrder;
   }
 
   @Override

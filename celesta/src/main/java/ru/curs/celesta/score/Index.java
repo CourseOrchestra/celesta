@@ -2,6 +2,7 @@ package ru.curs.celesta.score;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -88,6 +89,16 @@ public class Index extends GrainElement {
 	 *             дублирующийся по составу полей.
 	 */
 	void finalizeIndex() throws ParseException {
+		if (Arrays.equals(
+				getColumns().entrySet().toArray(),
+				table.getPrimaryKey().entrySet().toArray()
+		)) {
+			throw new ParseException(
+					String.format("Can't add index %s to table %s.%s. " +
+									"Prime key with same columns and order already exists." ,
+							getName(), table.getGrain().getName(), table.getName())
+			);
+		}
 		// Ищем дублирующиеся по составу полей индексы
 		for (Index ind : getGrain().getIndices().values()) {
 			if (ind == this)

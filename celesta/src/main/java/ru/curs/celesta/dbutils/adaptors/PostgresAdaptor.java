@@ -612,20 +612,6 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       String selectSql = sw.toString();
 
 
-      List<String> params = new ArrayList(pv.getParameters().keySet());
-
-      //Сортируем имена параметров по длине их имени по убыванию.
-      //При таком подходе параметер с именем param не сможет затереть параметр с именем param2 во время подстановки.
-      List<String> sortedParams = params.stream()
-          .sorted(
-              Comparator.comparing(String::length).reversed()
-          ).collect(Collectors.toList());
-
-      //Подстановка параметров
-      for (String param : sortedParams) {
-        selectSql = selectSql.replace("$" + param, "$" + (params.indexOf(param) + 1));
-      }
-
       String sql = String.format(
           "create or replace function " + tableTemplate() + "(%s) returns TABLE(%s) AS\n"
               + "$$\n %s $$\n"

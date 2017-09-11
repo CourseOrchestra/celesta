@@ -96,7 +96,7 @@ public class SQLGenerator extends ExprVisitor {
 
   @Override
   void visitParameterRef(ParameterRef expr) throws ParseException {
-    stack.push("$" + expr.getName());
+    stack.push(paramLiteral(expr.getName()));
   }
 
   @Override
@@ -163,6 +163,10 @@ public class SQLGenerator extends ExprVisitor {
 
   protected String boolLiteral(boolean val) {
     return val ? "true" : "false";
+  }
+
+  protected String paramLiteral(String paramName) {
+    return "$" + paramName;
   }
 
   protected String checkForDate(String lexValue) {

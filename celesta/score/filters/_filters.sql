@@ -57,8 +57,6 @@ create table hFilter (
   CONSTRAINT pk_hFilter PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_hFilter_id on hFilter(id);
-
 create table iFilter (
   id VARCHAR(36) NOT NULL,
   hFilterId VARCHAR(36) NOT NULL,

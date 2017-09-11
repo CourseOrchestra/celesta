@@ -922,6 +922,11 @@ final class MSSQLAdaptor extends DBAdaptor {
       protected String boolLiteral(boolean val) {
         return val ? "1" : "0";
       }
+
+      @Override
+      protected String paramLiteral(String paramName) {
+        return "@" + paramName;
+      }
     };
   }
 
@@ -1043,20 +1048,6 @@ final class MSSQLAdaptor extends DBAdaptor {
 
 
       String selectSql = sw.toString();
-
-      List<String> params = new ArrayList(pv.getParameters().keySet());
-
-      //Сортируем имена параметров по длине их имени по убыванию.
-      //При таком подходе параметер с именем param не сможет затереть параметр с именем param2 во время подстановки.
-      List<String> sortedParams = params.stream()
-          .sorted(
-              Comparator.comparing(String::length).reversed()
-          ).collect(Collectors.toList());
-
-      //Подстановка параметров
-      for (String param : sortedParams) {
-        selectSql = selectSql.replace("$" + param, "@" + param);
-      }
 
       String sql = String.format(
           "CREATE FUNCTION "+ tableTemplate() + "(%s)\n" +

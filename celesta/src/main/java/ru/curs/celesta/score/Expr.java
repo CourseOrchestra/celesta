@@ -76,10 +76,10 @@ public abstract class Expr {
 		accept(fr);
 	}
 
-	final Set<String> resolveParameterRefs(Map<String, Parameter> parameters) throws ParseException {
+	final ParameterResolverResult resolveParameterRefs(Map<String, Parameter> parameters) throws ParseException {
 		ParameterResolver r = new ParameterResolver(parameters);
 		accept(r);
-		return r.getUnusedParameters();
+		return r.getResult();
 	}
 
 	/**
