@@ -619,7 +619,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
       Statement stmt = conn.createStatement();
       try {
-        System.out.println(sql);
+        //System.out.println(sql);
         stmt.executeUpdate(sql);
       } finally {
         stmt.close();
@@ -1153,5 +1153,15 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   @Override
   String truncDate(String dateStr) {
     return "date_trunc('DAY'," + dateStr + ")";
+  }
+
+  @Override
+  public SQLGenerator getViewSQLGenerator() {
+    return new SQLGenerator() {
+      @Override
+      protected String paramLiteral(String paramName) {
+        return paramName;
+      }
+    };
   }
 }

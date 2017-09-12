@@ -221,11 +221,6 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
 
   @Override
-  public SQLGenerator getViewSQLGenerator() {
-    return new SQLGenerator();
-  }
-
-  @Override
   public PreparedStatement getNavigationStatement(
       Connection conn, FromClause from, String orderBy, String navigationWhereClause, Set<String> fields
   ) throws CelestaException {
