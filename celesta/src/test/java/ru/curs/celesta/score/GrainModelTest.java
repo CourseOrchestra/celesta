@@ -36,7 +36,6 @@ public class GrainModelTest {
 		Properties p = new Properties();
 		p.setProperty("score.path", ".");
 		p.setProperty("rdbms.connection.url", "jdbc:oracle:123");
-		AppSettings.init(p);
 	}
 
 	@Test

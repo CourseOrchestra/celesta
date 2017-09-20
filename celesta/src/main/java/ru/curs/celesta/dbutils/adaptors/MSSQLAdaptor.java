@@ -1057,7 +1057,7 @@ final class MSSQLAdaptor extends DBAdaptor {
 
       Statement stmt = conn.createStatement();
       try {
-        System.out.println(sql);
+        //System.out.println(sql);
         stmt.executeUpdate(sql);
       } finally {
         stmt.close();

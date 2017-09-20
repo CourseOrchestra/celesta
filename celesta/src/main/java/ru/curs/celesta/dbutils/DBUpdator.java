@@ -63,7 +63,7 @@ public final class DBUpdator {
    * @param score модель
    * @throws CelestaException в случае ошибки обновления.
    */
-  public static void updateDB(Score score) throws CelestaException {
+  public static void updateDB(Score score, boolean forceDdInitialize) throws CelestaException {
     if (dba == null)
       dba = DBAdaptor.getAdaptor();
     Connection conn = ConnectionPool.get();
@@ -75,7 +75,7 @@ public final class DBUpdator {
       // Проверяем наличие главной системной таблицы.
       if (!dba.tableExists(conn, "celesta", "grains")) {
         // Если главной таблицы нет, а другие таблицы есть -- ошибка.
-        if (dba.userTablesExist() && !AppSettings.getForceDBInitialize())
+        if (dba.userTablesExist() && !forceDdInitialize)
           throw new CelestaException("No celesta.grains table found in non-empty database.");
         // Если база вообще пустая, то создаём системные таблицы.
         try {

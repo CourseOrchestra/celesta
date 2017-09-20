@@ -1,6 +1,7 @@
 package ru.curs.celesta.score;
 
 import ru.curs.celesta.AppSettings;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -169,6 +170,10 @@ public class SQLGenerator extends ExprVisitor {
     return "$" + paramName;
   }
 
+  protected String getDate() {
+    return "GETDATE()";
+  }
+
   protected String checkForDate(String lexValue) {
     return lexValue;
   }
@@ -179,23 +184,7 @@ public class SQLGenerator extends ExprVisitor {
 
   @Override
   final void visitGetDate(GetDate expr) throws ParseException {
-    final String now;
-
-    AppSettings.DBType dbType = AppSettings.getDBType();
-    switch (dbType) {
-      case H2:
-      case ORACLE:
-      case POSTGRES:
-        now = "CURRENT_TIMESTAMP";
-        break;
-      case MSSQL:
-        now = "GETDATE()";
-        break;
-      default:
-        throw new RuntimeException("Unsupported dbType: " + dbType);
-    }
-
-    stack.push(now);
+    stack.push(getDate());
   }
 
 

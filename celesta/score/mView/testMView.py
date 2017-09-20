@@ -1,12 +1,13 @@
 # coding=UTF-8
 
 
-from celestaunit.internal_celesta_unit import CelestaUnit
 from java.sql import Timestamp
 from java.time import LocalDateTime, LocalDate, Month
 from java.time.temporal import ChronoUnit
 from mView._mView_orm import table1Cursor, table2Cursor, table3Cursor, \
     mView1Cursor, mView2Cursor, mView3Cursor, mView4Cursor
+
+from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
 from java.lang import Thread, System, String, Exception as JavaException
 from java.time import LocalDateTime
@@ -14,8 +15,8 @@ from ru.curs.celesta import SessionContext
 from ru.curs.celesta import CallContext
 from ru.curs.celesta import ConnectionPool
 
-
-class TestMaterializedView(CelestaUnit):
+@TestClass
+class TestMaterializedView(CelestaTestCase):
     def test_mat_view_insert(self):
         tableCursor = table1Cursor(self.context)
         mViewCursor = mView1Cursor(self.context)
@@ -55,7 +56,7 @@ class TestMaterializedView(CelestaUnit):
         mViewCursor = mView2Cursor(self.context)
 
         tableCursor.deleteAll()
-        self.assertEqual(0, mViewCursor.count())
+        self.assertEquals(0, mViewCursor.count())
 
         tableCursor.numb = 5
         tableCursor.var = "A"
@@ -69,7 +70,7 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.clear()
 
         mViewCursor.get("A")
-        self.assertEqual(7, mViewCursor.s)
+        self.assertEquals(7, mViewCursor.s)
 
         tableCursor.setRange('numb', 2)
         tableCursor.first()
@@ -78,7 +79,7 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.clear()
 
         mViewCursor.get("A")
-        self.assertEqual(0, mViewCursor.s)
+        self.assertEquals(0, mViewCursor.s)
 
         tableCursor.numb = 5
         tableCursor.var = "A"
@@ -86,7 +87,7 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.clear()
 
         mViewCursor.get("A")
-        self.assertEqual(5, mViewCursor.s)
+        self.assertEquals(5, mViewCursor.s)
 
         tableCursor.get(id1)
         tableCursor.var = "B"
@@ -94,16 +95,16 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.clear()
 
         mViewCursor.get("A")
-        self.assertEqual(0, mViewCursor.s)
+        self.assertEquals(0, mViewCursor.s)
         mViewCursor.get("B")
-        self.assertEqual(5, mViewCursor.s)
+        self.assertEquals(5, mViewCursor.s)
 
     def test_mat_view_date_rounding(self):
         tableCursor = table3Cursor(self.context)
         mViewCursor = mView4Cursor(self.context)
 
         tableCursor.deleteAll()
-        self.assertEqual(0, mViewCursor.count())
+        self.assertEquals(0, mViewCursor.count())
 
         datetime1 = LocalDateTime.of(2000, Month.AUGUST, 5, 10, 5, 32)
         date1 = datetime1.truncatedTo(ChronoUnit.DAYS)
@@ -126,12 +127,12 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.insert()
         tableCursor.clear()
 
-        self.assertEqual(2, mViewCursor.count())
+        self.assertEquals(2, mViewCursor.count())
         mViewCursor.get(Timestamp.valueOf(date1))
-        self.assertEqual(7, mViewCursor.s)
+        self.assertEquals(7, mViewCursor.s)
 
         mViewCursor.get(Timestamp.valueOf(date2))
-        self.assertEqual(5, mViewCursor.s)
+        self.assertEquals(5, mViewCursor.s)
 
     def _test_mat_view_insert(self, tableCursor, mViewCursor):
         tableCursor.deleteAll()
@@ -156,7 +157,7 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.insert()
         tableCursor.clear()
 
-        self.assertEqual(1, mViewCursor.count())
+        self.assertEquals(1, mViewCursor.count())
 
         tableCursor.numb = 20
         tableCursor.var = "B"
@@ -168,31 +169,31 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.insert()
         tableCursor.clear()
 
-        self.assertEqual(2, mViewCursor.count())
+        self.assertEquals(2, mViewCursor.count())
 
         mViewCursor.get("A")
-        self.assertEqual(6, mViewCursor.s)
-        self.assertEqual(4, mViewCursor.c)
+        self.assertEquals(6, mViewCursor.s)
+        self.assertEquals(4, mViewCursor.c)
 
         mViewCursor.get("B")
-        self.assertEqual(31, mViewCursor.s)
-        self.assertEqual(2, mViewCursor.c)
+        self.assertEquals(31, mViewCursor.s)
+        self.assertEquals(2, mViewCursor.c)
 
         mViewCursor.setRange('var', "A")
-        self.assertEqual(1, mViewCursor.count())
+        self.assertEquals(1, mViewCursor.count())
         mViewCursor.first()
-        self.assertEqual(6, mViewCursor.s)
-        self.assertEqual(4, mViewCursor.c)
+        self.assertEquals(6, mViewCursor.s)
+        self.assertEquals(4, mViewCursor.c)
 
         mViewCursor.setRange('var', "B")
-        self.assertEqual(1, mViewCursor.count())
+        self.assertEquals(1, mViewCursor.count())
         mViewCursor.first()
-        self.assertEqual(31, mViewCursor.s)
-        self.assertEqual(2, mViewCursor.c)
+        self.assertEquals(31, mViewCursor.s)
+        self.assertEquals(2, mViewCursor.c)
 
     def _test_mat_view_update(self, tableCursor, mViewCursor):
         tableCursor.deleteAll()
-        self.assertEqual(0, mViewCursor.count())
+        self.assertEquals(0, mViewCursor.count())
 
         tableCursor.numb = 5
         tableCursor.var = "A"
@@ -205,7 +206,7 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.clear()
 
         mViewCursor.get("A")
-        self.assertEqual(7, mViewCursor.s)
+        self.assertEquals(7, mViewCursor.s)
 
         tableCursor.numb = 20
         tableCursor.var = "B"
@@ -229,15 +230,15 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.update()
         tableCursor.clear()
 
-        self.assertEqual(2, mViewCursor.count())
+        self.assertEquals(2, mViewCursor.count())
 
         mViewCursor.get("A")
-        self.assertEqual(9, mViewCursor.s)
-        self.assertEqual(2, mViewCursor.c)
+        self.assertEquals(9, mViewCursor.s)
+        self.assertEquals(2, mViewCursor.c)
 
         mViewCursor.get("B")
-        self.assertEqual(35, mViewCursor.s)
-        self.assertEqual(2, mViewCursor.c)
+        self.assertEquals(35, mViewCursor.s)
+        self.assertEquals(2, mViewCursor.c)
 
     def _test_mat_view_delete(self, tableCursor, mViewCursor):
         tableCursor.deleteAll()
@@ -254,12 +255,12 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.clear()
 
         mViewCursor.get("A")
-        self.assertEqual(8, mViewCursor.s)
+        self.assertEquals(8, mViewCursor.s)
 
         tableCursor.get(old_id)
         tableCursor.delete()
         mViewCursor.get("A")
-        self.assertEqual(2, mViewCursor.s)
+        self.assertEquals(2, mViewCursor.s)
 
         tableCursor.numb = 5
         tableCursor.var = "A"
@@ -267,7 +268,7 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.clear()
 
         mViewCursor.get("A")
-        self.assertEqual(7, mViewCursor.s)
+        self.assertEquals(7, mViewCursor.s)
 
         tableCursor.numb = 20
         tableCursor.var = "B"
@@ -284,11 +285,11 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.delete()
         tableCursor.clear()
 
-        self.assertEqual(2, mViewCursor.count())
+        self.assertEquals(2, mViewCursor.count())
 
         mViewCursor.get("A")
-        self.assertEqual(5, mViewCursor.s)
-        self.assertEqual(1, mViewCursor.c)
+        self.assertEquals(5, mViewCursor.s)
+        self.assertEquals(1, mViewCursor.c)
 
         tableCursor.setRange('numb', 11)
         tableCursor.first()
@@ -296,14 +297,14 @@ class TestMaterializedView(CelestaUnit):
         tableCursor.clear()
 
         mViewCursor.get("B")
-        self.assertEqual(20, mViewCursor.s)
-        self.assertEqual(1, mViewCursor.c)
+        self.assertEquals(20, mViewCursor.s)
+        self.assertEquals(1, mViewCursor.c)
 
         tableCursor.setRange('var', "A")
         tableCursor.first()
         tableCursor.delete()
 
-        self.assertEqual(1, mViewCursor.count())
+        self.assertEquals(1, mViewCursor.count())
         '''
 
     def testMultiThread(self):

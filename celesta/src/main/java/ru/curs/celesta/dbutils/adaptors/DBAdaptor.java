@@ -49,10 +49,10 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorConfiguration;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
@@ -82,7 +82,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   static final String ALTER_TABLE = "alter table ";
   static final Pattern HEXSTR = Pattern.compile("0x(([0-9A-Fa-f][0-9A-Fa-f])+)");
 
-  private final static DBAdaptor db;
+  private static DBAdaptor db;
 
 
   static {
@@ -94,9 +94,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     CELESTA_TYPES_COLUMN_CLASSES.put(DateTimeColumn.CELESTA_TYPE, DateTimeColumn.class);
   }
 
-  static {
+  public static synchronized void init(DbAdaptorConfiguration configuration) throws CelestaException {
     try {
-      switch (AppSettings.getDBType()) {
+      switch (configuration.getDbType()) {
         case MSSQL:
           db = new MSSQLAdaptor();
           break;
@@ -115,7 +115,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       }
 
       if (db != null) {
-        db.configureDb();
+        db.configureDb(configuration);
       }
     } catch (Exception e) {
       /* Выводим здесь stacktrace, потому что подробности исключений в блоках статической инициализации
@@ -125,6 +125,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       throw e;
     }
   }
+
 
   /**
    * Фабрика классов адаптеров подходящего под текущие настройки типа.
@@ -945,7 +946,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   }
 
-  public void configureDb() {
+  public void configureDb(DbAdaptorConfiguration configuration) {
   }
 
   /**

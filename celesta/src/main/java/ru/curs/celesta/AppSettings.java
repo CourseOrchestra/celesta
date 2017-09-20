@@ -9,7 +9,6 @@ import java.util.logging.*;
  */
 public final class AppSettings {
   private static final String DEFAULT_PYLIB_PATH = "pylib";
-  private static AppSettings theSettings;
 
   private final Properties properties;
 
@@ -32,15 +31,15 @@ public final class AppSettings {
     logger.setLevel(Level.INFO);
   }
 
-  private AppSettings(Properties settings) throws CelestaException {
-    properties = settings;
+  public AppSettings(Properties properties) throws CelestaException {
+    this.properties = properties;
 
     StringBuffer sb = new StringBuffer();
 
     // Read the settings and check them as thoroughly as possible at this
     // point.
 
-    scorePath = settings.getProperty("score.path", "").trim();
+    scorePath = properties.getProperty("score.path", "").trim();
     if (scorePath.isEmpty())
       sb.append("No score path given (score.path).\n");
     else {
@@ -48,8 +47,8 @@ public final class AppSettings {
     }
 
 
-    h2ReferentialIntegrity = Boolean.parseBoolean(settings.getProperty("h2.referential.integrity", "false"));
-    h2InMemory = Boolean.parseBoolean(settings.getProperty("h2.in-memory", "false"));
+    h2ReferentialIntegrity = Boolean.parseBoolean(properties.getProperty("h2.referential.integrity", "false"));
+    h2InMemory = Boolean.parseBoolean(properties.getProperty("h2.in-memory", "false"));
 
     //Если настройка h2.in-memory установлена в true - игнорируем настройку строки jdbc подключения и вводим свою
     if (h2InMemory) {
@@ -57,12 +56,12 @@ public final class AppSettings {
       login = "";
       password = "";
     } else {
-      String url = settings.getProperty("database.connection", "").trim();
+      String url = properties.getProperty("database.connection", "").trim();
       if ("".equals(url))
-        url = settings.getProperty("rdbms.connection.url", "").trim();
+        url = properties.getProperty("rdbms.connection.url", "").trim();
       databaseConnection = url;
-      login = settings.getProperty("rdbms.connection.username", "").trim();
-      password = settings.getProperty("rdbms.connection.password", "").trim();
+      login = properties.getProperty("rdbms.connection.username", "").trim();
+      password = properties.getProperty("rdbms.connection.password", "").trim();
 
       if ("".equals(databaseConnection))
         sb.append("No JDBC URL given (rdbms.connection.url).\n");
@@ -72,7 +71,7 @@ public final class AppSettings {
     if (dbType == DBType.UNKNOWN)
       sb.append("Cannot recognize RDBMS type or unsupported database.");
 
-    String lf = settings.getProperty("log.file");
+    String lf = properties.getProperty("log.file");
     if (lf != null)
       try {
         FileHandler fh = new FileHandler(lf, true);
@@ -82,15 +81,15 @@ public final class AppSettings {
         sb.append("Could not access or create log file " + lf + '\n');
       }
 
-    pylibPath = settings.getProperty("pylib.path", DEFAULT_PYLIB_PATH).trim();
+    pylibPath = properties.getProperty("pylib.path", DEFAULT_PYLIB_PATH).trim();
     checkEntries(pylibPath, "pylib.path", sb);
 
-    javalibPath = settings.getProperty("javalib.path", "").trim();
+    javalibPath = properties.getProperty("javalib.path", "").trim();
     checkEntries(javalibPath, "javalib.path", sb);
 
-    skipDBUpdate = Boolean.parseBoolean(settings.getProperty("skip.dbupdate", "").trim());
-    forceDBInitialize = Boolean.parseBoolean(settings.getProperty("force.dbinitialize", "").trim());
-    logLogins = Boolean.parseBoolean(settings.getProperty("log.logins", "").trim());
+    skipDBUpdate = Boolean.parseBoolean(properties.getProperty("skip.dbupdate", "").trim());
+    forceDBInitialize = Boolean.parseBoolean(properties.getProperty("force.dbinitialize", "").trim());
+    logLogins = Boolean.parseBoolean(properties.getProperty("log.logins", "").trim());
 
     if (sb.length() > 0)
       throw new CelestaException(sb.toString());
@@ -105,16 +104,6 @@ public final class AppSettings {
           sb.append(String.format("Invalid %s entry: %s%n", propertyName, pathEntry));
         }
       }
-  }
-
-  /**
-   * Initializes AppSettings with given properties.
-   *
-   * @param settings properties for AppSettings to initialize
-   * @throws CelestaException wrong properties format
-   */
-  public static void init(Properties settings) throws CelestaException {
-    theSettings = new AppSettings(settings);
   }
 
   /**
@@ -187,94 +176,94 @@ public final class AppSettings {
   /**
    * Возвращает тип базы данных на основе JDBC-строки подключения.
    */
-  public static DBType getDBType() {
-    return theSettings.dbType;
+  public DBType getDBType() {
+    return dbType;
   }
 
   /**
    * Возвращает логгер, в который можно записывать сообщения.
    */
-  public static Logger getLogger() {
-    return theSettings.logger;
+  public Logger getLogger() {
+    return logger;
   }
 
   /**
    * Значение параметра "pylib.path".
    */
-  public static String getPylibPath() {
-    return theSettings.pylibPath;
+  public String getPylibPath() {
+    return pylibPath;
   }
 
   /**
    * Значение параметра "javalib.path".
    */
 
-  public static String getJavalibPath() {
-    return theSettings.javalibPath;
+  public String getJavalibPath() {
+    return javalibPath;
   }
 
   /**
    * Значение параметра "пропускать фазу обновления базы данных".
    */
-  public static boolean getSkipDBUpdate() {
-    return theSettings.skipDBUpdate;
+  public boolean getSkipDBUpdate() {
+    return skipDBUpdate;
   }
 
   /**
    * Значение параметра "заставлять обновлять непустую базу данных".
    */
-  public static boolean getForceDBInitialize() {
-    return theSettings.forceDBInitialize;
+  public boolean getForceDBInitialize() {
+    return forceDBInitialize;
   }
 
   /**
    * Значение параметра "логировать входы и выходы пользователей".
    */
-  public static boolean getLogLogins() {
-    return theSettings.logLogins;
+  public boolean getLogLogins() {
+    return logLogins;
   }
 
   /**
    * Значение параметра "score.path".
    */
-  public static String getScorePath() {
-    return theSettings.scorePath;
+  public String getScorePath() {
+    return scorePath;
   }
 
   /**
    * Значение параметра "Класс JDBC-подключения".
    */
-  public static String getDbClassName() {
-    return theSettings.dbType.getDriverClassName();
+  public String getDbClassName() {
+    return dbType.getDriverClassName();
   }
 
   /**
    * Значение параметра "Строка JDBC-подключения".
    */
-  public static String getDatabaseConnection() {
-    return theSettings.databaseConnection;
+  public String getDatabaseConnection() {
+    return databaseConnection;
   }
 
   /**
    * Флаг поддержки для uniq constraint (отключение позволяет, например,
    * вставлять записи без наличия ссылок на обязательные внешние записи)
    */
-  public static boolean isH2ReferentialIntegrity() {
-    return theSettings.h2ReferentialIntegrity;
+  public boolean isH2ReferentialIntegrity() {
+    return h2ReferentialIntegrity;
   }
 
   /**
    * Логин к базе данных.
    */
-  public static String getDBLogin() {
-    return theSettings.login;
+  public String getDBLogin() {
+    return login;
   }
 
   /**
    * Пароль к базе данных.
    */
-  public static String getDBPassword() {
-    return theSettings.password;
+  public String getDBPassword() {
+    return password;
   }
 
   /**
@@ -282,7 +271,7 @@ public final class AppSettings {
    * данный объект имеет смысл использовать только на чтение, динамическое
    * изменение этих свойств не приводит ни к чему.
    */
-  public static Properties getSetupProperties() {
-    return theSettings.properties;
+  public Properties getSetupProperties() {
+    return properties;
   }
 }

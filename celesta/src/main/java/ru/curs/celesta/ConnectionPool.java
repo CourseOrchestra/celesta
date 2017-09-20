@@ -15,10 +15,29 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
  */
 public final class ConnectionPool {
 
-	private static final ConcurrentLinkedQueue<Connection> POOL = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<Connection> pool = new ConcurrentLinkedQueue<>();
+	private String jdbcConnectionUrl;
+	private String driverClassName;
+	private String login;
+	private String password;
 
-	private ConnectionPool() {
+	private static ConnectionPool theConnectionPool;
 
+
+	public synchronized static void init(ConnectionPoolConfiguration configuration) throws CelestaException {
+			theConnectionPool = new ConnectionPool(
+					configuration.getJdbcConnectionUrl(),
+					configuration.getDriverClassName(),
+					configuration.getLogin(),
+					configuration.getPassword()
+			);
+	}
+
+	public ConnectionPool(String jdbcConnectionUrl, String driverClassName, String login, String password) {
+		this.driverClassName = driverClassName;
+		this.login = login;
+		this.password = password;
+		this.jdbcConnectionUrl = jdbcConnectionUrl;
 	}
 
 	/**
@@ -29,7 +48,7 @@ public final class ConnectionPool {
 	 */
 	public static Connection get() throws CelestaException {
 		final DBAdaptor db = DBAdaptor.getAdaptor();
-		Connection c = POOL.poll();
+		Connection c = theConnectionPool.pool.poll();
 		while (c != null) {
 			try {
 				if (db.isValidConnection(c, 1))
@@ -38,21 +57,24 @@ public final class ConnectionPool {
 				// do something to make CheckStyle happy ))
 				c = null;
 			}
-			c = POOL.poll();
+			c = theConnectionPool.pool.poll();
 		}
 		try {
-			Class.forName(AppSettings.getDbClassName());
-			if (AppSettings.getDBLogin().isEmpty()) {
-				c = DriverManager.getConnection(AppSettings.getDatabaseConnection());
+			Class.forName(theConnectionPool.driverClassName);
+			if (theConnectionPool.login.isEmpty()) {
+				c = DriverManager.getConnection(theConnectionPool.jdbcConnectionUrl);
 			} else {
-				c = DriverManager.getConnection(AppSettings.getDatabaseConnection(), AppSettings.getDBLogin(),
-						AppSettings.getDBPassword());
+				c = DriverManager.getConnection(
+						theConnectionPool.jdbcConnectionUrl,
+						theConnectionPool.login,
+						theConnectionPool.password
+				);
 			}
 			c.setAutoCommit(false);
 			return c;
 		} catch (SQLException | ClassNotFoundException e) {
 			throw new CelestaException("Could not connect to %s with error: %s",
-					PasswordHider.maskPassword(AppSettings.getDatabaseConnection()), e.getMessage());
+					PasswordHider.maskPassword(theConnectionPool.jdbcConnectionUrl), e.getMessage());
 		}
 	}
 
@@ -68,7 +90,7 @@ public final class ConnectionPool {
 		try {
 			if (c != null) {
 				c.commit();
-				POOL.add(c);
+				theConnectionPool.pool.add(c);
 			}
 		} catch (SQLException e) {
 			// do something to make CheckStyle happy ))
@@ -97,14 +119,14 @@ public final class ConnectionPool {
 	 * Очищает пул.
 	 */
 	public static void clear() {
-		Connection c = POOL.poll();
+		Connection c = theConnectionPool.pool.poll();
 		while (c != null) {
 			try {
 				c.close();
 			} catch (SQLException e) {
 				c = null;
 			}
-			c = POOL.poll();
+			c = theConnectionPool.pool.poll();
 		}
 	}
 }

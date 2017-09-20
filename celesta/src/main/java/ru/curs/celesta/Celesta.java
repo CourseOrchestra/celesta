@@ -66,6 +66,7 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.DBUpdator;
 import ru.curs.celesta.dbutils.ProfilingManager;
 import ru.curs.celesta.dbutils.SessionLogManager;
+import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorConfiguration;
 import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.ormcompiler.ORMCompiler;
 import ru.curs.celesta.score.Grain;
@@ -85,18 +86,21 @@ public final class Celesta {
 
 	private static Celesta theCelesta;
 	private final Score score;
+	private final AppSettings appSettings;
 	private final PythonInterpreterPool interpreterPool;
+	private final SessionLogManager sessionLogManager;
 	private final ConcurrentHashMap<String, SessionContext> sessions = new ConcurrentHashMap<>();
 	private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
 	private final ProfilingManager profiler = new ProfilingManager();
 	private TriggerDispatcher triggerDispatcher;
 
-	private Celesta(boolean initInterpeterPool) throws CelestaException {
+	private Celesta(AppSettings appSettings, boolean initInterpeterPool) throws CelestaException {
+		this.appSettings = appSettings;
 		// CELESTA STARTUP SEQUENCE
 		// 1. Разбор описания гранул.
 		System.out.print("Celesta initialization: phase 1/4 score parsing...");
-		score = new Score(AppSettings.getScorePath());
+		score = new Score(appSettings.getScorePath());
 		System.out.println("done.");
 
 		// 2. Перекомпиляция ORM-модулей, где это необходимо.
@@ -105,14 +109,30 @@ public final class Celesta {
 		System.out.println("done.");
 
 		// 3. Обновление структуры базы данных.
-		// Т. к. на данном этапе уже используется метаинформация, то theCelesta
+		// Т. к. на данном этапе уже используется метаинформация, то theCelesta и ConnectionPool
 		// необходимо проинициализировать.
+
+		ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
+		cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
+		cpc.setDriverClassName(appSettings.getDbClassName());
+		cpc.setLogin(appSettings.getDBLogin());
+		cpc.setPassword(appSettings.getDBPassword());
+		ConnectionPool.init(cpc);
+
+		DbAdaptorConfiguration dac = new DbAdaptorConfiguration();
+		dac.setDbType(appSettings.getDBType());
+		dac.setH2ReferentialIntegrity(appSettings.isH2ReferentialIntegrity());
+		DBAdaptor.init(dac);
+
+		//TODO::Вот это сделать через Optional
+		this.sessionLogManager = new SessionLogManager(appSettings.getLogLogins());
+
 		this.triggerDispatcher = new TriggerDispatcher();
 		theCelesta = this;
 
-		if (!AppSettings.getSkipDBUpdate()) {
+		if (!appSettings.getSkipDBUpdate()) {
 			System.out.print("Celesta initialization: phase 3/4 database upgrade...");
-			DBUpdator.updateDB(score);
+			DBUpdator.updateDB(score, appSettings.getForceDBInitialize());
 			System.out.println("done.");
 		} else {
 			System.out.println("Celesta initialization: phase 3/4 database upgrade...skipped.");
@@ -120,7 +140,13 @@ public final class Celesta {
 
 		if (initInterpeterPool) {
 			System.out.print("Celesta initialization: phase 4/4 Jython interpreters pool initialization...");
-			interpreterPool = new PythonInterpreterPool(score);
+
+			InterpreterPoolConfiguration ipc = new InterpreterPoolConfiguration();
+			ipc.setScore(score);
+			ipc.setJavaLibPath(appSettings.getJavalibPath());
+			ipc.setScriptLibPath(appSettings.getPylibPath());
+			interpreterPool = InterpreterPoolFactory.create(ipc);
+
 			System.out.println("done.");
 		} else {
 			interpreterPool = null;
@@ -202,7 +228,7 @@ public final class Celesta {
 		if (oldSession == null || !userId.equals(oldSession.getUserId())) {
 			SessionContext session = new SessionContext(userId, sessionId);
 			sessions.put(sessionId, session);
-			SessionLogManager.logLogin(session);
+			sessionLogManager.logLogin(session);
 		}
 	}
 
@@ -215,7 +241,7 @@ public final class Celesta {
 	 *             Ошибка работы с базой данных.
 	 */
 	public void failedLogin(String userId) throws CelestaException {
-		SessionLogManager.logFailedLogin(userId);
+		sessionLogManager.logFailedLogin(userId);
 	}
 
 	/**
@@ -234,7 +260,7 @@ public final class Celesta {
 		if (sc != null) {
 			// Очищаем сессионные данные, дабы облегчить работу сборщика мусора.
 			sc.getData().clear();
-			SessionLogManager.logLogout(sc, timeout);
+			sessionLogManager.logLogout(sc, timeout);
 		}
 	}
 
@@ -389,12 +415,12 @@ public final class Celesta {
 		initialize(settings, true);
 	}
 
-	private static synchronized void initialize(Properties settings, boolean initPython) throws CelestaException {
+	private static synchronized void initialize(Properties properties, boolean initPython) throws CelestaException {
 		if (theCelesta != null)
 			throw new CelestaException(CELESTA_IS_ALREADY_INITIALIZED);
 
 		System.out.print("Celesta pre-initialization: phase 1/2 system settings reading...");
-		AppSettings.init(settings);
+		AppSettings appSettings = new AppSettings(properties);
 		System.out.println("done.");
 
 		// Инициализация ClassLoader для нужд Jython-интерпретатора
@@ -402,7 +428,7 @@ public final class Celesta {
 		initCL();
 		System.out.println("done.");
 
-		new Celesta(initPython);
+		new Celesta(appSettings, initPython);
 
 	}
 
@@ -506,7 +532,7 @@ public final class Celesta {
 			throw new CelestaException(CELESTA_IS_NOT_INITIALIZED);
 		Map<String, SessionContext> sessions = theCelesta.sessions;
 		theCelesta = null;
-		new Celesta(true);
+		new Celesta(theCelesta.appSettings, true);
 		theCelesta.sessions.putAll(sessions);
 	}
 
@@ -586,7 +612,7 @@ public final class Celesta {
 	 * изменение этих свойств не приводит ни к чему.
 	 */
 	public Properties getSetupProperties() {
-		return AppSettings.getSetupProperties();
+		return appSettings.getSetupProperties();
 	}
 
 	/**

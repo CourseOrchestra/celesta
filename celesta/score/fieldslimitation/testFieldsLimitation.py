@@ -1,9 +1,10 @@
 # coding=UTF-8
 
-from celestaunit.internal_celesta_unit import CelestaUnit
 from fieldslimitation._fieldslimitation_orm import aCursor, avCursor, amvCursor
+from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
-class TestFieldsLimitation(CelestaUnit):
+@TestClass
+class TestFieldsLimitation(CelestaTestCase):
 
     def test_get_on_table(self):
         self._clear_table()
@@ -12,16 +13,16 @@ class TestFieldsLimitation(CelestaUnit):
         tableCursor = aCursor(self.context, ['numb', 'var'])
 
         tableCursor.get(id1)
-        self.assertEqual(id1, tableCursor.id)
-        self.assertEqual(5, tableCursor.numb)
-        self.assertEqual("A", tableCursor.var)
-        self.assertEqual(None, tableCursor.age)
+        self.assertEquals(id1, tableCursor.id)
+        self.assertEquals(5, tableCursor.numb)
+        self.assertEquals("A", tableCursor.var)
+        self.assertEquals(None, tableCursor.age)
 
         tableCursor.get(id2)
-        self.assertEqual(id2, tableCursor.id)
-        self.assertEqual(2, tableCursor.numb)
-        self.assertEqual("B", tableCursor.var)
-        self.assertEqual(None, tableCursor.age)
+        self.assertEquals(id2, tableCursor.id)
+        self.assertEquals(2, tableCursor.numb)
+        self.assertEquals("B", tableCursor.var)
+        self.assertEquals(None, tableCursor.age)
 
     def test_get_on_materialized_view(self):
         self._clear_table()
@@ -31,16 +32,16 @@ class TestFieldsLimitation(CelestaUnit):
         mvCursor = amvCursor(self.context, ['numb'])
 
         mvCursor.get("A")
-        self.assertEqual(None, mvCursor.id)
-        self.assertEqual(5, mvCursor.numb)
-        self.assertEqual("A", mvCursor.var)
-        self.assertEqual(None, mvCursor.age)
+        self.assertEquals(None, mvCursor.id)
+        self.assertEquals(5, mvCursor.numb)
+        self.assertEquals("A", mvCursor.var)
+        self.assertEquals(None, mvCursor.age)
 
         mvCursor.get("B")
-        self.assertEqual(None, mvCursor.id)
-        self.assertEqual(2, mvCursor.numb)
-        self.assertEqual("B", mvCursor.var)
-        self.assertEqual(None, mvCursor.age)
+        self.assertEquals(None, mvCursor.id)
+        self.assertEquals(2, mvCursor.numb)
+        self.assertEquals("B", mvCursor.var)
+        self.assertEquals(None, mvCursor.age)
 
     def test_set_on_table(self):
         tableCursor = aCursor(self.context, ['numb', 'var'])
@@ -73,14 +74,14 @@ class TestFieldsLimitation(CelestaUnit):
 
         cursor.orderBy("numb DESC")
         cursor.findSet()
-        self.assertEqual(5, cursor.numb)
-        self.assertEqual("A", cursor.var)
-        self.assertEqual(None, cursor.age)
+        self.assertEquals(5, cursor.numb)
+        self.assertEquals("A", cursor.var)
+        self.assertEquals(None, cursor.age)
 
         cursor.nextInSet()
-        self.assertEqual(2, cursor.numb)
-        self.assertEqual("B", cursor.var)
-        self.assertEqual(None, cursor.age)
+        self.assertEquals(2, cursor.numb)
+        self.assertEquals("B", cursor.var)
+        self.assertEquals(None, cursor.age)
 
     def _test_navigation(self, cursor):
         self._clear_table()
@@ -89,29 +90,29 @@ class TestFieldsLimitation(CelestaUnit):
 
         cursor.orderBy("numb DESC")
         cursor.first()
-        self.assertEqual(5, cursor.numb)
-        self.assertEqual("A", cursor.var)
-        self.assertEqual(None, cursor.age)
+        self.assertEquals(5, cursor.numb)
+        self.assertEquals("A", cursor.var)
+        self.assertEquals(None, cursor.age)
 
         cursor.next()
-        self.assertEqual(2, cursor.numb)
-        self.assertEqual("B", cursor.var)
-        self.assertEqual(None, cursor.age)
+        self.assertEquals(2, cursor.numb)
+        self.assertEquals("B", cursor.var)
+        self.assertEquals(None, cursor.age)
 
         cursor.navigate("=")
-        self.assertEqual(2, cursor.numb)
-        self.assertEqual("B", cursor.var)
-        self.assertEqual(None, cursor.age)
+        self.assertEquals(2, cursor.numb)
+        self.assertEquals("B", cursor.var)
+        self.assertEquals(None, cursor.age)
 
         cursor.previous()
-        self.assertEqual(5, cursor.numb)
-        self.assertEqual("A", cursor.var)
-        self.assertEqual(None, cursor.age)
+        self.assertEquals(5, cursor.numb)
+        self.assertEquals("A", cursor.var)
+        self.assertEquals(None, cursor.age)
 
         cursor.last()
-        self.assertEqual(2, cursor.numb)
-        self.assertEqual("B", cursor.var)
-        self.assertEqual(None, cursor.age)
+        self.assertEquals(2, cursor.numb)
+        self.assertEquals("B", cursor.var)
+        self.assertEquals(None, cursor.age)
 
     def _clear_table(self):
         tableCursor = aCursor(self.context)

@@ -1,33 +1,52 @@
 package ru.curs.celesta.dbutils.adaptors;
 
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.util.Properties;
 
-import ru.curs.celesta.AppSettings;
-import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.InitTest;
-import ru.curs.celesta.dbutils.adaptors.AbstractAdaptorTest;
-import ru.curs.celesta.dbutils.adaptors.PostgresAdaptor;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import ru.curs.celesta.*;
 import ru.curs.celesta.score.Score;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest( DBAdaptor.class )
+@PowerMockIgnore({
+		"javax.management.*", //https://github.com/powermock/powermock/issues/743#issuecomment-287843821
+})
 public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
 	public PostgresAdaptorTest() throws Exception {
-		ConnectionPool.clear();
 		Properties params = new Properties();
 		InputStream is = InitTest.class
 				.getResourceAsStream("celesta.postgres.properties");
 		params.load(is);
-		// Инициализация параметров приложения: вызов AppSettings.init(params) -
-		// метод имеет модификатор доступа "по умолчанию"
-		Method method = AppSettings.class.getDeclaredMethod("init",
-				Properties.class);
-		method.setAccessible(true);
-		method.invoke(null, params);
 
-		setDba(new PostgresAdaptor());
+		AppSettings appSettings = new AppSettings(params);
+
+		ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
+		cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
+		cpc.setDriverClassName(appSettings.getDbClassName());
+		cpc.setLogin(appSettings.getDBLogin());
+		cpc.setPassword(appSettings.getDBPassword());
+
+		ConnectionPool.init(cpc);
+
+		DBAdaptor dba = new PostgresAdaptor();
+		initMocks(dba);
+
+		setDba(dba);
 		setScore(new Score(SCORE_NAME));
 	}
 
+
+	public void initMocks(DBAdaptor dba) throws CelestaException {
+		PowerMockito.stub(
+				PowerMockito.method(
+						DBAdaptor.class, "getAdaptor"
+				)
+		).toReturn(dba);
+	}
 }

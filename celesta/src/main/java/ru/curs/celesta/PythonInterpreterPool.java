@@ -25,6 +25,8 @@ import ru.curs.celesta.score.Score;
 public class PythonInterpreterPool {
 
 	private final Score score;
+	private final String javaLibPath;
+	private final String pyLibPath;
 	private final PySystemState sysState;
 	private final PythonSourceMonitor sourceMonitor;
 	private final AtomicInteger activeInterpetersCount = new AtomicInteger();
@@ -44,8 +46,11 @@ public class PythonInterpreterPool {
 		}
 	}
 
-	public PythonInterpreterPool(Score score) throws CelestaException {
+	public PythonInterpreterPool(Score score, String javaLibPath, String pyLibPath) throws CelestaException {
 		this.score = score;
+		this.javaLibPath = javaLibPath;
+		this.pyLibPath = pyLibPath;
+
 		List<String> pyPathList = new ArrayList<>();
 		initPyPathList(pyPathList);
 		sysState = Py.getSystemState();
@@ -119,8 +124,8 @@ public class PythonInterpreterPool {
 	}
 
 	private void initPyPathList(List<String> pyPathList) {
-		if (!AppSettings.getJavalibPath().isEmpty())
-			for (String entry : AppSettings.getJavalibPath().split(File.pathSeparator)) {
+		if (!javaLibPath.isEmpty())
+			for (String entry : javaLibPath.split(File.pathSeparator)) {
 				File f = new File(entry);
 				if (f.exists() && f.isDirectory() && f.canRead()) {
 					for (String filename : f.list()) {
@@ -136,13 +141,13 @@ public class PythonInterpreterPool {
 		if (pathEntry.exists() && pathEntry.isDirectory()) {
 			pyPathList.add(pathEntry.getAbsolutePath());
 		}
-		for (String entry : AppSettings.getPylibPath().split(File.pathSeparator)) {
+		for (String entry : pyLibPath.split(File.pathSeparator)) {
 			pathEntry = new File(entry);
 			if (pathEntry.exists() && pathEntry.isDirectory()) {
 				pyPathList.add(pathEntry.getAbsolutePath());
 			}
 		}
-		for (String entry : AppSettings.getScorePath().split(File.pathSeparator)) {
+		for (String entry : score.getPath().split(File.pathSeparator)) {
 			pathEntry = new File(entry.trim());
 			if (pathEntry.exists() && pathEntry.isDirectory()) {
 				pyPathList.add(pathEntry.getAbsolutePath());

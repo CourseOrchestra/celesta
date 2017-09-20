@@ -1,2 +1,0 @@
-
-print "celestaunit initialization"

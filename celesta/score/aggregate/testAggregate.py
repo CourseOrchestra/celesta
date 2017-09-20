@@ -3,32 +3,34 @@
 from java.sql import Timestamp
 from java.time import LocalDateTime
 
-from celestaunit.internal_celesta_unit import CelestaUnit
 from aggregate._aggregate_orm import countConditionLessCursor, countGetDateCondCursor\
     , viewCountCondLessCursor, viewCountGetDateCondCursor, tableSumOneFieldCursor\
     , viewSumOneFieldCursor, sumFieldAndNumberCursor, viewSumTwoNumbersCursor\
     , tableSumTwoFieldsCursor, viewSumTwoFieldsCursor, tableMinMaxCursor\
     , viewMinOneFieldCursor, viewMaxOneFieldCursor, viewMinTwoFieldsCursor, viewMaxTwoFieldsCursor\
     , tableGroupByCursor, viewGroupByAggregateCursor, viewGroupByCursor, viewCountMinMaxCursor
+from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
-class TestAggregate(CelestaUnit):
+
+@TestClass
+class TestAggregate(CelestaTestCase):
 
     def test_count_without_condition(self):
         tableCursor = countConditionLessCursor(self.context)
         tableCursor.deleteAll()
 
         viewCursor = viewCountCondLessCursor(self.context)
-        self.assertEqual(1, viewCursor.count())
+        self.assertEquals(1, viewCursor.count())
         viewCursor.first()
-        self.assertEqual(0, viewCursor.c)
+        self.assertEquals(0, viewCursor.c)
 
         tableCursor.insert()
         tableCursor.clear()
         tableCursor.insert()
 
-        self.assertEqual(1, viewCursor.count())
+        self.assertEquals(1, viewCursor.count())
         viewCursor.first()
-        self.assertEqual(2, viewCursor.c)
+        self.assertEquals(2, viewCursor.c)
 
 
     def test_count_with_getdate_condition(self):
@@ -37,7 +39,7 @@ class TestAggregate(CelestaUnit):
 
         viewCursor = viewCountGetDateCondCursor(self.context)
         viewCursor.first()
-        self.assertEqual(0, viewCursor.c)
+        self.assertEquals(0, viewCursor.c)
 
         tableCursor.insert()
         tableCursor.clear()
@@ -45,14 +47,14 @@ class TestAggregate(CelestaUnit):
         tableCursor.insert()
 
         viewCursor.first()
-        self.assertEqual(0, viewCursor.c)
+        self.assertEquals(0, viewCursor.c)
 
         tableCursor.clear()
         tableCursor.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
         tableCursor.insert()
 
         viewCursor.first()
-        self.assertEqual(1, viewCursor.c)
+        self.assertEquals(1, viewCursor.c)
 
 
     def test_sum_one_field(self):
@@ -63,16 +65,16 @@ class TestAggregate(CelestaUnit):
         viewOneFieldAndNumberCursor= sumFieldAndNumberCursor(self.context)
         viewTwoNumbersCursor = viewSumTwoNumbersCursor(self.context)
 
-        self.assertEqual(1, viewOneFieldCursor.count())
-        self.assertEqual(1, viewOneFieldAndNumberCursor.count())
-        self.assertEqual(1, viewTwoNumbersCursor.count())
+        self.assertEquals(1, viewOneFieldCursor.count())
+        self.assertEquals(1, viewOneFieldAndNumberCursor.count())
+        self.assertEquals(1, viewTwoNumbersCursor.count())
 
         viewOneFieldCursor.first()
         viewOneFieldAndNumberCursor.first()
         viewTwoNumbersCursor.first()
-        self.assertEqual(None, viewOneFieldCursor.s)
-        self.assertEqual(None, viewOneFieldAndNumberCursor.s)
-        self.assertEqual(None, viewTwoNumbersCursor.s)
+        self.assertEquals(None, viewOneFieldCursor.s)
+        self.assertEquals(None, viewOneFieldAndNumberCursor.s)
+        self.assertEquals(None, viewTwoNumbersCursor.s)
 
         tableOneFieldCursor.f = 4
         tableOneFieldCursor.insert()
@@ -80,9 +82,9 @@ class TestAggregate(CelestaUnit):
         viewOneFieldCursor.first()
         viewOneFieldAndNumberCursor.first()
         viewTwoNumbersCursor.first()
-        self.assertEqual(4, viewOneFieldCursor.s)
-        self.assertEqual(5, viewOneFieldAndNumberCursor.s)
-        self.assertEqual(3, viewTwoNumbersCursor.s)
+        self.assertEquals(4, viewOneFieldCursor.s)
+        self.assertEquals(5, viewOneFieldAndNumberCursor.s)
+        self.assertEquals(3, viewTwoNumbersCursor.s)
 
 
     def test_sum_two_fields(self):
@@ -91,24 +93,24 @@ class TestAggregate(CelestaUnit):
 
         viewTwoFieldsCursor = viewSumTwoFieldsCursor(self.context)
 
-        self.assertEqual(1, viewTwoFieldsCursor.count())
+        self.assertEquals(1, viewTwoFieldsCursor.count())
 
         viewTwoFieldsCursor.first()
-        self.assertEqual(None, viewTwoFieldsCursor.s)
+        self.assertEquals(None, viewTwoFieldsCursor.s)
 
         tableTwoFieldsCursor.f1 = 2
         tableTwoFieldsCursor.insert()
         tableTwoFieldsCursor.clear()
 
         viewTwoFieldsCursor.first()
-        self.assertEqual(None, viewTwoFieldsCursor.s)
+        self.assertEquals(None, viewTwoFieldsCursor.s)
 
         tableTwoFieldsCursor.f2 = 2
         tableTwoFieldsCursor.insert()
         tableTwoFieldsCursor.clear()
 
         viewTwoFieldsCursor.first()
-        self.assertEqual(None, viewTwoFieldsCursor.s)
+        self.assertEquals(None, viewTwoFieldsCursor.s)
 
         tableTwoFieldsCursor.f1 = 2
         tableTwoFieldsCursor.f2 = 3
@@ -116,7 +118,7 @@ class TestAggregate(CelestaUnit):
         tableTwoFieldsCursor.clear()
 
         viewTwoFieldsCursor.first()
-        self.assertEqual(5, viewTwoFieldsCursor.s)
+        self.assertEquals(5, viewTwoFieldsCursor.s)
 
 
     def test_min_and_max_one_field(self):
@@ -134,18 +136,18 @@ class TestAggregate(CelestaUnit):
       viewMinTwoFieldsCur.first()
       viewMaxTwoFieldsCur.first()
       viewCountMinMaxCur.first()
-      self.assertEqual(1, viewMinOneFieldCur.count())
-      self.assertEqual(1, viewMaxOneFieldCur.count())
-      self.assertEqual(1, viewMinTwoFieldsCur.count())
-      self.assertEqual(1, viewMaxTwoFieldsCur.count())
-      self.assertEqual(1, viewCountMinMaxCur.count())
-      self.assertEqual(None, viewMinOneFieldCur.m)
-      self.assertEqual(None, viewMaxOneFieldCur.m)
-      self.assertEqual(None, viewMinTwoFieldsCur.m)
-      self.assertEqual(None, viewMaxTwoFieldsCur.m)
-      self.assertEqual(0, viewCountMinMaxCur.countv)
-      self.assertEqual(None, viewCountMinMaxCur.maxv)
-      self.assertEqual(None, viewCountMinMaxCur.minv)
+      self.assertEquals(1, viewMinOneFieldCur.count())
+      self.assertEquals(1, viewMaxOneFieldCur.count())
+      self.assertEquals(1, viewMinTwoFieldsCur.count())
+      self.assertEquals(1, viewMaxTwoFieldsCur.count())
+      self.assertEquals(1, viewCountMinMaxCur.count())
+      self.assertEquals(None, viewMinOneFieldCur.m)
+      self.assertEquals(None, viewMaxOneFieldCur.m)
+      self.assertEquals(None, viewMinTwoFieldsCur.m)
+      self.assertEquals(None, viewMaxTwoFieldsCur.m)
+      self.assertEquals(0, viewCountMinMaxCur.countv)
+      self.assertEquals(None, viewCountMinMaxCur.maxv)
+      self.assertEquals(None, viewCountMinMaxCur.minv)
 
       tableCur.f1 = 1
       tableCur.f2 = 5
@@ -163,23 +165,23 @@ class TestAggregate(CelestaUnit):
       viewMaxTwoFieldsCur.first()
       viewCountMinMaxCur.first()
 
-      self.assertEqual(1, viewMinOneFieldCur.m)
-      self.assertEqual(5, viewMaxOneFieldCur.m)
-      self.assertEqual(6, viewMinTwoFieldsCur.m)
-      self.assertEqual(7, viewMaxTwoFieldsCur.m)
-      self.assertEqual(2, viewCountMinMaxCur.countv)
-      self.assertEqual(5, viewCountMinMaxCur.maxv)
-      self.assertEqual(2, viewCountMinMaxCur.minv)
+      self.assertEquals(1, viewMinOneFieldCur.m)
+      self.assertEquals(5, viewMaxOneFieldCur.m)
+      self.assertEquals(6, viewMinTwoFieldsCur.m)
+      self.assertEquals(7, viewMaxTwoFieldsCur.m)
+      self.assertEquals(2, viewCountMinMaxCur.countv)
+      self.assertEquals(5, viewCountMinMaxCur.maxv)
+      self.assertEquals(2, viewCountMinMaxCur.minv)
 
 
-def testGroupBy(self):
+    def testGroupBy(self):
         tableCursor = tableGroupByCursor(self.context)
         tableCursor.deleteAll()
 
         viewGroupByCur = viewGroupByCursor(self.context)
         viewAggregateCursor = viewGroupByAggregateCursor(self.context)
 
-        self.assertEqual(0, viewAggregateCursor.count())
+        self.assertEquals(0, viewAggregateCursor.count())
 
         name1 = "A"
         name2 = "B"
@@ -190,8 +192,8 @@ def testGroupBy(self):
         tableCursor.clear()
 
         viewGroupByCur.first()
-        self.assertEqual(name1, viewGroupByCur.name)
-        self.assertEqual(100, viewGroupByCur.cost)
+        self.assertEquals(name1, viewGroupByCur.name)
+        self.assertEquals(100, viewGroupByCur.cost)
 
         tableCursor.name = name1
         tableCursor.cost = 150
@@ -202,11 +204,11 @@ def testGroupBy(self):
         tableCursor.insert()
         tableCursor.clear()
 
-        self.assertEqual(2, viewAggregateCursor.count())
+        self.assertEquals(2, viewAggregateCursor.count())
         viewAggregateCursor.first()
-        self.assertEqual(name1, viewAggregateCursor.name)
-        self.assertEqual(250, viewAggregateCursor.s)
+        self.assertEquals(name1, viewAggregateCursor.name)
+        self.assertEquals(250, viewAggregateCursor.s)
 
         viewAggregateCursor.next()
-        self.assertEqual(name2, viewAggregateCursor.name)
-        self.assertEqual(50, viewAggregateCursor.s)
+        self.assertEquals(name2, viewAggregateCursor.name)
+        self.assertEquals(50, viewAggregateCursor.s)

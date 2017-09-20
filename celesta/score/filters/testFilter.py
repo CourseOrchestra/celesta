@@ -1,14 +1,14 @@
-from celestaunit.internal_celesta_unit import CelestaUnit
-
 from java.time import LocalDateTime
 from java.sql import Timestamp
 from ru.curs.celesta import CelestaException
 from ru.curs.celesta.score import ParseException
 from _filters_orm import aFilterCursor, bFilterCursor, cFilterCursor, \
     dFilterCursor, eFilterCursor, fFilterCursor, gFilterCursor, hFilterCursor, iFilterCursor
+from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
 
-class testFilters(CelestaUnit):
+@TestClass
+class testFilters(CelestaTestCase):
 
     def testInFilterForIndices(self):
         a = aFilterCursor(self.context)
@@ -48,14 +48,14 @@ class testFilters(CelestaUnit):
         b.insert()
         b.clear()
 
-        lookup = a.setIn(b).add("date", "created");
-        self.assertEqual(2, a.count())
+        lookup = a.setIn(b).add("date", "created")
+        self.assertEquals(2, a.count())
 
         lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
-        self.assertEqual(1, a.count())
+        self.assertEquals(1, a.count())
 
         a.setIn(b).add("date", "created").add("number1", "numb1").add("number2", "numb2")
-        self.assertEqual(0, a.count())
+        self.assertEquals(0, a.count())
 
 
     def testInFilterForSimplePks(self):
@@ -86,7 +86,7 @@ class testFilters(CelestaUnit):
         d.clear()
 
         lookup = c.setIn(d).add("id", "id")
-        self.assertEqual(2, c.count())
+        self.assertEquals(2, c.count())
 
 
     def testInFilterForComplexPks(self):
@@ -120,7 +120,7 @@ class testFilters(CelestaUnit):
         f.clear()
 
         lookup = e.setIn(f).add("id", "id").add('number', 'numb')
-        self.assertEqual(2, e.count())
+        self.assertEquals(2, e.count())
 
 
     def testInFilterWithRangeInMainCursor(self):
@@ -163,7 +163,7 @@ class testFilters(CelestaUnit):
 
         a.setRange('number1', 5)
         lookup = a.setIn(b).add("date", "created")
-        self.assertEqual(1, a.count())
+        self.assertEquals(1, a.count())
         a.first()
 
     def testInFilterWithRangeInOtherCursorBeforeSetIn(self):
@@ -180,15 +180,15 @@ class testFilters(CelestaUnit):
         b.setRange('numb2', -40)
         lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
 
-        self.assertEqual(2, a.count())
+        self.assertEquals(2, a.count())
 
         a.first()
-        self.assertEqual(5, a.number1)
-        self.assertEqual(-10, a.number2)
+        self.assertEquals(5, a.number1)
+        self.assertEquals(-10, a.number2)
 
         a.navigate('>')
-        self.assertEqual(6, a.number1)
-        self.assertEqual(-20, a.number2)
+        self.assertEquals(6, a.number1)
+        self.assertEquals(-20, a.number2)
 
 
     def testInFilterWithRangeInOtherCursorAfterSetIn(self):
@@ -205,18 +205,18 @@ class testFilters(CelestaUnit):
 
         lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
 
-        self.assertEqual(3, a.count())
+        self.assertEquals(3, a.count())
 
         b.setRange('numb2', -40)
-        self.assertEqual(2, a.count())
+        self.assertEquals(2, a.count())
 
         a.first()
-        self.assertEqual(5, a.number1)
-        self.assertEqual(-10, a.number2)
+        self.assertEquals(5, a.number1)
+        self.assertEquals(-10, a.number2)
 
         a.navigate('>')
-        self.assertEqual(6, a.number1)
-        self.assertEqual(-20, a.number2)
+        self.assertEquals(6, a.number1)
+        self.assertEquals(-20, a.number2)
 
     def testInFilterWithAdditionalLookup(self):
         a = aFilterCursor(self.context)
@@ -259,25 +259,25 @@ class testFilters(CelestaUnit):
         lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
         additionalLookup = lookup.and(g).add("date", "createDate").add("number1", "num1")
 
-        self.assertEqual(3, a.count())
+        self.assertEquals(3, a.count())
 
         b.setRange('numb2', -40)
-        self.assertEqual(2, a.count())
+        self.assertEquals(2, a.count())
 
         a.first()
-        self.assertEqual(5, a.number1)
-        self.assertEqual(-10, a.number2)
+        self.assertEquals(5, a.number1)
+        self.assertEquals(-10, a.number2)
 
         a.navigate('>')
-        self.assertEqual(6, a.number1)
-        self.assertEqual(-20, a.number2)
+        self.assertEquals(6, a.number1)
+        self.assertEquals(-20, a.number2)
 
         g.setRange('num2', -30)
-        self.assertEqual(1, a.count())
+        self.assertEquals(1, a.count())
 
         a.first()
-        self.assertEqual(5, a.number1)
-        self.assertEqual(-10, a.number2)
+        self.assertEquals(5, a.number1)
+        self.assertEquals(-10, a.number2)
 
 
     def testInFilterWhenTargetHasPkAndOtherHasPkWithNotSameOrderAndIndexWithSameOrder(self):
@@ -301,7 +301,7 @@ class testFilters(CelestaUnit):
         i.clear()
 
         lookup = h.setIn(i).add('id', 'hFilterId')
-        self.assertEqual(1, h.count())
+        self.assertEquals(1, h.count())
 
     def testExceptionWhileAddingNotExistedFieldsToLookup(self):
         a = aFilterCursor(self.context)
@@ -309,14 +309,11 @@ class testFilters(CelestaUnit):
 
         lookup = a.setIn(b)
 
-        with self.assertRaises(ParseException):
-            lookup.add("notExistingField", "created")
+        lookupAdd = lambda targetCol, auxiliaryCol : lookup.add(targetCol, auxiliaryCol)
 
-        with self.assertRaises(ParseException):
-            lookup.add("date", "notExistingField")
-
-        with self.assertRaises(ParseException):
-            lookup.add("notExistingField", "notExistingField")
+        self.assertThrows(ParseException, lookupAdd, "notExistingField", "created")
+        self.assertThrows(ParseException, lookupAdd, "date", "notExistingField")
+        self.assertThrows(ParseException, lookupAdd, "notExistingField", "notExistingField")
 
 
 
@@ -326,10 +323,8 @@ class testFilters(CelestaUnit):
 
         lookup = a.setIn(b)
 
-        with self.assertRaises(CelestaException) as context:
-            lookup.add("date", "numb1")
-
-        self.assertTrue(isinstance(context.exception, CelestaException))
+        lookupAdd = lambda targetCol, auxiliaryCol : lookup.add(targetCol, auxiliaryCol)
+        self.assertThrows(CelestaException, lookupAdd, "date", "numb1")
 
 
     def testExceptionWhileAddingFieldsWithoutIndexToLookup(self):
@@ -338,14 +333,10 @@ class testFilters(CelestaUnit):
 
         lookup = a.setIn(b)
 
-        with self.assertRaises(CelestaException):
-            lookup.add("noIndexA", "numb1")
-
-        with self.assertRaises(CelestaException):
-            lookup.add("number1", "noIndexB")
-
-        with self.assertRaises(CelestaException):
-            lookup.add("noIndexA", "noIndexB")
+        lookupAdd = lambda targetCol, auxiliaryCol : lookup.add(targetCol, auxiliaryCol)
+        self.assertThrows(CelestaException, lookupAdd, "noIndexA", "numb1")
+        self.assertThrows(CelestaException, lookupAdd, "number1", "noIndexB")
+        self.assertThrows(CelestaException, lookupAdd, "noIndexA", "noIndexB")
 
 
     def testExceptionWhenPairsFromLookupDoNotMatchToIndices(self):
@@ -354,15 +345,13 @@ class testFilters(CelestaUnit):
 
         lookup = a.setIn(b)
 
-        with self.assertRaises(CelestaException):
-            lookup.add("number1", "numb2")
+        lookupAdd = lambda targetCol, auxiliaryCol : lookup.add(targetCol, auxiliaryCol)
+        self.assertThrows(CelestaException, lookupAdd, "number1", "numb2")
+        self.assertThrows(CelestaException, lookupAdd, "number2", "numb1")
 
-        with self.assertRaises(CelestaException):
-            lookup.add("number2", "numb1")
-
-        with self.assertRaises(CelestaException):
-            lookup.add("date", "created")
-            lookup.add("number2", "numb2")
+        lookupDoubleAdd = lambda targetCol1, auxiliaryCol1, targetCol2, auxiliaryCol2 : \
+            lookup.add(targetCol1, auxiliaryCol1).add(targetCol2, auxiliaryCol2)
+        self.assertThrows(CelestaException, lookupDoubleAdd, "date", "created", "number2", "numb2")
 
 
     def _fillTablesForTestInFilterWithRangeOnOtherCursor(self, a, b, timestamp):

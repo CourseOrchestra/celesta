@@ -4,8 +4,8 @@ from java.sql import Timestamp
 from java.time import LocalDateTime
 from ru.curs.celesta.syscursors import LogCursor
 
-from celestaunit.internal_celesta_unit import CelestaUnit
 from simpleCases._simpleCases_orm import getDateForViewCursor, viewWithGetDateCursor, zeroInsertCursor, duplicateCursor
+from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
 
 def preInsert(logCursor):
@@ -34,22 +34,23 @@ def postDelete(logCursor):
     logCursor.sessionid = "2"
 
 
-class TestSimpleCases(CelestaUnit):
+@TestClass
+class TestSimpleCases(CelestaTestCase):
     def test_getdate_in_view(self):
         tableCursor = getDateForViewCursor(self.context)
         tableCursor.deleteAll()
 
         viewCursor = viewWithGetDateCursor(self.context)
-        self.assertEqual(0, viewCursor.count())
+        self.assertEquals(0, viewCursor.count())
 
         tableCursor.date = Timestamp.valueOf(LocalDateTime.now().minusDays(1))
         tableCursor.insert()
-        self.assertEqual(0, viewCursor.count())
+        self.assertEquals(0, viewCursor.count())
 
         tableCursor.clear()
         tableCursor.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
         tableCursor.insert()
-        self.assertEqual(1, viewCursor.count())
+        self.assertEquals(1, viewCursor.count())
 
 
     def test_zero_insert(self):
@@ -78,13 +79,13 @@ class TestSimpleCases(CelestaUnit):
         c.action_type = "I"
         c.insert()
 
-        self.assertEqual("getDateForView", c.tablename)
-        self.assertEqual("1", c.sessionid)
+        self.assertEquals("getDateForView", c.tablename)
+        self.assertEquals("1", c.sessionid)
 
         c.update()
 
-        self.assertEqual("zeroInsert", c.tablename)
-        self.assertEqual("2", c.sessionid)
+        self.assertEquals("zeroInsert", c.tablename)
+        self.assertEquals("2", c.sessionid)
 
         self.assertFalse(isPreDeleteDone)
         self.assertFalse(isPostDeleteDone)

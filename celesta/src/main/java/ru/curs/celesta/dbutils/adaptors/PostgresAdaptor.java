@@ -1162,6 +1162,11 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       protected String paramLiteral(String paramName) {
         return paramName;
       }
+
+      @Override
+      protected String getDate() {
+        return "CURRENT_TIMESTAMP";
+      }
     };
   }
 }

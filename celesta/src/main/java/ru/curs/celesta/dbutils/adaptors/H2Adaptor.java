@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils.adaptors;
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorConfiguration;
 import ru.curs.celesta.dbutils.h2.MaterializedViewDeleteTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewInsertTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewUpdateTrigger;
@@ -187,8 +188,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  public void configureDb() {
-    boolean isH2ReferentialIntegrity = AppSettings.isH2ReferentialIntegrity();
+  public void configureDb(DbAdaptorConfiguration configuration) {
+    boolean isH2ReferentialIntegrity = configuration.isH2ReferentialIntegrity();
 
     try {
       //Выполняем команду включения флага REFERENTIAL_INTEGRITY
@@ -964,6 +965,11 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
       @Override
       protected String paramLiteral(String paramName) {
         return "?";
+      }
+
+      @Override
+      protected String getDate() {
+        return "CURRENT_TIMESTAMP";
       }
     };
   }

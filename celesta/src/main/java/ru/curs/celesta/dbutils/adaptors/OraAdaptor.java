@@ -1353,6 +1353,11 @@ final class OraAdaptor extends DBAdaptor {
       protected String paramLiteral(String paramName) {
         return paramName;
       }
+
+      @Override
+      protected String getDate() {
+        return "CURRENT_TIMESTAMP";
+      }
     };
   }
 

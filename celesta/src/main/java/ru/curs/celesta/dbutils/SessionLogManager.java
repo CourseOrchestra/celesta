@@ -14,8 +14,11 @@ import ru.curs.celesta.syscursors.SessionLogCursor;
  * Менеджер записи в лог сведений о входах и выходах пользователей.
  */
 public final class SessionLogManager {
-	private SessionLogManager() {
 
+	private final boolean enabled;
+
+	public SessionLogManager(boolean enabled) {
+		this.enabled = enabled;
 	}
 
 	/**
@@ -26,8 +29,9 @@ public final class SessionLogManager {
 	 * @throws CelestaException
 	 *             Ошибка взаимодействия с БД.
 	 */
-	public static void logLogin(SessionContext session) throws CelestaException {
-		if (AppSettings.getLogLogins()) {
+	public void logLogin(SessionContext session) throws CelestaException {
+			if (!enabled) return;
+
 			Connection conn = ConnectionPool.get();
 			CallContext context = new CallContext(conn,
 					BasicCursor.SYSTEMSESSION);
@@ -41,7 +45,6 @@ public final class SessionLogManager {
 				context.closeCursors();
 				ConnectionPool.putBack(conn);
 			}
-		}
 	}
 
 	/**
@@ -52,8 +55,9 @@ public final class SessionLogManager {
 	 * @throws CelestaException
 	 *             Если не удалось связаться с БД.
 	 */
-	public static void logFailedLogin(String userId) throws CelestaException {
-		if (AppSettings.getLogLogins()) {
+	public void logFailedLogin(String userId) throws CelestaException {
+			if (!enabled) return;
+
 			Connection conn = ConnectionPool.get();
 			CallContext context = new CallContext(conn,
 					BasicCursor.SYSTEMSESSION);
@@ -67,7 +71,6 @@ public final class SessionLogManager {
 				context.closeCursors();
 				ConnectionPool.putBack(conn);
 			}
-		}
 	}
 
 	/**
@@ -80,9 +83,10 @@ public final class SessionLogManager {
 	 * @throws CelestaException
 	 *             Ошибка взаимодействия с БД.
 	 */
-	public static void logLogout(SessionContext session, boolean timeout)
+	public void logLogout(SessionContext session, boolean timeout)
 			throws CelestaException {
-		if (AppSettings.getLogLogins()) {
+			if (!enabled) return;
+
 			Connection conn = ConnectionPool.get();
 			CallContext context = new CallContext(conn,
 					BasicCursor.SYSTEMSESSION);
@@ -101,6 +105,5 @@ public final class SessionLogManager {
 				context.closeCursors();
 				ConnectionPool.putBack(conn);
 			}
-		}
 	}
 }

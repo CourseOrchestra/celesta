@@ -57,6 +57,7 @@ public class Score {
 
 	private final Map<String, File> grainFiles = new HashMap<>();
 
+	private String path;
 	private File defaultGrainPath;
 
 	Score() {
@@ -74,6 +75,7 @@ public class Score {
 	 *             определения гранулы с одним и тем же именем.
 	 */
 	public Score(String scorePath) throws CelestaException {
+		this.path = scorePath;
 		for (String entry : scorePath.split(File.pathSeparator)) {
 			File path = new File(entry.trim());
 			if (!path.exists())
@@ -243,6 +245,10 @@ public class Score {
 		return defaultGrainPath;
 	}
 
+
+	public String getPath() {
+		return path;
+	}
 }
 
 /**

@@ -1,9 +1,11 @@
 # coding=UTF-8
 
-from celestaunit.internal_celesta_unit import CelestaUnit
 from pView._pView_orm import t1Cursor, t2Cursor, pView1Cursor, pView2Cursor, pView3Cursor
+from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
-class TestParameterizedView(CelestaUnit):
+
+@TestClass
+class TestParameterizedView(CelestaTestCase):
 
     def test_p_view_with_aggregate(self):
         tCursor = t1Cursor(self.context)
@@ -34,25 +36,25 @@ class TestParameterizedView(CelestaUnit):
         tCursor.clear()
 
         pvCursor = pView1Cursor(self.context, 1)
-        self.assertEqual(0, pvCursor.count())
+        self.assertEquals(0, pvCursor.count())
 
         pvCursor = pView1Cursor(self.context, 2)
         pvCursor.orderBy('f3')
-        self.assertEqual(2, pvCursor.count())
+        self.assertEquals(2, pvCursor.count())
 
         pvCursor.first()
-        self.assertEqual(10, pvCursor.sumv)
-        self.assertEqual('A', pvCursor.f3)
+        self.assertEquals(10, pvCursor.sumv)
+        self.assertEquals('A', pvCursor.f3)
         pvCursor.next()
-        self.assertEqual(7, pvCursor.sumv)
-        self.assertEqual('B', pvCursor.f3)
+        self.assertEquals(7, pvCursor.sumv)
+        self.assertEquals('B', pvCursor.f3)
 
         pvCursor = pView1Cursor(self.context, 3)
-        self.assertEqual(1, pvCursor.count())
+        self.assertEquals(1, pvCursor.count())
 
         pvCursor.first()
-        self.assertEqual(4, pvCursor.sumv)
-        self.assertEqual('A', pvCursor.f3)
+        self.assertEquals(4, pvCursor.sumv)
+        self.assertEquals('A', pvCursor.f3)
 
     def test_p_view_with_two_parameters(self):
         tCursor = t1Cursor(self.context)
@@ -83,36 +85,36 @@ class TestParameterizedView(CelestaUnit):
         tCursor.clear()
 
         pvCursor = pView2Cursor(self.context, 2, 'C')
-        self.assertEqual(0, pvCursor.count())
+        self.assertEquals(0, pvCursor.count())
 
         pvCursor = pView2Cursor(self.context, 2, 'A')
         pvCursor.orderBy('f1')
-        self.assertEqual(2, pvCursor.count())
+        self.assertEquals(2, pvCursor.count())
 
         pvCursor.first()
-        self.assertEqual(1, pvCursor.f1)
-        self.assertEqual(2, pvCursor.f2)
-        self.assertEqual('A', pvCursor.f3)
+        self.assertEquals(1, pvCursor.f1)
+        self.assertEquals(2, pvCursor.f2)
+        self.assertEquals('A', pvCursor.f3)
         pvCursor.next()
-        self.assertEqual(9, pvCursor.f1)
-        self.assertEqual(2, pvCursor.f2)
-        self.assertEqual('A', pvCursor.f3)
+        self.assertEquals(9, pvCursor.f1)
+        self.assertEquals(2, pvCursor.f2)
+        self.assertEquals('A', pvCursor.f3)
 
         pvCursor = pView2Cursor(self.context, 3, 'A')
-        self.assertEqual(1, pvCursor.count())
+        self.assertEquals(1, pvCursor.count())
 
         pvCursor.first()
-        self.assertEqual(4, pvCursor.f1)
-        self.assertEqual(3, pvCursor.f2)
-        self.assertEqual('A', pvCursor.f3)
+        self.assertEquals(4, pvCursor.f1)
+        self.assertEquals(3, pvCursor.f2)
+        self.assertEquals('A', pvCursor.f3)
 
         pvCursor = pView2Cursor(self.context, 2, 'B')
-        self.assertEqual(1, pvCursor.count())
+        self.assertEquals(1, pvCursor.count())
 
         pvCursor.first()
-        self.assertEqual(7, pvCursor.f1)
-        self.assertEqual(2, pvCursor.f2)
-        self.assertEqual('B', pvCursor.f3)
+        self.assertEquals(7, pvCursor.f1)
+        self.assertEquals(2, pvCursor.f2)
+        self.assertEquals('B', pvCursor.f3)
 
     def test_p_view_with_join(self):
         tCursor1 = t1Cursor(self.context)
@@ -134,9 +136,9 @@ class TestParameterizedView(CelestaUnit):
         tCursor1.clear()
 
         pvCursor = pView3Cursor(self.context, 2)
-        self.assertEqual(1, pvCursor.count())
+        self.assertEquals(1, pvCursor.count())
         pvCursor.first()
-        self.assertEqual(2, pvCursor.c)
+        self.assertEquals(2, pvCursor.c)
 
         tCursor2.ff1 = 9
         tCursor2.ff2 = 3
@@ -144,9 +146,9 @@ class TestParameterizedView(CelestaUnit):
         tCursor2.insert()
         tCursor2.clear()
 
-        self.assertEqual(1, pvCursor.count())
+        self.assertEquals(1, pvCursor.count())
         pvCursor.first()
-        self.assertEqual(2, pvCursor.c)
+        self.assertEquals(2, pvCursor.c)
 
         tCursor2.ff1 = 9
         tCursor2.ff2 = 2
@@ -154,9 +156,9 @@ class TestParameterizedView(CelestaUnit):
         tCursor2.insert()
         tCursor2.clear()
 
-        self.assertEqual(1, pvCursor.count())
+        self.assertEquals(1, pvCursor.count())
         pvCursor.first()
-        self.assertEqual(2, pvCursor.c)
+        self.assertEquals(2, pvCursor.c)
 
         tCursor2.ff1 = 9
         tCursor2.ff2 = 2
@@ -165,6 +167,6 @@ class TestParameterizedView(CelestaUnit):
         tCursor2.clear()
 
         # Проверка на декартово произведение
-        self.assertEqual(1, pvCursor.count())
+        self.assertEquals(1, pvCursor.count())
         pvCursor.first()
-        self.assertEqual(4, pvCursor.c)
+        self.assertEquals(4, pvCursor.c)

@@ -13,12 +13,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ru.curs.celesta.AppSettings;
-import ru.curs.celesta.CallContext;
-import ru.curs.celesta.Celesta;
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.SessionContext;
+import ru.curs.celesta.*;
 import ru.curs.celesta.syscursors.LogSetupCursor;
 
 public class BasicCursorTest {
@@ -31,7 +26,17 @@ public class BasicCursorTest {
 		Properties params = new Properties();
 		params.setProperty("score.path", "score");
 		params.setProperty("h2.in-memory", "true");
-		AppSettings.init(params);
+
+		AppSettings appSettings = new AppSettings(params);
+
+		ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
+		cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
+		cpc.setDriverClassName(appSettings.getDbClassName());
+		cpc.setLogin(appSettings.getDBLogin());
+		cpc.setPassword(appSettings.getDBPassword());
+
+		ConnectionPool.init(cpc);
+
 		ConnectionPool.clear();
 		try {
 			Celesta.initialize(params);
