@@ -169,12 +169,6 @@ public final class XMLJSONConverter {
 		if (str.contains("&gt;")) {
 			str = str.replace("&gt;", ">");
 		}
-		if (str.contains("&#xA;")) {
-			str = str.replace("&#xA;", "\n");
-		}
-		if (str.contains("&#10;")) {
-			str = str.replace("&#10;", "\n");
-		}
 
 		return str;
 	}
