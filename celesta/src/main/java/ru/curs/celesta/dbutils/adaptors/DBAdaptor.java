@@ -1055,7 +1055,14 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
     String tableGroupByColumns = mv.getColumns().values().stream()
         .filter(v -> mv.isGroupByColumn(v.getName()))
-        .map(v -> "\"" + mv.getColumnRef(v.getName()).getName() + "\"")
+        .map(v -> {
+          Column colRef = mv.getColumnRef(v.getName());
+          String groupByColStr =  "\"" + mv.getColumnRef(v.getName()).getName() + "\"";
+
+          if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+            return truncDate(groupByColStr);
+          return groupByColStr;
+        })
         .collect(Collectors.joining(", "));
 
     String deleteSql = "TRUNCATE TABLE " + mvIdentifier;

@@ -43,7 +43,7 @@ class TestAggregate(CelestaTestCase):
 
         tableCursor.insert()
         tableCursor.clear()
-        tableCursor.date = Timestamp.valueOf(LocalDateTime.now().minusSeconds(1))
+        tableCursor.date = Timestamp.valueOf(LocalDateTime.now().minusSeconds(2))
         tableCursor.insert()
 
         viewCursor.first()

@@ -30,8 +30,13 @@ public class CelestaScriptsTest {
   @BeforeAll
   public static void init() throws CelestaException {
     //Properties properties = new Properties();
+
     //properties.put("score.path", "E:/WorkSpace/Curs/Celesta/score");
     //properties.put("h2.in-memory", "true");
+
+    //properties.put("database.connection", "jdbc:postgresql://127.0.0.1:5432/celesta?user=postgres&password=123");
+    //properties.put("database.connection", "jdbc:oracle:thin:celesta/123@localhost:1521:XE");
+    //properties.put("database.connection", "jdbc:sqlserver://localhost;databaseName=celestaunit;user=sa;password=123");
 
     //Celesta.initialize(properties);
     //Celesta.reInitialize();
