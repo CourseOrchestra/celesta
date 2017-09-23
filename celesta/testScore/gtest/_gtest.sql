@@ -90,13 +90,14 @@ create materialized view mView1gTest as
 create table tableForInitMvData (
   id int identity not null primary key,
   var varchar(2) not null,
-  numb int
+  numb int,
+  d datetime not null
 );
 
 create materialized view mViewForInit as
-  select sum(numb) as s, var
+  select sum(numb) as s, var, d
   from tableForInitMvData
-  group by var;
+  group by var, d;
 
 create function pView(p int) as
   select id from test
