@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.adaptors;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
 import ru.curs.celesta.dbutils.query.FromClause;
@@ -24,7 +25,11 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   protected static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 
-	@Override
+  public OpenSourceDbAdaptor(ConnectionPool connectionPool) {
+    super(connectionPool);
+  }
+
+  @Override
 	public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
 		try (PreparedStatement check = conn
 				.prepareStatement(String.format("SELECT table_name FROM information_schema.tables  WHERE "

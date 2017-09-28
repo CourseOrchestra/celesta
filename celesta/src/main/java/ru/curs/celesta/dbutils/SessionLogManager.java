@@ -3,11 +3,7 @@ package ru.curs.celesta.dbutils;
 import java.sql.Connection;
 import java.util.Date;
 
-import ru.curs.celesta.AppSettings;
-import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.SessionContext;
+import ru.curs.celesta.*;
 import ru.curs.celesta.syscursors.SessionLogCursor;
 
 /**
@@ -15,9 +11,11 @@ import ru.curs.celesta.syscursors.SessionLogCursor;
  */
 public final class SessionLogManager {
 
+	private final Celesta celesta;
 	private final boolean enabled;
 
-	public SessionLogManager(boolean enabled) {
+	public SessionLogManager(Celesta celesta, boolean enabled) {
+		this.celesta = celesta;
 		this.enabled = enabled;
 	}
 
@@ -32,18 +30,12 @@ public final class SessionLogManager {
 	public void logLogin(SessionContext session) throws CelestaException {
 			if (!enabled) return;
 
-			Connection conn = ConnectionPool.get();
-			CallContext context = new CallContext(conn,
-					BasicCursor.SYSTEMSESSION);
-			try {
+			try (CallContext context = celesta.callContext(BasicCursor.SYSTEMSESSION)) {
 				SessionLogCursor sl = new SessionLogCursor(context);
 				sl.init();
 				sl.setSessionid(session.getSessionId());
 				sl.setUserid(session.getUserId());
 				sl.insert();
-			} finally {
-				context.closeCursors();
-				ConnectionPool.putBack(conn);
 			}
 	}
 
@@ -58,18 +50,12 @@ public final class SessionLogManager {
 	public void logFailedLogin(String userId) throws CelestaException {
 			if (!enabled) return;
 
-			Connection conn = ConnectionPool.get();
-			CallContext context = new CallContext(conn,
-					BasicCursor.SYSTEMSESSION);
-			try {
+			try (CallContext context = celesta.callContext(BasicCursor.SYSTEMSESSION)) {
 				SessionLogCursor sl = new SessionLogCursor(context);
 				sl.init();
 				sl.setUserid(userId);
 				sl.setFailedlogin(true);
 				sl.insert();
-			} finally {
-				context.closeCursors();
-				ConnectionPool.putBack(conn);
 			}
 	}
 
@@ -87,10 +73,7 @@ public final class SessionLogManager {
 			throws CelestaException {
 			if (!enabled) return;
 
-			Connection conn = ConnectionPool.get();
-			CallContext context = new CallContext(conn,
-					BasicCursor.SYSTEMSESSION);
-			try {
+			try (CallContext context = celesta.callContext(BasicCursor.SYSTEMSESSION)) {
 				SessionLogCursor sl = new SessionLogCursor(context);
 				sl.init();
 				sl.setRange("sessionid", session.getSessionId());
@@ -101,9 +84,6 @@ public final class SessionLogManager {
 					sl.setTimeout(timeout);
 					sl.update();
 				}
-			} finally {
-				context.closeCursors();
-				ConnectionPool.putBack(conn);
 			}
 	}
 }

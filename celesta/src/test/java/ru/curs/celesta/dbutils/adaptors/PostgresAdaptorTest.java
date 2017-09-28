@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils.adaptors;
 
+import java.sql.Connection;
 import java.util.Properties;
 
 import org.junit.BeforeClass;
@@ -37,7 +38,15 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
 		Celesta.initialize(params);
 
-		dba = new PostgresAdaptor();
+		AppSettings appSettings = new AppSettings(params);
+		ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
+		cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
+		cpc.setDriverClassName(appSettings.getDbClassName());
+		cpc.setLogin(appSettings.getDBLogin());
+		cpc.setPassword(appSettings.getDBPassword());
+		ConnectionPool connectionPool = ConnectionPool.create(cpc);
+
+		dba = new PostgresAdaptor(connectionPool);
 		initMocks(dba);
 	}
 
@@ -46,6 +55,10 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
 		setScore(new Score(SCORE_NAME));
 	}
 
+	@Override
+	Connection getConnection() throws CelestaException {
+		return dba.connectionPool.get();
+	}
 
 	public static void initMocks(DBAdaptor dba) throws CelestaException {
 		PowerMockito.stub(

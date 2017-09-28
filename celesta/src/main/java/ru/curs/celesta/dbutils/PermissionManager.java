@@ -158,9 +158,7 @@ final class PermissionManager {
 
 	private PermissionCacheEntry refreshPermissions(CallContext c,
 			GrainElement t) throws CelestaException {
-		CallContext sysContext = new CallContext(c.getConn(),
-				BasicCursor.SYSTEMSESSION);
-		try {
+		try (CallContext sysContext = new CallContext(c, BasicCursor.SYSTEMSESSION)) {
 			RoleCacheEntry rce = getRce(c.getUserId(), sysContext);
 			PermissionsCursor permissions = new PermissionsCursor(sysContext);
 			int permissionsMask = 0;
@@ -188,8 +186,6 @@ final class PermissionManager {
 				}
 			}
 			return new PermissionCacheEntry(c.getUserId(), t, permissionsMask);
-		} finally {
-			sysContext.closeCursors();
 		}
 
 	}

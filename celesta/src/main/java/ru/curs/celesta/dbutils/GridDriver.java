@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Random;
 
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
@@ -85,10 +86,8 @@ public final class GridDriver {
 		public void run() {
 
 			Connection conn = null;
-			CallContext sysContext = null;
-			try {
-				conn = ConnectionPool.get();
-				sysContext = new CallContext(conn, BasicCursor.SYSTEMSESSION);
+
+			try (CallContext sysContext = Celesta.getInstance().callContext(BasicCursor.SYSTEMSESSION)) {
 				BasicCursor c = closedCopy._getBufferCopy(sysContext);
 				c.copyFiltersFrom(closedCopy);
 				c.copyOrderFrom(closedCopy);
@@ -140,10 +139,7 @@ public final class GridDriver {
 				// terminate thread silently
 				return;
 			} finally {
-				if (sysContext != null)
-					sysContext.closeCursors();
 				counterThread = null;
-				ConnectionPool.putBack(conn);
 			}
 		}
 	}

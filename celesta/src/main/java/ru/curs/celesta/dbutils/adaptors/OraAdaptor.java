@@ -51,6 +51,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
@@ -275,6 +276,10 @@ final class OraAdaptor extends DBAdaptor {
     TRIGGER_EVENT_TYPE_DICT.put(TriggerType.POST_INSERT, "INSERT");
     TRIGGER_EVENT_TYPE_DICT.put(TriggerType.POST_UPDATE, "UPDATE");
     TRIGGER_EVENT_TYPE_DICT.put(TriggerType.POST_DELETE, "DELETE");
+  }
+
+  public OraAdaptor(ConnectionPool connectionPool) {
+    super(connectionPool);
   }
 
   @Override

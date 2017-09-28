@@ -2,10 +2,12 @@ package ru.curs.celesta.dbutils.adaptors.configuration;
 
 
 import ru.curs.celesta.AppSettings;
+import ru.curs.celesta.ConnectionPool;
 
 public class DbAdaptorConfiguration {
 
   private AppSettings.DBType dbType;
+  private ConnectionPool connectionPool;
   private boolean h2ReferentialIntegrity;
 
   public AppSettings.DBType getDbType() {
@@ -14,6 +16,14 @@ public class DbAdaptorConfiguration {
 
   public void setDbType(AppSettings.DBType dbType) {
     this.dbType = dbType;
+  }
+
+  public ConnectionPool getConnectionPool() {
+    return connectionPool;
+  }
+
+  public void setConnectionPool(ConnectionPool connectionPool) {
+    this.connectionPool = connectionPool;
   }
 
   public boolean isH2ReferentialIntegrity() {

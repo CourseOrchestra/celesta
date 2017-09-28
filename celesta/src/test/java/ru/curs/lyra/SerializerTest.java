@@ -25,10 +25,11 @@ import ru.curs.celesta.syscursors.TablesCursor;
 
 public class SerializerTest {
 
+	private static ConnectionPool connectionPool;
 	private SessionContext sc = new SessionContext("super", "foo");
 	private GrainsCursor c;
 	private TablesCursor tt;
-	private Connection conn;
+	private CallContext callContext;
 
 	@BeforeClass
 	public static void init() throws IOException, CelestaException {
@@ -44,9 +45,7 @@ public class SerializerTest {
 		cpc.setLogin(appSettings.getDBLogin());
 		cpc.setPassword(appSettings.getDBPassword());
 
-		ConnectionPool.init(cpc);
-
-		ConnectionPool.clear();
+		connectionPool = ConnectionPool.create(cpc);
 		try {
 			Celesta.initialize(params);
 		} catch (CelestaException e) {
@@ -56,15 +55,14 @@ public class SerializerTest {
 
 	@Before
 	public void before() throws CelestaException {
-		conn = ConnectionPool.get();
-		CallContext context = new CallContext(conn, sc);
-		c = new GrainsCursor(context);
-		tt = new TablesCursor(context);
+		callContext = new CallContext(connectionPool, sc);
+		c = new GrainsCursor(callContext);
+		tt = new TablesCursor(callContext);
 	}
 
 	@After
 	public void after() throws CelestaException {
-		ConnectionPool.putBack(conn);
+		callContext.close();
 	}
 
 	@Test
@@ -165,7 +163,7 @@ public class SerializerTest {
 
 	@Test
 	public void test2() throws CelestaException, UnsupportedEncodingException {
-		BasicCardForm bcf = new BasicCardForm(new CallContext(conn, sc)) {
+		BasicCardForm bcf = new BasicCardForm(new CallContext(connectionPool, sc)) {
 			{
 				createAllBoundFields();
 				createField("aab");
@@ -243,7 +241,7 @@ public class SerializerTest {
 		assertEquals(8, c.getChecksum().length());
 
 		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-		GrainsCursor c2 = new GrainsCursor(new CallContext(conn, sc));
+		GrainsCursor c2 = new GrainsCursor(new CallContext(connectionPool, sc));
 		bcf.deserialize(c2, bis);
 
 		assertEquals(c.getRecversion(), c2.getRecversion());

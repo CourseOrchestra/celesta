@@ -23,8 +23,8 @@ public final class ProfilingManager {
 	public void logCall(CallContext context) throws CelestaException {
 		if (profilemode) {
 			long finish = System.currentTimeMillis();
-			CallContext sysContext = new CallContext(context.getConn(), BasicCursor.SYSTEMSESSION);
-			try {
+
+			try (CallContext sysContext = new CallContext(context, BasicCursor.SYSTEMSESSION)) {
 				CallLogCursor clc = new CallLogCursor(sysContext);
 				clc.setProcname(context.getProcName());
 				clc.setSessionid(context.getSessionId());
@@ -32,8 +32,6 @@ public final class ProfilingManager {
 				clc.setStarttime(context.getStartTime());
 				clc.setDuration((int) (finish - context.getStartTime().getTime()));
 				clc.insert();
-			} finally {
-				sysContext.closeCursors();
 			}
 		}
 	}

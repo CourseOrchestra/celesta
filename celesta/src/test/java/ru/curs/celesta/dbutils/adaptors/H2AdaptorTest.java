@@ -10,6 +10,7 @@ import ru.curs.celesta.score.Score;
 
 import java.io.InputStream;
 
+import java.sql.Connection;
 import java.util.Properties;
 
 /**
@@ -22,6 +23,7 @@ import java.util.Properties;
 })
 public class H2AdaptorTest extends AbstractAdaptorTest {
 
+  private final ConnectionPool connectionPool;
 
   public H2AdaptorTest() throws Exception {
     Properties params = new Properties();
@@ -37,17 +39,19 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
     cpc.setLogin(appSettings.getDBLogin());
     cpc.setPassword(appSettings.getDBPassword());
 
-    ConnectionPool.init(cpc);
+    connectionPool = ConnectionPool.create(cpc);
 
-    DBAdaptor dba = new H2Adaptor();
+    DBAdaptor dba = new H2Adaptor(connectionPool);
     initMocks(dba);
-
-    ConnectionPool.clear();
 
     setDba(dba);
     setScore(new Score(SCORE_NAME));
   }
 
+  @Override
+  Connection getConnection() throws CelestaException {
+    return connectionPool.get();
+  }
 
   public void initMocks(DBAdaptor dba) throws CelestaException {
     PowerMockito.stub(
@@ -56,4 +60,5 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
         )
     ).toReturn(dba);
   }
+
 }

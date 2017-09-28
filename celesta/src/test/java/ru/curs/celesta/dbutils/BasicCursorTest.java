@@ -17,9 +17,9 @@ import ru.curs.celesta.*;
 import ru.curs.celesta.syscursors.LogSetupCursor;
 
 public class BasicCursorTest {
+	private static ConnectionPool connectionPool;
 	private SessionContext sc = new SessionContext("super", "foo");
 	private BasicCursor c;
-	private Connection conn;
 
 	@BeforeClass
 	public static void init() throws IOException, CelestaException {
@@ -35,9 +35,7 @@ public class BasicCursorTest {
 		cpc.setLogin(appSettings.getDBLogin());
 		cpc.setPassword(appSettings.getDBPassword());
 
-		ConnectionPool.init(cpc);
-
-		ConnectionPool.clear();
+		connectionPool = ConnectionPool.create(cpc);
 		try {
 			Celesta.initialize(params);
 		} catch (CelestaException e) {
@@ -47,13 +45,12 @@ public class BasicCursorTest {
 
 	@Before
 	public void before() throws CelestaException {
-		conn = ConnectionPool.get();
-		c = new LogSetupCursor(new CallContext(conn, sc));
+		c = new LogSetupCursor(new CallContext(connectionPool, sc));
 	}
 
 	@After
 	public void after() throws CelestaException {
-		ConnectionPool.putBack(conn);
+		c.close();
 	}
 
 	@Test

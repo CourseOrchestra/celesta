@@ -43,6 +43,9 @@ public abstract class AbstractAdaptorTest {
     private Connection conn;
     private Table t;
 
+
+    abstract Connection getConnection() throws CelestaException;
+
     private int insertRow(Connection conn, Table t, int val) throws IOException, CelestaException, SQLException {
         int count = t.getColumns().size();
         assertEquals(13, count);
@@ -97,7 +100,7 @@ public abstract class AbstractAdaptorTest {
 
     @Before
     public void setup() throws Exception {
-        conn = ConnectionPool.get();
+        conn = getConnection();
         dba.createSchemaIfNotExists(conn, GRAIN_NAME);
         conn.commit();
 
@@ -120,7 +123,7 @@ public abstract class AbstractAdaptorTest {
         } catch (Exception e) {
             // e.printStackTrace();
         }
-        ConnectionPool.putBack(conn);
+        conn.close();
     }
 
     @Test

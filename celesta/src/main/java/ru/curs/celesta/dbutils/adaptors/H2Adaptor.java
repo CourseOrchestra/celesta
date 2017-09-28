@@ -187,21 +187,20 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
 
+  public H2Adaptor(ConnectionPool connectionPool) {
+    super(connectionPool);
+  }
+
   @Override
   public void configureDb(DbAdaptorConfiguration configuration) {
     boolean isH2ReferentialIntegrity = configuration.isH2ReferentialIntegrity();
 
-    try {
+    try ( Connection connection = connectionPool.get()) {
       //Выполняем команду включения флага REFERENTIAL_INTEGRITY
-      Connection connection = ConnectionPool.get();
       String sql = "SET REFERENTIAL_INTEGRITY " + String.valueOf(isH2ReferentialIntegrity);
-      Statement stmt = connection.createStatement();
 
-      try {
+      try (Statement stmt = connection.createStatement()) {
         stmt.execute(sql);
-      } finally {
-        stmt.close();
-        ConnectionPool.putBack(connection);
       }
     } catch (Exception e) {
       throw new RuntimeException("Can't manage REFERENTIAL_INTEGRITY", e);

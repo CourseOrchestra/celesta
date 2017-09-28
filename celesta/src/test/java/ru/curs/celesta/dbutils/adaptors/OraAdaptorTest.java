@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils.adaptors;
 
+import java.sql.Connection;
 import java.util.Properties;
 
 import org.junit.runner.RunWith;
@@ -17,6 +18,8 @@ import ru.curs.celesta.score.Score;
 })
 public class OraAdaptorTest extends AbstractAdaptorTest {
 
+	private final ConnectionPool connectionPool;
+
 	public OraAdaptorTest() throws Exception {
 		Properties params = new Properties();
 		params.load(InitTest.class
@@ -30,15 +33,19 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
 		cpc.setLogin(appSettings.getDBLogin());
 		cpc.setPassword(appSettings.getDBPassword());
 
-		ConnectionPool.init(cpc);
+		connectionPool = ConnectionPool.create(cpc);
 
-		DBAdaptor dba = new OraAdaptor();
+		DBAdaptor dba = new OraAdaptor(connectionPool);
 		initMocks(dba);
 
 		setDba(dba);
 		setScore(new Score(SCORE_NAME));
 	}
 
+	@Override
+	Connection getConnection() throws CelestaException {
+		return connectionPool.get();
+	}
 
 	public void initMocks(DBAdaptor dba) throws CelestaException {
 		PowerMockito.stub(

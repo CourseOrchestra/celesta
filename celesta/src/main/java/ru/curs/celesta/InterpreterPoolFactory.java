@@ -10,6 +10,7 @@ public class InterpreterPoolFactory {
       throws CelestaException {
     //В будущем будет использоваться для создания разных интерпретаторов
     return new PythonInterpreterPool(
+        configuration.getCelesta(),
         configuration.getScore(),
         configuration.getJavaLibPath(),
         configuration.getScriptLibPath()

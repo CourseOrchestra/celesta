@@ -14,11 +14,9 @@ import java.util.stream.Stream;
 public class CelestaScriptsTest {
 
   static Celesta celesta;
-  static Connection globalConn;
   static SessionContext sessionContext;
   static CallContext globalCallContext;
 
-  Connection conn;
   CallContext context;
 
   public static Map<PyType, List<String>> testTypesAndTheirMethods = new LinkedHashMap<>();
@@ -42,26 +40,22 @@ public class CelestaScriptsTest {
     //Celesta.reInitialize();
     celesta = Celesta.getInstance();
     sessionContext = new SessionContext("super", "debug");
-    globalConn = ConnectionPool.get();
-    globalCallContext = new CallContext(globalConn, sessionContext);
+    globalCallContext = celesta.callContext(sessionContext);
   }
 
   @BeforeEach
   public void setUp() throws CelestaException {
-    conn = ConnectionPool.get();
-    context = new CallContext(conn, sessionContext);
+    context = celesta.callContext(sessionContext);
   }
 
   @AfterEach
-  public void tearDown() {
-    context.closeCursors();
-    ConnectionPool.putBack(conn);
+  public void tearDown() throws CelestaException {
+    context.close();
   }
 
   @AfterAll
-  public static void destroy() {
-    globalCallContext.closeCursors();
-    ConnectionPool.putBack(globalConn);
+  public static void destroy() throws CelestaException {
+    globalCallContext.close();
   }
 
   @TestFactory

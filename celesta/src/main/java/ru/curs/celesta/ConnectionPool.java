@@ -15,29 +15,32 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
  */
 public final class ConnectionPool {
 
-	private final ConcurrentLinkedQueue<Connection> pool = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<CelestaConnection> pool = new ConcurrentLinkedQueue<>();
 	private String jdbcConnectionUrl;
 	private String driverClassName;
 	private String login;
 	private String password;
 
-	private static ConnectionPool theConnectionPool;
 
-
-	public synchronized static void init(ConnectionPoolConfiguration configuration) throws CelestaException {
-			theConnectionPool = new ConnectionPool(
-					configuration.getJdbcConnectionUrl(),
-					configuration.getDriverClassName(),
-					configuration.getLogin(),
-					configuration.getPassword()
-			);
+	public synchronized static ConnectionPool create(ConnectionPoolConfiguration configuration) throws CelestaException {
+		return new ConnectionPool(
+				configuration.getJdbcConnectionUrl(),
+				configuration.getDriverClassName(),
+				configuration.getLogin(),
+				configuration.getPassword()
+		);
 	}
 
-	public ConnectionPool(String jdbcConnectionUrl, String driverClassName, String login, String password) {
+
+	private ConnectionPool(String jdbcConnectionUrl, String driverClassName, String login, String password) {
 		this.driverClassName = driverClassName;
 		this.login = login;
 		this.password = password;
 		this.jdbcConnectionUrl = jdbcConnectionUrl;
+
+		Runtime.getRuntime().addShutdownHook(
+				new Thread(this::clear)
+		);
 	}
 
 	/**
@@ -46,9 +49,9 @@ public final class ConnectionPool {
 	 * @throws CelestaException
 	 *             В случае, если новое соединение не удалось создать.
 	 */
-	public static Connection get() throws CelestaException {
+	public Connection get() throws CelestaException {
 		final DBAdaptor db = DBAdaptor.getAdaptor();
-		Connection c = theConnectionPool.pool.poll();
+		Connection c = pool.poll();
 		while (c != null) {
 			try {
 				if (db.isValidConnection(c, 1))
@@ -57,24 +60,29 @@ public final class ConnectionPool {
 				// do something to make CheckStyle happy ))
 				c = null;
 			}
-			c = theConnectionPool.pool.poll();
+			c = pool.poll();
 		}
 		try {
-			Class.forName(theConnectionPool.driverClassName);
-			if (theConnectionPool.login.isEmpty()) {
-				c = DriverManager.getConnection(theConnectionPool.jdbcConnectionUrl);
+			Class.forName(driverClassName);
+			if (login.isEmpty()) {
+				c = DriverManager.getConnection(jdbcConnectionUrl);
 			} else {
 				c = DriverManager.getConnection(
-						theConnectionPool.jdbcConnectionUrl,
-						theConnectionPool.login,
-						theConnectionPool.password
+						jdbcConnectionUrl,
+						login,
+						password
 				);
 			}
 			c.setAutoCommit(false);
-			return c;
+			return new CelestaConnection(c) {
+				@Override
+				public void close() throws SQLException {
+					putBack(this);
+				}
+			};
 		} catch (SQLException | ClassNotFoundException e) {
 			throw new CelestaException("Could not connect to %s with error: %s",
-					PasswordHider.maskPassword(theConnectionPool.jdbcConnectionUrl), e.getMessage());
+					PasswordHider.maskPassword(jdbcConnectionUrl), e.getMessage());
 		}
 	}
 
@@ -85,12 +93,12 @@ public final class ConnectionPool {
 	 * @param c
 	 *            возвращаемое соединение.
 	 */
-	public static void putBack(Connection c) {
+	private void putBack(CelestaConnection c) {
 		// Вставляем только хорошие соединения...
 		try {
 			if (c != null) {
 				c.commit();
-				theConnectionPool.pool.add(c);
+				pool.add(c);
 			}
 		} catch (SQLException e) {
 			// do something to make CheckStyle happy ))
@@ -105,7 +113,7 @@ public final class ConnectionPool {
 	 * @param conn
 	 *            соединение для выполнения коммита.
 	 */
-	public static void commit(Connection conn) {
+	public void commit(Connection conn) {
 		try {
 			if (conn != null)
 				conn.commit();
@@ -118,15 +126,15 @@ public final class ConnectionPool {
 	/**
 	 * Очищает пул.
 	 */
-	public static void clear() {
-		Connection c = theConnectionPool.pool.poll();
+	public void clear() {
+		CelestaConnection c = pool.poll();
 		while (c != null) {
 			try {
-				c.close();
+				c.getConnection().close();
 			} catch (SQLException e) {
 				c = null;
 			}
-			c = theConnectionPool.pool.poll();
+			c = pool.poll();
 		}
 	}
 }

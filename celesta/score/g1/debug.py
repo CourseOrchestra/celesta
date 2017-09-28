@@ -20,15 +20,14 @@ props.setProperty('rdbms.connection.url', 'jdbc:h2:mem:celesta')
 Celesta.initialize(props)
 Celesta.getDebugInstance()
 sc = SessionContext('super', 'debug')
-conn = ConnectionPool.get()
 
 try:
-    cc = CallContext(conn, sc)
+    cc = Celesta.getInstance().callContext(sc)
     print 'Hello world!'
     hello.hello(cc, 'foo')
 
 finally:
-    ConnectionPool.putBack(conn)
+    cc.close()
 
 print '!'
 

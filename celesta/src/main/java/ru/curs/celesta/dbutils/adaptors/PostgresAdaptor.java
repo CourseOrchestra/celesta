@@ -52,6 +52,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
@@ -214,6 +215,10 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
         return defaultStr;
       }
     });
+  }
+
+  public PostgresAdaptor(ConnectionPool connectionPool) {
+    super(connectionPool);
   }
 
   @Override

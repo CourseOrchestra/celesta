@@ -23,7 +23,7 @@ import ru.curs.celesta.score.Grain;
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
  * идентификатор пользователя.
  */
-public final class CallContext {
+public final class CallContext implements AutoCloseable {
 
 	/**
 	 * Максимальное число курсоров, которое может быть открыто в одном
@@ -36,6 +36,7 @@ public final class CallContext {
 	private static final Map<Connection, Integer> PIDSCACHE = Collections
 			.synchronizedMap(new WeakHashMap<Connection, Integer>());
 
+	private final ConnectionPool connectionPool;
 	private final Connection conn;
 	private final Grain grain;
 	private final String procName;
@@ -52,36 +53,45 @@ public final class CallContext {
 
 	private final HashMap<PyString, PyObject> cursorsCache = new HashMap<>();
 
-	public CallContext(Connection conn, SessionContext sesContext) throws CelestaException {
-		this(conn, sesContext, null, null, null);
+	public CallContext(ConnectionPool connectionPool, SessionContext sesContext) throws CelestaException {
+		this(connectionPool, sesContext, null, null, null);
 	}
 
-	public CallContext(Connection conn, SessionContext sesContext, Grain curGrain, String procName)
+	/**
+	 * Constructs callContext with same connection as in callContext param
+	 * @param callContext
+	 * @param sesContext
+	 * @throws CelestaException
+	 */
+	public CallContext(CallContext callContext, SessionContext sesContext) throws CelestaException {
+		this(callContext.connectionPool, sesContext, null, null, null);
+	}
+
+	public CallContext(ConnectionPool connectionPool, SessionContext sesContext, Grain curGrain, String procName)
 			throws CelestaException {
-		this(conn, sesContext, null, curGrain, procName);
+		this(connectionPool, sesContext, null, curGrain, procName);
 	}
 
-	public CallContext(Connection conn, SessionContext sesContext, ShowcaseContext showcaseContext, Grain curGrain,
+	public CallContext(ConnectionPool connectionPool, SessionContext sesContext, ShowcaseContext showcaseContext, Grain curGrain,
 			String procName) throws CelestaException {
-		this.conn = conn;
+		this.connectionPool = connectionPool;
+		this.conn = connectionPool.get();
 		this.sesContext = sesContext;
 		this.grain = curGrain;
 		this.procName = procName;
 		this.showcaseContext = showcaseContext;
 		DBAdaptor db = DBAdaptor.getAdaptor();
-		dbPid = PIDSCACHE.computeIfAbsent(conn, db::getDBPid);
+		dbPid = PIDSCACHE.computeIfAbsent(this.conn, db::getDBPid);
 	}
 
 	/**
-	 * Duplicates callcontext with given JDBC connection.
-	 * 
-	 * @param c
-	 *            new connection
+	 * Duplicates callcontext with another JDBC connection.
+	 *
 	 * @throws CelestaException
 	 *             cannot create adaptor
 	 */
-	public CallContext getCopy(Connection c) throws CelestaException {
-		return new CallContext(c, sesContext, showcaseContext, grain, procName);
+	public CallContext getCopy() throws CelestaException {
+		return new CallContext(connectionPool, sesContext, showcaseContext, grain, procName);
 	}
 
 	/**
@@ -306,7 +316,7 @@ public final class CallContext {
 	/**
 	 * Закрытие всех курсоров.
 	 */
-	public void closeCursors() {
+	private void closeCursors() {
 		while (lastCursor != null) {
 			lastCursor.close();
 		}
@@ -388,5 +398,19 @@ public final class CallContext {
 				i.remove();
 			}
 		}
+	}
+
+	@Override
+	public void close() throws CelestaException {
+		try {
+			closeCursors();
+			conn.close();
+		} catch (Exception e) {
+			throw new CelestaException("Can't close callContext", e);
+		}
+	}
+
+	void rollback() throws SQLException {
+		conn.rollback();
 	}
 }

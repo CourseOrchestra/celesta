@@ -50,6 +50,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
@@ -287,6 +288,10 @@ final class MSSQLAdaptor extends DBAdaptor {
   private static String msSQLDefault(Column c) {
     return String.format("constraint \"def_%s_%s\" ", c.getParentTable().getName(), c.getName())
         + ColumnDefiner.DEFAULT;
+  }
+
+  public MSSQLAdaptor(ConnectionPool connectionPool) {
+    super(connectionPool);
   }
 
   @Override

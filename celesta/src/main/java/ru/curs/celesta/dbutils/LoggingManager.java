@@ -93,14 +93,11 @@ final class LoggingManager {
 		if ("celesta".equals(c.meta().getGrain().getName())
 				&& "grains".equals(c.meta().getName()))
 			return;
-		CallContext sysContext = new CallContext(c.callContext().getConn(),
-				BasicCursor.SYSTEMSESSION);
-		try {
+
+		try (CallContext sysContext = new CallContext(c.callContext(), BasicCursor.SYSTEMSESSION)) {
 			if (!isLoggingNeeded(sysContext, c.meta(), a))
 				return;
 			writeToLog(c, a, sysContext);
-		} finally {
-			sysContext.closeCursors();
 		}
 	}
 

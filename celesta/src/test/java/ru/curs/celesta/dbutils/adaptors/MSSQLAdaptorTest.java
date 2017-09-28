@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils.adaptors;
 
+import java.sql.Connection;
 import java.util.Properties;
 
 import org.junit.runner.RunWith;
@@ -18,6 +19,8 @@ import ru.curs.celesta.score.Score;
 })
 public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 
+	private final ConnectionPool connectionPool;
+
 	public MSSQLAdaptorTest() throws Exception {
 		Properties params = new Properties();
 		params.load(InitTest.class
@@ -31,13 +34,18 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 		cpc.setLogin(appSettings.getDBLogin());
 		cpc.setPassword(appSettings.getDBPassword());
 
-		ConnectionPool.init(cpc);
+		connectionPool = ConnectionPool.create(cpc);
 
-		DBAdaptor dba = new MSSQLAdaptor();
+		DBAdaptor dba = new MSSQLAdaptor(connectionPool);
 		initMocks(dba);
 
 		setDba(dba);
 		setScore(new Score(SCORE_NAME));
+	}
+
+	@Override
+	Connection getConnection() throws CelestaException {
+		return connectionPool.get();
 	}
 
 	public void initMocks(DBAdaptor dba) throws CelestaException {
@@ -47,4 +55,6 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 				)
 		).toReturn(dba);
 	}
+
+
 }

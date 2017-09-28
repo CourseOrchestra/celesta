@@ -24,6 +24,7 @@ import ru.curs.celesta.score.Score;
  */
 public class PythonInterpreterPool {
 
+	private final Celesta celesta;
 	private final Score score;
 	private final String javaLibPath;
 	private final String pyLibPath;
@@ -46,7 +47,8 @@ public class PythonInterpreterPool {
 		}
 	}
 
-	public PythonInterpreterPool(Score score, String javaLibPath, String pyLibPath) throws CelestaException {
+	public PythonInterpreterPool(Celesta celesta, Score score, String javaLibPath, String pyLibPath) throws CelestaException {
+		this.celesta = celesta;
 		this.score = score;
 		this.javaLibPath = javaLibPath;
 		this.pyLibPath = pyLibPath;
@@ -174,9 +176,8 @@ public class PythonInterpreterPool {
 
 	private void initPythonScore(PythonInterpreter interp) throws CelestaException {
 		SessionContext scontext = new SessionContext("super", "celesta_init");
-		Connection conn = ConnectionPool.get();
-		CallContext context = new CallContext(conn, scontext);
-		try {
+
+		try (CallContext context = celesta.callContext(scontext)) {
 			try {
 				interp.exec("import sys");
 				interp.set("_ic", context);
@@ -188,9 +189,6 @@ public class PythonInterpreterPool {
 						e.getMessage());
 			}
 			reImportGrains(interp);
-		} finally {
-			context.closeCursors();
-			ConnectionPool.putBack(conn);
 		}
 		interp.set("_ic", "You can't use initcontext() outside the initialization code!");
 	}

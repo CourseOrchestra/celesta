@@ -87,6 +87,7 @@ public final class Celesta {
 	private static Celesta theCelesta;
 	private final Score score;
 	private final AppSettings appSettings;
+	private final ConnectionPool connectionPool;
 	private final PythonInterpreterPool interpreterPool;
 	private final SessionLogManager sessionLogManager;
 	private final ConcurrentHashMap<String, SessionContext> sessions = new ConcurrentHashMap<>();
@@ -117,22 +118,24 @@ public final class Celesta {
 		cpc.setDriverClassName(appSettings.getDbClassName());
 		cpc.setLogin(appSettings.getDBLogin());
 		cpc.setPassword(appSettings.getDBPassword());
-		ConnectionPool.init(cpc);
+		connectionPool = ConnectionPool.create(cpc);
 
+		//TODO::Сделать через builder
 		DbAdaptorConfiguration dac = new DbAdaptorConfiguration();
 		dac.setDbType(appSettings.getDBType());
+		dac.setConnectionPool(connectionPool);
 		dac.setH2ReferentialIntegrity(appSettings.isH2ReferentialIntegrity());
 		DBAdaptor.init(dac);
 
 		//TODO::Вот это сделать через Optional
-		this.sessionLogManager = new SessionLogManager(appSettings.getLogLogins());
+		this.sessionLogManager = new SessionLogManager(this, appSettings.getLogLogins());
 
 		this.triggerDispatcher = new TriggerDispatcher();
 		theCelesta = this;
 
 		if (!appSettings.getSkipDBUpdate()) {
 			System.out.print("Celesta initialization: phase 3/4 database upgrade...");
-			DBUpdator.updateDB(score, appSettings.getForceDBInitialize());
+			DBUpdator.updateDB(connectionPool, score, appSettings.getForceDBInitialize());
 			System.out.println("done.");
 		} else {
 			System.out.println("Celesta initialization: phase 3/4 database upgrade...skipped.");
@@ -141,7 +144,9 @@ public final class Celesta {
 		if (initInterpeterPool) {
 			System.out.print("Celesta initialization: phase 4/4 Jython interpreters pool initialization...");
 
+			//TODO::Сделать через builder
 			InterpreterPoolConfiguration ipc = new InterpreterPoolConfiguration();
+			ipc.setCelesta(this);
 			ipc.setScore(score);
 			ipc.setJavaLibPath(appSettings.getJavalibPath());
 			ipc.setScriptLibPath(appSettings.getPylibPath());
@@ -332,45 +337,46 @@ public final class Celesta {
 
 			sesContext.setMessageReceiver(rec);
 
-			Connection conn = ConnectionPool.get();
-			CallContext context = new CallContext(conn, sesContext, sc, grain, proc);
 
-			contexts.add(context);
 
-			try (PythonInterpreter interp = interpreterPool.getPythonInterpreter()) {
-				interp.set("context", context);
-				for (int i = 0; i < param.length; i++)
-					interp.set(String.format("arg%d", i), param[i]);
+			try (PythonInterpreter interp = interpreterPool.getPythonInterpreter();
+					 CallContext context = new CallContext(connectionPool, sesContext, sc, grain, proc)) {
+				contexts.add(context);
 
-				String lastPyCmd = "";
 				try {
-					String line = String.format("import %s%s", grainName, unitName);
-					lastPyCmd = line;
-					interp.exec(line);
-					line = String.format("%s%s.%s(%s)", grainName, unitName, procName, sb.toString());
-					lastPyCmd = line;
-					PyObject pyObj = interp.eval(line);
-					profiler.logCall(context);
-					return pyObj;
-				} catch (PyException e) {
-					String sqlErr = "";
+					interp.set("context", context);
+					for (int i = 0; i < param.length; i++)
+						interp.set(String.format("arg%d", i), param[i]);
+
+					String lastPyCmd = "";
 					try {
-						// Ошибка базы данных!
-						conn.rollback();
-					} catch (SQLException e1) {
-						// Если связь с базой развалилась, об этом тоже сообщим
-						// пользователю.
-						sqlErr = ". SQL error:" + e1.getMessage();
+						String line = String.format("import %s%s", grainName, unitName);
+						lastPyCmd = line;
+						interp.exec(line);
+						line = String.format("%s%s.%s(%s)", grainName, unitName, procName, sb.toString());
+						lastPyCmd = line;
+						PyObject pyObj = interp.eval(line);
+						profiler.logCall(context);
+						return pyObj;
+					} catch (PyException e) {
+						String sqlErr = "";
+						try {
+							// Ошибка базы данных!
+							context.rollback();
+						} catch (SQLException e1) {
+							// Если связь с базой развалилась, об этом тоже сообщим
+							// пользователю.
+							sqlErr = ". SQL error:" + e1.getMessage();
+						}
+						StringWriter sw = new StringWriter();
+						e.fillInStackTrace().printStackTrace(new PrintWriter(sw));
+						throw new CelestaException(String.format("Python error while executing '%s': %s:%s%n%s%n%s",
+								lastPyCmd, e.type, e.value, sw.toString(), sqlErr));
 					}
-					StringWriter sw = new StringWriter();
-					e.fillInStackTrace().printStackTrace(new PrintWriter(sw));
-					throw new CelestaException(String.format("Python error while executing '%s': %s:%s%n%s%n%s",
-							lastPyCmd, e.type, e.value, sw.toString(), sqlErr));
+				} finally {
+					contexts.remove(context);
 				}
 			} finally {
-				context.closeCursors();
-				ConnectionPool.putBack(conn);
-				contexts.remove(context);
 				sessions.putIfAbsent(sesId, sesContext);
 			}
 
@@ -645,5 +651,9 @@ public final class Celesta {
 
 	public TriggerDispatcher getTriggerDispatcher() {
 		return triggerDispatcher;
+	}
+
+	public CallContext callContext(SessionContext sessionContext) throws CelestaException {
+		return new CallContext(connectionPool, sessionContext);
 	}
 }

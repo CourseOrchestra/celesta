@@ -15,10 +15,10 @@ import ru.curs.celesta.score.Table;
 
 public class BasicDBAdaptorTest {
 
-	private void testCelestaScore(Score s, DBAdaptor a, String fileName)
+	private void testCelestaScore(Score s, DBAdaptor dba, String fileName)
 			throws ParseException, IOException {
-		String[] actual = (a.tableDef(s.getGrain("celesta").getElement("grains", Table.class))
-				+ "\n" + a.tableDef(s.getGrain("celesta").getElement("tables", Table.class)))
+		String[] actual = (dba.tableDef(s.getGrain("celesta").getElement("grains", Table.class))
+				+ "\n" + dba.tableDef(s.getGrain("celesta").getElement("tables", Table.class)))
 				.split("\n");
 		// for (String l : actual)
 		// System.out.println(l);
@@ -35,7 +35,7 @@ public class BasicDBAdaptorTest {
 		//DBAdaptor a = new MSSQLAdaptor();
 		//testCelestaScore(s, a, "mssql.txt");
 
-		DBAdaptor a = new PostgresAdaptor();
+		DBAdaptor a = new PostgresAdaptor(null);
 		testCelestaScore(s, a, "postgre.txt");
 
 		//a = new OraAdaptor();

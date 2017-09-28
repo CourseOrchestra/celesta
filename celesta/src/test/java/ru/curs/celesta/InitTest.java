@@ -27,17 +27,6 @@ public class InitTest {
 		params.setProperty("score.path", "score");
 		params.setProperty("h2.in-memory", "true");
 
-		AppSettings appSettings = new AppSettings(params);
-
-		ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
-		cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
-		cpc.setDriverClassName(appSettings.getDbClassName());
-		cpc.setLogin(appSettings.getDBLogin());
-		cpc.setPassword(appSettings.getDBPassword());
-
-		ConnectionPool.init(cpc);
-
-		ConnectionPool.clear();
 		try {
 			Celesta.initialize(params);
 		} catch (CelestaException e) {
@@ -52,10 +41,9 @@ public class InitTest {
 
 	@Test
 	public void grainCusrorIsCallable() throws CelestaException {
-		Connection conn = ConnectionPool.get();
+		Celesta celesta = Celesta.getInstance();
 		SessionContext sc = new SessionContext("user", "S");
-		CallContext ctxt = new CallContext(conn, sc);
-		try {
+		try (CallContext ctxt = celesta.callContext(sc)) {
 			GrainsCursor g = new GrainsCursor(ctxt);
 			assertEquals("grains", g.meta().getName());
 			assertEquals(8, g.getMaxStrLen("checksum"));
@@ -66,17 +54,14 @@ public class InitTest {
 			g.clear();
 
 			g.close();
-		} finally {
-			ConnectionPool.putBack(conn);
 		}
 	}
 
 	@Test
 	public void logCursorIsCallable() throws CelestaException {
-		Connection conn = ConnectionPool.get();
+		Celesta celesta = Celesta.getInstance();
 		SessionContext sc = new SessionContext("user", "S");
-		CallContext ctxt = new CallContext(conn, sc);
-		try {
+		try (CallContext ctxt = celesta.callContext(sc)) {
 			LogCursor l = new LogCursor(ctxt);
 			assertEquals("log", l.meta().getName());
 			l.orderBy("userid ASC", "pkvalue3 DESC", "pkvalue2");
@@ -101,17 +86,14 @@ public class InitTest {
 			// Пустой orderBy
 			l.orderBy();
 
-		} finally {
-			ConnectionPool.putBack(conn);
 		}
 	}
 
 	@Test
 	public void cursorsAreClosingOnContext() throws CelestaException {
-		Connection conn = ConnectionPool.get();
+		Celesta celesta = Celesta.getInstance();
 		SessionContext sc = new SessionContext("user", "S");
-		CallContext ctxt = new CallContext(conn, sc);
-		try {
+		try (CallContext ctxt = celesta.callContext(sc)) {
 			BasicCursor a = new LogCursor(ctxt);
 			BasicCursor b = new PermissionsCursor(ctxt);
 			BasicCursor c = new RolesCursor(ctxt);
@@ -121,14 +103,12 @@ public class InitTest {
 			assertFalse(c.isClosed());
 			assertFalse(d.isClosed());
 
-			ctxt.closeCursors();
+			ctxt.close();
 
 			assertTrue(a.isClosed());
 			assertTrue(b.isClosed());
 			assertTrue(c.isClosed());
 			assertTrue(d.isClosed());
-		} finally {
-			ConnectionPool.putBack(conn);
 		}
 	}
 }

@@ -83,6 +83,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
   static final Pattern HEXSTR = Pattern.compile("0x(([0-9A-Fa-f][0-9A-Fa-f])+)");
 
   private static DBAdaptor db;
+  protected final ConnectionPool connectionPool;
 
 
   static {
@@ -96,18 +97,19 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   public static synchronized void init(DbAdaptorConfiguration configuration) throws CelestaException {
     try {
+      ConnectionPool connectionPool = configuration.getConnectionPool();
       switch (configuration.getDbType()) {
         case MSSQL:
-          db = new MSSQLAdaptor();
+          db = new MSSQLAdaptor(connectionPool);
           break;
         case ORACLE:
-          db = new OraAdaptor();
+          db = new OraAdaptor(connectionPool);
           break;
         case POSTGRES:
-          db = new PostgresAdaptor();
+          db = new PostgresAdaptor(connectionPool);
           break;
         case H2:
-          db = new H2Adaptor();
+          db = new H2Adaptor(connectionPool);
           break;
         case UNKNOWN:
         default:
@@ -137,6 +139,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     if (db == null)
       throw new CelestaException("Unknown or unsupported database type.");
     return db;
+  }
+
+
+  protected DBAdaptor(ConnectionPool connectionPool) {
+    this.connectionPool = connectionPool;
   }
 
   /**
@@ -194,13 +201,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    * @throws CelestaException ошибка БД
    */
   public final boolean userTablesExist() throws CelestaException {
-    Connection conn = ConnectionPool.get();
-    try {
+    try (Connection conn = connectionPool.get()) {
       return userTablesExist(conn);
     } catch (SQLException e) {
       throw new CelestaException(e.getMessage());
-    } finally {
-      ConnectionPool.putBack(conn);
     }
   }
 
@@ -214,13 +218,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    *                          данным именем уже существует в базе данных.
    */
   public final void createSchemaIfNotExists(String name) throws CelestaException {
-    Connection conn = ConnectionPool.get();
-    try {
+    try (Connection conn = connectionPool.get()) {
       createSchemaIfNotExists(conn, name);
     } catch (SQLException e) {
       throw new CelestaException("Cannot create schema. " + e.getMessage());
-    } finally {
-      ConnectionPool.putBack(conn);
     }
   }
 
@@ -244,7 +245,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
         stmt.close();
       }
       manageAutoIncrement(conn, te);
-      ConnectionPool.commit(conn);
+      connectionPool.commit(conn);
       updateVersioningTrigger(conn, te);
     } catch (SQLException e) {
       throw new CelestaException("creating %s: %s", te.getName(), e.getMessage());
@@ -358,7 +359,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       } finally {
         stmt.close();
       }
-      ConnectionPool.commit(conn);
+      connectionPool.commit(conn);
     } catch (SQLException e) {
       throw new CelestaException("Cannot create index '%s': %s", index.getName(), e.getMessage());
     }
@@ -503,8 +504,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    */
   public final void dropIndex(Grain g, DBIndexInfo dBIndexInfo) throws CelestaException {
     String[] sql = getDropIndexSQL(g, dBIndexInfo);
-    Connection conn = ConnectionPool.get();
-    try {
+
+    try (Connection conn = connectionPool.get()) {
       Statement stmt = conn.createStatement();
       for (String s : sql) {
         stmt.executeUpdate(s);
@@ -512,8 +513,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       stmt.close();
     } catch (SQLException e) {
       throw new CelestaException("Cannot drop index '%s': %s ", dBIndexInfo.getIndexName(), e.getMessage());
-    } finally {
-      ConnectionPool.putBack(conn);
     }
   }
 

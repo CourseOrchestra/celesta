@@ -46,10 +46,8 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		if (context == null)
 			return fallBack;
 		boolean closeContext = context.isClosed();
-		Connection conn = null;
 		if (closeContext) {
-			conn = ConnectionPool.get();
-			setCallContext(context.getCopy(conn));
+			setCallContext(context.getCopy());
 		}
 		try {
 			return f.call(rec());
@@ -61,8 +59,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 					e.getClass().getName(), e.getMessage());
 		} finally {
 			if (closeContext) {
-				getContext().closeCursors();
-				ConnectionPool.putBack(conn);
+				getContext().close();
 			}
 		}
 	}

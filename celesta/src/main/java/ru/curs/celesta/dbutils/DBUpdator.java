@@ -5,10 +5,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.Map.Entry;
 
-import ru.curs.celesta.AppSettings;
-import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
@@ -63,12 +60,12 @@ public final class DBUpdator {
    * @param score модель
    * @throws CelestaException в случае ошибки обновления.
    */
-  public static void updateDB(Score score, boolean forceDdInitialize) throws CelestaException {
+  public static void updateDB(ConnectionPool connectionPool, Score score, boolean forceDdInitialize) throws CelestaException {
     if (dba == null)
       dba = DBAdaptor.getAdaptor();
-    Connection conn = ConnectionPool.get();
-    CallContext context = new CallContext(conn, BasicCursor.SYSTEMSESSION);
-    try {
+    try (CallContext context = new CallContext(connectionPool, BasicCursor.SYSTEMSESSION)) {
+      Connection conn = context.getConn();
+
       grain = new GrainsCursor(context);
       table = new TablesCursor(context);
 
@@ -89,7 +86,7 @@ public final class DBUpdator {
           // создания уже могут понадобиться системные объекты
           dba.createTable(conn, sys.getElement("logsetup", Table.class));
           insertGrainRec(sys);
-          updateGrain(sys);
+          updateGrain(sys, connectionPool);
           initSecurity(context);
         } catch (ParseException e) {
           throw new CelestaException("No 'celesta' grain definition found.");
@@ -132,19 +129,16 @@ public final class DBUpdator {
         GrainInfo gi = dbGrains.get(g.getName());
         if (gi == null) {
           insertGrainRec(g);
-          success = updateGrain(g) & success;
+          success = updateGrain(g, connectionPool) & success;
         } else {
           // Запись есть -- решение об апгрейде принимается на основе
           // версии и контрольной суммы.
-          success = decideToUpgrade(g, gi) & success;
+          success = decideToUpgrade(g, gi, connectionPool) & success;
         }
       }
       if (!success)
         throw new CelestaException(
             "Not all grains were updated successfully, see celesta.grains table data for details.");
-    } finally {
-      context.closeCursors();
-      ConnectionPool.putBack(conn);
     }
   }
 
@@ -185,12 +179,12 @@ public final class DBUpdator {
     grain.insert();
   }
 
-  private static boolean decideToUpgrade(Grain g, GrainInfo gi) throws CelestaException {
+  private static boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) throws CelestaException {
     if (gi.lock)
       return true;
 
     if (gi.recover)
-      return updateGrain(g);
+      return updateGrain(g, connectionPool);
 
     // Как соотносятся версии?
     switch (g.getVersion().compareTo(gi.version)) {
@@ -209,12 +203,12 @@ public final class DBUpdator {
             g.getName(), g.getVersion().toString(), gi.version.toString());
       case GREATER:
         // Версия выросла -- апгрейдим.
-        return updateGrain(g);
+        return updateGrain(g, connectionPool);
       case EQUALS:
         // Версия не изменилась: апгрейдим лишь в том случае, если
         // изменилась контрольная сумма.
         if (gi.length != g.getLength() || gi.checksum != g.getChecksum())
-          return updateGrain(g);
+          return updateGrain(g, connectionPool);
       default:
         return true;
     }
@@ -226,12 +220,12 @@ public final class DBUpdator {
    * @param g Гранула.
    * @throws CelestaException в случае ошибки обновления.
    */
-  private static boolean updateGrain(Grain g) throws CelestaException {
+  private static boolean updateGrain(Grain g, ConnectionPool connectionPool) throws CelestaException {
     // выставление в статус updating
     grain.get(g.getName());
     grain.setState(GrainsCursor.UPGRADING);
     grain.update();
-    ConnectionPool.commit(grain.callContext().getConn());
+    connectionPool.commit(grain.callContext().getConn());
 
     // теперь собственно обновление гранулы
     try {
@@ -336,7 +330,7 @@ public final class DBUpdator {
       grain.setMessage("");
       grain.setVersion(g.getVersion().toString());
       grain.update();
-      ConnectionPool.commit(grain.callContext().getConn());
+      connectionPool.commit(grain.callContext().getConn());
       return true;
     } catch (CelestaException e) {
       String newMsg = "";
@@ -350,7 +344,7 @@ public final class DBUpdator {
       grain.setMessage(String.format("%s/%d/%08X: %s", g.getVersion().toString(), g.getLength(), g.getChecksum(),
           e.getMessage() + newMsg));
       grain.update();
-      ConnectionPool.commit(grain.callContext().getConn());
+      connectionPool.commit(grain.callContext().getConn());
       return false;
     }
   }
