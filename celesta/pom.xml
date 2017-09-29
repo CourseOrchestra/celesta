@@ -485,7 +485,6 @@
                                 <exclude>**/adaptors/MSSQLAdaptorTest.java</exclude>
                                 <exclude>**/adaptors/OraAdaptorTest.java</exclude>
                                 <exclude>**/adaptors/BasicDBAdaptorTest.java</exclude>
-                                <exclude>**/adaptors/PostgresAdaptorTest.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>

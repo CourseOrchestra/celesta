@@ -55,7 +55,7 @@ public class SerializerTest {
 
 	@Before
 	public void before() throws CelestaException {
-		callContext = new CallContext(connectionPool, sc);
+		callContext = new CallContext(connectionPool, sc, Celesta.getInstance().getScore());
 		c = new GrainsCursor(callContext);
 		tt = new TablesCursor(callContext);
 	}
@@ -163,7 +163,7 @@ public class SerializerTest {
 
 	@Test
 	public void test2() throws CelestaException, UnsupportedEncodingException {
-		BasicCardForm bcf = new BasicCardForm(new CallContext(connectionPool, sc)) {
+		BasicCardForm bcf = new BasicCardForm(new CallContext(connectionPool, sc, Celesta.getInstance().getScore())) {
 			{
 				createAllBoundFields();
 				createField("aab");
@@ -241,7 +241,7 @@ public class SerializerTest {
 		assertEquals(8, c.getChecksum().length());
 
 		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-		GrainsCursor c2 = new GrainsCursor(new CallContext(connectionPool, sc));
+		GrainsCursor c2 = new GrainsCursor(new CallContext(connectionPool, sc, Celesta.getInstance().getScore()));
 		bcf.deserialize(c2, bis);
 
 		assertEquals(c.getRecversion(), c2.getRecversion());

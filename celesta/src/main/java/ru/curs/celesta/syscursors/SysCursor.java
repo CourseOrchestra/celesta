@@ -29,66 +29,42 @@ public abstract class SysCursor extends Cursor {
 	// CHECKSTYLE:OFF
 	protected void _preDelete() {
 		// CHECKSTYLE:ON
-		try {
-			Celesta.getInstance().getTriggerDispatcher().fireTrigger(TriggerType.PRE_DELETE, this);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().fireTrigger(TriggerType.PRE_DELETE, this);
 	}
 
 	@Override
 	// CHECKSTYLE:OFF
 	protected void _postDelete() {
 		// CHECKSTYLE:ON
-		try {
-			Celesta.getInstance().getTriggerDispatcher().fireTrigger(TriggerType.POST_DELETE, this);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().fireTrigger(TriggerType.POST_DELETE, this);
 	}
 
 	@Override
 	// CHECKSTYLE:OFF
 	protected void _preUpdate() {
 		// CHECKSTYLE:ON
-		try {
-			Celesta.getInstance().getTriggerDispatcher().fireTrigger(TriggerType.PRE_UPDATE, this);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().fireTrigger(TriggerType.PRE_UPDATE, this);
 	}
 
 	@Override
 	// CHECKSTYLE:OFF
 	protected void _postUpdate() {
 		// CHECKSTYLE:ON
-		try {
-			Celesta.getInstance().getTriggerDispatcher().fireTrigger(TriggerType.POST_UPDATE, this);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().fireTrigger(TriggerType.POST_UPDATE, this);
 	}
 
 	@Override
 	// CHECKSTYLE:OFF
 	protected void _preInsert() {
 		// CHECKSTYLE:ON
-		try {
-			Celesta.getInstance().getTriggerDispatcher().fireTrigger(TriggerType.PRE_INSERT, this);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().fireTrigger(TriggerType.PRE_INSERT, this);
 	}
 
 	@Override
 	// CHECKSTYLE:OFF
 	protected void _postInsert() {
 		// CHECKSTYLE:ON
-		try {
-			Celesta.getInstance().getTriggerDispatcher().fireTrigger(TriggerType.POST_INSERT, this);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().fireTrigger(TriggerType.POST_INSERT, this);
 	}
 
 	@Override

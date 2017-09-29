@@ -23,11 +23,14 @@ import ru.curs.celesta.syscursors.UserRolesCursor;
 /**
  * Класс, выполняющий процедуру обновления базы данных.
  */
-public final class DBUpdator {
+public final class DbUpdater {
 
-  private static DBAdaptor dba;
-  private static GrainsCursor grain;
-  private static TablesCursor table;
+  private final ConnectionPool connectionPool;
+  private final Score score;
+  private final boolean forceDdInitialize;
+  private final DBAdaptor dba;
+  private GrainsCursor grain;
+  private TablesCursor table;
 
   private static final Comparator<Grain> GRAIN_COMPARATOR = Comparator.comparingInt(Grain::getDependencyOrder);
 
@@ -40,13 +43,17 @@ public final class DBUpdator {
     EXPECTED_STATUSES.add(GrainsCursor.LOCK);
   }
 
-  private DBUpdator() {
+  public DbUpdater(ConnectionPool connectionPool, Score score, boolean forceDdInitialize, DBAdaptor dba) {
+    this.connectionPool = connectionPool;
+    this.score = score;
+    this.forceDdInitialize = forceDdInitialize;
+    this.dba = dba;
   }
 
   /**
    * Буфер для хранения информации о грануле.
    */
-  private static class GrainInfo {
+  private class GrainInfo {
     private boolean recover;
     private boolean lock;
     private int length;
@@ -57,13 +64,10 @@ public final class DBUpdator {
   /**
    * Выполняет обновление структуры БД на основе разобранной объектной модели.
    *
-   * @param score модель
    * @throws CelestaException в случае ошибки обновления.
    */
-  public static void updateDB(ConnectionPool connectionPool, Score score, boolean forceDdInitialize) throws CelestaException {
-    if (dba == null)
-      dba = DBAdaptor.getAdaptor();
-    try (CallContext context = new CallContext(connectionPool, BasicCursor.SYSTEMSESSION)) {
+  public void updateDb() throws CelestaException {
+    try (CallContext context = new CallContext(connectionPool, BasicCursor.SYSTEMSESSION, score)) {
       Connection conn = context.getConn();
 
       grain = new GrainsCursor(context);
@@ -75,23 +79,7 @@ public final class DBUpdator {
         if (dba.userTablesExist() && !forceDdInitialize)
           throw new CelestaException("No celesta.grains table found in non-empty database.");
         // Если база вообще пустая, то создаём системные таблицы.
-        try {
-          Grain sys = score.getGrain("celesta");
-          dba.createSchemaIfNotExists("celesta");
-          dba.createTable(conn, sys.getElement("grains", Table.class));
-          dba.createTable(conn, sys.getElement("tables", Table.class));
-          dba.createTable(conn, sys.getElement("sequences", Table.class));
-          dba.createSysObjects(conn);
-          // logsetup -- версионированная таблица, поэтому для её
-          // создания уже могут понадобиться системные объекты
-          dba.createTable(conn, sys.getElement("logsetup", Table.class));
-          insertGrainRec(sys);
-          updateGrain(sys, connectionPool);
-          initSecurity(context);
-        } catch (ParseException e) {
-          throw new CelestaException("No 'celesta' grain definition found.");
-        }
-
+        updateSysGrain(context);
       }
 
       // Теперь собираем в память информацию о гранулах на основании того,
@@ -142,13 +130,42 @@ public final class DBUpdator {
     }
   }
 
+  public void updateSysGrain() throws CelestaException {
+    try (CallContext context = new CallContext(connectionPool, BasicCursor.SYSTEMSESSION, score)) {
+      grain = new GrainsCursor(context);
+      table = new TablesCursor(context);
+
+      updateSysGrain(context);
+    }
+  }
+
+  private void updateSysGrain(CallContext context) throws CelestaException {
+    try {
+      Connection conn = context.getConn();
+      Grain sys = score.getGrain("celesta");
+      dba.createSchemaIfNotExists("celesta");
+      dba.createTable(conn, sys.getElement("grains", Table.class));
+      dba.createTable(conn, sys.getElement("tables", Table.class));
+      dba.createTable(conn, sys.getElement("sequences", Table.class));
+      dba.createSysObjects(conn);
+      // logsetup -- версионированная таблица, поэтому для её
+      // создания уже могут понадобиться системные объекты
+      dba.createTable(conn, sys.getElement("logsetup", Table.class));
+      insertGrainRec(sys);
+      updateGrain(sys, connectionPool);
+      initSecurity(context);
+    } catch (ParseException e) {
+      throw new CelestaException("No 'celesta' grain definition found.");
+    }
+  }
+
   /**
    * Инициализация записей в security-таблицах. Производится один раз при
    * создании системной гранулы.
    *
    * @throws CelestaException
    */
-  private static void initSecurity(CallContext context) throws CelestaException {
+  private void initSecurity(CallContext context) throws CelestaException {
     RolesCursor roles = new RolesCursor(context);
     roles.clear();
     roles.setId("editor");
@@ -167,7 +184,7 @@ public final class DBUpdator {
     userRoles.tryInsert();
   }
 
-  private static void insertGrainRec(Grain g) throws CelestaException {
+  private void insertGrainRec(Grain g) throws CelestaException {
     grain.init();
     grain.setId(g.getName());
     grain.setVersion(g.getVersion().toString());
@@ -179,7 +196,7 @@ public final class DBUpdator {
     grain.insert();
   }
 
-  private static boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) throws CelestaException {
+  private boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) throws CelestaException {
     if (gi.lock)
       return true;
 
@@ -220,7 +237,7 @@ public final class DBUpdator {
    * @param g Гранула.
    * @throws CelestaException в случае ошибки обновления.
    */
-  private static boolean updateGrain(Grain g, ConnectionPool connectionPool) throws CelestaException {
+  private boolean updateGrain(Grain g, ConnectionPool connectionPool) throws CelestaException {
     // выставление в статус updating
     grain.get(g.getName());
     grain.setState(GrainsCursor.UPGRADING);
@@ -349,32 +366,32 @@ public final class DBUpdator {
     }
   }
 
-  private static void createViews(Grain g) throws CelestaException {
+  private void createViews(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
     for (View v : g.getElements(View.class).values())
       dba.createView(conn, v);
   }
 
-  private static void dropAllViews(Grain g) throws CelestaException {
+  private void dropAllViews(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
     for (String viewName : dba.getViewList(conn, g))
       dba.dropView(conn, g.getName(), viewName);
   }
 
-  private static void createParameterizedViews(Grain g) throws CelestaException {
+  private void createParameterizedViews(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
     for (ParameterizedView pv : g.getElements(ParameterizedView.class).values())
       dba.createParameterizedView(conn, pv);
   }
 
-  private static void dropAllParameterizedViews(Grain g) throws CelestaException {
+  private void dropAllParameterizedViews(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
     for (String viewName : dba.getParameterizedViewList(conn, g))
       dba.dropParameterizedView(conn, g.getName(), viewName);
   }
 
 
-  private static void updateGrainFKeys(Grain g) throws CelestaException {
+  private void updateGrainFKeys(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
     Map<String, DBFKInfo> dbFKeys = new HashMap<>();
     for (DBFKInfo dbi : dba.getFKInfo(conn, g))
@@ -396,7 +413,7 @@ public final class DBUpdator {
         }
   }
 
-  private static List<DBFKInfo> dropOrphanedGrainFKeys(Grain g) throws CelestaException {
+  private List<DBFKInfo> dropOrphanedGrainFKeys(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
     List<DBFKInfo> dbFKeys = dba.getFKInfo(conn, g);
     Map<String, ForeignKey> fKeys = new HashMap<>();
@@ -415,7 +432,7 @@ public final class DBUpdator {
     return dbFKeys;
   }
 
-  private static void dropOrphanedGrainIndices(Grain g) throws CelestaException {
+  private void dropOrphanedGrainIndices(Grain g) throws CelestaException {
     /*
      * В целом метод повторяет код updateGrainIndices, но только в части
 		 * удаления индексов. Зачистить все индексы, подвергшиеся удалению или
@@ -453,7 +470,7 @@ public final class DBUpdator {
     }
   }
 
-  private static void updateGrainIndices(Grain g) throws CelestaException {
+  private void updateGrainIndices(Grain g) throws CelestaException {
     final Connection conn = grain.callContext().getConn();
     Map<String, DBIndexInfo> dbIndices = dba.getIndices(conn, g);
     Map<String, Index> myIndices = g.getIndices();
@@ -476,7 +493,7 @@ public final class DBUpdator {
     }
   }
 
-  private static boolean updateTable(Table t, List<DBFKInfo> dbFKeys) throws CelestaException {
+  private boolean updateTable(Table t, List<DBFKInfo> dbFKeys) throws CelestaException {
     // Если таблица скомпилирована с опцией NO AUTOUPDATE, то ничего не
     // делаем с ней
     if (!t.isAutoUpdate())
@@ -527,7 +544,7 @@ public final class DBUpdator {
     return modified;
   }
 
-  private static void updateMaterializedView(MaterializedView mv, boolean refTableIsModified) throws CelestaException {
+  private void updateMaterializedView(MaterializedView mv, boolean refTableIsModified) throws CelestaException {
     final Connection conn = grain.callContext().getConn();
 
     boolean mViewExists = dba.tableExists(conn, mv.getGrain().getName(), mv.getName());
@@ -561,7 +578,7 @@ public final class DBUpdator {
     dba.initDataForMaterializedView(conn, mv);
   }
 
-  private static void dropReferencedFKs(TableElement t, Connection conn, List<DBFKInfo> dbFKeys) throws CelestaException {
+  private void dropReferencedFKs(TableElement t, Connection conn, List<DBFKInfo> dbFKeys) throws CelestaException {
     Iterator<DBFKInfo> i = dbFKeys.iterator();
     while (i.hasNext()) {
       DBFKInfo dbFKey = i.next();
@@ -573,7 +590,7 @@ public final class DBUpdator {
     }
   }
 
-  private static boolean updateColumns(TableElement t, final Connection conn, Set<String> dbColumns, List<DBFKInfo> dbFKeys)
+  private boolean updateColumns(TableElement t, final Connection conn, Set<String> dbColumns, List<DBFKInfo> dbFKeys)
       throws CelestaException {
     // Таблица существует в базе данных, определяем: надо ли удалить
     // первичный ключ

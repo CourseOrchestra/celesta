@@ -226,56 +226,26 @@ public final class PermissionsCursor extends SysCursor {
 
 
 	public static void onPreDelete(PyFunction pyFunction) {
-		try {
-			Celesta.getInstance().getTriggerDispatcher()
-					.registerTrigger(TriggerType.PRE_DELETE, TABLE_NAME, pyFunction);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_DELETE, TABLE_NAME, pyFunction);
 	}
 
 	public static void onPostDelete(PyFunction pyFunction) {
-		try {
-			Celesta.getInstance().getTriggerDispatcher()
-					.registerTrigger(TriggerType.POST_DELETE, TABLE_NAME, pyFunction);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_DELETE, TABLE_NAME, pyFunction);
 	}
 
 	public static void onPreUpdate(PyFunction pyFunction) {
-		try {
-			Celesta.getInstance().getTriggerDispatcher()
-					.registerTrigger(TriggerType.PRE_UPDATE, TABLE_NAME, pyFunction);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_UPDATE, TABLE_NAME, pyFunction);
 	}
 
 	public static void onPostUpdate(PyFunction pyFunction) {
-		try {
-			Celesta.getInstance().getTriggerDispatcher()
-					.registerTrigger(TriggerType.POST_UPDATE, TABLE_NAME, pyFunction);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_UPDATE, TABLE_NAME, pyFunction);
 	}
 
 	public static void onPreInsert(PyFunction pyFunction) {
-		try {
-			Celesta.getInstance().getTriggerDispatcher()
-					.registerTrigger(TriggerType.PRE_INSERT, TABLE_NAME, pyFunction);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_INSERT, TABLE_NAME, pyFunction);
 	}
 
 	public static void onPostInsert(PyFunction pyFunction) {
-		try {
-			Celesta.getInstance().getTriggerDispatcher()
-					.registerTrigger(TriggerType.POST_INSERT, TABLE_NAME, pyFunction);
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
+		Celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_INSERT, TABLE_NAME, pyFunction);
 	}
 }

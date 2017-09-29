@@ -45,7 +45,7 @@ public class BasicCursorTest {
 
 	@Before
 	public void before() throws CelestaException {
-		c = new LogSetupCursor(new CallContext(connectionPool, sc));
+		c = new LogSetupCursor(new CallContext(connectionPool, sc, Celesta.getInstance().getScore()));
 	}
 
 	@After

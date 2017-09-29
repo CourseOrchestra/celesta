@@ -45,7 +45,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,8 +61,9 @@ import org.python.core.PyException;
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
 
+import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.DBUpdator;
+import ru.curs.celesta.dbutils.DbUpdater;
 import ru.curs.celesta.dbutils.ProfilingManager;
 import ru.curs.celesta.dbutils.SessionLogManager;
 import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorConfiguration;
@@ -85,7 +85,10 @@ public final class Celesta {
 			.compile("\\s*([A-Za-z][A-Za-z0-9]*)((\\.[A-Za-z_]\\w*)+)\\.([A-Za-z_]\\w*)\\s*");
 
 	private static Celesta theCelesta;
+	private static final TriggerDispatcher triggerDispatcher = new TriggerDispatcher();
+
 	private final Score score;
+	private final DBAdaptor dbAdaptor;
 	private final AppSettings appSettings;
 	private final ConnectionPool connectionPool;
 	private final PythonInterpreterPool interpreterPool;
@@ -94,7 +97,6 @@ public final class Celesta {
 	private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
 	private final ProfilingManager profiler = new ProfilingManager();
-	private TriggerDispatcher triggerDispatcher;
 
 	private Celesta(AppSettings appSettings, boolean initInterpeterPool) throws CelestaException {
 		this.appSettings = appSettings;
@@ -125,17 +127,24 @@ public final class Celesta {
 		dac.setDbType(appSettings.getDBType());
 		dac.setConnectionPool(connectionPool);
 		dac.setH2ReferentialIntegrity(appSettings.isH2ReferentialIntegrity());
-		DBAdaptor.init(dac);
+		dbAdaptor = DBAdaptor.create(dac);
 
 		//TODO::Вот это сделать через Optional
 		this.sessionLogManager = new SessionLogManager(this, appSettings.getLogLogins());
 
-		this.triggerDispatcher = new TriggerDispatcher();
 		theCelesta = this;
 
 		if (!appSettings.getSkipDBUpdate()) {
 			System.out.print("Celesta initialization: phase 3/4 database upgrade...");
-			DBUpdator.updateDB(connectionPool, score, appSettings.getForceDBInitialize());
+
+			DbUpdater dbUpdater = new DbUpdaterBuilder()
+					.dbAdaptor(dbAdaptor)
+					.connectionPool(connectionPool)
+					.score(score)
+					.forceDdInitialize(appSettings.getForceDBInitialize())
+					.build();
+
+			dbUpdater.updateDb();
 			System.out.println("done.");
 		} else {
 			System.out.println("Celesta initialization: phase 3/4 database upgrade...skipped.");
@@ -340,7 +349,7 @@ public final class Celesta {
 
 
 			try (PythonInterpreter interp = interpreterPool.getPythonInterpreter();
-					 CallContext context = new CallContext(connectionPool, sesContext, sc, grain, proc)) {
+					 CallContext context = new CallContext(connectionPool, sesContext, sc, score, grain, proc)) {
 				contexts.add(context);
 
 				try {
@@ -649,11 +658,11 @@ public final class Celesta {
 		profiler.setProfilemode(profilemode);
 	}
 
-	public TriggerDispatcher getTriggerDispatcher() {
-		return triggerDispatcher;
+	public static TriggerDispatcher getTriggerDispatcher() {
+		return Celesta.triggerDispatcher;
 	}
 
 	public CallContext callContext(SessionContext sessionContext) throws CelestaException {
-		return new CallContext(connectionPool, sessionContext);
+		return new CallContext(connectionPool, sessionContext, score);
 	}
 }

@@ -12,6 +12,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.*;
+import ru.curs.celesta.dbutils.DbUpdater;
+import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.score.Score;
 
 @RunWith(PowerMockRunner.class)
@@ -36,8 +38,6 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
 		params.put("rdbms.connection.username", postgres.getUsername());
 		params.put("rdbms.connection.password", postgres.getPassword());
 
-		Celesta.initialize(params);
-
 		AppSettings appSettings = new AppSettings(params);
 		ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
 		cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
@@ -48,10 +48,19 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
 		dba = new PostgresAdaptor(connectionPool);
 		initMocks(dba);
+
+		DbUpdater dbUpdater = new DbUpdaterBuilder()
+				.dbAdaptor(dba)
+				.connectionPool(connectionPool)
+				.score(new Score(SCORE_NAME))
+				.build();
+
+		dbUpdater.updateSysGrain();
 	}
 
 	public PostgresAdaptorTest() throws Exception {
 		setDba(dba);
+		initMocks(dba);
 		setScore(new Score(SCORE_NAME));
 	}
 

@@ -18,6 +18,7 @@ import org.python.core.PyType;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Score;
 
 /**
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
@@ -38,6 +39,7 @@ public final class CallContext implements AutoCloseable {
 
 	private final ConnectionPool connectionPool;
 	private final Connection conn;
+	private final Score score;
 	private final Grain grain;
 	private final String procName;
 	private final SessionContext sesContext;
@@ -53,8 +55,8 @@ public final class CallContext implements AutoCloseable {
 
 	private final HashMap<PyString, PyObject> cursorsCache = new HashMap<>();
 
-	public CallContext(ConnectionPool connectionPool, SessionContext sesContext) throws CelestaException {
-		this(connectionPool, sesContext, null, null, null);
+	public CallContext(ConnectionPool connectionPool, SessionContext sesContext, Score score) throws CelestaException {
+		this(connectionPool, sesContext, null, score, null, null);
 	}
 
 	/**
@@ -64,19 +66,20 @@ public final class CallContext implements AutoCloseable {
 	 * @throws CelestaException
 	 */
 	public CallContext(CallContext callContext, SessionContext sesContext) throws CelestaException {
-		this(callContext.connectionPool, sesContext, null, null, null);
+		this(callContext.connectionPool, sesContext, null, callContext.score, null, null);
 	}
 
 	public CallContext(ConnectionPool connectionPool, SessionContext sesContext, Grain curGrain, String procName)
 			throws CelestaException {
-		this(connectionPool, sesContext, null, curGrain, procName);
+		this(connectionPool, sesContext, null, null, curGrain, procName);
 	}
 
-	public CallContext(ConnectionPool connectionPool, SessionContext sesContext, ShowcaseContext showcaseContext, Grain curGrain,
-			String procName) throws CelestaException {
+	public CallContext(ConnectionPool connectionPool, SessionContext sesContext,
+					   ShowcaseContext showcaseContext, Score score, Grain curGrain, String procName) throws CelestaException {
 		this.connectionPool = connectionPool;
 		this.conn = connectionPool.get();
 		this.sesContext = sesContext;
+		this.score = score;
 		this.grain = curGrain;
 		this.procName = procName;
 		this.showcaseContext = showcaseContext;
@@ -91,7 +94,7 @@ public final class CallContext implements AutoCloseable {
 	 *             cannot create adaptor
 	 */
 	public CallContext getCopy() throws CelestaException {
-		return new CallContext(connectionPool, sesContext, showcaseContext, grain, procName);
+		return new CallContext(connectionPool, sesContext, showcaseContext, score, grain, procName);
 	}
 
 	/**
@@ -268,6 +271,10 @@ public final class CallContext implements AutoCloseable {
 	 */
 	public Celesta getCelesta() throws CelestaException {
 		return Celesta.getInstance();
+	}
+
+	public Score getScore() {
+		return score;
 	}
 
 	/**

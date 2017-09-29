@@ -95,7 +95,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     CELESTA_TYPES_COLUMN_CLASSES.put(DateTimeColumn.CELESTA_TYPE, DateTimeColumn.class);
   }
 
-  public static synchronized void init(DbAdaptorConfiguration configuration) throws CelestaException {
+  public static synchronized DBAdaptor create(DbAdaptorConfiguration configuration) throws CelestaException {
     try {
       ConnectionPool connectionPool = configuration.getConnectionPool();
       switch (configuration.getDbType()) {
@@ -119,6 +119,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
       if (db != null) {
         db.configureDb(configuration);
       }
+      return db;
     } catch (Exception e) {
       /* Выводим здесь stacktrace, потому что подробности исключений в блоках статической инициализации
        * проглатываются java машиной
