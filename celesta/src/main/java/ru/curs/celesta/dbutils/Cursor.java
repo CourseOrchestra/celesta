@@ -67,8 +67,6 @@ import ru.curs.celesta.score.Table;
  */
 public abstract class Cursor extends BasicCursor {
 
-	private static final LoggingManager LOGGING_MGR = new LoggingManager();
-
 	private Table meta = null;
 	private final CursorGetHelper getHelper;
 	private In inFilter;
@@ -232,8 +230,9 @@ public abstract class Cursor extends BasicCursor {
 
 			PreparedStatement ins = insert.getStatement(_currentValues(), recversion);
 
+			LoggingManager loggingManager = callContext().getServiceManager(LoggingManager.class);
 			if (ins.execute()) {
-				LOGGING_MGR.log(this, Action.INSERT);
+				loggingManager.log(this, Action.INSERT);
 				ResultSet ret = ins.getResultSet();
 				ret.next();
 				int id = ret.getInt(1);
@@ -242,7 +241,7 @@ public abstract class Cursor extends BasicCursor {
 			} else {
 				// TODO: get rid of "getCurrentIdent" call where possible
 				// e. g. using INSERT.. OUTPUT clause for MSSQL
-				LOGGING_MGR.log(this, Action.INSERT);
+				loggingManager.log(this, Action.INSERT);
 				for (Column c : meta().getColumns().values())
 					if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
 						_setAutoIncrement(db().getCurrentIdent(conn(), meta()));
@@ -337,7 +336,8 @@ public abstract class Cursor extends BasicCursor {
 			PreparedStatement upd = update.getStatement(values, recversion);
 
 			upd.execute();
-			LOGGING_MGR.log(this, Action.MODIFY);
+			LoggingManager loggingManager = callContext().getServiceManager(LoggingManager.class);
+			loggingManager.log(this, Action.MODIFY);
 			if (meta().isVersioned())
 				recversion++;
 			initXRec();
@@ -389,7 +389,8 @@ public abstract class Cursor extends BasicCursor {
 		try {
 			_preDelete();
 			del.execute();
-			LOGGING_MGR.log(this, Action.DELETE);
+			LoggingManager loggingManager = callContext().getServiceManager(LoggingManager.class);
+			loggingManager.log(this, Action.DELETE);
 			initXRec();
 			_postDelete();
 		} catch (SQLException e) {

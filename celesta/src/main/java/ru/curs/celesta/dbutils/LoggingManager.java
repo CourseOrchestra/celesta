@@ -1,7 +1,9 @@
 package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.CallContextBuilder;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.syscursors.LogCursor;
 import ru.curs.celesta.syscursors.LogSetupCursor;
@@ -11,7 +13,7 @@ import ru.curs.celesta.syscursors.LogSetupCursor;
  * необходимо).
  * 
  */
-final class LoggingManager {
+public final class LoggingManager implements ServiceManager{
 	/**
 	 * Размер кэша (в записях). ДОЛЖЕН БЫТЬ СТЕПЕНЬЮ ДВОЙКИ!! Этот кэш может
 	 * быть меньше кэша системы распределения прав доступа, т. к. хранит записи
@@ -23,6 +25,7 @@ final class LoggingManager {
 	 */
 	private static final int CACHE_ENTRY_SHELF_LIFE = 20000;
 
+	private final DBAdaptor dbAdaptor;
 	private CacheEntry[] cache = new CacheEntry[CACHE_SIZE];
 
 	/**
@@ -56,6 +59,10 @@ final class LoggingManager {
 			return (loggingMask & a.getMask()) != 0;
 		}
 
+	}
+
+	public LoggingManager(DBAdaptor dbAdaptor) {
+		this.dbAdaptor = dbAdaptor;
 	}
 
 	boolean isLoggingNeeded(CallContext sysContext, Table t, Action a)
@@ -94,7 +101,13 @@ final class LoggingManager {
 				&& "grains".equals(c.meta().getName()))
 			return;
 
-		try (CallContext sysContext = new CallContext(c.callContext(), BasicCursor.SYSTEMSESSION)) {
+		try (
+				CallContext sysContext = new CallContextBuilder()
+						.setCallContext(c.callContext())
+						.setSesContext(BasicCursor.SYSTEMSESSION)
+						.setDbAdaptor(dbAdaptor)
+						.createCallContext()
+		) {
 			if (!isLoggingNeeded(sysContext, c.meta(), a))
 				return;
 			writeToLog(c, a, sysContext);

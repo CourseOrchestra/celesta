@@ -4,11 +4,14 @@ import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.Score;
 
+import java.util.Map;
+
 public class DbUpdaterBuilder {
     private DBAdaptor dbAdaptor;
     private ConnectionPool connectionPool;
     private Score score;
     private boolean forceDdInitialize;
+    private Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers;
 
     public DbUpdaterBuilder dbAdaptor(DBAdaptor dbAdaptor) {
         this.dbAdaptor = dbAdaptor;
@@ -30,7 +33,12 @@ public class DbUpdaterBuilder {
         return this;
     }
 
+    public DbUpdaterBuilder serviceManagers(Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers) {
+        this.serviceManagers = serviceManagers;
+        return this;
+    }
+
     public DbUpdater build() {
-        return new DbUpdater(connectionPool, score, forceDdInitialize, dbAdaptor);
+        return new DbUpdater(connectionPool, score, forceDdInitialize, dbAdaptor, serviceManagers);
     }
 }

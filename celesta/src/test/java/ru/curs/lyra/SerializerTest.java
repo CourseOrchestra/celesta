@@ -6,7 +6,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -25,7 +24,6 @@ import ru.curs.celesta.syscursors.TablesCursor;
 
 public class SerializerTest {
 
-	private static ConnectionPool connectionPool;
 	private SessionContext sc = new SessionContext("super", "foo");
 	private GrainsCursor c;
 	private TablesCursor tt;
@@ -37,15 +35,6 @@ public class SerializerTest {
 		params.setProperty("score.path", "score");
 		params.setProperty("h2.in-memory", "true");
 
-		AppSettings appSettings = new AppSettings(params);
-
-		ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
-		cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
-		cpc.setDriverClassName(appSettings.getDbClassName());
-		cpc.setLogin(appSettings.getDBLogin());
-		cpc.setPassword(appSettings.getDBPassword());
-
-		connectionPool = ConnectionPool.create(cpc);
 		try {
 			Celesta.initialize(params);
 		} catch (CelestaException e) {
@@ -55,7 +44,8 @@ public class SerializerTest {
 
 	@Before
 	public void before() throws CelestaException {
-		callContext = new CallContext(connectionPool, sc, Celesta.getInstance().getScore());
+		callContext = Celesta.getInstance().callContext(sc);
+
 		c = new GrainsCursor(callContext);
 		tt = new TablesCursor(callContext);
 	}
@@ -163,7 +153,9 @@ public class SerializerTest {
 
 	@Test
 	public void test2() throws CelestaException, UnsupportedEncodingException {
-		BasicCardForm bcf = new BasicCardForm(new CallContext(connectionPool, sc, Celesta.getInstance().getScore())) {
+		BasicCardForm bcf = new BasicCardForm(
+				Celesta.getInstance().callContext(sc)
+		) {
 			{
 				createAllBoundFields();
 				createField("aab");
@@ -241,7 +233,9 @@ public class SerializerTest {
 		assertEquals(8, c.getChecksum().length());
 
 		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-		GrainsCursor c2 = new GrainsCursor(new CallContext(connectionPool, sc, Celesta.getInstance().getScore()));
+		GrainsCursor c2 = new GrainsCursor(
+				Celesta.getInstance().callContext(sc)
+		);
 		bcf.deserialize(c2, bis);
 
 		assertEquals(c.getRecversion(), c2.getRecversion());

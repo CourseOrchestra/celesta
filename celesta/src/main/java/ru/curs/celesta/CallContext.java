@@ -44,6 +44,8 @@ public final class CallContext implements AutoCloseable {
 	private final String procName;
 	private final SessionContext sesContext;
 	private final ShowcaseContext showcaseContext;
+	private final DBAdaptor dbAdaptor;
+	private final Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers;
 
 	private final int dbPid;
 	private final Date startTime = new Date();
@@ -55,36 +57,29 @@ public final class CallContext implements AutoCloseable {
 
 	private final HashMap<PyString, PyObject> cursorsCache = new HashMap<>();
 
-	public CallContext(ConnectionPool connectionPool, SessionContext sesContext, Score score) throws CelestaException {
-		this(connectionPool, sesContext, null, score, null, null);
-	}
-
-	/**
-	 * Constructs callContext with same connection as in callContext param
-	 * @param callContext
-	 * @param sesContext
-	 * @throws CelestaException
-	 */
-	public CallContext(CallContext callContext, SessionContext sesContext) throws CelestaException {
-		this(callContext.connectionPool, sesContext, null, callContext.score, null, null);
-	}
-
-	public CallContext(ConnectionPool connectionPool, SessionContext sesContext, Grain curGrain, String procName)
+	public CallContext(CallContext context, ConnectionPool connectionPool, SessionContext sesContext,
+					   ShowcaseContext showcaseContext, Score score, Grain curGrain, String procName,
+					   DBAdaptor dbAdaptor, Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers)
 			throws CelestaException {
-		this(connectionPool, sesContext, null, null, curGrain, procName);
-	}
 
-	public CallContext(ConnectionPool connectionPool, SessionContext sesContext,
-					   ShowcaseContext showcaseContext, Score score, Grain curGrain, String procName) throws CelestaException {
-		this.connectionPool = connectionPool;
-		this.conn = connectionPool.get();
+		if (context != null) {
+			this.connectionPool = context.connectionPool;
+			this.score = context.score;
+			this.serviceManagers = new HashMap<>(context.serviceManagers);
+		} else {
+			this.connectionPool = connectionPool;
+			this.score = score;
+			this.serviceManagers = new HashMap<>(serviceManagers);
+		}
+
+		this.conn = this.connectionPool.get();
 		this.sesContext = sesContext;
-		this.score = score;
 		this.grain = curGrain;
 		this.procName = procName;
 		this.showcaseContext = showcaseContext;
-		DBAdaptor db = DBAdaptor.getAdaptor();
-		dbPid = PIDSCACHE.computeIfAbsent(this.conn, db::getDBPid);
+
+		this.dbAdaptor = dbAdaptor;
+		this.dbPid = PIDSCACHE.computeIfAbsent(this.conn, dbAdaptor::getDBPid);
 	}
 
 	/**
@@ -94,7 +89,16 @@ public final class CallContext implements AutoCloseable {
 	 *             cannot create adaptor
 	 */
 	public CallContext getCopy() throws CelestaException {
-		return new CallContext(connectionPool, sesContext, showcaseContext, score, grain, procName);
+		return new CallContextBuilder()
+				.setConnectionPool(connectionPool)
+				.setSesContext(sesContext)
+				.setShowcaseContext(showcaseContext)
+				.setScore(score)
+				.setCurGrain(grain)
+				.setProcName(procName)
+				.setDbAdaptor(dbAdaptor)
+				.setServiceManagers(serviceManagers)
+				.createCallContext();
 	}
 
 	/**
@@ -367,6 +371,10 @@ public final class CallContext implements AutoCloseable {
 	 */
 	public boolean isClosed() {
 		return closed;
+	}
+
+	public <T extends ServiceManager> T getServiceManager(Class<? extends T> managerClass) {
+		return (T)serviceManagers.get(managerClass);
 	}
 
 	/**

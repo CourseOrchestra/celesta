@@ -46,13 +46,7 @@ import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,11 +55,8 @@ import org.python.core.PyException;
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
 
-import ru.curs.celesta.dbutils.DbUpdaterBuilder;
+import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.DbUpdater;
-import ru.curs.celesta.dbutils.ProfilingManager;
-import ru.curs.celesta.dbutils.SessionLogManager;
 import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorConfiguration;
 import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.ormcompiler.ORMCompiler;
@@ -93,10 +84,12 @@ public final class Celesta {
 	private final ConnectionPool connectionPool;
 	private final PythonInterpreterPool interpreterPool;
 	private final SessionLogManager sessionLogManager;
+	private final LoggingManager loggingManager;
+	private final PermissionManager permissionManager;
 	private final ConcurrentHashMap<String, SessionContext> sessions = new ConcurrentHashMap<>();
 	private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
-	private final ProfilingManager profiler = new ProfilingManager();
+	private final ProfilingManager profiler;
 
 	private Celesta(AppSettings appSettings, boolean initInterpeterPool) throws CelestaException {
 		this.appSettings = appSettings;
@@ -131,6 +124,9 @@ public final class Celesta {
 
 		//TODO::Вот это сделать через Optional
 		this.sessionLogManager = new SessionLogManager(this, appSettings.getLogLogins());
+		this.loggingManager = new LoggingManager(dbAdaptor);
+		this.permissionManager = new PermissionManager(dbAdaptor);
+		this.profiler = new ProfilingManager(dbAdaptor);
 
 		theCelesta = this;
 
@@ -142,6 +138,7 @@ public final class Celesta {
 					.connectionPool(connectionPool)
 					.score(score)
 					.forceDdInitialize(appSettings.getForceDBInitialize())
+					.serviceManagers(getServiceManagers())
 					.build();
 
 			dbUpdater.updateDb();
@@ -349,7 +346,16 @@ public final class Celesta {
 
 
 			try (PythonInterpreter interp = interpreterPool.getPythonInterpreter();
-					 CallContext context = new CallContext(connectionPool, sesContext, sc, score, grain, proc)) {
+					 CallContext context = new CallContextBuilder()
+							 .setConnectionPool(connectionPool)
+							 .setSesContext(sesContext)
+							 .setShowcaseContext(sc)
+							 .setScore(score)
+							 .setCurGrain(grain)
+							 .setProcName(proc)
+							 .setDbAdaptor(dbAdaptor)
+							 .setServiceManagers(getServiceManagers())
+							 .createCallContext()) {
 				contexts.add(context);
 
 				try {
@@ -663,6 +669,19 @@ public final class Celesta {
 	}
 
 	public CallContext callContext(SessionContext sessionContext) throws CelestaException {
-		return new CallContext(connectionPool, sessionContext, score);
+		return new CallContextBuilder()
+				.setConnectionPool(connectionPool)
+				.setSesContext(sessionContext)
+				.setScore(score)
+				.setDbAdaptor(dbAdaptor)
+				.setServiceManagers(getServiceManagers())
+				.createCallContext();
+	}
+
+	public Map<Class<? extends ServiceManager>, ? extends ServiceManager> getServiceManagers() {
+		return new HashMap<Class<? extends ServiceManager>, ServiceManager>(){{
+			put(LoggingManager.class, loggingManager);
+			put(PermissionManager.class, permissionManager);
+		}};
 	}
 }

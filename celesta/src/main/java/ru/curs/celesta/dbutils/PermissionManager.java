@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.CallContextBuilder;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.syscursors.PermissionsCursor;
 import ru.curs.celesta.syscursors.UserRolesCursor;
@@ -17,7 +19,7 @@ import ru.curs.celesta.syscursors.UserRolesCursor;
  * Для оптимизации работы объект содержит кэш.
  * 
  */
-final class PermissionManager {
+public final class PermissionManager implements ServiceManager {
 
 	/**
 	 * Имя роли, обладающей правами на редактирование всех таблиц.
@@ -42,6 +44,7 @@ final class PermissionManager {
 			| Action.INSERT.getMask() | Action.MODIFY.getMask()
 			| Action.DELETE.getMask();
 
+	private final DBAdaptor dbAdaptor;
 	private PermissionCacheEntry[] cache = new PermissionCacheEntry[CACHE_SIZE];
 	private RoleCacheEntry[] rolesCache = new RoleCacheEntry[ROLE_CACHE_SIZE];
 
@@ -105,6 +108,11 @@ final class PermissionManager {
 		}
 	}
 
+
+	public PermissionManager(DBAdaptor dbAdaptor) {
+		this.dbAdaptor = dbAdaptor;
+	}
+
 	/**
 	 * Разрешено ли действие.
 	 * 
@@ -158,7 +166,13 @@ final class PermissionManager {
 
 	private PermissionCacheEntry refreshPermissions(CallContext c,
 			GrainElement t) throws CelestaException {
-		try (CallContext sysContext = new CallContext(c, BasicCursor.SYSTEMSESSION)) {
+		try (
+				CallContext sysContext = new CallContextBuilder()
+						.setCallContext(c)
+						.setSesContext(BasicCursor.SYSTEMSESSION)
+						.setDbAdaptor(dbAdaptor)
+						.createCallContext()
+		) {
 			RoleCacheEntry rce = getRce(c.getUserId(), sysContext);
 			PermissionsCursor permissions = new PermissionsCursor(sysContext);
 			int permissionsMask = 0;

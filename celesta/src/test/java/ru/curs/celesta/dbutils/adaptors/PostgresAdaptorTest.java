@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.adaptors;
 
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.Properties;
 
 import org.junit.BeforeClass;
@@ -12,8 +13,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.DbUpdater;
-import ru.curs.celesta.dbutils.DbUpdaterBuilder;
+import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.score.Score;
 
 @RunWith(PowerMockRunner.class)
@@ -53,6 +53,10 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
 				.dbAdaptor(dba)
 				.connectionPool(connectionPool)
 				.score(new Score(SCORE_NAME))
+				.serviceManagers(new HashMap<Class<? extends ServiceManager>, ServiceManager>(){{
+					put(LoggingManager.class, new LoggingManager(dba));
+					put(PermissionManager.class, new PermissionManager(dba));
+				}})
 				.build();
 
 		dbUpdater.updateSysGrain();

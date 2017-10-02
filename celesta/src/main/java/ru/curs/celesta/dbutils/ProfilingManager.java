@@ -1,16 +1,24 @@
 package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.CallContextBuilder;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.syscursors.CallLogCursor;
 
 /**
  * Менеджер профилирования вызовов.
  *
  */
-public final class ProfilingManager {
+public final class ProfilingManager implements ServiceManager {
 
+	private final DBAdaptor dbAdaptor;
 	private boolean profilemode = false;
+
+
+	public ProfilingManager(DBAdaptor dbAdaptor) {
+		this.dbAdaptor = dbAdaptor;
+	}
 
 	/**
 	 * Записывает информацию о вызове в профилировщик.
@@ -24,7 +32,13 @@ public final class ProfilingManager {
 		if (profilemode) {
 			long finish = System.currentTimeMillis();
 
-			try (CallContext sysContext = new CallContext(context, BasicCursor.SYSTEMSESSION)) {
+			try (
+					CallContext sysContext = new CallContextBuilder()
+							.setCallContext(context)
+							.setSesContext(BasicCursor.SYSTEMSESSION)
+							.setDbAdaptor(dbAdaptor)
+							.createCallContext()
+			) {
 				CallLogCursor clc = new CallLogCursor(sysContext);
 				clc.setProcname(context.getProcName());
 				clc.setSessionid(context.getSessionId());

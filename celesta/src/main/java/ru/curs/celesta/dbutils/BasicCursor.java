@@ -65,7 +65,6 @@ public abstract class BasicCursor implements Closeable {
 		"Database error when closing recordset for table '%s': %s";
 	private static final String CURSOR_IS_CLOSED = "Cursor is closed.";
 
-	private static final PermissionManager PERMISSION_MGR = new PermissionManager();
 	private static final Pattern COLUMN_NAME =
 		Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)( +([Aa]|[Dd][Ee])[Ss][Cc])?");
 
@@ -414,7 +413,8 @@ public abstract class BasicCursor implements Closeable {
 	public final boolean canRead() throws CelestaException {
 		if (closed)
 			throw new CelestaException(CURSOR_IS_CLOSED);
-		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.READ);
+		PermissionManager permissionManager = callContext().getServiceManager(PermissionManager.class);
+		return permissionManager.isActionAllowed(context, meta(), Action.READ);
 	}
 
 	/**
@@ -426,7 +426,8 @@ public abstract class BasicCursor implements Closeable {
 	public final boolean canInsert() throws CelestaException {
 		if (closed)
 			throw new CelestaException(CURSOR_IS_CLOSED);
-		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.INSERT);
+		PermissionManager permissionManager = callContext().getServiceManager(PermissionManager.class);
+		return permissionManager.isActionAllowed(context, meta(), Action.INSERT);
 	}
 
 	/**
@@ -438,7 +439,8 @@ public abstract class BasicCursor implements Closeable {
 	public final boolean canModify() throws CelestaException {
 		if (closed)
 			throw new CelestaException(CURSOR_IS_CLOSED);
-		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.MODIFY);
+		PermissionManager permissionManager = callContext().getServiceManager(PermissionManager.class);
+		return permissionManager.isActionAllowed(context, meta(), Action.MODIFY);
 	}
 
 	/**
@@ -450,7 +452,8 @@ public abstract class BasicCursor implements Closeable {
 	public final boolean canDelete() throws CelestaException {
 		if (closed)
 			throw new CelestaException(CURSOR_IS_CLOSED);
-		return PERMISSION_MGR.isActionAllowed(context, meta(), Action.DELETE);
+		PermissionManager permissionManager = callContext().getServiceManager(PermissionManager.class);
+		return permissionManager.isActionAllowed(context, meta(), Action.DELETE);
 	}
 
 	/**
