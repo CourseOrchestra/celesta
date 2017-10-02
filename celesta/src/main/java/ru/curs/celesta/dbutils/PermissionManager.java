@@ -19,7 +19,7 @@ import ru.curs.celesta.syscursors.UserRolesCursor;
  * Для оптимизации работы объект содержит кэш.
  * 
  */
-public final class PermissionManager implements ServiceManager {
+public final class PermissionManager {
 
 	/**
 	 * Имя роли, обладающей правами на редактирование всех таблиц.

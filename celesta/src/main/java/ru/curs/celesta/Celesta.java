@@ -138,7 +138,8 @@ public final class Celesta {
 					.connectionPool(connectionPool)
 					.score(score)
 					.forceDdInitialize(appSettings.getForceDBInitialize())
-					.serviceManagers(getServiceManagers())
+					.setPermissionManager(permissionManager)
+					.setLoggingManager(loggingManager)
 					.build();
 
 			dbUpdater.updateDb();
@@ -354,7 +355,8 @@ public final class Celesta {
 							 .setCurGrain(grain)
 							 .setProcName(proc)
 							 .setDbAdaptor(dbAdaptor)
-							 .setServiceManagers(getServiceManagers())
+							 .setPermissionManager(permissionManager)
+							 .setLoggingManager(loggingManager)
 							 .createCallContext()) {
 				contexts.add(context);
 
@@ -674,14 +676,9 @@ public final class Celesta {
 				.setSesContext(sessionContext)
 				.setScore(score)
 				.setDbAdaptor(dbAdaptor)
-				.setServiceManagers(getServiceManagers())
+				.setPermissionManager(permissionManager)
+				.setLoggingManager(loggingManager)
 				.createCallContext();
 	}
 
-	public Map<Class<? extends ServiceManager>, ? extends ServiceManager> getServiceManagers() {
-		return new HashMap<Class<? extends ServiceManager>, ServiceManager>(){{
-			put(LoggingManager.class, loggingManager);
-			put(PermissionManager.class, permissionManager);
-		}};
-	}
 }

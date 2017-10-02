@@ -230,7 +230,7 @@ public abstract class Cursor extends BasicCursor {
 
 			PreparedStatement ins = insert.getStatement(_currentValues(), recversion);
 
-			LoggingManager loggingManager = callContext().getServiceManager(LoggingManager.class);
+			LoggingManager loggingManager = callContext().getLoggingManager();
 			if (ins.execute()) {
 				loggingManager.log(this, Action.INSERT);
 				ResultSet ret = ins.getResultSet();
@@ -336,7 +336,7 @@ public abstract class Cursor extends BasicCursor {
 			PreparedStatement upd = update.getStatement(values, recversion);
 
 			upd.execute();
-			LoggingManager loggingManager = callContext().getServiceManager(LoggingManager.class);
+			LoggingManager loggingManager = callContext().getLoggingManager();
 			loggingManager.log(this, Action.MODIFY);
 			if (meta().isVersioned())
 				recversion++;
@@ -389,7 +389,7 @@ public abstract class Cursor extends BasicCursor {
 		try {
 			_preDelete();
 			del.execute();
-			LoggingManager loggingManager = callContext().getServiceManager(LoggingManager.class);
+			LoggingManager loggingManager = callContext().getLoggingManager();
 			loggingManager.log(this, Action.DELETE);
 			initXRec();
 			_postDelete();

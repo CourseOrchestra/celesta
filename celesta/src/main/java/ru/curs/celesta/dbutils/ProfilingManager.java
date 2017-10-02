@@ -10,7 +10,7 @@ import ru.curs.celesta.syscursors.CallLogCursor;
  * Менеджер профилирования вызовов.
  *
  */
-public final class ProfilingManager implements ServiceManager {
+public final class ProfilingManager {
 
 	private final DBAdaptor dbAdaptor;
 	private boolean profilemode = false;

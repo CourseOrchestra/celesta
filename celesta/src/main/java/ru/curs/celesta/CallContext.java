@@ -45,7 +45,8 @@ public final class CallContext implements AutoCloseable {
 	private final SessionContext sesContext;
 	private final ShowcaseContext showcaseContext;
 	private final DBAdaptor dbAdaptor;
-	private final Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers;
+	private final PermissionManager permissionManager;
+	private final LoggingManager loggingManager;
 
 	private final int dbPid;
 	private final Date startTime = new Date();
@@ -59,17 +60,19 @@ public final class CallContext implements AutoCloseable {
 
 	public CallContext(CallContext context, ConnectionPool connectionPool, SessionContext sesContext,
 					   ShowcaseContext showcaseContext, Score score, Grain curGrain, String procName,
-					   DBAdaptor dbAdaptor, Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers)
+					   DBAdaptor dbAdaptor, PermissionManager permissionManager, LoggingManager loggingManager)
 			throws CelestaException {
 
 		if (context != null) {
 			this.connectionPool = context.connectionPool;
 			this.score = context.score;
-			this.serviceManagers = new HashMap<>(context.serviceManagers);
+			this.permissionManager = context.permissionManager;
+			this.loggingManager = context.loggingManager;
 		} else {
 			this.connectionPool = connectionPool;
 			this.score = score;
-			this.serviceManagers = new HashMap<>(serviceManagers);
+			this.permissionManager = permissionManager;
+			this.loggingManager = loggingManager;
 		}
 
 		this.conn = this.connectionPool.get();
@@ -97,7 +100,8 @@ public final class CallContext implements AutoCloseable {
 				.setCurGrain(grain)
 				.setProcName(procName)
 				.setDbAdaptor(dbAdaptor)
-				.setServiceManagers(serviceManagers)
+				.setPermissionManager(permissionManager)
+				.setLoggingManager(loggingManager)
 				.createCallContext();
 	}
 
@@ -373,8 +377,12 @@ public final class CallContext implements AutoCloseable {
 		return closed;
 	}
 
-	public <T extends ServiceManager> T getServiceManager(Class<? extends T> managerClass) {
-		return (T)serviceManagers.get(managerClass);
+	public PermissionManager getPermissionManager() {
+		return permissionManager;
+	}
+
+	public LoggingManager getLoggingManager() {
+		return loggingManager;
 	}
 
 	/**

@@ -11,7 +11,8 @@ public class DbUpdaterBuilder {
     private ConnectionPool connectionPool;
     private Score score;
     private boolean forceDdInitialize;
-    private Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers;
+    private PermissionManager permissionManager;
+    private LoggingManager loggingManager;
 
     public DbUpdaterBuilder dbAdaptor(DBAdaptor dbAdaptor) {
         this.dbAdaptor = dbAdaptor;
@@ -33,12 +34,18 @@ public class DbUpdaterBuilder {
         return this;
     }
 
-    public DbUpdaterBuilder serviceManagers(Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers) {
-        this.serviceManagers = serviceManagers;
+    public DbUpdaterBuilder setPermissionManager(PermissionManager permissionManager) {
+        this.permissionManager = permissionManager;
+        return this;
+    }
+
+    public DbUpdaterBuilder setLoggingManager(LoggingManager loggingManager) {
+        this.loggingManager = loggingManager;
         return this;
     }
 
     public DbUpdater build() {
-        return new DbUpdater(connectionPool, score, forceDdInitialize, dbAdaptor, serviceManagers);
+        return new DbUpdater(connectionPool, score, forceDdInitialize,
+                dbAdaptor, permissionManager, loggingManager);
     }
 }

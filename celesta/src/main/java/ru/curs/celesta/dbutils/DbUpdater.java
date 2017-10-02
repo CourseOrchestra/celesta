@@ -29,7 +29,8 @@ public final class DbUpdater {
   private final Score score;
   private final boolean forceDdInitialize;
   private final DBAdaptor dba;
-  private final Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers;
+  private final PermissionManager permissionManager;
+  private final LoggingManager loggingManager;
   private GrainsCursor grain;
   private TablesCursor table;
 
@@ -45,12 +46,13 @@ public final class DbUpdater {
   }
 
   public DbUpdater(ConnectionPool connectionPool, Score score, boolean forceDdInitialize, DBAdaptor dba,
-                   Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers) {
+                   PermissionManager permissionManager, LoggingManager loggingManager) {
     this.connectionPool = connectionPool;
     this.score = score;
     this.forceDdInitialize = forceDdInitialize;
     this.dba = dba;
-    this.serviceManagers = serviceManagers;
+    this.permissionManager = permissionManager;
+    this.loggingManager = loggingManager;
   }
 
   /**
@@ -76,7 +78,8 @@ public final class DbUpdater {
                     .setSesContext(BasicCursor.SYSTEMSESSION)
                     .setScore(score)
                     .setDbAdaptor(dba)
-                    .setServiceManagers(serviceManagers)
+                    .setPermissionManager(permissionManager)
+                    .setLoggingManager(loggingManager)
                     .createCallContext()
     ) {
       Connection conn = context.getConn();
@@ -148,7 +151,8 @@ public final class DbUpdater {
                     .setSesContext(BasicCursor.SYSTEMSESSION)
                     .setScore(score)
                     .setDbAdaptor(dba)
-                    .setServiceManagers(serviceManagers)
+                    .setPermissionManager(permissionManager)
+                    .setLoggingManager(loggingManager)
                     .createCallContext()
     ) {
       grain = new GrainsCursor(context);

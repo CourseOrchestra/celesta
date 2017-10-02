@@ -413,7 +413,7 @@ public abstract class BasicCursor implements Closeable {
 	public final boolean canRead() throws CelestaException {
 		if (closed)
 			throw new CelestaException(CURSOR_IS_CLOSED);
-		PermissionManager permissionManager = callContext().getServiceManager(PermissionManager.class);
+		PermissionManager permissionManager = callContext().getPermissionManager();
 		return permissionManager.isActionAllowed(context, meta(), Action.READ);
 	}
 
@@ -426,7 +426,7 @@ public abstract class BasicCursor implements Closeable {
 	public final boolean canInsert() throws CelestaException {
 		if (closed)
 			throw new CelestaException(CURSOR_IS_CLOSED);
-		PermissionManager permissionManager = callContext().getServiceManager(PermissionManager.class);
+		PermissionManager permissionManager = callContext().getPermissionManager();
 		return permissionManager.isActionAllowed(context, meta(), Action.INSERT);
 	}
 
@@ -439,7 +439,7 @@ public abstract class BasicCursor implements Closeable {
 	public final boolean canModify() throws CelestaException {
 		if (closed)
 			throw new CelestaException(CURSOR_IS_CLOSED);
-		PermissionManager permissionManager = callContext().getServiceManager(PermissionManager.class);
+		PermissionManager permissionManager = callContext().getPermissionManager();
 		return permissionManager.isActionAllowed(context, meta(), Action.MODIFY);
 	}
 
@@ -452,7 +452,7 @@ public abstract class BasicCursor implements Closeable {
 	public final boolean canDelete() throws CelestaException {
 		if (closed)
 			throw new CelestaException(CURSOR_IS_CLOSED);
-		PermissionManager permissionManager = callContext().getServiceManager(PermissionManager.class);
+		PermissionManager permissionManager = callContext().getPermissionManager();
 		return permissionManager.isActionAllowed(context, meta(), Action.DELETE);
 	}
 

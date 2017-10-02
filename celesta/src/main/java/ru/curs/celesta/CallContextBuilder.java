@@ -1,12 +1,10 @@
 package ru.curs.celesta;
 
-import ru.curs.celesta.dbutils.ServiceManager;
+import ru.curs.celesta.dbutils.LoggingManager;
+import ru.curs.celesta.dbutils.PermissionManager;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Score;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class CallContextBuilder {
     private ConnectionPool connectionPool = null;
@@ -17,7 +15,8 @@ public class CallContextBuilder {
     private String procName = null;
     private CallContext callContext = null;
     private DBAdaptor dbAdaptor = null;
-    private Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers = new HashMap<>();
+    private PermissionManager permissionManager;
+    private LoggingManager loggingManager;
 
     public CallContextBuilder setCallContext(CallContext callContext) {
         this.callContext = callContext;
@@ -59,13 +58,18 @@ public class CallContextBuilder {
         return this;
     }
 
-    public CallContextBuilder setServiceManagers(Map<Class<? extends ServiceManager>, ? extends ServiceManager> serviceManagers) {
-        this.serviceManagers = serviceManagers;
+    public CallContextBuilder setPermissionManager(PermissionManager permissionManager) {
+        this.permissionManager = permissionManager;
+        return this;
+    }
+
+    public CallContextBuilder setLoggingManager(LoggingManager loggingManager) {
+        this.loggingManager = loggingManager;
         return this;
     }
 
     public CallContext createCallContext() throws CelestaException {
         return new CallContext(callContext, connectionPool, sesContext,
-                showcaseContext, score, curGrain, procName, dbAdaptor, serviceManagers);
+                showcaseContext, score, curGrain, procName, dbAdaptor, permissionManager, loggingManager);
     }
 }

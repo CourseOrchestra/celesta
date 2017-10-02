@@ -53,10 +53,8 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
 				.dbAdaptor(dba)
 				.connectionPool(connectionPool)
 				.score(new Score(SCORE_NAME))
-				.serviceManagers(new HashMap<Class<? extends ServiceManager>, ServiceManager>(){{
-					put(LoggingManager.class, new LoggingManager(dba));
-					put(PermissionManager.class, new PermissionManager(dba));
-				}})
+				.setPermissionManager(new PermissionManager(dba))
+				.setLoggingManager(new LoggingManager(dba))
 				.build();
 
 		dbUpdater.updateSysGrain();

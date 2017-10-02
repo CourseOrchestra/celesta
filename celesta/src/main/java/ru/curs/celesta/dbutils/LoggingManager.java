@@ -13,7 +13,7 @@ import ru.curs.celesta.syscursors.LogSetupCursor;
  * необходимо).
  * 
  */
-public final class LoggingManager implements ServiceManager{
+public final class LoggingManager {
 	/**
 	 * Размер кэша (в записях). ДОЛЖЕН БЫТЬ СТЕПЕНЬЮ ДВОЙКИ!! Этот кэш может
 	 * быть меньше кэша системы распределения прав доступа, т. к. хранит записи
