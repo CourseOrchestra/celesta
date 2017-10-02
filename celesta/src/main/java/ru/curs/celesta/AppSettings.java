@@ -115,7 +115,7 @@ public final class AppSettings {
      */
     POSTGRES {
       @Override
-      String getDriverClassName() {
+      public String getDriverClassName() {
         return "org.postgresql.Driver";
       }
     },
@@ -124,7 +124,7 @@ public final class AppSettings {
      */
     MSSQL {
       @Override
-      String getDriverClassName() {
+      public String getDriverClassName() {
         return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
       }
     },
@@ -133,7 +133,7 @@ public final class AppSettings {
      */
     ORACLE {
       @Override
-      String getDriverClassName() {
+      public String getDriverClassName() {
         return "oracle.jdbc.driver.OracleDriver";
       }
     },
@@ -142,7 +142,7 @@ public final class AppSettings {
      */
     H2 {
       @Override
-      String getDriverClassName() {
+      public String getDriverClassName() {
         return "org.h2.Driver";
       }
     },
@@ -151,12 +151,12 @@ public final class AppSettings {
      */
     UNKNOWN {
       @Override
-      String getDriverClassName() {
+      public String getDriverClassName() {
         return "";
       }
     };
 
-    abstract String getDriverClassName();
+    abstract public String getDriverClassName();
   }
 
   public static DBType resolveDbType(String url) {
