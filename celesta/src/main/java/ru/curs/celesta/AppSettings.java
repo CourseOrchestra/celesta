@@ -67,7 +67,7 @@ public final class AppSettings {
         sb.append("No JDBC URL given (rdbms.connection.url).\n");
     }
 
-    dbType = internalGetDBType(databaseConnection);
+    dbType = resolveDbType(databaseConnection);
     if (dbType == DBType.UNKNOWN)
       sb.append("Cannot recognize RDBMS type or unsupported database.");
 
@@ -159,7 +159,7 @@ public final class AppSettings {
     abstract String getDriverClassName();
   }
 
-  private static DBType internalGetDBType(String url) {
+  public static DBType resolveDbType(String url) {
     if (url.startsWith("jdbc:sqlserver")) {
       return DBType.MSSQL;
     } else if (url.startsWith("jdbc:postgresql")) {
