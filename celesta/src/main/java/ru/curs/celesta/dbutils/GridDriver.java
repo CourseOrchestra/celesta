@@ -85,8 +85,6 @@ public final class GridDriver {
 		@Override
 		public void run() {
 
-			Connection conn = null;
-
 			try (CallContext sysContext = Celesta.getInstance().callContext(BasicCursor.SYSTEMSESSION)) {
 				BasicCursor c = closedCopy._getBufferCopy(sysContext);
 				c.copyFiltersFrom(closedCopy);
@@ -175,14 +173,14 @@ public final class GridDriver {
 		if (names.length == 1) {
 			// Single field key enumerator
 			ColumnMeta m = meta.getColumns().get(names[0]);
-			rootKeyEnumerator = createFieldKeyManager(m, dbAdaptor);
+			rootKeyEnumerator = createFieldKeyManager(m, dbAdaptor.nullsFirst());
 			keyEnumerators.put(names[0], rootKeyEnumerator);
 		} else {
 			// Multiple field key enumerator
 			KeyEnumerator[] km = new KeyEnumerator[names.length];
 			for (int i = 0; i < names.length; i++) {
 				ColumnMeta m = meta.getColumns().get(names[i]);
-				km[i] = createFieldKeyManager(m, dbAdaptor);
+				km[i] = createFieldKeyManager(m, dbAdaptor.nullsFirst());
 				keyEnumerators.put(names[i], km[i]);
 			}
 			rootKeyEnumerator = new CompositeKeyEnumerator(km);
@@ -324,7 +322,7 @@ public final class GridDriver {
 		return interpolator.getApproximatePosition(topVisiblePosition);
 	}
 
-	private KeyEnumerator createFieldKeyManager(ColumnMeta m, DBAdaptor dbAdaptor) throws CelestaException {
+	private KeyEnumerator createFieldKeyManager(ColumnMeta m, boolean nullsFirst) throws CelestaException {
 		KeyEnumerator result;
 
 		final String celestaType = m.getCelestaType();
@@ -352,7 +350,7 @@ public final class GridDriver {
 		}
 
 		if (m.isNullable()) {
-			result = NullableFieldEnumerator.create(dbAdaptor.nullsFirst(), result);
+			result = NullableFieldEnumerator.create(nullsFirst, result);
 		}
 		return result;
 	}
