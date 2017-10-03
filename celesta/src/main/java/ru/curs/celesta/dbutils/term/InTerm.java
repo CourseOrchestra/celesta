@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.term;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
@@ -15,9 +16,11 @@ import java.util.stream.Collectors;
 public final class InTerm extends WhereTerm {
 
   private final In filter;
+  private final QueryBuildingHelper queryBuildingHelper;
 
-  public InTerm(In filter) {
+  public InTerm(In filter, QueryBuildingHelper queryBuildingHelper) {
     this.filter = filter;
+    this.queryBuildingHelper = queryBuildingHelper;
   }
 
   @Override
@@ -38,7 +41,6 @@ public final class InTerm extends WhereTerm {
 
   private String buildWhereLookup(FieldsLookup lookup, WhereTermsMaker whereTermsMaker) {
     try {
-      DBAdaptor db = DBAdaptor.getAdaptor();
 
       final String otherWhere;
       if (whereTermsMaker != null) {
@@ -47,7 +49,7 @@ public final class InTerm extends WhereTerm {
         otherWhere = "";
       }
 
-      return db.getInFilterClause(lookup.getTable(), lookup.getOtherTable(),
+      return queryBuildingHelper.getInFilterClause(lookup.getTable(), lookup.getOtherTable(),
           lookup.getFields(), lookup.getOtherFields(), otherWhere);
     } catch (CelestaException e) {
       throw new RuntimeException(e);

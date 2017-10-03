@@ -20,6 +20,7 @@ public final class ConnectionPool {
 	private String driverClassName;
 	private String login;
 	private String password;
+	private DBAdaptor dbAdaptor;
 
 
 	public synchronized static ConnectionPool create(ConnectionPoolConfiguration configuration) throws CelestaException {
@@ -43,6 +44,10 @@ public final class ConnectionPool {
 		);
 	}
 
+	public void setDbAdaptor(DBAdaptor dbAdaptor) {
+		this.dbAdaptor = dbAdaptor;
+	}
+
 	/**
 	 * Извлекает соединение из пула.
 	 * 
@@ -50,11 +55,10 @@ public final class ConnectionPool {
 	 *             В случае, если новое соединение не удалось создать.
 	 */
 	public Connection get() throws CelestaException {
-		final DBAdaptor db = DBAdaptor.getAdaptor();
 		Connection c = pool.poll();
 		while (c != null) {
 			try {
-				if (db.isValidConnection(c, 1))
+				if (dbAdaptor.isValidConnection(c, 1))
 					return c;
 			} catch (CelestaException e) {
 				// do something to make CheckStyle happy ))

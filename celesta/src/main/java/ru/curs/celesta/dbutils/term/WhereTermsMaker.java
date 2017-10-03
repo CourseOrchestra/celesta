@@ -200,7 +200,7 @@ public class WhereTermsMaker {
 
 
 		l = r == null ? AlwaysTrue.TRUE : r;
-		r = paramsProvider.inFilter() == null ? AlwaysTrue.TRUE : new InTerm(paramsProvider.inFilter());
+		r = paramsProvider.inFilter() == null ? AlwaysTrue.TRUE : new InTerm(paramsProvider.inFilter(), paramsProvider.dba());
 		return AndTerm.construct(l, r);
 	}
 

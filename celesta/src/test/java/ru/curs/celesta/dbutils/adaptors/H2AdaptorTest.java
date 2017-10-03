@@ -1,10 +1,5 @@
 package ru.curs.celesta.dbutils.adaptors;
 
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import ru.curs.celesta.*;
 import ru.curs.celesta.score.Score;
 
@@ -16,11 +11,6 @@ import java.util.Properties;
 /**
  * Created by ioann on 03.05.2017.
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest( DBAdaptor.class )
-@PowerMockIgnore({
-    "javax.management.*", //https://github.com/powermock/powermock/issues/743#issuecomment-287843821
-})
 public class H2AdaptorTest extends AbstractAdaptorTest {
 
   private final ConnectionPool connectionPool;
@@ -42,7 +32,6 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
     connectionPool = ConnectionPool.create(cpc);
 
     DBAdaptor dba = new H2Adaptor(connectionPool);
-    initMocks(dba);
 
     setDba(dba);
     setScore(new Score(SCORE_NAME));
@@ -51,14 +40,6 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
   @Override
   Connection getConnection() throws CelestaException {
     return connectionPool.get();
-  }
-
-  public void initMocks(DBAdaptor dba) throws CelestaException {
-    PowerMockito.stub(
-        PowerMockito.method(
-            DBAdaptor.class, "getAdaptor"
-        )
-    ).toReturn(dba);
   }
 
 }

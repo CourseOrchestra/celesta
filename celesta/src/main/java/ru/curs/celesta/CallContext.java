@@ -385,6 +385,10 @@ public final class CallContext implements AutoCloseable {
 		return loggingManager;
 	}
 
+	public DBAdaptor getDbAdaptor() {
+		return dbAdaptor;
+	}
+
 	/**
 	 * Возвращает объект курсора cursorClass.
 	 * 

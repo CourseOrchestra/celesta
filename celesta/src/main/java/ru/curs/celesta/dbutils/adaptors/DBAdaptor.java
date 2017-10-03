@@ -129,22 +129,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     }
   }
 
-
-  /**
-   * Фабрика классов адаптеров подходящего под текущие настройки типа.
-   *
-   * @throws CelestaException При ошибке создания адаптера (например, при создании адаптера
-   *                          не поддерживаемого типа).
-   */
-  public static DBAdaptor getAdaptor() throws CelestaException {
-    if (db == null)
-      throw new CelestaException("Unknown or unsupported database type.");
-    return db;
-  }
-
-
   protected DBAdaptor(ConnectionPool connectionPool) {
     this.connectionPool = connectionPool;
+    connectionPool.setDbAdaptor(this);
   }
 
   /**

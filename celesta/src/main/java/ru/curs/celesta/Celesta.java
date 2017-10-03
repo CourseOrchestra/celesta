@@ -653,7 +653,7 @@ public final class Celesta {
 	 *             unknown database
 	 */
 	public boolean nullsFirst() throws CelestaException {
-		return DBAdaptor.getAdaptor().nullsFirst();
+		return dbAdaptor.nullsFirst();
 	}
 
 	/**

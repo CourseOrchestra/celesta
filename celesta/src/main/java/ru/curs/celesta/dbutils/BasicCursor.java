@@ -320,7 +320,7 @@ public abstract class BasicCursor implements Closeable {
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
-		db = DBAdaptor.getAdaptor();
+		db = callContext().getDbAdaptor();
 	}
 
 	public BasicCursor(CallContext context, Set<String> fields) throws CelestaException {

@@ -2,6 +2,9 @@ package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.SQLGenerator;
+import ru.curs.celesta.score.Table;
+
+import java.util.List;
 
 /**
  * Subset of DBAdaptor functions for literals translation.
@@ -27,4 +30,7 @@ public interface QueryBuildingHelper {
 	 * Returns SQL generator for Celesta views/complex filters.
 	 */
 	SQLGenerator getViewSQLGenerator();
+
+	String getInFilterClause(Table table, Table otherTable, List<String> fields,
+											 List<String> otherFields, String whereForOtherTable);
 }

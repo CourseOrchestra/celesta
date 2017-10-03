@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -12,11 +13,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.term.WhereMakerParamsProvider;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
-import ru.curs.celesta.score.CelestaParser;
-import ru.curs.celesta.score.ColumnMeta;
-import ru.curs.celesta.score.Expr;
-import ru.curs.celesta.score.SQLGenerator;
-import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.*;
 
 public class NavigationQueriesMakerTest {
 
@@ -98,6 +95,10 @@ public class NavigationQueriesMakerTest {
 					};
 				}
 
+				@Override
+				public String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields, String whereForOtherTable) {
+					return null;
+				}
 			};
 		}
 
