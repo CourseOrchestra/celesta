@@ -1,9 +1,8 @@
 package ru.curs.celesta.dbutils.adaptors;
 
-import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorConfiguration;
+import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorBuilder;
 import ru.curs.celesta.dbutils.h2.MaterializedViewDeleteTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewInsertTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewUpdateTrigger;
@@ -26,7 +25,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -187,13 +185,12 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
 
-  public H2Adaptor(ConnectionPool connectionPool) {
+  public H2Adaptor(ConnectionPool connectionPool, boolean isH2ReferentialIntegrity) {
     super(connectionPool);
+    configureDb(isH2ReferentialIntegrity);
   }
 
-  @Override
-  public void configureDb(DbAdaptorConfiguration configuration) {
-    boolean isH2ReferentialIntegrity = configuration.isH2ReferentialIntegrity();
+  private void configureDb(boolean isH2ReferentialIntegrity) {
 
     try ( Connection connection = connectionPool.get()) {
       //Выполняем команду включения флага REFERENTIAL_INTEGRITY

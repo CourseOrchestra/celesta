@@ -49,10 +49,11 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.*;
-import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorConfiguration;
+import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorBuilder;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
@@ -95,10 +96,13 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     CELESTA_TYPES_COLUMN_CLASSES.put(DateTimeColumn.CELESTA_TYPE, DateTimeColumn.class);
   }
 
-  public static synchronized DBAdaptor create(DbAdaptorConfiguration configuration) throws CelestaException {
+  public static synchronized DBAdaptor create(
+          AppSettings.DBType dbType,
+          ConnectionPool connectionPool,
+          boolean h2ReferentialIntegrity
+  ) throws CelestaException {
     try {
-      ConnectionPool connectionPool = configuration.getConnectionPool();
-      switch (configuration.getDbType()) {
+      switch (dbType) {
         case MSSQL:
           db = new MSSQLAdaptor(connectionPool);
           break;
@@ -109,16 +113,13 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
           db = new PostgresAdaptor(connectionPool);
           break;
         case H2:
-          db = new H2Adaptor(connectionPool);
+          db = new H2Adaptor(connectionPool, h2ReferentialIntegrity);
           break;
         case UNKNOWN:
         default:
           db = null;
       }
 
-      if (db != null) {
-        db.configureDb(configuration);
-      }
       return db;
     } catch (Exception e) {
       /* Выводим здесь stacktrace, потому что подробности исключений в блоках статической инициализации
@@ -931,9 +932,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    */
   public void createSysObjects(Connection conn) throws CelestaException {
 
-  }
-
-  public void configureDb(DbAdaptorConfiguration configuration) {
   }
 
   /**

@@ -27,7 +27,7 @@ public final class SessionLogManager {
 	 * @throws CelestaException
 	 *             Ошибка взаимодействия с БД.
 	 */
-	public void logLogin(SessionContext session) throws CelestaException {
+	public void logLogin(SessionContext session) {
 			if (!enabled) return;
 
 			try (CallContext context = celesta.callContext(BasicCursor.SYSTEMSESSION)) {
@@ -36,6 +36,8 @@ public final class SessionLogManager {
 				sl.setSessionid(session.getSessionId());
 				sl.setUserid(session.getUserId());
 				sl.insert();
+			} catch (CelestaException e) {
+				throw new RuntimeException(e);
 			}
 	}
 
@@ -47,7 +49,7 @@ public final class SessionLogManager {
 	 * @throws CelestaException
 	 *             Если не удалось связаться с БД.
 	 */
-	public void logFailedLogin(String userId) throws CelestaException {
+	public void logFailedLogin(String userId) {
 			if (!enabled) return;
 
 			try (CallContext context = celesta.callContext(BasicCursor.SYSTEMSESSION)) {
@@ -56,6 +58,8 @@ public final class SessionLogManager {
 				sl.setUserid(userId);
 				sl.setFailedlogin(true);
 				sl.insert();
+			} catch (CelestaException e) {
+				throw new RuntimeException(e);
 			}
 	}
 
@@ -69,8 +73,7 @@ public final class SessionLogManager {
 	 * @throws CelestaException
 	 *             Ошибка взаимодействия с БД.
 	 */
-	public void logLogout(SessionContext session, boolean timeout)
-			throws CelestaException {
+	public void logLogout(SessionContext session, boolean timeout) {
 			if (!enabled) return;
 
 			try (CallContext context = celesta.callContext(BasicCursor.SYSTEMSESSION)) {
@@ -84,6 +87,8 @@ public final class SessionLogManager {
 					sl.setTimeout(timeout);
 					sl.update();
 				}
+			} catch (CelestaException e) {
+				throw new RuntimeException(e);
 			}
 	}
 }

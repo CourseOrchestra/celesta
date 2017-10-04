@@ -31,7 +31,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
 
     connectionPool = ConnectionPool.create(cpc);
 
-    DBAdaptor dba = new H2Adaptor(connectionPool);
+    DBAdaptor dba = new H2Adaptor(connectionPool, false);
 
     setDba(dba);
     setScore(new Score(SCORE_NAME));

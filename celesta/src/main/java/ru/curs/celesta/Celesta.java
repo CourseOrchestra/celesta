@@ -57,7 +57,7 @@ import org.python.util.PythonInterpreter;
 
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorConfiguration;
+import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorBuilder;
 import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.ormcompiler.ORMCompiler;
 import ru.curs.celesta.score.Grain;
@@ -82,7 +82,7 @@ public final class Celesta {
 	private final AppSettings appSettings;
 	private final ConnectionPool connectionPool;
 	private final PythonInterpreterPool interpreterPool;
-	private final SessionLogManager sessionLogManager;
+	private final Optional<SessionLogManager> sessionLogManager;
 	private final LoggingManager loggingManager;
 	private final PermissionManager permissionManager;
 	private final ConcurrentHashMap<String, SessionContext> sessions = new ConcurrentHashMap<>();
@@ -116,15 +116,16 @@ public final class Celesta {
 		cpc.setPassword(appSettings.getDBPassword());
 		connectionPool = ConnectionPool.create(cpc);
 
-		//TODO::Сделать через builder
-		DbAdaptorConfiguration dac = new DbAdaptorConfiguration();
-		dac.setDbType(appSettings.getDBType());
-		dac.setConnectionPool(connectionPool);
-		dac.setH2ReferentialIntegrity(appSettings.isH2ReferentialIntegrity());
-		dbAdaptor = DBAdaptor.create(dac);
+		DbAdaptorBuilder dac = new DbAdaptorBuilder()
+				.setDbType(appSettings.getDBType())
+				.setConnectionPool(connectionPool)
+				.setH2ReferentialIntegrity(appSettings.isH2ReferentialIntegrity());
 
-		//TODO::Вот это сделать через Optional
-		this.sessionLogManager = new SessionLogManager(this, appSettings.getLogLogins());
+		dbAdaptor = dac.createDbAdaptor();
+
+		this.sessionLogManager = appSettings.getLogLogins()
+				? Optional.of(new SessionLogManager(this, appSettings.getLogLogins()))
+				: Optional.empty();
 		this.loggingManager = new LoggingManager(dbAdaptor);
 		this.permissionManager = new PermissionManager(dbAdaptor);
 		this.profiler = new ProfilingManager(dbAdaptor);
@@ -150,12 +151,11 @@ public final class Celesta {
 		if (initInterpeterPool) {
 			System.out.print("Celesta initialization: phase 4/4 Jython interpreters pool initialization...");
 
-			//TODO::Сделать через builder
-			InterpreterPoolConfiguration ipc = new InterpreterPoolConfiguration();
-			ipc.setCelesta(this);
-			ipc.setScore(score);
-			ipc.setJavaLibPath(appSettings.getJavalibPath());
-			ipc.setScriptLibPath(appSettings.getPylibPath());
+			InterpreterPoolConfiguration ipc = new InterpreterPoolConfiguration()
+					.setCelesta(this)
+					.setScore(score)
+					.setJavaLibPath(appSettings.getJavalibPath())
+					.setScriptLibPath(appSettings.getPylibPath());
 			interpreterPool = InterpreterPoolFactory.create(ipc);
 
 			System.out.println("done.");
@@ -219,10 +219,8 @@ public final class Celesta {
 	 *            Имя сессии.
 	 * @param userId
 	 *            Имя пользователя.
-	 * @throws CelestaException
-	 *             Сбой взаимодействия с базой данных.
 	 */
-	public void login(String sessionId, String userId) throws CelestaException {
+	public void login(String sessionId, String userId) {
 		if (sessionId == null)
 			throw new IllegalArgumentException("Session id is null.");
 		if (userId == null)
@@ -233,7 +231,8 @@ public final class Celesta {
 		if (oldSession == null || !userId.equals(oldSession.getUserId())) {
 			SessionContext session = new SessionContext(userId, sessionId);
 			sessions.put(sessionId, session);
-			sessionLogManager.logLogin(session);
+
+			sessionLogManager.ifPresent(s -> s.logLogin(session));
 		}
 	}
 
@@ -242,11 +241,9 @@ public final class Celesta {
 	 * 
 	 * @param userId
 	 *            Имя пользователя, под которым производился вход.
-	 * @throws CelestaException
-	 *             Ошибка работы с базой данных.
 	 */
-	public void failedLogin(String userId) throws CelestaException {
-		sessionLogManager.logFailedLogin(userId);
+	public void failedLogin(String userId) {
+		sessionLogManager.ifPresent(s -> s.logFailedLogin(userId));
 	}
 
 	/**
@@ -260,12 +257,12 @@ public final class Celesta {
 	 *             Ошибка взаимодействия с БД.
 	 * 
 	 */
-	public void logout(String sessionId, boolean timeout) throws CelestaException {
+	public void logout(String sessionId, boolean timeout) {
 		SessionContext sc = sessions.remove(sessionId);
 		if (sc != null) {
 			// Очищаем сессионные данные, дабы облегчить работу сборщика мусора.
 			sc.getData().clear();
-			sessionLogManager.logLogout(sc, timeout);
+			sessionLogManager.ifPresent(s -> s.logLogout(sc, timeout));
 		}
 	}
 
@@ -487,7 +484,6 @@ public final class Celesta {
 		// Properties.
 		Properties properties = new Properties();
 		try {
-			//TODO:Здесь в цикле надо считать все проперти файлы
 			ClassLoader loader = Thread.currentThread().getContextClassLoader();
 			InputStream in = loader.getResourceAsStream(FILE_PROPERTIES);
 			if (in == null) {
@@ -594,7 +590,6 @@ public final class Celesta {
 
 
 	public void close() {
-		//TODO::Закрыть CallContext'ы, т.к. в них соединения живут отдельно от пула
 		connectionPool.clear();
 	}
 }

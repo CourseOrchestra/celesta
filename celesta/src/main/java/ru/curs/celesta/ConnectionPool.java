@@ -3,7 +3,11 @@ package ru.curs.celesta;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,11 +20,14 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 public final class ConnectionPool {
 
 	private final ConcurrentLinkedQueue<CelestaConnection> pool = new ConcurrentLinkedQueue<>();
+	final List<CelestaConnection> allConnections =  new CopyOnWriteArrayList<>();
 	private String jdbcConnectionUrl;
 	private String driverClassName;
 	private String login;
 	private String password;
 	private DBAdaptor dbAdaptor;
+	final AtomicBoolean isClosed = new AtomicBoolean(false);
+	private final ReentrantLock lock = new ReentrantLock();
 
 
 	public synchronized static ConnectionPool create(ConnectionPoolConfiguration configuration) throws CelestaException {
@@ -55,38 +62,57 @@ public final class ConnectionPool {
 	 *             В случае, если новое соединение не удалось создать.
 	 */
 	public Connection get() throws CelestaException {
-		Connection c = pool.poll();
-		while (c != null) {
-			try {
-				if (dbAdaptor.isValidConnection(c, 1))
-					return c;
-			} catch (CelestaException e) {
-				// do something to make CheckStyle happy ))
-				c = null;
-			}
-			c = pool.poll();
-		}
+		lock.lock();
+
 		try {
-			Class.forName(driverClassName);
-			if (login.isEmpty()) {
-				c = DriverManager.getConnection(jdbcConnectionUrl);
-			} else {
-				c = DriverManager.getConnection(
-						jdbcConnectionUrl,
-						login,
-						password
-				);
+			if (isClosed.get()) {
+				throw new CelestaException("ConnectionPool is closed");
 			}
-			c.setAutoCommit(false);
-			return new CelestaConnection(c) {
-				@Override
-				public void close() throws SQLException {
-					putBack(this);
+
+			Connection c = pool.poll();
+			while (c != null) {
+				try {
+					if (dbAdaptor.isValidConnection(c, 1))
+						return c;
+				} catch (CelestaException e) {
+					// do something to make CheckStyle happy ))
+					c = null;
 				}
-			};
-		} catch (SQLException | ClassNotFoundException e) {
-			throw new CelestaException("Could not connect to %s with error: %s",
-					PasswordHider.maskPassword(jdbcConnectionUrl), e.getMessage());
+				c = pool.poll();
+			}
+			try {
+				Class.forName(driverClassName);
+				if (login.isEmpty()) {
+					c = DriverManager.getConnection(jdbcConnectionUrl);
+				} else {
+					c = DriverManager.getConnection(
+							jdbcConnectionUrl,
+							login,
+							password
+					);
+				}
+				c.setAutoCommit(false);
+
+				CelestaConnection celestaConnection = new CelestaConnection(c) {
+					@Override
+					public void close() throws SQLException {
+						try {
+							putBack(this);
+						} catch (CelestaException e) {
+							throw new SQLException(e);
+						}
+					}
+				};
+
+				allConnections.add(celestaConnection);
+
+				return celestaConnection;
+			} catch (SQLException | ClassNotFoundException e) {
+				throw new CelestaException("Could not connect to %s with error: %s",
+						PasswordHider.maskPassword(jdbcConnectionUrl), e.getMessage());
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
@@ -97,9 +123,14 @@ public final class ConnectionPool {
 	 * @param c
 	 *            возвращаемое соединение.
 	 */
-	private void putBack(CelestaConnection c) {
+	private void putBack(CelestaConnection c) throws CelestaException {
+		lock.lock();
 		// Вставляем только хорошие соединения...
 		try {
+			if (isClosed.get()) {
+				throw new CelestaException("ConnectionPool is closed");
+			}
+
 			if (c != null) {
 				c.commit();
 				pool.add(c);
@@ -108,6 +139,8 @@ public final class ConnectionPool {
 			// do something to make CheckStyle happy ))
 			e.printStackTrace();
 			return;
+		} finally {
+			lock.unlock();
 		}
 	}
 
@@ -117,13 +150,21 @@ public final class ConnectionPool {
 	 * @param conn
 	 *            соединение для выполнения коммита.
 	 */
-	public void commit(Connection conn) {
+	public void commit(Connection conn) throws CelestaException {
+		lock.lock();
+
 		try {
+			if (isClosed.get()) {
+				throw new CelestaException("ConnectionPool is closed");
+			}
+
 			if (conn != null)
 				conn.commit();
 		} catch (SQLException e) {
 			// do something to make CheckStyle happy ))
 			return;
+		} finally {
+			lock.unlock();
 		}
 	}
 
@@ -131,14 +172,21 @@ public final class ConnectionPool {
 	 * Очищает пул.
 	 */
 	public void clear() {
-		CelestaConnection c = pool.poll();
-		while (c != null) {
-			try {
-				c.getConnection().close();
-			} catch (SQLException e) {
-				c = null;
-			}
-			c = pool.poll();
+		lock.lock();
+
+		try {
+			for (CelestaConnection c : allConnections){
+				try {
+					c.getConnection().close();
+					allConnections.remove(c);
+				} catch (SQLException e) {
+					c = null;
+				}
+			};
+			pool.clear();
+			isClosed.set(true);
+		} finally {
+			lock.unlock();
 		}
 	}
 }
