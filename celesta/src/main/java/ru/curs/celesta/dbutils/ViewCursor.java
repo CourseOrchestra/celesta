@@ -35,7 +35,7 @@ public abstract class ViewCursor extends BasicCursor {
 	public View meta() throws CelestaException {
 		if (meta == null)
 			try {
-				meta = Celesta.getInstance().getScore()
+				meta = callContext().getScore()
 						.getGrain(_grainName()).getElement(_tableName(), View.class);
 			} catch (ParseException e) {
 				throw new CelestaException(e.getMessage());

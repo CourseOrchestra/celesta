@@ -6,10 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import ru.curs.celesta.CallContext;
-import ru.curs.celesta.Celesta;
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.BooleanColumn;
 import ru.curs.celesta.score.ColumnMeta;
@@ -85,7 +82,12 @@ public final class GridDriver {
 		@Override
 		public void run() {
 
-			try (CallContext sysContext = Celesta.getInstance().callContext(BasicCursor.SYSTEMSESSION)) {
+			try (
+					CallContext sysContext = new CallContextBuilder()
+							.setCallContext(closedCopy.callContext())
+							.setSesContext(BasicCursor.SYSTEMSESSION)
+							.createCallContext()
+			) {
 				BasicCursor c = closedCopy._getBufferCopy(sysContext);
 				c.copyFiltersFrom(closedCopy);
 				c.copyOrderFrom(closedCopy);

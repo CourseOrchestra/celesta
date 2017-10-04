@@ -50,7 +50,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   public ParameterizedView meta() throws CelestaException {
     if (meta == null)
       try {
-        meta = Celesta.getInstance().getScore()
+        meta = callContext().getScore()
             .getGrain(_grainName()).getElement(_tableName(), ParameterizedView.class);
       } catch (ParseException e) {
         throw new CelestaException(e.getMessage());

@@ -37,6 +37,7 @@ public final class CallContext implements AutoCloseable {
 	private static final Map<Connection, Integer> PIDSCACHE = Collections
 			.synchronizedMap(new WeakHashMap<Connection, Integer>());
 
+	private final Celesta celesta;
 	private final ConnectionPool connectionPool;
 	private final Connection conn;
 	private final Score score;
@@ -58,7 +59,7 @@ public final class CallContext implements AutoCloseable {
 
 	private final HashMap<PyString, PyObject> cursorsCache = new HashMap<>();
 
-	public CallContext(CallContext context, ConnectionPool connectionPool, SessionContext sesContext,
+	public CallContext(CallContext context, Celesta celesta, ConnectionPool connectionPool, SessionContext sesContext,
 					   ShowcaseContext showcaseContext, Score score, Grain curGrain, String procName,
 					   DBAdaptor dbAdaptor, PermissionManager permissionManager, LoggingManager loggingManager)
 			throws CelestaException {
@@ -68,11 +69,15 @@ public final class CallContext implements AutoCloseable {
 			this.score = context.score;
 			this.permissionManager = context.permissionManager;
 			this.loggingManager = context.loggingManager;
+			this.celesta = context.celesta;
+			this.dbAdaptor = context.dbAdaptor;
 		} else {
 			this.connectionPool = connectionPool;
 			this.score = score;
 			this.permissionManager = permissionManager;
 			this.loggingManager = loggingManager;
+			this.celesta = celesta;
+			this.dbAdaptor = dbAdaptor;
 		}
 
 		this.conn = this.connectionPool.get();
@@ -81,7 +86,6 @@ public final class CallContext implements AutoCloseable {
 		this.procName = procName;
 		this.showcaseContext = showcaseContext;
 
-		this.dbAdaptor = dbAdaptor;
 		this.dbPid = PIDSCACHE.computeIfAbsent(this.conn, dbAdaptor::getDBPid);
 	}
 
@@ -93,6 +97,7 @@ public final class CallContext implements AutoCloseable {
 	 */
 	public CallContext getCopy() throws CelestaException {
 		return new CallContextBuilder()
+				.setCelesta(celesta)
 				.setConnectionPool(connectionPool)
 				.setSesContext(sesContext)
 				.setShowcaseContext(showcaseContext)
@@ -278,7 +283,7 @@ public final class CallContext implements AutoCloseable {
 	 *             ошибка инициализации Celesta
 	 */
 	public Celesta getCelesta() throws CelestaException {
-		return Celesta.getInstance();
+		return celesta;
 	}
 
 	public Score getScore() {

@@ -75,7 +75,6 @@ public final class Celesta {
 	private static final Pattern PROCNAME = Pattern
 			.compile("\\s*([A-Za-z][A-Za-z0-9]*)((\\.[A-Za-z_]\\w*)+)\\.([A-Za-z_]\\w*)\\s*");
 
-	private static Celesta theCelesta;
 	private static final TriggerDispatcher triggerDispatcher = new TriggerDispatcher();
 
 	private final Score score;
@@ -92,6 +91,8 @@ public final class Celesta {
 	private final ProfilingManager profiler;
 
 	private Celesta(AppSettings appSettings, boolean initInterpeterPool) throws CelestaException {
+		CurrentCelesta.set(this);
+
 		this.appSettings = appSettings;
 		// CELESTA STARTUP SEQUENCE
 		// 1. Разбор описания гранул.
@@ -127,8 +128,6 @@ public final class Celesta {
 		this.loggingManager = new LoggingManager(dbAdaptor);
 		this.permissionManager = new PermissionManager(dbAdaptor);
 		this.profiler = new ProfilingManager(dbAdaptor);
-
-		theCelesta = this;
 
 		if (!appSettings.getSkipDBUpdate()) {
 			System.out.print("Celesta initialization: phase 3/4 database upgrade...");
@@ -175,8 +174,10 @@ public final class Celesta {
 	 */
 	public static void main(String[] args) {
 		System.out.println();
+		Celesta celesta = null;
 		try {
-			initialize(true);
+			Properties properties = loadPropertiesDynamically();
+			celesta = createInstance(properties);
 		} catch (CelestaException e) {
 			System.out.println("The following problems occured during initialization process:");
 			System.out.println(e.getMessage());
@@ -193,10 +194,10 @@ public final class Celesta {
 				String userId = args[0];
 				String sesId = String.format("TEMP%08X", (new Random()).nextInt());
 				// getInstance().setProfilemode(true);
-				theCelesta.login(sesId, userId);
-				theCelesta.runPython(sesId, args[1], params);
-				theCelesta.logout(sesId, false);
-				theCelesta.interpreterPool.cancelSourceMonitor();
+				celesta.login(sesId, userId);
+				celesta.runPython(sesId, args[1], params);
+				celesta.logout(sesId, false);
+				celesta.interpreterPool.cancelSourceMonitor();
 			} catch (CelestaException e) {
 				System.out.println("The following problems occured while trying to execute " + args[1] + ":");
 				System.out.println(e.getMessage());
@@ -209,14 +210,6 @@ public final class Celesta {
 	 */
 	public Collection<CallContext> getActiveContexts() {
 		return Collections.unmodifiableCollection(contexts);
-	}
-
-	/**
-	 * Очищает пул интерпретаторов Python.
-	 */
-	@Deprecated
-	public synchronized void clearInterpretersPool() {
-		// does nothing
 	}
 
 	/**
@@ -348,6 +341,7 @@ public final class Celesta {
 
 			try (PythonInterpreter interp = interpreterPool.getPythonInterpreter();
 					 CallContext context = new CallContextBuilder()
+							 .setCelesta(this)
 							 .setConnectionPool(connectionPool)
 							 .setSesContext(sesContext)
 							 .setShowcaseContext(sc)
@@ -421,40 +415,6 @@ public final class Celesta {
 		return scheduledExecutor.schedule(callable, delay, TimeUnit.MILLISECONDS);
 	}
 
-	/**
-	 * Инициализация с использованием явно передаваемых свойств (метод необходим
-	 * для автоматизации взаимодействия с другими системами, прежде всего, с
-	 * ShowCase). Вызывать один из перегруженных вариантов метода initialize
-	 * можно не более одного раза.
-	 * 
-	 * @param settings
-	 *            свойства, которые следует применить при инициализации --
-	 *            эквивалент файла celesta.properties.
-	 * 
-	 * @throws CelestaException
-	 *             в случае ошибки при инициализации.
-	 */
-	public static synchronized void initialize(Properties settings) throws CelestaException {
-		initialize(settings, true);
-	}
-
-	private static synchronized void initialize(Properties properties, boolean initPython) throws CelestaException {
-		if (theCelesta != null)
-			throw new CelestaException(CELESTA_IS_ALREADY_INITIALIZED);
-
-		System.out.print("Celesta pre-initialization: phase 1/2 system settings reading...");
-		AppSettings appSettings = new AppSettings(properties);
-		System.out.println("done.");
-
-		// Инициализация ClassLoader для нужд Jython-интерпретатора
-		System.out.print("Celesta pre-initialization: phase 2/2 Jython initialization...");
-		initCL();
-		System.out.println("done.");
-
-		new Celesta(appSettings, initPython);
-
-	}
-
 	private static void initCL() {
 		Set<URL> urlSet = new LinkedHashSet<URL>();
 
@@ -499,28 +459,35 @@ public final class Celesta {
 		}
 	}
 
-	/**
-	 * Инициализация с использованием свойств, находящихся в файле
-	 * celesta.properties, лежащем в одной папке с celesta.jar. Вызывать один из
-	 * перегруженных вариантов метода initialize можно не более одного раза.
-	 * 
-	 * @throws CelestaException
-	 *             в случае ошибки при инициализации, а также в случае, если
-	 *             Celesta уже была проинициализирована.
-	 */
-
-	public static synchronized void initialize() throws CelestaException {
-		initialize(true);
+	public static Celesta createInstance(Properties properties) throws CelestaException {
+		AppSettings appSettings = preInit(properties);
+		return new Celesta(appSettings, true);
 	}
 
-	private static synchronized void initialize(boolean initPython) throws CelestaException {
-		if (theCelesta != null)
-			throw new CelestaException(CELESTA_IS_ALREADY_INITIALIZED);
+	public static Celesta createDebugInstance(Properties properties) throws CelestaException {
+		AppSettings appSettings = preInit(properties);
+		return new Celesta(appSettings, false);
+	}
 
+	private static AppSettings preInit(Properties properties) throws CelestaException {
+		System.out.print("Celesta pre-initialization: phase 1/2 system settings reading...");
+		AppSettings appSettings = new AppSettings(properties);
+		System.out.println("done.");
+
+		// Инициализация ClassLoader для нужд Jython-интерпретатора
+		System.out.print("Celesta pre-initialization: phase 2/2 Jython initialization...");
+		initCL();
+		System.out.println("done.");
+
+		return appSettings;
+	}
+
+	private static Properties loadPropertiesDynamically() throws CelestaException {
 		// Разбираемся с настроечным файлом: читаем его и превращаем в
 		// Properties.
-		Properties settings = new Properties();
+		Properties properties = new Properties();
 		try {
+			//TODO:Здесь в цикле надо считать все проперти файлы
 			ClassLoader loader = Thread.currentThread().getContextClassLoader();
 			InputStream in = loader.getResourceAsStream(FILE_PROPERTIES);
 			if (in == null) {
@@ -531,7 +498,7 @@ public final class Celesta {
 				in = new FileInputStream(f);
 			}
 			try {
-				settings.load(in);
+				properties.load(in);
 			} finally {
 				in.close();
 			}
@@ -539,64 +506,7 @@ public final class Celesta {
 			throw new CelestaException(String.format("IOException while reading settings file: %s", e.getMessage()));
 		}
 
-		initialize(settings, initPython);
-	}
-
-	/**
-	 * Производит повторную инициализацию Celesta. Метод необходим для системы
-	 * динамического изменения структуры базы данных.
-	 * 
-	 * @throws CelestaException
-	 *             если Celesta не была иницилизирована или в случае ошибки
-	 *             инициализации.
-	 */
-	public static synchronized void reInitialize() throws CelestaException {
-		if (theCelesta == null)
-			throw new CelestaException(CELESTA_IS_NOT_INITIALIZED);
-		Map<String, SessionContext> sessions = theCelesta.sessions;
-		theCelesta = null;
-		new Celesta(theCelesta.appSettings, true);
-		theCelesta.sessions.putAll(sessions);
-	}
-
-	/**
-	 * Возвращает объект-синглетон Celesta. Если до этого объект не был создан,
-	 * то сначала инициализирует его.
-	 * 
-	 * @throws CelestaException
-	 *             в случае ошибки при инициализации.
-	 */
-	public static synchronized Celesta getInstance() throws CelestaException {
-		if (theCelesta == null)
-			initialize();
-		return theCelesta;
-	}
-
-
-	/**
-	 * Возвращает объект-синглетон Celesta, при этом не инициализируя один из
-	 * питоновских интерпретаторов в пуле. Метод предназначен для использования
-	 * в пошаговой отладке.
-	 *
-	 * @throws CelestaException
-	 *             в случае ошибки при инициализации.
-	 */
-	public static synchronized Celesta getDebugInstance() throws CelestaException {
-		if (theCelesta == null)
-			initialize(false);
-		return theCelesta;
-	}
-
-	/**
-	 * @param props настройки Celesta, записываются в ({@link AppSettings})
-	 *
-	 * @throws CelestaException
-	 *             в случае ошибки при инициализации.
-	 */
-	public static synchronized Celesta getDebugInstance(Properties props) throws CelestaException {
-		if (theCelesta == null)
-			initialize(props, false);
-		return theCelesta;
+		return properties;
 	}
 
 	static String getMyPath() {
@@ -672,6 +582,7 @@ public final class Celesta {
 
 	public CallContext callContext(SessionContext sessionContext) throws CelestaException {
 		return new CallContextBuilder()
+				.setCelesta(this)
 				.setConnectionPool(connectionPool)
 				.setSesContext(sessionContext)
 				.setScore(score)
@@ -681,4 +592,9 @@ public final class Celesta {
 				.createCallContext();
 	}
 
+
+	public void close() {
+		//TODO::Закрыть CallContext'ы, т.к. в них соединения живут отдельно от пула
+		connectionPool.clear();
+	}
 }

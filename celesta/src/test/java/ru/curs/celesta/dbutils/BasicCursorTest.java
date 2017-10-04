@@ -7,36 +7,39 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.syscursors.LogSetupCursor;
 
 public class BasicCursorTest {
+
+	private static Celesta celesta;
+
 	private SessionContext sc = new SessionContext("super", "foo");
 	private BasicCursor c;
 
 	@BeforeClass
 	public static void init() throws IOException, CelestaException {
-		Properties params = new Properties();
-		params.setProperty("score.path", "score");
-		params.setProperty("h2.in-memory", "true");
+		Properties properties = new Properties();
+		properties.setProperty("score.path", "score");
+		properties.setProperty("h2.in-memory", "true");
 
 		try {
-			Celesta.initialize(params);
+			celesta = Celesta.createInstance(properties);
 		} catch (CelestaException e) {
 			// do nothing, Celesta is initialized!
 		}
 	}
 
+	@AfterClass
+	public static void destroy() {
+		celesta.close();
+	}
+
 	@Before
 	public void before() throws CelestaException {
-		c = new LogSetupCursor(
-				Celesta.getInstance().callContext(sc)
-		);
+		c = new LogSetupCursor(celesta.callContext(sc));
 	}
 
 	@After

@@ -12,10 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.BasicCursor;
@@ -23,6 +20,7 @@ import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.TablesCursor;
 
 public class SerializerTest {
+	private static Celesta celesta;
 
 	private SessionContext sc = new SessionContext("super", "foo");
 	private GrainsCursor c;
@@ -36,15 +34,20 @@ public class SerializerTest {
 		params.setProperty("h2.in-memory", "true");
 
 		try {
-			Celesta.initialize(params);
+			celesta = Celesta.createInstance(params);
 		} catch (CelestaException e) {
 			// do nothing, Celesta is initialized
 		}
 	}
 
+	@AfterClass
+	public static void destroy() {
+		celesta.close();
+	}
+
 	@Before
 	public void before() throws CelestaException {
-		callContext = Celesta.getInstance().callContext(sc);
+		callContext = celesta.callContext(sc);
 
 		c = new GrainsCursor(callContext);
 		tt = new TablesCursor(callContext);
@@ -154,7 +157,7 @@ public class SerializerTest {
 	@Test
 	public void test2() throws CelestaException, UnsupportedEncodingException {
 		BasicCardForm bcf = new BasicCardForm(
-				Celesta.getInstance().callContext(sc)
+				celesta.callContext(sc)
 		) {
 			{
 				createAllBoundFields();
@@ -234,7 +237,7 @@ public class SerializerTest {
 
 		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
 		GrainsCursor c2 = new GrainsCursor(
-				Celesta.getInstance().callContext(sc)
+				celesta.callContext(sc)
 		);
 		bcf.deserialize(c2, bis);
 

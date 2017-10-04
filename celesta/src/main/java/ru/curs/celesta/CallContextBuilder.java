@@ -7,19 +7,26 @@ import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Score;
 
 public class CallContextBuilder {
+
+    private CallContext callContext = null;
+    private Celesta celesta = null;
     private ConnectionPool connectionPool = null;
     private SessionContext sesContext = null;
     private Score score = null;
     private ShowcaseContext showcaseContext = null;
     private Grain curGrain = null;
     private String procName = null;
-    private CallContext callContext = null;
     private DBAdaptor dbAdaptor = null;
     private PermissionManager permissionManager;
     private LoggingManager loggingManager;
 
     public CallContextBuilder setCallContext(CallContext callContext) {
         this.callContext = callContext;
+        return this;
+    }
+
+    public CallContextBuilder setCelesta(Celesta celesta) {
+        this.celesta = celesta;
         return this;
     }
 
@@ -69,7 +76,7 @@ public class CallContextBuilder {
     }
 
     public CallContext createCallContext() throws CelestaException {
-        return new CallContext(callContext, connectionPool, sesContext,
+        return new CallContext(callContext, celesta, connectionPool, sesContext,
                 showcaseContext, score, curGrain, procName, dbAdaptor, permissionManager, loggingManager);
     }
 }

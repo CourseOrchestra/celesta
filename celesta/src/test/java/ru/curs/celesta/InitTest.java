@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.util.Properties;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -21,6 +22,8 @@ import ru.curs.celesta.syscursors.RolesCursor;
 
 public class InitTest {
 
+	private static Celesta celesta;
+
 	@BeforeClass
 	public static void init() throws IOException, CelestaException {
 		Properties params = new Properties();
@@ -28,20 +31,24 @@ public class InitTest {
 		params.setProperty("h2.in-memory", "true");
 
 		try {
-			Celesta.initialize(params);
+			celesta = Celesta.createInstance(params);
 		} catch (CelestaException e) {
 			// do nothing
 		}
 	}
 
+	@AfterClass
+	public static void destroy() {
+		celesta.close();
+	}
+
 	@Test
 	public void testGetInstance() throws CelestaException {
-		assertNotNull(Celesta.getInstance());
+		assertNotNull(celesta);
 	}
 
 	@Test
 	public void grainCusrorIsCallable() throws CelestaException {
-		Celesta celesta = Celesta.getInstance();
 		SessionContext sc = new SessionContext("user", "S");
 		try (CallContext ctxt = celesta.callContext(sc)) {
 			GrainsCursor g = new GrainsCursor(ctxt);
@@ -59,7 +66,6 @@ public class InitTest {
 
 	@Test
 	public void logCursorIsCallable() throws CelestaException {
-		Celesta celesta = Celesta.getInstance();
 		SessionContext sc = new SessionContext("user", "S");
 		try (CallContext ctxt = celesta.callContext(sc)) {
 			LogCursor l = new LogCursor(ctxt);
@@ -91,7 +97,6 @@ public class InitTest {
 
 	@Test
 	public void cursorsAreClosingOnContext() throws CelestaException {
-		Celesta celesta = Celesta.getInstance();
 		SessionContext sc = new SessionContext("user", "S");
 		try (CallContext ctxt = celesta.callContext(sc)) {
 			BasicCursor a = new LogCursor(ctxt);

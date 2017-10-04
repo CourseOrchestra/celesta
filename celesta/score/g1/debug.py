@@ -17,12 +17,11 @@ props.setProperty('rdbms.connection.url', 'jdbc:h2:mem:celesta')
 #props.setProperty('rdbms.connection.username', 'postgres')
 #props.setProperty('rdbms.connection.password', '123')
 
-Celesta.initialize(props)
-Celesta.getDebugInstance()
+celesta = Celesta.createInstance(props)
 sc = SessionContext('super', 'debug')
 
 try:
-    cc = Celesta.getInstance().callContext(sc)
+    cc = celesta.callContext(sc)
     print 'Hello world!'
     hello.hello(cc, 'foo')
 
