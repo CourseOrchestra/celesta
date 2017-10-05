@@ -1,14 +1,18 @@
 package ru.curs.celesta;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.sql.Connection;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorBuilder;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 public class ConnectionPoolTest {
 
@@ -44,7 +48,7 @@ public class ConnectionPoolTest {
         assertAll(
                 () -> assertTrue(!conn1.isClosed()),
                 () -> assertTrue(!conn2.isClosed()),
-                () -> assertEquals(2, connectionPool.allConnections.size())
+                () -> assertEquals(1, connectionPool.poolSize())
         );
     }
 
@@ -53,15 +57,18 @@ public class ConnectionPoolTest {
     void testClosingConnectionPool() throws Exception {
         Connection conn1 = connectionPool.get();
         Connection conn2 = connectionPool.get();
+        Connection conn3 = connectionPool.get();
 
         conn1.close();
-        connectionPool.clear();
-
+        assertFalse(conn1.isClosed());
+        connectionPool.close();
+        conn3.close();
         assertAll(
                 () -> assertTrue(conn1.isClosed()),
-                () -> assertTrue(conn2.isClosed()),
-                () -> assertEquals(0, connectionPool.allConnections.size()),
-                () -> assertTrue(connectionPool.isClosed.get())
+                () -> assertFalse(conn2.isClosed()),
+                () -> assertTrue(conn3.isClosed()),
+                () -> assertEquals(0, connectionPool.poolSize()),
+                () -> assertTrue(connectionPool.isClosed())
         );
     }
 
@@ -73,18 +80,27 @@ public class ConnectionPoolTest {
 
         conn1.close();
 
-        connectionPool.clear();
+        connectionPool.close();
 
         assertThrows(CelestaException.class, () -> connectionPool.get());
-        assertThrows(CelestaException.class, () -> connectionPool.commit(conn2));
-        assertThrows(SQLException.class, () -> conn3.close());
+        
+        connectionPool.commit(conn2);
+        conn3.close();
+        
+        assertAll(
+                () -> assertTrue(conn1.isClosed()),
+                () -> assertFalse(conn2.isClosed()),
+                () -> assertTrue(conn3.isClosed()),
+                () -> assertEquals(0, connectionPool.poolSize()),
+                () -> assertTrue(connectionPool.isClosed())
+        );
     }
 
 
     @AfterEach
     public void tearDown() {
-        if (!connectionPool.isClosed.get()) {
-            connectionPool.clear();
+        if (!connectionPool.isClosed()) {
+            connectionPool.close();
         }
     }
 

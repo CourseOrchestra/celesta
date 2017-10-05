@@ -67,10 +67,7 @@ import ru.curs.celesta.score.Score;
 /**
  * Корневой класс приложения.
  */
-public final class Celesta {
-	private static final String CELESTA_IS_ALREADY_INITIALIZED = "Celesta is already initialized.";
-	private static final String CELESTA_IS_NOT_INITIALIZED = "Celesta is not initialized, use "
-			+ "one of 'initialize' methods instead.";
+public final class Celesta implements AutoCloseable {
 	private static final String FILE_PROPERTIES = "celesta.properties";
 	private static final Pattern PROCNAME = Pattern
 			.compile("\\s*([A-Za-z][A-Za-z0-9]*)((\\.[A-Za-z_]\\w*)+)\\.([A-Za-z_]\\w*)\\s*");
@@ -613,7 +610,8 @@ public final class Celesta {
 	/**
 	 * Останавливает работу Celesta. После вызова экземпляр Celesta становится непригодным для использования.
 	 */
+	@Override
 	public void close() {
-		connectionPool.clear();
+		connectionPool.close();
 	}
 }

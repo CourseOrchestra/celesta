@@ -282,4 +282,9 @@ public abstract class CelestaConnection implements Connection {
     return connection.isWrapperFor(iface);
   }
 
+  @Override
+  public void close() {
+    //Do nothing: to be overriden in pool
+	//here we declare it only to eliminate SQLException
+  }
 }

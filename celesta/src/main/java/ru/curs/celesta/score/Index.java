@@ -95,7 +95,7 @@ public class Index extends GrainElement {
 		)) {
 			throw new ParseException(
 					String.format("Can't add index %s to table %s.%s. " +
-									"Prime key with same columns and order already exists." ,
+									"Primary key with same columns and order already exists." ,
 							getName(), table.getGrain().getName(), table.getName())
 			);
 		}
