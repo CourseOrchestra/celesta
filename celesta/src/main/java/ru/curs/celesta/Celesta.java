@@ -456,11 +456,25 @@ public final class Celesta {
 		}
 	}
 
+
+	/**
+	 * Инициализирует и возвращает новый экземпляр Celesta с проиницилизированным интерпретатором скриптового языка
+	 * @param properties настройки
+	 * @return Celesta
+	 * @throws CelestaException
+	 */
 	public static Celesta createInstance(Properties properties) throws CelestaException {
 		AppSettings appSettings = preInit(properties);
 		return new Celesta(appSettings, true);
 	}
 
+	/**
+	 * Инициализирует и возвращает новый экземпляр Celesta без проиницилизированного интерпретатора скриптового языка
+	 * Использовать для отладочных целей
+	 * @param properties настройки
+	 * @return Celesta
+	 * @throws CelestaException
+	 */
 	public static Celesta createDebugInstance(Properties properties) throws CelestaException {
 		AppSettings appSettings = preInit(properties);
 		return new Celesta(appSettings, false);
@@ -576,6 +590,13 @@ public final class Celesta {
 		return Celesta.triggerDispatcher;
 	}
 
+
+	/**
+	 * Инициализирует и возвращает новый CallContext для указанного SessionContext
+	 * @param sessionContext
+	 * @return CallContext
+	 * @throws CelestaException
+	 */
 	public CallContext callContext(SessionContext sessionContext) throws CelestaException {
 		return new CallContextBuilder()
 				.setCelesta(this)
@@ -589,6 +610,9 @@ public final class Celesta {
 	}
 
 
+	/**
+	 * Останавливает работу Celesta. После вызова экземпляр Celesta становится непригодным для использования.
+	 */
 	public void close() {
 		connectionPool.clear();
 	}
