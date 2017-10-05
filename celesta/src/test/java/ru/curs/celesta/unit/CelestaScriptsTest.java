@@ -29,7 +29,7 @@ public class CelestaScriptsTest {
   public static void init() throws CelestaException {
     Properties properties = new Properties();
 
-    properties.put("score.path", "E:/WorkSpace/Curs/Celesta/score");
+    properties.put("score.path", "score");
     properties.put("h2.in-memory", "true");
 
     //properties.put("database.connection", "jdbc:postgresql://127.0.0.1:5432/celesta?user=postgres&password=123");
