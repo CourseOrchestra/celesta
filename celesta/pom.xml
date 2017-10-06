@@ -464,7 +464,6 @@
                         </dependencies>
                         <configuration>
                             <excludes>
-                                <exclude>**/adaptors/MSSQLAdaptorTest.java</exclude>
                                 <exclude>**/adaptors/BasicDBAdaptorTest.java</exclude>
                             </excludes>
                         </configuration>

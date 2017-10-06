@@ -20,6 +20,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import ru.curs.celesta.CallContext;
+import ru.curs.celesta.CallContextBuilder;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.*;
@@ -32,6 +34,7 @@ import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.score.*;
+import ru.curs.celesta.syscursors.GrainsCursor;
 
 public abstract class AbstractAdaptorTest {
     final static String GRAIN_NAME = "gtest";
@@ -100,11 +103,45 @@ public abstract class AbstractAdaptorTest {
 
     @Before
     public void setup() throws Exception {
+        Grain g = score.getGrain(GRAIN_NAME);
+
+
         conn = getConnection();
         dba.createSchemaIfNotExists(conn, GRAIN_NAME);
+
+        final boolean hasRecordInGrainsTable;
+        String sql = String.format("SELECT * FROM "  + dba.tableTemplate() + " WHERE \"id\"=?",
+                "celesta", GrainsCursor.TABLE_NAME);
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, GRAIN_NAME);
+            ResultSet rs = statement.executeQuery();
+
+            hasRecordInGrainsTable = rs.next();
+        }
+
+        if (!hasRecordInGrainsTable) {
+            sql = String.format(
+                    "INSERT INTO " + dba.tableTemplate()
+                            + " (\"id\", \"version\", \"length\", \"checksum\",\"state\",\"lastmodified\",\"message\") "
+                    + " VALUES(?,?,?,?,?,?,?)", "celesta", GrainsCursor.TABLE_NAME
+            );
+
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setString(1, g.getName());
+                statement.setString(2, g.getVersion().toString());
+                statement.setInt(3, g.getLength());
+                statement.setString(4, String.format("%08X", g.getChecksum()));
+                statement.setInt(5, GrainsCursor.READY);
+                statement.setDate(6, new java.sql.Date(new Date().getTime()));
+                statement.setString(7, "");
+
+                statement.executeUpdate();
+            }
+
+        }
+
         conn.commit();
 
-        Grain g = score.getGrain(GRAIN_NAME);
         t = g.getElement("test", Table.class);
         try {
             // Могла остаться от незавершившегося теста

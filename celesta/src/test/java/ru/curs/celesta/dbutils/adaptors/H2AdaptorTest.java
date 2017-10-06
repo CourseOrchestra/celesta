@@ -1,6 +1,11 @@
 package ru.curs.celesta.dbutils.adaptors;
 
+import org.junit.BeforeClass;
 import ru.curs.celesta.*;
+import ru.curs.celesta.dbutils.DbUpdater;
+import ru.curs.celesta.dbutils.DbUpdaterBuilder;
+import ru.curs.celesta.dbutils.LoggingManager;
+import ru.curs.celesta.dbutils.PermissionManager;
 import ru.curs.celesta.score.Score;
 
 import java.io.InputStream;
@@ -13,13 +18,14 @@ import java.util.Properties;
  */
 public class H2AdaptorTest extends AbstractAdaptorTest {
 
-  private final ConnectionPool connectionPool;
+  private static H2Adaptor dba;
 
-  public H2AdaptorTest() throws Exception {
+  @BeforeClass
+  public static void beforeAll() throws CelestaException {
     Properties params = new Properties();
-    InputStream is = InitTest.class
-        .getResourceAsStream("celesta.h2.properties");
-    params.load(is);
+    params.put("score.path", "score");
+    params.put("h2.in-memory", "true");
+    params.put("h2.referential.integrity", "true");
 
     AppSettings appSettings = new AppSettings(params);
 
@@ -29,17 +35,30 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
     cpc.setLogin(appSettings.getDBLogin());
     cpc.setPassword(appSettings.getDBPassword());
 
-    connectionPool = ConnectionPool.create(cpc);
+    ConnectionPool connectionPool = ConnectionPool.create(cpc);
 
-    DBAdaptor dba = new H2Adaptor(connectionPool, false);
+    dba = new H2Adaptor(connectionPool, appSettings.isH2ReferentialIntegrity());
 
+    DbUpdater dbUpdater = new DbUpdaterBuilder()
+            .dbAdaptor(dba)
+            .connectionPool(connectionPool)
+            .score(new Score(SCORE_NAME))
+            .setPermissionManager(new PermissionManager(dba))
+            .setLoggingManager(new LoggingManager(dba))
+            .build();
+
+    dbUpdater.updateSysGrain();
+  }
+
+
+  public H2AdaptorTest() throws Exception {
     setDba(dba);
     setScore(new Score(SCORE_NAME));
   }
 
   @Override
   Connection getConnection() throws CelestaException {
-    return connectionPool.get();
+    return dba.connectionPool.get();
   }
 
 }

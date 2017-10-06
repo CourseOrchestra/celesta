@@ -98,7 +98,8 @@ public final class LoggingManager {
 		// No logging for celesta.grains (this is needed for smooth update from
 		// versions having no recversion fields).
 		if ("celesta".equals(c.meta().getGrain().getName())
-				&& "grains".equals(c.meta().getName()))
+				&& ("grains".equals(c.meta().getName()))
+				|| "tables".equals(c.meta().getName()))
 			return;
 
 		try (
