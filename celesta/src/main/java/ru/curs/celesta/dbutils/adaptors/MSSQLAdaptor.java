@@ -1306,7 +1306,7 @@ final class MSSQLAdaptor extends DBAdaptor {
                   "on %s after delete as begin \n %s \n END;",
               t.getGrain().getName(), deleteTriggerName, fullTableName, deleteSql);
 
-          System.out.println(sql);
+          //System.out.println(sql);
           stmt.execute(sql);
         } catch (SQLException e) {
           throw new CelestaException("Could not update delete-trigger on %s for materialized view %s: %s",
