@@ -70,7 +70,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
 
   /*
    * NB для программистов. Класс большой, во избежание хаоса здесь порядок
-   * такой: прежде всего -- метод getAdaptor(), далее идут public final
+   * такой: прежде всего -- public final
    * методы, далее --- внутренняя кухня (default final и default static
    * методы), в самом низу -- все объявления абстрактных методов.
    */

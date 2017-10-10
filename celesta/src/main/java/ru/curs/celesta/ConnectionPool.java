@@ -21,7 +21,7 @@ public final class ConnectionPool implements AutoCloseable {
 	private final String login;
 	private final String password;
 	private DBAdaptor dbAdaptor;
-	private boolean isClosed;
+	private volatile boolean isClosed;
 
 	public static ConnectionPool create(ConnectionPoolConfiguration configuration) throws CelestaException {
 		return new ConnectionPool(configuration.getJdbcConnectionUrl(), configuration.getDriverClassName(),
