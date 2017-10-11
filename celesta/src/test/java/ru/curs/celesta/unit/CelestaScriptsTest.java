@@ -34,7 +34,6 @@ public class CelestaScriptsTest {
   static Celesta postgresCelesta;
   static Celesta oracleCelesta;
   static Celesta msSqlCelesta;
-  static Celesta currentCelesta;
 
 
   static SessionContext sessionContext;
@@ -80,8 +79,8 @@ public class CelestaScriptsTest {
 
   @DisplayName("Test jython scripts")
   @ParameterizedTest(name = "{1} ==> {2}:{3}")
-  @ArgumentsSource(CallContextProvider.class)
-  public void testScripts(CallContextProvider.TestContext testContext, AppSettings.DBType dbType,
+  @ArgumentsSource(JythonTestProvider.class)
+  public void testScripts(JythonTestProvider.TestContext testContext, AppSettings.DBType dbType,
                           String testClassName, String testMethod) throws Exception {
     context = testContext.celesta.callContext(sessionContext);
     testContext.testInstance.__setattr__("context", Py.java2py(context));
@@ -101,7 +100,7 @@ public class CelestaScriptsTest {
     return Celesta.createInstance(properties);
   }
 
-  static class CallContextProvider implements ArgumentsProvider {
+  static class JythonTestProvider implements ArgumentsProvider {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) throws Exception {
       Stream<Arguments> result = Stream.empty();
