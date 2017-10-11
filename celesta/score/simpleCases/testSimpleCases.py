@@ -23,6 +23,12 @@ def postUpdate(logCursor):
 isPreDeleteDone = False
 isPostDeleteDone = False
 
+def resetFlags():
+    global isPreDeleteDone
+    global isPostDeleteDone
+    isPreDeleteDone = False
+    isPostDeleteDone = False
+
 def preDelete(logCursor):
     global isPreDeleteDone
     isPreDeleteDone = True
@@ -63,6 +69,7 @@ class TestSimpleCases(CelestaTestCase):
 
 
     def test_triggers_on_sys_cursors(self):
+        resetFlags()
         c = LogCursor(self.context)
 
         LogCursor.onPreInsert(preInsert)

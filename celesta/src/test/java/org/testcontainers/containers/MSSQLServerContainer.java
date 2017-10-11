@@ -35,6 +35,7 @@ public class MSSQLServerContainer<SELF extends MSSQLServerContainer<SELF>> exten
         addEnv("ACCEPT_EULA", "Y");
         addEnv("SA_PASSWORD", password);
         addEnv("MSSQL_COLLATION", collation);
+        addEnv("TZ", System.getProperty("user.timezone"));
     }
 
     @Override

@@ -24,6 +24,7 @@ public class OracleContainer<SELF extends OracleContainer<SELF>> extends JdbcDat
     protected void configure() {
 
         addExposedPorts(ORACLE_PORT, APEX_HTTP_PORT);
+        addEnv("TZ", System.getProperty("user.timezone"));
     }
 
     @Override

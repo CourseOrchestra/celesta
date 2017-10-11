@@ -6,6 +6,7 @@ import org.python.core.PyType;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -16,10 +17,10 @@ public class TestClass {
   public TestClass(PyType pyType) {
     PyStringMap dict = (PyStringMap)pyType.fastGetDict();
 
-    List<String> testMethods = Arrays.stream(dict.keys().getArray())
+    Set<String> testMethods = Arrays.stream(dict.keys().getArray())
         .filter(k -> String.valueOf(k).startsWith("test") && dict.get(k) instanceof PyFunction)
         .map(String::valueOf)
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
 
     CelestaScriptsTest.testTypesAndTheirMethods.put(pyType, testMethods);
   }

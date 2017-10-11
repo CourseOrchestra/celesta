@@ -8,7 +8,7 @@ from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
 
 @TestClass
-class testFilters(CelestaTestCase):
+class TestFilters(CelestaTestCase):
 
     def testInFilterForIndices(self):
         a = aFilterCursor(self.context)
