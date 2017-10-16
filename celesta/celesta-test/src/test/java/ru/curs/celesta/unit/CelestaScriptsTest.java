@@ -28,7 +28,9 @@ public class CelestaScriptsTest {
 
   public static PostgreSQLContainer postgres = new PostgreSQLContainer();
   public static OracleContainer oracle = new OracleContainer();
-  public static MSSQLServerContainer msSql = new MSSQLServerContainer();
+  public static MSSQLServerContainer msSql = new MSSQLServerContainer()
+          .withDatabaseName("celesta")
+          .withCollation("Cyrillic_General_CI_AS");
 
   static Celesta h2Celesta;
   static Celesta postgresCelesta;
