@@ -111,6 +111,12 @@
         <profile>
             <id>jenkins</id>
 
+            <activation>
+                <property>
+                    <name>build.number</name>
+                </property>
+            </activation>
+
             <build>
                 <plugins>
                     <plugin>
@@ -149,6 +155,12 @@
 
         <profile>
             <id>dev</id>
+
+            <activation>
+                <property>
+                    <name>!build.number</name>
+                </property>
+            </activation>
 
             <build>
                 <plugins>
