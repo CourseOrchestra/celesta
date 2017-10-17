@@ -1,7 +1,6 @@
 package ru.curs.celesta.dbutils;
 
 import java.math.BigInteger;
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -175,14 +174,14 @@ public final class GridDriver {
 		if (names.length == 1) {
 			// Single field key enumerator
 			ColumnMeta m = meta.getColumns().get(names[0]);
-			rootKeyEnumerator = createFieldKeyManager(m, dbAdaptor.nullsFirst());
+			rootKeyEnumerator = createKeyEnumerator(m, dbAdaptor.nullsFirst());
 			keyEnumerators.put(names[0], rootKeyEnumerator);
 		} else {
 			// Multiple field key enumerator
 			KeyEnumerator[] km = new KeyEnumerator[names.length];
 			for (int i = 0; i < names.length; i++) {
 				ColumnMeta m = meta.getColumns().get(names[i]);
-				km[i] = createFieldKeyManager(m, dbAdaptor.nullsFirst());
+				km[i] = createKeyEnumerator(m, dbAdaptor.nullsFirst());
 				keyEnumerators.put(names[i], km[i]);
 			}
 			rootKeyEnumerator = new CompositeKeyEnumerator(km);
@@ -324,7 +323,7 @@ public final class GridDriver {
 		return interpolator.getApproximatePosition(topVisiblePosition);
 	}
 
-	private KeyEnumerator createFieldKeyManager(ColumnMeta m, boolean nullsFirst) throws CelestaException {
+	private KeyEnumerator createKeyEnumerator(ColumnMeta m, boolean nullsFirst) throws CelestaException {
 		KeyEnumerator result;
 
 		final String celestaType = m.getCelestaType();
