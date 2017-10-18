@@ -39,10 +39,9 @@ public class CelestaScriptsTest {
 
   CallContext context;
 
-  public static Map<PyType, Set<String>> testTypesAndTheirMethods = new LinkedHashMap<>();
-
   @BeforeAll
   public static void init() throws CelestaException {
+    TestClass.testTypesAndTheirMethods.clear();
 
     sessionContext = new SessionContext("super", "debug");
 
@@ -114,7 +113,7 @@ public class CelestaScriptsTest {
 
     private Stream<Arguments> prepareStreamOfArguments(Celesta celesta) throws CelestaException {
       AppSettings.DBType dbType = new AppSettings(celesta.getSetupProperties()).getDBType();
-      return testTypesAndTheirMethods.entrySet().stream()
+      return TestClass.testTypesAndTheirMethods.entrySet().stream()
               .flatMap(e -> {
                 PyObject testInstance = e.getKey().__call__();
                 return e.getValue().stream()

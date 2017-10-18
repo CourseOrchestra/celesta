@@ -4,15 +4,15 @@ import org.python.core.PyFunction;
 import org.python.core.PyStringMap;
 import org.python.core.PyType;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Created by ioann on 15.09.2017.
  */
 public class TestClass {
+
+    public static Map<PyType, Set<String>> testTypesAndTheirMethods = new LinkedHashMap<>();
 
   public TestClass(PyType pyType) {
     PyStringMap dict = (PyStringMap)pyType.fastGetDict();
@@ -22,10 +22,6 @@ public class TestClass {
         .map(String::valueOf)
         .collect(Collectors.toSet());
 
-    try {
-      CelestaScriptsTest.testTypesAndTheirMethods.put(pyType, testMethods);
-    } catch (NoClassDefFoundError e) {
-      //ignore
-    }
+      testTypesAndTheirMethods.put(pyType, testMethods);
   }
 }
