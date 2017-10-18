@@ -41,8 +41,6 @@ public class CelestaScriptsTest {
 
   @BeforeAll
   public static void init() throws CelestaException {
-    TestClass.testTypesAndTheirMethods.clear();
-
     sessionContext = new SessionContext("super", "debug");
 
     Properties properties = new Properties();

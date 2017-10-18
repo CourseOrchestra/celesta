@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.util.Locale;
 import java.util.Properties;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.testcontainers.containers.OracleContainer;
@@ -27,7 +28,6 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
 
 	@BeforeClass
 	public static void beforeAll() throws CelestaException {
-		//oracle.start();
 
 		Properties params = new Properties();
 		params.put("score.path", "score");
@@ -54,6 +54,11 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
 				.build();
 
 		dbUpdater.updateSysGrain();
+	}
+
+	@AfterClass
+	public static void afterAll() {
+		dba.connectionPool.close();
 	}
 
 	public OraAdaptorTest() throws Exception {

@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  */
 public class TestClass {
 
-    public static Map<PyType, Set<String>> testTypesAndTheirMethods = new LinkedHashMap<>();
+  public static Map<PyType, Set<String>> testTypesAndTheirMethods = new LinkedHashMap<>();
 
   public TestClass(PyType pyType) {
     PyStringMap dict = (PyStringMap)pyType.fastGetDict();

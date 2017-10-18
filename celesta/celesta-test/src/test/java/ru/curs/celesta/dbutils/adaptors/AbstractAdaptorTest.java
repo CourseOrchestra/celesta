@@ -9,9 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.sql.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.Date;
@@ -20,10 +18,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CallContextBuilder;
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
@@ -1451,4 +1446,16 @@ public abstract class AbstractAdaptorTest {
         }
     }
 
+
+    @Test
+    public void testSelectStaticStrings() throws Exception {
+        List<String > data =  Arrays.asList("A", "B");
+
+        List<String> result = dba.selectStaticStrings(data, "id", "");
+        assertEquals(data, result);
+
+        result = dba.selectStaticStrings(data, "id", "id desc");
+        Collections.reverse(data);
+        assertEquals(data, result);
+    }
 }

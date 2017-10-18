@@ -121,10 +121,12 @@ public final class ConnectionPool implements AutoCloseable {
 	 */
 	@Override
 	public void close() {
-		isClosed = true;
-		CelestaConnection c;
-		while ((c = pool.poll()) != null) {
-			c.close();
+		if (!isClosed) {
+			isClosed = true;
+			CelestaConnection c;
+			while ((c = pool.poll()) != null) {
+				c.close();
+			}
 		}
 	}
 

@@ -1,8 +1,8 @@
 package ru.curs.celesta.dbutils.adaptors;
 
+import org.h2.value.DataType;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorBuilder;
 import ru.curs.celesta.dbutils.h2.MaterializedViewDeleteTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewInsertTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewUpdateTrigger;
@@ -953,6 +953,13 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   @Override
   String truncDate(String dateStr) {
     return "TRUNC(" + dateStr + ")";
+  }
+
+  @Override
+  String prepareFirstRowColumnForSelectStaticStrings(String value, String colName) {
+    int dataType  = DataType.getTypeFromClass(value.getClass());
+    DataType type = DataType.getDataType(dataType);
+    return "CAST(? as " + type.name + ") as " + colName;
   }
 
   @Override

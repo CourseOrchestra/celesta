@@ -44,7 +44,7 @@
         </dependency>
         <dependency>
             <groupId>com.oracle.jdbc</groupId>
-            <artifactId>ojdbc7</artifactId>
+            <artifactId>ojdbc6</artifactId>
             <version>${jdbc.driver.oracle.version}</version>
             <scope>runtime</scope>
         </dependency>

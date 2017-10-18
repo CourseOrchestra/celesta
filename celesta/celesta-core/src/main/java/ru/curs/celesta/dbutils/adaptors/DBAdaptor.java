@@ -45,6 +45,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -53,7 +54,6 @@ import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.*;
-import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorBuilder;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
 import ru.curs.celesta.dbutils.meta.DBFKInfo;
 import ru.curs.celesta.dbutils.meta.DBIndexInfo;
@@ -1107,9 +1107,67 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    */
   abstract String truncDate(String dateStr);
 
+
+  public List<String> selectStaticStrings(
+          List<String> data, String columnName, String orderType) throws CelestaException {
+
+    //prepare sql
+    AtomicInteger rowCounter = new AtomicInteger();
+    String sql = data.stream().map(
+            str -> {
+              final String rowStr;
+
+              if (0 == rowCounter.getAndDecrement()) {
+                rowStr = prepareFirstRowColumnForSelectStaticStrings(str, columnName);
+              } else {
+                rowStr = "?";
+              }
+
+              return String.format("SELECT %s %s", rowStr, constantFromSql());
+            })
+            .collect(Collectors.joining(" UNION ALL "));
+
+    if (orderType != null && !orderType.isEmpty())
+      sql = sql + " ORDER BY " + orderType;
+
+    try (Connection conn = connectionPool.get();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      //fill preparedStatement
+      AtomicInteger paramCounter = new AtomicInteger(1);
+      data.forEach(
+              str -> {
+                try {
+                  ps.setString(paramCounter.getAndIncrement(), str);
+                } catch (SQLException e) {
+                  throw new RuntimeException(e);
+                }
+              });
+
+      //execute query and parse result
+      ResultSet rs = ps.executeQuery();
+
+      List<String> result = new ArrayList<>();
+
+      while (rs.next()) {
+        String str = rs.getString(1);
+        result.add(str);
+      }
+
+      return result;
+    } catch (Exception e) {
+      throw new CelestaException("Can't select static data", e);
+    }
+  }
+
+  String constantFromSql() {
+    return "";
+  }
+
+  String prepareFirstRowColumnForSelectStaticStrings(String value, String colName) {
+    return "? as " + colName;
+  }
 }
-
-
 
 /**
  * Класс, ответственный за генерацию определения столбца таблицы в разных СУБД.

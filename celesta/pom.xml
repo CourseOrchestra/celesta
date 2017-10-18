@@ -52,7 +52,7 @@
         <gson.version>RELEASE</gson.version>
         <h2.version>1.4.196</h2.version>
         <javacc.version>5.0</javacc.version>
-        <jdbc.driver.oracle.version>12.1.0.2</jdbc.driver.oracle.version>
+        <jdbc.driver.oracle.version>11.2.0</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.1.3</jdbc.driver.postgres.version>
         <jdbc.driver.sqlserver.version>4.0</jdbc.driver.sqlserver.version>
         <jython.version>2.7.1b3</jython.version>
@@ -111,27 +111,5 @@
             </plugin>
         </plugins>
     </build>
-
-
-    <profiles>
-        <profile>
-            <id>jenkins</id>
-
-            <activation>
-                <property>
-                    <name>build.number</name>
-                </property>
-            </activation>
-        </profile>
-        <profile>
-            <id>dev</id>
-
-            <activation>
-                <property>
-                    <name>!build.number</name>
-                </property>
-            </activation>
-        </profile>
-    </profiles>
 
 </project>

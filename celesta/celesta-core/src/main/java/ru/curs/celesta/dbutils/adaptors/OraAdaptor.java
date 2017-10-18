@@ -1769,4 +1769,9 @@ final class OraAdaptor extends DBAdaptor {
   String truncDate(String dateStr) {
     return "TRUNC(" + dateStr + " , 'DD')";
   }
+
+  @Override
+  String constantFromSql() {
+    return "FROM DUAL";
+  }
 }
