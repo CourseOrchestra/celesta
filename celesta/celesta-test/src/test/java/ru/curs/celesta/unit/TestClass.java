@@ -22,6 +22,10 @@ public class TestClass {
         .map(String::valueOf)
         .collect(Collectors.toSet());
 
-    CelestaScriptsTest.testTypesAndTheirMethods.put(pyType, testMethods);
+    try {
+      CelestaScriptsTest.testTypesAndTheirMethods.put(pyType, testMethods);
+    } catch (NoClassDefFoundError e) {
+      //ignore
+    }
   }
 }
