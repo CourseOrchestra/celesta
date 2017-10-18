@@ -455,6 +455,30 @@ public final class Celesta implements AutoCloseable {
 
 
 	/**
+	 * Инициализирует и возвращает новый экземпляр Celesta с проиницилизированным интерпретатором скриптового языка.
+	 * Конфигурация извлекается из файла celesta.properties рядом с jar
+	 * @return Celesta
+	 * @throws CelestaException
+	 */
+	public static Celesta createInstance() throws CelestaException {
+		Properties properties = loadPropertiesDynamically();
+		return createInstance(properties);
+	}
+
+
+	/**
+	 * Инициализирует и возвращает новый экземпляр Celesta без проиницилизированного интерпретатора скриптового языка
+	 * Конфигурация извлекается из файла celesta.properties рядом с jar
+	 * Использовать для отладочных целей
+	 * @return Celesta
+	 * @throws CelestaException
+	 */
+	public static Celesta createDebugInstance() throws CelestaException {
+		Properties properties = loadPropertiesDynamically();
+		return createDebugInstance(properties);
+	}
+
+	/**
 	 * Инициализирует и возвращает новый экземпляр Celesta с проиницилизированным интерпретатором скриптового языка
 	 * @param properties настройки
 	 * @return Celesta
