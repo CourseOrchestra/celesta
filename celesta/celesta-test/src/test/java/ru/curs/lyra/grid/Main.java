@@ -25,7 +25,7 @@ public class Main extends JFrame {
 
 	{
 		try {
-			mgr1 = new VarcharFieldEnumerator("ваня", "маша", 4);
+			mgr1 = new VarcharFieldEnumerator(VarcharFieldEnumeratorTest.DBA, "ваня", "маша", 4);
 		} catch (CelestaException e) {
 			e.printStackTrace();
 		}

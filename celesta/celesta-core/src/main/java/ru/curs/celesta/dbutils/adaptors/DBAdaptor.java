@@ -66,7 +66,7 @@ import ru.curs.celesta.score.*;
 /**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
  */
-public abstract class DBAdaptor implements QueryBuildingHelper {
+public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdaptor {
 
   /*
    * NB для программистов. Класс большой, во избежание хаоса здесь порядок
@@ -1107,22 +1107,14 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
    */
   abstract String truncDate(String dateStr);
 
-
+  @Override
   public List<String> selectStaticStrings(
           List<String> data, String columnName, String orderType) throws CelestaException {
 
     //prepare sql
-    AtomicInteger rowCounter = new AtomicInteger();
     String sql = data.stream().map(
             str -> {
-              final String rowStr;
-
-              if (0 == rowCounter.getAndDecrement()) {
-                rowStr = prepareFirstRowColumnForSelectStaticStrings(str, columnName);
-              } else {
-                rowStr = "?";
-              }
-
+              final String rowStr = prepareRowColumnForSelectStaticStrings(str, columnName);
               return String.format("SELECT %s %s", rowStr, constantFromSql());
             })
             .collect(Collectors.joining(" UNION ALL "));
@@ -1164,9 +1156,51 @@ public abstract class DBAdaptor implements QueryBuildingHelper {
     return "";
   }
 
-  String prepareFirstRowColumnForSelectStaticStrings(String value, String colName) {
+  String prepareRowColumnForSelectStaticStrings(String value, String colName) {
     return "? as " + colName;
   }
+
+  @Override
+  public int compareStrings(String left, String right) throws CelestaException {
+
+    List<String> comparisons = Arrays.asList("<", "=", ">");
+
+    String sql = comparisons.stream()
+            .map(comparison ->
+                    "select count(*) " +
+                            " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("?" , "a")
+                            + " " + constantFromSql() +  ") r " +
+                            " where a " + comparison + " ?"
+            )
+            .collect(Collectors.joining(" UNION ALL "));
+
+    try (Connection conn = connectionPool.get();
+         PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      for (int i = 1; i < comparisons.size() * 2; i += 2) {
+        ps.setString(i, left);
+        ps.setString(i + 1, right);
+      }
+
+      ResultSet rs = ps.executeQuery();
+
+      int result = -1;
+
+      while (rs.next()) {
+        boolean compareResult = rs.getBoolean(1);
+
+        if (compareResult)
+          break;
+
+        ++result;
+      }
+
+      return result;
+    } catch (Exception e) {
+      throw new CelestaException("Can't compare strings", e);
+    }
+  }
+
 }
 
 /**

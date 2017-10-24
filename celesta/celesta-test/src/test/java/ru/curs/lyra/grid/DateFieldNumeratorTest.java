@@ -7,13 +7,17 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.adaptors.StaticDataAdaptor;
 
 public class DateFieldNumeratorTest {
+
 	@Test
 	public void testConversion() throws CelestaException, InterruptedException {
 		Date d = new Date();
@@ -31,7 +35,7 @@ public class DateFieldNumeratorTest {
 	@Test
 	public void testCompositeUsage() throws CelestaException {
 		DateFieldEnumerator dfe = new DateFieldEnumerator();
-		VarcharFieldEnumerator vfe = new VarcharFieldEnumerator(VarcharFieldEnumerator.POSTGRES, 36);
+		VarcharFieldEnumerator vfe = new VarcharFieldEnumerator(VarcharFieldEnumeratorTest.DBA, 36);
 		NullsLast nle = new NullsLast(dfe);
 
 		CompositeKeyEnumerator cke = new CompositeKeyEnumerator(nle, vfe);

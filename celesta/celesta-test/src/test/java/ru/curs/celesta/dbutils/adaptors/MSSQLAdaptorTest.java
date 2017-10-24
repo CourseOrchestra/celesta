@@ -20,7 +20,7 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 	@ClassRule
 	public static MSSQLServerContainer msSql = new MSSQLServerContainer()
 			.withDatabaseName("celesta")
-			.withCollation("Cyrillic_General_CI_AS");
+			.withCollation("Cyrillic_General_CI_AI");
 
 	private static MSSQLAdaptor dba;
 

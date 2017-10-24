@@ -2,6 +2,7 @@ package ru.curs.celesta.dbutils;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -14,14 +15,7 @@ import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.ViewColumnMeta;
-import ru.curs.lyra.grid.BitFieldEnumerator;
-import ru.curs.lyra.grid.CompositeKeyEnumerator;
-import ru.curs.lyra.grid.DateFieldEnumerator;
-import ru.curs.lyra.grid.IntFieldEnumerator;
-import ru.curs.lyra.grid.KeyEnumerator;
-import ru.curs.lyra.grid.KeyInterpolator;
-import ru.curs.lyra.grid.NullableFieldEnumerator;
-import ru.curs.lyra.grid.VarcharFieldEnumerator;
+import ru.curs.lyra.grid.*;
 
 /**
  * Specifies the record position asynchronously, using separate execution
@@ -174,14 +168,14 @@ public final class GridDriver {
 		if (names.length == 1) {
 			// Single field key enumerator
 			ColumnMeta m = meta.getColumns().get(names[0]);
-			rootKeyEnumerator = createKeyEnumerator(m, dbAdaptor.nullsFirst());
+			rootKeyEnumerator = createKeyEnumerator(m, dbAdaptor.nullsFirst(), dbAdaptor);
 			keyEnumerators.put(names[0], rootKeyEnumerator);
 		} else {
 			// Multiple field key enumerator
 			KeyEnumerator[] km = new KeyEnumerator[names.length];
 			for (int i = 0; i < names.length; i++) {
 				ColumnMeta m = meta.getColumns().get(names[i]);
-				km[i] = createKeyEnumerator(m, dbAdaptor.nullsFirst());
+				km[i] = createKeyEnumerator(m, dbAdaptor.nullsFirst(), dbAdaptor);
 				keyEnumerators.put(names[i], km[i]);
 			}
 			rootKeyEnumerator = new CompositeKeyEnumerator(km);
@@ -323,7 +317,7 @@ public final class GridDriver {
 		return interpolator.getApproximatePosition(topVisiblePosition);
 	}
 
-	private KeyEnumerator createKeyEnumerator(ColumnMeta m, boolean nullsFirst) throws CelestaException {
+	private KeyEnumerator createKeyEnumerator(ColumnMeta m, boolean nullsFirst, DBAdaptor dbAdaptor) throws CelestaException {
 		KeyEnumerator result;
 
 		final String celestaType = m.getCelestaType();
@@ -332,17 +326,20 @@ public final class GridDriver {
 		else if (IntegerColumn.CELESTA_TYPE.equals(celestaType))
 			result = new IntFieldEnumerator();
 		else if (StringColumn.VARCHAR.equals(celestaType)) {
+			final int length;
 			if (m instanceof StringColumn) {
 				StringColumn s = (StringColumn) m;
-				result = new VarcharFieldEnumerator(s.getLength());
+				length = s.getLength();
 			} else {
 				ViewColumnMeta vcm = (ViewColumnMeta) m;
 				if (vcm.getLength() < 0) {
 					throw new CelestaException(
 							"Undefined length for VARCHAR view field: cannot use it as a key field in a grid.");
 				}
-				result = new VarcharFieldEnumerator(vcm.getLength());
+				length = vcm.getLength();
 			}
+
+			result = new VarcharFieldEnumerator(dbAdaptor, length);
 		} else if (DateTimeColumn.CELESTA_TYPE.equals(celestaType)) {
 			result = new DateFieldEnumerator();
 		} else {

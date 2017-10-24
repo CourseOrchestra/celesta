@@ -1,8 +1,13 @@
 package ru.curs.lyra.grid;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.adaptors.StaticDataAdaptor;
 
 /**
  * Нумератор ключа с типом varchar.
@@ -10,32 +15,28 @@ import ru.curs.celesta.CelestaException;
  */
 public class VarcharFieldEnumerator extends KeyEnumerator {
 
-	/**
-	 * Postgres collation rules.
-	 */
-	public static final Rules POSTGRES;
+	private static final Map<StaticDataAdaptor, String > RULES = new HashMap<>();
+
 	static final int[][] EMPTY_STRING = new int[0][0];
 
-	static {
-		POSTGRES = new Rules() {
-			@Override
-			public String getRules() {
-				return "<'''<'-'<'–'<'—'<' '<'!'<'\"'<'#'<'$'<'%'<'&'<'('<')'<'*'<','<'.'<'/'<':'<';'"
-						+ "<'?'<'@'<'['<'\\'<']'<'^'<'_'<'`'<'{'<'|'<'}'<'~'<'¦'<'‘'<'’'<'‚'<'“'<'”'<'„'<'‹'<'›'<'+'"
-						+ "<'<'<'='<'>'<'«'<'»'<'§'<'©'<'¬'<'®'<'°'<'†'<'‡'<'•'<'‰'<0<1<2<3<4<5<6<7<8<9"
-						+ "<a,A<b,B<c,C<d,D<e,E<f,F<g,G<h,H<i,I<j,J<k,K<l,L<m,M<n,N;№<o,O<p,P<q,Q<r,R<s,S<"
-						+ "t,T<™<u,U<v,V<w,W<x,X<y,Y<z,Z"
-				// <и,И<й,Й<
-						+ "<а,А<б,Б<в,В<г,Г<д,Д<е,Е;ё,Ё<ж,Ж<з,З<и,И;й,Й<к,К<л,Л<м,М<н,Н<о,О<п,П<р,Р<с,С<"
-						+ "т,Т<у,У<ф,Ф<х,Х<ц,Ц<ч,Ч<ш,Ш<щ,Щ<ъ,Ъ<ы,Ы<ь,Ь<э,Э<ю,Ю<я,Я";
-			}
+	public final static List<String> CHARS = Arrays.asList(
+			"'", "-", "–", "—", " ", "!", "\"", "#", "$", "%", "&", "(", ")",
+			"*", ",", ".", "/", ":", ";",
+			"?", "@", "[", "\\", "]", "^", "_", "`", "{", "|", "}",
+			"~", "¦", "‘", "’", "‚", "“", "”", "„", "‹", "›", "+",
+			"<", "=", ">", "«", "»", "§", "©", "¬", "®", "°", "†", "‡", "•", "‰",
+			"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+			"a", "A", "b", "B", "c", "C", "d", "D", "e", "E", "f", "F", "g", "G",
+			"h", "H", "i", "I", "j", "J", "k", "K", "l", "L", "m", "M", "n", "N", "o", "O", "p", "P",
+			"q", "Q", "r", "R", "s", "S", "t", "T", "™", "u", "U", "v", "V", "w", "W",
+			"x", "X", "y", "Y", "z", "Z",
+			"а", "А", "б", "Б", "в", "В", "г", "Г", "д", "Д", "е", "Е", "ё", "Ё",
+			"ж", "Ж", "з", "З", "и", "И", "й", "Й", "к", "К", "л", "Л", "м", "М", "н", "Н",
+			"о", "О", "п", "П", "р", "Р", "с", "С", "т", "Т",
+			"у", "У", "ф", "Ф", "х", "Х", "ц", "Ц", "ч", "Ч", "ш", "Ш", "щ", "Щ", "ъ", "Ъ", "ы", "Ы", "ь", "Ь",
+			"э", "Э", "ю", "Ю", "я", "Я"
+	);
 
-			@Override
-			public String getName() {
-				return "POSTGRES";
-			}
-		};
-	}
 
 	private final LyraCollator collator;
 
@@ -51,12 +52,9 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 
 	private String value = "";
 
-	public VarcharFieldEnumerator(int m) {
-		this(POSTGRES, m);
-	}
 
-	public VarcharFieldEnumerator(Rules rules, int m) {
-		this(rules, m, true);
+	public VarcharFieldEnumerator(StaticDataAdaptor staticDataAdaptor, int m) {
+		this(staticDataAdaptor, m, true);
 		this.min = EMPTY_STRING;
 		this.max = new int[m][3];
 		int p = collator.getPrimOrderCount() - 1;
@@ -72,20 +70,19 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 
 	}
 
-	public VarcharFieldEnumerator(String min, String max, int m) throws CelestaException {
-		this(POSTGRES, min, max, m);
-	}
 
-	public VarcharFieldEnumerator(Rules rules, String min, String max, int m) throws CelestaException {
-		this(rules, m, true);
+	public VarcharFieldEnumerator(StaticDataAdaptor staticDataAdaptor, String min, String max, int m) throws CelestaException {
+		this(staticDataAdaptor, m, true);
 		setBounds(min, max);
 	}
 
-	private VarcharFieldEnumerator(Rules rules, int m, boolean setup) {
+	private VarcharFieldEnumerator(StaticDataAdaptor staticDataAdaptor, int m, boolean setup) {
 		if (m <= 0)
 			throw new IllegalArgumentException();
+
+		String rules = RULES.computeIfAbsent(staticDataAdaptor, this::calcRules);
 		// Setting up collator
-		collator = LyraCollator.getInstance(rules.getRules(), rules.getName());
+		collator = LyraCollator.getInstance(rules, staticDataAdaptor.getClass().getSimpleName() + "Collator");
 
 		BigInteger[] count = { BigInteger.valueOf(collator.getPrimOrderCount()),
 				BigInteger.valueOf(collator.getSecOrderCount()), BigInteger.valueOf(collator.getTerOrderCount()) };
@@ -232,5 +229,40 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 			buf[i] = collator.getElement(arr[i][0], arr[i][1], arr[i][2]);
 		}
 		this.value = new String(buf, 0, i);
+	}
+
+	private String calcRules(StaticDataAdaptor staticDataAdaptor) {
+		try {
+			List<String> data = staticDataAdaptor.selectStaticStrings(VarcharFieldEnumerator.CHARS, "\"id\"", "\"id\" ASC");
+
+			StringBuilder ruleBuilder = new StringBuilder();
+			ruleBuilder.append("<'" + data.get(0) + "'");
+			for (int i = 1; i < data.size(); ++i) {
+				String left = data.get(i - 1);
+				String right = data.get(i);
+
+				int comparisonResult = staticDataAdaptor.compareStrings(left, right);
+
+				if (comparisonResult < 0)
+					if (staticDataAdaptor.compareStrings(right, left + "1") < 0)
+						if (left.equalsIgnoreCase(right))
+							ruleBuilder.append(",");
+						else
+							ruleBuilder.append(";");
+					else
+						ruleBuilder.append("<");
+				else if (comparisonResult == 0)
+					if (left.equalsIgnoreCase(right))
+						ruleBuilder.append(",");
+					else
+						ruleBuilder.append(";");
+
+				ruleBuilder.append("'" + right + "'");
+			}
+
+			return ruleBuilder.toString();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

@@ -70,6 +70,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   private static final Pattern HEX_STRING = Pattern.compile("'\\\\x([0-9A-Fa-f]+)'");
 
+
   static {
     TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
       @Override
@@ -1174,4 +1175,5 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       }
     };
   }
+
 }

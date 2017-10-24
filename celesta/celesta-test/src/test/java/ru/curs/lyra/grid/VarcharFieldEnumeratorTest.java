@@ -4,24 +4,53 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.adaptors.StaticDataAdaptor;
 
 public class VarcharFieldEnumeratorTest {
 
 	private static final double EPSILON = 1e-10;
 
-	private static final Rules rules = new Rules() {
+	private static final String RULES = "<а<б<в<г<д<е<ж<з<и<й<к<л<м<н<о<п<р<с<т<у<ф<х<ц<ч<ш<щ<ъ<ы<ь<э<ю<я";
+
+	private static final StaticDataAdaptor CUSTOM_DBA = new StaticDataAdaptor() {
 		@Override
-		public String getRules() {
-			return "<а<б<в<г<д<е<ж<з<и<й<к<л<м<н<о<п<р<с<т<у<ф<х<ц<ч<ш<щ<ъ<ы<ь<э<ю<я";
+		public List<String> selectStaticStrings(List<String> data, String columnName, String orderType) throws CelestaException {
+			return Arrays.asList(
+					"а","б","в","г","д","е","ж","з","и","й","к","л","м","н",
+					"о","п","р","с","т","у","ф","х",
+					"ц","ч","ш","щ","ъ","ы","ь","э","ю","я");
 		}
 
 		@Override
-		public String getName() {
-			return "simple";
+		public int compareStrings(String left, String right) throws CelestaException {
+			if (left.equalsIgnoreCase(right))
+				return left.compareToIgnoreCase(right);
+			return left.compareTo(right);
+		}
+	};
+
+
+	public static final StaticDataAdaptor DBA = new StaticDataAdaptor() {
+		@Override
+		public List<String> selectStaticStrings(List<String> data, String columnName, String orderType) throws CelestaException {
+			List<String> result = new ArrayList<>(VarcharFieldEnumerator.CHARS);
+			Collections.sort(result);
+			return result;
+		}
+
+		@Override
+		public int compareStrings(String left, String right) throws CelestaException {
+			if (left.equalsIgnoreCase(right))
+				return left.compareToIgnoreCase(right);
+			return left.compareTo(right);
 		}
 	};
 
@@ -31,7 +60,7 @@ public class VarcharFieldEnumeratorTest {
 		for (int i = 0; i < len; i++)
 			max[i] = 'я';
 
-		VarcharFieldEnumerator vfm = new VarcharFieldEnumerator(rules, min, new String(max), len);
+		VarcharFieldEnumerator vfm = new VarcharFieldEnumerator(CUSTOM_DBA, min, new String(max), len);
 		return vfm;
 	}
 
@@ -42,7 +71,7 @@ public class VarcharFieldEnumeratorTest {
 	@Test
 	public void test1() throws CelestaException {
 		VarcharFieldEnumerator km;
-		km = new VarcharFieldEnumerator(rules, 1);
+		km = new VarcharFieldEnumerator(CUSTOM_DBA, 1);
 		km.setValue("");
 		assertEquals(0.0, km.getPosition(), EPSILON);
 		km.setValue("а");
@@ -97,7 +126,7 @@ public class VarcharFieldEnumeratorTest {
 		} catch (CelestaException e) {
 			msg = e.getMessage();
 		}
-		assertEquals("Error in string 'XXX': character 'X' is unknown for collator 'simple'.", msg);
+		assertEquals("Error in string 'XXX': character 'X' is unknown for collator 'Collator'.", msg);
 
 	}
 
@@ -162,7 +191,7 @@ public class VarcharFieldEnumeratorTest {
 
 	@Test
 	public void test4() throws CelestaException {
-		VarcharFieldEnumerator km = new VarcharFieldEnumerator(rules, "ваня", "наташа", 7);
+		VarcharFieldEnumerator km = new VarcharFieldEnumerator(CUSTOM_DBA, "ваня", "наташа", 7);
 		km.setValue("коля");
 		double k = km.getPosition();
 		km.setValue("маша");
@@ -194,7 +223,7 @@ public class VarcharFieldEnumeratorTest {
 		km.setValue("в");
 		assertEquals(BigInteger.valueOf(3), km.getOrderValue());
 		km.setValue("я");
-		LyraCollator lc = LyraCollator.getInstance(rules.getRules(), rules.getName());
+		LyraCollator lc = LyraCollator.getInstance(RULES,CUSTOM_DBA.getClass().getSimpleName() + "Collator");
 		int alphabetLengh = lc.getPrimOrderCount();
 		assertEquals(BigInteger.valueOf(alphabetLengh), km.getOrderValue());
 
@@ -217,8 +246,8 @@ public class VarcharFieldEnumeratorTest {
 
 	@Test
 	public void test6() throws CelestaException {
-		VarcharFieldEnumerator km = new VarcharFieldEnumerator(VarcharFieldEnumerator.POSTGRES, 10);
-		String[] test = { "А-2-А", "ая", "Ая", "ая Дачная" };
+		VarcharFieldEnumerator km = new VarcharFieldEnumerator(DBA, 10);
+		String[] test = { "А-2-А", "Ая", "ая", "ая Дачная" };
 		BigInteger[] v = new BigInteger[test.length];
 		for (int i = 0; i < test.length; i++) {
 			km.setValue(test[i]);
@@ -239,8 +268,8 @@ public class VarcharFieldEnumeratorTest {
 
 	@Test
 	public void test7() throws CelestaException {
-		VarcharFieldEnumerator km = new VarcharFieldEnumerator(VarcharFieldEnumerator.POSTGRES, 10);
-		String[] test = { "Е", "ё", "Ё", "ее", "ёее", "ееее", "Еёее" };
+		VarcharFieldEnumerator km = new VarcharFieldEnumerator(DBA, 10);
+		String[] test = { "Ё", "Е", "Еёее", "ее", "ееее", "ё",  "ёее" };
 		BigInteger[] v = new BigInteger[test.length];
 		for (int i = 0; i < test.length; i++) {
 			km.setValue(test[i]);
@@ -259,9 +288,8 @@ public class VarcharFieldEnumeratorTest {
 
 	@Test
 	public void test8() throws CelestaException {
-		// "Пётр" and "петр" differ only by case and accent.
 
-		VarcharFieldEnumerator fe = new VarcharFieldEnumerator(VarcharFieldEnumerator.POSTGRES, 30);
+		VarcharFieldEnumerator fe = new VarcharFieldEnumerator(DBA, 30);
 
 		fe.setValue("Пётр");
 		BigInteger k1 = fe.getOrderValue();
@@ -272,7 +300,7 @@ public class VarcharFieldEnumeratorTest {
 		fe.setValue("");
 		assertEquals(BigInteger.ZERO, fe.getOrderValue());
 
-		assertTrue(k2.compareTo(k1) < 0);
+		assertTrue(k2.compareTo(k1) > 0);
 
 		fe.setOrderValue(k1);
 		assertEquals("Пётр", fe.getValue());
@@ -288,11 +316,11 @@ public class VarcharFieldEnumeratorTest {
 	@Test
 	public void test9() throws CelestaException {
 		String val = "В начале июля, в чрезвычайно жаркое время, под вечер, один молодой человек вышел из своей каморки, которую нанимал от жильцов в С — м переулке, на улицу и медленно, как бы в нерешимости, отправился к ";
-		VarcharFieldEnumerator e = new VarcharFieldEnumerator(200);
+		VarcharFieldEnumerator e = new VarcharFieldEnumerator(DBA, 200);
 		e.setValue(val);
 		BigInteger ord = e.getOrderValue();
 
-		VarcharFieldEnumerator e2 = new VarcharFieldEnumerator(200);
+		VarcharFieldEnumerator e2 = new VarcharFieldEnumerator(DBA, 200);
 		e2.setOrderValue(ord);
 		assertEquals(val, e2.getValue());
 	}

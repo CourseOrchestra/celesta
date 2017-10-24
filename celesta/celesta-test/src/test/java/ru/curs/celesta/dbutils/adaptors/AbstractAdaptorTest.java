@@ -8,6 +8,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -30,6 +31,7 @@ import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.score.*;
 import ru.curs.celesta.syscursors.GrainsCursor;
+import ru.curs.lyra.grid.VarcharFieldEnumerator;
 
 public abstract class AbstractAdaptorTest {
     final static String GRAIN_NAME = "gtest";
@@ -1458,4 +1460,37 @@ public abstract class AbstractAdaptorTest {
         Collections.reverse(data);
         assertEquals(data, result);
     }
+
+    @Test
+    public void testCompareStrings() throws Exception {
+        //less
+        int comparisonResult = dba.compareStrings("a", "ab");
+        assertEquals(-1, comparisonResult);
+
+        //equals
+        comparisonResult = dba.compareStrings("a", "a");
+        assertEquals(0, comparisonResult);
+
+        //greater
+        comparisonResult = dba.compareStrings("ab", "a");
+        assertEquals(1, comparisonResult);
+    }
+
+    @Test
+    public void testVarcharFieldEnumeratorCollation() throws Exception {
+        List<String> data = dba.selectStaticStrings(VarcharFieldEnumerator.CHARS, "\"id\"", "\"id\" ASC");
+        VarcharFieldEnumerator varcharFieldEnumerator = new VarcharFieldEnumerator(dba, 1);
+
+        BigInteger prevOrder = BigInteger.valueOf(-1);
+
+        for (int i = 0; i < data.size(); ++i) {
+            String ch = data.get(i);
+            varcharFieldEnumerator.setValue(ch);
+
+            BigInteger currentOrder = varcharFieldEnumerator.getOrderValue();
+            assertTrue(prevOrder.longValue() < currentOrder.longValue());
+            prevOrder = currentOrder;
+        }
+    }
+
 }

@@ -1774,4 +1774,5 @@ final class OraAdaptor extends DBAdaptor {
   String constantFromSql() {
     return "FROM DUAL";
   }
+
 }
