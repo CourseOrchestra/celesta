@@ -1205,10 +1205,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   }
 
   public abstract AppSettings.DBType getType();
-
-  public String objectToSqlString(Object o) throws OperationNotSupportedException {
-    throw new OperationNotSupportedException();
-  }
 }
 
 /**

@@ -1180,19 +1180,4 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   public AppSettings.DBType getType() {
     return AppSettings.DBType.POSTGRES;
   }
-
-  @Override
-  public String objectToSqlString(Object o) throws OperationNotSupportedException {
-    if (o == null)
-      return null;
-    if (o instanceof Date) {
-      Date d = (Date)o;
-      return String.format("'%s'", TIMESTAMP_FORMAT.format(d));
-    }
-    if (o instanceof String) {
-      return String.format("'%s'", o);
-    }
-    else
-      return String.valueOf(o);
-  }
 }
