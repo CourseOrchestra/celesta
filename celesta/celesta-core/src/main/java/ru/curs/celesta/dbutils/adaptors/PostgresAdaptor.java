@@ -38,19 +38,16 @@ package ru.curs.celesta.dbutils.adaptors;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
@@ -63,12 +60,16 @@ import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
+import javax.naming.OperationNotSupportedException;
+
 /**
  * Адаптер Postgres.
  */
 final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   private static final Pattern HEX_STRING = Pattern.compile("'\\\\x([0-9A-Fa-f]+)'");
+
+  private static final DateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
 
   static {
@@ -211,7 +212,6 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
         } else if (ic.getDefaultValue() != null) {
           DateFormat df = new SimpleDateFormat("yyyyMMdd");
           defaultStr = String.format(DEFAULT + " '%s'", df.format(ic.getDefaultValue()));
-
         }
         return defaultStr;
       }
@@ -1176,4 +1176,23 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     };
   }
 
+  @Override
+  public AppSettings.DBType getType() {
+    return AppSettings.DBType.POSTGRES;
+  }
+
+  @Override
+  public String objectToSqlString(Object o) throws OperationNotSupportedException {
+    if (o == null)
+      return null;
+    if (o instanceof Date) {
+      Date d = (Date)o;
+      return String.format("'%s'", TIMESTAMP_FORMAT.format(d));
+    }
+    if (o instanceof String) {
+      return String.format("'%s'", o);
+    }
+    else
+      return String.valueOf(o);
+  }
 }

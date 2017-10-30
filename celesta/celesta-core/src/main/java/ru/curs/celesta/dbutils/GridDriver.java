@@ -1,20 +1,12 @@
 package ru.curs.celesta.dbutils;
 
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.score.BooleanColumn;
-import ru.curs.celesta.score.ColumnMeta;
-import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.GrainElement;
-import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.ViewColumnMeta;
+import ru.curs.celesta.score.*;
 import ru.curs.lyra.grid.*;
 
 /**
@@ -23,7 +15,6 @@ import ru.curs.lyra.grid.*;
  */
 public final class GridDriver {
 
-	private static final int MAX_REFINEMENTS_COUNT = 100;
 	private static final int DEFAULT_SMALL_SCROLL = 11;
 
 	/**
@@ -32,9 +23,9 @@ public final class GridDriver {
 	private static final int DEFAULT_COUNT = 1024;
 
 	private final KeyInterpolator interpolator;
+	private final InterpolationInitializer interpolationInitializer;
 	private final KeyEnumerator rootKeyEnumerator;
 	private final Map<String, KeyEnumerator> keyEnumerators = new HashMap<>();
-	private final Random rnd = new Random();
 
 	/**
 	 * Key columns' names.
@@ -63,8 +54,6 @@ public final class GridDriver {
 	 */
 	private final BasicCursor closedCopy;
 
-	private int refinementsCount = 0;
-
 	private int smallScroll = DEFAULT_SMALL_SCROLL;
 
 	/**
@@ -88,28 +77,10 @@ public final class GridDriver {
 				while (true) {
 					RequestTask myRequest = task;
 					if (myRequest == null) {
-						if (refinementsCount > MAX_REFINEMENTS_COUNT)
-							return;
-						refinementsCount++;
-						BigInteger lav = interpolator.getLeastAccurateValue();
-						if (lav == null) {
-							// no refinements needed at all at the moment,
-							return;
-						} else {
-							// perform interpolation table refinement
-							setCursorOrdinal(c, lav);
-							if (rnd.nextBoolean()) {
-								c.navigate("=>+");
-							} else {
-								c.navigate("=<-");
-							}
-							int result = c.position();
-							BigInteger key = getCursorOrdinal(c);
-							interpolator.setPoint(key, result);
-							// if (changeNotifier != null)
-							// changeNotifier.run();
+						int count = interpolator.getApproximateCount();
+						if (interpolationInitializer.initialize(c, count))
 							continue;
-						}
+						return;
 					}
 
 					// check if it's time to execute the request
@@ -196,6 +167,22 @@ public final class GridDriver {
 			topVisiblePosition = BigInteger.ZERO;
 		}
 
+		interpolationInitializer = new InterpolationInitializer(interpolator, dbAdaptor) {
+			@Override
+			void setCursorOrdinal(BasicCursor c, BigInteger key) throws CelestaException {
+				GridDriver.this.setCursorOrdinal(c, key);
+			}
+
+			@Override
+			BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException {
+				return GridDriver.this.getCursorOrdinal(c);
+			}
+
+			@Override
+			BigInteger getCursorOrdinal(BasicCursor c, Collection<String> fields) throws CelestaException {
+				return GridDriver.this.getCursorOrdinal(c, fields);
+			}
+		};
 	}
 
 	/**
@@ -290,11 +277,15 @@ public final class GridDriver {
 		}
 	}
 
-	private synchronized BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException {
+	synchronized BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException {
+		return getCursorOrdinal(c, closedCopy.meta().getColumns().keySet());
+	}
+
+	synchronized BigInteger getCursorOrdinal(BasicCursor c, Collection<String> fields) throws CelestaException {
 		int i = 0;
 		Object[] values = c._currentValues();
 		KeyEnumerator km;
-		for (String cname : closedCopy.meta().getColumns().keySet()) {
+		for (String cname : fields) {
 			km = keyEnumerators.get(cname);
 			if (km != null)
 				km.setValue(values[i]);
@@ -303,7 +294,7 @@ public final class GridDriver {
 		return rootKeyEnumerator.getOrderValue();
 	}
 
-	private synchronized void setCursorOrdinal(BasicCursor c, BigInteger key) throws CelestaException {
+	synchronized void setCursorOrdinal(BasicCursor c, BigInteger key) throws CelestaException {
 		rootKeyEnumerator.setOrderValue(key);
 		for (Map.Entry<String, KeyEnumerator> e : keyEnumerators.entrySet()) {
 			c.setValue(e.getKey(), e.getValue().getValue());

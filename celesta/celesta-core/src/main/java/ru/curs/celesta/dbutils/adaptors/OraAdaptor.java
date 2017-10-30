@@ -50,6 +50,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
@@ -1082,12 +1083,16 @@ final class OraAdaptor extends DBAdaptor {
           getSelectFromOrderBy(from, whereClause, orderBy, fields), offset + 1L);
 
     } else {
-      sql = String.format(
-          "with a as (%s) select * from (select a.*, ROWNUM rnum "
-              + "from a where rownum <= %d) where rnum >= %d order by rnum",
-          getSelectFromOrderBy(from, whereClause, orderBy, fields), offset + rowCount, offset + 1L);
+      sql = getLimitedSqlWithOffset(orderBy, fields, from, whereClause, offset, rowCount);
     }
     return sql;
+  }
+
+  private String getLimitedSqlWithOffset(String orderBy, Set<String> fields, FromClause from, String where, long offset, long rowCount) {
+    return String.format(
+            "with a as (%s) select * from (select a.*, ROWNUM rnum "
+                    + "from a where rownum <= %d) where rnum >= %d order by rnum",
+            getSelectFromOrderBy(from, where, orderBy, fields), offset + rowCount, offset + 1L);
   }
 
   @Override
@@ -1475,7 +1480,8 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getNavigationStatement(
-      Connection conn, FromClause from, String orderBy, String navigationWhereClause, Set<String> fields
+      Connection conn, FromClause from, String orderBy,
+      String navigationWhereClause, Set<String> fields, long offset
   ) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
@@ -1483,12 +1489,20 @@ final class OraAdaptor extends DBAdaptor {
     StringBuilder w = new StringBuilder(navigationWhereClause);
     final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
 
-    if (orderBy.length() > 0)
-      w.append(" order by " + orderBy);
-    String sql = String.format(SELECT_S_FROM
-            + " (" + SELECT_S_FROM + " %s  %s)"
-            + " where rownum = 1", fieldList, fieldList,
-        from.getExpression(), "where " + w);
+    final String sql;
+
+    if (offset == 0) {
+      if (orderBy.length() > 0)
+        w.append(" order by " + orderBy);
+
+        sql = String.format(SELECT_S_FROM
+                      + " (" + SELECT_S_FROM + " %s  %s)"
+                      + " where rownum = 1", fieldList, fieldList,
+              from.getExpression(), "where " + w);
+    } else {
+      sql = getLimitedSqlWithOffset(orderBy, fields, from, w.toString(), offset - 1, offset);
+    }
+
     // System.out.println(sql);
     return prepareStatement(conn, sql);
   }
@@ -1775,4 +1789,8 @@ final class OraAdaptor extends DBAdaptor {
     return "FROM DUAL";
   }
 
+  @Override
+  public AppSettings.DBType getType() {
+    return AppSettings.DBType.ORACLE;
+  }
 }

@@ -227,7 +227,8 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getNavigationStatement(
-      Connection conn, FromClause from, String orderBy, String navigationWhereClause, Set<String> fields
+      Connection conn, FromClause from, String orderBy,
+      String navigationWhereClause, Set<String> fields, long offset
   ) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
@@ -236,8 +237,8 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
     boolean useWhere = w.length() > 0;
     if (orderBy.length() > 0)
       w.append(" order by " + orderBy);
-    String sql = String.format(SELECT_S_FROM + " %s %s  limit 1;", fieldList,
-        from.getExpression(), useWhere ? " where " + w : w);
+    String sql = String.format(SELECT_S_FROM + " %s %s  limit 1 offset %d;", fieldList,
+        from.getExpression(), useWhere ? " where " + w : w, offset == 0 ? 0 : offset - 1);
     // System.out.println(sql);
     return prepareStatement(conn, sql);
   }

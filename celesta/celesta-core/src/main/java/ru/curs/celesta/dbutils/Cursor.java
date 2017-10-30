@@ -159,7 +159,9 @@ public abstract class Cursor extends BasicCursor {
 			protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
 				WhereTerm where = getQmaker().getHereWhereTerm(meta());
 				where.programParams(program);
-				return db().getNavigationStatement(conn(), getFrom(),"", where.getWhere(), fieldsForStatement);
+				return db().getNavigationStatement(
+						conn(), getFrom(),"", where.getWhere(), fieldsForStatement, 0
+				);
 			}
 		};
 	}

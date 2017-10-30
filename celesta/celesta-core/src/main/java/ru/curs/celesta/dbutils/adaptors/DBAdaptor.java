@@ -63,6 +63,8 @@ import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
+import javax.naming.OperationNotSupportedException;
+
 /**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
  */
@@ -711,7 +713,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param navigationWhereClause Условие навигационного набора (от текущей записи).
    */
   public abstract PreparedStatement getNavigationStatement(
-      Connection conn, FromClause from, String orderBy, String navigationWhereClause, Set<String> fields
+      Connection conn, FromClause from, String orderBy,
+      String navigationWhereClause, Set<String> fields, long offset
   ) throws CelestaException;
 
   abstract String getLimitedSQL(
@@ -1109,7 +1112,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   @Override
   public List<String> selectStaticStrings(
-          List<String> data, String columnName, String orderType) throws CelestaException {
+          List<String> data, String columnName, String orderBy) throws CelestaException {
 
     //prepare sql
     String sql = data.stream().map(
@@ -1119,8 +1122,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
             })
             .collect(Collectors.joining(" UNION ALL "));
 
-    if (orderType != null && !orderType.isEmpty())
-      sql = sql + " ORDER BY " + orderType;
+    if (orderBy != null && !orderBy.isEmpty())
+      sql = sql + " ORDER BY " + orderBy;
 
     try (Connection conn = connectionPool.get();
       PreparedStatement ps = conn.prepareStatement(sql)
@@ -1201,6 +1204,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
   }
 
+  public abstract AppSettings.DBType getType();
+
+  public String objectToSqlString(Object o) throws OperationNotSupportedException {
+    throw new OperationNotSupportedException();
+  }
 }
 
 /**

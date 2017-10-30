@@ -49,6 +49,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.meta.DBColumnInfo;
@@ -865,11 +866,15 @@ final class MSSQLAdaptor extends DBAdaptor {
     } else {
       rowFilter = String.format("between %d and %d", offset + 1L, offset + rowCount);
     }
-    sql = String.format(
-        "with a as " + "(select ROW_NUMBER() OVER (ORDER BY %s) as [limit_row_number], %s from %s %s) "
-            + " select * from a where [limit_row_number] %s",
-        orderBy, fieldList, from.getExpression(), sqlwhere, rowFilter);
+    sql = getLimitedSqlWithOffset(orderBy, fieldList, from.getExpression(), sqlwhere, rowFilter);
     return sql;
+  }
+
+  private String getLimitedSqlWithOffset(String orderBy, String fieldList, String from, String where, String rowFilter) {
+    return String.format(
+            "with a as " + "(select ROW_NUMBER() OVER (ORDER BY %s) as [limit_row_number], %s from %s %s) "
+                    + " select * from a where [limit_row_number] %s",
+            orderBy, fieldList, from, where, rowFilter);
   }
 
   @Override
@@ -1106,7 +1111,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getNavigationStatement(
-      Connection conn, FromClause from, String orderBy, String navigationWhereClause, Set<String> fields
+      Connection conn, FromClause from, String orderBy,
+      String navigationWhereClause, Set<String> fields, long offset
   ) throws CelestaException {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
@@ -1114,10 +1120,20 @@ final class MSSQLAdaptor extends DBAdaptor {
     StringBuilder w = new StringBuilder(navigationWhereClause);
     final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
     boolean useWhere = w.length() > 0;
-    if (orderBy.length() > 0)
-      w.append(" order by " + orderBy);
-    String sql = String.format(SELECT_TOP_1 + " %s %s;", fieldList,
-        from.getExpression(), useWhere ? " where " + w : w);
+
+
+    final String sql;
+
+    if (offset == 0) {
+      if (orderBy.length() > 0)
+        w.append(" order by " + orderBy);
+
+      sql = String.format(SELECT_TOP_1 + " %s %s;", fieldList,
+              from.getExpression(), useWhere ? " where " + w : w);
+    } else {
+      sql = getLimitedSqlWithOffset(orderBy, fieldList, from.getExpression(), useWhere ? " where " + w : w.toString(), "=" + offset);
+    }
+
     // System.out.println(sql);
     return prepareStatement(conn, sql);
   }
@@ -1413,5 +1429,10 @@ final class MSSQLAdaptor extends DBAdaptor {
   @Override
   String truncDate(String dateStr) {
     return "cast(floor(cast(" + dateStr + " as float)) as datetime)";
+  }
+
+  @Override
+  public AppSettings.DBType getType() {
+    return AppSettings.DBType.MSSQL;
   }
 }

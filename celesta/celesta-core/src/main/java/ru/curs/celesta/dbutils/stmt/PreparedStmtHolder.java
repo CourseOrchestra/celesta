@@ -49,7 +49,7 @@ public abstract class PreparedStmtHolder {
 
 	public synchronized void close() {
 		try {
-			if (!(stmt == null))
+			if (stmt != null)
 				stmt.close();
 		} catch (SQLException e) {
 			e = null;

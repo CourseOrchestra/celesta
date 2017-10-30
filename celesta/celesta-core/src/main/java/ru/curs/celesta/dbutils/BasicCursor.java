@@ -64,11 +64,14 @@ public abstract class BasicCursor implements Closeable {
 	private static final String DATABASE_CLOSING_ERROR =
 		"Database error when closing recordset for table '%s': %s";
 	private static final String CURSOR_IS_CLOSED = "Cursor is closed.";
+	private static final String NAVIGATING_ERROR = "Error while navigating cursor: %s";
 
 	private static final Pattern COLUMN_NAME =
 		Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)( +([Aa]|[Dd][Ee])[Ss][Cc])?");
 
 	private static final Pattern NAVIGATION = Pattern.compile("[+-<>=]+");
+	private static final Pattern NAVIGATION_WITH_OFFSET = Pattern.compile("[<>]");
+
 	private final DBAdaptor db;
 	private final Connection conn;
 	private final CallContext context;
@@ -157,7 +160,9 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm('>');
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(conn, getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement);
+			return db.getNavigationStatement(
+					conn, getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement, navigationOffset
+			);
 		}
 
 	};
@@ -175,7 +180,9 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm('<');
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(conn, getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement);
+			return db.getNavigationStatement(
+					conn, getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement, navigationOffset
+			);
 		}
 
 	};
@@ -196,7 +203,9 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm();
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(conn, getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement);
+			return db.getNavigationStatement(
+					conn, getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement, 0
+			);
 		}
 
 	};
@@ -213,7 +222,9 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm();
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(conn, getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement);
+			return db.getNavigationStatement(
+					conn, getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement, 0
+			);
 		}
 	};
 
@@ -224,6 +235,7 @@ public abstract class BasicCursor implements Closeable {
 	private boolean[] descOrders;
 
 	private long offset = 0;
+	private long navigationOffset = 0;
 	private long rowCount = 0;
 	private Expr complexFilter;
 
@@ -342,7 +354,9 @@ public abstract class BasicCursor implements Closeable {
 					throws CelestaException {
 				WhereTerm where = qmaker.getWhereTerm('=');
 				where.programParams(program);
-				return db.getNavigationStatement(conn, getFrom(),"", where.getWhere(), fieldsForStatement);
+				return db.getNavigationStatement(
+						conn, getFrom(),"", where.getWhere(), fieldsForStatement, 0
+				);
 			}
 
 		};
@@ -350,6 +364,10 @@ public abstract class BasicCursor implements Closeable {
 
 	final void close(PreparedStmtHolder... stmts) {
 		closed = true;
+		closeStatements(stmts);
+	}
+
+	private void closeStatements(PreparedStmtHolder... stmts) {
 		for (PreparedStmtHolder stmt : stmts) {
 			stmt.close();
 		}
@@ -499,6 +517,12 @@ public abstract class BasicCursor implements Closeable {
 
 	String getOrderBy() throws CelestaException {
 		return getOrderBy(false);
+	}
+
+	List<String> getOrderByFields() throws CelestaException {
+		if (orderByNames == null)
+			orderBy();
+		return Arrays.asList(orderByNames);
 	}
 
 	String getReversedOrderBy() throws CelestaException {
@@ -745,24 +769,60 @@ public abstract class BasicCursor implements Closeable {
 					"Invalid navigation command: '%s', should consist of '+', '-', '>', '<' and '=' only!",
 					command);
 
+
+		if (navigationOffset != 0)
+			closeStatements(backwards, forwards);
+
+		navigationOffset = 0;
 		for (int i = 0; i < command.length(); i++) {
 			char c = command.charAt(i);
 			PreparedStatement navigator = chooseNavigator(c);
+
+			if (executeNavigator(navigator))
+				return true;
+		}
+		return false;
+	}
+
+	public boolean navigate(String command, long offset) throws CelestaException {
+		if (!canRead())
+			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+
+		Matcher m = NAVIGATION_WITH_OFFSET.matcher(command);
+		if (!m.matches())
+			throw new CelestaException(
+					"Invalid navigation command: '%s', should consist only one of  '>' or '<'!",
+					command);
+
+		if (offset < 0)
+			throw new CelestaException("Invalid navigation offset: offset should not be less than 0");
+
+		if (navigationOffset != offset) {
+			navigationOffset = offset;
+			closeStatements(backwards, forwards);
+		}
+
+		PreparedStatement navigator = chooseNavigator(command.charAt(0));
+		// System.out.println(navigator);
+		return executeNavigator(navigator);
+
+	}
+
+	private boolean executeNavigator(PreparedStatement navigator) throws CelestaException {
+		try {
+			// System.out.println(navigator);
+			ResultSet rs = navigator.executeQuery();
 			try {
-				// System.out.println(navigator);
-				ResultSet rs = navigator.executeQuery();
-				try {
-					if (rs.next()) {
-						_parseResult(rs);
-						initXRec();
-						return true;
-					}
-				} finally {
-					rs.close();
+				if (rs.next()) {
+					_parseResult(rs);
+					initXRec();
+					return true;
 				}
-			} catch (SQLException e) {
-				throw new CelestaException("Error while navigating cursor: %s", e.getMessage());
+			} finally {
+				rs.close();
 			}
+		} catch (SQLException e) {
+			throw new CelestaException(NAVIGATING_ERROR, e.getMessage());
 		}
 		return false;
 	}

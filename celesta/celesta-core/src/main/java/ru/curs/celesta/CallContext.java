@@ -86,7 +86,7 @@ public final class CallContext implements AutoCloseable {
 		this.procName = procName;
 		this.showcaseContext = showcaseContext;
 
-		this.dbPid = PIDSCACHE.computeIfAbsent(this.conn, dbAdaptor::getDBPid);
+		this.dbPid = PIDSCACHE.computeIfAbsent(this.conn, this.dbAdaptor::getDBPid);
 	}
 
 	/**
