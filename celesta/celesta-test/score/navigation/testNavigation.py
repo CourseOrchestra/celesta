@@ -2,6 +2,7 @@
 
 from navigation._navigation_orm import navigationTableCursor
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
+from ru.curs.celesta import CelestaException
 
 @TestClass
 class TestNavigation(CelestaTestCase):
@@ -63,6 +64,17 @@ class TestNavigation(CelestaTestCase):
 
         self.assertFalse(c.navigate('>', 10))
         self.assertEquals(2, c.numb)
+
+    def testCelestaExceptionWhenOffsetLessThanZero(self):
+        c = navigationTableCursor(self.context)
+        self._prepareTableForTest(c)
+
+        c.orderBy('numb')
+        c.first()
+        self.assertEquals(1, c.numb)
+
+        badNavigate = lambda command, offset : c.navigate(command, offset)
+        self.assertThrows(CelestaException, badNavigate, ">", -1)
 
 
     def _prepareTableForTest(self, c):

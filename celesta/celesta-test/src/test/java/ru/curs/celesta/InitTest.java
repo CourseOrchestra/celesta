@@ -1,18 +1,12 @@
 package ru.curs.celesta;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.Properties;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.syscursors.CallLogCursor;
 import ru.curs.celesta.syscursors.GrainsCursor;
@@ -20,11 +14,13 @@ import ru.curs.celesta.syscursors.LogCursor;
 import ru.curs.celesta.syscursors.PermissionsCursor;
 import ru.curs.celesta.syscursors.RolesCursor;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class InitTest {
 
 	private static Celesta celesta;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() throws IOException, CelestaException {
 		Properties params = new Properties();
 		params.setProperty("score.path", "score");
@@ -37,7 +33,7 @@ public class InitTest {
 		}
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void destroy() {
 		celesta.close();
 	}

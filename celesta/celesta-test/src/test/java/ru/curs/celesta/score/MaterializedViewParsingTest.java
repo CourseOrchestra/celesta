@@ -1,35 +1,35 @@
 package ru.curs.celesta.score;
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * Created by ioann on 15.06.2017.
  */
 public class MaterializedViewParsingTest extends AbstractParsingTest {
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWhenNullableColumnInGroupBy() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("materializedView/testParsingFailsWhenNullableColumnInGroupBy.sql"));
     CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWithNoAggregateColumn() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("materializedView/testParsingFailsWithNoAggregateColumn.sql"));
     CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWithWhereCondition() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("materializedView/testParsingFailsWithWhereCondition.sql"));
     CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    assertThrows(ParseException.class, () ->  cp.grain(s, "test"));
   }
 
   @Test
@@ -54,7 +54,7 @@ public class MaterializedViewParsingTest extends AbstractParsingTest {
   }
 
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWhenRefTableInAnotherGrain() throws ParseException {
     ChecksumInputStream input;
     CelestaParser cp;
@@ -73,16 +73,16 @@ public class MaterializedViewParsingTest extends AbstractParsingTest {
     //Пытаемся распарсить гранулу, в которой MaterializedView ссылается на таблицу из первой
     input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("materializedView/testParsingFailsWhenRefTableInAnotherGrain.sql"));
-    cp = new CelestaParser(input);
-    cp.grain(s, "test2");
+    CelestaParser cp2 = new CelestaParser(input);
+    assertThrows(ParseException.class, () -> cp2.grain(s, "test2"));
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWithDateInAggregate() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("materializedView/testParsingFailsWithDateInAggregate.sql"));
     CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
   }
 
 }

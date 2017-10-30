@@ -1,13 +1,12 @@
 package ru.curs.celesta.dbutils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.util.Properties;
 
-import org.junit.*;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.syscursors.LogSetupCursor;
@@ -19,7 +18,7 @@ public class BasicCursorTest {
 	private SessionContext sc = new SessionContext("super", "foo");
 	private BasicCursor c;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() throws IOException, CelestaException {
 		Properties properties = new Properties();
 		properties.setProperty("score.path", "score");
@@ -32,17 +31,17 @@ public class BasicCursorTest {
 		}
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void destroy() {
 		celesta.close();
 	}
 
-	@Before
+	@BeforeEach
 	public void before() throws CelestaException {
 		c = new LogSetupCursor(celesta.callContext(sc));
 	}
 
-	@After
+	@AfterEach
 	public void after() throws CelestaException {
 		c.close();
 	}

@@ -3,8 +3,8 @@ package ru.curs.celesta.dbutils.adaptors;
 import java.sql.Connection;
 import java.util.Properties;
 
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.*;
@@ -12,12 +12,11 @@ import ru.curs.celesta.score.Score;
 
 public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
-	@ClassRule
 	public static PostgreSQLContainer postgres = new PostgreSQLContainer();
 
 	private static PostgresAdaptor dba;
 
-	@BeforeClass
+	@BeforeAll
 	public static void beforeAll() throws CelestaException {
 		postgres.start();
 
@@ -46,6 +45,12 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
 				.build();
 
 		dbUpdater.updateSysGrain();
+	}
+
+	@AfterAll
+	public static void afterAll() {
+		dba.connectionPool.close();
+		postgres.stop();
 	}
 
 	public PostgresAdaptorTest() throws Exception {

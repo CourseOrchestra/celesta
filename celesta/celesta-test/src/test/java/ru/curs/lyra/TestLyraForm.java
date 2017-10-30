@@ -1,12 +1,11 @@
 package ru.curs.lyra;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.util.Map.Entry;
 
-import org.junit.Test;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;

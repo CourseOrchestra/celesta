@@ -1,11 +1,10 @@
 package ru.curs.celesta.dbutils.adaptors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -15,9 +14,6 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.Date;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.*;
@@ -98,7 +94,7 @@ public abstract class AbstractAdaptorTest {
         this.score = score;
     }
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
 
@@ -149,7 +145,7 @@ public abstract class AbstractAdaptorTest {
         dba.createTable(conn, t);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         conn.rollback();
         try {

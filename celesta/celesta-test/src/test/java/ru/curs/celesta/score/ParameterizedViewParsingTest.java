@@ -1,10 +1,10 @@
 package ru.curs.celesta.score;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.Assert.*;
 
 /**
  * Created by ioann on 09.08.2017.
@@ -47,36 +47,36 @@ public class ParameterizedViewParsingTest extends AbstractParsingTest {
     assertEquals(ViewColumnType.INT, p.getType());
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWhenParamIsNotUsed() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("parameterizedView/testParsingFailsWhenParamIsNotUsed.sql"));
     CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWithoutParams() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("parameterizedView/testParsingFailsWithoutParams.sql"));
     CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWhenUndeclaredParamIsUsed() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("parameterizedView/testParsingFailsWhenUndeclaredParamIsUsed.sql"));
     CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWhenParamDeclarationIsDuplicated() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("parameterizedView/testParsingFailsWhenParamDeclarationIsDuplicated.sql"));
     CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
   }
 }
 

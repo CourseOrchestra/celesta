@@ -1,6 +1,6 @@
 package ru.curs.lyra;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,8 +12,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.*;
 
+import org.junit.jupiter.api.*;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.syscursors.GrainsCursor;
@@ -27,7 +27,7 @@ public class SerializerTest {
 	private TablesCursor tt;
 	private CallContext callContext;
 
-	@BeforeClass
+	@BeforeAll
 	public static void init() throws IOException, CelestaException {
 		Properties params = new Properties();
 		params.setProperty("score.path", "score");
@@ -40,12 +40,12 @@ public class SerializerTest {
 		}
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void destroy() {
 		celesta.close();
 	}
 
-	@Before
+	@BeforeEach
 	public void before() throws CelestaException {
 		callContext = celesta.callContext(sc);
 
@@ -53,7 +53,7 @@ public class SerializerTest {
 		tt = new TablesCursor(callContext);
 	}
 
-	@After
+	@AfterEach
 	public void after() throws CelestaException {
 		callContext.close();
 	}

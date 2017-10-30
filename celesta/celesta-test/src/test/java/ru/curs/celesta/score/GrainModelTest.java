@@ -1,37 +1,21 @@
 package ru.curs.celesta.score;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.BinaryColumn;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKRule;
-import ru.curs.celesta.score.ForeignKey;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.Index;
-import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.Table;
 
 public class GrainModelTest {
 
 	private Score s = new Score();
 
-	@BeforeClass
+	@BeforeAll
 	public static void Setup() throws CelestaException {
 		Properties p = new Properties();
 		p.setProperty("score.path", ".");

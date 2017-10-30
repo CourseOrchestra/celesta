@@ -4,9 +4,8 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Properties;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.MSSQLServerContainer;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.DbUpdater;
@@ -17,15 +16,16 @@ import ru.curs.celesta.score.Score;
 
 public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 
-	@ClassRule
 	public static MSSQLServerContainer msSql = new MSSQLServerContainer()
 			.withDatabaseName("celesta")
 			.withCollation("Cyrillic_General_CI_AI");
 
 	private static MSSQLAdaptor dba;
 
-	@BeforeClass
+	@BeforeAll
 	public static void beforeAll() throws Exception {
+		msSql.start();
+
 		Properties params = new Properties();
 		params.put("score.path", "score");
 		params.put("rdbms.connection.url", msSql.getJdbcUrl());
@@ -40,16 +40,6 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 		cpc.setPassword(appSettings.getDBPassword());
 		ConnectionPool connectionPool = ConnectionPool.create(cpc);
 
-
-		//Устанавливаем COLLATION
-		try (Connection conn = connectionPool.get();
-			 Statement stmt = conn.createStatement()
-		) {
-			//String sql = "ALTER DATABASE master COLLATE French_CI_AS";
-			//stmt.executeUpdate(sql);
-			//connectionPool.commit(conn);
-		}
-
 		dba = new MSSQLAdaptor(connectionPool);
 
 		DbUpdater dbUpdater = new DbUpdaterBuilder()
@@ -63,7 +53,7 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 		dbUpdater.updateSysGrain();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void destroy() {
 		msSql.stop();
 	}

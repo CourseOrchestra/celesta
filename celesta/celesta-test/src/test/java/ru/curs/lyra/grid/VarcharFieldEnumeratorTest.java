@@ -1,15 +1,13 @@
 package ru.curs.lyra.grid;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.adaptors.StaticDataAdaptor;

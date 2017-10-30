@@ -1,26 +1,27 @@
 package ru.curs.celesta.score;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * Created by ioann on 11.09.2017.
  */
 public class TableParsingTest extends AbstractParsingTest {
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWhenSinglePkAndIndexMatches() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("table/testParsingFailsWhenSinglePkAndIndexMatches.sql"));
     CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testParsingFailsWhenComplexPkAndIndexMatches() throws ParseException {
     ChecksumInputStream input = new ChecksumInputStream(
         ParserTest.class.getResourceAsStream("table/testParsingFailsWhenComplexPkAndIndexMatches.sql"));
     CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
   }
 
   @Test

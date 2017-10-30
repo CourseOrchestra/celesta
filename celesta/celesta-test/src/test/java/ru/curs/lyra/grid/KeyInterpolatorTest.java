@@ -1,11 +1,9 @@
 package ru.curs.lyra.grid;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 import java.math.BigInteger;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 public class KeyInterpolatorTest {
 

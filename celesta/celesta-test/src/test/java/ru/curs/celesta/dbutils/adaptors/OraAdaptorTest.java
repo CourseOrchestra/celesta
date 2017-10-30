@@ -4,9 +4,8 @@ import java.sql.Connection;
 import java.util.Locale;
 import java.util.Properties;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.OracleContainer;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.DbUpdater;
@@ -21,13 +20,13 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
 		Locale.setDefault(Locale.US);
 	}
 
-	@ClassRule
 	public static OracleContainer oracle = new OracleContainer();
 
 	private static OraAdaptor dba;
 
-	@BeforeClass
+	@BeforeAll
 	public static void beforeAll() throws CelestaException {
+		oracle.start();
 
 		Properties params = new Properties();
 		params.put("score.path", "score");
@@ -56,9 +55,10 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
 		dbUpdater.updateSysGrain();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void afterAll() {
 		dba.connectionPool.close();
+		oracle.stop();
 	}
 
 	public OraAdaptorTest() throws Exception {

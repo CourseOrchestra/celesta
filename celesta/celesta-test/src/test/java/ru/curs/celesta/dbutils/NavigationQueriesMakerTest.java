@@ -1,13 +1,13 @@
 package ru.curs.celesta.dbutils;
 
-import static org.junit.Assert.*;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.*;

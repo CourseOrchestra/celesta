@@ -1,6 +1,6 @@
 package ru.curs.celesta.dbutils.adaptors;
 
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.DbUpdater;
 import ru.curs.celesta.dbutils.DbUpdaterBuilder;
@@ -8,7 +8,6 @@ import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
 import ru.curs.celesta.score.Score;
 
-import java.io.InputStream;
 
 import java.sql.Connection;
 import java.util.Properties;
@@ -20,7 +19,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
 
   private static H2Adaptor dba;
 
-  @BeforeClass
+  @BeforeAll
   public static void beforeAll() throws CelestaException {
     Properties params = new Properties();
     params.put("score.path", "score");

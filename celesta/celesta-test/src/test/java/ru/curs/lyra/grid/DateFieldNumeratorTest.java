@@ -1,20 +1,13 @@
 package ru.curs.lyra.grid;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
-import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.adaptors.StaticDataAdaptor;
 
 public class DateFieldNumeratorTest {
 

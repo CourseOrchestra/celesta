@@ -58,7 +58,6 @@
         <jython.version>2.7.1b3</jython.version>
         <junit.version>5.0.0</junit.version>
         <junit.platform.version>1.0.0</junit.platform.version>
-        <junit.vintage.engine.version>4.12.0</junit.vintage.engine.version>
         <org.json.version>20171018</org.json.version>
         <testcontainers.version>1.4.3</testcontainers.version>
 

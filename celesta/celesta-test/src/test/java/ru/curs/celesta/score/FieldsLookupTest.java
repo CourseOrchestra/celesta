@@ -1,7 +1,9 @@
 package ru.curs.celesta.score;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 
@@ -19,7 +21,7 @@ public class FieldsLookupTest {
   private static Runnable lookupChangeCallback = () -> {};
   private static Function<FieldsLookup, Void> newLookupCallback = (f) -> null;
 
-  @BeforeClass
+  @BeforeAll
   public static void init() throws ParseException {
     Score score = new Score();
     Grain grain = new Grain(score, "test");
@@ -50,22 +52,22 @@ public class FieldsLookupTest {
     lookup.add("a1", "b1");
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testAddWhenLeftColumnDoesNotExist() throws Exception {
     FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
-    lookup.add("notExistedField", "b1");
+    assertThrows(ParseException.class, () -> lookup.add("notExistedField", "b1"));
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testAddWhenRightColumnDoesNotExist() throws Exception {
     FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
-    lookup.add("a1", "notExistedField");
+    assertThrows(ParseException.class, () -> lookup.add("a1", "notExistedField"));
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void testAddWhenBothColumnsDoNotExist() throws Exception {
     FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
-    lookup.add("notExistedField", "notExistedField");
+    assertThrows(ParseException.class, () -> lookup.add("notExistedField", "notExistedField"));
   }
 
   @Test
@@ -91,23 +93,23 @@ public class FieldsLookupTest {
     lookup.add("a3", "c3");
   }
 
-  @Test(expected = CelestaException.class)
+  @Test
   public void testWhenIndicesDoNotMatchInAdditionalLookup() throws Exception {
     FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
     lookup.add("a1", "b1");
     lookup.add("a2", "b2");
     lookup.add("a3", "b3");
 
-    lookup = lookup.and(tableC);
+    FieldsLookup anotherLookup  = lookup.and(tableC);
 
-    lookup.add("a1", "c1");
-    lookup.add("a3", "c3");
+    anotherLookup.add("a1", "c1");
+    assertThrows(CelestaException.class, () -> anotherLookup.add("a3", "c3"));
   }
 
-  @Test(expected = CelestaException.class)
+  @Test
   public void testWhenIndicesDoNotMatch() throws Exception {
     FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
     lookup.add("a1", "b1");
-    lookup.add("a3", "b3");
+    assertThrows(CelestaException.class, () -> lookup.add("a3", "b3"));
   }
 }

@@ -1,9 +1,7 @@
 package ru.curs.celesta.dbutils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -30,7 +28,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
-import org.junit.Test;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.Range;
