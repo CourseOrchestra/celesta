@@ -69,8 +69,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   private static final Pattern HEX_STRING = Pattern.compile("'\\\\x([0-9A-Fa-f]+)'");
 
-  private static final DateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-
+  protected static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 
   static {
     TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
@@ -216,6 +215,11 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
         return defaultStr;
       }
     });
+  }
+
+  @Override
+  ColumnDefiner getColumnDefiner(Column c) {
+    return TYPES_DICT.get(c.getClass());
   }
 
   public PostgresAdaptor(ConnectionPool connectionPool) {

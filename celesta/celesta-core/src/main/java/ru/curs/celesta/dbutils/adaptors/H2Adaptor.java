@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   private static final Pattern HEX_STRING = Pattern.compile("X'([0-9A-Fa-f]+)'");
+  protected static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 
   static {
     TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
@@ -940,6 +941,11 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
             mv.getGrain().getName(), mv.getName(), e.getMessage());
       }
     }
+  }
+
+  @Override
+  ColumnDefiner getColumnDefiner(Column c) {
+    return TYPES_DICT.get(c.getClass());
   }
 
   @Override

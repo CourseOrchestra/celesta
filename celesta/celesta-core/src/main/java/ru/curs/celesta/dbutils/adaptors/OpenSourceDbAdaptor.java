@@ -23,8 +23,6 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   protected static final Pattern QUOTED_NAME = Pattern.compile("\"?([^\"]+)\"?");
 
-  protected static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
-
   public OpenSourceDbAdaptor(ConnectionPool connectionPool) {
     super(connectionPool);
   }
@@ -68,11 +66,6 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
       rs.close();
       check.close();
     }
-  }
-
-  @Override
-  ColumnDefiner getColumnDefiner(Column c) {
-    return TYPES_DICT.get(c.getClass());
   }
 
   @Override
