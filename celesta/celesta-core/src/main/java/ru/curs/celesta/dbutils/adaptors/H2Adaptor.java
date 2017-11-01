@@ -176,10 +176,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         if (ic.isGetdate()) {
           defaultStr = DEFAULT + NOW;
         } else if (ic.getDefaultValue() != null) {
-          System.out.printf("Formatting default date %s%n", ic.getDefaultValue().toString());
           DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
           defaultStr = String.format(DEFAULT + " '%s'", df.format(ic.getDefaultValue()));
-          System.out.printf("Result: %s%n", defaultStr);
+
         }
         return defaultStr;
       }
