@@ -228,8 +228,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     String def = tableDef(te);
 
     try {
-      //System.out.println(def); // for debug purposes
-      Statement stmt = conn.createStatement();
+      if ("gtest".equals(te.getGrain().getName())
+              && "test".equals(te.getName())) {
+        System.out.println(def); // for debug purposes
+      }
+        Statement stmt = conn.createStatement();
       try {
         stmt.executeUpdate(def);
       } finally {
