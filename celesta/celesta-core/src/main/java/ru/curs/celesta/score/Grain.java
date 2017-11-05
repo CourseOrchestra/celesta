@@ -1,6 +1,7 @@
 package ru.curs.celesta.score;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import ru.curs.celesta.CelestaException;
@@ -345,9 +346,11 @@ public final class Grain extends NamedElement {
 		if (!grainPath.exists())
 			grainPath.mkdirs();
 		File scriptFile = new File(String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, getName()));
-		try {
-			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(scriptFile), "utf-8"));
-			try {
+		try (
+			BufferedWriter bw = new BufferedWriter(
+					new OutputStreamWriter(
+							new FileOutputStream(scriptFile), StandardCharsets.UTF_8))
+		) {
 				writeCelestaDoc(this, bw);
 				bw.write("CREATE GRAIN ");
 				bw.write(getName());
@@ -387,10 +390,6 @@ public final class Grain extends NamedElement {
 				bw.newLine();
 				for (ParameterizedView pv : getElements(ParameterizedView.class).values())
 					pv.save(bw);
-			} finally {
-				bw.close();
-			}
-
 		} catch (IOException e) {
 			throw new CelestaException("Cannot save '%s' grain script: %s", getName(), e.getMessage());
 		}

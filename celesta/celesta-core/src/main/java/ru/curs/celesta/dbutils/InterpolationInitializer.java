@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public abstract class InterpolationInitializer {
 
     private static final int MAX_REFINEMENTS_COUNT = 100;
-    private static final int DEFAULT_AMOUNT_OF_INTERPOLATION_POINTS = 20;
+    private static final int DEFAULT_AMOUNT_OF_INTERPOLATION_POINTS = 10;
 
     private int refinementsCount = 0;
 
@@ -23,13 +23,14 @@ public abstract class InterpolationInitializer {
     private final DBAdaptor dbAdaptor;
     private final Random rnd = new Random();
 
-    public InterpolationInitializer(KeyInterpolator interpolator,  DBAdaptor dbAdaptor) {
+    public InterpolationInitializer(KeyInterpolator interpolator, DBAdaptor dbAdaptor) {
         this.interpolator = interpolator;
         this.dbAdaptor = dbAdaptor;
     }
 
     /**
      * Initializes the interpolation table.
+     *
      * @param c
      * @return true - initialized completed, false - no need for initialization
      * @throws CelestaException
@@ -37,9 +38,7 @@ public abstract class InterpolationInitializer {
     public boolean initialize(final BasicCursor c, int count) throws CelestaException {
         if (count == 0) {
             return false;
-        }
-
-        if (AppSettings.DBType.POSTGRES.equals(dbAdaptor.getType())) {
+        } else if (AppSettings.DBType.POSTGRES.equals(dbAdaptor.getType())) {
             return initializePostgres(c, count);
         } else {
             return initializeCommon(c);
@@ -62,6 +61,7 @@ public abstract class InterpolationInitializer {
                 c.navigate("=<-");
             }
             int result = c.position();
+            //System.out.printf("COUNT ISSUED %d%n", refinementsCount);
             BigInteger key = getCursorOrdinal(c);
             interpolator.setPoint(key, result);
 
@@ -70,6 +70,9 @@ public abstract class InterpolationInitializer {
     }
 
     private boolean initializePostgres(BasicCursor c, int count) throws CelestaException {
+        if (refinementsCount > 0)
+            return false;
+        refinementsCount = 1;
 
         int amountOfInterpolationPoints = (count > DEFAULT_AMOUNT_OF_INTERPOLATION_POINTS)
                 ? DEFAULT_AMOUNT_OF_INTERPOLATION_POINTS : count;
@@ -81,7 +84,7 @@ public abstract class InterpolationInitializer {
         amountOfInterpolationPoints -= 1;
 
         c.first();
-
+        //TODO: refactor this cycle!
         for (int point = 1; point <= amountOfInterpolationPoints; ++point) {
             int rowNumber = point * offset;
 
@@ -90,6 +93,7 @@ public abstract class InterpolationInitializer {
                 break;
 
             c.navigate(">", offset);
+            //System.out.printf("OFFSET SELECT ISSUED %d%n", point);
             BigInteger key = getCursorOrdinal(c);
             interpolator.setPoint(key, rowNumber);
         }
@@ -101,5 +105,4 @@ public abstract class InterpolationInitializer {
 
     abstract BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException;
 
-    abstract BigInteger getCursorOrdinal(BasicCursor c, Collection<String> fields) throws CelestaException;
 }

@@ -3,6 +3,7 @@ package ru.curs.celesta.syscursors;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.List;
 
 import org.python.core.PyFunction;
 import ru.curs.celesta.CallContext;
@@ -15,7 +16,7 @@ import ru.curs.celesta.event.TriggerType;
 /**
  * Курсор таблицы логирования входов и выходов из системы.
  */
-public class SessionLogCursor extends SysCursor {
+public final class SessionLogCursor extends SysCursor {
 
 	public static final String TABLE_NAME = "sessionlog";
 
@@ -45,7 +46,7 @@ public class SessionLogCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context, List<String> fields) throws CelestaException {
 		// CHECKSTYLE:ON
 		SessionLogCursor result = new SessionLogCursor(context);
 		result.copyFieldsFrom(this);

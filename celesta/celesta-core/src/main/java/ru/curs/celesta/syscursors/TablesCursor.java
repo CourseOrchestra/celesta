@@ -3,6 +3,7 @@ package ru.curs.celesta.syscursors;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.python.core.PyFunction;
 import ru.curs.celesta.CallContext;
@@ -186,7 +187,7 @@ public final class TablesCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context, List<String> fields) throws CelestaException {
 		// CHECKSTYLE:ON
 		TablesCursor result = new TablesCursor(context);
 		result.copyFieldsFrom(this);

@@ -1301,7 +1301,7 @@ public abstract class BasicCursor implements Closeable {
 	 * имена protected-методов начинаются с underscore. Использование методов
 	 * без underscore приводит к конфликтам с именами атрибутов.
 	 */
-	public abstract BasicCursor _getBufferCopy(CallContext context) throws CelestaException;
+	public abstract BasicCursor _getBufferCopy(CallContext context, List<String> fields) throws CelestaException;
 
 	public abstract Object[] _currentValues();
 

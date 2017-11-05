@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.score.*;
 import ru.curs.lyra.grid.*;
 
@@ -70,7 +71,8 @@ public final class GridDriver {
 							.setSesContext(BasicCursor.SYSTEMSESSION)
 							.createCallContext()
 			) {
-				BasicCursor c = closedCopy._getBufferCopy(sysContext);
+				List<String> columns = Arrays.stream(closedCopy.orderByColumnNames()).map(WhereTermsMaker::unquot).collect(Collectors.toList());
+				BasicCursor c = closedCopy._getBufferCopy(sysContext, columns);
 				c.copyFiltersFrom(closedCopy);
 				c.copyOrderFrom(closedCopy);
 
@@ -114,7 +116,8 @@ public final class GridDriver {
 	}
 
 	public GridDriver(BasicCursor c) throws CelestaException {
-		closedCopy = c._getBufferCopy(c.callContext());
+		// place to save filters and ordering
+		closedCopy = c._getBufferCopy(c.callContext(), null);
 		closedCopy.copyFiltersFrom(c);
 		closedCopy.copyOrderFrom(c);
 		closedCopy.close();
@@ -176,11 +179,6 @@ public final class GridDriver {
 			@Override
 			BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException {
 				return GridDriver.this.getCursorOrdinal(c);
-			}
-
-			@Override
-			BigInteger getCursorOrdinal(BasicCursor c, Collection<String> fields) throws CelestaException {
-				return GridDriver.this.getCursorOrdinal(c, fields);
 			}
 		};
 	}

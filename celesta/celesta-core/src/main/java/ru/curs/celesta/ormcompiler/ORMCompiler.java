@@ -20,7 +20,7 @@ public final class ORMCompiler {
      * Версия компилятора. Данную константу следует инкрементировать, когда
      * необходимо инициировать автоматическое пересоздание orm-скриптов.
      */
-    private static final int COMPILERVER = 12;
+    private static final int COMPILERVER = 13;
 
     private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
     private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context, fields = []):";
@@ -75,7 +75,7 @@ public final class ORMCompiler {
                         int crc32 = 0;
                         int compiler = 0;
                         try (BufferedReader r = new BufferedReader(
-                                new InputStreamReader(new FileInputStream(ormFile), "utf-8"))) {
+                                new InputStreamReader(new FileInputStream(ormFile), StandardCharsets.UTF_8))) {
                             String l = r.readLine();
                             while (l != null) {
                                 Matcher m = SIGNATURE.matcher(l);
@@ -363,8 +363,8 @@ public final class ORMCompiler {
 
     private static void compileCopying(PrintWriter w, Collection<String> columns, String className)
             throws IOException {
-        w.println("    def _getBufferCopy(self, context):");
-        w.printf("        result = %s(context)%n", className);
+        w.println("    def _getBufferCopy(self, context, fields=None):");
+        w.printf("        result = %s(context, fields)%n", className);
         w.println("        result.copyFieldsFrom(self)");
         w.println("        return result");
 

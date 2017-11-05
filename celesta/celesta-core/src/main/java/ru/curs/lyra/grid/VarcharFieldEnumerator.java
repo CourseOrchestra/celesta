@@ -259,7 +259,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 
 				ruleBuilder.append("'" + right + "'");
 			}
-			System.out.println(ruleBuilder.toString());
+			//System.out.println(ruleBuilder.toString());
 			return ruleBuilder.toString();
 		} catch (CelestaException e) {
 			throw new RuntimeException(e);

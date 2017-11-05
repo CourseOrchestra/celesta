@@ -300,7 +300,7 @@ public abstract class Cursor extends BasicCursor {
 					return false;
 				// Прочитали из базы данных значения -- обновляем xRec
 				if (xRec == null) {
-					xRec = (Cursor) _getBufferCopy(callContext());
+					xRec = (Cursor) _getBufferCopy(callContext(), null);
 					// Вопрос на будущее: эта строчка должна быть здесь или за
 					// фигурной скобкой? (проблема совместной работы над базой)
 					xRec._parseResult(rs);
@@ -403,7 +403,7 @@ public abstract class Cursor extends BasicCursor {
 	@Override
 	final void initXRec() throws CelestaException {
 		if (xRec == null) {
-			xRec = (Cursor) _getBufferCopy(callContext());
+			xRec = (Cursor) _getBufferCopy(callContext(), null);
 		} else {
 			xRec.copyFieldsFrom(this);
 		}

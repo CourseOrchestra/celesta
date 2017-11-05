@@ -157,7 +157,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		final String id = _getId();
 		final List<LyraFormData> result = new ArrayList<>(h);
 		final Map<String, LyraFormField> meta = getFieldsMeta();
-		BasicCursor copy = c._getBufferCopy(c.callContext());
+		BasicCursor copy = c._getBufferCopy(c.callContext(), null);
 		copy.close();
 		for (int i = 0; i < h; i++) {
 			_beforeSending(c);
@@ -232,7 +232,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
 	public void saveCursorPosition() throws CelestaException {
 		externalAction(c -> {
-			BasicCursor copy = c._getBufferCopy(getContext());
+			BasicCursor copy = c._getBufferCopy(getContext(), null);
 			copy.close();
 			savedPositions.push(copy);
 			return null;

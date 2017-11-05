@@ -2,6 +2,7 @@ package ru.curs.celesta.syscursors;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.python.core.PyFunction;
 import ru.curs.celesta.CallContext;
@@ -110,7 +111,7 @@ public final class RolesCursor extends SysCursor {
 
 	@Override
 	// CHECKSTYLE:OFF
-	public Cursor _getBufferCopy(CallContext context) throws CelestaException {
+	public Cursor _getBufferCopy(CallContext context, List<String> fields) throws CelestaException {
 		// CHECKSTYLE:ON
 		RolesCursor result = new RolesCursor(context);
 		result.copyFieldsFrom(this);
