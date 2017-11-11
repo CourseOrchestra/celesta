@@ -24,8 +24,8 @@ class ttt1Cursor(ReadOnlyTableCursor):
         self.id = None
     def _currentValues(self):
         return array([None if self.id == None else int(self.id)], Object)
-    def _getBufferCopy(self, context):
-        result = ttt1Cursor(context)
+    def _getBufferCopy(self, context, fields=None):
+        result = ttt1Cursor(context, fields)
         result.copyFieldsFrom(self)
         return result
     def copyFieldsFrom(self, c):
@@ -100,8 +100,8 @@ class ttt2Cursor(Cursor):
     def _postUpdate(self):
         for f in ttt2Cursor.onPostUpdate:
             f(self)
-    def _getBufferCopy(self, context):
-        result = ttt2Cursor(context)
+    def _getBufferCopy(self, context, fields=None):
+        result = ttt2Cursor(context, fields)
         result.copyFieldsFrom(self)
         return result
     def copyFieldsFrom(self, c):
