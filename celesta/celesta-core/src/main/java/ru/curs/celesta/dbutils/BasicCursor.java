@@ -391,17 +391,8 @@ public abstract class BasicCursor implements Closeable {
 		}
 	}
 
-	@Override
-	protected void finalize() throws Throwable {
-		close(set, forwards, backwards, here, first, last, count, position);
-	}
-
 	final Map<String, AbstractFilter> getFilters() {
 		return filters;
-	}
-
-	final Expr getComplexFilterExpr() {
-		return complexFilter;
 	}
 
 	final DBAdaptor db() {

@@ -174,11 +174,6 @@ public abstract class Cursor extends BasicCursor {
 		close(getHelper.getHolder(), insert, delete, update);
 	}
 
-	@Override
-	protected void finalize() throws Throwable {
-		close(getHelper.getHolder(), insert, delete, update);
-	}
-
 	/**
 	 * Осуществляет вставку курсора в БД.
 	 * 
