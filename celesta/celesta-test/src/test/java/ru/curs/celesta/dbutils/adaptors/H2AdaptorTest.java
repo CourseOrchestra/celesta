@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils.adaptors;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.DbUpdater;
@@ -49,6 +50,11 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
     dbUpdater.updateSysGrain();
   }
 
+  @AfterAll
+  static void afterAll() throws Exception {
+    dba.connectionPool.get().createStatement().execute("SHUTDOWN");
+    dba.connectionPool.close();
+  }
 
   public H2AdaptorTest() throws Exception {
     setDba(dba);

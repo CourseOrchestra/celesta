@@ -1,4 +1,4 @@
-package ru.curs.celesta.unit;
+package ru.curs.celesta;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -8,7 +8,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.python.core.*;
 import org.testcontainers.containers.*;
-import ru.curs.celesta.*;
+import ru.curs.celesta.unit.TestClass;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -66,7 +66,8 @@ public class CelestaScriptsTest {
   }
 
   @AfterAll
-  public static void destroy() throws CelestaException {
+  public static void destroy() throws Exception {
+    h2Celesta.connectionPool.get().createStatement().execute("SHUTDOWN");
     h2Celesta.close();
     postgresCelesta.close();
     oracleCelesta.close();

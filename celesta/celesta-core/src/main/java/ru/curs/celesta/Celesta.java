@@ -77,7 +77,7 @@ public final class Celesta implements AutoCloseable {
 	private final Score score;
 	private final DBAdaptor dbAdaptor;
 	private final AppSettings appSettings;
-	private final ConnectionPool connectionPool;
+	final ConnectionPool connectionPool;
 	private final PythonInterpreterPool interpreterPool;
 	private final Optional<SessionLogManager> sessionLogManager;
 	private final LoggingManager loggingManager;
@@ -395,14 +395,28 @@ public final class Celesta implements AutoCloseable {
 
 		final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
 
+		SessionContext sessionContext = sessions.get(sesId);
+
 		Callable<PyObject> callable = () -> {
+			String currentSesId = null;
 			try {
-				return runPython(sesId, proc, param);
+
+				if (sessions.containsKey(sesId)) {
+					currentSesId = sesId;
+				} else {
+					currentSesId = String.format("TEMP%08X", ThreadLocalRandom.current().nextInt());
+					login(currentSesId, sessionContext.getUserId());
+				}
+
+				return runPython(currentSesId, proc, param);
 			} catch (Exception e) {
 				System.out.println("Exception while executing async task:" + e.getMessage());
 				throw e;
 			} finally {
 				scheduledExecutor.shutdown();
+
+				if (currentSesId != null && sessions.containsKey(currentSesId))
+					logout(currentSesId, false);
 			}
 		};
 
