@@ -1,0 +1,694 @@
+options{
+    IGNORE_CASE=true ;
+    UNICODE_INPUT=true;
+    STATIC=false;
+    FORCE_LA_CHECK=true;
+    SUPPORT_CLASS_VISIBILITY_PUBLIC=false;
+}
+
+PARSER_BEGIN(CelestaParser)
+package ru.curs.celesta.score;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.io.StringReader;
+import ru.curs.celesta.CelestaException;
+
+//CHECKSTYLE:OFF
+public class CelestaParser{
+    public static Expr parseComplexFilter(String filter) throws CelestaException {
+         StringReader sr = new StringReader(filter);
+         try {
+                 CelestaParser parser = new CelestaParser(sr);
+                 try {
+                      return parser.sqlExpression();
+                 } catch (ParseException e) {
+                    throw new CelestaException("Invalid complex filter '%s': %s", filter, e.getMessage());
+                 }
+     } finally {
+         sr.close();
+     }
+   }
+}
+PARSER_END(CelestaParser)
+
+SKIP:
+{
+    " "
+|   "\t"
+|   "\r"
+|   "\n"
+}
+
+TOKEN: /* SQL keywords */ 
+{
+    <K_ACTION:       "ACTION">
+|   <K_ADD:          "ADD">
+|   <K_ALTER:        "ALTER">
+|   <K_AND:          "AND">
+|   <K_AS:           "AS">
+|   <K_BETWEEN:      "BETWEEN">
+|   <K_BY:           "BY">
+|   <K_CASCADE:      "CASCADE">
+|   <K_CONSTRAINT:   "CONSTRAINT">
+|   <K_COUNT:        "COUNT">
+|   <K_CREATE:       "CREATE">
+|   <K_DEFAULT:      "DEFAULT">
+|   <K_DELETE:       "DELETE">
+|   <K_DISTINCT:     "DISTINCT">
+|   <K_FALSE:        "FALSE">
+|   <K_FOREIGN:      "FOREIGN">
+|   <K_FROM:         "FROM">
+|   <K_FULL:         "FULL">
+|   <K_FUNCTION:     "FUNCTION">
+|   <K_GETDATE:      "GETDATE">
+|   <K_GROUP:        "GROUP">
+|   <K_IDENTITY:     "IDENTITY">
+|   <K_IN:           "IN">
+|   <K_INDEX:        "INDEX">
+|   <K_INNER:        "INNER">
+|   <K_IS:           "IS">
+|   <K_JOIN:         "JOIN">
+|   <K_KEY:          "KEY">
+|   <K_LEFT:         "LEFT">
+|   <K_LIKE:         "LIKE">
+|   <K_MATERIALIZED: "MATERIALIZED">
+|   <K_MAX:          "MAX">
+|   <K_MIN:          "MIN">
+|   <K_NO:           "NO">
+|   <K_NOT:          "NOT">
+|   <K_NULL:         "NULL">
+|   <K_ON:           "ON">
+|   <K_OR:           "OR">
+|   <K_PRIMARY:      "PRIMARY">
+|   <K_REFERENCES:   "REFERENCES">
+|   <K_RIGHT:        "RIGHT">
+|   <K_SELECT:       "SELECT">
+|   <K_SET:          "SET">
+|   <K_SUM:          "SUM">
+|   <K_TABLE:        "TABLE">
+|   <K_TEXT:         "TEXT">
+|   <K_TRUE:         "TRUE">
+|   <K_UPDATE:       "UPDATE">
+|   <K_VIEW:         "VIEW">
+|   <K_WHERE:        "WHERE">
+}
+
+TOKEN: /* Datatypes */
+{
+   <K_INT:       "INT">
+|  <K_REAL:      "REAL">
+|  <K_VARCHAR:   "VARCHAR">
+|  <K_BLOB:      "BLOB">
+|  <K_DATETIME:  "DATETIME">
+|  <K_BIT:       "BIT">
+}
+
+TOKEN : /* Numeric literals */
+{
+	< S_DOUBLE: ((<S_INTEGER>)? "." <S_INTEGER> ( ["e","E"] ([ "-","+"])? <S_INTEGER> )? 
+				|
+				(<S_INTEGER>)+ (".")? ["e","E"] ([ "-","+"])? (<S_INTEGER>)+
+				)>
+  | 	< S_INTEGER: ( <DIGIT> )+ >
+  | 	< #DIGIT: ["0" - "9"] >
+  |     <S_BINARY_LITERAL: "0x"(["a"-"f", "A"-"F", "0"-"9"]["a"-"f", "A"-"F", "0"-"9"])+>
+}
+
+
+TOKEN:
+{
+	< S_IDENTIFIER: ( <LETTER> )+ ( <DIGIT> | <LETTER> )* >
+|   < S_PARAM: "$"<S_IDENTIFIER> >
+| 	< #LETTER: ["a"-"z", "A"-"Z", "_"] >
+|   < S_CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")*>
+|   < S_QUOTED_IDENTIFIER: "\"" (~["\n","\r","\""])* "\"" | ("`" (~["\n","\r","`"])* "`") >
+|   < CELESTA_DOC: "/**" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+}
+
+
+SPECIAL_TOKEN:
+{
+   <LINE_COMMENT: "--"(~["\r","\n"])*>
+|  <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+}
+
+/*Metamodel. Root rule.*/
+Grain grain(Score s, String name):
+{
+   /*This work is dedicated to Maria, my misterious muse :-) 
+     Ivan Ponomarev, June 2013.*/
+	 
+   Grain g = new Grain(s, name);
+   Token t;
+   Token doc = null;
+}
+{ 
+   [doc = <CELESTA_DOC> {g.setCelestaDocLexem(doc.toString()); doc = null;}]
+   <K_CREATE> 
+   t = <S_IDENTIFIER> {if (!"GRAIN".equalsIgnoreCase(t.toString())) 
+      throw new ParseException(String.format(
+	  "Error: expected 'create GRAIN' at the beginning of the grain '%s' definition.", name));}
+   t = <S_IDENTIFIER> {if (!name.equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
+      "Error: expected 'create grain %s' at the beginning of the grain '%s' definition, found '%s'.", name, name, t.toString()));}
+   t = <S_IDENTIFIER> {if (!"VERSION".equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
+      "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
+   t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}";"
+   ( ( ([doc = <CELESTA_DOC>]<K_CREATE> (
+                    createTable(g, doc == null? null: doc.toString()) 
+                  | createIndex(g, doc == null? null: doc.toString())
+				  | createView(g, doc == null? null: doc.toString())
+				  | createMaterializedView(g, doc == null? null: doc.toString())
+				  | createFunction(g, doc == null? null: doc.toString())
+				  )
+				  {doc = null;} )
+	 | (<K_ALTER>   alterTable(g))) ";")*
+   <EOF>
+   {
+   g.completeParsing();
+   return g;
+   }
+}
+
+void createTable(Grain g, String doc):
+{
+	Table table = null;
+	Token t = null;
+    List<String> options = new ArrayList<String>(5);
+}
+{
+    <K_TABLE>
+	t = <S_IDENTIFIER> {table = new Table(g, t.toString());
+	                            table.setCelestaDocLexem(doc);}
+	"("
+		tableConstituent(table)	("," tableConstituent(table))*
+	")"
+    [ ((t = <S_IDENTIFIER> | t = <K_NO>) {options.add(t.toString());} )+ ]
+	{
+	  table.finalizePK(options);
+    }
+}
+
+void tableConstituent(Table table):{
+  String name; 
+  ForeignKey fk;
+}
+{
+     columnDefinition(table) 
+   | name = constraint(table.getGrain()) (
+          primaryKey(table) {table.setPkConstraintName(name);}
+        | fk = foreignKey(table) {fk.setConstraintName(name);})
+}
+
+void columnDefinition(Table table):
+{
+   Column column = null;
+   Token t;
+   Token length = null;
+   boolean nullable;
+   boolean negative = false;
+   boolean pk = false;
+   ForeignKey fk = null;
+   String name;
+   Token doc = null;
+}
+{
+ [doc = <CELESTA_DOC>]
+  t = <S_IDENTIFIER>
+    (  (<K_INT>       {column = new IntegerColumn(table, t.toString()); t = null; } 
+	       nullable = nullable() [(<K_DEFAULT> ["-" {negative = true;}] t = <S_INTEGER>)|(t = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])]
+	    )
+    |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;} 
+	       nullable = nullable() 
+		  [<K_DEFAULT> ["-" {negative = true;}] (t = <S_INTEGER> | t = <S_DOUBLE>)])
+    |  (<K_VARCHAR> {column = new StringColumn(table, t.toString()); t = null; } 
+	          ["("  (length = <S_INTEGER> /* | length = <K_MAX>*/) ")"]  
+			  {((StringColumn) column).setLength(length.toString());}
+	       nullable = nullable() 
+		  [<K_DEFAULT> t = <S_CHAR_LITERAL>])
+    |  (<K_TEXT> {column = new StringColumn(table, t.toString()); 
+	              ((StringColumn) column).setLength("MAX");
+				  t = null;} 
+	       nullable = nullable() 
+		  [<K_DEFAULT> t = <S_CHAR_LITERAL>])
+    |  (<K_BLOB>     {column = new BinaryColumn(table, t.toString()); t = null;} 
+	       nullable = nullable()
+		  [<K_DEFAULT> t = <S_BINARY_LITERAL>])
+    |  (<K_DATETIME>  {column = new DateTimeColumn(table, t.toString()); t = null;} 
+	       nullable = nullable()
+		  [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <K_GETDATE> "(" ")")])
+    |  (<K_BIT>       {column = new BooleanColumn(table, t.toString()); t = null;}) 
+	       nullable = nullable() 
+	      [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <S_INTEGER> | t=<K_FALSE>|t=<K_TRUE>)])
+	name = constraint(table.getGrain()) [<K_PRIMARY> <K_KEY> 
+	      {pk = true; table.setPkConstraintName(name);} name = constraint(table.getGrain())]
+	{ 
+      column.setNullableAndDefault(nullable, t == null? null: ((negative? "-": "") + t.toString()));
+	  column.setCelestaDocLexem(doc == null? null:doc.toString());
+	  if (pk) {
+	    table.addPK(column.getName());
+	    table.finalizePK();
+	  }
+    }
+	[<K_FOREIGN> <K_KEY> {fk = new ForeignKey(table); fk.addColumn(column.getName()); fk.setConstraintName(name);} references(fk)]
+}
+
+boolean nullable():
+{
+  boolean result = true;
+}
+{
+[<K_NULL>         {result = true;} |<K_NOT> <K_NULL> {result = false;}] { return result;}
+}
+
+void primaryKey(Table table):{Token t;}
+{
+  <K_PRIMARY> <K_KEY> "(" t = <S_IDENTIFIER> {table.addPK(t.toString());}
+                     ("," t = <S_IDENTIFIER> {table.addPK(t.toString());})* ")"
+  {
+    table.finalizePK();
+  }
+}
+
+ForeignKey foreignKey(Table table):{
+  Token t;
+  ForeignKey fk;
+}
+{
+<K_FOREIGN><K_KEY> { fk = new ForeignKey(table);}
+   "(" t = <S_IDENTIFIER> {fk.addColumn(t.toString());}
+  ("," t = <S_IDENTIFIER> {fk.addColumn(t.toString());})* ")"
+
+  references(fk) {
+  return fk;
+  }
+}
+
+void references(ForeignKey fk):{
+  Token t;
+  Token t2 = null;
+  FKRule action;
+}
+{
+<K_REFERENCES> t = <S_IDENTIFIER> ["." t2 = <S_IDENTIFIER>]
+  { if (t2 == null)
+      fk.setReferencedTable("", t.toString());
+	else 
+	  fk.setReferencedTable(t.toString(), t2.toString());}
+	  
+  "(" t = <S_IDENTIFIER> {fk.addReferencedColumn(t.toString());}
+  ("," t = <S_IDENTIFIER> {fk.addReferencedColumn(t.toString());})* ")"
+{fk.finalizeReference();}
+[<K_ON>
+  ((<K_UPDATE> action = action() {fk.setUpdateRule(action);} 
+    [<K_ON> <K_DELETE> action = action() {fk.setDeleteRule(action);}])
+  |(<K_DELETE> action = action() {fk.setDeleteRule(action);} 
+    [<K_ON> <K_UPDATE> action = action() {fk.setUpdateRule(action);}]))
+]
+}
+
+FKRule action():{
+  FKRule result;
+}
+{
+   ((<K_NO> <K_ACTION> {result = FKRule.NO_ACTION;})
+  |(<K_SET> <K_NULL>  {result =  FKRule.SET_NULL;})
+  | (<K_CASCADE>        {result =  FKRule.CASCADE;}))
+  {
+    return result;
+  }
+}
+
+void createIndex(Grain g, String doc):{
+Token indexName;
+Token tableName;
+Token columnName;
+Index ind;
+}
+{
+<K_INDEX> indexName = <S_IDENTIFIER> <K_ON> tableName = <S_IDENTIFIER> 
+   {ind = new Index(g, tableName.toString(), indexName.toString());
+    ind.setCelestaDocLexem(doc);}
+   "(" columnName = <S_IDENTIFIER> {ind.addColumn(columnName.toString());} ("," columnName = <S_IDENTIFIER>{ind.addColumn(columnName.toString());}) * ")"
+   {ind.finalizeIndex();}
+}
+
+void alterTable(Grain g):{
+  Token t;
+  Table table;
+  String name;
+  ForeignKey fk;
+}
+{
+<K_TABLE> t = <S_IDENTIFIER> {
+  table = g.getElement(t.toString(), Table.class);
+  }
+<K_ADD> name = constraint(g) fk = foreignKey(table) {fk.setConstraintName(name);}
+}
+
+String constraint(Grain g):{
+Token t = null;
+}
+{
+[<K_CONSTRAINT> t = <S_IDENTIFIER>]
+{
+if (t == null)
+  return null;
+else {
+  g.addConstraintName(t.toString());
+  return t.toString();
+} 
+}
+}
+
+void createView(Grain g, String doc):
+{
+	View view = null;
+	Token viewName = null;
+}
+{
+<K_VIEW> viewName = <S_IDENTIFIER> <K_AS>
+    {
+        view = new View(g, viewName.toString());
+	    view.setCelestaDocLexem(doc);
+	}
+	select(view)
+	{view.finalizeParsing();}
+}
+
+void createMaterializedView(Grain g, String doc):
+{
+    MaterializedView view = null;
+    Token viewName = null;
+}
+{
+<K_MATERIALIZED> <K_VIEW> viewName = <S_IDENTIFIER> <K_AS>
+    {
+        view = new MaterializedView(g, viewName.toString());
+        view.setCelestaDocLexem(doc);
+    }
+    materializedSelect(view)
+    {view.finalizeParsing();}
+}
+
+void createFunction(Grain g, String doc):
+{
+    ParameterizedView v = null;
+    Token viewName = null;
+}
+{
+<K_FUNCTION> viewName = <S_IDENTIFIER>
+    {
+        v = new ParameterizedView(g, viewName.toString());
+        v.setCelestaDocLexem(doc);
+    }
+"(" functionParam(v) ("," functionParam(v))* ")"
+    <K_AS>
+    select(v)
+	{v.finalizeParsing();}
+}
+
+void functionParam(ParameterizedView view):
+{
+    Token doc = null;
+    Token t;
+    Parameter p;
+    String name;
+}
+{
+   [doc = <CELESTA_DOC>]
+   t = <S_IDENTIFIER> {name = t.toString();}
+    (  (<K_INT>       {p = new Parameter(name, ViewColumnType.INT);  })
+    |  (<K_REAL>      {p = new Parameter(name, ViewColumnType.REAL); })
+    |  (<K_VARCHAR>   {p = new Parameter(name, ViewColumnType.TEXT); })
+    |  (<K_TEXT>      {p = new Parameter(name, ViewColumnType.TEXT); })
+    |  (<K_DATETIME>  {p = new Parameter(name, ViewColumnType.DATE); })
+    |  (<K_BIT>       {p = new Parameter(name, ViewColumnType.BIT);  })
+    )
+    {
+        p.setCelestaDocLexem(doc == null? null:doc.toString());
+        view.addParameter(p);
+    }
+}
+
+
+Expr sqlExpression():
+{ Expr result;
+  List<Expr> operands = new ArrayList<Expr>(5);}
+{
+    result = sqlAndExpression()   {operands.add(result);} (<K_OR> 
+	  result = sqlAndExpression() {operands.add(result);}
+	  )*
+	{return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.OR, operands);}
+}
+
+Expr sqlAndExpression():
+{ Expr result;
+  List<Expr> operands = new ArrayList<Expr>(5);}
+{
+    result = sqlUnaryLogicalExpression()    {operands.add(result);} (<K_AND> 
+	  result = sqlUnaryLogicalExpression()  {operands.add(result);}
+	  )* 
+	{return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.AND, operands);}
+}
+
+Expr sqlUnaryLogicalExpression():
+{ boolean isNot = false;
+  Expr result;}
+{
+  [<K_NOT> {isNot = true;}] result = sqlRelationalExpression() 
+  {return isNot? new NotExpr(result) : result; }
+}
+
+Expr sqlRelationalExpression():
+{ Expr result;
+  Expr buf1;
+  Expr buf2;
+  List<Expr> operands = new ArrayList<Expr>(5);
+  int relop;}
+{
+    result = sqlTermExpr()
+    (   relop = relop() buf1 = sqlTermExpr()                            {result = new Relop(result, buf1, relop);}
+      | (<K_IN> "(" buf1 = sqlTermExpr() {operands.add(buf1);} ("," buf1 = sqlTermExpr() {operands.add(buf1);})* ")") 
+	                                                                    {result = new In(result, operands);}
+      | (<K_BETWEEN> buf1 = sqlTermExpr() <K_AND> buf2 = sqlTermExpr()) {result = new Between(result, buf1, buf2);}
+      | (<K_LIKE> buf1 = sqlTermExpr())                                 {result = new Relop(result, buf1, Relop.LIKE);}
+      | (<K_IS> <K_NULL>)                                               {result = new IsNull(result);}
+    )?
+	{return result;}
+}
+
+int relop():
+{int result;}
+{ (
+    "=" {result = Relop.EQ;}
+  | ">" {result = Relop.GT;} ["=" {result = Relop.GTEQ;}]
+  | "<" {result = Relop.LS;} ["=" {result = Relop.LSEQ;} | ">" {result = Relop.NTEQ;}]
+  )
+  {return result;}
+}
+
+Expr sqlTermExpr():
+{ Expr result;
+  List<Expr> operands = new ArrayList<Expr>(5);
+  int operator = -1;}
+{
+    result = sqlMultiplicativeExpression() {operands.add(result);} ( ( "+" {operator = BinaryTermOp.PLUS;}
+	                                                                 | "-" {operator = BinaryTermOp.MINUS;}
+																	 | "||"{operator = BinaryTermOp.CONCAT;})
+                                 result =  sqlMultiplicativeExpression() {operands.add(result);}
+                               )*
+    {return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
+}
+
+Expr sqlMultiplicativeExpression():
+{ Expr result;
+  List<Expr> operands = new ArrayList<Expr>(5);
+  int operator = -1;}
+{
+    result = sqlUnaryExpression() {operands.add(result);} (  ("*" {operator = BinaryTermOp.TIMES;} | "/" {operator = BinaryTermOp.OVER;}) 
+	                     result = sqlUnaryExpression() {operands.add(result);}
+						 )*
+	{return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
+}
+
+Expr sqlUnaryExpression():
+{Expr result;
+boolean isMinus = false;}
+{
+    ["-" {isMinus = true;}] result = sqlPrimaryExpression() 
+    {return isMinus? new UnaryMinus(result) : result;}
+}
+
+
+Expr sqlPrimaryExpression():
+{Expr result;
+Token t = null;}
+{ (
+    t = <S_INTEGER>          {result = new IntegerLiteral(t.toString());}
+  | t = <S_DOUBLE>           {result = new RealLiteral(t.toString());}
+  | t = <S_CHAR_LITERAL>     {result = new TextLiteral(t.toString());}
+  | t = <S_PARAM>            {result = new ParameterRef(t.toString().substring(1));}
+  | t = <K_TRUE>             {result = new BooleanLiteral(true);}
+  | t = <K_FALSE>            {result = new BooleanLiteral(false);}
+  | <K_GETDATE> "(" ")"      {result = new GetDate();}
+  | "(" result = sqlExpression() ")"  {result = new ParenthesizedExpr(result);}
+  | result = fieldReference()
+  ) {return result;}
+}
+
+FieldRef fieldReference():
+{  
+  String tableName = null;
+  String fieldName;
+  Token t;
+}
+{
+  t = <S_IDENTIFIER> {fieldName = t.toString();} 
+  ["." t = <S_IDENTIFIER> {tableName = fieldName; fieldName = t.toString();} ]
+  {return new FieldRef(tableName, fieldName);}
+}
+
+void select(AbstractView v):
+{
+Expr where;
+}
+{
+    <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
+    <K_FROM>  fromClause(v)
+    [<K_WHERE> where = sqlExpression() {v.setWhereCondition(where);} ]
+    [<K_GROUP> <K_BY>  groupBy(v)]
+}
+
+void parameterizedSelect(ParameterizedView v):
+{
+Expr where;
+}
+{
+    <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
+    <K_FROM>  fromClause(v)
+    [<K_WHERE> where = sqlExpression() {v.setWhereCondition(where);} ]
+    [<K_GROUP> <K_BY>  groupBy(v)]
+}
+
+void materializedSelect(MaterializedView v):
+{
+}
+{
+    <K_SELECT> materializedSelectItem(v) ("," materializedSelectItem(v))*
+    <K_FROM>  fromClause(v)
+    [<K_GROUP> <K_BY>  groupBy(v)]
+}
+
+
+void groupBy(AbstractView view):
+{ FieldRef fr; }
+{
+fr = fieldReference() {view.addGroupByColumn(fr);}
+     ("," fr = fieldReference() {view.addGroupByColumn(fr);} )*
+}
+
+Expr aggregateFunc(AbstractView v):
+{
+    Expr term;
+    Token t;
+}
+{
+  (
+      <K_COUNT> "(" "*" ")"                  { return new Count(); }
+      | <K_SUM> "(" term = sqlTermExpr() ")" { return new Sum(term); }
+      | <K_MAX> "(" term = sqlTermExpr() ")" { return new Max(term); }
+      | <K_MIN> "(" term = sqlTermExpr() ")" { return new Min(term); }
+  )
+}
+
+Expr materializedAggregateFunc(MaterializedView v):
+{
+    Expr term;
+    Token t;
+}
+{
+  (
+      <K_COUNT> "(" "*" ")"                     { return new Count(); }
+      | <K_SUM> "(" term = fieldReference() ")" { return new Sum(term); }
+  )
+}
+
+void selectItem(AbstractView v):
+{
+  Token doc = null;
+  Token aliasToken = null;
+  String alias = "";
+  Expr expr;  
+}
+{
+   [doc = <CELESTA_DOC>] (expr = sqlTermExpr() | expr = aggregateFunc(v)) [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]
+   { if (alias.isEmpty() && expr instanceof FieldRef)
+		   alias = ((FieldRef) expr).getColumnName();
+     if (doc != null)
+        expr.getMeta().setCelestaDocLexem(doc.toString());
+     v.addColumn(alias, expr); }
+}
+
+void materializedSelectItem(MaterializedView v):
+{
+  Token doc = null;
+  Token aliasToken = null;
+  String alias = "";
+  Expr expr;
+}
+{
+   [doc = <CELESTA_DOC>] (expr = fieldReference() | expr = materializedAggregateFunc(v)) [<K_AS>]
+   [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]
+   { if (alias.isEmpty() && expr instanceof FieldRef)
+		   alias = ((FieldRef) expr).getColumnName();
+     if (doc != null)
+        expr.getMeta().setCelestaDocLexem(doc.toString());
+     v.addColumn(alias, expr); }
+}
+
+TableRef tableReference(AbstractView v):
+{ TableRef result;
+  Token t;
+  String grainName = null;
+  String tableName = null;
+  String alias;
+}
+{
+  t = <S_IDENTIFIER> {tableName = t.toString(); alias = tableName;} 
+      ["." t = <S_IDENTIFIER> {grainName = tableName; tableName = t.toString(); alias = tableName;}] 
+	  [<K_AS>] [t = <S_IDENTIFIER> {alias = t.toString();} ]
+  
+  {
+     Table tab;
+     if (grainName == null) {
+	    tab = v.getGrain().getElement(tableName, Table.class);
+	 } else {
+	    tab = v.getGrain().getScore().getGrain(grainName).getElement(tableName, Table.class);
+	 }
+	 return new TableRef(tab, alias);
+  }
+}
+
+void fromClause(AbstractView v):
+{TableRef tRef;}
+{
+    tRef = tableReference(v) {v.addFromTableRef(tRef);} 
+    (tRef = join(v) {v.addFromTableRef(tRef);} )*
+}
+
+TableRef join(AbstractView v):
+{ TableRef tRef;
+  TableRef.JoinType jt;
+  Expr onExpr;}
+{
+  (<K_INNER> {jt = TableRef.JoinType.INNER;} | <K_LEFT> {jt = TableRef.JoinType.LEFT;}| <K_RIGHT> {jt = TableRef.JoinType.RIGHT;}) 
+   <K_JOIN>
+   tRef = tableReference(v)
+   <K_ON> 
+   onExpr = sqlExpression()
+   { tRef.setJoinType(jt);
+     tRef.setOnExpr(onExpr);
+	 return tRef;
+   }
+}
