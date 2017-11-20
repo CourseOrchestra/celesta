@@ -238,6 +238,9 @@ public final class XMLJSONConverter {
 				result = result.replace("\\&quot;", "");
 			}
 		}
+		if (result.contains("&amp;")) {
+			result = result.replace("&amp;", "&");
+		}
 		return result;
 	}
 
