@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Properties;
 
 
@@ -32,7 +33,8 @@ public class BasicCursorTest {
 	}
 
 	@AfterAll
-	public static void destroy() {
+	public static void destroy() throws CelestaException, SQLException {
+		celesta.callContext(new SessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
 		celesta.close();
 	}
 

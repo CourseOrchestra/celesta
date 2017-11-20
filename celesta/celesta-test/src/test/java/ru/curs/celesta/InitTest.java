@@ -1,6 +1,7 @@
 package ru.curs.celesta;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Properties;
 
 
@@ -34,7 +35,8 @@ public class InitTest {
 	}
 
 	@AfterAll
-	public static void destroy() {
+	public static void destroy() throws CelestaException, SQLException {
+		celesta.connectionPool.get().createStatement().execute("SHUTDOWN");
 		celesta.close();
 	}
 

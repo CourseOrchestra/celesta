@@ -6,6 +6,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -21,6 +23,7 @@ import ru.curs.celesta.syscursors.TablesCursor;
 
 public class SerializerTest {
 	private static Celesta celesta;
+	private static Connection connection;
 
 	private SessionContext sc = new SessionContext("super", "foo");
 	private GrainsCursor c;
@@ -41,7 +44,8 @@ public class SerializerTest {
 	}
 
 	@AfterAll
-	public static void destroy() {
+	public static void destroy() throws SQLException {
+		connection.createStatement().execute("SHUTDOWN");
 		celesta.close();
 	}
 
@@ -51,6 +55,9 @@ public class SerializerTest {
 
 		c = new GrainsCursor(callContext);
 		tt = new TablesCursor(callContext);
+
+		if (connection == null)
+			connection = callContext.getConn();
 	}
 
 	@AfterEach

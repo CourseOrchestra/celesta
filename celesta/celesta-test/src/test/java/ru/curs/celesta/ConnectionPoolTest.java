@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,16 +17,20 @@ import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorBuilder;
 
 public class ConnectionPoolTest {
 
-    private ConnectionPool connectionPool;
+    private static ConnectionPoolConfiguration cpc;
 
-    @BeforeEach
-    public void init() throws CelestaException {
-        ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
+    static {
+        cpc = new ConnectionPoolConfiguration();
         String jdbcUrl = "jdbc:h2:mem:celesta;DB_CLOSE_DELAY=-1";
         cpc.setJdbcConnectionUrl(jdbcUrl);
         cpc.setDriverClassName(AppSettings.resolveDbType(jdbcUrl).getDriverClassName());
         cpc.setLogin("");
+    }
 
+    private ConnectionPool connectionPool;
+
+    @BeforeEach
+    public void init() throws CelestaException {
         connectionPool = ConnectionPool.create(cpc);
 
         DbAdaptorBuilder dac = new DbAdaptorBuilder()
@@ -36,6 +41,18 @@ public class ConnectionPoolTest {
         dac.createDbAdaptor();
     }
 
+
+    @AfterEach
+    public void tearDown() throws CelestaException, SQLException {
+        if (!connectionPool.isClosed()) {
+            connectionPool.get().createStatement().execute("SHUTDOWN");
+            connectionPool.close();
+        } else {
+            connectionPool = ConnectionPool.create(cpc);
+            connectionPool.get().createStatement().execute("SHUTDOWN");
+            connectionPool.close();
+        }
+    }
 
     @Test
     void testAllConnectionsSize() throws Exception {
@@ -94,14 +111,6 @@ public class ConnectionPoolTest {
                 () -> assertEquals(0, connectionPool.poolSize()),
                 () -> assertTrue(connectionPool.isClosed())
         );
-    }
-
-
-    @AfterEach
-    public void tearDown() {
-        if (!connectionPool.isClosed()) {
-            connectionPool.close();
-        }
     }
 
 }
