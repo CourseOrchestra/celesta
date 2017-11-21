@@ -1184,4 +1184,10 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   public AppSettings.DBType getType() {
     return AppSettings.DBType.POSTGRES;
   }
+
+  @Override
+  public boolean supportsCortegeComparing() {
+    return true;
+  }
+
 }

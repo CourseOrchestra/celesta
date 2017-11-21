@@ -1,7 +1,7 @@
 # coding=UTF-8
-# Source grain parameters: version=1.0, len=434, crc32=B1DC9BE9; compiler=12.
+# Source grain parameters: version=1.0, len=434, crc32=B1DC9BE9; compiler=13.
 """
-THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.
+THIS MODULE IS BEING CREATED AND UPDATED AUTOMATICALLY.
 DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.
 """
 import ru.curs.celesta.dbutils.Cursor as Cursor
@@ -132,8 +132,8 @@ class cCursor(Cursor):
     def _postUpdate(self):
         for f in cCursor.onPostUpdate:
             f(self)
-    def _getBufferCopy(self, context):
-        result = cCursor(context)
+    def _getBufferCopy(self, context, fields=None):
+        result = cCursor(context, fields)
         result.copyFieldsFrom(self)
         return result
     def copyFieldsFrom(self, c):

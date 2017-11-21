@@ -99,6 +99,11 @@ public class NavigationQueriesMakerTest {
 				public String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields, String whereForOtherTable) {
 					return null;
 				}
+
+				@Override
+				public boolean supportsCortegeComparing() {
+					return false;
+				}
 			};
 		}
 
@@ -126,6 +131,50 @@ public class NavigationQueriesMakerTest {
 		public Object[] values() throws CelestaException {
 			return values;
 		}
+	}
+
+	class CortegeSupportedParams extends Params implements WhereMakerParamsProvider {
+		public CortegeSupportedParams(String[] orderByNames, boolean[] descOrders, boolean[] nullables, boolean[] nullsMask) {
+			super(orderByNames, descOrders, nullables, nullsMask);
+		}
+
+		public CortegeSupportedParams(String[] orderByNames, boolean[] descOrders, boolean[] nullables) {
+			super(orderByNames, descOrders, nullables);
+		}
+
+		@Override
+		public QueryBuildingHelper dba() {
+			return new QueryBuildingHelper() {
+
+				@Override
+				public String translateDate(String date) throws CelestaException {
+					return date;
+				}
+
+				@Override
+				public boolean nullsFirst() {
+					return nf;
+				}
+
+				@Override
+				public SQLGenerator getViewSQLGenerator() {
+					return new SQLGenerator() {
+
+					};
+				}
+
+				@Override
+				public String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields, String whereForOtherTable) {
+					return null;
+				}
+
+				@Override
+				public boolean supportsCortegeComparing() {
+					return true;
+				}
+			};
+		}
+
 	}
 
 	private static boolean[] a(boolean... args) {
@@ -336,5 +385,29 @@ public class NavigationQueriesMakerTest {
 		
 		assertEquals("((\"е\" = ?) and (\"a\" = 1 OR \"b\" = 3))", c.getWhereTerm().getWhere());
 		
+	}
+
+	@Test
+	public void testSupportingOfCortege() throws CelestaException {
+		CortegeSupportedParams p = new CortegeSupportedParams(a("A", "B"), a(false, false), a(false, false));
+		WhereTermsMaker c = new WhereTermsMaker(p);
+
+		assertEquals(
+				"(\"A\", \"B\") > (?, ?)",
+				c.getWhereTerm('>').getWhere());
+		assertEquals("(\"A\", \"B\") < (?, ?)", c.getWhereTerm('<').getWhere());
+		assertEquals("((\"A\" = ?) and (\"B\" = ?))", c.getWhereTerm('=').getWhere());
+
+		//Different directions of order by.
+		p = new CortegeSupportedParams(a("A", "B"), a(false, true), a(false, false));
+		c = new WhereTermsMaker(p);
+		assertEquals("((\"A\" >= ?) and ((\"A\" > ?) or (\"B\" < ?)))", c.getWhereTerm('>').getWhere());
+		assertEquals("((\"A\" = ?) and (\"B\" = ?))", c.getWhereTerm('=').getWhere());
+
+		//Has nullable columns in order by fields.
+		p = new CortegeSupportedParams(a("A", "B"), a(false, true), a(true, true), a(true, false));
+		c = new WhereTermsMaker(p);
+		assertEquals("((not (\"A\" is null)) or (\"B\" < ?) or (\"B\" is null))", c.getWhereTerm('>').getWhere());
+		assertEquals("((\"A\" is null) and (\"B\" = ?))", c.getWhereTerm('=').getWhere());
 	}
 }

@@ -1,7 +1,7 @@
 # coding=UTF-8
-# Source grain parameters: version=1.0, len=1325, crc32=EC09B567; compiler=12.
+# Source grain parameters: version=1.0, len=1325, crc32=EC09B567; compiler=13.
 """
-THIS MODULE IS BEING CREATED AUTOMATICALLY EVERY TIME CELESTA STARTS.
+THIS MODULE IS BEING CREATED AND UPDATED AUTOMATICALLY.
 DO NOT MODIFY IT AS YOUR CHANGES WILL BE LOST.
 """
 import ru.curs.celesta.dbutils.Cursor as Cursor
@@ -96,8 +96,8 @@ class aaCursor(Cursor):
     def _postUpdate(self):
         for f in aaCursor.onPostUpdate:
             f(self)
-    def _getBufferCopy(self, context):
-        result = aaCursor(context)
+    def _getBufferCopy(self, context, fields=None):
+        result = aaCursor(context, fields)
         result.copyFieldsFrom(self)
         return result
     def copyFieldsFrom(self, c):
@@ -184,8 +184,8 @@ class aCursor(Cursor):
     def _postUpdate(self):
         for f in aCursor.onPostUpdate:
             f(self)
-    def _getBufferCopy(self, context):
-        result = aCursor(context)
+    def _getBufferCopy(self, context, fields=None):
+        result = aCursor(context, fields)
         result.copyFieldsFrom(self)
         return result
     def copyFieldsFrom(self, c):
@@ -284,8 +284,8 @@ class adressesCursor(Cursor):
     def _postUpdate(self):
         for f in adressesCursor.onPostUpdate:
             f(self)
-    def _getBufferCopy(self, context):
-        result = adressesCursor(context)
+    def _getBufferCopy(self, context, fields=None):
+        result = adressesCursor(context, fields)
         result.copyFieldsFrom(self)
         return result
     def copyFieldsFrom(self, c):
@@ -344,8 +344,8 @@ class testviewCursor(ViewCursor):
         self.f1 = None
     def _currentValues(self):
         return array([None if self.fieldAlias == None else unicode(self.fieldAlias), None if self.tablename == None else unicode(self.tablename), None if self.checksum == None else unicode(self.checksum), None if self.f1 == None else unicode(self.f1)], Object)
-    def _getBufferCopy(self, context):
-        result = testviewCursor(context)
+    def _getBufferCopy(self, context, fields=None):
+        result = testviewCursor(context, fields)
         result.copyFieldsFrom(self)
         return result
     def copyFieldsFrom(self, c):

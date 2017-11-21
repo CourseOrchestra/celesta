@@ -1,8 +1,11 @@
 package ru.curs.celesta.dbutils.term;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
+import org.python.google.common.primitives.Booleans;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
@@ -35,19 +38,19 @@ public class WhereTermsMaker {
 		C = new TermConstructor[40];
 		// NOT NULL, NF, REGULAR
 		C[0] = (f, i, m) -> {
-			return new CompTerm(f, i, ">");
+			return new FieldCompTerm(f, i, ">");
 		};
 		C[1] = (f, i, m) -> {
-			return new CompTerm(f, i, ">=");
+			return new FieldCompTerm(f, i, ">=");
 		};
 		C[2] = (f, i, m) -> {
-			return new CompTerm(f, i, "=");
+			return new FieldCompTerm(f, i, "=");
 		};
 		C[3] = (f, i, m) -> {
-			return new CompTerm(f, i, "<=");
+			return new FieldCompTerm(f, i, "<=");
 		};
 		C[4] = (f, i, m) -> {
-			return new CompTerm(f, i, "<");
+			return new FieldCompTerm(f, i, "<");
 		};
 
 		// NOT NULL, NF, NULL
@@ -80,10 +83,10 @@ public class WhereTermsMaker {
 		C[21] = C[1];
 		C[22] = C[2];
 		C[23] = (f, i, m) -> {
-			return OrTerm.construct(new CompTerm(f, i, "<="), new IsNull(f));
+			return OrTerm.construct(new FieldCompTerm(f, i, "<="), new IsNull(f));
 		};
 		C[24] = (f, i, m) -> {
-			return OrTerm.construct(new CompTerm(f, i, "<"), new IsNull(f));
+			return OrTerm.construct(new FieldCompTerm(f, i, "<"), new IsNull(f));
 		};
 
 		// NULLABLE, NF, NULL
@@ -99,10 +102,10 @@ public class WhereTermsMaker {
 
 		// NULLABLE, NL, REGULAR
 		C[30] = (f, i, m) -> {
-			return OrTerm.construct(new CompTerm(f, i, ">"), new IsNull(f));
+			return OrTerm.construct(new FieldCompTerm(f, i, ">"), new IsNull(f));
 		};
 		C[31] = (f, i, m) -> {
-			return OrTerm.construct(new CompTerm(f, i, ">="), new IsNull(f));
+			return OrTerm.construct(new FieldCompTerm(f, i, ">="), new IsNull(f));
 		};
 		C[32] = C[2];
 		C[33] = C[3];
@@ -140,7 +143,7 @@ public class WhereTermsMaker {
 	public static WhereTerm getPKWhereTerm(Table t) throws CelestaException {
 		WhereTerm r = null;
 		for (String colName : t.getPrimaryKey().keySet()) {
-			WhereTerm l = new CompTerm("\"" + colName + "\"", t.getColumnIndex(colName), "=");
+			WhereTerm l = new FieldCompTerm("\"" + colName + "\"", t.getColumnIndex(colName), "=");
 			r = r == null ? l : AndTerm.construct(l, r);
 		}
 		return r == null ? AlwaysTrue.TRUE : r;
@@ -150,7 +153,7 @@ public class WhereTermsMaker {
 		WhereTerm r = null;
 		int i = 0;
 		for (String colName : t.getPrimaryKey().keySet()) {
-			WhereTerm l = new CompTerm("\"" + colName + "\"", i++, "=");
+			WhereTerm l = new FieldCompTerm("\"" + colName + "\"", i++, "=");
 			r = r == null ? l : AndTerm.construct(l, r);
 		}
 		return r == null ? AlwaysTrue.TRUE : r;
@@ -215,9 +218,8 @@ public class WhereTermsMaker {
 	 */
 	public WhereTerm getWhereTerm(char op) throws CelestaException {
 		paramsProvider.initOrderBy();
-		rec = paramsProvider.values();
 
-		boolean invert = false;
+		boolean invert;
 		switch (op) {
 		case '>':
 			invert = false;
@@ -231,11 +233,47 @@ public class WhereTermsMaker {
 			throw new CelestaException("Invalid navigation operator: %s", op);
 		}
 
+
+		if (paramsProvider.dba().supportsCortegeComparing()) {
+			//Проверки возможности использовать кортежи
+			boolean allDescOrdersAreEquals = !(
+					Booleans.contains(paramsProvider.descOrders(), true)
+							&& Booleans.contains(paramsProvider.descOrders(), false)
+			);
+
+
+			if (allDescOrdersAreEquals) {
+
+				boolean allOfSortFieldsAreNotNull = true;
+				for (String sortField : paramsProvider.sortFields()) {
+					//process with replaced quotes
+					if (paramsProvider.isNullable(sortField.substring(1, sortField.length() - 1))) {
+						allOfSortFieldsAreNotNull = false;
+						break;
+					}
+				}
+
+
+				if (allOfSortFieldsAreNotNull) {
+					FieldsCortegeTerm fieldsCortegeTerm = new FieldsCortegeTerm(Arrays.asList(paramsProvider.sortFields()));
+					ValuesCortegeTerm valuesCortegeTerm = new ValuesCortegeTerm(
+							Arrays.stream(paramsProvider.sortFieldsIndices()).boxed().collect(Collectors.toList())
+					);
+
+					String operator = invert ^ paramsProvider.descOrders()[0] ? "<" : ">";
+
+					return AndTerm.construct(getWhereTerm(), new WhereTermCompareTerm(fieldsCortegeTerm, valuesCortegeTerm, operator));
+				}
+			}
+		}
+
+
 		int l = paramsProvider.sortFields().length;
 		char[] ops = new char[l];
 		for (int i = 0; i < l; i++) {
 			ops[i] = (invert ^ paramsProvider.descOrders()[i]) ? '<' : '>';
 		}
+
 		return AndTerm.construct(getWhereTerm(), getWhereTerm(ops, 0));
 	}
 

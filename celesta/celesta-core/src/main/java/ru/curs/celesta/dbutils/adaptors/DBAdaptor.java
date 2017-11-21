@@ -1205,6 +1205,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   }
 
   public abstract AppSettings.DBType getType();
+
+  @Override
+  public boolean supportsCortegeComparing() {
+    return false;
+  }
 }
 
 /**

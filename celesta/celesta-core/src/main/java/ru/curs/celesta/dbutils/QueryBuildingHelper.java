@@ -33,4 +33,6 @@ public interface QueryBuildingHelper {
 
 	String getInFilterClause(Table table, Table otherTable, List<String> fields,
 											 List<String> otherFields, String whereForOtherTable);
+
+	boolean supportsCortegeComparing();
 }
