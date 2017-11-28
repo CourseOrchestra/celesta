@@ -16,8 +16,6 @@
 				<exclude>org.postgresql:postgresql</exclude>
 				<exclude>com.microsoft.sqlserver:sqljdbc4</exclude>
 				<exclude>com.oracle.jdbc:ojdbc6</exclude>
-				<exclude>mysql:mysql-connector-java</exclude>
-				<exclude>org.python:jython</exclude>
 			</excludes>
 		</dependencySet>
 	</dependencySets>
