@@ -337,7 +337,7 @@ final class OraAdaptor extends DBAdaptor {
       Connection conn, TableElement t, String where, Set<String> fields
   ) throws CelestaException {
 
-    final String fieldList = getTableFieldsListExceptBlobs((GrainElement) t, fields);
+    final String fieldList = getTableFieldsListExceptBlobs((DataGrainElement) t, fields);
 
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1",
         fieldList, t.getGrain().getName(), t.getName(), where);

@@ -72,8 +72,10 @@ public abstract class Expr {
 	 *             в случае, если ссылка не может быть разрешена.
 	 */
 	public final void resolveFieldRefs(GrainElement ge) throws ParseException {
-		FilterFieldResolver fr = new FilterFieldResolver(ge);
-		accept(fr);
+		if (ge instanceof DataGrainElement) {
+			FilterFieldResolver fr = new FilterFieldResolver((DataGrainElement)ge);
+			accept(fr);
+		}
 	}
 
 	final ParameterResolverResult resolveParameterRefs(Map<String, Parameter> parameters) throws ParseException {

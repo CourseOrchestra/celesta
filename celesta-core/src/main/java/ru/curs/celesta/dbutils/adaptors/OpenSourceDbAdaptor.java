@@ -81,7 +81,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
       Connection conn, TableElement t, String where, Set<String> fields
   ) throws CelestaException {
 
-    final String fieldList = getTableFieldsListExceptBlobs((GrainElement) t, fields);
+    final String fieldList = getTableFieldsListExceptBlobs((DataGrainElement) t, fields);
     String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s limit 1;",
         fieldList, t.getGrain().getName(), t.getName(), where);
 

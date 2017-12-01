@@ -632,7 +632,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     return sb.toString();
   }
 
-  static String getTableFieldsListExceptBlobs(GrainElement t, Set<String> fields) {
+  static String getTableFieldsListExceptBlobs(DataGrainElement t, Set<String> fields) {
     final List<String> flds;
 
     Predicate<ColumnMeta> notBinary = c -> !BinaryColumn.CELESTA_TYPE.equals(c.getCelestaType());

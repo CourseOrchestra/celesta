@@ -354,7 +354,7 @@ final class MSSQLAdaptor extends DBAdaptor {
       Connection conn, TableElement t, String where, Set<String> fields
   ) throws CelestaException {
 
-    final String filedList = getTableFieldsListExceptBlobs((GrainElement) t, fields);
+    final String filedList = getTableFieldsListExceptBlobs((DataGrainElement) t, fields);
 
     String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S,
         filedList, t.getGrain().getName(), t.getName(), where);

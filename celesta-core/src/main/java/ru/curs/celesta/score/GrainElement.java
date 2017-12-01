@@ -29,19 +29,6 @@ public abstract class GrainElement extends NamedElement {
 		return grain;
 	}
 
-	/**
-	 * Перечень столбцов с именами.
-	 */
-	public abstract Map<String, ? extends ColumnMeta> getColumns();
-
-	/**
-	 * Номер столбца в перечне столбцов.
-	 * 
-	 * @param name
-	 *            Имя столбца.
-	 */
-	public abstract int getColumnIndex(String name);
-
 	abstract void save(BufferedWriter bw) throws IOException;
 
 	/**

@@ -10,6 +10,7 @@ PARSER_BEGIN(CelestaParser)
 package ru.curs.celesta.score;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.ArrayList;
 import java.io.StringReader;
 import ru.curs.celesta.CelestaException;
@@ -32,12 +33,19 @@ public class CelestaParser{
 }
 PARSER_END(CelestaParser)
 
-SKIP:
+
+
+<*> SKIP:
 {
     " "
 |   "\t"
 |   "\r"
 |   "\n"
+}
+
+TOKEN: /* Lexical states */
+{
+    <START_CREATE_SEQUENCE: <K_CREATE> <K_SEQUENCE>>: IN_CREATE_SEQUENCE
 }
 
 TOKEN: /* SQL keywords */ 
@@ -84,6 +92,7 @@ TOKEN: /* SQL keywords */
 |   <K_REFERENCES:   "REFERENCES">
 |   <K_RIGHT:        "RIGHT">
 |   <K_SELECT:       "SELECT">
+|   <K_SEQUENCE:     "SEQUENCE">
 |   <K_SET:          "SET">
 |   <K_SUM:          "SUM">
 |   <K_TABLE:        "TABLE">
@@ -92,6 +101,17 @@ TOKEN: /* SQL keywords */
 |   <K_UPDATE:       "UPDATE">
 |   <K_VIEW:         "VIEW">
 |   <K_WHERE:        "WHERE">
+}
+
+
+<IN_CREATE_SEQUENCE> TOKEN: {   /* CREATE SEQUENCE Sql keywords */
+        <K_CYCLE:        "CYCLE">
+    |   <K_INCREMENT:    "INCREMENT">
+    |   <K_MAXVALUE:     "MAXVALUE">
+    |   <K_MINVALUE:     "MINVALUE">
+    |   <K_START:        "START">
+    |   <K_WITH:         "WITH">
+    |   ";":    DEFAULT
 }
 
 TOKEN: /* Datatypes */
@@ -106,7 +126,7 @@ TOKEN: /* Datatypes */
 
 TOKEN : /* Numeric literals */
 {
-	< S_DOUBLE: ((<S_INTEGER>)? "." <S_INTEGER> ( ["e","E"] ([ "-","+"])? <S_INTEGER> )? 
+	< S_DOUBLE: ((<S_INTEGER>)? "." <S_INTEGER> ( ["e","E"] ([ "-","+"])? <S_INTEGER> )?
 				|
 				(<S_INTEGER>)+ (".")? ["e","E"] ([ "-","+"])? (<S_INTEGER>)+
 				)>
@@ -114,7 +134,6 @@ TOKEN : /* Numeric literals */
   | 	< #DIGIT: ["0" - "9"] >
   |     <S_BINARY_LITERAL: "0x"(["a"-"f", "A"-"F", "0"-"9"]["a"-"f", "A"-"F", "0"-"9"])+>
 }
-
 
 TOKEN:
 {
@@ -154,15 +173,18 @@ Grain grain(Score s, String name):
    t = <S_IDENTIFIER> {if (!"VERSION".equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
       "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
    t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}";"
-   ( ( ([doc = <CELESTA_DOC>]<K_CREATE> (
+   (
+    ( ([doc = <CELESTA_DOC>]<K_CREATE> (
                     createTable(g, doc == null? null: doc.toString()) 
                   | createIndex(g, doc == null? null: doc.toString())
 				  | createView(g, doc == null? null: doc.toString())
 				  | createMaterializedView(g, doc == null? null: doc.toString())
 				  | createFunction(g, doc == null? null: doc.toString())
+				  | createSequence(g, doc == null? null: doc.toString())
 				  )
 				  {doc = null;} )
-	 | (<K_ALTER>   alterTable(g))) ";")*
+	 | (<K_ALTER>   alterTable(g)))
+	 ";")*
    <EOF>
    {
    g.completeParsing();
@@ -406,6 +428,79 @@ void createFunction(Grain g, String doc):
     <K_AS>
     select(v)
 	{v.finalizeParsing();}
+}
+
+void createSequence(Grain g, String doc):
+{
+    Sequence s = null;
+    Token name = null;
+}
+{
+<K_SEQUENCE> name = <S_IDENTIFIER>
+    {
+        s = new Sequence(g, name.toString());
+        s.setCelestaDocLexem(doc);
+        token_source.SwitchTo(IN_CREATE_SEQUENCE);
+    }
+    (     sequenceStartWith(s)
+        | sequenceIncrementBy(s)
+        | sequenceMinValue(s)
+        | sequenceMaxValue(s)
+        | sequenceCycle(s)
+    )*
+}
+
+void sequenceStartWith(Sequence s):
+{
+    Token startWith;
+}
+{
+    <K_START> <K_WITH> startWith = <S_INTEGER>
+    {
+        s.startWith(Integer.parseInt(startWith.image));
+    }
+}
+
+void sequenceIncrementBy(Sequence s):
+{
+    Token incrementBy;
+}
+{
+    <K_INCREMENT> <K_BY> incrementBy = <S_INTEGER>
+    {
+        s.incrementBy(Integer.parseInt(incrementBy.image));
+    }
+}
+
+void sequenceMinValue(Sequence s):
+{
+    Token minValue;
+}
+{
+    <K_MINVALUE> minValue = <S_INTEGER>
+        {
+            s.minValue(Integer.parseInt(minValue.image));
+        }
+}
+
+void sequenceMaxValue(Sequence s):
+{
+    Token maxValue;
+}
+{
+    <K_MAXVALUE> maxValue = <S_INTEGER>
+        {
+            s.maxValue(Integer.parseInt(maxValue.image));
+        }
+}
+
+void sequenceCycle(Sequence s):
+{}
+{
+    <K_CYCLE>
+        {
+            s.setIsCycle(true);
+        }
 }
 
 void functionParam(ParameterizedView view):

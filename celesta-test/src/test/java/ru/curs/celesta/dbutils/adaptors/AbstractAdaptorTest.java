@@ -69,7 +69,7 @@ public abstract class AbstractAdaptorTest {
         }
     }
 
-    private int getCount(Connection conn, GrainElement ge) throws Exception {
+    private int getCount(Connection conn, DataGrainElement ge) throws Exception {
         FromClause from = new FromClause();
         from.setGe(ge);
         from.setExpression(String.format(dba.tableTemplate(), ge.getGrain().getName(), ge.getName()));

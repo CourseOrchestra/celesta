@@ -411,7 +411,7 @@ public abstract class BasicCursor implements Closeable {
 	 *             в случае ошибки извлечения метаинформации (в норме не должна
 	 *             происходить).
 	 */
-	public abstract GrainElement meta() throws CelestaException;
+	public abstract DataGrainElement meta() throws CelestaException;
 
 	/**
 	 * Есть ли у сессии права на чтение текущей таблицы.
@@ -1261,7 +1261,7 @@ public abstract class BasicCursor implements Closeable {
 
 	protected FromClause getFrom() throws CelestaException {
 		FromClause result = new FromClause();
-		GrainElement ge = meta();
+		DataGrainElement ge = meta();
 
 		result.setGe(ge);
 		result.setExpression(String.format(db.tableTemplate(), ge.getGrain().getName(), ge.getName()));

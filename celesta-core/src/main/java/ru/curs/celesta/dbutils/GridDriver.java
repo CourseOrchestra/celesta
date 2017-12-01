@@ -131,7 +131,7 @@ public final class GridDriver {
 		}
 
 		// KeyEnumerator factory
-		final GrainElement meta = c.meta();
+		final DataGrainElement meta = c.meta();
 		final String[] quotedNames = c.orderByColumnNames();
 		final String[] names = new String[quotedNames.length];
 		for (int i = 0; i < quotedNames.length; i++) {

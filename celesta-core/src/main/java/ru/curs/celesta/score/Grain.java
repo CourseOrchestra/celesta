@@ -33,7 +33,7 @@ public final class Grain extends NamedElement {
 
 	private File grainPath;
 
-	private final Map<Class<? extends DataGrainElement>, NamedElementHolder<? extends DataGrainElement>> grainElements = new HashMap<>();
+	private final Map<Class<? extends GrainElement>, NamedElementHolder<? extends GrainElement>> grainElements = new HashMap<>();
 
 	private final NamedElementHolder<Index> indices = new NamedElementHolder<Index>() {
 		@Override
@@ -57,7 +57,7 @@ public final class Grain extends NamedElement {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends DataGrainElement> NamedElementHolder<T> getElementsHolder(Class<T> cls) {
+	private <T extends GrainElement> NamedElementHolder<T> getElementsHolder(Class<T> cls) {
 		return (NamedElementHolder<T>) grainElements.computeIfAbsent(cls, c -> new NamedElementHolder<T>() {
 			@Override
 			protected String getErrorMsg(String name) {
@@ -84,7 +84,7 @@ public final class Grain extends NamedElement {
 				// Не рассматриваем тот же тип (у его холдера своя проверка)
 				.filter(entry -> !entry.getKey().equals(element.getClass()))
 				// Сводим все Map'ы в одну
-				.map(entry -> (Set<? extends Map.Entry<String, ? extends DataGrainElement>>) entry.getValue()
+				.map(entry -> (Set<? extends Map.Entry<String, ? extends GrainElement>>) entry.getValue()
 						.getElements().entrySet())
 				.flatMap(entrySet -> entrySet.stream())
 				// Ищем совпадения по имени
@@ -149,7 +149,7 @@ public final class Grain extends NamedElement {
 	 * @throws ParseException
 	 *             Если элемент с таким именем и классом не найден в грануле.
 	 */
-	public <T extends DataGrainElement> T getElement(String name, Class<T> classOfElement) throws ParseException {
+	public <T extends GrainElement> T getElement(String name, Class<T> classOfElement) throws ParseException {
 		T result = getElementsHolder(classOfElement).get(name);
 		if (result == null)
 			throw new ParseException(
