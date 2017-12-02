@@ -297,7 +297,6 @@ public final class Grain extends NamedElement {
 		parsingComplete = true;
 		modified = false;
 		dependencyOrder = score.nextOrderCounter();
-		System.out.printf("[[%s->%d]]%n", getName(), dependencyOrder);
 	}
 
 	/**

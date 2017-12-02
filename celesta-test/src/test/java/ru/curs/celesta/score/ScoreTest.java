@@ -33,9 +33,11 @@ public class ScoreTest {
 
         Grain g3 = s.getGrain("g3");
 
-        int o = g1.getDependencyOrder();
-        assertEquals(o + 4, g2.getDependencyOrder());
-        assertEquals(o + 5, g3.getDependencyOrder());
+        int o1 = g1.getDependencyOrder();
+        int o2 = g2.getDependencyOrder();
+        int o3 = g3.getDependencyOrder();
+        assertTrue(o1 < o2);
+        assertTrue(o2 < o3);
 
         assertEquals("score" + File.separator + "g1", g1.getGrainPath().toString());
         assertEquals("score" + File.separator + "g2", g2.getGrainPath().toString());
@@ -44,7 +46,7 @@ public class ScoreTest {
         Grain sys = s.getGrain("celesta");
         a = sys.getElement("grains", Table.class);
         assertEquals("grains", a.getName());
-        assertEquals(o - 4, sys.getDependencyOrder());
+        assertTrue(sys.getDependencyOrder() < o1);
         IntegerColumn c = (IntegerColumn) a.getColumns().get("state");
         assertEquals(3, c.getDefaultValue().intValue());
     }
