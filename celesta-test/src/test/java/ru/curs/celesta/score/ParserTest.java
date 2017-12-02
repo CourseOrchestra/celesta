@@ -277,8 +277,18 @@ public class ParserTest extends AbstractParsingTest {
     ForeignKey fk = t.getForeignKeys().iterator().next();
     assertEquals("fk_x_rolempyees_xroles", fk.getConstraintName());
 
-    assertEquals(20767, input.getCount());
-    assertEquals(0x1754E6E7, input.getCRC32());
+
+    //TODO: non-stable values when using Git because of line ending conversion
+    //hash sum calculation should be rewritten to be line-ending independent
+    if (";".equals(File.pathSeparator)){
+      //Windows!
+      assertEquals(20767, input.getCount());
+      assertEquals(0x1754E6E7, input.getCRC32());
+    } else {
+      //Linux!
+      assertEquals(19839, input.getCount());
+      assertEquals(0x3CFB69F0, input.getCRC32());
+    }
   }
 
 }

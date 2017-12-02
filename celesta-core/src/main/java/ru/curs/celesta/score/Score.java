@@ -49,242 +49,239 @@ import ru.curs.celesta.CelestaException;
 
 /**
  * Корневой класс полной модели данных гранул.
- * 
  */
 public class Score {
 
-	private final Map<String, Grain> grains = new HashMap<>();
+    private final Map<String, Grain> grains = new HashMap<>();
 
-	private final Map<String, File> grainFiles = new HashMap<>();
+    private final Map<String, File> grainFiles = new HashMap<>();
 
-	private String path;
-	private File defaultGrainPath;
+    private String path;
+    private File defaultGrainPath;
+    private int orderCounter;
 
-	Score() {
+    Score() {
 
-	}
+    }
 
-	/**
-	 * Инициализация ядра путём указания набора путей к папкам score,
-	 * разделённого точкой с запятой.
-	 * 
-	 * @param scorePath
-	 *            набор путей к папкам score, разделённый точкой с запятой.
-	 * @throws CelestaException
-	 *             в случае указания несуществующего пути или в случае двойного
-	 *             определения гранулы с одним и тем же именем.
-	 */
-	public Score(String scorePath) throws CelestaException {
-		this.path = scorePath;
-		for (String entry : scorePath.split(File.pathSeparator)) {
-			File path = new File(entry.trim());
-			if (!path.exists())
-				throw new CelestaException("Score path entry '%s' does not exist.", path.toString());
-			if (!path.canRead())
-				throw new CelestaException("Cannot read score path entry '%s'.", path.toString());
-			if (!path.isDirectory())
-				throw new CelestaException("Score path entry '%s' is not a directory.", path.toString());
+    /**
+     * Инициализация ядра путём указания набора путей к папкам score,
+     * разделённого точкой с запятой.
+     *
+     * @param scorePath набор путей к папкам score, разделённый точкой с запятой.
+     * @throws CelestaException в случае указания несуществующего пути или в случае двойного
+     *                          определения гранулы с одним и тем же именем.
+     */
+    public Score(String scorePath) throws CelestaException {
+        this.path = scorePath;
+        for (String entry : scorePath.split(File.pathSeparator)) {
+            File path = new File(entry.trim());
+            if (!path.exists())
+                throw new CelestaException("Score path entry '%s' does not exist.", path.toString());
+            if (!path.canRead())
+                throw new CelestaException("Cannot read score path entry '%s'.", path.toString());
+            if (!path.isDirectory())
+                throw new CelestaException("Score path entry '%s' is not a directory.", path.toString());
 
-			defaultGrainPath = path;
+            defaultGrainPath = path;
 
-			for (File grainPath : path.listFiles(new FileFilter() {
-				@Override
-				public boolean accept(File pathname) {
-					return pathname.isDirectory();
-				}
-			})) {
-				String grainName = grainPath.getName();
-				File scriptFile = new File(
-						String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, grainName));
+            for (File grainPath : path.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    return pathname.isDirectory();
+                }
+            })) {
+                String grainName = grainPath.getName();
+                File scriptFile = new File(
+                        String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, grainName));
 
-				if (scriptFile.exists()) {
-					/*
+                if (scriptFile.exists()) {
+                    /*
 					 * Наличие sql-файла говорит о том, что мы имеем дело с
 					 * папкой гранулы, и уже требуем от неё всё подряд.
 					 */
-					File initFile = new File(String.format("%s%s__init__.py", grainPath.getPath(), File.separator));
-					if (!initFile.exists())
-						throw new CelestaException("Cannot find __init__.py in grain '%s' definition folder.",
-								grainName);
+                    File initFile = new File(String.format("%s%s__init__.py", grainPath.getPath(), File.separator));
+                    if (!initFile.exists())
+                        throw new CelestaException("Cannot find __init__.py in grain '%s' definition folder.",
+                                grainName);
 
-					if (!scriptFile.canRead())
-						throw new CelestaException("Cannot read script file '%s'.", scriptFile);
-					if (grainFiles.containsKey(grainName))
-						throw new CelestaException("Grain '%s' defined more than once on different paths.", grainName);
-					grainFiles.put(grainName, scriptFile);
-				}
+                    if (!scriptFile.canRead())
+                        throw new CelestaException("Cannot read script file '%s'.", scriptFile);
+                    if (grainFiles.containsKey(grainName))
+                        throw new CelestaException("Grain '%s' defined more than once on different paths.", grainName);
+                    grainFiles.put(grainName, scriptFile);
+                }
 
-			}
-		}
+            }
+        }
 
-		initSystemGrain();
-		// В этот момент в таблице grainFiles содержится перечень распознанных
-		// имён гранул с именами файлов-скриптов.
-		parseGrains();
-	}
+        initSystemGrain();
+        // В этот момент в таблице grainFiles содержится перечень распознанных
+        // имён гранул с именами файлов-скриптов.
+        parseGrains();
+    }
 
-	/**
-	 * Сохраняет содержимое метаданных обратно в SQL-файлы, при этом
-	 * перезаписывая их содержимое.
-	 * 
-	 * @throws CelestaException
-	 *             при ошибке ввода-вывода.
-	 */
-	public void save() throws CelestaException {
-		for (Grain g : grains.values())
-			if (g.isModified())
-				g.save();
-	}
+    /**
+     * Сохраняет содержимое метаданных обратно в SQL-файлы, при этом
+     * перезаписывая их содержимое.
+     *
+     * @throws CelestaException при ошибке ввода-вывода.
+     */
+    public void save() throws CelestaException {
+        for (Grain g : grains.values())
+            if (g.isModified())
+                g.save();
+    }
 
-	private void parseGrains() throws CelestaException {
-		StringBuilder errorScript = new StringBuilder();
-		for (String s : grainFiles.keySet())
-			try {
-				getGrain(s);
-			} catch (ParseException e) {
-				if (errorScript.length() > 0)
-					errorScript.append("\n\n");
-				errorScript.append(e.getMessage());
-			}
-		if (errorScript.length() > 0)
-			throw new CelestaException(errorScript.toString());
-	}
+    private void parseGrains() throws CelestaException {
+        StringBuilder errorScript = new StringBuilder();
+        for (String s : grainFiles.keySet())
+            try {
+                getGrain(s);
+            } catch (ParseException e) {
+                if (errorScript.length() > 0)
+                    errorScript.append("\n\n");
+                errorScript.append(e.getMessage());
+            }
+        if (errorScript.length() > 0)
+            throw new CelestaException(errorScript.toString());
+    }
 
-	void addGrain(Grain grain) throws ParseException {
-		if (grain.getScore() != this)
-			throw new IllegalArgumentException();
-		if (grains.containsKey(grain.getName()))
-			throw new ParseException(String.format("Grain '%s' is already defined.", grain.getName()));
-		grains.put(grain.getName(), grain);
-	}
+    void addGrain(Grain grain) throws ParseException {
+        if (grain.getScore() != this)
+            throw new IllegalArgumentException();
+        if (grains.containsKey(grain.getName()))
+            throw new ParseException(String.format("Grain '%s' is already defined.", grain.getName()));
+        grains.put(grain.getName(), grain);
+    }
 
-	/**
-	 * Получение гранулы по её имени. При этом, если гранула ещё не была
-	 * подгружена из скрипта, производится её подгрузка. В случае, если имя
-	 * гранулы неизвестно, выводится исключение.
-	 * 
-	 * @param name
-	 *            Имя гранулы.
-	 * 
-	 * @throws ParseException
-	 *             Если имя гранулы неизвестно системе.
-	 */
-	public Grain getGrain(String name) throws ParseException {
-		Grain result = grains.get(name);
-		if (result == null) {
-			File f = grainFiles.get(name);
-			if (f == null)
-				throw new ParseException(String.format("Unknown grain '%s'.", name));
-			ChecksumInputStream is = null;
+    /**
+     * Получение гранулы по её имени. При этом, если гранула ещё не была
+     * подгружена из скрипта, производится её подгрузка. В случае, если имя
+     * гранулы неизвестно, выводится исключение.
+     *
+     * @param name Имя гранулы.
+     * @throws ParseException Если имя гранулы неизвестно системе.
+     */
+    public Grain getGrain(String name) throws ParseException {
+        Grain result = grains.get(name);
+        if (result == null) {
+            File f = grainFiles.get(name);
+            if (f == null)
+                throw new ParseException(String.format("Unknown grain '%s'.", name));
+            ChecksumInputStream is = null;
 
-			try {
-				is = new ChecksumInputStream(new FileInputStream(f));
-			} catch (FileNotFoundException e) {
-				throw new ParseException(String.format("Cannot open file '%s'.", f.toString()));
-			}
+            try {
+                is = new ChecksumInputStream(new FileInputStream(f));
+            } catch (FileNotFoundException e) {
+                throw new ParseException(String.format("Cannot open file '%s'.", f.toString()));
+            }
 
-			CelestaParser parser = new CelestaParser(is, "utf-8");
-			try {
-				try {
-					result = parser.grain(this, name);
-				} catch (ParseException | TokenMgrError e) {
-					throw new ParseException(String.format("Error parsing '%s': %s", f.toString(), e.getMessage()));
-				}
-				result.setChecksum(is.getCRC32());
-				result.setLength(is.getCount());
-				result.setGrainPath(f.getParentFile());
-			} finally {
-				try {
-					is.close();
-				} catch (IOException e) {
-					// This should never happen, however.
-					is = null;
-				}
-			}
-		}
+            CelestaParser parser = new CelestaParser(is, "utf-8");
+            try {
+                try {
+                    result = parser.grain(this, name);
+                } catch (ParseException | TokenMgrError e) {
+                    throw new ParseException(String.format("Error parsing '%s': %s", f.toString(), e.getMessage()));
+                }
+                result.setChecksum(is.getCRC32());
+                result.setLength(is.getCount());
+                result.setGrainPath(f.getParentFile());
+            } finally {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    // This should never happen, however.
+                    is = null;
+                }
+            }
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	private void initSystemGrain() throws CelestaException {
-		ChecksumInputStream is = new ChecksumInputStream(Score.class.getResourceAsStream("celesta.sql"));
+    private void initSystemGrain() throws CelestaException {
+        ChecksumInputStream is = new ChecksumInputStream(Score.class.getResourceAsStream("celesta.sql"));
 
-		CelestaParser parser = new CelestaParser(is, "utf-8");
-		try {
-			Grain result;
-			try {
-				result = parser.grain(this, "celesta");
-			} catch (ParseException e) {
-				throw new CelestaException(e.getMessage());
-			}
-			result.setChecksum(is.getCRC32());
-			result.setLength(is.getCount());
-		} finally {
-			try {
-				is.close();
-			} catch (IOException e) {
-				// This should never happen, however.
-				is = null;
-			}
-		}
+        CelestaParser parser = new CelestaParser(is, "utf-8");
+        try {
+            Grain result;
+            try {
+                result = parser.grain(this, "celesta");
+            } catch (ParseException e) {
+                throw new CelestaException(e.getMessage());
+            }
+            result.setChecksum(is.getCRC32());
+            result.setLength(is.getCount());
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                // This should never happen, however.
+                is = null;
+            }
+        }
 
-	}
+    }
 
-	/**
-	 * Возвращает неизменяемый набор гранул.
-	 */
-	public Map<String, Grain> getGrains() {
-		return Collections.unmodifiableMap(grains);
-	}
+    /**
+     * Возвращает неизменяемый набор гранул.
+     */
+    public Map<String, Grain> getGrains() {
+        return Collections.unmodifiableMap(grains);
+    }
 
-	/**
-	 * Возвращает путь по умолчанию для создаваемых динамически гранул. Значение
-	 * равно последней записи в score.path.
-	 */
-	File getDefaultGrainPath() {
-		return defaultGrainPath;
-	}
+    /**
+     * Возвращает путь по умолчанию для создаваемых динамически гранул. Значение
+     * равно последней записи в score.path.
+     */
+    File getDefaultGrainPath() {
+        return defaultGrainPath;
+    }
 
 
-	public String getPath() {
-		return path;
-	}
+    public String getPath() {
+        return path;
+    }
+
+    int nextOrderCounter() {
+        return ++orderCounter;
+    }
 }
 
 /**
  * Обёртка InputStream для подсчёта контрольной суммы при чтении.
- *
  */
 final class ChecksumInputStream extends InputStream {
-	private final CRC32 checksum = new CRC32();
-	private final InputStream input;
-	private int counter = 0;
+    private final CRC32 checksum = new CRC32();
+    private final InputStream input;
+    private int counter = 0;
 
-	ChecksumInputStream(InputStream input) {
-		this.input = input;
-	}
+    ChecksumInputStream(InputStream input) {
+        this.input = input;
+    }
 
-	@Override
-	public int read() throws IOException {
-		int result = input.read();
-		if (result >= 0) {
-			counter++;
-			checksum.update(result);
-		}
-		return result;
-	}
+    @Override
+    public int read() throws IOException {
+        int result = input.read();
+        if (result >= 0) {
+            counter++;
+            checksum.update(result);
+        }
+        return result;
+    }
 
-	public int getCRC32() {
-		return (int) checksum.getValue();
-	}
+    public int getCRC32() {
+        return (int) checksum.getValue();
+    }
 
-	public int getCount() {
-		return counter;
-	}
+    public int getCount() {
+        return counter;
+    }
 
-	@Override
-	public void close() throws IOException {
-		input.close();
-	}
+    @Override
+    public void close() throws IOException {
+        input.close();
+    }
 
 }
