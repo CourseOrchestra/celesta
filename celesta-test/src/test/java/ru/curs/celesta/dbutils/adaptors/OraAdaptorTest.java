@@ -17,7 +17,7 @@ import ru.curs.celesta.score.Score;
 public class OraAdaptorTest extends AbstractAdaptorTest {
 
 	static {
-		Locale.setDefault(Locale.US);
+		Locale.setDefault(new Locale("en", "US"));
 	}
 
 	public static OracleContainer oracle = new OracleContainer();
