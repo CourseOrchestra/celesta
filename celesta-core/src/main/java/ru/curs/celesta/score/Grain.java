@@ -11,12 +11,6 @@ import ru.curs.celesta.CelestaException;
  */
 public final class Grain extends NamedElement {
 
-	/**
-	 * Счётчик вызовов метода parsingComplete для заполнения свойства
-	 * dependencyOrder.
-	 */
-	private static int orderCounter = 0;
-
 	private final Score score;
 
 	private VersionString version = VersionString.DEFAULT;
@@ -302,8 +296,7 @@ public final class Grain extends NamedElement {
 	public void completeParsing() {
 		parsingComplete = true;
 		modified = false;
-		orderCounter++;
-		dependencyOrder = orderCounter;
+		dependencyOrder = score.nextOrderCounter();
 	}
 
 	/**
