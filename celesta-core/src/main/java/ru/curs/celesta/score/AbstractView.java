@@ -244,7 +244,7 @@ public abstract class AbstractView extends DataGrainElement {
   public abstract Map<String, ? extends ColumnMeta> getColumns();
 
 
-  Map<String, TableRef> getTables() {
+  public Map<String, TableRef> getTables() {
     return tables;
   }
 

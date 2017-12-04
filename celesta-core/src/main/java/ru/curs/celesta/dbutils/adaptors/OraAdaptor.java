@@ -463,7 +463,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public String getInFilterClause(Table table, Table otherTable, List<String> fields,
+  public String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
                                   List<String> otherFields, String otherWhere) {
     String template = "( %s ) IN (SELECT %s FROM %s WHERE %s)";
     String fieldsStr = String.join(",",
@@ -477,7 +477,7 @@ final class OraAdaptor extends DBAdaptor {
             .collect(Collectors.toList())
     );
 
-    String otherTableStr = String.format(tableTemplate(), otherTable.getGrain().getName(), otherTable.getName());
+    String otherTableStr = String.format(tableTemplate(), otherDge.getGrain().getName(), otherDge.getName());
     String result = String.format(template, fieldsStr, otherFieldsStr, otherTableStr, otherWhere);
     return result;
   }

@@ -751,9 +751,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   public abstract PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) throws CelestaException;
 
-  public abstract String getInFilterClause(Table table, Table otherTable, List<String> fields,
-                                           List<String> otherFields, String whereForOtherTable);
-
   abstract String[] getCreateIndexSQL(Index index);
 
   abstract String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo);

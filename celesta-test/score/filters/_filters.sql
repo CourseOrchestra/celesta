@@ -10,6 +10,10 @@ create table aFilter (
 
 create index idxDateNumb1Numb2 on aFilter (date, number1, number2);
 
+create view aFilterView as
+  SELECT id, date, number1, number2, noIndexA
+  FROM aFilter;
+
 create table bFilter (
   id int identity not null primary key,
   created datetime default GETDATE(),
@@ -19,6 +23,10 @@ create table bFilter (
 );
 
 create index idxCreatedNumb1Numb2 on bFilter (created, numb1, numb2);
+
+create view bFilterView as
+  SELECT id, created, numb1, numb2, noIndexB
+  FROM bFilter;
 
 create table cFilter (
   id int not null primary key
@@ -52,10 +60,16 @@ create table gFilter (
 
 create index idxCreateDateNum1 on gFilter (createDate, num1);
 
+create view gFilterView as
+  SELECT id, createDate, num1, num2, noIndexG
+  FROM gFilter;
+
 create table hFilter (
   id VARCHAR(36) NOT NULL,
   CONSTRAINT pk_hFilter PRIMARY KEY (id)
 );
+
+
 
 create table iFilter (
   id VARCHAR(36) NOT NULL,

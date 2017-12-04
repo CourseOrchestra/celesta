@@ -2,60 +2,23 @@ from java.time import LocalDateTime
 from java.sql import Timestamp
 from ru.curs.celesta import CelestaException
 from ru.curs.celesta.score import ParseException
-from _filters_orm import aFilterCursor, bFilterCursor, cFilterCursor, \
-    dFilterCursor, eFilterCursor, fFilterCursor, gFilterCursor, hFilterCursor, iFilterCursor
+from _filters_orm import aFilterCursor, aFilterViewCursor, bFilterCursor, bFilterViewCursor, cFilterCursor, \
+    dFilterCursor, eFilterCursor, fFilterCursor, gFilterCursor, gFilterViewCursor, hFilterCursor, iFilterCursor
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
 
 @TestClass
 class TestFilters(CelestaTestCase):
 
-    def testInFilterForIndices(self):
+    def testInFilterForTable(self):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
+        self._testInFilterForIndices(a, b)
 
-        a.deleteAll()
-        b.deleteAll()
-
-        timestamp = Timestamp.valueOf(LocalDateTime.now())
-
-        a.date = timestamp
-        a.number1 = 5
-        a.number2 = -10
-        a.insert()
-        a.clear()
-
-        a.date = timestamp
-        a.number1 = 1
-        a.number2 = -20
-        a.insert()
-        a.clear()
-
-        a.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
-        a.number2 = -30
-        a.insert()
-        a.clear()
-
-        b.created = timestamp
-        b.numb1 = 2
-        b.numb2 = -40
-        b.insert()
-        b.clear()
-
-        b.created = timestamp
-        b.numb1 = 5
-        b.numb2 = -50
-        b.insert()
-        b.clear()
-
-        lookup = a.setIn(b).add("date", "created")
-        self.assertEquals(2, a.count())
-
-        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
-        self.assertEquals(1, a.count())
-
-        a.setIn(b).add("date", "created").add("number1", "numb1").add("number2", "numb2")
-        self.assertEquals(0, a.count())
+    def testInFilterForView(self):
+        a = aFilterViewCursor(self.context)
+        b = bFilterViewCursor(self.context)
+        self._testInFilterForIndices(a, b)
 
 
     def testInFilterForSimplePks(self):
@@ -123,161 +86,47 @@ class TestFilters(CelestaTestCase):
         self.assertEquals(2, e.count())
 
 
-    def testInFilterWithRangeInMainCursor(self):
+    def testInFilterWithRangeInMainCursorForTable(self):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
+        self._testInFilterWithRangeInMainCursor(a, b)
 
-        a.deleteAll()
-        b.deleteAll()
+    def testInFilterWithRangeInMainCursorForView(self):
+        a = aFilterViewCursor(self.context)
+        b = bFilterViewCursor(self.context)
+        self._testInFilterWithRangeInMainCursor(a, b)
 
-        timestamp = Timestamp.valueOf(LocalDateTime.now())
-
-        a.date = timestamp
-        a.number1 = 5
-        a.number2 = -10
-        a.insert()
-        a.clear()
-
-        a.date = timestamp
-        a.number1 = 1
-        a.number2 = -20
-        a.insert()
-        a.clear()
-
-        a.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
-        a.number2 = -30
-        a.insert()
-        a.clear()
-
-        b.created = timestamp
-        b.numb1 = 2
-        b.numb2 = -40
-        b.insert()
-        b.clear()
-
-        b.created = timestamp
-        b.numb1 = 5
-        b.numb2 = -50
-        b.insert()
-        b.clear()
-
-        a.setRange('number1', 5)
-        lookup = a.setIn(b).add("date", "created")
-        self.assertEquals(1, a.count())
-        a.first()
-
-    def testInFilterWithRangeInOtherCursorBeforeSetIn(self):
+    def testInFilterWithRangeInOtherCursorBeforeSetInForTable(self):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
+        self._testInFilterWithRangeInOtherCursorBeforeSetIn(a, b)
 
-        a.deleteAll()
-        b.deleteAll()
+    def testInFilterWithRangeInOtherCursorBeforeSetInForView(self):
+        a = aFilterViewCursor(self.context)
+        b = bFilterViewCursor(self.context)
+        self._testInFilterWithRangeInOtherCursorBeforeSetIn(a, b)
 
-        timestamp = Timestamp.valueOf(LocalDateTime.now())
-
-        self._fillTablesForTestInFilterWithRangeOnOtherCursor(a, b, timestamp)
-
-        b.setRange('numb2', -40)
-        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
-
-        self.assertEquals(2, a.count())
-
-        a.first()
-        self.assertEquals(5, a.number1)
-        self.assertEquals(-10, a.number2)
-
-        a.navigate('>')
-        self.assertEquals(6, a.number1)
-        self.assertEquals(-20, a.number2)
-
-
-    def testInFilterWithRangeInOtherCursorAfterSetIn(self):
+    def testInFilterWithRangeInOtherCursorAfterSetInForTable(self):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
+        self._testInFilterWithRangeInOtherCursorAfterSetIn(a, b)
 
-        a.deleteAll()
-        b.deleteAll()
+    def testInFilterWithRangeInOtherCursorAfterSetInForView(self):
+        a = aFilterViewCursor(self.context)
+        b = bFilterViewCursor(self.context)
+        self._testInFilterWithRangeInOtherCursorAfterSetIn(a, b)
 
-        timestamp = Timestamp.valueOf(LocalDateTime.now())
-
-        self._fillTablesForTestInFilterWithRangeOnOtherCursor(a, b, timestamp)
-
-
-        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
-
-        self.assertEquals(3, a.count())
-
-        b.setRange('numb2', -40)
-        self.assertEquals(2, a.count())
-
-        a.first()
-        self.assertEquals(5, a.number1)
-        self.assertEquals(-10, a.number2)
-
-        a.navigate('>')
-        self.assertEquals(6, a.number1)
-        self.assertEquals(-20, a.number2)
-
-    def testInFilterWithAdditionalLookup(self):
+    def testInFilterWithAdditionalLookupForTable(self):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
         g = gFilterCursor(self.context)
+        self._testInFilterWithAdditionalLookup(a, b, g)
 
-        a.deleteAll()
-        b.deleteAll()
-        g.deleteAll()
-
-        timestamp = Timestamp.valueOf(LocalDateTime.now())
-
-        self._fillTablesForTestInFilterWithRangeOnOtherCursor(a, b, timestamp)
-
-        g.createDate = timestamp
-        g.num1 = 5
-        g.num2 = -30
-        g.insert()
-        g.clear()
-
-        g.createDate = timestamp
-        g.num1 = 6
-        g.num2 = -40
-        g.insert()
-        g.clear()
-
-        g.createDate = timestamp
-        g.num1 = 1
-        g.num2 = -41
-        g.insert()
-        g.clear()
-
-        g.createDate = timestamp
-        g.num1 = 1
-        g.num2 = -42
-        g.insert()
-        g.clear()
-
-
-        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
-        additionalLookup = lookup.and(g).add("date", "createDate").add("number1", "num1")
-
-        self.assertEquals(3, a.count())
-
-        b.setRange('numb2', -40)
-        self.assertEquals(2, a.count())
-
-        a.first()
-        self.assertEquals(5, a.number1)
-        self.assertEquals(-10, a.number2)
-
-        a.navigate('>')
-        self.assertEquals(6, a.number1)
-        self.assertEquals(-20, a.number2)
-
-        g.setRange('num2', -30)
-        self.assertEquals(1, a.count())
-
-        a.first()
-        self.assertEquals(5, a.number1)
-        self.assertEquals(-10, a.number2)
+    def testInFilterWithAdditionalLookupForView(self):
+        a = aFilterViewCursor(self.context)
+        b = bFilterViewCursor(self.context)
+        g = gFilterViewCursor(self.context)
+        self._testInFilterWithAdditionalLookup(a, b, g)
 
 
     def testInFilterWhenTargetHasPkAndOtherHasPkWithNotSameOrderAndIndexWithSameOrder(self):
@@ -303,29 +152,26 @@ class TestFilters(CelestaTestCase):
         lookup = h.setIn(i).add('id', 'hFilterId')
         self.assertEquals(1, h.count())
 
-    def testExceptionWhileAddingNotExistedFieldsToLookup(self):
+    def testExceptionWhileAddingNotExistedFieldsToLookupForTable(self):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
+        self._testExceptionWhileAddingNotExistedFieldsToLookup(a, b)
 
-        lookup = a.setIn(b)
-
-        lookupAdd = lambda targetCol, auxiliaryCol : lookup.add(targetCol, auxiliaryCol)
-
-        self.assertThrows(ParseException, lookupAdd, "notExistingField", "created")
-        self.assertThrows(ParseException, lookupAdd, "date", "notExistingField")
-        self.assertThrows(ParseException, lookupAdd, "notExistingField", "notExistingField")
+    def testExceptionWhileAddingNotExistedFieldsToLookupForView(self):
+        a = aFilterViewCursor(self.context)
+        b = bFilterViewCursor(self.context)
+        self._testExceptionWhileAddingNotExistedFieldsToLookup(a, b)
 
 
-
-    def testExceptionWhileAddingFieldsWithNotMatchesTypesToLookup(self):
+    def testExceptionWhileAddingFieldsWithNotMatchesTypesToLookupForTable(self):
         a = aFilterCursor(self.context)
         b = bFilterCursor(self.context)
+        self._testExceptionWhileAddingFieldsWithNotMatchesTypesToLookup(a, b)
 
-        lookup = a.setIn(b)
-
-        lookupAdd = lambda targetCol, auxiliaryCol : lookup.add(targetCol, auxiliaryCol)
-        self.assertThrows(CelestaException, lookupAdd, "date", "numb1")
-
+    def testExceptionWhileAddingFieldsWithNotMatchesTypesToLookupForView(self):
+        a = aFilterViewCursor(self.context)
+        b = bFilterViewCursor(self.context)
+        self._testExceptionWhileAddingFieldsWithNotMatchesTypesToLookup(a, b)
 
     def testExceptionWhileAddingFieldsWithoutIndexToLookup(self):
         a = aFilterCursor(self.context)
@@ -395,3 +241,224 @@ class TestFilters(CelestaTestCase):
         b.numb2 = -41
         b.insert()
         b.clear()
+
+    def _testInFilterForIndices(self, a, b):
+        aTableCursor = aFilterCursor(self.context)
+        bTableCursor = bFilterCursor(self.context)
+
+        aTableCursor.deleteAll()
+        bTableCursor.deleteAll()
+
+        timestamp = Timestamp.valueOf(LocalDateTime.now())
+
+        aTableCursor.date = timestamp
+        aTableCursor.number1 = 5
+        aTableCursor.number2 = -10
+        aTableCursor.insert()
+        aTableCursor.clear()
+
+        aTableCursor.date = timestamp
+        aTableCursor.number1 = 1
+        aTableCursor.number2 = -20
+        aTableCursor.insert()
+        aTableCursor.clear()
+
+        aTableCursor.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
+        aTableCursor.number2 = -30
+        aTableCursor.insert()
+        aTableCursor.clear()
+
+        bTableCursor.created = timestamp
+        bTableCursor.numb1 = 2
+        bTableCursor.numb2 = -40
+        bTableCursor.insert()
+        bTableCursor.clear()
+
+        bTableCursor.created = timestamp
+        bTableCursor.numb1 = 5
+        bTableCursor.numb2 = -50
+        bTableCursor.insert()
+        bTableCursor.clear()
+
+        lookup = a.setIn(b).add("date", "created")
+        self.assertEquals(2, a.count())
+
+        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
+        self.assertEquals(1, a.count())
+
+        a.setIn(b).add("date", "created").add("number1", "numb1").add("number2", "numb2")
+        self.assertEquals(0, a.count())
+
+    def _testInFilterWithRangeInMainCursor(self, a, b):
+        aTableCursor = aFilterCursor(self.context)
+        bTableCursor = bFilterCursor(self.context)
+
+        aTableCursor.deleteAll()
+        bTableCursor.deleteAll()
+
+        timestamp = Timestamp.valueOf(LocalDateTime.now())
+
+        aTableCursor.date = timestamp
+        aTableCursor.number1 = 5
+        aTableCursor.number2 = -10
+        aTableCursor.insert()
+        aTableCursor.clear()
+
+        aTableCursor.date = timestamp
+        aTableCursor.number1 = 1
+        aTableCursor.number2 = -20
+        aTableCursor.insert()
+        aTableCursor.clear()
+
+        aTableCursor.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
+        aTableCursor.number2 = -30
+        aTableCursor.insert()
+        aTableCursor.clear()
+
+        bTableCursor.created = timestamp
+        bTableCursor.numb1 = 2
+        bTableCursor.numb2 = -40
+        bTableCursor.insert()
+        bTableCursor.clear()
+
+        bTableCursor.created = timestamp
+        bTableCursor.numb1 = 5
+        bTableCursor.numb2 = -50
+        bTableCursor.insert()
+        bTableCursor.clear()
+
+        a.setRange('number1', 5)
+        lookup = a.setIn(b).add("date", "created")
+        self.assertEquals(1, a.count())
+        a.first()
+
+
+    def _testInFilterWithRangeInOtherCursorBeforeSetIn(self, a, b):
+        aTableCursor = aFilterCursor(self.context)
+        bTableCursor = bFilterCursor(self.context)
+
+        aTableCursor.deleteAll()
+        bTableCursor.deleteAll()
+
+        timestamp = Timestamp.valueOf(LocalDateTime.now())
+
+        self._fillTablesForTestInFilterWithRangeOnOtherCursor(aTableCursor, bTableCursor, timestamp)
+
+        b.setRange('numb2', -40)
+        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
+
+        self.assertEquals(2, a.count())
+
+        a.first()
+        self.assertEquals(5, a.number1)
+        self.assertEquals(-10, a.number2)
+
+        a.navigate('>')
+        self.assertEquals(6, a.number1)
+        self.assertEquals(-20, a.number2)
+
+
+    def _testInFilterWithRangeInOtherCursorAfterSetIn(self, a, b):
+        aTableCursor = aFilterCursor(self.context)
+        bTableCursor = bFilterCursor(self.context)
+
+        aTableCursor.deleteAll()
+        bTableCursor.deleteAll()
+
+        timestamp = Timestamp.valueOf(LocalDateTime.now())
+
+        self._fillTablesForTestInFilterWithRangeOnOtherCursor(aTableCursor, bTableCursor, timestamp)
+
+
+        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
+
+        self.assertEquals(3, a.count())
+
+        b.setRange('numb2', -40)
+        self.assertEquals(2, a.count())
+
+        a.first()
+        self.assertEquals(5, a.number1)
+        self.assertEquals(-10, a.number2)
+
+        a.navigate('>')
+        self.assertEquals(6, a.number1)
+        self.assertEquals(-20, a.number2)
+
+    def _testInFilterWithAdditionalLookup(self, a, b, g):
+        aTableCursor = aFilterCursor(self.context)
+        bTableCursor = bFilterCursor(self.context)
+        gTableCursor = gFilterCursor(self.context)
+
+        aTableCursor.deleteAll()
+        bTableCursor.deleteAll()
+        gTableCursor.deleteAll()
+
+        timestamp = Timestamp.valueOf(LocalDateTime.now())
+
+        self._fillTablesForTestInFilterWithRangeOnOtherCursor(aTableCursor, bTableCursor, timestamp)
+
+        gTableCursor.createDate = timestamp
+        gTableCursor.num1 = 5
+        gTableCursor.num2 = -30
+        gTableCursor.insert()
+        gTableCursor.clear()
+
+        gTableCursor.createDate = timestamp
+        gTableCursor.num1 = 6
+        gTableCursor.num2 = -40
+        gTableCursor.insert()
+        gTableCursor.clear()
+
+        gTableCursor.createDate = timestamp
+        gTableCursor.num1 = 1
+        gTableCursor.num2 = -41
+        gTableCursor.insert()
+        gTableCursor.clear()
+
+        gTableCursor.createDate = timestamp
+        gTableCursor.num1 = 1
+        gTableCursor.num2 = -42
+        gTableCursor.insert()
+        gTableCursor.clear()
+
+
+        lookup = a.setIn(b).add("date", "created").add("number1", "numb1")
+        additionalLookup = lookup.and(g).add("date", "createDate").add("number1", "num1")
+
+        self.assertEquals(3, a.count())
+
+        b.setRange('numb2', -40)
+        self.assertEquals(2, a.count())
+
+        a.first()
+        self.assertEquals(5, a.number1)
+        self.assertEquals(-10, a.number2)
+
+        a.navigate('>')
+        self.assertEquals(6, a.number1)
+        self.assertEquals(-20, a.number2)
+
+        g.setRange('num2', -30)
+        self.assertEquals(1, a.count())
+
+        a.first()
+        self.assertEquals(5, a.number1)
+        self.assertEquals(-10, a.number2)
+
+    def _testExceptionWhileAddingNotExistedFieldsToLookup(self, a, b):
+        lookup = a.setIn(b)
+
+        lookupAdd = lambda targetCol, auxiliaryCol : lookup.add(targetCol, auxiliaryCol)
+
+        self.assertThrows(ParseException, lookupAdd, "notExistingField", "created")
+        self.assertThrows(ParseException, lookupAdd, "date", "notExistingField")
+        self.assertThrows(ParseException, lookupAdd, "notExistingField", "notExistingField")
+
+
+
+    def _testExceptionWhileAddingFieldsWithNotMatchesTypesToLookup(self, a, b):
+        lookup = a.setIn(b)
+
+        lookupAdd = lambda targetCol, auxiliaryCol : lookup.add(targetCol, auxiliaryCol)
+        self.assertThrows(CelestaException, lookupAdd, "date", "numb1")

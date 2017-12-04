@@ -437,12 +437,12 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public String getInFilterClause(Table table, Table otherTable, List<String> fields,
+  public String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
                                   List<String> otherFields, String otherWhere) {
     String template = "EXISTS (SELECT * FROM %s WHERE %s AND %s)";
 
-    String tableStr = String.format(tableTemplate(), table.getGrain().getName(), table.getName());
-    String otherTableStr = String.format(tableTemplate(), otherTable.getGrain().getName(), otherTable.getName());
+    String tableStr = String.format(tableTemplate(), dge.getGrain().getName(), dge.getName());
+    String otherTableStr = String.format(tableTemplate(), otherDge.getGrain().getName(), otherDge.getName());
 
     StringBuilder sb = new StringBuilder();
 

@@ -1,27 +1,32 @@
 package ru.curs.celesta.dbutils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.filter.In;
+import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.View;
 
 /**
  * Базовый класс курсора для посмотра данных в представлениях.
  */
-public abstract class ViewCursor extends BasicCursor {
+public abstract class ViewCursor extends BasicCursor implements InFilterSupport {
 
 	private View meta = null;
+	private InFilterHolder inFilterHolder;
 
 	public ViewCursor(CallContext context) throws CelestaException {
 		super(context);
+		inFilterHolder = new InFilterHolder(this);
 	}
 
 	public ViewCursor(CallContext context, Set<String> fields) throws CelestaException {
 		super(context, fields);
+		inFilterHolder = new InFilterHolder(this);
 	}
 
 	/**
@@ -53,4 +58,36 @@ public abstract class ViewCursor extends BasicCursor {
 		}
 	}
 
+
+	@Override
+	public FieldsLookup setIn(BasicCursor otherCursor) throws CelestaException {
+		return inFilterHolder.setIn(otherCursor);
+	}
+
+	@Override
+	public In getIn() {
+		return inFilterHolder.getIn();
+	}
+
+	@Override
+	protected void resetSpecificState() {
+		inFilterHolder = new InFilterHolder(this);
+	}
+
+	@Override
+	protected void clearSpecificState() {
+		inFilterHolder = new InFilterHolder(this);
+	}
+
+	@Override
+	protected void copySpecificFiltersFrom(BasicCursor bc) {
+		ViewCursor c = (ViewCursor) bc;
+		inFilterHolder = c.inFilterHolder;
+	}
+
+	@Override
+	boolean isEquivalentSpecific(BasicCursor bc) throws CelestaException {
+		ViewCursor c = (ViewCursor) bc;
+		return Objects.equals(inFilterHolder, c.inFilterHolder);
+	}
 }
