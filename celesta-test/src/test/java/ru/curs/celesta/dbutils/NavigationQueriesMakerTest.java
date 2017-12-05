@@ -96,7 +96,7 @@ public class NavigationQueriesMakerTest {
 				}
 
 				@Override
-				public String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields, String whereForOtherTable) {
+				public String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields, List<String> otherFields, String whereForOtherTable) {
 					return null;
 				}
 
@@ -164,7 +164,7 @@ public class NavigationQueriesMakerTest {
 				}
 
 				@Override
-				public String getInFilterClause(Table table, Table otherTable, List<String> fields, List<String> otherFields, String whereForOtherTable) {
+				public String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields, List<String> otherFields, String whereForOtherTable) {
 					return null;
 				}
 

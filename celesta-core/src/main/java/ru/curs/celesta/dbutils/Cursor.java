@@ -65,11 +65,11 @@ import ru.curs.celesta.score.Table;
 /**
  * Базовый класс курсора для модификации данных в таблицах.
  */
-public abstract class Cursor extends BasicCursor {
+public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	private Table meta = null;
 	private final CursorGetHelper getHelper;
-	private In inFilter;
+	private InFilterHolder inFilterHolder;
 
 
 	private final MaskedStatementHolder insert = new MaskedStatementHolder() {
@@ -137,6 +137,7 @@ public abstract class Cursor extends BasicCursor {
 				.withTableName(_tableName());
 
 		getHelper = cghb.build();
+		inFilterHolder = new InFilterHolder(this);
 	}
 
 	public Cursor(CallContext context, Set<String> fields) throws CelestaException {
@@ -150,6 +151,7 @@ public abstract class Cursor extends BasicCursor {
 				.withFields(fieldsForStatement);
 
 		getHelper = cghb.build();
+		inFilterHolder = new InFilterHolder(this);
 	}
 
 	@Override
@@ -636,55 +638,36 @@ public abstract class Cursor extends BasicCursor {
 		return xRec;
 	}
 
-	public final FieldsLookup setIn(Cursor otherCursor) throws CelestaException {
-
-		Runnable lookupChangeCallback = () -> {
-			try {
-				if (!isClosed())
-					// пересоздаём набор
-					closeSet();
-			} catch (CelestaException e) {
-				throw new RuntimeException();
-			}
-		};
-
-		Function<FieldsLookup, Void> newLookupCallback = (lookup) -> {
-			inFilter.addLookup(lookup, lookup.getOtherCursor().getQmaker());
-			return null;
-		};
-
-		FieldsLookup fieldsLookup = new FieldsLookup(this, otherCursor, lookupChangeCallback, newLookupCallback);
-		WhereTermsMaker otherWhereTermMaker = otherCursor.getQmaker();
-		inFilter = new In(fieldsLookup, otherWhereTermMaker);
-
-		return fieldsLookup;
+	@Override
+	public FieldsLookup setIn(BasicCursor otherCursor) throws CelestaException {
+		return inFilterHolder.setIn(otherCursor);
 	}
 
 	@Override
-	protected In getIn() {
-		return inFilter;
+	public In getIn() {
+		return inFilterHolder.getIn();
 	}
 
 	@Override
 	protected void resetSpecificState() {
-		inFilter = null;
+		inFilterHolder = new InFilterHolder(this);
 	}
 
 	@Override
 	protected void clearSpecificState() {
-		inFilter = null;
+		inFilterHolder = new InFilterHolder(this);
 	}
 
 	@Override
 	protected void copySpecificFiltersFrom(BasicCursor bc) {
 		Cursor c = (Cursor) bc;
-		inFilter = c.inFilter;
+		inFilterHolder = c.inFilterHolder;
 	}
 
 	@Override
 	boolean isEquivalentSpecific(BasicCursor bc) throws CelestaException {
 		Cursor c = (Cursor) bc;
-		return Objects.equals(inFilter, c.inFilter);
+		return Objects.equals(inFilterHolder, c.inFilterHolder);
 	}
 
 	/**

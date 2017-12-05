@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.DataGrainElement;
 import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.Table;
 
@@ -31,8 +32,8 @@ public interface QueryBuildingHelper {
 	 */
 	SQLGenerator getViewSQLGenerator();
 
-	String getInFilterClause(Table table, Table otherTable, List<String> fields,
-											 List<String> otherFields, String whereForOtherTable);
+	String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
+							 List<String> otherFields, String whereForOtherTable);
 
 	boolean supportsCortegeComparing();
 }

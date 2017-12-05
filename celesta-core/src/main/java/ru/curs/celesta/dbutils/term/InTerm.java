@@ -49,7 +49,7 @@ public final class InTerm extends WhereTerm {
         otherWhere = "";
       }
 
-      return queryBuildingHelper.getInFilterClause(lookup.getTable(), lookup.getOtherTable(),
+      return queryBuildingHelper.getInFilterClause(lookup.getFiltered(), lookup.getFiltering(),
           lookup.getFields(), lookup.getOtherFields(), otherWhere);
     } catch (CelestaException e) {
       throw new RuntimeException(e);
