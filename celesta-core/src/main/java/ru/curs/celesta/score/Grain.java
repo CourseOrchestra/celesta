@@ -75,7 +75,7 @@ public final class Grain extends NamedElement {
 	 *             В случае, если элемент с таким именем уже существует.
 	 */
 	@SuppressWarnings("unchecked")
-	<T extends DataGrainElement> void addElement(T element) throws ParseException {
+	<T extends GrainElement> void addElement(T element) throws ParseException {
 		if (element.getGrain() != this) {
 			throw new IllegalArgumentException();
 		}

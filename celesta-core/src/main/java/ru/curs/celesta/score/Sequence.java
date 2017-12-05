@@ -6,8 +6,9 @@ import java.util.Optional;
 
 public class Sequence extends GrainElement {
 
-    private Optional<Integer> startWith = Optional.empty();
-    private Optional<Integer> incrementBy = Optional.empty();
+    //TODO:Если в других базах имеется порядок задания опциональных характеристик, то сделать и у нас
+    private Optional<Integer> startWith = Optional.of(0);
+    private Optional<Integer> incrementBy = Optional.of(1);
     private Optional<Integer> minValue = Optional.empty();
     private Optional<Integer> maxValue = Optional.empty();
     private Optional<Boolean> isCycle = Optional.empty();
@@ -15,9 +16,8 @@ public class Sequence extends GrainElement {
 
     Sequence(Grain g, String name) throws ParseException {
         super(g, name);
+        g.addElement(this);
     }
-
-    void setCelestaDocLexem(String doc) {}
 
     void startWith(Integer startWith) {
         this.startWith = Optional.of(startWith);
@@ -32,11 +32,21 @@ public class Sequence extends GrainElement {
         this.incrementBy = Optional.of(incrementBy);
     }
 
-    void minValue(Integer minValue) {
+    void minValue(Integer minValue) throws ParseException {
+        if (this.maxValue.isPresent() && this.maxValue.get() < minValue)
+            throw new ParseException(
+                    String.format("MAXVALUE for sequence %s can't be less than MINVALUE", getName())
+            );
+
         this.minValue = Optional.of(minValue);
     }
 
-    void maxValue(Integer maxValue) {
+    void maxValue(Integer maxValue) throws ParseException {
+        if (this.minValue.isPresent() && this.minValue.get() > maxValue)
+            throw new ParseException(
+                    String.format("MINVALUE for sequence %s can't be greater than MAXVALUE", getName())
+            );
+
         this.maxValue = Optional.of(maxValue);
     }
 

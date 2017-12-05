@@ -43,11 +43,6 @@ PARSER_END(CelestaParser)
 |   "\n"
 }
 
-TOKEN: /* Lexical states */
-{
-    <START_CREATE_SEQUENCE: <K_CREATE> <K_SEQUENCE>>: IN_CREATE_SEQUENCE
-}
-
 TOKEN: /* SQL keywords */ 
 {
     <K_ACTION:       "ACTION">
@@ -61,6 +56,7 @@ TOKEN: /* SQL keywords */
 |   <K_CONSTRAINT:   "CONSTRAINT">
 |   <K_COUNT:        "COUNT">
 |   <K_CREATE:       "CREATE">
+|   <K_CYCLE:        "CYCLE">
 |   <K_DEFAULT:      "DEFAULT">
 |   <K_DELETE:       "DELETE">
 |   <K_DISTINCT:     "DISTINCT">
@@ -73,6 +69,7 @@ TOKEN: /* SQL keywords */
 |   <K_GROUP:        "GROUP">
 |   <K_IDENTITY:     "IDENTITY">
 |   <K_IN:           "IN">
+|   <K_INCREMENT:    "INCREMENT">
 |   <K_INDEX:        "INDEX">
 |   <K_INNER:        "INNER">
 |   <K_IS:           "IS">
@@ -82,7 +79,9 @@ TOKEN: /* SQL keywords */
 |   <K_LIKE:         "LIKE">
 |   <K_MATERIALIZED: "MATERIALIZED">
 |   <K_MAX:          "MAX">
+|   <K_MAXVALUE:     "MAXVALUE">
 |   <K_MIN:          "MIN">
+|   <K_MINVALUE:     "MINVALUE">
 |   <K_NO:           "NO">
 |   <K_NOT:          "NOT">
 |   <K_NULL:         "NULL">
@@ -94,6 +93,7 @@ TOKEN: /* SQL keywords */
 |   <K_SELECT:       "SELECT">
 |   <K_SEQUENCE:     "SEQUENCE">
 |   <K_SET:          "SET">
+|   <K_START:        "START">
 |   <K_SUM:          "SUM">
 |   <K_TABLE:        "TABLE">
 |   <K_TEXT:         "TEXT">
@@ -101,17 +101,7 @@ TOKEN: /* SQL keywords */
 |   <K_UPDATE:       "UPDATE">
 |   <K_VIEW:         "VIEW">
 |   <K_WHERE:        "WHERE">
-}
-
-
-<IN_CREATE_SEQUENCE> TOKEN: {   /* CREATE SEQUENCE Sql keywords */
-        <K_CYCLE:        "CYCLE">
-    |   <K_INCREMENT:    "INCREMENT">
-    |   <K_MAXVALUE:     "MAXVALUE">
-    |   <K_MINVALUE:     "MINVALUE">
-    |   <K_START:        "START">
-    |   <K_WITH:         "WITH">
-    |   ";":    DEFAULT
+|   <K_WITH:         "WITH">
 }
 
 TOKEN: /* Datatypes */
@@ -205,7 +195,7 @@ void createTable(Grain g, String doc):
 	"("
 		tableConstituent(table)	("," tableConstituent(table))*
 	")"
-    [ ((t = <S_IDENTIFIER> | t = <K_NO>) {options.add(t.toString());} )+ ]
+    [ ((t = <S_IDENTIFIER> | t = <K_NO> | t = <K_WITH>) {options.add(t.toString());} )+ ]
 	{
 	  table.finalizePK(options);
     }
@@ -440,7 +430,6 @@ void createSequence(Grain g, String doc):
     {
         s = new Sequence(g, name.toString());
         s.setCelestaDocLexem(doc);
-        token_source.SwitchTo(IN_CREATE_SEQUENCE);
     }
     (     sequenceStartWith(s)
         | sequenceIncrementBy(s)
