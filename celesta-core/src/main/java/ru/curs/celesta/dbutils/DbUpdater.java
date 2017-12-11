@@ -302,6 +302,8 @@ public final class DbUpdater {
       // Создаём параметризованные представления заново
       createParameterizedViews(g);
 
+      updateSequences(g);
+
       // Обновляем все материализованные представления.
       for (MaterializedView mv : g.getElements(MaterializedView.class).values()) {
         String tableName = mv.getRefTable().getTable().getName();
@@ -405,6 +407,12 @@ public final class DbUpdater {
     Connection conn = grain.callContext().getConn();
     for (ParameterizedView pv : g.getElements(ParameterizedView.class).values())
       dba.createParameterizedView(conn, pv);
+  }
+
+  private void updateSequences(Grain g) throws CelestaException {
+    Connection conn = grain.callContext().getConn();
+    for (Sequence s : g.getElements(Sequence.class).values())
+      dba.createSequence(conn, s);
   }
 
   private void dropAllParameterizedViews(Grain g) throws CelestaException {

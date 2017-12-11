@@ -896,6 +896,34 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   }
 
+
+  public void createSequence(Connection conn, Sequence s) throws CelestaException {
+    try {
+      String sql = generateSqlForCreateSequenceExpression(s);
+
+      Statement stmt = conn.createStatement();
+      try {
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Error while creating sequence %s.%s: %s", s.getGrain().getName(), s.getName(),
+              e.getMessage());
+    }
+  }
+
+  String generateSqlForCreateSequenceExpression(Sequence s) {
+    StringBuilder sb = new StringBuilder("CREATE SEQUENCE ")
+            .append(String.format(tableTemplate(), s.getGrain().getName(), s.getName()));
+
+    s.getArguments().forEach((argument, o) -> {
+      sb.append(argument.getSql(o));
+    });
+
+    return sb.toString();
+  }
+
   public abstract void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException;
 
   /**

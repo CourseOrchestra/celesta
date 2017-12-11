@@ -145,17 +145,17 @@ SPECIAL_TOKEN:
 /*Metamodel. Root rule.*/
 Grain grain(Score s, String name):
 {
-   /*This work is dedicated to Maria, my misterious muse :-) 
+   /*This work is dedicated to Maria, my misterious muse :-)
      Ivan Ponomarev, June 2013.*/
-	 
+
    Grain g = new Grain(s, name);
    Token t;
    Token doc = null;
 }
-{ 
+{
    [doc = <CELESTA_DOC> {g.setCelestaDocLexem(doc.toString()); doc = null;}]
-   <K_CREATE> 
-   t = <S_IDENTIFIER> {if (!"GRAIN".equalsIgnoreCase(t.toString())) 
+   <K_CREATE>
+   t = <S_IDENTIFIER> {if (!"GRAIN".equalsIgnoreCase(t.toString()))
       throw new ParseException(String.format(
 	  "Error: expected 'create GRAIN' at the beginning of the grain '%s' definition.", name));}
    t = <S_IDENTIFIER> {if (!name.equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
@@ -165,7 +165,7 @@ Grain grain(Score s, String name):
    t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}";"
    (
     ( ([doc = <CELESTA_DOC>]<K_CREATE> (
-                    createTable(g, doc == null? null: doc.toString()) 
+                    createTable(g, doc == null? null: doc.toString())
                   | createIndex(g, doc == null? null: doc.toString())
 				  | createView(g, doc == null? null: doc.toString())
 				  | createMaterializedView(g, doc == null? null: doc.toString())
@@ -202,11 +202,11 @@ void createTable(Grain g, String doc):
 }
 
 void tableConstituent(Table table):{
-  String name; 
+  String name;
   ForeignKey fk;
 }
 {
-     columnDefinition(table) 
+     columnDefinition(table)
    | name = constraint(table.getGrain()) (
           primaryKey(table) {table.setPkConstraintName(name);}
         | fk = foreignKey(table) {fk.setConstraintName(name);})
@@ -227,34 +227,34 @@ void columnDefinition(Table table):
 {
  [doc = <CELESTA_DOC>]
   t = <S_IDENTIFIER>
-    (  (<K_INT>       {column = new IntegerColumn(table, t.toString()); t = null; } 
+    (  (<K_INT>       {column = new IntegerColumn(table, t.toString()); t = null; }
 	       nullable = nullable() [(<K_DEFAULT> ["-" {negative = true;}] t = <S_INTEGER>)|(t = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])]
 	    )
-    |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;} 
-	       nullable = nullable() 
+    |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;}
+	       nullable = nullable()
 		  [<K_DEFAULT> ["-" {negative = true;}] (t = <S_INTEGER> | t = <S_DOUBLE>)])
-    |  (<K_VARCHAR> {column = new StringColumn(table, t.toString()); t = null; } 
-	          ["("  (length = <S_INTEGER> /* | length = <K_MAX>*/) ")"]  
+    |  (<K_VARCHAR> {column = new StringColumn(table, t.toString()); t = null; }
+	          ["("  (length = <S_INTEGER> /* | length = <K_MAX>*/) ")"]
 			  {((StringColumn) column).setLength(length.toString());}
-	       nullable = nullable() 
+	       nullable = nullable()
 		  [<K_DEFAULT> t = <S_CHAR_LITERAL>])
-    |  (<K_TEXT> {column = new StringColumn(table, t.toString()); 
+    |  (<K_TEXT> {column = new StringColumn(table, t.toString());
 	              ((StringColumn) column).setLength("MAX");
-				  t = null;} 
-	       nullable = nullable() 
+				  t = null;}
+	       nullable = nullable()
 		  [<K_DEFAULT> t = <S_CHAR_LITERAL>])
-    |  (<K_BLOB>     {column = new BinaryColumn(table, t.toString()); t = null;} 
+    |  (<K_BLOB>     {column = new BinaryColumn(table, t.toString()); t = null;}
 	       nullable = nullable()
 		  [<K_DEFAULT> t = <S_BINARY_LITERAL>])
-    |  (<K_DATETIME>  {column = new DateTimeColumn(table, t.toString()); t = null;} 
+    |  (<K_DATETIME>  {column = new DateTimeColumn(table, t.toString()); t = null;}
 	       nullable = nullable()
 		  [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <K_GETDATE> "(" ")")])
-    |  (<K_BIT>       {column = new BooleanColumn(table, t.toString()); t = null;}) 
-	       nullable = nullable() 
+    |  (<K_BIT>       {column = new BooleanColumn(table, t.toString()); t = null;})
+	       nullable = nullable()
 	      [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <S_INTEGER> | t=<K_FALSE>|t=<K_TRUE>)])
-	name = constraint(table.getGrain()) [<K_PRIMARY> <K_KEY> 
+	name = constraint(table.getGrain()) [<K_PRIMARY> <K_KEY>
 	      {pk = true; table.setPkConstraintName(name);} name = constraint(table.getGrain())]
-	{ 
+	{
       column.setNullableAndDefault(nullable, t == null? null: ((negative? "-": "") + t.toString()));
 	  column.setCelestaDocLexem(doc == null? null:doc.toString());
 	  if (pk) {
@@ -305,16 +305,16 @@ void references(ForeignKey fk):{
 <K_REFERENCES> t = <S_IDENTIFIER> ["." t2 = <S_IDENTIFIER>]
   { if (t2 == null)
       fk.setReferencedTable("", t.toString());
-	else 
+	else
 	  fk.setReferencedTable(t.toString(), t2.toString());}
-	  
+
   "(" t = <S_IDENTIFIER> {fk.addReferencedColumn(t.toString());}
   ("," t = <S_IDENTIFIER> {fk.addReferencedColumn(t.toString());})* ")"
 {fk.finalizeReference();}
 [<K_ON>
-  ((<K_UPDATE> action = action() {fk.setUpdateRule(action);} 
+  ((<K_UPDATE> action = action() {fk.setUpdateRule(action);}
     [<K_ON> <K_DELETE> action = action() {fk.setDeleteRule(action);}])
-  |(<K_DELETE> action = action() {fk.setDeleteRule(action);} 
+  |(<K_DELETE> action = action() {fk.setDeleteRule(action);}
     [<K_ON> <K_UPDATE> action = action() {fk.setUpdateRule(action);}]))
 ]
 }
@@ -338,7 +338,7 @@ Token columnName;
 Index ind;
 }
 {
-<K_INDEX> indexName = <S_IDENTIFIER> <K_ON> tableName = <S_IDENTIFIER> 
+<K_INDEX> indexName = <S_IDENTIFIER> <K_ON> tableName = <S_IDENTIFIER>
    {ind = new Index(g, tableName.toString(), indexName.toString());
     ind.setCelestaDocLexem(doc);}
    "(" columnName = <S_IDENTIFIER> {ind.addColumn(columnName.toString());} ("," columnName = <S_IDENTIFIER>{ind.addColumn(columnName.toString());}) * ")"
@@ -369,7 +369,7 @@ if (t == null)
 else {
   g.addConstraintName(t.toString());
   return t.toString();
-} 
+}
 }
 }
 
@@ -437,49 +437,54 @@ void createSequence(Grain g, String doc):
         | sequenceMaxValue(s)
         | sequenceCycle(s)
     )*
+    {s.finalizeParsing();}
 }
 
 void sequenceStartWith(Sequence s):
 {
     Token startWith;
+    int sign = 1;
 }
 {
-    <K_START> <K_WITH> startWith = <S_INTEGER>
+    <K_START> <K_WITH> ["-" {sign = -1;}] startWith = <S_INTEGER>
     {
-        s.startWith(Integer.parseInt(startWith.image));
+        s.startWith(sign * Integer.parseInt(startWith.image));
     }
 }
 
 void sequenceIncrementBy(Sequence s):
 {
     Token incrementBy;
+    int sign = 1;
 }
 {
-    <K_INCREMENT> <K_BY> incrementBy = <S_INTEGER>
+    <K_INCREMENT> <K_BY> ["-" {sign = -1;}] incrementBy =  <S_INTEGER>
     {
-        s.incrementBy(Integer.parseInt(incrementBy.image));
+        s.incrementBy(sign * Integer.parseInt(incrementBy.image));
     }
 }
 
 void sequenceMinValue(Sequence s):
 {
     Token minValue;
+    int sign = 1;
 }
 {
-    <K_MINVALUE> minValue = <S_INTEGER>
+    <K_MINVALUE> ["-" {sign = -1;}] minValue = <S_INTEGER>
         {
-            s.minValue(Integer.parseInt(minValue.image));
+            s.minValue(sign * Integer.parseInt(minValue.image));
         }
 }
 
 void sequenceMaxValue(Sequence s):
 {
     Token maxValue;
+    int sign = 1;
 }
 {
-    <K_MAXVALUE> maxValue = <S_INTEGER>
+    <K_MAXVALUE> ["-" {sign = -1;}] maxValue = <S_INTEGER>
         {
-            s.maxValue(Integer.parseInt(maxValue.image));
+            s.maxValue(sign * Integer.parseInt(maxValue.image));
         }
 }
 
@@ -520,7 +525,7 @@ Expr sqlExpression():
 { Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);}
 {
-    result = sqlAndExpression()   {operands.add(result);} (<K_OR> 
+    result = sqlAndExpression()   {operands.add(result);} (<K_OR>
 	  result = sqlAndExpression() {operands.add(result);}
 	  )*
 	{return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.OR, operands);}
@@ -530,9 +535,9 @@ Expr sqlAndExpression():
 { Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);}
 {
-    result = sqlUnaryLogicalExpression()    {operands.add(result);} (<K_AND> 
+    result = sqlUnaryLogicalExpression()    {operands.add(result);} (<K_AND>
 	  result = sqlUnaryLogicalExpression()  {operands.add(result);}
-	  )* 
+	  )*
 	{return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.AND, operands);}
 }
 
@@ -540,7 +545,7 @@ Expr sqlUnaryLogicalExpression():
 { boolean isNot = false;
   Expr result;}
 {
-  [<K_NOT> {isNot = true;}] result = sqlRelationalExpression() 
+  [<K_NOT> {isNot = true;}] result = sqlRelationalExpression()
   {return isNot? new NotExpr(result) : result; }
 }
 
@@ -553,7 +558,7 @@ Expr sqlRelationalExpression():
 {
     result = sqlTermExpr()
     (   relop = relop() buf1 = sqlTermExpr()                            {result = new Relop(result, buf1, relop);}
-      | (<K_IN> "(" buf1 = sqlTermExpr() {operands.add(buf1);} ("," buf1 = sqlTermExpr() {operands.add(buf1);})* ")") 
+      | (<K_IN> "(" buf1 = sqlTermExpr() {operands.add(buf1);} ("," buf1 = sqlTermExpr() {operands.add(buf1);})* ")")
 	                                                                    {result = new In(result, operands);}
       | (<K_BETWEEN> buf1 = sqlTermExpr() <K_AND> buf2 = sqlTermExpr()) {result = new Between(result, buf1, buf2);}
       | (<K_LIKE> buf1 = sqlTermExpr())                                 {result = new Relop(result, buf1, Relop.LIKE);}
@@ -590,7 +595,7 @@ Expr sqlMultiplicativeExpression():
   List<Expr> operands = new ArrayList<Expr>(5);
   int operator = -1;}
 {
-    result = sqlUnaryExpression() {operands.add(result);} (  ("*" {operator = BinaryTermOp.TIMES;} | "/" {operator = BinaryTermOp.OVER;}) 
+    result = sqlUnaryExpression() {operands.add(result);} (  ("*" {operator = BinaryTermOp.TIMES;} | "/" {operator = BinaryTermOp.OVER;})
 	                     result = sqlUnaryExpression() {operands.add(result);}
 						 )*
 	{return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
@@ -600,7 +605,7 @@ Expr sqlUnaryExpression():
 {Expr result;
 boolean isMinus = false;}
 {
-    ["-" {isMinus = true;}] result = sqlPrimaryExpression() 
+    ["-" {isMinus = true;}] result = sqlPrimaryExpression()
     {return isMinus? new UnaryMinus(result) : result;}
 }
 

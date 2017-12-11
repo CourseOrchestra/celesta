@@ -92,7 +92,7 @@ public final class Grain extends NamedElement {
 				.map(entry -> entry.getValue().getClass().getSimpleName());
 		if (typeNameOfElementWithSameName.isPresent()) {
 			throw new ParseException(
-					String.format("Cannot create table '%s', a %s with the same name already exists in grain '%s'.",
+					String.format("Cannot create grain element '%s', a %s with the same name already exists in grain '%s'.",
 							element.getName(), typeNameOfElementWithSameName.get(), getName()));
 		}
 
@@ -106,7 +106,7 @@ public final class Grain extends NamedElement {
 	 * @param classOfElement
 	 *            Класс элементов из набора
 	 */
-	public <T extends DataGrainElement> Map<String, T> getElements(Class<T> classOfElement) {
+	public <T extends GrainElement> Map<String, T> getElements(Class<T> classOfElement) {
 		return getElementsHolder(classOfElement).getElements();
 	}
 

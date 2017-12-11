@@ -1251,6 +1251,15 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
+  String generateSqlForCreateSequenceExpression(Sequence s) {
+    String result = super.generateSqlForCreateSequenceExpression(s);
+    if (s.hasArgument(Sequence.Argument.CYCLE)) {
+      result = result + " NOCACHE";
+    }
+    return result;
+  }
+
+  @Override
   public void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
 
     try (Statement stmt = conn.createStatement()) {
