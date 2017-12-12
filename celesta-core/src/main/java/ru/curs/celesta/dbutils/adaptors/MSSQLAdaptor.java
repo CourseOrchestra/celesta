@@ -1435,4 +1435,18 @@ final class MSSQLAdaptor extends DBAdaptor {
   public AppSettings.DBType getType() {
     return AppSettings.DBType.MSSQL;
   }
+
+  @Override
+  public long nextSequenceValue(Connection conn, Sequence s) throws CelestaException {
+    String sql = String.format("SELECT NEXT VALUE FOR " + tableTemplate(), s.getGrain().getName(), s.getName());
+
+    try (Statement stmt = conn.createStatement()) {
+      ResultSet rs = stmt.executeQuery(sql);
+      rs.next();
+      return rs.getLong(1);
+    } catch (SQLException e) {
+      throw new CelestaException(String.format("Can't get next value of sequence " + tableTemplate(),
+              s.getGrain().getName(), s.getName()), e);
+    }
+  }
 }

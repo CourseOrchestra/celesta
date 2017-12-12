@@ -108,3 +108,5 @@ create table testInFilterClause (
   atVarchar varchar(2),
   atInt int default 3
 );
+
+CREATE SEQUENCE testSequence START WITH 5;

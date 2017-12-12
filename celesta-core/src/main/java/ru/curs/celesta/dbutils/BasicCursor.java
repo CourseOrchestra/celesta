@@ -43,10 +43,8 @@ import java.util.regex.*;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.filter.In;
-import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.*;
 import ru.curs.celesta.dbutils.term.*;
@@ -56,14 +54,13 @@ import ru.curs.celesta.score.ParseException;
 /**
  * Базовый класс курсора для чтения данных из представлений.
  */
-public abstract class BasicCursor implements Closeable {
+public abstract class BasicCursor extends BasicDataAccessor implements Closeable {
 
 	static final String SYSTEMUSERID = String.format("SYS%08X", (new Random()).nextInt());
 	static final SessionContext SYSTEMSESSION = new SessionContext(SYSTEMUSERID, "CELESTA");
 
 	private static final String DATABASE_CLOSING_ERROR =
 		"Database error when closing recordset for table '%s': %s";
-	private static final String CURSOR_IS_CLOSED = "Cursor is closed.";
 	private static final String NAVIGATING_ERROR = "Error while navigating cursor: %s";
 
 	private static final Pattern COLUMN_NAME =
@@ -72,9 +69,6 @@ public abstract class BasicCursor implements Closeable {
 	private static final Pattern NAVIGATION = Pattern.compile("[+-<>=]+");
 	private static final Pattern NAVIGATION_WITH_OFFSET = Pattern.compile("[<>]");
 
-	private final DBAdaptor db;
-	private final Connection conn;
-	private final CallContext context;
 	protected Set<String> fields = Collections.emptySet();
 	protected Set<String> fieldsForStatement = Collections.emptySet();
 
@@ -91,7 +85,7 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm();
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getRecordSetStatement(conn, getFrom(), where.getWhere(), getOrderBy(), offset,
+			return db().getRecordSetStatement(conn(), getFrom(), where.getWhere(), getOrderBy(), offset,
 					rowCount, fieldsForStatement);
 		}
 	};
@@ -112,7 +106,7 @@ public abstract class BasicCursor implements Closeable {
 
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getSetCountStatement(conn, from, where.getWhere());
+			return db().getSetCountStatement(conn(), from, where.getWhere());
 		}
 	};
 
@@ -142,7 +136,7 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm('<');
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getSetCountStatement(conn, getFrom(), where.getWhere());
+			return db().getSetCountStatement(conn(), getFrom(), where.getWhere());
 		}
 
 	};
@@ -160,8 +154,8 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm('>');
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(
-					conn, getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement, navigationOffset
+			return db().getNavigationStatement(
+					conn(), getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement, navigationOffset
 			);
 		}
 
@@ -180,8 +174,8 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm('<');
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(
-					conn, getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement, navigationOffset
+			return db().getNavigationStatement(
+					conn(), getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement, navigationOffset
 			);
 		}
 
@@ -203,8 +197,8 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm();
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(
-					conn, getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement, 0
+			return db().getNavigationStatement(
+					conn(), getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement, 0
 			);
 		}
 
@@ -222,8 +216,8 @@ public abstract class BasicCursor implements Closeable {
 			WhereTerm where = qmaker.getWhereTerm();
 			fromTerm.programParams(program);
 			where.programParams(program);
-			return db.getNavigationStatement(
-					conn, getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement, 0
+			return db().getNavigationStatement(
+					conn(), getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement, 0
 			);
 		}
 	};
@@ -239,11 +233,6 @@ public abstract class BasicCursor implements Closeable {
 	private long rowCount = 0;
 	private Expr complexFilter;
 
-	private boolean closed = false;
-
-	private BasicCursor previousCursor;
-	private BasicCursor nextCursor;
-
 	protected FromTerm fromTerm;
 
 	private final WhereTermsMaker qmaker = new WhereTermsMaker(new WhereMakerParamsProvider() {
@@ -256,7 +245,7 @@ public abstract class BasicCursor implements Closeable {
 
 		@Override
 		public QueryBuildingHelper dba() {
-			return db;
+			return db();
 		}
 
 		@Override
@@ -301,38 +290,7 @@ public abstract class BasicCursor implements Closeable {
 	});
 
 	public BasicCursor(CallContext context) throws CelestaException {
-		if (context == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: context should not be null.",
-					this.getClass().getName());
-		if (context.getConn() == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: connection is null.",
-					this.getClass().getName());
-		if (context.getUserId() == null)
-			throw new CelestaException(
-					"Invalid context passed to %s constructor: user id is null.",
-					this.getClass().getName());
-		if (context.isClosed())
-			throw new CelestaException("Cannot create %s on a closed CallContext.",
-					this.getClass().getName());
-
-		context.incCursorCount();
-
-		this.context = context;
-		previousCursor = context.getLastCursor();
-		if (previousCursor != null)
-			previousCursor.nextCursor = this;
-		context.setLastCursor(this);
-
-		conn = context.getConn();
-		try {
-			if (conn.isClosed())
-				throw new CelestaException("Trying to create a cursor on closed connection.");
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-		db = callContext().getDbAdaptor();
+		super(context);
 	}
 
 	public BasicCursor(CallContext context, Set<String> fields) throws CelestaException {
@@ -354,8 +312,8 @@ public abstract class BasicCursor implements Closeable {
 					throws CelestaException {
 				WhereTerm where = qmaker.getWhereTerm('=');
 				where.programParams(program);
-				return db.getNavigationStatement(
-						conn, getFrom(),"", where.getWhere(), fieldsForStatement, 0
+				return db().getNavigationStatement(
+						conn(), getFrom(),"", where.getWhere(), fieldsForStatement, 0
 				);
 			}
 
@@ -363,7 +321,7 @@ public abstract class BasicCursor implements Closeable {
 	}
 
 	final void close(PreparedStmtHolder... stmts) {
-		closed = true;
+		super.close();
 		closeStatements(stmts);
 	}
 
@@ -378,15 +336,7 @@ public abstract class BasicCursor implements Closeable {
 	 * невозможным к дальнейшему использованию.
 	 */
 	public void close() {
-		if (!closed) {
-			if (this == context.getLastCursor())
-				context.setLastCursor(previousCursor);
-			if (previousCursor != null)
-				previousCursor.nextCursor = nextCursor;
-			if (nextCursor != null)
-				nextCursor.previousCursor = previousCursor;
-			context.removeFromCache(this);
-			context.decCursorCount();
+		if (!isClosed()) {
 			close(set, forwards, backwards, here, first, last, count, position);
 		}
 	}
@@ -395,36 +345,9 @@ public abstract class BasicCursor implements Closeable {
 		return filters;
 	}
 
-	final DBAdaptor db() {
-		return db;
-	}
-
-	final Connection conn() {
-		return conn;
-	}
-
-	/**
-	 * Объект метаданных (таблица или представление), на основе которого создан
-	 * данный курсор.
-	 * 
-	 * @throws CelestaException
-	 *             в случае ошибки извлечения метаинформации (в норме не должна
-	 *             происходить).
-	 */
+	@Override
 	public abstract DataGrainElement meta() throws CelestaException;
 
-	/**
-	 * Есть ли у сессии права на чтение текущей таблицы.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка базы данных.
-	 */
-	public final boolean canRead() throws CelestaException {
-		if (closed)
-			throw new CelestaException(CURSOR_IS_CLOSED);
-		PermissionManager permissionManager = callContext().getPermissionManager();
-		return permissionManager.isActionAllowed(context, meta(), Action.READ);
-	}
 
 	/**
 	 * Есть ли у сессии права на вставку в текущую таблицу.
@@ -433,10 +356,10 @@ public abstract class BasicCursor implements Closeable {
 	 *             ошибка базы данных.
 	 */
 	public final boolean canInsert() throws CelestaException {
-		if (closed)
-			throw new CelestaException(CURSOR_IS_CLOSED);
+		if (isClosed())
+			throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
 		PermissionManager permissionManager = callContext().getPermissionManager();
-		return permissionManager.isActionAllowed(context, meta(), Action.INSERT);
+		return permissionManager.isActionAllowed(callContext(), meta(), Action.INSERT);
 	}
 
 	/**
@@ -446,10 +369,10 @@ public abstract class BasicCursor implements Closeable {
 	 *             ошибка базы данных.
 	 */
 	public final boolean canModify() throws CelestaException {
-		if (closed)
-			throw new CelestaException(CURSOR_IS_CLOSED);
+		if (isClosed())
+			throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
 		PermissionManager permissionManager = callContext().getPermissionManager();
-		return permissionManager.isActionAllowed(context, meta(), Action.MODIFY);
+		return permissionManager.isActionAllowed(callContext(), meta(), Action.MODIFY);
 	}
 
 	/**
@@ -459,17 +382,10 @@ public abstract class BasicCursor implements Closeable {
 	 *             ошибка базы данных.
 	 */
 	public final boolean canDelete() throws CelestaException {
-		if (closed)
-			throw new CelestaException(CURSOR_IS_CLOSED);
+		if (isClosed())
+			throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
 		PermissionManager permissionManager = callContext().getPermissionManager();
-		return permissionManager.isActionAllowed(context, meta(), Action.DELETE);
-	}
-
-	/**
-	 * Возвращает контекст вызова, в котором создан данный курсор.
-	 */
-	public final CallContext callContext() {
-		return context;
+		return permissionManager.isActionAllowed(callContext(), meta(), Action.DELETE);
 	}
 
 	private void closeStmt(PreparedStatement stmt) throws CelestaException {
@@ -858,7 +774,7 @@ public abstract class BasicCursor implements Closeable {
 	 */
 	public final void setRange(String name) throws CelestaException {
 		validateColumName(name);
-		if (closed)
+		if (isClosed())
 			return;
 		// Если фильтр присутствовал на поле -- сбрасываем набор. Если не
 		// присутствовал -- не сбрасываем.
@@ -881,7 +797,7 @@ public abstract class BasicCursor implements Closeable {
 			setFilter(name, "null");
 		} else {
 			validateColumName(name);
-			if (closed)
+			if (isClosed())
 				return;
 			AbstractFilter oldFilter = filters.get(name);
 			// Если один SingleValue меняется на другой SingleValue -- то
@@ -910,7 +826,7 @@ public abstract class BasicCursor implements Closeable {
 	public final void setRange(String name, Object valueFrom, Object valueTo)
 			throws CelestaException {
 		validateColumName(name);
-		if (closed)
+		if (isClosed())
 			return;
 		AbstractFilter oldFilter = filters.get(name);
 		// Если один Range меняется на другой Range -- то
@@ -943,7 +859,7 @@ public abstract class BasicCursor implements Closeable {
 					name);
 		AbstractFilter oldFilter =
 			filters.put(name, new Filter(value, meta().getColumns().get(name)));
-		if (closed)
+		if (isClosed())
 			return;
 		// Если заменили фильтр на тот же самый -- ничего делать не надо.
 		if (!(oldFilter instanceof Filter && value.equals(oldFilter.toString())))
@@ -966,7 +882,7 @@ public abstract class BasicCursor implements Closeable {
 			throw new CelestaException(e.getMessage());
 		}
 		complexFilter = buf;
-		if (closed)
+		if (isClosed())
 			return;
 		// пересоздаём набор
 		closeSet();
@@ -1085,6 +1001,7 @@ public abstract class BasicCursor implements Closeable {
 	 * @throws CelestaException
 	 *             SQL-ошибка.
 	 */
+	@Override
 	public void clear() throws CelestaException {
 		_clearBuffer(true);
 		filters.clear();
@@ -1103,8 +1020,6 @@ public abstract class BasicCursor implements Closeable {
 		rowCount = 0;
 		closeSet();
 	}
-
-	protected void clearSpecificState() {}
 
 	/**
 	 * Возвращает число записей в отфильтрованном наборе.
@@ -1244,13 +1159,6 @@ public abstract class BasicCursor implements Closeable {
 		_setFieldValue(name, value);
 	}
 
-	/**
-	 * Является ли курсор закрытым.
-	 */
-	public boolean isClosed() {
-		return closed;
-	}
-
 	protected boolean inRec(String field) {
 		return fieldsForStatement.isEmpty() || fieldsForStatement.contains(field);
 	}
@@ -1264,7 +1172,7 @@ public abstract class BasicCursor implements Closeable {
 		DataGrainElement ge = meta();
 
 		result.setGe(ge);
-		result.setExpression(String.format(db.tableTemplate(), ge.getGrain().getName(), ge.getName()));
+		result.setExpression(String.format(db().tableTemplate(), ge.getGrain().getName(), ge.getName()));
 
 		return result;
 	}
@@ -1297,12 +1205,6 @@ public abstract class BasicCursor implements Closeable {
 	public abstract Object[] _currentValues();
 
 	protected abstract void _clearBuffer(boolean withKeys);
-
-	protected abstract String _grainName();
-
-	protected abstract String _tableName();
-
-	protected abstract void _parseResult(ResultSet rs) throws SQLException;
 
 	protected abstract void _setFieldValue(String name, Object value);
 

@@ -3,7 +3,6 @@ package ru.curs.celesta.score;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Map;
 
 /**
  * Базовый класс для элементов гранулы (таблиц, индексов и представлений).

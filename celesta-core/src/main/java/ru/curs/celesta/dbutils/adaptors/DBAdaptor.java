@@ -1238,6 +1238,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   public boolean supportsCortegeComparing() {
     return false;
   }
+
+  public abstract long nextSequenceValue(Connection conn, Sequence s) throws CelestaException;
 }
 
 /**

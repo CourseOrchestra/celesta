@@ -27,10 +27,10 @@ import ru.curs.celesta.score.Score;
 public final class CallContext implements AutoCloseable {
 
 	/**
-	 * Максимальное число курсоров, которое может быть открыто в одном
+	 * Максимальное число объектов доступа, которое может быть открыто в одном
 	 * контексте.
 	 */
-	public static final int MAX_CURSORS = 1023;
+	public static final int MAX_DATA_ACCESSORS = 1023;
 
 	private static final String ERROR = "ERROR: %s";
 
@@ -52,12 +52,12 @@ public final class CallContext implements AutoCloseable {
 	private final int dbPid;
 	private final Date startTime = new Date();
 
-	private BasicCursor lastCursor;
-	private int cursorCount;
+	private BasicDataAccessor lastDataAccessor;
+	private int dataAccessorsCount;
 
 	private boolean closed = false;
 
-	private final HashMap<PyString, PyObject> cursorsCache = new HashMap<>();
+	private final HashMap<PyString, PyObject> dataAccessorsCache = new HashMap<>();
 
 	public CallContext(CallContext context, Celesta celesta, ConnectionPool connectionPool, SessionContext sesContext,
 					   ShowcaseContext showcaseContext, Score score, Grain curGrain, String procName,
@@ -298,47 +298,46 @@ public final class CallContext implements AutoCloseable {
 	}
 
 	/**
-	 * Установка последнего курсора в контексте.
+	 * Установка последнего объекта доступа в контексте.
 	 * 
-	 * @param c
-	 *            Курсор.
+	 * @param dataAccessor объект доступа
 	 */
-	public void setLastCursor(BasicCursor c) {
-		lastCursor = c;
+	public void setLastDataAccessor(BasicDataAccessor dataAccessor) {
+		lastDataAccessor = dataAccessor;
 	}
 
 	/**
-	 * Увеличивает счетчик открытых курсоров.
+	 * Увеличивает счетчик открытых объектов доступа.
 	 * 
 	 * @throws CelestaException
-	 *             Если число открытых курсоров превысило критический порог.
+	 *             Если число открытых объектов доступа превысило критический порог.
 	 */
-	public void incCursorCount() throws CelestaException {
-		if (cursorCount > MAX_CURSORS)
-			throw new CelestaException("Too many cursors created in one Celesta procedure call. Check for leaks!");
-		cursorCount++;
+	public void incDataAccessorsCount() throws CelestaException {
+		if (dataAccessorsCount > MAX_DATA_ACCESSORS)
+			throw new CelestaException("Too many data accessors created in one Celesta procedure call. Check for leaks!");
+		dataAccessorsCount++;
 	}
 
 	/**
-	 * Уменьшает счетчик открытых курсоров.
+	 * Уменьшает счетчик открытых объектов доступа.
 	 */
-	public void decCursorCount() {
-		cursorCount--;
+	public void decDataAccessorsCount() {
+		dataAccessorsCount--;
 	}
 
 	/**
-	 * Получает последний курсор.
+	 * Получает последний объект доступа.
 	 */
-	public BasicCursor getLastCursor() {
-		return lastCursor;
+	public BasicDataAccessor getLastDataAccessor() {
+		return lastDataAccessor;
 	}
 
 	/**
-	 * Закрытие всех курсоров.
+	 * Закрытие всех классов доступа.
 	 */
-	private void closeCursors() {
-		while (lastCursor != null) {
-			lastCursor.close();
+	private void closeDataAccessors() {
+		while (lastDataAccessor != null) {
+			lastDataAccessor.close();
 		}
 		closed = true;
 	}
@@ -395,38 +394,38 @@ public final class CallContext implements AutoCloseable {
 	}
 
 	/**
-	 * Возвращает объект курсора cursorClass.
+	 * Возвращает объект доступа dataAccessorClass.
 	 * 
-	 * Все созданные курсоры кэшируются и возвращаются при последюущем запросе
-	 * cursorClass. Каждый возвращаемый курсор предварительно очищается
+	 * Все созданные объекты доступа кэшируются и возвращаются при последюущем запросе
+	 * dataAccessorClass. Каждый возвращаемый объект доступа предварительно очищается
 	 * (clear()).
 	 * 
-	 * @param cursorClass
-	 *            класс курсора
-	 * @return объект курсора
+	 * @param dataAccessorClass
+	 *            класс объекта доступа
+	 * @return объект доступа
 	 */
-	public PyObject create(final PyType cursorClass) throws CelestaException {
-		PyString classId = cursorClass.__str__();
-		PyObject cur = cursorsCache.computeIfAbsent(classId, (s) -> cursorClass.__call__(Py.java2py(this)));
-		BasicCursor basicCur = (BasicCursor) cur.__tojava__(BasicCursor.class);
-		basicCur.clear();
-		return cur;
+	public PyObject create(final PyType dataAccessorClass) throws CelestaException {
+		PyString classId = dataAccessorClass.__str__();
+		PyObject result = dataAccessorsCache.computeIfAbsent(classId, (s) -> dataAccessorClass.__call__(Py.java2py(this)));
+		BasicDataAccessor basicDataAccessor = (BasicDataAccessor) result.__tojava__(BasicDataAccessor.class);
+		basicDataAccessor.clear();
+		return result;
 	}
 
 	/**
-	 * Удалят курсор из кэша курсоров.
+	 * Удалят объект доступа из кэша.
 	 * 
 	 * Метод предназначен для внутреннего использования.
 	 * 
-	 * @param cursor
-	 *            Объект курсора.
+	 * @param dataAccessor
+	 *            Объект доступа.
 	 */
-	public void removeFromCache(final BasicCursor cursor) {
-		Iterator<Entry<PyString, PyObject>> i = cursorsCache.entrySet().iterator();
+	public void removeFromCache(final BasicDataAccessor dataAccessor) {
+		Iterator<Entry<PyString, PyObject>> i = dataAccessorsCache.entrySet().iterator();
 		while (i.hasNext()) {
 			Entry<PyString, PyObject> e = i.next();
-			BasicCursor basicCur = (BasicCursor) e.getValue().__tojava__(BasicCursor.class);
-			if (cursor.equals(basicCur)) {
+			BasicDataAccessor basicDataAccessor = (BasicDataAccessor) e.getValue().__tojava__(BasicDataAccessor.class);
+			if (dataAccessor.equals(basicDataAccessor)) {
 				i.remove();
 			}
 		}
@@ -435,7 +434,7 @@ public final class CallContext implements AutoCloseable {
 	@Override
 	public void close() throws CelestaException {
 		try {
-			closeCursors();
+			closeDataAccessors();
 			conn.close();
 		} catch (Exception e) {
 			throw new CelestaException("Can't close callContext", e);

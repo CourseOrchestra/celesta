@@ -1446,6 +1446,16 @@ public abstract class AbstractAdaptorTest {
 
 
     @Test
+    void testSequence() throws Exception {
+        Grain g = score.getGrain(GRAIN_NAME);
+        Sequence sequence = g.getElement("testSequence", Sequence.class);
+        dba.createSequence(conn, sequence);
+
+        assertEquals(5, dba.nextSequenceValue(conn, sequence));
+        assertEquals(6, dba.nextSequenceValue(conn, sequence));
+    }
+
+    @Test
     public void testSelectStaticStrings() throws Exception {
         List<String > data =  Arrays.asList("A", "B");
 
