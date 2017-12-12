@@ -13,7 +13,7 @@ public abstract class SequenceCursor extends BasicDataAccessor {
         super(context);
     }
 
-    long nextValue() throws CelestaException {
+    public long nextValue() throws CelestaException {
         return db().nextSequenceValue(conn(), meta());
     }
 

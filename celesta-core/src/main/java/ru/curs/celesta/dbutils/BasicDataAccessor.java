@@ -134,6 +134,5 @@ public abstract class BasicDataAccessor implements Closeable {
     protected abstract String _grainName();
     //TODO:This is not correctly method name. Must be renamed to _objectName
     protected abstract String _tableName();
-    protected abstract void _parseResult(ResultSet rs) throws SQLException;
     // CHECKSTYLE:ON
 }

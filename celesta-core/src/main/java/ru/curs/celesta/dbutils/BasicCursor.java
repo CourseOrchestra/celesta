@@ -1208,6 +1208,8 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	protected abstract void _setFieldValue(String name, Object value);
 
+	protected abstract void _parseResult(ResultSet rs) throws SQLException;
+
 	// CHECKSTYLE:ON
 
 }

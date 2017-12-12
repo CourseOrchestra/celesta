@@ -20,7 +20,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
         assertAll(
                 () -> assertEquals(1, s1.getArgument(START_WITH)),
                 () -> assertEquals(1, s1.getArgument(INCREMENT_BY)),
-                () -> assertFalse(s1.hasArgument(MINVALUE)),
+                () -> assertEquals(1, s1.getArgument(MINVALUE)),
                 () -> assertFalse(s1.hasArgument(MAXVALUE)),
                 () -> assertFalse(s1.hasArgument(CYCLE))
         );
@@ -29,7 +29,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
         assertAll(
                 () -> assertEquals(3, s2.getArgument(START_WITH)),
                 () -> assertEquals(1, s2.getArgument(INCREMENT_BY)),
-                () -> assertFalse(s2.hasArgument(MINVALUE)),
+                () -> assertEquals(3, s2.getArgument(MINVALUE)),
                 () -> assertFalse(s2.hasArgument(MAXVALUE)),
                 () -> assertFalse(s2.hasArgument(CYCLE))
         );
@@ -38,7 +38,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
         assertAll(
                 () -> assertEquals(1, s3.getArgument(START_WITH)),
                 () -> assertEquals(2, s3.getArgument(INCREMENT_BY)),
-                () -> assertFalse(s3.hasArgument(MINVALUE)),
+                () -> assertEquals(1, s3.getArgument(MINVALUE)),
                 () -> assertFalse(s3.hasArgument(MAXVALUE)),
                 () -> assertFalse(s3.hasArgument(CYCLE))
         );
@@ -47,7 +47,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
         assertAll(
                 () -> assertEquals(1, s4.getArgument(START_WITH)),
                 () -> assertEquals(-2, s4.getArgument(INCREMENT_BY)),
-                () -> assertFalse(s4.hasArgument(MINVALUE)),
+                () -> assertEquals(-99999999, s4.getArgument(MINVALUE)),
                 () -> assertEquals(1, s4.getArgument(MAXVALUE)),
                 () -> assertFalse(s4.hasArgument(CYCLE))
         );
@@ -56,7 +56,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
         assertAll(
                 () -> assertEquals(5, s5.getArgument(START_WITH)),
                 () -> assertEquals(-1, s5.getArgument(INCREMENT_BY)),
-                () -> assertFalse(s5.hasArgument(MINVALUE)),
+                () -> assertEquals(-99999999, s5.getArgument(MINVALUE)),
                 () -> assertEquals(5, s5.getArgument(MAXVALUE)),
                 () -> assertFalse(s5.hasArgument(CYCLE))
         );
@@ -111,7 +111,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
         assertAll(
                 () -> assertEquals(1, s11.getArgument(START_WITH)),
                 () -> assertEquals(1, s11.getArgument(INCREMENT_BY)),
-                () -> assertFalse(s11.hasArgument(MINVALUE)),
+                () -> assertEquals(1, s11.getArgument(MINVALUE)),
                 () -> assertEquals(56, s11.getArgument(MAXVALUE)),
                 () -> assertFalse(s11.hasArgument(CYCLE))
         );
@@ -120,7 +120,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
         assertAll(
                 () -> assertEquals(1, s12.getArgument(START_WITH)),
                 () -> assertEquals(1, s12.getArgument(INCREMENT_BY)),
-                () -> assertFalse(s12.hasArgument(MINVALUE)),
+                () -> assertEquals(1, s12.getArgument(MINVALUE)),
                 () -> assertEquals(5, s12.getArgument(MAXVALUE)),
                 () -> assertEquals(true, s12.getArgument(CYCLE))
         );

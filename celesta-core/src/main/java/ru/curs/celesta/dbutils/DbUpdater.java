@@ -285,6 +285,9 @@ public final class DbUpdater {
       List<DBFKInfo> dbFKeys = dropOrphanedGrainFKeys(g);
 
       Set<String> modifiedTablesMap = new HashSet<>();
+
+      updateSequences(g);
+
       // Обновляем все таблицы.
       for (Table t : g.getElements(Table.class).values())
         if (updateTable(t, dbFKeys))
@@ -301,8 +304,6 @@ public final class DbUpdater {
 
       // Создаём параметризованные представления заново
       createParameterizedViews(g);
-
-      updateSequences(g);
 
       // Обновляем все материализованные представления.
       for (MaterializedView mv : g.getElements(MaterializedView.class).values()) {

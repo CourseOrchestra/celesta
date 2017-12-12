@@ -113,7 +113,10 @@ public class Sequence extends GrainElement {
                         String.format("MINVALUE for sequence %s can't be greater than START WITH", getName())
                 );
             }
+        } else {
+            minValue(startWith);
         }
+
         if (hasArgument(Argument.MAXVALUE)) {
             Integer maxValue = (Integer) getArgument(Argument.MAXVALUE);
             if (startWith > maxValue) {
@@ -124,8 +127,7 @@ public class Sequence extends GrainElement {
         }
 
 
-        if (incrementBy > 0) {
-            if (hasArgument(Argument.CYCLE) && !hasArgument(Argument.MAXVALUE))
+        if (incrementBy > 0 && hasArgument(Argument.CYCLE) && !hasArgument(Argument.MAXVALUE)) {
                 throw new ParseException(
                         String.format("MAXVALUE for sequence %s must be specified in case of ascending increment and cycle", getName())
                 );
@@ -137,24 +139,22 @@ public class Sequence extends GrainElement {
                         String.format("MAXVALUE for sequence %s must be specified in case of descending increment", getName())
                 );
 
+            Integer minValue = (Integer) getArgument(Argument.MINVALUE);
+            Integer maxValue = (Integer) getArgument(Argument.MAXVALUE);
 
-            if (hasArgument(Argument.MINVALUE)) {
-                Integer minValue = (Integer) getArgument(Argument.MINVALUE);
-                Integer maxValue = (Integer) getArgument(Argument.MAXVALUE);
-
-                if (startWith > 0 && (startWith + incrementBy) < minValue) {
-                    throw new ParseException(
-                            String.format("Sum of arguments START WITH AND INCREMENT BY must be greater or equals MINVALUE " +
-                                    "for sequence %s  in case of descending increment", getName())
-                    );
-                }
-
-                if (Math.abs(incrementBy) >= Math.abs((maxValue - minValue)))
-                    throw new ParseException(
-                            String.format("Absolute value of 'INCREMENT BY' must be less than absolute value of subtraction of MAXVALUE and MINVALUE " +
-                                    "for sequence %s in case of descending increment", getName())
-                    );
+            if (startWith > 0 && (startWith + incrementBy) < minValue) {
+                throw new ParseException(
+                        String.format("Sum of arguments START WITH AND INCREMENT BY must be greater or equals MINVALUE " +
+                                "for sequence %s  in case of descending increment", getName())
+                );
             }
+
+            if (Math.abs(incrementBy) >= Math.abs((maxValue - minValue)))
+                throw new ParseException(
+                        String.format("Absolute value of 'INCREMENT BY' must be less than absolute value of subtraction of MAXVALUE and MINVALUE " +
+                                "for sequence %s in case of descending increment", getName())
+                );
+
         }
 
     }
