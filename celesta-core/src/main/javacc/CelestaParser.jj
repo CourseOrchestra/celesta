@@ -448,7 +448,7 @@ void sequenceStartWith(Sequence s):
 {
     <K_START> <K_WITH> ["-" {sign = -1;}] startWith = <S_INTEGER>
     {
-        s.startWith(sign * Integer.parseInt(startWith.image));
+        s.startWith(sign * Long.parseLong(startWith.image));
     }
 }
 
@@ -460,7 +460,7 @@ void sequenceIncrementBy(Sequence s):
 {
     <K_INCREMENT> <K_BY> ["-" {sign = -1;}] incrementBy =  <S_INTEGER>
     {
-        s.incrementBy(sign * Integer.parseInt(incrementBy.image));
+        s.incrementBy(sign * Long.parseLong(incrementBy.image));
     }
 }
 
@@ -472,7 +472,7 @@ void sequenceMinValue(Sequence s):
 {
     <K_MINVALUE> ["-" {sign = -1;}] minValue = <S_INTEGER>
         {
-            s.minValue(sign * Integer.parseInt(minValue.image));
+            s.minValue(sign * Long.parseLong(minValue.image));
         }
 }
 
@@ -484,7 +484,7 @@ void sequenceMaxValue(Sequence s):
 {
     <K_MAXVALUE> ["-" {sign = -1;}] maxValue = <S_INTEGER>
         {
-            s.maxValue(sign * Integer.parseInt(maxValue.image));
+            s.maxValue(sign * Long.parseLong(maxValue.image));
         }
 }
 

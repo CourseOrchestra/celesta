@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by ioann on 10.05.2017.
  */
-public final class DBPKInfo {
+public final class DbPkInfo {
   private String name;
   private final List<String> columnNames = new LinkedList<>();
 

@@ -42,7 +42,6 @@ import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -50,17 +49,12 @@ import java.util.stream.Collectors;
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.meta.DBColumnInfo;
-import ru.curs.celesta.dbutils.meta.DBFKInfo;
-import ru.curs.celesta.dbutils.meta.DBIndexInfo;
-import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
-
-import javax.naming.OperationNotSupportedException;
 
 /**
  * Адаптер Postgres.
@@ -357,14 +351,14 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   @SuppressWarnings("unchecked")
   @Override
-  public DBColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
+  public DbColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
     try {
       DatabaseMetaData metaData = conn.getMetaData();
       ResultSet rs = metaData.getColumns(null, c.getParentTable().getGrain().getName(),
           c.getParentTable().getName(), c.getName());
       try {
         if (rs.next()) {
-          DBColumnInfo result = new DBColumnInfo();
+          DbColumnInfo result = new DbColumnInfo();
           result.setName(rs.getString(COLUMN_NAME));
           String typeName = rs.getString("TYPE_NAME");
           if ("serial".equalsIgnoreCase(typeName)) {
@@ -403,7 +397,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     }
   }
 
-  private String modifyDefault(DBColumnInfo ci, String defaultBody) {
+  private String modifyDefault(DbColumnInfo ci, String defaultBody) {
     String result = defaultBody;
     if (DateTimeColumn.class == ci.getType()) {
       if (NOW.equalsIgnoreCase(defaultBody))
@@ -429,7 +423,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  protected void updateColType(Column c, DBColumnInfo actual, List<String> batch) {
+  protected void updateColType(Column c, DbColumnInfo actual, List<String> batch) {
     String sql;
     String colType;
     if (c.getClass() == StringColumn.class) {
@@ -642,7 +636,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public DBPKInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
+  public DbPkInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
     String sql = String.format(
         "SELECT i.relname AS indexname, " + "i.oid, array_length(x.indkey, 1) as colcount " + "FROM pg_index x "
             + "INNER JOIN pg_class c ON c.oid = x.indrelid "
@@ -651,7 +645,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             + "WHERE c.relkind = 'r'::\"char\" AND i.relkind = 'i'::\"char\" "
             + "and n.nspname = '%s' and c.relname = '%s' and x.indisprimary",
         t.getGrain().getName(), t.getName());
-    DBPKInfo result = new DBPKInfo();
+    DbPkInfo result = new DbPkInfo();
     try {
       Statement stmt = conn.createStatement();
       PreparedStatement stmt2 = conn.prepareStatement("select pg_get_indexdef(?, ?, false)");
@@ -704,7 +698,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+  public List<DbFkInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
     // Full foreign key information query
     String sql = String.format(
         "SELECT RC.CONSTRAINT_SCHEMA AS GRAIN" + "   , KCU1.CONSTRAINT_NAME AS FK_CONSTRAINT_NAME"
@@ -725,16 +719,16 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
     // System.out.println(sql);
 
-    List<DBFKInfo> result = new LinkedList<>();
+    List<DbFkInfo> result = new LinkedList<>();
     try {
       Statement stmt = conn.createStatement();
       try {
-        DBFKInfo i = null;
+        DbFkInfo i = null;
         ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           String fkName = rs.getString("FK_CONSTRAINT_NAME");
           if (i == null || !i.getName().equals(fkName)) {
-            i = new DBFKInfo(fkName);
+            i = new DbFkInfo(fkName);
             result.add(i);
             i.setTableName(rs.getString("FK_TABLE_NAME"));
             i.setRefGrainName(rs.getString("REF_GRAIN"));
@@ -754,14 +748,14 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+  public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
     String sql = String.format("SELECT c.relname AS tablename, i.relname AS indexname, "
         + "i.oid, array_length(x.indkey, 1) as colcount " + "FROM pg_index x "
         + "INNER JOIN pg_class c ON c.oid = x.indrelid " + "INNER JOIN pg_class i ON i.oid = x.indexrelid "
         + "INNER JOIN pg_namespace n ON n.oid = c.relnamespace "
         + "WHERE c.relkind = 'r'::\"char\" AND i.relkind = 'i'::\"char\" "
         + "and n.nspname = '%s' and x.indisunique = false;", g.getName());
-    Map<String, DBIndexInfo> result = new HashMap<>();
+    Map<String, DbIndexInfo> result = new HashMap<>();
     try {
       Statement stmt = conn.createStatement();
       PreparedStatement stmt2 = conn.prepareStatement("select pg_get_indexdef(?, ?, false)");
@@ -772,7 +766,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
           String indName = rs.getString("indexname");
           if (indName.endsWith(CONJUGATE_INDEX_POSTFIX))
             continue;
-          DBIndexInfo ii = new DBIndexInfo(tabName, indName);
+          DbIndexInfo ii = new DbIndexInfo(tabName, indName);
           result.put(indName, ii);
           int colCount = rs.getInt("colcount");
           int oid = rs.getInt("oid");
@@ -1190,4 +1184,27 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     return true;
   }
 
+    @Override
+    public DbSequenceInfo getSequenceInfo(Connection conn, Sequence s) throws CelestaException {
+        String sql = "SELECT INCREMENT, MINIMUM_VALUE, MAXIMUM_VALUE, CYCLE_OPTION" +
+                " FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
+
+        try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, s.getGrain().getName());
+            preparedStatement.setString(2, s.getName());
+            ResultSet rs = preparedStatement.executeQuery();
+            rs.next();
+
+            DbSequenceInfo result = new DbSequenceInfo();
+
+            result.setIncrementBy(rs.getLong("INCREMENT"));
+            result.setMinValue(rs.getLong("MINIMUM_VALUE"));
+            result.setMaxValue(rs.getLong("MAXIMUM_VALUE"));
+            result.setCycle(rs.getBoolean("CYCLE_OPTION"));
+
+            return result;
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage(), e);
+        }
+    }
 }

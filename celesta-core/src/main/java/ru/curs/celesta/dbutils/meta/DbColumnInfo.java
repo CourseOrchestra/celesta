@@ -5,7 +5,7 @@ import ru.curs.celesta.score.*;
 /**
  * Данные о колонке в базе данных в виде, необходимом для Celesta.
  */
-public final class DBColumnInfo {
+public final class DbColumnInfo {
 	private String name;
 	private Class<? extends Column> type;
 	private boolean isNullable;

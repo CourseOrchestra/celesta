@@ -2,8 +2,8 @@ package ru.curs.celesta.dbutils.adaptors;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.meta.DBColumnInfo;
-import ru.curs.celesta.dbutils.meta.DBIndexInfo;
+import ru.curs.celesta.dbutils.meta.DbColumnInfo;
+import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
@@ -118,7 +118,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
+  String[] getDropIndexSQL(Grain g, DbIndexInfo dBIndexInfo) {
     String sql = String.format("DROP INDEX IF EXISTS " + tableTemplate(), g.getName(), dBIndexInfo.getIndexName());
     String sql2 = String.format("DROP INDEX IF EXISTS " + tableTemplate(), g.getName(),
         dBIndexInfo.getIndexName() + CONJUGATE_INDEX_POSTFIX);
@@ -128,7 +128,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
 
   @Override
-  public void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
+  public void updateColumn(Connection conn, Column c, DbColumnInfo actual) throws CelestaException {
     try {
       String sql;
       List<String> batch = new LinkedList<>();
@@ -174,7 +174,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   }
 
-  abstract protected void updateColType(Column c, DBColumnInfo actual, List<String> batch);
+  abstract protected void updateColType(Column c, DbColumnInfo actual, List<String> batch);
 
   @Override
   void dropAutoIncrement(Connection conn, TableElement t) throws SQLException {
@@ -266,4 +266,20 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
               s.getGrain().getName(), s.getName()), e);
     }
   }
+
+  @Override
+  public boolean sequenceExists(Connection conn, String schema, String name) throws CelestaException {
+    try (
+            PreparedStatement preparedStatement = conn.prepareStatement(
+                    "SELECT * FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?"
+            )
+    ) {
+      preparedStatement.setString(1, schema);
+      preparedStatement.setString(2, name);
+      return preparedStatement.executeQuery().next();
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage(), e);
+    }
+  }
+
 }

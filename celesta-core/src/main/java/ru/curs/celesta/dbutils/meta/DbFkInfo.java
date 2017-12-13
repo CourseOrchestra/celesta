@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Информация о внешнем ключе, полученная из базы данных.
  */
-public final class DBFKInfo {
+public final class DbFkInfo {
 
 	private String tableName;
 	private String name;
@@ -20,7 +20,7 @@ public final class DBFKInfo {
 	private FKRule updateRule = FKRule.NO_ACTION;
 	private final List<String> columnNames = new LinkedList<>();
 
-	public DBFKInfo(String name) {
+	public DbFkInfo(String name) {
 		this.name = name;
 	}
 

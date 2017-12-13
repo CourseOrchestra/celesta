@@ -17,14 +17,14 @@ public class Sequence extends GrainElement {
         g.addElement(this);
     }
 
-    void startWith(Integer startWith) throws ParseException {
+    void startWith(Long startWith) throws ParseException {
         if (arguments.putIfAbsent(Argument.START_WITH, startWith) != null)
             throw new ParseException(
                     String.format(DUPLICATE_ENTRANCE_TEMPLATE, Argument.START_WITH, getName())
             );
     }
 
-    void incrementBy(Integer incrementBy) throws ParseException {
+    void incrementBy(Long incrementBy) throws ParseException {
         if (incrementBy == 0)
             throw new ParseException(
                     String.format("Sequence %s has illegal value 0 for INCREMENT BY expression.", getName())
@@ -35,8 +35,8 @@ public class Sequence extends GrainElement {
             );
     }
 
-    void minValue(Integer minValue) throws ParseException {
-        if (arguments.containsKey(Argument.MAXVALUE) && (Integer)arguments.get(Argument.MAXVALUE) <= minValue)
+    void minValue(Long minValue) throws ParseException {
+        if (arguments.containsKey(Argument.MAXVALUE) && (Long)arguments.get(Argument.MAXVALUE) <= minValue)
             throw new ParseException(
                     String.format("MINVALUE for sequence %s must be less than MAXVALUE", getName())
             );
@@ -47,8 +47,8 @@ public class Sequence extends GrainElement {
             );
     }
 
-    void maxValue(Integer maxValue) throws ParseException {
-        if (arguments.containsKey(Argument.MINVALUE) && (Integer)(arguments.get(Argument.MINVALUE)) >= maxValue)
+    void maxValue(Long maxValue) throws ParseException {
+        if (arguments.containsKey(Argument.MINVALUE) && (Long)(arguments.get(Argument.MINVALUE)) >= maxValue)
             throw new ParseException(
                     String.format("MAXVALUE for sequence %s must be greater than MINVALUE", getName())
             );
@@ -99,49 +99,35 @@ public class Sequence extends GrainElement {
     }
 
     void finalizeParsing() throws ParseException {
-        arguments.putIfAbsent(Argument.START_WITH, 1);
-        arguments.putIfAbsent(Argument.INCREMENT_BY, 1);
+        arguments.putIfAbsent(Argument.START_WITH, 1L);
+        arguments.putIfAbsent(Argument.INCREMENT_BY, 1L);
 
-        Integer startWith = (Integer) getArgument(Argument.START_WITH);
-        Integer incrementBy = (Integer) getArgument(Argument.INCREMENT_BY);
+        Long startWith = (Long) getArgument(Argument.START_WITH);
+        Long incrementBy = (Long) getArgument(Argument.INCREMENT_BY);
 
-
-        if (hasArgument(Argument.MINVALUE)) {
-            Integer minValue = (Integer) getArgument(Argument.MINVALUE);
-            if (startWith < minValue) {
-                throw new ParseException(
-                        String.format("MINVALUE for sequence %s can't be greater than START WITH", getName())
-                );
-            }
-        } else {
+        if (!hasArgument(Argument.MINVALUE)) {
             minValue(startWith);
         }
 
-        if (hasArgument(Argument.MAXVALUE)) {
-            Integer maxValue = (Integer) getArgument(Argument.MAXVALUE);
-            if (startWith > maxValue) {
-                throw new ParseException(
-                        String.format("MAXVALUE for sequence %s must be greater or equals START WITH", getName())
-                );
-            }
+        Long minValue = (Long) getArgument(Argument.MINVALUE);
+        if (startWith < minValue) {
+            throw new ParseException(
+                    String.format("MINVALUE for sequence %s can't be greater than START WITH", getName())
+            );
         }
 
+        if (!hasArgument(Argument.MAXVALUE)) {
+            maxValue(Long.MAX_VALUE);
+        }
 
-        if (incrementBy > 0 && hasArgument(Argument.CYCLE) && !hasArgument(Argument.MAXVALUE)) {
-                throw new ParseException(
-                        String.format("MAXVALUE for sequence %s must be specified in case of ascending increment and cycle", getName())
-                );
+        Long maxValue = (Long) getArgument(Argument.MAXVALUE);
+        if (startWith > maxValue) {
+            throw new ParseException(
+                    String.format("MAXVALUE for sequence %s must be greater or equals START WITH", getName())
+            );
         }
 
         if (incrementBy < 0) {
-            if (!hasArgument(Argument.MAXVALUE))
-                throw new ParseException(
-                        String.format("MAXVALUE for sequence %s must be specified in case of descending increment", getName())
-                );
-
-            Integer minValue = (Integer) getArgument(Argument.MINVALUE);
-            Integer maxValue = (Integer) getArgument(Argument.MAXVALUE);
-
             if (startWith > 0 && (startWith + incrementBy) < minValue) {
                 throw new ParseException(
                         String.format("Sum of arguments START WITH AND INCREMENT BY must be greater or equals MINVALUE " +
