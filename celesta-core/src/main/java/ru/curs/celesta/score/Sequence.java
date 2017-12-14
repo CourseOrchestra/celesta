@@ -4,7 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 
 public class Sequence extends GrainElement {
 
@@ -127,6 +127,10 @@ public class Sequence extends GrainElement {
             );
         }
 
+        if (!hasArgument(Argument.CYCLE)) {
+            setIsCycle(false);
+        }
+
         if (incrementBy < 0) {
             if (startWith > 0 && (startWith + incrementBy) < minValue) {
                 throw new ParseException(
@@ -174,8 +178,12 @@ public class Sequence extends GrainElement {
             this.sqlTemplate = sqlTemplate;
         }
 
-        public String getSql(Object... values) {
-            return String.format(sqlTemplate, values);
+        public String getSql(Object value) {
+
+            if (this == CYCLE && Objects.equals(false, value))
+                return "";
+
+            return String.format(sqlTemplate, value);
         }
 
 

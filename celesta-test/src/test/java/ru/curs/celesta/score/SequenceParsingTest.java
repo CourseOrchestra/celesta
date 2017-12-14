@@ -22,7 +22,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(1L, s1.getArgument(INCREMENT_BY)),
                 () -> assertEquals(1L, s1.getArgument(MINVALUE)),
                 () -> assertEquals(Long.MAX_VALUE, s1.getArgument(MAXVALUE)),
-                () -> assertFalse(s1.hasArgument(CYCLE))
+                () -> assertEquals(false, s1.getArgument(CYCLE))
         );
 
         Sequence s2 = g.getElement("s2", Sequence.class);
@@ -31,7 +31,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(1L, s2.getArgument(INCREMENT_BY)),
                 () -> assertEquals(3L, s2.getArgument(MINVALUE)),
                 () -> assertEquals(Long.MAX_VALUE, s2.getArgument(MAXVALUE)),
-                () -> assertFalse(s2.hasArgument(CYCLE))
+                () -> assertEquals(false, s2.getArgument(CYCLE))
         );
 
         Sequence s3 = g.getElement("s3", Sequence.class);
@@ -40,7 +40,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(2L, s3.getArgument(INCREMENT_BY)),
                 () -> assertEquals(1L, s3.getArgument(MINVALUE)),
                 () -> assertEquals(Long.MAX_VALUE, s3.getArgument(MAXVALUE)),
-                () -> assertFalse(s3.hasArgument(CYCLE))
+                () -> assertEquals(false, s3.getArgument(CYCLE))
         );
 
         Sequence s4 = g.getElement("s4", Sequence.class);
@@ -49,7 +49,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(-2L, s4.getArgument(INCREMENT_BY)),
                 () -> assertEquals(-99999999L, s4.getArgument(MINVALUE)),
                 () -> assertEquals(1L, s4.getArgument(MAXVALUE)),
-                () -> assertFalse(s4.hasArgument(CYCLE))
+                () -> assertEquals(false, s4.getArgument(CYCLE))
         );
 
         Sequence s5 = g.getElement("s5", Sequence.class);
@@ -58,7 +58,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(-1L, s5.getArgument(INCREMENT_BY)),
                 () -> assertEquals(-99999999L, s5.getArgument(MINVALUE)),
                 () -> assertEquals(5L, s5.getArgument(MAXVALUE)),
-                () -> assertFalse(s5.hasArgument(CYCLE))
+                () -> assertEquals(false, s5.getArgument(CYCLE))
         );
 
         Sequence s6 = g.getElement("s6", Sequence.class);
@@ -67,7 +67,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(-1L, s6.getArgument(INCREMENT_BY)),
                 () -> assertEquals(4L, s6.getArgument(MINVALUE)),
                 () -> assertEquals(6L, s6.getArgument(MAXVALUE)),
-                () -> assertFalse(s6.hasArgument(CYCLE)),
+                () -> assertEquals(false, s6.getArgument(CYCLE)),
                 () -> assertEquals("TEST", s6.getCelestaDoc())
         );
 
@@ -77,7 +77,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(-2L, s7.getArgument(INCREMENT_BY)),
                 () -> assertEquals(-6L, s7.getArgument(MINVALUE)),
                 () -> assertEquals(-3L, s7.getArgument(MAXVALUE)),
-                () -> assertFalse(s7.hasArgument(CYCLE))
+                () -> assertEquals(false, s7.getArgument(CYCLE))
         );
 
         Sequence s8 = g.getElement("s8", Sequence.class);
@@ -86,7 +86,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(-2L, s8.getArgument(INCREMENT_BY)),
                 () -> assertEquals(-1L, s8.getArgument(MINVALUE)),
                 () -> assertEquals(2L, s8.getArgument(MAXVALUE)),
-                () -> assertFalse(s8.hasArgument(CYCLE))
+                () -> assertEquals(false, s8.getArgument(CYCLE))
         );
 
         Sequence s9 = g.getElement("s9", Sequence.class);
@@ -95,7 +95,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(1L, s9.getArgument(INCREMENT_BY)),
                 () -> assertEquals(5l, s9.getArgument(MINVALUE)),
                 () -> assertEquals(Long.MAX_VALUE, s9.getArgument(MAXVALUE)),
-                () -> assertFalse(s9.hasArgument(CYCLE))
+                () -> assertEquals(false, s9.getArgument(CYCLE))
         );
 
         Sequence s10 = g.getElement("s10", Sequence.class);
@@ -104,7 +104,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(1L, s10.getArgument(INCREMENT_BY)),
                 () -> assertEquals(-5L, s10.getArgument(MINVALUE)),
                 () -> assertEquals(Long.MAX_VALUE, s10.getArgument(MAXVALUE)),
-                () -> assertFalse(s10.hasArgument(CYCLE))
+                () -> assertEquals(false, s10.getArgument(CYCLE))
         );
 
         Sequence s11 = g.getElement("s11", Sequence.class);
@@ -113,7 +113,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(1L, s11.getArgument(INCREMENT_BY)),
                 () -> assertEquals(1L, s11.getArgument(MINVALUE)),
                 () -> assertEquals(56L, s11.getArgument(MAXVALUE)),
-                () -> assertFalse(s11.hasArgument(CYCLE))
+                () -> assertEquals(false, s11.getArgument(CYCLE))
         );
 
         Sequence s12 = g.getElement("s12", Sequence.class);

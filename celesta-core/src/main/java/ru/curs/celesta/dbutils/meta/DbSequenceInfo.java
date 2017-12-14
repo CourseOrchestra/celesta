@@ -1,19 +1,16 @@
 package ru.curs.celesta.dbutils.meta;
 
+import ru.curs.celesta.score.Sequence;
+
+import static ru.curs.celesta.score.Sequence.Argument.*;
+
+import java.util.Objects;
+
 public class DbSequenceInfo {
-    private String name;
     private long incrementBy;
     private long minValue;
     private long maxValue;
     private boolean isCycle;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public long getIncrementBy() {
         return incrementBy;
@@ -45,5 +42,14 @@ public class DbSequenceInfo {
 
     public void setCycle(boolean cycle) {
         isCycle = cycle;
+    }
+
+    public boolean reflects(Sequence s) {
+        return (
+                !Objects.equals(incrementBy, s.getArgument(INCREMENT_BY))
+                        || !Objects.equals(minValue, s.getArgument(MINVALUE))
+                        || !Objects.equals(maxValue, s.getArgument(MAXVALUE))
+                        || !Objects.equals(isCycle, s.getArgument(CYCLE))
+        );
     }
 }

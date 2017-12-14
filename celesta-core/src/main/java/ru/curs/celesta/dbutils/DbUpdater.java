@@ -7,10 +7,7 @@ import java.util.Map.Entry;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.meta.DbColumnInfo;
-import ru.curs.celesta.dbutils.meta.DbFkInfo;
-import ru.curs.celesta.dbutils.meta.DbIndexInfo;
-import ru.curs.celesta.dbutils.meta.DbPkInfo;
+import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
@@ -412,8 +409,17 @@ public final class DbUpdater {
 
   private void updateSequences(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
-    for (Sequence s : g.getElements(Sequence.class).values())
-      dba.createSequence(conn, s);
+
+    for (Sequence s : g.getElements(Sequence.class).values()) {
+      if (dba.sequenceExists(conn, g.getName(), s.getName())) {
+        DbSequenceInfo sequenceInfo = dba.getSequenceInfo(conn, s);
+        if (sequenceInfo.reflects(s))
+          dba.alterSequence(conn, s);
+      } else {
+        dba.createSequence(conn, s);
+      }
+    }
+
   }
 
   private void dropAllParameterizedViews(Grain g) throws CelestaException {

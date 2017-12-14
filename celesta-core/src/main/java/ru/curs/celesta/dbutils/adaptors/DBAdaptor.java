@@ -894,9 +894,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   public void createSequence(Connection conn, Sequence s) throws CelestaException {
     try {
-      String sql = generateSqlForCreateSequenceExpression(s);
+      StringBuilder sb = new StringBuilder("CREATE SEQUENCE ")
+              .append(String.format(tableTemplate(), s.getGrain().getName(), s.getName()));
+      generateArgumentsForCreateSequenceExpression(s, sb);
+      String sql = sb.toString();
 
-      Statement stmt = conn.createStatement();
+              Statement stmt = conn.createStatement();
       try {
         stmt.executeUpdate(sql);
       } finally {
@@ -909,19 +912,31 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   }
 
 
-  public void alterSequence(Connection connection, Sequence s) throws CelestaException {
-    //"ALTER SEQUENCE IF EXISTS"
+  public void alterSequence(Connection conn, Sequence s) throws CelestaException {
+    try {
+      StringBuilder sb = new StringBuilder("ALTER SEQUENCE ")
+              .append(String.format(tableTemplate(), s.getGrain().getName(), s.getName()));
+      generateArgumentsForCreateSequenceExpression(s, sb, Sequence.Argument.START_WITH);
+      String sql = sb.toString();
+
+      Statement stmt = conn.createStatement();
+      try {
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Error while altering sequence %s.%s: %s", s.getGrain().getName(), s.getName(),
+              e.getMessage());
+    }
   }
 
-  String generateSqlForCreateSequenceExpression(Sequence s) {
-    StringBuilder sb = new StringBuilder("CREATE SEQUENCE ")
-            .append(String.format(tableTemplate(), s.getGrain().getName(), s.getName()));
-
-    s.getArguments().forEach(
-            (argument, o) -> sb.append(argument.getSql(o))
-    );
-
-    return sb.toString();
+  void generateArgumentsForCreateSequenceExpression(Sequence s, StringBuilder sb, Sequence.Argument... excludedArguments) {
+    s.getArguments().entrySet().stream()
+            .filter(e -> !Arrays.asList(excludedArguments).contains(e.getKey()))
+            .forEach(
+                    (e) -> sb.append(e.getKey().getSql(e.getValue()))
+            );
   }
 
   public abstract void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException;

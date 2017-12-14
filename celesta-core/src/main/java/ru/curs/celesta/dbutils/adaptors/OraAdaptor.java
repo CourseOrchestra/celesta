@@ -1248,12 +1248,11 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  String generateSqlForCreateSequenceExpression(Sequence s) {
-    String result = super.generateSqlForCreateSequenceExpression(s);
+  void generateArgumentsForCreateSequenceExpression(Sequence s, StringBuilder sb, Sequence.Argument... excludedArguments) {
+    super.generateArgumentsForCreateSequenceExpression(s, sb, excludedArguments);
     if (s.hasArgument(Sequence.Argument.CYCLE)) {
-      result = result + " NOCACHE";
+      sb.append(" NOCACHE");
     }
-    return result;
   }
 
   @Override

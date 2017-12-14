@@ -1447,11 +1447,13 @@ public abstract class AbstractAdaptorTest {
         Grain g = score.getGrain(GRAIN_NAME);
         Sequence sequence = g.getElement("testSequence", Sequence.class);
 
+        //Sequence not exists
         assertFalse(dba.sequenceExists(conn, g.getName(), sequence.getName()));
         dba.createSequence(conn, sequence);
         assertTrue(dba.sequenceExists(conn, g.getName(), sequence.getName()));
 
         DbSequenceInfo sequenceInfo = dba.getSequenceInfo(conn, sequence);
+        assertFalse(sequenceInfo.reflects(sequence));
 
         assertAll(
                 () -> assertEquals(1L, sequenceInfo.getIncrementBy()),
@@ -1462,6 +1464,40 @@ public abstract class AbstractAdaptorTest {
 
         assertEquals(5, dba.nextSequenceValue(conn, sequence));
         assertEquals(6, dba.nextSequenceValue(conn, sequence));
+
+        //Modifying of increment by
+        sequence.getArguments().put(Sequence.Argument.INCREMENT_BY, 2L);
+        assertTrue(sequenceInfo.reflects(sequence));
+
+        dba.alterSequence(conn, sequence);
+
+        DbSequenceInfo sequenceInfo2 = dba.getSequenceInfo(conn, sequence);
+        assertFalse(sequenceInfo2.reflects(sequence));
+
+        assertAll(
+                () -> assertEquals(2L, sequenceInfo2.getIncrementBy()),
+                () -> assertEquals(5L, sequenceInfo2.getMinValue()),
+                () -> assertEquals(Long.MAX_VALUE, sequenceInfo2.getMaxValue()),
+                () -> assertEquals(false, sequenceInfo2.isCycle())
+        );
+
+        //Altering to short cycle
+        sequence.getArguments().put(Sequence.Argument.INCREMENT_BY, 1L);
+        sequence.getArguments().put(Sequence.Argument.MINVALUE, 5L);
+        sequence.getArguments().put(Sequence.Argument.MAXVALUE, 7L);
+        sequence.getArguments().put(Sequence.Argument.CYCLE, true);
+        assertTrue(sequenceInfo.reflects(sequence));
+
+        dba.alterSequence(conn, sequence);
+        DbSequenceInfo sequenceInfo3 = dba.getSequenceInfo(conn, sequence);
+        assertFalse(sequenceInfo3.reflects(sequence));
+
+        assertAll(
+                () -> assertEquals(1L, sequenceInfo3.getIncrementBy()),
+                () -> assertEquals(5L, sequenceInfo3.getMinValue()),
+                () -> assertEquals(7L, sequenceInfo3.getMaxValue()),
+                () -> assertEquals(true, sequenceInfo3.isCycle())
+        );
     }
 
     @Test
