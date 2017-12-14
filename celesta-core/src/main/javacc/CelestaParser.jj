@@ -446,7 +446,7 @@ void sequenceStartWith(Sequence s):
     int sign = 1;
 }
 {
-    <K_START> <K_WITH> ["-" {sign = -1;}] startWith = <S_INTEGER>
+    <K_START> <K_WITH> {sign = sign();} startWith = <S_INTEGER>
     {
         s.startWith(sign * Long.parseLong(startWith.image));
     }
@@ -458,7 +458,7 @@ void sequenceIncrementBy(Sequence s):
     int sign = 1;
 }
 {
-    <K_INCREMENT> <K_BY> ["-" {sign = -1;}] incrementBy =  <S_INTEGER>
+    <K_INCREMENT> <K_BY> {sign = sign();} incrementBy =  <S_INTEGER>
     {
         s.incrementBy(sign * Long.parseLong(incrementBy.image));
     }
@@ -470,7 +470,7 @@ void sequenceMinValue(Sequence s):
     int sign = 1;
 }
 {
-    <K_MINVALUE> ["-" {sign = -1;}] minValue = <S_INTEGER>
+    <K_MINVALUE> {sign = sign();} minValue = <S_INTEGER>
         {
             s.minValue(sign * Long.parseLong(minValue.image));
         }
@@ -482,7 +482,7 @@ void sequenceMaxValue(Sequence s):
     int sign = 1;
 }
 {
-    <K_MAXVALUE> ["-" {sign = -1;}] maxValue = <S_INTEGER>
+    <K_MAXVALUE> {sign = sign();} maxValue = <S_INTEGER>
         {
             s.maxValue(sign * Long.parseLong(maxValue.image));
         }
@@ -495,6 +495,13 @@ void sequenceCycle(Sequence s):
         {
             s.setIsCycle(true);
         }
+}
+
+int sign():
+{}
+{
+    ["-" {return -1;}]
+    {return 1;}
 }
 
 void functionParam(ParameterizedView view):
