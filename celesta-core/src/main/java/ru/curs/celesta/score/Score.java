@@ -84,13 +84,7 @@ public class Score {
                 throw new CelestaException("Score path entry '%s' is not a directory.", path.toString());
 
             defaultGrainPath = path;
-
-            for (File grainPath : path.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File pathname) {
-                    return pathname.isDirectory();
-                }
-            })) {
+            for (File grainPath : path.listFiles(File::isDirectory)) {
                 String grainName = grainPath.getName();
                 File scriptFile = new File(
                         String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, grainName));
