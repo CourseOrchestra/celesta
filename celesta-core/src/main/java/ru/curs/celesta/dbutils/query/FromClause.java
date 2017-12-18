@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils.query;
 
+import ru.curs.celesta.score.DataGrainElement;
 import ru.curs.celesta.score.GrainElement;
 
 import java.util.ArrayList;
@@ -9,15 +10,15 @@ import java.util.List;
  * Created by ioann on 15.08.2017.
  */
 public class FromClause {
-  GrainElement ge;
+  DataGrainElement ge;
   String expression;
   List<Object> parameters = new ArrayList<>();
 
-  public GrainElement getGe() {
+  public DataGrainElement getGe() {
     return ge;
   }
 
-  public void setGe(GrainElement ge) {
+  public void setGe(DataGrainElement ge) {
     this.ge = ge;
   }
 

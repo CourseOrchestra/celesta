@@ -54,16 +54,11 @@ import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.*;
-import ru.curs.celesta.dbutils.meta.DBColumnInfo;
-import ru.curs.celesta.dbutils.meta.DBFKInfo;
-import ru.curs.celesta.dbutils.meta.DBIndexInfo;
-import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
-
-import javax.naming.OperationNotSupportedException;
 
 /**
  * Адаптер соединения с БД, выполняющий команды, необходимые системе обновления.
@@ -493,7 +488,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param dBIndexInfo Информация об индексе
    * @throws CelestaException Если что-то пошло не так.
    */
-  public final void dropIndex(Grain g, DBIndexInfo dBIndexInfo) throws CelestaException {
+  public final void dropIndex(Grain g, DbIndexInfo dBIndexInfo) throws CelestaException {
     String[] sql = getDropIndexSQL(g, dBIndexInfo);
 
     try (Connection conn = connectionPool.get()) {
@@ -632,7 +627,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     return sb.toString();
   }
 
-  static String getTableFieldsListExceptBlobs(GrainElement t, Set<String> fields) {
+  static String getTableFieldsListExceptBlobs(DataGrainElement t, Set<String> fields) {
     final List<String> flds;
 
     Predicate<ColumnMeta> notBinary = c -> !BinaryColumn.CELESTA_TYPE.equals(c.getCelestaType());
@@ -753,7 +748,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   abstract String[] getCreateIndexSQL(Index index);
 
-  abstract String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo);
+  abstract String[] getDropIndexSQL(Grain g, DbIndexInfo dBIndexInfo);
 
 
   /**
@@ -763,7 +758,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param c    Столбец.
    * @throws CelestaException в случае сбоя связи с БД.
    */
-  public abstract DBColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException;
+  public abstract DbColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException;
 
   /**
    * Обновляет на таблице колонку.
@@ -772,7 +767,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param c    Колонка для обновления.
    * @throws CelestaException при ошибке обновления колонки.
    */
-  public abstract void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException;
+  public abstract void updateColumn(Connection conn, Column c, DbColumnInfo actual) throws CelestaException;
 
   /**
    * Возвращает информацию о первичном ключе таблицы.
@@ -782,7 +777,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    *             получить.
    * @throws CelestaException в случае сбоя связи с БД.
    */
-  public abstract DBPKInfo getPKInfo(Connection conn, TableElement t) throws CelestaException;
+  public abstract DbPkInfo getPKInfo(Connection conn, TableElement t) throws CelestaException;
 
   /**
    * Удаляет первичный ключ на таблице с использованием известного имени
@@ -805,7 +800,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    */
   public abstract void createPK(Connection conn, TableElement t) throws CelestaException;
 
-  public abstract List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException;
+  public abstract List<DbFkInfo> getFKInfo(Connection conn, Grain g) throws CelestaException;
 
   /**
    * Возвращает набор индексов, связанных с таблицами, лежащими в указанной
@@ -815,7 +810,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param g    Гранула, по таблицам которой следует просматривать индексы.
    * @throws CelestaException В случае сбоя связи с БД.
    */
-  public abstract Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException;
+  public abstract Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException;
 
   /**
    * Возвращает перечень имён представлений в грануле.
@@ -891,6 +886,54 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     }
 
+  }
+
+
+  public void createSequence(Connection conn, Sequence s) throws CelestaException {
+    try {
+      StringBuilder sb = new StringBuilder("CREATE SEQUENCE ")
+              .append(String.format(tableTemplate(), s.getGrain().getName(), s.getName()));
+      generateArgumentsForCreateSequenceExpression(s, sb);
+      String sql = sb.toString();
+
+              Statement stmt = conn.createStatement();
+      try {
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Error while creating sequence %s.%s: %s", s.getGrain().getName(), s.getName(),
+              e.getMessage());
+    }
+  }
+
+
+  public void alterSequence(Connection conn, Sequence s) throws CelestaException {
+    try {
+      StringBuilder sb = new StringBuilder("ALTER SEQUENCE ")
+              .append(String.format(tableTemplate(), s.getGrain().getName(), s.getName()));
+      generateArgumentsForCreateSequenceExpression(s, sb, Sequence.Argument.START_WITH);
+      String sql = sb.toString();
+
+      Statement stmt = conn.createStatement();
+      try {
+        stmt.executeUpdate(sql);
+      } finally {
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      throw new CelestaException("Error while altering sequence %s.%s: %s", s.getGrain().getName(), s.getName(),
+              e.getMessage());
+    }
+  }
+
+  void generateArgumentsForCreateSequenceExpression(Sequence s, StringBuilder sb, Sequence.Argument... excludedArguments) {
+    s.getArguments().entrySet().stream()
+            .filter(e -> !Arrays.asList(excludedArguments).contains(e.getKey()))
+            .forEach(
+                    (e) -> sb.append(e.getKey().getSql(e.getValue()))
+            );
   }
 
   public abstract void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException;
@@ -1207,6 +1250,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   public boolean supportsCortegeComparing() {
     return false;
   }
+
+  public abstract long nextSequenceValue(Connection conn, Sequence s) throws CelestaException;
+
+  public abstract boolean sequenceExists(Connection conn, String schema, String name) throws CelestaException;
+
+  public abstract DbSequenceInfo getSequenceInfo(Connection conn, Sequence s) throws CelestaException;
 }
 
 /**

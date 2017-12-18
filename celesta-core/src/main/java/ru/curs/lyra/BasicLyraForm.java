@@ -16,7 +16,7 @@ import ru.curs.celesta.score.*;
  * BasicCardForm and BasicGridForm.
  */
 public abstract class BasicLyraForm {
-	private final GrainElement meta;
+	private final DataGrainElement meta;
 	private final LyraNamedElementHolder<LyraFormField> fieldsMeta = new LyraNamedElementHolder<LyraFormField>() {
 		private static final long serialVersionUID = 1L;
 
@@ -42,7 +42,7 @@ public abstract class BasicLyraForm {
 	/**
 	 * A constructor for unit tests purposes only!
 	 */
-	BasicLyraForm(GrainElement m) throws CelestaException {
+	BasicLyraForm(DataGrainElement m) throws CelestaException {
 		meta = m;
 	}
 

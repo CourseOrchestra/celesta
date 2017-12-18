@@ -10,12 +10,12 @@ import java.util.List;
 /**
  * Информация об индексе, полученная из метаданых базы данных.
  */
-public final class DBIndexInfo {
+public final class DbIndexInfo {
 	private final String tableName;
 	private final String indexName;
 	private final List<String> columnNames = new LinkedList<>();
 
-	public DBIndexInfo(String tableName, String indexName) {
+	public DbIndexInfo(String tableName, String indexName) {
 		this.tableName = tableName;
 		this.indexName = indexName;
 	}

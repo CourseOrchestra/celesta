@@ -17,10 +17,7 @@ import java.util.Date;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.*;
-import ru.curs.celesta.dbutils.meta.DBColumnInfo;
-import ru.curs.celesta.dbutils.meta.DBFKInfo;
-import ru.curs.celesta.dbutils.meta.DBIndexInfo;
-import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.dbutils.term.WhereTerm;
@@ -69,7 +66,7 @@ public abstract class AbstractAdaptorTest {
         }
     }
 
-    private int getCount(Connection conn, GrainElement ge) throws Exception {
+    private int getCount(Connection conn, DataGrainElement ge) throws Exception {
         FromClause from = new FromClause();
         from.setGe(ge);
         from.setExpression(String.format(dba.tableTemplate(), ge.getGrain().getName(), ge.getName()));
@@ -343,13 +340,13 @@ public abstract class AbstractAdaptorTest {
         Index i = grain.getIndices().get("idxTest");
 
         dba.createIndex(conn, i);
-        Map<String, DBIndexInfo> indicesSet = dba.getIndices(conn, t.getGrain());
+        Map<String, DbIndexInfo> indicesSet = dba.getIndices(conn, t.getGrain());
         assertNotNull(indicesSet);
         assertEquals(1, indicesSet.size());
-        DBIndexInfo inf = indicesSet.get("idxTest");
+        DbIndexInfo inf = indicesSet.get("idxTest");
         assertTrue(inf.reflects(i));
 
-        dba.dropIndex(grain, new DBIndexInfo(t.getName(), i.getName()));
+        dba.dropIndex(grain, new DbIndexInfo(t.getName(), i.getName()));
 
         indicesSet = dba.getIndices(conn, t.getGrain());
         assertNotNull(indicesSet);
@@ -423,7 +420,7 @@ public abstract class AbstractAdaptorTest {
 
     @Test
     public void getColumnInfo1() throws CelestaException, ParseException {
-        DBColumnInfo c;
+        DbColumnInfo c;
         // Проверяем реакцию на столбец, которого нет в базе данных
         Column newCol = new IntegerColumn(t, "nonExistentColumn");
         assertSame(newCol, t.getColumn("nonExistentColumn"));
@@ -485,7 +482,7 @@ public abstract class AbstractAdaptorTest {
 
     @Test
     public void getColumnInfo2() throws CelestaException, ParseException {
-        DBColumnInfo c;
+        DbColumnInfo c;
         // Этот тест проверяет выражения default и дополнительные атрибуты
         // id int identity not null primary key,
         c = dba.getColumnInfo(conn, t.getColumn("id"));
@@ -596,7 +593,7 @@ public abstract class AbstractAdaptorTest {
             dba.createTable(conn, mView1gTest);
             tablesAreCreated = true;
 
-            DBColumnInfo c;
+            DbColumnInfo c;
             Column col;
 
             col = mView1gTest.getColumn("idsum");
@@ -666,7 +663,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void updateColumn() throws CelestaException, ParseException, IOException, SQLException {
         // NULL/NOT NULL и DEFAULT (простые)
-        DBColumnInfo c;
+        DbColumnInfo c;
         Column col;
         // To test transforms on non-empty table
         insertRow(conn, t, 17);
@@ -766,7 +763,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void updateColumn2test() throws CelestaException, ParseException, IOException, SQLException {
         // IDENTITY
-        DBColumnInfo c;
+        DbColumnInfo c;
         IntegerColumn col;
 
         // To test transforms on non-empty table
@@ -819,7 +816,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void updateColumn3test() throws CelestaException, ParseException, IOException, SQLException {
         // String length
-        DBColumnInfo c;
+        DbColumnInfo c;
         StringColumn col;
         // To test transforms on non-empty table
         insertRow(conn, t, 15);
@@ -859,7 +856,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void updateColumn4test() throws CelestaException, ParseException, IOException, SQLException {
         // BLOB Default
-        DBColumnInfo c;
+        DbColumnInfo c;
         BinaryColumn col;
         // To test transforms on non-empty table
         insertRow(conn, t, 11);
@@ -887,7 +884,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void updateColumn5test() throws CelestaException, ParseException, IOException, SQLException {
         // Change data type
-        DBColumnInfo c;
+        DbColumnInfo c;
         IntegerColumn col;
         StringColumn scol;
         BooleanColumn bcol;
@@ -955,7 +952,7 @@ public abstract class AbstractAdaptorTest {
 
     @Test
     public void testReflects() throws CelestaException, ParseException {
-        DBColumnInfo c;
+        DbColumnInfo c;
 
         c = dba.getColumnInfo(conn, t.getColumn("f8"));
         assertTrue(c.reflects(t.getColumn("f8")));
@@ -974,7 +971,7 @@ public abstract class AbstractAdaptorTest {
 
     @Test
     public void getPKInfo() throws CelestaException, ParseException, IOException, SQLException {
-        DBPKInfo c;
+        DbPkInfo c;
         insertRow(conn, t, 15);
 
         c = dba.getPKInfo(conn, t);
@@ -1027,14 +1024,14 @@ public abstract class AbstractAdaptorTest {
             assertTrue(dba.tableExists(conn, "gtest", "test"));
             assertTrue(dba.tableExists(conn, "gtest", "refTo"));
 
-            List<DBFKInfo> l = dba.getFKInfo(conn, g);
+            List<DbFkInfo> l = dba.getFKInfo(conn, g);
             assertNotNull(l);
             assertEquals(0, l.size());
 
             dba.createFK(conn, fk);
             l = dba.getFKInfo(conn, g);
             assertEquals(1, l.size());
-            DBFKInfo info = l.get(0);
+            DbFkInfo info = l.get(0);
             assertEquals("fk_testNameVeryVeryLongLonName", info.getName());
             String[] expected = {"attrVarchar", "attrInt"};
             String[] actual = info.getColumnNames().toArray(new String[0]);
@@ -1073,7 +1070,7 @@ public abstract class AbstractAdaptorTest {
         Table t3 = g.getElement("aLongIdentityTableNaaame", Table.class);
         try {
             dba.createTable(conn, t3);
-            DBColumnInfo c = dba.getColumnInfo(conn, t3.getColumn("f1"));
+            DbColumnInfo c = dba.getColumnInfo(conn, t3.getColumn("f1"));
             assertTrue(c.isIdentity());
             c = dba.getColumnInfo(conn, t3.getColumn("field2"));
             assertSame(BooleanColumn.class, c.getType());
@@ -1149,8 +1146,8 @@ public abstract class AbstractAdaptorTest {
         Grain g = score.getGrain(GRAIN_NAME);
         Index idx = g.getIndices().get("idxTest2");
         dba.createIndex(conn, idx);
-        Map<String, DBIndexInfo> indicesSet = dba.getIndices(conn, t.getGrain());
-        DBIndexInfo inf = indicesSet.get("idxTest2");
+        Map<String, DbIndexInfo> indicesSet = dba.getIndices(conn, t.getGrain());
+        DbIndexInfo inf = indicesSet.get("idxTest2");
         assertEquals(2, inf.getColumnNames().size());
         assertTrue(inf.reflects(idx));
         dba.dropIndex(g, inf);
@@ -1444,6 +1441,64 @@ public abstract class AbstractAdaptorTest {
         }
     }
 
+
+    @Test
+    void testSequence() throws Exception {
+        Grain g = score.getGrain(GRAIN_NAME);
+        Sequence sequence = g.getElement("testSequence", Sequence.class);
+
+        //Sequence not exists
+        assertFalse(dba.sequenceExists(conn, g.getName(), sequence.getName()));
+        dba.createSequence(conn, sequence);
+        assertTrue(dba.sequenceExists(conn, g.getName(), sequence.getName()));
+
+        DbSequenceInfo sequenceInfo = dba.getSequenceInfo(conn, sequence);
+        assertFalse(sequenceInfo.reflects(sequence));
+
+        assertAll(
+                () -> assertEquals(1L, sequenceInfo.getIncrementBy()),
+                () -> assertEquals(5L, sequenceInfo.getMinValue()),
+                () -> assertEquals(Long.MAX_VALUE, sequenceInfo.getMaxValue()),
+                () -> assertEquals(false, sequenceInfo.isCycle())
+        );
+
+        assertEquals(5, dba.nextSequenceValue(conn, sequence));
+        assertEquals(6, dba.nextSequenceValue(conn, sequence));
+
+        //Modifying of increment by
+        sequence.getArguments().put(Sequence.Argument.INCREMENT_BY, 2L);
+        assertTrue(sequenceInfo.reflects(sequence));
+
+        dba.alterSequence(conn, sequence);
+
+        DbSequenceInfo sequenceInfo2 = dba.getSequenceInfo(conn, sequence);
+        assertFalse(sequenceInfo2.reflects(sequence));
+
+        assertAll(
+                () -> assertEquals(2L, sequenceInfo2.getIncrementBy()),
+                () -> assertEquals(5L, sequenceInfo2.getMinValue()),
+                () -> assertEquals(Long.MAX_VALUE, sequenceInfo2.getMaxValue()),
+                () -> assertEquals(false, sequenceInfo2.isCycle())
+        );
+
+        //Altering to short cycle
+        sequence.getArguments().put(Sequence.Argument.INCREMENT_BY, 1L);
+        sequence.getArguments().put(Sequence.Argument.MINVALUE, 5L);
+        sequence.getArguments().put(Sequence.Argument.MAXVALUE, 7L);
+        sequence.getArguments().put(Sequence.Argument.CYCLE, true);
+        assertTrue(sequenceInfo.reflects(sequence));
+
+        dba.alterSequence(conn, sequence);
+        DbSequenceInfo sequenceInfo3 = dba.getSequenceInfo(conn, sequence);
+        assertFalse(sequenceInfo3.reflects(sequence));
+
+        assertAll(
+                () -> assertEquals(1L, sequenceInfo3.getIncrementBy()),
+                () -> assertEquals(5L, sequenceInfo3.getMinValue()),
+                () -> assertEquals(7L, sequenceInfo3.getMaxValue()),
+                () -> assertEquals(true, sequenceInfo3.isCycle())
+        );
+    }
 
     @Test
     public void testSelectStaticStrings() throws Exception {

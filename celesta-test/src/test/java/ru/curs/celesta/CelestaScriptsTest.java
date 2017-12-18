@@ -46,16 +46,14 @@ public class CelestaScriptsTest {
     Properties properties = new Properties();
     properties.put("score.path", "score");
     properties.put("h2.in-memory", "true");
-    h2Celesta = Celesta.createInstance(properties);
 
+    h2Celesta = Celesta.createInstance(properties);
     postgres.start();
     postgresCelesta = createCelestaByContainer(postgres);
-
-    oracle.start();
-    oracleCelesta = createCelestaByContainer(oracle);
-
     msSql.start();
     msSqlCelesta = createCelestaByContainer(msSql);
+    oracle.start();
+    oracleCelesta = createCelestaByContainer(oracle);
   }
 
   @AfterEach

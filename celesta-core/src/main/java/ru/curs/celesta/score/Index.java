@@ -10,7 +10,7 @@ import java.util.Map;
  * Табличный индекс. Celesta допускает создание только простых индексов, без
  * ограничения UNIQUE.
  */
-public class Index extends GrainElement {
+public class Index extends GrainElement implements HasColumns {
 	private static final String INDEX_CREATION_ERROR = "Error while creating index '%s': column '%s' in table '%s' is ";
 	private final Table table;
 	private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {

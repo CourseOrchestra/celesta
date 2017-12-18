@@ -7,10 +7,7 @@ import java.util.Map.Entry;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.meta.DBColumnInfo;
-import ru.curs.celesta.dbutils.meta.DBFKInfo;
-import ru.curs.celesta.dbutils.meta.DBIndexInfo;
-import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
@@ -282,9 +279,12 @@ public final class DbUpdater {
       dropOrphanedGrainIndices(g);
 
       // Сбрасываем внешние ключи, более не включённые в метаданные
-      List<DBFKInfo> dbFKeys = dropOrphanedGrainFKeys(g);
+      List<DbFkInfo> dbFKeys = dropOrphanedGrainFKeys(g);
 
       Set<String> modifiedTablesMap = new HashSet<>();
+
+      updateSequences(g);
+
       // Обновляем все таблицы.
       for (Table t : g.getElements(Table.class).values())
         if (updateTable(t, dbFKeys))
@@ -407,6 +407,21 @@ public final class DbUpdater {
       dba.createParameterizedView(conn, pv);
   }
 
+  private void updateSequences(Grain g) throws CelestaException {
+    Connection conn = grain.callContext().getConn();
+
+    for (Sequence s : g.getElements(Sequence.class).values()) {
+      if (dba.sequenceExists(conn, g.getName(), s.getName())) {
+        DbSequenceInfo sequenceInfo = dba.getSequenceInfo(conn, s);
+        if (sequenceInfo.reflects(s))
+          dba.alterSequence(conn, s);
+      } else {
+        dba.createSequence(conn, s);
+      }
+    }
+
+  }
+
   private void dropAllParameterizedViews(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
     for (String viewName : dba.getParameterizedViewList(conn, g))
@@ -416,15 +431,15 @@ public final class DbUpdater {
 
   private void updateGrainFKeys(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
-    Map<String, DBFKInfo> dbFKeys = new HashMap<>();
-    for (DBFKInfo dbi : dba.getFKInfo(conn, g))
+    Map<String, DbFkInfo> dbFKeys = new HashMap<>();
+    for (DbFkInfo dbi : dba.getFKInfo(conn, g))
       dbFKeys.put(dbi.getName(), dbi);
     for (Table t : g.getElements(Table.class).values())
       if (t.isAutoUpdate())
         for (ForeignKey fk : t.getForeignKeys()) {
           if (dbFKeys.containsKey(fk.getConstraintName())) {
             // FK обнаружен в базе, апдейтим при необходимости.
-            DBFKInfo dbi = dbFKeys.get(fk.getConstraintName());
+            DbFkInfo dbi = dbFKeys.get(fk.getConstraintName());
             if (!dbi.reflects(fk)) {
               dba.dropFK(conn, g.getName(), dbi.getTableName(), dbi.getName());
               dba.createFK(conn, fk);
@@ -436,16 +451,16 @@ public final class DbUpdater {
         }
   }
 
-  private List<DBFKInfo> dropOrphanedGrainFKeys(Grain g) throws CelestaException {
+  private List<DbFkInfo> dropOrphanedGrainFKeys(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
-    List<DBFKInfo> dbFKeys = dba.getFKInfo(conn, g);
+    List<DbFkInfo> dbFKeys = dba.getFKInfo(conn, g);
     Map<String, ForeignKey> fKeys = new HashMap<>();
     for (Table t : g.getElements(Table.class).values())
       for (ForeignKey fk : t.getForeignKeys())
         fKeys.put(fk.getConstraintName(), fk);
-    Iterator<DBFKInfo> i = dbFKeys.iterator();
+    Iterator<DbFkInfo> i = dbFKeys.iterator();
     while (i.hasNext()) {
-      DBFKInfo dbFKey = i.next();
+      DbFkInfo dbFKey = i.next();
       ForeignKey fKey = fKeys.get(dbFKey.getName());
       if (fKey == null || !dbFKey.reflects(fKey)) {
         dba.dropFK(conn, g.getName(), dbFKey.getTableName(), dbFKey.getName());
@@ -464,17 +479,17 @@ public final class DbUpdater {
 		 * висящие на полях индексы могут помешать процессу.
 		 */
     final Connection conn = grain.callContext().getConn();
-    Map<String, DBIndexInfo> dbIndices = dba.getIndices(conn, g);
+    Map<String, DbIndexInfo> dbIndices = dba.getIndices(conn, g);
     Map<String, Index> myIndices = g.getIndices();
     // Удаление несуществующих в метаданных индексов.
-    for (DBIndexInfo dBIndexInfo : dbIndices.values())
+    for (DbIndexInfo dBIndexInfo : dbIndices.values())
       if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
         dba.dropIndex(g, dBIndexInfo);
 
     // Удаление индексов, которые будут в дальнейшем изменены, перед
     // обновлением таблиц.
     for (Entry<String, Index> e : myIndices.entrySet()) {
-      DBIndexInfo dBIndexInfo = dbIndices.get(e.getKey());
+      DbIndexInfo dBIndexInfo = dbIndices.get(e.getKey());
       if (dBIndexInfo != null) {
         boolean reflects = dBIndexInfo.reflects(e.getValue());
         if (!reflects)
@@ -483,7 +498,7 @@ public final class DbUpdater {
         // Удаление индексов на тех полях, которые подвергнутся
         // изменению
         for (Entry<String, Column> ee : e.getValue().getColumns().entrySet()) {
-          DBColumnInfo ci = dba.getColumnInfo(conn, ee.getValue());
+          DbColumnInfo ci = dba.getColumnInfo(conn, ee.getValue());
           if (ci == null || !ci.reflects(ee.getValue())) {
             dba.dropIndex(g, dBIndexInfo);
             break;
@@ -495,12 +510,12 @@ public final class DbUpdater {
 
   private void updateGrainIndices(Grain g) throws CelestaException {
     final Connection conn = grain.callContext().getConn();
-    Map<String, DBIndexInfo> dbIndices = dba.getIndices(conn, g);
+    Map<String, DbIndexInfo> dbIndices = dba.getIndices(conn, g);
     Map<String, Index> myIndices = g.getIndices();
 
     // Обновление и создание нужных индексов
     for (Entry<String, Index> e : myIndices.entrySet()) {
-      DBIndexInfo dBIndexInfo = dbIndices.get(e.getKey());
+      DbIndexInfo dBIndexInfo = dbIndices.get(e.getKey());
       if (dBIndexInfo != null) {
         // БД содержит индекс с таким именем, надо проверить
         // поля и пересоздать индекс в случае необходимости.
@@ -516,7 +531,7 @@ public final class DbUpdater {
     }
   }
 
-  private boolean updateTable(Table t, List<DBFKInfo> dbFKeys) throws CelestaException {
+  private boolean updateTable(Table t, List<DbFkInfo> dbFKeys) throws CelestaException {
     // Если таблица скомпилирована с опцией NO AUTOUPDATE, то ничего не
     // делаем с ней
     if (!t.isAutoUpdate())
@@ -530,14 +545,14 @@ public final class DbUpdater {
       return true;
     }
 
-    DBPKInfo pkInfo;
+    DbPkInfo pkInfo;
     Set<String> dbColumns = dba.getColumns(conn, t);
     boolean modified = updateColumns(t, conn, dbColumns, dbFKeys);
 
     // Для версионированных таблиц синхронизируем поле recversion
     if (t.isVersioned())
       if (dbColumns.contains(VersionedElement.REC_VERSION)) {
-        DBColumnInfo ci = dba.getColumnInfo(conn, t.getRecVersionField());
+        DbColumnInfo ci = dba.getColumnInfo(conn, t.getRecVersionField());
         if (!ci.reflects(t.getRecVersionField())) {
           dba.updateColumn(conn, t.getRecVersionField(), ci);
           modified = true;
@@ -601,10 +616,10 @@ public final class DbUpdater {
     dba.initDataForMaterializedView(conn, mv);
   }
 
-  private void dropReferencedFKs(TableElement t, Connection conn, List<DBFKInfo> dbFKeys) throws CelestaException {
-    Iterator<DBFKInfo> i = dbFKeys.iterator();
+  private void dropReferencedFKs(TableElement t, Connection conn, List<DbFkInfo> dbFKeys) throws CelestaException {
+    Iterator<DbFkInfo> i = dbFKeys.iterator();
     while (i.hasNext()) {
-      DBFKInfo dbFKey = i.next();
+      DbFkInfo dbFKey = i.next();
       if (t.getGrain().getName().equals(dbFKey.getRefGrainName())
           && t.getName().equals(dbFKey.getRefTableName())) {
         dba.dropFK(conn, t.getGrain().getName(), dbFKey.getTableName(), dbFKey.getName());
@@ -613,11 +628,11 @@ public final class DbUpdater {
     }
   }
 
-  private boolean updateColumns(TableElement t, final Connection conn, Set<String> dbColumns, List<DBFKInfo> dbFKeys)
+  private boolean updateColumns(TableElement t, final Connection conn, Set<String> dbColumns, List<DbFkInfo> dbFKeys)
       throws CelestaException {
     // Таблица существует в базе данных, определяем: надо ли удалить
     // первичный ключ
-    DBPKInfo pkInfo = dba.getPKInfo(conn, t);
+    DbPkInfo pkInfo = dba.getPKInfo(conn, t);
     boolean result = false;
     boolean keyDropped = pkInfo.isEmpty();
     if (!(pkInfo.reflects(t) || keyDropped)) {
@@ -631,7 +646,7 @@ public final class DbUpdater {
         // Таблица содержит колонку с таким именем, надо проверить
         // все её атрибуты и при необходимости -- попытаться
         // обновить.
-        DBColumnInfo ci = dba.getColumnInfo(conn, e.getValue());
+        DbColumnInfo ci = dba.getColumnInfo(conn, e.getValue());
         if (!ci.reflects(e.getValue())) {
           // Если колонка, требующая обновления, входит в первичный
           // ключ -- сбрасываем первичный ключ.

@@ -52,10 +52,7 @@ import java.util.stream.Collectors;
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.meta.DBColumnInfo;
-import ru.curs.celesta.dbutils.meta.DBFKInfo;
-import ru.curs.celesta.dbutils.meta.DBIndexInfo;
-import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
@@ -297,13 +294,8 @@ final class MSSQLAdaptor extends DBAdaptor {
 
   @Override
   public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
-    String sql = String.format("select coalesce(object_id('%s.%s'), -1)", schema, name);
-    try (Statement check = conn.createStatement()) {
-      ResultSet rs = check.executeQuery(sql);
-      return rs.next() && rs.getInt(1) != -1;
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
+    //TODO: It's a not good idea. We must check more concretely, cuz this method will work for other objects such as view etc.
+    return objectExists(conn, schema, name);
   }
 
   @Override
@@ -354,7 +346,7 @@ final class MSSQLAdaptor extends DBAdaptor {
       Connection conn, TableElement t, String where, Set<String> fields
   ) throws CelestaException {
 
-    final String filedList = getTableFieldsListExceptBlobs((GrainElement) t, fields);
+    final String filedList = getTableFieldsListExceptBlobs((DataGrainElement) t, fields);
 
     String sql = String.format(SELECT_TOP_1 + tableTemplate() + WHERE_S,
         filedList, t.getGrain().getName(), t.getName(), where);
@@ -471,7 +463,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  String[] getDropIndexSQL(Grain g, DBIndexInfo dBIndexInfo) {
+  String[] getDropIndexSQL(Grain g, DbIndexInfo dBIndexInfo) {
     String sql = String.format("DROP INDEX %s ON " + tableTemplate(), dBIndexInfo.getIndexName(), g.getName(),
         dBIndexInfo.getTableName());
     String[] result = {sql};
@@ -522,7 +514,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   // CHECKSTYLE:OFF
   @SuppressWarnings("unchecked")
   @Override
-  public DBColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
+  public DbColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
     // CHECKSTYLE:ON
     try {
       DatabaseMetaData metaData = conn.getMetaData();
@@ -530,7 +522,7 @@ final class MSSQLAdaptor extends DBAdaptor {
           c.getParentTable().getName(), c.getName());
       try {
         if (rs.next()) {
-          DBColumnInfo result = new DBColumnInfo();
+          DbColumnInfo result = new DbColumnInfo();
           result.setName(rs.getString(COLUMN_NAME));
           String typeName = rs.getString("TYPE_NAME");
           if ("varbinary".equalsIgnoreCase(typeName) && checkIfVarcharMax(conn, c)) {
@@ -579,7 +571,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void updateColumn(Connection conn, Column c, DBColumnInfo actual) throws CelestaException {
+  public void updateColumn(Connection conn, Column c, DbColumnInfo actual) throws CelestaException {
 
     String sql;
     if (!"".equals(actual.getDefaultValue())) {
@@ -716,9 +708,9 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public DBPKInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
+  public DbPkInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
 
-    DBPKInfo result = new DBPKInfo();
+    DbPkInfo result = new DbPkInfo();
     try {
       String sql = String.format(
           "select cons.CONSTRAINT_NAME, cols.COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE cols "
@@ -792,7 +784,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+  public List<DbFkInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
     // Full foreign key information query
     String sql = String.format(
         "SELECT RC.CONSTRAINT_SCHEMA AS 'GRAIN'" + "   , KCU1.CONSTRAINT_NAME AS 'FK_CONSTRAINT_NAME'"
@@ -813,16 +805,16 @@ final class MSSQLAdaptor extends DBAdaptor {
 
     // System.out.println(sql);
 
-    List<DBFKInfo> result = new LinkedList<>();
+    List<DbFkInfo> result = new LinkedList<>();
     try {
       Statement stmt = conn.createStatement();
       try {
-        DBFKInfo i = null;
+        DbFkInfo i = null;
         ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           String fkName = rs.getString("FK_CONSTRAINT_NAME");
           if (i == null || !i.getName().equals(fkName)) {
-            i = new DBFKInfo(fkName);
+            i = new DbFkInfo(fkName);
             result.add(i);
             i.setTableName(rs.getString("FK_TABLE_NAME"));
             i.setRefGrainName(rs.getString("REF_GRAIN"));
@@ -878,7 +870,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+  public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
     String sql = String.format("select " + "    s.name as SchemaName," + "    o.name as TableName,"
         + "    i.name as IndexName," + "    co.name as ColumnName," + "    ic.key_ordinal as ColumnOrder "
         + "from sys.indexes i " + "inner join sys.objects o on i.object_id = o.object_id "
@@ -890,17 +882,17 @@ final class MSSQLAdaptor extends DBAdaptor {
 
     // System.out.println(sql);
 
-    Map<String, DBIndexInfo> result = new HashMap<>();
+    Map<String, DbIndexInfo> result = new HashMap<>();
     try {
       Statement stmt = conn.createStatement();
       try {
-        DBIndexInfo i = null;
+        DbIndexInfo i = null;
         ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           String tabName = rs.getString("TableName");
           String indName = rs.getString("IndexName");
           if (i == null || !i.getTableName().equals(tabName) || !i.getIndexName().equals(indName)) {
-            i = new DBIndexInfo(tabName, indName);
+            i = new DbIndexInfo(tabName, indName);
             result.put(indName, i);
           }
           i.getColumnNames().add(rs.getString("ColumnName"));
@@ -1434,5 +1426,60 @@ final class MSSQLAdaptor extends DBAdaptor {
   @Override
   public AppSettings.DBType getType() {
     return AppSettings.DBType.MSSQL;
+  }
+
+  @Override
+  public long nextSequenceValue(Connection conn, Sequence s) throws CelestaException {
+    String sql = String.format("SELECT NEXT VALUE FOR " + tableTemplate(), s.getGrain().getName(), s.getName());
+
+    try (Statement stmt = conn.createStatement()) {
+      ResultSet rs = stmt.executeQuery(sql);
+      rs.next();
+      return rs.getLong(1);
+    } catch (SQLException e) {
+      throw new CelestaException(String.format("Can't get next value of sequence " + tableTemplate(),
+              s.getGrain().getName(), s.getName()), e);
+    }
+  }
+
+  @Override
+  public boolean sequenceExists(Connection conn, String schema, String name) throws CelestaException {
+    //TODO: It's a not good idea. We must check more concretely, cuz this method will work for other objects such as view etc.
+    return objectExists(conn, schema, name);
+  }
+
+  @Override
+  public DbSequenceInfo getSequenceInfo(Connection conn, Sequence s) throws CelestaException {
+    String sql = "SELECT CAST(INCREMENT AS varchar(max)) AS INCREMENT, CAST(MINIMUM_VALUE AS varchar(max)) AS MINIMUM_VALUE, " +
+            "CAST(MAXIMUM_VALUE AS varchar(max)) AS MAXIMUM_VALUE, CAST(IS_CYCLING AS varchar(max)) AS IS_CYCLING" +
+            " FROM SYS.SEQUENCES WHERE SCHEMA_ID = SCHEMA_ID (?) AND NAME = ?";
+
+    try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+      preparedStatement.setString(1, s.getGrain().getName());
+      preparedStatement.setString(2, s.getName());
+      ResultSet rs = preparedStatement.executeQuery();
+      rs.next();
+
+      DbSequenceInfo result = new DbSequenceInfo();
+
+      result.setIncrementBy(rs.getLong("INCREMENT"));
+      result.setMinValue(rs.getLong("MINIMUM_VALUE"));
+      result.setMaxValue(rs.getLong("MAXIMUM_VALUE"));
+      result.setCycle(rs.getBoolean("IS_CYCLING"));
+
+      return result;
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage(), e);
+    }
+  }
+
+  private boolean objectExists(Connection conn, String schema, String name) throws CelestaException {
+    String sql = String.format("select coalesce(object_id('%s.%s'), -1)", schema, name);
+    try (Statement check = conn.createStatement()) {
+      ResultSet rs = check.executeQuery(sql);
+      return rs.next() && rs.getInt(1) != -1;
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage());
+    }
   }
 }

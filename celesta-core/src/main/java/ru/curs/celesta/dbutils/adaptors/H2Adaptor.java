@@ -8,10 +8,7 @@ import ru.curs.celesta.dbutils.h2.MaterializedViewDeleteTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewInsertTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewUpdateTrigger;
 import ru.curs.celesta.dbutils.h2.RecVersionCheckTrigger;
-import ru.curs.celesta.dbutils.meta.DBColumnInfo;
-import ru.curs.celesta.dbutils.meta.DBFKInfo;
-import ru.curs.celesta.dbutils.meta.DBIndexInfo;
-import ru.curs.celesta.dbutils.meta.DBPKInfo;
+import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
@@ -417,7 +414,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   @SuppressWarnings("unchecked")
   @Override
-  public DBColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
+  public DbColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
     try {
       DatabaseMetaData metaData = conn.getMetaData();
       String grainName = c.getParentTable().getGrain().getName();
@@ -426,7 +423,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
       try {
         if (rs.next()) {
-          DBColumnInfo result = new DBColumnInfo();
+          DbColumnInfo result = new DbColumnInfo();
           result.setName(rs.getString(COLUMN_NAME));
           String typeName = rs.getString("TYPE_NAME");
           String columnDefault = rs.getString("COLUMN_DEFAULT");
@@ -473,7 +470,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
   }
 
-  private String modifyDefault(DBColumnInfo ci, String defaultBody, Connection conn) throws CelestaException {
+  private String modifyDefault(DbColumnInfo ci, String defaultBody, Connection conn) throws CelestaException {
     String result = defaultBody;
     if (DateTimeColumn.class == ci.getType()) {
       if (NOW.equalsIgnoreCase(defaultBody))
@@ -520,7 +517,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  protected void updateColType(Column c, DBColumnInfo actual, List<String> batch) {
+  protected void updateColType(Column c, DbColumnInfo actual, List<String> batch) {
     String sql;
     String colType;
     if (c.getClass() == StringColumn.class) {
@@ -547,7 +544,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  public DBPKInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
+  public DbPkInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
     String sql = String.format(
         "SELECT constraint_name AS indexName, column_name as colName " +
             "FROM  INFORMATION_SCHEMA.INDEXES " +
@@ -555,7 +552,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
             "AND table_name = '%s' " +
             "AND index_type_name = 'PRIMARY KEY'",
         t.getGrain().getName(), t.getName());
-    DBPKInfo result = new DBPKInfo();
+    DbPkInfo result = new DbPkInfo();
 
     try {
       Statement stmt = conn.createStatement();
@@ -597,7 +594,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public List<DBFKInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+  public List<DbFkInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
 
     String sql = "SELECT " +
         "FK_NAME AS FK_CONSTRAINT_NAME, " +
@@ -612,16 +609,16 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         "ORDER BY FK_CONSTRAINT_NAME, ORDINAL_POSITION";
     sql = String.format(sql, g.getName());
 
-    List<DBFKInfo> result = new LinkedList<>();
+    List<DbFkInfo> result = new LinkedList<>();
     try {
       Statement stmt = conn.createStatement();
       try {
-        DBFKInfo i = null;
+        DbFkInfo i = null;
         ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
           String fkName = rs.getString("FK_CONSTRAINT_NAME");
           if (i == null || !i.getName().equals(fkName)) {
-            i = new DBFKInfo(fkName);
+            i = new DbFkInfo(fkName);
             result.add(i);
             i.setTableName(rs.getString("FK_TABLE_NAME"));
             i.setRefGrainName(rs.getString("REF_GRAIN"));
@@ -716,8 +713,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public Map<String, DBIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
-    Map<String, DBIndexInfo> result = new HashMap<>();
+  public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+    Map<String, DbIndexInfo> result = new HashMap<>();
 
     String sql = String.format(
         "SELECT table_name as tableName, index_name as indexName, column_name as colName " +
@@ -733,11 +730,11 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
         while (rs.next()) {
           String indexName = rs.getString("indexName");
-          DBIndexInfo ii = result.get(indexName);
+          DbIndexInfo ii = result.get(indexName);
 
           if (ii == null) {
             String tableName = rs.getString("tableName");
-            ii = new DBIndexInfo(tableName, indexName);
+            ii = new DbIndexInfo(tableName, indexName);
             result.put(indexName, ii);
           }
 
@@ -987,5 +984,30 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   @Override
   public AppSettings.DBType getType() {
     return AppSettings.DBType.H2;
+  }
+
+  @Override
+  public DbSequenceInfo getSequenceInfo(Connection conn, Sequence s) throws CelestaException {
+    String sql = "SELECT INCREMENT, MIN_VALUE, MAX_VALUE, IS_CYCLE " +
+            "FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
+
+    try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+      preparedStatement.setString(1, s.getGrain().getName());
+      preparedStatement.setString(2, s.getName());
+      ResultSet rs = preparedStatement.executeQuery();
+      rs.next();
+
+
+      DbSequenceInfo result = new DbSequenceInfo();
+
+      result.setIncrementBy(rs.getLong("INCREMENT"));
+      result.setMinValue(rs.getLong("MIN_VALUE"));
+      result.setMaxValue(rs.getLong("MAX_VALUE"));
+      result.setCycle(rs.getBoolean("IS_CYCLE"));
+
+      return result;
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage(), e);
+    }
   }
 }

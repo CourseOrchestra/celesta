@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 /**
  * Created by ioann on 09.08.2017.
  */
-public abstract class DataGrainElement extends GrainElement {
+public abstract class DataGrainElement extends GrainElement implements HasColumns {
   public DataGrainElement(Grain g, String name) throws ParseException {
     super(g, name);
   }

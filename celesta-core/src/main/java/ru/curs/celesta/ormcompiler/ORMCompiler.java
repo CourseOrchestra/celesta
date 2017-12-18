@@ -23,8 +23,9 @@ public final class ORMCompiler {
     private static final int COMPILERVER = 13;
 
     private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
-    private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context, fields = []):";
-    private static final String DEF_INIT_SELF_CONTEXT_PARAMS_TEMPLATE = "    def __init__(self, context, %s, fields = []):%n";
+    private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
+    private static final String DEF_INIT_SELF_CONTEXT_FIELDS = "    def __init__(self, context, fields = []):";
+    private static final String DEF_INIT_SELF_CONTEXT_PARAMS_FIELDS_TEMPLATE = "    def __init__(self, context, %s, fields = []):%n";
     private static final String SELF_CONTEXT_CONTEXT = "        self.context = context";
     private static final String RETURN_ARRAY_S_OBJECT = "        return array([%s], Object)%n";
     private static final String SELF_S_EQUALS_NONE = "        self.%s = None%n";
@@ -39,6 +40,7 @@ public final class ORMCompiler {
             "import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor",
             "import ru.curs.celesta.dbutils.MaterializedViewCursor as MaterializedViewCursor",
             "import ru.curs.celesta.dbutils.ParameterizedViewCursor as ParameterizedViewCursor",
+            "import ru.curs.celesta.dbutils.SequenceCursor as SequenceCursor",
             "from java.lang import Object",
             "from jarray import array", "from java.util import Calendar, GregorianCalendar, HashSet, HashMap",
             "from java.sql import Timestamp", "import datetime", "", "def _to_timestamp(d):",
@@ -134,6 +136,8 @@ public final class ORMCompiler {
         for (ParameterizedView pv : g.getElements(ParameterizedView.class).values())
             compileParameterizedView(pv, w);
 
+        for (Sequence s : g.getElements(Sequence.class).values())
+            compileSequence(s, w);
     }
 
     private static void compileView(View v, PrintWriter w) throws IOException {
@@ -187,6 +191,20 @@ public final class ORMCompiler {
         compileCopying(w, pv.getColumns().keySet(), className);
         // Итерация в Python-стиле
         compileIterate(w);
+        w.println();
+    }
+
+    private static void compileSequence(Sequence s , PrintWriter w) throws IOException {
+        String className = s.getName() + "Cursor";
+
+        w.printf("class %s(SequenceCursor):%n", className);
+        //constructor
+        compileSequenceInit(w);
+        // _grainName()
+        compileGrainName(s, w);
+        // _tableName
+        compileTableName(s, w);
+
         w.println();
     }
 
@@ -502,7 +520,7 @@ public final class ORMCompiler {
     }
 
     private static void compileTableInit(PrintWriter w, Collection<Column> columns) throws IOException {
-        w.println(DEF_INIT_SELF_CONTEXT);
+        w.println(DEF_INIT_SELF_CONTEXT_FIELDS);
         w.println("        if fields:");
         w.println("            Cursor.__init__(self, context, HashSet(fields))");
         w.println("        else:");
@@ -514,7 +532,7 @@ public final class ORMCompiler {
     }
 
     private static void compileROTableInit(PrintWriter w, Collection<Column> columns) throws IOException {
-        w.println(DEF_INIT_SELF_CONTEXT);
+        w.println(DEF_INIT_SELF_CONTEXT_FIELDS);
         w.println("        if fields:");
         w.println("            ReadOnlyTableCursor.__init__(self, context, HashSet(fields))");
         w.println("        else:");
@@ -526,7 +544,7 @@ public final class ORMCompiler {
     }
 
     private static void compileMaterializedViewInit(PrintWriter w, Collection<Column> columns) throws IOException {
-        w.println(DEF_INIT_SELF_CONTEXT);
+        w.println(DEF_INIT_SELF_CONTEXT_FIELDS);
         w.println("        if fields:");
         w.println("            MaterializedViewCursor.__init__(self, context, HashSet(fields))");
         w.println("        else:");
@@ -538,7 +556,7 @@ public final class ORMCompiler {
     }
 
     private static void compileViewInit(PrintWriter w, Map<String, ViewColumnMeta> columns) throws IOException {
-        w.println(DEF_INIT_SELF_CONTEXT);
+        w.println(DEF_INIT_SELF_CONTEXT_FIELDS);
         w.println("        if fields:");
         w.println("            ViewCursor.__init__(self, context, HashSet(fields))");
         w.println("        else:");
@@ -555,7 +573,7 @@ public final class ORMCompiler {
             ParameterizedView pv
     ) throws IOException {
         String params = pv.getParameters().keySet().stream().collect(Collectors.joining(", "));
-        w.printf(DEF_INIT_SELF_CONTEXT_PARAMS_TEMPLATE, params);
+        w.printf(DEF_INIT_SELF_CONTEXT_PARAMS_FIELDS_TEMPLATE, params);
         w.println("        params = HashMap()");
         for (String param : pv.getParameters().keySet()) {
             w.println("        params.put('" + param + "', " + param + ")");
@@ -568,6 +586,12 @@ public final class ORMCompiler {
         for (String c : columns.keySet()) {
             w.printf(SELF_S_EQUALS_NONE, c);
         }
+        w.println(SELF_CONTEXT_CONTEXT);
+    }
+
+    private static void compileSequenceInit(PrintWriter w) {
+        w.println(DEF_INIT_SELF_CONTEXT);
+        w.println("        SequenceCursor.__init__(self, context)");
         w.println(SELF_CONTEXT_CONTEXT);
     }
 }

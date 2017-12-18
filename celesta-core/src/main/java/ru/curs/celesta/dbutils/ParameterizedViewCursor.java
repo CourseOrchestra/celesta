@@ -5,6 +5,7 @@ import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.term.FromTerm;
+import ru.curs.celesta.score.DataGrainElement;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.ParameterizedView;
 import ru.curs.celesta.score.ParseException;
@@ -72,7 +73,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   protected FromClause getFrom() throws CelestaException {
 
     FromClause result = new FromClause();
-    GrainElement ge = meta();
+    DataGrainElement ge = meta();
 
     result.setGe(ge);
     result.setExpression(db().getCallFunctionSql(meta));
