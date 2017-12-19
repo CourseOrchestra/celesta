@@ -89,8 +89,8 @@ PARSER_END(CelestaParser)
 |   <K_TEXT:         "TEXT">
 |   <K_TRUE:         "TRUE">
 |   <K_UPDATE:       "UPDATE">
-|   <K_WHERE:        "WHERE">
 |   <K_WITH:         "WITH">
+|   <K_WHERE:        "WHERE">
 |   <K_TABLE:        "TABLE">: DEFAULT
 |   <K_FUNCTION:     "FUNCTION">: DEFAULT
 |   <K_INDEX:        "INDEX">: DEFAULT
@@ -102,8 +102,8 @@ PARSER_END(CelestaParser)
 
 <CREATE_STATE> TOKEN:
 {
-    <K_GRAIN: "GRAIN">
-|   <K_VERSION: "VERSION">
+    <K_GRAIN:   "GRAIN">
+|   <K_GRAIN_VERSION: "VERSION">
 }
 
 <SEQUENCE_STATE> TOKEN:
@@ -113,6 +113,15 @@ PARSER_END(CelestaParser)
 |   <K_SEQUENCE_MINVALUE:     "MINVALUE">
 |   <K_SEQUENCE_START:        "START">
 |   <K_SEQUENCE_INCREMENT:    "INCREMENT">
+}
+
+<TABLE_OPTIONS_STATE> TOKEN:
+{
+     <K_READ:        "READ">
+|    <K_ONLY:        "ONLY">
+|    <K_VERSION:     "VERSION">
+|    <K_CHECK:       "CHECK">
+|    <K_AUTOUPDATE:  "AUTOUPDATE">
 }
 
 TOKEN: /* Datatypes */
@@ -171,7 +180,7 @@ Grain grain(Score s, String name):
    <K_GRAIN>
    t = <S_IDENTIFIER> {if (!name.equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
       "Error: expected 'create grain %s' at the beginning of the grain '%s' definition, found '%s'.", name, name, t.toString()));}
-   <K_VERSION>
+   <K_GRAIN_VERSION>
    t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}<K_END_OF_STATEMENT>
    (
     ( ([doc = <CELESTA_DOC>] <K_CREATE> (
@@ -196,7 +205,7 @@ void createTable(Grain g, String doc):
 {
 	Table table = null;
 	Token t = null;
-    List<String> options = new ArrayList<String>(5);
+    boolean val = true;
 }
 {
     <K_TABLE>
@@ -205,9 +214,19 @@ void createTable(Grain g, String doc):
 	"("
 		tableConstituent(table)	("," tableConstituent(table))*
 	")"
-    [ ((t = <S_IDENTIFIER> | t = <K_NO> | t = <K_WITH>) {options.add(t.toString());} )+ ]
+
+	[<K_WITH> { token_source.SwitchTo(TABLE_OPTIONS_STATE); }
+	   (
+	     (<K_READ> <K_ONLY> {table.setVersioned(false);
+	                       table.setReadOnly(true);})
+	   | ( {val = true;}  [ <K_NO> {val = false;} ]
+	       ( <K_VERSION> <K_CHECK> {table.setVersioned(val);}
+	       | <K_AUTOUPDATE>        {table.setAutoUpdate(val);})
+	     )+
+	   )
+	]
 	{
-	  table.finalizePK(options);
+	  table.finalizePK();
     }
 }
 

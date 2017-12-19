@@ -16,7 +16,7 @@ public class ContextSensitiveKeywordsUsage extends  AbstractParsingTest{
 
         Table foo = g.getElement("foo", Table.class);
         assertArrayEquals(new String[]{"CYCLE", "MAXVALUE", "MINVALUE", "INCREMENT",
-                "VERSION", "GRAIN"},
+                "VERSION", "GRAIN", "AUTOUPDATE", "READ", "ONLY"},
                 foo.getColumns().keySet().toArray(new String[]{}));
     }
 }

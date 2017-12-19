@@ -7,5 +7,8 @@ CREATE TABLE foo (
   INCREMENT int,
   VERSION int,
   GRAIN int,
+  AUTOUPDATE int,
+  READ int,
+  ONLY int,
   CONSTRAINT pk PRIMARY KEY (CYCLE)
 );

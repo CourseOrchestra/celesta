@@ -206,111 +206,10 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 	 * @throws ParseException
 	 *             Если первичный ключ пуст.
 	 */
-	void finalizePK() throws ParseException {
+	public void finalizePK() throws ParseException {
 		if (pk.isEmpty() && !isReadOnly)
 			throw new ParseException(String.format("No primary key defined for table %s!", getName()));
 		pkFinalized = true;
-	}
-
-	private void throwPE(String option) throws ParseException {
-		throw new ParseException(
-				String.format(
-						"Invalid option for table '%s': '%s'. 'READ ONLY', "
-								+ "'VERSION CHECK', 'NO VERSION CHECK', and/or 'NO AUTOUPDATE' expected.",
-						getName(), option));
-	}
-
-	/**
-	 * Финализирует таблицу с перечнем WITH-опций.
-	 * 
-	 * @param options
-	 *            Перечень опций.
-	 * @throws ParseException
-	 *             Ошибка определения таблицы.
-	 */
-	// CHECKSTYLE:OFF for cyclomatic complexity: this is finite state machine
-	public void finalizePK(List<String> options) throws ParseException {
-		// CHECKSTYLE:ON
-		int state = 0;
-		for (String option : options)
-			switch (state) {
-			// beginning
-			case 0:
-				if ("with".equalsIgnoreCase(option)) {
-					state = 1;
-				} else {
-					throwPE(option);
-				}
-				break;
-			// 'with' read
-			case 1:
-				if ("read".equalsIgnoreCase(option)) {
-					isReadOnly = true;
-					isVersioned = false;
-					state = 2;
-				} else if ("version".equalsIgnoreCase(option)) {
-					isReadOnly = false;
-					isVersioned = true;
-					state = 3;
-				} else if ("no".equalsIgnoreCase(option)) {
-					state = 4;
-				} else {
-					throwPE(option);
-				}
-				break;
-			case 2:
-				if ("only".equalsIgnoreCase(option)) {
-					state = 5;
-				} else {
-					throwPE(option);
-				}
-				break;
-			case 3:
-				if ("check".equalsIgnoreCase(option)) {
-					state = 5;
-				} else {
-					throwPE(option);
-				}
-				break;
-			case 4:
-				// 'no' read for the first time
-				if ("version".equalsIgnoreCase(option)) {
-					state = 3;
-					isReadOnly = false;
-					isVersioned = false;
-				} else if ("autoupdate".equalsIgnoreCase(option)) {
-					state = 7;
-					autoUpdate = false;
-				} else {
-					throwPE(option);
-				}
-				break;
-			case 5:
-				if ("no".equalsIgnoreCase(option)) {
-					state = 6;
-				} else {
-					throwPE(option);
-				}
-				break;
-			case 6:
-				if ("autoupdate".equalsIgnoreCase(option)) {
-					state = 7;
-					autoUpdate = false;
-				} else {
-					throwPE(option);
-				}
-				break;
-			case 7:
-				throwPE(option);
-				break;
-			default:
-				break;
-			}
-		if (state == 0 || state == 5 || state == 7) {
-			finalizePK();
-		} else {
-			throwPE("");
-		}
 	}
 
 	/**
@@ -420,17 +319,20 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 	 * @throws ParseException
 	 *             Если данная опция включается вместе с versioned.
 	 */
-	void setReadOnly(boolean isReadOnly) throws ParseException {
+	public void setReadOnly(boolean isReadOnly) throws ParseException {
 		if (isReadOnly && isVersioned)
 			throw new ParseException(String.format(
 					"Method setReadOnly(true) failed: table %s should be either versioned or read only.", getName()));
-
 		this.isReadOnly = isReadOnly;
 	}
 
 	@Override
 	public boolean isVersioned() {
 		return isVersioned;
+	}
+
+	public void setVersioned(boolean isVersioned){
+		this.isVersioned = isVersioned;
 	}
 
 	@Override
@@ -470,4 +372,5 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 	void removeIndex(Index index) {
 		indices.remove(index);
 	}
+
 }

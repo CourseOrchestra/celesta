@@ -34,4 +34,38 @@ public class TableParsingTest extends AbstractParsingTest {
     cp.grain(s, "test");
   }
 
+  @Test
+  public void testOptions() throws ParseException{
+    ChecksumInputStream input = new ChecksumInputStream(
+            ParserTest.class.getResourceAsStream(
+                    "table/testTableOptionsCombinations.sql"
+            ));
+    CelestaParser cp = new CelestaParser(input);
+    Grain g = cp.grain(s, "test");
+    Table t = g.getTable("t1");
+    assertTrue(t.isReadOnly());
+    assertTrue(t.isAutoUpdate());
+    assertFalse(t.isVersioned());
+
+    t = g.getTable("t2");
+    assertFalse(t.isReadOnly());
+    assertTrue(t.isAutoUpdate());
+    assertFalse(t.isVersioned());
+
+    t = g.getTable("t3");
+    assertFalse(t.isReadOnly());
+    assertFalse(t.isAutoUpdate());
+    assertTrue(t.isVersioned());
+
+    t = g.getTable("t4");
+    assertFalse(t.isReadOnly());
+    assertFalse(t.isAutoUpdate());
+    assertFalse(t.isVersioned());
+
+    t = g.getTable("t5");
+    assertFalse(t.isReadOnly());
+    assertTrue(t.isAutoUpdate());
+    assertTrue(t.isVersioned());
+  }
+
 }
