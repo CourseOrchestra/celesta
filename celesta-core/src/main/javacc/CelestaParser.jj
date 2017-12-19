@@ -43,7 +43,7 @@ PARSER_END(CelestaParser)
 |   "\n"
 }
 
-TOKEN: /* SQL keywords */ 
+<*> TOKEN: /* SQL keywords */
 {
     <K_ACTION:       "ACTION">
 |   <K_ADD:          "ADD">
@@ -55,8 +55,7 @@ TOKEN: /* SQL keywords */
 |   <K_CASCADE:      "CASCADE">
 |   <K_CONSTRAINT:   "CONSTRAINT">
 |   <K_COUNT:        "COUNT">
-|   <K_CREATE:       "CREATE">
-|   <K_CYCLE:        "CYCLE">
+|   <K_CREATE:       "CREATE">: CREATE_STATE
 |   <K_DEFAULT:      "DEFAULT">
 |   <K_DELETE:       "DELETE">
 |   <K_DISTINCT:     "DISTINCT">
@@ -64,24 +63,18 @@ TOKEN: /* SQL keywords */
 |   <K_FOREIGN:      "FOREIGN">
 |   <K_FROM:         "FROM">
 |   <K_FULL:         "FULL">
-|   <K_FUNCTION:     "FUNCTION">
 |   <K_GETDATE:      "GETDATE">
 |   <K_GROUP:        "GROUP">
 |   <K_IDENTITY:     "IDENTITY">
 |   <K_IN:           "IN">
-|   <K_INCREMENT:    "INCREMENT">
-|   <K_INDEX:        "INDEX">
 |   <K_INNER:        "INNER">
 |   <K_IS:           "IS">
 |   <K_JOIN:         "JOIN">
 |   <K_KEY:          "KEY">
 |   <K_LEFT:         "LEFT">
 |   <K_LIKE:         "LIKE">
-|   <K_MATERIALIZED: "MATERIALIZED">
 |   <K_MAX:          "MAX">
-|   <K_MAXVALUE:     "MAXVALUE">
 |   <K_MIN:          "MIN">
-|   <K_MINVALUE:     "MINVALUE">
 |   <K_NO:           "NO">
 |   <K_NOT:          "NOT">
 |   <K_NULL:         "NULL">
@@ -91,17 +84,35 @@ TOKEN: /* SQL keywords */
 |   <K_REFERENCES:   "REFERENCES">
 |   <K_RIGHT:        "RIGHT">
 |   <K_SELECT:       "SELECT">
-|   <K_SEQUENCE:     "SEQUENCE">
 |   <K_SET:          "SET">
-|   <K_START:        "START">
 |   <K_SUM:          "SUM">
-|   <K_TABLE:        "TABLE">
 |   <K_TEXT:         "TEXT">
 |   <K_TRUE:         "TRUE">
 |   <K_UPDATE:       "UPDATE">
-|   <K_VIEW:         "VIEW">
 |   <K_WHERE:        "WHERE">
 |   <K_WITH:         "WITH">
+|   <K_TABLE:        "TABLE">: DEFAULT
+|   <K_FUNCTION:     "FUNCTION">: DEFAULT
+|   <K_INDEX:        "INDEX">: DEFAULT
+|   <K_MATERIALIZED: "MATERIALIZED">
+|   <K_SEQUENCE:     "SEQUENCE">: SEQUENCE_STATE
+|   <K_VIEW:         "VIEW">: DEFAULT
+|   <K_END_OF_STATEMENT: ";">: DEFAULT
+}
+
+<CREATE_STATE> TOKEN:
+{
+    <K_GRAIN: "GRAIN">
+|   <K_VERSION: "VERSION">
+}
+
+<SEQUENCE_STATE> TOKEN:
+{
+    <K_SEQUENCE_CYCLE:        "CYCLE">
+|   <K_SEQUENCE_MAXVALUE:     "MAXVALUE">
+|   <K_SEQUENCE_MINVALUE:     "MINVALUE">
+|   <K_SEQUENCE_START:        "START">
+|   <K_SEQUENCE_INCREMENT:    "INCREMENT">
 }
 
 TOKEN: /* Datatypes */
@@ -114,7 +125,7 @@ TOKEN: /* Datatypes */
 |  <K_BIT:       "BIT">
 }
 
-TOKEN : /* Numeric literals */
+<*> TOKEN : /* Numeric literals */
 {
 	< S_DOUBLE: ((<S_INTEGER>)? "." <S_INTEGER> ( ["e","E"] ([ "-","+"])? <S_INTEGER> )?
 				|
@@ -125,7 +136,9 @@ TOKEN : /* Numeric literals */
   |     <S_BINARY_LITERAL: "0x"(["a"-"f", "A"-"F", "0"-"9"]["a"-"f", "A"-"F", "0"-"9"])+>
 }
 
-TOKEN:
+<*> TOKEN: {< T_MINUS: "-" >}
+
+<*> TOKEN:
 {
 	< S_IDENTIFIER: ( <LETTER> )+ ( <DIGIT> | <LETTER> )* >
 |   < S_PARAM: "$"<S_IDENTIFIER> >
@@ -155,16 +168,13 @@ Grain grain(Score s, String name):
 {
    [doc = <CELESTA_DOC> {g.setCelestaDocLexem(doc.toString()); doc = null;}]
    <K_CREATE>
-   t = <S_IDENTIFIER> {if (!"GRAIN".equalsIgnoreCase(t.toString()))
-      throw new ParseException(String.format(
-	  "Error: expected 'create GRAIN' at the beginning of the grain '%s' definition.", name));}
+   <K_GRAIN>
    t = <S_IDENTIFIER> {if (!name.equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
       "Error: expected 'create grain %s' at the beginning of the grain '%s' definition, found '%s'.", name, name, t.toString()));}
-   t = <S_IDENTIFIER> {if (!"VERSION".equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
-      "Error: expected 'create grain %s VERSION' at the beginning of the grain '%s' definition.", name, name));}
-   t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}";"
+   <K_VERSION>
+   t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}<K_END_OF_STATEMENT>
    (
-    ( ([doc = <CELESTA_DOC>]<K_CREATE> (
+    ( ([doc = <CELESTA_DOC>] <K_CREATE> (
                     createTable(g, doc == null? null: doc.toString())
                   | createIndex(g, doc == null? null: doc.toString())
 				  | createView(g, doc == null? null: doc.toString())
@@ -174,7 +184,7 @@ Grain grain(Score s, String name):
 				  )
 				  {doc = null;} )
 	 | (<K_ALTER>   alterTable(g)))
-	 ";")*
+	 <K_END_OF_STATEMENT>)*
    <EOF>
    {
    g.completeParsing();
@@ -442,66 +452,61 @@ void createSequence(Grain g, String doc):
 
 void sequenceStartWith(Sequence s):
 {
-    Token startWith;
-    int sign = 1;
+    long val;
 }
 {
-    <K_START> <K_WITH> {sign = sign();} startWith = <S_INTEGER>
+    <K_SEQUENCE_START> <K_WITH> val = signedInteger()
     {
-        s.startWith(sign * Long.parseLong(startWith.image));
+        s.startWith(val);
     }
 }
 
 void sequenceIncrementBy(Sequence s):
 {
-    Token incrementBy;
-    int sign = 1;
+    long val;
 }
 {
-    <K_INCREMENT> <K_BY> {sign = sign();} incrementBy =  <S_INTEGER>
+    <K_SEQUENCE_INCREMENT> <K_BY> val = signedInteger()
     {
-        s.incrementBy(sign * Long.parseLong(incrementBy.image));
+        s.incrementBy(val);
     }
+}
+
+long signedInteger(): {int sign = 1; Token val;}{
+    ["-" {sign = -1;}]
+    val =  <S_INTEGER>
+    {return sign * Long.parseLong(val.image);}
 }
 
 void sequenceMinValue(Sequence s):
 {
-    Token minValue;
-    int sign = 1;
+    long val;
 }
 {
-    <K_MINVALUE> {sign = sign();} minValue = <S_INTEGER>
-        {
-            s.minValue(sign * Long.parseLong(minValue.image));
-        }
+    <K_SEQUENCE_MINVALUE> val = signedInteger()
+    {
+        s.minValue(val);
+    }
 }
 
 void sequenceMaxValue(Sequence s):
 {
-    Token maxValue;
-    int sign = 1;
+    long val;
 }
 {
-    <K_MAXVALUE> {sign = sign();} maxValue = <S_INTEGER>
-        {
-            s.maxValue(sign * Long.parseLong(maxValue.image));
-        }
+    <K_SEQUENCE_MAXVALUE> val = signedInteger()
+    {
+        s.maxValue(val);
+    }
 }
 
 void sequenceCycle(Sequence s):
 {}
 {
-    <K_CYCLE>
+    <K_SEQUENCE_CYCLE>
         {
             s.setIsCycle(true);
         }
-}
-
-int sign():
-{}
-{
-    ["-" {return -1;}]
-    {return 1;}
 }
 
 void functionParam(ParameterizedView view):
