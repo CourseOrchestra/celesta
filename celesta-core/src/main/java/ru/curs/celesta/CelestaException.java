@@ -19,4 +19,8 @@ public class CelestaException extends Exception {
 	public CelestaException(String message, Throwable cause) {
 		super(message, cause);
 	}
+
+	public CelestaException(Throwable cause) {
+		super(cause);
+	}
 }

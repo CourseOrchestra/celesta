@@ -20,7 +20,7 @@ public final class ORMCompiler {
      * Версия компилятора. Данную константу следует инкрементировать, когда
      * необходимо инициировать автоматическое пересоздание orm-скриптов.
      */
-    private static final int COMPILERVER = 13;
+    private static final int COMPILERVER = 14;
 
     private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
     private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -40,7 +40,7 @@ public final class ORMCompiler {
             "import ru.curs.celesta.dbutils.ReadOnlyTableCursor as ReadOnlyTableCursor",
             "import ru.curs.celesta.dbutils.MaterializedViewCursor as MaterializedViewCursor",
             "import ru.curs.celesta.dbutils.ParameterizedViewCursor as ParameterizedViewCursor",
-            "import ru.curs.celesta.dbutils.SequenceCursor as SequenceCursor",
+            "import ru.curs.celesta.dbutils.Sequence as Sequence",
             "from java.lang import Object",
             "from jarray import array", "from java.util import Calendar, GregorianCalendar, HashSet, HashMap",
             "from java.sql import Timestamp", "import datetime", "", "def _to_timestamp(d):",
@@ -136,7 +136,7 @@ public final class ORMCompiler {
         for (ParameterizedView pv : g.getElements(ParameterizedView.class).values())
             compileParameterizedView(pv, w);
 
-        for (Sequence s : g.getElements(Sequence.class).values())
+        for (SequenceElement s : g.getElements(SequenceElement.class).values())
             compileSequence(s, w);
     }
 
@@ -194,10 +194,10 @@ public final class ORMCompiler {
         w.println();
     }
 
-    private static void compileSequence(Sequence s , PrintWriter w) throws IOException {
-        String className = s.getName() + "Cursor";
+    private static void compileSequence(SequenceElement s , PrintWriter w) throws IOException {
+        String className = s.getName();
 
-        w.printf("class %s(SequenceCursor):%n", className);
+        w.printf("class %s(Sequence):%n", className);
         //constructor
         compileSequenceInit(w);
         // _grainName()
@@ -591,7 +591,7 @@ public final class ORMCompiler {
 
     private static void compileSequenceInit(PrintWriter w) {
         w.println(DEF_INIT_SELF_CONTEXT);
-        w.println("        SequenceCursor.__init__(self, context)");
+        w.println("        Sequence.__init__(self, context)");
         w.println(SELF_CONTEXT_CONTEXT);
     }
 }

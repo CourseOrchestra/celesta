@@ -317,6 +317,42 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
+  public void createTable(Connection conn, TableElement te) throws CelestaException {
+    super.createTable(conn, te);
+
+    //creating of triggers to emulate default sequence values
+    try {
+      for (Column column : te.getColumns().values())
+        if (IntegerColumn.class.equals(column.getClass())) {
+          IntegerColumn ic = (IntegerColumn)column;
+
+          if (ic.getSequence() != null) {
+            SequenceElement s = ic.getSequence();
+            String triggerName = generateSequenceTriggerName(ic);
+            String sequenceName = String.format("%s_%s", s.getGrain().getName(), s.getName());
+            createOrReplaceSequenceTriggerForColumn(conn, triggerName, ic, sequenceName);
+          }
+        }
+    } catch (SQLException e) {
+      throw new CelestaException(e.getMessage(), e);
+    }
+
+  }
+
+  private void createOrReplaceSequenceTriggerForColumn(Connection conn, String triggerName, IntegerColumn ic, String sequenceName) throws SQLException {
+    TableElement t = ic.getParentTable();
+    String sql = String.format(
+            "CREATE OR REPLACE TRIGGER \"" + triggerName + "\" BEFORE INSERT ON " + tableTemplate()
+                    + " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT \"" + sequenceName
+                    + "\".NEXTVAL INTO :new.%s FROM dual; END;",
+            t.getGrain().getName(), t.getName(), ic.getQuotedName(), ic.getQuotedName());
+
+    try (Statement statement = conn.createStatement()) {
+      statement.executeUpdate(sql);
+    }
+  }
+
+  @Override
   OraColumnDefiner getColumnDefiner(Column c) {
     return TYPES_DICT.get(c.getClass());
   }
@@ -615,17 +651,41 @@ final class OraAdaptor extends DBAdaptor {
 
   private void processDefaults(Connection conn, Column c, DbColumnInfo result) throws SQLException {
     ResultSet rs;
+    TableElement te = c.getParentTable();
+    Grain g = te.getGrain();
     PreparedStatement getDefault = conn.prepareStatement(String.format(
         "select DATA_DEFAULT from DBA_TAB_COLUMNS where " + "owner = sys_context('userenv','session_user') "
             + "and TABLE_NAME = '%s_%s' and COLUMN_NAME = '%s'",
-        c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName()));
+            g.getName(), te.getName(), c.getName()));
     try {
       rs = getDefault.executeQuery();
       if (!rs.next())
         return;
       String body = rs.getString(1);
-      if (body == null || "null".equalsIgnoreCase(body))
-        return;
+      if (body == null || "null".equalsIgnoreCase(body)) {
+
+        if (c instanceof IntegerColumn) {
+          IntegerColumn ic = (IntegerColumn) c;
+          String sequenceTriggerName = generateSequenceTriggerName(ic);
+
+          String sql = String.format("SELECT REFERENCED_NAME FROM USER_DEPENDENCIES " +
+                  " WHERE NAME = '%s' " +
+                  " AND TYPE = 'TRIGGER' " +
+                  " AND REFERENCED_TYPE = 'SEQUENCE'", sequenceTriggerName);
+
+          try (Statement stmt = conn.createStatement()) {
+            ResultSet sequenceRs = stmt.executeQuery(sql);
+
+            if (sequenceRs.next()) {
+              String sequenceName = sequenceRs.getString(1);
+              body = "NEXTVAL(" + sequenceName.replace(g.getName() + "_", "") + ")";
+            } else
+              return;
+          }
+
+        } else
+            return;
+      }
       if (BooleanColumn.class == result.getType())
         body = "0".equals(body.trim()) ? "'FALSE'" : "'TRUE'";
       else if (DateTimeColumn.class == result.getType()) {
@@ -660,7 +720,7 @@ final class OraAdaptor extends DBAdaptor {
     if (actual.getType() == BooleanColumn.class && !(c instanceof BooleanColumn)) {
       // Тип Boolean меняется на что-то другое, надо сбросить constraint
       String check = String.format(ALTER_TABLE + tableTemplate() + " drop constraint %s",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), getBooleanCheckName(c));
+              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), getBooleanCheckName(c));
       runUpdateColumnSQL(conn, c, check);
     }
 
@@ -691,37 +751,81 @@ final class OraAdaptor extends DBAdaptor {
 
       String tempName = "\"" + c.getName() + "2\"";
       String sql = String.format(ALTER_TABLE + tableTemplate() + " add %s",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), columnDef(c));
+              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), columnDef(c));
       sql = sql.replace(c.getQuotedName(), tempName);
       // System.out.println(sql);
       runUpdateColumnSQL(conn, c, sql);
       sql = String.format("update " + tableTemplate() + " set %s = \"%s\"",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), tempName, c.getName());
+              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), tempName, c.getName());
       // System.out.println(sql);
       runUpdateColumnSQL(conn, c, sql);
       sql = String.format(ALTER_TABLE + tableTemplate() + " drop column %s",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getQuotedName());
+              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getQuotedName());
       // System.out.println(sql);
       runUpdateColumnSQL(conn, c, sql);
       sql = String.format(ALTER_TABLE + tableTemplate() + " rename column %s to %s",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), tempName, c.getQuotedName());
+              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), tempName, c.getQuotedName());
       // System.out.println(sql);
       runUpdateColumnSQL(conn, c, sql);
     } else {
 
       String sql = String.format(ALTER_TABLE + tableTemplate() + " modify (%s)",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), def);
+              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), def);
 
       runUpdateColumnSQL(conn, c, sql);
     }
     if (c instanceof BooleanColumn && actual.getType() != BooleanColumn.class) {
       // Тип поменялся на Boolean, надо добавить constraint
       String check = String.format(ALTER_TABLE + tableTemplate() + " add constraint %s check (%s in (0, 1))",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), getBooleanCheckName(c),
-          c.getQuotedName());
+              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), getBooleanCheckName(c),
+              c.getQuotedName());
       runUpdateColumnSQL(conn, c, check);
-
     }
+    if (c instanceof IntegerColumn) {
+      IntegerColumn ic = (IntegerColumn) c;
+
+      try {
+        if ("".equals(actual.getDefaultValue())) { //old defaultValue Is null - create trigger if necessary
+          if (((IntegerColumn) c).getSequence() != null) {
+            String sequenceName = String.format("%s_%s", c.getParentTable().getGrain().getName(), ic.getSequence().getName());
+            createOrReplaceSequenceTriggerForColumn(conn, generateSequenceTriggerName(ic), ic, sequenceName);
+          }
+        } else {
+          Pattern p = Pattern.compile("(?i)NEXTVAL\\((.*)\\)");
+          Matcher m = p.matcher(actual.getDefaultValue());
+
+          if (m.matches()) { //old default value is sequence
+            if (ic.getSequence() == null) {
+              TriggerQuery triggerQuery = new TriggerQuery()
+                      .withSchema(c.getParentTable().getGrain().getName())
+                      .withTableName(c.getParentTable().getName())
+                      .withName(generateSequenceTriggerName(ic))
+                      .withType(TriggerType.PRE_INSERT);
+              dropTrigger(conn, triggerQuery);
+            } else {
+              String oldSequenceName = m.group(1);
+
+              if (!oldSequenceName.equals(ic.getSequence().getName())) { //using of new sequence
+                String sequenceName = String.format("%s_%s", c.getParentTable().getGrain().getName(), ic.getSequence().getName());
+                createOrReplaceSequenceTriggerForColumn(conn, generateSequenceTriggerName(ic), ic, sequenceName);
+              }
+            }
+          } else if (ic.getSequence() != null) {
+            String sequenceName = String.format("%s_%s", c.getParentTable().getGrain().getName(), ic.getSequence().getName());
+            createOrReplaceSequenceTriggerForColumn(conn, generateSequenceTriggerName(ic), ic, sequenceName);
+          }
+        }
+      } catch (SQLException e) {
+        throw new CelestaException(e.getMessage(), e);
+      }
+    }
+  }
+
+
+  private String generateSequenceTriggerName(IntegerColumn ic) {
+    TableElement te = ic.getParentTable();
+    String result = String.format("%s_%s_%s_seq_trigger", te.getGrain().getName(), te.getName(), ic.getName());
+    return NamedElement.limitName(result);
   }
 
   public boolean fromOrToNClob(Column c, DbColumnInfo actual) {
@@ -794,19 +898,7 @@ final class OraAdaptor extends DBAdaptor {
     }
 
     // 3. Now we have to create or replace the auto-increment trigger
-    sql = String.format(
-        "CREATE OR REPLACE TRIGGER \"" + sequenceName + "\" BEFORE INSERT ON " + tableTemplate()
-            + " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT \"" + sequenceName
-            + "\".NEXTVAL INTO :new.%s FROM dual; END;",
-        t.getGrain().getName(), t.getName(), ic.getQuotedName(), ic.getQuotedName());
-
-    // System.out.println(sql);
-    Statement s = conn.createStatement();
-    try {
-      s.execute(sql);
-    } finally {
-      stmt.close();
-    }
+    createOrReplaceSequenceTriggerForColumn(conn, sequenceName, ic, sequenceName);
   }
 
   @Override
@@ -1248,9 +1340,9 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  void generateArgumentsForCreateSequenceExpression(Sequence s, StringBuilder sb, Sequence.Argument... excludedArguments) {
+  void generateArgumentsForCreateSequenceExpression(SequenceElement s, StringBuilder sb, SequenceElement.Argument... excludedArguments) {
     super.generateArgumentsForCreateSequenceExpression(s, sb, excludedArguments);
-    if (s.hasArgument(Sequence.Argument.CYCLE)) {
+    if (s.hasArgument(SequenceElement.Argument.CYCLE)) {
       sb.append(" NOCACHE");
     }
   }
@@ -1800,7 +1892,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public long nextSequenceValue(Connection conn, Sequence s) throws CelestaException {
+  public long nextSequenceValue(Connection conn, SequenceElement s) throws CelestaException {
     String sql = String.format("SELECT " + tableTemplate() +" .nextval from DUAL", s.getGrain().getName(), s.getName());
 
     try (Statement stmt = conn.createStatement()) {
@@ -1826,7 +1918,7 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public DbSequenceInfo getSequenceInfo(Connection conn, Sequence s) throws CelestaException {
+  public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) throws CelestaException {
       String sql = "SELECT INCREMENT_BY, MIN_VALUE, MAX_VALUE, CYCLE_FLAG" +
               " FROM USER_SEQUENCES WHERE SEQUENCE_NAME = ?";
 

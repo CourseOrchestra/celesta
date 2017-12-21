@@ -148,7 +148,8 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
       }
 
       // Если в данных пустой default, а в метаданных -- не пустой -- то
-      if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate())) {
+      if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate())
+              || (c instanceof IntegerColumn && ((IntegerColumn)c).getSequence() != null)) {
         sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" SET %s",
             c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(),
             getColumnDefiner(c).getDefaultDefinition(c));
@@ -254,7 +255,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public long nextSequenceValue(Connection conn, Sequence s) throws CelestaException {
+  public long nextSequenceValue(Connection conn, SequenceElement s) throws CelestaException {
     String sql = String.format("SELECT NEXTVAL('" + tableTemplate() +"')", s.getGrain().getName(), s.getName());
 
     try (Statement stmt = conn.createStatement()) {

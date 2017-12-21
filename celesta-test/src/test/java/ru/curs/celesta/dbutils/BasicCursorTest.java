@@ -25,11 +25,7 @@ public class BasicCursorTest {
 		properties.setProperty("score.path", "score");
 		properties.setProperty("h2.in-memory", "true");
 
-		try {
-			celesta = Celesta.createInstance(properties);
-		} catch (CelestaException e) {
-			// do nothing, Celesta is initialized!
-		}
+		celesta = Celesta.createInstance(properties);
 	}
 
 	@AfterAll

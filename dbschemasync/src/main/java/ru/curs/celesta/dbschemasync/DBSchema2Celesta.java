@@ -83,7 +83,7 @@ public final class DBSchema2Celesta {
                 if (g == null)
                     g = new Grain(refScore, schema.getAttribute("name"));
                 updateGrain(schema, g);
-                g.completeParsing();
+                g.finalizeParsing();
             }
         }
 

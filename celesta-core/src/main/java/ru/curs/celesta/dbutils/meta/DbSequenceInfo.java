@@ -1,8 +1,8 @@
 package ru.curs.celesta.dbutils.meta;
 
-import ru.curs.celesta.score.Sequence;
+import ru.curs.celesta.score.SequenceElement;
 
-import static ru.curs.celesta.score.Sequence.Argument.*;
+import static ru.curs.celesta.score.SequenceElement.Argument.*;
 
 import java.util.Objects;
 
@@ -44,7 +44,7 @@ public class DbSequenceInfo {
         isCycle = cycle;
     }
 
-    public boolean reflects(Sequence s) {
+    public boolean reflects(SequenceElement s) {
         return (
                 !Objects.equals(incrementBy, s.getArgument(INCREMENT_BY))
                         || !Objects.equals(minValue, s.getArgument(MINVALUE))

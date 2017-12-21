@@ -110,3 +110,10 @@ create table testInFilterClause (
 );
 
 CREATE SEQUENCE testSequence START WITH 5;
+CREATE SEQUENCE testSequence2 START WITH 5;
+
+CREATE TABLE tableForTestSequence(
+  id int not null DEFAULT NEXTVAL(testSequence),
+  numb int,
+  CONSTRAINT Pk_gtest_tableForTestSequence PRIMARY KEY (id)
+);

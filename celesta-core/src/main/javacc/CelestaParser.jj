@@ -75,6 +75,7 @@ PARSER_END(CelestaParser)
 |   <K_LIKE:         "LIKE">
 |   <K_MAX:          "MAX">
 |   <K_MIN:          "MIN">
+|   <K_NEXTVAL:      "NEXTVAL">
 |   <K_NO:           "NO">
 |   <K_NOT:          "NOT">
 |   <K_NULL:         "NULL">
@@ -196,7 +197,7 @@ Grain grain(Score s, String name):
 	 <K_END_OF_STATEMENT>)*
    <EOF>
    {
-   g.completeParsing();
+   g.finalizeParsing();
    return g;
    }
 }
@@ -252,16 +253,24 @@ void columnDefinition(Table table):
    ForeignKey fk = null;
    String name;
    Token doc = null;
+   SequenceElement sequence = null;
+   String defaultValue = null;
 }
 {
  [doc = <CELESTA_DOC>]
   t = <S_IDENTIFIER>
     (  (<K_INT>       {column = new IntegerColumn(table, t.toString()); t = null; }
-	       nullable = nullable() [(<K_DEFAULT> ["-" {negative = true;}] t = <S_INTEGER>)|(t = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])]
+	       nullable = nullable()
+	       [
+	         (   <K_DEFAULT> ((["-" {negative = true;}] t = <S_INTEGER> {defaultValue = (negative? "-": "") + t.toString();})
+	           | ( defaultValue = sequenceNextVal() [<K_NOT> <K_NULL> {nullable = false;}]) )
+	         )
+	        | (t = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])
+	       ]
 	    )
     |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;}
 	       nullable = nullable()
-		  [<K_DEFAULT> ["-" {negative = true;}] (t = <S_INTEGER> | t = <S_DOUBLE>)])
+		  [<K_DEFAULT> ["-" {negative = true;}] (t = <S_INTEGER> | t = <S_DOUBLE>) {defaultValue = (negative? "-": "") + t.toString();}])
     |  (<K_VARCHAR> {column = new StringColumn(table, t.toString()); t = null; }
 	          ["("  (length = <S_INTEGER> /* | length = <K_MAX>*/) ")"]
 			  {((StringColumn) column).setLength(length.toString());}
@@ -284,8 +293,9 @@ void columnDefinition(Table table):
 	name = constraint(table.getGrain()) [<K_PRIMARY> <K_KEY>
 	      {pk = true; table.setPkConstraintName(name);} name = constraint(table.getGrain())]
 	{
-      column.setNullableAndDefault(nullable, t == null? null: ((negative? "-": "") + t.toString()));
+	  column.setNullableAndDefault(nullable, defaultValue != null ? defaultValue : t == null ? null :  t.toString());
 	  column.setCelestaDocLexem(doc == null? null:doc.toString());
+
 	  if (pk) {
 	    table.addPK(column.getName());
 	    table.finalizePK();
@@ -451,13 +461,13 @@ void createFunction(Grain g, String doc):
 
 void createSequence(Grain g, String doc):
 {
-    Sequence s = null;
+    SequenceElement s = null;
     Token name = null;
 }
 {
 <K_SEQUENCE> name = <S_IDENTIFIER>
     {
-        s = new Sequence(g, name.toString());
+        s = new SequenceElement(g, name.toString());
         s.setCelestaDocLexem(doc);
     }
     (     sequenceStartWith(s)
@@ -469,7 +479,7 @@ void createSequence(Grain g, String doc):
     {s.finalizeParsing();}
 }
 
-void sequenceStartWith(Sequence s):
+void sequenceStartWith(SequenceElement s):
 {
     long val;
 }
@@ -480,7 +490,7 @@ void sequenceStartWith(Sequence s):
     }
 }
 
-void sequenceIncrementBy(Sequence s):
+void sequenceIncrementBy(SequenceElement s):
 {
     long val;
 }
@@ -497,7 +507,7 @@ long signedInteger(): {int sign = 1; Token val;}{
     {return sign * Long.parseLong(val.image);}
 }
 
-void sequenceMinValue(Sequence s):
+void sequenceMinValue(SequenceElement s):
 {
     long val;
 }
@@ -508,7 +518,7 @@ void sequenceMinValue(Sequence s):
     }
 }
 
-void sequenceMaxValue(Sequence s):
+void sequenceMaxValue(SequenceElement s):
 {
     long val;
 }
@@ -519,7 +529,7 @@ void sequenceMaxValue(Sequence s):
     }
 }
 
-void sequenceCycle(Sequence s):
+void sequenceCycle(SequenceElement s):
 {}
 {
     <K_SEQUENCE_CYCLE>
@@ -787,6 +797,19 @@ TableRef tableReference(AbstractView v):
 	    tab = v.getGrain().getScore().getGrain(grainName).getElement(tableName, Table.class);
 	 }
 	 return new TableRef(tab, alias);
+  }
+}
+
+String sequenceNextVal():
+{
+  Token t;
+  String sequenceName = null;
+}
+{
+  <K_NEXTVAL>  "(" t = <S_IDENTIFIER> ")"
+  {
+    sequenceName = t.toString();
+    return "NEXTVAL(" + sequenceName + ")";
   }
 }
 

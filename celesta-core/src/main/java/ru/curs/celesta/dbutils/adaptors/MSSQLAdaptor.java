@@ -47,6 +47,8 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.AppSettings;
@@ -92,7 +94,10 @@ final class MSSQLAdaptor extends DBAdaptor {
       @Override
       String getDefaultDefinition(Column c) {
         IntegerColumn ic = (IntegerColumn) c;
-        if (ic.getDefaultValue() != null)
+        SequenceElement s = ic.getSequence();
+        if (s != null) {
+          return msSQLDefault(c) + "next value for " + s.getGrain().getQuotedName() + "." + s.getQuotedName();
+        } else if (ic.getDefaultValue() != null)
           return msSQLDefault(c) + ic.getDefaultValue();
         return "";
       }
@@ -553,6 +558,14 @@ final class MSSQLAdaptor extends DBAdaptor {
               i++;
             }
             defaultBody = defaultBody.substring(i, defaultBody.length() - i);
+            if (IntegerColumn.class == result.getType()) {
+              Pattern p = Pattern.compile("NEXT VALUE FOR \\[.*]\\.\\[(.*)]");
+              Matcher m = p.matcher(defaultBody);
+              if (m.matches()) {
+               String sequenceName = m.group(1);
+                defaultBody = "NEXTVAL(" + sequenceName + ")";
+              }
+            }
             if (BooleanColumn.class == result.getType() || DateTimeColumn.class == result.getType())
               defaultBody = defaultBody.toUpperCase();
             result.setDefaultValue(defaultBody);
@@ -1429,7 +1442,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public long nextSequenceValue(Connection conn, Sequence s) throws CelestaException {
+  public long nextSequenceValue(Connection conn, SequenceElement s) throws CelestaException {
     String sql = String.format("SELECT NEXT VALUE FOR " + tableTemplate(), s.getGrain().getName(), s.getName());
 
     try (Statement stmt = conn.createStatement()) {
@@ -1449,7 +1462,7 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public DbSequenceInfo getSequenceInfo(Connection conn, Sequence s) throws CelestaException {
+  public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) throws CelestaException {
     String sql = "SELECT CAST(INCREMENT AS varchar(max)) AS INCREMENT, CAST(MINIMUM_VALUE AS varchar(max)) AS MINIMUM_VALUE, " +
             "CAST(MAXIMUM_VALUE AS varchar(max)) AS MAXIMUM_VALUE, CAST(IS_CYCLING AS varchar(max)) AS IS_CYCLING" +
             " FROM SYS.SEQUENCES WHERE SCHEMA_ID = SCHEMA_ID (?) AND NAME = ?";

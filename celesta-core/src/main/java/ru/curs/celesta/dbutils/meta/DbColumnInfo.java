@@ -2,6 +2,9 @@ package ru.curs.celesta.dbutils.meta;
 
 import ru.curs.celesta.score.*;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Данные о колонке в базе данных в виде, необходимом для Celesta.
  */
@@ -117,7 +120,19 @@ public final class DbColumnInfo {
 				result = false;
 			}
 		} else if (type == IntegerColumn.class) {
-			result = Integer.valueOf(defaultValue).equals(value.getDefaultValue());
+			Pattern p = Pattern.compile("(?i)NEXTVAL\\((.*)\\)");
+			IntegerColumn iValue = (IntegerColumn)value;
+			if (iValue.getSequence() != null) {
+				Matcher m = p.matcher(defaultValue);
+				if (result = m.matches()) {
+					String sequenceName = m.group(1);
+					result = sequenceName.equals(iValue.getSequence().getName());
+				}
+			}
+			else if (!p.matcher(defaultValue).matches())
+				result = Integer.valueOf(defaultValue).equals(value.getDefaultValue());
+			else
+				result = false;
 		} else if (type == FloatingColumn.class) {
 			result = Double.valueOf(defaultValue).equals(value.getDefaultValue());
 		} else if (type == DateTimeColumn.class) {

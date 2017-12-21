@@ -81,7 +81,10 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       String getDefaultDefinition(Column c) {
         IntegerColumn ic = (IntegerColumn) c;
         String defaultStr = "";
-        if (ic.getDefaultValue() != null) {
+        SequenceElement s = ic.getSequence();
+        if (s != null) {
+          defaultStr = DEFAULT + "nextval('" + s.getGrain().getQuotedName() + "." + s.getQuotedName() + "')";
+        } else if (ic.getDefaultValue() != null) {
           defaultStr = DEFAULT + ic.getDefaultValue();
         }
         return defaultStr;
@@ -304,13 +307,18 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
           if (ic.isIdentity())
             idColumn = ic;
           else {
-            if (ic.getDefaultValue() == null) {
+            if (ic.getDefaultValue() == null && ic.getSequence() == null) {
               sql = String.format("alter table %s.%s alter column %s drop default",
                   t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
-            } else {
+            } else if (ic.getDefaultValue() != null) {
               sql = String.format("alter table %s.%s alter column %s set default %d",
                   t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName(),
                   ic.getDefaultValue().intValue());
+            } else {
+              SequenceElement s = ic.getSequence();
+              sql = String.format("alter table %s.%s alter column %s set default "
+                              + "nextval('" + s.getGrain().getQuotedName() + "." + s.getQuotedName() + "')",
+                      t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
             }
             stmt.executeUpdate(sql);
           }
@@ -348,7 +356,6 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     }
   }
 
-
   @SuppressWarnings("unchecked")
   @Override
   public DbColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
@@ -363,8 +370,28 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
           String typeName = rs.getString("TYPE_NAME");
           if ("serial".equalsIgnoreCase(typeName)) {
             result.setType(IntegerColumn.class);
-            result.setIdentity(true);
             result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
+
+            String defaultBody = rs.getString("COLUMN_DEF");
+            Pattern p = Pattern.compile("nextval\\('[\"]?[^\"]+[\"]?\\.[\"]?([^\"]+)+[\"]?'::regclass\\)");
+            Matcher m = p.matcher(defaultBody);
+
+            if (m.matches()) {
+              String sequenceName = m.group(1);
+              String tableName = c.getParentTable().getName();
+
+              if (sequenceName.equals(tableName + "_seq")) {
+                try {
+                  c.getParentTable().getGrain().getElement(sequenceName, SequenceElement.class);
+                  result.setDefaultValue("NEXTVAL(" + sequenceName + ")");
+                } catch (ParseException e) {
+                  result.setIdentity(true);
+                }
+              } else {
+                result.setDefaultValue("NEXTVAL(" + sequenceName + ")");
+              }
+            }
+
             return result;
           } else if ("text".equalsIgnoreCase(typeName)) {
             result.setType(StringColumn.class);
@@ -1185,7 +1212,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
     @Override
-    public DbSequenceInfo getSequenceInfo(Connection conn, Sequence s) throws CelestaException {
+    public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) throws CelestaException {
         String sql = "SELECT INCREMENT, MINIMUM_VALUE, MAXIMUM_VALUE, CYCLE_OPTION" +
                 " FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
 

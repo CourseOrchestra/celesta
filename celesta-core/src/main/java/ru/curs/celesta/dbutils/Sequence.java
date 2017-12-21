@@ -3,13 +3,13 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.Sequence;
+import ru.curs.celesta.score.SequenceElement;
 
-public abstract class SequenceCursor extends BasicDataAccessor {
+public abstract class Sequence extends BasicDataAccessor {
 
-    private Sequence meta = null;
+    private SequenceElement meta = null;
 
-    public SequenceCursor(CallContext context) throws CelestaException {
+    public Sequence(CallContext context) throws CelestaException {
         super(context);
     }
 
@@ -30,11 +30,11 @@ public abstract class SequenceCursor extends BasicDataAccessor {
      *             происходить).
      */
     @Override
-    public final Sequence meta() throws CelestaException {
+    public final SequenceElement meta() throws CelestaException {
         if (meta == null)
             try {
                 meta = callContext().getScore()
-                        .getGrain(_grainName()).getElement(_tableName(), Sequence.class);
+                        .getGrain(_grainName()).getElement(_tableName(), SequenceElement.class);
             } catch (ParseException e) {
                 throw new CelestaException(e.getMessage());
             }

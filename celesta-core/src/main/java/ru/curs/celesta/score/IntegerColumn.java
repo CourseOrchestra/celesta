@@ -2,6 +2,8 @@ package ru.curs.celesta.score;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
 
@@ -16,6 +18,7 @@ public final class IntegerColumn extends Column {
 	public static final String CELESTA_TYPE = "INT";
 	private Integer defaultvalue;
 	private boolean identity;
+	private SequenceElement sequence;
 
 	public IntegerColumn(TableElement table, String name) throws ParseException {
 		super(table, name);
@@ -30,22 +33,38 @@ public final class IntegerColumn extends Column {
 		if (lexvalue == null) {
 			defaultvalue = null;
 			identity = false;
-		} else if ("IDENTITY".equalsIgnoreCase(lexvalue)) {
-			for (Column c : getParentTable().getColumns().values())
-				if (c instanceof IntegerColumn && c != this && ((IntegerColumn) c).isIdentity())
-					throw new ParseException(
-							"More than one identity columns are defined in table " + getParentTable().getName());
-			defaultvalue = null;
-			identity = true;
+			sequence = null;
 		} else {
-			defaultvalue = Integer.parseInt(lexvalue);
-			identity = false;
+			Pattern p = Pattern.compile("(?i)NEXTVAL\\((.*)\\)");
+			Matcher m = p.matcher(lexvalue);
+			if (m.matches()) {
+				defaultvalue = null;
+				identity = false;
+				String sequenceName = m.group(1);
+				sequence = getParentTable().getGrain().getElement(sequenceName, SequenceElement.class);
+			} else if ("IDENTITY".equalsIgnoreCase(lexvalue)) {
+				for (Column c : getParentTable().getColumns().values())
+					if (c instanceof IntegerColumn && c != this && ((IntegerColumn) c).isIdentity())
+						throw new ParseException(
+								"More than one identity columns are defined in table " + getParentTable().getName());
+				defaultvalue = null;
+				identity = true;
+				sequence = null;
+			} else {
+				defaultvalue = Integer.parseInt(lexvalue);
+				identity = false;
+				sequence = null;
+			}
 		}
 	}
 
 	@Override
 	public Integer getDefaultValue() {
 		return defaultvalue;
+	}
+
+	public SequenceElement getSequence() {
+		return sequence;
 	}
 
 	/**
