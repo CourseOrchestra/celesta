@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.Sequence;
 
 /**
  * Гранула.
@@ -293,7 +294,15 @@ public final class Grain extends NamedElement {
 	/**
 	 * Указывает на то, что разбор гранулы завершен. Системный метод.
 	 */
-	public void completeParsing() {
+	public void finalizeParsing() throws ParseException {
+
+		for (String tableName: getElements(Table.class).keySet()) {
+			String sequenceName = tableName + "_seq";
+			SequenceElement se = getElementsHolder(SequenceElement.class).get(sequenceName);
+			if (se != null)
+				throw new ParseException(String.format("Identifier %s can't be used for the naming of sequence as  it'is reserved by Celesta.", sequenceName));
+		}
+
 		parsingComplete = true;
 		modified = false;
 		dependencyOrder = score.nextOrderCounter();

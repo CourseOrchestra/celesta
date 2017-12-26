@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static ru.curs.celesta.score.Sequence.Argument.*;
+import static ru.curs.celesta.score.SequenceElement.Argument.*;
 
 public class SequenceParsingTest extends AbstractParsingTest {
 
@@ -16,7 +16,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
         CelestaParser cp = new CelestaParser(input);
         Grain g = cp.grain(s, "test");
 
-        Sequence s1 = g.getElement("s1", Sequence.class);
+        SequenceElement s1 = g.getElement("s1", SequenceElement.class);
         assertAll(
                 () -> assertEquals(1L, s1.getArgument(START_WITH)),
                 () -> assertEquals(1L, s1.getArgument(INCREMENT_BY)),
@@ -25,7 +25,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(false, s1.getArgument(CYCLE))
         );
 
-        Sequence s2 = g.getElement("s2", Sequence.class);
+        SequenceElement s2 = g.getElement("s2", SequenceElement.class);
         assertAll(
                 () -> assertEquals(3L, s2.getArgument(START_WITH)),
                 () -> assertEquals(1L, s2.getArgument(INCREMENT_BY)),
@@ -34,7 +34,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(false, s2.getArgument(CYCLE))
         );
 
-        Sequence s3 = g.getElement("s3", Sequence.class);
+        SequenceElement s3 = g.getElement("s3", SequenceElement.class);
         assertAll(
                 () -> assertEquals(1L, s3.getArgument(START_WITH)),
                 () -> assertEquals(2L, s3.getArgument(INCREMENT_BY)),
@@ -43,7 +43,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(false, s3.getArgument(CYCLE))
         );
 
-        Sequence s4 = g.getElement("s4", Sequence.class);
+        SequenceElement s4 = g.getElement("s4", SequenceElement.class);
         assertAll(
                 () -> assertEquals(1L, s4.getArgument(START_WITH)),
                 () -> assertEquals(-2L, s4.getArgument(INCREMENT_BY)),
@@ -52,7 +52,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(false, s4.getArgument(CYCLE))
         );
 
-        Sequence s5 = g.getElement("s5", Sequence.class);
+        SequenceElement s5 = g.getElement("s5", SequenceElement.class);
         assertAll(
                 () -> assertEquals(5L, s5.getArgument(START_WITH)),
                 () -> assertEquals(-1L, s5.getArgument(INCREMENT_BY)),
@@ -61,7 +61,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(false, s5.getArgument(CYCLE))
         );
 
-        Sequence s6 = g.getElement("s6", Sequence.class);
+        SequenceElement s6 = g.getElement("s6", SequenceElement.class);
         assertAll(
                 () -> assertEquals(5L, s6.getArgument(START_WITH)),
                 () -> assertEquals(-1L, s6.getArgument(INCREMENT_BY)),
@@ -71,7 +71,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals("TEST", s6.getCelestaDoc())
         );
 
-        Sequence s7 = g.getElement("s7", Sequence.class);
+        SequenceElement s7 = g.getElement("s7", SequenceElement.class);
         assertAll(
                 () -> assertEquals(-3L, s7.getArgument(START_WITH)),
                 () -> assertEquals(-2L, s7.getArgument(INCREMENT_BY)),
@@ -80,7 +80,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(false, s7.getArgument(CYCLE))
         );
 
-        Sequence s8 = g.getElement("s8", Sequence.class);
+        SequenceElement s8 = g.getElement("s8", SequenceElement.class);
         assertAll(
                 () -> assertEquals(-1L, s8.getArgument(START_WITH)),
                 () -> assertEquals(-2L, s8.getArgument(INCREMENT_BY)),
@@ -89,7 +89,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(false, s8.getArgument(CYCLE))
         );
 
-        Sequence s9 = g.getElement("s9", Sequence.class);
+        SequenceElement s9 = g.getElement("s9", SequenceElement.class);
         assertAll(
                 () -> assertEquals(5L, s9.getArgument(START_WITH)),
                 () -> assertEquals(1L, s9.getArgument(INCREMENT_BY)),
@@ -98,7 +98,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(false, s9.getArgument(CYCLE))
         );
 
-        Sequence s10 = g.getElement("s10", Sequence.class);
+        SequenceElement s10 = g.getElement("s10", SequenceElement.class);
         assertAll(
                 () -> assertEquals(-5L, s10.getArgument(START_WITH)),
                 () -> assertEquals(1L, s10.getArgument(INCREMENT_BY)),
@@ -107,7 +107,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(false, s10.getArgument(CYCLE))
         );
 
-        Sequence s11 = g.getElement("s11", Sequence.class);
+        SequenceElement s11 = g.getElement("s11", SequenceElement.class);
         assertAll(
                 () -> assertEquals(1L, s11.getArgument(START_WITH)),
                 () -> assertEquals(1L, s11.getArgument(INCREMENT_BY)),
@@ -116,7 +116,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(false, s11.getArgument(CYCLE))
         );
 
-        Sequence s12 = g.getElement("s12", Sequence.class);
+        SequenceElement s12 = g.getElement("s12", SequenceElement.class);
         assertAll(
                 () -> assertEquals(1L, s12.getArgument(START_WITH)),
                 () -> assertEquals(1L, s12.getArgument(INCREMENT_BY)),
@@ -125,7 +125,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(true, s12.getArgument(CYCLE))
         );
 
-        Sequence s13 = g.getElement("s13", Sequence.class);
+        SequenceElement s13 = g.getElement("s13", SequenceElement.class);
         assertAll(
                 () -> assertEquals(1L, s13.getArgument(START_WITH)),
                 () -> assertEquals(-1L, s13.getArgument(INCREMENT_BY)),
@@ -134,7 +134,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(true, s13.getArgument(CYCLE))
         );
 
-        Sequence s14 = g.getElement("s14", Sequence.class);
+        SequenceElement s14 = g.getElement("s14", SequenceElement.class);
         assertAll(
                 () -> assertEquals(5L, s14.getArgument(START_WITH)),
                 () -> assertEquals(2L, s14.getArgument(INCREMENT_BY)),
@@ -143,7 +143,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
                 () -> assertEquals(true, s14.getArgument(CYCLE))
         );
 
-        Sequence s15 = g.getElement("s15", Sequence.class);
+        SequenceElement s15 = g.getElement("s15", SequenceElement.class);
         assertAll(
                 () -> assertEquals(5L, s15.getArgument(START_WITH)),
                 () -> assertEquals(2L, s15.getArgument(INCREMENT_BY)),
@@ -258,6 +258,16 @@ public class SequenceParsingTest extends AbstractParsingTest {
         ChecksumInputStream input = new ChecksumInputStream(
                 ParserTest.class.getResourceAsStream(
                         "sequence/testParsingFailsOnCycleDuplication.sql"
+                ));
+        CelestaParser cp = new CelestaParser(input);
+        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+    }
+
+    @Test
+    void testParsingFailsWhenSequenceIdentifierIsReservedByCelesta() {
+        ChecksumInputStream input = new ChecksumInputStream(
+                ParserTest.class.getResourceAsStream(
+                        "sequence/testParsingFailsWhenSequenceIdentifierIsReservedByCelesta.sql"
                 ));
         CelestaParser cp = new CelestaParser(input);
         assertThrows(ParseException.class, () -> cp.grain(s, "test"));

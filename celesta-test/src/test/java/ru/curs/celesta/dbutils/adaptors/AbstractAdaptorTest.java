@@ -1443,9 +1443,12 @@ public abstract class AbstractAdaptorTest {
 
 
     @Test
-    void testSequence() throws Exception {
+    void testCreateAndAlterSequence() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
-        Sequence sequence = g.getElement("testSequence", Sequence.class);
+        SequenceElement sequence = g.getElement("testSequence", SequenceElement.class);
+
+        if (dba.sequenceExists(conn, g.getName(), sequence.getName()))
+            dba.dropSequence(conn, sequence);
 
         //Sequence not exists
         assertFalse(dba.sequenceExists(conn, g.getName(), sequence.getName()));
@@ -1466,7 +1469,7 @@ public abstract class AbstractAdaptorTest {
         assertEquals(6, dba.nextSequenceValue(conn, sequence));
 
         //Modifying of increment by
-        sequence.getArguments().put(Sequence.Argument.INCREMENT_BY, 2L);
+        sequence.getArguments().put(SequenceElement.Argument.INCREMENT_BY, 2L);
         assertTrue(sequenceInfo.reflects(sequence));
 
         dba.alterSequence(conn, sequence);
@@ -1482,10 +1485,10 @@ public abstract class AbstractAdaptorTest {
         );
 
         //Altering to short cycle
-        sequence.getArguments().put(Sequence.Argument.INCREMENT_BY, 1L);
-        sequence.getArguments().put(Sequence.Argument.MINVALUE, 5L);
-        sequence.getArguments().put(Sequence.Argument.MAXVALUE, 7L);
-        sequence.getArguments().put(Sequence.Argument.CYCLE, true);
+        sequence.getArguments().put(SequenceElement.Argument.INCREMENT_BY, 1L);
+        sequence.getArguments().put(SequenceElement.Argument.MINVALUE, 5L);
+        sequence.getArguments().put(SequenceElement.Argument.MAXVALUE, 7L);
+        sequence.getArguments().put(SequenceElement.Argument.CYCLE, true);
         assertTrue(sequenceInfo.reflects(sequence));
 
         dba.alterSequence(conn, sequence);
@@ -1498,10 +1501,96 @@ public abstract class AbstractAdaptorTest {
                 () -> assertEquals(7L, sequenceInfo3.getMaxValue()),
                 () -> assertEquals(true, sequenceInfo3.isCycle())
         );
+
+        dba.dropSequence(conn, sequence);
     }
 
     @Test
-    public void testSelectStaticStrings() throws Exception {
+    void testColumnUpdateWithDefaultSequence() throws Exception {
+        Grain g = score.getGrain(GRAIN_NAME);
+        SequenceElement sequence = g.getElement("testSequence", SequenceElement.class);
+        SequenceElement sequence2 = g.getElement("testSequence2", SequenceElement.class);
+        Table table = g.getElement("tableForTestSequence", Table.class);
+
+        if (dba.sequenceExists(conn, g.getName(), sequence.getName()))
+            dba.dropSequence(conn, sequence);
+        if (dba.sequenceExists(conn, g.getName(), sequence2.getName()))
+            dba.dropSequence(conn, sequence2);
+        if (dba.tableExists(conn, g.getName(), table.getName()))
+            dba.dropTable(conn, table);
+
+        dba.createSequence(conn, sequence);
+        dba.createSequence(conn, sequence2);
+        dba.createTable(conn, table);
+
+        IntegerColumn id = (IntegerColumn)table.getColumn("id");
+
+        final DbColumnInfo idInfo1 = dba.getColumnInfo(conn, table.getColumn("id"));
+        assertAll(
+                () -> assertTrue(idInfo1.reflects(id)),
+                () -> assertEquals(IntegerColumn.class, idInfo1.getType()),
+                () -> assertEquals("NEXTVAL(testSequence)".toLowerCase(), idInfo1.getDefaultValue().toLowerCase())
+        );
+
+        id.setNullableAndDefault(false, "NEXTVAL(" + sequence2.getName() + ")");
+        assertFalse(idInfo1.reflects(id));
+        dba.updateColumn(conn, id, idInfo1);
+
+        final DbColumnInfo idInfo2 = dba.getColumnInfo(conn, table.getColumn("id"));
+        assertAll(
+                () -> assertTrue(idInfo2.reflects(id)),
+                () -> assertEquals(IntegerColumn.class, idInfo2.getType()),
+                () -> assertEquals("NEXTVAL(testSequence2)".toLowerCase(), idInfo2.getDefaultValue().toLowerCase())
+        );
+
+        id.setNullableAndDefault(false, "5");
+        assertFalse(idInfo2.reflects(id));
+        dba.updateColumn(conn, id, idInfo2);
+
+        final DbColumnInfo idInfo3 = dba.getColumnInfo(conn, table.getColumn("id"));
+        assertAll(
+                () -> assertTrue(idInfo3.reflects(id)),
+                () -> assertEquals(IntegerColumn.class, idInfo3.getType()),
+                () -> assertEquals("5".toLowerCase(), idInfo3.getDefaultValue().toLowerCase())
+        );
+
+        id.setNullableAndDefault(false, "NEXTVAL(" + sequence.getName() + ")");
+        assertFalse(idInfo3.reflects(id));
+        dba.updateColumn(conn, id, idInfo3);
+
+        final DbColumnInfo idInfo4 = dba.getColumnInfo(conn, table.getColumn("id"));
+        assertAll(
+                () -> assertTrue(idInfo4.reflects(id)),
+                () -> assertEquals(IntegerColumn.class, idInfo4.getType()),
+                () -> assertEquals("NEXTVAL(testSequence)".toLowerCase(), idInfo4.getDefaultValue().toLowerCase())
+        );
+
+
+        IntegerColumn numb = (IntegerColumn)table.getColumn("numb");
+        final DbColumnInfo numbInfo1 = dba.getColumnInfo(conn, numb);
+        assertAll(
+                () -> assertTrue(numbInfo1.reflects(numb)),
+                () -> assertEquals(IntegerColumn.class, numbInfo1.getType()),
+                () -> assertTrue(numbInfo1.getDefaultValue().isEmpty())
+        );
+
+        numb.setNullableAndDefault(false, "NEXTVAL(" + sequence2.getName() + ")");
+        assertFalse(numbInfo1.reflects(numb));
+        dba.updateColumn(conn, numb, numbInfo1);
+        final DbColumnInfo numbInfo2 = dba.getColumnInfo(conn, numb);
+        assertAll(
+                () -> assertTrue(numbInfo2.reflects(numb)),
+                () -> assertEquals(IntegerColumn.class, numbInfo2.getType()),
+                () -> assertEquals("NEXTVAL(testSequence2)".toLowerCase(), numbInfo2.getDefaultValue().toLowerCase())
+        );
+
+        dba.dropTable(conn, table);
+        dba.dropSequence(conn, sequence);
+        dba.dropSequence(conn, sequence2);
+    }
+
+    @Test
+    void testSelectStaticStrings() throws Exception {
         List<String > data =  Arrays.asList("A", "B");
 
         List<String> result = dba.selectStaticStrings(data, "id", "");

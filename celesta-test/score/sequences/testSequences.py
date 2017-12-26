@@ -3,45 +3,45 @@
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
 from ru.curs.celesta import CelestaException
 
-from sequences._sequences_orm import s1Cursor, s2Cursor, s3Cursor, s4Cursor, s5Cursor, \
-    s6Cursor, s7Cursor, s8Cursor, s9Cursor, s10Cursor, \
-    s11Cursor, s12Cursor, s13Cursor, s14Cursor, s15Cursor
+from sequences._sequences_orm import s1Sequence, s2Sequence, s3Sequence, s4Sequence, s5Sequence, \
+    s6Sequence, s7Sequence, s8Sequence, s9Sequence, s10Sequence, \
+    s11Sequence, s12Sequence, s13Sequence, s14Sequence, s15Sequence, t1Cursor
 
 @TestClass
 class TestSequence(CelestaTestCase):
 
     def testS1(self):
-        s = s1Cursor(self.context)
+        s = s1Sequence(self.context)
 
         self.assertEquals(1L, s.nextValue())
         self.assertEquals(2L, s.nextValue())
 
     def testS2(self):
-        s = s2Cursor(self.context)
+        s = s2Sequence(self.context)
 
         self.assertEquals(3L, s.nextValue())
         self.assertEquals(4L, s.nextValue())
 
     def testS3(self):
-        s = s3Cursor(self.context)
+        s = s3Sequence(self.context)
 
         self.assertEquals(1L, s.nextValue())
         self.assertEquals(3L, s.nextValue())
 
     def testS4(self):
-        s = s4Cursor(self.context)
+        s = s4Sequence(self.context)
 
         self.assertEquals(1L, s.nextValue())
         self.assertEquals(-1L, s.nextValue())
 
     def testS5(self):
-        s = s5Cursor(self.context)
+        s = s5Sequence(self.context)
 
         self.assertEquals(5L, s.nextValue())
         self.assertEquals(4L, s.nextValue())
 
     def testS6(self):
-        s = s6Cursor(self.context)
+        s = s6Sequence(self.context)
 
         self.assertEquals(5L, s.nextValue())
         self.assertEquals(4L, s.nextValue())
@@ -49,7 +49,7 @@ class TestSequence(CelestaTestCase):
         self.assertThrows(CelestaException, nextVal, s)
 
     def testS7(self):
-        s = s7Cursor(self.context)
+        s = s7Sequence(self.context)
 
         self.assertEquals(-3L, s.nextValue())
         self.assertEquals(-5L, s.nextValue())
@@ -57,32 +57,32 @@ class TestSequence(CelestaTestCase):
         self.assertThrows(CelestaException, nextVal, s)
 
     def testS8(self):
-        s = s8Cursor(self.context)
+        s = s8Sequence(self.context)
 
         self.assertEquals(-1L, s.nextValue())
         #end of sequence
         self.assertThrows(CelestaException, nextVal, s)
 
     def testS9(self):
-        s = s9Cursor(self.context)
+        s = s9Sequence(self.context)
 
         self.assertEquals(5L, s.nextValue())
         self.assertEquals(6L, s.nextValue())
 
     def testS10(self):
-        s = s10Cursor(self.context)
+        s = s10Sequence(self.context)
 
         self.assertEquals(-5L, s.nextValue())
         self.assertEquals(-4L, s.nextValue())
 
     def testS11(self):
-        s = s11Cursor(self.context)
+        s = s11Sequence(self.context)
 
         self.assertEquals(1L, s.nextValue())
         self.assertEquals(2L, s.nextValue())
 
     def testS12(self):
-        s = s12Cursor(self.context)
+        s = s12Sequence(self.context)
 
         self.assertEquals(1L, s.nextValue())
         self.assertEquals(2L, s.nextValue())
@@ -93,7 +93,7 @@ class TestSequence(CelestaTestCase):
         self.assertEquals(1L, s.nextValue())
 
     def testS13(self):
-        s = s13Cursor(self.context)
+        s = s13Sequence(self.context)
 
         self.assertEquals(1L, s.nextValue())
         self.assertEquals(0L, s.nextValue())
@@ -102,8 +102,20 @@ class TestSequence(CelestaTestCase):
         self.assertEquals(1L, s.nextValue())
 
     def testS14AndS15(self):
-        self._testS14OrS15(s14Cursor(self.context))
-        self._testS14OrS15(s15Cursor(self.context))
+        self._testS14OrS15(s14Sequence(self.context))
+        self._testS14OrS15(s15Sequence(self.context))
+
+    def testDefaultPkColumnValueWithSequence(self):
+        c = t1Cursor(self.context)
+
+        c.insert()
+        c.last()
+        self.assertEquals(4, c.id)
+        c.clear()
+        c.insert()
+        c.last()
+        self.assertEquals(6, c.id)
+
 
     def _testS14OrS15(self, s):
         lastValue = s.nextValue()

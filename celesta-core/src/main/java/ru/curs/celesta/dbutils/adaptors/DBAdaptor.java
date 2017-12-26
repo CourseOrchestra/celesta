@@ -82,7 +82,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   private static DBAdaptor db;
   protected final ConnectionPool connectionPool;
-
+  final SqlRunner sqlRunner = new SqlRunner();
 
   static {
     CELESTA_TYPES_COLUMN_CLASSES.put(IntegerColumn.CELESTA_TYPE, IntegerColumn.class);
@@ -180,6 +180,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   abstract public void dropTrigger(Connection conn, TriggerQuery query) throws SQLException;
 
+  public void dropSequence(Connection conn, SequenceElement s) throws CelestaException {
+    String sql = String.format("DROP SEQUENCE " + tableTemplate(), s.getGrain().getName(), s.getName());
+    sqlRunner.executeUpdate(conn, sql);
+  }
+
   /**
    * Возвращает true в том и только том случае, если база данных содержит
    * пользовательские таблицы (т. е. не является пустой базой данных).
@@ -219,7 +224,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @throws CelestaException В случае возникновения критического сбоя при создании
    *                          таблицы, в том числе в случае, если такая таблица существует.
    */
-  public final void createTable(Connection conn, TableElement te) throws CelestaException {
+  public void createTable(Connection conn, TableElement te) throws CelestaException {
     String def = tableDef(te);
 
     try {
@@ -889,7 +894,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   }
 
 
-  public void createSequence(Connection conn, Sequence s) throws CelestaException {
+  public void createSequence(Connection conn, SequenceElement s) throws CelestaException {
     try {
       StringBuilder sb = new StringBuilder("CREATE SEQUENCE ")
               .append(String.format(tableTemplate(), s.getGrain().getName(), s.getName()));
@@ -909,11 +914,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   }
 
 
-  public void alterSequence(Connection conn, Sequence s) throws CelestaException {
+  public void alterSequence(Connection conn, SequenceElement s) throws CelestaException {
     try {
       StringBuilder sb = new StringBuilder("ALTER SEQUENCE ")
               .append(String.format(tableTemplate(), s.getGrain().getName(), s.getName()));
-      generateArgumentsForCreateSequenceExpression(s, sb, Sequence.Argument.START_WITH);
+      generateArgumentsForCreateSequenceExpression(s, sb, SequenceElement.Argument.START_WITH);
       String sql = sb.toString();
 
       Statement stmt = conn.createStatement();
@@ -928,7 +933,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
   }
 
-  void generateArgumentsForCreateSequenceExpression(Sequence s, StringBuilder sb, Sequence.Argument... excludedArguments) {
+  void generateArgumentsForCreateSequenceExpression(SequenceElement s, StringBuilder sb, SequenceElement.Argument... excludedArguments) {
     s.getArguments().entrySet().stream()
             .filter(e -> !Arrays.asList(excludedArguments).contains(e.getKey()))
             .forEach(
@@ -1251,11 +1256,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     return false;
   }
 
-  public abstract long nextSequenceValue(Connection conn, Sequence s) throws CelestaException;
+  public abstract long nextSequenceValue(Connection conn, SequenceElement s) throws CelestaException;
 
   public abstract boolean sequenceExists(Connection conn, String schema, String name) throws CelestaException;
 
-  public abstract DbSequenceInfo getSequenceInfo(Connection conn, Sequence s) throws CelestaException;
+  public abstract DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) throws CelestaException;
 }
 
 /**

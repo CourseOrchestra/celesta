@@ -52,7 +52,11 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
       String getDefaultDefinition(Column c) {
         IntegerColumn ic = (IntegerColumn) c;
         String defaultStr = "";
-        if (ic.getDefaultValue() != null) {
+
+        SequenceElement s = ic.getSequence();
+        if (s != null) {
+          defaultStr = DEFAULT + s.getGrain().getQuotedName() + "." + s.getQuotedName() + ".nextval";
+        } else if (ic.getDefaultValue() != null) {
           defaultStr = DEFAULT + ic.getDefaultValue();
         }
         return defaultStr;
@@ -282,13 +286,18 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
           if (ic.isIdentity())
             idColumn = ic;
           else {
-            if (ic.getDefaultValue() == null) {
+            if (ic.getDefaultValue() == null && ic.getSequence() == null) {
               sql = String.format("alter table %s.%s alter column %s drop default",
                   t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
-            } else {
+            } else if (ic.getDefaultValue() != null) {
               sql = String.format("alter table %s.%s alter column %s set default %d",
                   t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName(),
                   ic.getDefaultValue().intValue());
+            } else {
+              SequenceElement s = ic.getSequence();
+              sql = String.format("alter table %s.%s alter column %s set default "
+                              + s.getGrain().getQuotedName() + "." + s.getQuotedName() + ".nextval",
+                      t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
             }
             stmt.executeUpdate(sql);
           }
@@ -434,7 +443,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
           );
 
           if ("integer".equalsIgnoreCase(typeName) &&
-              columnDefaultForIdentity.equals(columnDefault)) {
+                  columnDefaultForIdentity.equals(columnDefault)) {
             result.setType(IntegerColumn.class);
             result.setIdentity(true);
             result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
@@ -472,7 +481,15 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   private String modifyDefault(DbColumnInfo ci, String defaultBody, Connection conn) throws CelestaException {
     String result = defaultBody;
-    if (DateTimeColumn.class == ci.getType()) {
+
+    if (IntegerColumn.class == ci.getType() && !ci.isIdentity()) {
+      Pattern p = Pattern.compile("\\(NEXT VALUE FOR \"[^\"]+\"\\.\"([^\"]+)+\"\\)");
+      Matcher m = p.matcher(defaultBody);
+      if (m.matches()) {
+        String sequenceName = m.group(1);
+        result = "NEXTVAL(" + sequenceName + ")";
+      }
+    } else if (DateTimeColumn.class == ci.getType()) {
       if (NOW.equalsIgnoreCase(defaultBody))
         result = "GETDATE()";
       else {
@@ -987,7 +1004,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public DbSequenceInfo getSequenceInfo(Connection conn, Sequence s) throws CelestaException {
+  public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) throws CelestaException {
     String sql = "SELECT INCREMENT, MIN_VALUE, MAX_VALUE, IS_CYCLE " +
             "FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
 

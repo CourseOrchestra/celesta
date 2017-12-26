@@ -410,7 +410,7 @@ public final class DbUpdater {
   private void updateSequences(Grain g) throws CelestaException {
     Connection conn = grain.callContext().getConn();
 
-    for (Sequence s : g.getElements(Sequence.class).values()) {
+    for (SequenceElement s : g.getElements(SequenceElement.class).values()) {
       if (dba.sequenceExists(conn, g.getName(), s.getName())) {
         DbSequenceInfo sequenceInfo = dba.getSequenceInfo(conn, s);
         if (sequenceInfo.reflects(s))

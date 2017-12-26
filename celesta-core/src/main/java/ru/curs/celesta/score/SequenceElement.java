@@ -6,13 +6,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class Sequence extends GrainElement {
+public class SequenceElement extends GrainElement {
 
     private static final String DUPLICATE_ENTRANCE_TEMPLATE = "Duplicate entrance of %s was detected for sequence %s";
 
     private final Map<Argument, Object> arguments = new LinkedHashMap<>();
 
-    Sequence(Grain g, String name) throws ParseException {
+    SequenceElement(Grain g, String name) throws ParseException {
         super(g, name);
         g.addElement(this);
     }
