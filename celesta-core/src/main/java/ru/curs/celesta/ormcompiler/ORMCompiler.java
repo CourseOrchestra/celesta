@@ -20,7 +20,7 @@ public final class ORMCompiler {
      * Версия компилятора. Данную константу следует инкрементировать, когда
      * необходимо инициировать автоматическое пересоздание orm-скриптов.
      */
-    private static final int COMPILERVER = 14;
+    private static final int COMPILERVER = 15;
 
     private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
     private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -195,7 +195,7 @@ public final class ORMCompiler {
     }
 
     private static void compileSequence(SequenceElement s , PrintWriter w) throws IOException {
-        String className = s.getName();
+        String className = s.getName() + "Sequence";
 
         w.printf("class %s(Sequence):%n", className);
         //constructor
