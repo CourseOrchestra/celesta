@@ -4,6 +4,7 @@ import ru.curs.celesta.CelestaException;
 
 import java.util.List;
 
+//TODO: Javadoc
 public interface StaticDataAdaptor {
 
     /**

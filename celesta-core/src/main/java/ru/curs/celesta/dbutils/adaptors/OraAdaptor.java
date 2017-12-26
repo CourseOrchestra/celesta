@@ -1617,24 +1617,24 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void resetIdentity(Connection conn, Table t, int i) throws SQLException {
+  public void resetIdentity(Connection conn, Table t, int i) throws CelestaException {
     String sequenceName = getSequenceName(t);
-    Statement stmt = conn.createStatement();
-    try {
+
       String sql = String.format("select \"%s\".nextval from dual", sequenceName);
-      ResultSet rs = stmt.executeQuery(sql);
-      rs.next();
-      int curVal = rs.getInt(1);
-      rs.close();
-      sql = String.format("alter sequence \"%s\" increment by %d minvalue 1", sequenceName, i - curVal - 1);
-      stmt.executeUpdate(sql);
-      sql = String.format("select \"%s\".nextval from dual", sequenceName);
-      stmt.executeQuery(sql).close();
-      sql = String.format("alter sequence \"%s\" increment by 1 minvalue 1", sequenceName);
-      stmt.executeUpdate(sql);
-    } finally {
-      stmt.close();
-    }
+
+      try (ResultSet rs = sqlRunner.executeQuery(conn, sql)) {
+        rs.next();
+        int curVal = rs.getInt(1);
+        rs.close();
+        sql = String.format("alter sequence \"%s\" increment by %d minvalue 1", sequenceName, i - curVal - 1);
+        sqlRunner.executeUpdate(conn, sql);
+        sql = String.format("select \"%s\".nextval from dual", sequenceName);
+        sqlRunner.executeQuery(conn, sql).close();
+        sql = String.format("alter sequence \"%s\" increment by 1 minvalue 1", sequenceName);
+        sqlRunner.executeUpdate(conn, sql);
+      } catch (SQLException e) {
+        throw new CelestaException(e);
+      }
   }
 
 

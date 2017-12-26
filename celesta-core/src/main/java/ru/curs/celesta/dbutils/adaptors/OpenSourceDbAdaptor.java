@@ -238,15 +238,10 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void resetIdentity(Connection conn, Table t, int i) throws SQLException {
-    Statement stmt = conn.createStatement();
-    try {
+  public void resetIdentity(Connection conn, Table t, int i) throws CelestaException {
       String sql = String.format("alter sequence \"%s\".\"%s_seq\" restart with %d", t.getGrain().getName(),
           t.getName(), i);
-      stmt.executeUpdate(sql);
-    } finally {
-      stmt.close();
-    }
+      sqlRunner.executeUpdate(conn, sql);
   }
 
   @Override
