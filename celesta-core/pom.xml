@@ -63,9 +63,26 @@
                 <version>${javacc.maven.plugin.version}</version>
                 <executions>
                     <execution>
+                        <id>celesta-parser</id>
                         <goals>
                             <goal>javacc</goal>
                         </goals>
+                        <configuration>
+                            <includes>
+                                <include>CelestaParser.jj</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>filter-parser</id>
+                        <goals>
+                            <goal>javacc</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>FilterParser.jj</include>
+                            </includes>
+                        </configuration>
                     </execution>
                 </executions>
                 <dependencies>
