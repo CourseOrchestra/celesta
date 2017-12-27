@@ -1,8 +1,5 @@
 package ru.curs.celesta.score;
 
-import ru.curs.celesta.AppSettings;
-import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;

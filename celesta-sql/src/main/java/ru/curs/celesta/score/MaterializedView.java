@@ -337,7 +337,7 @@ public class MaterializedView extends AbstractView implements TableElement {
     public String build() {
       String preResult = String.format(TEMPLATE, TRIGGER_TYPES_TO_NAME_PARTS.get(type),
           schema, tableName, schema, name);
-      return NamedElement.limitName(preResult);
+      return limitName(preResult);
     }
   }
 }

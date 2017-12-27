@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.Sequence;
 
 /**
  * Гранула.
