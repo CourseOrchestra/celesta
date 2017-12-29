@@ -108,6 +108,7 @@
                         <configuration>
                             <artifactSet>
                                 <includes>
+                                    <include>ru.curs:celesta-sql</include>
                                     <include>com.h2database:h2</include>
                                 </includes>
                             </artifactSet>
