@@ -8,7 +8,7 @@
     <version>6.1-SNAPSHOT</version>
     <description>celesta - GPL platform for business logic development</description>
     <packaging>pom</packaging>
-    <url>https://share.curs.ru/wiki/index.php/Celesta</url>
+    <url>https://corchestra.ru/wiki/index.php?title=Celesta</url>
 
     <modules>
         <module>celesta-core</module>
@@ -19,18 +19,17 @@
 
     <organization>
         <name>CURS</name>
-        <url>http://corchestra.com</url>
+        <url>https://corchestra.ru</url>
     </organization>
 
     <scm>
-        <connection>https://share.curs.ru/svn/celesta/trunk/</connection>
-        <url>https://svn.code.sf.net/p/kurs-celesta/code/trunk/</url>
+        <url>https://github.com/CourseOrchestra/celesta.git</url>
     </scm>
 
     <licenses>
         <license>
             <name>GNU General Public License (GPL), Version 3</name>
-            <url>http://www.gnu.org/licenses/gpl.txt</url>
+            <url>https://www.gnu.org/licenses/gpl.txt</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
