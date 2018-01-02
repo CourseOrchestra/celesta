@@ -24,7 +24,7 @@ fi'''
 
     try{
         stage ('Exec Maven') {
-            rtMaven.run pom: 'pom.xml', goals: 'clean install', buildInfo: buildInfo
+            rtMaven.run pom: 'pom.xml', goals: 'clean install -P dev', buildInfo: buildInfo
         }
     } finally {
         junit 'target/surefire-reports/**/*.xml'
