@@ -30,11 +30,11 @@
         </dependency>
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>sqljdbc4</artifactId>
+            <artifactId>mssql-jdbc</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.jdbc</groupId>
-            <artifactId>ojdbc6</artifactId>
+            <groupId>com.oracle.weblogic</groupId>
+            <artifactId>ojdbc7</artifactId>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
