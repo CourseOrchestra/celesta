@@ -27,7 +27,7 @@ fi'''
             rtMaven.run pom: 'pom.xml', goals: 'clean install -P dev', buildInfo: buildInfo
         }
     } finally {
-        junit 'target/surefire-reports/**/*.xml'
+        junit '**/surefire-reports/**/*.xml'
     }
     
     stage ('Publish build info') {
