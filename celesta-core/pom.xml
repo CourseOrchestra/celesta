@@ -34,7 +34,7 @@
         </dependency>
         <dependency>
             <groupId>com.oracle.weblogic</groupId>
-            <artifactId>ojdbc7</artifactId>
+            <artifactId>ojdbc6</artifactId>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>

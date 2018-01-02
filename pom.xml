@@ -53,7 +53,7 @@
         <gson.version>2.8.2</gson.version>
         <h2.version>1.4.196</h2.version>
         <javacc.version>7.0.3</javacc.version>
-        <jdbc.driver.oracle.version>12.1.3-0-0</jdbc.driver.oracle.version>
+        <jdbc.driver.oracle.version>12.1.2-0-0</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.1.3</jdbc.driver.postgres.version>
         <jdbc.driver.sqlserver.version>6.2.2.jre8</jdbc.driver.sqlserver.version>
         <jython.version>2.7.1b3</jython.version>
@@ -107,7 +107,7 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.weblogic</groupId>
-                <artifactId>ojdbc7</artifactId>
+                <artifactId>ojdbc6</artifactId>
                 <version>${jdbc.driver.oracle.version}</version>
                 <scope>runtime</scope>
             </dependency>
