@@ -14,8 +14,8 @@
 			<scope>runtime</scope>
 			<excludes>
 				<exclude>org.postgresql:postgresql</exclude>
-				<exclude>com.microsoft.sqlserver:sqljdbc4</exclude>
-				<exclude>com.oracle.jdbc:ojdbc6</exclude>
+				<exclude>com.microsoft.sqlserver:mssql-jdbc</exclude>
+				<exclude>com.oracle.weblogic:ojdbc6</exclude>
 			</excludes>
 		</dependencySet>
 	</dependencySets>
