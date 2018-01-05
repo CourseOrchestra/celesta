@@ -11,30 +11,7 @@
 	<artifactId>dbschemasync</artifactId>
 	<packaging>jar</packaging>
 	<name>dbschemasync</name>
-	<url>http://corchestra.ru</url>
-	<licenses>
-		<license></license>
-	</licenses>
-	<distributionManagement>
-		<repository>
-			<id>curs</id>
-			<url>http://nexus.curs.ru:8081/repository/curs</url>
-		</repository>
-	</distributionManagement>
-		<repositories>
-		<repository>
-			<id>lib</id>
-			<name>lib</name>
-			<releases>
-				<enabled>true</enabled>
-				<checksumPolicy>ignore</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<url>http://nexus.curs.ru:8081/repository/curs</url>
-		</repository>
-	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>ru.curs</groupId>
@@ -69,13 +46,14 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
+					<appendAssemblyId>false</appendAssemblyId>
 					<descriptors>
 						<descriptor>src/assembly/bin.xml</descriptor>
 					</descriptors>
 				</configuration>
 				<executions>
 					<execution>
-						<phase> package</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
