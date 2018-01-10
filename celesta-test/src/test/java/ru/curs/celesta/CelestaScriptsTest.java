@@ -87,7 +87,7 @@ public class CelestaScriptsTest {
     Properties properties = new Properties();
 
     properties.put("score.path", "score");
-    properties.put("rdbms.connection.url", container.getJdbcUrl());
+    properties.put("rdbms.connection.url", container.getJdbcUrl().replace("localhost", "0.0.0.0"));
     properties.put("rdbms.connection.username", container.getUsername());
     properties.put("rdbms.connection.password", container.getPassword());
     properties.put("force.dbinitialize", "true");

@@ -4,17 +4,21 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.net.URL;
 
 
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.*;
 
+//TODO: This class must be actualized
 public class CompileTest {
 	@Test
-	public void compileTest() throws ParseException, IOException {
+	public void compileTest() throws CelestaException, ParseException, IOException {
 
-		InputStream input = ParserTest.class.getResourceAsStream("test.sql");
-		CelestaParser cp = new CelestaParser(input, "utf-8");
-		Grain g = cp.grain(ScoreTest.S, "test1");
+		URL url = CompileTest.class.getResource("test.sql");
+		CelestaParser cp = new CelestaParser(url.openStream(), "utf-8");
+		Score score = ScoreAccessor.createEmptyScore();
+		Grain g = cp.grain(score, "test1");
 		StringWriter sw = new StringWriter();
 		PrintWriter bw = new PrintWriter(sw);
 		ORMCompiler.compileROTable(g.getElement("ttt1", Table.class), bw);

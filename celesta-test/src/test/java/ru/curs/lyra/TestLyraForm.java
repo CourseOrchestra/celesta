@@ -10,13 +10,7 @@ import java.util.Map.Entry;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.score.CelestaParser;
-import ru.curs.celesta.score.ColumnMeta;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.ScoreTest;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.*;
 
 public class TestLyraForm {
 
@@ -76,7 +70,7 @@ public class TestLyraForm {
 
 	@Test
 	public void test2() throws ParseException, CelestaException {
-		Score s = ScoreTest.S;
+		Score s = ScoreAccessor.createEmptyScore();
 		InputStream input = TestLyraForm.class.getResourceAsStream("test.sql");
 		CelestaParser cp = new CelestaParser(input, "utf-8");
 		Grain g = cp.grain(s, "testlyra");

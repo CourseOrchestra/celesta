@@ -46,6 +46,8 @@ import java.util.Map;
 import java.util.zip.CRC32;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreDiscovery;
 
 /**
  * Корневой класс полной модели данных гранул.
@@ -72,7 +74,7 @@ public class Score {
      * @throws CelestaException в случае указания несуществующего пути или в случае двойного
      *                          определения гранулы с одним и тем же именем.
      */
-    public Score(String scorePath) throws CelestaException {
+    public Score(String scorePath, ScoreDiscovery scoreDiscovery) throws CelestaException {
         this.path = scorePath;
         for (String entry : scorePath.split(File.pathSeparator)) {
             File path = new File(entry.trim());
@@ -84,29 +86,7 @@ public class Score {
                 throw new CelestaException("Score path entry '%s' is not a directory.", path.toString());
 
             defaultGrainPath = path;
-            for (File grainPath : path.listFiles(File::isDirectory)) {
-                String grainName = grainPath.getName();
-                File scriptFile = new File(
-                        String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, grainName));
-
-                if (scriptFile.exists()) {
-                    /*
-					 * Наличие sql-файла говорит о том, что мы имеем дело с
-					 * папкой гранулы, и уже требуем от неё всё подряд.
-					 */
-                    File initFile = new File(String.format("%s%s__init__.py", grainPath.getPath(), File.separator));
-                    if (!initFile.exists())
-                        throw new CelestaException("Cannot find __init__.py in grain '%s' definition folder.",
-                                grainName);
-
-                    if (!scriptFile.canRead())
-                        throw new CelestaException("Cannot read script file '%s'.", scriptFile);
-                    if (grainFiles.containsKey(grainName))
-                        throw new CelestaException("Grain '%s' defined more than once on different paths.", grainName);
-                    grainFiles.put(grainName, scriptFile);
-                }
-
-            }
+            scoreDiscovery.discoverScore(path, grainFiles);
         }
 
         initSystemGrain();
@@ -163,16 +143,9 @@ public class Score {
             File f = grainFiles.get(name);
             if (f == null)
                 throw new ParseException(String.format("Unknown grain '%s'.", name));
-            ChecksumInputStream is = null;
 
-            try {
-                is = new ChecksumInputStream(new FileInputStream(f));
-            } catch (FileNotFoundException e) {
-                throw new ParseException(String.format("Cannot open file '%s'.", f.toString()));
-            }
-
-            CelestaParser parser = new CelestaParser(is, "utf-8");
-            try {
+            try (ChecksumInputStream is = new ChecksumInputStream(new FileInputStream(f))) {
+                CelestaParser parser = new CelestaParser(is, "utf-8");
                 try {
                     result = parser.grain(this, name);
                 } catch (ParseException | TokenMgrError e) {
@@ -181,14 +154,13 @@ public class Score {
                 result.setChecksum(is.getCRC32());
                 result.setLength(is.getCount());
                 result.setGrainPath(f.getParentFile());
-            } finally {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    // This should never happen, however.
-                    is = null;
-                }
+            } catch (FileNotFoundException e) {
+                throw new ParseException(String.format("Cannot open file '%s'.", f.toString()));
+            } catch (IOException e) {
+                //TODO: Throw new CelestaException (runtime)
+                // This should never happen, however.
             }
+
         }
 
         return result;
@@ -241,6 +213,28 @@ public class Score {
     int nextOrderCounter() {
         return ++orderCounter;
     }
+
+
+    public static final class ScoreBuilder {
+        private String path;
+        private ScoreDiscovery scoreDiscovery;
+
+        public ScoreBuilder path(String path) {
+            this.path = path;
+            return this;
+        }
+
+        public ScoreBuilder scoreDiscovery(ScoreDiscovery scoreDiscovery) {
+            this.scoreDiscovery = scoreDiscovery;
+            return this;
+        }
+
+        public Score build() throws CelestaException {
+            if (scoreDiscovery == null)
+                scoreDiscovery = new DefaultScoreDiscovery();
+            return new Score(path, scoreDiscovery);
+        }
+    }
 }
 
 /**
@@ -277,5 +271,4 @@ final class ChecksumInputStream extends InputStream {
     public void close() throws IOException {
         input.close();
     }
-
 }
