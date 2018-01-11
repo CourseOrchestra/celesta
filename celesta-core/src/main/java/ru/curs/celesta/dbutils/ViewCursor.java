@@ -86,7 +86,7 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
 	}
 
 	@Override
-	boolean isEquivalentSpecific(BasicCursor bc) throws CelestaException {
+	boolean isEquivalentSpecific(BasicCursor bc) {
 		ViewCursor c = (ViewCursor) bc;
 		return Objects.equals(inFilterHolder, c.inFilterHolder);
 	}

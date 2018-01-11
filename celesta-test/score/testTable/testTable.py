@@ -1,8 +1,11 @@
 # coding=UTF-8
 
-from _testTable_orm import tBlobCursor
+from _testTable_orm import tBlobCursor, tXRecCursor
 
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
+
+from java.sql import Timestamp
+from java.time import LocalDateTime, Month
 
 import java.io.OutputStreamWriter as OutputStreamWriter
 import java.io.InputStreamReader as InputStreamReader
@@ -57,8 +60,49 @@ class TestTable(CelestaTestCase):
         self.assertEquals('blob field 2!', bf.readLine())
         bf.close()
 
+    def test_getXRec(self):
+        cursor = tXRecCursor(self.context)
+        cursor.deleteAll()
+
+        id = 1
+        num = 10
+        cost = 10.2
+        title = 'product'
+        isActive = True
+        created = Timestamp.valueOf(LocalDateTime.of(2018, Month.of(1), 11, 19, 15))
+
+        cursor.num = num
+        cursor.cost = cost
+        cursor.title = title
+        cursor.isActive = isActive
+        cursor.created = created
+
+        xRec = cursor.getXRec()
+        self._assertXRecCursorFields(xRec, None, None, None, None, None, None)
+        cursor.insert()
+
+        self._assertXRecCursorFields(xRec, None, None, None, None, None, None)
+        cursor.clear()
+
+        xRec = cursor.getXRec()
+        self._assertXRecCursorFields(xRec, None, None, None, None, None, None)
+
+        cursor.get(1)
+        self._assertXRecCursorFields(xRec, id, num, cost, title, isActive, created)
+
+        cursor.num = num + 1
+        cursor.cost = cost + 1
+        cursor.title = title + 'asd'
+        cursor.isActive = False
+        cursor.created = Timestamp.valueOf(LocalDateTime.of(2017, Month.of(1), 11, 19, 15))
+
+        self._assertXRecCursorFields(xRec, id, num, cost, title, isActive, created)
 
 
-
-
-
+    def _assertXRecCursorFields(self, cursor, id, num, cost, title, isActive, created):
+        self.assertEquals(id, cursor.id)
+        self.assertEquals(num, cursor.num)
+        self.assertEquals(cost, cursor.cost)
+        self.assertEquals(title, cursor.title)
+        self.assertEquals(isActive, cursor.isActive)
+        self.assertEquals(created, cursor.created)
