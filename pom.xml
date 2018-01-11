@@ -79,11 +79,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>ru.curs</groupId>
-                <artifactId>celesta-sql</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.json</groupId>
                 <artifactId>json</artifactId>
                 <version>${org.json.version}</version>
