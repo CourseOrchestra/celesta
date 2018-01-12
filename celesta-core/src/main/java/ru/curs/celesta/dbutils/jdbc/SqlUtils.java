@@ -10,9 +10,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class SqlRunner {
-    
-    public int executeUpdate(Connection conn, String sql) throws CelestaException {
+public final class SqlUtils {
+
+    private SqlUtils() {
+        throw new AssertionError();
+    }
+
+    public static int executeUpdate(Connection conn, String sql) throws CelestaException {
         try (Statement stmt = conn.createStatement()) {
             return stmt.executeUpdate(sql);
         } catch (SQLException e) {
@@ -20,7 +24,7 @@ public class SqlRunner {
         }
     }
 
-    public ResultSet executeQuery(Connection conn, String sql) throws CelestaException {
+    public static ResultSet executeQuery(Connection conn, String sql) throws CelestaException {
         Statement stmt = null;
         try  {
             stmt = conn.createStatement();
@@ -38,7 +42,7 @@ public class SqlRunner {
         }
     }
 
-    private class ResultSetInvocationHandler implements InvocationHandler {
+    private static class ResultSetInvocationHandler implements InvocationHandler {
 
         private final ResultSet rs;
 

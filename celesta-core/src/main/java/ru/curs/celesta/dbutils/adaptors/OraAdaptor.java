@@ -60,6 +60,7 @@ import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
+import static ru.curs.celesta.dbutils.jdbc.SqlUtils.*;
 /**
  * Адаптер Oracle Database.
  */
@@ -1622,16 +1623,16 @@ final class OraAdaptor extends DBAdaptor {
 
       String sql = String.format("select \"%s\".nextval from dual", sequenceName);
 
-      try (ResultSet rs = sqlRunner.executeQuery(conn, sql)) {
+      try (ResultSet rs = executeQuery(conn, sql)) {
         rs.next();
         int curVal = rs.getInt(1);
         rs.close();
         sql = String.format("alter sequence \"%s\" increment by %d minvalue 1", sequenceName, i - curVal - 1);
-        sqlRunner.executeUpdate(conn, sql);
+        executeUpdate(conn, sql);
         sql = String.format("select \"%s\".nextval from dual", sequenceName);
-        sqlRunner.executeQuery(conn, sql).close();
+        executeQuery(conn, sql).close();
         sql = String.format("alter sequence \"%s\" increment by 1 minvalue 1", sequenceName);
-        sqlRunner.executeUpdate(conn, sql);
+        executeUpdate(conn, sql);
       } catch (SQLException e) {
         throw new CelestaException(e);
       }

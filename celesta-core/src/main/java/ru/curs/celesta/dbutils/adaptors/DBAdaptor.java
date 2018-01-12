@@ -54,12 +54,13 @@ import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.*;
-import ru.curs.celesta.dbutils.jdbc.SqlRunner;
 import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
+
+import static ru.curs.celesta.dbutils.jdbc.SqlUtils.*;
 
 /**
  * Adapter for connection to the database.
@@ -90,7 +91,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   private static DBAdaptor db;
   protected final ConnectionPool connectionPool;
-  final SqlRunner sqlRunner = new SqlRunner();
 
   static {
     CELESTA_TYPES_COLUMN_CLASSES.put(IntegerColumn.CELESTA_TYPE, IntegerColumn.class);
@@ -472,7 +472,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   public final void dropTable(Connection conn, TableElement t) throws CelestaException {
     try {
       String sql = String.format("DROP TABLE " + tableTemplate(), t.getGrain().getName(), t.getName());
-      sqlRunner.executeUpdate(conn, sql);
+      executeUpdate(conn, sql);
       dropAutoIncrement(conn, t);
       conn.commit();
     } catch (SQLException e) {
@@ -525,7 +525,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     String sql = String.format(ALTER_TABLE + tableTemplate() + " add %s", c.getParentTable().getGrain().getName(),
             c.getParentTable().getName(), columnDef(c));
     try {
-      sqlRunner.executeUpdate(conn, sql);
+      executeUpdate(conn, sql);
     } catch (CelestaException e) {
       throw new CelestaException("creating %s.%s: %s", c.getParentTable().getName(), c.getName(), e.getMessage());
     }
@@ -577,7 +577,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     String[] sql = getCreateIndexSQL(index);
     try {
       for (String s : sql)
-        sqlRunner.executeUpdate(conn, s);
+        executeUpdate(conn, s);
       connectionPool.commit(conn);
     } catch (CelestaException e) {
       throw new CelestaException("Cannot create index '%s': %s", index.getName(), e.getMessage());
@@ -650,7 +650,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
       // System.out.println(sqlStmt);
 
       try {
-        sqlRunner.executeUpdate(conn, sqlstmt);
+        executeUpdate(conn, sqlstmt);
       } catch (CelestaException e) {
         if (!sqlstmt.startsWith("drop"))
           throw new CelestaException("Cannot create foreign key '%s': %s", fk.getConstraintName(),
@@ -672,7 +672,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     try (Connection conn = connectionPool.get()) {
       for (String s : sql) {
-        sqlRunner.executeUpdate(conn, s);
+        executeUpdate(conn, s);
       }
     } catch (CelestaException | SQLException e) {
       throw new CelestaException("Cannot drop index '%s': %s ", dBIndexInfo.getIndexName(), e.getMessage());
@@ -771,7 +771,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     try {
       //System.out.println(def); // for debug purposes
       Statement stmt = conn.createStatement();
-      sqlRunner.executeUpdate(conn, def);
+      executeUpdate(conn, def);
       manageAutoIncrement(conn, te);
       connectionPool.commit(conn);
       updateVersioningTrigger(conn, te);
@@ -827,7 +827,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     for (String sqlStmt : sqlQueue) {
       // System.out.println(sqlStmt);
       try {
-        sqlRunner.executeUpdate(conn, sqlStmt);
+        executeUpdate(conn, sqlStmt);
       } catch (CelestaException e) {
         if (!sqlStmt.startsWith("drop trigger"))
           throw new CelestaException("Cannot drop foreign key '%s': %s", fkName, e.getMessage());
@@ -848,7 +848,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     String sql = String.format("select table_name from information_schema.views where table_schema = '%s'",
             g.getName());
     List<String> result = new LinkedList<>();
-    try (ResultSet rs = sqlRunner.executeQuery(conn, sql)) {
+    try (ResultSet rs = executeQuery(conn, sql)) {
         while (rs.next()) {
           result.add(rs.getString(1));
         }
@@ -889,7 +889,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
       String sql = sw.toString();
       // System.out.println(sql);
-      sqlRunner.executeUpdate(conn, sql);
+      executeUpdate(conn, sql);
     } catch (IOException e) {
       throw new CelestaException("Error while creating view %s.%s: %s", v.getGrain().getName(), v.getName(),
               e.getMessage());
@@ -907,7 +907,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
       generateArgumentsForCreateSequenceExpression(s, sb);
       String sql = sb.toString();
 
-      sqlRunner.executeUpdate(conn, sql);
+      executeUpdate(conn, sql);
     } catch (CelestaException e) {
       throw new CelestaException("Error while creating sequence %s.%s: %s", s.getGrain().getName(), s.getName(),
               e.getMessage());
@@ -922,7 +922,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
       generateArgumentsForCreateSequenceExpression(s, sb, SequenceElement.Argument.START_WITH);
       String sql = sb.toString();
 
-      sqlRunner.executeUpdate(conn, sql);
+      executeUpdate(conn, sql);
     } catch (CelestaException e) {
       throw new CelestaException("Error while altering sequence %s.%s: %s", s.getGrain().getName(), s.getName(),
               e.getMessage());
@@ -932,7 +932,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   //TODO: Javadoc
   public void dropSequence(Connection conn, SequenceElement s) throws CelestaException {
     String sql = String.format("DROP SEQUENCE " + tableTemplate(), s.getGrain().getName(), s.getName());
-    sqlRunner.executeUpdate(conn, sql);
+    executeUpdate(conn, sql);
   }
 
   /**
@@ -947,7 +947,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   public void dropView(Connection conn, String grainName, String viewName) throws CelestaException {
     try {
       String sql = String.format("DROP VIEW " + tableTemplate(), grainName, viewName);
-      sqlRunner.executeUpdate(conn, sql);
+      executeUpdate(conn, sql);
       conn.commit();
     } catch (SQLException e) {
       throw new CelestaException(e.getMessage());
@@ -1000,12 +1000,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
               i - 1, t.getGrain().getName(), t.getName());
 
       // System.out.println(sql);
-      int v = sqlRunner.executeUpdate(conn, sql);
+      int v = executeUpdate(conn, sql);
       if (v == 0) {
         sql = String.format("insert into \"celesta\".\"sequences\" (\"grainid\", \"tablename\" , \"seqvalue\") "
                 + "values ('%s', '%s', %d)", t.getGrain().getName(), t.getName(), i - 1);
         // System.out.println(sql);
-        sqlRunner.executeUpdate(conn, sql);
+        executeUpdate(conn, sql);
       }
 
   }
@@ -1014,7 +1014,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   public Optional<String> getTriggerBody(Connection conn, TriggerQuery query) throws CelestaException {
     String sql = getSelectTriggerBodySql(query);
 
-    try (ResultSet rs = sqlRunner.executeQuery(conn, sql)) {
+    try (ResultSet rs = executeQuery(conn, sql)) {
         Optional<String> result;
 
         if (rs.next()) {
@@ -1089,8 +1089,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     String insertSql = String.format("INSERT INTO %s (%s) "  + selectScript, mvIdentifier, mvColumns);
 
     try {
-      sqlRunner.executeUpdate(conn, deleteSql);
-      sqlRunner.executeUpdate(conn, insertSql);
+      executeUpdate(conn, deleteSql);
+      executeUpdate(conn, insertSql);
     } catch (CelestaException e) {
       throw new CelestaException("Can't init data for materialized view %s: %s",
               mvIdentifier, e);
