@@ -12,6 +12,8 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import static ru.curs.celesta.dbutils.jdbc.SqlUtils.*;
+
 /**
  * Created by ioann on 02.05.2017.
  */
@@ -238,15 +240,10 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void resetIdentity(Connection conn, Table t, int i) throws SQLException {
-    Statement stmt = conn.createStatement();
-    try {
+  public void resetIdentity(Connection conn, Table t, int i) throws CelestaException {
       String sql = String.format("alter sequence \"%s\".\"%s_seq\" restart with %d", t.getGrain().getName(),
           t.getName(), i);
-      stmt.executeUpdate(sql);
-    } finally {
-      stmt.close();
-    }
+      executeUpdate(conn, sql);
   }
 
   @Override

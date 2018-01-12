@@ -694,7 +694,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 		try {
 			db().resetIdentity(conn(), meta(), newValue);
-		} catch (SQLException e) {
+		} catch (CelestaException e) {
 			throw new CelestaException("Cannot reset identity for table %s.%s with message '%s'.", _grainName(),
 					_tableName(), e.getMessage());
 		}

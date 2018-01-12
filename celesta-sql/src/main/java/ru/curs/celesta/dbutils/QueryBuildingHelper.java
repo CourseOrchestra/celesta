@@ -32,8 +32,10 @@ public interface QueryBuildingHelper {
 	 */
 	SQLGenerator getViewSQLGenerator();
 
+	//TODO: Javadoc
 	String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
 							 List<String> otherFields, String whereForOtherTable);
 
+	//TODO: Javadoc
 	boolean supportsCortegeComparing();
 }
