@@ -353,7 +353,7 @@ public final class Grain extends NamedElement {
 							new FileOutputStream(scriptFile), StandardCharsets.UTF_8))
 		) {
 				writeCelestaDoc(this, bw);
-				bw.write("CREATE GRAIN ");
+				bw.write("CREATE SCHEMA ");
 				bw.write(getName());
 				bw.write(" VERSION '");
 				bw.write(getVersion().toString());

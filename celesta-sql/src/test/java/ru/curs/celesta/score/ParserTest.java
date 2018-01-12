@@ -1,9 +1,12 @@
 package ru.curs.celesta.score;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -15,6 +18,48 @@ import org.junit.jupiter.api.Test;
 import ru.curs.celesta.CelestaException;
 
 public class ParserTest extends AbstractParsingTest {
+
+  @Test
+  void testSchemaAndGrainKeywordsEquivalence() throws Exception {
+    String createSchemaTemplate = "CREATE %s someGrain VERSION '1.0';";
+    String createSchema = String.format(createSchemaTemplate, "SCHEMA");
+    String createGrain = String.format(createSchemaTemplate, "GRAIN");
+
+    File scoreDir = new File(Files.createTempDirectory("testSchemaAndGrainKeywordsEquivalence").toUri());
+    scoreDir.deleteOnExit();
+
+    File schemaDir = new File (scoreDir, "schema");
+    schemaDir.mkdir();
+    schemaDir.deleteOnExit();
+    File grainDir = new File(scoreDir, "grain");
+    grainDir.mkdir();
+    grainDir.deleteOnExit();
+
+
+    parseAndSaveCsqlScript(createSchema, schemaDir, "someGrain");
+    parseAndSaveCsqlScript(createGrain, grainDir, "someGrain");
+
+    File schemaScript = new File(schemaDir.getPath() + File.separator + "_someGrain.sql");
+    schemaScript.deleteOnExit();
+    File grainScript = new File(grainDir.getPath() + File.separator + "_someGrain.sql");
+    grainScript.deleteOnExit();
+
+    assertEquals(
+            new String(Files.readAllBytes(schemaScript.toPath()), StandardCharsets.UTF_8.name()),
+            new String(Files.readAllBytes(grainScript.toPath()), StandardCharsets.UTF_8.name())
+    );
+
+  }
+
+  private void parseAndSaveCsqlScript(String csqlScript, File grainPath, String grainName) throws Exception {
+    try (InputStream is = new ByteArrayInputStream(csqlScript.getBytes(StandardCharsets.UTF_8))) {
+      CelestaParser cp = new CelestaParser(is, "utf-8");
+      Grain g = cp.grain(new Score(), grainName);
+      g.setGrainPath(grainPath);
+      g.modify();
+      g.save();
+    }
+  }
 
   @Test
   public void test0() throws ParseException, CelestaException, IOException {
