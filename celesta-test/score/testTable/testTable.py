@@ -1,6 +1,7 @@
 # coding=UTF-8
 
-from _testTable_orm import tBlobCursor, tXRecCursor
+from _testTable_orm import tBlobCursor, tXRecCursor, tCsvLineCursor, tIterateCursor, \
+    tCopyFieldsCursor, tLimitCursor
 
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
@@ -98,6 +99,83 @@ class TestTable(CelestaTestCase):
 
         self._assertXRecCursorFields(xRec, id, num, cost, title, isActive, created)
 
+    def test_asCSVLine(self):
+        cursor = tCsvLineCursor(self.context)
+        self.assertEquals('NULL,NULL',cursor.asCSVLine())
+
+        cursor.id = 1
+        self.assertEquals('1,NULL',cursor.asCSVLine())
+
+        cursor.title = 'noQuotes'
+        self.assertEquals('1,noQuotes',cursor.asCSVLine())
+
+        cursor.title = '"withQuotes"'
+        self.assertEquals('1,"""withQuotes"""',cursor.asCSVLine())
+
+        cursor.title = None
+        self.assertEquals('1,NULL',cursor.asCSVLine())
+
+    def test_iterate(self):
+        cursor = tIterateCursor(self.context)
+        cursor.insert()
+        cursor.insert()
+
+        idList = []
+
+        for cursor in cursor.iterate():
+            idList.append(cursor.id)
+
+        self.assertEquals(2, idList.__len__())
+        self.assertEquals(1, idList[0])
+        self.assertEquals(2, idList[1])
+
+    def test_CopyFieldsFrom(self):
+        cursor = tCopyFieldsCursor(self.context)
+        cursorFrom = tCopyFieldsCursor(self.context)
+
+        id = 11234
+        title = 'ttt'
+
+        cursorFrom.id = id
+        cursorFrom.title = title
+        cursor.copyFieldsFrom(cursorFrom)
+
+        self.assertEquals(id, cursor.id)
+        self.assertEquals(title, cursor.title)
+
+    def test_limit(self):
+        cursor = tLimitCursor(self.context)
+
+        for i in range(3):
+            cursor.insert()
+
+        idList = []
+
+        cursor.limit(0, 2)
+        for cursor in cursor.iterate():
+            idList.append(cursor.id)
+        self.assertEquals(2, idList.__len__())
+        self.assertEquals(1, idList[0])
+        self.assertEquals(2, idList[1])
+        del idList[:]
+
+        cursor.limit(2, 1)
+        for cursor in cursor.iterate():
+            idList.append(cursor.id)
+        self.assertEquals(1, idList.__len__())
+        self.assertEquals(3, idList[0])
+        del idList[:]
+
+        cursor.limit(3, 0)
+        for cursor in cursor.iterate():
+            idList.append(cursor.id)
+        self.assertEquals(0, idList.__len__())
+        del idList[:]
+
+        cursor.limit(3, 5)
+        for cursor in cursor.iterate():
+            idList.append(cursor.id)
+        self.assertEquals(0, idList.__len__())
 
     def _assertXRecCursorFields(self, cursor, id, num, cost, title, isActive, created):
         self.assertEquals(id, cursor.id)
