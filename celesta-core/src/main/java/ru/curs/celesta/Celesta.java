@@ -63,6 +63,7 @@ import ru.curs.celesta.ormcompiler.ORMCompiler;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
 /**
  * Корневой класс приложения.
@@ -94,7 +95,10 @@ public final class Celesta implements AutoCloseable {
 		// CELESTA STARTUP SEQUENCE
 		// 1. Разбор описания гранул.
 		System.out.print("Celesta initialization: phase 1/4 score parsing...");
-		score = new Score(appSettings.getScorePath());
+		score = new Score.ScoreBuilder()
+				.path(appSettings.getScorePath())
+				.scoreDiscovery(new PyScoreDiscovery())
+				.build();
 		System.out.println("done.");
 
 		// 2. Перекомпиляция ORM-модулей, где это необходимо.

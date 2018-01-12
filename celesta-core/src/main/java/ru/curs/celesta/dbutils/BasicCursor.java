@@ -1138,7 +1138,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	}
 
 
-	boolean isEquivalentSpecific(BasicCursor c) throws CelestaException {
+	boolean isEquivalentSpecific(BasicCursor c) {
 		return true;
 	}
 

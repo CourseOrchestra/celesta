@@ -2,6 +2,7 @@ package ru.curs.celesta.dbschemasync;
 
 import org.junit.jupiter.api.Test;
 import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -17,7 +18,10 @@ public class SchemaSyncTest {
     void celestaToDbs() throws Exception {
         String scorePath = SchemaSyncTest.class
                 .getClassLoader().getResource("score").getFile();
-        Score s = new Score(scorePath);
+        Score s = new Score.ScoreBuilder()
+                .path(scorePath)
+                .scoreDiscovery(new PyScoreDiscovery())
+                .build();
         File tmp = File.createTempFile("sst", "tmp");
         tmp.delete();
         try {
@@ -42,7 +46,10 @@ public class SchemaSyncTest {
         File adoc = new File(scorePath, "../Layout_.adoc");
         adoc.delete();
         assertFalse(adoc.exists());
-        Score s = new Score(scorePath);
+        Score s = new Score.ScoreBuilder()
+                .path(scorePath)
+                .scoreDiscovery(new PyScoreDiscovery())
+                .build();
         DBSchema2Celesta.dBSToScore(new File(dbs), s, true);
         assertTrue(adoc.exists());
     }

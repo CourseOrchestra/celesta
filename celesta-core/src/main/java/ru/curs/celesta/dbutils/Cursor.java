@@ -626,7 +626,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	 * Возвращает копию буфера, содержащую значения, полученные при последнем
 	 * чтении данных из базы.
 	 */
-	public final BasicCursor getXRec() {
+	public final Cursor getXRec() {
 		if (xRec == null) {
 			try {
 				initXRec();
@@ -665,7 +665,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	}
 
 	@Override
-	boolean isEquivalentSpecific(BasicCursor bc) throws CelestaException {
+	boolean isEquivalentSpecific(BasicCursor bc) {
 		Cursor c = (Cursor) bc;
 		return Objects.equals(inFilterHolder, c.inFilterHolder);
 	}
