@@ -103,7 +103,7 @@ PARSER_END(CelestaParser)
 
 <CREATE_STATE> TOKEN:
 {
-    <K_GRAIN:   "GRAIN">
+    <K_GRAIN:   "GRAIN"|"SCHEMA">
 |   <K_GRAIN_VERSION: "VERSION">
 }
 
