@@ -50,9 +50,9 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
@@ -103,7 +103,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   //TODO: Javadoc
   public static synchronized DBAdaptor create(
-          AppSettings.DBType dbType,
+          DBType dbType,
           ConnectionPool connectionPool,
           boolean h2ReferentialIntegrity
   ) throws CelestaException {
@@ -1350,7 +1350,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
           throws CelestaException;
 
   //TODO: Javadoc
-  public abstract AppSettings.DBType getType();
+  public abstract DBType getType();
 
   //TODO: Javadoc
   public abstract long nextSequenceValue(Connection conn, SequenceElement s) throws CelestaException;

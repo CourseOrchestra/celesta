@@ -17,31 +17,9 @@ import ru.curs.celesta.event.TriggerType;
  * Курсор на таблице Grains.
  * 
  */
-public final class GrainsCursor extends SysCursor {
+public final class GrainsCursor extends SysCursor implements ISchemaCursor {
 
 	public static final String TABLE_NAME = "grains";
-
-	/**
-	 * Статус "готов".
-	 */
-	public static final int READY = 0;
-	/**
-	 * Статус "в процессе обновления".
-	 */
-	public static final int UPGRADING = 1;
-	/**
-	 * Статус "ошибка".
-	 */
-	public static final int ERROR = 2;
-	/**
-	 * Статус "обновить!".
-	 */
-	public static final int RECOVER = 3;
-	
-	/**
-	 * Статус "не обновлять!".
-	 */
-	public static final int LOCK = 4;
 	
 
 	private String id;

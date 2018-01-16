@@ -37,7 +37,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
         dba = new PostgresAdaptor(connectionPool);
 
-        DbUpdater dbUpdater = new DbUpdaterBuilder()
+        DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                 .dbAdaptor(dba)
                 .connectionPool(connectionPool)
                 .score(

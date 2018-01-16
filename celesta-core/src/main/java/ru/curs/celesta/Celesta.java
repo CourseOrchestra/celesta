@@ -89,16 +89,16 @@ public final class Celesta implements AutoCloseable {
 	private final ProfilingManager profiler;
 
 	private Celesta(AppSettings appSettings, boolean initInterpeterPool) throws CelestaException {
-		CurrentCelesta.set(this);
 
 		this.appSettings = appSettings;
 		// CELESTA STARTUP SEQUENCE
 		// 1. Разбор описания гранул.
 		System.out.print("Celesta initialization: phase 1/4 score parsing...");
-		score = new Score.ScoreBuilder()
+		this.score = new Score.ScoreBuilder()
 				.path(appSettings.getScorePath())
 				.scoreDiscovery(new PyScoreDiscovery())
 				.build();
+		CurrentScore.set(this.score);
 		System.out.println("done.");
 
 		// 2. Перекомпиляция ORM-модулей, где это необходимо.
@@ -134,7 +134,7 @@ public final class Celesta implements AutoCloseable {
 		if (!appSettings.getSkipDBUpdate()) {
 			System.out.print("Celesta initialization: phase 3/4 database upgrade...");
 
-			DbUpdater dbUpdater = new DbUpdaterBuilder()
+			DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
 					.dbAdaptor(dbAdaptor)
 					.connectionPool(connectionPool)
 					.score(score)

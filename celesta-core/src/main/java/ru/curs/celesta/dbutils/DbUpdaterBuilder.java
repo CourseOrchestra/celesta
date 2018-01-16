@@ -4,8 +4,6 @@ import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.Score;
 
-import java.util.Map;
-
 public class DbUpdaterBuilder {
     private DBAdaptor dbAdaptor;
     private ConnectionPool connectionPool;
@@ -44,8 +42,8 @@ public class DbUpdaterBuilder {
         return this;
     }
 
-    public DbUpdater build() {
-        return new DbUpdater(connectionPool, score, forceDdInitialize,
+    public DbUpdaterImpl build() {
+        return new DbUpdaterImpl(connectionPool, score, forceDdInitialize,
                 dbAdaptor, permissionManager, loggingManager);
     }
 }

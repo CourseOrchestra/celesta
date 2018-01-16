@@ -41,10 +41,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.function.Function;
 
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;

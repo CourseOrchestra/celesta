@@ -24,7 +24,7 @@ import ru.curs.celesta.score.Score;
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
  * идентификатор пользователя.
  */
-public final class CallContext implements AutoCloseable {
+public final class CallContext implements ICallContext<BasicDataAccessor> {
 
 	/**
 	 * Максимальное число объектов доступа, которое может быть открыто в одном
@@ -89,12 +89,6 @@ public final class CallContext implements AutoCloseable {
 		this.dbPid = PIDSCACHE.computeIfAbsent(this.conn, this.dbAdaptor::getDBPid);
 	}
 
-	/**
-	 * Duplicates callcontext with another JDBC connection.
-	 *
-	 * @throws CelestaException
-	 *             cannot create adaptor
-	 */
 	public CallContext getCopy() throws CelestaException {
 		return new CallContextBuilder()
 				.setCelesta(celesta)
@@ -110,16 +104,10 @@ public final class CallContext implements AutoCloseable {
 				.createCallContext();
 	}
 
-	/**
-	 * Соединение с базой данных.
-	 */
 	public Connection getConn() {
 		return conn;
 	}
 
-	/**
-	 * Идентификатор пользователя.
-	 */
 	public String getUserId() {
 		return sesContext.getUserId();
 	}
@@ -138,12 +126,7 @@ public final class CallContext implements AutoCloseable {
 		return sesContext.getData();
 	}
 
-	/**
-	 * Коммитит транзакцию.
-	 * 
-	 * @throws CelestaException
-	 *             в случае проблемы с БД.
-	 */
+
 	public void commit() throws CelestaException {
 		try {
 			conn.commit();
@@ -297,21 +280,10 @@ public final class CallContext implements AutoCloseable {
 		return grain;
 	}
 
-	/**
-	 * Установка последнего объекта доступа в контексте.
-	 * 
-	 * @param dataAccessor объект доступа
-	 */
 	public void setLastDataAccessor(BasicDataAccessor dataAccessor) {
 		lastDataAccessor = dataAccessor;
 	}
 
-	/**
-	 * Увеличивает счетчик открытых объектов доступа.
-	 * 
-	 * @throws CelestaException
-	 *             Если число открытых объектов доступа превысило критический порог.
-	 */
 	public void incDataAccessorsCount() throws CelestaException {
 		if (dataAccessorsCount > MAX_DATA_ACCESSORS)
 			throw new CelestaException("Too many data accessors created in one Celesta procedure call. Check for leaks!");
@@ -374,9 +346,6 @@ public final class CallContext implements AutoCloseable {
 		return showcaseContext;
 	}
 
-	/**
-	 * Был ли контекст закрыт.
-	 */
 	public boolean isClosed() {
 		return closed;
 	}
@@ -412,14 +381,7 @@ public final class CallContext implements AutoCloseable {
 		return result;
 	}
 
-	/**
-	 * Удалят объект доступа из кэша.
-	 * 
-	 * Метод предназначен для внутреннего использования.
-	 * 
-	 * @param dataAccessor
-	 *            Объект доступа.
-	 */
+
 	public void removeFromCache(final BasicDataAccessor dataAccessor) {
 		Iterator<Entry<PyString, PyObject>> i = dataAccessorsCache.entrySet().iterator();
 		while (i.hasNext()) {

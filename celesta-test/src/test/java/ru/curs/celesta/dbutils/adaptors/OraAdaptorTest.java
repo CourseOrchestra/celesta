@@ -8,7 +8,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.OracleContainer;
 import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.DbUpdater;
+import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
@@ -45,7 +45,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
 
         dba = new OraAdaptor(connectionPool);
 
-        DbUpdater dbUpdater = new DbUpdaterBuilder()
+        DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                 .dbAdaptor(dba)
                 .connectionPool(connectionPool)
                 .score(

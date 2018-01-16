@@ -1,16 +1,12 @@
 package ru.curs.celesta.dbutils;
 
-import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.score.Table;
 import ru.curs.lyra.grid.KeyInterpolator;
 
-import javax.naming.OperationNotSupportedException;
 import java.math.BigInteger;
-import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public abstract class InterpolationInitializer {
 
@@ -38,7 +34,7 @@ public abstract class InterpolationInitializer {
     public boolean initialize(final BasicCursor c, int count) throws CelestaException {
         if (count == 0) {
             return false;
-        } else if (AppSettings.DBType.POSTGRES.equals(dbAdaptor.getType())) {
+        } else if (DBType.POSTGRES.equals(dbAdaptor.getType())) {
             return initializePostgres(c, count);
         } else {
             return initializeCommon(c);
