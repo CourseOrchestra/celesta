@@ -24,7 +24,7 @@ import ru.curs.celesta.score.Score;
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
  * идентификатор пользователя.
  */
-public final class CallContext implements ICallContext<BasicDataAccessor> {
+public final class CallContext implements ICallContext {
 
 	/**
 	 * Максимальное число объектов доступа, которое может быть открыто в одном

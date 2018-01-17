@@ -68,15 +68,14 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
         return closed;
     }
 
-    public void close() {
+    public final void close() {
         if (!isClosed()) {
+            closed = true;
             closeInternal();
         }
     }
 
-    protected void closeInternal() {
-        closed = true;
-    }
+    abstract void closeInternal();
 
     public abstract void clear() throws CelestaException;
 

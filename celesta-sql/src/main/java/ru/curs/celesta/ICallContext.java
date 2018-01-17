@@ -1,12 +1,10 @@
 package ru.curs.celesta;
 
-import ru.curs.celesta.dbutils.CsqlBasicDataAccessor;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 
 import java.sql.Connection;
 
-//TODO::Rename
-public interface ICallContext<T extends CsqlBasicDataAccessor> extends AutoCloseable {
+public interface ICallContext extends AutoCloseable {
 
     /**
      * Duplicates callcontext with another JDBC connection.

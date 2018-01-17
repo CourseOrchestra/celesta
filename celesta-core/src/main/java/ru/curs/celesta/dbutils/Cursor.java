@@ -66,11 +66,11 @@ import ru.curs.celesta.score.Table;
 public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	private Table meta = null;
-	private final CursorGetHelper getHelper;
+	final CursorGetHelper getHelper;
 	private InFilterHolder inFilterHolder;
 
 
-	private final MaskedStatementHolder insert = new MaskedStatementHolder() {
+	final MaskedStatementHolder insert = new MaskedStatementHolder() {
 
 		@Override
 		protected int[] getNullsMaskIndices() throws CelestaException {
@@ -88,9 +88,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	};
 
-	private boolean[] updateMask = null;
-	private boolean[] nullUpdateMask = null;
-	private final PreparedStmtHolder update = new PreparedStmtHolder() {
+	boolean[] updateMask = null;
+	boolean[] nullUpdateMask = null;
+	final PreparedStmtHolder update = new PreparedStmtHolder() {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
 			WhereTerm where = WhereTermsMaker.getPKWhereTerm(meta());
@@ -101,7 +101,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		}
 	};
 
-	private final PreparedStmtHolder delete = new PreparedStmtHolder() {
+	final PreparedStmtHolder delete = new PreparedStmtHolder() {
 
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
@@ -167,11 +167,11 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	}
 
 	@Override
-	public final void close() {
-		super.close();
+	void closeInternal() {
+		super.closeInternal();
 		if (xRec != null)
 			xRec.close();
-		close(getHelper.getHolder(), insert, delete, update);
+		closeStatements(getHelper.getHolder(), insert, delete, update);
 	}
 
 	/**

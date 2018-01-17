@@ -1,7 +1,5 @@
 package ru.curs.celesta.score;
 
-import ru.curs.celesta.CelestaException;
-
 public final class ScoreAccessor {
 
     private ScoreAccessor() {

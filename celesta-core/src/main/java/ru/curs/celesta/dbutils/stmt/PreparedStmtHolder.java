@@ -14,7 +14,7 @@ public abstract class PreparedStmtHolder {
 	private PreparedStatement stmt;
 	private final List<ParameterSetter> program = new LinkedList<>();
 
-	boolean isStmtValid() throws CelestaException {
+	public boolean isStmtValid() throws CelestaException {
 		try {
 			return !(stmt == null || stmt.isClosed());
 		} catch (SQLException e) {
