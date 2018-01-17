@@ -24,7 +24,9 @@ fi'''
 
     try{
         stage ('Exec Maven') {
-            rtMaven.run pom: 'pom.xml', goals: 'clean install -P dev', buildInfo: buildInfo
+            ansiColor('xterm') {
+                rtMaven.run pom: 'pom.xml', goals: 'clean install -P dev', buildInfo: buildInfo
+            }
         }
     } finally {
         junit '**/surefire-reports/**/*.xml'
