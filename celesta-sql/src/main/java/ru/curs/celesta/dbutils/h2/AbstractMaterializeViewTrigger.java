@@ -1,8 +1,7 @@
 package ru.curs.celesta.dbutils.h2;
 
 import org.h2.api.Trigger;
-import ru.curs.celesta.Celesta;
-import ru.curs.celesta.CurrentCelesta;
+import ru.curs.celesta.CurrentScore;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
@@ -41,7 +40,7 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
                    boolean before, int type) throws SQLException {
 
     try {
-      Map<String, Grain> grains = CurrentCelesta.get().getScore().getGrains();
+      Map<String, Grain> grains = CurrentScore.get().getGrains();
       Grain g = grains.get(schemaName);
       t = g.getElement(tableName, Table.class);
 

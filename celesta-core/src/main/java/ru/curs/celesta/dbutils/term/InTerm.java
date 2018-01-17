@@ -2,7 +2,6 @@ package ru.curs.celesta.dbutils.term;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
-import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;

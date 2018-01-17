@@ -1,18 +1,18 @@
 package ru.curs.celesta.dbutils.adaptors.configuration;
 
 
-import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 
 public class DbAdaptorBuilder {
 
-  private AppSettings.DBType dbType;
+  private DBType dbType;
   private ConnectionPool connectionPool;
   private boolean h2ReferentialIntegrity;
 
-  public DbAdaptorBuilder setDbType(AppSettings.DBType dbType) {
+  public DbAdaptorBuilder setDbType(DBType dbType) {
     this.dbType = dbType;
     return this;
   }

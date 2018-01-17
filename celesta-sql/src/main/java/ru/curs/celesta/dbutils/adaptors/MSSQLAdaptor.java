@@ -51,9 +51,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
@@ -1437,8 +1437,8 @@ final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public AppSettings.DBType getType() {
-    return AppSettings.DBType.MSSQL;
+  public DBType getType() {
+    return DBType.MSSQL;
   }
 
   @Override

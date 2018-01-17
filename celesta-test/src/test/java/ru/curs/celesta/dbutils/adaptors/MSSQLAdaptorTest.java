@@ -1,14 +1,13 @@
 package ru.curs.celesta.dbutils.adaptors;
 
 import java.sql.Connection;
-import java.sql.Statement;
 import java.util.Properties;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.MSSQLServerContainer;
 import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.DbUpdater;
+import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
@@ -43,7 +42,7 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 
         dba = new MSSQLAdaptor(connectionPool);
 
-        DbUpdater dbUpdater = new DbUpdaterBuilder()
+        DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                 .dbAdaptor(dba)
                 .connectionPool(connectionPool)
                 .score(

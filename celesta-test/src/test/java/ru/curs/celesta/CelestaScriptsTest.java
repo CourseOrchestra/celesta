@@ -75,7 +75,7 @@ public class CelestaScriptsTest {
   @DisplayName("Test jython scripts")
   @ParameterizedTest(name = "{1} ==> {2}:{3}")
   @ArgumentsSource(JythonTestProvider.class)
-  public void testScripts(JythonTestProvider.TestContext testContext, AppSettings.DBType dbType,
+  public void testScripts(JythonTestProvider.TestContext testContext, DBType dbType,
                           String testClassName, String testMethod) throws Exception {
     context = testContext.celesta.callContext(sessionContext);
     testContext.testInstance.__setattr__("context", Py.java2py(context));
@@ -109,7 +109,7 @@ public class CelestaScriptsTest {
     }
 
     private Stream<Arguments> prepareStreamOfArguments(Celesta celesta) throws CelestaException {
-      AppSettings.DBType dbType = new AppSettings(celesta.getSetupProperties()).getDBType();
+      DBType dbType = new AppSettings(celesta.getSetupProperties()).getDBType();
       return TestClass.testTypesAndTheirMethods.entrySet().stream()
               .flatMap(e -> {
                 PyObject testInstance = e.getKey().__call__();

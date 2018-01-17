@@ -34,7 +34,7 @@ public class ConnectionPoolTest {
         connectionPool = ConnectionPool.create(cpc);
 
         DbAdaptorBuilder dac = new DbAdaptorBuilder()
-                .setDbType(AppSettings.DBType.H2)
+                .setDbType(DBType.H2)
                 .setConnectionPool(connectionPool)
                 .setH2ReferentialIntegrity(false);
 

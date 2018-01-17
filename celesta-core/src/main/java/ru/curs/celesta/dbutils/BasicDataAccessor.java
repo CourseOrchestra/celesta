@@ -2,114 +2,53 @@ package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.ICallContext;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.GrainElement;
 
 import java.io.Closeable;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public abstract class BasicDataAccessor implements Closeable {
-    static final String DATA_ACCESSOR_IS_CLOSED = "DataAccessor is closed.";
-
-
-    private final CallContext context;
-
-    private final Connection conn;
-    private final DBAdaptor db;
+public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContext> implements Closeable {
 
     private BasicDataAccessor previousDataAccessor;
     private BasicDataAccessor nextDataAccessor;
 
-    private boolean closed = false;
-
-
     public BasicDataAccessor(CallContext context) throws CelestaException {
-        if (context == null)
-            throw new CelestaException(
-                    "Invalid context passed to %s constructor: context should not be null.",
-                    this.getClass().getName());
-        if (context.getConn() == null)
-            throw new CelestaException(
-                    "Invalid context passed to %s constructor: connection is null.",
-                    this.getClass().getName());
-        if (context.getUserId() == null)
-            throw new CelestaException(
-                    "Invalid context passed to %s constructor: user id is null.",
-                    this.getClass().getName());
-        if (context.isClosed())
-            throw new CelestaException("Cannot create %s on a closed CallContext.",
-                    this.getClass().getName());
+        super(context);
 
         context.incDataAccessorsCount();
-        this.context = context;
 
         previousDataAccessor = context.getLastDataAccessor();
         if (previousDataAccessor != null)
             previousDataAccessor.nextDataAccessor = this;
         context.setLastDataAccessor(this);
-
-        this.conn = context.getConn();
-
-        try {
-            if (conn.isClosed())
-                throw new CelestaException("Trying to create a cursor on closed connection.");
-        } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
-        }
-        this.db = callContext().getDbAdaptor();
     }
 
-    /**
-     * Возвращает контекст вызова, в котором создан данный курсор.
-     */
-    public final CallContext callContext() {
-        return context;
+
+    @Override
+    protected void validateInitContext(CallContext context) throws CelestaException {
+        super.validateInitContext(context);
+        if (context.getUserId() == null)
+            throw new CelestaException(
+                    "Invalid context passed to %s constructor: user id is null.",
+                    this.getClass().getName());
     }
 
-    final DBAdaptor db() {
-        return db;
+    @Override
+    void closeInternal() {
+        if (this == callContext().getLastDataAccessor())
+            callContext().setLastDataAccessor(previousDataAccessor);
+        if (previousDataAccessor != null)
+            previousDataAccessor.nextDataAccessor = nextDataAccessor;
+        if (nextDataAccessor != null)
+            nextDataAccessor.previousDataAccessor = previousDataAccessor;
+        callContext().removeFromCache(this);
+        callContext().decDataAccessorsCount();
     }
-
-    final Connection conn() {
-        return conn;
-    }
-
-    /**
-     * Является ли объект доступа закрытым.
-     */
-    public boolean isClosed() {
-        return closed;
-    }
-
-    public void close() {
-        if (!isClosed()) {
-            closed = true;
-            if (this == callContext().getLastDataAccessor())
-                context.setLastDataAccessor(previousDataAccessor);
-            if (previousDataAccessor != null)
-                previousDataAccessor.nextDataAccessor = nextDataAccessor;
-            if (nextDataAccessor != null)
-                nextDataAccessor.previousDataAccessor = previousDataAccessor;
-            context.removeFromCache(this);
-            context.decDataAccessorsCount();
-        }
-    }
-
-    public abstract void clear() throws CelestaException;
 
     protected void clearSpecificState() {}
-
-    /**
-     * Объект метаданных (таблица, представление или последовательность), на основе которого создан
-     * данный объект доступа.
-     *
-     * @throws CelestaException
-     *             в случае ошибки извлечения метаинформации (в норме не должна
-     *             происходить).
-     */
-    public abstract GrainElement meta() throws CelestaException;
 
     /**
      * Есть ли у сессии права на чтение текущего объекта.

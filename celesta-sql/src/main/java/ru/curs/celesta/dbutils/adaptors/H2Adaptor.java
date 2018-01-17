@@ -1,7 +1,7 @@
 package ru.curs.celesta.dbutils.adaptors;
 
 import org.h2.value.DataType;
-import ru.curs.celesta.AppSettings;
+import ru.curs.celesta.DBType;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.h2.MaterializedViewDeleteTrigger;
@@ -999,8 +999,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public AppSettings.DBType getType() {
-    return AppSettings.DBType.H2;
+  public DBType getType() {
+    return DBType.H2;
   }
 
   @Override

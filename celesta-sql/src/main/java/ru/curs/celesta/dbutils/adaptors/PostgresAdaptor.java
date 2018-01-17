@@ -46,9 +46,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
@@ -1202,8 +1202,8 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public AppSettings.DBType getType() {
-    return AppSettings.DBType.POSTGRES;
+  public DBType getType() {
+    return DBType.POSTGRES;
   }
 
   @Override

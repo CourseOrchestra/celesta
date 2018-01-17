@@ -3,7 +3,7 @@ package ru.curs.celesta.dbutils.adaptors;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.DbUpdater;
+import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
@@ -40,7 +40,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
 
         dba = new H2Adaptor(connectionPool, appSettings.isH2ReferentialIntegrity());
 
-        DbUpdater dbUpdater = new DbUpdaterBuilder()
+        DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                 .dbAdaptor(dba)
                 .connectionPool(connectionPool)
                 .score(

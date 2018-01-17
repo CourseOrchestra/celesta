@@ -72,7 +72,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	protected Set<String> fields = Collections.emptySet();
 	protected Set<String> fieldsForStatement = Collections.emptySet();
 
-	private final PreparedStmtHolder set = new PreparedStmtHolder() {
+	final PreparedStmtHolder set = new PreparedStmtHolder() {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
@@ -92,7 +92,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	private ResultSet cursor = null;
 
-	private final PreparedStmtHolder count = new PreparedStmtHolder() {
+	final PreparedStmtHolder count = new PreparedStmtHolder() {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
@@ -123,7 +123,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 		}
 	}
 
-	private final PreparedStmtHolder position = new OrderFieldsMaskedStatementHolder() {
+	final PreparedStmtHolder position = new OrderFieldsMaskedStatementHolder() {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
@@ -141,7 +141,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	};
 
-	private final PreparedStmtHolder forwards = new OrderFieldsMaskedStatementHolder() {
+	final PreparedStmtHolder forwards = new OrderFieldsMaskedStatementHolder() {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
@@ -160,7 +160,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 		}
 
 	};
-	private final PreparedStmtHolder backwards = new OrderFieldsMaskedStatementHolder() {
+	final PreparedStmtHolder backwards = new OrderFieldsMaskedStatementHolder() {
 
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
@@ -181,9 +181,9 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	};
 
-	private final PreparedStmtHolder here = getHereHolder();
+	final PreparedStmtHolder here = getHereHolder();
 
-	private final PreparedStmtHolder first = new PreparedStmtHolder() {
+	final PreparedStmtHolder first = new PreparedStmtHolder() {
 
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
@@ -203,7 +203,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 		}
 
 	};
-	private final PreparedStmtHolder last = new PreparedStmtHolder() {
+	final PreparedStmtHolder last = new PreparedStmtHolder() {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program)
 				throws CelestaException {
@@ -320,25 +320,19 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 		};
 	}
 
-	final void close(PreparedStmtHolder... stmts) {
-		super.close();
-		closeStatements(stmts);
-	}
-
-	private void closeStatements(PreparedStmtHolder... stmts) {
+	final void closeStatements(PreparedStmtHolder... stmts) {
 		for (PreparedStmtHolder stmt : stmts) {
 			stmt.close();
 		}
 	}
 
 	/**
-	 * Закрывает курсор, высвобождает все его PreparedStatements и делает курсор
-	 * невозможным к дальнейшему использованию.
+	 * Высвобождает все PreparedStatements курсора.
 	 */
-	public void close() {
-		if (!isClosed()) {
-			close(set, forwards, backwards, here, first, last, count, position);
-		}
+	@Override
+	void closeInternal() {
+		super.closeInternal();
+		closeStatements(set, forwards, backwards, here, first, last, count, position);
 	}
 
 	final Map<String, AbstractFilter> getFilters() {
