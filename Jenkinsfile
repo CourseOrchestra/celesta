@@ -24,15 +24,15 @@ fi'''
 
     try{
         stage ('Exec Maven') {
-            ansiColor('xterm') {
-                rtMaven.run pom: 'pom.xml', goals: 'clean install -P dev', buildInfo: buildInfo
-            }
+            rtMaven.run pom: 'pom.xml', goals: 'clean install -P dev', buildInfo: buildInfo
         }
     } finally {
         junit '**/surefire-reports/**/*.xml'
     }
     
-    stage ('Publish build info') {
-        server.publishBuildInfo buildInfo
+    if (env.BRANCH_NAME == 'dev') {
+        stage ('Publish build info') {
+            server.publishBuildInfo buildInfo
+        }
     }
 }
