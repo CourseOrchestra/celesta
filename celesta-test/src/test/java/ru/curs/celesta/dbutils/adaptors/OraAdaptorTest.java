@@ -12,7 +12,7 @@ import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
-import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
 public class OraAdaptorTest extends AbstractAdaptorTest {
@@ -49,7 +49,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
                 .dbAdaptor(dba)
                 .connectionPool(connectionPool)
                 .score(
-                        new Score.ScoreBuilder()
+                        new AbstractScore.ScoreBuilder()
                                 .path(SCORE_NAME)
                                 .scoreDiscovery(new PyScoreDiscovery())
                                 .build()
@@ -70,7 +70,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
     public OraAdaptorTest() throws Exception {
         setDba(dba);
         setScore(
-                new Score.ScoreBuilder()
+                new AbstractScore.ScoreBuilder()
                         .path(SCORE_NAME)
                         .scoreDiscovery(new PyScoreDiscovery())
                         .build()

@@ -26,7 +26,7 @@ import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
@@ -51,7 +51,7 @@ public final class Celesta2DBSchema {
 	 * @throws Exception
 	 *             Любая ошибка.
 	 */
-	public static void scoreToDBS(Score s, File dbsFile) throws Exception {
+	public static void scoreToDBS(AbstractScore s, File dbsFile) throws Exception {
 
 		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder = docFactory.newDocumentBuilder();

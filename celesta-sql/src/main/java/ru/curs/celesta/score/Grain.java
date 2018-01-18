@@ -11,7 +11,7 @@ import ru.curs.celesta.CelestaException;
  */
 public final class Grain extends NamedElement {
 
-	private final Score score;
+	private final AbstractScore score;
 
 	private VersionString version = VersionString.DEFAULT;
 
@@ -38,7 +38,7 @@ public final class Grain extends NamedElement {
 
 	private final Set<String> constraintNames = new HashSet<>();
 
-	public Grain(Score score, String name) throws ParseException {
+	public Grain(AbstractScore score, String name) throws ParseException {
 		super(name);
 		if (score == null)
 			throw new IllegalArgumentException();
@@ -211,7 +211,7 @@ public final class Grain extends NamedElement {
 	/**
 	 * Возвращает модель, к которой принадлежит гранула.
 	 */
-	public Score getScore() {
+	public AbstractScore getScore() {
 		return score;
 	}
 

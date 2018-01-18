@@ -35,7 +35,6 @@
 package ru.curs.celesta.score;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -52,7 +51,7 @@ import ru.curs.celesta.score.discovery.ScoreDiscovery;
 /**
  * Корневой класс полной модели данных гранул.
  */
-public class Score {
+public abstract class AbstractScore {
 
     private final Map<String, Grain> grains = new HashMap<>();
 
@@ -62,7 +61,7 @@ public class Score {
     private File defaultGrainPath;
     private int orderCounter;
 
-    Score() {
+    AbstractScore() {
 
     }
 
@@ -74,7 +73,7 @@ public class Score {
      * @throws CelestaException в случае указания несуществующего пути или в случае двойного
      *                          определения гранулы с одним и тем же именем.
      */
-    public Score(String scorePath, ScoreDiscovery scoreDiscovery) throws CelestaException {
+    public AbstractScore(String scorePath, ScoreDiscovery scoreDiscovery) throws CelestaException {
         this.path = scorePath;
         for (String entry : scorePath.split(File.pathSeparator)) {
             File path = new File(entry.trim());
@@ -167,7 +166,7 @@ public class Score {
     }
 
     private void initSystemGrain() throws CelestaException {
-        ChecksumInputStream is = new ChecksumInputStream(Score.class.getResourceAsStream("celesta.sql"));
+        ChecksumInputStream is = new ChecksumInputStream(getSysSchemaInputStream());
 
         CelestaParser parser = new CelestaParser(is, "utf-8");
         try {
@@ -189,6 +188,8 @@ public class Score {
         }
 
     }
+
+    protected abstract InputStream getSysSchemaInputStream();
 
     /**
      * Возвращает неизменяемый набор гранул.
@@ -218,6 +219,7 @@ public class Score {
     public static final class ScoreBuilder {
         private String path;
         private ScoreDiscovery scoreDiscovery;
+        private Class<? extends AbstractScore> scoreClass;
 
         public ScoreBuilder path(String path) {
             this.path = path;
@@ -229,10 +231,21 @@ public class Score {
             return this;
         }
 
-        public Score build() throws CelestaException {
+        public ScoreBuilder scoreClass(Class<? extends AbstractScore> scoreClass) {
+            this.scoreClass = scoreClass;
+            return this;
+        }
+
+        public AbstractScore build() throws CelestaException {
             if (scoreDiscovery == null)
                 scoreDiscovery = new DefaultScoreDiscovery();
-            return new Score(path, scoreDiscovery);
+
+            try {
+                return scoreClass.getDeclaredConstructor(String.class, ScoreDiscovery.class)
+                        .newInstance(this.path, this.scoreDiscovery);
+            } catch (Exception e) {
+                throw new CelestaException(e);
+            }
         }
     }
 }

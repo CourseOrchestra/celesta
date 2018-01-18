@@ -2,7 +2,7 @@ package ru.curs.celesta.dbschemasync;
 
 import java.io.File;
 
-import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
 /**
@@ -30,7 +30,7 @@ public final class DBSchemaSync {
             System.out.println("DBS-->SCORE");
             File dbsFile = new File(args[0]);
             System.out.println("parsing score...");
-            Score s = new Score.ScoreBuilder()
+            AbstractScore s = new AbstractScore.ScoreBuilder()
                     .path(args[1])
                     .scoreDiscovery(new PyScoreDiscovery())
                     .build();
@@ -42,7 +42,7 @@ public final class DBSchemaSync {
             File dbsFile = new File(args[1]);
             System.out.println("SCORE-->DBS");
             System.out.println("parsing score...");
-            Score s = new Score.ScoreBuilder()
+            AbstractScore s = new AbstractScore.ScoreBuilder()
                     .path(args[0])
                     .scoreDiscovery(new PyScoreDiscovery())
                     .build();

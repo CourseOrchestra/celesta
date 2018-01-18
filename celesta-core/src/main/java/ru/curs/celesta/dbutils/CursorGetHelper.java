@@ -37,6 +37,7 @@ class CursorGetHelper {
   private final String tableName;
   private final Set<String> fields;
 
+  //TODO!!! We must use factories for the getting of PreparedStmtHolder's
   private final PreparedStmtHolder get = new PreparedStmtHolder() {
     @Override
     protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {

@@ -89,6 +89,13 @@ public final class CallContext implements ICallContext {
 		this.dbPid = PIDSCACHE.computeIfAbsent(this.conn, this.dbAdaptor::getDBPid);
 	}
 
+
+	/**
+	 * Duplicates callcontext with another JDBC connection.
+	 *
+	 * @throws CelestaException
+	 *             cannot create adaptor
+	 */
 	public CallContext getCopy() throws CelestaException {
 		return new CallContextBuilder()
 				.setCelesta(celesta)
@@ -127,6 +134,12 @@ public final class CallContext implements ICallContext {
 	}
 
 
+	/**
+	 * Коммитит транзакцию.
+	 *
+	 * @throws CelestaException
+	 *             в случае проблемы с БД.
+	 */
 	public void commit() throws CelestaException {
 		try {
 			conn.commit();

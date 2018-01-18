@@ -167,7 +167,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	}
 
 	@Override
-	void closeInternal() {
+	protected void closeInternal() {
 		super.closeInternal();
 		if (xRec != null)
 			xRec.close();

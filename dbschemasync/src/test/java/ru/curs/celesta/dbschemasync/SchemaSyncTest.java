@@ -1,7 +1,7 @@
 package ru.curs.celesta.dbschemasync;
 
 import org.junit.jupiter.api.Test;
-import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
 import java.io.BufferedReader;
@@ -18,7 +18,7 @@ public class SchemaSyncTest {
     void celestaToDbs() throws Exception {
         String scorePath = SchemaSyncTest.class
                 .getClassLoader().getResource("score").getFile();
-        Score s = new Score.ScoreBuilder()
+        AbstractScore s = new AbstractScore.ScoreBuilder()
                 .path(scorePath)
                 .scoreDiscovery(new PyScoreDiscovery())
                 .build();
@@ -46,7 +46,7 @@ public class SchemaSyncTest {
         File adoc = new File(scorePath, "../Layout_.adoc");
         adoc.delete();
         assertFalse(adoc.exists());
-        Score s = new Score.ScoreBuilder()
+        AbstractScore s = new AbstractScore.ScoreBuilder()
                 .path(scorePath)
                 .scoreDiscovery(new PyScoreDiscovery())
                 .build();

@@ -70,7 +70,7 @@ public class TestLyraForm {
 
 	@Test
 	public void test2() throws ParseException, CelestaException {
-		Score s = ScoreAccessor.createEmptyScore();
+		AbstractScore s = ScoreAccessor.createEmptyScore();
 		InputStream input = TestLyraForm.class.getResourceAsStream("test.sql");
 		CelestaParser cp = new CelestaParser(input, "utf-8");
 		Grain g = cp.grain(s, "testlyra");

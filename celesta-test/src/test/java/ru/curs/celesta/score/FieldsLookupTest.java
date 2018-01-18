@@ -2,13 +2,11 @@ package ru.curs.celesta.score;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import javafx.scene.control.Tab;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 
-import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -29,7 +27,7 @@ public class FieldsLookupTest {
 
     @BeforeAll
     public static void init() throws ParseException {
-        Score score = new Score();
+        AbstractScore score = new AbstractScore();
         Grain grain = new Grain(score, "test");
 
         tableA = generateTable(grain, "a");

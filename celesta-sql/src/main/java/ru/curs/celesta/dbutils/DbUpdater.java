@@ -28,13 +28,13 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
 
-    final DBAdaptor dbAdaptor;
-    final Score score;
+    protected final DBAdaptor dbAdaptor;
+    protected final AbstractScore score;
     private final boolean forceDdInitialize;
-    final ConnectionPool connectionPool;
-    ISchemaCursor schemaCursor;
+    protected final ConnectionPool connectionPool;
+    protected ISchemaCursor schemaCursor;
 
-    public DbUpdater(ConnectionPool connectionPool, Score score, boolean forceDdInitialize, DBAdaptor dbAdaptor) {
+    public DbUpdater(ConnectionPool connectionPool, AbstractScore score, boolean forceDdInitialize, DBAdaptor dbAdaptor) {
         this.connectionPool = connectionPool;
         this.score = score;
         this.forceDdInitialize = forceDdInitialize;
@@ -42,9 +42,11 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
 
-    abstract T createContext() throws CelestaException;
+    protected abstract T createContext() throws CelestaException;
 
-    abstract void initDataAccessors(T context) throws CelestaException;
+    protected abstract void initDataAccessors(T context) throws CelestaException;
+
+    protected abstract String getSchemasTableName();
 
     /**
      * Выполняет обновление структуры БД на основе разобранной объектной модели.
@@ -58,7 +60,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             initDataAccessors(context);
 
             // Проверяем наличие главной системной таблицы.
-            if (!dbAdaptor.tableExists(conn, "celesta", "grains")) {
+            if (!dbAdaptor.tableExists(conn, "celesta", getSchemasTableName())) {
                 // Если главной таблицы нет, а другие таблицы есть -- ошибка.
                 if (dbAdaptor.userTablesExist() && !forceDdInitialize)
                     throw new CelestaException("No celesta.grains table found in non-empty database.");
@@ -129,7 +131,7 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     void createSysObjects(Connection conn, Grain sys) throws CelestaException, ParseException {
         dbAdaptor.createSchemaIfNotExists("celesta");
-        dbAdaptor.createTable(conn, sys.getElement("grains", Table.class));
+        dbAdaptor.createTable(conn, sys.getElement(getSchemasTableName(), Table.class));
         dbAdaptor.createSysObjects(conn);
     }
 
@@ -274,7 +276,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    abstract void processGrainMeta(Grain g) throws CelestaException;
+    protected abstract void processGrainMeta(Grain g) throws CelestaException;
 
     void createViews(Grain g) throws CelestaException {
         Connection conn = schemaCursor.callContext().getConn();

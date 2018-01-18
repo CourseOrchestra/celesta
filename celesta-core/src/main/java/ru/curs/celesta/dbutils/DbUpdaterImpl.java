@@ -38,13 +38,18 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
 
   @Override
-  void initDataAccessors(CallContext context) throws CelestaException {
+  protected void initDataAccessors(CallContext context) throws CelestaException {
     schemaCursor = new GrainsCursor(context);
     table = new TablesCursor(context);
   }
 
-  @Override
-  CallContext createContext() throws CelestaException {
+    @Override
+    protected String getSchemasTableName() {
+        return GrainsCursor.TABLE_NAME;
+    }
+
+    @Override
+  protected CallContext createContext() throws CelestaException {
     return new CallContextBuilder()
             .setConnectionPool(connectionPool)
             .setSesContext(BasicCursor.SYSTEMSESSION)
@@ -107,7 +112,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
   }
 
   @Override
-  void processGrainMeta(Grain g) throws CelestaException {
+  protected void processGrainMeta(Grain g) throws CelestaException {
     // Обновляем справочник celesta.tables.
     table.setRange("grainid", g.getName());
     while (table.nextInSet()) {

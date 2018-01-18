@@ -6,7 +6,7 @@ public final class ScoreAccessor {
         throw new AssertionError();
     }
 
-    public static Score createEmptyScore() {
-        return new Score();
+    public static AbstractScore createEmptyScore() {
+        return new AbstractScore();
     }
 }

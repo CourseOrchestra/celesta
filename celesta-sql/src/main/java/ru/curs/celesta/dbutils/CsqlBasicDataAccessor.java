@@ -75,7 +75,7 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
         }
     }
 
-    abstract void closeInternal();
+    protected abstract void closeInternal();
 
     public abstract void clear() throws CelestaException;
 

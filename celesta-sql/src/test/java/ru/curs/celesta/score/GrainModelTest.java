@@ -13,7 +13,7 @@ import ru.curs.celesta.CelestaException;
 
 public class GrainModelTest {
 
-	private Score s = new Score();
+	private AbstractScore s = new CelestaSqlTestScore();
 
 	@BeforeAll
 	public static void Setup() throws CelestaException {

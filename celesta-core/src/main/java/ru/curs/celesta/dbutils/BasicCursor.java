@@ -330,7 +330,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	 * Высвобождает все PreparedStatements курсора.
 	 */
 	@Override
-	void closeInternal() {
+	protected void closeInternal() {
 		super.closeInternal();
 		closeStatements(set, forwards, backwards, here, first, last, count, position);
 	}
