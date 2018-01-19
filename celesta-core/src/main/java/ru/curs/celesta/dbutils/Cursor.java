@@ -50,6 +50,7 @@ import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 import ru.curs.celesta.dbutils.stmt.MaskedStatementHolder;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.dbutils.stmt.PreparedStatementHolderFactory;
 import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
@@ -69,37 +70,11 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	final CursorGetHelper getHelper;
 	private InFilterHolder inFilterHolder;
 
-
-	final MaskedStatementHolder insert = new MaskedStatementHolder() {
-
-		@Override
-		protected int[] getNullsMaskIndices() throws CelestaException {
-			// we monitor all columns for nulls
-			int[] result = new int[meta().getColumns().size()];
-			for (int i = 0; i < result.length; i++)
-				result[i] = i;
-			return result;
-		}
-
-		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
-			return db().getInsertRecordStatement(conn(), meta(), getNullsMask(), program);
-		}
-
-	};
+	final MaskedStatementHolder insert = PreparedStatementHolderFactory.createInsertHolder(meta(), db(), conn());
 
 	boolean[] updateMask = null;
 	boolean[] nullUpdateMask = null;
-	final PreparedStmtHolder update = new PreparedStmtHolder() {
-		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
-			WhereTerm where = WhereTermsMaker.getPKWhereTerm(meta());
-			PreparedStatement result = db().getUpdateRecordStatement(conn(), meta(), updateMask, nullUpdateMask, program,
-					where.getWhere());
-			where.programParams(program);
-			return result;
-		}
-	};
+	final PreparedStmtHolder update = PreparedStatementHolderFactory.createUpdateHolder(meta(), db(), conn(), updateMask, nullUpdateMask);
 
 	final PreparedStmtHolder delete = new PreparedStmtHolder() {
 

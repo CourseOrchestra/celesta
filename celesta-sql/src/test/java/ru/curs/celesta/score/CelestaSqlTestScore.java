@@ -16,7 +16,7 @@ public class CelestaSqlTestScore extends AbstractScore {
     }
 
     @Override
-    protected InputStream getSysSchemaInputStream() {
-        return AbstractScore.class.getResourceAsStream("celesta-sql.sql");
+    public String getSysSchemaName() {
+        return "celestaSql";
     }
 }

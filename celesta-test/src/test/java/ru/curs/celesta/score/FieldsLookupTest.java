@@ -27,7 +27,7 @@ public class FieldsLookupTest {
 
     @BeforeAll
     public static void init() throws ParseException {
-        AbstractScore score = new AbstractScore();
+        AbstractScore score = new Score();
         Grain grain = new Grain(score, "test");
 
         tableA = generateTable(grain, "a");

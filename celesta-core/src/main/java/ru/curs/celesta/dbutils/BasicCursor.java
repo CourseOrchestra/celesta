@@ -72,23 +72,45 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	protected Set<String> fields = Collections.emptySet();
 	protected Set<String> fieldsForStatement = Collections.emptySet();
 
-	final PreparedStmtHolder set = new PreparedStmtHolder() {
-		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program)
-				throws CelestaException {
-			FromClause from = getFrom();
+	final PreparedStmtHolder set = PreparedStatementHolderFactory.createFindSetHolder(
+			db(), conn(),
+			() -> {
+				try {
+					return getFrom();
+				} catch (CelestaException e) {
+					throw new RuntimeException(e);
+				}
+			},
+			() -> {
+				try {
+					if (BasicCursor.this.fromTerm == null) {
+						fromTerm = new FromTerm(getFrom().getParameters());
+						return BasicCursor.this.fromTerm;
+					}
+					return BasicCursor.this.fromTerm;
+				} catch(CelestaException e) {
+						throw new RuntimeException(e);
+					}
+				},
+			() -> {
+				try {
+					return BasicCursor.this.qmaker.getWhereTerm();
+				} catch (CelestaException e) {
+					throw new RuntimeException(e);
+				}
+			},
+			() -> {
+				try {
+					return getOrderBy();
+				} catch (CelestaException e) {
+					throw new RuntimeException(e);
+				}
+			},
+			() -> BasicCursor.this.offset,
+			() -> BasicCursor.this.rowCount,
+			() -> fieldsForStatement
+	);
 
-			if (fromTerm == null) {
-				fromTerm = new FromTerm(from.getParameters());
-			}
-
-			WhereTerm where = qmaker.getWhereTerm();
-			fromTerm.programParams(program);
-			where.programParams(program);
-			return db().getRecordSetStatement(conn(), getFrom(), where.getWhere(), getOrderBy(), offset,
-					rowCount, fieldsForStatement);
-		}
-	};
 
 	private ResultSet cursor = null;
 
@@ -1161,6 +1183,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 		return null;
 	}
 
+	//TODO:Must be refactored by new util class FromClauseGenerator
 	protected FromClause getFrom() throws CelestaException {
 		FromClause result = new FromClause();
 		DataGrainElement ge = meta();

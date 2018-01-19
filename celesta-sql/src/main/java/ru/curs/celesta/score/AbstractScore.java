@@ -39,6 +39,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.ParameterizedType;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +63,7 @@ public abstract class AbstractScore {
     private int orderCounter;
 
     AbstractScore() {
-
+        //TODO!!! Used only for test and must be replaced.
     }
 
     /**
@@ -172,7 +173,7 @@ public abstract class AbstractScore {
         try {
             Grain result;
             try {
-                result = parser.grain(this, "celesta");
+                result = parser.grain(this,  getSysSchemaName());
             } catch (ParseException e) {
                 throw new CelestaException(e.getMessage());
             }
@@ -189,7 +190,11 @@ public abstract class AbstractScore {
 
     }
 
-    protected abstract InputStream getSysSchemaInputStream();
+    private InputStream getSysSchemaInputStream() {
+        return this.getClass().getResourceAsStream(getSysSchemaName() + ".sql");
+    }
+
+    public abstract String getSysSchemaName();
 
     /**
      * Возвращает неизменяемый набор гранул.
@@ -216,27 +221,26 @@ public abstract class AbstractScore {
     }
 
 
-    public static final class ScoreBuilder {
+    public static class ScoreBuilder<T extends AbstractScore> {
         private String path;
         private ScoreDiscovery scoreDiscovery;
-        private Class<? extends AbstractScore> scoreClass;
+        private Class<T> scoreClass;
 
-        public ScoreBuilder path(String path) {
+        public ScoreBuilder (Class<T> scoreClass) {
+            this.scoreClass = scoreClass;
+        }
+
+        public ScoreBuilder<T> path(String path) {
             this.path = path;
             return this;
         }
 
-        public ScoreBuilder scoreDiscovery(ScoreDiscovery scoreDiscovery) {
+        public ScoreBuilder<T> scoreDiscovery(ScoreDiscovery scoreDiscovery) {
             this.scoreDiscovery = scoreDiscovery;
             return this;
         }
 
-        public ScoreBuilder scoreClass(Class<? extends AbstractScore> scoreClass) {
-            this.scoreClass = scoreClass;
-            return this;
-        }
-
-        public AbstractScore build() throws CelestaException {
+        public T build() throws CelestaException {
             if (scoreDiscovery == null)
                 scoreDiscovery = new DefaultScoreDiscovery();
 

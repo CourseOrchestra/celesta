@@ -41,5 +41,5 @@ fff int foreign key references aa(idaa) on delete cascade --первая час�
 create view testView as
  select distinct grainid as fieldAlias , ta.tablename, grains.checksum ,
    ta.tablename || grains.checksum as f1
-   from celesta.tables ta inner join celesta.grains on ta.grainid = grains.id
+   from celestaSql.tables ta inner join celestaSql.grains on ta.grainid = grains.id
    where tablename >= 'aa' and 5 between 0 and 6 or '55' > '1';

@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
-    static final String DATA_ACCESSOR_IS_CLOSED = "DataAccessor is closed.";
+    protected static final String DATA_ACCESSOR_IS_CLOSED = "DataAccessor is closed.";
 
     private final T context;
     private final Connection conn;
@@ -53,11 +53,11 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
         return context;
     }
 
-    final DBAdaptor db() {
+    protected final DBAdaptor db() {
         return db;
     }
 
-    final Connection conn() {
+    protected final Connection conn() {
         return conn;
     }
 

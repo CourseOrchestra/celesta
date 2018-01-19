@@ -60,7 +60,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             initDataAccessors(context);
 
             // Проверяем наличие главной системной таблицы.
-            if (!dbAdaptor.tableExists(conn, "celesta", getSchemasTableName())) {
+            if (!dbAdaptor.tableExists(conn, score.getSysSchemaName(), getSchemasTableName())) {
                 // Если главной таблицы нет, а другие таблицы есть -- ошибка.
                 if (dbAdaptor.userTablesExist() && !forceDdInitialize)
                     throw new CelestaException("No celesta.grains table found in non-empty database.");
@@ -120,17 +120,17 @@ public abstract class DbUpdater<T extends ICallContext> {
     void updateSysGrain(T context) throws CelestaException {
         try {
             Connection conn = context.getConn();
-            Grain sys = score.getGrain("celesta");
+            Grain sys = score.getGrain(score.getSysSchemaName());
             createSysObjects(conn, sys);
             insertGrainRec(sys);
             updateGrain(sys, connectionPool);
         } catch (ParseException e) {
-            throw new CelestaException("No 'celesta' grain definition found.");
+            throw new CelestaException("No '%s' grain definition found.", score.getSysSchemaName());
         }
     }
 
     void createSysObjects(Connection conn, Grain sys) throws CelestaException, ParseException {
-        dbAdaptor.createSchemaIfNotExists("celesta");
+        dbAdaptor.createSchemaIfNotExists(score.getSysSchemaName());
         dbAdaptor.createTable(conn, sys.getElement(getSchemasTableName(), Table.class));
         dbAdaptor.createSysObjects(conn);
     }

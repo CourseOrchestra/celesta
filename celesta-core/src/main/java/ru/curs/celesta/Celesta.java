@@ -94,7 +94,7 @@ public final class Celesta implements AutoCloseable {
 		// CELESTA STARTUP SEQUENCE
 		// 1. Разбор описания гранул.
 		System.out.print("Celesta initialization: phase 1/4 score parsing...");
-		this.score = new Score.ScoreBuilder()
+		this.score = new Score.ScoreBuilder<>(Score.class)
 				.path(appSettings.getScorePath())
 				.scoreDiscovery(new PyScoreDiscovery())
 				.build();

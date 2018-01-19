@@ -53,7 +53,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
     return new CallContextBuilder()
             .setConnectionPool(connectionPool)
             .setSesContext(BasicCursor.SYSTEMSESSION)
-            .setScore(score)
+            .setScore((Score) score)
             .setDbAdaptor(dbAdaptor)
             .setPermissionManager(permissionManager)
             .setLoggingManager(loggingManager)

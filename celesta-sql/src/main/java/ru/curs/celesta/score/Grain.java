@@ -329,7 +329,7 @@ public final class Grain extends NamedElement {
 	}
 
 	void modify() throws ParseException {
-		if ("celesta".equals(getName()) && parsingComplete)
+		if (getScore().getSysSchemaName().equals(getName()) && parsingComplete)
 			throw new ParseException("You cannot modify system grain.");
 		modified = true;
 	}

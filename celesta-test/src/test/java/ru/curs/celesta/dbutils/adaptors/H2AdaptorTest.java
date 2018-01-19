@@ -8,6 +8,7 @@ import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
 import ru.curs.celesta.score.AbstractScore;
+import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
 
@@ -44,7 +45,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
                 .dbAdaptor(dba)
                 .connectionPool(connectionPool)
                 .score(
-                        new AbstractScore.ScoreBuilder()
+                        new AbstractScore.ScoreBuilder<>(Score.class)
                                 .path(SCORE_NAME)
                                 .scoreDiscovery(new PyScoreDiscovery())
                                 .build()
@@ -65,7 +66,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
     public H2AdaptorTest() throws Exception {
         setDba(dba);
         setScore(
-                new AbstractScore.ScoreBuilder()
+                new AbstractScore.ScoreBuilder<>(Score.class)
                 .path(SCORE_NAME)
                 .scoreDiscovery(new PyScoreDiscovery())
                 .build()

@@ -27,11 +27,7 @@ public class InitTest {
 		params.setProperty("score.path", "score");
 		params.setProperty("h2.in-memory", "true");
 
-		try {
-			celesta = Celesta.createInstance(params);
-		} catch (CelestaException e) {
-			// do nothing
-		}
+		celesta = Celesta.createInstance(params);
 	}
 
 	@AfterAll
