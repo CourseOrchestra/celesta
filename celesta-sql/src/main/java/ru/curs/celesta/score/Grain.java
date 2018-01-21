@@ -377,7 +377,7 @@ public final class Grain extends NamedElement {
         }
     }
 
-    static boolean writeCelestaDoc(NamedElement e, PrintWriter bw) throws IOException {
+    static boolean writeCelestaDoc(NamedElement e, PrintWriter bw) {
         String doc = e.getCelestaDoc();
         if (doc == null) {
             return false;

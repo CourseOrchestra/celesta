@@ -1,13 +1,13 @@
 package ru.curs.celesta.dbschemasync;
 
 import org.junit.jupiter.api.Test;
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -36,7 +36,7 @@ public class SchemaSyncTest {
 
     private String getScorePath() {
         return SchemaSyncTest.class
-                    .getClassLoader().getResource("score").getFile();
+                .getClassLoader().getResource("score").getFile();
     }
 
     @Test
@@ -62,10 +62,8 @@ public class SchemaSyncTest {
                 .path(scorePath)
                 .scoreDiscovery(new PyScoreDiscovery())
                 .build();
-        StringWriter old = new StringWriter();
-        s.getGrain("logs").save(new PrintWriter(old));
-        System.out.println(old);
-
+        StringWriter oldval = new StringWriter();
+        s.getGrain("logs").save(new PrintWriter(oldval));
         File tmp = File.createTempFile("sst", "tmp");
         tmp.delete();
         try {
@@ -74,6 +72,10 @@ public class SchemaSyncTest {
         } finally {
             tmp.delete();
         }
+        StringWriter newval = new StringWriter();
+        s.getGrain("logs").save(new PrintWriter(newval));
+        assertEquals(oldval.toString().replaceAll("\\r\\n", "\n"),
+                newval.toString().replaceAll("\\r\\n", "\n"));
     }
 
 }
