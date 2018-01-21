@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Строковая колонка.
@@ -154,7 +154,7 @@ public final class StringColumn extends Column {
 	}
 
 	@Override
-	void save(BufferedWriter bw) throws IOException {
+	void save(PrintWriter bw) throws IOException {
 		super.save(bw);
 		if (isMax())
 			bw.write(" TEXT");

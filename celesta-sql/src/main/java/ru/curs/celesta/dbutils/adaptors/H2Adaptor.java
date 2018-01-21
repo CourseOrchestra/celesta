@@ -15,8 +15,8 @@ import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.*;
 import java.text.DateFormat;
@@ -373,7 +373,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     SQLGenerator gen = getViewSQLGenerator();
     try {
       StringWriter sw = new StringWriter();
-      BufferedWriter bw = new BufferedWriter(sw);
+      PrintWriter bw = new PrintWriter(sw);
 
       pv.selectScript(bw, gen);
       bw.flush();

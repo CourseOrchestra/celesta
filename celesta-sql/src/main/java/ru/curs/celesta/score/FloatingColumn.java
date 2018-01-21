@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Колонка с типом REAL.
@@ -35,7 +35,7 @@ public final class FloatingColumn extends Column {
 	}
 
 	@Override
-	void save(BufferedWriter bw) throws IOException {
+	void save(PrintWriter bw) throws IOException {
 		super.save(bw);
 		bw.write(" REAL");
 		if (!isNullable())

@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 
 /**
@@ -28,7 +28,7 @@ public abstract class GrainElement extends NamedElement {
 		return grain;
 	}
 
-	abstract void save(BufferedWriter bw) throws IOException;
+	abstract void save(PrintWriter bw) throws IOException;
 
 	/**
 	 * Возвращает Celesta-SQL представление объекта.
@@ -38,7 +38,7 @@ public abstract class GrainElement extends NamedElement {
 	 */
 	public String getCelestaSQL() throws IOException {
 		StringWriter sw = new StringWriter();
-		BufferedWriter bw = new BufferedWriter(sw);
+		PrintWriter bw = new PrintWriter(sw);
 		save(bw);
 		bw.flush();
 		return sw.toString();

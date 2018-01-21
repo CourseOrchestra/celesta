@@ -35,8 +35,8 @@
 
 package ru.curs.celesta.dbutils.adaptors;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.*;
 import java.text.DateFormat;
@@ -610,7 +610,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     SQLGenerator gen = getViewSQLGenerator();
     try {
       StringWriter sw = new StringWriter();
-      BufferedWriter bw = new BufferedWriter(sw);
+      PrintWriter bw = new PrintWriter(sw);
 
       pv.selectScript(bw, gen);
       bw.flush();
