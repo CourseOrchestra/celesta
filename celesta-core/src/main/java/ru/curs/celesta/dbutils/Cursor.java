@@ -74,7 +74,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	boolean[] updateMask = null;
 	boolean[] nullUpdateMask = null;
-	final PreparedStmtHolder update = PreparedStatementHolderFactory.createUpdateHolder(meta(), db(), conn(), updateMask, nullUpdateMask);
+	final PreparedStmtHolder update = PreparedStatementHolderFactory.createUpdateHolder(
+			meta(), db(), conn(), () -> updateMask, () -> nullUpdateMask
+	);
 
 	final PreparedStmtHolder delete = new PreparedStmtHolder() {
 

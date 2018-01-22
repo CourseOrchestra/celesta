@@ -51,13 +51,15 @@ public class PreparedStatementHolderFactory {
     }
 
     public static PreparedStmtHolder createUpdateHolder(Table meta, DBAdaptor dbAdaptor, Connection conn,
-                                                        boolean[] updateMask, boolean[] nullUpdateMask) {
+                                                        Supplier<boolean[]> updateMaskSupplier,
+                                                        Supplier<boolean[]> nullUpdateMaskSupplier) {
         return new PreparedStmtHolder() {
             @Override
             protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
                 WhereTerm where = CsqlWhereTermsMaker.getPKWhereTerm(meta);
-                PreparedStatement result = dbAdaptor.getUpdateRecordStatement(conn, meta, updateMask, nullUpdateMask, program,
-                        where.getWhere());
+                PreparedStatement result = dbAdaptor.getUpdateRecordStatement(
+                        conn, meta, updateMaskSupplier.get(), nullUpdateMaskSupplier.get(), program, where.getWhere()
+                );
                 where.programParams(program);
                 return result;
             }
