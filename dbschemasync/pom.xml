@@ -65,9 +65,10 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
 					<archive>
-				
 						<manifest>
 							<addClasspath>true</addClasspath>
+							<classpathLayoutType>custom</classpathLayoutType>
+							<customClasspathLayout>$${artifact.artifactId}-$${artifact.version}$${dashClassifier?}.$${artifact.extension}</customClasspathLayout>
 							<mainClass>ru.curs.celesta.dbschemasync.DBSchemaSync</mainClass>
 						</manifest>
 					</archive>
