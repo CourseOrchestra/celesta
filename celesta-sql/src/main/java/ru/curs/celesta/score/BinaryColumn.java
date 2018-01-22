@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Бинарная колонка (тип IMAGE или BLOB).
@@ -35,7 +35,7 @@ public final class BinaryColumn extends Column {
 	}
 
 	@Override
-	void save(BufferedWriter bw) throws IOException {
+	void save(PrintWriter bw) throws IOException {
 		super.save(bw);
 		bw.write(" BLOB");
 		if (!isNullable())

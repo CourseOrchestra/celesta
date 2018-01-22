@@ -1,13 +1,7 @@
 package ru.curs.celesta.score;
 
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
+import java.io.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -291,7 +285,7 @@ public class ScoreTest {
         Table t = g.getElement("testTable", Table.class);
         StringWriter sw = new StringWriter();
 
-        BufferedWriter bw = new BufferedWriter(sw);
+        PrintWriter bw = new PrintWriter(sw);
         t.save(bw);
         bw.flush();
         // System.out.println(sw);
@@ -323,7 +317,7 @@ public class ScoreTest {
         CelestaParser cp = new CelestaParser(input, "utf-8");
         Grain g = cp.grain(s, "test1");
         StringWriter sw = new StringWriter();
-        BufferedWriter bw = new BufferedWriter(sw);
+        PrintWriter bw = new PrintWriter(sw);
 
         Table t = g.getElement("ttt1", Table.class);
         t.save(bw);

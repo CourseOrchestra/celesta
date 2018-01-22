@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -358,7 +358,7 @@ public class ForeignKey {
 		parentTable.removeFK(this);
 	}
 
-	void save(BufferedWriter bw, int count) throws IOException {
+	void save(PrintWriter bw, int count) throws IOException {
 		bw.write("ALTER TABLE ");
 		bw.write(getParentTable().getName());
 		bw.write(" ADD CONSTRAINT ");
@@ -412,7 +412,6 @@ public class ForeignKey {
 			break;
 		}
 
-		bw.write(";");
-		bw.newLine();
+		bw.println(";");
 	}
 }

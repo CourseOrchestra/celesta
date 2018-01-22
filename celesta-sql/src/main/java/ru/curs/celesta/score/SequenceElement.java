@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -68,34 +68,33 @@ public class SequenceElement extends GrainElement {
 
 
     @Override
-    void save(BufferedWriter bw) throws IOException {
+    void save(PrintWriter bw) throws IOException {
         Grain.writeCelestaDoc(this, bw);
-        bw.write(String.format("CREATE SEQUENCE %s ", getName()));
+        bw.printf("CREATE SEQUENCE %s ", getName());
 
 
         if (hasArgument(Argument.START_WITH)) {
-            bw.write(String.format("START WITH %s ", getArgument(Argument.START_WITH)));
+            bw.printf("START WITH %s ", getArgument(Argument.START_WITH));
         }
 
         if (hasArgument(Argument.INCREMENT_BY)) {
-            bw.write(String.format("INCREMENT BY %s ", getArgument((Argument.INCREMENT_BY))));
+            bw.printf("INCREMENT BY %s ", getArgument((Argument.INCREMENT_BY)));
         }
 
         if (hasArgument(Argument.MINVALUE)) {
-            bw.write(String.format("MINVALUE %s ", getArgument(Argument.MINVALUE)));
+            bw.printf("MINVALUE %s ", getArgument(Argument.MINVALUE));
         }
 
         if (hasArgument(Argument.MAXVALUE)) {
-            bw.write(String.format("MAXVALUE %s ", getArgument(Argument.MAXVALUE)));
+            bw.printf("MAXVALUE %s ", getArgument(Argument.MAXVALUE));
         }
 
         if (hasArgument(Argument.CYCLE) && (Boolean)getArgument(Argument.CYCLE)) {
             bw.write("CYCLE ");
         }
 
-        bw.write(";");
-        bw.newLine();
-        bw.newLine();
+        bw.println(";");
+        bw.println();
     }
 
     void finalizeParsing() throws ParseException {

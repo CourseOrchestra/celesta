@@ -4,20 +4,17 @@ import org.junit.jupiter.api.Test;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SchemaSyncTest {
     @Test
     void celestaToDbs() throws Exception {
-        String scorePath = SchemaSyncTest.class
-                .getClassLoader().getResource("score").getFile();
+        String scorePath = getScorePath();
         Score s = new Score.ScoreBuilder()
                 .path(scorePath)
                 .scoreDiscovery(new PyScoreDiscovery())
@@ -37,12 +34,16 @@ public class SchemaSyncTest {
         }
     }
 
+    private String getScorePath() {
+        return SchemaSyncTest.class
+                .getClassLoader().getResource("score").getFile();
+    }
+
     @Test
     void dbsToCelesta() throws Exception {
         String dbs = SchemaSyncTest.class
                 .getClassLoader().getResource("test.dbs").getFile();
-        String scorePath = SchemaSyncTest.class
-                .getClassLoader().getResource("score").getFile();
+        String scorePath = getScorePath();
         File adoc = new File(scorePath, "../Layout_.adoc");
         adoc.delete();
         assertFalse(adoc.exists());
@@ -52,6 +53,29 @@ public class SchemaSyncTest {
                 .build();
         DBSchema2Celesta.dBSToScore(new File(dbs), s, true);
         assertTrue(adoc.exists());
+    }
+
+    @Test
+    void bothWays() throws Exception {
+        String scorePath = getScorePath();
+        Score s = new Score.ScoreBuilder()
+                .path(scorePath)
+                .scoreDiscovery(new PyScoreDiscovery())
+                .build();
+        StringWriter oldval = new StringWriter();
+        s.getGrain("logs").save(new PrintWriter(oldval));
+        File tmp = File.createTempFile("sst", "tmp");
+        tmp.delete();
+        try {
+            Celesta2DBSchema.scoreToDBS(s, tmp);
+            DBSchema2Celesta.dBSToScore(tmp, s, false);
+        } finally {
+            tmp.delete();
+        }
+        StringWriter newval = new StringWriter();
+        s.getGrain("logs").save(new PrintWriter(newval));
+        assertEquals(oldval.toString().replaceAll("\\r\\n", "\n"),
+                newval.toString().replaceAll("\\r\\n", "\n"));
     }
 
 }

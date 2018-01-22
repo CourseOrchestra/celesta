@@ -159,7 +159,9 @@ public final class Celesta2DBSchema {
 	private static void writeComment(String celestaDoc, Document doc, Element parent) {
 		if (celestaDoc != null) {
 			Element comment = doc.createElement("comment");
-			comment.appendChild(doc.createCDATASection(celestaDoc));
+			//Seems to be a bug in XML Builder
+            // that substitute CRLF->CRCRLF and this doubles spaces between lines in Celstadoc
+			comment.appendChild(doc.createCDATASection(celestaDoc.replaceAll("\\r\\n", "\n")));
 			parent.appendChild(comment);
 		}
 	}

@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -45,7 +45,7 @@ public abstract class AbstractView extends DataGrainElement {
    */
   abstract void setWhereCondition(Expr whereCondition) throws ParseException;
 
-  public void selectScript(final BufferedWriter bw, SQLGenerator gen) throws IOException {
+  public void selectScript(final PrintWriter bw, SQLGenerator gen) throws IOException {
     BWWrapper bww = new BWWrapper();
 
     writeSelectPart(bw, gen, bww);
@@ -55,7 +55,7 @@ public abstract class AbstractView extends DataGrainElement {
   }
 
 
-  void writeSelectPart(final BufferedWriter bw, SQLGenerator gen, BWWrapper bww) throws IOException {
+  void writeSelectPart(final PrintWriter bw, SQLGenerator gen, BWWrapper bww) throws IOException {
     bww.append("  select ", bw);
     if (distinct)
       bww.append("distinct ", bw);
@@ -73,16 +73,16 @@ public abstract class AbstractView extends DataGrainElement {
       bww.append(st, bw);
       cont = true;
     }
-    bw.newLine();
+    bw.println();
   }
 
-  void writeFromPart(final BufferedWriter bw, SQLGenerator gen) throws IOException {
+  void writeFromPart(final PrintWriter bw, SQLGenerator gen) throws IOException {
     bw.write("  from ");
     boolean cont = false;
     for (TableRef tRef : getTables().values()) {
       if (cont) {
-        bw.newLine();
-        bw.write(String.format("    %s ", tRef.getJoinType().toString()));
+        bw.println();
+        bw.printf("    %s ", tRef.getJoinType().toString());
         bw.write("join ");
       }
       bw.write(gen.tableName(tRef));
@@ -94,11 +94,11 @@ public abstract class AbstractView extends DataGrainElement {
     }
   }
 
-  void writeWherePart(final BufferedWriter bw, SQLGenerator gen) throws IOException {}
+  void writeWherePart(final PrintWriter bw, SQLGenerator gen) throws IOException {}
 
-  void writeGroupByPart(final BufferedWriter bw, SQLGenerator gen) throws IOException {
+  void writeGroupByPart(final PrintWriter bw, SQLGenerator gen) throws IOException {
     if (!groupByColumns.isEmpty()) {
-      bw.newLine();
+      bw.println();
       bw.write(" group by ");
 
       int countOfProcessed = 0;
@@ -282,11 +282,11 @@ public abstract class AbstractView extends DataGrainElement {
     private static final String PADDING = "    ";
     private int l = 0;
 
-    private void append(String s, BufferedWriter bw) throws IOException {
+    private void append(String s, PrintWriter bw) throws IOException {
       bw.write(s);
       l += s.length();
       if (l >= LINE_SIZE) {
-        bw.newLine();
+        bw.println();
         bw.write(PADDING);
         l = PADDING.length();
       }

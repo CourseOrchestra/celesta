@@ -1,9 +1,6 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -88,29 +85,27 @@ public class View extends AbstractView {
    * @param gen генератор-visitor
    * @throws IOException ошибка записи в поток
    */
-  public void createViewScript(BufferedWriter bw, SQLGenerator gen) throws IOException {
-    bw.write(gen.preamble(this));
-    bw.newLine();
+  public void createViewScript(PrintWriter bw, SQLGenerator gen) throws IOException {
+    bw.println(gen.preamble(this));
     selectScript(bw, gen);
   }
 
   @Override
-  void writeWherePart(BufferedWriter bw, SQLGenerator gen) throws IOException {
+  void writeWherePart(PrintWriter bw, SQLGenerator gen) throws IOException {
     if (whereCondition != null) {
-      bw.newLine();
+      bw.println();
       bw.write("  where ");
       bw.write(gen.generateSQL(whereCondition));
     }
   }
 
   @Override
-  void save(BufferedWriter bw) throws IOException {
+  void save(PrintWriter bw) throws IOException {
     SQLGenerator gen = new CelestaSQLGen();
     Grain.writeCelestaDoc(this, bw);
     createViewScript(bw, gen);
-    bw.write(";");
-    bw.newLine();
-    bw.newLine();
+    bw.println(";");
+    bw.println();
   }
 
 
@@ -122,7 +117,7 @@ public class View extends AbstractView {
     if (queryString != null)
       return queryString;
     StringWriter sw = new StringWriter();
-    BufferedWriter bw = new BufferedWriter(sw);
+    PrintWriter bw = new PrintWriter(sw);
     SQLGenerator gen = new CelestaSQLGen();
     try {
       selectScript(bw, gen);

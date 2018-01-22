@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
@@ -140,7 +140,7 @@ public class Index extends GrainElement implements HasColumns {
 	}
 
 	@Override
-	void save(BufferedWriter bw) throws IOException {
+	void save(PrintWriter bw) throws IOException {
 		Grain.writeCelestaDoc(this, bw);
 		bw.write("CREATE INDEX ");
 		bw.write(getName());
@@ -154,8 +154,7 @@ public class Index extends GrainElement implements HasColumns {
 			bw.write(c.getName());
 			comma = true;
 		}
-		bw.write(");");
-		bw.newLine();
+		bw.println(");");
 	}
 
 	@Override
