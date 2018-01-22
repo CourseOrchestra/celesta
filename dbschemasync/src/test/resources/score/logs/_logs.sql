@@ -1,5 +1,7 @@
 CREATE GRAIN logs VERSION '1.2';
 
+/**This is Celesta doc.
+This is second line of Celestadoc.*/
 CREATE TABLE SystemLog(
 	id INT IDENTITY NOT NULL,
 	level INT NOT NULL,
@@ -16,24 +18,22 @@ CREATE TABLE SystemLog(
 ) WITH NO VERSION CHECK;
 
 
+/**This is Celesta doc.
+This is second line of Celestadoc.*/
 CREATE TABLE BettorLog(
 	id INT IDENTITY NOT NULL,
 	level INT NOT NULL,
 	sender_type INT NOT NULL,
-	/*
-	{caption: 'SID сотрудника'}*/
+	/**{caption: 'SID сотрудника'}*/
 	sender_id VARCHAR(50) NOT NULL,
-	/*
-	{caption: 'Время изменения'}*/
+	/**{caption: 'Время изменения'}*/
 	dt DATETIME NOT NULL,
 	event_id INT,
 	target_type INT,
-	/*
-	{caption: 'ID пользователя'}*/
+	/**{caption: 'ID пользователя'}*/
 	target_id VARCHAR(50),
 	result INT NOT NULL DEFAULT 0,
-	/*
-	{caption: 'Сообщение'}*/
+	/**{caption: 'Сообщение'}*/
 	message TEXT,
 	
 	CONSTRAINT Pk_BettorLog PRIMARY KEY (id)

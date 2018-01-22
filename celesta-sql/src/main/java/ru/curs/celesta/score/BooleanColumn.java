@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Булевская колонка (тип BIT).
@@ -55,7 +55,7 @@ public final class BooleanColumn extends Column {
 	}
 
 	@Override
-	void save(BufferedWriter bw) throws IOException {
+	void save(PrintWriter bw) throws IOException {
 		super.save(bw);
 		bw.write(" BIT");
 		if (!isNullable())

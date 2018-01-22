@@ -1,11 +1,10 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -252,15 +251,13 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 	}
 
 	@Override
-	void save(BufferedWriter bw) throws IOException {
+	void save(PrintWriter bw) throws IOException {
 		Grain.writeCelestaDoc(this, bw);
-		bw.write(String.format("CREATE TABLE %s(", getName()));
-		bw.newLine();
+		bw.printf("CREATE TABLE %s(%n", getName());
 		boolean comma = false;
 		for (Column c : getColumns().values()) {
 			if (comma) {
-				bw.write(",");
-				bw.newLine();
+				bw.println(",");
 			}
 			c.save(bw);
 			comma = true;
@@ -270,7 +267,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 		if (!getPrimaryKey().isEmpty()) {
 			if (comma)
 				bw.write(",");
-			bw.newLine();
+			bw.println();
 			bw.write("  CONSTRAINT ");
 			bw.write(getPkConstraintName());
 			bw.write(" PRIMARY KEY (");
@@ -281,8 +278,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 				bw.write(c.getName());
 				comma = true;
 			}
-			bw.write(")");
-			bw.newLine();
+			bw.println(")");
 		}
 
 		bw.write(")");
@@ -299,9 +295,8 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 				bw.write(" WITH");
 			bw.write(" NO AUTOUPDATE");
 		}
-		bw.write(";");
-		bw.newLine();
-		bw.newLine();
+		bw.println(";");
+		bw.println();
 	}
 
 	/**

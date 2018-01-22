@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -130,7 +130,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 		parentTable.removeColumn(this);
 	}
 
-	void save(BufferedWriter bw) throws IOException {
+	void save(PrintWriter bw) throws IOException {
 		bw.write("  ");
 		if (Grain.writeCelestaDoc(this, bw))
 			bw.write("  ");

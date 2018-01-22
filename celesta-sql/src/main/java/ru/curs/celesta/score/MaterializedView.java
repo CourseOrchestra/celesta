@@ -2,10 +2,7 @@ package ru.curs.celesta.score;
 
 import ru.curs.celesta.event.TriggerType;
 
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -139,15 +136,13 @@ public class MaterializedView extends AbstractView implements TableElement {
   }
 
   @Override
-  void save(BufferedWriter bw) throws IOException {
+  void save(PrintWriter bw) throws IOException {
     SQLGenerator gen = new CelestaSQLGen();
     Grain.writeCelestaDoc(this, bw);
-    bw.write(gen.preamble(this));
-    bw.newLine();
+    bw.println(gen.preamble(this));
     selectScript(bw, gen);
-    bw.write(";");
-    bw.newLine();
-    bw.newLine();
+    bw.println(";");
+    bw.println();
   }
 
   @Override
@@ -239,7 +234,7 @@ public class MaterializedView extends AbstractView implements TableElement {
     try {
       SQLGenerator gen = new SQLGenerator();
       StringWriter sw = new StringWriter();
-      BufferedWriter bw = new BufferedWriter(sw);
+      PrintWriter bw = new PrintWriter(sw);
       BWWrapper bww = new BWWrapper();
 
       writeSelectPart(bw, gen, bww);
@@ -254,7 +249,7 @@ public class MaterializedView extends AbstractView implements TableElement {
     try {
       SQLGenerator gen = new SQLGenerator();
       StringWriter sw = new StringWriter();
-      BufferedWriter bw = new BufferedWriter(sw);
+      PrintWriter bw = new PrintWriter(sw);
 
       writeGroupByPart(bw, gen);
       bw.flush();

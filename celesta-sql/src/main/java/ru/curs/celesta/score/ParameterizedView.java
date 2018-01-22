@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -70,13 +70,12 @@ public class ParameterizedView extends View {
   }
 
   @Override
-  void save(BufferedWriter bw) throws IOException {
+  void save(PrintWriter bw) throws IOException {
     SQLGenerator gen = new CelestaSQLGen();
     Grain.writeCelestaDoc(this, bw);
     createViewScript(bw, gen);
-    bw.write(";");
-    bw.newLine();
-    bw.newLine();
+    bw.println(";");
+    bw.println();
   }
 
   /**

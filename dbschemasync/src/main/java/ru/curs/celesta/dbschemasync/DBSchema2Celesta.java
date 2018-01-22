@@ -1,10 +1,6 @@
 package ru.curs.celesta.dbschemasync;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -129,19 +125,14 @@ public final class DBSchema2Celesta {
         File docFile = new File(dbs.getAbsoluteFile().getParentFile().getAbsolutePath(),
                 String.format("%s.adoc", viewName));
         try {
-            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(docFile), "utf-8"))) {
-                bw.write(String.format("[uml,file=\"%s.png\"]", viewName));
-                bw.newLine();
-                bw.write("--");
-                bw.newLine();
-                bw.write("@startuml");
-                bw.newLine();
-                bw.newLine();
-                bw.write("skinparam monochrome true");
-                bw.newLine();
-                bw.write("skinparam dpi 150");
-                bw.newLine();
-                bw.newLine();
+            try (PrintWriter bw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(docFile), "utf-8"))) {
+                bw.printf("[uml,file=\"%s.png\"]%n", viewName);
+                bw.println("--");
+                bw.println("@startuml");
+                bw.println();
+                bw.println("skinparam monochrome true");
+                bw.println("skinparam dpi 150");
+                bw.println();
                 NodeList l = layout.getChildNodes();
                 Set<Table> tables = new HashSet<>();
                 for (int i = 0; i < l.getLength(); i++) {
@@ -152,24 +143,22 @@ public final class DBSchema2Celesta {
                         String eName = entity.getAttribute("name");
                         Table t = g.getTables().get(eName);
                         if (t != null) {
-                            bw.write(String.format("class %s {%n", t.getName()));
+                            bw.printf("class %s {%n", t.getName());
                             for (Entry<String, Column> c : t.getColumns().entrySet()) {
-                                bw.write(String.format("  %s: %s%n", c.getKey(), c.getValue().getCelestaType()));
+                                bw.printf("  %s: %s%n", c.getKey(), c.getValue().getCelestaType());
                             }
-                            bw.write("}");
-                            bw.newLine();
-                            bw.newLine();
+                            bw.println("}");
+                            bw.println();
                             tables.add(t);
                         } else {
                             View v = g.getViews().get(eName);
                             if (v != null) {
-                                bw.write(String.format("class %s <<view>>{%n", v.getName()));
+                                bw.printf("class %s <<view>>{%n", v.getName());
                                 for (Entry<String, ViewColumnMeta> c : v.getColumns().entrySet()) {
                                     bw.write(String.format("  %s: %s%n", c.getKey(), c.getValue().getCelestaType()));
                                 }
-                                bw.write("}");
-                                bw.newLine();
-                                bw.newLine();
+                                bw.println("}");
+                                bw.println();
                             }
                         }
                     }
@@ -188,10 +177,8 @@ public final class DBSchema2Celesta {
                                     fk.getReferencedTable().getName(), columns));
                     }
 
-                bw.write("@enduml");
-                bw.newLine();
-                bw.write("--");
-                bw.newLine();
+                bw.println("@enduml");
+                bw.println("--");
             }
 
         } catch (IOException | ParseException e) {

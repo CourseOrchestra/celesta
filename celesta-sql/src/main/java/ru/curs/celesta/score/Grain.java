@@ -60,19 +60,17 @@ public final class Grain extends NamedElement {
 		});
 	}
 
-	/**
-	 * Добавляет элемент в гранулу.
-	 *
-	 * @param element
-	 *            Новый элемент гранулы.
-	 * @throws ParseException
-	 *             В случае, если элемент с таким именем уже существует.
-	 */
-	@SuppressWarnings("unchecked")
-	<T extends GrainElement> void addElement(T element) throws ParseException {
-		if (element.getGrain() != this) {
-			throw new IllegalArgumentException();
-		}
+    /**
+     * Добавляет элемент в гранулу.
+     *
+     * @param element Новый элемент гранулы.
+     * @throws ParseException В случае, если элемент с таким именем уже существует.
+     */
+    @SuppressWarnings("unchecked")
+    <T extends GrainElement> void addElement(T element) throws ParseException {
+        if (element.getGrain() != this) {
+            throw new IllegalArgumentException();
+        }
 
 		Optional<String> typeNameOfElementWithSameName = grainElements.entrySet().stream()
 				// Не рассматриваем тот же тип (у его холдера своя проверка)
@@ -94,15 +92,14 @@ public final class Grain extends NamedElement {
 		getElementsHolder((Class<T>) element.getClass()).addElement(element);
 	}
 
-	/**
-	 * Возвращает набор элементов указанного типа, определённый в грануле.
-	 *
-	 * @param classOfElement
-	 *            Класс элементов из набора
-	 */
-	public <T extends GrainElement> Map<String, T> getElements(Class<T> classOfElement) {
-		return getElementsHolder(classOfElement).getElements();
-	}
+    /**
+     * Возвращает набор элементов указанного типа, определённый в грануле.
+     *
+     * @param classOfElement Класс элементов из набора
+     */
+    public <T extends GrainElement> Map<String, T> getElements(Class<T> classOfElement) {
+        return getElementsHolder(classOfElement).getElements();
+    }
 
 	/**
 	 * Возвращает набор индексов, определённых в грануле.
@@ -132,39 +129,34 @@ public final class Grain extends NamedElement {
 		return getElementsHolder(View.class).getElements();
 	}
 
-	/**
-	 * Возвращает элемент по его имени и классу, либо исключение с сообщением о
-	 * том, что элемент не найден.
-	 *
-	 * @param name
-	 *            Имя
-	 * @param classOfElement
-	 *            Класс элемента
-	 * @throws ParseException
-	 *             Если элемент с таким именем и классом не найден в грануле.
-	 */
-	public <T extends GrainElement> T getElement(String name, Class<T> classOfElement) throws ParseException {
-		T result = getElementsHolder(classOfElement).get(name);
-		if (result == null)
-			throw new ParseException(
-					String.format("%s '%s' not found in grain '%s'", classOfElement.getSimpleName(), name, getName()));
-		return result;
-	}
+    /**
+     * Возвращает элемент по его имени и классу, либо исключение с сообщением о
+     * том, что элемент не найден.
+     *
+     * @param name           Имя
+     * @param classOfElement Класс элемента
+     * @throws ParseException Если элемент с таким именем и классом не найден в грануле.
+     */
+    public <T extends GrainElement> T getElement(String name, Class<T> classOfElement) throws ParseException {
+        T result = getElementsHolder(classOfElement).get(name);
+        if (result == null)
+            throw new ParseException(
+                    String.format("%s '%s' not found in grain '%s'", classOfElement.getSimpleName(), name, getName()));
+        return result;
+    }
 
-	/**
-	 * Добавляет индекс.
-	 *
-	 * @param index
-	 *            Новый индекс гранулы.
-	 * @throws ParseException
-	 *             В случае, если индекс с таким именем уже существует.
-	 */
-	public void addIndex(Index index) throws ParseException {
-		if (index.getGrain() != this)
-			throw new IllegalArgumentException();
-		modify();
-		indices.addElement(index);
-	}
+    /**
+     * Добавляет индекс.
+     *
+     * @param index Новый индекс гранулы.
+     * @throws ParseException В случае, если индекс с таким именем уже существует.
+     */
+    public void addIndex(Index index) throws ParseException {
+        if (index.getGrain() != this)
+            throw new IllegalArgumentException();
+        modify();
+        indices.addElement(index);
+    }
 
 	synchronized void removeIndex(Index index) throws ParseException {
 		modify();
@@ -247,33 +239,29 @@ public final class Grain extends NamedElement {
 		this.checksum = checksum;
 	}
 
-	/**
-	 * Устанавливает версию гранулы.
-	 *
-	 * @param version
-	 *            Quoted-string. В процессе установки обрамляющие и двойные
-	 *            кавычки удаляются.
-	 * @throws ParseException
-	 *             в случае, если имеется неверный формат quoted string.
-	 */
-	public void setVersion(String version) throws ParseException {
-		modify();
-		this.version = new VersionString(StringColumn.unquoteString(version));
-	}
+    /**
+     * Устанавливает версию гранулы.
+     *
+     * @param version Quoted-string. В процессе установки обрамляющие и двойные
+     *                кавычки удаляются.
+     * @throws ParseException в случае, если имеется неверный формат quoted string.
+     */
+    public void setVersion(String version) throws ParseException {
+        modify();
+        this.version = new VersionString(StringColumn.unquoteString(version));
+    }
 
-	/**
-	 * Добавление имени ограничения (для проверерки, что оно уникальное).
-	 *
-	 * @param name
-	 *            Имя ограничения.
-	 * @throws ParseException
-	 *             В случае, если ограничение с таким именем уже определено.
-	 */
-	void addConstraintName(String name) throws ParseException {
-		if (constraintNames.contains(name))
-			throw new ParseException(String.format("Constraint '%s' is defined more than once in a grain.", name));
-		constraintNames.add(name);
-	}
+    /**
+     * Добавление имени ограничения (для проверерки, что оно уникальное).
+     *
+     * @param name Имя ограничения.
+     * @throws ParseException В случае, если ограничение с таким именем уже определено.
+     */
+    void addConstraintName(String name) throws ParseException {
+        if (constraintNames.contains(name))
+            throw new ParseException(String.format("Constraint '%s' is defined more than once in a grain.", name));
+        constraintNames.add(name);
+    }
 
 	/**
 	 * Указывает на то, что разбор гранулы из файла завершён.
@@ -302,10 +290,10 @@ public final class Grain extends NamedElement {
 				throw new ParseException(String.format("Identifier %s can't be used for the naming of sequence as  it'is reserved by Celesta.", sequenceName));
 		}
 
-		parsingComplete = true;
-		modified = false;
-		dependencyOrder = score.nextOrderCounter();
-	}
+        parsingComplete = true;
+        modified = false;
+        dependencyOrder = score.nextOrderCounter();
+    }
 
 	/**
 	 * Возвращает путь к грануле.
@@ -334,106 +322,92 @@ public final class Grain extends NamedElement {
 		modified = true;
 	}
 
-	/**
-	 * Сохраняет гранулу обратно в файл, расположенный в grainPath.
-	 *
-	 * @throws CelestaException
-	 *             ошибка ввода-вывода
-	 */
-	void save() throws CelestaException {
-		// Сохранять неизменённую гранулу нет смысла.
-		if (!modified)
-			return;
-		if (!grainPath.exists())
-			grainPath.mkdirs();
-		File scriptFile = new File(String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, getName()));
-		try (
-			BufferedWriter bw = new BufferedWriter(
-					new OutputStreamWriter(
-							new FileOutputStream(scriptFile), StandardCharsets.UTF_8))
-		) {
-				writeCelestaDoc(this, bw);
-				bw.write("CREATE SCHEMA ");
-				bw.write(getName());
-				bw.write(" VERSION '");
-				bw.write(getVersion().toString());
-				bw.write("';");
-				bw.newLine();
-				bw.newLine();
-				bw.write("-- *** TABLES ***");
-				bw.newLine();
-				for (Table t : getElements(Table.class).values())
-					t.save(bw);
 
-				bw.write("-- *** FOREIGN KEYS ***");
-				bw.newLine();
-				int j = 1;
-				for (Table t : getElements(Table.class).values())
-					for (ForeignKey fk : t.getForeignKeys())
-						fk.save(bw, j++);
+    public void save(PrintWriter bw) throws IOException {
+        writeCelestaDoc(this, bw);
+        bw.printf("CREATE SCHEMA %s VERSION '%s';%n", getName(), getVersion().toString());
+        bw.println();
+        bw.println("-- *** TABLES ***");
+        for (Table t : getElements(Table.class).values())
+            t.save(bw);
 
-				bw.write("-- *** INDICES ***");
-				bw.newLine();
-				for (Index i : getIndices().values())
-					i.save(bw);
+        bw.println("-- *** FOREIGN KEYS ***");
+        int j = 1;
+        for (Table t : getElements(Table.class).values())
+            for (ForeignKey fk : t.getForeignKeys())
+                fk.save(bw, j++);
 
-				bw.write("-- *** VIEWS ***");
-				bw.newLine();
-				for (View v : getElements(View.class).values())
-					v.save(bw);
+        bw.println("-- *** INDICES ***");
+        for (Index i : getIndices().values())
+            i.save(bw);
 
-				bw.write("-- *** MATERIALIZED VIEWS ***");
-				bw.newLine();
-				for (MaterializedView mv : getElements(MaterializedView.class).values())
-					mv.save(bw);
+        bw.println("-- *** VIEWS ***");
+        for (View v : getElements(View.class).values())
+            v.save(bw);
 
-				bw.write("-- *** PARAMETERIZED VIEWS ***");
-				bw.newLine();
-				for (ParameterizedView pv : getElements(ParameterizedView.class).values())
-					pv.save(bw);
-		} catch (IOException e) {
-			throw new CelestaException("Cannot save '%s' grain script: %s", getName(), e.getMessage());
-		}
-	}
+        bw.println("-- *** MATERIALIZED VIEWS ***");
+        for (MaterializedView mv : getElements(MaterializedView.class).values())
+            mv.save(bw);
 
-	static boolean writeCelestaDoc(NamedElement e, BufferedWriter bw) throws IOException {
-		String doc = e.getCelestaDoc();
-		if (doc == null) {
-			return false;
-		} else {
-			bw.write("/**");
-			bw.write(doc);
-			bw.write("*/");
-			bw.newLine();
-			return true;
-		}
-	}
+        bw.println("-- *** PARAMETERIZED VIEWS ***");
+        for (ParameterizedView pv : getElements(ParameterizedView.class).values())
+            pv.save(bw);
+    }
 
-	/**
-	 * Возвращает представление по его имени, либо исключение с сообщением о
-	 * том, что представление не найдено.
-	 * 
-	 * @param name
-	 *            Имя
-	 * @throws ParseException
-	 *             Если таблица с таким именем не найдена в грануле.
-	 */
+    /**
+     * Сохраняет гранулу обратно в файл, расположенный в grainPath.
+     *
+     * @throws CelestaException ошибка ввода-вывода
+     */
+    void save() throws CelestaException {
+        // Сохранять неизменённую гранулу нет смысла.
+        if (!modified)
+            return;
+        if (!grainPath.exists())
+            grainPath.mkdirs();
+        File scriptFile = new File(String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, getName()));
+        try (
+                PrintWriter bw = new PrintWriter(
+                        new OutputStreamWriter(
+                                new FileOutputStream(scriptFile), StandardCharsets.UTF_8))
+        ) {
+            save(bw);
+        } catch (IOException e) {
+            throw new CelestaException("Cannot save '%s' grain script: %s", getName(), e.getMessage());
+        }
+    }
+
+    static boolean writeCelestaDoc(NamedElement e, PrintWriter bw) {
+        String doc = e.getCelestaDoc();
+        if (doc == null) {
+            return false;
+        } else {
+            bw.printf("/**%s*/%n", doc);
+            return true;
+        }
+    }
+
+    /**
+     * Возвращает представление по его имени, либо исключение с сообщением о
+     * том, что представление не найдено.
+     *
+     * @param name Имя
+     * @throws ParseException Если таблица с таким именем не найдена в грануле.
+     */
 
 	public View getView(String name) throws ParseException {
 		return getElement(name, View.class);
 	}
 
-	/**
-	 * Возвращает таблицу по её имени, либо исключение с сообщением о том, что
-	 * таблица не найдена.
-	 * 
-	 * @param name
-	 *            Имя
-	 * @throws ParseException
-	 *             Если таблица с таким именем не найдена в грануле.
-	 */
-	public Table getTable(String name) throws ParseException {
-		return getElement(name, Table.class);
-	}
+    /**
+     * Возвращает таблицу по её имени, либо исключение с сообщением о том, что
+     * таблица не найдена.
+     *
+     * @param name Имя
+     * @throws ParseException Если таблица с таким именем не найдена в грануле.
+     */
+    public Table getTable(String name) throws ParseException {
+        return getElement(name, Table.class);
+    }
 
 }

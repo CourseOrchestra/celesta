@@ -35,8 +35,8 @@
 
 package ru.curs.celesta.dbutils.adaptors;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -1046,7 +1046,7 @@ final class MSSQLAdaptor extends DBAdaptor {
     SQLGenerator gen = getViewSQLGenerator();
     try {
       StringWriter sw = new StringWriter();
-      BufferedWriter bw = new BufferedWriter(sw);
+      PrintWriter bw = new PrintWriter(sw);
 
       pv.selectScript(bw, gen);
       bw.flush();
