@@ -35,11 +35,11 @@
 package ru.curs.celesta.score;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.ParameterizedType;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +52,7 @@ import ru.curs.celesta.score.discovery.ScoreDiscovery;
 /**
  * Корневой класс полной модели данных гранул.
  */
-public class Score {
+public abstract class AbstractScore {
 
     private final Map<String, Grain> grains = new HashMap<>();
 
@@ -62,8 +62,8 @@ public class Score {
     private File defaultGrainPath;
     private int orderCounter;
 
-    Score() {
-
+    AbstractScore() {
+        //TODO!!! Used only for test and must be replaced.
     }
 
     /**
@@ -74,7 +74,7 @@ public class Score {
      * @throws CelestaException в случае указания несуществующего пути или в случае двойного
      *                          определения гранулы с одним и тем же именем.
      */
-    public Score(String scorePath, ScoreDiscovery scoreDiscovery) throws CelestaException {
+    public AbstractScore(String scorePath, ScoreDiscovery scoreDiscovery) throws CelestaException {
         this.path = scorePath;
         for (String entry : scorePath.split(File.pathSeparator)) {
             File path = new File(entry.trim());
@@ -167,13 +167,13 @@ public class Score {
     }
 
     private void initSystemGrain() throws CelestaException {
-        ChecksumInputStream is = new ChecksumInputStream(Score.class.getResourceAsStream("celesta.sql"));
+        ChecksumInputStream is = new ChecksumInputStream(getSysSchemaInputStream());
 
         CelestaParser parser = new CelestaParser(is, "utf-8");
         try {
             Grain result;
             try {
-                result = parser.grain(this, "celesta");
+                result = parser.grain(this,  getSysSchemaName());
             } catch (ParseException e) {
                 throw new CelestaException(e.getMessage());
             }
@@ -189,6 +189,12 @@ public class Score {
         }
 
     }
+
+    private InputStream getSysSchemaInputStream() {
+        return this.getClass().getResourceAsStream(getSysSchemaName() + ".sql");
+    }
+
+    public abstract String getSysSchemaName();
 
     /**
      * Возвращает неизменяемый набор гранул.
@@ -215,24 +221,35 @@ public class Score {
     }
 
 
-    public static final class ScoreBuilder {
+    public static class ScoreBuilder<T extends AbstractScore> {
         private String path;
         private ScoreDiscovery scoreDiscovery;
+        private Class<T> scoreClass;
 
-        public ScoreBuilder path(String path) {
+        public ScoreBuilder (Class<T> scoreClass) {
+            this.scoreClass = scoreClass;
+        }
+
+        public ScoreBuilder<T> path(String path) {
             this.path = path;
             return this;
         }
 
-        public ScoreBuilder scoreDiscovery(ScoreDiscovery scoreDiscovery) {
+        public ScoreBuilder<T> scoreDiscovery(ScoreDiscovery scoreDiscovery) {
             this.scoreDiscovery = scoreDiscovery;
             return this;
         }
 
-        public Score build() throws CelestaException {
+        public T build() throws CelestaException {
             if (scoreDiscovery == null)
                 scoreDiscovery = new DefaultScoreDiscovery();
-            return new Score(path, scoreDiscovery);
+
+            try {
+                return scoreClass.getDeclaredConstructor(String.class, ScoreDiscovery.class)
+                        .newInstance(this.path, this.scoreDiscovery);
+            } catch (Exception e) {
+                throw new CelestaException(e);
+            }
         }
     }
 }

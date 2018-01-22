@@ -7,7 +7,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.dbutils.DbUpdaterBuilder;
+import ru.curs.celesta.dbutils.DbUpdaterImpl;
+import ru.curs.celesta.dbutils.LoggingManager;
+import ru.curs.celesta.dbutils.PermissionManager;
+import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
@@ -41,7 +45,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
                 .dbAdaptor(dba)
                 .connectionPool(connectionPool)
                 .score(
-                        new Score.ScoreBuilder()
+                        new AbstractScore.ScoreBuilder<>(Score.class)
                                 .path(SCORE_NAME)
                                 .scoreDiscovery(new PyScoreDiscovery())
                                 .build()
@@ -62,7 +66,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
     public PostgresAdaptorTest() throws Exception {
         setDba(dba);
         setScore(
-                new Score.ScoreBuilder()
+                new AbstractScore.ScoreBuilder<>(Score.class)
                         .path(SCORE_NAME)
                         .scoreDiscovery(new PyScoreDiscovery())
                         .build());

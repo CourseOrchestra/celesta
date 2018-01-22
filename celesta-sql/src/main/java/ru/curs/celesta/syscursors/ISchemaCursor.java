@@ -38,6 +38,8 @@ public interface ISchemaCursor {
 
     void setLength(int length);
 
+    Date getLastmodified();
+
     void setLastmodified(Date lastmodified);
 
     void setMessage(String message);

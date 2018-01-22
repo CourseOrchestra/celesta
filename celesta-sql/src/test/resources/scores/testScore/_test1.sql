@@ -1,5 +1,5 @@
 /**описание гранулы: * grain celestadoc*/
-CREATE GRAIN test1 VERSION '2.0';
+CREATE SCHEMA test1 VERSION '2.0';
 
 -- *** TABLES ***
 CREATE TABLE table1(

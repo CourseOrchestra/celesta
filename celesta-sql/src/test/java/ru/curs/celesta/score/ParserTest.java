@@ -54,7 +54,7 @@ public class ParserTest extends AbstractParsingTest {
   private void parseAndSaveCsqlScript(String csqlScript, File grainPath, String grainName) throws Exception {
     try (InputStream is = new ByteArrayInputStream(csqlScript.getBytes(StandardCharsets.UTF_8))) {
       CelestaParser cp = new CelestaParser(is, "utf-8");
-      Grain g = cp.grain(new Score(), grainName);
+      Grain g = cp.grain(new CelestaSqlTestScore(), grainName);
       g.setGrainPath(grainPath);
       g.modify();
       g.save();

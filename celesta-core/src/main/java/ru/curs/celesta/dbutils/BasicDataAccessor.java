@@ -37,7 +37,7 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
     }
 
     @Override
-    void closeInternal() {
+    protected void closeInternal() {
         if (this == callContext().getLastDataAccessor())
             callContext().setLastDataAccessor(previousDataAccessor);
         if (previousDataAccessor != null)

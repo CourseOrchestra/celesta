@@ -17,7 +17,7 @@ public class CompileTest {
 
 		URL url = CompileTest.class.getResource("test.sql");
 		CelestaParser cp = new CelestaParser(url.openStream(), "utf-8");
-		Score score = ScoreAccessor.createEmptyScore();
+		AbstractScore score = ScoreAccessor.createEmptyScore();
 		Grain g = cp.grain(score, "test1");
 		StringWriter sw = new StringWriter();
 		PrintWriter bw = new PrintWriter(sw);

@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.dbutils.stmt.PreparedStatementHolderFactory;
 import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
@@ -37,14 +38,9 @@ class CursorGetHelper {
   private final String tableName;
   private final Set<String> fields;
 
-  private final PreparedStmtHolder get = new PreparedStmtHolder() {
-    @Override
-    protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
-      WhereTerm where = WhereTermsMaker.getPKWhereTermForGet(meta);
-      where.programParams(program);
-      return db.getOneRecordStatement(conn, meta, where.getWhere(), fields);
-    }
-  };
+  private final PreparedStmtHolder get;
+
+
 
   public CursorGetHelper(DBAdaptor db, Connection conn, TableElement meta,
                          String tableName, Set<String> fields) {
@@ -53,6 +49,8 @@ class CursorGetHelper {
     this.meta = meta;
     this.tableName = tableName;
     this.fields = fields;
+
+    this.get = PreparedStatementHolderFactory.createGetHolder(meta, db, conn);
   }
 
 

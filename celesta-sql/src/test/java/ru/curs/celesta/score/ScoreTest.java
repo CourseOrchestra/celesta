@@ -22,7 +22,7 @@ public class ScoreTest {
 
     @Test
     public void test1() throws CelestaException, ParseException {
-        Score s = new Score.ScoreBuilder()
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_2 + File.pathSeparator + COMPOSITE_SCORE_PATH_1)
                 .build();
         assertTrue(s.getGrains().size() < 20, () -> String.format("Too many grains?: %d", s.getGrains().size()));
@@ -47,7 +47,7 @@ public class ScoreTest {
         assertEquals(COMPOSITE_SCORE_PATH_1 + File.separator + "grain2", g2.getGrainPath().toString());
         assertEquals(COMPOSITE_SCORE_PATH_2 + File.separator + "grain3", g3.getGrainPath().toString());
 
-        Grain sys = s.getGrain("celesta");
+        Grain sys = s.getGrain("celestaSql");
         a = sys.getElement("grains", Table.class);
         assertEquals("grains", a.getName());
         assertTrue(sys.getDependencyOrder() < o1);
@@ -57,7 +57,10 @@ public class ScoreTest {
 
     @Test
     public void test2() throws CelestaException, ParseException, IOException {
-        Score s = new Score.ScoreBuilder().path(COMPOSITE_SCORE_PATH_1).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .path(COMPOSITE_SCORE_PATH_1)
+                .build();
+
         Grain g1 = s.getGrain("grain1");
         View v = g1.getElement("testView", View.class);
         assertEquals("testView", v.getName());
@@ -70,8 +73,8 @@ public class ScoreTest {
 
         String[] expected = {
                 "  select distinct grainid as fieldAlias, ta.tablename as tablename, grains.checksum as checksum",
-                "    , ta.tablename || grains.checksum as f1", "  from celesta.tables as ta",
-                "    INNER join celesta.grains as grains on ta.grainid = grains.id",
+                "    , ta.tablename || grains.checksum as f1", "  from celestaSql.tables as ta",
+                "    INNER join celestaSql.grains as grains on ta.grainid = grains.id",
                 "  where tablename >= 'aa' AND 5 BETWEEN 0 AND 6 OR '55' > '1'"};
 
         assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
@@ -79,7 +82,7 @@ public class ScoreTest {
 
     @Test
     public void modificationTest1() throws CelestaException, ParseException {
-        Score s = new Score.ScoreBuilder()
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_1 + File.pathSeparator + COMPOSITE_SCORE_PATH_2)
                 .build();
         Grain g1 = s.getGrain("grain1");
@@ -107,8 +110,10 @@ public class ScoreTest {
 
     @Test
     public void modificationTest2() throws CelestaException, ParseException {
-        Score s = new Score.ScoreBuilder().path(COMPOSITE_SCORE_PATH_1).build();
-        Grain celesta = s.getGrain("celesta");
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .path(COMPOSITE_SCORE_PATH_1)
+                .build();
+        Grain celesta = s.getGrain("celestaSql");
         assertFalse(celesta.isModified());
         // Проверяем, что модифицировать элементы системной гранулы недопустимо.
         Table tables = celesta.getElement("tables", Table.class);
@@ -124,11 +129,13 @@ public class ScoreTest {
 
     @Test
     public void modificationTest3() throws CelestaException, ParseException {
-        Score s = new Score.ScoreBuilder().path(COMPOSITE_SCORE_PATH_2 + File.pathSeparator + COMPOSITE_SCORE_PATH_1).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .path(COMPOSITE_SCORE_PATH_2 + File.pathSeparator + COMPOSITE_SCORE_PATH_1)
+                .build();
         Grain g1 = s.getGrain("grain1");
         Grain g2 = s.getGrain("grain2");
         Grain g3 = s.getGrain("grain3");
-        Grain celesta = s.getGrain("celesta");
+        Grain celesta = s.getGrain("celestaSql");
         Grain g4 = new Grain(s, "newgrain");
 
         assertFalse(g1.isModified());
@@ -157,7 +164,9 @@ public class ScoreTest {
 
     @Test
     public void modificationTest4() throws CelestaException, ParseException {
-        Score s = new Score.ScoreBuilder().path(COMPOSITE_SCORE_PATH_1).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .path(COMPOSITE_SCORE_PATH_1)
+                .build();
         Grain g2 = s.getGrain("grain2");
         assertFalse(g2.isModified());
 
@@ -173,7 +182,7 @@ public class ScoreTest {
 
     @Test
     public void modificationTest5() throws CelestaException, ParseException {
-        Score s = new Score.ScoreBuilder()
+        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_1 + File.pathSeparator + COMPOSITE_SCORE_PATH_2)
                 .build();
         Grain g2 = s.getGrain("grain2");
@@ -199,7 +208,8 @@ public class ScoreTest {
 
     @Test
     public void modificationTest6() throws CelestaException, ParseException {
-        Score s = new Score.ScoreBuilder().path(COMPOSITE_SCORE_PATH_1).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
+                .build();
         Grain g2 = s.getGrain("grain2");
         // Нельзя создать view с именем таблицы
         boolean itWas = false;
@@ -223,7 +233,8 @@ public class ScoreTest {
 
     @Test
     public void modificationTest7() throws CelestaException, ParseException, IOException {
-        Score s = new Score.ScoreBuilder().path(COMPOSITE_SCORE_PATH_1).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
+                .build();
         Grain g1 = s.getGrain("grain1");
         assertEquals(1, g1.getElements(View.class).size());
         View v = g1.getElement("testView", View.class);
@@ -235,7 +246,9 @@ public class ScoreTest {
 
     @Test
     public void modificationTest8() throws CelestaException, ParseException, IOException {
-        Score s = new Score.ScoreBuilder().path(COMPOSITE_SCORE_PATH_1).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+                .path(COMPOSITE_SCORE_PATH_1)
+                .build();
         Grain g1 = s.getGrain("grain1");
         assertEquals(1, g1.getElements(View.class).size());
         assertFalse(g1.isModified());
@@ -258,7 +271,9 @@ public class ScoreTest {
 
     @Test
     public void setCelestaDoc() throws ParseException, CelestaException {
-        Score s = new Score.ScoreBuilder().path(TEST_SCORE_PATH).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+                .path(TEST_SCORE_PATH)
+                .build();
         Grain g = s.getGrain("testGrain");
         Table t = g.getElement("testTable", Table.class);
         t.setCelestaDocLexem("/** бла бла бла бла*/");
@@ -280,7 +295,9 @@ public class ScoreTest {
     @Test
     public void saveTest() throws ParseException, CelestaException, IOException {
         // Проверяется функциональность записи динамически изменённых объектов.
-        Score s = new Score.ScoreBuilder().path(TEST_SCORE_PATH).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+                .path(TEST_SCORE_PATH)
+                .build();
         Grain g = s.getGrain("testGrain");
         Table t = g.getElement("testTable", Table.class);
         StringWriter sw = new StringWriter();
@@ -312,7 +329,7 @@ public class ScoreTest {
     public void saveTest2() throws ParseException, IOException {
         // Проверяется функциональность записи динамически изменённых объектов с
         // опциями (Read Only, Version Check).
-        Score s = new Score();
+        AbstractScore s = new CelestaSqlTestScore();
         InputStream input = ParserTest.class.getResourceAsStream("test.sql");
         CelestaParser cp = new CelestaParser(input, "utf-8");
         Grain g = cp.grain(s, "test1");
@@ -340,7 +357,9 @@ public class ScoreTest {
 
     @Test
     public void fknameTest() throws ParseException, CelestaException {
-        Score s = new Score.ScoreBuilder().path(TEST_SCORE_PATH).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+                .path(TEST_SCORE_PATH)
+                .build();
         Grain g = s.getGrain("testGrain");
         Table t = g.getElement("aLongIdentityTableNaaame", Table.class);
         ForeignKey[] ff = t.getForeignKeys().toArray(new ForeignKey[0]);
@@ -352,7 +371,9 @@ public class ScoreTest {
 
     @Test
     public void viewTest() throws ParseException, CelestaException {
-        Score s = new Score.ScoreBuilder().path(TEST_SCORE_PATH).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+                .path(TEST_SCORE_PATH)
+                .build();
         Grain g = s.getGrain("testGrain");
 
         View v = g.getElement("testView", View.class);
@@ -378,7 +399,9 @@ public class ScoreTest {
 
     @Test
     public void vewTest2() throws CelestaException, ParseException {
-        Score s = new Score.ScoreBuilder().path(TEST_SCORE_PATH).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+                .path(TEST_SCORE_PATH)
+                .build();
         Grain g = s.getGrain("testGrain");
         View v = g.getElement("testView3", View.class);
         String[] expected = {"  select 1 as a, 1.4 as b, 1 as c, 1 as d, 1 as e, 1 as f, 1 as g, 1 as h, 1 as j",
@@ -400,7 +423,8 @@ public class ScoreTest {
 
     @Test
     public void viewTest3() throws CelestaException, ParseException {
-        Score s = new Score.ScoreBuilder().path(TEST_SCORE_PATH).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class).path(TEST_SCORE_PATH)
+                .build();
         Grain g = s.getGrain("testGrain");
         View v = g.getElement("testView4", View.class);
         String[] expected = {"  select f1 as f1, f4 as f4, f5 as f5, f4 + f5 as s, f5 * f5 + 1 as s2",
@@ -417,7 +441,8 @@ public class ScoreTest {
 
     @Test
     public void viewTest4() throws CelestaException, ParseException {
-        Score s = new Score.ScoreBuilder().path(TEST_SCORE_PATH).build();
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class).path(TEST_SCORE_PATH)
+                .build();
         Grain g = s.getGrain("testGrain");
         View v = g.getElement("testView5", View.class);
         Table t = g.getElement("testTable", Table.class);

@@ -31,7 +31,7 @@ public abstract class AbstractAdaptorTest {
     final static String SCORE_NAME = "testScore";
 
     private DBAdaptor dba;
-    private Score score;
+    private AbstractScore score;
 
     private Connection conn;
     private Table t;
@@ -87,7 +87,7 @@ public abstract class AbstractAdaptorTest {
         this.dba = dba;
     }
 
-    protected void setScore(Score score) {
+    protected void setScore(AbstractScore score) {
         this.score = score;
     }
 

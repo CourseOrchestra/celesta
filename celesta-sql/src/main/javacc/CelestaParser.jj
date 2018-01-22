@@ -166,7 +166,7 @@ SPECIAL_TOKEN:
 }
 
 /*Metamodel. Root rule.*/
-Grain grain(Score s, String name):
+Grain grain(AbstractScore s, String name):
 {
    /*This work is dedicated to Maria, my misterious muse :-)
      Ivan Ponomarev, June 2013.*/

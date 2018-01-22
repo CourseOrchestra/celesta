@@ -31,7 +31,7 @@ import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
@@ -55,7 +55,7 @@ public final class DBSchema2Celesta {
      * @param withPlantUml также вывести PlantUml-диаграммы для каждого из View.
      * @throws Exception любая ошибка.
      */
-    public static void dBSToScore(File dbs, Score refScore, boolean withPlantUml) throws Exception {
+    public static void dBSToScore(File dbs, AbstractScore refScore, boolean withPlantUml) throws Exception {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         Document doc;
@@ -108,7 +108,7 @@ public final class DBSchema2Celesta {
 
     }
 
-    private static void plantUml(boolean withPlantUml, File dbs, Score refScore, NodeList l) throws CelestaException {
+    private static void plantUml(boolean withPlantUml, File dbs, AbstractScore refScore, NodeList l) throws CelestaException {
         if (withPlantUml) {
             for (int i = 0; i < l.getLength(); i++) {
                 Node n = l.item(i);
@@ -120,7 +120,7 @@ public final class DBSchema2Celesta {
         }
     }
 
-    private static void writeADoc(File dbs, Element layout, Score refScore) throws CelestaException {
+    private static void writeADoc(File dbs, Element layout, AbstractScore refScore) throws CelestaException {
         String viewName = layout.getAttribute("name");
         File docFile = new File(dbs.getAbsoluteFile().getParentFile().getAbsolutePath(),
                 String.format("%s.adoc", viewName));
