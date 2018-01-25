@@ -1,10 +1,12 @@
 package ru.curs.celesta;
 
+import java.util.Arrays;
+
 public enum DBType {
     /**
      * Postgre.
      */
-    POSTGRES {
+    POSTGRESQL {
         @Override
         public String getDriverClassName() {
             return "org.postgresql.Driver";
@@ -48,4 +50,11 @@ public enum DBType {
     };
 
     abstract public String getDriverClassName();
+
+    public static DBType getByNameIgnoreCase(String name) {
+        return Arrays.stream(values())
+                .filter(n -> n.name().equalsIgnoreCase(name))
+                .findFirst()
+                .get();
+    }
 }

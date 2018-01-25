@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.ArrayList;
 import java.io.StringReader;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.DBType;
 
 //CHECKSTYLE:OFF
 public class CelestaParser{
@@ -59,6 +60,7 @@ PARSER_END(CelestaParser)
 |   <K_DEFAULT:      "DEFAULT">
 |   <K_DELETE:       "DELETE">
 |   <K_DISTINCT:     "DISTINCT">
+|   <K_EXEC:         "EXEC"|"EXECUTE">: EXEC_STATE
 |   <K_FALSE:        "FALSE">
 |   <K_FOREIGN:      "FOREIGN">
 |   <K_FROM:         "FROM">
@@ -125,6 +127,15 @@ PARSER_END(CelestaParser)
 |    <K_AUTOUPDATE:  "AUTOUPDATE">
 }
 
+<EXEC_STATE> TOKEN:
+{
+     <K_NATIVE:   "NATIVE">
+|    <K_DBTYPE:   "ORACLE"|"POSTGRESQL"|"MSSQL"|"H2">
+|    <NATIVE_SQL: "--{{" (~["-"]|"-"(("-")+"}-")*(~["-"]|("-")+(~["-", "}"]|"}"~["-", "}"])))*"-"(("-")+"}-")*("-")+"}}">
+|    <K_AFTER:    "AFTER">
+|    <K_BEFORE:   "BEFORE">
+}
+
 TOKEN: /* Datatypes */
 {
    <K_INT:       "INT">
@@ -184,7 +195,9 @@ Grain grain(AbstractScore s, String name):
    <K_GRAIN_VERSION>
    t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}<K_END_OF_STATEMENT>
    (
-    ( ([doc = <CELESTA_DOC>] <K_CREATE> (
+    (
+        (
+            ([doc = <CELESTA_DOC>] <K_CREATE> (
                     createTable(g, doc == null? null: doc.toString())
                   | createIndex(g, doc == null? null: doc.toString())
 				  | createView(g, doc == null? null: doc.toString())
@@ -193,7 +206,10 @@ Grain grain(AbstractScore s, String name):
 				  | createSequence(g, doc == null? null: doc.toString())
 				  )
 				  {doc = null;} )
-	 | (<K_ALTER>   alterTable(g)))
+	        | (<K_ALTER>   alterTable(g))
+	    )
+	    | (<K_EXEC> executeNativeSql(g))
+	 )
 	 <K_END_OF_STATEMENT>)*
    <EOF>
    {
@@ -823,7 +839,8 @@ void fromClause(AbstractView v):
 TableRef join(AbstractView v):
 { TableRef tRef;
   TableRef.JoinType jt;
-  Expr onExpr;}
+  Expr onExpr;
+}
 {
   (<K_INNER> {jt = TableRef.JoinType.INNER;} | <K_LEFT> {jt = TableRef.JoinType.LEFT;}| <K_RIGHT> {jt = TableRef.JoinType.RIGHT;}) 
    <K_JOIN>
@@ -834,4 +851,22 @@ TableRef join(AbstractView v):
      tRef.setOnExpr(onExpr);
 	 return tRef;
    }
+}
+
+void executeNativeSql(Grain g):
+{
+    Token sql;
+    boolean isBefore = false;
+    Token dbType;
+}
+{
+    <K_NATIVE> dbType = <K_DBTYPE> (<K_BEFORE> {isBefore = true;} | <K_AFTER>)
+    sql = <NATIVE_SQL>
+    {
+        g.addNativeSql(
+            sql.toString(),
+            isBefore,
+            DBType.getByNameIgnoreCase(dbType.toString())
+        );
+    }
 }

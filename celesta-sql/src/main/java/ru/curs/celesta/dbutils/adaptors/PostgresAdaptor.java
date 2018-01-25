@@ -1203,7 +1203,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   @Override
   public DBType getType() {
-    return DBType.POSTGRES;
+    return DBType.POSTGRESQL;
   }
 
   @Override

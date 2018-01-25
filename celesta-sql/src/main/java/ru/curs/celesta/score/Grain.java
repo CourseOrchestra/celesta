@@ -3,8 +3,11 @@ package ru.curs.celesta.score;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.DBType;
 
 /**
  * Гранула.
@@ -409,5 +412,33 @@ public final class Grain extends NamedElement {
     public Table getTable(String name) throws ParseException {
         return getElement(name, Table.class);
     }
+
+	private static final Pattern NATIVE_SQL = Pattern.compile("--\\{\\{(.*)--}}", Pattern.DOTALL);
+
+    private Map<DBType, List<String>> beforeSql = new HashMap<>();
+    private Map<DBType, List<String>> afterSql = new HashMap<>();
+
+    void addNativeSql(String sql, boolean isBefore, DBType dbType) throws ParseException {
+		Matcher m = NATIVE_SQL.matcher(sql);
+		if (!m.matches())
+			throw new ParseException("Native sql should match pattern --{{...--}}, was " + sql);
+
+    	final List<String> sqlList;
+
+    	if (isBefore)
+			sqlList = beforeSql.computeIfAbsent(dbType, (dbTypeVar) -> new ArrayList<>());
+    	else
+			sqlList = afterSql.computeIfAbsent(dbType, (dbTypeVar) -> new ArrayList<>());
+
+    	sqlList.add(m.group(1));
+	}
+
+	public List<String> getBeforeSqlList(DBType dbType) {
+    	return beforeSql.getOrDefault(dbType, Collections.emptyList());
+	}
+
+	public List<String> getAfterSqlList(DBType dbType) {
+		return afterSql.getOrDefault(dbType, Collections.emptyList());
+	}
 
 }

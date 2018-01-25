@@ -34,7 +34,7 @@ public abstract class InterpolationInitializer {
     public boolean initialize(final BasicCursor c, int count) throws CelestaException {
         if (count == 0) {
             return false;
-        } else if (DBType.POSTGRES.equals(dbAdaptor.getType())) {
+        } else if (DBType.POSTGRESQL.equals(dbAdaptor.getType())) {
             return initializePostgres(c, count);
         } else {
             return initializeCommon(c);

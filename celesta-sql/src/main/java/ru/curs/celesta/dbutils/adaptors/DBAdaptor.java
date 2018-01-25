@@ -115,7 +115,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         case ORACLE:
           db = new OraAdaptor(connectionPool);
           break;
-        case POSTGRES:
+        case POSTGRESQL:
           db = new PostgresAdaptor(connectionPool);
           break;
         case H2:
