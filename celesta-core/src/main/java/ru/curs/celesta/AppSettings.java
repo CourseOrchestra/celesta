@@ -111,7 +111,7 @@ public final class AppSettings {
     if (url.startsWith("jdbc:sqlserver")) {
       return DBType.MSSQL;
     } else if (url.startsWith("jdbc:postgresql")) {
-      return DBType.POSTGRES;
+      return DBType.POSTGRESQL;
     } else if (url.startsWith("jdbc:oracle")) {
       return DBType.ORACLE;
     } else if (url.startsWith("jdbc:h2")) {

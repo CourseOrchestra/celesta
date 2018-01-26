@@ -200,6 +200,8 @@ public abstract class DbUpdater<T extends ICallContext> {
             // Схему создаём, если ещё не создана.
             dbAdaptor.createSchemaIfNotExists(g.getName());
 
+            beforeGrainUpdating(g);
+
             // Удаляем все представления
             dropAllViews(g);
             // Удаляем все параметризованные представления
@@ -248,6 +250,7 @@ public abstract class DbUpdater<T extends ICallContext> {
 
             processGrainMeta(g);
 
+            afterGrainUpdating(g);
             // По завершении -- обновление номера версии, контрольной суммы
             // и выставление в статус ready
             schemaCursor.setState(ISchemaCursor.READY);
@@ -275,6 +278,10 @@ public abstract class DbUpdater<T extends ICallContext> {
             return false;
         }
     }
+
+    protected void beforeGrainUpdating(Grain g) throws CelestaException { }
+
+    protected void afterGrainUpdating(Grain g) throws CelestaException { }
 
     protected abstract void processGrainMeta(Grain g) throws CelestaException;
 

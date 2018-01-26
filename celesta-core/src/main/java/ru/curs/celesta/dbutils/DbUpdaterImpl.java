@@ -26,6 +26,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
   private final LoggingManager loggingManager;
   private TablesCursor table;
 
+  static final String EXEC_NATIVE_NOT_SUPPORTED_MESSAGE = "\"EXECUTE NATIVE\" expression is not supported";
 
   public DbUpdaterImpl(ConnectionPool connectionPool, Score score, boolean forceDdInitialize, DBAdaptor dba,
                        PermissionManager permissionManager, LoggingManager loggingManager) {
@@ -160,4 +161,14 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
       table.tryInsert();
     }
   }
+
+  @Override
+  protected void beforeGrainUpdating(Grain g) throws CelestaException {
+    for (DBType dbType : DBType.values()) {
+      if (!g.getBeforeSqlList(dbType).isEmpty() || !g.getAfterSqlList(dbType).isEmpty()) {
+        throw new CelestaException(EXEC_NATIVE_NOT_SUPPORTED_MESSAGE);
+      }
+    }
+  }
+
 }
