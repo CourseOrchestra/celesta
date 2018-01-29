@@ -3,6 +3,8 @@ package ru.curs.celesta.score;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+
 /**
  * Created by ioann on 11.09.2017.
  */
@@ -10,38 +12,38 @@ public class TableParsingTest extends AbstractParsingTest {
 
   @Test
   public void testParsingFailsWhenSinglePkAndIndexMatches() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("table/testParsingFailsWhenSinglePkAndIndexMatches.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "table/testParsingFailsWhenSinglePkAndIndexMatches.sql"
+    );
+    assertThrows(ParseException.class, () -> parse(f));
   }
 
   @Test
   public void testParsingFailsWhenComplexPkAndIndexMatches() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("table/testParsingFailsWhenComplexPkAndIndexMatches.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "table/testParsingFailsWhenComplexPkAndIndexMatches.sql"
+    );
+    assertThrows(ParseException.class, () -> parse(f));
   }
 
   @Test
-  public void testParsingNotFailsWhenComplexPkAndIndexMatchesByFieldsButNotByOrder() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream(
+  public void testParsingNotFailsWhenComplexPkAndIndexMatchesByFieldsButNotByOrder() throws Exception {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
             "table/testParsingNotFailsWhenComplexPkAndIndexMatchesByFieldsButNotByOrder.sql"
-        ));
-    CelestaParser cp = new CelestaParser(input);
-    cp.grain(s, "test");
+    );
+    parse(f);
   }
 
   @Test
-  public void testOptions() throws ParseException{
-    ChecksumInputStream input = new ChecksumInputStream(
-            ParserTest.class.getResourceAsStream(
-                    "table/testTableOptionsCombinations.sql"
-            ));
-    CelestaParser cp = new CelestaParser(input);
-    Grain g = cp.grain(s, "test");
+  public void testOptions() throws Exception{
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "table/testTableOptionsCombinations.sql"
+    );
+    Grain g = parse(f);
     Table t = g.getTable("t1");
     assertTrue(t.isReadOnly());
     assertTrue(t.isAutoUpdate());

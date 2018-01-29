@@ -22,7 +22,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
     private static PostgresAdaptor dba;
 
     @BeforeAll
-    public static void beforeAll() throws CelestaException {
+    public static void beforeAll() throws Exception {
         postgres.start();
 
         Properties params = new Properties();

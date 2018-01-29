@@ -31,8 +31,8 @@ public abstract class AbstractView extends DataGrainElement {
     });
   }
 
-  public AbstractView(Grain grain, String name) throws ParseException {
-    super(grain, name);
+  public AbstractView(GrainPart grainPart, String name) throws ParseException {
+    super(grainPart, name);
   }
 
   abstract String viewType();

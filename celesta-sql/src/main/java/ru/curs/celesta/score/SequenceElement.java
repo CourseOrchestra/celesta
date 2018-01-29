@@ -12,9 +12,9 @@ public class SequenceElement extends GrainElement {
 
     private final Map<Argument, Object> arguments = new LinkedHashMap<>();
 
-    SequenceElement(Grain g, String name) throws ParseException {
-        super(g, name);
-        g.addElement(this);
+    SequenceElement(GrainPart grainPart, String name) throws ParseException {
+        super(grainPart, name);
+        getGrain().addElement(this);
     }
 
     void startWith(Long startWith) throws ParseException {

@@ -23,7 +23,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
     private static H2Adaptor dba;
 
     @BeforeAll
-    public static void beforeAll() throws CelestaException {
+    public static void beforeAll() throws Exception {
         Properties params = new Properties();
         params.put("score.path", "score");
         params.put("h2.in-memory", "true");

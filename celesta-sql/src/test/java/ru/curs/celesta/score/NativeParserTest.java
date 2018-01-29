@@ -30,7 +30,7 @@ public class NativeParserTest {
                 () -> assertTrue(g.getBeforeSqlList(DBType.H2).isEmpty()),
                 () -> assertTrue(g.getAfterSqlList(DBType.H2).isEmpty()),
                 () -> assertEquals(1, g.getAfterSqlList(DBType.ORACLE).size()),
-                () -> assertEquals("", g.getAfterSqlList(DBType.ORACLE).get(0))
+                () -> assertEquals("", g.getAfterSqlList(DBType.ORACLE).get(0).getSql())
         );
     }
 
@@ -50,7 +50,7 @@ public class NativeParserTest {
                 () -> assertTrue(g.getBeforeSqlList(DBType.H2).isEmpty()),
                 () -> assertTrue(g.getAfterSqlList(DBType.H2).isEmpty()),
                 () -> assertEquals(1, g.getAfterSqlList(DBType.POSTGRESQL).size()),
-                () -> assertEquals(" ", g.getAfterSqlList(DBType.POSTGRESQL).get(0))
+                () -> assertEquals(" ", g.getAfterSqlList(DBType.POSTGRESQL).get(0).getSql())
         );
     }
 
@@ -70,7 +70,7 @@ public class NativeParserTest {
                 () -> assertTrue(g.getBeforeSqlList(DBType.H2).isEmpty()),
                 () -> assertTrue(g.getAfterSqlList(DBType.H2).isEmpty()),
                 () -> assertEquals(1, g.getAfterSqlList(DBType.MSSQL).size()),
-                () -> assertEquals(" -", g.getAfterSqlList(DBType.MSSQL).get(0))
+                () -> assertEquals(" -", g.getAfterSqlList(DBType.MSSQL).get(0).getSql())
         );
     }
 
@@ -90,7 +90,7 @@ public class NativeParserTest {
                 () -> assertTrue(g.getBeforeSqlList(DBType.H2).isEmpty()),
                 () -> assertFalse(g.getAfterSqlList(DBType.H2).isEmpty()),
                 () -> assertEquals(1, g.getAfterSqlList(DBType.H2).size()),
-                () -> assertEquals(" asasf  ", g.getAfterSqlList(DBType.H2).get(0))
+                () -> assertEquals(" asasf  ", g.getAfterSqlList(DBType.H2).get(0).getSql())
         );
     }
 
@@ -102,7 +102,7 @@ public class NativeParserTest {
 
         assertAll(
                 () -> assertEquals(1, g.getAfterSqlList(DBType.ORACLE).size()),
-                () -> assertEquals(" asasf  \n asda ", g.getAfterSqlList(DBType.ORACLE).get(0))
+                () -> assertEquals(" asasf  \n asda ", g.getAfterSqlList(DBType.ORACLE).get(0).getSql())
         );
     }
 
@@ -185,7 +185,10 @@ public class NativeParserTest {
 
         assertAll(
                 () -> assertEquals(1, g.getAfterSqlList(DBType.ORACLE).size()),
-                () -> assertEquals(" asasf --{{  --}-fasdf-asf -}}-  asf asf -- asf --} ", g.getAfterSqlList(DBType.ORACLE).get(0))
+                () -> assertEquals(
+                        " asasf --{{  --}-fasdf-asf -}}-  asf asf -- asf --} ",
+                        g.getAfterSqlList(DBType.ORACLE).get(0).getSql()
+                )
         );
     }
 
@@ -199,7 +202,7 @@ public class NativeParserTest {
                 () -> assertFalse(g.getBeforeSqlList(DBType.ORACLE).isEmpty()),
                 () -> assertTrue(g.getAfterSqlList(DBType.ORACLE).isEmpty()),
                 () -> assertEquals(1, g.getBeforeSqlList(DBType.ORACLE).size()),
-                () -> assertEquals("a = b", g.getBeforeSqlList(DBType.ORACLE).get(0))
+                () -> assertEquals("a = b", g.getBeforeSqlList(DBType.ORACLE).get(0).getSql())
         );
     }
 
@@ -214,8 +217,8 @@ public class NativeParserTest {
                 () -> assertFalse(g.getBeforeSqlList(DBType.ORACLE).isEmpty()),
                 () -> assertTrue(g.getAfterSqlList(DBType.ORACLE).isEmpty()),
                 () -> assertEquals(2, g.getBeforeSqlList(DBType.ORACLE).size()),
-                () -> assertEquals("1", g.getBeforeSqlList(DBType.ORACLE).get(0)),
-                () -> assertEquals("2", g.getBeforeSqlList(DBType.ORACLE).get(1))
+                () -> assertEquals("1", g.getBeforeSqlList(DBType.ORACLE).get(0).getSql()),
+                () -> assertEquals("2", g.getBeforeSqlList(DBType.ORACLE).get(1).getSql())
         );
     }
 
@@ -240,15 +243,15 @@ public class NativeParserTest {
                 () -> assertFalse(g.getBeforeSqlList(DBType.H2).isEmpty()),
                 () -> assertTrue(g.getAfterSqlList(DBType.H2).isEmpty()),
                 () -> assertEquals(1, g.getBeforeSqlList(DBType.ORACLE).size()),
-                () -> assertEquals("1", g.getBeforeSqlList(DBType.ORACLE).get(0)),
+                () -> assertEquals("1", g.getBeforeSqlList(DBType.ORACLE).get(0).getSql()),
                 () -> assertEquals(1, g.getAfterSqlList(DBType.ORACLE).size()),
-                () -> assertEquals("2", g.getAfterSqlList(DBType.ORACLE).get(0)),
+                () -> assertEquals("2", g.getAfterSqlList(DBType.ORACLE).get(0).getSql()),
                 () -> assertEquals(1, g.getAfterSqlList(DBType.POSTGRESQL).size()),
-                () -> assertEquals("3", g.getAfterSqlList(DBType.POSTGRESQL).get(0)),
+                () -> assertEquals("3", g.getAfterSqlList(DBType.POSTGRESQL).get(0).getSql()),
                 () -> assertEquals(1, g.getBeforeSqlList(DBType.MSSQL).size()),
-                () -> assertEquals("4", g.getBeforeSqlList(DBType.MSSQL).get(0)),
+                () -> assertEquals("4", g.getBeforeSqlList(DBType.MSSQL).get(0).getSql()),
                 () -> assertEquals(1, g.getBeforeSqlList(DBType.H2).size()),
-                () -> assertEquals("5", g.getBeforeSqlList(DBType.H2).get(0))
+                () -> assertEquals("5", g.getBeforeSqlList(DBType.H2).get(0).getSql())
         );
     }
 
@@ -264,9 +267,15 @@ public class NativeParserTest {
     }
 
     private Grain parse(String text) throws Exception {
+        final GrainPart gp;
         try (InputStream is = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))) {
             CelestaParser cp = new CelestaParser(is, "utf-8");
-            return cp.grain(new CelestaSqlTestScore(), "nativeSql");
+            gp = cp.extractGrainInfo(new CelestaSqlTestScore(), null);
+        }
+
+        try (InputStream is = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))) {
+            CelestaParser cp = new CelestaParser(is, "utf-8");
+            return cp.parseGrainPart(gp);
         }
     }
 

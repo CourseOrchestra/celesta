@@ -3,6 +3,8 @@ package ru.curs.lyra;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Map.Entry;
 
@@ -69,11 +71,22 @@ public class TestLyraForm {
 	}
 
 	@Test
-	public void test2() throws ParseException, CelestaException {
+	public void test2() throws Exception {
 		AbstractScore s = ScoreAccessor.createEmptyScore();
-		InputStream input = TestLyraForm.class.getResourceAsStream("test.sql");
-		CelestaParser cp = new CelestaParser(input, "utf-8");
-		Grain g = cp.grain(s, "testlyra");
+
+		final Grain g;
+
+		File f = new File(this.getClass().getResource("test.sql").getPath());
+		try (
+				InputStream is1 = new FileInputStream(f);
+				InputStream is2 = new FileInputStream(f)
+		) {
+			CelestaParser cp1 = new CelestaParser(is1, "utf-8");
+			CelestaParser cp2 = new CelestaParser(is2, "utf-8");
+			GrainPart gp = cp1.extractGrainInfo(s, f);
+			g = cp2.parseGrainPart(gp);
+		}
+
 		Table t = g.getElement("table1", Table.class);
 		BasicLyraForm blf = new BasicLyraForm(t) {
 

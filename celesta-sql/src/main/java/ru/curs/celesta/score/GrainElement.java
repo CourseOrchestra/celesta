@@ -12,20 +12,24 @@ public abstract class GrainElement extends NamedElement {
 	/**
 	 * Гранула, к которой относится данный элемент.
 	 */
-	private final Grain grain;
+	private final GrainPart grainPart;
 
-	public GrainElement(Grain g, String name) throws ParseException {
+	public GrainElement(GrainPart gp, String name) throws ParseException {
 		super(name);
-		if (g == null)
+		if (gp == null)
 			throw new IllegalArgumentException();
-		grain = g;
+		grainPart = gp;
 	}
 
 	/**
 	 * Возвращает гранулу, к которой относится элемент.
 	 */
 	public final Grain getGrain() {
-		return grain;
+		return this.grainPart.getGrain();
+	}
+
+	final GrainPart getGrainPart() {
+		return grainPart;
 	}
 
 	abstract void save(PrintWriter bw) throws IOException;

@@ -13,8 +13,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
 import java.io.StringReader;
+import java.io.File;
+
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
+
+import ru.curs.celesta.score.GrainPart;
 
 //CHECKSTYLE:OFF
 public class CelestaParser{
@@ -103,10 +107,14 @@ PARSER_END(CelestaParser)
 |   <K_END_OF_STATEMENT: ";">: DEFAULT
 }
 
-<CREATE_STATE> TOKEN:
+<CREATE_STATE, SET_SCHEMA_STATE> TOKEN:
 {
     <K_GRAIN:   "GRAIN"|"SCHEMA">
-|   <K_GRAIN_VERSION: "VERSION">
+}
+
+<CREATE_STATE> TOKEN:
+{
+    <K_GRAIN_VERSION: "VERSION">
 }
 
 <SEQUENCE_STATE> TOKEN:
@@ -176,49 +184,96 @@ SPECIAL_TOKEN:
 |  <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
 }
 
+
+GrainPart extractGrainInfo(AbstractScore s, File f):
+{
+    Token t;
+    boolean isDefinition = false;
+    String grainName;
+    Grain grain;
+}
+{
+    (
+        (
+            [<CELESTA_DOC>]
+            <K_CREATE>
+            <K_GRAIN>
+            t = <S_IDENTIFIER>
+            {
+                isDefinition = true;
+            }
+        )
+        |
+        (
+            <K_SET> { token_source.SwitchTo(SET_SCHEMA_STATE); }
+            <K_GRAIN> t = <S_IDENTIFIER>
+        )
+    )
+    {
+        grainName = t.toString();
+        grain = s.getGrains().get(grainName);
+
+        if (grain == null) grain = new Grain(s, grainName);
+
+        return new GrainPart(grain, isDefinition, f);
+    }
+}
+
+
 /*Metamodel. Root rule.*/
-Grain grain(AbstractScore s, String name):
+Grain parseGrainPart(GrainPart grainPart) :
 {
    /*This work is dedicated to Maria, my misterious muse :-)
      Ivan Ponomarev, June 2013.*/
 
-   Grain g = new Grain(s, name);
    Token t;
    Token doc = null;
 }
 {
-   [doc = <CELESTA_DOC> {g.setCelestaDocLexem(doc.toString()); doc = null;}]
-   <K_CREATE>
-   <K_GRAIN>
-   t = <S_IDENTIFIER> {if (!name.equalsIgnoreCase(t.toString())) throw new ParseException(String.format(
-      "Error: expected 'create grain %s' at the beginning of the grain '%s' definition, found '%s'.", name, name, t.toString()));}
-   <K_GRAIN_VERSION>
-   t = <S_CHAR_LITERAL> {g.setVersion(t.toString());}<K_END_OF_STATEMENT>
+   ((
+    [doc = <CELESTA_DOC>]
+    <K_CREATE>
+    <K_GRAIN>
+    t = <S_IDENTIFIER>
+    {
+        if (!t.toString().equals(grainPart.getGrain().getName())) throw new ParseException("TODOTODOTODO");
+        if (doc != null) {grainPart.setCelestaDocLexem(doc.toString()); doc = null;}
+    }
+    <K_GRAIN_VERSION>
+    t = <S_CHAR_LITERAL> {grainPart.setVersion(t.toString());}
+    ) |
+    (
+    <K_SET> { token_source.SwitchTo(SET_SCHEMA_STATE); }
+    <K_GRAIN> t = <S_IDENTIFIER>
+        {
+            if (!t.toString().equals(grainPart.getGrain().getName())) throw new ParseException("TODOTODOTODO");
+        }
+    ))
+    <K_END_OF_STATEMENT>
    (
     (
         (
             ([doc = <CELESTA_DOC>] <K_CREATE> (
-                    createTable(g, doc == null? null: doc.toString())
-                  | createIndex(g, doc == null? null: doc.toString())
-				  | createView(g, doc == null? null: doc.toString())
-				  | createMaterializedView(g, doc == null? null: doc.toString())
-				  | createFunction(g, doc == null? null: doc.toString())
-				  | createSequence(g, doc == null? null: doc.toString())
+                    createTable(grainPart, doc == null? null: doc.toString())
+                  | createIndex(grainPart, doc == null? null: doc.toString())
+				  | createView(grainPart, doc == null? null: doc.toString())
+				  | createMaterializedView(grainPart, doc == null? null: doc.toString())
+				  | createFunction(grainPart, doc == null? null: doc.toString())
+				  | createSequence(grainPart, doc == null? null: doc.toString())
 				  )
 				  {doc = null;} )
-	        | (<K_ALTER>   alterTable(g))
+	        | (<K_ALTER>   alterTable(grainPart))
 	    )
-	    | (<K_EXEC> executeNativeSql(g))
+	    | (<K_EXEC> executeNativeSql(grainPart))
 	 )
 	 <K_END_OF_STATEMENT>)*
    <EOF>
    {
-   g.finalizeParsing();
-   return g;
+   return grainPart.getGrain();
    }
 }
 
-void createTable(Grain g, String doc):
+void createTable(GrainPart g, String doc):
 {
 	Table table = null;
 	Token t = null;
@@ -386,7 +441,7 @@ FKRule action():{
   }
 }
 
-void createIndex(Grain g, String doc):{
+void createIndex(GrainPart g, String doc):{
 Token indexName;
 Token tableName;
 Token columnName;
@@ -400,7 +455,7 @@ Index ind;
    {ind.finalizeIndex();}
 }
 
-void alterTable(Grain g):{
+void alterTable(GrainPart g):{
   Token t;
   Table table;
   String name;
@@ -408,9 +463,9 @@ void alterTable(Grain g):{
 }
 {
 <K_TABLE> t = <S_IDENTIFIER> {
-  table = g.getElement(t.toString(), Table.class);
+  table = g.getGrain().getElement(t.toString(), Table.class);
   }
-<K_ADD> name = constraint(g) fk = foreignKey(table) {fk.setConstraintName(name);}
+<K_ADD> name = constraint(g.getGrain()) fk = foreignKey(table) {fk.setConstraintName(name);}
 }
 
 String constraint(Grain g):{
@@ -428,7 +483,7 @@ else {
 }
 }
 
-void createView(Grain g, String doc):
+void createView(GrainPart g, String doc):
 {
 	View view = null;
 	Token viewName = null;
@@ -443,7 +498,7 @@ void createView(Grain g, String doc):
 	{view.finalizeParsing();}
 }
 
-void createMaterializedView(Grain g, String doc):
+void createMaterializedView(GrainPart g, String doc):
 {
     MaterializedView view = null;
     Token viewName = null;
@@ -458,7 +513,7 @@ void createMaterializedView(Grain g, String doc):
     {view.finalizeParsing();}
 }
 
-void createFunction(Grain g, String doc):
+void createFunction(GrainPart g, String doc):
 {
     ParameterizedView v = null;
     Token viewName = null;
@@ -475,7 +530,7 @@ void createFunction(Grain g, String doc):
 	{v.finalizeParsing();}
 }
 
-void createSequence(Grain g, String doc):
+void createSequence(GrainPart g, String doc):
 {
     SequenceElement s = null;
     Token name = null;
@@ -853,7 +908,7 @@ TableRef join(AbstractView v):
    }
 }
 
-void executeNativeSql(Grain g):
+void executeNativeSql(GrainPart g):
 {
     Token sql;
     boolean isBefore = false;
@@ -863,10 +918,11 @@ void executeNativeSql(Grain g):
     <K_NATIVE> dbType = <K_DBTYPE> (<K_BEFORE> {isBefore = true;} | <K_AFTER>)
     sql = <NATIVE_SQL>
     {
-        g.addNativeSql(
+        g.getGrain().addNativeSql(
             sql.toString(),
             isBefore,
-            DBType.getByNameIgnoreCase(dbType.toString())
+            DBType.getByNameIgnoreCase(dbType.toString()),
+            g
         );
     }
 }

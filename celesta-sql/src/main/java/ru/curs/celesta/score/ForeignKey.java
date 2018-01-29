@@ -1,5 +1,7 @@
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.CelestaException;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
@@ -159,7 +161,13 @@ public class ForeignKey {
 		if ("".equals(grain) || parentTable.getGrain().getName().equals(grain)) {
 			gm = parentTable.getGrain();
 		} else {
-			gm = parentTable.getGrain().getScore().getGrain(grain);
+			AbstractScore score = parentTable.getGrain().getScore();
+			gm = score.getGrain(grain);
+
+			if (gm.isModified()) //TODO:Костыль, используем как флаг того, что гранула начала парситься - must be removed
+				score.parseGrain(grain);
+
+
 			if (!gm.isParsingComplete())
 				throw new ParseException(
 						String.format(

@@ -13,8 +13,8 @@ public class ParameterizedView extends View {
   private final Map<String, Parameter> parameters = new LinkedHashMap<>();
   private final List<String> parameterRefsWithOrder = new ArrayList<>();
 
-  public ParameterizedView(Grain g, String name) throws ParseException {
-    super(g, name);
+  public ParameterizedView(GrainPart grainPart, String name) throws ParseException {
+    super(grainPart, name);
   }
 
   @Override

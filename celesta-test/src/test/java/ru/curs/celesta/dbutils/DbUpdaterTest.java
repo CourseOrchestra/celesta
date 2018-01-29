@@ -47,7 +47,7 @@ public class DbUpdaterTest {
     }
 
 
-    private DbUpdater createDbUpdater(String scoreResourcePath) throws CelestaException {
+    private DbUpdater createDbUpdater(String scoreResourcePath) throws Exception {
         String scorePath = getClass().getResource(scoreResourcePath).getPath();
 
         Properties params = new Properties();

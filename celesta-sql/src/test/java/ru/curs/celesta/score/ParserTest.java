@@ -8,9 +8,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
@@ -39,9 +37,9 @@ public class ParserTest extends AbstractParsingTest {
     parseAndSaveCsqlScript(createSchema, schemaDir, "someGrain");
     parseAndSaveCsqlScript(createGrain, grainDir, "someGrain");
 
-    File schemaScript = new File(schemaDir.getPath() + File.separator + "_someGrain.sql");
+    File schemaScript = new File(schemaDir, "_someGrain.sql");
     schemaScript.deleteOnExit();
-    File grainScript = new File(grainDir.getPath() + File.separator + "_someGrain.sql");
+    File grainScript = new File(grainDir, "_someGrain.sql");
     grainScript.deleteOnExit();
 
     assertEquals(
@@ -52,44 +50,29 @@ public class ParserTest extends AbstractParsingTest {
   }
 
   private void parseAndSaveCsqlScript(String csqlScript, File grainPath, String grainName) throws Exception {
+    final GrainPart gp;
+
     try (InputStream is = new ByteArrayInputStream(csqlScript.getBytes(StandardCharsets.UTF_8))) {
       CelestaParser cp = new CelestaParser(is, "utf-8");
-      Grain g = cp.grain(new CelestaSqlTestScore(), grainName);
-      g.setGrainPath(grainPath);
+      CelestaSqlTestScore s = new CelestaSqlTestScore();
+      gp = cp.extractGrainInfo(s, new File(grainPath,"_" + grainName + ".sql"));
+    }
+
+    try (InputStream is = new ByteArrayInputStream(csqlScript.getBytes(StandardCharsets.UTF_8))) {
+      CelestaParser cp = new CelestaParser(is, "utf-8");
+      Grain g = cp.parseGrainPart(gp);
       g.modify();
       g.save();
     }
   }
 
   @Test
-  public void test0() throws ParseException, CelestaException, IOException {
-    InputStream input = ParserTest.class.getResourceAsStream("test.sql");
-    try {
-      CelestaParser cp = new CelestaParser(input, "utf-8");
-      Grain g = cp.grain(s, "test1");
-      g.setGrainPath(new File(ScoreTest.TEST_SCORE_PATH));
-      g.setVersion("'2.0'");
-      g.save();
-    } finally {
-      input.close();
-    }
-    input = ParserTest.class.getResourceAsStream("test2.sql");
-    try {
-      CelestaParser cp = new CelestaParser(input, "utf-8");
-      Grain g = cp.grain(s, "test2");
-      g.setGrainPath(new File(ScoreTest.TEST_SCORE_PATH));
-      g.setVersion("'2.0'");
-      g.save();
-    } finally {
-      input.close();
-    }
-  }
-
-  @Test
-  public void test1() throws ParseException {
-    InputStream input = ParserTest.class.getResourceAsStream("test.sql");
-    CelestaParser cp = new CelestaParser(input, "utf-8");
-    Grain g = cp.grain(s, "test1");
+  public void test1() throws Exception {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "test.sql"
+    );
+    Grain g = parse(f);
     assertEquals("test1", g.getName());
     assertEquals("1.0", g.getVersion().toString());
     assertEquals("описание гранулы: * grain celestadoc", g.getCelestaDoc());
@@ -257,10 +240,12 @@ public class ParserTest extends AbstractParsingTest {
   }
 
   @Test
-  public void test2() throws ParseException {
-    InputStream input = ParserTest.class.getResourceAsStream("test2.sql");
-    CelestaParser cp = new CelestaParser(input);
-    Grain g = cp.grain(s, "test2");
+  public void test2() throws Exception {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "test2.sql"
+    );
+    Grain g = parse(f);
     assertEquals("test2", g.getName());
     assertEquals("2.5", g.getVersion().toString());
 
@@ -301,20 +286,23 @@ public class ParserTest extends AbstractParsingTest {
   }
 
   @Test
-  public void test3() throws ParseException {
-    InputStream input = ParserTest.class.getResourceAsStream("test3.sql");
-    CelestaParser cp = new CelestaParser(input);
-    Grain g = cp.grain(s, "bc");
+  public void test3() throws Exception {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "test3.sql"
+    );
+    Grain g = parse(f);
     Table t = g.getElement("structure_subordination", Table.class);
     assertEquals(2, t.getForeignKeys().size());
   }
 
   @Test
-  public void test4() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("test4.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    Grain g = cp.grain(s, "skk");
+  public void test4() throws Exception {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "test4.sql"
+    );
+    Grain g = parse(f);
     Table t = g.getElement("app_division_add_info_el", Table.class);
     assertEquals("pk_app_division_add_info_el", t.getPkConstraintName());
     t = g.getElement("x_role_employees", Table.class);
@@ -327,12 +315,12 @@ public class ParserTest extends AbstractParsingTest {
     //hash sum calculation should be rewritten to be line-ending independent
     if (";".equals(File.pathSeparator)){
       //Windows!
-      assertEquals(20767, input.getCount());
-      assertEquals(0x1754E6E7, input.getCRC32());
+      assertEquals(20767, g.getLength());
+      assertEquals(0x1754E6E7, g.getChecksum());
     } else {
       //Linux!
-      assertEquals(19839, input.getCount());
-      assertEquals(0x3CFB69F0, input.getCRC32());
+      assertEquals(19839, g.getLength());
+      assertEquals(0x3CFB69F0, g.getChecksum());
     }
   }
 

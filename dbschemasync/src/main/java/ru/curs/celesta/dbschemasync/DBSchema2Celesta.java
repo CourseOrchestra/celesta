@@ -20,22 +20,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.BinaryColumn;
-import ru.curs.celesta.score.BooleanColumn;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.DateTimeColumn;
-import ru.curs.celesta.score.FKRule;
-import ru.curs.celesta.score.FloatingColumn;
-import ru.curs.celesta.score.ForeignKey;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.Index;
-import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.AbstractScore;
-import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.Table;
-import ru.curs.celesta.score.View;
-import ru.curs.celesta.score.ViewColumnMeta;
+import ru.curs.celesta.score.*;
 
 /**
  * Переносит данные из DBSchema в Celesta.
@@ -227,7 +212,8 @@ public final class DBSchema2Celesta {
                 g.setCelestaDoc(extractComment((Element) n));
             } else if ("table".equals(n.getNodeName())) {
                 Element table = (Element) n;
-                Table t = new Table(g, table.getAttribute("name"));
+                GrainPart gp = g.getGrainParts().stream().filter(GrainPart::isDefinition).findFirst().get();
+                Table t = new Table(gp, table.getAttribute("name"));
                 updateTable(table, t);
             } else if ("view".equals(n.getNodeName())) {
                 Element view = (Element) n;
@@ -245,7 +231,8 @@ public final class DBSchema2Celesta {
             if ("view_script".equals(vn.getNodeName())) {
                 Element viewScript = (Element) vn;
                 String sql = viewScript.getTextContent().trim();
-                cview = new View(g, view.getAttribute("name"), sql);
+                GrainPart gp = g.getGrainParts().stream().filter(GrainPart::isDefinition).findFirst().get();
+                cview = new View(gp, view.getAttribute("name"), sql);
             } else if ("comment".equals(vn.getNodeName())) {
                 celestaDoc = extractComment((Element) vn);
             }

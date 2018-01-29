@@ -20,20 +20,20 @@ public class Index extends GrainElement implements HasColumns {
 		}
 	};
 
-	Index(Grain grain, String tableName, String name) throws ParseException {
-		super(grain, name);
+	Index(GrainPart grainPart, String tableName, String name) throws ParseException {
+		super(grainPart, name);
 		if (tableName == null || name == null)
 			throw new IllegalArgumentException();
-		table = grain.getElement(tableName, Table.class);
+		table = getGrain().getElement(tableName, Table.class);
 		if (table == null)
 			throw new ParseException(
 					String.format("Error while creating index '%s': table '%s' not found.", name, tableName));
-		grain.addIndex(this);
+		getGrain().addIndex(this);
 		table.addIndex(this);
 	}
 
 	public Index(Table t, String name, String[] columns) throws ParseException {
-		this(t.getGrain(), t.getName(), name);
+		this(t.getGrainPart(), t.getName(), name);
 		for (String n : columns)
 			addColumn(n);
 		finalizeIndex();

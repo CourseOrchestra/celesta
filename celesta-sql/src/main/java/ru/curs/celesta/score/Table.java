@@ -45,9 +45,9 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 
 	private String pkConstraintName;
 
-	public Table(Grain grain, String name) throws ParseException {
-		super(grain, name);
-		grain.addElement(this);
+	public Table(GrainPart grainPart, String name) throws ParseException {
+		super(grainPart, name);
+		getGrain().addElement(this);
 	}
 
 	/**

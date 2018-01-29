@@ -3,6 +3,7 @@ package ru.curs.celesta.score;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.util.Map;
 
 
@@ -13,10 +14,11 @@ public class ParameterizedViewParsingTest extends AbstractParsingTest {
 
   @Test
   public void testParsingNotFailsWhenParameterizedViewSyntaxIsCorrect() throws Exception {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("parameterizedView/testParsingNotFailsWhenParameterizedViewSyntaxIsCorrect.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    Grain g = cp.grain(s, "test");
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "parameterizedView/testParsingNotFailsWhenParameterizedViewSyntaxIsCorrect.sql"
+    );
+    Grain g = parse(f);
 
     assertEquals(3, g.getElements(ParameterizedView.class).size());
 
@@ -48,35 +50,39 @@ public class ParameterizedViewParsingTest extends AbstractParsingTest {
   }
 
   @Test
-  public void testParsingFailsWhenParamIsNotUsed() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("parameterizedView/testParsingFailsWhenParamIsNotUsed.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+  public void testParsingFailsWhenParamIsNotUsed() {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "parameterizedView/testParsingFailsWhenParamIsNotUsed.sql"
+    );
+    assertThrows(ParseException.class, () -> parse(f));
   }
 
   @Test
-  public void testParsingFailsWithoutParams() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("parameterizedView/testParsingFailsWithoutParams.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+  public void testParsingFailsWithoutParams() {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "parameterizedView/testParsingFailsWithoutParams.sql"
+    );
+    assertThrows(ParseException.class, () -> parse(f));
   }
 
   @Test
-  public void testParsingFailsWhenUndeclaredParamIsUsed() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("parameterizedView/testParsingFailsWhenUndeclaredParamIsUsed.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+  public void testParsingFailsWhenUndeclaredParamIsUsed() {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "parameterizedView/testParsingFailsWhenUndeclaredParamIsUsed.sql"
+    );
+    assertThrows(ParseException.class, () -> parse(f));
   }
 
   @Test
-  public void testParsingFailsWhenParamDeclarationIsDuplicated() throws ParseException {
-    ChecksumInputStream input = new ChecksumInputStream(
-        ParserTest.class.getResourceAsStream("parameterizedView/testParsingFailsWhenParamDeclarationIsDuplicated.sql"));
-    CelestaParser cp = new CelestaParser(input);
-    assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+  public void testParsingFailsWhenParamDeclarationIsDuplicated() {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "parameterizedView/testParsingFailsWhenParamDeclarationIsDuplicated.sql"
+    );
+    assertThrows(ParseException.class, () -> parse(f));
   }
 }
 

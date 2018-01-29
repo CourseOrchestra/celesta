@@ -15,13 +15,13 @@ public class View extends AbstractView {
   private String queryString;
   Expr whereCondition;
 
-  View(Grain grain, String name) throws ParseException {
-    super(grain, name);
-    grain.addElement(this);
+  View(GrainPart grainPart, String name) throws ParseException {
+    super(grainPart, name);
+    getGrain().addElement(this);
   }
 
-  public View(Grain grain, String name, String sql) throws ParseException {
-    this(grain, name);
+  public View(GrainPart grainPart, String name, String sql) throws ParseException {
+    this(grainPart, name);
     StringReader sr = new StringReader(sql);
     CelestaParser parser = new CelestaParser(sr);
     try {

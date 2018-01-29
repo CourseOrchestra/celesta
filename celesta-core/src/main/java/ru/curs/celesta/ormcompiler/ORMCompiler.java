@@ -69,43 +69,48 @@ public final class ORMCompiler {
         for (Grain g : score.getGrains().values())
             // Пропускаем системную гранулу.
             if (!"celesta".equals(g.getName())) {
-                File ormFile = new File(String.format("%s%s_%s_orm.py", g.getGrainPath(), File.separator, g.getName()));
-                try {
-                    // Блок проверки: а может, перекомпилировать нет нужды?
-                    if (ormFile.exists() && ormFile.canRead()) {
-                        int len = 0;
-                        int crc32 = 0;
-                        int compiler = 0;
-                        try (BufferedReader r = new BufferedReader(
-                                new InputStreamReader(new FileInputStream(ormFile), StandardCharsets.UTF_8))) {
-                            String l = r.readLine();
-                            while (l != null) {
-                                Matcher m = SIGNATURE.matcher(l);
-                                if (m.find()) {
-                                    len = Integer.parseInt(m.group(1));
-                                    crc32 = (int) Long.parseLong(m.group(2), 16);
-                                    compiler = m.group(4) == null ? 0 : Integer.parseInt(m.group(4));
-                                    break;
+
+                for (GrainPart gp: g.getGrainParts()) {
+                    File ormFile = new File(String.format(
+                            "%s%s_%s_orm.py", gp.getSourceFile().getParentFile().getPath(), File.separator, g.getName()
+                    ));
+                    try {
+                        // Блок проверки: а может, перекомпилировать нет нужды?
+                        if (ormFile.exists() && ormFile.canRead()) {
+                            int len = 0;
+                            int crc32 = 0;
+                            int compiler = 0;
+                            try (BufferedReader r = new BufferedReader(
+                                    new InputStreamReader(new FileInputStream(ormFile), StandardCharsets.UTF_8))) {
+                                String l = r.readLine();
+                                while (l != null) {
+                                    Matcher m = SIGNATURE.matcher(l);
+                                    if (m.find()) {
+                                        len = Integer.parseInt(m.group(1));
+                                        crc32 = (int) Long.parseLong(m.group(2), 16);
+                                        compiler = m.group(4) == null ? 0 : Integer.parseInt(m.group(4));
+                                        break;
+                                    }
+                                    l = r.readLine();
                                 }
-                                l = r.readLine();
                             }
+
+                            if (g.getLength() == len && g.getChecksum() == crc32 && compiler >= COMPILERVER)
+                                continue;
                         }
 
-                        if (g.getLength() == len && g.getChecksum() == crc32 && compiler >= COMPILERVER)
-                            continue;
+                        // Перекомпилировать надо и мы начинаем запись.
+                        try (
+                                PrintWriter w = new PrintWriter(
+                                        new OutputStreamWriter(
+                                                new FileOutputStream(ormFile), StandardCharsets.UTF_8))) {
+                            compileGrain(g, w);
+                        }
+                        ormFile.setReadable(true, false);
+                    } catch (IOException e) {
+                        throw new CelestaException("Error while compiling orm classes for '%s' grain: %s", g.getName(),
+                                e.getMessage());
                     }
-
-                    // Перекомпилировать надо и мы начинаем запись.
-                    try (
-                            PrintWriter w = new PrintWriter(
-                                    new OutputStreamWriter(
-                                            new FileOutputStream(ormFile), StandardCharsets.UTF_8))) {
-                        compileGrain(g, w);
-                    }
-                    ormFile.setReadable(true, false);
-                } catch (IOException e) {
-                    throw new CelestaException("Error while compiling orm classes for '%s' grain: %s", g.getName(),
-                            e.getMessage());
                 }
             }
     }

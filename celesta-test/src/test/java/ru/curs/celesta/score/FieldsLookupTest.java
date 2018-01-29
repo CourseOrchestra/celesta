@@ -29,18 +29,19 @@ public class FieldsLookupTest {
     public static void init() throws ParseException {
         AbstractScore score = new Score();
         Grain grain = new Grain(score, "test");
+        GrainPart gp = new GrainPart(grain, true, null);
 
-        tableA = generateTable(grain, "a");
-        tableB = generateTable(grain, "b");
-        tableC = generateTable(grain, "c");
+        tableA = generateTable(gp, "a");
+        tableB = generateTable(gp, "b");
+        tableC = generateTable(gp, "c");
 
-        viewA = generateView(grain, "aV", tableA);
-        viewB = generateView(grain, "bV", tableB);
-        viewC = generateView(grain, "cV", tableC);
+        viewA = generateView(gp, "aV", tableA);
+        viewB = generateView(gp, "bV", tableB);
+        viewC = generateView(gp, "cV", tableC);
     }
 
-    private static Table generateTable(Grain grain, String name) throws ParseException {
-        Table table = new Table(grain, name);
+    private static Table generateTable(GrainPart gp, String name) throws ParseException {
+        Table table = new Table(gp, name);
 
         Column c1 = new IntegerColumn(table, name + "1");
         Column c2 = new IntegerColumn(table, name + "2");
@@ -53,8 +54,8 @@ public class FieldsLookupTest {
         return table;
     }
 
-    private static View generateView(Grain grain, String name, Table table) throws ParseException {
-        View view = new View(grain, name);
+    private static View generateView(GrainPart gp, String name, Table table) throws ParseException {
+        View view = new View(gp, name);
         view.addFromTableRef(new TableRef(table, table.getName()));
 
         view.getColumns().put(table.getName() + "1", new ViewColumnMeta(ViewColumnType.INT));
