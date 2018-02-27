@@ -1,7 +1,11 @@
 package ru.curs.celesta.score.validator;
 
 import org.junit.jupiter.api.Test;
+import ru.curs.celesta.score.NamedElement;
 import ru.curs.celesta.score.ParseException;
+
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -43,5 +47,18 @@ public class IdentifierValidatorTest {
                 () -> assertThrows(ParseException.class, () -> plainIdentifierValidator.validate(name2)),
                 () -> assertThrows(ParseException.class, () -> ansiQuotedIdentifierValidator.validate(name2))
         );
+    }
+
+    @Test
+    void testNameLengthLimit() throws Exception {
+        String shortName = IntStream.range(0, NamedElement.MAX_IDENTIFIER_LENGTH)
+                .boxed().map(i -> "a").collect(Collectors.joining());
+        String longName = IntStream.range(0, NamedElement.MAX_IDENTIFIER_LENGTH + 1)
+                .boxed().map(i -> "a").collect(Collectors.joining());
+
+        plainIdentifierValidator.validate(shortName);
+        ansiQuotedIdentifierValidator.validate(shortName);
+        assertThrows(ParseException.class, () ->plainIdentifierValidator.validate(longName));
+        ansiQuotedIdentifierValidator.validate(longName);
     }
 }
