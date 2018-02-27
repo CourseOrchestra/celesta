@@ -1,5 +1,7 @@
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.score.validator.IdentifierValidator;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,33 +15,23 @@ public abstract class NamedElement {
 	/**
 	 * Максимальная длина идентификатора Celesta.
 	 */
-	private static final int MAX_IDENTIFIER_LENGTH = 30;
+	public static final int MAX_IDENTIFIER_LENGTH = 30;
 
 	private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/", Pattern.DOTALL);
-	private static final Pattern NAME_PATTERN = Pattern.compile("[a-zA-Z_][0-9a-zA-Z_]*");
 
 	private final String name;
 	private final String quotedName;
 
 	private String celestaDoc;
 
-	public NamedElement(String name) throws ParseException {
+	public NamedElement(String name, IdentifierValidator identifierValidator) throws ParseException {
 		// Не должно быть name==null, т. к. все методы написаны исходя из того,
 		// что name != null.
 		if (name == null)
 			throw new IllegalArgumentException();
-		validateIdentifier(name);
+		identifierValidator.validate(name);
 		this.name = name;
 		this.quotedName = String.format("\"%s\"", name);
-	}
-
-	static void validateIdentifier(String name) throws ParseException {
-		Matcher m = NAME_PATTERN.matcher(name);
-		if (!m.matches())
-			throw new ParseException(String.format("Invalid identifier: '%s'.", name));
-		if (name.length() > MAX_IDENTIFIER_LENGTH)
-			throw new ParseException(
-					String.format("Identifier '%s' is longer than %d characters.", name, MAX_IDENTIFIER_LENGTH));
 	}
 
 	/**

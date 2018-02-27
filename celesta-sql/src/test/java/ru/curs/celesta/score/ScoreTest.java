@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.validator.AnsiQuotedIdentifierValidator;
 
 public class ScoreTest {
 
@@ -502,5 +503,29 @@ public class ScoreTest {
         assertTrue(vcm.isNullable());
         assertEquals(StringColumn.VARCHAR, vcm.getCelestaType());
         assertEquals(-1, vcm.getLength());
+    }
+
+    @Test
+    void testGrainWithAnsiQuotedIdentifiers() throws CelestaException, ParseException {
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlAnsiQuotedTestScore.class)
+                .path(SCORE_PATH_PREFIX + File.separator + "scoreWithAnsiQuotedIdentifiers")
+                .build();
+
+        String grainName = "\"schema номер 1\"";
+
+        Grain g = s.getGrains().get(grainName);
+
+        String seq1Name = "s1";
+        String seq2Name = "\" s2 \"";
+        String seq3Name = "\"!@#$%^&\"";
+
+        assertAll(
+                () -> assertNotNull(g),
+                () -> assertEquals(grainName, g.getName()),
+                () -> assertEquals(3, g.getElements(SequenceElement.class).size()),
+                () -> assertNotNull(g.getElement(seq1Name, SequenceElement.class)),
+                () -> assertNotNull(g.getElement(seq2Name, SequenceElement.class)),
+                () -> assertNotNull(g.getElement(seq3Name, SequenceElement.class))
+        );
     }
 }
