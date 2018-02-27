@@ -2,19 +2,20 @@ package ru.curs.celesta.score;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static ru.curs.celesta.score.SequenceElement.Argument.*;
 
 public class SequenceParsingTest extends AbstractParsingTest {
 
     @Test
-    void testParsingOnCorrectSyntax() throws ParseException {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingOnCorrectSyntax.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        Grain g = cp.grain(s, "test");
+    void testParsingOnCorrectSyntax() throws Exception {
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingOnCorrectSyntax.sql"
+        );
+        Grain g = parse(f);
 
         SequenceElement s1 = g.getElement("s1", SequenceElement.class);
         assertAll(
@@ -155,121 +156,109 @@ public class SequenceParsingTest extends AbstractParsingTest {
 
     @Test
     void testParsingFailsOnZeroIncrementBy() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsOnZeroIncrementBy.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsOnZeroIncrementBy.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsWhenMinValueGtMaxValue() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsWhenMinValueGtMaxValue.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsWhenMinValueGtMaxValue.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsWhenMinValueGtStartWith() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsWhenMinValueGtStartWith.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsWhenMinValueGtStartWith.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsWhenMaxValueLtStartWith() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsWhenMaxValueLtStartWith.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsWhenMaxValueLtStartWith.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsWhenIncIsNegativeAndSwIsPositiveAndSumOfSwAndIncLtMinValue() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsWhenIncIsNegativeAndSwIsPositiveAndSumOfSwAndIncLtMinValue.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsWhenIncIsNegativeAndSwIsPositiveAndSumOfSwAndIncLtMinValue.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsWhenIncIsNegativeAndAbsOfIncGtOrEqAbsOfSubtractionOfMaxValueAndMinValue() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsWhenIncIsNegativeAndAbsOfIncGtOrEqAbsOfSubtractionOfMaxValueAndMinValue.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsWhenIncIsNegativeAndAbsOfIncGtOrEqAbsOfSubtractionOfMaxValueAndMinValue.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsOnStartWithDuplication() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsOnStartWithDuplication.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsOnStartWithDuplication.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsOnIncrementByDuplication() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsOnIncrementByDuplication.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsOnIncrementByDuplication.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsOnMinValueDuplication() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsOnMinValueDuplication.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsOnMinValueDuplication.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsOnMaxValueDuplication() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsOnMaxValueDuplication.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsOnMaxValueDuplication.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsOnCycleDuplication() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsOnCycleDuplication.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsOnCycleDuplication.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 
     @Test
     void testParsingFailsWhenSequenceIdentifierIsReservedByCelesta() {
-        ChecksumInputStream input = new ChecksumInputStream(
-                ParserTest.class.getResourceAsStream(
-                        "sequence/testParsingFailsWhenSequenceIdentifierIsReservedByCelesta.sql"
-                ));
-        CelestaParser cp = new CelestaParser(input);
-        assertThrows(ParseException.class, () -> cp.grain(s, "test"));
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "sequence/testParsingFailsWhenSequenceIdentifierIsReservedByCelesta.sql"
+        );
+        assertThrows(ParseException.class, () -> parse(f));
     }
 }

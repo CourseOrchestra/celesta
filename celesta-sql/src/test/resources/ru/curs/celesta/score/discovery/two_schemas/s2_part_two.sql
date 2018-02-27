@@ -1,0 +1,3 @@
+SET SCHEMA test2;
+
+CREATE SEQUENCE s4;

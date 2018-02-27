@@ -1,13 +1,10 @@
 package ru.curs.celesta;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.GrainPart;
 import ru.curs.celesta.score.Score;
 
 /**
@@ -23,7 +20,7 @@ final class PythonSourceMonitor {
 
 	// the flat list of monitored modules
 	private final List<File> modules = new ArrayList<>();
-	private final List<String> moduleNames = new ArrayList<>();
+	private final Set<String> moduleNames = new LinkedHashSet<>();
 
 	private final Timer t = new Timer(true);
 
@@ -36,9 +33,11 @@ final class PythonSourceMonitor {
 		for (Grain g : s.getGrains().values())
 			// skipping the built-in system grain
 			if (!"celesta".equals(g.getName())) {
-				File p = g.getGrainPath();
-				if (p.isDirectory())
-					addWithSubPackages(p, g.getName());
+				for (GrainPart gp : g.getGrainParts()) {
+					File p = gp.getSourceFile().getParentFile();
+					if (p.isDirectory())
+						addWithSubPackages(p, g.getName());
+				}
 			}
 
 		// immediate first pass
@@ -105,7 +104,7 @@ final class PythonSourceMonitor {
 		return timestamp;
 	}
 
-	public List<String> getModules() {
+	public Set<String> getModules() {
 		return moduleNames;
 	}
 

@@ -177,15 +177,6 @@
             <id>jenkins</id>
             <build>
                 <finalName>${project.artifactId}-${project.version}.${revision.number}_build${build.number}</finalName>
-                <resources>
-                    <resource>
-                        <directory>src/main/resources</directory>
-                        <filtering>true</filtering>
-                        <excludes>
-                            <exclude>*.sql</exclude>
-                        </excludes>
-                    </resource>
-                </resources>
                 <plugins>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
@@ -222,7 +213,6 @@
                         <directory>src/main/resources</directory>
                         <filtering>true</filtering>
                         <excludes>
-                            <exclude>*.sql</exclude>
                             <exclude>versioninfo</exclude>
                         </excludes>
                     </resource>

@@ -2,6 +2,8 @@ package ru.curs.celesta.dbschemasync;
 
 import org.junit.jupiter.api.Test;
 import ru.curs.celesta.score.AbstractScore;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.GrainPart;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
@@ -64,7 +66,10 @@ public class SchemaSyncTest {
                 .scoreDiscovery(new PyScoreDiscovery())
                 .build();
         StringWriter oldval = new StringWriter();
-        s.getGrain("logs").save(new PrintWriter(oldval));
+        PrintWriter oldvalPrintWriter = new PrintWriter(oldval);
+        Grain g = s.getGrain("logs");
+        for (GrainPart gp : g.getGrainParts())
+            g.save(oldvalPrintWriter, gp);
         File tmp = File.createTempFile("sst", "tmp");
         tmp.delete();
         try {
@@ -74,7 +79,9 @@ public class SchemaSyncTest {
             tmp.delete();
         }
         StringWriter newval = new StringWriter();
-        s.getGrain("logs").save(new PrintWriter(newval));
+        PrintWriter newvalPrintWriter = new PrintWriter(newval);
+        for (GrainPart gp : g.getGrainParts())
+            g.save(newvalPrintWriter, gp);
         assertEquals(oldval.toString().replaceAll("\\r\\n", "\n"),
                 newval.toString().replaceAll("\\r\\n", "\n"));
     }

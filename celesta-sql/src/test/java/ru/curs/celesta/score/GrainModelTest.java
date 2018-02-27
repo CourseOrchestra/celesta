@@ -27,7 +27,9 @@ public class GrainModelTest {
 		Grain g = new Grain(s, "grain1");
 		assertSame(g, s.getGrain("grain1"));
 
-		Table t = new Table(g, "table1");
+		GrainPart gp = new GrainPart(g, true, null);
+
+		Table t = new Table(gp, "table1");
 		(new IntegerColumn(t, "a")).setNullableAndDefault(false, "IDENTITY");
 		new IntegerColumn(t, "b").setNullableAndDefault(false, "0");
 		new IntegerColumn(t, "c").setNullableAndDefault(false, "0");
@@ -40,7 +42,7 @@ public class GrainModelTest {
 		assertEquals(0, t.getColumnIndex("a"));
 		assertEquals(2, t.getColumnIndex("c"));
 		
-		Index ind = new Index(g, "table1", "aa_i1");
+		Index ind = new Index(gp, "table1", "aa_i1");
 		ind.addColumn("b");
 		ind.addColumn("d");
 		ind.finalizeIndex();
@@ -52,13 +54,13 @@ public class GrainModelTest {
 		boolean itWas = false;
 		try {
 			// Нельзя вставить в модель два индекса с одним и тем же именем.
-			ind = new Index(g, "table1", "aa_i1");
+			ind = new Index(gp, "table1", "aa_i1");
 		} catch (ParseException e) {
 			itWas = true;
 		}
 		assertTrue(itWas);
 
-		ind = new Index(g, "table1", "aa_i2");
+		ind = new Index(gp, "table1", "aa_i2");
 
 		itWas = false;
 		try {
@@ -88,7 +90,7 @@ public class GrainModelTest {
 		assertEquals(2, ind.getColumns().size());
 
 		// Нелзя создавать полностью дублирующиеся индексы.
-		ind = new Index(g, "table1", "aa_i3");
+		ind = new Index(gp, "table1", "aa_i3");
 		ind.addColumn("b");
 		ind.addColumn("d");
 		itWas = false;
@@ -117,12 +119,13 @@ public class GrainModelTest {
 	public void test2() throws ParseException {
 		// Корректное и некорректное добавление таблицы
 		Grain g = new Grain(s, "grain2");
-		Table t = new Table(g, "aa");
-		t = new Table(g, "bb");
+		GrainPart gp = new GrainPart(g, true, null);
+		Table t = new Table(gp, "aa");
+		t = new Table(gp, "bb");
 		assertEquals(2, g.getElements(Table.class).size());
 		boolean itWas = false;
 		try {
-			t = new Table(g, "aa");
+			t = new Table(gp, "aa");
 		} catch (ParseException e) {
 			itWas = true;
 		}
@@ -202,7 +205,8 @@ public class GrainModelTest {
 	@Test
 	public void test3() throws ParseException {
 		Grain g = new Grain(s, "grain3");
-		Table t1 = new Table(g, "t1");
+		GrainPart gp = new GrainPart(g, true, null);
+		Table t1 = new Table(gp, "t1");
 		Column cc = new IntegerColumn(t1, "ida");
 		cc.setNullableAndDefault(false, "IDENTITY");
 
@@ -211,7 +215,7 @@ public class GrainModelTest {
 		new IntegerColumn(t1, "intcol");
 		new DateTimeColumn(t1, "datecol");
 
-		Table t2 = new Table(g, "t2");
+		Table t2 = new Table(gp, "t2");
 		cc = new IntegerColumn(t2, "idb");
 		cc.setNullableAndDefault(false, "IDENTITY");
 		t2.addPK("idb");
@@ -295,7 +299,7 @@ public class GrainModelTest {
 			itWas = true;
 		}
 
-		Table t3 = new Table(g, "t3");
+		Table t3 = new Table(gp, "t3");
 		c = new StringColumn(t3, "idc");
 		c.setLength("5");
 		c.setNullableAndDefault(false, "");
@@ -341,7 +345,7 @@ public class GrainModelTest {
 		fk.addReferencedColumn("idc");
 		fk.finalizeReference();
 
-		Table t4 = new Table(g, "t4");
+		Table t4 = new Table(gp, "t4");
 		cc = new IntegerColumn(t4, "idd1");
 		cc.setNullableAndDefault(false, "-1");
 
@@ -417,15 +421,15 @@ public class GrainModelTest {
 	@Test
 	public void test4() throws ParseException {
 		Grain gm = new Grain(s, "grain4");
-
-		Table t1 = new Table(gm, "t1");
+		GrainPart gp = new GrainPart(gm, true, null);
+		Table t1 = new Table(gp, "t1");
 		IntegerColumn c = new IntegerColumn(t1, "c1");
 		c.setNullableAndDefault(false, "IDENTITY");
 
 		t1.addPK("c1");
 		t1.finalizePK();
 
-		Table t2 = new Table(gm, "t2");
+		Table t2 = new Table(gp, "t2");
 		c = new IntegerColumn(t2, "c1");
 		c.setNullableAndDefault(false, "IDENTITY");
 

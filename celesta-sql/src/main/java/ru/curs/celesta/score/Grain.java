@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
@@ -28,7 +29,7 @@ public final class Grain extends NamedElement {
 
 	private boolean modified = true;
 
-	private File grainPath;
+	private Set<GrainPart> grainParts = new LinkedHashSet<>();
 
 	private final Map<Class<? extends GrainElement>, NamedElementHolder<? extends GrainElement>> grainElements = new HashMap<>();
 
@@ -50,7 +51,8 @@ public final class Grain extends NamedElement {
 		this.score = score;
 		score.addGrain(this);
 
-		grainPath = new File(String.format("%s%s%s", score.getDefaultGrainPath(), File.separator, name));
+
+		//TODO: Что-то с этим надо сделать grainPath = new File(String.format("%s%s%s", score.getDefaultGrainPath(), File.separator, name));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -103,6 +105,16 @@ public final class Grain extends NamedElement {
     public <T extends GrainElement> Map<String, T> getElements(Class<T> classOfElement) {
         return getElementsHolder(classOfElement).getElements();
     }
+
+	/**
+	 * Возвращает набор элементов указанного типа, определённый в грануле.
+	 *
+	 * @param classOfElement Класс элементов из набора
+	 */
+	private <T extends GrainElement> List<T> getElements(Class<T> classOfElement, GrainPart gp) {
+		return getElements(classOfElement).values().stream()
+				.filter(t -> gp == t.getGrainPart()).collect(Collectors.toList());
+	}
 
 	/**
 	 * Возвращает набор индексов, определённых в грануле.
@@ -299,19 +311,6 @@ public final class Grain extends NamedElement {
     }
 
 	/**
-	 * Возвращает путь к грануле.
-	 */
-	public File getGrainPath() {
-		return grainPath;
-	}
-
-	void setGrainPath(File grainPath) {
-		if (!grainPath.isDirectory())
-			throw new IllegalArgumentException();
-		this.grainPath = grainPath;
-	}
-
-	/**
 	 * Возвращает признак модификации гранулы (true, если составляющие части
 	 * гранулы были модифицированы в runtime).
 	 */
@@ -326,68 +325,71 @@ public final class Grain extends NamedElement {
 	}
 
 
-    public void save(PrintWriter bw) throws IOException {
+    public void save(PrintWriter bw, GrainPart gp) throws IOException {
         writeCelestaDoc(this, bw);
         bw.printf("CREATE SCHEMA %s VERSION '%s';%n", getName(), getVersion().toString());
         bw.println();
+
         bw.println("-- *** TABLES ***");
-        for (Table t : getElements(Table.class).values())
+        List<Table> tables = getElements(Table.class, gp);
+        for (Table t : tables)
             t.save(bw);
 
         bw.println("-- *** FOREIGN KEYS ***");
         int j = 1;
-        for (Table t : getElements(Table.class).values())
+        for (Table t : tables)
             for (ForeignKey fk : t.getForeignKeys())
                 fk.save(bw, j++);
 
         bw.println("-- *** INDICES ***");
-        for (Index i : getIndices().values())
+		List<Index> indices = getElements(Index.class, gp);
+        for (Index i : indices)
             i.save(bw);
 
         bw.println("-- *** VIEWS ***");
-        for (View v : getElements(View.class).values())
+		List<View> views = getElements(View.class, gp);
+        for (View v : views)
             v.save(bw);
 
         bw.println("-- *** MATERIALIZED VIEWS ***");
-        for (MaterializedView mv : getElements(MaterializedView.class).values())
+		List<MaterializedView> materializedViews = getElements(MaterializedView.class, gp);
+        for (MaterializedView mv : materializedViews)
             mv.save(bw);
 
         bw.println("-- *** PARAMETERIZED VIEWS ***");
-        for (ParameterizedView pv : getElements(ParameterizedView.class).values())
+		List<ParameterizedView> parameterizedViews = getElements(ParameterizedView.class, gp);
+        for (ParameterizedView pv : parameterizedViews)
             pv.save(bw);
     }
 
     /**
-     * Сохраняет гранулу обратно в файл, расположенный в grainPath.
+     * Saves grain back to source files
      *
-     * @throws CelestaException ошибка ввода-вывода
+     * @throws CelestaException io error
      */
     void save() throws CelestaException {
-        // Сохранять неизменённую гранулу нет смысла.
-        if (!modified)
-            return;
-        if (!grainPath.exists())
-            grainPath.mkdirs();
-        File scriptFile = new File(String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, getName()));
-        try (
-                PrintWriter bw = new PrintWriter(
-                        new OutputStreamWriter(
-                                new FileOutputStream(scriptFile), StandardCharsets.UTF_8))
-        ) {
-            save(bw);
-        } catch (IOException e) {
-            throw new CelestaException("Cannot save '%s' grain script: %s", getName(), e.getMessage());
-        }
-    }
+		// Сохранять неизменённую гранулу нет смысла.
+		if (!modified)
+			return;
 
-    static boolean writeCelestaDoc(NamedElement e, PrintWriter bw) {
-        String doc = e.getCelestaDoc();
-        if (doc == null) {
-            return false;
-        } else {
-            bw.printf("/**%s*/%n", doc);
-            return true;
-        }
+		for (GrainPart gp : this.grainParts) {
+
+			File sourceFile = gp.getSourceFile();
+
+			if (!sourceFile.exists()) {
+				sourceFile.getParentFile().mkdirs();
+			}
+
+			try (
+					PrintWriter bw = new PrintWriter(
+							new OutputStreamWriter(
+									new FileOutputStream(sourceFile), StandardCharsets.UTF_8))
+			) {
+				save(bw, gp);
+			} catch (IOException e) {
+				throw new CelestaException("Cannot save '%s' grain script: %s", getName(), e.getMessage());
+			}
+		}
     }
 
     /**
@@ -400,6 +402,16 @@ public final class Grain extends NamedElement {
 
 	public View getView(String name) throws ParseException {
 		return getElement(name, View.class);
+	}
+
+	static boolean writeCelestaDoc(NamedElement e, PrintWriter bw) {
+		String doc = e.getCelestaDoc();
+		if (doc == null) {
+			return false;
+		} else {
+			bw.printf("/**%s*/%n", doc);
+			return true;
+		}
 	}
 
     /**
@@ -415,30 +427,36 @@ public final class Grain extends NamedElement {
 
 	private static final Pattern NATIVE_SQL = Pattern.compile("--\\{\\{(.*)--}}", Pattern.DOTALL);
 
-    private Map<DBType, List<String>> beforeSql = new HashMap<>();
-    private Map<DBType, List<String>> afterSql = new HashMap<>();
+    private final Map<DBType, List<NativeSqlElement>> beforeSql = new HashMap<>();
+    private final Map<DBType, List<NativeSqlElement>> afterSql = new HashMap<>();
 
-    void addNativeSql(String sql, boolean isBefore, DBType dbType) throws ParseException {
+    void addNativeSql(String sql, boolean isBefore, DBType dbType, GrainPart grainPart) throws ParseException {
 		Matcher m = NATIVE_SQL.matcher(sql);
 		if (!m.matches())
 			throw new ParseException("Native sql should match pattern --{{...--}}, was " + sql);
 
-    	final List<String> sqlList;
+    	final List<NativeSqlElement> sqlList;
 
     	if (isBefore)
 			sqlList = beforeSql.computeIfAbsent(dbType, (dbTypeVar) -> new ArrayList<>());
     	else
 			sqlList = afterSql.computeIfAbsent(dbType, (dbTypeVar) -> new ArrayList<>());
 
-    	sqlList.add(m.group(1));
+    	sqlList.add(
+    			new NativeSqlElement(grainPart, m.group(1))
+		);
 	}
 
-	public List<String> getBeforeSqlList(DBType dbType) {
+	public List<NativeSqlElement> getBeforeSqlList(DBType dbType) {
     	return beforeSql.getOrDefault(dbType, Collections.emptyList());
 	}
 
-	public List<String> getAfterSqlList(DBType dbType) {
+	public List<NativeSqlElement> getAfterSqlList(DBType dbType) {
 		return afterSql.getOrDefault(dbType, Collections.emptyList());
 	}
 
+
+	public Set<GrainPart> getGrainParts() {
+    	return grainParts;
+	}
 }

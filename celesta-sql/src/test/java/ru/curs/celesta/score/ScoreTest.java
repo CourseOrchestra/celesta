@@ -43,9 +43,38 @@ public class ScoreTest {
         assertTrue(o1 < o2);
         assertTrue(o2 < o3);
 
-        assertEquals(COMPOSITE_SCORE_PATH_1 + File.separator + "grain1", g1.getGrainPath().toString());
-        assertEquals(COMPOSITE_SCORE_PATH_1 + File.separator + "grain2", g2.getGrainPath().toString());
-        assertEquals(COMPOSITE_SCORE_PATH_2 + File.separator + "grain3", g3.getGrainPath().toString());
+        assertAll(
+                () -> assertEquals(1, g1.getGrainParts().size()),
+                () -> assertTrue(
+                        g1.getGrainParts().stream()
+                                .map(GrainPart::getSourceFile)
+                                .map(File::toString)
+                                .filter(
+                                        p -> p.equals(COMPOSITE_SCORE_PATH_1 + File.separator + "grain1"
+                                                + File.separator + "_grain1.sql")
+                                ).findFirst().isPresent()
+                ),
+                () -> assertEquals(1, g2.getGrainParts().size()),
+                () -> assertTrue(
+                        g2.getGrainParts().stream()
+                                .map(GrainPart::getSourceFile)
+                                .map(File::toString)
+                                .filter(
+                                        p -> p.equals(COMPOSITE_SCORE_PATH_1 + File.separator + "grain2"
+                                                + File.separator + "_grain2.sql")
+                                ).findFirst().isPresent()
+                ),
+                () -> assertEquals(1, g3.getGrainParts().size()),
+                () -> assertTrue(
+                        g3.getGrainParts().stream()
+                                .map(GrainPart::getSourceFile)
+                                .map(File::toString)
+                                .filter(
+                                        p -> p.equals(COMPOSITE_SCORE_PATH_2 + File.separator + "grain3"
+                                                + File.separator + "_grain3.sql")
+                                ).findFirst().isPresent()
+                )
+                );
 
         Grain sys = s.getGrain("celestaSql");
         a = sys.getElement("grains", Table.class);
@@ -101,7 +130,9 @@ public class ScoreTest {
         assertTrue(g2.isModified());
         assertFalse(g3.isModified());
 
-        new Table(g3, "newtable");
+        GrainPart g3p = g3.getGrainParts().stream().findFirst().get();
+
+        new Table(g3p, "newtable");
         assertFalse(g1.isModified());
         assertTrue(g2.isModified());
         assertTrue(g3.isModified());
@@ -138,14 +169,16 @@ public class ScoreTest {
         Grain celesta = s.getGrain("celestaSql");
         Grain g4 = new Grain(s, "newgrain");
 
-        assertFalse(g1.isModified());
-        assertFalse(g2.isModified());
-        assertFalse(g3.isModified());
-        assertFalse(celesta.isModified());
-        assertTrue(g4.isModified());
+        assertAll(
+                () -> assertFalse(g1.isModified()),
+                () -> assertFalse(g2.isModified()),
+                () -> assertFalse(g3.isModified()),
+                () -> assertFalse(celesta.isModified()),
+                () -> assertTrue(g4.isModified()),
+                () -> assertEquals("1.00", g4.getVersion().toString()),
+                () -> assertEquals(0, g4.getGrainParts().size())
+        );
 
-        assertEquals("1.00", g4.getVersion().toString());
-        assertEquals(COMPOSITE_SCORE_PATH_1 + File.separator + "newgrain", g4.getGrainPath().toString());
 
         g3.modify();
         assertTrue(g3.isModified());
@@ -211,24 +244,25 @@ public class ScoreTest {
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
                 .build();
         Grain g2 = s.getGrain("grain2");
+        GrainPart g2p = g2.getGrainParts().stream().findFirst().get();
         // Нельзя создать view с именем таблицы
         boolean itWas = false;
         try {
-            new View(g2, "b");
+            new View(g2p, "b");
         } catch (ParseException e) {
             itWas = true;
         }
         assertTrue(itWas);
         // Нельзя создать таблицу с именем view
-        new View(g2, "newView");
+        new View(g2p, "newView");
         itWas = false;
         try {
-            new Table(g2, "newView");
+            new Table(g2p, "newView");
         } catch (ParseException e) {
             itWas = true;
         }
         assertTrue(itWas);
-        new Table(g2, "newView2");
+        new Table(g2p, "newView2");
     }
 
     @Test
@@ -250,19 +284,20 @@ public class ScoreTest {
                 .path(COMPOSITE_SCORE_PATH_1)
                 .build();
         Grain g1 = s.getGrain("grain1");
+        GrainPart g1p = g1.getGrainParts().stream().findFirst().get();
         assertEquals(1, g1.getElements(View.class).size());
         assertFalse(g1.isModified());
         boolean itWas = false;
         View nv = null;
         try {
-            nv = new View(g1, "testit", "select postalcode, city from adresses where flat = 5");
+            nv = new View(g1p, "testit", "select postalcode, city from adresses where flat = 5");
         } catch (ParseException e) {
             itWas = true;
         }
         assertTrue(itWas);
         assertEquals(1, g1.getElements(View.class).size());
         assertTrue(g1.isModified());
-        nv = new View(g1, "testit", "select postalcode, city from adresses where flat = '5'");
+        nv = new View(g1p, "testit", "select postalcode, city from adresses where flat = '5'");
         assertEquals(2, nv.getColumns().size());
         assertEquals(2, g1.getElements(View.class).size());
         assertTrue(g1.isModified());
@@ -330,9 +365,13 @@ public class ScoreTest {
         // Проверяется функциональность записи динамически изменённых объектов с
         // опциями (Read Only, Version Check).
         AbstractScore s = new CelestaSqlTestScore();
-        InputStream input = ParserTest.class.getResourceAsStream("test.sql");
-        CelestaParser cp = new CelestaParser(input, "utf-8");
-        Grain g = cp.grain(s, "test1");
+
+        String filePath = this.getClass().getResource("test.sql").getPath();
+        File f = new File(filePath);
+        CelestaParser cp1 = new CelestaParser(new FileInputStream(f), "utf-8");
+        GrainPart gp = cp1.extractGrainInfo(s, f);
+        CelestaParser cp2 = new CelestaParser(new FileInputStream(f), "utf-8");
+        Grain g = cp2.parseGrainPart(gp);
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
 

@@ -27,7 +27,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
     private static OraAdaptor dba;
 
     @BeforeAll
-    public static void beforeAll() throws CelestaException {
+    public static void beforeAll() throws Exception {
         oracle.start();
 
         Properties params = new Properties();

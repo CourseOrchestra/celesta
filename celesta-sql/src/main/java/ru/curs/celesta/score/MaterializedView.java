@@ -59,9 +59,9 @@ public class MaterializedView extends AbstractView implements TableElement {
     }
   };
 
-  public MaterializedView(Grain g, String name) throws ParseException {
-    super(g, name);
-    g.addElement(this);
+  public MaterializedView(GrainPart grainPart, String name) throws ParseException {
+    super(grainPart, name);
+    getGrain().addElement(this);
     surrogateCount = new IntegerColumn(this, SURROGATE_COUNT);
     surrogateCount.setNullableAndDefault(false, "0");
   }

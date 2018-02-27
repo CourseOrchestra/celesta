@@ -13,12 +13,24 @@ import ru.curs.celesta.score.*;
 //TODO: This class must be actualized
 public class CompileTest {
 	@Test
-	public void compileTest() throws CelestaException, ParseException, IOException {
+	public void compileTest() throws ParseException, IOException {
 
-		URL url = CompileTest.class.getResource("test.sql");
-		CelestaParser cp = new CelestaParser(url.openStream(), "utf-8");
 		AbstractScore score = ScoreAccessor.createEmptyScore();
-		Grain g = cp.grain(score, "test1");
+
+		File f = new File(this.getClass().getResource("test.sql").getPath());
+
+		final Grain g;
+
+		try (
+				InputStream is1 = new FileInputStream(f);
+				InputStream is2 = new FileInputStream(f)
+		) {
+			CelestaParser cp1 = new CelestaParser(is1, "utf-8");
+			CelestaParser cp2 = new CelestaParser(is2, "utf-8");
+			GrainPart gp = cp1.extractGrainInfo(score, f);
+			g = cp2.parseGrainPart(gp);
+		}
+
 		StringWriter sw = new StringWriter();
 		PrintWriter bw = new PrintWriter(sw);
 		ORMCompiler.compileROTable(g.getElement("ttt1", Table.class), bw);

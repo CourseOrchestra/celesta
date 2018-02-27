@@ -1,12 +1,9 @@
 package ru.curs.celesta.score.discovery;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.curs.celesta.CelestaException;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,35 +13,29 @@ public class PyScoreDiscoveryTest {
             + File.separator + "scores" + File.separator;
 
     PyScoreDiscovery pyScoreDiscovery = new PyScoreDiscovery();
-    Map<String, File> grainFiles = new HashMap<>();
-
-    @BeforeEach
-    void setUp() {
-        grainFiles.clear();
-    }
+    Set<File> grainPartFiles;
 
     @Test
-    void testPyScoreWithoutScripts() throws CelestaException {
+    void testPyScoreWithoutScripts() {
         File scoreDir = getScoreDir("emptyScore");
-        pyScoreDiscovery.discoverScore(scoreDir, grainFiles);
-        assertTrue(grainFiles.isEmpty());
+        grainPartFiles = pyScoreDiscovery.discoverScore(scoreDir);
+        assertTrue(grainPartFiles.isEmpty());
     }
 
     @Test
     void testPyScoreWithoutPyInit() {
         File scoreDir = getScoreDir("badScore");
-        assertThrows(CelestaException.class, () -> pyScoreDiscovery.discoverScore(scoreDir, grainFiles));
+        assertThrows(RuntimeException.class, () -> pyScoreDiscovery.discoverScore(scoreDir));
     }
 
     @Test
-    void testGoodPyScore() throws CelestaException {
+    void testGoodPyScore() {
         File scoreDir = getScoreDir("goodScore");
-        pyScoreDiscovery.discoverScore(scoreDir, grainFiles);
+        grainPartFiles = pyScoreDiscovery.discoverScore(scoreDir);
 
         assertAll(
-                () -> assertEquals(1, grainFiles.size()),
-                () -> assertTrue(grainFiles.containsKey("grain")),
-                () -> assertEquals("_grain.sql", grainFiles.get("grain").getName())
+                () -> assertEquals(1, grainPartFiles.size()),
+                () -> assertEquals("_grain.sql", grainPartFiles.stream().findFirst().get().getName())
         );
     }
 

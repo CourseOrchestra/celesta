@@ -1,35 +1,26 @@
 package ru.curs.celesta.score.discovery;
 
-import ru.curs.celesta.CelestaException;
-
 import java.io.File;
-import java.util.Map;
+import java.util.Set;
 
 public class PyScoreDiscovery implements ScoreDiscovery {
     @Override
-    public void discoverScore(File scoreDir, Map<String, File> grainFiles) throws CelestaException {
-        for (File grainPath : scoreDir.listFiles(File::isDirectory)) {
-            String grainName = grainPath.getName();
-            File scriptFile = new File(
-                    String.format("%s%s_%s.sql", grainPath.getPath(), File.separator, grainName));
+    public Set<File> discoverScore(File scoreDir) {
+        ScoreDiscovery scoreDiscovery = new DefaultScoreDiscovery();
+        Set<File> result = scoreDiscovery.discoverScore(scoreDir);
 
-            if (scriptFile.exists()) {
-                /*
-                 * Наличие sql-файла говорит о том, что мы имеем дело с
-                 * папкой гранулы, и уже требуем от неё всё подряд.
-                 */
-                File initFile = new File(String.format("%s%s__init__.py", grainPath.getPath(), File.separator));
-                if (!initFile.exists())
-                    throw new CelestaException("Cannot find __init__.py in grain '%s' definition folder.",
-                            grainName);
+        result.stream()
+                .filter(f -> {
+                    File initFile = new File(String.format("%s%s__init__.py", f.getParentFile().getPath(), File.separator));
+                    return !initFile.exists();
+                })
+                .findFirst().ifPresent(f -> {
+            throw new RuntimeException( //TODO: Our analog of RuntimeException must be used
+                    String.format("Cannot find __init__.py in '%s' folder.",
+                            f.getParentFile().getPath()));
+        });
 
-                if (!scriptFile.canRead())
-                    throw new CelestaException("Cannot read script file '%s'.", scriptFile);
-                if (grainFiles.containsKey(grainName))
-                    throw new CelestaException("Grain '%s' defined more than once on different paths.", grainName);
-                grainFiles.put(grainName, scriptFile);
-            }
-
-        }
+        return result;
     }
+
 }
