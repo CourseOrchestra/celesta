@@ -43,7 +43,7 @@ public final class Grain extends NamedElement {
 	private final Set<String> constraintNames = new HashSet<>();
 
 	public Grain(AbstractScore score, String name) throws ParseException {
-		super(name);
+		super(name, score.getIdentifierValidator());
 		if (score == null)
 			throw new IllegalArgumentException();
 		if (name.indexOf("_") >= 0)

@@ -352,7 +352,7 @@ public class ForeignKey {
 	 */
 	public void setConstraintName(String constraintName) throws ParseException {
 		if (constraintName != null)
-			NamedElement.validateIdentifier(constraintName);
+            parentTable.getGrain().getScore().getIdentifierValidator().validate(constraintName);
 		this.constraintName = constraintName;
 	}
 

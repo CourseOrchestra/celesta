@@ -45,6 +45,7 @@ import java.util.zip.CRC32;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
+import ru.curs.celesta.score.validator.IdentifierValidator;
 
 /**
  * Корневой класс полной модели данных гранул.
@@ -278,6 +279,8 @@ public abstract class AbstractScore {
     }
 
     public abstract String getSysSchemaName();
+
+    public abstract IdentifierValidator getIdentifierValidator();
 
     /**
      * Возвращает неизменяемый набор гранул.

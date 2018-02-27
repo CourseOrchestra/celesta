@@ -169,7 +169,7 @@ TOKEN: /* Datatypes */
 
 <*> TOKEN:
 {
-	< S_IDENTIFIER: ( <LETTER> )+ ( <DIGIT> | <LETTER> )* >
+	< S_IDENTIFIER:  (( <LETTER> )+ ( <DIGIT> | <LETTER> )*) | ("\"" (~["\""])* "\"") >
 |   < S_PARAM: "$"<S_IDENTIFIER> >
 | 	< #LETTER: ["a"-"z", "A"-"Z", "_"] >
 |   < S_CHAR_LITERAL: "'" (~["'"])* "'" ("'" (~["'"])* "'")*>

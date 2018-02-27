@@ -246,7 +246,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 	 */
 	public void setPkConstraintName(String pkConstraintName) throws ParseException {
 		if (pkConstraintName != null)
-			validateIdentifier(pkConstraintName);
+			getGrain().getScore().getIdentifierValidator().validate(pkConstraintName);
 		this.pkConstraintName = pkConstraintName;
 	}
 
