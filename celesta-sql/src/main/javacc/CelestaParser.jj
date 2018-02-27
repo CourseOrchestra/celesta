@@ -236,7 +236,6 @@ Grain parseGrainPart(GrainPart grainPart) :
     <K_GRAIN>
     t = <S_IDENTIFIER>
     {
-        if (!t.toString().equals(grainPart.getGrain().getName())) throw new ParseException("TODOTODOTODO");
         if (doc != null) {grainPart.setCelestaDocLexem(doc.toString()); doc = null;}
     }
     <K_GRAIN_VERSION>
@@ -245,9 +244,6 @@ Grain parseGrainPart(GrainPart grainPart) :
     (
     <K_SET> { token_source.SwitchTo(SET_SCHEMA_STATE); }
     <K_GRAIN> t = <S_IDENTIFIER>
-        {
-            if (!t.toString().equals(grainPart.getGrain().getName())) throw new ParseException("TODOTODOTODO");
-        }
     ))
     <K_END_OF_STATEMENT>
    (

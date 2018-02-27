@@ -107,6 +107,16 @@ public final class Grain extends NamedElement {
     }
 
 	/**
+	 * Возвращает набор элементов указанного типа, определённый в грануле.
+	 *
+	 * @param classOfElement Класс элементов из набора
+	 */
+	private <T extends GrainElement> List<T> getElements(Class<T> classOfElement, GrainPart gp) {
+		return getElements(classOfElement).values().stream()
+				.filter(t -> gp == t.getGrainPart()).collect(Collectors.toList());
+	}
+
+	/**
 	 * Возвращает набор индексов, определённых в грануле.
 	 */
 	public Map<String, Index> getIndices() {
@@ -321,8 +331,7 @@ public final class Grain extends NamedElement {
         bw.println();
 
         bw.println("-- *** TABLES ***");
-        List<Table> tables = getElements(Table.class).values().stream()
-				.filter(t -> gp == t.getGrainPart()).collect(Collectors.toList());
+        List<Table> tables = getElements(Table.class, gp);
         for (Table t : tables)
             t.save(bw);
 
@@ -333,26 +342,22 @@ public final class Grain extends NamedElement {
                 fk.save(bw, j++);
 
         bw.println("-- *** INDICES ***");
-		List<Index> indices = getElements(Index.class).values().stream()
-				.filter(t -> gp == t.getGrainPart()).collect(Collectors.toList());
+		List<Index> indices = getElements(Index.class, gp);
         for (Index i : indices)
             i.save(bw);
 
         bw.println("-- *** VIEWS ***");
-		List<View> views = getElements(View.class).values().stream()
-				.filter(t -> gp == t.getGrainPart()).collect(Collectors.toList());
+		List<View> views = getElements(View.class, gp);
         for (View v : views)
             v.save(bw);
 
         bw.println("-- *** MATERIALIZED VIEWS ***");
-		List<MaterializedView> materializedViews = getElements(MaterializedView.class).values().stream()
-				.filter(t -> gp == t.getGrainPart()).collect(Collectors.toList());
+		List<MaterializedView> materializedViews = getElements(MaterializedView.class, gp);
         for (MaterializedView mv : materializedViews)
             mv.save(bw);
 
         bw.println("-- *** PARAMETERIZED VIEWS ***");
-		List<ParameterizedView> parameterizedViews = getElements(ParameterizedView.class).values().stream()
-				.filter(t -> gp == t.getGrainPart()).collect(Collectors.toList());
+		List<ParameterizedView> parameterizedViews = getElements(ParameterizedView.class, gp);
         for (ParameterizedView pv : parameterizedViews)
             pv.save(bw);
     }
