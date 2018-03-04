@@ -190,10 +190,10 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 		// Составную часть внешнего ключа нельзя удалить
 		for (ForeignKey fk : fKeys)
 			if (fk.getColumns().containsValue(column))
-				String.format(
+				throw new ParseException(String.format(
 						YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO
 								+ "a foreign key. Drop or change relevant foreign key first.",
-						getGrain().getName(), getName(), column.getName());
+						getGrain().getName(), getName(), column.getName()));
 
 		getGrain().modify();
 		columns.remove(column);
