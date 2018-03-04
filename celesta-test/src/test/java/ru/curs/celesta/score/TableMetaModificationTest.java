@@ -10,8 +10,8 @@ class TableMetaModificationTest {
     void boundFieldsCannotBeDeleted() throws ParseException {
         AbstractScore score = new Score();
         Grain grain = new Grain(score, "test");
-
-        Table tableA = new Table(grain, "a");
+        GrainPart gp = new GrainPart(grain, true, null);
+        Table tableA = new Table(gp, "a");
         Column a1 = new IntegerColumn(tableA, "a1");
         a1.setNullableAndDefault(false, "0");
         Column a2 = new IntegerColumn(tableA, "a2");
@@ -23,7 +23,7 @@ class TableMetaModificationTest {
         new Index(tableA, "IA", new String[]{"a2"});
 
 
-        Table tableB = new Table(grain, "b");
+        Table tableB = new Table(gp, "b");
         Column b1 = new IntegerColumn(tableB, "b1");
         b1.setNullableAndDefault(false, "0");
         tableB.addPK("b1");
