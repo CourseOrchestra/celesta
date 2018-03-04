@@ -1,12 +1,10 @@
 package ru.curs.celesta.score;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static ru.curs.celesta.score.FieldsLookupTest.generateTable;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class TableMetaModificationTest {
+class TableMetaModificationTest {
 
     @Test
     void boundFieldsCannotBeDeleted() throws ParseException {
@@ -18,7 +16,7 @@ public class TableMetaModificationTest {
         a1.setNullableAndDefault(false, "0");
         Column a2 = new IntegerColumn(tableA, "a2");
         a2.setNullableAndDefault(false, "0");
-        Column a3 = new IntegerColumn(tableA, "a3");
+        new IntegerColumn(tableA, "a3");
         Column a4 = new IntegerColumn(tableA, "a4");
         tableA.addPK("a1");
         tableA.finalizePK();
@@ -37,16 +35,20 @@ public class TableMetaModificationTest {
         a4.delete();
         assertEquals(3, tableA.getColumns().size());
 
-        //PK
-        Assertions.assertThrows(ParseException.class,
-                () -> tableA.getColumn("a1").delete());
 
-        //Index
-        Assertions.assertThrows(ParseException.class,
-                () -> tableA.getColumn("a2").delete());
+        assertAll(
+                //PK
+                () -> assertThrows(ParseException.class,
+                        () -> tableA.getColumn("a1").delete()),
 
-        //FK
-        Assertions.assertThrows(ParseException.class,
-                () -> tableA.getColumn("a3").delete());
+                //Index
+                () -> assertThrows(ParseException.class,
+                        () -> tableA.getColumn("a2").delete()),
+
+                //FK
+                () -> assertThrows(ParseException.class,
+                        () -> tableA.getColumn("a3").delete()));
+
+        assertEquals(3, tableA.getColumns().size());
     }
 }
