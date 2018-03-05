@@ -67,7 +67,7 @@ public final class AppSettings {
         sb.append("No JDBC URL given (rdbms.connection.url).\n");
     }
 
-    dbType = resolveDbType(databaseConnection);
+    dbType = DBType.resolveByJdbcUrl(databaseConnection);
     if (dbType == DBType.UNKNOWN)
       sb.append("Cannot recognize RDBMS type or unsupported database.");
 
@@ -107,19 +107,7 @@ public final class AppSettings {
   }
 
 
-  public static DBType resolveDbType(String url) {
-    if (url.startsWith("jdbc:sqlserver")) {
-      return DBType.MSSQL;
-    } else if (url.startsWith("jdbc:postgresql")) {
-      return DBType.POSTGRESQL;
-    } else if (url.startsWith("jdbc:oracle")) {
-      return DBType.ORACLE;
-    } else if (url.startsWith("jdbc:h2")) {
-      return DBType.H2;
-    } else {
-      return DBType.UNKNOWN;
-    }
-  }
+
 
   /**
    * Возвращает тип базы данных на основе JDBC-строки подключения.

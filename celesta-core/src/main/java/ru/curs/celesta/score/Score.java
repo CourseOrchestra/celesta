@@ -1,12 +1,13 @@
 package ru.curs.celesta.score;
 
-import ru.curs.celesta.score.validator.IdentifierValidator;
-import ru.curs.celesta.score.validator.PlainIdentifierValidator;
+
+import ru.curs.celesta.score.validator.IdentifierParser;
+import ru.curs.celesta.score.validator.PlainIdentifierParser;
 
 public class Score extends AbstractScore {
     public static final String SYSTEM_SCHEMA_NAME = "celesta";
 
-    private IdentifierValidator identifierValidator = new PlainIdentifierValidator();
+    private IdentifierParser identifierParser = new PlainIdentifierParser();
 
     public Score() {}
 
@@ -16,7 +17,7 @@ public class Score extends AbstractScore {
     }
 
     @Override
-    public IdentifierValidator getIdentifierValidator() {
-        return identifierValidator;
+    public IdentifierParser getIdentifierParser() {
+        return identifierParser;
     }
 }

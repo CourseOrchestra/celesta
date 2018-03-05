@@ -143,15 +143,15 @@ public class Index extends GrainElement implements HasColumns {
 	void save(PrintWriter bw) throws IOException {
 		Grain.writeCelestaDoc(this, bw);
 		bw.write("CREATE INDEX ");
-		bw.write(getName());
+		bw.write(getQuotedNameIfNeeded());
 		bw.write(" ON ");
-		bw.write(table.getName());
+		bw.write(table.getQuotedNameIfNeeded());
 		bw.write("(");
 		boolean comma = false;
 		for (Column c : columns) {
 			if (comma)
 				bw.write(", ");
-			bw.write(c.getName());
+			bw.write(c.getQuotedNameIfNeeded());
 			comma = true;
 		}
 		bw.println(");");

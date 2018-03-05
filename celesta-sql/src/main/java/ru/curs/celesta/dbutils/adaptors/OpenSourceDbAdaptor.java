@@ -33,7 +33,10 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 	public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
 		try (PreparedStatement check = conn
 				.prepareStatement(String.format("SELECT table_name FROM information_schema.tables  WHERE "
-						+ "table_schema = '%s' AND table_name = '%s'", schema, name))) {
+						+ "table_schema = '%s' AND table_name = '%s'",
+                        schema,
+                        name
+                ))) {
 			ResultSet rs = check.executeQuery();
 			return rs.next();
 		} catch (SQLException e) {
@@ -46,8 +49,8 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
     Statement stmt = conn.createStatement();
 
     try {
-      String sql = String.format("DROP TRIGGER \"%s\" ON " + tableTemplate(),
-          query.getName(), query.getSchema(), query.getTableName());
+      String sql = String.format("DROP TRIGGER \"%s\" ON " + tableString(query.getSchema(), query.getTableName()),
+          query.getName());
       stmt.executeUpdate(sql);
     } finally {
       stmt.close();
@@ -73,8 +76,8 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   @Override
   public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
     TableElement t = c.getParentTable();
-    String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s limit 1;", c.getQuotedName(),
-        t.getGrain().getName(), t.getName(), where);
+    String sql = String.format(SELECT_S_FROM + tableString(t.getGrain().getName(), t.getName())
+                    + " where %s limit 1;", c.getQuotedName(), where);
     return prepareStatement(conn, sql);
   }
 
@@ -84,8 +87,8 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   ) throws CelestaException {
 
     final String fieldList = getTableFieldsListExceptBlobs((DataGrainElement) t, fields);
-    String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s limit 1;",
-        fieldList, t.getGrain().getName(), t.getName(), where);
+    String sql = String.format(SELECT_S_FROM + tableString(t.getGrain().getName(), t.getName())
+                    + " where %s limit 1;", fieldList, where);
 
     PreparedStatement result = prepareStatement(conn, sql);
     //System.out.println(result.toString());
@@ -94,7 +97,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) throws CelestaException {
-    String sql = String.format("delete from " + tableTemplate() + " where %s;", t.getGrain().getName(), t.getName(),
+    String sql = String.format("delete from " + tableString(t.getGrain().getName(), t.getName()) + " where %s;",
         where);
     return prepareStatement(conn, sql);
   }
@@ -102,14 +105,15 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   @Override
   public Set<String> getColumns(Connection conn, TableElement t) throws CelestaException {
     String sql = String.format("select column_name from information_schema.columns "
-        + "where table_schema = '%s' and table_name = '%s';", t.getGrain().getName(), t.getName());
+        + "where table_schema = '%s' and table_name = '%s';", t.getGrain().getName().replace("\"", ""),
+            t.getName().replace("\"", ""));
     return sqlToStringSet(conn, sql);
   }
 
   @Override
   public PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) throws CelestaException {
     // Готовим запрос на удаление
-    String sql = String.format("delete from " + tableTemplate() + " %s;", t.getGrain().getName(), t.getName(),
+    String sql = String.format("delete from " + tableString(t.getGrain().getName(), t.getName()) + " %s;",
         where.isEmpty() ? "" : "where " + where);
     try {
       PreparedStatement result = conn.prepareStatement(sql);
@@ -121,8 +125,8 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   @Override
   String[] getDropIndexSQL(Grain g, DbIndexInfo dBIndexInfo) {
-    String sql = String.format("DROP INDEX IF EXISTS " + tableTemplate(), g.getName(), dBIndexInfo.getIndexName());
-    String sql2 = String.format("DROP INDEX IF EXISTS " + tableTemplate(), g.getName(),
+    String sql = "DROP INDEX IF EXISTS " + tableString(g.getName(), dBIndexInfo.getIndexName());
+    String sql2 = "DROP INDEX IF EXISTS " + tableString(g.getName(),
         dBIndexInfo.getIndexName() + CONJUGATE_INDEX_POSTFIX);
     String[] result = {sql, sql2};
     return result;
@@ -135,26 +139,28 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
       String sql;
       List<String> batch = new LinkedList<>();
       // Начинаем с удаления default-значения
-      sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" DROP DEFAULT",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName());
+      sql = String.format(
+              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                      + " ALTER COLUMN \"%s\" DROP DEFAULT", c.getName()
+      );
       batch.add(sql);
 
       updateColType(c, actual, batch);
 
       // Проверяем nullability
       if (c.isNullable() != actual.isNullable()) {
-        sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" %s",
-            c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(),
-            c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
+        sql = String.format(
+                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                        + " ALTER COLUMN \"%s\" %s", c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
         batch.add(sql);
       }
 
       // Если в данных пустой default, а в метаданных -- не пустой -- то
       if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate())
               || (c instanceof IntegerColumn && ((IntegerColumn)c).getSequence() != null)) {
-        sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" SET %s",
-            c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(),
-            getColumnDefiner(c).getDefaultDefinition(c));
+        sql = String.format(
+                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                        + " ALTER COLUMN \"%s\" SET %s", c.getName(), getColumnDefiner(c).getDefaultDefinition(c));
         batch.add(sql);
       }
 
@@ -253,15 +259,16 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
   @Override
   public long nextSequenceValue(Connection conn, SequenceElement s) throws CelestaException {
-    String sql = String.format("SELECT NEXTVAL('" + tableTemplate() +"')", s.getGrain().getName(), s.getName());
+    String sql = "SELECT NEXTVAL('" + tableString(s.getGrain().getName(), s.getName()) +"')";
 
     try (Statement stmt = conn.createStatement()) {
       ResultSet rs = stmt.executeQuery(sql);
       rs.next();
       return rs.getLong(1);
     } catch (SQLException e) {
-      throw new CelestaException(String.format("Can't get next value of sequence " + tableTemplate(),
-              s.getGrain().getName(), s.getName()), e);
+      throw new CelestaException(
+              "Can't get next value of sequence " + tableString(s.getGrain().getName(), s.getName()), e
+      );
     }
   }
 
@@ -272,8 +279,8 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
                     "SELECT * FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?"
             )
     ) {
-      preparedStatement.setString(1, schema);
-      preparedStatement.setString(2, name);
+      preparedStatement.setString(1, schema.replace("\"", ""));
+      preparedStatement.setString(2, name.replace("\"", ""));
       return preparedStatement.executeQuery().next();
     } catch (SQLException e) {
       throw new CelestaException(e.getMessage(), e);

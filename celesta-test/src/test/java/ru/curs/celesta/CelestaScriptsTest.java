@@ -1,5 +1,6 @@
 package ru.curs.celesta;
 
+import org.testcontainers.containers.MSSQLServerContainer;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;

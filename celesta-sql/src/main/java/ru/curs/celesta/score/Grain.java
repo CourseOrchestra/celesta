@@ -43,7 +43,7 @@ public final class Grain extends NamedElement {
 	private final Set<String> constraintNames = new HashSet<>();
 
 	public Grain(AbstractScore score, String name) throws ParseException {
-		super(name, score.getIdentifierValidator());
+		super(name, score.getIdentifierParser());
 		if (score == null)
 			throw new IllegalArgumentException();
 		if (name.indexOf("_") >= 0)
@@ -273,6 +273,7 @@ public final class Grain extends NamedElement {
      * @throws ParseException В случае, если ограничение с таким именем уже определено.
      */
     void addConstraintName(String name) throws ParseException {
+    	name = getScore().getIdentifierParser().parse(name);
         if (constraintNames.contains(name))
             throw new ParseException(String.format("Constraint '%s' is defined more than once in a grain.", name));
         constraintNames.add(name);

@@ -1,14 +1,14 @@
 package ru.curs.celesta.score;
 
-import ru.curs.celesta.score.validator.AnsiQuotedIdentifierValidator;
-import ru.curs.celesta.score.validator.IdentifierValidator;
+import ru.curs.celesta.score.validator.AnsiQuotedIdentifierParser;
+import ru.curs.celesta.score.validator.IdentifierParser;
 
 public class CelestaSqlAnsiQuotedTestScore extends CelestaSqlTestScore {
 
-    private IdentifierValidator identifierValidator = new AnsiQuotedIdentifierValidator();
+    private final IdentifierParser identifierValidator = new AnsiQuotedIdentifierParser();
 
     @Override
-    public IdentifierValidator getIdentifierValidator() {
+    public IdentifierParser getIdentifierParser() {
         return this.identifierValidator;
     }
 }

@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class IdentifierValidatorTest {
 
-    private PlainIdentifierValidator plainIdentifierValidator = new PlainIdentifierValidator();
-    private AnsiQuotedIdentifierValidator ansiQuotedIdentifierValidator = new AnsiQuotedIdentifierValidator();
+    private PlainIdentifierParser plainIdentifierValidator = new PlainIdentifierParser();
+    private AnsiQuotedIdentifierParser ansiQuotedIdentifierValidator = new AnsiQuotedIdentifierParser();
 
     @Test
     void testPlainIdentifier() throws Exception {

@@ -76,7 +76,6 @@ final class OraAdaptor extends DBAdaptor {
 
   private static final String DROP_TRIGGER = "drop trigger \"";
 
-  private static final String TABLE_TEMPLATE = "\"%s_%s\"";
 
   private static final Pattern BOOLEAN_CHECK = Pattern.compile("\"([^\"]+)\" *[iI][nN] *\\( *0 *, *1 *\\)");
   private static final Pattern DATE_PATTERN = Pattern.compile("'(\\d\\d\\d\\d)-([01]\\d)-([0123]\\d)'");
@@ -287,7 +286,8 @@ final class OraAdaptor extends DBAdaptor {
       return false;
     }
     String sql = String.format("select count(*) from all_tables where owner = "
-        + "sys_context('userenv','session_user') and table_name = '%s_%s'", schema, name);
+        + "sys_context('userenv','session_user') and table_name = '%s_%s'",
+            schema, name);
 
     try (Statement checkForTable = conn.createStatement()) {
       ResultSet rs = checkForTable.executeQuery(sql);
@@ -343,10 +343,11 @@ final class OraAdaptor extends DBAdaptor {
   private void createOrReplaceSequenceTriggerForColumn(Connection conn, String triggerName, IntegerColumn ic, String sequenceName) throws SQLException {
     TableElement t = ic.getParentTable();
     String sql = String.format(
-            "CREATE OR REPLACE TRIGGER \"" + triggerName + "\" BEFORE INSERT ON " + tableTemplate()
+            "CREATE OR REPLACE TRIGGER \"" + triggerName + "\" BEFORE INSERT ON "
+                    + tableString(t.getGrain().getName(), t.getName())
                     + " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT \"" + sequenceName
                     + "\".NEXTVAL INTO :new.%s FROM dual; END;",
-            t.getGrain().getName(), t.getName(), ic.getQuotedName(), ic.getQuotedName());
+            ic.getQuotedName(), ic.getQuotedName());
 
     try (Statement statement = conn.createStatement()) {
       statement.executeUpdate(sql);
@@ -361,8 +362,8 @@ final class OraAdaptor extends DBAdaptor {
   @Override
   public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
     TableElement t = c.getParentTable();
-    String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1", c.getQuotedName(),
-        t.getGrain().getName(), t.getName(), where);
+    String sql = String.format(SELECT_S_FROM + tableString(t.getGrain().getName(), t.getName())
+            + " where %s and rownum = 1", c.getQuotedName(), where);
     return prepareStatement(conn, sql);
   }
 
@@ -373,8 +374,8 @@ final class OraAdaptor extends DBAdaptor {
 
     final String fieldList = getTableFieldsListExceptBlobs((DataGrainElement) t, fields);
 
-    String sql = String.format(SELECT_S_FROM + tableTemplate() + " where %s and rownum = 1",
-        fieldList, t.getGrain().getName(), t.getName(), where);
+    String sql = String.format(SELECT_S_FROM + tableString(t.getGrain().getName(), t.getName())
+                    + " where %s and rownum = 1", fieldList, where);
     return prepareStatement(conn, sql);
   }
 
@@ -410,19 +411,22 @@ final class OraAdaptor extends DBAdaptor {
           .filter(k -> !VersionedElement.REC_VERSION.equals(k))
           .findFirst().get();
 
-      sql = String.format("insert into " + tableTemplate() + " (\"%s\") values (DEFAULT)", t.getGrain().getName(),
-          t.getName(), columnToInsert);
+      sql = String.format(
+              "insert into " + tableString(t.getGrain().getName(), t.getName())
+                      + " (\"%s\") values (DEFAULT)", columnToInsert
+      );
     } else {
-      sql = String.format("insert into " + tableTemplate() + " (%s) values (%s)", t.getGrain().getName(),
-          t.getName(), fields.toString(), params.toString());
+      sql = String.format(
+              "insert into " + tableString(t.getGrain().getName(), t.getName())
+                      + " (%s) values (%s)", fields.toString(), params.toString()
+      );
     }
     return prepareStatement(conn, sql);
   }
 
   @Override
   public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) throws CelestaException {
-    String sql = String.format("delete " + tableTemplate() + " where %s", t.getGrain().getName(), t.getName(),
-        where);
+    String sql = String.format("delete " + tableString(t.getGrain().getName(), t.getName()) + " where %s", where);
     return prepareStatement(conn, sql);
   }
 
@@ -453,7 +457,7 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) throws CelestaException {
-    String sql = String.format("delete from " + tableTemplate() + " %s", t.getGrain().getName(), t.getName(),
+    String sql = String.format("delete from " + tableString(t.getGrain().getName(), t.getName()) + " %s",
         where.isEmpty() ? "" : "where " + where);
     try {
       PreparedStatement result = conn.prepareStatement(sql);
@@ -474,8 +478,22 @@ final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public String tableTemplate() {
-    return TABLE_TEMPLATE;
+  public String tableString(String schemaName, String tableName) {
+    StringBuilder sb = new StringBuilder();
+
+    if (schemaName.startsWith("\""))
+      sb.append(schemaName.substring(0, schemaName.length() - 1));
+    else {
+      sb.append("\"").append(schemaName);
+    }
+    sb.append("_");
+    if (tableName.startsWith("\""))
+      sb.append(tableName.substring(1));
+    else {
+      sb.append(tableName).append("\"");
+    }
+
+    return sb.toString();
   }
 
   @Override
@@ -511,7 +529,7 @@ final class OraAdaptor extends DBAdaptor {
             .collect(Collectors.toList())
     );
 
-    String otherTableStr = String.format(tableTemplate(), otherDge.getGrain().getName(), otherDge.getName());
+    String otherTableStr = tableString(otherDge.getGrain().getName(), otherDge.getName());
     String result = String.format(template, fieldsStr, otherFieldsStr, otherTableStr, otherWhere);
     return result;
   }
@@ -520,8 +538,11 @@ final class OraAdaptor extends DBAdaptor {
   String[] getCreateIndexSQL(Index index) {
     String grainName = index.getTable().getGrain().getName();
     String fieldList = getFieldList(index.getColumns().keySet());
-    String sql = String.format("CREATE INDEX " + tableTemplate() + " ON " + tableTemplate() + " (%s)", grainName,
-        index.getName(), grainName, index.getTable().getName(), fieldList);
+    String sql = String.format(
+            "CREATE INDEX " + tableString(grainName, index.getName())
+                    + " ON " + tableString(grainName, index.getTable().getName()) + " (%s)",
+            fieldList
+    );
     String[] result = {sql};
     return result;
   }
@@ -532,7 +553,7 @@ final class OraAdaptor extends DBAdaptor {
     if (dBIndexInfo.getIndexName().startsWith("##")) {
       sql = String.format("DROP INDEX %s", dBIndexInfo.getIndexName().substring(2));
     } else {
-      sql = String.format("DROP INDEX " + tableTemplate(), g.getName(), dBIndexInfo.getIndexName());
+      sql = "DROP INDEX " + tableString( g.getName(), dBIndexInfo.getIndexName());
     }
     String[] result = {sql};
     return result;
@@ -720,8 +741,10 @@ final class OraAdaptor extends DBAdaptor {
     dropVersioningTrigger(conn, c.getParentTable());
     if (actual.getType() == BooleanColumn.class && !(c instanceof BooleanColumn)) {
       // Тип Boolean меняется на что-то другое, надо сбросить constraint
-      String check = String.format(ALTER_TABLE + tableTemplate() + " drop constraint %s",
-              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), getBooleanCheckName(c));
+      String check = String.format(
+              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                      + " drop constraint %s", getBooleanCheckName(c)
+      );
       runUpdateColumnSQL(conn, c, check);
     }
 
@@ -751,35 +774,43 @@ final class OraAdaptor extends DBAdaptor {
     if (fromOrToNClob(c, actual)) {
 
       String tempName = "\"" + c.getName() + "2\"";
-      String sql = String.format(ALTER_TABLE + tableTemplate() + " add %s",
-              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), columnDef(c));
+      String sql = String.format(
+              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName()) + " add %s"
+              , columnDef(c)
+      );
       sql = sql.replace(c.getQuotedName(), tempName);
       // System.out.println(sql);
       runUpdateColumnSQL(conn, c, sql);
-      sql = String.format("update " + tableTemplate() + " set %s = \"%s\"",
-              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), tempName, c.getName());
+      sql = String.format("update " + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName()) + " set %s = \"%s\"",
+              tempName, c.getName());
       // System.out.println(sql);
       runUpdateColumnSQL(conn, c, sql);
-      sql = String.format(ALTER_TABLE + tableTemplate() + " drop column %s",
-              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getQuotedName());
+      sql = String.format(
+              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                      + " drop column %s", c.getQuotedName()
+      );
       // System.out.println(sql);
       runUpdateColumnSQL(conn, c, sql);
-      sql = String.format(ALTER_TABLE + tableTemplate() + " rename column %s to %s",
-              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), tempName, c.getQuotedName());
+      sql = String.format(
+              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                      + " rename column %s to %s", tempName, c.getQuotedName());
       // System.out.println(sql);
       runUpdateColumnSQL(conn, c, sql);
     } else {
 
-      String sql = String.format(ALTER_TABLE + tableTemplate() + " modify (%s)",
-              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), def);
+      String sql = String.format(
+              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                      + " modify (%s)", def
+      );
 
       runUpdateColumnSQL(conn, c, sql);
     }
     if (c instanceof BooleanColumn && actual.getType() != BooleanColumn.class) {
       // Тип поменялся на Boolean, надо добавить constraint
-      String check = String.format(ALTER_TABLE + tableTemplate() + " add constraint %s check (%s in (0, 1))",
-              c.getParentTable().getGrain().getName(), c.getParentTable().getName(), getBooleanCheckName(c),
-              c.getQuotedName());
+      String check = String.format(
+              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                      + " add constraint %s check (%s in (0, 1))", getBooleanCheckName(c), c.getQuotedName()
+      );
       runUpdateColumnSQL(conn, c, check);
     }
     if (c instanceof IntegerColumn) {
@@ -1290,7 +1321,7 @@ final class OraAdaptor extends DBAdaptor {
   public void dropParameterizedView(Connection conn, String grainName, String viewName) throws CelestaException {
     //удалить pview
     try (Statement stmt = conn.createStatement()) {
-      String sql = String.format("DROP FUNCTION " + tableTemplate(), grainName, viewName);
+      String sql = "DROP FUNCTION " + tableString(grainName, viewName);
       stmt.executeUpdate(sql);
 
       ResultSet rs;
@@ -1332,8 +1363,7 @@ final class OraAdaptor extends DBAdaptor {
   @Override
   public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
     return String.format(
-        "TABLE(" + tableTemplate() + "(%s))",
-        pv.getGrain().getName(), pv.getName(),
+        "TABLE(" + tableString(pv.getGrain().getName(), pv.getName()) + "(%s))",
         pv.getParameters().keySet().stream()
             .map(p -> "?")
             .collect(Collectors.joining(", "))
@@ -1370,14 +1400,16 @@ final class OraAdaptor extends DBAdaptor {
             return sb.toString();
           }).collect(Collectors.joining(",\n"));
 
-      String sql = String.format("create type " + tableTemplate() + " as object\n" +
-          "(%s)", pv.getGrain().getName(), pv.getName() + "_o", colsDef);
+      String sql = String.format(
+              "create type " + tableString(pv.getGrain().getName(), pv.getName() + "_o")
+                      + " as object\n" + "(%s)", colsDef
+      );
       //System.out.println(sql);
       stmt.executeUpdate(sql);
 
       //Создаем коллекцию типов
-      sql = String.format("create type " + tableTemplate() + " as TABLE OF " + tableTemplate(),
-          pv.getGrain().getName(), pv.getName() + "_t", pv.getGrain().getName(), pv.getName() + "_o");
+      sql = "create type " + tableString(pv.getGrain().getName(), pv.getName() + "_t")
+                      + " as TABLE OF " + tableString(pv.getGrain().getName(), pv.getName() + "_o");
       //System.out.println(sql);
       stmt.executeUpdate(sql);
 
@@ -1406,16 +1438,16 @@ final class OraAdaptor extends DBAdaptor {
           .collect(Collectors.joining(", "));
 
       sql = String.format(
-          "create or replace function " + tableTemplate() + "(%s) return " + tableTemplate()
+          "create or replace function " + tableString(pv.getGrain().getName(), pv.getName()) + "(%s) return "
+                  + tableString(pv.getGrain().getName(), pv.getName() + "_t")
               + " PIPELINED IS\n"
               + "BEGIN\n"
               + "for curr in (%s) loop \n"
               + "pipe row (%s(%s));\n"
               + "end loop;"
               + "END;",
-          pv.getGrain().getName(), pv.getName(), pvParams,
-          pv.getGrain().getName(), pv.getName() + "_t",
-          selectSql, String.format(tableTemplate(), pv.getGrain().getName(), pv.getName() + "_o"),
+          pvParams,
+          selectSql, tableString(pv.getGrain().getName(), pv.getName() + "_o"),
           objectParams);
 
       //System.out.println(sql);
@@ -1433,13 +1465,13 @@ final class OraAdaptor extends DBAdaptor {
 
       @Override
       protected String viewName(AbstractView v) {
-        return String.format(TABLE_TEMPLATE, v.getGrain().getName(), v.getName());
+        return tableString(v.getGrain().getName(), v.getName());
       }
 
       @Override
       protected String tableName(TableRef tRef) {
         Table t = tRef.getTable();
-        return String.format(TABLE_TEMPLATE + " \"%s\"", t.getGrain().getName(), t.getName(), tRef.getAlias());
+        return String.format(tableString(t.getGrain().getName(), t.getName()) + " %s", tRef.getAlias());
       }
 
       @Override
@@ -1499,7 +1531,9 @@ final class OraAdaptor extends DBAdaptor {
     String sql = String.format(
         SELECT_TRIGGER_BODY
             + "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = '%s'",
-        query.getSchema(), query.getTableName(), query.getName(),
+        query.getSchema(),
+            query.getTableName(),
+            query.getName(),
         TRIGGER_EVENT_TYPE_DICT.get(query.getType()));
 
     Statement stmt = conn.createStatement();
@@ -1664,10 +1698,10 @@ final class OraAdaptor extends DBAdaptor {
         .filter(mv -> mv.getRefTable().getTable().equals(t))
         .collect(Collectors.toList());
 
-    String fullTableName = String.format(tableTemplate(), t.getGrain().getName(), t.getName());
+    String fullTableName = tableString(t.getGrain().getName(), t.getName());
 
     for (MaterializedView mv : mvList) {
-      String fullMvName = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
+      String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
 
       String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
       String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
@@ -1894,21 +1928,26 @@ final class OraAdaptor extends DBAdaptor {
 
   @Override
   public long nextSequenceValue(Connection conn, SequenceElement s) throws CelestaException {
-    String sql = String.format("SELECT " + tableTemplate() +" .nextval from DUAL", s.getGrain().getName(), s.getName());
+    String sql = "SELECT " + tableString(s.getGrain().getName(), s.getName()) + ".nextval from DUAL";
 
     try (Statement stmt = conn.createStatement()) {
       ResultSet rs = stmt.executeQuery(sql);
       rs.next();
       return rs.getLong(1);
     } catch (SQLException e) {
-      throw new CelestaException(String.format("Can't get current value of sequence " + tableTemplate(),
-              s.getGrain().getName(), s.getName()), e);
+      throw new CelestaException(
+              "Can't get current value of sequence " + tableString(s.getGrain().getName(), s.getName()), e
+      );
     }
   }
 
   @Override
   public boolean sequenceExists(Connection conn, String schema, String name) throws CelestaException {
-    String sql = String.format("select count(*) from user_sequences where sequence_name = '%s_%s'", schema, name);
+    String sql = String.format(
+            "select count(*) from user_sequences where sequence_name = '%s_%s'",
+            schema,
+            name
+    );
 
     try (Statement checkForTable = conn.createStatement()) {
       ResultSet rs = checkForTable.executeQuery(sql);

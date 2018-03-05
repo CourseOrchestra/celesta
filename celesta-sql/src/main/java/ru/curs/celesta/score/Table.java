@@ -125,6 +125,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 	 *            Имя колонки первичного ключа.
 	 */
 	void addPK(String name) throws ParseException {
+		name = getGrain().getScore().getIdentifierParser().parse(name);
 		if (pkFinalized)
 			throw new ParseException(String.format("More than one PRIMARY KEY definition in table '%s'.", getName()));
 		Column c = validatePKColumn(name);
@@ -246,14 +247,14 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 	 */
 	public void setPkConstraintName(String pkConstraintName) throws ParseException {
 		if (pkConstraintName != null)
-			getGrain().getScore().getIdentifierValidator().validate(pkConstraintName);
+			pkConstraintName = getGrain().getScore().getIdentifierParser().parse(pkConstraintName);
 		this.pkConstraintName = pkConstraintName;
 	}
 
 	@Override
 	void save(PrintWriter bw) throws IOException {
 		Grain.writeCelestaDoc(this, bw);
-		bw.printf("CREATE TABLE %s(%n", getName());
+		bw.printf("CREATE TABLE %s(%n", getQuotedNameIfNeeded());
 		boolean comma = false;
 		for (Column c : getColumns().values()) {
 			if (comma) {
@@ -275,7 +276,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 			for (Column c : getPrimaryKey().values()) {
 				if (comma)
 					bw.write(", ");
-				bw.write(c.getName());
+				bw.write(c.getQuotedNameIfNeeded());
 				comma = true;
 			}
 			bw.println(")");

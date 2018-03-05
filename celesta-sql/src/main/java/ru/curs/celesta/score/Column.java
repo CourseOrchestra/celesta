@@ -20,7 +20,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 	private boolean nullable = true;
 
 	Column(TableElement parentTable, String name) throws ParseException {
-		super(name, parentTable.getGrain().getScore().getIdentifierValidator());
+		super(name, parentTable.getGrain().getScore().getIdentifierParser());
 		if (VersionedElement.REC_VERSION.equals(name))
 			throw new ParseException(String.format("Column name '%s' is reserved for system needs.", VersionedElement.REC_VERSION));
 		if (parentTable == null)
@@ -39,7 +39,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 	 *             Не должно возникать.
 	 */
 	Column(TableElement parentTable) throws ParseException {
-		super(VersionedElement.REC_VERSION, parentTable.getGrain().getScore().getIdentifierValidator());
+		super(VersionedElement.REC_VERSION, parentTable.getGrain().getScore().getIdentifierParser());
 		if (parentTable == null)
 			throw new IllegalArgumentException();
 		this.parentTable = parentTable;

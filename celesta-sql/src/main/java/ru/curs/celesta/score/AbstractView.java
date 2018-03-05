@@ -126,6 +126,7 @@ public abstract class AbstractView extends DataGrainElement {
 
     if (alias == null || alias.isEmpty())
       throw new ParseException(String.format("%s '%s' contains a column with undefined alias.", viewType(), getName()));
+    alias = getGrain().getScore().getIdentifierParser().parse(alias);
     if (columns.containsKey(alias))
       throw new ParseException(String.format(
           "%s '%s' already contains column with name or alias '%s'. Use unique aliases for %s columns.",
@@ -151,6 +152,19 @@ public abstract class AbstractView extends DataGrainElement {
       throw new ParseException(String.format(
           "Duplicate column '%s' in GROUP BY expression for %s '%s.%s'.",
           alias, viewType(), getGrain().getName(), getName()));
+
+    Expr existedColumn = columns.get(fr.getColumnName());
+
+    if (existedColumn == null) {
+      throw new ParseException("Couldn't resolve column ref " + fr.getColumnName());
+    }
+
+    if (existedColumn.getClass().equals(FieldRef.class)) {
+      FieldRef existedColumnFr = (FieldRef)existedColumn;
+      fr.setTableNameOrAlias(existedColumnFr.getTableNameOrAlias());
+      fr.setColumnName(existedColumnFr.getColumnName());
+      fr.setColumn(existedColumnFr.getColumn());
+    }
 
     groupByColumns.put(alias, fr);
   }
@@ -305,16 +319,16 @@ public abstract class AbstractView extends DataGrainElement {
 
     @Override
     protected String viewName(AbstractView v) {
-      return getName();
+      return getQuotedNameIfNeeded();
     }
 
     @Override
     protected String tableName(TableRef tRef) {
       Table t = tRef.getTable();
       if (t.getGrain() == getGrain()) {
-        return String.format("%s as %s", t.getName(), tRef.getAlias());
+        return String.format("%s as %s", t.getQuotedNameIfNeeded(), tRef.getAlias());
       } else {
-        return String.format("%s.%s as %s", t.getGrain().getName(), t.getName(), tRef.getAlias());
+        return String.format("%s.%s as %s", t.getGrain().getQuotedNameIfNeeded(), t.getQuotedNameIfNeeded(), tRef.getAlias());
       }
     }
 

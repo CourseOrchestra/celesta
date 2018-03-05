@@ -54,6 +54,7 @@ public abstract class DbUpdater<T extends ICallContext> {
      * @throws CelestaException в случае ошибки обновления.
      */
     public void updateDb() throws CelestaException {
+        String sysSchemaName = score.getSysSchemaName();
         try (T context = createContext()) {
             Connection conn = context.getConn();
 
@@ -63,7 +64,8 @@ public abstract class DbUpdater<T extends ICallContext> {
             if (!dbAdaptor.tableExists(conn, score.getSysSchemaName(), getSchemasTableName())) {
                 // Если главной таблицы нет, а другие таблицы есть -- ошибка.
                 if (dbAdaptor.userTablesExist() && !forceDdInitialize)
-                    throw new CelestaException("No celesta.grains table found in non-empty database.");
+                    throw new CelestaException("No %s.%s table found in non-empty database.",
+                            sysSchemaName, getSchemasTableName());
                 // Если база вообще пустая, то создаём системные таблицы.
                 updateSysGrain(context);
             }
@@ -75,8 +77,8 @@ public abstract class DbUpdater<T extends ICallContext> {
             while (schemaCursor.nextInSet()) {
 
                 if (!(EXPECTED_STATUSES.contains(schemaCursor.getState())))
-                    throw new CelestaException("Cannot proceed with database upgrade: there are grains "
-                            + "not in 'ready', 'recover' or 'lock' state.");
+                    throw new CelestaException("Cannot proceed with database upgrade: there are %s " +
+                            "not in 'ready', 'recover' or 'lock' state.", getSchemasTableName());
                 GrainInfo gi = new GrainInfo();
                 gi.checksum = (int) Long.parseLong(schemaCursor.getChecksum(), 16);
                 gi.length = schemaCursor.getLength();
@@ -86,7 +88,11 @@ public abstract class DbUpdater<T extends ICallContext> {
                     gi.version = new VersionString(schemaCursor.getVersion());
                 } catch (ParseException e) {
                     throw new CelestaException(
-                            String.format("Error while scanning celesta.grains table: %s", e.getMessage()));
+                            String.format(
+                                    "Error while scanning %s.%s table: %s",
+                                    sysSchemaName, getSchemasTableName(), e.getMessage()
+                            )
+                    );
                 }
                 dbGrains.put(schemaCursor.getId(), gi);
             }
@@ -112,7 +118,9 @@ public abstract class DbUpdater<T extends ICallContext> {
             }
             if (!success)
                 throw new CelestaException(
-                        "Not all grains were updated successfully, see celesta.grains table data for details.");
+                        "Not all %s were updated successfully, see %s.%s table data for details.",
+                        getSchemasTableName(), sysSchemaName, getSchemasTableName()
+                );
         }
     }
 
@@ -132,7 +140,7 @@ public abstract class DbUpdater<T extends ICallContext> {
     void createSysObjects(Connection conn, Grain sys) throws CelestaException, ParseException {
         dbAdaptor.createSchemaIfNotExists(score.getSysSchemaName());
         dbAdaptor.createTable(conn, sys.getElement(getSchemasTableName(), Table.class));
-        dbAdaptor.createSysObjects(conn);
+        dbAdaptor.createSysObjects(conn, score.getSysSchemaName());
     }
 
     private void insertGrainRec(Grain g) throws CelestaException {

@@ -659,8 +659,8 @@ abstract class Aggregate extends Expr {
  * Ссылка на колонку таблицы.
  */
 final class FieldRef extends Expr {
-	private final String tableNameOrAlias;
-	private final String columnName;
+	private String tableNameOrAlias;
+	private String columnName;
 	private Column column = null;
 	private ViewColumnMeta meta;
 
@@ -732,6 +732,14 @@ final class FieldRef extends Expr {
 	 */
 	public void setColumn(Column column) {
 		this.column = column;
+	}
+
+	public void setTableNameOrAlias(String tableNameOrAlias) {
+		this.tableNameOrAlias = tableNameOrAlias;
+	}
+
+	public void setColumnName(String columnName) {
+		this.columnName = columnName;
 	}
 
 	@Override
