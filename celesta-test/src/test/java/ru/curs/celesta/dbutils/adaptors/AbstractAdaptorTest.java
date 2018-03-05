@@ -100,7 +100,7 @@ public abstract class AbstractAdaptorTest {
         dba.createSchemaIfNotExists(conn, GRAIN_NAME);
 
         final boolean hasRecordInGrainsTable;
-        String sql = String.format("SELECT * FROM "  + dba.tableTemplate() + " WHERE \"id\"=?",
+        String sql = String.format("SELECT * FROM " + dba.tableTemplate() + " WHERE \"id\"=?",
                 "celesta", GrainsCursor.TABLE_NAME);
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, GRAIN_NAME);
@@ -113,7 +113,7 @@ public abstract class AbstractAdaptorTest {
             sql = String.format(
                     "INSERT INTO " + dba.tableTemplate()
                             + " (\"id\", \"version\", \"length\", \"checksum\",\"state\",\"lastmodified\",\"message\") "
-                    + " VALUES(?,?,?,?,?,?,?)", "celesta", GrainsCursor.TABLE_NAME
+                            + " VALUES(?,?,?,?,?,?,?)", "celesta", GrainsCursor.TABLE_NAME
             );
 
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -882,12 +882,18 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void updateColumn5test() throws CelestaException, ParseException, IOException, SQLException {
+    public void updateColumn5test() throws CelestaException, ParseException {
         // Change data type
         DbColumnInfo c;
         IntegerColumn col;
         StringColumn scol;
         BooleanColumn bcol;
+
+        for (ForeignKey fk : t.getForeignKeys()) {
+            //to make column attrInt deletable
+            fk.delete();
+        }
+
         // Table should be empty in Oracle to change data type...
         // insertRow(conn, t, 11);
         col = (IntegerColumn) t.getColumn("attrInt");
@@ -946,7 +952,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(true, c.isNullable());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isIdentity());
-
     }
 
 
@@ -1236,7 +1241,7 @@ public abstract class AbstractAdaptorTest {
 
             boolean[] nullsMask = {true, false, false, false};
             LocalDateTime d = LocalDateTime.now();
-            Object[] rowData = {null, "A", 5,  Date.from(
+            Object[] rowData = {null, "A", 5, Date.from(
                     d.toInstant(ZoneOffset.UTC))};
             List<ParameterSetter> program = new ArrayList<>();
             pstmt = dba.getInsertRecordStatement(conn, t, nullsMask, program);
@@ -1523,7 +1528,7 @@ public abstract class AbstractAdaptorTest {
         dba.createSequence(conn, sequence2);
         dba.createTable(conn, table);
 
-        IntegerColumn id = (IntegerColumn)table.getColumn("id");
+        IntegerColumn id = (IntegerColumn) table.getColumn("id");
 
         final DbColumnInfo idInfo1 = dba.getColumnInfo(conn, table.getColumn("id"));
         assertAll(
@@ -1566,7 +1571,7 @@ public abstract class AbstractAdaptorTest {
         );
 
 
-        IntegerColumn numb = (IntegerColumn)table.getColumn("numb");
+        IntegerColumn numb = (IntegerColumn) table.getColumn("numb");
         final DbColumnInfo numbInfo1 = dba.getColumnInfo(conn, numb);
         assertAll(
                 () -> assertTrue(numbInfo1.reflects(numb)),
@@ -1591,7 +1596,7 @@ public abstract class AbstractAdaptorTest {
 
     @Test
     void testSelectStaticStrings() throws Exception {
-        List<String > data =  Arrays.asList("A", "B");
+        List<String> data = Arrays.asList("A", "B");
 
         List<String> result = dba.selectStaticStrings(data, "id", "");
         assertEquals(data, result);
