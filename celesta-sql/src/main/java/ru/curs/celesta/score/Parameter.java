@@ -1,6 +1,6 @@
 package ru.curs.celesta.score;
 
-import ru.curs.celesta.score.validator.PlainIdentifierValidator;
+import ru.curs.celesta.score.validator.PlainIdentifierParser;
 
 import java.sql.Timestamp;
 
@@ -13,7 +13,7 @@ public class Parameter extends NamedElement {
   private final ViewColumnType type;
 
   public Parameter(String name, ViewColumnType type) throws ParseException {
-    super(name, new PlainIdentifierValidator());
+    super(name, new PlainIdentifierParser());
     this.type = type;
     celestaType = type.getCelestaType();
   }

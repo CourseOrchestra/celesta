@@ -45,7 +45,7 @@ import java.util.zip.CRC32;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
-import ru.curs.celesta.score.validator.IdentifierValidator;
+import ru.curs.celesta.score.validator.IdentifierParser;
 
 /**
  * Корневой класс полной модели данных гранул.
@@ -136,7 +136,7 @@ public abstract class AbstractScore {
 
         for (GrainPart grainPart: grainParts) {
 
-            String grainName = grainPart.getGrain().getName();
+            String grainName = grainPart.getGrain().getName().replace("\"", "");
 
             if (!grainNameToGrainParts.containsKey(grainName)) {
                 if (!grainPart.isDefinition()) {
@@ -198,11 +198,9 @@ public abstract class AbstractScore {
      */
     public Grain getGrain(String name) throws ParseException {
         Grain result = grains.get(name);
-
         if (result == null) {
             throw new ParseException(String.format("Unknown grain '%s'.", name));
         }
-
         return result;
     }
 
@@ -280,7 +278,7 @@ public abstract class AbstractScore {
 
     public abstract String getSysSchemaName();
 
-    public abstract IdentifierValidator getIdentifierValidator();
+    public abstract IdentifierParser getIdentifierParser();
 
     /**
      * Возвращает неизменяемый набор гранул.

@@ -40,7 +40,7 @@ public final class IntegerColumn extends Column {
 			if (m.matches()) {
 				defaultvalue = null;
 				identity = false;
-				String sequenceName = m.group(1);
+				String sequenceName = getParentTable().getGrain().getScore().getIdentifierParser().parse(m.group(1));
 				sequence = getParentTable().getGrain().getElement(sequenceName, SequenceElement.class);
 			} else if ("IDENTITY".equalsIgnoreCase(lexvalue)) {
 				for (Column c : getParentTable().getColumns().values())

@@ -1,11 +1,11 @@
 package ru.curs.celesta.score;
 
-import ru.curs.celesta.score.validator.IdentifierValidator;
-import ru.curs.celesta.score.validator.PlainIdentifierValidator;
+import ru.curs.celesta.score.validator.IdentifierParser;
+import ru.curs.celesta.score.validator.PlainIdentifierParser;
 
 public class CelestaSqlTestScore extends AbstractScore {
 
-    private IdentifierValidator identifierValidator = new PlainIdentifierValidator();
+    private final IdentifierParser identifierValidator = new PlainIdentifierParser();
 
     public CelestaSqlTestScore() {
     }
@@ -16,7 +16,7 @@ public class CelestaSqlTestScore extends AbstractScore {
     }
 
     @Override
-    public IdentifierValidator getIdentifierValidator() {
+    public IdentifierParser getIdentifierParser() {
         return identifierValidator;
     }
 

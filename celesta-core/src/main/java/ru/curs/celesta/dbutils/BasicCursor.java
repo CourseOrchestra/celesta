@@ -891,7 +891,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	 *             Ошибка разбора выражения.
 	 */
 	public final void setComplexFilter(String condition) throws CelestaException {
-		Expr buf = CelestaParser.parseComplexFilter(condition);
+		Expr buf = CelestaParser.parseComplexFilter(condition, meta().getGrain().getScore().getIdentifierParser());
 		try {
 			buf.resolveFieldRefs(meta());
 		} catch (ParseException e) {
@@ -1189,7 +1189,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 		DataGrainElement ge = meta();
 
 		result.setGe(ge);
-		result.setExpression(String.format(db().tableTemplate(), ge.getGrain().getName(), ge.getName()));
+		result.setExpression(db().tableString(ge.getGrain().getName(), ge.getName()));
 
 		return result;
 	}

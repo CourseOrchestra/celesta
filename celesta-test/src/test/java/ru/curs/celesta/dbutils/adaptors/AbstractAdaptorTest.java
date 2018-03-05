@@ -69,7 +69,7 @@ public abstract class AbstractAdaptorTest {
     private int getCount(Connection conn, DataGrainElement ge) throws Exception {
         FromClause from = new FromClause();
         from.setGe(ge);
-        from.setExpression(String.format(dba.tableTemplate(), ge.getGrain().getName(), ge.getName()));
+        from.setExpression(dba.tableString(ge.getGrain().getName(), ge.getName()));
         PreparedStatement stmt = dba.getSetCountStatement(
                 conn,
                 from,
@@ -100,8 +100,7 @@ public abstract class AbstractAdaptorTest {
         dba.createSchemaIfNotExists(conn, GRAIN_NAME);
 
         final boolean hasRecordInGrainsTable;
-        String sql = String.format("SELECT * FROM " + dba.tableTemplate() + " WHERE \"id\"=?",
-                "celesta", GrainsCursor.TABLE_NAME);
+        String sql = "SELECT * FROM "  + dba.tableString("celesta", GrainsCursor.TABLE_NAME) + " WHERE \"id\"=?";
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, GRAIN_NAME);
             ResultSet rs = statement.executeQuery();
@@ -110,11 +109,9 @@ public abstract class AbstractAdaptorTest {
         }
 
         if (!hasRecordInGrainsTable) {
-            sql = String.format(
-                    "INSERT INTO " + dba.tableTemplate()
+            sql = "INSERT INTO " + dba.tableString("celesta", GrainsCursor.TABLE_NAME)
                             + " (\"id\", \"version\", \"length\", \"checksum\",\"state\",\"lastmodified\",\"message\") "
-                            + " VALUES(?,?,?,?,?,?,?)", "celesta", GrainsCursor.TABLE_NAME
-            );
+                    + " VALUES(?,?,?,?,?,?,?)";
 
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.setString(1, g.getName());
@@ -230,7 +227,7 @@ public abstract class AbstractAdaptorTest {
 
     @Test
     public void lostUpdatesTest() throws Exception {
-        dba.createSysObjects(conn);
+        dba.createSysObjects(conn, score.getSysSchemaName());
         insertRow(conn, t, 1);
         WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
         PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere(), Collections.emptySet());
@@ -888,14 +885,15 @@ public abstract class AbstractAdaptorTest {
         IntegerColumn col;
         StringColumn scol;
         BooleanColumn bcol;
+        // Table should be empty in Oracle to change data type...
+        // insertRow(conn, t, 11);
+
 
         for (ForeignKey fk : t.getForeignKeys()) {
             //to make column attrInt deletable
             fk.delete();
         }
 
-        // Table should be empty in Oracle to change data type...
-        // insertRow(conn, t, 11);
         col = (IntegerColumn) t.getColumn("attrInt");
         c = dba.getColumnInfo(conn, col);
         assertEquals("attrInt", c.getName());
@@ -952,6 +950,7 @@ public abstract class AbstractAdaptorTest {
         assertEquals(true, c.isNullable());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isIdentity());
+
     }
 
 
@@ -1172,7 +1171,7 @@ public abstract class AbstractAdaptorTest {
 
             FromClause from = new FromClause();
             from.setGe(t);
-            from.setExpression(String.format(dba.tableTemplate(), t.getGrain().getName(), t.getName()));
+            from.setExpression(dba.tableString(t.getGrain().getName(), t.getName()));
 
             stmt = dba.getRecordSetStatement(
                     conn, from, "", orderBy, 0, 0, Collections.emptySet()
@@ -1279,7 +1278,7 @@ public abstract class AbstractAdaptorTest {
 
             FromClause from = new FromClause();
             from.setGe(mv);
-            from.setExpression(String.format(dba.tableTemplate(), mv.getGrain().getName(), mv.getName()));
+            from.setExpression(dba.tableString(mv.getGrain().getName(), mv.getName()));
 
             pstmt = dba.getRecordSetStatement(
                     conn, from, "", "\"var\"", 0, 0, Collections.emptySet()
@@ -1388,7 +1387,7 @@ public abstract class AbstractAdaptorTest {
 
             FromClause from = new FromClause();
             from.setGe(t);
-            from.setExpression(String.format(dba.tableTemplate(), g.getName(), t.getName()));
+            from.setExpression(dba.tableString(g.getName(), t.getName()));
 
             pstmt = dba.getSetCountStatement(conn, from, where);
             ResultSet rs = pstmt.executeQuery();

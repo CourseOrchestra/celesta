@@ -265,8 +265,10 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
 
 
-    String sql = String.format("insert into " + tableTemplate() + " (%s) values (%s)", t.getGrain().getName(),
-        t.getName(), fields.toString(), params.toString());
+    String sql = String.format(
+            "insert into " + tableString(t.getGrain().getName(), t.getName()) + " (%s) " +
+                    "values (%s)", fields.toString(), params.toString()
+    );
 
     return prepareStatement(conn, sql);
   }
@@ -358,8 +360,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   public void dropParameterizedView(Connection conn, String grainName, String viewName) throws CelestaException {
     try {
       try (Statement stmt = conn.createStatement()) {
-        String sql = String.format("DROP ALIAS IF EXISTS " + tableTemplate(),
-            grainName, viewName);
+        String sql = "DROP ALIAS IF EXISTS " + tableString(grainName, viewName);
         stmt.executeUpdate(sql);
       }
     } catch (SQLException e) {
@@ -399,13 +400,13 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
       selectSql = selectSql.replaceAll("\\R", "");
 
       String sql = String.format(
-          "CREATE ALIAS " + tableTemplate() + " AS $$ " +
+          "CREATE ALIAS " + tableString(pv.getGrain().getName(), pv.getName()) + " AS $$ " +
               " java.sql.ResultSet %s(java.sql.Connection conn, %s) throws java.sql.SQLException {" +
               "java.sql.PreparedStatement ps = conn.prepareStatement(\"%s\");" +
               "%s" +
               "return ps.executeQuery();" +
               "} $$;",
-          pv.getGrain().getName(), pv.getName(), pv.getName(),
+          pv.getName(),
           inputParams, selectSql, paramSettingBuilder.toString());
 
       Statement stmt = conn.createStatement();
@@ -438,9 +439,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
           String columnDefault = rs.getString("COLUMN_DEFAULT");
 
 
-          String columnDefaultForIdentity = String.format(
-              "NEXTVAL('" + tableTemplate() + "')", grainName, tableName + "_seq"
-          );
+          String columnDefaultForIdentity = "NEXTVAL('" + tableString(grainName, tableName + "_seq") + "')";
 
           if ("integer".equalsIgnoreCase(typeName) &&
                   columnDefaultForIdentity.equals(columnDefault)) {
@@ -545,15 +544,19 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
     // Если тип не совпадает
     if (c.getClass() != actual.getType()) {
-      sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" %s",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(), colType);
+      sql = String.format(
+              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                      + " ALTER COLUMN \"%s\" %s", c.getName(), colType
+      );
 
       batch.add(sql);
     } else if (c.getClass() == StringColumn.class) {
       StringColumn sc = (StringColumn) c;
       if (sc.isMax() != actual.isMax() || sc.getLength() != actual.getLength()) {
-        sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" %s",
-            c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(), colType);
+        sql = String.format(
+                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                        + " ALTER COLUMN \"%s\" %s", c.getName(), colType
+        );
         batch.add(sql);
       }
     }
@@ -696,7 +699,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
             .collect(Collectors.toList())
     );
 
-    String otherTableStr = String.format(tableTemplate(), otherDge.getGrain().getName(), otherDge.getName());
+    String otherTableStr = tableString(otherDge.getGrain().getName(), otherDge.getName());
     String result = String.format(template, fieldsStr, otherFieldsStr, otherTableStr, otherWhere);
     return result;
   }
@@ -705,8 +708,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   String[] getCreateIndexSQL(Index index) {
     String grainName = index.getTable().getGrain().getName();
     String fieldList = getFieldList(index.getColumns().keySet());
-    String sql = String.format("CREATE INDEX " + tableTemplate() + " ON " + tableTemplate() + " (%s)", grainName,
-        index.getName(), grainName, index.getTable().getName(), fieldList);
+    String sql = String.format("CREATE INDEX " + tableString(grainName, index.getName())
+            + " ON " + tableString(grainName, index.getTable().getName()) + " (%s)", fieldList);
     String[] result = {sql};
     return result;
   }
@@ -772,7 +775,10 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
     String sql = String.format("select count(*) from information_schema.triggers where "
         + "		table_schema = '%s' and table_name = '%s'"
-        + "		and trigger_name = '%s'", query.getSchema(), query.getTableName(), query.getName());
+        + "		and trigger_name = '%s'",
+            query.getSchema().replace("\"", ""),
+            query.getTableName().replace("\"", ""),
+            query.getName());
 
     Statement stmt = conn.createStatement();
     try {
@@ -808,9 +814,10 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
             } else {
               // CREATE TRIGGER
               sql = String.format(
-                  "CREATE TRIGGER \"versioncheck_%s\"" + " BEFORE UPDATE ON " + tableTemplate()
+                  "CREATE TRIGGER \"versioncheck_%s\"" + " BEFORE UPDATE ON "
+                          + tableString(t.getGrain().getName(), t.getName())
                       + " FOR EACH ROW CALL \"%s\"",
-                  t.getName(), t.getGrain().getName(), t.getName(),
+                  t.getName(),
                   RecVersionCheckTrigger.class.getName());
 
               stmt.executeUpdate(sql);
@@ -879,47 +886,47 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         try {
           sql = String.format(
               "CREATE TRIGGER \"" + insertTriggerName + "\" AFTER INSERT ON "
-                  + tableTemplate() + " FOR EACH ROW CALL \n " +
+                  + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \n " +
                   MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n" +
                   "\"%s\"",
-              t.getGrain().getName(), t.getName(), mv.getChecksum(),
+              mv.getChecksum(),
               MaterializedViewInsertTrigger.class.getName());
           stmt.execute(sql);
         } catch (SQLException e) {
-          throw new CelestaException("Could not update insert-trigger on " + tableTemplate()
-              + " for materialized view" + tableTemplate() + ": %s",
-              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
+          throw new CelestaException(
+                  "Could not update insert-trigger on " + tableString(t.getGrain().getName(), t.getName())
+              + " for materialized view" + tableString(mv.getGrain().getName(), mv.getName()) + ": %s", e
+          );
         }
         //UPDATE
         try {
           sql = String.format(
               "CREATE TRIGGER \"" + updateTriggerName + "\" AFTER UPDATE ON "
-                  + tableTemplate() + " FOR EACH ROW CALL \"%s\"",
-              t.getGrain().getName(), t.getName(),
+                  + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \"%s\"",
               MaterializedViewUpdateTrigger.class.getName());
           stmt.execute(sql);
         } catch (SQLException e) {
-          throw new CelestaException("Could not update update-trigger on " + tableTemplate()
-              + " for materialized view" + tableTemplate() + ": %s",
-              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
+          throw new CelestaException(
+                  "Could not update update-trigger on " + tableString(t.getGrain().getName(), t.getName())
+              + " for materialized view" + tableString(mv.getGrain().getName(), mv.getName()) + ": %s", e
+          );
         }
         //DELETE
         try {
           sql = String.format(
               "CREATE TRIGGER \"" + deleteTriggerName + "\" AFTER DELETE ON "
-                  + tableTemplate() + " FOR EACH ROW CALL \"%s\"",
-              t.getGrain().getName(), t.getName(),
+                  + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \"%s\"",
               MaterializedViewDeleteTrigger.class.getName());
           stmt.execute(sql);
         } catch (SQLException e) {
-          throw new CelestaException("Could not update delete-trigger on " + tableTemplate()
-              + " for materialized view" + tableTemplate() + ": %s",
-              t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
+          throw new CelestaException(
+                  "Could not update delete-trigger on " + tableString(t.getGrain().getName(), t.getName())
+              + " for materialized view" + tableString(mv.getGrain().getName(), mv.getName()) + ": %s", e
+          );
         }
       } catch (SQLException e) {
-        throw new CelestaException("Could not update triggers on" + tableTemplate()
-            + " for materialized view " + tableTemplate() + ": %s",
-            t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e);
+        throw new CelestaException("Could not update triggers on" + tableString(t.getGrain().getName(), t.getName())
+            + " for materialized view " + tableString(mv.getGrain().getName(), mv.getName()) + ": %s", e);
       }
     }
   }

@@ -3,6 +3,7 @@ package ru.curs.celesta.score.discovery;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -14,7 +15,7 @@ public interface ScoreDiscovery {
 
     default Set<File> discoverScore(final File scoreDir) {
         try {
-            return Files.walk(scoreDir.toPath())
+            return Files.walk(scoreDir.toPath(), FileVisitOption.FOLLOW_LINKS)
                     .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".sql"))
                     .map(Path::toFile)
                     .collect(Collectors.toCollection(LinkedHashSet::new));

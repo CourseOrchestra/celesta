@@ -14,6 +14,7 @@ import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.term.WhereMakerParamsProvider;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.validator.PlainIdentifierParser;
 
 public class NavigationQueriesMakerTest {
 
@@ -364,7 +365,7 @@ public class NavigationQueriesMakerTest {
 			public Expr complexFilter() {
 				Expr buf;
 				try {
-					buf = CelestaParser.parseComplexFilter("a = 1 or b = 3");
+					buf = CelestaParser.parseComplexFilter("a = 1 or b = 3", new PlainIdentifierParser());
 					return buf;
 				} catch (CelestaException e) {
 					throw new RuntimeException(e);

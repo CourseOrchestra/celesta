@@ -212,7 +212,7 @@ public class SQLGenerator extends ExprVisitor {
   }
 
   protected String tableName(TableRef t) {
-    return String.format("%s.%s as \"%s\"", t.getTable().getGrain().getQuotedName(), t.getTable().getQuotedName(),
+    return String.format("%s.%s as %s", t.getTable().getGrain().getQuotedName(), t.getTable().getQuotedName(),
         t.getAlias());
   }
 

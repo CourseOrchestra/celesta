@@ -305,7 +305,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     StringBuilder sb = new StringBuilder();
     // Table definition with columns
     sb.append(
-            String.format("create table " + tableTemplate() + "(\n", te.getGrain().getName(), te.getName()));
+            "create table " + tableString(te.getGrain().getName(), te.getName()) + "(\n"
+    );
     boolean multiple = false;
     for (Column c : te.getColumns().values()) {
       if (multiple)
@@ -471,7 +472,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    */
   public final void dropTable(Connection conn, TableElement t) throws CelestaException {
     try {
-      String sql = String.format("DROP TABLE " + tableTemplate(), t.getGrain().getName(), t.getName());
+      String sql = "DROP TABLE " + tableString(t.getGrain().getName(), t.getName());
       executeUpdate(conn, sql);
       dropAutoIncrement(conn, t);
       conn.commit();
@@ -522,8 +523,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    */
   //TODO: Javadoc In English
   public final void createColumn(Connection conn, Column c) throws CelestaException {
-    String sql = String.format(ALTER_TABLE + tableTemplate() + " add %s", c.getParentTable().getGrain().getName(),
-            c.getParentTable().getName(), columnDef(c));
+    String sql = String.format(ALTER_TABLE
+                    + tableString(c.getParentTable().getGrain().getName(),c.getParentTable().getName())
+                    + " add %s", columnDef(c));
     try {
       executeUpdate(conn, sql);
     } catch (CelestaException e) {
@@ -558,8 +560,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
       i++;
     }
 
-    String sql = String.format("update " + tableTemplate() + " set %s where %s", t.getGrain().getName(),
-            t.getName(), setClause.toString(), where);
+    String sql = String.format("update " + tableString(t.getGrain().getName(), t.getName()) + " set %s where %s",
+            setClause.toString(), where);
 
     // System.out.println(sql);
     return prepareStatement(conn, sql);
@@ -598,8 +600,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     // Строим запрос на создание FK
     StringBuilder sql = new StringBuilder();
     sql.append(ALTER_TABLE);
-    sql.append(String.format(tableTemplate(), fk.getParentTable().getGrain().getName(),
-            fk.getParentTable().getName()));
+    sql.append(tableString(fk.getParentTable().getGrain().getName(), fk.getParentTable().getName()));
     sql.append(" add constraint \"");
     sql.append(fk.getConstraintName());
     sql.append("\" foreign key (");
@@ -613,7 +614,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
       needComma = true;
     }
     sql.append(") references ");
-    sql.append(String.format(tableTemplate(), fk.getReferencedTable().getGrain().getName(),
+    sql.append(tableString(fk.getReferencedTable().getGrain().getName(),
             fk.getReferencedTable().getName()));
     sql.append("(");
     needComma = false;
@@ -752,8 +753,22 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * Получить шаблон имени таблицы.
    */
   //TODO: Javadoc In English
-  public String tableTemplate() {
-    return "\"%s\".\"%s\"";
+  public String tableString(String schemaName, String tableName) {
+    StringBuilder sb = new StringBuilder();
+
+    if (schemaName.startsWith("\""))
+      sb.append(schemaName);
+    else
+      sb.append("\"").append(schemaName).append("\"");
+
+    sb.append(".");
+
+    if (tableName.startsWith("\""))
+      sb.append(tableName);
+    else
+      sb.append("\"").append(tableName).append("\"");
+
+    return sb.toString();
   }
 
   /**
@@ -792,7 +807,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     Set<String> result = new LinkedHashSet<>();
     try {
       DatabaseMetaData metaData = conn.getMetaData();
-      ResultSet rs = metaData.getColumns(null, t.getGrain().getName(), t.getName(), null);
+      ResultSet rs = metaData.getColumns(null,
+              t.getGrain().getName(),
+              t.getName(), null);
       try {
         while (rs.next()) {
           String rColumnName = rs.getString(COLUMN_NAME);
@@ -819,7 +836,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   //TODO: Javadoc In English
   public void dropFK(Connection conn, String grainName, String tableName, String fkName) throws CelestaException {
     LinkedList<String> sqlQueue = new LinkedList<>();
-    String sql = String.format("alter table " + tableTemplate() + " drop constraint \"%s\"", grainName, tableName,
+    String sql = String.format("alter table " + tableString(grainName, tableName) + " drop constraint \"%s\"",
             fkName);
     sqlQueue.add(sql);
     processDropUpdateRule(sqlQueue, fkName);
@@ -861,8 +878,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   //TODO: Javadoc
   public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
     return String.format(
-            tableTemplate() + "(%s)",
-            pv.getGrain().getName(), pv.getName(),
+            tableString(pv.getGrain().getName(), pv.getName()) + "(%s)",
             pv.getParameters().keySet().stream()
                     .map(p -> "?")
                     .collect(Collectors.joining(", "))
@@ -903,7 +919,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   public void createSequence(Connection conn, SequenceElement s) throws CelestaException {
     try {
       StringBuilder sb = new StringBuilder("CREATE SEQUENCE ")
-              .append(String.format(tableTemplate(), s.getGrain().getName(), s.getName()));
+              .append(tableString(s.getGrain().getName(), s.getName()));
       generateArgumentsForCreateSequenceExpression(s, sb);
       String sql = sb.toString();
 
@@ -918,7 +934,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   public void alterSequence(Connection conn, SequenceElement s) throws CelestaException {
     try {
       StringBuilder sb = new StringBuilder("ALTER SEQUENCE ")
-              .append(String.format(tableTemplate(), s.getGrain().getName(), s.getName()));
+              .append(tableString(s.getGrain().getName(), s.getName()));
       generateArgumentsForCreateSequenceExpression(s, sb, SequenceElement.Argument.START_WITH);
       String sql = sb.toString();
 
@@ -931,7 +947,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   //TODO: Javadoc
   public void dropSequence(Connection conn, SequenceElement s) throws CelestaException {
-    String sql = String.format("DROP SEQUENCE " + tableTemplate(), s.getGrain().getName(), s.getName());
+    String sql = String.format("DROP SEQUENCE " + tableString(s.getGrain().getName(), s.getName()));
     executeUpdate(conn, sql);
   }
 
@@ -946,7 +962,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   //TODO: Javadoc In English
   public void dropView(Connection conn, String grainName, String viewName) throws CelestaException {
     try {
-      String sql = String.format("DROP VIEW " + tableTemplate(), grainName, viewName);
+      String sql = "DROP VIEW " + tableString(grainName, viewName);
       executeUpdate(conn, sql);
       conn.commit();
     } catch (SQLException e) {
@@ -962,7 +978,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @throws CelestaException Ошибка создания объектов.
    */
   //TODO: Javadoc In English
-  public void createSysObjects(Connection conn) throws CelestaException {
+  public void createSysObjects(Connection conn, String sysSchemaName) throws CelestaException {
 
   }
 
@@ -1034,7 +1050,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
           throws CelestaException {
     Table t = mv.getRefTable().getTable();
 
-    String mvIdentifier = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
+    String mvIdentifier = tableString(mv.getGrain().getName(), mv.getName());
     String mvColumns = mv.getColumns().keySet().stream()
             .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
             .map(alias -> "\"" + alias + "\"")
@@ -1084,8 +1100,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
             }).collect(Collectors.joining(", "));
 
     String selectScript = String.format("SELECT " + colsToSelect + ", COUNT(*)"
-                    + " FROM " + tableTemplate() + " GROUP BY %s",
-            t.getGrain().getName(), t.getName(), tableGroupByColumns);
+                    + " FROM " + tableString(t.getGrain().getName(), t.getName()) + " GROUP BY %s",
+            tableGroupByColumns);
     String insertSql = String.format("INSERT INTO %s (%s) "  + selectScript, mvIdentifier, mvColumns);
 
     try {

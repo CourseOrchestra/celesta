@@ -1,7 +1,5 @@
 package ru.curs.celesta.score;
 
-import ru.curs.celesta.CelestaException;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
@@ -134,6 +132,7 @@ public class ForeignKey {
 	 *             в случае, если колонка не найдена.
 	 */
 	void addColumn(String columnName) throws ParseException {
+		columnName = getParentTable().getGrain().getScore().getIdentifierParser().parse(columnName);
 		Column c = parentTable.getColumns().get(columnName);
 		if (c == null)
 			throw new ParseException(
@@ -156,6 +155,7 @@ public class ForeignKey {
 	 *             обязательно ссылающийся на ту же таблицу) уже есть в таблице.
 	 */
 	void setReferencedTable(String grain, String table) throws ParseException {
+		table = getParentTable().getGrain().getScore().getIdentifierParser().parse(table);
 		// Извлечение гранулы по имени.
 		Grain gm;
 		if ("".equals(grain) || parentTable.getGrain().getName().equals(grain)) {
@@ -273,6 +273,7 @@ public class ForeignKey {
 		// которую ссылаемся.
 		if (referencedTable == null)
 			throw new IllegalStateException();
+		columnName = getParentTable().getGrain().getScore().getIdentifierParser().parse(columnName);
 		Column c = referencedTable.getColumns().get(columnName);
 		if (c == null)
 			throw new ParseException(
@@ -352,7 +353,7 @@ public class ForeignKey {
 	 */
 	public void setConstraintName(String constraintName) throws ParseException {
 		if (constraintName != null)
-            parentTable.getGrain().getScore().getIdentifierValidator().validate(constraintName);
+            parentTable.getGrain().getScore().getIdentifierParser().parse(constraintName);
 		this.constraintName = constraintName;
 	}
 
@@ -368,7 +369,7 @@ public class ForeignKey {
 
 	void save(PrintWriter bw, int count) throws IOException {
 		bw.write("ALTER TABLE ");
-		bw.write(getParentTable().getName());
+		bw.write(getParentTable().getQuotedNameIfNeeded());
 		bw.write(" ADD CONSTRAINT ");
 		String name = getConstraintName();
 		if (name == null)
@@ -379,21 +380,21 @@ public class ForeignKey {
 		for (Column c : getColumns().values()) {
 			if (comma)
 				bw.write(", ");
-			bw.write(c.getName());
+			bw.write(c.getQuotedNameIfNeeded());
 			comma = true;
 		}
 		bw.write(") REFERENCES ");
 
-		bw.write(referencedTable.getGrain().getName());
+		bw.write(referencedTable.getGrain().getQuotedNameIfNeeded());
 		bw.write(".");
 
-		bw.write(referencedTable.getName());
+		bw.write(referencedTable.getQuotedNameIfNeeded());
 		bw.write("(");
 		comma = false;
 		for (Column c : referencedTable.getPrimaryKey().values()) {
 			if (comma)
 				bw.write(", ");
-			bw.write(c.getName());
+			bw.write(c.getQuotedNameIfNeeded());
 			comma = true;
 		}
 		bw.write(")");

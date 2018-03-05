@@ -282,11 +282,11 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     final String sql;
 
     if (fields.length() == 0 && params.length() == 0) {
-      sql = String.format("insert into " + tableTemplate() + " default values %s;", t.getGrain().getName(),
-          t.getName(), returning);
+      sql = String.format("insert into " + tableString(t.getGrain().getName(),
+              t.getName()) + " default values %s;", returning);
     } else {
-      sql = String.format("insert into " + tableTemplate() + " (%s) values (%s)%s;", t.getGrain().getName(),
-          t.getName(), fields.toString(), params.toString(), returning);
+      sql = String.format("insert into " + tableString(t.getGrain().getName(),
+              t.getName()) + " (%s) values (%s)%s;", fields.toString(), params.toString(), returning);
     }
 
     return prepareStatement(conn, sql);
@@ -361,8 +361,8 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   public DbColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
     try {
       DatabaseMetaData metaData = conn.getMetaData();
-      ResultSet rs = metaData.getColumns(null, c.getParentTable().getGrain().getName(),
-          c.getParentTable().getName(), c.getName());
+      ResultSet rs = metaData.getColumns(null, c.getParentTable().getGrain().getName().replace("\"", ""),
+          c.getParentTable().getName().replace("\"", ""), c.getName().replace("\"", ""));
       try {
         if (rs.next()) {
           DbColumnInfo result = new DbColumnInfo();
@@ -461,8 +461,9 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     }
     // Если тип не совпадает
     if (c.getClass() != actual.getType()) {
-      sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" TYPE %s",
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(), colType);
+      sql = String.format(
+              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                      + " ALTER COLUMN \"%s\" TYPE %s", c.getName(), colType);
       if (c.getClass() == IntegerColumn.class)
         sql += String.format(" USING (%s::integer);", c.getQuotedName());
       else if (c.getClass() == BooleanColumn.class)
@@ -472,8 +473,9 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
     } else if (c.getClass() == StringColumn.class) {
       StringColumn sc = (StringColumn) c;
       if (sc.isMax() != actual.isMax() || sc.getLength() != actual.getLength()) {
-        sql = String.format(ALTER_TABLE + tableTemplate() + " ALTER COLUMN \"%s\" TYPE %s",
-            c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName(), colType);
+        sql = String.format(
+                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                        + " ALTER COLUMN \"%s\" TYPE %s", c.getName(), colType);
         batch.add(sql);
       }
     }
@@ -495,7 +497,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             .collect(Collectors.toList())
     );
 
-    String otherTableStr = String.format(tableTemplate(), otherDge.getGrain().getName(), otherDge.getName());
+    String otherTableStr = tableString(otherDge.getGrain().getName(), otherDge.getName());
     String result = String.format(template, fieldsStr, otherFieldsStr, otherTableStr, otherWhere);
     return result;
   }
@@ -524,12 +526,15 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
       }
     }
 
-    String sql = String.format("CREATE INDEX \"%s\" ON " + tableTemplate() + " (%s)", index.getName(),
-        index.getTable().getGrain().getName(), index.getTable().getName(), sb.toString());
+    String sql = String.format(
+            "CREATE INDEX \"%s\" ON "
+                    + tableString(index.getTable().getGrain().getName(), index.getTable().getName())
+                    + " (%s)", index.getName(), sb.toString());
     if (conjugate) {
-      String sql2 = String.format("CREATE INDEX \"%s\" ON " + tableTemplate() + " (%s)",
-          index.getName() + CONJUGATE_INDEX_POSTFIX, index.getTable().getGrain().getName(),
-          index.getTable().getName(), sb2.toString());
+      String sql2 = String.format(
+              "CREATE INDEX \"%s\" ON "
+                      + tableString(index.getTable().getGrain().getName(), index.getTable().getName())
+                      + " (%s)", index.getName() + CONJUGATE_INDEX_POSTFIX, sb2.toString());
       String[] result = {sql, sql2};
       return result;
     } else {
@@ -644,9 +649,10 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
 
       String sql = String.format(
-          "create or replace function " + tableTemplate() + "(%s) returns TABLE(%s) AS\n"
+          "create or replace function " + tableString(pv.getGrain().getName(), pv.getName())
+                  + "(%s) returns TABLE(%s) AS\n"
               + "$$\n %s $$\n"
-              + "language sql;", pv.getGrain().getName(), pv.getName(), pvParams, pViewCols, selectSql);
+              + "language sql;", pvParams, pViewCols, selectSql);
 
       Statement stmt = conn.createStatement();
       try {
@@ -671,7 +677,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             + "INNER JOIN pg_namespace n ON n.oid = c.relnamespace "
             + "WHERE c.relkind = 'r'::\"char\" AND i.relkind = 'i'::\"char\" "
             + "and n.nspname = '%s' and c.relname = '%s' and x.indisprimary",
-        t.getGrain().getName(), t.getName());
+        t.getGrain().getName().replace("\"", ""), t.getName().replace("\"", ""));
     DbPkInfo result = new DbPkInfo();
     try {
       Statement stmt = conn.createStatement();
@@ -825,8 +831,9 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  public void createSysObjects(Connection conn) throws CelestaException {
-    String sql = "CREATE OR REPLACE FUNCTION celesta.recversion_check()" + "  RETURNS trigger AS $BODY$ BEGIN\n"
+  public void createSysObjects(Connection conn, String sysSchemaName) throws CelestaException {
+    String sql = "CREATE OR REPLACE FUNCTION " + sysSchemaName + ".recversion_check()"
+            + "  RETURNS trigger AS $BODY$ BEGIN\n"
         + "    IF (OLD.recversion = NEW.recversion) THEN\n"
         + "       NEW.recversion = NEW.recversion + 1;\n     ELSE\n"
         + "       RAISE EXCEPTION 'record version check failure';\n" + "    END IF;"
@@ -840,7 +847,7 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
         stmt.close();
       }
     } catch (SQLException e) {
-      throw new CelestaException("Could not create or replace celesta.recversion_check() function: %s",
+      throw new CelestaException("Could not create or replace " + sysSchemaName + ".recversion_check() function: %s",
           e.getMessage());
     }
   }
@@ -850,7 +857,10 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
     String sql = String.format("select count(*) from information_schema.triggers where "
         + "		event_object_schema = '%s' and event_object_table= '%s'"
-        + "		and trigger_name = '%s'", query.getSchema(), query.getTableName(), query.getName());
+        + "		and trigger_name = '%s'",
+            query.getSchema().replace("\"", ""),
+            query.getTableName().replace("\"", ""),
+            query.getName());
 
     Statement stmt = conn.createStatement();
     try {
@@ -884,10 +894,11 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             return;
           } else {
             // CREATE TRIGGER
-            sql = String.format(
-                "CREATE TRIGGER \"versioncheck\"" + " BEFORE UPDATE ON " + tableTemplate()
-                    + " FOR EACH ROW EXECUTE PROCEDURE celesta.recversion_check();",
-                t.getGrain().getName(), t.getName());
+            sql =
+                "CREATE TRIGGER \"versioncheck\""
+                        + " BEFORE UPDATE ON " + tableString(t.getGrain().getName(), t.getName())
+                    + " FOR EACH ROW EXECUTE PROCEDURE "
+                        + t.getGrain().getScore().getSysSchemaName() + ".recversion_check();";
             stmt.executeUpdate(sql);
           }
         } else {
@@ -926,10 +937,10 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
         .filter(mv -> mv.getRefTable().getTable().equals(t))
         .collect(Collectors.toList());
 
-    String fullTableName = String.format(tableTemplate(), t.getGrain().getName(), t.getName());
+    String fullTableName = tableString(t.getGrain().getName(), t.getName());
 
     for (MaterializedView mv : mvList) {
-      String fullMvName = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
+      String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
 
       String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
       String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
@@ -960,12 +971,12 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
             StringBuilder sb = new StringBuilder();
             String alias = e.getKey();
 
-            sb.append("\"").append(alias)
-                .append("\" = \"").append(alias)
+            sb.append("\"").append(alias.replace("\"", ""))
+                .append("\" = \"").append(alias.replace("\"", ""))
                 .append("\" %1$s ");
 
             if (e.getValue() instanceof Sum) {
-              sb.append("%2$s.\"").append(mv.getColumnRef(alias).getName()).append("\"");
+              sb.append("%2$s.\"").append(mv.getColumnRef(alias.replace("\"", "")).getName()).append("\"");
             } else if (e.getValue() instanceof Count) {
               sb.append("1");
             }
@@ -1109,13 +1120,13 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
   @Override
   public void dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
 
-    String fullTableName = String.format(tableTemplate(), t.getGrain().getName(), t.getName());
+    String fullTableName = tableString(t.getGrain().getName(), t.getName());
     List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
         .filter(mv -> mv.getRefTable().getTable().equals(t))
         .collect(Collectors.toList());
 
     for (MaterializedView mv : mvList) {
-      String fullMvName = String.format(tableTemplate(), mv.getGrain().getName(), mv.getName());
+      String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
 
       TriggerQuery query = new TriggerQuery()
           .withSchema(t.getGrain().getName())
@@ -1217,8 +1228,8 @@ final class PostgresAdaptor extends OpenSourceDbAdaptor {
                 " FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
 
         try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, s.getGrain().getName());
-            preparedStatement.setString(2, s.getName());
+            preparedStatement.setString(1, s.getGrain().getName().replace("\"", ""));
+            preparedStatement.setString(2, s.getName().replace("\"", ""));
             ResultSet rs = preparedStatement.executeQuery();
             rs.next();
 

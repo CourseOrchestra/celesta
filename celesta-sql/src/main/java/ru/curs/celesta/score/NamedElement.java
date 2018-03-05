@@ -1,6 +1,6 @@
 package ru.curs.celesta.score;
 
-import ru.curs.celesta.score.validator.IdentifierValidator;
+import ru.curs.celesta.score.validator.IdentifierParser;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,14 +24,13 @@ public abstract class NamedElement {
 
 	private String celestaDoc;
 
-	public NamedElement(String name, IdentifierValidator identifierValidator) throws ParseException {
+	public NamedElement(String name, IdentifierParser identifierParser) throws ParseException {
 		// Не должно быть name==null, т. к. все методы написаны исходя из того,
 		// что name != null.
 		if (name == null)
 			throw new IllegalArgumentException();
-		identifierValidator.validate(name);
-		this.name = name;
-		this.quotedName = String.format("\"%s\"", name);
+		this.name = identifierParser.parse(name);
+		this.quotedName = String.format("\"%s\"", this.name);
 	}
 
 	/**
@@ -63,6 +62,14 @@ public abstract class NamedElement {
 	 */
 	public final String getQuotedName() {
 		return quotedName;
+	}
+
+	public final String getQuotedNameIfNeeded() {
+		Pattern p = Pattern.compile(IdentifierParser.PLAIN_NAME_PATTERN_STR);
+		if (p.matcher(name).matches())
+			return name;
+		else
+			return quotedName;
 	}
 
 	@Override

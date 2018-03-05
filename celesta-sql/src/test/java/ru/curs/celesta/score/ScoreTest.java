@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.validator.AnsiQuotedIdentifierValidator;
 
 public class ScoreTest {
 
@@ -511,13 +510,13 @@ public class ScoreTest {
                 .path(SCORE_PATH_PREFIX + File.separator + "scoreWithAnsiQuotedIdentifiers")
                 .build();
 
-        String grainName = "\"schema номер 1\"";
+        String grainName = "schema номер 1";
 
         Grain g = s.getGrains().get(grainName);
 
         String seq1Name = "s1";
-        String seq2Name = "\" s2 \"";
-        String seq3Name = "\"!@#$%^&\"";
+        String seq2Name = " s2 ";
+        String seq3Name = "!@#$%^&";
 
         assertAll(
                 () -> assertNotNull(g),

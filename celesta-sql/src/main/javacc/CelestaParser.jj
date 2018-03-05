@@ -19,15 +19,16 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 
 import ru.curs.celesta.score.GrainPart;
+import ru.curs.celesta.score.validator.IdentifierParser;
 
 //CHECKSTYLE:OFF
 public class CelestaParser{
-    public static Expr parseComplexFilter(String filter) throws CelestaException {
+    public static Expr parseComplexFilter(String filter, IdentifierParser identifierParser) throws CelestaException {
          StringReader sr = new StringReader(filter);
          try {
                  CelestaParser parser = new CelestaParser(sr);
                  try {
-                      return parser.sqlExpression();
+                      return parser.sqlExpression(identifierParser);
                  } catch (ParseException e) {
                     throw new CelestaException("Invalid complex filter '%s': %s", filter, e.getMessage());
                  }
@@ -210,10 +211,10 @@ GrainPart extractGrainInfo(AbstractScore s, File f):
         )
     )
     {
-        grainName = t.toString();
+        grainName = s.getIdentifierParser().parse(t.toString());
         grain = s.getGrains().get(grainName);
 
-        if (grain == null) grain = new Grain(s, grainName);
+        if (grain == null) grain = new Grain(s, t.toString());
 
         return new GrainPart(grain, isDefinition, f);
     }
@@ -379,7 +380,11 @@ boolean nullable():
 [<K_NULL>         {result = true;} |<K_NOT> <K_NULL> {result = false;}] { return result;}
 }
 
-void primaryKey(Table table):{Token t;}
+void primaryKey(Table table):
+{
+  Token t;
+  IdentifierParser identifierParser = table.getGrain().getScore().getIdentifierParser();
+}
 {
   <K_PRIMARY> <K_KEY> "(" t = <S_IDENTIFIER> {table.addPK(t.toString());}
                      ("," t = <S_IDENTIFIER> {table.addPK(t.toString());})* ")"
@@ -456,10 +461,11 @@ void alterTable(GrainPart g):{
   Table table;
   String name;
   ForeignKey fk;
+  IdentifierParser identifierParser =  g.getGrain().getScore().getIdentifierParser();
 }
 {
 <K_TABLE> t = <S_IDENTIFIER> {
-  table = g.getGrain().getElement(t.toString(), Table.class);
+  table = g.getGrain().getElement(identifierParser.parse(t.toString()), Table.class);
   }
 <K_ADD> name = constraint(g.getGrain()) fk = foreignKey(table) {fk.setConstraintName(name);}
 }
@@ -629,47 +635,47 @@ void functionParam(ParameterizedView view):
 }
 
 
-Expr sqlExpression():
+Expr sqlExpression(IdentifierParser identifierParser):
 { Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);}
 {
-    result = sqlAndExpression()   {operands.add(result);} (<K_OR>
-	  result = sqlAndExpression() {operands.add(result);}
+    result = sqlAndExpression(identifierParser)   {operands.add(result);} (<K_OR>
+	  result = sqlAndExpression(identifierParser) {operands.add(result);}
 	  )*
 	{return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.OR, operands);}
 }
 
-Expr sqlAndExpression():
+Expr sqlAndExpression(IdentifierParser identifierParser):
 { Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);}
 {
-    result = sqlUnaryLogicalExpression()    {operands.add(result);} (<K_AND>
-	  result = sqlUnaryLogicalExpression()  {operands.add(result);}
+    result = sqlUnaryLogicalExpression(identifierParser)    {operands.add(result);} (<K_AND>
+	  result = sqlUnaryLogicalExpression(identifierParser)  {operands.add(result);}
 	  )*
 	{return operands.size() == 1? result : new BinaryLogicalOp(BinaryLogicalOp.AND, operands);}
 }
 
-Expr sqlUnaryLogicalExpression():
+Expr sqlUnaryLogicalExpression(IdentifierParser identifierParser):
 { boolean isNot = false;
   Expr result;}
 {
-  [<K_NOT> {isNot = true;}] result = sqlRelationalExpression()
+  [<K_NOT> {isNot = true;}] result = sqlRelationalExpression(identifierParser)
   {return isNot? new NotExpr(result) : result; }
 }
 
-Expr sqlRelationalExpression():
+Expr sqlRelationalExpression(IdentifierParser identifierParser):
 { Expr result;
   Expr buf1;
   Expr buf2;
   List<Expr> operands = new ArrayList<Expr>(5);
   int relop;}
 {
-    result = sqlTermExpr()
-    (   relop = relop() buf1 = sqlTermExpr()                            {result = new Relop(result, buf1, relop);}
-      | (<K_IN> "(" buf1 = sqlTermExpr() {operands.add(buf1);} ("," buf1 = sqlTermExpr() {operands.add(buf1);})* ")")
+    result = sqlTermExpr(identifierParser)
+    (   relop = relop() buf1 = sqlTermExpr(identifierParser)                            {result = new Relop(result, buf1, relop);}
+      | (<K_IN> "(" buf1 = sqlTermExpr(identifierParser) {operands.add(buf1);} ("," buf1 = sqlTermExpr(identifierParser) {operands.add(buf1);})* ")")
 	                                                                    {result = new In(result, operands);}
-      | (<K_BETWEEN> buf1 = sqlTermExpr() <K_AND> buf2 = sqlTermExpr()) {result = new Between(result, buf1, buf2);}
-      | (<K_LIKE> buf1 = sqlTermExpr())                                 {result = new Relop(result, buf1, Relop.LIKE);}
+      | (<K_BETWEEN> buf1 = sqlTermExpr(identifierParser) <K_AND> buf2 = sqlTermExpr(identifierParser)) {result = new Between(result, buf1, buf2);}
+      | (<K_LIKE> buf1 = sqlTermExpr(identifierParser))                                 {result = new Relop(result, buf1, Relop.LIKE);}
       | (<K_IS> <K_NULL>)                                               {result = new IsNull(result);}
     )?
 	{return result;}
@@ -685,40 +691,40 @@ int relop():
   {return result;}
 }
 
-Expr sqlTermExpr():
+Expr sqlTermExpr(IdentifierParser identifierParser):
 { Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
   int operator = -1;}
 {
-    result = sqlMultiplicativeExpression() {operands.add(result);} ( ( "+" {operator = BinaryTermOp.PLUS;}
+    result = sqlMultiplicativeExpression(identifierParser) {operands.add(result);} ( ( "+" {operator = BinaryTermOp.PLUS;}
 	                                                                 | "-" {operator = BinaryTermOp.MINUS;}
 																	 | "||"{operator = BinaryTermOp.CONCAT;})
-                                 result =  sqlMultiplicativeExpression() {operands.add(result);}
+                                 result =  sqlMultiplicativeExpression(identifierParser) {operands.add(result);}
                                )*
     {return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
 }
 
-Expr sqlMultiplicativeExpression():
+Expr sqlMultiplicativeExpression(IdentifierParser identifierParser):
 { Expr result;
   List<Expr> operands = new ArrayList<Expr>(5);
   int operator = -1;}
 {
-    result = sqlUnaryExpression() {operands.add(result);} (  ("*" {operator = BinaryTermOp.TIMES;} | "/" {operator = BinaryTermOp.OVER;})
-	                     result = sqlUnaryExpression() {operands.add(result);}
+    result = sqlUnaryExpression(identifierParser) {operands.add(result);} (  ("*" {operator = BinaryTermOp.TIMES;} | "/" {operator = BinaryTermOp.OVER;})
+	                     result = sqlUnaryExpression(identifierParser) {operands.add(result);}
 						 )*
 	{return operands.size() == 1? result : new BinaryTermOp(operator, operands);}
 }
 
-Expr sqlUnaryExpression():
+Expr sqlUnaryExpression(IdentifierParser identifierParser):
 {Expr result;
 boolean isMinus = false;}
 {
-    ["-" {isMinus = true;}] result = sqlPrimaryExpression()
+    ["-" {isMinus = true;}] result = sqlPrimaryExpression(identifierParser)
     {return isMinus? new UnaryMinus(result) : result;}
 }
 
 
-Expr sqlPrimaryExpression():
+Expr sqlPrimaryExpression(IdentifierParser identifierParser):
 {Expr result;
 Token t = null;}
 { (
@@ -729,20 +735,20 @@ Token t = null;}
   | t = <K_TRUE>             {result = new BooleanLiteral(true);}
   | t = <K_FALSE>            {result = new BooleanLiteral(false);}
   | <K_GETDATE> "(" ")"      {result = new GetDate();}
-  | "(" result = sqlExpression() ")"  {result = new ParenthesizedExpr(result);}
-  | result = fieldReference()
+  | "(" result = sqlExpression(identifierParser) ")"  {result = new ParenthesizedExpr(result);}
+  | result = fieldReference(identifierParser)
   ) {return result;}
 }
 
-FieldRef fieldReference():
+FieldRef fieldReference(IdentifierParser identifierParser):
 {  
   String tableName = null;
   String fieldName;
   Token t;
 }
 {
-  t = <S_IDENTIFIER> {fieldName = t.toString();} 
-  ["." t = <S_IDENTIFIER> {tableName = fieldName; fieldName = t.toString();} ]
+  t = <S_IDENTIFIER> {fieldName = identifierParser.parse(t.toString());}
+  ["." t = <S_IDENTIFIER> {tableName = fieldName; fieldName = identifierParser.parse(t.toString());} ]
   {return new FieldRef(tableName, fieldName);}
 }
 
@@ -753,7 +759,7 @@ Expr where;
 {
     <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
     <K_FROM>  fromClause(v)
-    [<K_WHERE> where = sqlExpression() {v.setWhereCondition(where);} ]
+    [<K_WHERE> where = sqlExpression(v.getGrain().getScore().getIdentifierParser()) {v.setWhereCondition(where);} ]
     [<K_GROUP> <K_BY>  groupBy(v)]
 }
 
@@ -764,7 +770,7 @@ Expr where;
 {
     <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
     <K_FROM>  fromClause(v)
-    [<K_WHERE> where = sqlExpression() {v.setWhereCondition(where);} ]
+    [<K_WHERE> where = sqlExpression(v.getGrain().getScore().getIdentifierParser()) {v.setWhereCondition(where);} ]
     [<K_GROUP> <K_BY>  groupBy(v)]
 }
 
@@ -781,8 +787,8 @@ void materializedSelect(MaterializedView v):
 void groupBy(AbstractView view):
 { FieldRef fr; }
 {
-fr = fieldReference() {view.addGroupByColumn(fr);}
-     ("," fr = fieldReference() {view.addGroupByColumn(fr);} )*
+fr = fieldReference(view.getGrain().getScore().getIdentifierParser()) {view.addGroupByColumn(fr);}
+     ("," fr = fieldReference(view.getGrain().getScore().getIdentifierParser()) {view.addGroupByColumn(fr);} )*
 }
 
 Expr aggregateFunc(AbstractView v):
@@ -793,9 +799,9 @@ Expr aggregateFunc(AbstractView v):
 {
   (
       <K_COUNT> "(" "*" ")"                  { return new Count(); }
-      | <K_SUM> "(" term = sqlTermExpr() ")" { return new Sum(term); }
-      | <K_MAX> "(" term = sqlTermExpr() ")" { return new Max(term); }
-      | <K_MIN> "(" term = sqlTermExpr() ")" { return new Min(term); }
+      | <K_SUM> "(" term = sqlTermExpr(v.getGrain().getScore().getIdentifierParser()) ")" { return new Sum(term); }
+      | <K_MAX> "(" term = sqlTermExpr(v.getGrain().getScore().getIdentifierParser()) ")" { return new Max(term); }
+      | <K_MIN> "(" term = sqlTermExpr(v.getGrain().getScore().getIdentifierParser()) ")" { return new Min(term); }
   )
 }
 
@@ -807,7 +813,7 @@ Expr materializedAggregateFunc(MaterializedView v):
 {
   (
       <K_COUNT> "(" "*" ")"                     { return new Count(); }
-      | <K_SUM> "(" term = fieldReference() ")" { return new Sum(term); }
+      | <K_SUM> "(" term = fieldReference(v.getGrain().getScore().getIdentifierParser()) ")" { return new Sum(term); }
   )
 }
 
@@ -819,7 +825,7 @@ void selectItem(AbstractView v):
   Expr expr;  
 }
 {
-   [doc = <CELESTA_DOC>] (expr = sqlTermExpr() | expr = aggregateFunc(v)) [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]
+   [doc = <CELESTA_DOC>] (expr = sqlTermExpr(v.getGrain().getScore().getIdentifierParser()) | expr = aggregateFunc(v)) [<K_AS>] [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]
    { if (alias.isEmpty() && expr instanceof FieldRef)
 		   alias = ((FieldRef) expr).getColumnName();
      if (doc != null)
@@ -835,7 +841,7 @@ void materializedSelectItem(MaterializedView v):
   Expr expr;
 }
 {
-   [doc = <CELESTA_DOC>] (expr = fieldReference() | expr = materializedAggregateFunc(v)) [<K_AS>]
+   [doc = <CELESTA_DOC>] (expr = fieldReference(v.getGrain().getScore().getIdentifierParser()) | expr = materializedAggregateFunc(v)) [<K_AS>]
    [aliasToken =  <S_IDENTIFIER> {alias = aliasToken.toString();}]
    { if (alias.isEmpty() && expr instanceof FieldRef)
 		   alias = ((FieldRef) expr).getColumnName();
@@ -850,6 +856,7 @@ TableRef tableReference(AbstractView v):
   String grainName = null;
   String tableName = null;
   String alias;
+  IdentifierParser identifierParser = v.getGrain().getScore().getIdentifierParser();
 }
 {
   t = <S_IDENTIFIER> {tableName = t.toString(); alias = tableName;} 
@@ -859,9 +866,9 @@ TableRef tableReference(AbstractView v):
   {
      Table tab;
      if (grainName == null) {
-	    tab = v.getGrain().getElement(tableName, Table.class);
+	    tab = v.getGrain().getElement(identifierParser.parse(tableName), Table.class);
 	 } else {
-	    tab = v.getGrain().getScore().getGrain(grainName).getElement(tableName, Table.class);
+	    tab = v.getGrain().getScore().getGrain(grainName).getElement(identifierParser.parse(tableName), Table.class);
 	 }
 	 return new TableRef(tab, alias);
   }
@@ -897,7 +904,7 @@ TableRef join(AbstractView v):
    <K_JOIN>
    tRef = tableReference(v)
    <K_ON> 
-   onExpr = sqlExpression()
+   onExpr = sqlExpression(v.getGrain().getScore().getIdentifierParser())
    { tRef.setJoinType(jt);
      tRef.setOnExpr(onExpr);
 	 return tRef;
