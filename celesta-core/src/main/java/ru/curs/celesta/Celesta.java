@@ -57,7 +57,8 @@ import org.python.util.PythonInterpreter;
 
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorBuilder;
+import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorFactory;
+import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.ormcompiler.ORMCompiler;
 import ru.curs.celesta.score.Grain;
@@ -122,8 +123,9 @@ public final class Celesta implements AutoCloseable {
 		cpc.setPassword(appSettings.getDBPassword());
 		connectionPool = ConnectionPool.create(cpc);
 
-		DbAdaptorBuilder dac = new DbAdaptorBuilder()
+		DbAdaptorFactory dac = new DbAdaptorFactory()
 				.setDbType(appSettings.getDBType())
+				.setDdlConsumer(new JdbcDdlConsumer())
 				.setConnectionPool(connectionPool)
 				.setH2ReferentialIntegrity(appSettings.isH2ReferentialIntegrity());
 

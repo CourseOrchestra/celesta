@@ -7,6 +7,7 @@ import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
+import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
@@ -39,7 +40,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
 
         ConnectionPool connectionPool = ConnectionPool.create(cpc);
 
-        dba = new H2Adaptor(connectionPool, appSettings.isH2ReferentialIntegrity());
+        dba = new H2Adaptor(connectionPool, new JdbcDdlConsumer(), appSettings.isH2ReferentialIntegrity());
 
         DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                 .dbAdaptor(dba)

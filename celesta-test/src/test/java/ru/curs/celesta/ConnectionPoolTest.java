@@ -13,7 +13,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorBuilder;
+import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorFactory;
+import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 
 public class ConnectionPoolTest {
 
@@ -33,8 +34,9 @@ public class ConnectionPoolTest {
     public void init() throws CelestaException {
         connectionPool = ConnectionPool.create(cpc);
 
-        DbAdaptorBuilder dac = new DbAdaptorBuilder()
+        DbAdaptorFactory dac = new DbAdaptorFactory()
                 .setDbType(DBType.H2)
+                .setDdlConsumer(new JdbcDdlConsumer())
                 .setConnectionPool(connectionPool)
                 .setH2ReferentialIntegrity(false);
 

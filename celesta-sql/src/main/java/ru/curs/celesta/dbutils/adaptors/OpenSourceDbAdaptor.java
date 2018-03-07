@@ -2,6 +2,8 @@ package ru.curs.celesta.dbutils.adaptors;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
+import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.dbutils.query.FromClause;
@@ -18,15 +20,13 @@ import static ru.curs.celesta.dbutils.jdbc.SqlUtils.*;
  * Created by ioann on 02.05.2017.
  */
 public abstract class OpenSourceDbAdaptor extends DBAdaptor {
-  protected static final String CONJUGATE_INDEX_POSTFIX = "__vpo";
   protected static final String SELECT_S_FROM = "select %s from ";
-  protected static final String NOW = "now()";
   protected static final Pattern DATEPATTERN = Pattern.compile("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)");
 
   protected static final Pattern QUOTED_NAME = Pattern.compile("\"?([^\"]+)\"?");
 
-  public OpenSourceDbAdaptor(ConnectionPool connectionPool) {
-    super(connectionPool);
+  public OpenSourceDbAdaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer) {
+    super(connectionPool, ddlConsumer);
   }
 
   @Override
@@ -43,33 +43,19 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 			throw new CelestaException(e.getMessage());
 		}
 	}
-	
-  @Override
-  public void dropTrigger(Connection conn, TriggerQuery query) throws SQLException {
-    Statement stmt = conn.createStatement();
-
-    try {
-      String sql = String.format("DROP TRIGGER \"%s\" ON " + tableString(query.getSchema(), query.getTableName()),
-          query.getName());
-      stmt.executeUpdate(sql);
-    } finally {
-      stmt.close();
-    }
-  }
 
   @Override
-  void createSchemaIfNotExists(Connection conn, String name) throws SQLException {
-    String sql = String.format("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '%s';",
-        name);
-    Statement check = conn.createStatement();
-    ResultSet rs = check.executeQuery(sql);
-    try {
-      if (!rs.next()) {
-        check.executeUpdate(String.format("create schema \"%s\";", name));
-      }
-    } finally {
-      rs.close();
-      check.close();
+  void createSchemaIfNotExists(Connection conn, String name) throws CelestaException {
+    String sql = String.format(
+            "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '%s';", name
+    );
+
+    try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        if (!rs.next()) {
+          ddlAdaptor.createSchema(conn, name);
+        }
+    } catch (SQLException e) {
+      throw new CelestaException(e);
     }
   }
 
@@ -122,110 +108,6 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
       throw new CelestaException(e.getMessage());
     }
   }
-
-  @Override
-  String[] getDropIndexSQL(Grain g, DbIndexInfo dBIndexInfo) {
-    String sql = "DROP INDEX IF EXISTS " + tableString(g.getName(), dBIndexInfo.getIndexName());
-    String sql2 = "DROP INDEX IF EXISTS " + tableString(g.getName(),
-        dBIndexInfo.getIndexName() + CONJUGATE_INDEX_POSTFIX);
-    String[] result = {sql, sql2};
-    return result;
-  }
-
-
-  @Override
-  public void updateColumn(Connection conn, Column c, DbColumnInfo actual) throws CelestaException {
-    try {
-      String sql;
-      List<String> batch = new LinkedList<>();
-      // Начинаем с удаления default-значения
-      sql = String.format(
-              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                      + " ALTER COLUMN \"%s\" DROP DEFAULT", c.getName()
-      );
-      batch.add(sql);
-
-      updateColType(c, actual, batch);
-
-      // Проверяем nullability
-      if (c.isNullable() != actual.isNullable()) {
-        sql = String.format(
-                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                        + " ALTER COLUMN \"%s\" %s", c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
-        batch.add(sql);
-      }
-
-      // Если в данных пустой default, а в метаданных -- не пустой -- то
-      if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate())
-              || (c instanceof IntegerColumn && ((IntegerColumn)c).getSequence() != null)) {
-        sql = String.format(
-                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                        + " ALTER COLUMN \"%s\" SET %s", c.getName(), getColumnDefiner(c).getDefaultDefinition(c));
-        batch.add(sql);
-      }
-
-      Statement stmt = conn.createStatement();
-      try {
-        // System.out.println(">>batch begin>>");
-        for (String s : batch) {
-          // System.out.println(s);
-          stmt.executeUpdate(s);
-        }
-        // System.out.println("<<batch end<<");
-      } finally {
-        stmt.close();
-      }
-
-    } catch (SQLException e) {
-      throw new CelestaException("Cannot modify column %s on table %s.%s: %s", c.getName(),
-          c.getParentTable().getGrain().getName(), c.getParentTable().getName(), e.getMessage());
-    }
-
-  }
-
-  abstract protected void updateColType(Column c, DbColumnInfo actual, List<String> batch);
-
-  @Override
-  void dropAutoIncrement(Connection conn, TableElement t) throws SQLException {
-    // Удаление Sequence
-    String sql = String.format("drop sequence if exists \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
-    Statement stmt = conn.createStatement();
-    try {
-      stmt.execute(sql);
-    } finally {
-      stmt.close();
-    }
-  }
-
-  @Override
-  public void createPK(Connection conn, TableElement t) throws CelestaException {
-    StringBuilder sql = new StringBuilder();
-    sql.append(String.format("alter table %s.%s add constraint \"%s\" primary key (", t.getGrain().getQuotedName(),
-        t.getQuotedName(), t.getPkConstraintName()));
-    boolean multiple = false;
-    for (String s : t.getPrimaryKey().keySet()) {
-      if (multiple)
-        sql.append(", ");
-      sql.append('"');
-      sql.append(s);
-      sql.append('"');
-      multiple = true;
-    }
-    sql.append(")");
-
-    // System.out.println(sql.toString());
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        stmt.executeUpdate(sql.toString());
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException("Cannot create PK '%s': %s", t.getPkConstraintName(), e.getMessage());
-    }
-  }
-
 
   @Override
   public PreparedStatement getNavigationStatement(

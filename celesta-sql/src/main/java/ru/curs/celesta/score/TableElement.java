@@ -58,4 +58,16 @@ public interface TableElement {
    * Неизменяемый перечень столбцов первичного ключа таблицы.
    */
   Map<String, Column> getPrimaryKey();
+
+
+  //TODO: Javadoc
+  static IntegerColumn findIdentityField(TableElement t) {
+    IntegerColumn ic = null;
+    for (Column c : t.getColumns().values())
+      if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
+        ic = (IntegerColumn) c;
+        break;
+      }
+    return ic;
+  }
 }

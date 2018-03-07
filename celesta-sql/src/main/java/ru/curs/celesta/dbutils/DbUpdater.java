@@ -48,27 +48,38 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     protected abstract String getSchemasTableName();
 
+    public void updateSystemSchema() throws CelestaException {
+        try (T context = createContext()) {
+            updateSystemSchema(context);
+        }
+    }
+
+    private void updateSystemSchema(T context) throws CelestaException {
+        initDataAccessors(context);
+
+        Connection conn = context.getConn();
+        // Проверяем наличие главной системной таблицы.
+        if (!dbAdaptor.tableExists(conn, score.getSysSchemaName(), getSchemasTableName())) {
+            // Если главной таблицы нет, а другие таблицы есть -- ошибка.
+            if (dbAdaptor.userTablesExist() && !forceDdInitialize)
+                throw new CelestaException("No %s.%s table found in non-empty database.",
+                        score.getSysSchemaName(), getSchemasTableName());
+            // Если база вообще пустая, то создаём системные таблицы.
+            updateSysGrain(context);
+        }
+    }
+
     /**
      * Выполняет обновление структуры БД на основе разобранной объектной модели.
      *
      * @throws CelestaException в случае ошибки обновления.
      */
     public void updateDb() throws CelestaException {
+        dbAdaptor.validateScore(score);
+
         String sysSchemaName = score.getSysSchemaName();
         try (T context = createContext()) {
-            Connection conn = context.getConn();
-
-            initDataAccessors(context);
-
-            // Проверяем наличие главной системной таблицы.
-            if (!dbAdaptor.tableExists(conn, score.getSysSchemaName(), getSchemasTableName())) {
-                // Если главной таблицы нет, а другие таблицы есть -- ошибка.
-                if (dbAdaptor.userTablesExist() && !forceDdInitialize)
-                    throw new CelestaException("No %s.%s table found in non-empty database.",
-                            sysSchemaName, getSchemasTableName());
-                // Если база вообще пустая, то создаём системные таблицы.
-                updateSysGrain(context);
-            }
+            updateSystemSchema(context);
 
             // Теперь собираем в память информацию о гранулах на основании того,
             // что
@@ -475,7 +486,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         if (modified)
             try {
                 dbAdaptor.manageAutoIncrement(conn, t);
-            } catch (SQLException e) {
+            } catch (CelestaException e) {
                 throw new CelestaException("Updating table %s.%s failed: %s.", t.getGrain().getName(), t.getName(),
                         e.getMessage());
             }
@@ -528,7 +539,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         boolean keyDropped = pkInfo.isEmpty();
         if (!(pkInfo.reflects(t) || keyDropped)) {
             dropReferencedFKs(t, conn, dbFKeys);
-            dbAdaptor.dropPK(conn, t, pkInfo.getName());
+            dbAdaptor.dropPk(conn, t, pkInfo.getName());
             keyDropped = true;
         }
 
@@ -543,7 +554,7 @@ public abstract class DbUpdater<T extends ICallContext> {
                     // ключ -- сбрасываем первичный ключ.
                     if (t.getPrimaryKey().containsKey(e.getKey()) && !keyDropped) {
                         dropReferencedFKs(t, conn, dbFKeys);
-                        dbAdaptor.dropPK(conn, t, pkInfo.getName());
+                        dbAdaptor.dropPk(conn, t, pkInfo.getName());
                         keyDropped = true;
                     }
                     dbAdaptor.updateColumn(conn, e.getValue(), ci);

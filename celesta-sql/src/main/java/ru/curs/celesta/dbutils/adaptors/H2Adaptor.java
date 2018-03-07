@@ -4,20 +4,15 @@ import org.h2.value.DataType;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.h2.MaterializedViewDeleteTrigger;
-import ru.curs.celesta.dbutils.h2.MaterializedViewInsertTrigger;
-import ru.curs.celesta.dbutils.h2.MaterializedViewUpdateTrigger;
-import ru.curs.celesta.dbutils.h2.RecVersionCheckTrigger;
+import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.*;
+
+import ru.curs.celesta.dbutils.adaptors.ddl.*;
 import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
-import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -34,163 +29,16 @@ import java.util.stream.Collectors;
 final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   private static final Pattern HEX_STRING = Pattern.compile("X'([0-9A-Fa-f]+)'");
-  protected static final Map<Class<? extends Column>, ColumnDefiner> TYPES_DICT = new HashMap<>();
 
-  static {
-    TYPES_DICT.put(IntegerColumn.class, new ColumnDefiner() {
-      @Override
-      String dbFieldType() {
-        return "integer";
-      }
-
-      @Override
-      String getMainDefinition(Column c) {
-        return join(c.getQuotedName(), dbFieldType(), nullable(c));
-      }
-
-      @Override
-      String getDefaultDefinition(Column c) {
-        IntegerColumn ic = (IntegerColumn) c;
-        String defaultStr = "";
-
-        SequenceElement s = ic.getSequence();
-        if (s != null) {
-          defaultStr = DEFAULT + s.getGrain().getQuotedName() + "." + s.getQuotedName() + ".nextval";
-        } else if (ic.getDefaultValue() != null) {
-          defaultStr = DEFAULT + ic.getDefaultValue();
-        }
-        return defaultStr;
-      }
-    });
-
-    TYPES_DICT.put(FloatingColumn.class, new ColumnDefiner() {
-
-      @Override
-      String dbFieldType() {
-        return "double"; // double precision";
-      }
-
-      @Override
-      String getMainDefinition(Column c) {
-        return join(c.getQuotedName(), dbFieldType(), nullable(c));
-      }
-
-      @Override
-      String getDefaultDefinition(Column c) {
-        FloatingColumn ic = (FloatingColumn) c;
-        String defaultStr = "";
-        if (ic.getDefaultValue() != null) {
-          defaultStr = DEFAULT + ic.getDefaultValue();
-        }
-        return defaultStr;
-      }
-    });
-
-    TYPES_DICT.put(BooleanColumn.class, new ColumnDefiner() {
-
-      @Override
-      String dbFieldType() {
-        return "boolean";
-      }
-
-      @Override
-      String getMainDefinition(Column c) {
-        return join(c.getQuotedName(), dbFieldType(), nullable(c));
-      }
-
-      @Override
-      String getDefaultDefinition(Column c) {
-        BooleanColumn ic = (BooleanColumn) c;
-        String defaultStr = "";
-        if (ic.getDefaultValue() != null) {
-          defaultStr = DEFAULT + ic.getDefaultValue();
-        }
-        return defaultStr;
-      }
-    });
-
-    TYPES_DICT.put(StringColumn.class, new ColumnDefiner() {
-
-      @Override
-      String dbFieldType() {
-        return "varchar";
-      }
-
-      @Override
-      String getMainDefinition(Column c) {
-        StringColumn ic = (StringColumn) c;
-        String fieldType = ic.isMax() ? "clob" : String.format("%s(%s)", dbFieldType(), ic.getLength());
-        return join(c.getQuotedName(), fieldType, nullable(c));
-      }
-
-      @Override
-      String getDefaultDefinition(Column c) {
-        StringColumn ic = (StringColumn) c;
-        String defaultStr = "";
-        if (ic.getDefaultValue() != null) {
-          defaultStr = DEFAULT + StringColumn.quoteString(ic.getDefaultValue());
-        }
-        return defaultStr;
-      }
-    });
-
-    TYPES_DICT.put(BinaryColumn.class, new ColumnDefiner() {
-
-      @Override
-      String dbFieldType() {
-        return "varbinary";
-      }
-
-      @Override
-      String getMainDefinition(Column c) {
-        return join(c.getQuotedName(), dbFieldType(), nullable(c));
-      }
-
-      @Override
-      String getDefaultDefinition(Column c) {
-        BinaryColumn bc = (BinaryColumn) c;
-        String defaultStr = "";
-        if (bc.getDefaultValue() != null) {
-          Matcher m = HEXSTR.matcher(bc.getDefaultValue());
-          m.matches();
-          defaultStr = DEFAULT + String.format("X'%s'", m.group(1));
-        }
-        return defaultStr;
-      }
-    });
-
-    TYPES_DICT.put(DateTimeColumn.class, new ColumnDefiner() {
-
-      @Override
-      String dbFieldType() {
-        return "timestamp";
-      }
-
-      @Override
-      String getMainDefinition(Column c) {
-        return join(c.getQuotedName(), dbFieldType(), nullable(c));
-      }
-
-      @Override
-      String getDefaultDefinition(Column c) {
-        DateTimeColumn ic = (DateTimeColumn) c;
-        String defaultStr = "";
-        if (ic.isGetdate()) {
-          defaultStr = DEFAULT + NOW;
-        } else if (ic.getDefaultValue() != null) {
-          DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-          defaultStr = String.format(DEFAULT + " '%s'", df.format(ic.getDefaultValue()));
-
-        }
-        return defaultStr;
-      }
-    });
+  
+  public H2Adaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer, boolean isH2ReferentialIntegrity) {
+    super(connectionPool, ddlConsumer);
+    configureDb(isH2ReferentialIntegrity);
   }
 
-
-  public H2Adaptor(ConnectionPool connectionPool, boolean isH2ReferentialIntegrity) {
-    super(connectionPool);
-    configureDb(isH2ReferentialIntegrity);
+  @Override
+  DdlGenerator getDdlGenerator() {
+    return new H2DdlGenerator(this);
   }
 
   private void configureDb(boolean isH2ReferentialIntegrity) {
@@ -274,73 +122,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public void manageAutoIncrement(Connection conn, TableElement t) throws SQLException {
-    String sql;
-    Statement stmt = conn.createStatement();
-    try {
-      // 1. Firstly, we have to clean up table from any auto-increment
-      // defaults. Meanwhile we check if table has IDENTITY field, if it
-      // doesn't, no need to proceed.
-      IntegerColumn idColumn = null;
-      for (Column c : t.getColumns().values())
-        if (c instanceof IntegerColumn) {
-          IntegerColumn ic = (IntegerColumn) c;
-          if (ic.isIdentity())
-            idColumn = ic;
-          else {
-            if (ic.getDefaultValue() == null && ic.getSequence() == null) {
-              sql = String.format("alter table %s.%s alter column %s drop default",
-                  t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
-            } else if (ic.getDefaultValue() != null) {
-              sql = String.format("alter table %s.%s alter column %s set default %d",
-                  t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName(),
-                  ic.getDefaultValue().intValue());
-            } else {
-              SequenceElement s = ic.getSequence();
-              sql = String.format("alter table %s.%s alter column %s set default "
-                              + s.getGrain().getQuotedName() + "." + s.getQuotedName() + ".nextval",
-                      t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
-            }
-            stmt.executeUpdate(sql);
-          }
-        }
-
-      if (idColumn == null)
-        return;
-
-      // 2. Now, we know that we surely have IDENTITY field, and we have
-      // to be sure that we have an appropriate sequence.
-      boolean hasSequence = false;
-      sql = String.format(
-          "SELECT COUNT(*) FROM information_schema.sequences " +
-              "WHERE sequence_schema = '%s' " +
-              "AND sequence_name = '%s_seq'",
-          t.getGrain().getName(), t.getName());
-      ResultSet rs = stmt.executeQuery(sql);
-      rs.next();
-      try {
-        hasSequence = rs.getInt(1) > 0;
-      } finally {
-        rs.close();
-      }
-      if (!hasSequence) {
-        sql = String.format("create sequence \"%s\".\"%s_seq\" increment 1 minvalue 1", t.getGrain().getName(),
-            t.getName());
-        stmt.executeUpdate(sql);
-      }
-
-      // 3. Now we have to create the auto-increment default
-      sql = String.format(
-          "alter table %s.%s alter column %s set default " + "nextval('\"%s\".\"%s_seq\"');",
-          t.getGrain().getQuotedName(), t.getQuotedName(), idColumn.getQuotedName(), t.getGrain().getName(),
-          t.getName());
-      stmt.executeUpdate(sql);
-    } finally {
-      stmt.close();
-    }
-  }
-
-  @Override
   public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
     String sql = String.format("SELECT ALIAS_NAME FROM INFORMATION_SCHEMA.FUNCTION_ALIASES where alias_schema = '%s'",
         g.getName());
@@ -354,72 +135,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
       throw new CelestaException("Cannot get parameterized views list: %s", e.toString());
     }
     return result;
-  }
-
-  @Override
-  public void dropParameterizedView(Connection conn, String grainName, String viewName) throws CelestaException {
-    try {
-      try (Statement stmt = conn.createStatement()) {
-        String sql = "DROP ALIAS IF EXISTS " + tableString(grainName, viewName);
-        stmt.executeUpdate(sql);
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage(), e);
-    }
-  }
-
-
-  @Override
-  public void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
-    SQLGenerator gen = getViewSQLGenerator();
-    try {
-      StringWriter sw = new StringWriter();
-      PrintWriter bw = new PrintWriter(sw);
-
-      pv.selectScript(bw, gen);
-      bw.flush();
-
-      String selectSql = sw.toString();
-
-      String inputParams = pv.getParameters().values().stream()
-          .map(p -> p.getJavaClass().getName() + " " + p.getName())
-          .collect(Collectors.joining(", "));
-
-      List<String> paramRefsWithOrder = pv.getParameterRefsWithOrder();
-
-      StringBuilder paramSettingBuilder = new StringBuilder();
-
-      int settingPosition = 1;
-
-      for (String param : paramRefsWithOrder) {
-        paramSettingBuilder.append("ps.setObject(" + settingPosition + "," + param + ");");
-        ++settingPosition;
-      }
-
-      selectSql = selectSql.replace("\"", "\\\"");
-      selectSql = selectSql.replaceAll("\\R", "");
-
-      String sql = String.format(
-          "CREATE ALIAS " + tableString(pv.getGrain().getName(), pv.getName()) + " AS $$ " +
-              " java.sql.ResultSet %s(java.sql.Connection conn, %s) throws java.sql.SQLException {" +
-              "java.sql.PreparedStatement ps = conn.prepareStatement(\"%s\");" +
-              "%s" +
-              "return ps.executeQuery();" +
-              "} $$;",
-          pv.getName(),
-          inputParams, selectSql, paramSettingBuilder.toString());
-
-      Statement stmt = conn.createStatement();
-      try {
-        stmt.executeUpdate(sql);
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException | IOException e) {
-      e.printStackTrace();
-      throw new CelestaException("Error while creating parameterized view %s.%s: %s",
-          pv.getGrain().getName(), pv.getName(), e.getMessage());
-    }
   }
 
   @SuppressWarnings("unchecked")
@@ -451,9 +166,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
             result.setType(StringColumn.class);
             result.setMax(true);
           } else {
-            for (Class<?> cc : COLUMN_CLASSES)
-              if (TYPES_DICT.get(cc).dbFieldType().equalsIgnoreCase(typeName)) {
-                result.setType((Class<? extends Column>) cc);
+            for (Class<? extends Column> cc : COLUMN_CLASSES)
+              if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(typeName)) {
+                result.setType(cc);
                 break;
               }
           }
@@ -533,37 +248,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  protected void updateColType(Column c, DbColumnInfo actual, List<String> batch) {
-    String sql;
-    String colType;
-    if (c.getClass() == StringColumn.class) {
-      StringColumn sc = (StringColumn) c;
-      colType = sc.isMax() ? "clob" : String.format("%s(%s)", getColumnDefiner(c).dbFieldType(), sc.getLength());
-    } else {
-      colType = getColumnDefiner(c).dbFieldType();
-    }
-    // Если тип не совпадает
-    if (c.getClass() != actual.getType()) {
-      sql = String.format(
-              ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                      + " ALTER COLUMN \"%s\" %s", c.getName(), colType
-      );
-
-      batch.add(sql);
-    } else if (c.getClass() == StringColumn.class) {
-      StringColumn sc = (StringColumn) c;
-      if (sc.isMax() != actual.isMax() || sc.getLength() != actual.getLength()) {
-        sql = String.format(
-                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                        + " ALTER COLUMN \"%s\" %s", c.getName(), colType
-        );
-        batch.add(sql);
-      }
-    }
-  }
-
-
-  @Override
   public DbPkInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
     String sql = String.format(
         "SELECT constraint_name AS indexName, column_name as colName " +
@@ -595,22 +279,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
       throw new CelestaException("Could not get indices information: %s", e.getMessage());
     }
     return result;
-  }
-
-  @Override
-  public void dropPK(Connection conn, TableElement t, String pkName) throws CelestaException {
-    String sql = String.format("alter table %s.%s drop primary key", t.getGrain().getQuotedName(),
-        t.getQuotedName(), pkName);
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        stmt.executeUpdate(sql);
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException("Cannot drop PK '%s': %s", pkName, e.getMessage());
-    }
   }
 
   @Override
@@ -705,16 +373,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  String[] getCreateIndexSQL(Index index) {
-    String grainName = index.getTable().getGrain().getName();
-    String fieldList = getFieldList(index.getColumns().keySet());
-    String sql = String.format("CREATE INDEX " + tableString(grainName, index.getName())
-            + " ON " + tableString(grainName, index.getTable().getName()) + " (%s)", fieldList);
-    String[] result = {sql};
-    return result;
-  }
-
-  @Override
   String getLimitedSQL(
       FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
   ) {
@@ -792,54 +450,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
   }
 
-  @Override
-  public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
-    // First of all, we are about to check if trigger exists
-
-    try {
-      Statement stmt = conn.createStatement();
-      try {
-        TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
-            .withName("versioncheck_" + t.getName())
-            .withTableName(t.getName());
-        boolean triggerExists = triggerExists(conn, query);
-
-        if (t instanceof VersionedElement) {
-          VersionedElement ve = (VersionedElement) t;
-
-          String sql;
-          if (ve.isVersioned()) {
-            if (triggerExists) {
-              return;
-            } else {
-              // CREATE TRIGGER
-              sql = String.format(
-                  "CREATE TRIGGER \"versioncheck_%s\"" + " BEFORE UPDATE ON "
-                          + tableString(t.getGrain().getName(), t.getName())
-                      + " FOR EACH ROW CALL \"%s\"",
-                  t.getName(),
-                  RecVersionCheckTrigger.class.getName());
-
-              stmt.executeUpdate(sql);
-            }
-          } else {
-            if (triggerExists) {
-              // DROP TRIGGER
-              dropTrigger(conn, query);
-            } else {
-              return;
-            }
-          }
-        }
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException("Could not update version check trigger on %s.%s: %s", t.getGrain().getName(),
-          t.getName(), e.getMessage());
-    }
-
-  }
 
   @Override
   public int getDBPid(Connection conn) {
@@ -867,109 +477,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public void createTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
-
-    List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-        .filter(mv -> mv.getRefTable().getTable().equals(t))
-        .collect(Collectors.toList());
-
-
-    for (MaterializedView mv : mvList) {
-
-      String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-      String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
-      String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
-
-      String sql;
-      try (Statement stmt = conn.createStatement()) {
-        //INSERT
-        try {
-          sql = String.format(
-              "CREATE TRIGGER \"" + insertTriggerName + "\" AFTER INSERT ON "
-                  + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \n " +
-                  MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n" +
-                  "\"%s\"",
-              mv.getChecksum(),
-              MaterializedViewInsertTrigger.class.getName());
-          stmt.execute(sql);
-        } catch (SQLException e) {
-          throw new CelestaException(
-                  "Could not update insert-trigger on " + tableString(t.getGrain().getName(), t.getName())
-              + " for materialized view" + tableString(mv.getGrain().getName(), mv.getName()) + ": %s", e
-          );
-        }
-        //UPDATE
-        try {
-          sql = String.format(
-              "CREATE TRIGGER \"" + updateTriggerName + "\" AFTER UPDATE ON "
-                  + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \"%s\"",
-              MaterializedViewUpdateTrigger.class.getName());
-          stmt.execute(sql);
-        } catch (SQLException e) {
-          throw new CelestaException(
-                  "Could not update update-trigger on " + tableString(t.getGrain().getName(), t.getName())
-              + " for materialized view" + tableString(mv.getGrain().getName(), mv.getName()) + ": %s", e
-          );
-        }
-        //DELETE
-        try {
-          sql = String.format(
-              "CREATE TRIGGER \"" + deleteTriggerName + "\" AFTER DELETE ON "
-                  + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \"%s\"",
-              MaterializedViewDeleteTrigger.class.getName());
-          stmt.execute(sql);
-        } catch (SQLException e) {
-          throw new CelestaException(
-                  "Could not update delete-trigger on " + tableString(t.getGrain().getName(), t.getName())
-              + " for materialized view" + tableString(mv.getGrain().getName(), mv.getName()) + ": %s", e
-          );
-        }
-      } catch (SQLException e) {
-        throw new CelestaException("Could not update triggers on" + tableString(t.getGrain().getName(), t.getName())
-            + " for materialized view " + tableString(mv.getGrain().getName(), mv.getName()) + ": %s", e);
-      }
-    }
-  }
-
-  @Override
-  public void dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
-
-    List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-        .filter(mv -> mv.getRefTable().getTable().equals(t))
-        .collect(Collectors.toList());
-
-    for (MaterializedView mv : mvList) {
-      TriggerQuery query = new TriggerQuery()
-          .withSchema(t.getGrain().getName())
-          .withTableName(t.getName());
-
-      String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-      String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
-      String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
-
-      try {
-        query.withName(insertTriggerName);
-        if (triggerExists(conn, query))
-          dropTrigger(conn, query);
-        query.withName(updateTriggerName);
-        if (triggerExists(conn, query))
-          dropTrigger(conn, query);
-        query.withName(deleteTriggerName);
-        if (triggerExists(conn, query))
-          dropTrigger(conn, query);
-      } catch (SQLException e) {
-        throw new CelestaException("Can't drop triggers for materialized view %s.%s: %s",
-            mv.getGrain().getName(), mv.getName(), e.getMessage());
-      }
-    }
-  }
-
-  @Override
-  ColumnDefiner getColumnDefiner(Column c) {
-    return TYPES_DICT.get(c.getClass());
-  }
-
-  @Override
   String getSelectTriggerBodySql(TriggerQuery query) {
     String sql = String.format("select SQL from information_schema.triggers where "
         + "		table_schema = '%s' and table_name = '%s'"
@@ -979,30 +486,10 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  String truncDate(String dateStr) {
-    return "TRUNC(" + dateStr + ")";
-  }
-
-  @Override
   String prepareRowColumnForSelectStaticStrings(String value, String colName) {
     int dataType  = DataType.getTypeFromClass(value.getClass());
     DataType type = DataType.getDataType(dataType);
     return "CAST(? as " + type.name + ") as " + colName;
-  }
-
-  @Override
-  public SQLGenerator getViewSQLGenerator() {
-    return new SQLGenerator() {
-      @Override
-      protected String paramLiteral(String paramName) {
-        return "?";
-      }
-
-      @Override
-      protected String getDate() {
-        return "CURRENT_TIMESTAMP";
-      }
-    };
   }
 
   @Override
