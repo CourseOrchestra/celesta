@@ -7,3 +7,5 @@ A platform for rapid business applications development
 https://habrahabr.ru/post/335966/
 
 https://corchestra.ru/wiki/index.php?title=Celesta
+
+<img src="celesta_duke.png" width="200px">
