@@ -25,8 +25,8 @@ create table bFilter (
 create index idxCreatedNumb1Numb2 on bFilter (created, numb1, numb2);
 
 create view bFilterView as
-  SELECT id, created, numb1, numb2, noIndexB
-  FROM bFilter;
+  SELECT t.id as id, t.created as created, t.numb1 as numb1, t.numb2 as numb2, t.noIndexB as noIndexB
+  FROM bFilter as t;
 
 create table cFilter (
   id int not null primary key
