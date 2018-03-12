@@ -870,7 +870,7 @@ TableRef tableReference(AbstractView v):
 	 } else {
 	    tab = v.getGrain().getScore().getGrain(grainName).getElement(identifierParser.parse(tableName), Table.class);
 	 }
-	 return new TableRef(tab, alias);
+	 return new TableRef(tab, identifierParser.parse(alias));
   }
 }
 
