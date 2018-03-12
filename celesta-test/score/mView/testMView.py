@@ -4,8 +4,8 @@
 from java.sql import Timestamp
 from java.time import LocalDateTime, LocalDate, Month
 from java.time.temporal import ChronoUnit
-from mView._mView_orm import table1Cursor, table2Cursor, table3Cursor, \
-    mView1Cursor, mView2Cursor, mView3Cursor, mView4Cursor
+from mView._mView_orm import table1Cursor, table2Cursor, table3Cursor, table4Cursor, \
+    mView1Cursor, mView2Cursor, mView3Cursor, mView4Cursor, mView5Cursor
 
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
@@ -46,6 +46,28 @@ class TestMaterializedView(CelestaTestCase):
         tableCursor = table2Cursor(self.context)
         mViewCursor = mView3Cursor(self.context)
         self._test_mat_view_delete(tableCursor, mViewCursor)
+
+    def test_mat_view_two_columns(self):
+        tableCursor = table4Cursor(self.context)
+        mViewCursor = mView5Cursor(self.context)
+        self.assertEquals(0, mViewCursor.count())
+        tableCursor.var1 = "A"
+        tableCursor.var2 = "B"
+        tableCursor.numb = 3
+        tableCursor.insert()
+        tableCursor.id = None
+        tableCursor.numb = 2
+        tableCursor.insert()
+        self.assertEquals(1, mViewCursor.count())
+        mViewCursor.get("A", "B")
+        self.assertEquals(5, mViewCursor.s)
+
+        tableCursor.id = None
+        tableCursor.var2 = "C"
+        tableCursor.numb = 4
+        tableCursor.insert()
+        mViewCursor.get("A", "C")
+        self.assertEquals(4, mViewCursor.s)
 
     '''
         Этот тест необходим для гарантии того, что в materialized view останется результат SUM(), даже если он равен 0.
