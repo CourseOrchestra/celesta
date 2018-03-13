@@ -868,7 +868,7 @@ TableRef tableReference(AbstractView v):
      if (grainName == null) {
 	    tab = v.getGrain().getElement(identifierParser.parse(tableName), Table.class);
 	 } else {
-	    tab = v.getGrain().getScore().getGrain(grainName).getElement(identifierParser.parse(tableName), Table.class);
+	    tab = v.getGrain().getScore().getGrainAsDependency(v.getGrain(), grainName).getElement(identifierParser.parse(tableName), Table.class);
 	 }
 	 return new TableRef(tab, identifierParser.parse(alias));
   }
