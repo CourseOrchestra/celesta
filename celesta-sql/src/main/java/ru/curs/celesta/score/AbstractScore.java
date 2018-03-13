@@ -204,6 +204,25 @@ public abstract class AbstractScore {
         return result;
     }
 
+    Grain getGrainAsDependency(Grain currentGrain, String dependencyGrain) throws ParseException {
+        Grain g = grains.get(dependencyGrain);
+
+        if (currentGrain == g)
+            return currentGrain;
+
+        if (g.isModified())
+            parseGrain(dependencyGrain);
+
+        if (!g.isParsingComplete())
+            throw new ParseException(
+                    String.format("Error parsing grain %s "
+                            + "due to previous parsing errors or "
+                            + "cycle reference involving grains '%s' and '%s'.", currentGrain.getName(), dependencyGrain
+                    ));
+
+        return g;
+    }
+
     private ChecksumInputStream parseGrainPart(GrainPart grainPart, ChecksumInputStream cis) throws ParseException {
         File f = grainPart.getSourceFile();
         try (

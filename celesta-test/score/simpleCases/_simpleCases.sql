@@ -23,3 +23,7 @@ create table duplicate(
  id INT NOT NULL PRIMARY KEY,
  val INT
 );
+
+/**This is to test view creation from neighbouring grain*/
+create view tCopyField AS
+  select id from testTable.tCopyFields;
