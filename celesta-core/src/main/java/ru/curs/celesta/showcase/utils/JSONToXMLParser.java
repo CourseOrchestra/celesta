@@ -118,6 +118,7 @@ public class JSONToXMLParser {
 	public String outPrint() throws TransformerException, JSONException,
 			ParserConfigurationException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setNamespaceAware(true);
 		builder = factory.newDocumentBuilder();
 		Document doc = builder.newDocument();
 

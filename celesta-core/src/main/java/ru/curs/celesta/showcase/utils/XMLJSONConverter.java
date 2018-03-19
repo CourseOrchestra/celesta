@@ -80,16 +80,22 @@ public final class XMLJSONConverter {
 			newXml = newXml.replaceFirst("<[?]xml(.)*[?]>", "");
 		}
 
-		while (newXml.contains("&gt;")) {
-			newXml = newXml.replace("&gt;", "&amp;gt;");
+		if (newXml.contains("&gt;")) {
+			while (newXml.contains("&gt;")) {
+				newXml = newXml.replace("&gt;", "&amp;gt;");
+			}
 		}
 
-		while (newXml.contains("&lt;")) {
-			newXml = newXml.replace("&lt;", "&amp;lt;");
+		if (newXml.contains("&lt;")) {
+			while (newXml.contains("&lt;")) {
+				newXml = newXml.replace("&lt;", "&amp;lt;");
+			}
 		}
 
-		while (newXml.contains("&nbsp;")) {
-			newXml = newXml.replace("&nbsp;", "&amp;nbsp;");
+		if (newXml.contains("&nbsp;")) {
+			while (newXml.contains("&nbsp;")) {
+				newXml = newXml.replace("&nbsp;", "&amp;nbsp;");
+			}
 		}
 
 		List<String> innerOfCurColIdList = new ArrayList<String>();
@@ -113,7 +119,8 @@ public final class XMLJSONConverter {
 
 		int j = 0;
 		for (String content : innerOfCurColIdList) {
-			newXml = newXml.replace(content, "innerOfCurColIdList" + j);
+			if (!" ".equals(content))
+				newXml = newXml.replace(content, "innerOfCurColIdList" + j);
 			j++;
 		}
 
@@ -144,14 +151,15 @@ public final class XMLJSONConverter {
 			k++;
 		}
 
-		final String tempRootForResolvingProblem = "tempRootForResolvingProblem";
-		newXml =
-			"<" + tempRootForResolvingProblem + ">" + newXml + "</" + tempRootForResolvingProblem
-					+ ">";
+		newXml = "<tempRootForResolvingProblem>" + newXml + "</tempRootForResolvingProblem>";
+		newXml = newXml.replaceAll("&(?!amp;)", "xxxxxx");
+		
 		InputStream in = stringToStream(newXml);
 		parser.parse(in, handler);
 		JsonElement result = handler.getResult();
 		String str = result.toString();
+		str = str.replace("xxxxxx", "&");
+		
 		int ind = str.indexOf(':');
 		str = str.substring(ind + 1);
 		ind = str.lastIndexOf("}");
@@ -159,7 +167,8 @@ public final class XMLJSONConverter {
 
 		j = 0;
 		for (String content : innerOfCurColIdList) {
-			str = str.replace("innerOfCurColIdList" + j, content);
+			if (!" ".equals(content))
+				str = str.replace("innerOfCurColIdList" + j, content);
 			j++;
 		}
 
@@ -238,9 +247,13 @@ public final class XMLJSONConverter {
 				result = result.replace("\\&quot;", "");
 			}
 		}
-		if (result.contains("&amp;")) {
-			result = result.replace("&amp;", "&");
+		if (result.contains("&amp;#10;")) {
+			result = result.replace("&amp;#10;", "&#10;");
 		}
+		if (result.contains("\"\n ")) {
+			result = result.replace("\"\n ", "\"");
+		}
+		
 		return result;
 	}
 
@@ -304,7 +317,7 @@ public final class XMLJSONConverter {
 	 */
 	public static SAXParser createSAXParser() {
 		SAXParserFactory factory = SAXParserFactory.newInstance();
-		factory.setNamespaceAware(false);
+		factory.setNamespaceAware(true);
 		factory.setValidating(false);
 		SAXParser parser = null;
 		try {
