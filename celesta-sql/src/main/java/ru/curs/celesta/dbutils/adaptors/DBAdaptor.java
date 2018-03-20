@@ -476,8 +476,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
 
   // =========> PUBLIC METHODS <=========
-  public void validateScore(AbstractScore s) throws CelestaException { }
-
   /**
    * Проверка на валидность соединения.
    *

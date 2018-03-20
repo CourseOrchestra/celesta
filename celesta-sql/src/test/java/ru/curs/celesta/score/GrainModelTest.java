@@ -467,7 +467,16 @@ public class GrainModelTest {
 		assertSame(FKRule.NO_ACTION, fk.getUpdateRule());
 		fk.setUpdateRule(FKRule.CASCADE);
 		assertSame(FKRule.CASCADE, fk.getUpdateRule());
+	}
 
+	@Test
+	void testThatUnderscoreIsNotAllowedInGrainName() {
+		assertAll(
+				() -> assertThrows(ParseException.class, () -> new Grain(s, "_")),
+				() -> assertThrows(ParseException.class, () -> new Grain(s, "_foo")),
+				() -> assertThrows(ParseException.class, () -> new Grain(s, "bar_")),
+				() -> assertThrows(ParseException.class, () -> new Grain(s, "foo_bar"))
+		);
 	}
 
 }

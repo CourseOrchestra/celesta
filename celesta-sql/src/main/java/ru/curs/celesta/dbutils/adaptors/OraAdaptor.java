@@ -245,16 +245,6 @@ public final class OraAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void validateScore(AbstractScore s) throws CelestaException {
-    //Character "_" is not allowed in schema names for Oracle
-    boolean hasNotAllowedSchemaNames = s.getGrains().keySet().stream()
-            .anyMatch(n -> n.contains("_"));
-
-    if (hasNotAllowedSchemaNames)
-      throw new CelestaException("Character \"_\" is not allowed in schema names for Oracle.");
-  }
-
-  @Override
   public boolean isValidConnection(Connection conn, int timeout) throws CelestaException {
     try (Statement stmt = conn.createStatement()) {
       ResultSet rs = stmt.executeQuery("SELECT 1 FROM Dual");

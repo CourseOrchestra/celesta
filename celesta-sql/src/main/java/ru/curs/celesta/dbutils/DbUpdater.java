@@ -75,8 +75,6 @@ public abstract class DbUpdater<T extends ICallContext> {
      * @throws CelestaException в случае ошибки обновления.
      */
     public void updateDb() throws CelestaException {
-        dbAdaptor.validateScore(score);
-
         String sysSchemaName = score.getSysSchemaName();
         try (T context = createContext()) {
             updateSystemSchema(context);
