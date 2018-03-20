@@ -987,7 +987,7 @@ public abstract class AbstractAdaptorTest {
         assertTrue(c.reflects(t));
         assertFalse(c.isEmpty());
 
-        dba.dropPK(conn, t, "pk_test");
+        dba.dropPk(conn, t, "pk_test");
         c = dba.getPKInfo(conn, t);
         assertNull(c.getName());
         assertEquals(0, c.getColumnNames().size());

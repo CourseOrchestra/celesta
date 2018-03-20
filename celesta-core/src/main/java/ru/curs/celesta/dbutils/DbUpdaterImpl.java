@@ -72,7 +72,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
 
   @Override
-  void updateSysGrain(CallContext context) throws CelestaException {
+  public void updateSysGrain(CallContext context) throws CelestaException {
     super.updateSysGrain(context);
     initSecurity(context);
   }

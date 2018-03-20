@@ -54,12 +54,7 @@ import ru.curs.celesta.dbutils.stmt.PreparedStatementHolderFactory;
 import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
-import ru.curs.celesta.score.BinaryColumn;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.StringColumn;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.*;
 
 /**
  * Базовый класс курсора для модификации данных в таблицах.
@@ -662,7 +657,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	 *             работы с базой данных.
 	 */
 	public final void resetIdentity(int newValue) throws CelestaException {
-		IntegerColumn ic = DBAdaptor.findIdentityField(meta());
+		IntegerColumn ic = TableElement.findIdentityField(meta());
 		if (ic == null)
 			throw new CelestaException("Cannot reset identity: there is no IDENTITY field defined for table %s.%s.",
 					_grainName(), _tableName());

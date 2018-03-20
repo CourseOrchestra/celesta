@@ -11,6 +11,7 @@ import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
+import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
@@ -39,7 +40,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
         cpc.setPassword(appSettings.getDBPassword());
         ConnectionPool connectionPool = ConnectionPool.create(cpc);
 
-        dba = new PostgresAdaptor(connectionPool);
+        dba = new PostgresAdaptor(connectionPool, new JdbcDdlConsumer());
 
         DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                 .dbAdaptor(dba)

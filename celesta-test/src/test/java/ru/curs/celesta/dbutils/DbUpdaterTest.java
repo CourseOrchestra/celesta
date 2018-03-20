@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.H2Adaptor;
+import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
@@ -65,7 +66,7 @@ public class DbUpdaterTest {
 
         this.connectionPool = ConnectionPool.create(cpc);
 
-        DBAdaptor dba = new H2Adaptor(this.connectionPool, appSettings.isH2ReferentialIntegrity());
+        DBAdaptor dba = new H2Adaptor(this.connectionPool, new JdbcDdlConsumer(), appSettings.isH2ReferentialIntegrity());
 
         DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                 .dbAdaptor(dba)

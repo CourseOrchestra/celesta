@@ -35,12 +35,7 @@ public class SerializerTest {
 		Properties params = new Properties();
 		params.setProperty("score.path", "score");
 		params.setProperty("h2.in-memory", "true");
-
-		try {
-			celesta = Celesta.createInstance(params);
-		} catch (CelestaException e) {
-			// do nothing, Celesta is initialized
-		}
+		celesta = Celesta.createInstance(params);
 	}
 
 	@AfterAll
