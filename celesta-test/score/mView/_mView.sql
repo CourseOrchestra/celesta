@@ -52,3 +52,17 @@ create materialized view mView5 AS
   select var1, var2 as vvv, sum(numb) as s
   from table4
   group by var1, vvv;
+
+CREATE SEQUENCE table5Num;
+
+create table table5 (
+  id int default NEXTVAL(table5Num) not null,
+  f1 decimal(4, 2) not null default 24.01,
+  f2 decimal(5, 4) not null default 1.0001,
+  CONSTRAINT Pk_mView_table5 PRIMARY KEY (id)
+);
+
+CREATE materialized view mView6 AS
+  select f1, sum(f1) as s1, sum(f2) as s2
+  from table5
+  group by f1;

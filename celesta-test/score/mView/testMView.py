@@ -2,10 +2,11 @@
 
 
 from java.sql import Timestamp
+from java.math import BigDecimal
 from java.time import LocalDateTime, LocalDate, Month
 from java.time.temporal import ChronoUnit
-from mView._mView_orm import table1Cursor, table2Cursor, table3Cursor, table4Cursor, \
-    mView1Cursor, mView2Cursor, mView3Cursor, mView4Cursor, mView5Cursor
+from mView._mView_orm import table1Cursor, table2Cursor, table3Cursor, table4Cursor, table5Cursor,\
+    mView1Cursor, mView2Cursor, mView3Cursor, mView4Cursor, mView5Cursor, mView6Cursor
 
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
@@ -155,6 +156,25 @@ class TestMaterializedView(CelestaTestCase):
 
         mViewCursor.get(Timestamp.valueOf(date2))
         self.assertEquals(5, mViewCursor.s)
+
+    def testSumOfDecimal(self):
+        t = table5Cursor(self.context)
+        mv = mView6Cursor(self.context)
+
+        t.insert()
+        t.insert()
+        t.f1 = BigDecimal('24.02')
+        t.insert()
+
+        mv.first()
+        self.assertEquals(BigDecimal('24.01'), mv.f1)
+        self.assertEquals(BigDecimal('48.02'), mv.s1)
+        self.assertEquals(BigDecimal('2.0002'), mv.s2)
+
+        mv.next()
+        self.assertEquals(BigDecimal('24.02'), mv.f1)
+        self.assertEquals(BigDecimal('24.02'), mv.s1)
+        self.assertEquals(BigDecimal('1.0001'), mv.s2)
 
     def _test_mat_view_insert(self, tableCursor, mViewCursor):
         tableCursor.deleteAll()

@@ -186,8 +186,11 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
               }
           }
           result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
-          if (result.getType() == StringColumn.class) {
+          if (result.getType() == StringColumn.class || result.getType() == DecimalColumn.class) {
             result.setLength(rs.getInt("COLUMN_SIZE"));
+          }
+          if (result.getType() == DecimalColumn.class) {
+            result.setScale(rs.getInt("DECIMAL_DIGITS"));
           }
           String defaultBody = rs.getString("COLUMN_DEF");
           if (defaultBody != null) {

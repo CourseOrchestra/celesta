@@ -181,27 +181,41 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                     "%s(%s)",
                     ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType(), sc.getLength()
             );
+        } else if (c.getClass() == DecimalColumn.class) {
+            DecimalColumn dc = (DecimalColumn) c;
+            colType = String.format(
+                    "%s(%s,%s)",
+                    ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType(),
+                    dc.getPrecision(), dc.getScale()
+            );
         } else {
             colType = ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType();
         }
+
+        StringBuilder alterSql = new StringBuilder(
+                String.format(
+                        ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                                + " ALTER COLUMN \"%s\" TYPE %s", c.getName(), colType
+                )
+        );
+
         // Если тип не совпадает
         if (c.getClass() != actual.getType()) {
-            sql = String.format(
-                    ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                            + " ALTER COLUMN \"%s\" TYPE %s", c.getName(), colType);
             if (c.getClass() == IntegerColumn.class)
-                sql += String.format(" USING (%s::integer);", c.getQuotedName());
+                alterSql.append(String.format(" USING (%s::integer);", c.getQuotedName()));
             else if (c.getClass() == BooleanColumn.class)
-                sql += String.format(" USING (%s::boolean);", c.getQuotedName());
+                alterSql.append(String.format(" USING (%s::boolean);", c.getQuotedName()));
 
-            sqlList.add(sql);
+            sqlList.add(alterSql.toString());
         } else if (c.getClass() == StringColumn.class) {
             StringColumn sc = (StringColumn) c;
             if (sc.isMax() != actual.isMax() || sc.getLength() != actual.getLength()) {
-                sql = String.format(
-                        ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                                + " ALTER COLUMN \"%s\" TYPE %s", c.getName(), colType);
-                sqlList.add(sql);
+                sqlList.add(alterSql.toString());
+            }
+        } else if (c.getClass() == DecimalColumn.class) {
+            DecimalColumn dc = (DecimalColumn)c;
+            if (dc.getPrecision() != actual.getLength() || dc.getScale() != dc.getScale()) {
+                sqlList.add(alterSql.toString());
             }
         }
     }
@@ -289,7 +303,8 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                 .map(e -> {
                             StringBuilder sb = new StringBuilder(e.getKey()).append(" ");
 
-                            if (pv.getAggregateColumns().containsKey(e.getKey()))
+                            if (pv.getAggregateColumns().containsKey(e.getKey())
+                                    && e.getValue().getColumnType() != ViewColumnType.DECIMAL)
                                 sb.append("bigint");
                             else
                                 sb.append(ColumnDefinerFactory.getColumnDefiner(getType(),

@@ -468,6 +468,12 @@ public final class DBSchema2Celesta {
             FloatingColumn fc = new FloatingColumn(t, columnName);
             fc.setNullableAndDefault(isNullable, defaultVal);
             fc.setCelestaDoc(celestaDoc);
+        } else if (DecimalColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
+            int precision = Integer.parseInt(column.getAttribute("precision"));
+            int scale = Integer.parseInt(column.getAttribute("scale"));
+            DecimalColumn dc = new DecimalColumn(t, columnName, precision, scale);
+            dc.setNullableAndDefault(isNullable, defaultVal);
+            dc.setCelestaDoc(celestaDoc);
         } else if (IntegerColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
             IntegerColumn ic = new IntegerColumn(t, columnName);
             if ("y".equals(column.getAttribute("autoincrement"))) {

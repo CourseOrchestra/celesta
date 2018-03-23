@@ -149,6 +149,7 @@ TOKEN: /* Datatypes */
 {
    <K_INT:       "INT">
 |  <K_REAL:      "REAL">
+|  <K_DECIMAL:   "DECIMAL">
 |  <K_VARCHAR:   "VARCHAR">
 |  <K_BLOB:      "BLOB">
 |  <K_DATETIME:  "DATETIME">
@@ -323,6 +324,8 @@ void columnDefinition(Table table):
    Token doc = null;
    SequenceElement sequence = null;
    String defaultValue = null;
+   Token precision = null;
+   Token scale = null;
 }
 {
  [doc = <CELESTA_DOC>]
@@ -339,6 +342,15 @@ void columnDefinition(Table table):
     |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;}
 	       nullable = nullable()
 		  [<K_DEFAULT> ["-" {negative = true;}] (t = <S_INTEGER> | t = <S_DOUBLE>) {defaultValue = (negative? "-": "") + t.toString();}])
+    |  (<K_DECIMAL> ("(" precision = <S_INTEGER> "," scale = <S_INTEGER> ")")
+          {
+            column = new DecimalColumn(
+                table, t.toString(), Integer.parseInt(precision.toString()), Integer.parseInt(scale.toString())
+            );
+            t = null;
+          }
+          nullable = nullable()
+          [<K_DEFAULT> ["-" {negative = true;}] (t = <S_DOUBLE>) {defaultValue = (negative? "-": "") + t.toString();}])
     |  (<K_VARCHAR> {column = new StringColumn(table, t.toString()); t = null; }
 	          ["("  (length = <S_INTEGER> /* | length = <K_MAX>*/) ")"]
 			  {((StringColumn) column).setLength(length.toString());}
@@ -623,6 +635,7 @@ void functionParam(ParameterizedView view):
    t = <S_IDENTIFIER> {name = t.toString();}
     (  (<K_INT>       {p = new Parameter(name, ViewColumnType.INT);  })
     |  (<K_REAL>      {p = new Parameter(name, ViewColumnType.REAL); })
+    |  (<K_DECIMAL>   {p = new Parameter(name, ViewColumnType.DECIMAL); })
     |  (<K_VARCHAR>   {p = new Parameter(name, ViewColumnType.TEXT); })
     |  (<K_TEXT>      {p = new Parameter(name, ViewColumnType.TEXT); })
     |  (<K_DATETIME>  {p = new Parameter(name, ViewColumnType.DATE); })

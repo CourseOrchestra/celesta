@@ -13,7 +13,9 @@ f7 varchar(8),
 f8 datetime default '20130401',
 f9 datetime not null default getdate(),
 f10 blob default 0xFFAAFFAAFF,
-f11 blob not null
+f11 blob not null,
+f12 decimal(11, 7),
+f13 decimal(5, 3) not null default 46.123
 );
 
 create index idxTest on test (f1);
@@ -51,13 +53,14 @@ create table tableForMatView (
   f2 int not null default 3,
   f3 bit not null,
   f4 real not null,
-  f5 datetime not null
+  f5 datetime not null,
+  f6 decimal(2, 1) not null
 );
 
 create materialized view mView1gTest as
-  select sum(id) as idsum, f1, f2, f3, f4, f5
+  select sum(id) as idsum, f1, f2, f3, f4, f5, f6
   from tableForMatView
-  group by f1, f2, f3, f4, f5;
+  group by f1, f2, f3, f4, f5, f6;
 
 create table tableForInitMvData (
   id int identity not null primary key,

@@ -59,6 +59,30 @@ class H2FloatingColumnDefiner extends ColumnDefiner {
     }
 }
 
+class H2DecimalColumnDefiner extends ColumnDefiner {
+    @Override
+    public String dbFieldType() {
+        return "DECIMAL";
+    }
+
+    @Override
+    public String getMainDefinition(Column c) {
+        DecimalColumn dc = (DecimalColumn)c;
+        String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
+        return join(c.getQuotedName(), fieldType, nullable(c));
+    }
+
+    @Override
+    public String getDefaultDefinition(Column c) {
+        DecimalColumn dc = (DecimalColumn)c;
+        String defaultStr = "";
+        if (dc.getDefaultValue() != null) {
+            defaultStr = DEFAULT + dc.getDefaultValue();
+        }
+        return defaultStr;
+    }
+}
+
 class H2BooleanColumnDefiner extends ColumnDefiner {
     @Override
     public String dbFieldType() {

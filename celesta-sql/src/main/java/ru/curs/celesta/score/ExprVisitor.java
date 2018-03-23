@@ -199,8 +199,8 @@ final class TypeChecker extends ExprVisitor {
   void visitRelop(Relop expr) throws ParseException {
     final ViewColumnType t = expr.getLeft().getMeta().getColumnType();
     // Сравнивать можно не все типы.
-    if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.INT
-        || t == ViewColumnType.TEXT) {
+    if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.DECIMAL
+            || t == ViewColumnType.INT || t == ViewColumnType.TEXT) {
       // сравнивать можно только однотипные термы
       expr.getRight().assertType(t);
       // при этом like действует только на строковых термах

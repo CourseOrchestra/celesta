@@ -56,6 +56,30 @@ class PostgresFloatingColumnDefiner extends ColumnDefiner {
     }
 }
 
+class PostgresDecimalColumnDefiner extends ColumnDefiner {
+    @Override
+    public String dbFieldType() {
+        return "numeric";
+    }
+
+    @Override
+    public String getMainDefinition(Column c) {
+        DecimalColumn dc = (DecimalColumn)c;
+        String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
+        return join(c.getQuotedName(), fieldType, nullable(c));
+    }
+
+    @Override
+    public String getDefaultDefinition(Column c) {
+        DecimalColumn dc = (DecimalColumn) c;
+        String defaultStr = "";
+        if (dc.getDefaultValue() != null) {
+            defaultStr = DEFAULT + dc.getDefaultValue();
+        }
+        return defaultStr;
+    }
+}
+
 class PostgresBooleanColumnDefiner extends ColumnDefiner {
     @Override
     public String dbFieldType() {

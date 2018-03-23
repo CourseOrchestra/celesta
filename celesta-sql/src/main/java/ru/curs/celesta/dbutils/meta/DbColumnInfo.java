@@ -2,6 +2,7 @@ package ru.curs.celesta.dbutils.meta;
 
 import ru.curs.celesta.score.*;
 
+import java.math.BigDecimal;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,6 +15,7 @@ public final class DbColumnInfo {
 	private boolean isNullable;
 	private String defaultValue = "";
 	private int length;
+	private int scale;
 	private boolean isMax;
 	private boolean isIdentity;
 
@@ -65,6 +67,14 @@ public final class DbColumnInfo {
 		this.length = length;
 	}
 
+	public int getScale() {
+		return scale;
+	}
+
+	public void setScale(int scale) {
+		this.scale = scale;
+	}
+
 	public void setMax(boolean isMax) {
 		this.isMax = isMax;
 	}
@@ -93,6 +103,12 @@ public final class DbColumnInfo {
 			// Если параметры длин не совпали -- не проверяем
 			StringColumn col = (StringColumn) value;
 			if (!(isMax ? col.isMax() : length == col.getLength()))
+				return false;
+		}
+
+		if (this.type == DecimalColumn.class) {
+			DecimalColumn dc = (DecimalColumn)value;
+			if (dc.getPrecision() != this.length || dc.getScale() != this.scale)
 				return false;
 		}
 
@@ -135,6 +151,9 @@ public final class DbColumnInfo {
 				result = false;
 		} else if (type == FloatingColumn.class) {
 			result = Double.valueOf(defaultValue).equals(value.getDefaultValue());
+		} else if (type == DecimalColumn.class) {
+			DecimalColumn dc = (DecimalColumn)value;
+			result = new BigDecimal(defaultValue).equals(dc.getDefaultValue());
 		} else if (type == DateTimeColumn.class) {
 			if ("GETDATE()".equalsIgnoreCase(defaultValue))
 				result = ((DateTimeColumn) value).isGetdate();

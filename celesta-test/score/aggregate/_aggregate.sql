@@ -1,4 +1,4 @@
-create grain aggregate version '1.0';
+create grain aggregate version '1.1';
 
 create table countConditionLess (
   id int identity not null primary key,
@@ -71,3 +71,17 @@ create view viewGroupByAggregate as
 
 create view viewGroupBy as
   select name, cost from tableGroupBy group by name, cost;
+
+
+CREATE SEQUENCE tWithDecimalNum;
+
+create table tWithDecimal (
+  id int default NEXTVAL(tWithDecimalNum) not null,
+  f1 decimal(4, 2) not null default 24.01,
+  f2 decimal(5, 4) not null default 1.0001,
+  CONSTRAINT Pk_aggregate_tWithDecimal PRIMARY KEY (id)
+);
+
+
+create view viewWithDecimal as
+  select sum(f1) as f1, sum(f2) as f2, sum(f1 + f2) as f12 from tWithDecimal;

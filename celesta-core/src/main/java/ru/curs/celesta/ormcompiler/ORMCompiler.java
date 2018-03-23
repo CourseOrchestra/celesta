@@ -43,7 +43,9 @@ public final class ORMCompiler {
             "import ru.curs.celesta.dbutils.Sequence as Sequence",
             "from java.lang import Object",
             "from jarray import array", "from java.util import Calendar, GregorianCalendar, HashSet, HashMap",
-            "from java.sql import Timestamp", "import datetime", "", "def _to_timestamp(d):",
+            "from java.sql import Timestamp",
+            "from java.math import BigDecimal",
+            "import datetime", "", "def _to_timestamp(d):",
             "    if isinstance(d, datetime.datetime):", "        calendar = GregorianCalendar()",
             "        calendar.set(d.year, d.month - 1, d.day, d.hour, d.minute, d.second)",
             "        ts = Timestamp(calendar.getTimeInMillis())", "        ts.setNanos(d.microsecond * 1000)",
@@ -455,6 +457,8 @@ public final class ORMCompiler {
             sb.append(String.format("None if self.%s == None else int(self.%s)", c.getKey(), c.getKey()));
         else if (c.getValue().getColumnType() == ViewColumnType.REAL)
             sb.append(String.format("None if self.%s == None else float(self.%s)", c.getKey(), c.getKey()));
+        else if (c.getValue().getColumnType() == ViewColumnType.DECIMAL)
+            sb.append(String.format("None if self.%s == None else BigDecimal(self.%s)", c.getKey(), c.getKey()));
         else if (c.getValue().getColumnType() == ViewColumnType.TEXT)
             sb.append(String.format("None if self.%s == None else unicode(self.%s)", c.getKey(), c.getKey()));
         else {

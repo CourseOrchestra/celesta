@@ -51,3 +51,12 @@ create table tLimit (
   id int default NEXTVAL(tLimitNum) not null,
   CONSTRAINT Pk_testTable_tLimit PRIMARY KEY (id)
 );
+
+
+CREATE SEQUENCE tWithDecimalNum;
+
+create table tWithDecimal (
+  id int default NEXTVAL(tWithDecimalNum) not null,
+  cost decimal(4, 2) default 5.2,
+  CONSTRAINT Pk_testTable_tWithDecimal PRIMARY KEY (id)
+);

@@ -37,6 +37,7 @@ public final class ColumnDefinerFactory {
 
         H2_METHODS.put(IntegerColumn.class, H2IntegerColumnDefiner::new);
         H2_METHODS.put(FloatingColumn.class, H2FloatingColumnDefiner::new);
+        H2_METHODS.put(DecimalColumn.class, H2DecimalColumnDefiner::new);
         H2_METHODS.put(BooleanColumn.class, H2BooleanColumnDefiner::new);
         H2_METHODS.put(StringColumn.class, H2StringColumnDefiner::new);
         H2_METHODS.put(BinaryColumn.class, H2BinaryColumnDefiner::new);
@@ -44,6 +45,7 @@ public final class ColumnDefinerFactory {
 
         POSTGRES_METHODS.put(IntegerColumn.class, PostgresIntegerColumnDefiner::new);
         POSTGRES_METHODS.put(FloatingColumn.class, PostgresFloatingColumnDefiner::new);
+        POSTGRES_METHODS.put(DecimalColumn.class, PostgresDecimalColumnDefiner::new);
         POSTGRES_METHODS.put(BooleanColumn.class, PostgresBooleanColumnDefiner::new);
         POSTGRES_METHODS.put(StringColumn.class, PostgresStringColumnDefiner::new);
         POSTGRES_METHODS.put(BinaryColumn.class, PostgresBinaryColumnDefiner::new);
@@ -51,6 +53,7 @@ public final class ColumnDefinerFactory {
 
         MS_SQL_METHODS.put(IntegerColumn.class, MsSqlIntegerColumnDefiner::new);
         MS_SQL_METHODS.put(FloatingColumn.class, MsSqlFloatingColumnDefiner::new);
+        MS_SQL_METHODS.put(DecimalColumn.class, MsSqlDecimalColumnDefiner::new);
         MS_SQL_METHODS.put(BooleanColumn.class, MsSqlBooleanColumnDefiner::new);
         MS_SQL_METHODS.put(StringColumn.class, MsSqlStringColumnDefiner::new);
         MS_SQL_METHODS.put(BinaryColumn.class, MsSqlBinaryColumnDefiner::new);
@@ -58,6 +61,7 @@ public final class ColumnDefinerFactory {
 
         ORA_METHODS.put(IntegerColumn.class, OraIntegerColumnDefiner::new);
         ORA_METHODS.put(FloatingColumn.class, OraFloatingColumnDefiner::new);
+        ORA_METHODS.put(DecimalColumn.class, OraDecimalColumnDefiner::new);
         ORA_METHODS.put(BooleanColumn.class, OraBooleanColumnDefiner::new);
         ORA_METHODS.put(StringColumn.class, OraStringColumnDefiner::new);
         ORA_METHODS.put(BinaryColumn.class, OraBinaryColumnDefiner::new);

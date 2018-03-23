@@ -5,6 +5,7 @@ import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.filter.Range;
 import ru.curs.celesta.dbutils.filter.SingleValue;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -25,6 +26,8 @@ public abstract class ParameterSetter {
 				stmt.setInt(i, (Integer) v);
 			else if (v instanceof Double)
 				stmt.setDouble(i, (Double) v);
+			else if (v instanceof BigDecimal)
+				stmt.setBigDecimal(i, (BigDecimal)v);
 			else if (v instanceof String)
 				stmt.setString(i, (String) v);
 			else if (v instanceof Boolean)

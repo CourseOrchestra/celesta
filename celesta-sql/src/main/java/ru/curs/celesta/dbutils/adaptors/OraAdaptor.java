@@ -362,7 +362,7 @@ public final class OraAdaptor extends DBAdaptor {
       String tableName = String.format("%s_%s", c.getParentTable().getGrain().getName(),
           c.getParentTable().getName());
       String sql = String.format(
-          "SELECT COLUMN_NAME, DATA_TYPE, NULLABLE, CHAR_LENGTH "
+          "SELECT COLUMN_NAME, DATA_TYPE, NULLABLE, CHAR_LENGTH, DATA_PRECISION, DATA_SCALE "
               + "FROM user_tab_cols	WHERE table_name = '%s' and COLUMN_NAME = '%s'",
           tableName, c.getName());
       // System.out.println(sql);
@@ -382,6 +382,11 @@ public final class OraAdaptor extends DBAdaptor {
           } else if ("nclob".equalsIgnoreCase(typeName)) {
             result.setType(StringColumn.class);
             result.setMax(true);
+          } else if ("number".equalsIgnoreCase(typeName)
+                  && rs.getInt("DATA_PRECISION") != 0 && rs.getInt("DATA_SCALE") != 0) {
+            result.setType(DecimalColumn.class);
+            result.setLength(rs.getInt("DATA_PRECISION"));
+            result.setScale(rs.getInt("DATA_SCALE"));
           } else {
             for (Class<? extends Column> cc : COLUMN_CLASSES)
               if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(typeName)) {
@@ -406,7 +411,6 @@ public final class OraAdaptor extends DBAdaptor {
           if (result.getType() == StringColumn.class) {
             result.setLength(rs.getInt("CHAR_LENGTH"));
           }
-
         } else {
           return null;
         }

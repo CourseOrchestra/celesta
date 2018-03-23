@@ -26,6 +26,8 @@ public abstract class AbstractView extends DataGrainElement {
     });
     EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Sum.class, (Expr sumExpr) -> {
       Sum sum = (Sum) sumExpr;
+      if (sum.term instanceof BinaryTermOp)
+        return null;
       FieldRef fr = (FieldRef) sum.term;
       return fr.getColumn();
     });

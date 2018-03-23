@@ -12,8 +12,9 @@ public abstract class Expr {
 	final void assertType(ViewColumnType t) throws ParseException {
 		// INT and REAL are both numeric types, so they are comparable
 		final ViewColumnType columnType = getMeta().getColumnType();
-		if (t == ViewColumnType.INT || t == ViewColumnType.REAL) {
-			if (!(columnType == ViewColumnType.INT || columnType == ViewColumnType.REAL))
+		if (t == ViewColumnType.INT || t == ViewColumnType.REAL || t == ViewColumnType.DECIMAL) {
+			if (!(columnType == ViewColumnType.INT || columnType == ViewColumnType.REAL
+					|| columnType == ViewColumnType.DECIMAL))
 				throw new ParseException(
 						String.format("Expression '%s' is expected to be of numeric type, but it is %s", getCSQL(),
 								getMeta().toString()));
@@ -467,6 +468,10 @@ final class BinaryTermOp extends Expr {
 						meta = new ViewColumnMeta(ViewColumnType.REAL);
 						break cases;
 					}
+					if (o.getMeta().getColumnType() == ViewColumnType.DECIMAL) {
+						meta = new ViewColumnMeta(ViewColumnType.DECIMAL);
+						break cases;
+					}
 				}
 				meta = new ViewColumnMeta(ViewColumnType.INT);
 				break;
@@ -694,6 +699,8 @@ final class FieldRef extends Expr {
 					meta = new ViewColumnMeta(ViewColumnType.INT);
 				else if (column instanceof FloatingColumn)
 					meta = new ViewColumnMeta(ViewColumnType.REAL);
+				else if (column instanceof DecimalColumn)
+					meta = new ViewColumnMeta(ViewColumnType.DECIMAL);
 				else if (column instanceof StringColumn) {
 					StringColumn sc = (StringColumn) column;
 					if (sc.isMax())
