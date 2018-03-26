@@ -2,13 +2,15 @@
 
 from java.sql import Timestamp
 from java.time import LocalDateTime
+from java.math import BigDecimal
 
 from aggregate._aggregate_orm import countConditionLessCursor, countGetDateCondCursor\
     , viewCountCondLessCursor, viewCountGetDateCondCursor, tableSumOneFieldCursor\
     , viewSumOneFieldCursor, sumFieldAndNumberCursor, viewSumTwoNumbersCursor\
     , tableSumTwoFieldsCursor, viewSumTwoFieldsCursor, tableMinMaxCursor\
     , viewMinOneFieldCursor, viewMaxOneFieldCursor, viewMinTwoFieldsCursor, viewMaxTwoFieldsCursor\
-    , tableGroupByCursor, viewGroupByAggregateCursor, viewGroupByCursor, viewCountMinMaxCursor
+    , tableGroupByCursor, viewGroupByAggregateCursor, viewGroupByCursor, viewCountMinMaxCursor\
+    , tWithDecimalCursor, viewWithDecimalCursor
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
 
@@ -212,3 +214,16 @@ class TestAggregate(CelestaTestCase):
         viewAggregateCursor.next()
         self.assertEquals(name2, viewAggregateCursor.name)
         self.assertEquals(50, viewAggregateCursor.s)
+
+    def testSumOfDecimal(self):
+        t = tWithDecimalCursor(self.context)
+        v = viewWithDecimalCursor(self.context)
+
+        t.insert()
+        t.insert()
+
+        v.first()
+
+        self.assertEquals(BigDecimal('48.02'), v.f1.stripTrailingZeros())
+        self.assertEquals(BigDecimal('2.0002'), v.f2.stripTrailingZeros())
+        self.assertEquals(BigDecimal('50.0202'), v.f12.stripTrailingZeros())

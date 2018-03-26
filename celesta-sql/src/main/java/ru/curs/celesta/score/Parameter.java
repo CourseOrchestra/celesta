@@ -2,6 +2,7 @@ package ru.curs.celesta.score;
 
 import ru.curs.celesta.score.validator.PlainIdentifierParser;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
@@ -28,6 +29,7 @@ public class Parameter extends NamedElement {
       case DATE: return Timestamp.class;
       case TEXT: return String.class;
       case REAL: return Double.class;
+      case DECIMAL: return BigDecimal.class;
       case INT:  return Integer.class;
       default:
         throw new RuntimeException("Type is not defined or incorrect");

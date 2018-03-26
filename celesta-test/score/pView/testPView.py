@@ -1,6 +1,8 @@
 # coding=UTF-8
 
-from pView._pView_orm import t1Cursor, t2Cursor, pView1Cursor, pView2Cursor, pView3Cursor
+from java.math import BigDecimal
+
+from pView._pView_orm import t1Cursor, t2Cursor, t3Cursor, pView1Cursor, pView2Cursor, pView3Cursor, pView4Cursor
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
 
@@ -170,3 +172,24 @@ class TestParameterizedView(CelestaTestCase):
         self.assertEquals(1, pvCursor.count())
         pvCursor.first()
         self.assertEquals(4, pvCursor.c)
+
+    def testSumOfDecimal(self):
+        t = t3Cursor(self.context)
+
+        t.insert()
+        t.f2 = BigDecimal('0.0001')
+        t.insert()
+
+        pv = pView4Cursor(self.context, BigDecimal('1.00001'))
+        pv.first()
+
+        self.assertEquals(BigDecimal('24.01'), pv.f1.stripTrailingZeros())
+        self.assertEquals(BigDecimal('1.0001'), pv.f2.stripTrailingZeros())
+        self.assertEquals(BigDecimal('25.0101'), pv.f12.stripTrailingZeros())
+
+        pv = pView4Cursor(self.context, BigDecimal('0.00001'))
+        pv.first()
+
+        self.assertEquals(BigDecimal('48.02'), pv.f1.stripTrailingZeros())
+        self.assertEquals(BigDecimal('1.0002'), pv.f2.stripTrailingZeros())
+        self.assertEquals(BigDecimal('49.0202'), pv.f12.stripTrailingZeros())

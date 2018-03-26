@@ -35,6 +35,20 @@ public enum ViewColumnType {
 
 	},
 	/**
+	 * Числовое значение с дробной частью с фиксированной точкой
+	 */
+	DECIMAL {
+		@Override
+		public String jdbcGetterName() {
+			return "getBigDecimal";
+		}
+
+		@Override
+		public String getCelestaType() {
+			return DecimalColumn.CELESTA_TYPE;
+		}
+	},
+	/**
 	 * Целочисленное значение.
 	 */
 	INT {

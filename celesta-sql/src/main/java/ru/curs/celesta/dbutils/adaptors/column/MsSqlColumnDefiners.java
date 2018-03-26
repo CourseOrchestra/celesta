@@ -70,6 +70,40 @@ class MsSqlFloatingColumnDefiner extends MsSqlColumnDefiner {
     }
 }
 
+class MsSqlDecimalColumnDefiner extends MsSqlColumnDefiner {
+    @Override
+    public String dbFieldType() {
+        return "decimal";
+    }
+
+    @Override
+    public String getMainDefinition(Column c) {
+        DecimalColumn dc = (DecimalColumn)c;
+        String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
+        return join(c.getQuotedName(), fieldType, nullable(c));
+    }
+
+    @Override
+    public String getDefaultDefinition(Column c) {
+        DecimalColumn dc = (DecimalColumn)c;
+        String defaultStr = "";
+        if (dc.getDefaultValue() != null) {
+            defaultStr = msSQLDefault(c) + dc.getDefaultValue();
+        }
+        return defaultStr;
+    }
+
+    @Override
+    public String getLightDefaultDefinition(Column c) {
+        DecimalColumn dc = (DecimalColumn) c;
+        String defaultStr = "";
+        if (dc.getDefaultValue() != null) {
+            defaultStr = DEFAULT + dc.getDefaultValue();
+        }
+        return defaultStr;
+    }
+}
+
 class MsSqlStringColumnDefiner extends MsSqlColumnDefiner {
     @Override
     public String dbFieldType() {

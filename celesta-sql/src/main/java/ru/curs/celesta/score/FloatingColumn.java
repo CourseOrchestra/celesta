@@ -13,7 +13,7 @@ public final class FloatingColumn extends Column {
 	 */
 	public static final String CELESTA_TYPE = "REAL";
 
-	private Double defaultvalue;
+	private Double defaultValue;
 
 	public FloatingColumn(TableElement table, String name) throws ParseException {
 		super(table, name);
@@ -21,12 +21,12 @@ public final class FloatingColumn extends Column {
 
 	@Override
 	protected void setDefault(String lexvalue) {
-		defaultvalue = (lexvalue == null) ? null : Double.parseDouble(lexvalue);
+		defaultValue = (lexvalue == null) ? null : Double.parseDouble(lexvalue);
 	}
 
 	@Override
 	public Double getDefaultValue() {
-		return defaultvalue;
+		return defaultValue;
 	}
 
 	@Override
@@ -54,7 +54,7 @@ public final class FloatingColumn extends Column {
 
 	@Override
 	public String getCelestaDefault() {
-		return defaultvalue == null ? null : defaultvalue.toString();
+		return defaultValue == null ? null : defaultValue.toString();
 	}
 
 }

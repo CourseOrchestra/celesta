@@ -1,12 +1,14 @@
 # coding=UTF-8
 
 from _testTable_orm import tBlobCursor, tXRecCursor, tCsvLineCursor, tIterateCursor, \
-    tCopyFieldsCursor, tLimitCursor
+    tCopyFieldsCursor, tLimitCursor, tWithDecimalCursor
 
+from ru.curs.celesta import CelestaException
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
 from java.sql import Timestamp
 from java.time import LocalDateTime, Month
+from java.math import BigDecimal
 
 import java.io.OutputStreamWriter as OutputStreamWriter
 import java.io.InputStreamReader as InputStreamReader
@@ -176,6 +178,23 @@ class TestTable(CelestaTestCase):
         for cursor in cursor.iterate():
             idList.append(cursor.id)
         self.assertEquals(0, idList.__len__())
+
+    def test_decimal(self):
+        c = tWithDecimalCursor(self.context)
+
+        c.insert()
+        c.first()
+        self.assertEquals(BigDecimal('5.2'), c.cost.stripTrailingZeros())
+
+        c.cost = BigDecimal('5.289')
+        c.update()
+        c.first()
+        self.assertEquals(BigDecimal('5.29'), c.cost.stripTrailingZeros())
+
+        c.cost = BigDecimal('123.2')
+        update = lambda : c.update()
+        self.assertThrows(CelestaException, update)
+
 
     def _assertXRecCursorFields(self, cursor, id, num, cost, title, isActive, created):
         self.assertEquals(id, cursor.id)

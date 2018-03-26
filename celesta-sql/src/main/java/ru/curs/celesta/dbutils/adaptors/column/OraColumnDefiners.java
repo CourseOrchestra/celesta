@@ -52,6 +52,30 @@ class OraFloatingColumnDefiner extends OraColumnDefiner {
     }
 }
 
+class OraDecimalColumnDefiner extends OraColumnDefiner {
+    @Override
+    public String dbFieldType() {
+        return "NUMBER";
+    }
+
+    @Override
+    public String getInternalDefinition(Column c) {
+        DecimalColumn dc = (DecimalColumn)c;
+        String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
+        return join(c.getQuotedName(), fieldType);
+    }
+
+    @Override
+    public String getDefaultDefinition(Column c) {
+        DecimalColumn dc = (DecimalColumn)c;
+        String defaultStr = "";
+        if (dc.getDefaultValue() != null) {
+            defaultStr = DEFAULT + dc.getDefaultValue();
+        }
+        return defaultStr;
+    }
+}
+
 class OraStringColumnDefiner extends OraColumnDefiner {
     @Override
     public String dbFieldType() {

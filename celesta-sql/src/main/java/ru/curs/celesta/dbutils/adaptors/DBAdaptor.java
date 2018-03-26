@@ -86,8 +86,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * then -- private methods
    */
 
-  static final List<Class<? extends Column>> COLUMN_CLASSES = Arrays.asList(IntegerColumn.class, StringColumn.class, BooleanColumn.class,
-      FloatingColumn.class, BinaryColumn.class, DateTimeColumn.class);
+  static final List<Class<? extends Column>> COLUMN_CLASSES = Arrays.asList(IntegerColumn.class, StringColumn.class,
+          BooleanColumn.class, FloatingColumn.class, DecimalColumn.class, BinaryColumn.class, DateTimeColumn.class);
   static final String COLUMN_NAME = "COLUMN_NAME";
 
   protected final ConnectionPool connectionPool;
@@ -214,13 +214,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     return sqlfrom + sqlwhere + " order by " + orderBy;
   }
-
-  //TODO:Must be defined in single place
-  final String columnDef(Column c) {
-    return ColumnDefinerFactory
-            .getColumnDefiner(getType(), c.getClass())
-            .getFullDefinition(c);
-  }
   // =========> END PACKAGE-PRIVATE FINAL METHODS <=========
 
 
@@ -233,11 +226,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   //TODO: Javadoc
   String prepareRowColumnForSelectStaticStrings(String value, String colName) {
     return "? as " + colName;
-  }
-
-  //TODO: Javadoc
-  <T extends Column> ColumnDefiner getColumnDefiner(T c) {
-    return getColumnDefiner(c.getClass());
   }
 
   ColumnDefiner getColumnDefiner(Class<? extends Column> c) {

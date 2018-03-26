@@ -5,6 +5,7 @@ import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 
 
+import ru.curs.celesta.dbutils.adaptors.column.ColumnDefiner;
 import ru.curs.celesta.dbutils.adaptors.column.ColumnDefinerFactory;
 import ru.curs.celesta.dbutils.adaptors.column.OraColumnDefiner;
 import ru.curs.celesta.dbutils.jdbc.SqlUtils;
@@ -18,6 +19,7 @@ import ru.curs.celesta.score.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -289,6 +291,8 @@ public class OraDdlGenerator extends DdlGenerator {
     List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) throws CelestaException {
         List<String> result = new ArrayList<>();
 
+        final String tableFullName = tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName());
+
         TableElement t = c.getParentTable();
         String triggerName = getUpdTriggerName(t);
         TriggerQuery query = new TriggerQuery()
@@ -305,7 +309,7 @@ public class OraDdlGenerator extends DdlGenerator {
         if (actual.getType() == BooleanColumn.class && !(c instanceof BooleanColumn)) {
             // Тип Boolean меняется на что-то другое, надо сбросить constraint
             String sql = String.format(
-                    ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                    ALTER_TABLE + tableFullName
                             + " drop constraint %s", getBooleanCheckName(c)
             );
             result.add(sql);
@@ -313,10 +317,7 @@ public class OraDdlGenerator extends DdlGenerator {
 
         OraColumnDefiner definer = (OraColumnDefiner) ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass());
 
-        // В Oracle нельзя снять default, можно только установить его в Null
-        String defdef = definer.getDefaultDefinition(c);
-        if ("".equals(defdef) && !"".equals(actual.getDefaultValue()))
-            defdef = "default null";
+        String defdef = defaultDefForAlter(c, definer, actual);
 
         // В Oracle, если меняешь blob-поле, то в alter table не надо
         // указывать его тип (будет ошибка).
@@ -338,40 +339,36 @@ public class OraDdlGenerator extends DdlGenerator {
 
             String tempName = "\"" + c.getName() + "2\"";
             String sql = String.format(
-                    ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName()) + " add %s"
+                    ALTER_TABLE + tableFullName + " add %s"
                     , columnDef(c)
             );
             sql = sql.replace(c.getQuotedName(), tempName);
             // System.out.println(sql);
             result.add(sql);
-            sql = String.format("update " + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName()) + " set %s = \"%s\"",
+            sql = String.format("update " + tableFullName + " set %s = \"%s\"",
                     tempName, c.getName());
             // System.out.println(sql);
             result.add(sql);
             sql = String.format(
-                    ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                    ALTER_TABLE + tableFullName
                             + " drop column %s", c.getQuotedName()
             );
             // System.out.println(sql);
             result.add(sql);
             sql = String.format(
-                    ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                    ALTER_TABLE + tableFullName
                             + " rename column %s to %s", tempName, c.getQuotedName());
             // System.out.println(sql);
             result.add(sql);
+        } else if (actual.getType() == DecimalColumn.class && c instanceof DecimalColumn) {
+            result.addAll(updateDecimalColumn(conn, (DecimalColumn) c, actual, def));
         } else {
-
-            String sql = String.format(
-                    ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                            + " modify (%s)", def
-            );
-
-            result.add(sql);
+            result.add(modifyColumn(tableFullName, def));
         }
         if (c instanceof BooleanColumn && actual.getType() != BooleanColumn.class) {
             // Тип поменялся на Boolean, надо добавить constraint
             String sql = String.format(
-                    ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                    ALTER_TABLE + tableFullName
                             + " add constraint %s check (%s in (0, 1))", getBooleanCheckName(c), c.getQuotedName()
             );
             result.add(sql);
@@ -925,4 +922,86 @@ public class OraDdlGenerator extends DdlGenerator {
         return result;
     }
 
+    private List<String> updateDecimalColumn(Connection conn, DecimalColumn dc, DbColumnInfo actual, String def)
+        throws CelestaException {
+        List<String> result = new ArrayList<>();
+        final String tableFullName = tableString(dc.getParentTable().getGrain().getName(), dc.getParentTable().getName());
+        //If there is any decreasing of scale or whole part, we must use additional column to perform alter.
+        int actualScale = actual.getScale(), scale = dc.getScale();
+        int actualWholePartLength = actual.getLength() - actualScale,
+                wholePartLength = dc.getPrecision() - scale;
+
+        if (scale < actualScale || wholePartLength < actualWholePartLength) {
+            if (!actual.isNullable())
+                result.add(
+                        String.format(
+                                "alter table %s modify (%s null)", tableFullName, dc.getQuotedName()
+                        )
+                );
+
+            String tempColumnName = String.format(
+                    "\"%s\"",
+                    NamedElement.limitName(String.format("temp%s%s", dc.getName(), UUID.randomUUID().toString()))
+            );
+
+            OraColumnDefiner columnDefiner = (OraColumnDefiner)ColumnDefinerFactory.getColumnDefiner(getType(), dc.getClass());
+
+            String sql = String.format(
+                    ALTER_TABLE + " %s add %s %s(%s,%s)",
+                    tableFullName, tempColumnName, columnDefiner.dbFieldType(), dc.getPrecision(), dc.getScale()
+            );
+            result.add(sql);
+            sql = String.format("update %s set %s = %s", tableFullName, tempColumnName, dc.getQuotedName());
+            result.add(sql);
+            sql = String.format("update %s set %s = null", tableFullName, dc.getQuotedName());
+            result.add(sql);
+
+            final String fillColumnSql = String.format(
+                    "update %s set %s = %s", tableFullName, dc.getQuotedName(), tempColumnName
+            );
+
+            String selectSql = String.format("select count(*) from %s where %s is null", tableFullName, dc.getQuotedName());
+
+            final boolean hasNullValues;
+
+            try (ResultSet rs = SqlUtils.executeQuery(conn, selectSql)) {
+                rs.next();
+                hasNullValues = rs.getInt(1) > 0;
+            } catch (SQLException e) {
+                throw new CelestaException(e);
+            }
+
+            if (!dc.isNullable() && !hasNullValues) {
+                //Modify column without nullable flag to avoid error during altering.
+                String defdef = defaultDefForAlter(dc, columnDefiner, actual);
+                String preDef = OraColumnDefiner.join(columnDefiner.getInternalDefinition(dc), defdef);
+                result.add(modifyColumn(tableFullName, preDef));
+
+                //Fill records and finish modifying
+                result.add(fillColumnSql);
+                result.add(modifyColumn(tableFullName, def));
+            } else {
+                result.add(modifyColumn(tableFullName, def));
+                result.add(fillColumnSql);
+            }
+            sql = String.format("alter table %s drop column %s", tableFullName, tempColumnName);
+            result.add(sql);
+        } else {
+            result.add(modifyColumn(tableFullName, def));
+        }
+
+        return result;
+    }
+
+    private String modifyColumn(String tableFullName, String columnDef) {
+        return String.format(ALTER_TABLE + tableFullName + " modify (%s)", columnDef);
+    }
+
+    private String defaultDefForAlter(Column c, ColumnDefiner cd, DbColumnInfo actual) {
+        // В Oracle нельзя снять default, можно только установить его в Null
+        String result = cd.getDefaultDefinition(c);
+        if ("".equals(result) && !"".equals(actual.getDefaultValue()))
+            result = "default null";
+        return result;
+    }
 }

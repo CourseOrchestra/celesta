@@ -170,7 +170,6 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
 
     @Override
     void updateColType(Column c, DbColumnInfo actual, List<String> sqlList) {
-        String sql;
         String colType;
         if (c.getClass() == StringColumn.class) {
             StringColumn sc = (StringColumn) c;
@@ -178,25 +177,35 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
                     "%s(%s)",
                     ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType(), sc.getLength()
             );
+        } else if (c.getClass() == DecimalColumn.class) {
+            DecimalColumn dc = (DecimalColumn) c;
+            colType = String.format(
+                    "%s(%s,%s)",
+                    ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType(),
+                    dc.getPrecision(), dc.getScale()
+            );
         } else {
             colType = ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType();
         }
+
+
+        final String alterSql = String.format(
+                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                        + " ALTER COLUMN \"%s\" %s", c.getName(), colType
+        );
+
         // Если тип не совпадает
         if (c.getClass() != actual.getType()) {
-            sql = String.format(
-                    ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                            + " ALTER COLUMN \"%s\" %s", c.getName(), colType
-            );
-
-            sqlList.add(sql);
+            sqlList.add(alterSql);
         } else if (c.getClass() == StringColumn.class) {
             StringColumn sc = (StringColumn) c;
             if (sc.isMax() != actual.isMax() || sc.getLength() != actual.getLength()) {
-                sql = String.format(
-                        ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                                + " ALTER COLUMN \"%s\" %s", c.getName(), colType
-                );
-                sqlList.add(sql);
+                sqlList.add(alterSql);
+            }
+        } else if (c.getClass() == DecimalColumn.class) {
+            DecimalColumn dc = (DecimalColumn)c;
+            if (dc.getPrecision() != actual.getLength() || dc.getScale() != dc.getScale()) {
+                sqlList.add(alterSql);
             }
         }
     }

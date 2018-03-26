@@ -173,8 +173,11 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
               }
           }
           result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
-          if (result.getType() == StringColumn.class) {
-            result.setLength(rs.getInt("CHARACTER_MAXIMUM_LENGTH"));
+          if (result.getType() == StringColumn.class || result.getType() == DecimalColumn.class) {
+            result.setLength(rs.getInt("COLUMN_SIZE"));
+          }
+          if (result.getType() == DecimalColumn.class) {
+            result.setScale(rs.getInt("DECIMAL_DIGITS"));
           }
 
           if (columnDefault != null) {

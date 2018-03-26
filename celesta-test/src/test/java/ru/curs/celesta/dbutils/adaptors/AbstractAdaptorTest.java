@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -41,11 +42,11 @@ public abstract class AbstractAdaptorTest {
 
     private int insertRow(Connection conn, Table t, int val) throws IOException, CelestaException, SQLException {
         int count = t.getColumns().size();
-        assertEquals(13, count);
-        boolean[] nullsMask = {true, false, false, false, true, false, true, true, false, true, true, true, false};
+        assertEquals(15, count);
+        boolean[] nullsMask = {true, false, false, false, true, false, true, true, false, true, true, true, false, false, true};
         BLOB b = new BLOB();
         b.getOutStream().write(new byte[]{1, 2, 3});
-        Object[] rowData = {null, "ab", val, false, null, 1.1, null, null, "eee", null, null, null, b};
+        Object[] rowData = {null, "ab", val, false, null, 1.1, null, null, "eee", null, null, null, b, BigDecimal.ONE, null};
         List<ParameterSetter> program = new ArrayList<>();
         PreparedStatement pstmt = dba.getInsertRecordStatement(conn, t, nullsMask, program);
         assertNotNull(pstmt);
@@ -206,11 +207,11 @@ public abstract class AbstractAdaptorTest {
         insertRow(conn, t, 1);
         assertEquals(1, getCount(conn, t));
 
-        assertEquals(13, t.getColumns().size());
-        boolean[] mask = {true, true, false, true, true, true, true, true, true, true, true, true, true};
+        assertEquals(15, t.getColumns().size());
+        boolean[] mask = {true, true, false, true, true, true, true, true, true, true, true, true, true, true, true};
         boolean[] nullsMask = {false, false, false, false, false, false, false, false, false, false, false, false,
-                false};
-        Integer[] rec = {1, null, 2, null, null, null, null, null, null, null, null, null, null};
+                false, false, false};
+        Integer[] rec = {1, null, 2, null, null, null, null, null, null, null, null, null, null, null, null};
         List<ParameterSetter> program = new ArrayList<>();
         WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
         PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask, nullsMask, program, w.getWhere());
@@ -243,10 +244,10 @@ public abstract class AbstractAdaptorTest {
         assertEquals(1, rs.getInt("recversion"));
         rs.close();
 
-        boolean[] mask = {true, true, false, true, true, true, true, true, true, true, true, true, true, false};
+        boolean[] mask = {true, true, false, true, true, true, true, true, true, true, true, true, true, false, true, true};
         boolean[] nullsMask = {false, false, false, false, false, false, false, false, false, false, false, false,
-                false, false};
-        Integer[] rec = {1, null, 22, null, null, null, null, null, null, null, null, null, null};
+                false, false, false, false};
+        Integer[] rec = {1, null, 22, null, null, null, null, null, null, null, null, null, null, null, null};
         program = new ArrayList<>();
         w = WhereTermsMaker.getPKWhereTerm(t);
 
@@ -269,7 +270,7 @@ public abstract class AbstractAdaptorTest {
         assertEquals(22, rs.getInt("attrInt"));
         rs.close();
 
-        rec = new Integer[]{1, null, 23, null, null, null, null, null, null, null, null, null, null};
+        rec = new Integer[]{1, null, 23, null, null, null, null, null, null, null, null, null, null, null, null};
         i = 1;
         for (ParameterSetter ps : program) {
             ps.execute(pstmt2, i++, rec, 2);
@@ -322,11 +323,11 @@ public abstract class AbstractAdaptorTest {
     public void getColumns() throws Exception {
         Set<String> columnSet = dba.getColumns(conn, t);
         assertNotNull(columnSet);
-        assertEquals(14, columnSet.size());
+        assertEquals(16, columnSet.size());
         assertTrue(columnSet.contains("f4"));
         assertFalse(columnSet.contains("nonExistentColumn"));
         // String[] columnNames = { "id", "attrVarchar", "attrInt", "f1",
-        // "f2", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11" };
+        // "f2", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13" };
         // System.out
         // .println(Arrays.toString(columnSet.toArray(new String[0])));
     }
@@ -431,6 +432,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(StringColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals(2, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -441,6 +443,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(BooleanColumn.class, c.getType());
         assertEquals(false, c.isNullable());
         assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -451,6 +454,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(FloatingColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -461,6 +465,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(StringColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals(8, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -471,6 +476,18 @@ public abstract class AbstractAdaptorTest {
         assertSame(BinaryColumn.class, c.getType());
         assertEquals(false, c.isNullable());
         assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
+        assertEquals("", c.getDefaultValue());
+        assertEquals(false, c.isMax());
+        assertEquals(false, c.isIdentity());
+
+        // f12 decimal(11, 7),
+        c = dba.getColumnInfo(conn, t.getColumn("f12"));
+        assertEquals("f12", c.getName());
+        assertSame(DecimalColumn.class, c.getType());
+        assertEquals(true, c.isNullable());
+        assertEquals(11, c.getLength());
+        assertEquals(7, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -487,6 +504,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(IntegerColumn.class, c.getType());
         assertEquals(false, c.isNullable());
         assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(true, c.isIdentity());
@@ -497,6 +515,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(IntegerColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("3", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -507,6 +526,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(BooleanColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("'TRUE'", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -517,6 +537,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(FloatingColumn.class, c.getType());
         assertEquals(false, c.isNullable());
         assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("5.5", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -527,6 +548,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(StringColumn.class, c.getType());
         assertEquals(false, c.isNullable());
         // assertEquals(0, c.getLength()); -- database-dependent value
+        assertEquals(0, c.getScale());
         assertEquals("'abc'", c.getDefaultValue());
         assertEquals(true, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -537,6 +559,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(DateTimeColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("'20130401'", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -547,6 +570,7 @@ public abstract class AbstractAdaptorTest {
         assertSame(DateTimeColumn.class, c.getType());
         assertEquals(false, c.isNullable());
         assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("GETDATE()", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
@@ -557,7 +581,19 @@ public abstract class AbstractAdaptorTest {
         assertSame(BinaryColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
         assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
+        assertEquals(false, c.isMax());
+        assertEquals(false, c.isIdentity());
+
+        // f13 decimal(5, 3) not null default 46.123
+        c = dba.getColumnInfo(conn, t.getColumn("f13"));
+        assertEquals("f13", c.getName());
+        assertSame(DecimalColumn.class, c.getType());
+        assertEquals(false, c.isNullable());
+        assertEquals(5, c.getLength());
+        assertEquals(3, c.getScale());
+        assertEquals("46.123", c.getDefaultValue());
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
     }
@@ -565,7 +601,7 @@ public abstract class AbstractAdaptorTest {
 
     @Test
     public void testColumnInfoForMaterializedView()
-            throws CelestaException, ParseException, IOException, SQLException {
+            throws CelestaException, ParseException {
 
         Grain g = score.getGrain(GRAIN_NAME);
         Table tableForMatView = g.getElement("tableForMatView", Table.class);
@@ -601,6 +637,7 @@ public abstract class AbstractAdaptorTest {
             assertEquals("", c.getDefaultValue());
             assertEquals(false, c.isIdentity());
             assertEquals(0, c.getLength());
+            assertEquals(0, c.getScale());
 
             col = mView1gTest.getColumn("f1");
             c = dba.getColumnInfo(conn, col);
@@ -610,6 +647,7 @@ public abstract class AbstractAdaptorTest {
             assertEquals("", c.getDefaultValue());
             assertEquals(false, c.isIdentity());
             assertEquals(2, c.getLength());
+            assertEquals(0, c.getScale());
 
             col = mView1gTest.getColumn("f2");
             c = dba.getColumnInfo(conn, col);
@@ -619,6 +657,7 @@ public abstract class AbstractAdaptorTest {
             assertEquals("", c.getDefaultValue());
             assertEquals(false, c.isIdentity());
             assertEquals(0, c.getLength());
+            assertEquals(0, c.getScale());
 
             col = mView1gTest.getColumn("f3");
             c = dba.getColumnInfo(conn, col);
@@ -628,6 +667,7 @@ public abstract class AbstractAdaptorTest {
             assertEquals("", c.getDefaultValue());
             assertEquals(false, c.isIdentity());
             assertEquals(0, c.getLength());
+            assertEquals(0, c.getScale());
 
             col = mView1gTest.getColumn("f4");
             c = dba.getColumnInfo(conn, col);
@@ -637,6 +677,7 @@ public abstract class AbstractAdaptorTest {
             assertEquals("", c.getDefaultValue());
             assertEquals(false, c.isIdentity());
             assertEquals(0, c.getLength());
+            assertEquals(0, c.getScale());
 
             col = mView1gTest.getColumn("f5");
             c = dba.getColumnInfo(conn, col);
@@ -646,6 +687,17 @@ public abstract class AbstractAdaptorTest {
             assertEquals("", c.getDefaultValue());
             assertEquals(false, c.isIdentity());
             assertEquals(0, c.getLength());
+            assertEquals(0, c.getScale());
+
+            col = mView1gTest.getColumn("f6");
+            c = dba.getColumnInfo(conn, col);
+            assertEquals("f6", c.getName());
+            assertSame(DecimalColumn.class, c.getType());
+            assertEquals(false, c.isNullable());
+            assertEquals("", c.getDefaultValue());
+            assertEquals(false, c.isIdentity());
+            assertEquals(2, c.getLength());
+            assertEquals(1, c.getScale());
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
@@ -755,6 +807,25 @@ public abstract class AbstractAdaptorTest {
         assertEquals("0xBBCC", c.getDefaultValue());
         assertFalse(c.isNullable());
 
+        //f12 decimal(11, 7)
+        col = t.getColumn("f12");
+        c = dba.getColumnInfo(conn, col);
+        assertTrue(col.isNullable());
+        assertTrue(c.isNullable());
+        assertEquals("", c.getDefaultValue());
+        assertEquals(11, c.getLength());
+        assertEquals(7, c.getScale());
+        col.setNullableAndDefault(false, "155.0216");
+        DecimalColumn dc = (DecimalColumn) col;
+        dc.setPrecision(7);
+        dc.setScale(4);
+        dba.updateColumn(conn, col, c);
+        dba.manageAutoIncrement(conn, t);
+        c = dba.getColumnInfo(conn, col);
+        assertEquals("155.0216", c.getDefaultValue());
+        assertEquals(7, c.getLength());
+        assertEquals(4, c.getScale());
+        assertFalse(c.isNullable());
     }
 
     @Test

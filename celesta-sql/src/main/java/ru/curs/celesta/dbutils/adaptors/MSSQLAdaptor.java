@@ -306,6 +306,10 @@ public final class MSSQLAdaptor extends DBAdaptor {
             result.setLength(rs.getInt("COLUMN_SIZE"));
             result.setMax(checkIfVarcharMax(conn, c));
           }
+          if (result.getType() == DecimalColumn.class) {
+            result.setLength(rs.getInt("COLUMN_SIZE"));
+            result.setScale(rs.getInt("DECIMAL_DIGITS"));
+          }
           String defaultBody = rs.getString("COLUMN_DEF");
           if (defaultBody != null) {
             int i = 0;
