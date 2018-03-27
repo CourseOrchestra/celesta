@@ -1,6 +1,8 @@
 package ru.curs.celesta.dbutils;
 
 
+import java.sql.Connection;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -105,6 +107,11 @@ public class NavigationQueriesMakerTest {
 				public boolean supportsCortegeComparing() {
 					return false;
 				}
+
+				@Override
+				public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
+					return z;
+				}
 			};
 		}
 
@@ -172,6 +179,11 @@ public class NavigationQueriesMakerTest {
 				@Override
 				public boolean supportsCortegeComparing() {
 					return true;
+				}
+
+				@Override
+				public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
+					return z;
 				}
 			};
 		}

@@ -1,33 +1,21 @@
 package ru.curs.celesta.dbutils.stmt;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 
 import java.sql.PreparedStatement;
+
 
 /**
  * Parameter setter for record field.
  */
 public final class FieldParameterSetter extends ParameterSetter {
-	private static final FieldParameterSetter[] CACHE = new FieldParameterSetter[16];
-
-	static {
-		for (int i = 0; i < CACHE.length; i++) {
-			CACHE[i] = new FieldParameterSetter(i);
-		}
-	}
 
 	private final int fieldNum;
 
-	private FieldParameterSetter(int fieldNum) {
+	public FieldParameterSetter(QueryBuildingHelper queryBuildingHelper, int fieldNum) {
+		super(queryBuildingHelper);
 		this.fieldNum = fieldNum;
-	}
-
-	static FieldParameterSetter get(int i) {
-		if (i < 0)
-			throw new IllegalArgumentException();
-		if (i < CACHE.length)
-			return CACHE[i];
-		return new FieldParameterSetter(i);
 	}
 
 	@Override

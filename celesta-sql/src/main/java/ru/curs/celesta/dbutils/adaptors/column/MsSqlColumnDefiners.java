@@ -104,6 +104,38 @@ class MsSqlDecimalColumnDefiner extends MsSqlColumnDefiner {
     }
 }
 
+class MsSqlBooleanColumnDefiner extends MsSqlColumnDefiner {
+    @Override
+    public String dbFieldType() {
+        return "bit";
+    }
+
+    @Override
+    public String getMainDefinition(Column c) {
+        return join(c.getQuotedName(), dbFieldType(), nullable(c));
+    }
+
+    @Override
+    public String getDefaultDefinition(Column c) {
+        BooleanColumn ic = (BooleanColumn) c;
+        String defaultStr = "";
+        if (ic.getDefaultValue() != null) {
+            defaultStr = msSQLDefault(c) + "'" + ic.getDefaultValue() + "'";
+        }
+        return defaultStr;
+    }
+
+    @Override
+    public String getLightDefaultDefinition(Column c) {
+        BooleanColumn ic = (BooleanColumn) c;
+        String defaultStr = "";
+        if (ic.getDefaultValue() != null) {
+            defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
+        }
+        return defaultStr;
+    }
+}
+
 class MsSqlStringColumnDefiner extends MsSqlColumnDefiner {
     @Override
     public String dbFieldType() {
@@ -211,10 +243,10 @@ class MsSqlDateTimeColumnDefiner extends MsSqlColumnDefiner {
     }
 }
 
-class MsSqlBooleanColumnDefiner extends MsSqlColumnDefiner {
+class MsSqlZonedDateTimeColumnDefiner extends MsSqlColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "bit";
+        return "datetimeoffset";
     }
 
     @Override
@@ -224,21 +256,11 @@ class MsSqlBooleanColumnDefiner extends MsSqlColumnDefiner {
 
     @Override
     public String getDefaultDefinition(Column c) {
-        BooleanColumn ic = (BooleanColumn) c;
-        String defaultStr = "";
-        if (ic.getDefaultValue() != null) {
-            defaultStr = msSQLDefault(c) + "'" + ic.getDefaultValue() + "'";
-        }
-        return defaultStr;
+        return "";
     }
 
     @Override
     public String getLightDefaultDefinition(Column c) {
-        BooleanColumn ic = (BooleanColumn) c;
-        String defaultStr = "";
-        if (ic.getDefaultValue() != null) {
-            defaultStr = DEFAULT + "'" + ic.getDefaultValue() + "'";
-        }
-        return defaultStr;
+        return "";
     }
 }

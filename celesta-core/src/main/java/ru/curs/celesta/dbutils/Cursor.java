@@ -45,7 +45,6 @@ import java.util.*;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
-import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 import ru.curs.celesta.dbutils.stmt.MaskedStatementHolder;
@@ -78,7 +77,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
 			WhereTerm where = WhereTermsMaker.getPKWhereTerm(meta());
-			where.programParams(program);
+			where.programParams(program, db());
 			return db().getDeleteRecordStatement(conn(), meta(), where.getWhere());
 		}
 
@@ -89,7 +88,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
 			WhereTerm where = getQmaker().getWhereTerm();
-			where.programParams(program);
+			where.programParams(program, db());
 			return db().deleteRecordSetStatement(conn(), meta(), where.getWhere());
 		}
 
@@ -130,7 +129,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 			@Override
 			protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
 				WhereTerm where = getQmaker().getHereWhereTerm(meta());
-				where.programParams(program);
+				where.programParams(program, db());
 				return db().getNavigationStatement(
 						conn(), getFrom(),"", where.getWhere(), fieldsForStatement, 0
 				);
@@ -486,7 +485,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		WhereTerm w = WhereTermsMaker.getPKWhereTerm(meta);
 		PreparedStatement stmt = db().getOneFieldStatement(conn(), c, w.getWhere());
 		int i = 1;
-		w.programParams(program);
+		w.programParams(program, db());
 		Object[] rec = _currentValues();
 		for (ParameterSetter f : program) {
 			f.execute(stmt, i++, rec, recversion);

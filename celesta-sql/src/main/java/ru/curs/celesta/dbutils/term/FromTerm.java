@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils.term;
 
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
 import java.util.List;
@@ -15,9 +16,9 @@ public class FromTerm {
     this.values = values;
   }
 
-  public void programParams(List<ParameterSetter> program) {
+  public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
     values.forEach(
-        v -> program.add(ParameterSetter.createArbitrary(v))
+        v -> program.add(ParameterSetter.createArbitrary(v, queryBuildingHelper))
     );
   }
 }

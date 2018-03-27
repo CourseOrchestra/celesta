@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.stmt;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -8,11 +9,10 @@ import java.sql.SQLException;
 /**
  * Parameter setter for recverion parameter.
  */
-public final class RecversionParameterSetter extends ParameterSetter {
+public final class RecVersionParameterSetter extends ParameterSetter {
 
-	public static final RecversionParameterSetter THESETTER = new RecversionParameterSetter();
-
-	private RecversionParameterSetter() {
+	public RecVersionParameterSetter(QueryBuildingHelper queryBuildingHelper) {
+		super(queryBuildingHelper);
 	}
 
 	@Override

@@ -32,6 +32,7 @@ public abstract class DdlGenerator {
         CELESTA_TYPES_COLUMN_CLASSES.put(StringColumn.VARCHAR, StringColumn.class);
         CELESTA_TYPES_COLUMN_CLASSES.put(BinaryColumn.CELESTA_TYPE, BinaryColumn.class);
         CELESTA_TYPES_COLUMN_CLASSES.put(DateTimeColumn.CELESTA_TYPE, DateTimeColumn.class);
+        CELESTA_TYPES_COLUMN_CLASSES.put(ZonedDateTimeColumn.CELESTA_TYPE, ZonedDateTimeColumn.class);
     }
 
     DBAdaptor dmlAdaptor;

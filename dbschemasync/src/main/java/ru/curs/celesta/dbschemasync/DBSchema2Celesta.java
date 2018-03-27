@@ -464,6 +464,10 @@ public final class DBSchema2Celesta {
             DateTimeColumn dc = new DateTimeColumn(t, columnName);
             dc.setNullableAndDefault(isNullable, defaultVal);
             dc.setCelestaDoc(celestaDoc);
+        } else if (ZonedDateTimeColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
+            ZonedDateTimeColumn zdc = new ZonedDateTimeColumn(t, columnName);
+            zdc.setNullableAndDefault(isNullable, defaultVal);
+            zdc.setCelestaDoc(celestaDoc);
         } else if (FloatingColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
             FloatingColumn fc = new FloatingColumn(t, columnName);
             fc.setNullableAndDefault(isNullable, defaultVal);

@@ -40,6 +40,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -176,7 +177,7 @@ public final class OraAdaptor extends DBAdaptor {
       fields.append('"');
       fields.append(c);
       fields.append('"');
-      program.add(ParameterSetter.create(i));
+      program.add(ParameterSetter.create(i, this));
     }
 
     final String sql;
@@ -376,7 +377,10 @@ public final class OraAdaptor extends DBAdaptor {
           String typeName = rs.getString("DATA_TYPE");
 
           if (typeName.startsWith("TIMESTAMP")) {
-            result.setType(DateTimeColumn.class);
+            if (typeName.endsWith("WITH TIME ZONE"))
+              result.setType(ZonedDateTimeColumn.class);
+            else
+              result.setType(DateTimeColumn.class);
           } else if ("float".equalsIgnoreCase(typeName)) {
             result.setType(FloatingColumn.class);
           } else if ("nclob".equalsIgnoreCase(typeName)) {
@@ -817,6 +821,23 @@ public final class OraAdaptor extends DBAdaptor {
     return 0;
   }
 
+  @Override
+  public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
+
+    try (ResultSet rs = executeQuery(conn, "SELECT SESSIONTIMEZONE FROM DUAL")) {
+      rs.next();
+      String zoneId = rs.getString(1);
+
+      Instant instant = Instant.now();
+      ZoneId systemZone = ZoneId.of(zoneId);
+      ZoneOffset systemOffset = systemZone.getRules().getOffset(instant);
+      int offsetDifInSeconds = systemOffset.getTotalSeconds();
+
+      return z.plusSeconds(offsetDifInSeconds);
+    } catch (CelestaException | SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   @Override
   public boolean nullsFirst() {

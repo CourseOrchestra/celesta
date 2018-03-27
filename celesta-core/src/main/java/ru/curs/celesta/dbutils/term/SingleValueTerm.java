@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.term;
 
 
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.SingleValue;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
@@ -25,7 +26,7 @@ public final class SingleValueTerm extends WhereTerm {
 	}
 
 	@Override
-	public void programParams(List<ParameterSetter> program) {
-		program.add(ParameterSetter.create(filter));
+	public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
+		program.add(ParameterSetter.create(filter, queryBuildingHelper));
 	}
 }

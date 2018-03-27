@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.term;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
 import java.util.List;
@@ -31,7 +32,9 @@ public final class NotTerm extends WhereTerm {
 	}
 
 	@Override
-	public void programParams(List<ParameterSetter> program) throws CelestaException {
-		a.programParams(program);
+	public void programParams(
+			List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper
+	) throws CelestaException {
+		a.programParams(program, queryBuildingHelper);
 	}
 }

@@ -45,6 +45,7 @@ public class MaterializedView extends AbstractView implements TableElement {
         COL_CLASSES_AND_FABRIC_FUNCS.put(BooleanColumn.class, (mView, colRef, alias) -> new BooleanColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(BinaryColumn.class, (mView, colRef, alias) -> new BinaryColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(DateTimeColumn.class, (mView, colRef, alias) -> new DateTimeColumn(mView, alias));
+        COL_CLASSES_AND_FABRIC_FUNCS.put(ZonedDateTimeColumn.class, (mView, colRef, alias) -> new ZonedDateTimeColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(StringColumn.class, (mView, colRef, alias) -> {
             StringColumn result = new StringColumn(mView, alias);
             StringColumn strColRef = (StringColumn) colRef;

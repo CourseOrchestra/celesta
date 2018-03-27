@@ -60,3 +60,12 @@ create table tWithDecimal (
   cost decimal(4, 2) default 5.2,
   CONSTRAINT Pk_testTable_tWithDecimal PRIMARY KEY (id)
 );
+
+
+CREATE SEQUENCE tWithDateTimeZNum;
+
+create table tWithDateTimeZ (
+  id int default NEXTVAL(tWithDateTimeZNum) not null,
+  eventDate datetime with time zone,
+  CONSTRAINT Pk_testTable_tWithDateTimeZ PRIMARY KEY (id)
+);

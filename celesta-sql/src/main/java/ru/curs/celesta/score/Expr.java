@@ -711,6 +711,8 @@ final class FieldRef extends Expr {
 					meta = new ViewColumnMeta(ViewColumnType.BIT);
 				else if (column instanceof DateTimeColumn)
 					meta = new ViewColumnMeta(ViewColumnType.DATE);
+				else if (column instanceof ZonedDateTimeColumn)
+					meta = new ViewColumnMeta(ViewColumnType.DATE_WITH_TIME_ZONE);
 				else if (column instanceof BinaryColumn)
 					meta = new ViewColumnMeta(ViewColumnType.BLOB);
 				// This should not happen unless we introduced new types in

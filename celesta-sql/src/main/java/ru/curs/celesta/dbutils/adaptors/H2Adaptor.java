@@ -109,7 +109,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
       fields.append('"');
       fields.append(c);
       fields.append('"');
-      program.add(ParameterSetter.create(i));
+      program.add(ParameterSetter.create(i, this));
     }
 
 
@@ -465,7 +465,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
     return 0;
   }
-
 
   @Override
   public String translateDate(String date) throws CelestaException {

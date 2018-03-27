@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.stmt;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 
 import java.sql.PreparedStatement;
 
@@ -11,7 +12,8 @@ public class ArbitraryParameterSetter extends ParameterSetter {
 
   private final Object v;
 
-  public ArbitraryParameterSetter(Object v) {
+  public ArbitraryParameterSetter(QueryBuildingHelper queryBuildingHelper, Object v) {
+    super(queryBuildingHelper);
     this.v = v;
   }
 

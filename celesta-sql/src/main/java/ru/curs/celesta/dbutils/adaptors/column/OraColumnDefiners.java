@@ -76,6 +76,35 @@ class OraDecimalColumnDefiner extends OraColumnDefiner {
     }
 }
 
+class OraBooleanColumnDefiner extends OraColumnDefiner {
+    @Override
+    public String dbFieldType() {
+        return "number";
+    }
+
+    @Override
+    public String getInternalDefinition(Column c) {
+        return join(c.getQuotedName(), dbFieldType());
+    }
+
+    @Override
+    public String getDefaultDefinition(Column c) {
+        BooleanColumn ic = (BooleanColumn) c;
+        String defaultStr = "";
+        if (ic.getDefaultValue() != null) {
+            defaultStr = DEFAULT + (ic.getDefaultValue() ? "1" : "0");
+        }
+        return defaultStr;
+    }
+
+    @Override
+    public String getFullDefinition(Column c) {
+        String check = String.format("constraint %s check (%s in (0, 1))", getBooleanCheckName(c),
+                c.getQuotedName());
+        return join(getInternalDefinition(c), getDefaultDefinition(c), nullable(c), check);
+    }
+}
+
 class OraStringColumnDefiner extends OraColumnDefiner {
     @Override
     public String dbFieldType() {
@@ -155,10 +184,10 @@ class OraDateTimeColumnDefiner extends OraColumnDefiner {
     }
 }
 
-class OraBooleanColumnDefiner extends OraColumnDefiner {
+class OraZonedDateTimeColumnDefiner extends OraColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "number";
+        return "timestamp with time zone";
     }
 
     @Override
@@ -168,18 +197,6 @@ class OraBooleanColumnDefiner extends OraColumnDefiner {
 
     @Override
     public String getDefaultDefinition(Column c) {
-        BooleanColumn ic = (BooleanColumn) c;
-        String defaultStr = "";
-        if (ic.getDefaultValue() != null) {
-            defaultStr = DEFAULT + (ic.getDefaultValue() ? "1" : "0");
-        }
-        return defaultStr;
-    }
-
-    @Override
-    public String getFullDefinition(Column c) {
-        String check = String.format("constraint %s check (%s in (0, 1))", getBooleanCheckName(c),
-                c.getQuotedName());
-        return join(getInternalDefinition(c), getDefaultDefinition(c), nullable(c), check);
+        return "";
     }
 }

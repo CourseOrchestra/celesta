@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.term;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
 import java.util.List;
@@ -41,8 +42,10 @@ public final class OrTerm extends WhereTerm {
 	}
 
 	@Override
-	public void programParams(List<ParameterSetter> program) throws CelestaException {
-		l.programParams(program);
-		r.programParams(program);
+	public void programParams(
+			List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper
+	) throws CelestaException {
+		l.programParams(program, queryBuildingHelper);
+		r.programParams(program, queryBuildingHelper);
 	}
 }

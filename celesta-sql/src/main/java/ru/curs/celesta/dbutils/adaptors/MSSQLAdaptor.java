@@ -150,7 +150,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
       fields.append('"');
       fields.append(c);
       fields.append('"');
-      program.add(ParameterSetter.create(i));
+      program.add(ParameterSetter.create(i, this));
     }
 
     final String sql;
@@ -327,7 +327,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
                 defaultBody = "NEXTVAL(" + sequenceName + ")";
               }
             }
-            if (BooleanColumn.class == result.getType() || DateTimeColumn.class == result.getType())
+            if (BooleanColumn.class == result.getType()
+                    || DateTimeColumn.class == result.getType() || ZonedDateTimeColumn.class == result.getType())
               defaultBody = defaultBody.toUpperCase();
             result.setDefaultValue(defaultBody);
           }

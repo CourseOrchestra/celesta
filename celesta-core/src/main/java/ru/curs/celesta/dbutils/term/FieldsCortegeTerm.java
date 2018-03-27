@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils.term;
 
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class FieldsCortegeTerm extends WhereTerm {
     }
 
     @Override
-    public void programParams(List<ParameterSetter> program) {
+    public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
         //do nothing
     }
 }

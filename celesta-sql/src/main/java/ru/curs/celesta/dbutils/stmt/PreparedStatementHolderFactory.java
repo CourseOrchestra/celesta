@@ -44,7 +44,7 @@ public class PreparedStatementHolderFactory {
             @Override
             protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
                 WhereTerm where = CsqlWhereTermsMaker.getPKWhereTermForGet(meta);
-                where.programParams(program);
+                where.programParams(program, dbAdaptor);
                 return dbAdaptor.getOneRecordStatement(conn, meta, where.getWhere(), Collections.emptySet());
             }
         };
@@ -60,7 +60,7 @@ public class PreparedStatementHolderFactory {
                 PreparedStatement result = dbAdaptor.getUpdateRecordStatement(
                         conn, meta, updateMaskSupplier.get(), nullUpdateMaskSupplier.get(), program, where.getWhere()
                 );
-                where.programParams(program);
+                where.programParams(program, dbAdaptor);
                 return result;
             }
         };
@@ -84,8 +84,8 @@ public class PreparedStatementHolderFactory {
                 }
 
                 WhereTerm where = whereTermSupplier.get();
-                fromTerm.programParams(program);
-                where.programParams(program);
+                fromTerm.programParams(program, dbAdaptor);
+                where.programParams(program, dbAdaptor);
                 return dbAdaptor.getRecordSetStatement(conn, from, where.getWhere(), orderBySupplier.get(),
                         offsetSupplier.get(), rowCountSupplier.get(), fieldsForStatementSupplier.get());
             }
