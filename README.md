@@ -1,7 +1,7 @@
 # Celesta
 
 [![Build Status](https://ci.corchestra.ru/buildStatus/icon?job=celesta/dev)](https://ci.corchestra.ru/job/celesta/job/dev/)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5ff36f37f97b4366825d4e57986408b2)](https://www.codacy.com/app/inponomarev/celesta?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CourseOrchestra/celesta&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5ff36f37f97b4366825d4e57986408b2)](https://www.codacy.com/app/CourseOrchestra/celesta?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CourseOrchestra/celesta&amp;utm_campaign=Badge_Grade)
 
 A platform for rapid business applications development
 
