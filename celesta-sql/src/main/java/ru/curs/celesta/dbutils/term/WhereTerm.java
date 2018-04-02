@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.term;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
 import java.util.List;
@@ -11,5 +12,7 @@ import java.util.List;
 public abstract class WhereTerm {
 	public abstract String getWhere() throws CelestaException;
 
-	public abstract void programParams(List<ParameterSetter> program) throws CelestaException;
+	public abstract void programParams(
+			List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper
+	) throws CelestaException;
 }

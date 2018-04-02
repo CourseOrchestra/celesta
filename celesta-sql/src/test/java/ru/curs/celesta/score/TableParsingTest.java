@@ -160,4 +160,31 @@ public class TableParsingTest extends AbstractParsingTest {
     );
   }
 
+  @Test
+  void testParsingFailsWhenDatetimeWithTimeZoneHasDefaultValue() {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "table/testParsingFailsWhenDatetimeWithTimeZoneHasDefaultValue.sql"
+    );
+    assertThrows(ParseException.class, () -> parse(f));
+  }
+
+  @Test
+  void testDatetimeWithTimeZone() throws Exception {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "table/testDatetimeWithTimeZone.sql"
+    );
+    Grain g = parse(f);
+    Table t1 = g.getElement("t", Table.class);
+    ZonedDateTimeColumn c = (ZonedDateTimeColumn)t1.getColumn("created");
+
+    assertAll(
+            // created datetime with time zone default null
+            () -> assertEquals("created", c.getName()),
+            () -> assertNull(c.getDefaultValue()),
+            () -> assertTrue(c.isNullable())
+    );
+  }
+
 }

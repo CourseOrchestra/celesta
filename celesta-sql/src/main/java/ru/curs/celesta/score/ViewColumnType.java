@@ -90,8 +90,23 @@ public enum ViewColumnType {
 		public String getCelestaType() {
 			return DateTimeColumn.CELESTA_TYPE;
 		}
-
 	},
+
+	/**
+	 * Дата с часовым поясом.
+	 */
+	DATE_WITH_TIME_ZONE {
+		@Override
+		public String jdbcGetterName() {
+			return "getString";
+		}
+
+		@Override
+		public String getCelestaType() {
+			return ZonedDateTimeColumn.CELESTA_TYPE;
+		}
+	},
+
 	/**
 	 * Булевское значение.
 	 */

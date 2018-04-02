@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.stmt;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.SingleValue;
 
 import java.sql.PreparedStatement;
@@ -11,7 +12,8 @@ import java.sql.PreparedStatement;
 public final class SingleValueParameterSetter extends ParameterSetter {
 	private final SingleValue v;
 
-	SingleValueParameterSetter(SingleValue v) {
+	public SingleValueParameterSetter(QueryBuildingHelper queryBuildingHelper, SingleValue v) {
+		super(queryBuildingHelper);
 		this.v = v;
 	}
 

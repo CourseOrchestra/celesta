@@ -126,8 +126,8 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 			WhereTerm where = qmaker.getWhereTerm();
 
-			fromTerm.programParams(program);
-			where.programParams(program);
+			fromTerm.programParams(program, db());
+			where.programParams(program, db());
 			return db().getSetCountStatement(conn(), from, where.getWhere());
 		}
 	};
@@ -156,8 +156,8 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			}
 
 			WhereTerm where = qmaker.getWhereTerm('<');
-			fromTerm.programParams(program);
-			where.programParams(program);
+			fromTerm.programParams(program, db());
+			where.programParams(program, db());
 			return db().getSetCountStatement(conn(), getFrom(), where.getWhere());
 		}
 
@@ -174,8 +174,8 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			}
 
 			WhereTerm where = qmaker.getWhereTerm('>');
-			fromTerm.programParams(program);
-			where.programParams(program);
+			fromTerm.programParams(program, db());
+			where.programParams(program, db());
 			return db().getNavigationStatement(
 					conn(), getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement, navigationOffset
 			);
@@ -194,8 +194,8 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			}
 
 			WhereTerm where = qmaker.getWhereTerm('<');
-			fromTerm.programParams(program);
-			where.programParams(program);
+			fromTerm.programParams(program, db());
+			where.programParams(program, db());
 			return db().getNavigationStatement(
 					conn(), getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement, navigationOffset
 			);
@@ -217,8 +217,8 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			}
 
 			WhereTerm where = qmaker.getWhereTerm();
-			fromTerm.programParams(program);
-			where.programParams(program);
+			fromTerm.programParams(program, db());
+			where.programParams(program, db());
 			return db().getNavigationStatement(
 					conn(), getFrom(), getOrderBy(), where.getWhere(), fieldsForStatement, 0
 			);
@@ -236,8 +236,8 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			}
 
 			WhereTerm where = qmaker.getWhereTerm();
-			fromTerm.programParams(program);
-			where.programParams(program);
+			fromTerm.programParams(program, db());
+			where.programParams(program, db());
 			return db().getNavigationStatement(
 					conn(), getFrom(), getReversedOrderBy(), where.getWhere(), fieldsForStatement, 0
 			);
@@ -333,7 +333,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			protected PreparedStatement initStatement(List<ParameterSetter> program)
 					throws CelestaException {
 				WhereTerm where = qmaker.getWhereTerm('=');
-				where.programParams(program);
+				where.programParams(program, db());
 				return db().getNavigationStatement(
 						conn(), getFrom(),"", where.getWhere(), fieldsForStatement, 0
 				);

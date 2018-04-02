@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.python.google.common.primitives.Booleans;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.score.Table;
@@ -321,7 +322,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 		}
 
 		@Override
-		public void programParams(List<ParameterSetter> program) {
+		public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
 			// do nothing - no parameters
 		}
 
@@ -338,7 +339,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 		}
 
 		@Override
-		public void programParams(List<ParameterSetter> program) {
+		public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
 			// do nothing - no parameters
 		}
 

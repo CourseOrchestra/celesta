@@ -174,3 +174,20 @@ class PostgresDateTimeColumnDefiner extends ColumnDefiner {
         return defaultStr;
     }
 }
+
+class PostgresZonedDateTimeColumnDefiner extends ColumnDefiner {
+    @Override
+    public String dbFieldType() {
+        return "timestamptz";
+    }
+
+    @Override
+    public String getMainDefinition(Column c) {
+        return join(c.getQuotedName(), dbFieldType(), nullable(c));
+    }
+
+    @Override
+    public String getDefaultDefinition(Column c) {
+        return "";
+    }
+}

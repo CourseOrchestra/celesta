@@ -36,6 +36,7 @@
 package ru.curs.celesta.dbutils.adaptors;
 
 import java.sql.*;
+import java.time.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,7 +116,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
       fields.append('"');
       fields.append(c);
       fields.append('"');
-      program.add(ParameterSetter.create(i));
+      program.add(ParameterSetter.create(i, this));
     }
 
     String returning = "";
@@ -495,6 +496,14 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
       // do nothing
     }
     return 0;
+  }
+
+  @Override
+  public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
+    ZoneOffset systemOffset = OffsetDateTime.now().getOffset();
+    ZoneOffset offset = z.getOffset();
+    int offsetDifInSeconds = systemOffset.getTotalSeconds() - offset.getTotalSeconds();
+    return z.plusSeconds(offsetDifInSeconds);
   }
 
   @Override

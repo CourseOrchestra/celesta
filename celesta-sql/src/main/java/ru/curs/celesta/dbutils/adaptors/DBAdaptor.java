@@ -41,6 +41,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
@@ -87,7 +88,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    */
 
   static final List<Class<? extends Column>> COLUMN_CLASSES = Arrays.asList(IntegerColumn.class, StringColumn.class,
-          BooleanColumn.class, FloatingColumn.class, DecimalColumn.class, BinaryColumn.class, DateTimeColumn.class);
+          BooleanColumn.class, FloatingColumn.class, DecimalColumn.class, BinaryColumn.class, DateTimeColumn.class,
+          ZonedDateTimeColumn.class);
   static final String COLUMN_NAME = "COLUMN_NAME";
 
   protected final ConnectionPool connectionPool;
@@ -248,7 +250,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   //TODO: Javadoc
   abstract void createSchemaIfNotExists(Connection conn, String name) throws CelestaException;
-
   // =========> END PACKAGE-PRIVATE ABSTRACT METHODS <=========
 
   // =========> PUBLIC STATIC METHODS <=========
@@ -314,7 +315,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     StringBuilder setClause = new StringBuilder();
     if (t.isVersioned()) {
       setClause.append(String.format("\"%s\" = ?", VersionedElement.REC_VERSION));
-      program.add(ParameterSetter.createForRecversion());
+      program.add(ParameterSetter.createForRecversion(this));
     }
 
     int i = 0;
@@ -326,7 +327,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
           setClause.append(String.format("\"%s\" = NULL", c));
         } else {
           setClause.append(String.format("\"%s\" = ?", c));
-          program.add(ParameterSetter.create(t.getColumnIndex(c)));
+          program.add(ParameterSetter.create(t.getColumnIndex(c), this));
         }
       }
       i++;
@@ -830,6 +831,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   public void updateColumn(Connection conn, Column c, DbColumnInfo actual) throws CelestaException {
     ddlAdaptor.updateColumn(conn, c, actual);
   }
+
+  @Override
+  public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
+    return z;
+  }
+
   // =========> END PUBLIC METHODS <=========
 
   // =========> PUBLIC ABSTRACT METHODS <=========

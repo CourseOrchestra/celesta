@@ -42,6 +42,7 @@ public final class ColumnDefinerFactory {
         H2_METHODS.put(StringColumn.class, H2StringColumnDefiner::new);
         H2_METHODS.put(BinaryColumn.class, H2BinaryColumnDefiner::new);
         H2_METHODS.put(DateTimeColumn.class, H2DateTimeColumnDefiner::new);
+        H2_METHODS.put(ZonedDateTimeColumn.class, H2ZonedDateTimeColumnDefiner::new);
 
         POSTGRES_METHODS.put(IntegerColumn.class, PostgresIntegerColumnDefiner::new);
         POSTGRES_METHODS.put(FloatingColumn.class, PostgresFloatingColumnDefiner::new);
@@ -50,6 +51,7 @@ public final class ColumnDefinerFactory {
         POSTGRES_METHODS.put(StringColumn.class, PostgresStringColumnDefiner::new);
         POSTGRES_METHODS.put(BinaryColumn.class, PostgresBinaryColumnDefiner::new);
         POSTGRES_METHODS.put(DateTimeColumn.class, PostgresDateTimeColumnDefiner::new);
+        POSTGRES_METHODS.put(ZonedDateTimeColumn.class, PostgresZonedDateTimeColumnDefiner::new);
 
         MS_SQL_METHODS.put(IntegerColumn.class, MsSqlIntegerColumnDefiner::new);
         MS_SQL_METHODS.put(FloatingColumn.class, MsSqlFloatingColumnDefiner::new);
@@ -58,6 +60,7 @@ public final class ColumnDefinerFactory {
         MS_SQL_METHODS.put(StringColumn.class, MsSqlStringColumnDefiner::new);
         MS_SQL_METHODS.put(BinaryColumn.class, MsSqlBinaryColumnDefiner::new);
         MS_SQL_METHODS.put(DateTimeColumn.class, MsSqlDateTimeColumnDefiner::new);
+        MS_SQL_METHODS.put(ZonedDateTimeColumn.class, MsSqlZonedDateTimeColumnDefiner::new);
 
         ORA_METHODS.put(IntegerColumn.class, OraIntegerColumnDefiner::new);
         ORA_METHODS.put(FloatingColumn.class, OraFloatingColumnDefiner::new);
@@ -66,6 +69,7 @@ public final class ColumnDefinerFactory {
         ORA_METHODS.put(StringColumn.class, OraStringColumnDefiner::new);
         ORA_METHODS.put(BinaryColumn.class, OraBinaryColumnDefiner::new);
         ORA_METHODS.put(DateTimeColumn.class, OraDateTimeColumnDefiner::new);
+        ORA_METHODS.put(ZonedDateTimeColumn.class, OraZonedDateTimeColumnDefiner::new);
     }
 
     private ColumnDefinerFactory() {

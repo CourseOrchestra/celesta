@@ -118,10 +118,10 @@ public class PreparedStatementHolderTest {
 
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
-			program.add(ParameterSetter.create(filter));
-			program.add(ParameterSetter.create(2));
-			program.add(ParameterSetter.createForValueFrom(filter2));
-			program.add(ParameterSetter.createForValueTo(filter2));
+			program.add(ParameterSetter.create(filter, null));
+			program.add(ParameterSetter.create(2, null));
+			program.add(ParameterSetter.createForValueFrom(filter2, null));
+			program.add(ParameterSetter.createForValueTo(filter2, null));
 			return new DummyPreparedStatement();
 		}
 	}
@@ -135,9 +135,9 @@ public class PreparedStatementHolderTest {
 
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
-			program.add(ParameterSetter.create(1));
-			program.add(ParameterSetter.create(3));
-			program.add(ParameterSetter.create(2));
+			program.add(ParameterSetter.create(1, null));
+			program.add(ParameterSetter.create(3, null));
+			program.add(ParameterSetter.create(2, null));
 			return new DummyPreparedStatement();
 		}
 
@@ -147,8 +147,8 @@ public class PreparedStatementHolderTest {
 
 		@Override
 		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
-			program.add(ParameterSetter.create(3));
-			program.add(ParameterSetter.createForRecversion());
+			program.add(ParameterSetter.create(3, null));
+			program.add(ParameterSetter.createForRecversion(null));
 			return new DummyPreparedStatement();
 		}
 	}

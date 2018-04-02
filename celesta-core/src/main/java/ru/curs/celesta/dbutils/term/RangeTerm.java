@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.term;
 
 
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.Range;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
@@ -25,8 +26,8 @@ public final class RangeTerm extends WhereTerm {
 	}
 
 	@Override
-	public void programParams(List<ParameterSetter> program) {
-		program.add(ParameterSetter.createForValueFrom(filter));
-		program.add(ParameterSetter.createForValueTo(filter));
+	public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
+		program.add(ParameterSetter.createForValueFrom(filter, queryBuildingHelper));
+		program.add(ParameterSetter.createForValueTo(filter, queryBuildingHelper));
 	}
 }

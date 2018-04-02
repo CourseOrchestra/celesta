@@ -20,7 +20,7 @@ public final class ORMCompiler {
      * Версия компилятора. Данную константу следует инкрементировать, когда
      * необходимо инициировать автоматическое пересоздание orm-скриптов.
      */
-    private static final int COMPILERVER = 15;
+    private static final int COMPILERVER = 17;
 
     private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
     private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -42,8 +42,9 @@ public final class ORMCompiler {
             "import ru.curs.celesta.dbutils.ParameterizedViewCursor as ParameterizedViewCursor",
             "import ru.curs.celesta.dbutils.Sequence as Sequence",
             "from java.lang import Object",
-            "from jarray import array", "from java.util import Calendar, GregorianCalendar, HashSet, HashMap",
+            "from jarray import array", "from java.util import Calendar, GregorianCalendar, TimeZone, HashSet, HashMap",
             "from java.sql import Timestamp",
+            "from java.time import ZonedDateTime, ZoneOffset",
             "from java.math import BigDecimal",
             "import datetime", "", "def _to_timestamp(d):",
             "    if isinstance(d, datetime.datetime):", "        calendar = GregorianCalendar()",
@@ -117,7 +118,7 @@ public final class ORMCompiler {
             }
     }
 
-    private static void compileGrain(Grain g, PrintWriter w) throws IOException {
+    private static void compileGrain(Grain g, PrintWriter w) {
         w.println("# coding=UTF-8");
 
         w.printf("# Source grain parameters: version=%s, len=%d, crc32=%08X; compiler=%d.%n", g.getVersion(),
@@ -147,7 +148,7 @@ public final class ORMCompiler {
             compileSequence(s, w);
     }
 
-    private static void compileView(View v, PrintWriter w) throws IOException {
+    private static void compileView(View v, PrintWriter w) {
         String className = v.getName() + "Cursor";
 
         Map<String, ViewColumnMeta> columns = v.getColumns();
@@ -174,7 +175,7 @@ public final class ORMCompiler {
         w.println();
     }
 
-    private static void compileParameterizedView(ParameterizedView pv, PrintWriter w) throws IOException {
+    private static void compileParameterizedView(ParameterizedView pv, PrintWriter w) {
         String className = pv.getName() + "Cursor";
 
         Map<String, ViewColumnMeta> columns = pv.getColumns();
@@ -201,7 +202,7 @@ public final class ORMCompiler {
         w.println();
     }
 
-    private static void compileSequence(SequenceElement s , PrintWriter w) throws IOException {
+    private static void compileSequence(SequenceElement s , PrintWriter w) {
         String className = s.getName() + "Sequence";
 
         w.printf("class %s(Sequence):%n", className);
@@ -215,14 +216,14 @@ public final class ORMCompiler {
         w.println();
     }
 
-    private static void compileClearBuffer(PrintWriter w, Map<String, ViewColumnMeta> columns) throws IOException {
+    private static void compileClearBuffer(PrintWriter w, Map<String, ViewColumnMeta> columns) {
         w.println(DEF_CLEAR_BUFFER_SELF_WITH_KEYS);
         for (String c : columns.keySet()) {
             w.printf(SELF_S_EQUALS_NONE, c);
         }
     }
 
-    private static void compileParseResult(PrintWriter w, Map<String, ViewColumnMeta> columns) throws IOException {
+    private static void compileParseResult(PrintWriter w, Map<String, ViewColumnMeta> columns) {
         w.println("    def _parseResult(self, rs):");
         for (Map.Entry<String, ViewColumnMeta> e : columns.entrySet()) {
             if (e.getValue().getColumnType() == ViewColumnType.BLOB) {
@@ -237,7 +238,7 @@ public final class ORMCompiler {
         }
     }
 
-    static void compileROTable(TableElement t, PrintWriter w) throws IOException {
+    static void compileROTable(TableElement t, PrintWriter w) {
         String className = t.getName() + "Cursor";
 
         Collection<Column> columns = t.getColumns().values();
@@ -275,7 +276,7 @@ public final class ORMCompiler {
         w.println();
     }
 
-    static void compileTable(Table t, PrintWriter w) throws IOException {
+    static void compileTable(Table t, PrintWriter w) {
 
         Collection<Column> columns = t.getColumns().values();
         Set<Column> pk = new LinkedHashSet<>(t.getPrimaryKey().values());
@@ -326,7 +327,7 @@ public final class ORMCompiler {
         w.println();
     }
 
-    private static void compileOptionFields(PrintWriter w, Collection<Column> columns) throws IOException {
+    private static void compileOptionFields(PrintWriter w, Collection<Column> columns) {
         for (Column c : columns) {
             if (c instanceof IntegerColumn || c instanceof StringColumn) {
                 try {
@@ -351,12 +352,12 @@ public final class ORMCompiler {
 
     }
 
-    private static void compileSetFieldValue(PrintWriter w) throws IOException {
+    private static void compileSetFieldValue(PrintWriter w) {
         w.println("    def _setFieldValue(self, name, value):");
         w.println("        setattr(self, name, value)");
     }
 
-    private static void compileCalcBLOBs(PrintWriter w, Collection<Column> columns) throws IOException {
+    private static void compileCalcBLOBs(PrintWriter w, Collection<Column> columns) {
         for (Column c : columns)
             if (c instanceof BinaryColumn) {
                 w.printf("    def calc%s(self):%n", c.getName());
@@ -365,7 +366,7 @@ public final class ORMCompiler {
             }
     }
 
-    private static void compileTriggers(PrintWriter w, String className) throws IOException {
+    private static void compileTriggers(PrintWriter w, String className) {
         w.println("    def _preDelete(self):");
         w.printf("        for f in %s.onPreDelete:%n", className);
         w.println(F_SELF);
@@ -386,8 +387,7 @@ public final class ORMCompiler {
         w.println(F_SELF);
     }
 
-    private static void compileCopying(PrintWriter w, Collection<String> columns, String className)
-            throws IOException {
+    private static void compileCopying(PrintWriter w, Collection<String> columns, String className) {
         w.println("    def _getBufferCopy(self, context, fields=None):");
         w.printf("        result = %s(context, fields)%n", className);
         w.println("        result.copyFieldsFrom(self)");
@@ -399,7 +399,7 @@ public final class ORMCompiler {
         }
     }
 
-    private static void compileSetAutoIncrement(PrintWriter w, Collection<Column> columns) throws IOException {
+    private static void compileSetAutoIncrement(PrintWriter w, Collection<Column> columns) {
         w.println("    def _setAutoIncrement(self, val):");
         boolean hasCode = false;
         for (Column c : columns)
@@ -412,7 +412,7 @@ public final class ORMCompiler {
             w.println("        pass");
     }
 
-    private static void compileCurrentValues(PrintWriter w, Collection<Column> columns) throws IOException {
+    private static void compileCurrentValues(PrintWriter w, Collection<Column> columns) {
         w.println("    def _currentValues(self):");
         StringBuilder sb = new StringBuilder();
         for (Column c : columns)
@@ -421,7 +421,7 @@ public final class ORMCompiler {
         w.printf(RETURN_ARRAY_S_OBJECT, sb.toString());
     }
 
-    private static void compileCurrentValues(PrintWriter w, Map<String, ViewColumnMeta> columns) throws IOException {
+    private static void compileCurrentValues(PrintWriter w, Map<String, ViewColumnMeta> columns) {
         w.println("    def _currentValues(self):");
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, ViewColumnMeta> c : columns.entrySet())
@@ -466,7 +466,7 @@ public final class ORMCompiler {
         }
     }
 
-    private static void compileCurrentKeyValues(PrintWriter w, Set<Column> pk) throws IOException {
+    private static void compileCurrentKeyValues(PrintWriter w, Set<Column> pk) {
         w.println("    def _currentKeyValues(self):");
         StringBuilder sb = new StringBuilder();
         for (Column c : pk)
@@ -475,8 +475,7 @@ public final class ORMCompiler {
         w.printf(RETURN_ARRAY_S_OBJECT, sb.toString());
     }
 
-    private static void compileClearBuffer(PrintWriter w, Collection<Column> columns, Set<Column> pk)
-            throws IOException {
+    private static void compileClearBuffer(PrintWriter w, Collection<Column> columns, Set<Column> pk) {
         w.println(DEF_CLEAR_BUFFER_SELF_WITH_KEYS);
         w.println("        if withKeys:");
         for (Column c : pk) {
@@ -488,38 +487,52 @@ public final class ORMCompiler {
             }
     }
 
-    private static void compileClearBuffer(PrintWriter w, Collection<Column> columns) throws IOException {
+    private static void compileClearBuffer(PrintWriter w, Collection<Column> columns) {
         w.println(DEF_CLEAR_BUFFER_SELF_WITH_KEYS);
         for (Column c : columns) {
             w.printf(SELF_S_EQUALS_NONE, c.getName());
         }
     }
 
-    private static void compileParseResult(PrintWriter w, Collection<Column> columns) throws IOException {
+    private static void compileParseResult(PrintWriter w, Collection<Column> columns) {
         w.println("    def _parseResult(self, rs):");
         for (Column c : columns) {
             if (c instanceof BinaryColumn) {
                 w.printf(SELF_S_EQUALS_NONE, c.getName());
             } else {
                 w.printf("        if self.inRec('%s'):%n", c.getName());
-                w.printf("            self.%s = rs.%s('%s')%n", c.getName(), c.jdbcGetterName(), c.getName());
-                w.printf("            if rs.wasNull():%n");
-                w.printf("        " + SELF_S_EQUALS_NONE, c.getName());
+                if (c instanceof ZonedDateTimeColumn) {
+                    w.printf(
+                            "            self.%s = rs.%s('%s', Calendar.getInstance(TimeZone.getTimeZone(\"UTC\")))%n",
+                            c.getName(), c.jdbcGetterName(), c.getName()
+                    );
+                    w.printf(
+                            "            if not rs.wasNull():%n"
+                    );
+                    w.printf(
+                            "                self.%s = ZonedDateTime.of(self.%s.toLocalDateTime(), ZoneOffset.systemDefault())%n",
+                            c.getName(), c.getName()
+                    );
+                } else {
+                    w.printf("            self.%s = rs.%s('%s')%n", c.getName(), c.jdbcGetterName(), c.getName());
+                    w.printf("            if rs.wasNull():%n");
+                    w.printf("        " + SELF_S_EQUALS_NONE, c.getName());
+                }
             }
         }
     }
 
-    private static void compileTableName(GrainElement t, PrintWriter w) throws IOException {
+    private static void compileTableName(GrainElement t, PrintWriter w) {
         w.println("    def _tableName(self):");
         w.printf("        return '%s'%n", t.getName());
     }
 
-    private static void compileGrainName(GrainElement t, PrintWriter w) throws IOException {
+    private static void compileGrainName(GrainElement t, PrintWriter w) {
         w.println("    def _grainName(self):");
         w.printf("        return '%s'%n", t.getGrain().getName());
     }
 
-    private static void compileIterate(PrintWriter w) throws IOException {
+    private static void compileIterate(PrintWriter w) {
         w.println("    def iterate(self):");
         w.println("        if self.tryFindSet():");
         w.println("            while True:");
@@ -528,7 +541,7 @@ public final class ORMCompiler {
         w.println("                    break");
     }
 
-    private static void compileTableInit(PrintWriter w, Collection<Column> columns) throws IOException {
+    private static void compileTableInit(PrintWriter w, Collection<Column> columns) {
         w.println(DEF_INIT_SELF_CONTEXT_FIELDS);
         w.println("        if fields:");
         w.println("            Cursor.__init__(self, context, HashSet(fields))");
@@ -540,7 +553,7 @@ public final class ORMCompiler {
         w.println(SELF_CONTEXT_CONTEXT);
     }
 
-    private static void compileROTableInit(PrintWriter w, Collection<Column> columns) throws IOException {
+    private static void compileROTableInit(PrintWriter w, Collection<Column> columns) {
         w.println(DEF_INIT_SELF_CONTEXT_FIELDS);
         w.println("        if fields:");
         w.println("            ReadOnlyTableCursor.__init__(self, context, HashSet(fields))");
@@ -552,7 +565,7 @@ public final class ORMCompiler {
         w.println(SELF_CONTEXT_CONTEXT);
     }
 
-    private static void compileMaterializedViewInit(PrintWriter w, Collection<Column> columns) throws IOException {
+    private static void compileMaterializedViewInit(PrintWriter w, Collection<Column> columns) {
         w.println(DEF_INIT_SELF_CONTEXT_FIELDS);
         w.println("        if fields:");
         w.println("            MaterializedViewCursor.__init__(self, context, HashSet(fields))");
@@ -564,7 +577,7 @@ public final class ORMCompiler {
         w.println(SELF_CONTEXT_CONTEXT);
     }
 
-    private static void compileViewInit(PrintWriter w, Map<String, ViewColumnMeta> columns) throws IOException {
+    private static void compileViewInit(PrintWriter w, Map<String, ViewColumnMeta> columns) {
         w.println(DEF_INIT_SELF_CONTEXT_FIELDS);
         w.println("        if fields:");
         w.println("            ViewCursor.__init__(self, context, HashSet(fields))");
@@ -580,7 +593,7 @@ public final class ORMCompiler {
             PrintWriter w,
             Map<String, ViewColumnMeta> columns,
             ParameterizedView pv
-    ) throws IOException {
+    ) {
         String params = pv.getParameters().keySet().stream().collect(Collectors.joining(", "));
         w.printf(DEF_INIT_SELF_CONTEXT_PARAMS_FIELDS_TEMPLATE, params);
         w.println("        params = HashMap()");

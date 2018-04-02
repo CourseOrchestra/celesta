@@ -1,14 +1,15 @@
 # coding=UTF-8
 
 from _testTable_orm import tBlobCursor, tXRecCursor, tCsvLineCursor, tIterateCursor, \
-    tCopyFieldsCursor, tLimitCursor, tWithDecimalCursor
+    tCopyFieldsCursor, tLimitCursor, tWithDecimalCursor, tWithDateTimeZCursor
 
 from ru.curs.celesta import CelestaException
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
 from java.sql import Timestamp
-from java.time import LocalDateTime, Month
+from java.time import LocalDateTime, Month, ZonedDateTime, ZoneId
 from java.math import BigDecimal
+from java.util import TimeZone
 
 import java.io.OutputStreamWriter as OutputStreamWriter
 import java.io.InputStreamReader as InputStreamReader
@@ -194,6 +195,32 @@ class TestTable(CelestaTestCase):
         c.cost = BigDecimal('123.2')
         update = lambda : c.update()
         self.assertThrows(CelestaException, update)
+
+    def test_datetime_with_time_zone(self):
+        oldDefaultTimeZone = TimeZone.getDefault()
+        try:
+            TimeZone.setDefault(TimeZone.getTimeZone("GMT+4"))
+            c = tWithDateTimeZCursor(self.context)
+
+            zoneId = ZoneId.of("GMT+2")
+            #This is the datetime we will insert
+            localDateTime = LocalDateTime.of(2017, Month.DECEMBER, 31, 22, 0, 0)
+            zonedDateTime = ZonedDateTime.of(localDateTime, zoneId)
+            #This is the datetime we expect the database to receive
+            utcDateTime = LocalDateTime.of(2018, Month.JANUARY, 1, 0, 0, 0)
+
+            c.eventDate = zonedDateTime
+            c.insert()
+            c.clear()
+
+            c.first()
+
+            zoneIdAfterSelect = ZoneId.of("GMT+4")
+            self.assertEquals(utcDateTime, c.eventDate.toLocalDateTime())
+            self.assertEquals(zoneIdAfterSelect, c.eventDate.getZone())
+
+        finally:
+            TimeZone.setDefault(oldDefaultTimeZone)
 
 
     def _assertXRecCursorFields(self, cursor, id, num, cost, title, isActive, created):

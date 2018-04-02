@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.term;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
 import java.util.List;
@@ -24,8 +25,10 @@ public class ValuesCortegeTerm extends WhereTerm {
     }
 
     @Override
-    public void programParams(List<ParameterSetter> program) throws CelestaException {
-        fieldIndices.forEach((i) -> program.add(ParameterSetter.create(i)));
+    public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
+        fieldIndices.forEach(
+                (i) -> program.add(ParameterSetter.create(i, queryBuildingHelper))
+        );
     }
 
 }

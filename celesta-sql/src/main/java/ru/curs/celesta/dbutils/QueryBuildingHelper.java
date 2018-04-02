@@ -3,8 +3,9 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.DataGrainElement;
 import ru.curs.celesta.score.SQLGenerator;
-import ru.curs.celesta.score.Table;
 
+import java.sql.Connection;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
@@ -38,4 +39,6 @@ public interface QueryBuildingHelper {
 
 	//TODO: Javadoc
 	boolean supportsCortegeComparing();
+
+	ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z);
 }

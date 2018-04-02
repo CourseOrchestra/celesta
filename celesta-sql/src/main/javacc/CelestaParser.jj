@@ -145,6 +145,12 @@ PARSER_END(CelestaParser)
 |    <K_BEFORE:   "BEFORE">
 }
 
+<DATETIME_STATE> TOKEN:
+{
+    <K_TIME:         "TIME">
+|   <K_ZONE:         "ZONE">: DEFAULT
+}
+
 TOKEN: /* Datatypes */
 {
    <K_INT:       "INT">
@@ -364,7 +370,17 @@ void columnDefinition(Table table):
     |  (<K_BLOB>     {column = new BinaryColumn(table, t.toString()); t = null;}
 	       nullable = nullable()
 		  [<K_DEFAULT> t = <S_BINARY_LITERAL>])
-    |  (<K_DATETIME>  {column = new DateTimeColumn(table, t.toString()); t = null;}
+    |  (<K_DATETIME>
+        [
+            <K_WITH> {token_source.SwitchTo(DATETIME_STATE);}
+             <K_TIME> <K_ZONE> { column = new ZonedDateTimeColumn(table, t.toString());}
+        ]
+        {
+            if (column == null) {
+                column = column = new DateTimeColumn(table, t.toString());
+            }
+            t = null;
+        }
 	       nullable = nullable()
 		  [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <K_GETDATE> "(" ")")])
     |  (<K_BIT>       {column = new BooleanColumn(table, t.toString()); t = null;})

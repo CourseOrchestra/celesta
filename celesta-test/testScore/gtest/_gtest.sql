@@ -15,7 +15,8 @@ f9 datetime not null default getdate(),
 f10 blob default 0xFFAAFFAAFF,
 f11 blob not null,
 f12 decimal(11, 7),
-f13 decimal(5, 3) not null default 46.123
+f13 decimal(5, 3) not null default 46.123,
+f14 datetime with time zone
 );
 
 create index idxTest on test (f1);

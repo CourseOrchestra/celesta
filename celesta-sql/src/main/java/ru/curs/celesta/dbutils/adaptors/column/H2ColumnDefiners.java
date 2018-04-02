@@ -178,3 +178,20 @@ class H2DateTimeColumnDefiner extends ColumnDefiner {
         return defaultStr;
     }
 }
+
+class H2ZonedDateTimeColumnDefiner extends ColumnDefiner {
+    @Override
+    public String dbFieldType() {
+        return "timestamp with time zone";
+    }
+
+    @Override
+    public String getMainDefinition(Column c) {
+        return join(c.getQuotedName(), dbFieldType(), nullable(c));
+    }
+
+    @Override
+    public String getDefaultDefinition(Column c) {
+        return "";
+    }
+}

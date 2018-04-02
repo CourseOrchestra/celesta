@@ -2,6 +2,7 @@ package ru.curs.celesta.dbutils.stmt;
 
 import ru.curs.celesta.CelestaException;
 
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.Range;
 
 import java.sql.PreparedStatement;
@@ -12,7 +13,8 @@ import java.sql.PreparedStatement;
 public final class ValueToParameterSetter extends ParameterSetter {
   private final Range r;
 
-  ValueToParameterSetter(Range r) {
+  public ValueToParameterSetter(QueryBuildingHelper queryBuildingHelper, Range r) {
+    super(queryBuildingHelper);
     this.r = r;
   }
 

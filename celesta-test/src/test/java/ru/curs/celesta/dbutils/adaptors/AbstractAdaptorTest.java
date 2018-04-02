@@ -42,11 +42,17 @@ public abstract class AbstractAdaptorTest {
 
     private int insertRow(Connection conn, Table t, int val) throws IOException, CelestaException, SQLException {
         int count = t.getColumns().size();
-        assertEquals(15, count);
-        boolean[] nullsMask = {true, false, false, false, true, false, true, true, false, true, true, true, false, false, true};
+        assertEquals(16, count);
+        boolean[] nullsMask = {
+                true, false, false, false, true, false, true, true,
+                false, true, true, true, false, false, true, true
+        };
         BLOB b = new BLOB();
         b.getOutStream().write(new byte[]{1, 2, 3});
-        Object[] rowData = {null, "ab", val, false, null, 1.1, null, null, "eee", null, null, null, b, BigDecimal.ONE, null};
+        Object[] rowData = {
+                null, "ab", val, false, null, 1.1, null, null,
+                "eee", null, null, null, b, BigDecimal.ONE, null, null
+        };
         List<ParameterSetter> program = new ArrayList<>();
         PreparedStatement pstmt = dba.getInsertRecordStatement(conn, t, nullsMask, program);
         assertNotNull(pstmt);
@@ -207,15 +213,20 @@ public abstract class AbstractAdaptorTest {
         insertRow(conn, t, 1);
         assertEquals(1, getCount(conn, t));
 
-        assertEquals(15, t.getColumns().size());
-        boolean[] mask = {true, true, false, true, true, true, true, true, true, true, true, true, true, true, true};
-        boolean[] nullsMask = {false, false, false, false, false, false, false, false, false, false, false, false,
-                false, false, false};
-        Integer[] rec = {1, null, 2, null, null, null, null, null, null, null, null, null, null, null, null};
+        assertEquals(16, t.getColumns().size());
+        boolean[] mask = {
+                true, true, false, true, true, true, true, true,
+                true, true, true, true, true, true, true, true
+        };
+        boolean[] nullsMask = {
+                false, false, false, false, false, false, false, false,
+                false, false, false, false, false, false, false, false
+        };
+        Integer[] rec = {1, null, 2, null, null, null, null, null, null, null, null, null, null, null, null, null};
         List<ParameterSetter> program = new ArrayList<>();
         WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
         PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask, nullsMask, program, w.getWhere());
-        w.programParams(program);
+        w.programParams(program, dba);
         int i = 1;
         for (ParameterSetter ps : program) {
             ps.execute(pstmt, i++, rec, 1);
@@ -234,7 +245,7 @@ public abstract class AbstractAdaptorTest {
         PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere(), Collections.emptySet());
 
         List<ParameterSetter> program = new ArrayList<>();
-        w.programParams(program);
+        w.programParams(program, dba);
         int i = 1;
         for (ParameterSetter ps : program) {
             ps.execute(pstmt, i++, new Integer[]{1}, 1);
@@ -256,7 +267,7 @@ public abstract class AbstractAdaptorTest {
         // System.out.println(pstmt2.toString());
         assertNotNull(pstmt2);
 
-        w.programParams(program);
+        w.programParams(program, dba);
         i = 1;
         for (ParameterSetter ps : program) {
             ps.execute(pstmt2, i++, rec, 1);
@@ -306,7 +317,7 @@ public abstract class AbstractAdaptorTest {
         List<ParameterSetter> program = new ArrayList<>();
 
         PreparedStatement pstmt = dba.getDeleteRecordStatement(conn, t, w.getWhere());
-        w.programParams(program);
+        w.programParams(program, dba);
         int i = 1;
         for (ParameterSetter ps : program) {
             ps.execute(pstmt, i++, new Integer[]{1}, 1);
@@ -323,7 +334,7 @@ public abstract class AbstractAdaptorTest {
     public void getColumns() throws Exception {
         Set<String> columnSet = dba.getColumns(conn, t);
         assertNotNull(columnSet);
-        assertEquals(16, columnSet.size());
+        assertEquals(17, columnSet.size());
         assertTrue(columnSet.contains("f4"));
         assertFalse(columnSet.contains("nonExistentColumn"));
         // String[] columnNames = { "id", "attrVarchar", "attrInt", "f1",
@@ -368,7 +379,7 @@ public abstract class AbstractAdaptorTest {
 
         PreparedStatement pstmt = dba.getOneFieldStatement(conn, c, w.getWhere());
 
-        w.programParams(program);
+        w.programParams(program, dba);
         int i = 1;
         for (ParameterSetter ps : program) {
             ps.execute(pstmt, i++, new Integer[]{1}, 1);
@@ -390,7 +401,7 @@ public abstract class AbstractAdaptorTest {
 
         PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere(), Collections.emptySet());
 
-        w.programParams(program);
+        w.programParams(program, dba);
         int i = 1;
         for (ParameterSetter ps : program) {
             ps.execute(pstmt, i++, new Integer[]{1}, 1);
@@ -492,6 +503,16 @@ public abstract class AbstractAdaptorTest {
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
 
+        //f14 datetime with time zone
+        c = dba.getColumnInfo(conn, t.getColumn("f14"));
+        assertEquals("f14", c.getName());
+        assertSame(ZonedDateTimeColumn.class, c.getType());
+        assertEquals(true, c.isNullable());
+        assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
+        assertEquals("", c.getDefaultValue());
+        assertEquals(false, c.isMax());
+        assertEquals(false, c.isIdentity());
     }
 
     @Test
@@ -1198,7 +1219,7 @@ public abstract class AbstractAdaptorTest {
         assertNotNull(pstmt);
 
         List<ParameterSetter> program = new ArrayList<>();
-        w.programParams(program);
+        w.programParams(program, dba);
         int i = 1;
         for (ParameterSetter ps : program) {
             ps.execute(pstmt, i++, new Integer[]{555 /* key value */}, 1);
