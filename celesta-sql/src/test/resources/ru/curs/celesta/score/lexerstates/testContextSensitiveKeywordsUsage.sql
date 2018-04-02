@@ -10,5 +10,7 @@ CREATE TABLE foo (
   AUTOUPDATE int,
   READ int,
   ONLY int,
+  ZONE int,
+  TIME int,
   CONSTRAINT pk PRIMARY KEY (CYCLE)
 );

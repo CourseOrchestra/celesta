@@ -95,12 +95,10 @@ PARSER_END(CelestaParser)
 |   <K_SET:          "SET">
 |   <K_SUM:          "SUM">
 |   <K_TEXT:         "TEXT">
-|   <K_TIME:         "TIME">
 |   <K_TRUE:         "TRUE">
 |   <K_UPDATE:       "UPDATE">
 |   <K_WITH:         "WITH">
 |   <K_WHERE:        "WHERE">
-|   <K_ZONE:         "ZONE">
 |   <K_TABLE:        "TABLE">: DEFAULT
 |   <K_FUNCTION:     "FUNCTION">: DEFAULT
 |   <K_INDEX:        "INDEX">: DEFAULT
@@ -145,6 +143,12 @@ PARSER_END(CelestaParser)
 |    <NATIVE_SQL: "--{{" (~["-"]|"-"(("-")+"}-")*(~["-"]|("-")+(~["-", "}"]|"}"~["-", "}"])))*"-"(("-")+"}-")*("-")+"}}">
 |    <K_AFTER:    "AFTER">
 |    <K_BEFORE:   "BEFORE">
+}
+
+<DATETIME_STATE> TOKEN:
+{
+    <K_TIME:         "TIME">
+|   <K_ZONE:         "ZONE">: DEFAULT
 }
 
 TOKEN: /* Datatypes */
@@ -367,7 +371,10 @@ void columnDefinition(Table table):
 	       nullable = nullable()
 		  [<K_DEFAULT> t = <S_BINARY_LITERAL>])
     |  (<K_DATETIME>
-        [<K_WITH> <K_TIME> <K_ZONE> {column = new ZonedDateTimeColumn(table, t.toString());}]
+        [
+            <K_WITH> {token_source.SwitchTo(DATETIME_STATE);}
+             <K_TIME> <K_ZONE> { column = new ZonedDateTimeColumn(table, t.toString());}
+        ]
         {
             if (column == null) {
                 column = column = new DateTimeColumn(table, t.toString());
