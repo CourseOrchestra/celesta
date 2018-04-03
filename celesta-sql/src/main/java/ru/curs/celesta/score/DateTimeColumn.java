@@ -117,6 +117,11 @@ public final class DateTimeColumn extends Column {
 	}
 
 	@Override
+	public Class getJavaClass() {
+		return Date.class;
+	}
+
+	@Override
 	public String getCelestaDefault() {
 		if (isGetdate()) {
 			return "GETDATE()";

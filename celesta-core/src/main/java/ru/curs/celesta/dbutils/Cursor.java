@@ -53,6 +53,7 @@ import ru.curs.celesta.dbutils.stmt.PreparedStatementHolderFactory;
 import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
+import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
 /**
@@ -103,7 +104,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		cghb.withDb(db())
 				.withConn(conn())
 				.withMeta(meta())
-				.withTableName(_tableName());
+				.withTableName(_objectName());
 
 		getHelper = cghb.build();
 		inFilterHolder = new InFilterHolder(this);
@@ -116,7 +117,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		cghb.withDb(db())
 				.withConn(conn())
 				.withMeta(meta())
-				.withTableName(_tableName())
+				.withTableName(_objectName())
 				.withFields(fieldsForStatement);
 
 		getHelper = cghb.build();
@@ -159,7 +160,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
-			throw new CelestaException("Record %s (%s) already exists", _tableName(), sb.toString());
+			throw new CelestaException("Record %s (%s) already exists", _objectName(), sb.toString());
 		}
 	}
 
@@ -173,7 +174,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		if (!canInsert())
 			throw new PermissionDeniedException(callContext(), meta(), Action.INSERT);
 
-		_preInsert();
+		preInsert();
 		//TODO: одно из самых нуждающихся в переделке мест.
 		// на один insert--2 select-а, что вызывает справедливое возмущение тех, кто смотрит логи
 		// 1) Если у нас автоинкремент и автоинкрементное поле в None, то первый select не нужен
@@ -198,7 +199,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 			PreparedStatement ins = insert.getStatement(_currentValues(), recversion);
 
-			LoggingManager loggingManager = callContext().getLoggingManager();
+			ILoggingManager loggingManager = callContext().getLoggingManager();
 			if (ins.execute()) {
 				loggingManager.log(this, Action.INSERT);
 				ResultSet ret = ins.getResultSet();
@@ -219,7 +220,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 				getHelper.internalGet(this::_parseResult, this::initXRec,
 						recversion, _currentKeyValues());
-			_postInsert();
+			postInsert();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
@@ -241,7 +242,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
-			throw new CelestaException("Record %s (%s) does not exist.", _tableName(), sb.toString());
+			throw new CelestaException("Record %s (%s) does not exist.", _objectName(), sb.toString());
 		}
 	}
 
@@ -257,7 +258,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		if (!canModify())
 			throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
 
-		_preUpdate();
+		preUpdate();
 		PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
 		try {
 			ResultSet rs = g.executeQuery();
@@ -304,12 +305,12 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 			PreparedStatement upd = update.getStatement(values, recversion);
 
 			upd.execute();
-			LoggingManager loggingManager = callContext().getLoggingManager();
+			ILoggingManager loggingManager = callContext().getLoggingManager();
 			loggingManager.log(this, Action.MODIFY);
 			if (meta().isVersioned())
 				recversion++;
 			initXRec();
-			_postUpdate();
+			postUpdate();
 
 		} catch (SQLException e) {
 			if (e.getMessage().contains("record version check failure")) {
@@ -355,12 +356,12 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		PreparedStatement del = delete.getStatement(_currentValues(), recversion);
 
 		try {
-			_preDelete();
+			preDelete();
 			del.execute();
-			LoggingManager loggingManager = callContext().getLoggingManager();
+			ILoggingManager loggingManager = callContext().getLoggingManager();
 			loggingManager.log(this, Action.DELETE);
 			initXRec();
-			_postDelete();
+			postDelete();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
@@ -413,7 +414,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 					sb.append(", ");
 				sb.append(value == null ? "null" : value.toString());
 			}
-			throw new CelestaException("There is no %s (%s).", _tableName(), sb.toString());
+			throw new CelestaException("There is no %s (%s).", _objectName(), sb.toString());
 		}
 	}
 
@@ -564,7 +565,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		if (meta == null)
 			try {
 				meta = callContext().getScore()
-						.getGrain(_grainName()).getElement(_tableName(), Table.class);
+						.getGrain(_grainName()).getElement(_objectName(), Table.class);
 			} catch (ParseException e) {
 				throw new CelestaException(e.getMessage());
 			}
@@ -659,13 +660,13 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		IntegerColumn ic = TableElement.findIdentityField(meta());
 		if (ic == null)
 			throw new CelestaException("Cannot reset identity: there is no IDENTITY field defined for table %s.%s.",
-					_grainName(), _tableName());
+					_grainName(), _objectName());
 
 		try {
 			db().resetIdentity(conn(), meta(), newValue);
 		} catch (CelestaException e) {
 			throw new CelestaException("Cannot reset identity for table %s.%s with message '%s'.", _grainName(),
-					_tableName(), e.getMessage());
+					_objectName(), e.getMessage());
 		}
 	}
 
@@ -676,7 +677,31 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		return _currentKeyValues();
 	}
 
-	// CHECKSTYLE:OFF
+	private void preDelete() {
+		callContext().getCelesta().getTriggerDispatcher().fireTrigger(TriggerType.PRE_DELETE, this);
+	}
+
+	private void postDelete() {
+		callContext().getCelesta().getTriggerDispatcher().fireTrigger(TriggerType.POST_DELETE, this);
+	}
+
+	private void preUpdate() {
+		callContext().getCelesta().getTriggerDispatcher().fireTrigger(TriggerType.PRE_UPDATE, this);
+	}
+
+	private void postUpdate() {
+		callContext().getCelesta().getTriggerDispatcher().fireTrigger(TriggerType.POST_UPDATE, this);
+	}
+
+	private void preInsert() {
+		callContext().getCelesta().getTriggerDispatcher().fireTrigger(TriggerType.PRE_INSERT, this);
+	}
+
+	private void postInsert() {
+		callContext().getCelesta().getTriggerDispatcher().fireTrigger(TriggerType.POST_INSERT, this);
+	}
+
+
 	/*
 	 * Эта группа методов именуется по правилам Python, а не Java. В Python
 	 * имена protected-методов начинаются с underscore. Использование методов
@@ -686,17 +711,4 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	protected abstract Object[] _currentKeyValues();
 
 	protected abstract void _setAutoIncrement(int val);
-
-	protected abstract void _preDelete();
-
-	protected abstract void _postDelete();
-
-	protected abstract void _preUpdate();
-
-	protected abstract void _postUpdate();
-
-	protected abstract void _preInsert();
-
-	protected abstract void _postInsert();
-	// CHECKSTYLE:ON
 }

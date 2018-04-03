@@ -1,17 +1,17 @@
 package ru.curs.celesta.dbutils.term;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.python.google.common.primitives.Booleans;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.score.Table;
-import ru.curs.celesta.score.TableElement;
 
 /**
  * Produces navigation queries.
@@ -209,11 +209,13 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 
 
 		if (paramsProvider.dba().supportsCortegeComparing()) {
+			Set<Boolean> set = new HashSet<>();
+
+			for (boolean b: paramsProvider.descOrders())
+				set.add(b);
+
 			//Проверки возможности использовать кортежи
-			boolean allDescOrdersAreEquals = !(
-					Booleans.contains(paramsProvider.descOrders(), true)
-							&& Booleans.contains(paramsProvider.descOrders(), false)
-			);
+			boolean allDescOrdersAreEquals = set.size() == 1;
 
 
 			if (allDescOrdersAreEquals) {

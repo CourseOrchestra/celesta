@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Table;
@@ -28,7 +27,7 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
 		if (meta == null)
 			try {
 				meta = callContext().getScore()
-						.getGrain(_grainName()).getElement(_tableName(), Table.class);
+						.getGrain(_grainName()).getElement(_objectName(), Table.class);
 			} catch (ParseException e) {
 				throw new CelestaException(e.getMessage());
 			}

@@ -3,17 +3,9 @@ package ru.curs.celesta;
 import java.sql.*;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.Map.Entry;
 
-import org.python.core.Py;
-import org.python.core.PyDictionary;
-import org.python.core.PyObject;
-import org.python.core.PyString;
-import org.python.core.PyType;
 
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
@@ -23,8 +15,18 @@ import ru.curs.celesta.score.Score;
 /**
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
  * идентификатор пользователя.
+ *
+ * @param <T> heir class of CallContext
+ * @param <R> heir class of SessionContext
+ * @param <E> class of data accessor to create and put into cash (crutch, must be removed, cuz it's a PyType in celesta-module)
+ * @param <F>  class of created data accessor (crutch, must be removed, cuz it's a PyObject in celesta-module)
+ *           Types E and F are temporary parameters. CallContext must not resolve purposes of cursors caching.
  */
-public final class CallContext implements ICallContext {
+public abstract class CallContext
+		<
+		T extends CallContext<T, R, E, F>, R extends SessionContext, E extends Object, F extends Object
+		>
+		implements ICallContext {
 
 	/**
 	 * Максимальное число объектов доступа, которое может быть открыто в одном
@@ -32,22 +34,20 @@ public final class CallContext implements ICallContext {
 	 */
 	public static final int MAX_DATA_ACCESSORS = 1023;
 
-	private static final String ERROR = "ERROR: %s";
-
 	private static final Map<Connection, Integer> PIDSCACHE = Collections
 			.synchronizedMap(new WeakHashMap<Connection, Integer>());
 
-	private final Celesta celesta;
-	private final ConnectionPool connectionPool;
+	protected final ICelesta celesta;
+	protected final ConnectionPool connectionPool;
 	private final Connection conn;
-	private final Score score;
-	private final Grain grain;
-	private final String procName;
-	private final SessionContext sesContext;
-	private final ShowcaseContext showcaseContext;
-	private final DBAdaptor dbAdaptor;
-	private final PermissionManager permissionManager;
-	private final LoggingManager loggingManager;
+	protected final Score score;
+	protected final Grain grain;
+	protected final String procName;
+	protected final R sesContext;
+	protected final ShowcaseContext showcaseContext;
+	protected final DBAdaptor dbAdaptor;
+	protected final IPermissionManager permissionManager;
+	protected final ILoggingManager loggingManager;
 
 	private final int dbPid;
 	private final Date startTime = new Date();
@@ -57,12 +57,10 @@ public final class CallContext implements ICallContext {
 
 	private boolean closed = false;
 
-	private final HashMap<PyString, PyObject> dataAccessorsCache = new HashMap<>();
-
-	public CallContext(CallContext context, Celesta celesta, ConnectionPool connectionPool, SessionContext sesContext,
-					   ShowcaseContext showcaseContext, Score score, Grain curGrain, String procName,
-					   DBAdaptor dbAdaptor, PermissionManager permissionManager, LoggingManager loggingManager)
+	public CallContext(CallContextBuilder<? extends CallContextBuilder, T, R> contextBuilder)
 			throws CelestaException {
+
+		CallContext context = contextBuilder.callContext;
 
 		if (context != null) {
 			this.connectionPool = context.connectionPool;
@@ -72,23 +70,22 @@ public final class CallContext implements ICallContext {
 			this.celesta = context.celesta;
 			this.dbAdaptor = context.dbAdaptor;
 		} else {
-			this.connectionPool = connectionPool;
-			this.score = score;
-			this.permissionManager = permissionManager;
-			this.loggingManager = loggingManager;
-			this.celesta = celesta;
-			this.dbAdaptor = dbAdaptor;
+			this.connectionPool = contextBuilder.connectionPool;
+			this.score = contextBuilder.score;
+			this.permissionManager = contextBuilder.permissionManager;
+			this.loggingManager = contextBuilder.loggingManager;
+			this.celesta = contextBuilder.celesta;
+			this.dbAdaptor = contextBuilder.dbAdaptor;
 		}
 
 		this.conn = this.connectionPool.get();
-		this.sesContext = sesContext;
-		this.grain = curGrain;
-		this.procName = procName;
-		this.showcaseContext = showcaseContext;
+		this.sesContext = contextBuilder.sesContext;
+		this.grain = contextBuilder.curGrain;
+		this.procName = contextBuilder.procName;
+		this.showcaseContext = contextBuilder.showcaseContext;
 
 		this.dbPid = PIDSCACHE.computeIfAbsent(this.conn, this.dbAdaptor::getDBPid);
 	}
-
 
 	/**
 	 * Duplicates callcontext with another JDBC connection.
@@ -96,20 +93,7 @@ public final class CallContext implements ICallContext {
 	 * @throws CelestaException
 	 *             cannot create adaptor
 	 */
-	public CallContext getCopy() throws CelestaException {
-		return new CallContextBuilder()
-				.setCelesta(celesta)
-				.setConnectionPool(connectionPool)
-				.setSesContext(sesContext)
-				.setShowcaseContext(showcaseContext)
-				.setScore(score)
-				.setCurGrain(grain)
-				.setProcName(procName)
-				.setDbAdaptor(dbAdaptor)
-				.setPermissionManager(permissionManager)
-				.setLoggingManager(loggingManager)
-				.createCallContext();
-	}
+	public abstract T getCopy() throws CelestaException;
 
 	public Connection getConn() {
 		return conn;
@@ -126,12 +110,6 @@ public final class CallContext implements ICallContext {
 		return sesContext.getSessionId();
 	}
 
-	/**
-	 * Данные сессии.
-	 */
-	public PyDictionary getData() {
-		return sesContext.getData();
-	}
 
 
 	/**
@@ -148,137 +126,7 @@ public final class CallContext implements ICallContext {
 		}
 	}
 
-	/**
-	 * Инициирует информационное сообщение.
-	 * 
-	 * @param msg
-	 *            текст сообщения
-	 */
-	public void message(String msg) {
-		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg));
-	}
-
-	/**
-	 * Инициирует информационное сообщение.
-	 * 
-	 * @param msg
-	 *            текст сообщения
-	 * @param caption
-	 *            Заголовок окна.
-	 */
-	public void message(String msg, String caption) {
-		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg, caption));
-	}
-
-	/**
-	 * Инициирует информационное сообщение.
-	 * 
-	 * @param msg
-	 *            текст сообщения
-	 * 
-	 * @param caption
-	 *            Заголовок окна.
-	 * 
-	 * @param subkind
-	 *            Субтип сообщения.
-	 * 
-	 */
-	public void message(String msg, String caption, String subkind) {
-		sesContext.addMessage(new CelestaMessage(CelestaMessage.INFO, msg, caption, subkind));
-	}
-
-	/**
-	 * Инициирует предупреждение.
-	 * 
-	 * @param msg
-	 *            текст сообщения
-	 */
-	public void warning(String msg) {
-		sesContext.addMessage(new CelestaMessage(CelestaMessage.WARNING, msg));
-	}
-
-	/**
-	 * Инициирует предупреждение.
-	 * 
-	 * @param msg
-	 *            текст сообщения
-	 * @param caption
-	 *            Заголовок окна.
-	 */
-	public void warning(String msg, String caption) {
-		sesContext.addMessage(new CelestaMessage(CelestaMessage.WARNING, msg, caption));
-	}
-
-	/**
-	 * Инициирует предупреждение.
-	 * 
-	 * @param msg
-	 *            текст сообщения
-	 * 
-	 * @param caption
-	 *            Заголовок окна.
-	 * 
-	 * @param subkind
-	 *            Субтип сообщения.
-	 * 
-	 */
-	public void warning(String msg, String caption, String subkind) {
-		sesContext.addMessage(new CelestaMessage(CelestaMessage.WARNING, msg, caption, subkind));
-	}
-
-	/**
-	 * Инициирует ошибку и вызывает исключение.
-	 * 
-	 * @param msg
-	 *            текст сообщения
-	 * @throws CelestaException
-	 *             во всех случаях, при этом с переданным текстом
-	 */
-	public void error(String msg) throws CelestaException {
-		sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg));
-		throw new CelestaException(ERROR, msg);
-	}
-
-	/**
-	 * Инициирует ошибку и вызывает исключение.
-	 * 
-	 * @param msg
-	 *            текст сообщения
-	 * @param caption
-	 *            Заголовок окна.
-	 * @throws CelestaException
-	 *             во всех случаях, при этом с переданным текстом
-	 */
-	public void error(String msg, String caption) throws CelestaException {
-		sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg, caption));
-		throw new CelestaException(ERROR, msg);
-	}
-
-	/**
-	 * Инициирует ошибку и вызывает исключение.
-	 * 
-	 * @param msg
-	 *            текст сообщения
-	 * @param caption
-	 *            Заголовок окна.
-	 * @param subkind
-	 *            Субтип сообщения.
-	 * @throws CelestaException
-	 *             во всех случаях, при этом с переданным текстом
-	 */
-	public void error(String msg, String caption, String subkind) throws CelestaException {
-		sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg, caption, subkind));
-		throw new CelestaException(ERROR, msg);
-	}
-
-	/**
-	 * Возвращает экземпляр Celesta, использованный при создании контекста
-	 * вызова.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка инициализации Celesta
-	 */
-	public Celesta getCelesta() throws CelestaException {
+	public ICelesta getCelesta() {
 		return celesta;
 	}
 
@@ -363,47 +211,16 @@ public final class CallContext implements ICallContext {
 		return closed;
 	}
 
-	public PermissionManager getPermissionManager() {
+	public IPermissionManager getPermissionManager() {
 		return permissionManager;
 	}
 
-	public LoggingManager getLoggingManager() {
+	public ILoggingManager getLoggingManager() {
 		return loggingManager;
 	}
 
 	public DBAdaptor getDbAdaptor() {
 		return dbAdaptor;
-	}
-
-	/**
-	 * Возвращает объект доступа dataAccessorClass.
-	 * 
-	 * Все созданные объекты доступа кэшируются и возвращаются при последюущем запросе
-	 * dataAccessorClass. Каждый возвращаемый объект доступа предварительно очищается
-	 * (clear()).
-	 * 
-	 * @param dataAccessorClass
-	 *            класс объекта доступа
-	 * @return объект доступа
-	 */
-	public PyObject create(final PyType dataAccessorClass) throws CelestaException {
-		PyString classId = dataAccessorClass.__str__();
-		PyObject result = dataAccessorsCache.computeIfAbsent(classId, (s) -> dataAccessorClass.__call__(Py.java2py(this)));
-		BasicDataAccessor basicDataAccessor = (BasicDataAccessor) result.__tojava__(BasicDataAccessor.class);
-		basicDataAccessor.clear();
-		return result;
-	}
-
-
-	public void removeFromCache(final BasicDataAccessor dataAccessor) {
-		Iterator<Entry<PyString, PyObject>> i = dataAccessorsCache.entrySet().iterator();
-		while (i.hasNext()) {
-			Entry<PyString, PyObject> e = i.next();
-			BasicDataAccessor basicDataAccessor = (BasicDataAccessor) e.getValue().__tojava__(BasicDataAccessor.class);
-			if (dataAccessor.equals(basicDataAccessor)) {
-				i.remove();
-			}
-		}
 	}
 
 	@Override
@@ -418,5 +235,97 @@ public final class CallContext implements ICallContext {
 
 	void rollback() throws SQLException {
 		conn.rollback();
+	}
+
+
+	/**
+	 * Возвращает объект доступа dataAccessorClass.
+	 *
+	 * Все созданные объекты доступа кэшируются и возвращаются при последюущем запросе
+	 * dataAccessorClass. Каждый возвращаемый объект доступа предварительно очищается
+	 * (clear()).
+	 *
+	 * @param dataAccessorClass
+	 *            класс объекта доступа
+	 * @return объект доступа
+	 */
+	public abstract F create(E dataAccessorClass) throws CelestaException;
+
+	public abstract void removeFromCache(BasicDataAccessor dataAccessor);
+
+	public static abstract class CallContextBuilder<T extends CallContextBuilder<T, R, E>,
+			R extends CallContext, E extends SessionContext> {
+
+		protected R callContext = null;
+		protected ICelesta celesta = null;
+		protected ConnectionPool connectionPool = null;
+		protected E sesContext = null;
+		protected Score score = null;
+		protected ShowcaseContext showcaseContext = null;
+		protected Grain curGrain = null;
+		protected String procName = null;
+		protected DBAdaptor dbAdaptor = null;
+		protected IPermissionManager permissionManager;
+		protected ILoggingManager loggingManager;
+
+
+		protected abstract T getThis();
+
+		public T setCallContext(R callContext) {
+			this.callContext = callContext;
+			return getThis();
+		}
+
+		public T setCelesta(ICelesta celesta) {
+			this.celesta = celesta;
+			return getThis();
+		}
+
+		public T setConnectionPool(ConnectionPool connectionPool) {
+			this.connectionPool = connectionPool;
+			return getThis();
+		}
+
+		public T setSesContext(E sesContext) {
+			this.sesContext = sesContext;
+			return getThis();
+		}
+
+		public T setScore(Score score) {
+			this.score = score;
+			return getThis();
+		}
+
+		public T setShowcaseContext(ShowcaseContext showcaseContext) {
+			this.showcaseContext = showcaseContext;
+			return getThis();
+		}
+
+		public T setCurGrain(Grain curGrain) {
+			this.curGrain = curGrain;
+			return getThis();
+		}
+
+		public T setProcName(String procName) {
+			this.procName = procName;
+			return getThis();
+		}
+
+		public T setDbAdaptor(DBAdaptor dbAdaptor) {
+			this.dbAdaptor = dbAdaptor;
+			return getThis();
+		}
+
+		public T setPermissionManager(IPermissionManager permissionManager) {
+			this.permissionManager = permissionManager;
+			return getThis();
+		}
+
+		public T setLoggingManager(ILoggingManager loggingManager) {
+			this.loggingManager = loggingManager;
+			return getThis();
+		}
+
+		public abstract R createCallContext() throws CelestaException;
 	}
 }

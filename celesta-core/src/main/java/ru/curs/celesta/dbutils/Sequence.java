@@ -34,7 +34,7 @@ public abstract class Sequence extends BasicDataAccessor {
         if (meta == null)
             try {
                 meta = callContext().getScore()
-                        .getGrain(_grainName()).getElement(_tableName(), SequenceElement.class);
+                        .getGrain(_grainName()).getElement(_objectName(), SequenceElement.class);
             } catch (ParseException e) {
                 throw new CelestaException(e.getMessage());
             }

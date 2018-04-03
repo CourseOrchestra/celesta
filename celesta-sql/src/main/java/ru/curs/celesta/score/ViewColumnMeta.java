@@ -47,6 +47,11 @@ public final class ViewColumnMeta implements ColumnMeta {
 	}
 
 	@Override
+	public Class getJavaClass() {
+		return type.getJavaClass();
+	}
+
+	@Override
 	public boolean isNullable() {
 		return nullable;
 	}

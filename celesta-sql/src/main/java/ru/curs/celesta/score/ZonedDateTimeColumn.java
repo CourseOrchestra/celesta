@@ -2,6 +2,7 @@ package ru.curs.celesta.score;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 public final class ZonedDateTimeColumn extends Column {
@@ -24,7 +25,7 @@ public final class ZonedDateTimeColumn extends Column {
     }
 
     @Override
-    public Date getDefaultValue() {
+    public ZonedDateTime getDefaultValue() {
         return null;
     }
 
@@ -45,6 +46,11 @@ public final class ZonedDateTimeColumn extends Column {
     @Override
     public String getCelestaType() {
         return CELESTA_TYPE;
+    }
+
+    @Override
+    public Class getJavaClass() {
+        return ZonedDateTime.class;
     }
 
     @Override

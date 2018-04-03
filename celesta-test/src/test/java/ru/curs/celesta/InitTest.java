@@ -38,7 +38,7 @@ public class InitTest {
 
     @Test
     public void grainCusrorIsCallable() throws CelestaException {
-        SessionContext sc = new SessionContext("user", "S");
+        PySessionContext sc = new PySessionContext("user", "S");
         try (CallContext ctxt = celesta.callContext(sc)) {
             GrainsCursor g = new GrainsCursor(ctxt);
             assertEquals("grains", g.meta().getName());
@@ -55,7 +55,7 @@ public class InitTest {
 
     @Test
     public void logCursorIsCallable() throws CelestaException {
-        SessionContext sc = new SessionContext("user", "S");
+        PySessionContext sc = new PySessionContext("user", "S");
         try (CallContext ctxt = celesta.callContext(sc)) {
             LogCursor l = new LogCursor(ctxt);
             assertEquals("log", l.meta().getName());
@@ -75,12 +75,12 @@ public class InitTest {
 
     @Test
     public void cursorsAreClosingOnContext() throws CelestaException {
-        SessionContext sc = new SessionContext("user", "S");
+        PySessionContext sc = new PySessionContext("user", "S");
         try (CallContext ctxt = celesta.callContext(sc)) {
             BasicCursor a = new LogCursor(ctxt);
             BasicCursor b = new PermissionsCursor(ctxt);
             BasicCursor c = new RolesCursor(ctxt);
-            BasicCursor d = new CallLogCursor(ctxt);
+            BasicCursor d = new CalllogCursor(ctxt);
             assertFalse(a.isClosed());
             assertFalse(b.isClosed());
             assertFalse(c.isClosed());

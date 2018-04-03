@@ -36,13 +36,13 @@ public class CelestaScriptsTest {
   static Celesta msSqlCelesta;
 
 
-  static SessionContext sessionContext;
+  static PySessionContext sessionContext;
 
   CallContext context;
 
   @BeforeAll
   public static void init() throws CelestaException {
-    sessionContext = new SessionContext("super", "debug");
+    sessionContext = new PySessionContext("super", "debug");
 
     Properties properties = new Properties();
     properties.put("score.path", "score");

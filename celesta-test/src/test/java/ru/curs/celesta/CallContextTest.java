@@ -2,7 +2,7 @@ package ru.curs.celesta;
 
 import org.junit.jupiter.api.*;
 import ru.curs.celesta.syscursors.GrainsCursor;
-import ru.curs.celesta.syscursors.LogSetupCursor;
+import ru.curs.celesta.syscursors.LogsetupCursor;
 
 import java.sql.SQLException;
 import java.util.Properties;
@@ -15,7 +15,7 @@ public class CallContextTest {
 
     private static Celesta celesta;
 
-    private SessionContext sc = new SessionContext("super", "foo");
+    private PySessionContext sc = new PySessionContext("super", "foo");
     private CallContext context;
 
     @BeforeAll
@@ -29,7 +29,7 @@ public class CallContextTest {
 
     @AfterAll
     public static void destroy() throws CelestaException, SQLException {
-        celesta.callContext(new SessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
+        celesta.callContext(new PySessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
         celesta.close();
     }
 
@@ -46,7 +46,7 @@ public class CallContextTest {
     @Test
     public void testClose() throws CelestaException {
         GrainsCursor grainsCursor = new GrainsCursor(context);
-        LogSetupCursor logSetupCursor = new LogSetupCursor(context);
+        LogsetupCursor logSetupCursor = new LogsetupCursor(context);
 
         assertAll(
                 () -> assertFalse(context.isClosed()),

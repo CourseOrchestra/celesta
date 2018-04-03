@@ -32,11 +32,11 @@ public interface ISchemaCursor {
 
     ICallContext callContext();
 
-    void setState(int state);
+    void setState(Integer state);
 
     void setChecksum(String checksum);
 
-    void setLength(int length);
+    void setLength(Integer length);
 
     Date getLastmodified();
 
@@ -56,11 +56,11 @@ public interface ISchemaCursor {
 
     String getId();
 
-    int getState();
+    Integer getState();
 
     String getVersion();
 
-    int getLength();
+    Integer getLength();
 
     String getChecksum();
 

@@ -1,12 +1,11 @@
 package ru.curs.celesta.score;
 
+import org.json.JSONException;
+import ru.curs.celesta.CelestaException;
+
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Объект-таблица в метаданных.
@@ -367,6 +366,22 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 
 	void removeIndex(Index index) {
 		indices.remove(index);
+	}
+
+
+	/**
+	 * Возвращает интерфейсы, реализуемые курсором (значение свойства implements) для данной таблицы.
+	 *
+	 * @throws CelestaException
+	 *             в случае, если интерфейсы заданы неверно.
+	 */
+	public List<String> getImplements() throws CelestaException {
+		try {
+			return CelestaDocUtils.getList(getCelestaDoc(), CelestaDocUtils.IMPLEMENTS);
+		} catch (JSONException e1) {
+			throw new CelestaException("Error in CelestaDoc for %s.%s: %s", getGrain().getName(),
+					getName(), e1.getMessage());
+		}
 	}
 
 }

@@ -11,7 +11,7 @@ class ttt1Cursor(ReadOnlyTableCursor):
         self.context = context
     def _grainName(self):
         return 'test1'
-    def _tableName(self):
+    def _objectName(self):
         return 'ttt1'
     def _parseResult(self, rs):
         if self.inRec('id'):
@@ -38,12 +38,24 @@ class ttt1Cursor(ReadOnlyTableCursor):
                     break
 
 class ttt2Cursor(Cursor):
-    onPreDelete  = []
-    onPostDelete = []
-    onPreInsert  = []
-    onPostInsert = []
-    onPreUpdate  = []
-    onPostUpdate = []
+    @staticmethod
+    def onPreDelete(celesta, f):
+        TriggerRegister.registerTrigger(celesta, TriggerType.PRE_DELETE, f, ttt2Cursor)
+    @staticmethod
+    def onPostDelete(celesta, f):
+        TriggerRegister.registerTrigger(celesta, TriggerType.POST_DELETE, f, ttt2Cursor)
+    @staticmethod
+    def onPreInsert(celesta, f):
+        TriggerRegister.registerTrigger(celesta, TriggerType.PRE_INSERT, f, ttt2Cursor)
+    @staticmethod
+    def onPostInsert(celesta, f):
+        TriggerRegister.registerTrigger(celesta, TriggerType.POST_INSERT, f, ttt2Cursor)
+    @staticmethod
+    def onPreUpdate(celesta, f):
+        TriggerRegister.registerTrigger(celesta, TriggerType.PRE_UPDATE, f, ttt2Cursor)
+    @staticmethod
+    def onPostUpdate(celesta, f):
+        TriggerRegister.registerTrigger(celesta, TriggerType.POST_UPDATE, f, ttt2Cursor)
     class descr:
         one = 'one'
         two = 'two'
@@ -58,7 +70,7 @@ class ttt2Cursor(Cursor):
         self.context = context
     def _grainName(self):
         return 'test1'
-    def _tableName(self):
+    def _objectName(self):
         return 'ttt2'
     def _parseResult(self, rs):
         if self.inRec('id'):
@@ -82,24 +94,6 @@ class ttt2Cursor(Cursor):
         return array([None if self.id == None else int(self.id), None if self.descr == None else unicode(self.descr)], Object)
     def _setAutoIncrement(self, val):
         pass
-    def _preDelete(self):
-        for f in ttt2Cursor.onPreDelete:
-            f(self)
-    def _postDelete(self):
-        for f in ttt2Cursor.onPostDelete:
-            f(self)
-    def _preInsert(self):
-        for f in ttt2Cursor.onPreInsert:
-            f(self)
-    def _postInsert(self):
-        for f in ttt2Cursor.onPostInsert:
-            f(self)
-    def _preUpdate(self):
-        for f in ttt2Cursor.onPreUpdate:
-            f(self)
-    def _postUpdate(self):
-        for f in ttt2Cursor.onPostUpdate:
-            f(self)
     def _getBufferCopy(self, context, fields=None):
         result = ttt2Cursor(context, fields)
         result.copyFieldsFrom(self)

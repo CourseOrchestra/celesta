@@ -179,6 +179,11 @@ public final class StringColumn extends Column {
 	}
 
 	@Override
+	public Class getJavaClass() {
+		return String.class;
+	}
+
+	@Override
 	public String getCelestaDefault() {
 		return defaultvalue == null ? null : quoteString(defaultvalue);
 	}

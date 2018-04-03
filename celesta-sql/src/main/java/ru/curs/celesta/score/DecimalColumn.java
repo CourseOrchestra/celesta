@@ -88,6 +88,10 @@ public class DecimalColumn extends Column {
         return CELESTA_TYPE;
     }
 
+    @Override
+    public Class getJavaClass() {
+        return BigDecimal.class;
+    }
 
     @Override
     void save(PrintWriter bw) throws IOException {
