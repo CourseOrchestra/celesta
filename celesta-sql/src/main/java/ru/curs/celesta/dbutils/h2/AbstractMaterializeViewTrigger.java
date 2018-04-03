@@ -35,10 +35,11 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
 
     @Override
     public void init(Connection connection, String schemaName, String triggerName, String tableName,
-                     boolean before, int type) throws SQLException {
+                     boolean before, int type) {
 
         try {
-            Map<String, Grain> grains = CurrentScore.get().getGrains();
+            AbstractScore score = CurrentScore.get();
+            Map<String, Grain> grains = score.getGrains();
             Grain g = grains.get(schemaName);
             t = g.getElement(tableName, Table.class);
 
@@ -91,17 +92,15 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
 
 
     void delete(Connection conn, Object[] row) throws SQLException {
-        StringBuilder deleteSqlBuilder = new StringBuilder("DELETE FROM %s WHERE %s");
 
         HashMap<String, Object> groupByColumnValues = getTableRowGroupByColumns(row);
 
-        String deleteSql = String.format(deleteSqlBuilder.toString(), mvFullName, keySearchTerm);
+        String deleteSql = String.format("DELETE FROM %s WHERE %s", mvFullName, keySearchTerm);
 
         setParamsAndRun(conn, groupByColumnValues, deleteSql);
     }
 
     void insert(Connection conn, Object[] row) throws SQLException {
-        StringBuilder insertSqlBuilder = new StringBuilder("INSERT INTO %s (%s) %s");
 
         HashMap<String, Object> groupByColumnValues = getTableRowGroupByColumns(row);
 
@@ -153,7 +152,7 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
         selectStmtBuilder.append(" WHERE ").append(whereCondition)
                 .append(mv.getGroupByPartOfScript());
 
-        String insertSql = String.format(insertSqlBuilder.toString(), mvFullName,
+        String insertSql = String.format("INSERT INTO %s (%s) %s", mvFullName,
                 mvAllColumns + ", \"" + MaterializedView.SURROGATE_COUNT + "\"", selectStmtBuilder.toString());
 
 
@@ -171,11 +170,13 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
     }
 
     @Override
-    public void close() throws SQLException {
+    public void close() {
+        //nothing to do
     }
 
     @Override
-    public void remove() throws SQLException {
+    public void remove() {
+        //nothing to do
     }
 
     abstract String getNamePrefix();

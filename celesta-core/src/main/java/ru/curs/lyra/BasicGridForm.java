@@ -1,6 +1,5 @@
 package ru.curs.lyra;
 
-import java.sql.Connection;
 import java.util.*;
 
 import ru.curs.celesta.*;
