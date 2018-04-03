@@ -1,7 +1,5 @@
 package ru.curs.celesta;
 
-import org.h2.tools.Server;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.*;
@@ -44,7 +42,7 @@ class H2MixedModeTest {
         ) {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("select count(*) from \"celesta\".\"grains\"");
-            rs.next();
+            assertTrue(rs.next());
             assertTrue(rs.getInt(1) > 0);
         }
     }

@@ -60,7 +60,6 @@ public class InitTest {
             LogCursor l = new LogCursor(ctxt);
             assertEquals("log", l.meta().getName());
             l.orderBy("userid ASC", "pkvalue3 DESC", "pkvalue2");
-            boolean itWas = false;
             assertAll(
                     // Неизвестная колонка
                     () -> assertThrows(CelestaException.class,
