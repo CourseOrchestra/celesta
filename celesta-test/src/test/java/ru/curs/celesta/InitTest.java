@@ -1,113 +1,97 @@
 package ru.curs.celesta;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Properties;
-
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.syscursors.CallLogCursor;
-import ru.curs.celesta.syscursors.GrainsCursor;
-import ru.curs.celesta.syscursors.LogCursor;
-import ru.curs.celesta.syscursors.PermissionsCursor;
-import ru.curs.celesta.syscursors.RolesCursor;
+import ru.curs.celesta.syscursors.*;
+
+import java.sql.SQLException;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class InitTest {
 
-	private static Celesta celesta;
+    private static Celesta celesta;
 
-	@BeforeAll
-	public static void init() throws IOException, CelestaException {
-		Properties params = new Properties();
-		params.setProperty("score.path", "score");
-		params.setProperty("h2.in-memory", "true");
+    @BeforeAll
+    public static void init() throws CelestaException {
+        Properties params = new Properties();
+        params.setProperty("score.path", "score");
+        params.setProperty("h2.in-memory", "true");
+        celesta = Celesta.createInstance(params);
 
-		celesta = Celesta.createInstance(params);
-	}
+        assertSame(celesta.getSetupProperties(), params);
+    }
 
-	@AfterAll
-	public static void destroy() throws CelestaException, SQLException {
-		celesta.connectionPool.get().createStatement().execute("SHUTDOWN");
-		celesta.close();
-	}
+    @AfterAll
+    public static void destroy() throws CelestaException, SQLException {
+        celesta.connectionPool.get().createStatement().execute("SHUTDOWN");
+        celesta.close();
+    }
 
-	@Test
-	public void testGetInstance() throws CelestaException {
-		assertNotNull(celesta);
-	}
+    @Test
+    public void testGetInstance() throws CelestaException {
+        assertNotNull(celesta);
+    }
 
-	@Test
-	public void grainCusrorIsCallable() throws CelestaException {
-		SessionContext sc = new SessionContext("user", "S");
-		try (CallContext ctxt = celesta.callContext(sc)) {
-			GrainsCursor g = new GrainsCursor(ctxt);
-			assertEquals("grains", g.meta().getName());
-			assertEquals(8, g.getMaxStrLen("checksum"));
-			assertEquals(30, g.getMaxStrLen("id"));
-			assertEquals(-1, g.getMaxStrLen("message"));
-			g.reset();
-			g.init();
-			g.clear();
+    @Test
+    public void grainCusrorIsCallable() throws CelestaException {
+        SessionContext sc = new SessionContext("user", "S");
+        try (CallContext ctxt = celesta.callContext(sc)) {
+            GrainsCursor g = new GrainsCursor(ctxt);
+            assertEquals("grains", g.meta().getName());
+            assertEquals(8, g.getMaxStrLen("checksum"));
+            assertEquals(30, g.getMaxStrLen("id"));
+            assertEquals(-1, g.getMaxStrLen("message"));
+            g.reset();
+            g.init();
+            g.clear();
 
-			g.close();
-		}
-	}
+            g.close();
+        }
+    }
 
-	@Test
-	public void logCursorIsCallable() throws CelestaException {
-		SessionContext sc = new SessionContext("user", "S");
-		try (CallContext ctxt = celesta.callContext(sc)) {
-			LogCursor l = new LogCursor(ctxt);
-			assertEquals("log", l.meta().getName());
-			l.orderBy("userid ASC", "pkvalue3 DESC", "pkvalue2");
-			boolean itWas = false;
-			// Неизвестная колонка
-			try {
-				l.orderBy("userid", "psekvalue3 ASC", "pkvsealue3");
-			} catch (CelestaException e) {
-				itWas = true;
-			}
-			assertTrue(itWas);
+    @Test
+    public void logCursorIsCallable() throws CelestaException {
+        SessionContext sc = new SessionContext("user", "S");
+        try (CallContext ctxt = celesta.callContext(sc)) {
+            LogCursor l = new LogCursor(ctxt);
+            assertEquals("log", l.meta().getName());
+            l.orderBy("userid ASC", "pkvalue3 DESC", "pkvalue2");
+            assertAll(
+                    // Неизвестная колонка
+                    () -> assertThrows(CelestaException.class,
+                            () -> l.orderBy("userid", "psekvalue3 ASC", "pkvsealue3")),
+                    // Повтор колонок
+                    () -> assertThrows(CelestaException.class,
+                            () -> l.orderBy("userid ASC", "pkvalue3 ASC", "pkvalue3 DESC")),
+                    // Пустой orderBy
+                    () -> l.orderBy()
+            );
+        }
+    }
 
-			// Повтор колонок
-			itWas = false;
-			try {
-				l.orderBy("userid ASC", "pkvalue3 ASC", "pkvalue3 DESC");
-			} catch (CelestaException e) {
-				itWas = true;
-			}
-			assertTrue(itWas);
+    @Test
+    public void cursorsAreClosingOnContext() throws CelestaException {
+        SessionContext sc = new SessionContext("user", "S");
+        try (CallContext ctxt = celesta.callContext(sc)) {
+            BasicCursor a = new LogCursor(ctxt);
+            BasicCursor b = new PermissionsCursor(ctxt);
+            BasicCursor c = new RolesCursor(ctxt);
+            BasicCursor d = new CallLogCursor(ctxt);
+            assertFalse(a.isClosed());
+            assertFalse(b.isClosed());
+            assertFalse(c.isClosed());
+            assertFalse(d.isClosed());
 
-			// Пустой orderBy
-			l.orderBy();
+            ctxt.close();
 
-		}
-	}
-
-	@Test
-	public void cursorsAreClosingOnContext() throws CelestaException {
-		SessionContext sc = new SessionContext("user", "S");
-		try (CallContext ctxt = celesta.callContext(sc)) {
-			BasicCursor a = new LogCursor(ctxt);
-			BasicCursor b = new PermissionsCursor(ctxt);
-			BasicCursor c = new RolesCursor(ctxt);
-			BasicCursor d = new CallLogCursor(ctxt);
-			assertFalse(a.isClosed());
-			assertFalse(b.isClosed());
-			assertFalse(c.isClosed());
-			assertFalse(d.isClosed());
-
-			ctxt.close();
-
-			assertTrue(a.isClosed());
-			assertTrue(b.isClosed());
-			assertTrue(c.isClosed());
-			assertTrue(d.isClosed());
-		}
-	}
+            assertTrue(a.isClosed());
+            assertTrue(b.isClosed());
+            assertTrue(c.isClosed());
+            assertTrue(d.isClosed());
+        }
+    }
 }
