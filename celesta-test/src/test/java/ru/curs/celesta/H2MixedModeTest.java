@@ -6,6 +6,7 @@ import java.sql.*;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class H2MixedModeTest {
@@ -29,6 +30,9 @@ class H2MixedModeTest {
         assertEquals(Integer.parseInt(port), as.getH2Port());
         assertEquals(jdbcURL,
                 as.getDatabaseConnection());
+
+        params.setProperty("h2.port", "notanumber");
+        assertThrows(CelestaException.class, () -> new AppSettings(params));
     }
 
     @Test
