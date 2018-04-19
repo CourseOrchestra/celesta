@@ -353,6 +353,11 @@ public class NavigationQueriesMakerTest {
 			}
 
 			@Override
+			public Class getJavaClass() {
+				return String.class;
+			}
+
+			@Override
 			public boolean isNullable() {
 				return true;
 			}

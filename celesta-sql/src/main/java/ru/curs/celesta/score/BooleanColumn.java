@@ -75,6 +75,11 @@ public final class BooleanColumn extends Column {
 	}
 
 	@Override
+	public Class getJavaClass() {
+		return Boolean.class;
+	}
+
+	@Override
 	public String getCelestaDefault() {
 		return defaultvalue == null ? null : ("'" + defaultvalue.toString().toUpperCase() + "'");
 	}

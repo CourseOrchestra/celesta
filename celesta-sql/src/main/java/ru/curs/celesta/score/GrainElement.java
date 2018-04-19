@@ -28,7 +28,7 @@ public abstract class GrainElement extends NamedElement {
 		return this.grainPart.getGrain();
 	}
 
-	final GrainPart getGrainPart() {
+	public final GrainPart getGrainPart() {
 		return grainPart;
 	}
 

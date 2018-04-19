@@ -13,6 +13,7 @@ import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
+import ru.curs.celesta.mock.CelestaImpl;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
@@ -56,6 +57,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
                                 .scoreDiscovery(new PyScoreDiscovery())
                                 .build()
                 )
+                .setCelesta(new CelestaImpl())
                 .setPermissionManager(new PermissionManager(dba))
                 .setLoggingManager(new LoggingManager(dba))
                 .build();

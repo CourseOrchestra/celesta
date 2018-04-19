@@ -59,7 +59,7 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
     public final boolean canRead() throws CelestaException {
         if (isClosed())
             throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
-        PermissionManager permissionManager = callContext().getPermissionManager();
+        IPermissionManager permissionManager = callContext().getPermissionManager();
         return permissionManager.isActionAllowed(callContext(), meta(), Action.READ);
     }
 
@@ -71,7 +71,7 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
 	 * без underscore приводит к конфликтам с именами атрибутов.
 	 */
     protected abstract String _grainName();
-    //TODO:This is not correctly method name. Must be renamed to _objectName
-    protected abstract String _tableName();
+
+    protected abstract String _objectName();
     // CHECKSTYLE:ON
 }

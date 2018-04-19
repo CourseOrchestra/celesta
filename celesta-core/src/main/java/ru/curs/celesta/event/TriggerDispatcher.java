@@ -1,46 +1,31 @@
 package ru.curs.celesta.event;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Consumer;
 
-import org.python.core.PyFunction;
-
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.syscursors.SysCursor;
+import ru.curs.celesta.dbutils.Cursor;
 
 /**
  * Created by ioann on 31.05.2017.
  */
 public class TriggerDispatcher {
 
-	private final EnumMap<TriggerType, Map<String, List<PyFunction>>> triggerMap = new EnumMap<>(TriggerType.class);
+    private final EnumMap<TriggerType, Map<Class<? extends Cursor>, List<Consumer<Cursor>>>> triggerMap = new EnumMap<>(TriggerType.class);
 
-	public TriggerDispatcher() {
-		Arrays.stream(TriggerType.values()).forEach(t -> triggerMap.put(t, new HashMap<>()));
-	}
+    public TriggerDispatcher() {
+        Arrays.stream(TriggerType.values()).forEach(t -> triggerMap.put(t, new HashMap<>()));
+    }
 
-	public void registerTrigger(TriggerType type, String tableName, PyFunction pyFunction) {
-		Map<String, List<PyFunction>> tableMap = triggerMap.get(type);
-		tableMap.computeIfAbsent(tableName, s -> new ArrayList<>()).add(pyFunction);
-	}
+    public void registerTrigger(TriggerType type, Class<? extends Cursor> cursorClass, Consumer consumer) {
+        Map<Class<? extends Cursor>, List<Consumer<Cursor>>> cursorClassMap = triggerMap.get(type);
+        cursorClassMap.computeIfAbsent(cursorClass, s -> new ArrayList<>()).add(consumer);
+    }
 
-	public void fireTrigger(TriggerType type, SysCursor cursor) {
-		Map<String, List<PyFunction>> tableMap = triggerMap.get(type);
-		String tableName;
-		try {
-			tableName = cursor.meta().getName();
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
-		}
-		List<PyFunction> handlers = tableMap.get(tableName);
-		if (handlers != null) {
-			Object[] args = { cursor };
-			handlers.forEach(f -> f._jcall(args));
-		}
-	}
+    public void fireTrigger(TriggerType type, Cursor cursor) {
+        Map<Class<? extends Cursor>, List<Consumer<Cursor>>> cursorClassMap = triggerMap.get(type);
+        final Class<? extends Cursor> cursorClass = cursor.getClass();
+        cursorClassMap.getOrDefault(cursorClass, Collections.emptyList())
+                .forEach(consumer -> consumer.accept(cursor));
+    }
 
 }

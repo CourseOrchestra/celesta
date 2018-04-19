@@ -56,9 +56,6 @@ import ru.curs.celesta.score.ParseException;
  */
 public abstract class BasicCursor extends BasicDataAccessor implements Closeable {
 
-	static final String SYSTEMUSERID = String.format("SYS%08X", (new Random()).nextInt());
-	static final SessionContext SYSTEMSESSION = new SessionContext(SYSTEMUSERID, "CELESTA");
-
 	private static final String DATABASE_CLOSING_ERROR =
 		"Database error when closing recordset for table '%s': %s";
 	private static final String NAVIGATING_ERROR = "Error while navigating cursor: %s";
@@ -112,7 +109,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	);
 
 
-	private ResultSet cursor = null;
+	protected ResultSet cursor = null;
 
 	final PreparedStmtHolder count = new PreparedStmtHolder() {
 		@Override
@@ -367,40 +364,40 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Есть ли у сессии права на вставку в текущую таблицу.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             ошибка базы данных.
 	 */
 	public final boolean canInsert() throws CelestaException {
 		if (isClosed())
 			throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
-		PermissionManager permissionManager = callContext().getPermissionManager();
+		IPermissionManager permissionManager = callContext().getPermissionManager();
 		return permissionManager.isActionAllowed(callContext(), meta(), Action.INSERT);
 	}
 
 	/**
 	 * Есть ли у сессии права на модификацию данных текущей таблицы.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             ошибка базы данных.
 	 */
 	public final boolean canModify() throws CelestaException {
 		if (isClosed())
 			throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
-		PermissionManager permissionManager = callContext().getPermissionManager();
+		IPermissionManager permissionManager = callContext().getPermissionManager();
 		return permissionManager.isActionAllowed(callContext(), meta(), Action.MODIFY);
 	}
 
 	/**
 	 * Есть ли у сессии права на удаление данных текущей таблицы.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             ошибка базы данных.
 	 */
 	public final boolean canDelete() throws CelestaException {
 		if (isClosed())
 			throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
-		PermissionManager permissionManager = callContext().getPermissionManager();
+		IPermissionManager permissionManager = callContext().getPermissionManager();
 		return permissionManager.isActionAllowed(callContext(), meta(), Action.DELETE);
 	}
 
@@ -408,7 +405,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 		try {
 			stmt.close();
 		} catch (SQLException e) {
-			throw new CelestaException(DATABASE_CLOSING_ERROR, _tableName(), e.getMessage());
+			throw new CelestaException(DATABASE_CLOSING_ERROR, _objectName(), e.getMessage());
 		}
 	}
 
@@ -454,7 +451,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Returns column names that are in sorting.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             cannot normally occur.
 	 */
@@ -466,7 +463,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Returns mask of DESC orders.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             cannot normally occur.
 	 */
@@ -479,9 +476,9 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	/**
 	 * Переходит к первой записи в отфильтрованном наборе и возвращает
 	 * информацию об успешности перехода.
-	 * 
+	 *
 	 * @return true, если переход успешен, false -- если записей в наборе нет.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             Ошибка связи с базой данных
 	 */
@@ -508,7 +505,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * То же, что navigate("-").
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             Ошибка взаимодействия с БД.
 	 */
@@ -518,7 +515,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * То же, что tryFirst(), но вызывает ошибку, если запись не найдена.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             Запись не найдена или ошибка БД.
 	 */
@@ -529,7 +526,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * То же, что navigate("+").
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             Ошибка взаимодействия с БД.
 	 */
@@ -539,7 +536,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * То же, что tryLast(), но вызывает ошибку, если запись не найдена.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             Запись не найдена или ошибка БД.
 	 */
@@ -550,7 +547,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * То же, что navigate("&gt;").
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             Ошибка взаимодействия с БД.
 	 */
@@ -560,7 +557,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * То же, что navigate("&lt").
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             Ошибка взаимодействия с БД.
 	 */
@@ -575,7 +572,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 				sb.append(", ");
 			sb.append(String.format("%s=%s", e.getKey(), e.getValue().toString()));
 		}
-		throw new CelestaException("There is no %s (%s).", _tableName(), sb.toString());
+		throw new CelestaException("There is no %s (%s).", _objectName(), sb.toString());
 	}
 
 	void initXRec() throws CelestaException {
@@ -584,7 +581,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	/**
 	 * Переходит к первой записи в отфильтрованном наборе, вызывая ошибку в
 	 * случае, если переход неудачен.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             в случае, если записей в наборе нет.
 	 */
@@ -636,7 +633,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	/**
 	 * Переходит к следующей записи в отсортированном наборе. Возвращает false,
 	 * если достигнут конец набора.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             в случае ошибки БД
 	 */
@@ -664,7 +661,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	/**
 	 * Метод навигации (пошагового перехода в отфильтрованном и отсортированном
 	 * наборе).
-	 * 
+	 *
 	 * @param command
 	 *            Команда, состоящая из последовательности символов:
 	 *            <ul>
@@ -777,12 +774,12 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	final void validateColumName(String name) throws CelestaException {
 		if (!meta().getColumns().containsKey(name))
-			throw new CelestaException("No column %s exists in table %s.", name, _tableName());
+			throw new CelestaException("No column %s exists in table %s.", name, _objectName());
 	}
 
 	/**
 	 * Сброс любого фильтра на поле.
-	 * 
+	 *
 	 * @param name
 	 *            Имя поля.
 	 * @throws CelestaException
@@ -800,7 +797,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Установка диапазона из единственного значения на поле.
-	 * 
+	 *
 	 * @param name
 	 *            Имя поля.
 	 * @param value
@@ -829,7 +826,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Установка диапазона от..до на поле.
-	 * 
+	 *
 	 * @param name
 	 *            Имя поля
 	 * @param valueFrom
@@ -858,7 +855,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Установка фильтра на поле.
-	 * 
+	 *
 	 * @param name
 	 *            Имя поля
 	 * @param value
@@ -884,7 +881,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Устанавливает сложное условие на набор данных.
-	 * 
+	 *
 	 * @param condition
 	 *            Условие, соответствующее выражению where.
 	 * @throws CelestaException
@@ -914,7 +911,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Устанавливает фильтр на диапазон возвращаемых курсором записей.
-	 * 
+	 *
 	 * @param offset
 	 *            Количество записей, которое необходимо пропустить (0 -
 	 *            начинать с начала).
@@ -936,7 +933,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Сброс фильтров и сортировки.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             SQL-ошибка.
 	 */
@@ -956,7 +953,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Установка сортировки.
-	 * 
+	 *
 	 * @param names
 	 *            Перечень полей для сортировки.
 	 * @throws CelestaException
@@ -1013,7 +1010,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Сброс фильтров, сортировки и полная очистка буфера.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             SQL-ошибка.
 	 */
@@ -1039,7 +1036,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Возвращает число записей в отфильтрованном наборе.
-	 * 
+	 *
 	 * @throws CelestaException
 	 *             в случае ошибки доступа или ошибки БД
 	 */
@@ -1080,17 +1077,17 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	/**
 	 * Получает копию фильтров, а также значений limit (offset и rowcount) из
 	 * курсора того же типа.
-	 * 
+	 *
 	 * @param c
 	 *            Курсор, фильтры которого нужно скопировать.
 	 * @throws CelestaException
 	 *             неверный тип курсора
 	 */
 	public final void copyFiltersFrom(BasicCursor c) throws CelestaException {
-		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(_tableName())))
+		if (!(c._grainName().equals(_grainName()) && c._objectName().equals(_objectName())))
 			throw new CelestaException(
 					"Cannot assign filters from cursor for %s.%s to cursor for %s.%s.",
-					c._grainName(), c._tableName(), _grainName(), _tableName());
+					c._grainName(), c._objectName(), _grainName(), _objectName());
 		filters.clear();
 		filters.putAll(c.filters);
 		complexFilter = c.complexFilter;
@@ -1104,17 +1101,17 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 	/**
 	 * Получает копию сортировок из курсора того же типа.
-	 * 
+	 *
 	 * @param c
 	 *            Курсор, фильтры которого нужно скопировать.
 	 * @throws CelestaException
 	 *             неверный тип курсора
 	 */
 	public final void copyOrderFrom(BasicCursor c) throws CelestaException {
-		if (!(c._grainName().equals(_grainName()) && c._tableName().equals(_tableName())))
+		if (!(c._grainName().equals(_grainName()) && c._objectName().equals(_objectName())))
 			throw new CelestaException(
 					"Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
-					c._grainName(), c._tableName(), _grainName(), _tableName());
+					c._grainName(), c._objectName(), _grainName(), _objectName());
 		orderByNames = c.orderByNames;
 		orderByIndices = c.orderByIndices;
 		descOrders = c.descOrders;
@@ -1162,7 +1159,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 	 * Устанавливает значение поля по его имени. Необходимо для косвенного
 	 * заполнения данными курсора из Java (в Python, естественно, для этой цели
 	 * есть процедура setattr(...)).
-	 * 
+	 *
 	 * @param name
 	 *            Имя поля.
 	 * @param value
@@ -1203,9 +1200,10 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 		);
 		fieldsForStatement.addAll(fields);
 	}
+
 	/**
 	 * Копировать значения полей из курсора того же типа.
-	 * 
+	 *
 	 * @param from
 	 *            курсор, из которого следует скопировать значения полей
 	 */

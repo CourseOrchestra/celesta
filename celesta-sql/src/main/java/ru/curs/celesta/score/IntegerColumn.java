@@ -100,6 +100,11 @@ public final class IntegerColumn extends Column {
 	}
 
 	@Override
+	public Class getJavaClass() {
+		return Integer.class;
+	}
+
+	@Override
 	public String getCelestaDefault() {
 		return defaultvalue == null ? null : defaultvalue.toString();
 	}

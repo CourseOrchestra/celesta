@@ -6,6 +6,7 @@ import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.H2Adaptor;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
+import ru.curs.celesta.mock.CelestaImpl;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
@@ -77,6 +78,7 @@ public class DbUpdaterTest {
                                 .scoreDiscovery(new PyScoreDiscovery())
                                 .build()
                 )
+                .setCelesta(new CelestaImpl())
                 .setPermissionManager(new PermissionManager(dba))
                 .setLoggingManager(new LoggingManager(dba))
                 .build();

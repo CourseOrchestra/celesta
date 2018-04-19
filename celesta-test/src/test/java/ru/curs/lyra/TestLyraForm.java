@@ -39,6 +39,11 @@ public class TestLyraForm {
 		}
 
 		@Override
+		public Class getJavaClass() {
+			return null;
+		}
+
+		@Override
 		public String getCelestaDoc() {
 			return cDoc;
 		}
@@ -46,7 +51,7 @@ public class TestLyraForm {
 	}
 	
 	private static String testJSON(String test) throws CelestaException{
-		return (new DummyMeta(test)).getCelestaDocJSON();
+		return CelestaDocUtils.getCelestaDocJSON((new DummyMeta(test)).getCelestaDoc());
 	}
 
 	@Test

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import static  org.junit.jupiter.api.Assertions.*;
 import org.python.core.Py;
 import org.python.core.PyObject;
-import ru.curs.celesta.syscursors.UserRolesCursor;
+import ru.curs.celesta.syscursors.UserrolesCursor;
 
 import java.util.Properties;
 import java.util.concurrent.Future;
@@ -39,7 +39,7 @@ public class CelestaTest {
         celesta.login(sesId, USER_ID);
         Future<PyObject> future = celesta.runPythonAsync(sesId, "gtest.async.execute", 100);
 
-        UserRolesCursor c = Py.tojava(future.get(), UserRolesCursor.class);
+        UserrolesCursor c = Py.tojava(future.get(), UserrolesCursor.class);
 
         assertEquals(USER_ID, c.getUserid());
         assertEquals(ROLE_ID, c.getRoleid());
@@ -54,7 +54,7 @@ public class CelestaTest {
         Future<PyObject> future = celesta.runPythonAsync(sesId, "gtest.async.execute", 500);
         celesta.logout(sesId, false);
 
-        UserRolesCursor c = Py.tojava(future.get(), UserRolesCursor.class);
+        UserrolesCursor c = Py.tojava(future.get(), UserrolesCursor.class);
 
         assertEquals(USER_ID, c.getUserid());
         assertEquals(ROLE_ID, c.getRoleid());

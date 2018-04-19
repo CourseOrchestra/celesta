@@ -1,7 +1,6 @@
 package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
 import ru.curs.celesta.score.MaterializedView;
@@ -27,7 +26,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
     cghb.withDb(db())
         .withConn(conn())
         .withMeta(meta())
-        .withTableName(_tableName());
+        .withTableName(_objectName());
 
     getHelper = cghb.build();
   }
@@ -39,7 +38,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
     cghb.withDb(db())
         .withConn(conn())
         .withMeta(meta())
-        .withTableName(_tableName())
+        .withTableName(_objectName())
         .withFields(fieldsForStatement);
 
     getHelper = cghb.build();
@@ -57,7 +56,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
     if (meta == null)
       try {
         meta = callContext().getScore()
-            .getGrain(_grainName()).getElement(_tableName(), MaterializedView.class);
+            .getGrain(_grainName()).getElement(_objectName(), MaterializedView.class);
       } catch (ParseException e) {
         throw new CelestaException(e.getMessage());
       }
@@ -93,7 +92,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
           sb.append(", ");
         sb.append(value == null ? "null" : value.toString());
       }
-      throw new CelestaException("There is no %s (%s).", _tableName(), sb.toString());
+      throw new CelestaException("There is no %s (%s).", _objectName(), sb.toString());
     }
   }
 

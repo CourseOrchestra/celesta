@@ -53,6 +53,11 @@ public final class BinaryColumn extends Column {
 	}
 
 	@Override
+	public Class getJavaClass() {
+		return String.class;
+	}
+
+	@Override
 	public String getCelestaDefault() {
 		return defaultvalue;
 	}

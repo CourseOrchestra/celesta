@@ -24,6 +24,14 @@ create table duplicate(
  val INT
 );
 
+
+create sequence custom;
+
+CREATE TABLE forTriggers(
+  id INT NOT NULL PRIMARY KEY,
+  val INT
+);
+
 /**This is to test view creation from neighbouring grain*/
 create view tCopyField AS
   select id from testTable.tCopyFields;

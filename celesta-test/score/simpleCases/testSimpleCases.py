@@ -2,22 +2,32 @@
 
 from java.sql import Timestamp
 from java.time import LocalDateTime
+from java.util.function import Consumer
 from ru.curs.celesta.syscursors import LogCursor
 
-from simpleCases._simpleCases_orm import getDateForViewCursor, viewWithGetDateCursor, zeroInsertCursor, duplicateCursor
+from simpleCases._simpleCases_orm import getDateForViewCursor, viewWithGetDateCursor, zeroInsertCursor, duplicateCursor,\
+    customSequence, forTriggersCursor
 from ru.curs.celesta.unit import TestClass, CelestaTestCase
 
 
-def preInsert(logCursor):
+class consumer(Consumer):
+    def __init__(self,fn):
+        self.accept=fn
+
+@consumer
+def sysPreInsert(logCursor):
     logCursor.tablename = "getDateForView"
 
-def postInsert(logCursor):
+@consumer
+def sysPostInsert(logCursor):
     logCursor.sessionid = "1"
 
-def preUpdate(logCursor):
+@consumer
+def sysPreUpdate(logCursor):
     logCursor.tablename = "zeroInsert"
 
-def postUpdate(logCursor):
+@consumer
+def sysPostUpdate(logCursor):
     logCursor.sessionid = "2"
 
 isPreDeleteDone = False
@@ -29,15 +39,40 @@ def resetFlags():
     isPreDeleteDone = False
     isPostDeleteDone = False
 
-def preDelete(logCursor):
+@consumer
+def sysPreDelete(logCursor):
     global isPreDeleteDone
     isPreDeleteDone = True
     logCursor.tablename = "table2"
 
-def postDelete(logCursor):
+@consumer
+def sysPostDelete(logCursor):
     global isPostDeleteDone
     isPostDeleteDone = True
     logCursor.sessionid = "2"
+
+
+def preInsert(forTriggersCursor):
+    s = customSequence(forTriggersCursor.callContext())
+    forTriggersCursor.id = s.nextValue()
+
+def postInsert(forTriggersCursor):
+    forTriggersCursor.val = 2
+
+def preUpdate(forTriggersCursor):
+    forTriggersCursor.val = 3
+
+def postUpdate(forTriggersCursor):
+    s = customSequence(forTriggersCursor.callContext())
+    forTriggersCursor.id = s.nextValue()
+
+def preDelete(forTriggersCursor):
+    global isPreDeleteDone
+    isPreDeleteDone = True
+
+def postDelete(forTriggersCursor):
+    global isPostDeleteDone
+    isPostDeleteDone = True
 
 
 @TestClass
@@ -72,12 +107,12 @@ class TestSimpleCases(CelestaTestCase):
         resetFlags()
         c = LogCursor(self.context)
 
-        LogCursor.onPreInsert(preInsert)
-        LogCursor.onPostInsert(postInsert)
-        LogCursor.onPreUpdate(preUpdate)
-        LogCursor.onPostUpdate(postUpdate)
-        LogCursor.onPreDelete(preDelete)
-        LogCursor.onPostDelete(postDelete)
+        LogCursor.onPreInsert(self.context.getCelesta(), sysPreInsert)
+        LogCursor.onPostInsert(self.context.getCelesta(), sysPostInsert)
+        LogCursor.onPreUpdate(self.context.getCelesta(), sysPreUpdate)
+        LogCursor.onPostUpdate(self.context.getCelesta(), sysPostUpdate)
+        LogCursor.onPreDelete(self.context.getCelesta(), sysPreDelete)
+        LogCursor.onPostDelete(self.context.getCelesta(), sysPostDelete)
 
         c.userid = '1'
         c.sessionid = '0'
@@ -101,7 +136,39 @@ class TestSimpleCases(CelestaTestCase):
 
         self.assertTrue(isPreDeleteDone)
         self.assertTrue(isPostDeleteDone)
-    
+
+    def test_triggers_on_gen_cursors(self):
+        resetFlags()
+        c = forTriggersCursor(self.context)
+
+        forTriggersCursor.onPreInsert(self.context.getCelesta(), preInsert)
+        forTriggersCursor.onPostInsert(self.context.getCelesta(), postInsert)
+        forTriggersCursor.onPreUpdate(self.context.getCelesta(), preUpdate)
+        forTriggersCursor.onPostUpdate(self.context.getCelesta(), postUpdate)
+        forTriggersCursor.onPreDelete(self.context.getCelesta(), preDelete)
+        forTriggersCursor.onPostDelete(self.context.getCelesta(), postDelete)
+
+        c.insert()
+
+        self.assertEquals(1, c.id)
+        self.assertEquals(2, c.val)
+
+        c.update()
+
+        self.assertEquals(2L, c.id)
+        self.assertEquals(3, c.val)
+
+        self.assertFalse(isPreDeleteDone)
+        self.assertFalse(isPostDeleteDone)
+
+        c.id = 1
+
+        c.delete()
+
+        self.assertTrue(isPreDeleteDone)
+        self.assertTrue(isPostDeleteDone)
+
+
     def test_try_insert(self):
         c = duplicateCursor(self.context)
         c.deleteAll()

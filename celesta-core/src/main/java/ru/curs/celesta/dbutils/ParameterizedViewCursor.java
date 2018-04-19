@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public abstract class ParameterizedViewCursor extends BasicCursor {
 
   private ParameterizedView meta = null;
-  private Map<String, Object> parameters = null;
+  protected Map<String, Object> parameters = null;
 
 
   public ParameterizedViewCursor(CallContext context, Map<String, Object> parameters) throws CelestaException {
@@ -49,7 +49,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
     if (meta == null)
       try {
         meta = callContext().getScore()
-            .getGrain(_grainName()).getElement(_tableName(), ParameterizedView.class);
+            .getGrain(_grainName()).getElement(_objectName(), ParameterizedView.class);
       } catch (ParseException e) {
         throw new CelestaException(e.getMessage());
       }

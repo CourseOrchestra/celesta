@@ -53,6 +53,11 @@ public final class FloatingColumn extends Column {
 	}
 
 	@Override
+	public Class getJavaClass() {
+		return Double.class;
+	}
+
+	@Override
 	public String getCelestaDefault() {
 		return defaultValue == null ? null : defaultValue.toString();
 	}

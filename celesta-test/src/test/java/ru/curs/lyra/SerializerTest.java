@@ -25,7 +25,7 @@ public class SerializerTest {
 	private static Celesta celesta;
 	private static Connection connection;
 
-	private SessionContext sc = new SessionContext("super", "foo");
+	private PySessionContext sc = new PySessionContext("super", "foo");
 	private GrainsCursor c;
 	private TablesCursor tt;
 	private CallContext callContext;
@@ -254,7 +254,7 @@ public class SerializerTest {
 		// System.out.println(buf);
 
 		c2.clear();
-		assertEquals("", c2.getChecksum());
+		assertNull(c2.getChecksum());
 		bis = new ByteArrayInputStream(bos.toByteArray());
 		bcf.deserialize(c2, bis);
 

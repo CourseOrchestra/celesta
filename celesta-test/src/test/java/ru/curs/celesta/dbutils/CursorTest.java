@@ -10,13 +10,13 @@ import java.util.Properties;
 
 
 import ru.curs.celesta.*;
-import ru.curs.celesta.syscursors.LogSetupCursor;
+import ru.curs.celesta.syscursors.LogsetupCursor;
 
 public class CursorTest {
 
 	private static Celesta celesta;
 
-	private SessionContext sc = new SessionContext("super", "foo");
+	private PySessionContext sc = new PySessionContext("super", "foo");
 	private Cursor c;
 
 	@BeforeAll
@@ -30,13 +30,13 @@ public class CursorTest {
 
 	@AfterAll
 	public static void destroy() throws CelestaException, SQLException {
-		celesta.callContext(new SessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
+		celesta.callContext(new PySessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
 		celesta.close();
 	}
 
 	@BeforeEach
 	public void before() throws CelestaException {
-		c = new LogSetupCursor(celesta.callContext(sc));
+		c = new LogsetupCursor(celesta.callContext(sc));
 	}
 
 	@AfterEach
@@ -47,7 +47,7 @@ public class CursorTest {
 	@Test
 	public void cursorIsNavigable() throws CelestaException {
 		c.setFilter("grainid", "'b'%");
-		LogSetupCursor c2 = (LogSetupCursor) c;
+		LogsetupCursor c2 = (LogsetupCursor) c;
 		c2.setGrainid("grainval");
 		c2.setTablename("tablenameval");
 		c2.setI(true);
@@ -66,7 +66,7 @@ public class CursorTest {
 
 	@Test
 	public void fieldsAreAssignable() throws CelestaException {
-		LogSetupCursor lsc = (LogSetupCursor) c;
+		LogsetupCursor lsc = (LogsetupCursor) c;
 		assertNull(lsc.getGrainid());
 		lsc.setValue("grainid", "asdFsaf");
 

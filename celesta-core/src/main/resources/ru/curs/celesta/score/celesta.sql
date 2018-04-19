@@ -34,9 +34,10 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.12';
+create grain celesta version '1.13';
 
-/**Active grains list.*/
+/**Active grains list.
+   {implements: [ru.curs.celesta.syscursors.ISchemaCursor]}*/
 create table grains(
   /**grain prefix (id)*/
   id varchar(30) not null primary key, 

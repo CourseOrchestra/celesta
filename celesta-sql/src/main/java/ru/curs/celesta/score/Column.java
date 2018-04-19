@@ -2,10 +2,9 @@ package ru.curs.celesta.score;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import ru.curs.celesta.CelestaException;
 
@@ -15,7 +14,6 @@ import ru.curs.celesta.CelestaException;
  */
 public abstract class Column extends NamedElement implements ColumnMeta {
 
-	private static final String OPTION = "option";
 	private final TableElement parentTable;
 	private boolean nullable = true;
 
@@ -54,19 +52,9 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 	 * @throws CelestaException
 	 *             в случае, если опции заданы неверно.
 	 */
-	public String[] getOptions() throws CelestaException {
-		String json = getCelestaDocJSON();
+	public List<String> getOptions() throws CelestaException {
 		try {
-			JSONObject metadata = new JSONObject(json);
-			if (metadata.has(OPTION)) {
-				JSONArray options = metadata.getJSONArray(OPTION);
-				String[] result = new String[options.length()];
-				for (int i = 0; i < options.length(); i++)
-					result[i] = options.getString(i);
-				return result;
-			} else {
-				return new String[0];
-			}
+			return CelestaDocUtils.getList(getCelestaDoc(), CelestaDocUtils.OPTION);
 		} catch (JSONException e1) {
 			throw new CelestaException("Error in CelestaDoc for %s.%s.%s: %s", getParentTable().getGrain().getName(),
 					getParentTable().getName(), getName(), e1.getMessage());

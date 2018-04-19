@@ -55,7 +55,7 @@ public abstract class AbstractScore {
     private final Map<String, Grain> grains = new HashMap<>();
 
     private final Map<String, List<GrainPart>> grainNameToGrainParts = new LinkedHashMap<>();
-    private final Set<File> grainFiles = new LinkedHashSet<>(); //TODO: What to do with it?
+    private final Set<File> grainFiles = new LinkedHashSet<>();
 
     private String path;
     private File defaultGrainPath;

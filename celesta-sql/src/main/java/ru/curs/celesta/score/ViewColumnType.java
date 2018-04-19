@@ -1,5 +1,9 @@
 package ru.curs.celesta.score;
 
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
+import java.util.Date;
+
 /**
  * Тип выражения.
  */
@@ -18,6 +22,10 @@ public enum ViewColumnType {
 			return BooleanColumn.CELESTA_TYPE;
 		}
 
+		@Override
+		public Class getJavaClass() {
+			return Boolean.class;
+		}
 	},
 	/**
 	 * Числовое значение с дробной частью.
@@ -33,6 +41,10 @@ public enum ViewColumnType {
 			return FloatingColumn.CELESTA_TYPE;
 		}
 
+		@Override
+		public Class getJavaClass() {
+			return Double.class;
+		}
 	},
 	/**
 	 * Числовое значение с дробной частью с фиксированной точкой
@@ -47,6 +59,11 @@ public enum ViewColumnType {
 		public String getCelestaType() {
 			return DecimalColumn.CELESTA_TYPE;
 		}
+
+		@Override
+		public Class getJavaClass() {
+			return BigDecimal.class;
+		}
 	},
 	/**
 	 * Целочисленное значение.
@@ -60,6 +77,11 @@ public enum ViewColumnType {
 		@Override
 		public String getCelestaType() {
 			return IntegerColumn.CELESTA_TYPE;
+		}
+
+		@Override
+		public Class getJavaClass() {
+			return Integer.class;
 		}
 	},
 	/**
@@ -76,6 +98,10 @@ public enum ViewColumnType {
 			return StringColumn.VARCHAR;
 		}
 
+		@Override
+		public Class getJavaClass() {
+			return String.class;
+		}
 	},
 	/**
 	 * Дата.
@@ -89,6 +115,11 @@ public enum ViewColumnType {
 		@Override
 		public String getCelestaType() {
 			return DateTimeColumn.CELESTA_TYPE;
+		}
+
+		@Override
+		public Class getJavaClass() {
+			return Date.class;
 		}
 	},
 
@@ -104,6 +135,11 @@ public enum ViewColumnType {
 		@Override
 		public String getCelestaType() {
 			return ZonedDateTimeColumn.CELESTA_TYPE;
+		}
+
+		@Override
+		public Class getJavaClass() {
+			return ZonedDateTime.class;
 		}
 	},
 
@@ -121,6 +157,10 @@ public enum ViewColumnType {
 			return BooleanColumn.CELESTA_TYPE;
 		}
 
+		@Override
+		public Class getJavaClass() {
+			return Boolean.class;
+		}
 	},
 	/**
 	 * Большой объект.
@@ -136,6 +176,10 @@ public enum ViewColumnType {
 			return BinaryColumn.CELESTA_TYPE;
 		}
 
+		@Override
+		public Class getJavaClass() {
+			return String.class;
+		}
 	},
 	/**
 	 * Неопределённое значение.
@@ -151,6 +195,10 @@ public enum ViewColumnType {
 			return null;
 		}
 
+		@Override
+		public Class getJavaClass() {
+			return null;
+		}
 	};
 
 	/**
@@ -162,4 +210,6 @@ public enum ViewColumnType {
 	 * Celesta type.
 	 */
 	public abstract String getCelestaType();
+
+	public abstract Class getJavaClass();
 }
