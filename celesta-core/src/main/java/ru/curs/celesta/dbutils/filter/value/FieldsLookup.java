@@ -31,19 +31,19 @@ public final class FieldsLookup {
 
     public FieldsLookup(Cursor cursor, Cursor otherCursor,
                         Runnable lookupChangeCallback,
-                        Function<FieldsLookup, Void> newLookupCallback) throws CelestaException {
+                        Function<FieldsLookup, Void> newLookupCallback) {
         this(Table.class, cursor, cursor.meta(), otherCursor, otherCursor.meta(), lookupChangeCallback, newLookupCallback);
     }
 
     public FieldsLookup(ViewCursor cursor, ViewCursor otherCursor,
                         Runnable lookupChangeCallback,
-                        Function<FieldsLookup, Void> newLookupCallback) throws CelestaException {
+                        Function<FieldsLookup, Void> newLookupCallback) {
         this(View.class, cursor, cursor.meta(), otherCursor, otherCursor.meta(), lookupChangeCallback, newLookupCallback);
     }
 
     private FieldsLookup(Class<? extends DataGrainElement> targetClass, BasicCursor cursor, DataGrainElement filtered, BasicCursor otherCursor,
                          DataGrainElement filtering, Runnable lookupChangeCallback,
-                         Function<FieldsLookup, Void> newLookupCallback) throws CelestaException {
+                         Function<FieldsLookup, Void> newLookupCallback) {
         validateCursors(cursor, otherCursor);
         this.cursor = cursor;
         this.otherCursor = otherCursor;
@@ -63,12 +63,12 @@ public final class FieldsLookup {
      * @param otherTable
      * @param lookupChangeCallback
      * @param newLookupCallback
-     * @throws CelestaException
+     * 
      */
     public FieldsLookup(
             Table table, Table otherTable,
             Runnable lookupChangeCallback,
-            Function<FieldsLookup, Void> newLookupCallback) throws CelestaException {
+            Function<FieldsLookup, Void> newLookupCallback) {
         this.targetClass = Table.class;
         this.filtered = table;
         this.filtering = otherTable;
@@ -84,12 +84,12 @@ public final class FieldsLookup {
      * @param otherView
      * @param lookupChangeCallback
      * @param newLookupCallback
-     * @throws CelestaException
+     * 
      */
     public FieldsLookup(
             View view, View otherView,
             Runnable lookupChangeCallback,
-            Function<FieldsLookup, Void> newLookupCallback) throws CelestaException {
+            Function<FieldsLookup, Void> newLookupCallback) {
         this.targetClass = View.class;
         this.filtered = view;
         this.filtering = otherView;
@@ -98,7 +98,7 @@ public final class FieldsLookup {
         lookupChangeCallback.run();
     }
 
-    private void validateCursors(BasicCursor cursor, BasicCursor otherCursor) throws CelestaException {
+    private void validateCursors(BasicCursor cursor, BasicCursor otherCursor) {
         if (cursor == null) {
             throw new IllegalArgumentException("Argument 'cursor' can't be null");
         }
@@ -111,7 +111,7 @@ public final class FieldsLookup {
         }
     }
 
-    public FieldsLookup and(BasicCursor otherCursor) throws CelestaException {
+    public FieldsLookup and(BasicCursor otherCursor) {
         if (Table.class.equals(targetClass)) {
             FieldsLookup fieldsLookup = new FieldsLookup((Cursor) cursor, (Cursor) otherCursor, lookupChangeCallback, newLookupCallback);
             newLookupCallback.apply(fieldsLookup);
@@ -125,7 +125,7 @@ public final class FieldsLookup {
         }
     }
 
-    public FieldsLookup and(Table filtering) throws CelestaException {
+    public FieldsLookup and(Table filtering) {
 
         if (filtered instanceof Table) {
             Table filteredTable = (Table) filtered;
@@ -137,7 +137,7 @@ public final class FieldsLookup {
         }
     }
 
-    public FieldsLookup and(View filtering) throws CelestaException {
+    public FieldsLookup and(View filtering) {
 
         if (filtered instanceof View) {
             View filteredView = (View) filtered;
@@ -149,7 +149,7 @@ public final class FieldsLookup {
         }
     }
 
-    public FieldsLookup add(String field, String otherField) throws CelestaException, ParseException {
+    public FieldsLookup add(String field, String otherField) throws ParseException {
         final ColumnMeta column;
         final ColumnMeta otherColumn;
 
@@ -204,7 +204,7 @@ public final class FieldsLookup {
         return this;
     }
 
-    public void validate() throws CelestaException {
+    public void validate() {
         if (Table.class.equals(targetClass)) {
             Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fields, (Table)filtered);
             Set<List<Integer>> otherColumnOrdersInIndicesSet = getColumnOrdersInIndicesSet(otherFields, (Table)filtering);
@@ -223,7 +223,7 @@ public final class FieldsLookup {
     }
 
     private Set<List<Integer>> getColumnOrdersInIndicesSet(List<String> fieldsToValidate, Table table)
-            throws CelestaException {
+            {
 
         final List<Index> indexesToValidate;
         // Сперва определяем, есть ли указанные поля в первичном ключе

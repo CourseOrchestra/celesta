@@ -23,10 +23,8 @@ public final class ProfilingManager {
 	 * 
 	 * @param context
 	 *            контекст вызова.
-	 * @throws CelestaException
-	 *             Если запись невозможна.
 	 */
-	public void logCall(CallContext context) throws CelestaException {
+	public void logCall(CallContext context) {
 		if (profilemode) {
 			long finish = System.currentTimeMillis();
 

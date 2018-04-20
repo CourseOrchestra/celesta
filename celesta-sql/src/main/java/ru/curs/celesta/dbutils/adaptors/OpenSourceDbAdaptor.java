@@ -4,10 +4,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
 import ru.curs.celesta.dbutils.jdbc.SqlUtils;
-import ru.curs.celesta.dbutils.meta.DbColumnInfo;
-import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.dbutils.query.FromClause;
-import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 import java.sql.*;
@@ -30,7 +27,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-	public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+	public boolean tableExists(Connection conn, String schema, String name) {
 		try (PreparedStatement check = conn
 				.prepareStatement(String.format("SELECT table_name FROM information_schema.tables  WHERE "
 						+ "table_schema = '%s' AND table_name = '%s'",
@@ -45,7 +42,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 	}
 
   @Override
-  void createSchemaIfNotExists(Connection conn, String name) throws CelestaException {
+  void createSchemaIfNotExists(Connection conn, String name) {
     String sql = String.format(
             "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '%s';", name
     );
@@ -60,7 +57,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
+  public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) {
     TableElement t = c.getParentTable();
     String sql = String.format(SELECT_S_FROM + tableString(t.getGrain().getName(), t.getName())
                     + " where %s limit 1;", c.getQuotedName(), where);
@@ -70,7 +67,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   @Override
   public PreparedStatement getOneRecordStatement(
       Connection conn, TableElement t, String where, Set<String> fields
-  ) throws CelestaException {
+  ) {
 
     final String fieldList = getTableFieldsListExceptBlobs((DataGrainElement) t, fields);
     String sql = String.format(SELECT_S_FROM + tableString(t.getGrain().getName(), t.getName())
@@ -82,14 +79,14 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) throws CelestaException {
+  public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) {
     String sql = String.format("delete from " + tableString(t.getGrain().getName(), t.getName()) + " where %s;",
         where);
     return prepareStatement(conn, sql);
   }
 
   @Override
-  public Set<String> getColumns(Connection conn, TableElement t) throws CelestaException {
+  public Set<String> getColumns(Connection conn, TableElement t) {
     String sql = String.format("select column_name from information_schema.columns "
         + "where table_schema = '%s' and table_name = '%s';", t.getGrain().getName().replace("\"", ""),
             t.getName().replace("\"", ""));
@@ -97,7 +94,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) throws CelestaException {
+  public PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) {
     // Готовим запрос на удаление
     String sql = String.format("delete from " + tableString(t.getGrain().getName(), t.getName()) + " %s;",
         where.isEmpty() ? "" : "where " + where);
@@ -113,7 +110,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   public PreparedStatement getNavigationStatement(
       Connection conn, FromClause from, String orderBy,
       String navigationWhereClause, Set<String> fields, long offset
-  ) throws CelestaException {
+  ) {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
     StringBuilder w = new StringBuilder(navigationWhereClause);
@@ -128,7 +125,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public void resetIdentity(Connection conn, Table t, int i) throws CelestaException {
+  public void resetIdentity(Connection conn, Table t, int i) {
       String sql = String.format("alter sequence \"%s\".\"%s_seq\" restart with %d", t.getGrain().getName(),
           t.getName(), i);
       executeUpdate(conn, sql);
@@ -140,7 +137,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public long nextSequenceValue(Connection conn, SequenceElement s) throws CelestaException {
+  public long nextSequenceValue(Connection conn, SequenceElement s) {
     String sql = "SELECT NEXTVAL('" + tableString(s.getGrain().getName(), s.getName()) +"')";
 
     try (Statement stmt = conn.createStatement()) {
@@ -155,7 +152,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-  public boolean sequenceExists(Connection conn, String schema, String name) throws CelestaException {
+  public boolean sequenceExists(Connection conn, String schema, String name) {
     try (
             PreparedStatement preparedStatement = conn.prepareStatement(
                     "SELECT * FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?"

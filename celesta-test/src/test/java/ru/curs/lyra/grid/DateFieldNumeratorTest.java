@@ -6,13 +6,10 @@ import org.junit.jupiter.api.Test;
 import java.math.BigInteger;
 import java.util.Date;
 
-
-import ru.curs.celesta.CelestaException;
-
 public class DateFieldNumeratorTest {
 
 	@Test
-	public void testConversion() throws CelestaException, InterruptedException {
+	public void testConversion() throws InterruptedException {
 		Date d = new Date();
 		DateFieldEnumerator dfe = new DateFieldEnumerator();
 		dfe.setValue(d);
@@ -26,7 +23,7 @@ public class DateFieldNumeratorTest {
 	}
 
 	@Test
-	public void testCompositeUsage() throws CelestaException {
+	public void testCompositeUsage() {
 		DateFieldEnumerator dfe = new DateFieldEnumerator();
 		VarcharFieldEnumerator vfe = new VarcharFieldEnumerator(VarcharFieldEnumeratorTest.DBA, 36);
 		NullsLast nle = new NullsLast(dfe);

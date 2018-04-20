@@ -29,7 +29,7 @@ public abstract class BasicLyraForm {
 	private BasicCursor rec;
 	private CallContext context;
 
-	public BasicLyraForm(CallContext context) throws CelestaException {
+	public BasicLyraForm(CallContext context) {
 
 		_createUnboundField(fieldsMeta, "_properties_");
 
@@ -42,17 +42,14 @@ public abstract class BasicLyraForm {
 	/**
 	 * A constructor for unit tests purposes only!
 	 */
-	BasicLyraForm(DataGrainElement m) throws CelestaException {
+	BasicLyraForm(DataGrainElement m) {
 		meta = m;
 	}
 
 	/**
 	 * Adds all bound fields to meta information using their CelestaDoc.
-	 * 
-	 * @throws CelestaException
-	 *             JSON Error
 	 */
-	public void createAllBoundFields() throws CelestaException {
+	public void createAllBoundFields() {
 		int i = 0;
 		for (Entry<String, ? extends ColumnMeta> e : meta.getColumns().entrySet()) {
 			createBoundField(e.getKey(), i++, e.getValue());
@@ -71,7 +68,7 @@ public abstract class BasicLyraForm {
 		return metadata.has(propName) ? metadata.getBoolean(propName) : def;
 	}
 
-	private LyraFormField createBoundField(String name, int index, ColumnMeta m) throws CelestaException {
+	private LyraFormField createBoundField(String name, int index, ColumnMeta m) {
 		LyraFieldType lft = LyraFieldType.lookupFieldType(m);
 		FieldAccessor a = FieldAccessorFactory.create(index, name, lft);
 		LyraFormField f = new LyraFormField(name, a);
@@ -119,10 +116,8 @@ public abstract class BasicLyraForm {
 	 * 
 	 * @param name
 	 *            Name of a table column.
-	 * @throws CelestaException
-	 *             JSON error in CelestaDoc.
 	 */
-	public LyraFormField createField(String name) throws CelestaException {
+	public LyraFormField createField(String name) {
 		ColumnMeta m = meta.getColumns().get(name);
 		if (m == null) {
 			// UNBOUND FIELD
@@ -156,13 +151,10 @@ public abstract class BasicLyraForm {
 
 	/**
 	 * Gets current alive cursor.
-	 * 
-	 * @throws CelestaException
-	 *             navigation error.
 	 */
 	// NB: never make this public, since we don't always have a correct
 	// CallContext here!
-	protected synchronized BasicCursor rec() throws CelestaException {
+	protected synchronized BasicCursor rec() {
 		if (rec == null) {
 			if (context != null) {
 				rec = _getCursor(context);
@@ -179,7 +171,7 @@ public abstract class BasicLyraForm {
 		return rec;
 	}
 
-	protected Cursor getCursor() throws CelestaException {
+	protected Cursor getCursor() {
 		rec = rec();
 		if (rec instanceof Cursor) {
 			return (Cursor) rec;
@@ -204,21 +196,15 @@ public abstract class BasicLyraForm {
 
 	/**
 	 * Returns column names that are in sorting.
-	 * 
-	 * @throws CelestaException
-	 *             cannot normally occur.
 	 */
-	public String[] orderByColumnNames() throws CelestaException {
+	public String[] orderByColumnNames() {
 		return rec == null ? null : rec.orderByColumnNames();
 	}
 
 	/**
 	 * Returns mask of DESC orders.
-	 * 
-	 * @throws CelestaException
-	 *             cannot normally occur.
 	 */
-	public boolean[] descOrders() throws CelestaException {
+	public boolean[] descOrders() {
 		return rec == null ? null : rec.descOrders();
 	}
 

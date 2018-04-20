@@ -34,10 +34,8 @@ public abstract class LyraNamedElementHolder<T extends LyraNamedElement> impleme
 	 * 
 	 * @param element
 	 *            Element to be added.
-	 * @throws CelestaException
-	 *             If element already exists.
 	 */
-	public final void addElement(T element) throws CelestaException {
+	public final void addElement(T element) {
 		T oldValue = namespace.put(element.getName(), element);
 		if (oldValue != null) {
 			namespace.put(oldValue.getName(), oldValue);

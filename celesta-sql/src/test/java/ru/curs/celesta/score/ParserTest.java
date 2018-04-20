@@ -3,7 +3,6 @@ package ru.curs.celesta.score;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -13,7 +12,6 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
-import ru.curs.celesta.CelestaException;
 
 public class ParserTest extends AbstractParsingTest {
 

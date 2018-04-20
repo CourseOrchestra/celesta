@@ -49,10 +49,10 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 	 * Возвращает опции (значение свойства option) для данного поля. Имеет
 	 * применение только для текстовых и Integer-полей.
 	 * 
-	 * @throws CelestaException
+	 * @
 	 *             в случае, если опции заданы неверно.
 	 */
-	public List<String> getOptions() throws CelestaException {
+	public List<String> getOptions()  {
 		try {
 			return CelestaDocUtils.getList(getCelestaDoc(), CelestaDocUtils.OPTION);
 		} catch (JSONException e1) {

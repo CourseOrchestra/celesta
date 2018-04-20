@@ -13,7 +13,7 @@ public class FilterParserTest {
 
 	private FilterParser.SQLTranslator tr = new FilterParser.SQLTranslator() {
 		@Override
-		public String translateDate(String date) throws CelestaException {
+		public String translateDate(String date) {
 			try {
 				DateTimeColumn.parseISODate(date);
 				return "D" + date;
@@ -26,7 +26,7 @@ public class FilterParserTest {
 	};
 
 	@Test
-	public void test1() throws CelestaException {
+	public void test1() {
 		String result;
 
 		result = FilterParser.translateFilter(FilterType.NUMERIC, "foo",
@@ -68,7 +68,7 @@ public class FilterParserTest {
 	}
 
 	@Test
-	public void test15() throws CelestaException {
+	public void test15() {
 		String result;
 		result = FilterParser.translateFilter(FilterType.NUMERIC, "baz",
 				"-5 .. 10&!-3.5", tr);
@@ -76,7 +76,7 @@ public class FilterParserTest {
 	}
 
 	@Test
-	public void test2() throws CelestaException {
+	public void test2() {
 		boolean itWas = false;
 		try {
 			FilterParser.translateFilter(FilterType.NUMERIC, "foo",
@@ -88,7 +88,7 @@ public class FilterParserTest {
 	}
 
 	@Test
-	public void test3() throws CelestaException {
+	public void test3() {
 		String result;
 		result = FilterParser.translateFilter(FilterType.TEXT, "foo",
 				"'abc'%'ef'%'g''h'", tr);
@@ -102,7 +102,7 @@ public class FilterParserTest {
 	}
 
 	@Test
-	public void test4() throws CelestaException {
+	public void test4() {
 
 		String result;
 		result = FilterParser.translateFilter(FilterType.DATETIME, "bar",

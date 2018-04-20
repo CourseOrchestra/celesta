@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.term;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
@@ -16,7 +15,7 @@ public class ValuesCortegeTerm extends WhereTerm {
     }
 
     @Override
-    public String getWhere() throws CelestaException {
+    public String getWhere() {
         String placeHolders = fieldIndices.stream()
                 .map((i) -> "?")
                 .collect(Collectors.joining(", "));

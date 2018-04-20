@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.term;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
@@ -23,14 +22,14 @@ public final class InTerm extends WhereTerm {
   }
 
   @Override
-  public String getWhere() throws CelestaException {
+  public String getWhere() {
     return filter.getLookupWhereTermMap().entrySet().stream()
         .map(e -> buildWhereLookup(e.getKey(), e.getValue()))
         .collect(Collectors.joining(" AND "));
   }
 
   @Override
-  public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) throws CelestaException {
+  public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
     for (WhereTermsMaker wtm : filter.getOtherWhereTermMakers())
       if (wtm != null) {
         wtm.getWhereTerm().programParams(program, queryBuildingHelper);
@@ -39,20 +38,17 @@ public final class InTerm extends WhereTerm {
 
 
   private String buildWhereLookup(FieldsLookup lookup, WhereTermsMaker whereTermsMaker) {
-    try {
 
-      final String otherWhere;
-      if (whereTermsMaker != null) {
-        otherWhere = whereTermsMaker.getWhereTerm().getWhere();
-      } else {
-        otherWhere = "";
-      }
-
-      return queryBuildingHelper.getInFilterClause(lookup.getFiltered(), lookup.getFiltering(),
-          lookup.getFields(), lookup.getOtherFields(), otherWhere);
-    } catch (CelestaException e) {
-      throw new RuntimeException(e);
+    final String otherWhere;
+    if (whereTermsMaker != null) {
+      otherWhere = whereTermsMaker.getWhereTerm().getWhere();
+    } else {
+      otherWhere = "";
     }
+
+    return queryBuildingHelper.getInFilterClause(lookup.getFiltered(), lookup.getFiltering(),
+            lookup.getFields(), lookup.getOtherFields(), otherWhere);
+
   }
 
 }

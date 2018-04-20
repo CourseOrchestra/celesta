@@ -35,7 +35,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
 
   @Override
-  protected void initDataAccessors(CallContext context) throws CelestaException {
+  protected void initDataAccessors(CallContext context) {
     schemaCursor = new GrainsCursor(context);
     table = new TablesCursor(context);
   }
@@ -46,7 +46,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
     }
 
     @Override
-    protected CallContext createContext() throws CelestaException {
+    protected CallContext createContext() {
         return PyCallContext.builder()
                 .setCelesta(this.celesta)
                 .setConnectionPool(connectionPool)
@@ -58,7 +58,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
                 .createCallContext();
     }
 
-  public void updateSysGrain() throws CelestaException {
+  public void updateSysGrain() {
     try (CallContext context = createContext()) {
       schemaCursor = new GrainsCursor(context);
       table = new TablesCursor(context);
@@ -69,13 +69,13 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
 
   @Override
-  public void updateSysGrain(CallContext context) throws CelestaException {
+  public void updateSysGrain(CallContext context) {
     super.updateSysGrain(context);
     initSecurity(context);
   }
 
   @Override
-  void createSysObjects(Connection conn, Grain sys) throws CelestaException, ParseException {
+  void createSysObjects(Connection conn, Grain sys) throws ParseException {
     super.createSysObjects(conn, sys);
 
     dbAdaptor.createTable(conn, sys.getElement("tables", Table.class));
@@ -87,10 +87,8 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
   /**
    * Инициализация записей в security-таблицах. Производится один раз при
    * создании системной гранулы.
-   *
-   * @throws CelestaException
    */
-  private void initSecurity(CallContext context) throws CelestaException {
+  private void initSecurity(CallContext context) {
     RolesCursor roles = new RolesCursor(context);
     roles.clear();
     roles.setId("editor");
@@ -110,7 +108,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
   }
 
   @Override
-  protected void processGrainMeta(Grain g) throws CelestaException {
+  protected void processGrainMeta(Grain g) {
     // Обновляем справочник celesta.tables.
     table.setRange("grainid", g.getName());
     while (table.nextInSet()) {
@@ -163,7 +161,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
   }
 
   @Override
-  protected void beforeGrainUpdating(Grain g) throws CelestaException {
+  protected void beforeGrainUpdating(Grain g) {
     for (DBType dbType : DBType.values()) {
       if (!g.getBeforeSqlList(dbType).isEmpty() || !g.getAfterSqlList(dbType).isEmpty()) {
         throw new CelestaException(EXEC_NATIVE_NOT_SUPPORTED_MESSAGE);

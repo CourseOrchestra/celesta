@@ -42,19 +42,19 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
 
-    protected abstract T createContext() throws CelestaException;
+    protected abstract T createContext();
 
-    protected abstract void initDataAccessors(T context) throws CelestaException;
+    protected abstract void initDataAccessors(T context);
 
     protected abstract String getSchemasTableName();
 
-    public void updateSystemSchema() throws CelestaException {
+    public void updateSystemSchema() {
         try (T context = createContext()) {
             updateSystemSchema(context);
         }
     }
 
-    private void updateSystemSchema(T context) throws CelestaException {
+    private void updateSystemSchema(T context) {
         initDataAccessors(context);
 
         Connection conn = context.getConn();
@@ -72,9 +72,9 @@ public abstract class DbUpdater<T extends ICallContext> {
     /**
      * Выполняет обновление структуры БД на основе разобранной объектной модели.
      *
-     * @throws CelestaException в случае ошибки обновления.
+     * @в случае ошибки обновления.
      */
-    public void updateDb() throws CelestaException {
+    public void updateDb() {
         String sysSchemaName = score.getSysSchemaName();
         try (T context = createContext()) {
             updateSystemSchema(context);
@@ -134,7 +134,7 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
 
-    void updateSysGrain(T context) throws CelestaException {
+    void updateSysGrain(T context) {
         try {
             Connection conn = context.getConn();
             Grain sys = score.getGrain(score.getSysSchemaName());
@@ -146,13 +146,13 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    void createSysObjects(Connection conn, Grain sys) throws CelestaException, ParseException {
+    void createSysObjects(Connection conn, Grain sys) throws ParseException {
         dbAdaptor.createSchemaIfNotExists(score.getSysSchemaName());
         dbAdaptor.createTable(conn, sys.getElement(getSchemasTableName(), Table.class));
         dbAdaptor.createSysObjects(conn, score.getSysSchemaName());
     }
 
-    private void insertGrainRec(Grain g) throws CelestaException {
+    private void insertGrainRec(Grain g) {
         schemaCursor.init();
         schemaCursor.setId(g.getName());
         schemaCursor.setVersion(g.getVersion().toString());
@@ -164,7 +164,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         schemaCursor.insert();
     }
 
-    boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) throws CelestaException {
+    boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) {
         if (gi.lock)
             return true;
 
@@ -203,9 +203,9 @@ public abstract class DbUpdater<T extends ICallContext> {
      * Выполняет обновление на уровне отдельной гранулы.
      *
      * @param g Гранула.
-     * @throws CelestaException в случае ошибки обновления.
+     * @в случае ошибки обновления.
      */
-    boolean updateGrain(Grain g, ConnectionPool connectionPool) throws CelestaException {
+    boolean updateGrain(Grain g, ConnectionPool connectionPool) {
         // выставление в статус updating
         schemaCursor.get(g.getName());
         schemaCursor.setState(ISchemaCursor.UPGRADING);
@@ -296,31 +296,31 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    protected void beforeGrainUpdating(Grain g) throws CelestaException { }
+    protected void beforeGrainUpdating(Grain g) { }
 
-    protected void afterGrainUpdating(Grain g) throws CelestaException { }
+    protected void afterGrainUpdating(Grain g) { }
 
-    protected abstract void processGrainMeta(Grain g) throws CelestaException;
+    protected abstract void processGrainMeta(Grain g);
 
-    void createViews(Grain g) throws CelestaException {
+    void createViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         for (View v : g.getElements(View.class).values())
             dbAdaptor.createView(conn, v);
     }
 
-    void dropAllViews(Grain g) throws CelestaException {
+    void dropAllViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         for (String viewName : dbAdaptor.getViewList(conn, g))
             dbAdaptor.dropView(conn, g.getName(), viewName);
     }
 
-    void createParameterizedViews(Grain g) throws CelestaException {
+    void createParameterizedViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         for (ParameterizedView pv : g.getElements(ParameterizedView.class).values())
             dbAdaptor.createParameterizedView(conn, pv);
     }
 
-    void updateSequences(Grain g) throws CelestaException {
+    void updateSequences(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
 
         for (SequenceElement s : g.getElements(SequenceElement.class).values()) {
@@ -335,13 +335,13 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     }
 
-    void dropAllParameterizedViews(Grain g) throws CelestaException {
+    void dropAllParameterizedViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         for (String viewName : dbAdaptor.getParameterizedViewList(conn, g))
             dbAdaptor.dropParameterizedView(conn, g.getName(), viewName);
     }
 
-    void updateGrainFKeys(Grain g) throws CelestaException {
+    void updateGrainFKeys(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         Map<String, DbFkInfo> dbFKeys = new HashMap<>();
         for (DbFkInfo dbi : dbAdaptor.getFKInfo(conn, g))
@@ -363,7 +363,7 @@ public abstract class DbUpdater<T extends ICallContext> {
                 }
     }
 
-    List<DbFkInfo> dropOrphanedGrainFKeys(Grain g) throws CelestaException {
+    List<DbFkInfo> dropOrphanedGrainFKeys(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         List<DbFkInfo> dbFKeys = dbAdaptor.getFKInfo(conn, g);
         Map<String, ForeignKey> fKeys = new HashMap<>();
@@ -382,7 +382,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         return dbFKeys;
     }
 
-    void dropOrphanedGrainIndices(Grain g) throws CelestaException {
+    void dropOrphanedGrainIndices(Grain g) {
         /*
          * В целом метод повторяет код updateGrainIndices, но только в части
          * удаления индексов. Зачистить все индексы, подвергшиеся удалению или
@@ -420,7 +420,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    void updateGrainIndices(Grain g) throws CelestaException {
+    void updateGrainIndices(Grain g) {
         final Connection conn = schemaCursor.callContext().getConn();
         Map<String, DbIndexInfo> dbIndices = dbAdaptor.getIndices(conn, g);
         Map<String, Index> myIndices = g.getIndices();
@@ -443,7 +443,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    boolean updateTable(Table t, List<DbFkInfo> dbFKeys) throws CelestaException {
+    boolean updateTable(Table t, List<DbFkInfo> dbFKeys) {
         // Если таблица скомпилирована с опцией NO AUTOUPDATE, то ничего не
         // делаем с ней
         if (!t.isAutoUpdate())
@@ -494,7 +494,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         return modified;
     }
 
-    void updateMaterializedView(MaterializedView mv, boolean refTableIsModified) throws CelestaException {
+    void updateMaterializedView(MaterializedView mv, boolean refTableIsModified) {
         final Connection conn = schemaCursor.callContext().getConn();
 
         boolean mViewExists = dbAdaptor.tableExists(conn, mv.getGrain().getName(), mv.getName());
@@ -529,7 +529,7 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
     private boolean updateColumns(TableElement t, final Connection conn, Set<String> dbColumns, List<DbFkInfo> dbFKeys)
-            throws CelestaException {
+            {
         // Таблица существует в базе данных, определяем: надо ли удалить
         // первичный ключ
         DbPkInfo pkInfo = dbAdaptor.getPKInfo(conn, t);
@@ -567,7 +567,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         return result;
     }
 
-    private void dropReferencedFKs(TableElement t, Connection conn, List<DbFkInfo> dbFKeys) throws CelestaException {
+    private void dropReferencedFKs(TableElement t, Connection conn, List<DbFkInfo> dbFKeys) {
         Iterator<DbFkInfo> i = dbFKeys.iterator();
         while (i.hasNext()) {
             DbFkInfo dbFKey = i.next();

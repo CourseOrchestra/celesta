@@ -55,7 +55,7 @@ public abstract class DdlGenerator {
 
     abstract List<String> dropParameterizedView(
             String schemaName, String viewName, Connection conn
-    ) throws CelestaException;
+    ) ;
 
     abstract List<String> dropIndex(Grain g, DbIndexInfo dBIndexInfo);
 
@@ -199,16 +199,16 @@ public abstract class DdlGenerator {
 
     abstract DBType getType();
 
-    abstract List<String> manageAutoIncrement(Connection conn, TableElement t) throws CelestaException;
+    abstract List<String> manageAutoIncrement(Connection conn, TableElement t) ;
 
     /**
      * Генерирует sql для обновления триггера контроля версий на таблице.
      *
      * @param conn Соединение.
      * @param t    Таблица (версионируемая или не версионируемая).
-     * @throws CelestaException Ошибка создания или удаления триггера.
+     * @ Ошибка создания или удаления триггера.
      */
-    abstract List<String> updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException;
+    abstract List<String> updateVersioningTrigger(Connection conn, TableElement t) ;
 
     abstract List<String> createIndex(Index index);
 
@@ -216,10 +216,10 @@ public abstract class DdlGenerator {
      * Обновляет на таблице колонку.
      *
      * @param c Колонка для обновления.
-     * @throws CelestaException при ошибке обновления колонки.
+     * @ при ошибке обновления колонки.
      */
     //TODO: Javadoc In English
-    abstract List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) throws CelestaException;
+    abstract List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) ;
 
     final String createPk(TableElement t) {
         StringBuilder sb = new StringBuilder();
@@ -245,7 +245,7 @@ public abstract class DdlGenerator {
         return sb.toString();
     }
 
-    final List<String> createFk(Connection conn, ForeignKey fk) throws CelestaException {
+    final List<String> createFk(Connection conn, ForeignKey fk)  {
         LinkedList<StringBuilder> sqlQueue = new LinkedList<>();
 
         // Строим запрос на создание FK
@@ -299,7 +299,7 @@ public abstract class DdlGenerator {
                 .collect(Collectors.toList());
     }
 
-    void processCreateUpdateRule(Connection conn, ForeignKey fk, LinkedList<StringBuilder> sqlQueue) throws CelestaException {
+    void processCreateUpdateRule(Connection conn, ForeignKey fk, LinkedList<StringBuilder> sqlQueue)  {
         StringBuilder sql = sqlQueue.peek();
         switch (fk.getUpdateRule()) {
             case SET_NULL:
@@ -314,7 +314,7 @@ public abstract class DdlGenerator {
         }
     }
 
-    final String createView(View v) throws CelestaException {
+    final String createView(View v)  {
         try {
             SQLGenerator gen = getViewSQLGenerator();
             StringWriter sw = new StringWriter();
@@ -406,7 +406,7 @@ public abstract class DdlGenerator {
         return Arrays.asList(deleteSql, insertSql);
     }
 
-    final boolean triggerExists(Connection conn, TriggerQuery query) throws CelestaException {
+    final boolean triggerExists(Connection conn, TriggerQuery query)  {
         try {
             return isTriggerKnown(query) || this.dmlAdaptor.triggerExists(conn, query);
         } catch (SQLException e) {
@@ -438,11 +438,11 @@ public abstract class DdlGenerator {
     //TODO: Javadoc In English
     abstract SQLGenerator getViewSQLGenerator();
 
-    abstract List<String> createParameterizedView(ParameterizedView pv) throws CelestaException;
+    abstract List<String> createParameterizedView(ParameterizedView pv) ;
 
-    abstract Optional<String> dropAutoIncrement(Connection conn, TableElement t) throws CelestaException;
+    abstract Optional<String> dropAutoIncrement(Connection conn, TableElement t) ;
 
-    public abstract List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException;
+    public abstract List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t) ;
 
     public abstract List<String> createTableTriggersForMaterializedViews(Table t);
 

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.MaterializedViewCursor;
@@ -19,11 +18,11 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     private Integer surrogate_count;
     private Integer c;
 
-    public TestTableMvCursor(CallContext context) throws CelestaException {
+    public TestTableMvCursor(CallContext context) {
         super(context);
     }
 
-    public TestTableMvCursor(CallContext context, Set<String> fields) throws CelestaException {
+    public TestTableMvCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }
 
@@ -90,7 +89,7 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     }
 
     @Override
-    public TestTableMvCursor _getBufferCopy(CallContext context, List<String> fields) throws CelestaException {
+    public TestTableMvCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestTableMvCursor result;
 
         if (Objects.isNull(fields)) {

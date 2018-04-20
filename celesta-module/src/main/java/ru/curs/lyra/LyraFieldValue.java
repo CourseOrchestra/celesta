@@ -7,8 +7,6 @@ import java.util.Date;
 
 import javax.xml.stream.*;
 
-import ru.curs.celesta.CelestaException;
-
 /**
  * Значение поля, передаваемого в форму и обратно.
  */
@@ -18,7 +16,7 @@ public final class LyraFieldValue extends LyraNamedElement {
 	private final Object val;
 	private final LyraFormField lff;
 
-	LyraFieldValue(LyraFormField lff, Object val) throws CelestaException {
+	LyraFieldValue(LyraFormField lff, Object val) {
 		super(lff.getName());
 		this.lff = lff;
 		this.val = val;

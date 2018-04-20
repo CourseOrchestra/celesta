@@ -76,7 +76,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public boolean tableExists(Connection conn, String schema, String name) throws CelestaException {
+  public boolean tableExists(Connection conn, String schema, String name) {
     //TODO: It's a not good idea. We must check more concretely, cuz this method will work for other objects such as view etc.
     return objectExists(conn, schema, name);
   }
@@ -95,7 +95,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  void createSchemaIfNotExists(Connection conn, String name) throws CelestaException {
+  void createSchemaIfNotExists(Connection conn, String name) {
     String sql = String.format(
             "select coalesce(SCHEMA_ID('%s'), -1)", name.replace("\"", "")
     );
@@ -111,7 +111,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException {
+  public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) {
     TableElement t = c.getParentTable();
     String sql = String.format(SELECT_TOP_1 + tableString(t.getGrain().getName(), t.getName())
                     + WHERE_S, c.getQuotedName(), where);
@@ -121,7 +121,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   @Override
   public PreparedStatement getOneRecordStatement(
       Connection conn, TableElement t, String where, Set<String> fields
-  ) throws CelestaException {
+  ) {
 
     final String filedList = getTableFieldsListExceptBlobs((DataGrainElement) t, fields);
 
@@ -132,7 +132,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
   @Override
   public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
-                                                    List<ParameterSetter> program) throws CelestaException {
+                                                    List<ParameterSetter> program) {
 
     Iterator<String> columns = t.getColumns().keySet().iterator();
     // Создаём параметризуемую часть запроса, пропуская нулевые значения.
@@ -168,13 +168,13 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) throws CelestaException {
+  public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) {
     String sql = String.format("delete " + tableString(t.getGrain().getName(), t.getName()) + WHERE_S, where);
     return prepareStatement(conn, sql);
   }
 
   @Override
-  public PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) throws CelestaException {
+  public PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) {
     // Готовим запрос на удаление
     String sql = String.format("delete " + tableString(t.getGrain().getName(), t.getName()) + " %s;",
         where.isEmpty() ? "" : "where " + where);
@@ -187,7 +187,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+  public int getCurrentIdent(Connection conn, Table t) {
     String sysSchemaName = t.getGrain().getScore().getSysSchemaName();
     String sql = String.format("select seqvalue from " + sysSchemaName
                     + ".sequences where grainid = '%s' and tablename = '%s'",
@@ -271,12 +271,12 @@ public final class MSSQLAdaptor extends DBAdaptor {
    *
    * @param conn Соединение с БД.
    * @param c    Столбец.
-   * @throws CelestaException в случае сбоя связи с БД.
+   * @в случае сбоя связи с БД.
    */
   // CHECKSTYLE:OFF
   @SuppressWarnings("unchecked")
   @Override
-  public DbColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
+  public DbColumnInfo getColumnInfo(Connection conn, Column c) {
     // CHECKSTYLE:ON
     try {
       DatabaseMetaData metaData = conn.getMetaData();
@@ -346,7 +346,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public DbPkInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
+  public DbPkInfo getPKInfo(Connection conn, TableElement t) {
 
     DbPkInfo result = new DbPkInfo();
     try {
@@ -377,7 +377,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public List<DbFkInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+  public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
     // Full foreign key information query
     String sql = String.format(
         "SELECT RC.CONSTRAINT_SCHEMA AS 'GRAIN'" + "   , KCU1.CONSTRAINT_NAME AS 'FK_CONSTRAINT_NAME'"
@@ -463,7 +463,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+  public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
     String sql = String.format("select " + "    s.name as SchemaName," + "    o.name as TableName,"
         + "    i.name as IndexName," + "    co.name as ColumnName," + "    ic.key_ordinal as ColumnOrder "
         + "from sys.indexes i " + "inner join sys.objects o on i.object_id = o.object_id "
@@ -555,7 +555,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   public PreparedStatement getNavigationStatement(
       Connection conn, FromClause from, String orderBy,
       String navigationWhereClause, Set<String> fields, long offset
-  ) throws CelestaException {
+  ) {
     if (navigationWhereClause == null)
       throw new IllegalArgumentException();
 
@@ -598,7 +598,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
+  public List<String> getParameterizedViewList(Connection conn, Grain g) {
     String sql = String.format("SELECT routine_name FROM INFORMATION_SCHEMA.ROUTINES " +
             "where routine_schema = '%s' AND routine_type='FUNCTION'",
         g.getName());
@@ -634,7 +634,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public long nextSequenceValue(Connection conn, SequenceElement s) throws CelestaException {
+  public long nextSequenceValue(Connection conn, SequenceElement s) {
     String sql = "SELECT NEXT VALUE FOR " + tableString(s.getGrain().getName(), s.getName());
 
     try (Statement stmt = conn.createStatement()) {
@@ -649,13 +649,13 @@ public final class MSSQLAdaptor extends DBAdaptor {
   }
 
   @Override
-  public boolean sequenceExists(Connection conn, String schema, String name) throws CelestaException {
+  public boolean sequenceExists(Connection conn, String schema, String name) {
     //TODO: It's a not good idea. We must check more concretely, cuz this method will work for other objects such as view etc.
     return objectExists(conn, schema, name);
   }
 
   @Override
-  public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) throws CelestaException {
+  public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
     String sql = "SELECT CAST(INCREMENT AS varchar(max)) AS INCREMENT, CAST(MINIMUM_VALUE AS varchar(max)) AS MINIMUM_VALUE, " +
             "CAST(MAXIMUM_VALUE AS varchar(max)) AS MAXIMUM_VALUE, CAST(IS_CYCLING AS varchar(max)) AS IS_CYCLING" +
             " FROM SYS.SEQUENCES WHERE SCHEMA_ID = SCHEMA_ID (?) AND NAME = ?";
@@ -679,7 +679,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
     }
   }
 
-  private boolean objectExists(Connection conn, String schema, String name) throws CelestaException {
+  private boolean objectExists(Connection conn, String schema, String name) {
     String sql = String.format(
             "select coalesce(object_id('%s.%s'), -1)",
             schema.replace("\"", ""),

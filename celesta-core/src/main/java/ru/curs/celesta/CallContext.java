@@ -57,8 +57,7 @@ public abstract class CallContext
 
 	private boolean closed = false;
 
-	public CallContext(CallContextBuilder<? extends CallContextBuilder, T, R> contextBuilder)
-			throws CelestaException {
+	public CallContext(CallContextBuilder<? extends CallContextBuilder, T, R> contextBuilder) {
 
 		CallContext context = contextBuilder.callContext;
 
@@ -89,11 +88,8 @@ public abstract class CallContext
 
 	/**
 	 * Duplicates callcontext with another JDBC connection.
-	 *
-	 * @throws CelestaException
-	 *             cannot create adaptor
 	 */
-	public abstract T getCopy() throws CelestaException;
+	public abstract T getCopy();
 
 	public Connection getConn() {
 		return conn;
@@ -114,11 +110,8 @@ public abstract class CallContext
 
 	/**
 	 * Коммитит транзакцию.
-	 *
-	 * @throws CelestaException
-	 *             в случае проблемы с БД.
 	 */
-	public void commit() throws CelestaException {
+	public void commit() {
 		try {
 			conn.commit();
 		} catch (SQLException e) {
@@ -145,7 +138,7 @@ public abstract class CallContext
 		lastDataAccessor = dataAccessor;
 	}
 
-	public void incDataAccessorsCount() throws CelestaException {
+	public void incDataAccessorsCount() {
 		if (dataAccessorsCount > MAX_DATA_ACCESSORS)
 			throw new CelestaException("Too many data accessors created in one Celesta procedure call. Check for leaks!");
 		dataAccessorsCount++;
@@ -177,12 +170,8 @@ public abstract class CallContext
 
 	/**
 	 * Возвращает Process Id текущего подключения к базе данных.
-	 * 
-	 * @throws CelestaException
-	 *             Если подключение закрылось.
 	 */
-	public int getDBPid() throws CelestaException {
-
+	public int getDBPid() {
 		return dbPid;
 	}
 
@@ -224,7 +213,7 @@ public abstract class CallContext
 	}
 
 	@Override
-	public void close() throws CelestaException {
+	public void close() {
 		try {
 			closeDataAccessors();
 			conn.close();
@@ -249,7 +238,7 @@ public abstract class CallContext
 	 *            класс объекта доступа
 	 * @return объект доступа
 	 */
-	public abstract F create(E dataAccessorClass) throws CelestaException;
+	public abstract F create(E dataAccessorClass);
 
 	public abstract void removeFromCache(BasicDataAccessor dataAccessor);
 
@@ -326,6 +315,6 @@ public abstract class CallContext
 			return getThis();
 		}
 
-		public abstract R createCallContext() throws CelestaException;
+		public abstract R createCallContext();
 	}
 }

@@ -76,7 +76,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
     }
 
     @Override
-    Connection getConnection() throws CelestaException {
+    Connection getConnection() {
         return dba.connectionPool.get();
     }
 

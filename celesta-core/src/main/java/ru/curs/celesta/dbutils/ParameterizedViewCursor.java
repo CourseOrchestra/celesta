@@ -20,17 +20,17 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   protected Map<String, Object> parameters = null;
 
 
-  public ParameterizedViewCursor(CallContext context, Map<String, Object> parameters) throws CelestaException {
+  public ParameterizedViewCursor(CallContext context, Map<String, Object> parameters) {
     super(context);
     initParameters(parameters);
   }
 
-  public ParameterizedViewCursor(CallContext context, Set<String> fields, Map<String, Object> parameters) throws CelestaException {
+  public ParameterizedViewCursor(CallContext context, Set<String> fields, Map<String, Object> parameters) {
     super(context, fields);
     initParameters(parameters);
   }
 
-  private void initParameters(Map<String, Object> parameters) throws CelestaException {
+  private void initParameters(Map<String, Object> parameters) {
     if (!meta().getParameters().keySet().containsAll(parameters.keySet()))
       throw new CelestaException("Not all required parameters were passed");
 
@@ -39,13 +39,9 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
 
   /**
    * Описание представления (метаинформация).
-   *
-   * @throws CelestaException
-   *             в случае ошибки извлечения метаинформации (в норме не должна
-   *             происходить).
    */
   @Override
-  public ParameterizedView meta() throws CelestaException {
+  public ParameterizedView meta() {
     if (meta == null)
       try {
         meta = callContext().getScore()
@@ -57,7 +53,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   }
 
   @Override
-  final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException {
+  final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
     // для представлений мы сортируем всегда по первому столбцу, если
     // сортировки нет вообще
     if (colNames.isEmpty()) {
@@ -67,7 +63,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   }
 
   @Override
-  protected FromClause getFrom() throws CelestaException {
+  protected FromClause getFrom() {
 
     FromClause result = new FromClause();
     DataGrainElement ge = meta();

@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.term;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
@@ -19,12 +18,12 @@ public class WhereTermCompareTerm extends WhereTerm {
     }
 
     @Override
-    public String getWhere() throws CelestaException {
+    public String getWhere() {
         return String.format("%s %s %s", lTerm.getWhere(), op, rTerm.getWhere());
     }
 
     @Override
-    public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) throws CelestaException {
+    public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
         lTerm.programParams(program, queryBuildingHelper);
         rTerm.programParams(program, queryBuildingHelper);
     }

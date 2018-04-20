@@ -9,28 +9,24 @@ public abstract class Sequence extends BasicDataAccessor {
 
     private SequenceElement meta = null;
 
-    public Sequence(CallContext context) throws CelestaException {
+    public Sequence(CallContext context) {
         super(context);
     }
 
-    public long nextValue() throws CelestaException {
+    public long nextValue() {
         return db().nextSequenceValue(conn(), meta());
     }
 
     @Override
-    public void clear() throws CelestaException {
+    public void clear() {
 
     }
 
     /**
      * Описание представления (метаинформация).
-     *
-     * @throws CelestaException
-     *             в случае ошибки извлечения метаинформации (в норме не должна
-     *             происходить).
      */
     @Override
-    public final SequenceElement meta() throws CelestaException {
+    public final SequenceElement meta() {
         if (meta == null)
             try {
                 meta = callContext().getScore()

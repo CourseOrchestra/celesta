@@ -76,7 +76,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	final PreparedStmtHolder delete = new PreparedStmtHolder() {
 
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program) {
 			WhereTerm where = WhereTermsMaker.getPKWhereTerm(meta());
 			where.programParams(program, db());
 			return db().getDeleteRecordStatement(conn(), meta(), where.getWhere());
@@ -87,7 +87,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	private final PreparedStmtHolder deleteAll = new PreparedStmtHolder() {
 
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program) {
 			WhereTerm where = getQmaker().getWhereTerm();
 			where.programParams(program, db());
 			return db().deleteRecordSetStatement(conn(), meta(), where.getWhere());
@@ -98,7 +98,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	private Cursor xRec;
 	private int recversion;
 
-	public Cursor(CallContext context) throws CelestaException {
+	public Cursor(CallContext context) {
 		super(context);
 		CursorGetHelper.CursorGetHelperBuilder cghb = new CursorGetHelper.CursorGetHelperBuilder();
 		cghb.withDb(db())
@@ -110,7 +110,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		inFilterHolder = new InFilterHolder(this);
 	}
 
-	public Cursor(CallContext context, Set<String> fields) throws CelestaException {
+	public Cursor(CallContext context, Set<String> fields) {
 		super(context, fields);
 
 		CursorGetHelper.CursorGetHelperBuilder cghb = new CursorGetHelper.CursorGetHelperBuilder();
@@ -128,7 +128,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	PreparedStmtHolder getHereHolder() {
 		return new PreparedStmtHolder() {
 			@Override
-			protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+			protected PreparedStatement initStatement(List<ParameterSetter> program) {
 				WhereTerm where = getQmaker().getHereWhereTerm(meta());
 				where.programParams(program, db());
 				return db().getNavigationStatement(
@@ -148,11 +148,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	/**
 	 * Осуществляет вставку курсора в БД.
-	 * 
-	 * @throws CelestaException
-	 *             в случае ошибки БД
 	 */
-	public final void insert() throws CelestaException {
+	public final void insert() {
 		if (!tryInsert()) {
 			StringBuilder sb = new StringBuilder();
 			for (Object value : _currentKeyValues()) {
@@ -166,11 +163,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	/**
 	 * Осуществляет вставку курсора в БД.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка БД
 	 */
-	public final boolean tryInsert() throws CelestaException {
+	public final boolean tryInsert() {
 		if (!canInsert())
 			throw new PermissionDeniedException(callContext(), meta(), Action.INSERT);
 
@@ -230,11 +224,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	/**
 	 * Осуществляет сохранение содержимого курсора в БД, выбрасывая исключение в
 	 * случае, если запись с такими ключевыми полями не найдена.
-	 * 
-	 * @throws CelestaException
-	 *             в случае ошибки БД
 	 */
-	public final void update() throws CelestaException {
+	public final void update() {
 		if (!tryUpdate()) {
 			StringBuilder sb = new StringBuilder();
 			for (Object value : _currentKeyValues()) {
@@ -248,12 +239,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	/**
 	 * Осуществляет сохранение содержимого курсора в БД.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка БД
 	 */
 	// CHECKSTYLE:OFF for cyclomatic complexity
-	public final boolean tryUpdate() throws CelestaException {
+	public final boolean tryUpdate() {
 		// CHECKSTYLE:ON
 		if (!canModify())
 			throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
@@ -345,11 +333,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	/**
 	 * Удаляет текущую запись.
-	 * 
-	 * @throws CelestaException
-	 *             ошибка БД
 	 */
-	public final void delete() throws CelestaException {
+	public final void delete() {
 		if (!canDelete())
 			throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
 
@@ -368,7 +353,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	}
 
 	@Override
-	final void initXRec() throws CelestaException {
+	final void initXRec() {
 		if (xRec == null) {
 			xRec = (Cursor) _getBufferCopy(callContext(), null);
 		} else {
@@ -378,11 +363,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	/**
 	 * Удаляет все записи, попавшие в текущий фильтр.
-	 * 
-	 * @throws CelestaException
-	 *             Ошибка БД
 	 */
-	public final void deleteAll() throws CelestaException {
+	public final void deleteAll() {
 		if (!canDelete())
 			throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
 		PreparedStatement stmt = deleteAll.getStatement(_currentValues(), recversion);
@@ -403,10 +385,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	 * 
 	 * @param values
 	 *            значения ключевых полей
-	 * @throws CelestaException
-	 *             в случае, если запись не найдена
 	 */
-	public final void get(Object... values) throws CelestaException {
+	public final void get(Object... values) {
 		if (!tryGet(values)) {
 			StringBuilder sb = new StringBuilder();
 			for (Object value : values) {
@@ -424,10 +404,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	 * 
 	 * @param values
 	 *            значения ключевых полей
-	 * @throws CelestaException
-	 *             SQL-ошибка
 	 */
-	public final boolean tryGet(Object... values) throws CelestaException {
+	public final boolean tryGet(Object... values) {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 		return getHelper.internalGet(this::_parseResult, this::initXRec,
@@ -437,11 +415,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	/**
 	 * Получает из базы данных запись, соответствующую полям текущего первичного
 	 * ключа.
-	 * 
-	 * @throws CelestaException
-	 *             Ошибка доступа или взаимодействия с БД.
 	 */
-	public final boolean tryGetCurrent() throws CelestaException {
+	public final boolean tryGetCurrent() {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 		return getHelper.internalGet(this::_parseResult, this::initXRec,
@@ -471,10 +446,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	 * 
 	 * @param name
 	 *            имя поля
-	 * @throws CelestaException
-	 *             Неверное имя поля
 	 */
-	protected BLOB calcBlob(String name) throws CelestaException {
+	protected BLOB calcBlob(String name) {
 		validateColumName(name);
 		Column c = meta().getColumns().get(name);
 		if (!(c instanceof BinaryColumn))
@@ -528,10 +501,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	 *            Имя текстового поля.
 	 * @return длина текстового поля или -1 (минус единица) если вместо длины
 	 *         указано MAX.
-	 * @throws CelestaException
-	 *             Если указано имя несуществующего или нетекстового поля.
 	 */
-	public final int getMaxStrLen(String name) throws CelestaException {
+	public final int getMaxStrLen(String name) {
 		validateColumName(name);
 		Column c = meta().getColumns().get(name);
 		if (c instanceof StringColumn) {
@@ -555,13 +526,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	/**
 	 * Описание таблицы (метаинформация).
-	 * 
-	 * @throws CelestaException
-	 *             в случае ошибки извлечения метаинформации (в норме не должна
-	 *             происходить).
 	 */
 	@Override
-	public final Table meta() throws CelestaException {
+	public final Table meta() {
 		if (meta == null)
 			try {
 				meta = callContext().getScore()
@@ -573,7 +540,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	}
 
 	@Override
-	final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException {
+	final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
 		// Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
 		// естественном порядке
 		for (String colName : meta().getPrimaryKey().keySet())
@@ -584,7 +551,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	}
 
 	@Override
-	public final void clear() throws CelestaException {
+	public final void clear() {
 		super.clear();
 		setRecversion(0);
 		if (xRec != null)
@@ -609,7 +576,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	}
 
 	@Override
-	public FieldsLookup setIn(BasicCursor otherCursor) throws CelestaException {
+	public FieldsLookup setIn(BasicCursor otherCursor) {
 		return inFilterHolder.setIn(otherCursor);
 	}
 
@@ -652,11 +619,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	 * @param newValue
 	 *            значение, которое должно принять поле IDENITITY при следующей
 	 *            вставке.
-	 * @throws CelestaException
-	 *             Если таблица не содержит IDENTITY-поля или в случае сбоя
-	 *             работы с базой данных.
 	 */
-	public final void resetIdentity(int newValue) throws CelestaException {
+	public final void resetIdentity(int newValue) {
 		IntegerColumn ic = TableElement.findIdentityField(meta());
 		if (ic == null)
 			throw new CelestaException("Cannot reset identity: there is no IDENTITY field defined for table %s.%s.",

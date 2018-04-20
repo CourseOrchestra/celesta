@@ -18,12 +18,12 @@ public class CelestaImpl implements PyCelesta {
     }
 
     @Override
-    public PyObject runPython(String sesId, String proc, Object... param) throws CelestaException {
+    public PyObject runPython(String sesId, String proc, Object... param) {
         return null;
     }
 
     @Override
-    public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc, Object... param) throws CelestaException {
+    public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc, Object... param) {
         return null;
     }
 

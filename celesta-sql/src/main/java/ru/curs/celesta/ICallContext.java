@@ -21,5 +21,5 @@ public interface ICallContext extends AutoCloseable {
 
     AbstractScore getScore();
 
-    void close() throws CelestaException;
+    void close();
 }

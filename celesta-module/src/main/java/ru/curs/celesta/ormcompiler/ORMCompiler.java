@@ -64,9 +64,8 @@ public final class ORMCompiler {
      * Выполняет компиляцию кода на основе разобранной объектной модели.
      *
      * @param score модель
-     * @throws CelestaException при неудаче компиляции, например, при ошибке вывода в файл.
      */
-    public static void compile(Score score) throws CelestaException {
+    public static void compile(Score score) {
         for (Grain g : score.getGrains().values())
             // Пропускаем системную гранулу.
             if (!"celesta".equals(g.getName())) {

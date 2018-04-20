@@ -13,11 +13,7 @@ public class CursorIterator<T extends BasicCursor> implements Iterator<T> {
 
     public CursorIterator(T cursor) {
         this.cursor = cursor;
-        try {
-            this.hasResults = cursor.tryFindSet();
-        } catch (CelestaException e) {
-            throw new RuntimeException(e);
-        }
+        this.hasResults = cursor.tryFindSet();
     }
 
     @Override
@@ -32,23 +28,16 @@ public class CursorIterator<T extends BasicCursor> implements Iterator<T> {
             boolean result = this.cursor.cursor.next();
             this.cursor.cursor.previous();
             return result;
-        }
-        catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new CelestaException(e);
         }
     }
 
     @Override
     public T next() {
         if (!this.justCreated) {
-            try {
-                this.cursor.nextInSet();
-            }
-            catch (CelestaException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        else {
+            this.cursor.nextInSet();
+        } else {
             this.justCreated = false;
         }
         return this.cursor;

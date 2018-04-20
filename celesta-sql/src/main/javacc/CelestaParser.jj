@@ -23,7 +23,7 @@ import ru.curs.celesta.score.validator.IdentifierParser;
 
 //CHECKSTYLE:OFF
 public class CelestaParser{
-    public static Expr parseComplexFilter(String filter, IdentifierParser identifierParser) throws CelestaException {
+    public static Expr parseComplexFilter(String filter, IdentifierParser identifierParser) {
          StringReader sr = new StringReader(filter);
          try {
                  CelestaParser parser = new CelestaParser(sr);

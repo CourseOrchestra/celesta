@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 
 
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.score.*;
 
@@ -50,12 +49,12 @@ public class TestLyraForm {
 
 	}
 	
-	private static String testJSON(String test) throws CelestaException{
+	private static String testJSON(String test){
 		return CelestaDocUtils.getCelestaDocJSON((new DummyMeta(test)).getCelestaDoc());
 	}
 
 	@Test
-	public void test1() throws CelestaException {
+	public void test1() {
 		assertEquals("{}", testJSON(""));
 		assertEquals("{}", testJSON(null));
 		assertEquals("{}", testJSON("   sfdwer фывафа "));

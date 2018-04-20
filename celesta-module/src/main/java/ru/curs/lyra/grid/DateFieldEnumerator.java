@@ -3,8 +3,6 @@ package ru.curs.lyra.grid;
 import java.math.BigInteger;
 import java.util.Date;
 
-import ru.curs.celesta.CelestaException;
-
 public class DateFieldEnumerator extends KeyEnumerator {
 
 	private Date value;
@@ -20,7 +18,7 @@ public class DateFieldEnumerator extends KeyEnumerator {
 	}
 
 	@Override
-	public BigInteger getOrderValue() throws CelestaException {
+	public BigInteger getOrderValue() {
 		return BigInteger.valueOf(value.getTime()).subtract(min);
 	}
 

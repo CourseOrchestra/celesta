@@ -16,7 +16,7 @@ class H2MixedModeTest {
             "jdbc:h2:tcp://localhost:%s/mem:celesta", port);
 
     @Test
-    void h2InMemorySetupPropertyIsParsed() throws CelestaException {
+    void h2InMemorySetupPropertyIsParsed() {
         Properties params = new Properties();
         params.setProperty("score.path", "score");
         params.setProperty("h2.in-memory", "true");
@@ -36,7 +36,7 @@ class H2MixedModeTest {
     }
 
     @Test
-    void celestaRunsInMixedModeOnTcpPort() throws CelestaException, SQLException {
+    void celestaRunsInMixedModeOnTcpPort() throws SQLException {
         Properties params = new Properties();
         params.setProperty("score.path", "score");
         params.setProperty("h2.in-memory", "true");

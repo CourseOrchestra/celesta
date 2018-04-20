@@ -19,7 +19,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
   private final CursorGetHelper getHelper;
 
 
-  public MaterializedViewCursor(CallContext context) throws CelestaException {
+  public MaterializedViewCursor(CallContext context) {
     super(context);
 
     CursorGetHelper.CursorGetHelperBuilder cghb = new CursorGetHelper.CursorGetHelperBuilder();
@@ -31,7 +31,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
     getHelper = cghb.build();
   }
 
-  public MaterializedViewCursor(CallContext context, Set<String> fields) throws CelestaException {
+  public MaterializedViewCursor(CallContext context, Set<String> fields) {
     super(context, fields);
 
     CursorGetHelper.CursorGetHelperBuilder cghb = new CursorGetHelper.CursorGetHelperBuilder();
@@ -46,13 +46,9 @@ public abstract class MaterializedViewCursor extends BasicCursor {
 
   /**
    * Описание представления (метаинформация).
-   *
-   * @throws CelestaException
-   *             в случае ошибки извлечения метаинформации (в норме не должна
-   *             происходить).
    */
   @Override
-  public MaterializedView meta() throws CelestaException {
+  public MaterializedView meta() {
     if (meta == null)
       try {
         meta = callContext().getScore()
@@ -65,7 +61,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
 
 
   @Override
-  final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException {
+  final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
     // Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
     // естественном порядке
     for (String colName : meta().getPrimaryKey().keySet())
@@ -81,10 +77,8 @@ public abstract class MaterializedViewCursor extends BasicCursor {
    *
    * @param values
    *            значения ключевых полей
-   * @throws CelestaException
-   *             в случае, если запись не найдена
    */
-  public final void get(Object... values) throws CelestaException {
+  public final void get(Object... values) {
     if (!tryGet(values)) {
       StringBuilder sb = new StringBuilder();
       for (Object value : values) {
@@ -102,10 +96,8 @@ public abstract class MaterializedViewCursor extends BasicCursor {
    *
    * @param values
    *            значения ключевых полей
-   * @throws CelestaException
-   *             SQL-ошибка
    */
-  public final boolean tryGet(Object... values) throws CelestaException {
+  public final boolean tryGet(Object... values) {
     if (!canRead())
       throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 
@@ -117,11 +109,8 @@ public abstract class MaterializedViewCursor extends BasicCursor {
   /**
    * Получает из базы данных запись, соответствующую полям текущего первичного
    * ключа.
-   *
-   * @throws CelestaException
-   *             Ошибка доступа или взаимодействия с БД.
    */
-  public final boolean tryGetCurrent() throws CelestaException {
+  public final boolean tryGetCurrent() {
     if (!canRead())
       throw new PermissionDeniedException(callContext(), meta(), Action.READ);
     return getHelper.internalGet(this::_parseResult, this::initXRec,

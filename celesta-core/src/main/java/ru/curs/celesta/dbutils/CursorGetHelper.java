@@ -2,11 +2,8 @@ package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.dbutils.stmt.PreparedStatementHolderFactory;
 import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
-import ru.curs.celesta.dbutils.term.WhereTerm;
-import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.score.TableElement;
 
 import java.sql.Connection;
@@ -14,7 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -29,7 +25,7 @@ class CursorGetHelper {
 
   @FunctionalInterface
   interface InitXRecFunction {
-    void apply() throws CelestaException;
+    void apply() ;
   }
 
   private final DBAdaptor db;
@@ -60,7 +56,7 @@ class CursorGetHelper {
 
 
   final boolean internalGet(ParseResultFunction parseResultFunc, InitXRecFunction initXRecFunc,
-                            int recversion, Object... values) throws CelestaException {
+                            int recversion, Object... values) {
     PreparedStatement g = prepareGet(recversion, values);
     //System.out.println(g.toString());
     try (ResultSet rs = g.executeQuery()){
@@ -77,7 +73,7 @@ class CursorGetHelper {
   }
 
 
-  final PreparedStatement prepareGet(int recversion, Object... values) throws CelestaException {
+  final PreparedStatement prepareGet(int recversion, Object... values) {
     if (meta.getPrimaryKey().size() != values.length)
       throw new CelestaException("Invalid number of 'get' arguments for '%s': expected %d, provided %d.",
           tableName, meta.getPrimaryKey().size(), values.length);

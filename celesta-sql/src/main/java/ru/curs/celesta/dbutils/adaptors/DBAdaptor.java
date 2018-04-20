@@ -111,9 +111,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param conn Connection to use.
    * @param sql SQL statement.
    * @return new default PreparedStatement object.
-   * @throws CelestaException if a {@link SQLException} occurs.
+   * @if a {@link SQLException} occurs.
    */
-  static PreparedStatement prepareStatement(Connection conn, String sql) throws CelestaException {
+  static PreparedStatement prepareStatement(Connection conn, String sql) {
     try {
       return conn.prepareStatement(sql);
     } catch (SQLException e) {
@@ -173,9 +173,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param sql Sql query to execute.
    * @return {@link Set<String>} with values of column with index 1,
    *         which were received as a result of the sql query.
-   * @throws CelestaException if a {@link SQLException} occurs.
+   * @if a {@link SQLException} occurs.
    */
-  static Set<String> sqlToStringSet(Connection conn, String sql) throws CelestaException {
+  static Set<String> sqlToStringSet(Connection conn, String sql) {
     Set<String> result = new HashSet<>();
     try {
       Statement stmt = conn.createStatement();
@@ -249,7 +249,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   abstract boolean userTablesExist(Connection conn) throws SQLException;
 
   //TODO: Javadoc
-  abstract void createSchemaIfNotExists(Connection conn, String name) throws CelestaException;
+  abstract void createSchemaIfNotExists(Connection conn, String name);
   // =========> END PACKAGE-PRIVATE ABSTRACT METHODS <=========
 
   // =========> PUBLIC STATIC METHODS <=========
@@ -263,9 +263,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    *
    * @param conn Connection to use.
    * @param t TableElement metadata of deleting table provided by Celesta.
-   * @throws CelestaException if a {@link SQLException} occurs.
+   * @if a {@link SQLException} occurs.
    */
-  public final void dropTable(Connection conn, TableElement t) throws CelestaException {
+  public final void dropTable(Connection conn, TableElement t) {
     this.ddlAdaptor.dropTable(conn, t);
   }
 
@@ -273,10 +273,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * Возвращает true в том и только том случае, если база данных содержит
    * пользовательские таблицы (т. е. не является пустой базой данных).
    *
-   * @throws CelestaException ошибка БД
+   * @ошибка БД
    */
   //TODO: Javadoc In English
-  public final boolean userTablesExist() throws CelestaException {
+  public final boolean userTablesExist() {
     try (Connection conn = connectionPool.get()) {
       return userTablesExist(conn);
     } catch (SQLException e) {
@@ -289,12 +289,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * не существовала.
    *
    * @param name имя схемы.
-   * @throws CelestaException только в том случае, если возник критический сбой при
+   * @только в том случае, если возник критический сбой при
    *                          создании схемы. Не выбрасывается в случае, если схема с
    *                          данным именем уже существует в базе данных.
    */
   //TODO: Javadoc In English
-  public final void createSchemaIfNotExists(String name) throws CelestaException {
+  public final void createSchemaIfNotExists(String name) {
     try (Connection conn = connectionPool.get()) {
       createSchemaIfNotExists(conn, name);
     } catch (SQLException e) {
@@ -302,7 +302,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
   }
 
-  public final void createColumn(Connection conn, Column c) throws CelestaException {
+  public final void createColumn(Connection conn, Column c) {
     this.ddlAdaptor.createColumn(conn, c);
   }
 
@@ -310,7 +310,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   //TODO: Javadoc
   public final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask,
                                                           boolean[] nullsMask, List<ParameterSetter> program, String where)
-          throws CelestaException {
+          {
     // CHECKSTYLE:ON
     StringBuilder setClause = new StringBuilder();
     if (t.isVersioned()) {
@@ -340,11 +340,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     return prepareStatement(conn, sql);
   }
 
-  public final void createIndex(Connection conn, Index index) throws CelestaException {
+  public final void createIndex(Connection conn, Index index) {
     this.ddlAdaptor.createIndex(conn, index);
   }
 
-  public final void createFK(Connection conn, ForeignKey fk) throws CelestaException {
+  public final void createFK(Connection conn, ForeignKey fk) {
     this.ddlAdaptor.createFk(conn, fk);
   }
 
@@ -353,10 +353,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    *
    * @param g           Гранула
    * @param dBIndexInfo Информация об индексе
-   * @throws CelestaException Если что-то пошло не так.
+   * @Если что-то пошло не так.
    */
   //TODO: Javadoc In English
-  public final void dropIndex(Grain g, DbIndexInfo dBIndexInfo) throws CelestaException {
+  public final void dropIndex(Grain g, DbIndexInfo dBIndexInfo) {
     try (Connection conn = connectionPool.get()) { //TODO: Why there is a new Connection instance
         ddlAdaptor.dropIndex(conn, g, dBIndexInfo);
     } catch (CelestaException | SQLException e) {
@@ -373,14 +373,14 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param offset   Количество строк для пропуска
    * @param rowCount Количество строк для возврата (limit-фильтр).
    * @param fields   Запрашиваемые столбцы. Если не пришло, то выбираются все.
-   * @throws CelestaException Ошибка БД или некорректный фильтр.
+   * @Ошибка БД или некорректный фильтр.
    */
   //TODO: Javadoc In English
   // CHECKSTYLE:OFF 6 parameters
   public final PreparedStatement getRecordSetStatement(
           Connection conn, FromClause from, String whereClause,
           String orderBy, long offset, long rowCount, Set<String> fields
-  ) throws CelestaException {
+  ) {
     // CHECKSTYLE:ON
     String sql;
 
@@ -404,7 +404,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   //TODO: Javadoc
   public final PreparedStatement getSetCountStatement(Connection conn, FromClause from, String whereClause)
-          throws CelestaException {
+          {
     String sql = "select count(*) from " + from.getExpression()
             + ("".equals(whereClause) ? "" : " where " + whereClause);
     PreparedStatement result = prepareStatement(conn, sql);
@@ -413,19 +413,19 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   }
 
   //TODO: Javadoc
-  public final void dropTrigger(Connection conn, TriggerQuery query) throws CelestaException {
+  public final void dropTrigger(Connection conn, TriggerQuery query) {
     ddlAdaptor.dropTrigger(conn, query);
   }
 
-  public final void manageAutoIncrement(Connection conn, TableElement t) throws CelestaException {
+  public final void manageAutoIncrement(Connection conn, TableElement t) {
     ddlAdaptor.manageAutoIncrement(conn, t);
   }
 
-  public void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
+  public void updateVersioningTrigger(Connection conn, TableElement t) {
     ddlAdaptor.updateVersioningTrigger(conn, t);
   }
 
-  public final void createPK(Connection conn, TableElement t) throws CelestaException {
+  public final void createPK(Connection conn, TableElement t) {
     this.ddlAdaptor.createPk(conn, t);
   }
 
@@ -438,27 +438,27 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    *
    * @param conn Соединение с БД.
    * @param v    Представление.
-   * @throws CelestaException Ошибка БД.
+   * @Ошибка БД.
    */
   //TODO: Javadoc In English
-  public final void createView(Connection conn, View v) throws CelestaException {
+  public final void createView(Connection conn, View v) {
     this.ddlAdaptor.createView(conn, v);
   }
 
 
-  public final void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
+  public final void createParameterizedView(Connection conn, ParameterizedView pv) {
     this.ddlAdaptor.createParameterizedView(conn, pv);
   }
 
-  public final void dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
+  public final void dropTableTriggersForMaterializedViews(Connection conn, Table t) {
     this.ddlAdaptor.dropTableTriggersForMaterializedViews(conn, t);
   }
 
-  public final void createTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
+  public final void createTableTriggersForMaterializedViews(Connection conn, Table t) {
     this.ddlAdaptor.createTableTriggersForMaterializedViews(conn, t);
   }
 
-  public final void executeNative(Connection conn, String sql) throws CelestaException {
+  public final void executeNative(Connection conn, String sql) {
     this.ddlAdaptor.executeNative(conn, sql);
   }
   // =========> END PUBLIC FINAL METHODS <=========
@@ -471,10 +471,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param conn    соединение.
    * @param timeout тайм-аут.
    * @return true если соединение валидно, иначе false
-   * @throws CelestaException при возникновении ошибки работы с БД.
+   * @при возникновении ошибки работы с БД.
    */
   //TODO: Javadoc In English
-  public boolean isValidConnection(Connection conn, int timeout) throws CelestaException {
+  public boolean isValidConnection(Connection conn, int timeout) {
     try {
       return conn.isValid(timeout);
     } catch (SQLException e) {
@@ -509,11 +509,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    *
    * @param conn Соединение.
    * @param te   Таблица для создания.
-   * @throws CelestaException В случае возникновения критического сбоя при создании
+   * @В случае возникновения критического сбоя при создании
    *                          таблицы, в том числе в случае, если такая таблица существует.
    */
   //TODO: Javadoc In English
-  public void createTable(Connection conn, TableElement te) throws CelestaException {
+  public void createTable(Connection conn, TableElement te) {
     ddlAdaptor.createTable(conn, te);
   }
 
@@ -522,10 +522,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    *
    * @param conn Соединение с БД.
    * @param t    Таблица, по которой просматривать столбцы.
-   * @throws CelestaException в случае сбоя связи с БД.
+   * @в случае сбоя связи с БД.
    */
   //TODO: Javadoc In English
-  public Set<String> getColumns(Connection conn, TableElement t) throws CelestaException {
+  public Set<String> getColumns(Connection conn, TableElement t) {
     Set<String> result = new LinkedHashSet<>();
     try {
       DatabaseMetaData metaData = conn.getMetaData();
@@ -553,10 +553,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param schemaName имя гранулы
    * @param tableName Имя таблицы, на которой определён первичный ключ.
    * @param fkName    Имя внешнего ключа.
-   * @throws CelestaException В случае сбоя в базе данных.
+   * @В случае сбоя в базе данных.
    */
   //TODO: Javadoc In English
-  public void dropFK(Connection conn, String schemaName, String tableName, String fkName) throws CelestaException {
+  public void dropFK(Connection conn, String schemaName, String tableName, String fkName) {
     try {
       this.ddlAdaptor.dropFK(conn, schemaName, tableName, fkName);
     } catch (CelestaException e) {
@@ -565,7 +565,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   }
 
   //TODO: Javadoc
-  public void dropParameterizedView(Connection conn, String schemaName, String viewName) throws CelestaException {
+  public void dropParameterizedView(Connection conn, String schemaName, String viewName) {
     this.ddlAdaptor.dropParameterizedView(conn, schemaName, viewName);
   }
 
@@ -575,10 +575,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param conn Соединение с БД.
    * @param g    Гранула, перечень имён представлений которой необходимо
    *             получить.
-   * @throws CelestaException В случае сбоя связи с БД.
+   * @В случае сбоя связи с БД.
    */
   //TODO: Javadoc In English
-  public List<String> getViewList(Connection conn, Grain g) throws CelestaException {
+  public List<String> getViewList(Connection conn, Grain g) {
     String sql = String.format("select table_name from information_schema.views where table_schema = '%s'",
             g.getName());
     List<String> result = new LinkedList<>();
@@ -593,7 +593,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   }
 
   //TODO: Javadoc
-  public String getCallFunctionSql(ParameterizedView pv) throws CelestaException {
+  public String getCallFunctionSql(ParameterizedView pv) {
     return String.format(
             tableString(pv.getGrain().getName(), pv.getName()) + "(%s)",
             pv.getParameters().keySet().stream()
@@ -604,17 +604,17 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
 
   //TODO: Javadoc
-  public void createSequence(Connection conn, SequenceElement s) throws CelestaException {
+  public void createSequence(Connection conn, SequenceElement s) {
     ddlAdaptor.createSequence(conn, s);
   }
 
   //TODO: Javadoc
-  public void alterSequence(Connection conn, SequenceElement s) throws CelestaException {
+  public void alterSequence(Connection conn, SequenceElement s) {
     ddlAdaptor.alterSequence(conn, s);
   }
 
   //TODO: Javadoc
-  public void dropSequence(Connection conn, SequenceElement s) throws CelestaException {
+  public void dropSequence(Connection conn, SequenceElement s) {
     String sql = String.format("DROP SEQUENCE " + tableString(s.getGrain().getName(), s.getName()));
     executeUpdate(conn, sql);
   }
@@ -625,10 +625,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param conn      Соединение с БД.
    * @param schemaName Имя гранулы.
    * @param viewName  Имя представления.
-   * @throws CelestaException Ошибка БД.
+   * @Ошибка БД.
    */
   //TODO: Javadoc In English
-  public void dropView(Connection conn, String schemaName, String viewName) throws CelestaException {
+  public void dropView(Connection conn, String schemaName, String viewName) {
     ddlAdaptor.dropView(conn, schemaName, viewName);
   }
 
@@ -637,10 +637,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * функции), необходимые для функционирования Celesta на текущей СУБД.
    *
    * @param conn Соединение.
-   * @throws CelestaException Ошибка создания объектов.
+   * @Ошибка создания объектов.
    */
   //TODO: Javadoc In English
-  public void createSysObjects(Connection conn, String sysSchemaName) throws CelestaException {
+  public void createSysObjects(Connection conn, String sysSchemaName) {
 
   }
 
@@ -649,10 +649,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * данных.
    *
    * @param date Литерал даты.
-   * @throws CelestaException ошибка парсинга.
+   * @ошибка парсинга.
    */
   //TODO: Javadoc In English
-  public String translateDate(String date) throws CelestaException {
+  public String translateDate(String date) {
     try {
       DateTimeColumn.parseISODate(date);
     } catch (ParseException e) {
@@ -670,7 +670,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @throws SQLException Ошибка соединения с БД.
    */
   //TODO: Javadoc In English
-  public void resetIdentity(Connection conn, Table t, int i) throws CelestaException {
+  public void resetIdentity(Connection conn, Table t, int i) {
 
       String sql = String.format(
               "update \"celesta\".\"sequences\" set \"seqvalue\" = %d "
@@ -689,7 +689,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   }
 
   //TODO: Javadoc
-  public Optional<String> getTriggerBody(Connection conn, TriggerQuery query) throws CelestaException {
+  public Optional<String> getTriggerBody(Connection conn, TriggerQuery query) {
     String sql = getSelectTriggerBodySql(query);
 
     try (ResultSet rs = executeQuery(conn, sql)) {
@@ -708,14 +708,14 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   }
 
   //TODO: Javadoc
-  public void initDataForMaterializedView(Connection conn, MaterializedView mv) throws CelestaException {
+  public void initDataForMaterializedView(Connection conn, MaterializedView mv) {
       this.ddlAdaptor.initDataForMaterializedView(conn, mv);
   }
 
   //TODO: Javadoc
   @Override
   public List<String> selectStaticStrings(
-          List<String> data, String columnName, String orderBy) throws CelestaException {
+          List<String> data, String columnName, String orderBy) {
 
     //prepare sql
     String sql = data.stream().map(
@@ -760,7 +760,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
   //TODO: Javadoc
   @Override
-  public int compareStrings(String left, String right) throws CelestaException {
+  public int compareStrings(String left, String right) {
 
     List<String> comparisons = Arrays.asList("<", "=", ">");
 
@@ -813,10 +813,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param conn   Соединение с базой данных.
    * @param t      Таблица.
    * @param pkName Имя первичного ключа.
-   * @throws CelestaException в случае сбоя связи с БД.
+   * @в случае сбоя связи с БД.
    */
   //TODO: Javadoc In English
-  public void dropPk(Connection conn, TableElement t, String pkName) throws CelestaException {
+  public void dropPk(Connection conn, TableElement t, String pkName) {
     ddlAdaptor.dropPk(conn, t, pkName);
   }
 
@@ -825,10 +825,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    *
    * @param conn Соединение с БД.
    * @param c    Колонка для обновления.
-   * @throws CelestaException при ошибке обновления колонки.
+   * @при ошибке обновления колонки.
    */
   //TODO: Javadoc In English
-  public void updateColumn(Connection conn, Column c, DbColumnInfo actual) throws CelestaException {
+  public void updateColumn(Connection conn, Column c, DbColumnInfo actual) {
     ddlAdaptor.updateColumn(conn, c, actual);
   }
 
@@ -852,31 +852,31 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   public abstract PreparedStatement getNavigationStatement(
       Connection conn, FromClause from, String orderBy,
       String navigationWhereClause, Set<String> fields, long offset
-  ) throws CelestaException;
+  );
 
   //TODO: Javadoc
-  public abstract boolean tableExists(Connection conn, String schema, String name) throws CelestaException;
+  public abstract boolean tableExists(Connection conn, String schema, String name);
 
   //TODO: Javadoc
   public abstract boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException;
 
   //TODO: Javadoc
   public abstract PreparedStatement getOneRecordStatement(Connection conn, TableElement t,
-                                                          String where, Set<String> fields) throws CelestaException;
+                                                          String where, Set<String> fields);
   //TODO: Javadoc
-  public abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) throws CelestaException;
+  public abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where);
 
   //TODO: Javadoc
-  public abstract PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) throws CelestaException;
+  public abstract PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where);
 
   //TODO: Javadoc
   public abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
-                                                             List<ParameterSetter> program) throws CelestaException;
+                                                             List<ParameterSetter> program);
   //TODO: Javadoc
-  public abstract int getCurrentIdent(Connection conn, Table t) throws CelestaException;
+  public abstract int getCurrentIdent(Connection conn, Table t);
 
   //TODO: Javadoc
-  public abstract PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) throws CelestaException;
+  public abstract PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where);
 
 
   /**
@@ -884,10 +884,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    *
    * @param conn Соединение с БД.
    * @param c    Столбец.
-   * @throws CelestaException в случае сбоя связи с БД.
+   * @в случае сбоя связи с БД.
    */
   //TODO: Javadoc In English
-  public abstract DbColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException;
+  public abstract DbColumnInfo getColumnInfo(Connection conn, Column c);
 
   /**
    * Возвращает информацию о первичном ключе таблицы.
@@ -895,13 +895,13 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    * @param conn Соединение с БД.
    * @param t    Таблица, информацию о первичном ключе которой необходимо
    *             получить.
-   * @throws CelestaException в случае сбоя связи с БД.
+   * @в случае сбоя связи с БД.
    */
   //TODO: Javadoc In English
-  public abstract DbPkInfo getPKInfo(Connection conn, TableElement t) throws CelestaException;
+  public abstract DbPkInfo getPKInfo(Connection conn, TableElement t);
 
   //TODO: Javadoc
-  public abstract List<DbFkInfo> getFKInfo(Connection conn, Grain g) throws CelestaException;
+  public abstract List<DbFkInfo> getFKInfo(Connection conn, Grain g);
 
   /**
    * Возвращает набор индексов, связанных с таблицами, лежащими в указанной
@@ -909,19 +909,19 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
    *
    * @param conn Соединение с БД.
    * @param g    Гранула, по таблицам которой следует просматривать индексы.
-   * @throws CelestaException В случае сбоя связи с БД.
+   * @В случае сбоя связи с БД.
    */
   //TODO: Javadoc In English
-  public abstract Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException;
+  public abstract Map<String, DbIndexInfo> getIndices(Connection conn, Grain g);
 
   //TODO: Javadoc
-  public abstract List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException;
+  public abstract List<String> getParameterizedViewList(Connection conn, Grain g);
 
   /**
    * Возвращает Process Id текущего подключения к базе данных.
    *
    * @param conn Соединение с БД.
-   * @throws CelestaException Если подключение закрылось.
+   * @Если подключение закрылось.
    */
   //TODO: Javadoc In English
   public abstract int getDBPid(Connection conn);
@@ -930,12 +930,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
   public abstract DBType getType();
 
   //TODO: Javadoc
-  public abstract long nextSequenceValue(Connection conn, SequenceElement s) throws CelestaException;
+  public abstract long nextSequenceValue(Connection conn, SequenceElement s);
 
   //TODO: Javadoc
-  public abstract boolean sequenceExists(Connection conn, String schema, String name) throws CelestaException;
+  public abstract boolean sequenceExists(Connection conn, String schema, String name);
 
   //TODO: Javadoc
-  public abstract DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) throws CelestaException;
+  public abstract DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s);
   // =========> END PUBLIC ABSTRACT METHODS <=========
 }

@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.term;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.AbstractFilter;
 import ru.curs.celesta.dbutils.filter.In;
@@ -16,17 +15,17 @@ import java.util.Map;
 public interface WhereMakerParamsProvider {
 	QueryBuildingHelper dba();
 
-	void initOrderBy() throws CelestaException;
+	void initOrderBy();
 
-	String[] sortFields() throws CelestaException;
+	String[] sortFields();
 
-	int[] sortFieldsIndices() throws CelestaException;
+	int[] sortFieldsIndices();
 
-	boolean[] descOrders() throws CelestaException;
+	boolean[] descOrders();
 
-	Object[] values() throws CelestaException;
+	Object[] values();
 
-	boolean isNullable(String columnName) throws CelestaException;
+	boolean isNullable(String columnName);
 
 	Map<String, AbstractFilter> filters();
 

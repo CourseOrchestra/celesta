@@ -21,27 +21,27 @@ public final class DdlAdaptor {
         this.ddlConsumer = ddlConsumer;
     }
 
-    public final void createSchema(Connection conn, String name) throws CelestaException {
+    public final void createSchema(Connection conn, String name)  {
         Optional<String> sql = ddlGenerator.createSchema(name);
         processSql(conn, sql);
     }
 
-    public final void dropView(Connection conn, String schemaName, String viewName) throws CelestaException {
+    public final void dropView(Connection conn, String schemaName, String viewName)  {
         String sql = ddlGenerator.dropView(schemaName, viewName);
         processSql(conn, sql);
     }
 
-    public final void dropParameterizedView(Connection conn, String schemaName, String viewName) throws CelestaException {
+    public final void dropParameterizedView(Connection conn, String schemaName, String viewName)  {
         List<String> sqlList = ddlGenerator.dropParameterizedView(schemaName, viewName, conn);
         processSql(conn, sqlList);
     }
 
-    public final void dropIndex(Connection conn, Grain g, DbIndexInfo dBIndexInfo) throws CelestaException {
+    public final void dropIndex(Connection conn, Grain g, DbIndexInfo dBIndexInfo)  {
         List<String> sqlList = ddlGenerator.dropIndex(g, dBIndexInfo);
         processSql(conn, sqlList);
     }
 
-    public final void dropFK(Connection conn, String schemaName, String tableName, String fkName) throws CelestaException {
+    public final void dropFK(Connection conn, String schemaName, String tableName, String fkName)  {
         String sql = ddlGenerator.dropFk(schemaName, tableName, fkName);
         try {
             processSql(conn, sql);
@@ -58,13 +58,13 @@ public final class DdlAdaptor {
 
     }
 
-    public final void dropTrigger(Connection conn, TriggerQuery query) throws CelestaException {
+    public final void dropTrigger(Connection conn, TriggerQuery query)  {
         String sql = ddlGenerator.dropTrigger(query);
         processSql(conn, sql);
     }
 
 
-    public final void createSequence(Connection conn, SequenceElement s) throws CelestaException {
+    public final void createSequence(Connection conn, SequenceElement s)  {
         String sql = ddlGenerator.createSequence(s);
 
         try {
@@ -75,7 +75,7 @@ public final class DdlAdaptor {
         }
     }
 
-    public final void alterSequence(Connection conn, SequenceElement s) throws CelestaException {
+    public final void alterSequence(Connection conn, SequenceElement s)  {
         String sql = ddlGenerator.alterSequence(s);
 
         try {
@@ -86,7 +86,7 @@ public final class DdlAdaptor {
         }
     }
 
-    public final void createTable(Connection conn, TableElement te) throws CelestaException {
+    public final void createTable(Connection conn, TableElement te)  {
         String sql = ddlGenerator.createTable(te);
 
         try {
@@ -103,17 +103,17 @@ public final class DdlAdaptor {
         }
     }
 
-    public final void manageAutoIncrement(Connection conn, TableElement t) throws CelestaException {
+    public final void manageAutoIncrement(Connection conn, TableElement t)  {
         List<String> sqlList = ddlGenerator.manageAutoIncrement(conn, t);
         processSql(conn, sqlList);
     }
 
-    public final void updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
+    public final void updateVersioningTrigger(Connection conn, TableElement t)  {
         List<String> sqlList = ddlGenerator.updateVersioningTrigger(conn, t);
         processSql(conn, sqlList);
     }
 
-    public final void dropPk(Connection conn, TableElement t, String pkName) throws CelestaException {
+    public final void dropPk(Connection conn, TableElement t, String pkName)  {
         String sql = ddlGenerator.dropPk(t, pkName);
 
         try {
@@ -125,7 +125,7 @@ public final class DdlAdaptor {
         }
     }
 
-    public final void updateColumn(Connection conn, Column c, DbColumnInfo actual) throws CelestaException {
+    public final void updateColumn(Connection conn, Column c, DbColumnInfo actual)  {
         List<String> sqlList = ddlGenerator.updateColumn(conn, c, actual);
 
         try {
@@ -145,10 +145,10 @@ public final class DdlAdaptor {
      *
      * @param conn Соединение с БД.
      * @param c    Колонка для добавления.
-     * @throws CelestaException при ошибке добавления колонки.
+     * @ при ошибке добавления колонки.
      */
     //TODO: Javadoc In English
-    public final void createColumn(Connection conn, Column c) throws CelestaException {
+    public final void createColumn(Connection conn, Column c)  {
         String sql = ddlGenerator.createColumn(c);
         try {
             processSql(conn, sql);
@@ -168,11 +168,11 @@ public final class DdlAdaptor {
      *
      * @param conn Соединение с базой данных.
      * @param t    Таблица.
-     * @throws CelestaException неудача создания первичного ключа (например, неуникальные
+     * @ неудача создания первичного ключа (например, неуникальные
      *                          записи).
      */
     //TODO: Javadoc In English
-    public final void createPk(Connection conn, TableElement t) throws CelestaException {
+    public final void createPk(Connection conn, TableElement t)  {
         String sql = ddlGenerator.createPk(t);
 
         try {
@@ -192,10 +192,10 @@ public final class DdlAdaptor {
      *
      * @param conn  Соединение с БД.
      * @param index описание индекса.
-     * @throws CelestaException Если что-то пошло не так.
+     * @ Если что-то пошло не так.
      */
     //TODO: Javadoc In English
-    public final void createIndex(Connection conn, Index index) throws CelestaException {
+    public final void createIndex(Connection conn, Index index)  {
         List<String> sqlList = ddlGenerator.createIndex(index);
 
         try {
@@ -211,10 +211,10 @@ public final class DdlAdaptor {
      *
      * @param conn соединение с БД.
      * @param fk   первичный ключ
-     * @throws CelestaException в случае неудачи создания ключа
+     * @ в случае неудачи создания ключа
      */
     //TODO: Javadoc In English
-    public final void createFk(Connection conn, ForeignKey fk) throws CelestaException {
+    public final void createFk(Connection conn, ForeignKey fk)  {
         try {
             List<String> sqlList = ddlGenerator.createFk(conn, fk);
             for (String slq : sqlList) {
@@ -231,10 +231,10 @@ public final class DdlAdaptor {
      *
      * @param conn Соединение с БД.
      * @param v    Представление.
-     * @throws CelestaException Ошибка БД.
+     * @ Ошибка БД.
      */
     //TODO: Javadoc In English
-    public final void createView(Connection conn, View v) throws CelestaException {
+    public final void createView(Connection conn, View v)  {
         String sql = this.ddlGenerator.createView(v);
 
         try {
@@ -251,7 +251,7 @@ public final class DdlAdaptor {
     }
 
     //TODO: Javadoc
-    public final void createParameterizedView(Connection conn, ParameterizedView pv) throws CelestaException {
+    public final void createParameterizedView(Connection conn, ParameterizedView pv)  {
         List<String> sqlList = this.ddlGenerator.createParameterizedView(pv);
 
         try {
@@ -272,9 +272,9 @@ public final class DdlAdaptor {
      *
      * @param conn Connection to use.
      * @param t    TableElement metadata of deleting table provided by Celesta.
-     * @throws CelestaException if a {@link SQLException} occurs.
+     * @ if a {@link SQLException} occurs.
      */
-    public final void dropTable(Connection conn, TableElement t) throws CelestaException {
+    public final void dropTable(Connection conn, TableElement t)  {
         String sql = this.ddlGenerator.dropTable(t);
         processSql(conn, sql);
         Optional<String> sqlOpt = this.ddlGenerator.dropAutoIncrement(conn, t);
@@ -283,7 +283,7 @@ public final class DdlAdaptor {
     }
 
     //TODO: Javadoc
-    public final void initDataForMaterializedView(Connection conn, MaterializedView mv) throws CelestaException {
+    public final void initDataForMaterializedView(Connection conn, MaterializedView mv)  {
         List<String> sqlList = this.ddlGenerator.initDataForMaterializedView(mv);
 
         try {
@@ -296,7 +296,7 @@ public final class DdlAdaptor {
     }
 
     //TODO: Javadoc
-    public void dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
+    public void dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
         List<String> sqlList = this.ddlGenerator.dropTableTriggersForMaterializedViews(conn, t);
         try {
             processSql(conn, sqlList);
@@ -305,7 +305,7 @@ public final class DdlAdaptor {
         }
     }
 
-    public void createTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
+    public void createTableTriggersForMaterializedViews(Connection conn, Table t)  {
         List<String> sqlList = this.ddlGenerator.createTableTriggersForMaterializedViews(t);
         try {
             processSql(conn, sqlList);
@@ -319,20 +319,20 @@ public final class DdlAdaptor {
         }
     }
 
-    public void executeNative(Connection conn, String sql) throws CelestaException {
+    public void executeNative(Connection conn, String sql)  {
         processSql(conn, sql);
     }
 
-    private void processSql(Connection conn, Optional<String> sql) throws CelestaException {
+    private void processSql(Connection conn, Optional<String> sql)  {
         if (sql.isPresent())
             processSql(conn, sql.get());
     }
 
-    private void processSql(Connection conn, String sql) throws CelestaException {
+    private void processSql(Connection conn, String sql)  {
         ddlConsumer.consume(conn, sql);
     }
 
-    private void processSql(Connection conn, List<String> sqlList) throws CelestaException {
+    private void processSql(Connection conn, List<String> sqlList)  {
         for (String sql : sqlList) {
             processSql(conn, sql);
         }

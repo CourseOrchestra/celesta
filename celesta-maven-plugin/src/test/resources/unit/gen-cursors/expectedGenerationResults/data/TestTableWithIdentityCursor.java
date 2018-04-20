@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
@@ -22,11 +21,11 @@ public final class TestTableWithIdentityCursor extends Cursor implements Iterabl
 
     private Integer identityId;
 
-    public TestTableWithIdentityCursor(CallContext context) throws CelestaException {
+    public TestTableWithIdentityCursor(CallContext context) {
         super(context);
     }
 
-    public TestTableWithIdentityCursor(CallContext context, Set<String> fields) throws CelestaException {
+    public TestTableWithIdentityCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }
 
@@ -119,7 +118,7 @@ public final class TestTableWithIdentityCursor extends Cursor implements Iterabl
     }
 
     @Override
-    public TestTableWithIdentityCursor _getBufferCopy(CallContext context, List<String> fields) throws CelestaException {
+    public TestTableWithIdentityCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestTableWithIdentityCursor result;
 
         if (Objects.isNull(fields)) {

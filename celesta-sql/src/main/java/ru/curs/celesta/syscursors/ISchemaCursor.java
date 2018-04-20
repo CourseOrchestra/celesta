@@ -1,6 +1,5 @@
 package ru.curs.celesta.syscursors;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ICallContext;
 
 import java.util.Date;
@@ -46,9 +45,9 @@ public interface ISchemaCursor {
 
     void setVersion(String version);
 
-    void update() throws CelestaException;
+    void update();
 
-    void get(Object... values) throws CelestaException;
+    void get(Object... values);
 
     void init();
 
@@ -64,7 +63,7 @@ public interface ISchemaCursor {
 
     String getChecksum();
 
-    boolean nextInSet() throws CelestaException;
+    boolean nextInSet();
 
-    void insert() throws CelestaException;
+    void insert();
 }

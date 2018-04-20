@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.ParameterizedViewCursor;
@@ -19,11 +18,11 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
 
     private Integer s;
 
-    public TestTablePvCursor(CallContext context, Map<String, Object> parameters) throws CelestaException {
+    public TestTablePvCursor(CallContext context, Map<String, Object> parameters) {
         super(context, parameters);
     }
 
-    public TestTablePvCursor(CallContext context, Set<String> fields, Map<String, Object> parameters) throws CelestaException {
+    public TestTablePvCursor(CallContext context, Set<String> fields, Map<String, Object> parameters) {
         super(context, fields, parameters);
     }
 
@@ -77,7 +76,7 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
     }
 
     @Override
-    public TestTablePvCursor _getBufferCopy(CallContext context, List<String> fields) throws CelestaException {
+    public TestTablePvCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestTablePvCursor result;
 
         if (Objects.isNull(fields)) {

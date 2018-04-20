@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.stmt;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.SingleValue;
 
@@ -18,7 +17,7 @@ public final class SingleValueParameterSetter extends ParameterSetter {
 	}
 
 	@Override
-	public void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion) throws CelestaException {
+	public void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion)  {
 		setParam(stmt, paramNum, v.getValue());
 	}
 }

@@ -35,7 +35,7 @@ public class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn) throws CelestaException {
+    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn)  {
         String sql = String.format("DROP FUNCTION %s", tableString(schemaName, viewName));
         return Arrays.asList(sql);
     }
@@ -66,7 +66,7 @@ public class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> manageAutoIncrement(Connection conn, TableElement t) throws CelestaException {
+    List<String> manageAutoIncrement(Connection conn, TableElement t)  {
         List<String> result = new ArrayList<>();
         // 1. Firstly, we have to clean up table from any auto-increment
         // triggers
@@ -163,7 +163,7 @@ public class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
+    List<String> updateVersioningTrigger(Connection conn, TableElement t)  {
         List<String> result = new ArrayList<>();
         // First of all, we are about to check if trigger exists
         try {
@@ -197,7 +197,7 @@ public class MsSqlDdlGenerator extends DdlGenerator {
         return result;
     }
 
-    private String createVersioningTrigger(TableElement t) throws CelestaException {
+    private String createVersioningTrigger(TableElement t)  {
         StringBuilder sb = new StringBuilder();
         sb.append(
                 String.format("create trigger \"%s\".\"%s_upd\" on \"%s\".\"%s\" for update as begin\n",
@@ -309,7 +309,7 @@ public class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> createParameterizedView(ParameterizedView pv) throws CelestaException {
+    List<String> createParameterizedView(ParameterizedView pv)  {
         SQLGenerator gen = getViewSQLGenerator();
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
@@ -356,7 +356,7 @@ public class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
+    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()

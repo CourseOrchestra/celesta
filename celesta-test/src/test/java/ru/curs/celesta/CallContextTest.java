@@ -19,7 +19,7 @@ public class CallContextTest {
     private CallContext context;
 
     @BeforeAll
-    public static void init() throws CelestaException {
+    public static void init() {
         Properties properties = new Properties();
         properties.setProperty("score.path", "score");
         properties.setProperty("h2.in-memory", "true");
@@ -28,23 +28,23 @@ public class CallContextTest {
     }
 
     @AfterAll
-    public static void destroy() throws CelestaException, SQLException {
+    public static void destroy() throws SQLException {
         celesta.callContext(new PySessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
         celesta.close();
     }
 
     @BeforeEach
-    public void before() throws CelestaException {
+    public void before() {
         context = celesta.callContext(sc);
     }
 
     @AfterEach
-    public void after() throws CelestaException {
+    public void after() {
         context.close();
     }
 
     @Test
-    public void testClose() throws CelestaException {
+    public void testClose() {
         GrainsCursor grainsCursor = new GrainsCursor(context);
         LogsetupCursor logSetupCursor = new LogsetupCursor(context);
 

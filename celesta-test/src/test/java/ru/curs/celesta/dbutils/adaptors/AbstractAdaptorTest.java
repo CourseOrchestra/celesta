@@ -38,9 +38,9 @@ public abstract class AbstractAdaptorTest {
     private Table t;
 
 
-    abstract Connection getConnection() throws CelestaException;
+    abstract Connection getConnection();
 
-    private int insertRow(Connection conn, Table t, int val) throws IOException, CelestaException, SQLException {
+    private int insertRow(Connection conn, Table t, int val) throws IOException, SQLException {
         int count = t.getColumns().size();
         assertEquals(16, count);
         boolean[] nullsMask = {
@@ -428,7 +428,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void getColumnInfo1() throws CelestaException, ParseException {
+    public void getColumnInfo1() throws ParseException {
         DbColumnInfo c;
         // Проверяем реакцию на столбец, которого нет в базе данных
         Column newCol = new IntegerColumn(t, "nonExistentColumn");
@@ -516,7 +516,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void getColumnInfo2() throws CelestaException, ParseException {
+    public void getColumnInfo2() throws ParseException {
         DbColumnInfo c;
         // Этот тест проверяет выражения default и дополнительные атрибуты
         // id int identity not null primary key,
@@ -621,8 +621,7 @@ public abstract class AbstractAdaptorTest {
 
 
     @Test
-    public void testColumnInfoForMaterializedView()
-            throws CelestaException, ParseException {
+    public void testColumnInfoForMaterializedView() throws ParseException {
 
         Grain g = score.getGrain(GRAIN_NAME);
         Table tableForMatView = g.getElement("tableForMatView", Table.class);
@@ -731,7 +730,7 @@ public abstract class AbstractAdaptorTest {
 
 
     @Test
-    public void updateColumn() throws CelestaException, ParseException, IOException, SQLException {
+    public void updateColumn() throws ParseException, IOException, SQLException {
         // NULL/NOT NULL и DEFAULT (простые)
         DbColumnInfo c;
         Column col;
@@ -850,7 +849,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void updateColumn2test() throws CelestaException, ParseException, IOException, SQLException {
+    public void updateColumn2test() throws ParseException, IOException, SQLException {
         // IDENTITY
         DbColumnInfo c;
         IntegerColumn col;
@@ -903,7 +902,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void updateColumn3test() throws CelestaException, ParseException, IOException, SQLException {
+    public void updateColumn3test() throws ParseException, IOException, SQLException {
         // String length
         DbColumnInfo c;
         StringColumn col;
@@ -943,7 +942,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void updateColumn4test() throws CelestaException, ParseException, IOException, SQLException {
+    public void updateColumn4test() throws ParseException, IOException, SQLException {
         // BLOB Default
         DbColumnInfo c;
         BinaryColumn col;
@@ -971,7 +970,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void updateColumn5test() throws CelestaException, ParseException {
+    public void updateColumn5test() throws ParseException {
         // Change data type
         DbColumnInfo c;
         IntegerColumn col;
@@ -1047,7 +1046,7 @@ public abstract class AbstractAdaptorTest {
 
 
     @Test
-    public void testReflects() throws CelestaException, ParseException {
+    public void testReflects() throws ParseException {
         DbColumnInfo c;
 
         c = dba.getColumnInfo(conn, t.getColumn("f8"));
@@ -1066,7 +1065,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void getPKInfo() throws CelestaException, ParseException, IOException, SQLException {
+    public void getPKInfo() throws ParseException, IOException, SQLException {
         DbPkInfo c;
         insertRow(conn, t, 15);
 
@@ -1100,7 +1099,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void getFKInfo() throws ParseException, CelestaException, SQLException {
+    public void getFKInfo() throws ParseException, SQLException {
         dba.dropTable(conn, t);
         assertFalse(dba.tableExists(conn, "gtest", "test"));
         assertFalse(dba.tableExists(conn, "gtest", "refTo"));
@@ -1161,7 +1160,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void additionalCreateTableTest() throws ParseException, CelestaException {
+    public void additionalCreateTableTest() throws ParseException {
         Grain g = score.getGrain(GRAIN_NAME);
         Table t3 = g.getElement("aLongIdentityTableNaaame", Table.class);
         try {
@@ -1179,7 +1178,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void viewTest() throws ParseException, CelestaException, SQLException {
+    public void viewTest() throws ParseException, SQLException {
         Grain g = score.getGrain(GRAIN_NAME);
         Table t2 = g.getElement("refTo", Table.class);
         try {
@@ -1211,7 +1210,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void resetIdentityTest() throws IOException, CelestaException, SQLException {
+    public void resetIdentityTest() throws IOException, SQLException {
         insertRow(conn, t, 110);
         WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
         PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere(), Collections.emptySet());
@@ -1238,7 +1237,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void createComplexIndex() throws ParseException, CelestaException {
+    public void createComplexIndex() throws ParseException {
         Grain g = score.getGrain(GRAIN_NAME);
         Index idx = g.getIndices().get("idxTest2");
         dba.createIndex(conn, idx);
@@ -1250,7 +1249,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void selectWithLimitAndOffset() throws ParseException, CelestaException, IOException, SQLException {
+    public void selectWithLimitAndOffset() throws ParseException, IOException, SQLException {
         insertRow(conn, t, 1);
         insertRow(conn, t, 2);
 

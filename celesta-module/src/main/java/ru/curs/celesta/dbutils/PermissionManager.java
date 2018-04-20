@@ -104,8 +104,7 @@ public final class PermissionManager implements IPermissionManager {
 	}
 
 	@Override
-	public boolean isActionAllowed(CallContext c, GrainElement t, Action a)
-			throws CelestaException {
+	public boolean isActionAllowed(CallContext c, GrainElement t, Action a) {
 		// Системному пользователю дозволяется всё без дальнейшего
 		// разбирательства.
 		if (SessionContext.SYSTEMUSERID.equals(c.getUserId()))
@@ -126,8 +125,7 @@ public final class PermissionManager implements IPermissionManager {
 		return ce.isActionPermitted(a);
 	}
 
-	private RoleCacheEntry getRce(String userID, CallContext sysContext)
-			throws CelestaException {
+	private RoleCacheEntry getRce(String userID, CallContext sysContext) {
 		int index = userID.hashCode() & (ROLE_CACHE_SIZE - 1);
 		RoleCacheEntry rce = rolesCache[index];
 		if (rce == null || rce.isExpired() || !rce.userId.equals(userID)) {
@@ -142,8 +140,7 @@ public final class PermissionManager implements IPermissionManager {
 		return rce;
 	}
 
-	private PermissionCacheEntry refreshPermissions(CallContext c,
-			GrainElement t) throws CelestaException {
+	private PermissionCacheEntry refreshPermissions(CallContext c, GrainElement t) {
 		try (
 				CallContext sysContext = PyCallContext.builder()
 						.setCallContext((PyCallContext) c)

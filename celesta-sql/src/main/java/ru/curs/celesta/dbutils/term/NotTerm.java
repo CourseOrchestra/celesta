@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.term;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
@@ -27,14 +26,14 @@ public final class NotTerm extends WhereTerm {
 	}
 
 	@Override
-	public String getWhere() throws CelestaException {
+	public String getWhere()  {
 		return String.format("(not %s)", a.getWhere());
 	}
 
 	@Override
 	public void programParams(
 			List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper
-	) throws CelestaException {
+	)  {
 		a.programParams(program, queryBuildingHelper);
 	}
 }

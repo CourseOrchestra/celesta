@@ -1,7 +1,5 @@
 package ru.curs.lyra;
 
-import ru.curs.celesta.CelestaException;
-
 /**
  * Lyra form field metadata.
  */
@@ -61,12 +59,12 @@ public class LyraFormField extends LyraNamedElement {
 	private String subtype;
 	private String linkId;
 
-	public LyraFormField(String name) throws CelestaException {
+	public LyraFormField(String name) {
 		super(name);
 		accessor = null;
 	}
 
-	public LyraFormField(String name, FieldAccessor accessor) throws CelestaException {
+	public LyraFormField(String name, FieldAccessor accessor) {
 		super(name);
 		this.accessor = accessor;
 	}

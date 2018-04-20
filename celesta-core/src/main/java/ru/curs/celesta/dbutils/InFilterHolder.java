@@ -18,16 +18,12 @@ public final class InFilterHolder {
         this.cursor = cursor;
     }
 
-    final FieldsLookup setIn(BasicCursor otherCursor) throws CelestaException {
+    final FieldsLookup setIn(BasicCursor otherCursor) {
 
         Runnable lookupChangeCallback = () -> {
-            try {
-                if (!cursor.isClosed())
-                    // пересоздаём набор
-                    cursor.closeSet();
-            } catch (CelestaException e) {
-                throw new RuntimeException();
-            }
+            if (!cursor.isClosed())
+                // пересоздаём набор
+                cursor.closeSet();
         };
 
         Function<FieldsLookup, Void> newLookupCallback = (lookup) -> {

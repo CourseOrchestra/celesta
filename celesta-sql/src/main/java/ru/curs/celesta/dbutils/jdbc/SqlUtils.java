@@ -16,7 +16,7 @@ public final class SqlUtils {
         throw new AssertionError();
     }
 
-    public static int executeUpdate(Connection conn, String sql) throws CelestaException {
+    public static int executeUpdate(Connection conn, String sql)  {
         try (Statement stmt = conn.createStatement()) {
             return stmt.executeUpdate(sql);
         } catch (SQLException e) {
@@ -24,7 +24,7 @@ public final class SqlUtils {
         }
     }
 
-    public static ResultSet executeQuery(Connection conn, String sql) throws CelestaException {
+    public static ResultSet executeQuery(Connection conn, String sql)  {
         Statement stmt = null;
         try  {
             stmt = conn.createStatement();

@@ -16,7 +16,7 @@ public final class RecVersionParameterSetter extends ParameterSetter {
 	}
 
 	@Override
-	public void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion) throws CelestaException {
+	public void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion)  {
 		try {
 			stmt.setInt(paramNum, recversion);
 		} catch (SQLException e) {

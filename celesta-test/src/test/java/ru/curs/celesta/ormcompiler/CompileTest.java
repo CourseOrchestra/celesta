@@ -4,10 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
-import java.net.URL;
 
-
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.*;
 
 //TODO: This class must be actualized

@@ -6,8 +6,7 @@ public class InterpreterPoolFactory {
     throw new AssertionError();
   }
 
-  public static PythonInterpreterPool create(InterpreterPoolConfiguration configuration)
-      throws CelestaException {
+  public static PythonInterpreterPool create(InterpreterPoolConfiguration configuration) {
     //В будущем будет использоваться для создания разных интерпретаторов
     return new PythonInterpreterPool(
         configuration.getCelesta(),

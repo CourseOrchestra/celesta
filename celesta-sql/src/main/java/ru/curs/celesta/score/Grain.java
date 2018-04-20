@@ -366,9 +366,9 @@ public final class Grain extends NamedElement {
     /**
      * Saves grain back to source files
      *
-     * @throws CelestaException io error
+     * @ io error
      */
-    void save() throws CelestaException {
+    void save()  {
 		// Сохранять неизменённую гранулу нет смысла.
 		if (!modified)
 			return;

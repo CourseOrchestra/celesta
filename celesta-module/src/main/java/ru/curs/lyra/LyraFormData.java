@@ -45,10 +45,8 @@ public final class LyraFormData implements Serializable {
 	 * @param map
 	 * @param formId
 	 *            Fully qualified form class name.
-	 * @throws CelestaException
-	 *             names clash
 	 */
-	public LyraFormData(BasicCursor c, Map<String, LyraFormField> map, String formId) throws CelestaException {
+	public LyraFormData(BasicCursor c, Map<String, LyraFormField> map, String formId) {
 		if (c instanceof Cursor) {
 			recversion = ((Cursor) c).getRecversion();
 			keyValues = ((Cursor) c).getCurrentKeyValues();
@@ -69,7 +67,7 @@ public final class LyraFormData implements Serializable {
 		}
 	}
 
-	public LyraFormData(InputStream is) throws CelestaException {
+	public LyraFormData(InputStream is) {
 		FormDataParser parser;
 		parser = new FormDataParser();
 		try {
@@ -93,10 +91,8 @@ public final class LyraFormData implements Serializable {
 	 *            Курсор.
 	 * @param map
 	 *            Набор полей.
-	 * @throws CelestaException
-	 *             ошибка Celesta
 	 */
-	public void populateFields(Cursor c, Map<String, LyraFormField> map) throws CelestaException {
+	public void populateFields(Cursor c, Map<String, LyraFormField> map) {
 		c.setRecversion(recversion);
 		for (LyraFieldValue lfv : fields) {
 			LyraFormField lff = map.get(lfv.getName());
@@ -111,10 +107,8 @@ public final class LyraFormData implements Serializable {
 	 * 
 	 * @param outputStream
 	 *            Поток.
-	 * @throws CelestaException
-	 *             Ошибка записи в поток.
 	 */
-	public void serialize(OutputStream outputStream) throws CelestaException {
+	public void serialize(OutputStream outputStream) {
 		try {
 			XMLStreamWriter xmlWriter = XMLOutputFactory.newInstance()
 					.createXMLStreamWriter(new OutputStreamWriter(outputStream, "UTF-8"));

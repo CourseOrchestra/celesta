@@ -85,7 +85,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+  public int getCurrentIdent(Connection conn, Table t) {
     String sql = String.format("select last_value from \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
     try (Statement stmt = conn.createStatement()) {
       ResultSet rs = stmt.executeQuery(sql);
@@ -98,7 +98,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   @Override
   public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
-                                                    List<ParameterSetter> program) throws CelestaException {
+                                                    List<ParameterSetter> program) {
 
     Iterator<String> columns = t.getColumns().keySet().iterator();
     // Создаём параметризуемую часть запроса, пропуская нулевые значения.
@@ -141,7 +141,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   @SuppressWarnings("unchecked")
   @Override
-  public DbColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
+  public DbColumnInfo getColumnInfo(Connection conn, Column c) {
     try {
       DatabaseMetaData metaData = conn.getMetaData();
       ResultSet rs = metaData.getColumns(null, c.getParentTable().getGrain().getName().replace("\"", ""),
@@ -275,7 +275,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
+  public List<String> getParameterizedViewList(Connection conn, Grain g) {
     String sql = String.format(
         " SELECT r.routine_name FROM INFORMATION_SCHEMA.ROUTINES r " +
             "where r.routine_schema = '%s' AND r.routine_type='FUNCTION' " +
@@ -296,7 +296,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public DbPkInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
+  public DbPkInfo getPKInfo(Connection conn, TableElement t) {
     String sql = String.format(
         "SELECT i.relname AS indexname, " + "i.oid, array_length(x.indkey, 1) as colcount " + "FROM pg_index x "
             + "INNER JOIN pg_class c ON c.oid = x.indrelid "
@@ -342,7 +342,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public List<DbFkInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+  public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
     // Full foreign key information query
     String sql = String.format(
         "SELECT RC.CONSTRAINT_SCHEMA AS GRAIN" + "   , KCU1.CONSTRAINT_NAME AS FK_CONSTRAINT_NAME"
@@ -392,7 +392,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+  public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
     String sql = String.format("SELECT c.relname AS tablename, i.relname AS indexname, "
         + "i.oid, array_length(x.indkey, 1) as colcount " + "FROM pg_index x "
         + "INNER JOIN pg_class c ON c.oid = x.indrelid " + "INNER JOIN pg_class i ON i.oid = x.indexrelid "
@@ -442,7 +442,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  public void createSysObjects(Connection conn, String sysSchemaName) throws CelestaException {
+  public void createSysObjects(Connection conn, String sysSchemaName) {
     String sql = "CREATE OR REPLACE FUNCTION " + sysSchemaName + ".recversion_check()"
             + "  RETURNS trigger AS $BODY$ BEGIN\n"
         + "    IF (OLD.recversion = NEW.recversion) THEN\n"
@@ -531,7 +531,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
   }
 
     @Override
-    public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) throws CelestaException {
+    public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
         String sql = "SELECT INCREMENT, MINIMUM_VALUE, MAXIMUM_VALUE, CYCLE_OPTION" +
                 " FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
 

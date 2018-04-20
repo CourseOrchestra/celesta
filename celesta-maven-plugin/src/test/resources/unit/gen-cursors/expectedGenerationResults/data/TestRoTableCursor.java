@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.ReadOnlyTableCursor;
@@ -18,11 +17,11 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
 
     private Integer id;
 
-    public TestRoTableCursor(CallContext context) throws CelestaException {
+    public TestRoTableCursor(CallContext context) {
         super(context);
     }
 
-    public TestRoTableCursor(CallContext context, Set<String> fields) throws CelestaException {
+    public TestRoTableCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }
 
@@ -76,7 +75,7 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
     }
 
     @Override
-    public TestRoTableCursor _getBufferCopy(CallContext context, List<String> fields) throws CelestaException {
+    public TestRoTableCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestRoTableCursor result;
 
         if (Objects.isNull(fields)) {

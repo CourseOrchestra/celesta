@@ -46,7 +46,7 @@ public class PythonInterpreterPool {
 		}
 	}
 
-	public PythonInterpreterPool(Celesta celesta, Score score, String javaLibPath, String pyLibPath) throws CelestaException {
+	public PythonInterpreterPool(Celesta celesta, Score score, String javaLibPath, String pyLibPath) {
 		this.celesta = celesta;
 		this.score = score;
 		this.javaLibPath = javaLibPath;
@@ -109,7 +109,7 @@ public class PythonInterpreterPool {
 		}
 	}
 
-	public PythonInterpreter getPythonInterpreter() throws CelestaException {
+	public PythonInterpreter getPythonInterpreter() {
 		// wait here in case it's locked for maintenance
 		lock.lock();
 		lock.unlock();
@@ -156,7 +156,7 @@ public class PythonInterpreterPool {
 		}
 	}
 
-	private void reImportGrains(PythonInterpreter interp) throws CelestaException {
+	private void reImportGrains(PythonInterpreter interp) {
 		for (Grain g : score.getGrains().values())
 			if (!"celesta".equals(g.getName())) {
 				try {
@@ -173,7 +173,7 @@ public class PythonInterpreterPool {
 			}
 	}
 
-	private void initPythonScore(PythonInterpreter interp) throws CelestaException {
+	private void initPythonScore(PythonInterpreter interp) {
 		PySessionContext scontext = new PySessionContext("super", "celesta_init");
 
 		try (CallContext context = celesta.callContext(scontext)) {

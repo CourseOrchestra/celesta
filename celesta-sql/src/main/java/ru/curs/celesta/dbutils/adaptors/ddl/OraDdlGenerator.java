@@ -19,7 +19,6 @@ import ru.curs.celesta.score.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -46,7 +45,7 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn) throws CelestaException {
+    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn)  {
         List<String> result = new ArrayList<>();
 
         //Удаление функции
@@ -105,7 +104,7 @@ public class OraDdlGenerator extends DdlGenerator {
         return String.format("DROP INDEX %s", indexFullName);
     }
 
-    private boolean hasTypeInteractive(String typeName, String typeCode, Connection conn) throws CelestaException {
+    private boolean hasTypeInteractive(String typeName, String typeCode, Connection conn)  {
         String sql = String.format(
                 "select TYPE_NAME from DBA_TYPES WHERE owner = sys_context('userenv','session_user')\n" +
                         " and TYPECODE = '%s' and TYPE_NAME = '%s'",
@@ -157,7 +156,7 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> manageAutoIncrement(Connection conn, TableElement t) throws CelestaException {
+    List<String> manageAutoIncrement(Connection conn, TableElement t)  {
         List<String> result = new ArrayList<>();
         // 1. Firstly, we have to clean up table from any auto-increment
         // triggers
@@ -209,7 +208,7 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
+    List<String> updateVersioningTrigger(Connection conn, TableElement t)  {
         List<String> result = new ArrayList<>();
         // First of all, we are about to check if trigger exists
         String triggerName = getUpdTriggerName(t);
@@ -288,7 +287,7 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) throws CelestaException {
+    List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual)  {
         List<String> result = new ArrayList<>();
 
         final String tableFullName = tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName());
@@ -459,7 +458,7 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    void processCreateUpdateRule(Connection conn, ForeignKey fk, LinkedList<StringBuilder> sqlQueue) throws CelestaException {
+    void processCreateUpdateRule(Connection conn, ForeignKey fk, LinkedList<StringBuilder> sqlQueue)  {
         String snlTriggerName = getFKTriggerName(SNL, fk.getConstraintName());
         String cscTriggerName = getFKTriggerName(CSC, fk.getConstraintName());
         TriggerQuery query = new TriggerQuery()
@@ -611,7 +610,7 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> createParameterizedView(ParameterizedView pv) throws CelestaException {
+    List<String> createParameterizedView(ParameterizedView pv)  {
         List<String> result = new ArrayList<>();
 
         //Создаем тип
@@ -691,7 +690,7 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    Optional<String> dropAutoIncrement(Connection conn, TableElement t) throws CelestaException {
+    Optional<String> dropAutoIncrement(Connection conn, TableElement t)  {
         String sequenceName = getSequenceName(t);
         String sequenceExistsSql = String.format(
                 "select count(*) from user_sequences where sequence_name = '%s'",
@@ -720,7 +719,7 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
+    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
@@ -923,7 +922,7 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     private List<String> updateDecimalColumn(Connection conn, DecimalColumn dc, DbColumnInfo actual, String def)
-        throws CelestaException {
+         {
         List<String> result = new ArrayList<>();
         final String tableFullName = tableString(dc.getParentTable().getGrain().getName(), dc.getParentTable().getName());
         //If there is any decreasing of scale or whole part, we must use additional column to perform alter.
