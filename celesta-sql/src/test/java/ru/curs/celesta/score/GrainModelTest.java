@@ -14,7 +14,7 @@ public class GrainModelTest {
 	private AbstractScore s = new CelestaSqlTestScore();
 
 	@BeforeAll
-	public static void Setup()  {
+	public static void setup()  {
 		Properties p = new Properties();
 		p.setProperty("score.path", ".");
 		p.setProperty("rdbms.connection.url", "jdbc:oracle:123");

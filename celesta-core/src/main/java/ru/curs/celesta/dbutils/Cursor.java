@@ -41,6 +41,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
@@ -227,13 +228,11 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	 */
 	public final void update() {
 		if (!tryUpdate()) {
-			StringBuilder sb = new StringBuilder();
-			for (Object value : _currentKeyValues()) {
-				if (sb.length() > 0)
-					sb.append(", ");
-				sb.append(value == null ? "null" : value.toString());
-			}
-			throw new CelestaException("Record %s (%s) does not exist.", _objectName(), sb.toString());
+			String values = Arrays.stream(_currentKeyValues())
+					.map(String::valueOf)
+					.collect(Collectors.joining(", "));
+
+			throw new CelestaException("Record %s (%s) does not exist.", _objectName(), values);
 		}
 	}
 

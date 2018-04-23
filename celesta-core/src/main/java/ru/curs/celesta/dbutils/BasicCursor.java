@@ -518,8 +518,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 		throw new CelestaException("There is no %s (%s).", _objectName(), sb.toString());
 	}
 
-	void initXRec() {
-	}
+	abstract void initXRec();
 
 	/**
 	 * Переходит к первой записи в отфильтрованном наборе, вызывая ошибку в
@@ -1033,6 +1032,7 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			if (!e.getValue().filterEquals(c.filters.get(e.getKey())))
 				return false;
 		}
+
 		// equality of complex filter
 		if (!(complexFilter == null ? c.complexFilter == null
 				: complexFilter.getCSQL().equals(c.complexFilter.getCSQL())))
@@ -1046,14 +1046,12 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			orderBy();
 		if (c.orderByNames == null)
 			c.orderBy();
-		if (orderByNames.length != c.orderByNames.length)
+
+		if (!Arrays.equals(orderByNames, c.orderByNames))
 			return false;
-		for (int i = 0; i < orderByNames.length; i++) {
-			if (!(orderByNames[i].equals(c.orderByNames[i])))
-				return false;
-			if (descOrders[i] != c.descOrders[i])
-				return false;
-		}
+		if (!Arrays.equals(descOrders, c.descOrders))
+			return false;
+
 		return true;
 	}
 
