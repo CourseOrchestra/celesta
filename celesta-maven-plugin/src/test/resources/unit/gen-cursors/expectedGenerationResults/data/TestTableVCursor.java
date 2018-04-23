@@ -44,13 +44,6 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
     }
 
     @Override
-    protected void _parseResult(ResultSet rs) throws SQLException {
-        if (this.inRec("id")) {
-            this.id = rs.getInt("id");
-        }
-    }
-
-    @Override
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);
@@ -59,6 +52,13 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
             f.set(this, value);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected void _parseResult(ResultSet rs) throws SQLException {
+        if (this.inRec("id")) {
+            this.id = rs.getInt("id");
         }
     }
 

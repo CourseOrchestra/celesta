@@ -456,7 +456,6 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			result = cursor.next();
 			if (result) {
 				_parseResult(cursor);
-				initXRec();
 			}
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
@@ -517,8 +516,6 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 		}
 		throw new CelestaException("There is no %s (%s).", _objectName(), sb.toString());
 	}
-
-	abstract void initXRec();
 
 	/**
 	 * Переходит к первой записи в отфильтрованном наборе, вызывая ошибку в
@@ -583,7 +580,6 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			}
 			if (result) {
 				_parseResult(cursor);
-				initXRec();
 			} else {
 				cursor.close();
 				cursor = null;
@@ -669,7 +665,6 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 			try {
 				if (rs.next()) {
 					_parseResult(rs);
-					initXRec();
 					return true;
 				}
 			} finally {
@@ -1049,10 +1044,8 @@ public abstract class BasicCursor extends BasicDataAccessor implements Closeable
 
 		if (!Arrays.equals(orderByNames, c.orderByNames))
 			return false;
-		if (!Arrays.equals(descOrders, c.descOrders))
-			return false;
 
-		return true;
+		return Arrays.equals(descOrders, c.descOrders);
 	}
 
 

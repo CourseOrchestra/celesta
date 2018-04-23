@@ -45,13 +45,6 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
     }
 
     @Override
-    protected void _parseResult(ResultSet rs) throws SQLException {
-        if (this.inRec("s")) {
-            this.s = rs.getInt("s");
-        }
-    }
-
-    @Override
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);
@@ -60,6 +53,13 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
             f.set(this, value);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected void _parseResult(ResultSet rs) throws SQLException {
+        if (this.inRec("s")) {
+            this.s = rs.getInt("s");
         }
     }
 

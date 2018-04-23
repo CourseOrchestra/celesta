@@ -8,6 +8,7 @@ import ru.curs.celesta.score.ParseException;
 
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -101,7 +102,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
     if (!canRead())
       throw new PermissionDeniedException(callContext(), meta(), Action.READ);
 
-    return getHelper.internalGet(this::_parseResult, this::initXRec,
+    return getHelper.internalGet(this::_parseResult, Optional.empty(),
         0, values);
   }
 
@@ -113,7 +114,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
   public final boolean tryGetCurrent() {
     if (!canRead())
       throw new PermissionDeniedException(callContext(), meta(), Action.READ);
-    return getHelper.internalGet(this::_parseResult, this::initXRec,
+    return getHelper.internalGet(this::_parseResult, Optional.empty(),
         0, _currentKeyValues());
   }
 

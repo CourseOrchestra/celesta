@@ -213,7 +213,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 					}
 			}
 
-				getHelper.internalGet(this::_parseResult, this::initXRec,
+				getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
 						recversion, _currentKeyValues());
 			postInsert();
 		} catch (SQLException e) {
@@ -296,7 +296,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 			loggingManager.log(this, Action.MODIFY);
 			if (meta().isVersioned())
 				recversion++;
-			initXRec();
+			this.initXRec();
 			postUpdate();
 
 		} catch (SQLException e) {
@@ -344,15 +344,14 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 			del.execute();
 			ILoggingManager loggingManager = callContext().getLoggingManager();
 			loggingManager.log(this, Action.DELETE);
-			initXRec();
+			this.initXRec();
 			postDelete();
 		} catch (SQLException e) {
 			throw new CelestaException(e.getMessage());
 		}
 	}
 
-	@Override
-	final void initXRec() {
+	private void initXRec() {
 		if (xRec == null) {
 			xRec = (Cursor) _getBufferCopy(callContext(), null);
 		} else {
@@ -407,7 +406,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	public final boolean tryGet(Object... values) {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
-		return getHelper.internalGet(this::_parseResult, this::initXRec,
+		return getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
 				recversion, values);
 	}
 
@@ -418,7 +417,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	public final boolean tryGetCurrent() {
 		if (!canRead())
 			throw new PermissionDeniedException(callContext(), meta(), Action.READ);
-		return getHelper.internalGet(this::_parseResult, this::initXRec,
+		return getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
 				recversion, _currentKeyValues());
 	}
 
@@ -565,7 +564,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	public final Cursor getXRec() {
 		if (xRec == null) {
 			try {
-				initXRec();
+				this.initXRec();
 				xRec.clear();
 			} catch (CelestaException e) {
 				xRec = null;
@@ -640,7 +639,13 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		return _currentKeyValues();
 	}
 
-	private void preDelete() {
+    @Override
+    protected void _parseResult(ResultSet rs) throws SQLException {
+        this._parseResultInternal(rs);
+        this.initXRec();
+    }
+
+    private void preDelete() {
 		callContext().getCelesta().getTriggerDispatcher().fireTrigger(TriggerType.PRE_DELETE, this);
 	}
 
@@ -674,4 +679,6 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	protected abstract Object[] _currentKeyValues();
 
 	protected abstract void _setAutoIncrement(int val);
+
+    protected abstract void _parseResultInternal(ResultSet rs) throws SQLException;
 }

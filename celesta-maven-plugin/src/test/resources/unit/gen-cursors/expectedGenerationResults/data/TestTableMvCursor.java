@@ -53,16 +53,6 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     }
 
     @Override
-    protected void _parseResult(ResultSet rs) throws SQLException {
-        if (this.inRec("surrogate_count")) {
-            this.surrogate_count = rs.getInt("surrogate_count");
-        }
-        if (this.inRec("c")) {
-            this.c = rs.getInt("c");
-        }
-    }
-
-    @Override
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);
@@ -71,6 +61,16 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
             f.set(this, value);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected void _parseResult(ResultSet rs) throws SQLException {
+        if (this.inRec("surrogate_count")) {
+            this.surrogate_count = rs.getInt("surrogate_count");
+        }
+        if (this.inRec("c")) {
+            this.c = rs.getInt("c");
         }
     }
 

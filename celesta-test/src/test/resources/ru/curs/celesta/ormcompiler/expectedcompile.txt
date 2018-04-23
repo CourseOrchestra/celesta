@@ -72,7 +72,7 @@ class ttt2Cursor(Cursor):
         return 'test1'
     def _objectName(self):
         return 'ttt2'
-    def _parseResult(self, rs):
+    def _parseResultInternal(self, rs):
         if self.inRec('id'):
             self.id = rs.getInt('id')
             if rs.wasNull():

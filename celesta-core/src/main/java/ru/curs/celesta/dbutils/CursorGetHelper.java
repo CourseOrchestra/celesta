@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -24,8 +25,8 @@ class CursorGetHelper {
   }
 
   @FunctionalInterface
-  interface InitXRecFunction {
-    void apply() ;
+  interface ParseResultCallBack {
+    void apply();
   }
 
   private final DBAdaptor db;
@@ -55,7 +56,7 @@ class CursorGetHelper {
   }
 
 
-  final boolean internalGet(ParseResultFunction parseResultFunc, InitXRecFunction initXRecFunc,
+  final boolean internalGet(ParseResultFunction parseResultFunc, Optional<ParseResultCallBack> initXRecFunc,
                             int recversion, Object... values) {
     PreparedStatement g = prepareGet(recversion, values);
     //System.out.println(g.toString());
@@ -63,7 +64,7 @@ class CursorGetHelper {
     	boolean result = rs.next();
     	if (result) {
           parseResultFunc.apply(rs);
-          initXRecFunc.apply();
+          initXRecFunc.ifPresent(ParseResultCallBack::apply);
         }
     	return result;	
     } catch (SQLException e) {

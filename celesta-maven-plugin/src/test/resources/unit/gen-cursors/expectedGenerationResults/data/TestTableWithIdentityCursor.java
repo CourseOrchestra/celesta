@@ -48,14 +48,6 @@ public final class TestTableWithIdentityCursor extends Cursor implements Iterabl
     }
 
     @Override
-    protected void _parseResult(ResultSet rs) throws SQLException {
-        if (this.inRec("identityId")) {
-            this.identityId = rs.getInt("identityId");
-        }
-        this.setRecversion(rs.getInt("recversion"));
-    }
-
-    @Override
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);
@@ -72,6 +64,14 @@ public final class TestTableWithIdentityCursor extends Cursor implements Iterabl
         Object[] result = new Object[1];
         result[0] = this.identityId;
         return result;
+    }
+
+    @Override
+    protected void _parseResultInternal(ResultSet rs) throws SQLException {
+        if (this.inRec("identityId")) {
+            this.identityId = rs.getInt("identityId");
+        }
+        this.setRecversion(rs.getInt("recversion"));
     }
 
     @Override

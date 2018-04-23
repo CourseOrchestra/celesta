@@ -128,7 +128,26 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     }
 
     @Override
-    protected void _parseResult(ResultSet rs) throws SQLException {
+    protected void _setFieldValue(String name, Object value) {
+        try {
+            Field f = getClass().getDeclaredField(name);
+
+            f.setAccessible(true);
+            f.set(this, value);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected Object[] _currentKeyValues() {
+        Object[] result = new Object[1];
+        result[0] = this.id;
+        return result;
+    }
+
+    @Override
+    protected void _parseResultInternal(ResultSet rs) throws SQLException {
         if (this.inRec("id")) {
             this.id = rs.getInt("id");
         }
@@ -160,25 +179,6 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
             }
         }
         this.setRecversion(rs.getInt("recversion"));
-    }
-
-    @Override
-    protected void _setFieldValue(String name, Object value) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-
-            f.setAccessible(true);
-            f.set(this, value);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    protected Object[] _currentKeyValues() {
-        Object[] result = new Object[1];
-        result[0] = this.id;
-        return result;
     }
 
     @Override

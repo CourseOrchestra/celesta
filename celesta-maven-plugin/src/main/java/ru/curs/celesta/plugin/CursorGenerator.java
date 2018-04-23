@@ -90,19 +90,27 @@ public final class CursorGenerator {
         if (ge instanceof DataGrainElement) {
             DataGrainElement dge = (DataGrainElement) ge;
             Map<String, ? extends ColumnMeta> columns = dge.getColumns();
-            MethodSpec buildParseResultMethod = buildParseResult(columns, isVersionedGe);
-            cursorClass.addMethod(buildParseResultMethod);
+
             cursorClass.addMethod(buildSetFieldValue());
+
+            StringBuilder parseResultOverridingMethodNameBuilder = new StringBuilder("_parseResult");
 
             final Set<Column> pk;
             if (dge instanceof Table) {
                 Table t = (Table) dge;
                 pk = t.isReadOnly() ? Collections.emptySet() : new LinkedHashSet<>(t.getPrimaryKey().values());
-                if (!t.isReadOnly())
+                if (!t.isReadOnly()) {
                     cursorClass.addMethod(buildCurrentKeyValues(pk));
+                    parseResultOverridingMethodNameBuilder.append("Internal");
+                }
             } else {
                 pk = Collections.emptySet();
             }
+
+            MethodSpec buildParseResultMethod = buildParseResult(
+                    columns, parseResultOverridingMethodNameBuilder.toString(), isVersionedGe
+            );
+            cursorClass.addMethod(buildParseResultMethod);
 
             cursorClass.addMethod(buildClearBuffer(columns, pk));
 
@@ -333,8 +341,10 @@ public final class CursorGenerator {
         return result;
     }
 
-    private static MethodSpec buildParseResult(Map<String, ? extends ColumnMeta> columns, boolean isVersionedObject) {
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("_parseResult")
+    private static MethodSpec buildParseResult(
+            Map<String, ? extends ColumnMeta> columns, String methodName, boolean isVersionedObject
+    ) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PROTECTED)
                 .addAnnotation(Override.class)
                 .addParameter(ResultSet.class, "rs")
