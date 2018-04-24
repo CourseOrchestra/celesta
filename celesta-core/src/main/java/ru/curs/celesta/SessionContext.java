@@ -4,7 +4,8 @@ import java.util.Random;
 
 public abstract class SessionContext {
 
-    public static final String SYSTEMUSERID = String.format("SYS%08X", (new Random()).nextInt());
+    public static final String SYSTEM_USER_ID = String.format("SYS%08X", (new Random()).nextInt());
+    public static final String SYSTEM_SESSION_ID = "CELESTA";
 
     private final String userId;
     private final String sessionId;
@@ -27,4 +28,6 @@ public abstract class SessionContext {
     public String getSessionId() {
         return sessionId;
     }
+
+    abstract CallContext.CallContextBuilder callContextBuilder();
 }

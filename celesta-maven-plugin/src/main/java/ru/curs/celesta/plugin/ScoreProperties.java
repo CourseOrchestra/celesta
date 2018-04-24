@@ -9,23 +9,15 @@ public class ScoreProperties {
     @Parameter(property = "path", required = true)
     private String path;
 
-    @Parameter(property = "rootPackage", required = true)
-    private String rootPackage;
-
     public ScoreProperties() {
     }
 
-    public ScoreProperties(String path, String rootPackage) {
+    public ScoreProperties(String path) {
         this.path = path;
-        this.rootPackage = rootPackage;
     }
 
     public String getPath() {
         return path;
-    }
-
-    public String getRootPackage() {
-        return rootPackage;
     }
 
     @Override
@@ -37,14 +29,13 @@ public class ScoreProperties {
         if (obj instanceof ScoreProperties) {
             ScoreProperties that = (ScoreProperties)obj;
             return this.hashCode() == that.hashCode()
-                    && Objects.equals(this.path, that.path)
-                    && Objects.equals(this.rootPackage, that.rootPackage);
+                    && Objects.equals(this.path, that.path);
         }
         return super.equals(obj);
     }
 
     @Override
     public int hashCode() {
-        return this.path.hashCode() + this.rootPackage.hashCode();
+        return this.path.hashCode();
     }
 }

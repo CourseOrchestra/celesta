@@ -40,7 +40,7 @@ public class GenCursorsMojo extends AbstractMojo {
         score.getGrains().values()
                 .stream()
                 .filter(g -> genSysCursors || !g.getScore().getSysSchemaName().equals(g.getName()))
-                .forEach(g -> generateCursors(g, properties.getRootPackage(), score));
+                .forEach(g -> generateCursors(g, score));
     }
 
     private Score initScore(String scorePath) {
@@ -56,7 +56,7 @@ public class GenCursorsMojo extends AbstractMojo {
 
     }
 
-    private void generateCursors(Grain g, String rootPackage, Score score) {
+    private void generateCursors(Grain g, Score score) {
         final boolean isSysSchema = g.getName().equals(g.getScore().getSysSchemaName());
         Map<GrainPart, List<GrainElement>> partsToElements = new HashMap<>();
 
@@ -89,7 +89,7 @@ public class GenCursorsMojo extends AbstractMojo {
                         scorePath = scoreDir.getAbsolutePath();
                     }
                     e.getValue().forEach(
-                            ge -> generateCursor(ge, getSourceRoot(), rootPackage, scorePath)
+                            ge -> generateCursor(ge, getSourceRoot(), scorePath)
                     );
                 }
 

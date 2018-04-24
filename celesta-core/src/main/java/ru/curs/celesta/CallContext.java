@@ -242,6 +242,8 @@ public abstract class CallContext
 
 	public abstract void removeFromCache(BasicDataAccessor dataAccessor);
 
+	public abstract CallContextBuilder getBuilder();
+
 	public static abstract class CallContextBuilder<T extends CallContextBuilder<T, R, E>,
 			R extends CallContext, E extends SessionContext> {
 

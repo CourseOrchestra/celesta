@@ -11,12 +11,14 @@
     <url>https://corchestra.ru/wiki/index.php?title=Celesta</url>
 
     <modules>
-        <module>celesta-module</module>
+        <module>celesta-jython</module>
         <module>celesta-test</module>
         <module>dbschemasync</module>
         <module>celesta-sql</module>
         <module>celesta-maven-plugin</module>
         <module>celesta-core</module>
+        <module>celesta-java</module>
+        <module>celesta-system-services</module>
     </modules>
 
     <organization>
