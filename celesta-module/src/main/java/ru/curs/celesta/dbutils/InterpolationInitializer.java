@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.lyra.grid.KeyInterpolator;
@@ -29,9 +28,8 @@ public abstract class InterpolationInitializer {
      *
      * @param c
      * @return true - initialized completed, false - no need for initialization
-     * @throws CelestaException
      */
-    public boolean initialize(final BasicCursor c, int count) throws CelestaException {
+    public boolean initialize(final BasicCursor c, int count) {
         if (count == 0) {
             return false;
         } else if (DBType.POSTGRESQL.equals(dbAdaptor.getType())) {
@@ -41,7 +39,7 @@ public abstract class InterpolationInitializer {
         }
     }
 
-    private boolean initializeCommon(BasicCursor c) throws CelestaException {
+    private boolean initializeCommon(BasicCursor c) {
         if (refinementsCount > MAX_REFINEMENTS_COUNT)
             return false;
         refinementsCount++;
@@ -65,7 +63,7 @@ public abstract class InterpolationInitializer {
         }
     }
 
-    private boolean initializePostgres(BasicCursor c, int count) throws CelestaException {
+    private boolean initializePostgres(BasicCursor c, int count) {
         if (refinementsCount > 0)
             return false;
         refinementsCount = 1;
@@ -97,8 +95,8 @@ public abstract class InterpolationInitializer {
         return true;
     }
 
-    abstract void setCursorOrdinal(BasicCursor c, BigInteger key) throws CelestaException;
+    abstract void setCursorOrdinal(BasicCursor c, BigInteger key);
 
-    abstract BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException;
+    abstract BigInteger getCursorOrdinal(BasicCursor c);
 
 }

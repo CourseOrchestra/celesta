@@ -29,7 +29,6 @@ import java.util.Calendar;
 import java.util.List;
 
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.Range;
 import ru.curs.celesta.dbutils.filter.SingleValue;
 import ru.curs.celesta.dbutils.stmt.MaskedStatementHolder;
@@ -39,7 +38,7 @@ import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 public class PreparedStatementHolderTest {
 
 	@Test
-	public void test1() throws CelestaException {
+	public void test1() {
 		A a = new A();
 		Integer[] rec = { 11, 12, 15 };
 
@@ -62,7 +61,7 @@ public class PreparedStatementHolderTest {
 	}
 
 	@Test
-	public void test2() throws CelestaException {
+	public void test2() {
 		B b = new B();
 		Integer[] rec = { 11, 12, 13, 14, 15 };
 
@@ -100,7 +99,7 @@ public class PreparedStatementHolderTest {
 	}
 
 	@Test
-	public void test3() throws CelestaException {
+	public void test3() {
 		C c = new C();
 		Double[] rec = { 23.4, 2.83, 29.3, 37.8, 6.8 };
 		DummyPreparedStatement s = (DummyPreparedStatement) c.getStatement(rec, 15);
@@ -117,7 +116,7 @@ public class PreparedStatementHolderTest {
 		Range filter2 = new Range("bar", "foo");
 
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program) {
 			program.add(ParameterSetter.create(filter, null));
 			program.add(ParameterSetter.create(2, null));
 			program.add(ParameterSetter.createForValueFrom(filter2, null));
@@ -134,7 +133,7 @@ public class PreparedStatementHolderTest {
 		}
 
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program) {
 			program.add(ParameterSetter.create(1, null));
 			program.add(ParameterSetter.create(3, null));
 			program.add(ParameterSetter.create(2, null));
@@ -146,7 +145,7 @@ public class PreparedStatementHolderTest {
 	class C extends PreparedStmtHolder {
 
 		@Override
-		protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+		protected PreparedStatement initStatement(List<ParameterSetter> program) {
 			program.add(ParameterSetter.create(3, null));
 			program.add(ParameterSetter.createForRecversion(null));
 			return new DummyPreparedStatement();

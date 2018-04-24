@@ -1,7 +1,6 @@
 package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.GrainElement;
 
 public interface IPermissionManager {
@@ -25,8 +24,8 @@ public interface IPermissionManager {
      *
      * @param a
      *            тип действия
-     * @throws CelestaException
+     * @
      *             ошибка БД
      */
-    boolean isActionAllowed(CallContext c, GrainElement t, Action a) throws CelestaException;
+    boolean isActionAllowed(CallContext c, GrainElement t, Action a) ;
 }

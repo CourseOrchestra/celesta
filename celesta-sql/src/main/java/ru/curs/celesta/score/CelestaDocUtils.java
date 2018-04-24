@@ -20,9 +20,9 @@ public final class CelestaDocUtils {
     /**
      * Extracts first occurence of JSON object string from CelestaDoc.
      *
-     * @throws CelestaException Broken or truncated JSON.
+     * @ Broken or truncated JSON.
      */
-    public static String getCelestaDocJSON(String celestaDoc) throws CelestaException {
+    public static String getCelestaDocJSON(String celestaDoc)  {
 
         if (celestaDoc == null)
             return "{}";
@@ -72,7 +72,7 @@ public final class CelestaDocUtils {
     }
 
 
-    public static List<String> getList(String celestaDoc, String key) throws CelestaException {
+    public static List<String> getList(String celestaDoc, String key)  {
         String json = getCelestaDocJSON(celestaDoc);
 
         JSONObject metadata = new JSONObject(json);

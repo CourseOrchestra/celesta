@@ -110,12 +110,12 @@ public final class GridDriver {
 		}
 	}
 
-	public GridDriver(BasicCursor c, Runnable callback) throws CelestaException {
+	public GridDriver(BasicCursor c, Runnable callback) {
 		this(c);
 		setChangeNotifier(callback);
 	}
 
-	public GridDriver(BasicCursor c) throws CelestaException {
+	public GridDriver(BasicCursor c) {
 		// place to save filters and ordering
 		closedCopy = c._getBufferCopy(c.callContext(), null);
 		closedCopy.copyFiltersFrom(c);
@@ -172,12 +172,12 @@ public final class GridDriver {
 
 		interpolationInitializer = new InterpolationInitializer(interpolator, dbAdaptor) {
 			@Override
-			void setCursorOrdinal(BasicCursor c, BigInteger key) throws CelestaException {
+			void setCursorOrdinal(BasicCursor c, BigInteger key) {
 				GridDriver.this.setCursorOrdinal(c, key);
 			}
 
 			@Override
-			BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException {
+			BigInteger getCursorOrdinal(BasicCursor c) {
 				return GridDriver.this.getCursorOrdinal(c);
 			}
 		};
@@ -189,10 +189,8 @@ public final class GridDriver {
 	 * 
 	 * @param c
 	 *            Cursor for checking.
-	 * @throws CelestaException
-	 *             wrong ordering.
 	 */
-	public boolean isValidFor(BasicCursor c) throws CelestaException {
+	public boolean isValidFor(BasicCursor c) {
 		return closedCopy.isEquivalent(c);
 	}
 
@@ -204,10 +202,8 @@ public final class GridDriver {
 	 * @param c
 	 *            Alive cursor to be modified
 	 * @return false if record set is empty
-	 * @throws CelestaException
-	 *             e.g. wrong cursor
 	 */
-	public boolean setPosition(int position, BasicCursor c) throws CelestaException {
+	public boolean setPosition(int position, BasicCursor c) {
 		checkMeta(c);
 		// First, we are checking if exact positioning is possible
 		final int closestPosition = interpolator.getClosestPosition(position);
@@ -253,16 +249,14 @@ public final class GridDriver {
 	 * 
 	 * @param c
 	 *            Cursor that is set to a certain position.
-	 * @throws CelestaException
-	 *             e. g. wrong cursor
 	 */
-	public void setPosition(BasicCursor c) throws CelestaException {
+	public void setPosition(BasicCursor c) {
 		checkMeta(c);
 		topVisiblePosition = getCursorOrdinal(c);
 		requestRefinement(topVisiblePosition, false);
 	}
 
-	private void requestRefinement(BigInteger key, boolean immediate) throws CelestaException {
+	private void requestRefinement(BigInteger key, boolean immediate) {
 		// do not process one request twice in a row
 		if (key.equals(latestRequest))
 			return;
@@ -275,11 +269,11 @@ public final class GridDriver {
 		}
 	}
 
-	synchronized BigInteger getCursorOrdinal(BasicCursor c) throws CelestaException {
+	synchronized BigInteger getCursorOrdinal(BasicCursor c) {
 		return getCursorOrdinal(c, closedCopy.meta().getColumns().keySet());
 	}
 
-	synchronized BigInteger getCursorOrdinal(BasicCursor c, Collection<String> fields) throws CelestaException {
+	synchronized BigInteger getCursorOrdinal(BasicCursor c, Collection<String> fields) {
 		int i = 0;
 		Object[] values = c._currentValues();
 		KeyEnumerator km;
@@ -292,7 +286,7 @@ public final class GridDriver {
 		return rootKeyEnumerator.getOrderValue();
 	}
 
-	synchronized void setCursorOrdinal(BasicCursor c, BigInteger key) throws CelestaException {
+	synchronized void setCursorOrdinal(BasicCursor c, BigInteger key) {
 		rootKeyEnumerator.setOrderValue(key);
 		for (Map.Entry<String, KeyEnumerator> e : keyEnumerators.entrySet()) {
 			c.setValue(e.getKey(), e.getValue().getValue());
@@ -306,7 +300,7 @@ public final class GridDriver {
 		return interpolator.getApproximatePosition(topVisiblePosition);
 	}
 
-	private KeyEnumerator createKeyEnumerator(ColumnMeta m, boolean nullsFirst, DBAdaptor dbAdaptor) throws CelestaException {
+	private KeyEnumerator createKeyEnumerator(ColumnMeta m, boolean nullsFirst, DBAdaptor dbAdaptor) {
 		KeyEnumerator result;
 
 		final String celestaType = m.getCelestaType();
@@ -342,7 +336,7 @@ public final class GridDriver {
 		return result;
 	}
 
-	private void checkMeta(BasicCursor c) throws CelestaException {
+	private void checkMeta(BasicCursor c) {
 		if (c.meta() != closedCopy.meta())
 			throw new CelestaException("Metaobjects for cursor and cursor position specifier don't match.");
 	}

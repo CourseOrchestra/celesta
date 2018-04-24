@@ -76,10 +76,10 @@ public abstract class AbstractScore {
      * Инициализация ядра путём указания набора путей к папкам score,
      * разделённого точкой с запятой.
      *
-     * @throws CelestaException в случае указания несуществующего пути или в случае двойного
+     * @ в случае указания несуществующего пути или в случае двойного
      *                          определения гранулы с одним и тем же именем.
      */
-    void init(ScoreDiscovery scoreDiscovery) throws CelestaException, ParseException {
+    void init(ScoreDiscovery scoreDiscovery) throws ParseException {
         for (String entry : this.path.split(File.pathSeparator)) {
             File path = new File(entry.trim());
             if (!path.exists())
@@ -106,9 +106,9 @@ public abstract class AbstractScore {
      * Сохраняет содержимое метаданных обратно в SQL-файлы, при этом
      * перезаписывая их содержимое.
      *
-     * @throws CelestaException при ошибке ввода-вывода.
+     * @ при ошибке ввода-вывода.
      */
-    public void save() throws CelestaException {
+    public void save()  {
         for (Grain g : grains.values())
             if (g.isModified())
                 g.save();
@@ -260,7 +260,7 @@ public abstract class AbstractScore {
         }
     }
 
-    private void initSystemGrain() throws CelestaException {
+    private void initSystemGrain()  {
         ChecksumInputStream is = null;
 
         try {
@@ -343,7 +343,7 @@ public abstract class AbstractScore {
             return this;
         }
 
-        public T build() throws CelestaException, ParseException {
+        public T build() throws ParseException {
             if (scoreDiscovery == null)
                 scoreDiscovery = new DefaultScoreDiscovery();
 

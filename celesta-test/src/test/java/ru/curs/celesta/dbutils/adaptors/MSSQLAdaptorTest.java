@@ -78,7 +78,7 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
     }
 
     @Override
-    Connection getConnection() throws CelestaException {
+    Connection getConnection() {
         return dba.connectionPool.get();
     }
 

@@ -19,25 +19,21 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
 	private View meta = null;
 	private InFilterHolder inFilterHolder;
 
-	public ViewCursor(CallContext context) throws CelestaException {
+	public ViewCursor(CallContext context) {
 		super(context);
 		inFilterHolder = new InFilterHolder(this);
 	}
 
-	public ViewCursor(CallContext context, Set<String> fields) throws CelestaException {
+	public ViewCursor(CallContext context, Set<String> fields) {
 		super(context, fields);
 		inFilterHolder = new InFilterHolder(this);
 	}
 
 	/**
 	 * Описание представления (метаинформация).
-	 * 
-	 * @throws CelestaException
-	 *             в случае ошибки извлечения метаинформации (в норме не должна
-	 *             происходить).
 	 */
 	@Override
-	public View meta() throws CelestaException {
+	public View meta() {
 		if (meta == null)
 			try {
 				meta = callContext().getScore()
@@ -49,7 +45,7 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
 	}
 
 	@Override
-	final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException {
+	final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
 		// для представлений мы сортируем всегда по первому столбцу, если
 		// сортировки нет вообще
 		if (colNames.isEmpty()) {
@@ -60,7 +56,7 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
 
 
 	@Override
-	public FieldsLookup setIn(BasicCursor otherCursor) throws CelestaException {
+	public FieldsLookup setIn(BasicCursor otherCursor) {
 		return inFilterHolder.setIn(otherCursor);
 	}
 

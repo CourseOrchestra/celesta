@@ -11,7 +11,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.term.WhereMakerParamsProvider;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
@@ -82,7 +81,7 @@ public class NavigationQueriesMakerTest {
 			return new QueryBuildingHelper() {
 
 				@Override
-				public String translateDate(String date) throws CelestaException {
+				public String translateDate(String date) {
 					return date;
 				}
 
@@ -116,7 +115,7 @@ public class NavigationQueriesMakerTest {
 		}
 
 		@Override
-		public void initOrderBy() throws CelestaException {
+		public void initOrderBy() {
 			init = true;
 		}
 
@@ -131,12 +130,12 @@ public class NavigationQueriesMakerTest {
 		}
 
 		@Override
-		public int[] sortFieldsIndices() throws CelestaException {
+		public int[] sortFieldsIndices() {
 			return sfIndices;
 		}
 
 		@Override
-		public Object[] values() throws CelestaException {
+		public Object[] values() {
 			return values;
 		}
 	}
@@ -155,7 +154,7 @@ public class NavigationQueriesMakerTest {
 			return new QueryBuildingHelper() {
 
 				@Override
-				public String translateDate(String date) throws CelestaException {
+				public String translateDate(String date) {
 					return date;
 				}
 
@@ -199,7 +198,7 @@ public class NavigationQueriesMakerTest {
 	}
 
 	@Test
-	public void test1() throws CelestaException {
+	public void test1() {
 
 		Params p = new Params(a("grainid", "tablename"), a(false, false), a(false, false));
 		WhereTermsMaker c = new WhereTermsMaker(p);
@@ -217,7 +216,7 @@ public class NavigationQueriesMakerTest {
 	}
 
 	@Test
-	public void test2() throws CelestaException {
+	public void test2() {
 		Params p = new Params(a("d", "i", "m", "grainid", "tablename"), a(false, false, true, false, false),
 				a(false, false, false, false, false, false));
 		WhereTermsMaker c = new WhereTermsMaker(p);
@@ -232,7 +231,7 @@ public class NavigationQueriesMakerTest {
 	}
 
 	@Test
-	public void test3() throws CelestaException {
+	public void test3() {
 		Params p = new Params(a("grainid", "m", "tablename"), a(false, true, false), a(false, false, false));
 		WhereTermsMaker c = new WhereTermsMaker(p);
 
@@ -258,7 +257,7 @@ public class NavigationQueriesMakerTest {
 	}
 
 	@Test
-	public void test4() throws CelestaException {
+	public void test4() {
 		Params p = new Params(a("A"), a(false), a(false));
 		WhereTermsMaker c = new WhereTermsMaker(p);
 		assertEquals("(\"A\" > ?)", c.getWhereTerm('>').getWhere());
@@ -302,7 +301,7 @@ public class NavigationQueriesMakerTest {
 	}
 
 	@Test
-	public void test5() throws CelestaException {
+	public void test5() {
 		Params p = new Params(a("A", "B"), a(false, false), a(true, true));
 		WhereTermsMaker c = new WhereTermsMaker(p);
 
@@ -326,7 +325,7 @@ public class NavigationQueriesMakerTest {
 	}
 
 	@Test
-	public void test6() throws CelestaException {
+	public void test6() {
 		Params p = new Params(a("A"), a(false), a(true));
 		p.setNullsFirst(false);
 		WhereTermsMaker c = new WhereTermsMaker(p);
@@ -376,17 +375,12 @@ public class NavigationQueriesMakerTest {
 	}
 
 	@Test
-	public void test7() throws CelestaException {
+	public void test7() {
 		Params p = new Params(a("A"), a(false), a(true)) {
 			@Override
 			public Expr complexFilter() {
-				Expr buf;
-				try {
-					buf = CelestaParser.parseComplexFilter("a = 1 or b = 3", new PlainIdentifierParser());
-					return buf;
-				} catch (CelestaException e) {
-					throw new RuntimeException(e);
-				}
+				Expr buf = CelestaParser.parseComplexFilter("a = 1 or b = 3", new PlainIdentifierParser());
+				return buf;
 			}
 
 			@Override
@@ -406,7 +400,7 @@ public class NavigationQueriesMakerTest {
 	}
 
 	@Test
-	public void testSupportingOfCortege() throws CelestaException {
+	public void testSupportingOfCortege() {
 		CortegeSupportedParams p = new CortegeSupportedParams(a("A", "B"), a(false, false), a(false, false));
 		WhereTermsMaker c = new WhereTermsMaker(p);
 

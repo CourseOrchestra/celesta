@@ -32,7 +32,7 @@ public final class AppSettings {
         logger.setLevel(Level.INFO);
     }
 
-    public AppSettings(Properties properties) throws CelestaException {
+    public AppSettings(Properties properties) {
         this.properties = properties;
 
         StringBuffer sb = new StringBuffer();

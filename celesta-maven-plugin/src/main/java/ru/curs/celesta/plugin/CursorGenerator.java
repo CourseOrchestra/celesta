@@ -3,7 +3,6 @@ package ru.curs.celesta.plugin;
 import com.squareup.javapoet.*;
 import org.apache.commons.lang3.StringUtils;
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.event.TriggerType;
@@ -91,19 +90,27 @@ public final class CursorGenerator {
         if (ge instanceof DataGrainElement) {
             DataGrainElement dge = (DataGrainElement) ge;
             Map<String, ? extends ColumnMeta> columns = dge.getColumns();
-            MethodSpec buildParseResultMethod = buildParseResult(columns, isVersionedGe);
-            cursorClass.addMethod(buildParseResultMethod);
+
             cursorClass.addMethod(buildSetFieldValue());
+
+            StringBuilder parseResultOverridingMethodNameBuilder = new StringBuilder("_parseResult");
 
             final Set<Column> pk;
             if (dge instanceof Table) {
                 Table t = (Table) dge;
                 pk = t.isReadOnly() ? Collections.emptySet() : new LinkedHashSet<>(t.getPrimaryKey().values());
-                if (!t.isReadOnly())
+                if (!t.isReadOnly()) {
                     cursorClass.addMethod(buildCurrentKeyValues(pk));
+                    parseResultOverridingMethodNameBuilder.append("Internal");
+                }
             } else {
                 pk = Collections.emptySet();
             }
+
+            MethodSpec buildParseResultMethod = buildParseResult(
+                    columns, parseResultOverridingMethodNameBuilder.toString(), isVersionedGe
+            );
+            cursorClass.addMethod(buildParseResultMethod);
 
             cursorClass.addMethod(buildClearBuffer(columns, pk));
 
@@ -174,7 +181,7 @@ public final class CursorGenerator {
         if (ge instanceof Table) {
             Table t = (Table) ge;
             if (!t.isReadOnly())
-                getTableImplements(t).forEach(
+                t.getImplements().forEach(
                         i -> builder.addSuperinterface(ClassName.bestGuess(i))
                 );
 
@@ -193,7 +200,7 @@ public final class CursorGenerator {
 
     private static List<TypeSpec> buildOptionFieldsAsInnerStaticClasses(Collection<Column> columns) {
         return columns.stream()
-                .filter(c -> (c instanceof IntegerColumn || c instanceof StringColumn) && !getColumnOptions(c).isEmpty())
+                .filter(c -> (c instanceof IntegerColumn || c instanceof StringColumn) && !c.getOptions().isEmpty())
                 .map(
                         c -> {
                             TypeSpec.Builder builder = TypeSpec.classBuilder(StringUtils.capitalize(c.getName()))
@@ -207,49 +214,29 @@ public final class CursorGenerator {
                             builder.addMethod(constructor);
 
 
-                            try {
-                                List<String> options = c.getOptions();
-                                builder.addFields(
-                                        options.stream().map(s -> {
-                                                    FieldSpec.Builder fb = FieldSpec.builder(
-                                                            c.getJavaClass(), s,
-                                                            Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL
-                                                    );
+                            List<String> options = c.getOptions();
+                            builder.addFields(
+                                    options.stream().map(s -> {
+                                                FieldSpec.Builder fb = FieldSpec.builder(
+                                                        c.getJavaClass(), s,
+                                                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL
+                                                );
 
-                                                    if (c instanceof IntegerColumn) {
-                                                        fb.initializer("$L", options.indexOf(s));
-                                                    } else {
-                                                        fb.initializer("$S", s);
-                                                    }
-
-                                                    return fb.build();
+                                                if (c instanceof IntegerColumn) {
+                                                    fb.initializer("$L", options.indexOf(s));
+                                                } else {
+                                                    fb.initializer("$S", s);
                                                 }
-                                        ).collect(Collectors.toList())
-                                );
 
-                            } catch (CelestaException e) {
-                                throw new RuntimeException();
-                            }
+                                                return fb.build();
+                                            }
+                                    ).collect(Collectors.toList())
+                            );
+
 
                             return builder.build();
                         }
                 ).collect(Collectors.toList());
-    }
-
-    private static List<String> getColumnOptions(Column c) {
-        try {
-            return c.getOptions();
-        } catch (CelestaException e) {
-            throw new RuntimeException();
-        }
-    }
-
-    private static List<String> getTableImplements(Table t) {
-        try {
-            return t.getImplements();
-        } catch (CelestaException e) {
-            throw new RuntimeException();
-        }
     }
 
     private static List<MethodSpec> buildConstructors(GrainElement ge) {
@@ -266,7 +253,6 @@ public final class CursorGenerator {
 
         Supplier<MethodSpec.Builder> msp = () -> MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
-                .addException(CelestaException.class)
                 .addParameter(contextParam);
 
         //Common constructor
@@ -355,8 +341,10 @@ public final class CursorGenerator {
         return result;
     }
 
-    private static MethodSpec buildParseResult(Map<String, ? extends ColumnMeta> columns, boolean isVersionedObject) {
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("_parseResult")
+    private static MethodSpec buildParseResult(
+            Map<String, ? extends ColumnMeta> columns, String methodName, boolean isVersionedObject
+    ) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PROTECTED)
                 .addAnnotation(Override.class)
                 .addParameter(ResultSet.class, "rs")
@@ -551,7 +539,6 @@ public final class CursorGenerator {
                 .addAnnotation(Override.class)
                 .addParameters(Arrays.asList(context, fields))
                 .returns(selfTypeName)
-                .addException(CelestaException.class)
                 .addStatement("final $T result", selfTypeName)
                 .beginControlFlow("if ($T.isNull($N))", Objects.class, fields.name);
 

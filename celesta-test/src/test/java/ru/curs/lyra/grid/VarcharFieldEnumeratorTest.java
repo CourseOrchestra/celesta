@@ -20,7 +20,7 @@ public class VarcharFieldEnumeratorTest {
 
 	private static final StaticDataAdaptor CUSTOM_DBA = new StaticDataAdaptor() {
 		@Override
-		public List<String> selectStaticStrings(List<String> data, String columnName, String orderType) throws CelestaException {
+		public List<String> selectStaticStrings(List<String> data, String columnName, String orderType) {
 			return Arrays.asList(
 					"а","б","в","г","д","е","ж","з","и","й","к","л","м","н",
 					"о","п","р","с","т","у","ф","х",
@@ -28,7 +28,7 @@ public class VarcharFieldEnumeratorTest {
 		}
 
 		@Override
-		public int compareStrings(String left, String right) throws CelestaException {
+		public int compareStrings(String left, String right) {
 			if (left.equalsIgnoreCase(right))
 				return left.compareToIgnoreCase(right);
 			return left.compareTo(right);
@@ -38,21 +38,21 @@ public class VarcharFieldEnumeratorTest {
 
 	public static final StaticDataAdaptor DBA = new StaticDataAdaptor() {
 		@Override
-		public List<String> selectStaticStrings(List<String> data, String columnName, String orderType) throws CelestaException {
+		public List<String> selectStaticStrings(List<String> data, String columnName, String orderType) {
 			List<String> result = new ArrayList<>(VarcharFieldEnumerator.CHARS);
 			Collections.sort(result);
 			return result;
 		}
 
 		@Override
-		public int compareStrings(String left, String right) throws CelestaException {
+		public int compareStrings(String left, String right) {
 			if (left.equalsIgnoreCase(right))
 				return left.compareToIgnoreCase(right);
 			return left.compareTo(right);
 		}
 	};
 
-	private VarcharFieldEnumerator getManager(String min, int len) throws CelestaException {
+	private VarcharFieldEnumerator getManager(String min, int len) {
 
 		char[] max = new char[len];
 		for (int i = 0; i < len; i++)
@@ -62,12 +62,12 @@ public class VarcharFieldEnumeratorTest {
 		return vfm;
 	}
 
-	private VarcharFieldEnumerator getManager(int len) throws CelestaException {
+	private VarcharFieldEnumerator getManager(int len) {
 		return getManager("", len);
 	}
 
 	@Test
-	public void test1() throws CelestaException {
+	public void test1() {
 		VarcharFieldEnumerator km;
 		km = new VarcharFieldEnumerator(CUSTOM_DBA, 1);
 		km.setValue("");
@@ -128,7 +128,7 @@ public class VarcharFieldEnumeratorTest {
 
 	}
 
-	private void testReverse(VarcharFieldEnumerator km, String test) throws CelestaException {
+	private void testReverse(VarcharFieldEnumerator km, String test) {
 		km.setValue(test);
 		double p = km.getPosition();
 		km.setValue("");
@@ -137,7 +137,7 @@ public class VarcharFieldEnumeratorTest {
 	}
 
 	@Test
-	public void test2() throws CelestaException {
+	public void test2() {
 		VarcharFieldEnumerator km;
 		km = getManager(4);
 		testReverse(km, "а");
@@ -153,7 +153,7 @@ public class VarcharFieldEnumeratorTest {
 	}
 
 	@Test
-	public void test3() throws CelestaException {
+	public void test3() {
 		VarcharFieldEnumerator km1, km2;
 		km1 = getManager("ваня", 10);
 		km2 = getManager("", 10);
@@ -188,7 +188,7 @@ public class VarcharFieldEnumeratorTest {
 	}
 
 	@Test
-	public void test4() throws CelestaException {
+	public void test4() {
 		VarcharFieldEnumerator km = new VarcharFieldEnumerator(CUSTOM_DBA, "ваня", "наташа", 7);
 		km.setValue("коля");
 		double k = km.getPosition();
@@ -212,7 +212,7 @@ public class VarcharFieldEnumeratorTest {
 	}
 
 	@Test
-	public void test5() throws CelestaException {
+	public void test5() {
 		VarcharFieldEnumerator km = getManager(1);
 		assertEquals("", km.getValue());
 		assertEquals(BigInteger.ZERO, km.getOrderValue());
@@ -243,7 +243,7 @@ public class VarcharFieldEnumeratorTest {
 	}
 
 	@Test
-	public void test6() throws CelestaException {
+	public void test6() {
 		VarcharFieldEnumerator km = new VarcharFieldEnumerator(DBA, 10);
 		String[] test = { "А-2-А", "Ая", "ая", "ая Дачная" };
 		BigInteger[] v = new BigInteger[test.length];
@@ -265,7 +265,7 @@ public class VarcharFieldEnumeratorTest {
 	}
 
 	@Test
-	public void test7() throws CelestaException {
+	public void test7() {
 		VarcharFieldEnumerator km = new VarcharFieldEnumerator(DBA, 10);
 		String[] test = { "Ё", "Е", "Еёее", "ее", "ееее", "ё",  "ёее" };
 		BigInteger[] v = new BigInteger[test.length];
@@ -285,7 +285,7 @@ public class VarcharFieldEnumeratorTest {
 	}
 
 	@Test
-	public void test8() throws CelestaException {
+	public void test8() {
 
 		VarcharFieldEnumerator fe = new VarcharFieldEnumerator(DBA, 30);
 
@@ -312,7 +312,7 @@ public class VarcharFieldEnumeratorTest {
 	}
 
 	@Test
-	public void test9() throws CelestaException {
+	public void test9() {
 		String val = "В начале июля, в чрезвычайно жаркое время, под вечер, один молодой человек вышел из своей каморки, которую нанимал от жильцов в С — м переулке, на улицу и медленно, как бы в нерешимости, отправился к ";
 		VarcharFieldEnumerator e = new VarcharFieldEnumerator(DBA, 200);
 		e.setValue(val);

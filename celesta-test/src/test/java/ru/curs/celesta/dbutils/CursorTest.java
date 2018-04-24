@@ -20,7 +20,7 @@ public class CursorTest {
 	private Cursor c;
 
 	@BeforeAll
-	public static void init() throws IOException, CelestaException {
+	public static void init() {
 		Properties properties = new Properties();
 		properties.setProperty("score.path", "score");
 		properties.setProperty("h2.in-memory", "true");
@@ -29,23 +29,23 @@ public class CursorTest {
 	}
 
 	@AfterAll
-	public static void destroy() throws CelestaException, SQLException {
+	public static void destroy() throws SQLException {
 		celesta.callContext(new PySessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
 		celesta.close();
 	}
 
 	@BeforeEach
-	public void before() throws CelestaException {
+	public void before() {
 		c = new LogsetupCursor(celesta.callContext(sc));
 	}
 
 	@AfterEach
-	public void after() throws CelestaException {
+	public void after() {
 		c.close();
 	}
 
 	@Test
-	public void cursorIsNavigable() throws CelestaException {
+	public void cursorIsNavigable() {
 		c.setFilter("grainid", "'b'%");
 		LogsetupCursor c2 = (LogsetupCursor) c;
 		c2.setGrainid("grainval");
@@ -65,7 +65,7 @@ public class CursorTest {
 	}
 
 	@Test
-	public void fieldsAreAssignable() throws CelestaException {
+	public void fieldsAreAssignable() {
 		LogsetupCursor lsc = (LogsetupCursor) c;
 		assertNull(lsc.getGrainid());
 		lsc.setValue("grainid", "asdFsaf");

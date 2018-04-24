@@ -3,7 +3,6 @@ package ru.curs.lyra.grid;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
-import ru.curs.celesta.CelestaException;
 
 public class LyraCollatorTest {
 
@@ -71,7 +70,7 @@ public class LyraCollatorTest {
 	}
 
 	@Test
-	public void test3() throws CelestaException, LyraCollatorException {
+	public void test3() throws LyraCollatorException {
 		LyraCollator lc = LyraCollator.getInstance("mo<a < b,c < d,g;e,k;f,w<'~'", "TEST");
 		assertEquals(4, lc.getPrimOrderCount());
 		assertEquals(3, lc.getSecOrderCount());

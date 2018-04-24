@@ -32,7 +32,7 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn) throws CelestaException {
+    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn)  {
         List<String> result = new ArrayList<>();
 
         String sql = "select format('DROP FUNCTION IF EXISTS %s(%s);',\n" +
@@ -60,7 +60,7 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> manageAutoIncrement(Connection conn, TableElement t) throws CelestaException {
+    List<String> manageAutoIncrement(Connection conn, TableElement t)  {
         List<String> result = new ArrayList<>();
         String sql;
 
@@ -126,7 +126,7 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> updateVersioningTrigger(Connection conn, TableElement t) throws CelestaException {
+    List<String> updateVersioningTrigger(Connection conn, TableElement t)  {
         List<String> result = new ArrayList<>();
         // First of all, we are about to check if trigger exists
         try {
@@ -277,7 +277,7 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> createParameterizedView(ParameterizedView pv) throws CelestaException {
+    List<String> createParameterizedView(ParameterizedView pv)  {
         SQLGenerator gen = getViewSQLGenerator();
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
@@ -333,7 +333,7 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t) throws CelestaException {
+    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()

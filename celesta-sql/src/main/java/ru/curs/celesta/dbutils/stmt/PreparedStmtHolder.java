@@ -14,7 +14,7 @@ public abstract class PreparedStmtHolder {
 	private PreparedStatement stmt;
 	private final List<ParameterSetter> program = new LinkedList<>();
 
-	public boolean isStmtValid() throws CelestaException {
+	public boolean isStmtValid()  {
 		try {
 			return !(stmt == null || stmt.isClosed());
 		} catch (SQLException e) {
@@ -28,10 +28,10 @@ public abstract class PreparedStmtHolder {
 	 * @param rec
 	 *            Array of record fields' values.
 	 *
-	 * @throws CelestaException
+	 * @
 	 *             something wrong.
 	 */
-	public synchronized PreparedStatement getStatement(Object[] rec, int recversion) throws CelestaException {
+	public synchronized PreparedStatement getStatement(Object[] rec, int recversion)  {
 		if (!isStmtValid()) {
 			program.clear();
 			stmt = initStatement(program);
@@ -58,6 +58,6 @@ public abstract class PreparedStmtHolder {
 		program.clear();
 	}
 
-	protected abstract PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException;
+	protected abstract PreparedStatement initStatement(List<ParameterSetter> program) ;
 
 }

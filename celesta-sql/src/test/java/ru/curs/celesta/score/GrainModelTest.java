@@ -9,14 +9,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import ru.curs.celesta.CelestaException;
-
 public class GrainModelTest {
 
 	private AbstractScore s = new CelestaSqlTestScore();
 
 	@BeforeAll
-	public static void Setup() throws CelestaException {
+	public static void setup()  {
 		Properties p = new Properties();
 		p.setProperty("score.path", ".");
 		p.setProperty("rdbms.connection.url", "jdbc:oracle:123");

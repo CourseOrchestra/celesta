@@ -20,7 +20,7 @@ public final class ORMCompiler {
      * Версия компилятора. Данную константу следует инкрементировать, когда
      * необходимо инициировать автоматическое пересоздание orm-скриптов.
      */
-    private static final int COMPILERVER = 19;
+    private static final int COMPILERVER = 21;
 
     private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
     private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -64,9 +64,8 @@ public final class ORMCompiler {
      * Выполняет компиляцию кода на основе разобранной объектной модели.
      *
      * @param score модель
-     * @throws CelestaException при неудаче компиляции, например, при ошибке вывода в файл.
      */
-    public static void compile(Score score) throws CelestaException {
+    public static void compile(Score score) {
         for (Grain g : score.getGrains().values())
             // Пропускаем системную гранулу.
             if (!"celesta".equals(g.getName())) {
@@ -260,7 +259,7 @@ public final class ORMCompiler {
         // Имя таблицы
         compileObjectName((GrainElement) t, w);
         // Разбор строки по переменным
-        compileParseResult(w, columns);
+        compileParseResult(w, columns, true);
         // Динамическая установка значения поля
         compileSetFieldValue(w);
         // Очистка буфера
@@ -293,7 +292,7 @@ public final class ORMCompiler {
         // Имя таблицы
         compileObjectName(t, w);
         // Разбор строки по переменным
-        compileParseResult(w, columns);
+        compileParseResult(w, columns, false);
         if (t.isVersioned()) {
             w.println("        self.recversion = rs.getInt('recversion')");
         }
@@ -492,8 +491,9 @@ public final class ORMCompiler {
         }
     }
 
-    private static void compileParseResult(PrintWriter w, Collection<Column> columns) {
-        w.println("    def _parseResult(self, rs):");
+    private static void compileParseResult(PrintWriter w, Collection<Column> columns, boolean isReadOnlyTable) {
+        String methodName = isReadOnlyTable ? "_parseResult" : "_parseResultInternal";
+        w.printf("    def %s(self, rs):%n", methodName);
         for (Column c : columns) {
             if (c instanceof BinaryColumn) {
                 w.printf(SELF_S_EQUALS_NONE, c.getName());

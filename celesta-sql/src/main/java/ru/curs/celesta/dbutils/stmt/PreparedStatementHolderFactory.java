@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.stmt;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.term.CsqlWhereTermsMaker;
@@ -14,7 +13,6 @@ import java.sql.PreparedStatement;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class PreparedStatementHolderFactory {
@@ -23,7 +21,7 @@ public class PreparedStatementHolderFactory {
         return new MaskedStatementHolder() {
 
             @Override
-            protected int[] getNullsMaskIndices() throws CelestaException {
+            protected int[] getNullsMaskIndices()  {
                 // we monitor all columns for nulls
                 int[] result = new int[meta.getColumns().size()];
                 for (int i = 0; i < result.length; i++)
@@ -32,7 +30,7 @@ public class PreparedStatementHolderFactory {
             }
 
             @Override
-            protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+            protected PreparedStatement initStatement(List<ParameterSetter> program)  {
                 return dbAdaptor.getInsertRecordStatement(conn, meta, getNullsMask(), program);
             }
 
@@ -42,7 +40,7 @@ public class PreparedStatementHolderFactory {
     public static PreparedStmtHolder createGetHolder(TableElement meta, DBAdaptor dbAdaptor, Connection conn) {
         return new PreparedStmtHolder() {
             @Override
-            protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+            protected PreparedStatement initStatement(List<ParameterSetter> program)  {
                 WhereTerm where = CsqlWhereTermsMaker.getPKWhereTermForGet(meta);
                 where.programParams(program, dbAdaptor);
                 return dbAdaptor.getOneRecordStatement(conn, meta, where.getWhere(), Collections.emptySet());
@@ -55,7 +53,7 @@ public class PreparedStatementHolderFactory {
                                                         Supplier<boolean[]> nullUpdateMaskSupplier) {
         return new PreparedStmtHolder() {
             @Override
-            protected PreparedStatement initStatement(List<ParameterSetter> program) throws CelestaException {
+            protected PreparedStatement initStatement(List<ParameterSetter> program)  {
                 WhereTerm where = CsqlWhereTermsMaker.getPKWhereTerm(meta);
                 PreparedStatement result = dbAdaptor.getUpdateRecordStatement(
                         conn, meta, updateMaskSupplier.get(), nullUpdateMaskSupplier.get(), program, where.getWhere()
@@ -75,7 +73,7 @@ public class PreparedStatementHolderFactory {
         return new PreparedStmtHolder() {
             @Override
             protected PreparedStatement initStatement(List<ParameterSetter> program)
-                    throws CelestaException {
+                     {
                 FromClause from = fromClauseSupplier.get();
                 FromTerm fromTerm = fromTermSupplier.get();
 

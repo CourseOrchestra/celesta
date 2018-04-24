@@ -31,7 +31,7 @@ public class SerializerTest {
 	private CallContext callContext;
 
 	@BeforeAll
-	public static void init() throws IOException, CelestaException {
+	public static void init() {
 		Properties params = new Properties();
 		params.setProperty("score.path", "score");
 		params.setProperty("h2.in-memory", "true");
@@ -45,7 +45,7 @@ public class SerializerTest {
 	}
 
 	@BeforeEach
-	public void before() throws CelestaException {
+	public void before() {
 		callContext = celesta.callContext(sc);
 
 		c = new GrainsCursor(callContext);
@@ -56,12 +56,12 @@ public class SerializerTest {
 	}
 
 	@AfterEach
-	public void after() throws CelestaException {
+	public void after() {
 		callContext.close();
 	}
 
 	@Test
-	public void test() throws CelestaException, UnsupportedEncodingException {
+	public void test() throws UnsupportedEncodingException {
 
 		Map<String, LyraFormField> metaform = new LinkedHashMap<>();
 		LyraFormField lff;
@@ -72,7 +72,7 @@ public class SerializerTest {
 			}
 
 			@Override
-			public void setValue(BasicCursor c, Object newValue) throws CelestaException {
+			public void setValue(BasicCursor c, Object newValue) {
 
 			}
 		});
@@ -87,7 +87,7 @@ public class SerializerTest {
 			}
 
 			@Override
-			public void setValue(BasicCursor c, Object newValue) throws CelestaException {
+			public void setValue(BasicCursor c, Object newValue) {
 
 			}
 		});
@@ -102,7 +102,7 @@ public class SerializerTest {
 			}
 
 			@Override
-			public void setValue(BasicCursor c, Object newValue) throws CelestaException {
+			public void setValue(BasicCursor c, Object newValue) {
 
 			}
 		});
@@ -116,7 +116,7 @@ public class SerializerTest {
 			}
 
 			@Override
-			public void setValue(BasicCursor c, Object newValue) throws CelestaException {
+			public void setValue(BasicCursor c, Object newValue) {
 
 			}
 		});
@@ -130,7 +130,7 @@ public class SerializerTest {
 			}
 
 			@Override
-			public void setValue(BasicCursor c, Object newValue) throws CelestaException {
+			public void setValue(BasicCursor c, Object newValue) {
 
 			}
 		});
@@ -157,7 +157,7 @@ public class SerializerTest {
 	}
 
 	@Test
-	public void test2() throws CelestaException, UnsupportedEncodingException {
+	public void test2() throws UnsupportedEncodingException {
 		BasicCardForm bcf = new BasicCardForm(
 				celesta.callContext(sc)
 		) {
@@ -190,7 +190,7 @@ public class SerializerTest {
 						}
 
 						@Override
-						public void setValue(BasicCursor c, Object newValue) throws CelestaException {
+						public void setValue(BasicCursor c, Object newValue) {
 							assertEquals("русский текст", newValue);
 						}
 					});

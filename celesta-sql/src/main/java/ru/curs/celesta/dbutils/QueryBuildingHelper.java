@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.DataGrainElement;
 import ru.curs.celesta.score.SQLGenerator;
 
@@ -18,10 +17,10 @@ public interface QueryBuildingHelper {
 	 * 
 	 * @param date
 	 *            date in ISO format.
-	 * @throws CelestaException
+	 * @
 	 *             wrong format.
 	 */
-	String translateDate(String date) throws CelestaException;
+	String translateDate(String date) ;
 
 	/**
 	 * Does RDBMS sort nulls first?

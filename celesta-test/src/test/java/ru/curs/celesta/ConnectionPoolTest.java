@@ -31,7 +31,7 @@ public class ConnectionPoolTest {
     private ConnectionPool connectionPool;
 
     @BeforeEach
-    public void init() throws CelestaException {
+    public void init() {
         connectionPool = ConnectionPool.create(cpc);
 
         DbAdaptorFactory dac = new DbAdaptorFactory()
@@ -45,7 +45,7 @@ public class ConnectionPoolTest {
 
 
     @AfterEach
-    public void tearDown() throws CelestaException, SQLException {
+    public void tearDown() throws SQLException {
         if (!connectionPool.isClosed()) {
             connectionPool.get().createStatement().execute("SHUTDOWN");
             connectionPool.close();

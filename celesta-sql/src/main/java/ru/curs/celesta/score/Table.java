@@ -371,11 +371,8 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 
 	/**
 	 * Возвращает интерфейсы, реализуемые курсором (значение свойства implements) для данной таблицы.
-	 *
-	 * @throws CelestaException
-	 *             в случае, если интерфейсы заданы неверно.
 	 */
-	public List<String> getImplements() throws CelestaException {
+	public List<String> getImplements() {
 		try {
 			return CelestaDocUtils.getList(getCelestaDoc(), CelestaDocUtils.IMPLEMENTS);
 		} catch (JSONException e1) {

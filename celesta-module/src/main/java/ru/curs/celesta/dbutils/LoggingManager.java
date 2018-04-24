@@ -63,8 +63,7 @@ public final class LoggingManager implements ILoggingManager {
 		this.dbAdaptor = dbAdaptor;
 	}
 
-	boolean isLoggingNeeded(CallContext sysContext, Table t, Action a)
-			throws CelestaException {
+	boolean isLoggingNeeded(CallContext sysContext, Table t, Action a) {
 		// Вычисляем местоположение данных в кэше.
 		int index = CacheEntry.hash(t) & (CACHE_SIZE - 1);
 
@@ -78,8 +77,7 @@ public final class LoggingManager implements ILoggingManager {
 		return ce.isLoggingNeeded(a);
 	}
 
-	private CacheEntry refreshLogging(CallContext sysContext, Table t)
-			throws CelestaException {
+	private CacheEntry refreshLogging(CallContext sysContext, Table t) {
 		LogsetupCursor logsetup = new LogsetupCursor(sysContext);
 		int loggingMask = 0;
 		if (logsetup.tryGet(t.getGrain().getName(), t.getName())) {
@@ -91,7 +89,7 @@ public final class LoggingManager implements ILoggingManager {
 	}
 
 	@Override
-	public void log(Cursor c, Action a) throws CelestaException {
+	public void log(Cursor c, Action a) {
 		if (a == Action.READ)
 			throw new IllegalArgumentException();
 		// No logging for celesta.grains (this is needed for smooth update from
@@ -114,8 +112,7 @@ public final class LoggingManager implements ILoggingManager {
 		}
 	}
 
-	private void writeToLog(Cursor c, Action a, CallContext sysContext)
-			throws CelestaException {
+	private void writeToLog(Cursor c, Action a, CallContext sysContext) {
 		LogCursor log = new LogCursor(sysContext);
 		log.init();
 		log.setUserid(c.callContext().getUserId());

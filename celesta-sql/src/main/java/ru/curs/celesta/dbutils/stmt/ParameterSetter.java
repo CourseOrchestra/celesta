@@ -22,13 +22,13 @@ public abstract class ParameterSetter {
 
 	QueryBuildingHelper queryBuildingHelper;
 
-	public abstract void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion) throws CelestaException;
+	public abstract void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion) ;
 
 	ParameterSetter(QueryBuildingHelper queryBuildingHelper) {
 		this.queryBuildingHelper = queryBuildingHelper;
 	}
 
-	protected void setParam(PreparedStatement stmt, int i, Object v) throws CelestaException {
+	protected void setParam(PreparedStatement stmt, int i, Object v)  {
 		try {
 			if (v == null)
 				stmt.setNull(i, java.sql.Types.NULL);

@@ -20,14 +20,14 @@ public abstract class LyraNamedElement {
 
 	private final String name;
 
-	public LyraNamedElement(String name) throws CelestaException {
+	public LyraNamedElement(String name) {
 		if (name == null)
 			throw new IllegalArgumentException();
 		validateIdentifier(name);
 		this.name = name;
 	}
 
-	static void validateIdentifier(String name) throws CelestaException {
+	static void validateIdentifier(String name) {
 		Matcher m = NAME_PATTERN.matcher(name);
 		if (!m.matches())
 			throw new CelestaException("Invalid identifier: '" + name + "'.");

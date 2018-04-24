@@ -13,12 +13,12 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	private GridDriver gd;
 	private final LinkedList<BasicCursor> savedPositions = new LinkedList<>();
 
-	public BasicGridForm(CallContext context) throws CelestaException {
+	public BasicGridForm(CallContext context) {
 		super(context);
 		actuateGridDriver(_getCursor(context));
 	}
 
-	private void actuateGridDriver(BasicCursor c) throws CelestaException {
+	private void actuateGridDriver(BasicCursor c) {
 		if (gd == null) {
 			gd = new GridDriver(c);
 		} else if (!gd.isValidFor(c)) {
@@ -30,11 +30,11 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		}
 	}
 
-	public <T> T externalAction(ExternalAction<T> f) throws CelestaException {
+	public <T> T externalAction(ExternalAction<T> f) {
 		return externalAction(f, null);
 	}
 
-	public <T> T externalAction(ExternalAction<T> f, T fallBack) throws CelestaException {
+	public <T> T externalAction(ExternalAction<T> f, T fallBack) {
 		CallContext context = getContext();
 		if (context == null)
 			return fallBack;
@@ -57,7 +57,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		}
 	}
 
-	public synchronized List<LyraFormData> getRows(int position) throws CelestaException {
+	public synchronized List<LyraFormData> getRows(int position) {
 		return getRowsH(position, getGridHeight());
 	}
 
@@ -66,10 +66,8 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * 
 	 * @param position
 	 *            New scrollbar's position.
-	 * @throws CelestaException
-	 *             e. g. insufficient access rights
 	 */
-	public synchronized List<LyraFormData> getRowsH(int position, int h) throws CelestaException {
+	public synchronized List<LyraFormData> getRowsH(int position, int h) {
 		return externalAction(c -> {
 			actuateGridDriver(c);
 			if (gd.setPosition(position, c)) {
@@ -80,17 +78,14 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		}, Collections.emptyList());
 	}
 
-	public synchronized List<LyraFormData> getRows() throws CelestaException {
+	public synchronized List<LyraFormData> getRows() {
 		return getRowsH(getGridHeight());
 	}
 
 	/**
 	 * Returns contents of grid for current cursor's position.
-	 * 
-	 * @throws CelestaException
-	 *             e. g. insufficient user rights.
 	 */
-	public synchronized List<LyraFormData> getRowsH(int h) throws CelestaException {
+	public synchronized List<LyraFormData> getRowsH(int h) {
 		return externalAction(bc -> {
 			// TODO: optimize for reducing DB SELECT calls!
 			if (bc.navigate("=<-")) {
@@ -102,7 +97,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		}, Collections.emptyList());
 	}
 
-	public synchronized List<LyraFormData> setPosition(Object... pk) throws CelestaException {
+	public synchronized List<LyraFormData> setPosition(Object... pk) {
 		return setPositionH(getGridHeight(), pk);
 	}
 
@@ -111,12 +106,8 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * 
 	 * @param pk
 	 *            Values of primary key.
-	 * 
-	 * @throws CelestaException
-	 *             e. g. insufficient access rights
 	 */
-	public synchronized List<LyraFormData> setPositionH(int h, Object... pk)
-			throws CelestaException {
+	public synchronized List<LyraFormData> setPositionH(int h, Object... pk) {
 		return externalAction(bc -> {
 			actuateGridDriver(bc);
 
@@ -145,7 +136,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
 	}
 
-	private List<LyraFormData> returnRows(BasicCursor c, int h) throws CelestaException {
+	private List<LyraFormData> returnRows(BasicCursor c, int h) {
 
 		final String id = _getId();
 		final List<LyraFormData> result = new ArrayList<>(h);
@@ -223,7 +214,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		return gd.getTopVisiblePosition();
 	}
 
-	public void saveCursorPosition() throws CelestaException {
+	public void saveCursorPosition() {
 		externalAction(c -> {
 			BasicCursor copy = c._getBufferCopy(getContext(), null);
 			copy.close();
@@ -232,7 +223,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		}, null);
 	}
 
-	public void restoreCursorPosition() throws CelestaException {
+	public void restoreCursorPosition() {
 		externalAction(c -> {
 			BasicCursor copy = savedPositions.pop();
 			rec().copyFieldsFrom(copy);
@@ -247,6 +238,6 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
 	@FunctionalInterface
 	public interface ExternalAction<T> {
-		T call(BasicCursor t) throws CelestaException;
+		T call(BasicCursor t);
 	}
 }

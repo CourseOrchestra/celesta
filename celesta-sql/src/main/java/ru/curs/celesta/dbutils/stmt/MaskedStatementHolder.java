@@ -1,7 +1,5 @@
 package ru.curs.celesta.dbutils.stmt;
 
-import ru.curs.celesta.CelestaException;
-
 import java.sql.PreparedStatement;
 
 /**
@@ -12,7 +10,7 @@ public abstract class MaskedStatementHolder extends PreparedStmtHolder {
 	private boolean[] nullsMask;
 
 	@Override
-	public synchronized PreparedStatement getStatement(Object[] rec, int recversion) throws CelestaException {
+	public synchronized PreparedStatement getStatement(Object[] rec, int recversion)  {
 		reusable: if (isStmtValid()) {
 			for (int i = 0; i < nullsMask.length; i++) {
 				if (nullsMask[i] != (rec[nullsMaskIndices[i]] == null)) {
@@ -41,6 +39,6 @@ public abstract class MaskedStatementHolder extends PreparedStmtHolder {
 		return nullsMask;
 	}
 
-	protected abstract int[] getNullsMaskIndices() throws CelestaException;
+	protected abstract int[] getNullsMaskIndices() ;
 
 }

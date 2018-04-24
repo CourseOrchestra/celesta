@@ -19,7 +19,7 @@ public class CelestaTest {
     private static final String ROLE_ID = "editor";
 
     @BeforeAll
-    static void beforeAll() throws CelestaException {
+    static void beforeAll() {
         Properties properties = new Properties();
         properties.put("score.path", "testScore");
         properties.put("h2.in-memory", "true");

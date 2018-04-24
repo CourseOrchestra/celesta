@@ -7,7 +7,6 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 
@@ -19,17 +18,14 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	private static final String UTF_8 = "utf-8";
 	private LyraFormData lfd;
 
-	public BasicCardForm(CallContext context) throws CelestaException {
+	public BasicCardForm(CallContext context) {
 		super(context);
 	}
 
 	/**
 	 * Отыскивает первую запись в наборе записей.
-	 * 
-	 * @throws CelestaException
-	 *             Ошибка извлечения данных из базы.
 	 */
-	public String findRec() throws CelestaException {
+	public String findRec() {
 		ByteArrayOutputStream result = new ByteArrayOutputStream();
 		serialize(rec(), result);
 		try {
@@ -45,11 +41,8 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * 
 	 * @param data
 	 *            сериализованный курсор
-	 * 
-	 * @throws CelestaException
-	 *             Ошибка извлечения данных из базы.
 	 */
-	public synchronized String revert(String data) throws CelestaException {
+	public synchronized String revert(String data) {
 
 		Cursor c = getCursor();
 
@@ -75,11 +68,8 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * 
 	 * @param data
 	 *            сериализованный курсор.
-	 * 
-	 * @throws CelestaException
-	 *             Ошибка извлечения данных из базы.
 	 */
-	public synchronized String move(String cmd, String data) throws CelestaException {
+	public synchronized String move(String cmd, String data) {
 		try {
 			BasicCursor rec = rec();
 			if (rec instanceof Cursor) {
@@ -100,11 +90,8 @@ public abstract class BasicCardForm extends BasicLyraForm {
 
 	/**
 	 * Инициирует новую запись для вставки в базу данных.
-	 * 
-	 * @throws CelestaException
-	 *             Ошибка извлечения данных из базы.
 	 */
-	public synchronized String newRec() throws CelestaException {
+	public synchronized String newRec() {
 		Cursor c = getCursor();
 		c.clear();
 		c.setRecversion(0);
@@ -122,11 +109,8 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	 * 
 	 * @param data
 	 *            сериализованный курсор.
-	 * 
-	 * @throws CelestaException
-	 *             Ошибка извлечения данных из базы.
 	 */
-	public synchronized String deleteRec(String data) throws CelestaException {
+	public synchronized String deleteRec(String data) {
 		Cursor c = getCursor();
 
 		ByteArrayInputStream dataIS;
@@ -148,13 +132,13 @@ public abstract class BasicCardForm extends BasicLyraForm {
 		}
 	}
 
-	void serialize(BasicCursor c, OutputStream result) throws CelestaException {
+	void serialize(BasicCursor c, OutputStream result) {
 		_beforeSending(c);
 		lfd = new LyraFormData(c, getFieldsMeta(), _getId());
 		lfd.serialize(result);
 	}
 
-	void deserialize(Cursor c, InputStream dataIS) throws CelestaException {
+	void deserialize(Cursor c, InputStream dataIS) {
 		lfd = new LyraFormData(dataIS);
 		lfd.populateFields(c, getFieldsMeta());
 		_afterReceiving(c);

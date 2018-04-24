@@ -74,7 +74,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  public int getCurrentIdent(Connection conn, Table t) throws CelestaException {
+  public int getCurrentIdent(Connection conn, Table t) {
     String sql = String.format("select CURRVAL('\"%s\".\"%s_seq\"')", t.getGrain().getName(), t.getName());
     try {
       Statement stmt = conn.createStatement();
@@ -92,7 +92,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask, List<ParameterSetter> program) throws CelestaException {
+  public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask, List<ParameterSetter> program) {
     Iterator<String> columns = t.getColumns().keySet().iterator();
     // Создаём параметризуемую часть запроса, пропуская нулевые значения.
     StringBuilder fields = new StringBuilder();
@@ -122,7 +122,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public List<String> getParameterizedViewList(Connection conn, Grain g) throws CelestaException {
+  public List<String> getParameterizedViewList(Connection conn, Grain g) {
     String sql = String.format("SELECT ALIAS_NAME FROM INFORMATION_SCHEMA.FUNCTION_ALIASES where alias_schema = '%s'",
         g.getName());
     List<String> result = new LinkedList<>();
@@ -139,7 +139,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   @SuppressWarnings("unchecked")
   @Override
-  public DbColumnInfo getColumnInfo(Connection conn, Column c) throws CelestaException {
+  public DbColumnInfo getColumnInfo(Connection conn, Column c) {
     try {
       DatabaseMetaData metaData = conn.getMetaData();
       String grainName = c.getParentTable().getGrain().getName();
@@ -196,7 +196,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
   }
 
-  private String modifyDefault(DbColumnInfo ci, String defaultBody, Connection conn) throws CelestaException {
+  private String modifyDefault(DbColumnInfo ci, String defaultBody, Connection conn) {
     String result = defaultBody;
 
     if (IntegerColumn.class == ci.getType() && !ci.isIdentity()) {
@@ -251,7 +251,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
 
   @Override
-  public DbPkInfo getPKInfo(Connection conn, TableElement t) throws CelestaException {
+  public DbPkInfo getPKInfo(Connection conn, TableElement t) {
     String sql = String.format(
         "SELECT constraint_name AS indexName, column_name as colName " +
             "FROM  INFORMATION_SCHEMA.INDEXES " +
@@ -285,7 +285,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public List<DbFkInfo> getFKInfo(Connection conn, Grain g) throws CelestaException {
+  public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
 
     String sql = "SELECT " +
         "FK_NAME AS FK_CONSTRAINT_NAME, " +
@@ -394,7 +394,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) throws CelestaException {
+  public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
     Map<String, DbIndexInfo> result = new HashMap<>();
 
     String sql = String.format(
@@ -467,7 +467,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public String translateDate(String date) throws CelestaException {
+  public String translateDate(String date) {
     try {
       Date d = DateTimeColumn.parseISODate(date);
       DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
@@ -500,7 +500,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   }
 
   @Override
-  public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) throws CelestaException {
+  public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
     String sql = "SELECT INCREMENT, MIN_VALUE, MAX_VALUE, IS_CYCLE " +
             "FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
 

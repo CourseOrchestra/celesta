@@ -41,7 +41,7 @@ public class CelestaScriptsTest {
   CallContext context;
 
   @BeforeAll
-  public static void init() throws CelestaException {
+  public static void init() {
     sessionContext = new PySessionContext("super", "debug");
 
     Properties properties = new Properties();
@@ -58,7 +58,7 @@ public class CelestaScriptsTest {
   }
 
   @AfterEach
-  public void tearDown() throws CelestaException {
+  public void tearDown() {
     if (context != null) {
       context.close();
     }
@@ -84,7 +84,7 @@ public class CelestaScriptsTest {
   }
 
 
-  private static Celesta createCelestaByContainer(JdbcDatabaseContainer container) throws CelestaException {
+  private static Celesta createCelestaByContainer(JdbcDatabaseContainer container) {
     Properties properties = new Properties();
 
     properties.put("score.path", "score");
@@ -109,7 +109,7 @@ public class CelestaScriptsTest {
       return result;
     }
 
-    private Stream<Arguments> prepareStreamOfArguments(Celesta celesta) throws CelestaException {
+    private Stream<Arguments> prepareStreamOfArguments(Celesta celesta) {
       DBType dbType = new AppSettings(celesta.getSetupProperties()).getDBType();
       return TestClass.testTypesAndTheirMethods.entrySet().stream()
               .flatMap(e -> {

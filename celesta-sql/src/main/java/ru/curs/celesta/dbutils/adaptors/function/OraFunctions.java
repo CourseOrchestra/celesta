@@ -39,7 +39,7 @@ public final class OraFunctions {
         return NamedElement.limitName(result);
     }
 
-    public static String translateDate(String date) throws CelestaException {
+    public static String translateDate(String date)  {
         try {
             Date d = DateTimeColumn.parseISODate(date);
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd");

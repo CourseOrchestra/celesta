@@ -18,7 +18,7 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
     private boolean closed = false;
 
 
-    public CsqlBasicDataAccessor(T context) throws CelestaException {
+    public CsqlBasicDataAccessor(T context)  {
         validateInitContext(context);
 
         this.context = context;
@@ -32,7 +32,7 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
         this.db = callContext().getDbAdaptor();
     }
 
-    protected void validateInitContext(T context) throws CelestaException {
+    protected void validateInitContext(T context)  {
         if (context == null)
             throw new CelestaException(
                     "Invalid context passed to %s constructor: context should not be null.",
@@ -77,15 +77,15 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
 
     protected abstract void closeInternal();
 
-    public abstract void clear() throws CelestaException;
+    public abstract void clear() ;
 
     /**
      * Объект метаданных (таблица, представление или последовательность), на основе которого создан
      * данный объект доступа.
      *
-     * @throws CelestaException
+     * @
      *             в случае ошибки извлечения метаинформации (в норме не должна
      *             происходить).
      */
-    public abstract GrainElement meta() throws CelestaException;
+    public abstract GrainElement meta() ;
 }

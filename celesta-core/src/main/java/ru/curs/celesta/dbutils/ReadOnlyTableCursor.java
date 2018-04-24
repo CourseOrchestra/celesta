@@ -14,16 +14,16 @@ import ru.curs.celesta.score.Table;
 public abstract class ReadOnlyTableCursor extends BasicCursor {
 	private Table meta = null;
 
-	public ReadOnlyTableCursor(CallContext context) throws CelestaException {
+	public ReadOnlyTableCursor(CallContext context) {
 		super(context);
 	}
 
-	public ReadOnlyTableCursor(CallContext context, Set<String> fields) throws CelestaException {
+	public ReadOnlyTableCursor(CallContext context, Set<String> fields) {
 		super(context, fields);
 	}
 
 	@Override
-	public final Table meta() throws CelestaException {
+	public final Table meta() {
 		if (meta == null)
 			try {
 				meta = callContext().getScore()
@@ -35,7 +35,7 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
 	}
 
 	@Override
-	final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) throws CelestaException {
+	final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
 
 		if (meta().getPrimaryKey().isEmpty() && colNames.isEmpty()) {
 			// Если никакой сортировки нет вовсе, сортируем по первому полю.

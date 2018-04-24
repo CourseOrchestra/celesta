@@ -2,8 +2,6 @@ package ru.curs.lyra.grid;
 
 import java.math.BigInteger;
 
-import ru.curs.celesta.CelestaException;
-
 /**
  * Numerator for a nullable field.
  */
@@ -73,7 +71,7 @@ class NullsFirst extends NullableFieldEnumerator {
 	}
 
 	@Override
-	public BigInteger getOrderValue() throws CelestaException {
+	public BigInteger getOrderValue() {
 		return isValueIsNull() ? BigInteger.ZERO : getParent().getOrderValue().add(BigInteger.ONE);
 	}
 
@@ -97,7 +95,7 @@ class NullsLast extends NullableFieldEnumerator {
 	}
 
 	@Override
-	public BigInteger getOrderValue() throws CelestaException {
+	public BigInteger getOrderValue() {
 		return isValueIsNull() ? getParent().cardinality() : getParent().getOrderValue();
 	}
 

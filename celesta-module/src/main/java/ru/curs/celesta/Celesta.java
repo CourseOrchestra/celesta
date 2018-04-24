@@ -90,7 +90,7 @@ public final class Celesta implements AutoCloseable, PyCelesta {
     private final ProfilingManager profiler;
     private Optional<Server> server;
 
-    private Celesta(AppSettings appSettings, boolean initInterpeterPool) throws CelestaException {
+    private Celesta(AppSettings appSettings, boolean initInterpeterPool) {
         this.appSettings = appSettings;
         manageH2Server();
 
@@ -175,7 +175,7 @@ public final class Celesta implements AutoCloseable, PyCelesta {
         }
     }
 
-    private void manageH2Server() throws CelestaException {
+    private void manageH2Server() {
         if (appSettings.getH2Port() > 0) {
             try {
                 System.out.printf("H2 server starting on port %d...", appSettings.getH2Port());
@@ -287,14 +287,14 @@ public final class Celesta implements AutoCloseable, PyCelesta {
     }
 
     @Override
-    public PyObject runPython(String sesId, String proc, Object... param) throws CelestaException {
+    public PyObject runPython(String sesId, String proc, Object... param) {
         return runPython(sesId, null, null, proc, param);
     }
 
 
     @Override
     public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc,
-                              Object... param) throws CelestaException {
+                              Object... param) {
         if (interpreterPool == null)
             throw new CelestaException("Interperter pool not initialized. Running in debug mode?");
 
@@ -465,9 +465,8 @@ public final class Celesta implements AutoCloseable, PyCelesta {
      * Конфигурация извлекается из файла celesta.properties рядом с jar
      *
      * @return Celesta
-     * @throws CelestaException
      */
-    public static Celesta createInstance() throws CelestaException {
+    public static Celesta createInstance() {
         Properties properties = loadPropertiesDynamically();
         return createInstance(properties);
     }
@@ -479,9 +478,8 @@ public final class Celesta implements AutoCloseable, PyCelesta {
      * Использовать для отладочных целей
      *
      * @return Celesta
-     * @throws CelestaException
      */
-    public static Celesta createDebugInstance() throws CelestaException {
+    public static Celesta createDebugInstance() {
         Properties properties = loadPropertiesDynamically();
         return createDebugInstance(properties);
     }
@@ -491,9 +489,8 @@ public final class Celesta implements AutoCloseable, PyCelesta {
      *
      * @param properties настройки
      * @return Celesta
-     * @throws CelestaException
      */
-    public static Celesta createInstance(Properties properties) throws CelestaException {
+    public static Celesta createInstance(Properties properties) {
         AppSettings appSettings = preInit(properties);
         return new Celesta(appSettings, true);
     }
@@ -504,14 +501,13 @@ public final class Celesta implements AutoCloseable, PyCelesta {
      *
      * @param properties настройки
      * @return Celesta
-     * @throws CelestaException
      */
-    public static Celesta createDebugInstance(Properties properties) throws CelestaException {
+    public static Celesta createDebugInstance(Properties properties) {
         AppSettings appSettings = preInit(properties);
         return new Celesta(appSettings, false);
     }
 
-    private static AppSettings preInit(Properties properties) throws CelestaException {
+    private static AppSettings preInit(Properties properties) {
         System.out.print("Celesta pre-initialization: phase 1/2 system settings reading...");
         AppSettings appSettings = new AppSettings(properties);
         System.out.println("done.");
@@ -523,7 +519,7 @@ public final class Celesta implements AutoCloseable, PyCelesta {
         return appSettings;
     }
 
-    private static Properties loadPropertiesDynamically() throws CelestaException {
+    private static Properties loadPropertiesDynamically() {
         // Разбираемся с настроечным файлом: читаем его и превращаем в
         // Properties.
         Properties properties = new Properties();
@@ -594,9 +590,8 @@ public final class Celesta implements AutoCloseable, PyCelesta {
     /**
      * Возвращает поведение NULLS FIRST текущей базы данных.
      *
-     * @throws CelestaException unknown database
      */
-    public boolean nullsFirst() throws CelestaException {
+    public boolean nullsFirst() {
         return dbAdaptor.nullsFirst();
     }
 
@@ -620,9 +615,8 @@ public final class Celesta implements AutoCloseable, PyCelesta {
      *
      * @param sessionContext
      * @return CallContext
-     * @throws CelestaException
      */
-    public CallContext callContext(PySessionContext sessionContext) throws CelestaException {
+    public CallContext callContext(PySessionContext sessionContext) {
         return PyCallContext.builder()
                 .setCelesta(this)
                 .setConnectionPool(connectionPool)

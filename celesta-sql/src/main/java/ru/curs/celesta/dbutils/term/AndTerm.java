@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.term;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
@@ -31,20 +30,20 @@ public final class AndTerm extends WhereTerm {
 	}
 
 	@Override
-	public String getWhere() throws CelestaException {
+	public String getWhere()  {
 		String ls = (l instanceof AndTerm) ? ((AndTerm) l).getOpenWhere() : l.getWhere();
 		String rs = (r instanceof AndTerm) ? ((AndTerm) r).getOpenWhere() : r.getWhere();
 		return String.format("(%s and %s)", ls, rs);
 	}
 
-	private String getOpenWhere() throws CelestaException {
+	private String getOpenWhere()  {
 		return String.format("%s and %s", l.getWhere(), r.getWhere());
 	}
 
 	@Override
 	public void programParams(
 			List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper
-	) throws CelestaException {
+	)  {
 		l.programParams(program, queryBuildingHelper);
 		r.programParams(program, queryBuildingHelper);
 	}

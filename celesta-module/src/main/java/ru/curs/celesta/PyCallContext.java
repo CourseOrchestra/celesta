@@ -14,18 +14,15 @@ public final class PyCallContext extends CallContext<PyCallContext, PySessionCon
     private final HashMap<PyString, PyObject> dataAccessorsCache = new HashMap<>();
 
 
-    public PyCallContext(PyCallContextBuilder contextBuilder) throws CelestaException {
+    public PyCallContext(PyCallContextBuilder contextBuilder) {
         super(contextBuilder);
     }
 
 
     /**
      * Duplicates callcontext with another JDBC connection.
-     *
-     * @throws CelestaException
-     *             cannot create adaptor
      */
-    public PyCallContext getCopy() throws CelestaException {
+    public PyCallContext getCopy() {
         return new PyCallContextBuilder()
                 .setCelesta(this.celesta)
                 .setConnectionPool(this.connectionPool)
@@ -129,12 +126,9 @@ public final class PyCallContext extends CallContext<PyCallContext, PySessionCon
     /**
      * Инициирует ошибку и вызывает исключение.
      *
-     * @param msg
-     *            текст сообщения
-     * @throws CelestaException
-     *             во всех случаях, при этом с переданным текстом
+     * @param msg текст сообщения
      */
-    public void error(String msg) throws CelestaException {
+    public void error(String msg) {
         sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg));
         throw new CelestaException(ERROR, msg);
     }
@@ -142,14 +136,10 @@ public final class PyCallContext extends CallContext<PyCallContext, PySessionCon
     /**
      * Инициирует ошибку и вызывает исключение.
      *
-     * @param msg
-     *            текст сообщения
-     * @param caption
-     *            Заголовок окна.
-     * @throws CelestaException
-     *             во всех случаях, при этом с переданным текстом
+     * @param msg текст сообщения
+     * @param caption Заголовок окна.
      */
-    public void error(String msg, String caption) throws CelestaException {
+    public void error(String msg, String caption) {
         sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg, caption));
         throw new CelestaException(ERROR, msg);
     }
@@ -163,17 +153,15 @@ public final class PyCallContext extends CallContext<PyCallContext, PySessionCon
      *            Заголовок окна.
      * @param subkind
      *            Субтип сообщения.
-     * @throws CelestaException
-     *             во всех случаях, при этом с переданным текстом
      */
-    public void error(String msg, String caption, String subkind) throws CelestaException {
+    public void error(String msg, String caption, String subkind) {
         sesContext.addMessage(new CelestaMessage(CelestaMessage.ERROR, msg, caption, subkind));
         throw new CelestaException(ERROR, msg);
     }
 
 
     @Override
-    public PyObject create(final PyType dataAccessorClass) throws CelestaException {
+    public PyObject create(final PyType dataAccessorClass) {
         PyString classId = dataAccessorClass.__str__();
         PyObject result = dataAccessorsCache.computeIfAbsent(classId, s -> dataAccessorClass.__call__(Py.java2py(this)));
         BasicDataAccessor basicDataAccessor = (BasicDataAccessor) result.__tojava__(BasicDataAccessor.class);
@@ -207,7 +195,7 @@ public final class PyCallContext extends CallContext<PyCallContext, PySessionCon
         }
 
         @Override
-        public PyCallContext createCallContext() throws CelestaException {
+        public PyCallContext createCallContext() {
             return new PyCallContext(this);
         }
 

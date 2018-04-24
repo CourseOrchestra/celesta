@@ -3,7 +3,6 @@ package ru.curs.lyra;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 
 /**
@@ -15,10 +14,8 @@ public interface FieldAccessor {
 	 * 
 	 * @param c
 	 *            Cursor values (ignored for unbound field).
-	 * @throws CelestaException
-	 *             Error getting the value.
 	 */
-	Object getValue(Object[] c) throws CelestaException;
+	Object getValue(Object[] c);
 
 	/**
 	 * Set field's value.
@@ -27,10 +24,8 @@ public interface FieldAccessor {
 	 *            Cursor (ignored for unbound field).
 	 * @param newValue
 	 *            New field's value.
-	 * @throws CelestaException
-	 *             unsuccessful setting.
 	 */
-	void setValue(BasicCursor c, Object newValue) throws CelestaException;
+	void setValue(BasicCursor c, Object newValue);
 
 }
 
@@ -58,7 +53,7 @@ final class FieldAccessorFactory {
 		}
 
 		@Override
-		public final void setValue(BasicCursor c, Object newValue) throws CelestaException {
+		public final void setValue(BasicCursor c, Object newValue) {
 			if (newValue == null) {
 				c.setValue(name, null);
 			} else {
@@ -71,7 +66,7 @@ final class FieldAccessorFactory {
 			return name;
 		}
 
-		abstract void setValue(BasicCursor c, Object newValue, String buf) throws CelestaException;
+		abstract void setValue(BasicCursor c, Object newValue, String buf);
 	}
 
 	private FieldAccessorFactory() {
@@ -86,7 +81,7 @@ final class FieldAccessorFactory {
 				private SimpleDateFormat sdf;
 
 				@Override
-				public void setValue(BasicCursor c, Object val, String buf) throws CelestaException {
+				public void setValue(BasicCursor c, Object val, String buf) {
 					if (val instanceof Date)
 						c.setValue(name(), val);
 					else {
@@ -107,14 +102,14 @@ final class FieldAccessorFactory {
 		case BIT:
 			return new BasicBoundFieldAccessor(index, name) {
 				@Override
-				public void setValue(BasicCursor c, Object val, String buf) throws CelestaException {
+				public void setValue(BasicCursor c, Object val, String buf) {
 					c.setValue(name(), Boolean.valueOf(buf));
 				}
 			};
 		case INT:
 			return new BasicBoundFieldAccessor(index, name) {
 				@Override
-				public void setValue(BasicCursor c, Object val, String buf) throws CelestaException {
+				public void setValue(BasicCursor c, Object val, String buf) {
 					c.setValue(name(), Integer.valueOf(buf));
 				}
 			};
@@ -122,7 +117,7 @@ final class FieldAccessorFactory {
 		case REAL:
 			return new BasicBoundFieldAccessor(index, name) {
 				@Override
-				public void setValue(BasicCursor c, Object val, String buf) throws CelestaException {
+				public void setValue(BasicCursor c, Object val, String buf) {
 					c.setValue(name(), Double.valueOf(buf));
 				}
 			};
@@ -130,7 +125,7 @@ final class FieldAccessorFactory {
 		default:
 			return new BasicBoundFieldAccessor(index, name) {
 				@Override
-				public void setValue(BasicCursor c, Object val, String buf) throws CelestaException {
+				public void setValue(BasicCursor c, Object val, String buf) {
 					c.setValue(name(), buf);
 				}
 			};

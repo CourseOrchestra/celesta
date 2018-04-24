@@ -19,7 +19,6 @@ import java.util.TimeZone;
 import java.util.function.Consumer;
 
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
@@ -38,11 +37,11 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     private BigDecimal cost;
     private ZonedDateTime toDelete;
 
-    public TestTableCursor(CallContext context) throws CelestaException {
+    public TestTableCursor(CallContext context) {
         super(context);
     }
 
-    public TestTableCursor(CallContext context, Set<String> fields) throws CelestaException {
+    public TestTableCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }
 
@@ -129,7 +128,26 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     }
 
     @Override
-    protected void _parseResult(ResultSet rs) throws SQLException {
+    protected void _setFieldValue(String name, Object value) {
+        try {
+            Field f = getClass().getDeclaredField(name);
+
+            f.setAccessible(true);
+            f.set(this, value);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected Object[] _currentKeyValues() {
+        Object[] result = new Object[1];
+        result[0] = this.id;
+        return result;
+    }
+
+    @Override
+    protected void _parseResultInternal(ResultSet rs) throws SQLException {
         if (this.inRec("id")) {
             this.id = rs.getInt("id");
         }
@@ -161,25 +179,6 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
             }
         }
         this.setRecversion(rs.getInt("recversion"));
-    }
-
-    @Override
-    protected void _setFieldValue(String name, Object value) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-
-            f.setAccessible(true);
-            f.set(this, value);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    protected Object[] _currentKeyValues() {
-        Object[] result = new Object[1];
-        result[0] = this.id;
-        return result;
     }
 
     @Override
@@ -248,7 +247,7 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     }
 
     @Override
-    public TestTableCursor _getBufferCopy(CallContext context, List<String> fields) throws CelestaException {
+    public TestTableCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestTableCursor result;
 
         if (Objects.isNull(fields)) {

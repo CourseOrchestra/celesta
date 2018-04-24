@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-import ru.curs.celesta.CelestaException;
-
 public class ScoreTest {
 
     private static final String SCORE_PATH_PREFIX = "src" + File.separator + "test" + File.separator + "resources"
@@ -21,7 +19,7 @@ public class ScoreTest {
 
 
     @Test
-    public void test1() throws CelestaException, ParseException {
+    public void test1() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_2 + File.pathSeparator + COMPOSITE_SCORE_PATH_1)
                 .build();
@@ -85,7 +83,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void test2() throws CelestaException, ParseException, IOException {
+    public void test2() throws ParseException, IOException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_1)
                 .build();
@@ -110,7 +108,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest1() throws CelestaException, ParseException {
+    public void modificationTest1() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_1 + File.pathSeparator + COMPOSITE_SCORE_PATH_2)
                 .build();
@@ -140,7 +138,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest2() throws CelestaException, ParseException {
+    public void modificationTest2() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_1)
                 .build();
@@ -159,7 +157,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest3() throws CelestaException, ParseException {
+    public void modificationTest3() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_2 + File.pathSeparator + COMPOSITE_SCORE_PATH_1)
                 .build();
@@ -196,7 +194,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest4() throws CelestaException, ParseException {
+    public void modificationTest4() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_1)
                 .build();
@@ -214,7 +212,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest5() throws CelestaException, ParseException {
+    public void modificationTest5() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_1 + File.pathSeparator + COMPOSITE_SCORE_PATH_2)
                 .build();
@@ -240,7 +238,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest6() throws CelestaException, ParseException {
+    public void modificationTest6() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
                 .build();
         Grain g2 = s.getGrain("grain2");
@@ -266,7 +264,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest7() throws CelestaException, ParseException, IOException {
+    public void modificationTest7() throws ParseException, IOException {
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
                 .build();
         Grain g1 = s.getGrain("grain1");
@@ -279,7 +277,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest8() throws CelestaException, ParseException, IOException {
+    public void modificationTest8() throws ParseException, IOException {
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_1)
                 .build();
@@ -305,7 +303,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void setCelestaDoc() throws ParseException, CelestaException {
+    public void setCelestaDoc() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
                 .path(TEST_SCORE_PATH)
                 .build();
@@ -328,7 +326,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void saveTest() throws ParseException, CelestaException, IOException {
+    public void saveTest() throws ParseException, IOException {
         // Проверяется функциональность записи динамически изменённых объектов.
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
                 .path(TEST_SCORE_PATH)
@@ -395,7 +393,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void fknameTest() throws ParseException, CelestaException {
+    public void fknameTest() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
                 .path(TEST_SCORE_PATH)
                 .build();
@@ -409,7 +407,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void viewTest() throws ParseException, CelestaException {
+    public void viewTest() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
                 .path(TEST_SCORE_PATH)
                 .build();
@@ -437,7 +435,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void vewTest2() throws CelestaException, ParseException {
+    public void vewTest2() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
                 .path(TEST_SCORE_PATH)
                 .build();
@@ -461,7 +459,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void viewTest3() throws CelestaException, ParseException {
+    public void viewTest3() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class).path(TEST_SCORE_PATH)
                 .build();
         Grain g = s.getGrain("testGrain");
@@ -479,7 +477,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void viewTest4() throws CelestaException, ParseException {
+    public void viewTest4() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class).path(TEST_SCORE_PATH)
                 .build();
         Grain g = s.getGrain("testGrain");
@@ -505,7 +503,7 @@ public class ScoreTest {
     }
 
     @Test
-    void testGrainWithAnsiQuotedIdentifiers() throws CelestaException, ParseException {
+    void testGrainWithAnsiQuotedIdentifiers() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlAnsiQuotedTestScore.class)
                 .path(SCORE_PATH_PREFIX + File.separator + "scoreWithAnsiQuotedIdentifiers")
                 .build();

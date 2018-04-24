@@ -139,21 +139,15 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 	 * 
 	 * @param t
 	 *            Table meta.
-	 * 
-	 * @throws CelestaException
-	 *             Celesta error.
 	 */
-	public WhereTerm getHereWhereTerm(Table t) throws CelestaException {
+	public WhereTerm getHereWhereTerm(Table t) {
 		return AndTerm.construct(getPKWhereTerm(t), getWhereTerm());
 	}
 
 	/**
 	 * Gets WHERE clause for filtered rowset.
-	 * 
-	 * @throws CelestaException
-	 *             Celesta error.
 	 */
-	public WhereTerm getWhereTerm() throws CelestaException {
+	public WhereTerm getWhereTerm() {
 		paramsProvider.initOrderBy();
 		rec = paramsProvider.values();
 
@@ -187,10 +181,8 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 	 * 
 	 * @param op
 	 *            navigation operator: '>', '<', or '='.
-	 * @throws CelestaException
-	 *             Invalid navigation operator.
 	 */
-	public WhereTerm getWhereTerm(char op) throws CelestaException {
+	public WhereTerm getWhereTerm(char op) {
 		paramsProvider.initOrderBy();
 
 		boolean invert;
@@ -253,11 +245,11 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 		return AndTerm.construct(getWhereTerm(), getWhereTerm(ops, 0));
 	}
 
-	private boolean isNull(int k) throws CelestaException {
+	private boolean isNull(int k) {
 		return rec[paramsProvider.sortFieldsIndices()[k]] == null;
 	}
 
-	private WhereTerm getEqualsWhereTerm(int k) throws CelestaException {
+	private WhereTerm getEqualsWhereTerm(int k) {
 		final String fieldName = paramsProvider.sortFields()[k];
 		final int fieldIndex = paramsProvider.sortFieldsIndices()[k];
 		final boolean nullable = treatAsNullable(fieldName);
@@ -272,7 +264,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 		}
 	}
 
-	private WhereTerm getWhereTerm(char[] ops, int k) throws CelestaException {
+	private WhereTerm getWhereTerm(char[] ops, int k) {
 		final String fieldName = paramsProvider.sortFields()[k];
 		final int fieldIndex = paramsProvider.sortFieldsIndices()[k];
 		final boolean isNull = isNull(k);
@@ -289,7 +281,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 		}
 	}
 
-	private boolean treatAsNullable(String fieldName) throws CelestaException {
+	private boolean treatAsNullable(String fieldName) {
 		// if a Range filter is set on the field, we treat it as NOT NULL
 		// (no nulls will be in the record set anyway).
 		String name = unquot(fieldName);
@@ -319,7 +311,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 		}
 
 		@Override
-		public String getWhere() throws CelestaException {
+		public String getWhere() {
 			return "(" + filter.makeWhereClause("\"" + fieldName + "\"", paramsProvider.dba()) + ")";
 		}
 
@@ -336,7 +328,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 	final class ComplexFilterTerm extends WhereTerm {
 
 		@Override
-		public String getWhere() throws CelestaException {
+		public String getWhere() {
 			return "(" + paramsProvider.complexFilter().getSQL(paramsProvider.dba()) + ")";
 		}
 

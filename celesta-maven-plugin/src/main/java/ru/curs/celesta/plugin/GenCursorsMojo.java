@@ -51,7 +51,7 @@ public class GenCursorsMojo extends AbstractMojo {
                     .build();
             return score;
         } catch (CelestaException | ParseException e) {
-            throw new RuntimeException("Can't init score", e);
+            throw new CelestaException("Can't init score", e);
         }
 
     }

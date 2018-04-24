@@ -1,12 +1,11 @@
 package ru.curs.celesta.dbutils.term;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.TableElement;
 
 public class CsqlWhereTermsMaker {
 
-    public static WhereTerm getPKWhereTermForGet(TableElement t) throws CelestaException {
+    public static WhereTerm getPKWhereTermForGet(TableElement t)  {
         WhereTerm r = null;
         int i = 0;
         for (String colName : t.getPrimaryKey().keySet()) {
@@ -21,10 +20,10 @@ public class CsqlWhereTermsMaker {
      *
      * @param t
      *            Table meta.
-     * @throws CelestaException
+     * @
      *             Celesta error.
      */
-    public static WhereTerm getPKWhereTerm(Table t) throws CelestaException {
+    public static WhereTerm getPKWhereTerm(Table t)  {
         WhereTerm r = null;
         for (String colName : t.getPrimaryKey().keySet()) {
             WhereTerm l = new FieldCompTerm("\"" + colName + "\"", t.getColumnIndex(colName), "=");

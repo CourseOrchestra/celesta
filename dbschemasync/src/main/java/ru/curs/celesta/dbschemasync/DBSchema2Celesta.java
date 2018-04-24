@@ -93,7 +93,7 @@ public final class DBSchema2Celesta {
 
     }
 
-    private static void plantUml(boolean withPlantUml, File dbs, AbstractScore refScore, NodeList l) throws CelestaException {
+    private static void plantUml(boolean withPlantUml, File dbs, AbstractScore refScore, NodeList l) {
         if (withPlantUml) {
             for (int i = 0; i < l.getLength(); i++) {
                 Node n = l.item(i);
@@ -105,7 +105,7 @@ public final class DBSchema2Celesta {
         }
     }
 
-    private static void writeADoc(File dbs, Element layout, AbstractScore refScore) throws CelestaException {
+    private static void writeADoc(File dbs, Element layout, AbstractScore refScore) {
         String viewName = layout.getAttribute("name");
         File docFile = new File(dbs.getAbsoluteFile().getParentFile().getAbsolutePath(),
                 String.format("%s.adoc", viewName));

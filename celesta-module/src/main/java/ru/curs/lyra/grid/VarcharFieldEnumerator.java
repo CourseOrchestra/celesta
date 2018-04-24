@@ -11,7 +11,6 @@ import ru.curs.celesta.dbutils.adaptors.StaticDataAdaptor;
 
 /**
  * Нумератор ключа с типом varchar.
- * 
  */
 public class VarcharFieldEnumerator extends KeyEnumerator {
 
@@ -71,7 +70,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	}
 
 
-	public VarcharFieldEnumerator(StaticDataAdaptor staticDataAdaptor, String min, String max, int m) throws CelestaException {
+	public VarcharFieldEnumerator(StaticDataAdaptor staticDataAdaptor, String min, String max, int m) {
 		this(staticDataAdaptor, m, true);
 		setBounds(min, max);
 	}
@@ -105,17 +104,15 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	 *            минимальное значение.
 	 * @param max
 	 *            максимальное значение.
-	 * @throws CelestaException
-	 *             в случае, если строка содержит неизвестный символ.
 	 */
-	public void setBounds(String min, String max) throws CelestaException {
+	public void setBounds(String min, String max) {
 		this.min = toArray(min);
 		this.max = toArray(max);
 		minOrd = ord(this.min);
 		card = ord(this.max).subtract(ord(this.min)).add(BigInteger.ONE);
 	}
 
-	private int[][] toArray(String str) throws CelestaException {
+	private int[][] toArray(String str) {
 		if (str.isEmpty())
 			return EMPTY_STRING;
 		int[][] result = new int[str.length()][3];
@@ -155,7 +152,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	}
 
 	@Override
-	public BigInteger getOrderValue() throws CelestaException {
+	public BigInteger getOrderValue() {
 		int[][] arr;
 		arr = toArray(value);
 		return ord(arr).subtract(minOrd);
@@ -232,37 +229,34 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 	}
 
 	private String calcRules(StaticDataAdaptor staticDataAdaptor) {
-		try {
-			List<String> data = staticDataAdaptor.selectStaticStrings(VarcharFieldEnumerator.CHARS, "\"id\"", "\"id\" ASC");
+		List<String> data = staticDataAdaptor.selectStaticStrings(VarcharFieldEnumerator.CHARS, "\"id\"", "\"id\" ASC");
 
-			StringBuilder ruleBuilder = new StringBuilder();
-			ruleBuilder.append("<'" + data.get(0) + "'");
-			for (int i = 1; i < data.size(); ++i) {
-				String left = data.get(i - 1);
-				String right = data.get(i);
+		StringBuilder ruleBuilder = new StringBuilder();
+		ruleBuilder.append("<'" + data.get(0) + "'");
+		for (int i = 1; i < data.size(); ++i) {
+			String left = data.get(i - 1);
+			String right = data.get(i);
 
-				int comparisonResult = staticDataAdaptor.compareStrings(left, right);
+			int comparisonResult = staticDataAdaptor.compareStrings(left, right);
 
-				if (comparisonResult < 0)
-					if (staticDataAdaptor.compareStrings(right, left + "1") < 0)
-						if (left.equalsIgnoreCase(right))
-							ruleBuilder.append(",");
-						else
-							ruleBuilder.append(";");
-					else
-						ruleBuilder.append("<");
-				else if (comparisonResult == 0)
+			if (comparisonResult < 0)
+				if (staticDataAdaptor.compareStrings(right, left + "1") < 0)
 					if (left.equalsIgnoreCase(right))
 						ruleBuilder.append(",");
 					else
 						ruleBuilder.append(";");
+				else
+					ruleBuilder.append("<");
+			else if (comparisonResult == 0)
+				if (left.equalsIgnoreCase(right))
+					ruleBuilder.append(",");
+				else
+					ruleBuilder.append(";");
 
-				ruleBuilder.append("'" + right + "'");
-			}
-			//System.out.println(ruleBuilder.toString());
-			return ruleBuilder.toString();
-		} catch (CelestaException e) {
-			throw new RuntimeException(e);
+			ruleBuilder.append("'" + right + "'");
 		}
+		//System.out.println(ruleBuilder.toString());
+		return ruleBuilder.toString();
+
 	}
 }

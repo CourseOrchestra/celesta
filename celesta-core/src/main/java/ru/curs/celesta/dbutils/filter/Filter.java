@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.filter;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.score.*;
 
@@ -34,7 +33,7 @@ public class Filter extends AbstractFilter {
 		return value;
 	}
 
-	public String makeWhereClause(String quotedName, final QueryBuildingHelper dba) throws CelestaException {
+	public String makeWhereClause(String quotedName, final QueryBuildingHelper dba) {
 		String result = FilterParser.translateFilter(ftype, quotedName, value, dba::translateDate);
 		return result;
 	}

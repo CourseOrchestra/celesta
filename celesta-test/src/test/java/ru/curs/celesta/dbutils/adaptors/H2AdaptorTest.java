@@ -77,7 +77,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
     }
 
     @Override
-    Connection getConnection() throws CelestaException {
+    Connection getConnection() {
         return dba.connectionPool.get();
     }
 

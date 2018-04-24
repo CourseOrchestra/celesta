@@ -16,7 +16,7 @@ public class InitTest {
     private static Celesta celesta;
 
     @BeforeAll
-    public static void init() throws CelestaException {
+    public static void init() {
         Properties params = new Properties();
         params.setProperty("score.path", "score");
         params.setProperty("h2.in-memory", "true");
@@ -26,18 +26,18 @@ public class InitTest {
     }
 
     @AfterAll
-    public static void destroy() throws CelestaException, SQLException {
+    public static void destroy() throws SQLException {
         celesta.connectionPool.get().createStatement().execute("SHUTDOWN");
         celesta.close();
     }
 
     @Test
-    public void testGetInstance() throws CelestaException {
+    public void testGetInstance() {
         assertNotNull(celesta);
     }
 
     @Test
-    public void grainCusrorIsCallable() throws CelestaException {
+    public void grainCusrorIsCallable() {
         PySessionContext sc = new PySessionContext("user", "S");
         try (CallContext ctxt = celesta.callContext(sc)) {
             GrainsCursor g = new GrainsCursor(ctxt);
@@ -54,7 +54,7 @@ public class InitTest {
     }
 
     @Test
-    public void logCursorIsCallable() throws CelestaException {
+    public void logCursorIsCallable() {
         PySessionContext sc = new PySessionContext("user", "S");
         try (CallContext ctxt = celesta.callContext(sc)) {
             LogCursor l = new LogCursor(ctxt);
@@ -74,7 +74,7 @@ public class InitTest {
     }
 
     @Test
-    public void cursorsAreClosingOnContext() throws CelestaException {
+    public void cursorsAreClosingOnContext() {
         PySessionContext sc = new PySessionContext("user", "S");
         try (CallContext ctxt = celesta.callContext(sc)) {
             BasicCursor a = new LogCursor(ctxt);

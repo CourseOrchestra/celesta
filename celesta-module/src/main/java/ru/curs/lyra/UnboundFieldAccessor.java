@@ -25,7 +25,7 @@ public final class UnboundFieldAccessor implements FieldAccessor {
 	}
 
 	@Override
-	public Object getValue(Object[] c) throws CelestaException {
+	public Object getValue(Object[] c) {
 
 		PyObject value = null;
 		try {
@@ -64,7 +64,7 @@ public final class UnboundFieldAccessor implements FieldAccessor {
 	}
 
 	@Override
-	public void setValue(BasicCursor c, Object newValue) throws CelestaException {
+	public void setValue(BasicCursor c, Object newValue) {
 		PyObject p = Py.java2py(newValue);
 		setter.__call__(instance, p);
 	}
