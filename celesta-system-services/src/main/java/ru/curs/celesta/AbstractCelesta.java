@@ -93,7 +93,7 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
             dbUpdater.updateDb();
             System.out.println("done.");
         } else {
-            System.out.println("Celesta initialization: phase 2/4 database upgrade...skipped.");
+            System.out.printf("Celesta initialization: phase 2/%s database upgrade...skipped.%n", phasesCount);
         }
     }
 

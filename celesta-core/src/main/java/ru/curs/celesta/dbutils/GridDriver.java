@@ -65,12 +65,16 @@ public final class GridDriver {
 		@Override
 		public void run() {
 
+			CallContext closedCopyCallContext = closedCopy.callContext();
+			ICelesta celesta = closedCopyCallContext.getCelesta();
+
 			try (
-					CallContext sysContext = PyCallContext.builder()
-							.setCallContext((PyCallContext) closedCopy.callContext())
-							.setSesContext(Celesta.SYSTEM_SESSION)
+					CallContext sysContext = closedCopyCallContext.getBuilder()
+							.setCallContext(closedCopyCallContext)
+							.setSesContext(celesta.getSystemSessionContext())
 							.createCallContext()
 			) {
+
 				List<String> columns = Arrays.stream(closedCopy.orderByColumnNames()).map(WhereTermsMaker::unquot).collect(Collectors.toList());
 				BasicCursor c = closedCopy._getBufferCopy(sysContext, columns);
 				c.copyFiltersFrom(closedCopy);

@@ -15,7 +15,6 @@ public class AppSettings {
     private final String scorePath;
     private final DBType dbType;
     private final String databaseConnection;
-    private final boolean h2InMemory;
     private final boolean h2ReferentialIntegrity;
     private final int h2Port;
     private final String login;
@@ -47,7 +46,7 @@ public class AppSettings {
 
 
         h2ReferentialIntegrity = Boolean.parseBoolean(properties.getProperty("h2.referential.integrity", "false"));
-        h2InMemory = Boolean.parseBoolean(properties.getProperty("h2.in-memory", "false"));
+        final boolean h2InMemory = Boolean.parseBoolean(properties.getProperty("h2.in-memory", "false"));
         int h2PortTmp = 0;
         try {
             h2PortTmp = Integer.parseInt(properties.getProperty("h2.port", "0"));
