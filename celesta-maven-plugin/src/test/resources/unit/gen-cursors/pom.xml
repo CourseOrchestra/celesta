@@ -17,11 +17,9 @@
                 <scores>
                     <score>
                         <path>src/test/resources/scorePart1${path.separator}src/test/resources/scorePart2</path>
-                        <rootPackage>ru.curs.celesta.jcursor.score</rootPackage>
                     </score>
                     <score>
                         <path>src/test/resources/emptyScore</path>
-                        <rootPackage>ru.curs.celesta.jcursor.empty</rootPackage>
                     </score>
                 </scores>
                 <project implementation="ru.curs.celesta.plugin.CelestaMavenPluginStub"/>

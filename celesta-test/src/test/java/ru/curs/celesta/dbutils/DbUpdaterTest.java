@@ -69,24 +69,25 @@ public class DbUpdaterTest {
 
         DBAdaptor dba = new H2Adaptor(this.connectionPool, new JdbcDdlConsumer(), appSettings.isH2ReferentialIntegrity());
 
+        Score score = new AbstractScore.ScoreBuilder<>(Score.class)
+                .path(scorePath)
+                .scoreDiscovery(new PyScoreDiscovery())
+                .build();
+
+        CelestaImpl celesta = new CelestaImpl(dba, connectionPool, score);
+        PermissionManager permissionManager = celesta.getPermissionManager();
+        LoggingManager loggingManager = celesta.getLoggingManager();
+
         DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                 .dbAdaptor(dba)
                 .connectionPool(this.connectionPool)
-                .score(
-                        new AbstractScore.ScoreBuilder<>(Score.class)
-                                .path(scorePath)
-                                .scoreDiscovery(new PyScoreDiscovery())
-                                .build()
-                )
-                .setCelesta(new CelestaImpl())
-                .setPermissionManager(new PermissionManager(dba))
-                .setLoggingManager(new LoggingManager(dba))
+                .score(score)
+                .setCelesta(celesta)
+                .setPermissionManager(permissionManager)
+                .setLoggingManager(loggingManager)
                 .build();
 
         return dbUpdater;
     }
 
-    private String getScorePath(String resourcePath) {
-        return getClass().getResource(resourcePath).toString();
-    }
 }

@@ -3,6 +3,7 @@ package ru.curs.celesta.plugin;
 import com.squareup.javapoet.*;
 import org.apache.commons.lang3.StringUtils;
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.event.TriggerType;
@@ -65,8 +66,15 @@ public final class CursorGenerator {
         throw new AssertionError();
     }
 
-    protected static void generateCursor(GrainElement ge, File srcDir, String rootPackage, String scorePath) {
-        final String sourcePackage = calcsourcePackage(ge, rootPackage, scorePath);
+    protected static void generateCursor(GrainElement ge, File srcDir, String scorePath) {
+        final String sourcePackage = calcSourcePackage(ge, scorePath);
+
+        if (sourcePackage.isEmpty())
+            throw new CelestaException(
+                    "Couldn't generate class file for %s.%s without package",
+                    ge.getGrain().getName(), ge.getName()
+            );
+
         final String sourceFileNamePrefix = StringUtils.capitalize(ge.getName());
 
         boolean isVersionedGe = ge instanceof VersionedElement && ((VersionedElement) ge).isVersioned();
@@ -82,12 +90,7 @@ public final class CursorGenerator {
             List<FieldSpec> fieldSpecs = buildFields((DataGrainElement) ge);
             cursorClass.addFields(fieldSpecs);
             cursorClass.addMethods(generateGettersAndSetters(fieldSpecs));
-        }
 
-        //Overriding of _grainName and _objectName
-        cursorClass.addMethods(buildGrainNameAndObjectName(ge));
-
-        if (ge instanceof DataGrainElement) {
             DataGrainElement dge = (DataGrainElement) ge;
             Map<String, ? extends ColumnMeta> columns = dge.getColumns();
 
@@ -132,6 +135,7 @@ public final class CursorGenerator {
             cursorClass.addMethod(buildIterator(className));
         }
 
+        cursorClass.addMethods(buildGrainNameAndObjectName(ge));
 
         JavaFile javaFile = JavaFile.builder(sourcePackage, cursorClass.build())
                 .skipJavaLangImports(true)
@@ -145,16 +149,19 @@ public final class CursorGenerator {
         }
     }
 
-    private static String calcsourcePackage(GrainElement ge, String rootPackage, String scorePath) {
-        final String result;
+    private static String calcSourcePackage(GrainElement ge, String scorePath) {
+        String result;
 
         Grain g = ge.getGrain();
         if (g.getName().equals(g.getScore().getSysSchemaName())) {
-            result = rootPackage;
+            result = "ru.curs.celesta.syscursors";
         } else {
             final String grainPartPath = ge.getGrainPart().getSourceFile().getParentFile().getAbsolutePath();
             final String grainPartRelativePath = grainPartPath.replace(scorePath, "");
-            result = rootPackage + grainPartRelativePath.replace(File.separator, ".");
+            result = grainPartRelativePath.replace(File.separator, ".");
+
+            if (result.startsWith("."))
+                result = result.substring(1);
         }
 
         return result;

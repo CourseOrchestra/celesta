@@ -19,4 +19,12 @@ public interface ICelesta {
      * изменение этих свойств не приводит ни к чему.
      */
     Properties getSetupProperties();
+
+    /**
+     * Initializes and returns new CallContext for System SessionContext
+     * @return
+     */
+    CallContext callContext();
+
+    SessionContext getSystemSessionContext();
 }

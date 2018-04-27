@@ -43,18 +43,22 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
 
         dba = new H2Adaptor(connectionPool, new JdbcDdlConsumer(), appSettings.isH2ReferentialIntegrity());
 
+        Score score = new AbstractScore.ScoreBuilder<>(Score.class)
+                .path(SCORE_NAME)
+                .scoreDiscovery(new PyScoreDiscovery())
+                .build();
+
+        CelestaImpl celesta = new CelestaImpl(dba, connectionPool, score);
+        PermissionManager permissionManager = celesta.getPermissionManager();
+        LoggingManager loggingManager = celesta.getLoggingManager();
+
         DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                 .dbAdaptor(dba)
                 .connectionPool(connectionPool)
-                .score(
-                        new AbstractScore.ScoreBuilder<>(Score.class)
-                                .path(SCORE_NAME)
-                                .scoreDiscovery(new PyScoreDiscovery())
-                                .build()
-                )
-                .setCelesta(new CelestaImpl())
-                .setPermissionManager(new PermissionManager(dba))
-                .setLoggingManager(new LoggingManager(dba))
+                .score(score)
+                .setCelesta(celesta)
+                .setPermissionManager(permissionManager)
+                .setLoggingManager(loggingManager)
                 .build();
 
         dbUpdater.updateSysGrain();
@@ -70,9 +74,9 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
         setDba(dba);
         setScore(
                 new AbstractScore.ScoreBuilder<>(Score.class)
-                .path(SCORE_NAME)
-                .scoreDiscovery(new PyScoreDiscovery())
-                .build()
+                        .path(SCORE_NAME)
+                        .scoreDiscovery(new PyScoreDiscovery())
+                        .build()
         );
     }
 
