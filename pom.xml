@@ -64,6 +64,7 @@
         <junit.version>5.1.0</junit.version>
         <junit.platform.version>1.0.0</junit.platform.version>
         <org.json.version>20171018</org.json.version>
+        <org.reflections.version>0.9.11</org.reflections.version>
         <testcontainers.version>1.4.3</testcontainers.version>
 
         <!--plugin versions -->

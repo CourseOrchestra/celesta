@@ -35,7 +35,7 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
         params.put("rdbms.connection.username", msSql.getUsername());
         params.put("rdbms.connection.password", msSql.getPassword());
 
-        AppSettings appSettings = new AppSettings(params);
+        BaseAppSettings appSettings = new JythonAppSettings(params);
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
         cpc.setDriverClassName(appSettings.getDbClassName());

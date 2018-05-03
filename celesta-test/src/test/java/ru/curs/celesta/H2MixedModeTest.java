@@ -20,19 +20,19 @@ class H2MixedModeTest {
         Properties params = new Properties();
         params.setProperty("score.path", "score");
         params.setProperty("h2.in-memory", "true");
-        AppSettings as = new AppSettings(params);
+        BaseAppSettings as = new JythonAppSettings(params);
         //embedded mode
         assertEquals("jdbc:h2:mem:celesta;DB_CLOSE_DELAY=-1", as.getDatabaseConnection());
 
         //mixed mode
         params.setProperty("h2.port", port);
-        as = new AppSettings(params);
+        as = new JythonAppSettings(params);
         assertEquals(Integer.parseInt(port), as.getH2Port());
         assertEquals(jdbcURL,
                 as.getDatabaseConnection());
 
         params.setProperty("h2.port", "notanumber");
-        assertThrows(CelestaException.class, () -> new AppSettings(params));
+        assertThrows(CelestaException.class, () -> new JythonAppSettings(params));
     }
 
     @Test

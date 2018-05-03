@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-public class AppSettings {
+public abstract class BaseAppSettings {
 
     private final Properties properties;
 
@@ -29,7 +29,7 @@ public class AppSettings {
         logger.setLevel(Level.INFO);
     }
 
-    public AppSettings(Properties properties) {
+    public BaseAppSettings(Properties properties) {
         this.properties = properties;
 
         StringBuffer sb = new StringBuffer();

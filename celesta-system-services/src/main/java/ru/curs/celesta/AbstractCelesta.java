@@ -18,7 +18,7 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
 
     static final String FILE_PROPERTIES = "celesta.properties";
 
-    private final AppSettings appSettings;
+    private final BaseAppSettings appSettings;
     private final Score score;
     final ConnectionPool connectionPool;
     final DBAdaptor dbAdaptor;
@@ -33,7 +33,7 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
     final ConcurrentHashMap<String, T> sessions = new ConcurrentHashMap<>();
     final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
-    public AbstractCelesta(AppSettings appSettings, int phasesCount) {
+    public AbstractCelesta(BaseAppSettings appSettings, int phasesCount) {
         this.appSettings = appSettings;
         manageH2Server();
 

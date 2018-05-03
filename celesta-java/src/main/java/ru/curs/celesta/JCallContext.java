@@ -42,7 +42,7 @@ public class JCallContext extends CallContext<
 
     @Override
     public CallContextBuilder getBuilder() {
-        return null;
+        return builder();
     }
 
     public static JCallContextBuilder builder() {
