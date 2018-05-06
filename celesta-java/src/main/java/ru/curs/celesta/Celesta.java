@@ -89,10 +89,8 @@ public class Celesta extends AbstractCelesta<JSessionContext> implements ICelest
         return new JSessionContext(userId, sessionId);
     }
 
-    public Object runProc(String sesId, String qualifier, Object... args) {
-        JSessionContext sessionContext = this.sessions.get(sesId);
-        if (sessionContext == null)
-            throw new CelestaException("Session ID=%s is not logged in", sesId);
+    public Object runProc(String sessionId, String qualifier, Object... args) {
+        JSessionContext sessionContext = this.getSessionContext(sessionId);
 
         return this.celestaProcExecutor.runProc(sessionContext, qualifier, args);
     }

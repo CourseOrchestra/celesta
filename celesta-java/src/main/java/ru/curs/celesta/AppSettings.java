@@ -4,19 +4,24 @@ import java.util.*;
 
 public class AppSettings extends BaseAppSettings {
 
-    private final Set<String> celestaScan = new LinkedHashSet<>();
+    private final Set<String> celestaScan;
 
-    public AppSettings(Properties properties) {
+    AppSettings(Properties properties) {
         super(properties);
 
-        String celestaScanProperty = properties.getProperty("celestaScan");
-        if (celestaScanProperty != null)
+        final String celestaScanProperty = properties.getProperty("celestaScan");
+        final Set<String> celestaScanVar = new LinkedHashSet();
+
+        if (celestaScanProperty != null) {
             Arrays.stream(celestaScanProperty.split(","))
                     .map(String::trim)
-                    .forEach(celestaScan::add);
+                    .forEach(celestaScanVar::add);
+        }
+
+        this.celestaScan = Collections.unmodifiableSet(celestaScanVar);
     }
 
     public Set<String> getCelestaScan() {
-        return Collections.unmodifiableSet(celestaScan);
+        return this.celestaScan;
     }
 }

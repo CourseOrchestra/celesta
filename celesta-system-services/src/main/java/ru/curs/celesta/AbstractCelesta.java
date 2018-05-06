@@ -181,6 +181,13 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
 
     abstract T sessionContext(String userId, String sessionId);
 
+    T getSessionContext(String sessionId) {
+        T result = this.sessions.get(sessionId);
+        if (result == null)
+            throw new CelestaException("Session ID=%s is not logged in", sessionId);
+        return result;
+    }
+
     /**
      * Initializes and returns new CallContext for specified SessionContext
      *

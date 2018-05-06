@@ -155,10 +155,10 @@ public final class Celesta extends AbstractCelesta<PySessionContext> implements 
 
 
     @Override
-    public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc,
+    public PyObject runPython(String sessionId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc,
                               Object... param) {
         if (interpreterPool == null)
-            throw new CelestaException("Interperter pool not initialized. Running in debug mode?");
+            throw new CelestaException("Interpreter pool not initialized. Running in debug mode?");
 
         Matcher m = PROCNAME.matcher(proc);
 
@@ -179,12 +179,8 @@ public final class Celesta extends AbstractCelesta<PySessionContext> implements 
             for (int i = 0; i < param.length; i++)
                 sb.append(String.format(", arg%d", i));
 
-            PySessionContext sesContext = sessions.get(sesId);
-            if (sesContext == null)
-                throw new CelestaException("Session ID=%s is not logged in", sesId);
-
+            PySessionContext sesContext = this.getSessionContext(sessionId);
             sesContext.setMessageReceiver(rec);
-
 
             try (PythonInterpreter interp = interpreterPool.getPythonInterpreter();
                  CallContext context = PyCallContext.builder()
@@ -235,7 +231,7 @@ public final class Celesta extends AbstractCelesta<PySessionContext> implements 
                     contexts.remove(context);
                 }
             } finally {
-                sessions.putIfAbsent(sesId, sesContext);
+                sessions.putIfAbsent(sessionId, sesContext);
             }
 
         } else {

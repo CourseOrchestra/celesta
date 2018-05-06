@@ -29,13 +29,13 @@ class CelestaProcExecutor {
 
             final Object underlyingObject;
 
-            if (procMeta.isNeedClassInstantiation()) {
+            if (procMeta.isClassInstantiationNeeded()) {
                 underlyingObject = methodClass.newInstance();
             } else {
                 underlyingObject = methodClass;
             }
 
-            if (procMeta.isNeedInjectCallContext()) {
+            if (procMeta.isCallContextInjectionNeeded()) {
                 try (CallContext callContext = callContextProvider.apply(sessionContext)) {
                     LinkedList list = new LinkedList<>(Arrays.asList(args));
                     list.addFirst(callContext);
@@ -53,22 +53,22 @@ class CelestaProcExecutor {
 }
 
 class CelestaProcMeta {
-    private final boolean needInjectCallContext;
-    private final boolean needClassInstantiation;
+    private final boolean isCallContextInjectionNeeded;
+    private final boolean isClassInstantiationNeeded;
     private final Method method;
 
-    public CelestaProcMeta(boolean needInjectCallContext, boolean needClassInstantiation, Method method) {
-        this.needInjectCallContext = needInjectCallContext;
-        this.needClassInstantiation = needClassInstantiation;
+    public CelestaProcMeta(boolean isCallContextInjectionNeeded, boolean isClassInstantiationNeeded, Method method) {
+        this.isCallContextInjectionNeeded = isCallContextInjectionNeeded;
+        this.isClassInstantiationNeeded = isClassInstantiationNeeded;
         this.method = method;
     }
 
-    public boolean isNeedInjectCallContext() {
-        return needInjectCallContext;
+    public boolean isCallContextInjectionNeeded() {
+        return isCallContextInjectionNeeded;
     }
 
-    public boolean isNeedClassInstantiation() {
-        return needClassInstantiation;
+    public boolean isClassInstantiationNeeded() {
+        return isClassInstantiationNeeded;
     }
 
     public Method getMethod() {

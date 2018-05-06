@@ -10,6 +10,8 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,6 +20,7 @@ public class CelestaProcTest {
     private static final String barQualifier = "ru.curs.celesta.annotated.bar.Bar#annotatedBarMethod";
     private static final String fooQualifier = "ru.curs.celesta.annotated.foo.Foo#annotatedFooMethod";
     private static final String noReturnValueQualifier = "ru.curs.celesta.annotated.returnvoid.ReturnVoid#noReturnValue";
+    private static final String callContextInjectionQualifier = "ru.curs.celesta.callcontext.CallContextInjection#run";
 
     private Optional<Celesta> celesta;
 
@@ -30,7 +33,7 @@ public class CelestaProcTest {
                 "src" + File.separator + "test" + File.separator + "resources" + File.separator + "emptyScore"
         );
         params.setProperty("h2.in-memory", "true");
-        params.setProperty("celestaScan", "ru.curs.celesta.annotated");
+        params.setProperty("celestaScan", "ru.curs.celesta.annotated, ru.curs.celesta.callcontext");
         this.celesta = Optional.of(Celesta.createInstance(params));
 
         this.celesta.get().login(SessionContext.SYSTEM_SESSION_ID, SessionContext.SYSTEM_USER_ID);
@@ -92,6 +95,19 @@ public class CelestaProcTest {
     }
 
     @Test
+    void testCallContextInjection() {
+        AtomicBoolean isAssertionExecuted = new AtomicBoolean(false);
+        Consumer<CallContext> callContextConsumer = callContext -> {
+            assertNotNull(callContext);
+            isAssertionExecuted.set(true);
+        };
+
+        celesta.get().runProc(SessionContext.SYSTEM_SESSION_ID, callContextInjectionQualifier, callContextConsumer);
+
+        assertTrue(isAssertionExecuted.get());
+    }
+
+    @Test
     void testRunProcAsync() throws Exception {
 
         Instant start = Instant.now();
@@ -109,4 +125,5 @@ public class CelestaProcTest {
                 )
         );
     }
+
 }

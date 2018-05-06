@@ -38,16 +38,16 @@ public class CelestaProcProviderTest {
         assertAll(
                 () -> assertNotNull(barProcMeta),
                 () -> assertEquals(barMethod, barProcMeta.getMethod()),
-                () -> assertTrue(barProcMeta.isNeedClassInstantiation()),
-                () -> assertTrue(barProcMeta.isNeedInjectCallContext()),
+                () -> assertTrue(barProcMeta.isClassInstantiationNeeded()),
+                () -> assertTrue(barProcMeta.isCallContextInjectionNeeded()),
                 () -> assertNotNull(fooProcMeta),
                 () -> assertEquals(fooMethod, fooProcMeta.getMethod()),
-                () -> assertFalse(fooProcMeta.isNeedClassInstantiation()),
-                () -> assertFalse(fooProcMeta.isNeedInjectCallContext()),
+                () -> assertFalse(fooProcMeta.isClassInstantiationNeeded()),
+                () -> assertFalse(fooProcMeta.isCallContextInjectionNeeded()),
                 () -> assertNotNull(noReturnValueProcMeta),
                 () -> assertEquals(noReturnValueMethod, noReturnValueProcMeta.getMethod()),
-                () -> assertTrue(noReturnValueProcMeta.isNeedClassInstantiation()),
-                () -> assertTrue(noReturnValueProcMeta.isNeedInjectCallContext())
+                () -> assertTrue(noReturnValueProcMeta.isClassInstantiationNeeded()),
+                () -> assertTrue(noReturnValueProcMeta.isCallContextInjectionNeeded())
         );
     }
 
