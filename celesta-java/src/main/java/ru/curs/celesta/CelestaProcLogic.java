@@ -11,7 +11,7 @@ class CelestaProcExecutor {
     private final CelestaProcProvider celestaProcProvider;
     private final Function<JSessionContext, CallContext> callContextProvider;
 
-    public CelestaProcExecutor(CelestaProcProvider celestaProcProvider, Function<JSessionContext, CallContext> callContextProvider) {
+    CelestaProcExecutor(CelestaProcProvider celestaProcProvider, Function<JSessionContext, CallContext> callContextProvider) {
         this.celestaProcProvider = celestaProcProvider;
         this.callContextProvider = callContextProvider;
     }
@@ -57,7 +57,7 @@ class CelestaProcMeta {
     private final boolean isClassInstantiationNeeded;
     private final Method method;
 
-    public CelestaProcMeta(boolean isCallContextInjectionNeeded, boolean isClassInstantiationNeeded, Method method) {
+    CelestaProcMeta(boolean isCallContextInjectionNeeded, boolean isClassInstantiationNeeded, Method method) {
         this.isCallContextInjectionNeeded = isCallContextInjectionNeeded;
         this.isClassInstantiationNeeded = isClassInstantiationNeeded;
         this.method = method;
@@ -100,7 +100,7 @@ class CelestaProcProvider {
 
     private final Map<String, CelestaProcMeta> celestaProcedures = new LinkedHashMap<>();
 
-    public CelestaProcProvider(Set<Method> methods) {
+    CelestaProcProvider(Set<Method> methods) {
 
         methods.forEach(
                 method -> {

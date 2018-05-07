@@ -10,4 +10,5 @@ create view testTableV AS
   {implements: [java.io.Serializable, java.lang.Cloneable]}
  */
 create materialized view testTableMv AS
-  SELECT count(*) as c from testTable;
+  SELECT count(*) as c, cost from testTable
+  GROUP BY cost;

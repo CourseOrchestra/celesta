@@ -1,6 +1,7 @@
 package data.view;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
 
     private Integer surrogate_count;
     private Integer c;
+    private BigDecimal cost;
 
     public TestTableMvCursor(CallContext context) {
         super(context);
@@ -42,6 +44,14 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
         this.c = c;
     }
 
+    public BigDecimal getCost() {
+        return this.cost;
+    }
+
+    public void setCost(BigDecimal cost) {
+        this.cost = cost;
+    }
+
     @Override
     protected void _setFieldValue(String name, Object value) {
         try {
@@ -55,6 +65,13 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     }
 
     @Override
+    protected Object[] _currentKeyValues() {
+        Object[] result = new Object[1];
+        result[0] = this.cost;
+        return result;
+    }
+
+    @Override
     protected void _parseResult(ResultSet rs) throws SQLException {
         if (this.inRec("surrogate_count")) {
             this.surrogate_count = rs.getInt("surrogate_count");
@@ -62,19 +79,26 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
         if (this.inRec("c")) {
             this.c = rs.getInt("c");
         }
+        if (this.inRec("cost")) {
+            this.cost = rs.getBigDecimal("cost");
+        }
     }
 
     @Override
     protected void _clearBuffer(boolean withKeys) {
+        if (withKeys) {
+            this.cost = null;
+        }
         this.surrogate_count = null;
         this.c = null;
     }
 
     @Override
     public Object[] _currentValues() {
-        Object[] result = new Object[2];
+        Object[] result = new Object[3];
         result[0] = this.surrogate_count;
         result[1] = this.c;
+        result[2] = this.cost;
         return result;
     }
 
@@ -96,6 +120,7 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
         TestTableMvCursor from = (TestTableMvCursor)c;
         this.surrogate_count = from.surrogate_count;
         this.c = from.c;
+        this.cost = from.cost;
     }
 
     @Override

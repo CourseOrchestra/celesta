@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
+import ru.curs.celesta.dbutils.BLOB;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.CursorIterator;
@@ -33,7 +34,7 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     private Double weight;
     private String content;
     private Date created;
-    private String rawData;
+    private BLOB rawData;
     private BigDecimal cost;
     private ZonedDateTime toDelete;
 
@@ -93,11 +94,11 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         this.created = created;
     }
 
-    public String getRawData() {
+    public BLOB getRawData() {
         return this.rawData;
     }
 
-    public void setRawData(String rawData) {
+    public void setRawData(BLOB rawData) {
         this.rawData = rawData;
     }
 
