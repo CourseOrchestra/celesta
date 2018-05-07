@@ -1,5 +1,7 @@
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.dbutils.BLOB;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -54,7 +56,7 @@ public final class BinaryColumn extends Column {
 
 	@Override
 	public Class getJavaClass() {
-		return String.class;
+		return BLOB.class;
 	}
 
 	@Override

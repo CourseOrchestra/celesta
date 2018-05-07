@@ -20,7 +20,7 @@ public final class ORMCompiler {
      * Версия компилятора. Данную константу следует инкрементировать, когда
      * необходимо инициировать автоматическое пересоздание orm-скриптов.
      */
-    private static final int COMPILERVER = 21;
+    private static final int COMPILERVER = 22;
 
     private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
     private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -264,6 +264,13 @@ public final class ORMCompiler {
         compileSetFieldValue(w);
         // Очистка буфера
         compileClearBuffer(w, columns);
+
+        if (t instanceof MaterializedView) {
+            MaterializedView mv = (MaterializedView)t;
+            Set<Column> pk = new LinkedHashSet<>(mv.getPrimaryKey().values());
+            compileCurrentKeyValues(w, pk);
+        }
+
         // Текущие значения всех полей
         compileCurrentValues(w, columns);
         // Клонирование

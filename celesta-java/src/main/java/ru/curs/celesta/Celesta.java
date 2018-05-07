@@ -5,7 +5,10 @@ import ru.curs.celesta.score.discovery.ScoreDiscovery;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.*;
 
 public class Celesta extends AbstractCelesta<JSessionContext> implements ICelesta {
 
@@ -14,9 +17,16 @@ public class Celesta extends AbstractCelesta<JSessionContext> implements ICelest
     );
 
     private final ScoreDiscovery scoreDiscovery = new DefaultScoreDiscovery();
+    private final CelestaProcExecutor celestaProcExecutor;
 
     private Celesta(AppSettings appSettings) {
-        super(appSettings, 2);
+        super(appSettings, 3);
+
+        System.out.printf("Celesta initialization: phase 3/3 annotation scanning...");
+        Set<Method> scannedMethods = AnnotationScanner.scan(appSettings.getCelestaScan());
+        CelestaProcProvider procProvider = new CelestaProcProvider(scannedMethods);
+        this.celestaProcExecutor = new CelestaProcExecutor(procProvider, this::callContext);
+        System.out.println("done.");
     }
 
 
@@ -77,6 +87,46 @@ public class Celesta extends AbstractCelesta<JSessionContext> implements ICelest
     @Override
     JSessionContext sessionContext(String userId, String sessionId) {
         return new JSessionContext(userId, sessionId);
+    }
+
+    public Object runProc(String sessionId, String qualifier, Object... args) {
+        JSessionContext sessionContext = this.getSessionContext(sessionId);
+
+        return this.celestaProcExecutor.runProc(sessionContext, qualifier, args);
+    }
+
+    public Future<Object> runProcAsync(String sesId, String qualifier, long delay, Object... args) {
+        final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        JSessionContext sessionContext = this.sessions.get(sesId);
+
+        Thread shutDownHook = new Thread(scheduledExecutor::shutdown);
+        Runtime.getRuntime().addShutdownHook(shutDownHook);
+
+        Callable<Object> callable = () -> {
+            String currentSesId = null;
+            try {
+
+                if (sessions.containsKey(sesId)) {
+                    currentSesId = sesId;
+                } else {
+                    currentSesId = String.format("TEMP%08X", ThreadLocalRandom.current().nextInt());
+                    login(currentSesId, sessionContext.getUserId());
+                }
+
+                return this.runProc(currentSesId, qualifier, args);
+            } catch (Exception e) {
+                System.out.println("Exception while executing async task:" + e.getMessage());
+                throw e;
+            } finally {
+                Runtime.getRuntime().removeShutdownHook(shutDownHook);
+                scheduledExecutor.shutdown();
+
+                if (currentSesId != null && sessions.containsKey(currentSesId))
+                    logout(currentSesId, false);
+            }
+        };
+
+        return scheduledExecutor.schedule(callable, delay, TimeUnit.MILLISECONDS);
     }
 
 }

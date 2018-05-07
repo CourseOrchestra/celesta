@@ -57,7 +57,7 @@ public class DbUpdaterTest {
         params.put("h2.in-memory", "true");
         params.put("h2.referential.integrity", "true");
 
-        AppSettings appSettings = new AppSettings(params);
+        BaseAppSettings appSettings = new JythonAppSettings(params);
 
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());

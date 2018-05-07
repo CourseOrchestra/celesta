@@ -99,12 +99,17 @@ public final class CursorGenerator {
             StringBuilder parseResultOverridingMethodNameBuilder = new StringBuilder("_parseResult");
 
             final Set<Column> pk;
-            if (dge instanceof Table) {
-                Table t = (Table) dge;
-                pk = t.isReadOnly() ? Collections.emptySet() : new LinkedHashSet<>(t.getPrimaryKey().values());
-                if (!t.isReadOnly()) {
+            if (dge instanceof TableElement) {
+                TableElement te = (TableElement) dge;
+
+                if (te instanceof Table && ((Table) te).isReadOnly()) {
+                    pk = Collections.emptySet();
+                } else {
+                    pk = new LinkedHashSet<>(te.getPrimaryKey().values());
                     cursorClass.addMethod(buildCurrentKeyValues(pk));
-                    parseResultOverridingMethodNameBuilder.append("Internal");
+                    if (te instanceof Table) {
+                        parseResultOverridingMethodNameBuilder.append("Internal");
+                    }
                 }
             } else {
                 pk = Collections.emptySet();

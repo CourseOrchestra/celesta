@@ -110,7 +110,7 @@ public class CelestaScriptsTest {
     }
 
     private Stream<Arguments> prepareStreamOfArguments(Celesta celesta) {
-      DBType dbType = new AppSettings(celesta.getSetupProperties()).getDBType();
+      DBType dbType = new JythonAppSettings(celesta.getSetupProperties()).getDBType();
       return TestClass.testTypesAndTheirMethods.entrySet().stream()
               .flatMap(e -> {
                 PyObject testInstance = e.getKey().__call__();

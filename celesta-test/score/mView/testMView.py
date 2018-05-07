@@ -69,11 +69,12 @@ class TestMaterializedView(CelestaTestCase):
         tableCursor.insert()
         mViewCursor.get("A", "C")
         self.assertEquals(4, mViewCursor.s)
+        mViewCursor.tryGetCurrent()
+        self.assertEquals(4, mViewCursor.s)
 
     '''
         Этот тест необходим для гарантии того, что в materialized view останется результат SUM(), даже если он равен 0.
     '''
-
     def test_mat_view_update_when_count_is_unknown(self):
         tableCursor = table1Cursor(self.context)
         mViewCursor = mView2Cursor(self.context)

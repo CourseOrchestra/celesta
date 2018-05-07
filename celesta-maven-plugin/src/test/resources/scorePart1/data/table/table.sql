@@ -13,7 +13,7 @@ create table testTable(
   content text,
   created datetime,
   rawData blob,
-  cost decimal(4,2),
+  cost decimal(4,2) not null,
   toDelete datetime with time zone,
   CONSTRAINT Pk_test_testTable PRIMARY KEY (id)
 );

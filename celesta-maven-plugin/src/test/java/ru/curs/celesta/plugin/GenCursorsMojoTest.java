@@ -6,6 +6,8 @@ import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import ru.curs.celesta.CelestaException;
 
 
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -40,10 +42,17 @@ public class GenCursorsMojoTest extends AbstractMojoTestCase {
     }
 
     public void testExecute() throws Exception {
-        File pom = getTestFile("target/test-classes/unit/gen-cursors/pom.xml");
-        GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
-        mojo.execute();
-        assertGeneratedFiles();
+        File celestaGeneratedRoot = new File("src/test/resources/unit/gen-cursors/target/generated-sources/celesta");
+        try {
+            FileUtils.deleteDirectory(celestaGeneratedRoot);
+            File pom = getTestFile("target/test-classes/unit/gen-cursors/pom.xml");
+            GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
+            mojo.execute();
+            assertGeneratedFiles();
+        } finally {
+            FileUtils.deleteDirectory(celestaGeneratedRoot);
+        }
+
     }
 
     public void testFailOnGeneratingClassWithoutPackage() throws Exception {
@@ -74,9 +83,12 @@ public class GenCursorsMojoTest extends AbstractMojoTestCase {
                 "data/view/TestTablePvCursor.java"
         );
 
+        JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
+
         paths.forEach(p -> {
             File f = new File(prefix + p);
             assertTrue(f.exists());
+            assertEquals(0, javaCompiler.run(null, null, null, f.getPath()));
 
             File expectedF = new File(expectedPrefix + p);
             try {

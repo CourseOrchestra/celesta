@@ -38,7 +38,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
         params.put("rdbms.connection.username", oracle.getUsername());
         params.put("rdbms.connection.password", oracle.getPassword());
 
-        AppSettings appSettings = new AppSettings(params);
+        BaseAppSettings appSettings = new JythonAppSettings(params);
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
         cpc.setDriverClassName(appSettings.getDbClassName());

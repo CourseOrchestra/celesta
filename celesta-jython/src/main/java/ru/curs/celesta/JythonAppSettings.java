@@ -5,7 +5,7 @@ import java.util.Properties;
 /**
  * Класс, хранящий параметры приложения. Разбирает .properties-файл.
  */
-public final class JythonAppSettings extends AppSettings {
+public final class JythonAppSettings extends BaseAppSettings {
     private static final String DEFAULT_PYLIB_PATH = "pylib";
 
     private final String pyLibPath;
