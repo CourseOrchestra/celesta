@@ -25,9 +25,7 @@ public class CursorIterator<T extends BasicCursor> implements Iterator<T> {
             return true;
         }
         try {
-            boolean result = this.cursor.cursor.next();
-            this.cursor.cursor.previous();
-            return result;
+            return !this.cursor.cursor.isLast();
         } catch (SQLException e) {
             throw new CelestaException(e);
         }
