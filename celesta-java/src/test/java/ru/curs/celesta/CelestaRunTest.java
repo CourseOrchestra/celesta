@@ -1,6 +1,8 @@
 package ru.curs.celesta;
 
 import org.junit.jupiter.api.Test;
+import ru.curs.celesta.annotated.bar.Bar;
+import ru.curs.celesta.callcontext.CallContextInjection;
 import ru.curs.celesta.syscursors.UserrolesCursor;
 
 import java.time.Duration;
@@ -12,17 +14,16 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class CelestaProcTest extends AbstractCelestaTest {
-
-    private static final String barQualifier = "ru.curs.celesta.annotated.bar.Bar#annotatedBarMethod";
-    private static final String fooQualifier = "ru.curs.celesta.annotated.foo.Foo#annotatedFooMethod";
-    private static final String noReturnValueQualifier = "ru.curs.celesta.annotated.returnvoid.ReturnVoid#noReturnValue";
-    private static final String callContextInjectionQualifier = "ru.curs.celesta.callcontext.CallContextInjection#run";
-
+public class CelestaRunTest extends AbstractCelestaTest {
 
     @Test
     void testBarMethod() {
-        Object result = celesta.get().runProc(SessionContext.SYSTEM_SESSION_ID, barQualifier, "qwe", 2);
+        Bar bar = new Bar();
+        String result = this.celesta.get()
+                .run(
+                        SessionContext.SYSTEM_SESSION_ID,
+                        context -> bar.annotatedBarMethod(context, "qwe", 2)
+                );
 
         assertAll(
                 () -> assertTrue(result instanceof String),
@@ -34,33 +35,6 @@ public class CelestaProcTest extends AbstractCelestaTest {
     }
 
     @Test
-    void testFooMethod() {
-        Object result = celesta.get().runProc(SessionContext.SYSTEM_SESSION_ID, fooQualifier, 5, 2);
-
-        assertAll(
-                () -> assertTrue(result instanceof Integer),
-                () -> assertEquals(
-                        7,
-                        result
-                )
-        );
-    }
-
-    @Test
-    void testNoReturnValueMethod() {
-        Object result = celesta.get().runProc(SessionContext.SYSTEM_SESSION_ID, noReturnValueQualifier, 5);
-        assertNull(result);
-    }
-
-    @Test
-    void testCelestaExceptionOnNotExistedProcedure() {
-        assertThrows(
-                CelestaException.class,
-                () -> celesta.get().runProc(SessionContext.SYSTEM_SESSION_ID, "ru.curs.Qf#noSuchMethod")
-        );
-    }
-
-    @Test
     void testCallContextInjection() {
         AtomicBoolean isAssertionExecuted = new AtomicBoolean(false);
         Consumer<CallContext> callContextConsumer = callContext -> {
@@ -68,17 +42,24 @@ public class CelestaProcTest extends AbstractCelestaTest {
             isAssertionExecuted.set(true);
         };
 
-        celesta.get().runProc(SessionContext.SYSTEM_SESSION_ID, callContextInjectionQualifier, callContextConsumer);
+        CallContextInjection callContextInjection = new CallContextInjection();
+        this.celesta.get().run(
+                SessionContext.SYSTEM_SESSION_ID,
+                context -> callContextInjection.run(context, callContextConsumer)
+        );
 
         assertTrue(isAssertionExecuted.get());
     }
 
     @Test
-    void testRunProcAsync() throws Exception {
+    void testRunAsync() throws Exception {
 
+        Bar bar = new Bar();
         Instant start = Instant.now();
         Future<Object> resultFuture = celesta.get()
-                .runProcAsync(SessionContext.SYSTEM_SESSION_ID, barQualifier, 500, "qwe", 2);
+                .runAsync(
+                        SessionContext.SYSTEM_SESSION_ID,
+                        context -> bar.annotatedBarMethod(context, "qwe", 2), 500);
         Object result = resultFuture.get();
         Instant end = Instant.now();
 
@@ -92,9 +73,8 @@ public class CelestaProcTest extends AbstractCelestaTest {
         );
     }
 
-
     @Test
-    void testRunProcAsyncAfterLogout() throws Exception {
+    void testRunAsyncAfterLogout() throws Exception {
         AtomicReference<UserrolesCursor> cursorAtomicReference = new AtomicReference<>();
         Consumer<CallContext> callContextConsumer = callContext -> {
             UserrolesCursor cursor = new UserrolesCursor(callContext);
@@ -103,8 +83,12 @@ public class CelestaProcTest extends AbstractCelestaTest {
             cursorAtomicReference.compareAndSet(null, cursor);
         };
 
-        Future<Object> resultFuture = celesta.get().runProcAsync(
-                SessionContext.SYSTEM_SESSION_ID, callContextInjectionQualifier, 500, callContextConsumer
+
+        CallContextInjection callContextInjection = new CallContextInjection();
+        Future<Void> resultFuture = this.celesta.get().runAsync(
+                SessionContext.SYSTEM_SESSION_ID,
+                context -> callContextInjection.run(context, callContextConsumer),
+                500
         );
         this.celesta.get().logout(SessionContext.SYSTEM_SESSION_ID, false);
         resultFuture.get();
