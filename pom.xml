@@ -19,6 +19,7 @@
         <module>celesta-core</module>
         <module>celesta-java</module>
         <module>celesta-system-services</module>
+        <module>celesta-vintage</module>
     </modules>
 
     <organization>

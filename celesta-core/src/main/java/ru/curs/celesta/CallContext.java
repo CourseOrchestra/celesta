@@ -222,7 +222,7 @@ public abstract class CallContext
 		}
 	}
 
-	void rollback() throws SQLException {
+	protected void rollback() throws SQLException {
 		conn.rollback();
 	}
 

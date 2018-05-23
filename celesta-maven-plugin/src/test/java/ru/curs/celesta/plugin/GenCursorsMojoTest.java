@@ -2,7 +2,10 @@ package ru.curs.celesta.plugin;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import ru.curs.celesta.CelestaException;
 
 
@@ -47,6 +50,7 @@ public class GenCursorsMojoTest extends AbstractMojoTestCase {
             FileUtils.deleteDirectory(celestaGeneratedRoot);
             File pom = getTestFile("target/test-classes/unit/gen-cursors/pom.xml");
             GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
+            setExecution(mojo);
             mojo.execute();
             assertGeneratedFiles();
         } finally {
@@ -58,6 +62,7 @@ public class GenCursorsMojoTest extends AbstractMojoTestCase {
     public void testFailOnGeneratingClassWithoutPackage() throws Exception {
         File pom = getTestFile("target/test-classes/unit/gen-cursors/badPom.xml");
         GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
+        setExecution(mojo);
 
         boolean celestaExceptionWasThrown = false;
 
@@ -104,4 +109,10 @@ public class GenCursorsMojoTest extends AbstractMojoTestCase {
 
     }
 
+
+    private void setExecution(GenCursorsMojo mojo) {
+        Plugin plugin = new Plugin();
+        mojo.execution = new MojoExecution(plugin, "gen-cursors", "exId");
+        mojo.execution.setLifecyclePhase(LifecyclePhase.GENERATE_SOURCES.id());
+    }
 }

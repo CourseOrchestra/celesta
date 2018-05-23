@@ -2,7 +2,6 @@ package ru.curs.celesta.unit;
 
 import org.python.core.PyFunction;
 import org.python.core.PyObject;
-import ru.curs.celesta.score.ParseException;
 
 public abstract class CelestaTestCase {
 

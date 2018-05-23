@@ -66,7 +66,7 @@ public class CelestaScriptsTest {
 
   @AfterAll
   public static void destroy() throws Exception {
-    h2Celesta.connectionPool.get().createStatement().execute("SHUTDOWN");
+    h2Celesta.callContext().getConn().createStatement().execute("SHUTDOWN");
     h2Celesta.close();
     postgresCelesta.close();
     oracleCelesta.close();

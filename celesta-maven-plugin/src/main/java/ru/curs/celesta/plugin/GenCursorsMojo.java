@@ -1,6 +1,7 @@
 package ru.curs.celesta.plugin;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -10,6 +11,8 @@ import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static ru.curs.celesta.plugin.CursorGenerator.generateCursor;
 
@@ -19,6 +22,22 @@ import static ru.curs.celesta.plugin.CursorGenerator.generateCursor;
 )
 public class GenCursorsMojo extends AbstractMojo {
 
+    private static final Map<String, String> lifeCyclePhaseToGeneratedSourcesDirName;
+    private static final Map<String, Function<MavenProject, Consumer<String>>> lifeCyclePhaseToAddCompileSourceRootConsumer;
+
+    static {
+        Map<String, String> dirNameMap = new HashMap<>();
+        dirNameMap.put(LifecyclePhase.GENERATE_SOURCES.id(), "generated-sources");
+        dirNameMap.put(LifecyclePhase.GENERATE_TEST_SOURCES.id(), "generated-test-sources");
+        lifeCyclePhaseToGeneratedSourcesDirName = Collections.unmodifiableMap(dirNameMap);
+
+        Map<String, Function<MavenProject, Consumer<String>>> consumerMap = new HashMap<>();
+        consumerMap.put(LifecyclePhase.GENERATE_SOURCES.id(), project -> project::addCompileSourceRoot);
+        consumerMap.put(LifecyclePhase.GENERATE_TEST_SOURCES.id(), project -> project::addTestCompileSourceRoot);
+        lifeCyclePhaseToAddCompileSourceRootConsumer = Collections.unmodifiableMap(consumerMap);
+    }
+
+
     @Parameter(property = "scores", required = true)
     protected List<ScoreProperties> scores;
 
@@ -27,6 +46,9 @@ public class GenCursorsMojo extends AbstractMojo {
 
     @Component
     private MavenProject project;
+
+    @Component
+    MojoExecution execution;
 
     @Override
     public void execute() {
@@ -100,7 +122,8 @@ public class GenCursorsMojo extends AbstractMojo {
     private File getSourceRoot() {
         return new File(
                 project.getBuild().getDirectory()
-                        + File.separator + "generated-sources" + File.separator + "celesta"
+                        + File.separator + lifeCyclePhaseToGeneratedSourcesDirName.get(execution.getLifecyclePhase())
+                        + File.separator + "celesta"
         );
     }
 
@@ -108,7 +131,9 @@ public class GenCursorsMojo extends AbstractMojo {
     private void addSourceRoot(File directory) {
         if (this.project != null) {
             this.getLog().info("Adding compile source root for cursors: " + directory);
-            this.project.addCompileSourceRoot(directory.getAbsolutePath());
+            lifeCyclePhaseToAddCompileSourceRootConsumer.get(this.execution.getLifecyclePhase())
+                    .apply(this.project)
+                    .accept(directory.getAbsolutePath());
         }
     }
 
