@@ -98,7 +98,7 @@ fi'''
              "files": [
                 {
                   "pattern": "target/warnings.yml",
-                  "target": "warn/celesta/${currentBuild.number}/warnings.yml",
+                  "target": "warn/celesta/${currentBuild.number}/warnings.yml"
                 }
                 ]
             }"""
