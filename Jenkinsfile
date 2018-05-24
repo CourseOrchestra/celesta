@@ -47,7 +47,7 @@ fi'''
         findbugs pattern: '**/target/findbugsXml.xml'
     }
 
-    stage ('Static Analysis') {
+    stage ('Static analysis') {
         def warningsMap = [:];
         for (module in modules) {
             def checkStyleResultPath = findFiles(glob: module + "/target/checkstyle-result.xml")[0].path
@@ -55,11 +55,12 @@ fi'''
             def targetPath = checkStyleResultPath.substring(0, checkStyleResultPath.lastIndexOf("/"))
 
             def shScript = $/{
-                            echo 'checkstyle:' ;
+                            printf 'checkstyle: ' ;
                             xmllint --xpath 'count(/checkstyle/file/error)' ${checkStyleResultPath} ;
                             echo;
-                            echo 'findbugs:' ;
+                            printf 'findbugs: ' ;
                             xmllint --xpath 'count(/BugCollection/BugInstance)' ${findBugsXmlPath} ;
+                            echo;
                         } | sed -e 'N;s/count:\n/\n  count: /g' > ${targetPath}/warnings.yml/$
             sh shScript
 
