@@ -71,13 +71,12 @@ fi'''
         }
         writeYaml file: 'target/warnings.yml', data: warningsMap
     }
-    
-/*    
+       
     stage ('Ratcheting') {
       def downloadSpec = """
          {"files": [
             {
-              "pattern": "warn/celesta/ * /warnings.yml",
+              "pattern": "warn/celesta/*/warnings.yml",
               "build": "celesta :: dev/LATEST",
               "target": "previous.yml",
               "flat": "true"
@@ -90,7 +89,7 @@ fi'''
            error "Ratcheting failed, see messages above."
         }
     }
-*/
+    
     if (env.BRANCH_NAME == 'dev') {
         stage ('Publish build info') {
             def uploadSpec = """
