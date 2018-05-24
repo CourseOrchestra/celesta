@@ -1,3 +1,4 @@
+@NonCPS
 boolean compareWarnings(before, after) {
     boolean result = true
     before.forEach { module, info ->
