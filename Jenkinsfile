@@ -1,17 +1,17 @@
-node {
-    boolean compareWarnings(before, after) {
-        boolean result = true
-        before.forEach { module, info ->
-            info.forEach { checker, warnings ->
-                if (after[module][checker] > warnings) {
-                    println "${module}.${checker}: ${warnings}->${after[module][checker]}"
-                    result = false
-                }
+boolean compareWarnings(before, after) {
+    boolean result = true
+    before.forEach { module, info ->
+        info.forEach { checker, warnings ->
+            if (after[module][checker] > warnings) {
+                println "${module}.${checker}: ${warnings}->${after[module][checker]}"
+                result = false
             }
         }
-        return result
     }
-    
+    return result
+}
+
+node {    
     def server = Artifactory.server 'ART'
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo
