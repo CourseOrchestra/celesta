@@ -1,4 +1,17 @@
 node {
+    boolean compareWarnings(before, after) {
+        boolean result = true
+        before.forEach { module, info ->
+            info.forEach { checker, warnings ->
+                if (after[module][checker] > warnings) {
+                    println "${module}.${checker}: ${warnings}->${after[module][checker]}"
+                    result = false
+                }
+            }
+        }
+        return result
+    }
+    
     def server = Artifactory.server 'ART'
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo
@@ -34,32 +47,63 @@ fi'''
         findbugs pattern: '**/target/findbugsXml.xml'
     }
 
-        stage ('Static Analysis') {
-            def warningsMap = [:];
-            for (module in modules) {
-                def checkStyleResultPath = findFiles(glob: module + "/target/checkstyle-result.xml")[0].path
-                def findBugsXmlPath = findFiles(glob: module + "/target/findbugsXml.xml")[0].path
-                def targetPath = checkStyleResultPath.substring(0, checkStyleResultPath.lastIndexOf("/"))
+    stage ('Static Analysis') {
+        def warningsMap = [:];
+        for (module in modules) {
+            def checkStyleResultPath = findFiles(glob: module + "/target/checkstyle-result.xml")[0].path
+            def findBugsXmlPath = findFiles(glob: module + "/target/findbugsXml.xml")[0].path
+            def targetPath = checkStyleResultPath.substring(0, checkStyleResultPath.lastIndexOf("/"))
 
-                def shScript = $/{
-                                echo 'checkstyle: count:' ;
-                                xmllint --xpath 'count(/checkstyle/file/error)' ${checkStyleResultPath} ;
-                                echo;
-                                echo 'findbugs: count:' ;
-                                xmllint --xpath 'count(/BugCollection/BugInstance)' ${findBugsXmlPath} ;
-                            } | sed -e 'N;s/count:\n/\n  count: /g' > ${targetPath}/warnings.yaml/$
-                sh shScript
+            def shScript = $/{
+                            echo 'checkstyle:' ;
+                            xmllint --xpath 'count(/checkstyle/file/error)' ${checkStyleResultPath} ;
+                            echo;
+                            echo 'findbugs:' ;
+                            xmllint --xpath 'count(/BugCollection/BugInstance)' ${findBugsXmlPath} ;
+                        } | sed -e 'N;s/count:\n/\n  count: /g' > ${targetPath}/warnings.yml/$
+            sh shScript
 
-                warnings = readYaml file: targetPath + '/warnings.yaml'
-                echo "${module} checkstyle warnings count: ${warnings.checkstyle.count}"
-                echo "${module} findbugs warnings count: ${warnings.findbugs.count}"
-                warningsMap.put(module, warnings)
-            }
-            writeYaml file: 'target/warnings.yaml', data: warningsMap
+            warnings = readYaml file: targetPath + '/warnings.yml'
+            echo "${module} checkstyle warnings count: ${warnings.checkstyle}"
+            echo "${module} findbugs warnings count: ${warnings.findbugs}"
+            warningsMap.put(module, warnings)
         }
-
+        writeYaml file: 'target/warnings.yml', data: warningsMap
+    }
+    
+/*    
+    stage ('Ratcheting') {
+      def downloadSpec = """
+         {"files": [
+            {
+              "pattern": "warn/celesta/ * /warnings.yml",
+              "build": "celesta :: dev/LATEST",
+              "target": "previous.yml",
+              "flat": "true"
+            }
+            ]
+        }""" 
+        server.download spec: downloadSpec
+        def oldWarnings = readYaml file: 'previous.yml'
+        if (!compareWarnings(oldWarnings, warningsMap)){
+           error "Ratcheting failed, see messages above."
+        }
+    }
+*/
     if (env.BRANCH_NAME == 'dev') {
         stage ('Publish build info') {
+            def uploadSpec = """
+            {
+             "files": [
+                {
+                  "pattern": "target/warnings.yml",
+                  "target": "warn/celesta/${currentBuild.number}/warnings.yml",
+                }
+                ]
+            }"""
+            
+            def buildInfo2 = server.upload spec: uploadSpec
+            buildInfo.append(buildInfo2)
             server.publishBuildInfo buildInfo
         }
     }
