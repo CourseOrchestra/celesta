@@ -17,7 +17,8 @@ node {
     def buildInfo
     def modules = ['celesta-sql', 'celesta-core', 'celesta-maven-plugin',
                     'celesta-system-services', 'celesta-java', 'celesta-jython', 'dbschemasync']
-
+    def warningsMap = [:];
+    
     stage ('Clone') {
         checkout scm
     }
@@ -48,7 +49,6 @@ fi'''
     }
 
     stage ('Static analysis') {
-        def warningsMap = [:];
         for (module in modules) {
             def checkStyleResultPath = findFiles(glob: module + "/target/checkstyle-result.xml")[0].path
             def findBugsXmlPath = findFiles(glob: module + "/target/findbugsXml.xml")[0].path
