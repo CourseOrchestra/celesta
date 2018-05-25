@@ -74,7 +74,7 @@ fi'''
         }""" 
         server.download spec: downloadSpec
         def oldWarnings = readYaml file: 'previous.yml'
-        if (!compareWarnings(oldWarnings, warningsMap)){
+        if (!ratcheting.compareWarnings(oldWarnings, warningsMap)){
            error "Ratcheting failed, see messages above."
         }
     }
