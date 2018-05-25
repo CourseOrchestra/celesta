@@ -1,4 +1,5 @@
 @Library('ratcheting')_
+import ru.curs.ratcheting.utils
 
 node {    
     def server = Artifactory.server 'ART'
@@ -74,7 +75,7 @@ fi'''
         }""" 
         server.download spec: downloadSpec
         def oldWarnings = readYaml file: 'previous.yml'
-        if (!ratcheting.compareWarnings(oldWarnings, warningsMap)){
+        if (!(new utils()).compareWarnings(oldWarnings, warningsMap)){
            error "Ratcheting failed, see messages above."
         }
     }
