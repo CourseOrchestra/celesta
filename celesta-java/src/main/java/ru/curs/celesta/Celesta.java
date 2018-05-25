@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 public class Celesta extends AbstractCelesta<JSessionContext> implements ICelesta {
 
@@ -91,29 +92,42 @@ public class Celesta extends AbstractCelesta<JSessionContext> implements ICelest
 
     public Object runProc(String sessionId, String qualifier, Object... args) {
         JSessionContext sessionContext = this.getSessionContext(sessionId);
-
         return this.celestaProcExecutor.runProc(sessionContext, qualifier, args);
     }
 
-    public Future<Object> runProcAsync(String sesId, String qualifier, long delay, Object... args) {
-        final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-        JSessionContext sessionContext = this.sessions.get(sesId);
+    public Future<Object> runProcAsync(String sessionId, String qualifier, long delay, Object... args) {
+        return this.runAsyncInner(sessionId, delay, currentSessionId -> this.runProc(currentSessionId, qualifier, args));
+    }
 
+    public <T> T run(String sessionId, Function<CallContext, T> f) {
+        JSessionContext sessionContext = this.getSessionContext(sessionId);
+        try (CallContext cc = callContext(sessionContext)) {
+            return f.apply(cc);
+        }
+    }
+
+    public <T> Future<T> runAsync(String sessionId, Function<CallContext, T> f, long delay) {
+        return this.runAsyncInner(sessionId, delay, currentSessionId -> this.run(currentSessionId, f));
+    }
+
+    private <T> Future<T> runAsyncInner(String sessionId, long delay, Function<String, T> f) {
+        final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        JSessionContext sessionContext = this.sessions.get(sessionId);
         Thread shutDownHook = new Thread(scheduledExecutor::shutdown);
         Runtime.getRuntime().addShutdownHook(shutDownHook);
 
-        Callable<Object> callable = () -> {
+        Callable<T> callable = () -> {
             String currentSesId = null;
             try {
 
-                if (sessions.containsKey(sesId)) {
-                    currentSesId = sesId;
+                if (sessions.containsKey(sessionId)) {
+                    currentSesId = sessionId;
                 } else {
                     currentSesId = String.format("TEMP%08X", ThreadLocalRandom.current().nextInt());
                     login(currentSesId, sessionContext.getUserId());
                 }
 
-                return this.runProc(currentSesId, qualifier, args);
+                return f.apply(currentSesId);
             } catch (Exception e) {
                 System.out.println("Exception while executing async task:" + e.getMessage());
                 throw e;

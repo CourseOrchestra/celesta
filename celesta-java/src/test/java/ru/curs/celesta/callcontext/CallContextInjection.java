@@ -8,7 +8,8 @@ import java.util.function.Consumer;
 public class CallContextInjection {
 
     @CelestaProc
-    public void run(CallContext callContext, Consumer<CallContext> contextConsumer) {
+    public Void run(CallContext callContext, Consumer<CallContext> contextConsumer) {
         contextConsumer.accept(callContext);
+        return null;
     }
 }
