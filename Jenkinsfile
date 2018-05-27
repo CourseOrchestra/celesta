@@ -7,8 +7,9 @@ node {
     def buildInfo
     def modules = ['celesta-sql', 'celesta-core', 'celesta-maven-plugin',
                     'celesta-system-services', 'celesta-java', 'celesta-jython', 'dbschemasync']
-    def warningsMap = [:];
-    
+    def warningsMap = [:]
+    def oldWarnings
+
     stage ('Clone') {
         checkout scm
     }
@@ -19,6 +20,19 @@ node {
         rtMaven.resolver releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot', server: server
         buildInfo = Artifactory.newBuildInfo()
         buildInfo.env.capture = true
+
+        def downloadSpec = """
+                 {"files": [
+                    {
+                      "pattern": "warn/celesta/*/warnings.yml",
+                      "build": "celesta :: dev/LATEST",
+                      "target": "previous.yml",
+                      "flat": "true"
+                    }
+                    ]
+                }"""
+        server.download spec: downloadSpec
+        oldWarnings = readYaml file: 'previous.yml'
     }
     
     stage ('Docker cleanup') {
@@ -63,20 +77,10 @@ fi'''
     }
        
     stage ('Ratcheting') {
-      def downloadSpec = """
-         {"files": [
-            {
-              "pattern": "warn/celesta/*/warnings.yml",
-              "build": "celesta :: dev/LATEST",
-              "target": "previous.yml",
-              "flat": "true"
-            }
-            ]
-        }""" 
-        server.download spec: downloadSpec
-        def oldWarnings = readYaml file: 'previous.yml'
         if (!(new utils()).compareWarnings(oldWarnings, warningsMap)){
            error "Ratcheting failed, see messages above."
+        } else {
+           echo "Ratcheting: no new issues found"
         }
     }
     

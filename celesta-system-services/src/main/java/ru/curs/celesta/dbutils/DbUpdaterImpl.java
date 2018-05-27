@@ -17,8 +17,6 @@ import ru.curs.celesta.syscursors.UserrolesCursor;
 public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
   private final ICelesta celesta;
-  private final PermissionManager permissionManager;
-  private final LoggingManager loggingManager;
   private TablesCursor table;
 
   static final String EXEC_NATIVE_NOT_SUPPORTED_MESSAGE = "\"EXECUTE NATIVE\" expression is not supported";
@@ -29,8 +27,6 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
     super(connectionPool, score, forceDdInitialize, dba);
 
     this.celesta = celesta;
-    this.permissionManager = permissionManager;
-    this.loggingManager = loggingManager;
   }
 
 
