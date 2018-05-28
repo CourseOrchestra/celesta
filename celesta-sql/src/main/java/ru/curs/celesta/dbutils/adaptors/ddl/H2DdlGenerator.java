@@ -164,7 +164,7 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
     @Override
     public String dropPk(TableElement t, String pkName) {
         String sql = String.format("alter table %s.%s drop primary key", t.getGrain().getQuotedName(),
-                t.getQuotedName(), pkName);
+                t.getQuotedName());
         return sql;
     }
 
@@ -340,8 +340,8 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
             //INSERT
             sql = String.format(
                     "CREATE TRIGGER \"" + insertTriggerName + "\" AFTER INSERT ON "
-                            + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \n " +
-                            MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n" +
+                            + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL %n " +
+                            MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "%n" +
                             "\"%s\"",
                     mv.getChecksum(),
                     MaterializedViewInsertTrigger.class.getName());

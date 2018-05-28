@@ -217,7 +217,8 @@ public abstract class AbstractScore {
             throw new ParseException(
                     String.format("Error parsing grain %s "
                             + "due to previous parsing errors or "
-                            + "cycle reference involving grains '%s' and '%s'.", currentGrain.getName(), dependencyGrain
+                            + "cycle reference involving grains '%s' and '%s'.",
+                            currentGrain.getName(), currentGrain.getName(), dependencyGrain
                     ));
 
         return g;
