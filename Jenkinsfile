@@ -1,4 +1,4 @@
-@Library('ratcheting')_
+@Library('ratcheting') _
 import ru.curs.ratcheting.utils
 
 node {    
@@ -80,11 +80,7 @@ fi'''
     stage ('Ratcheting') {
         println oldWarnings
         println warningsMap
-        if (!(new utils()).compareWarnings(oldWarnings, warningsMap)){
-           error "Ratcheting failed, see messages above."
-        } else {
-           echo "Ratcheting: no new issues found"
-        }
+        compareWarningMaps oldWarnings, warningsMap
     }
     
     if (env.BRANCH_NAME == 'dev') {
