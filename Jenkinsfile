@@ -1,5 +1,4 @@
 @Library('ratcheting') _
-import ru.curs.ratcheting.utils
 
 node {    
     def server = Artifactory.server 'ART'
