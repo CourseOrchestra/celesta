@@ -29,7 +29,7 @@ public abstract class BaseAppSettings {
         logger.setLevel(Level.INFO);
     }
 
-    public BaseAppSettings(Properties properties) {
+    public BaseAppSettings(final Properties properties) {
         this.properties = properties;
 
         StringBuffer sb = new StringBuffer();
