@@ -33,7 +33,7 @@ node {
                 }"""
         server.download spec: downloadSpec
         oldWarnings = readYaml file: 'previous.yml'
-        echo "${oldWarnings}"
+        println oldWarnings
     }
     
     stage ('Docker cleanup') {
@@ -78,8 +78,8 @@ fi'''
     }
        
     stage ('Ratcheting') {
-        echo "${oldWarnings}"
-        echo "${warningsMap}"
+        println oldWarnings
+        println warningsMap
         if (!(new utils()).compareWarnings(oldWarnings, warningsMap)){
            error "Ratcheting failed, see messages above."
         } else {
