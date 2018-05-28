@@ -32,7 +32,6 @@ node {
                 }"""
         server.download spec: downloadSpec
         oldWarnings = readYaml file: 'previous.yml'
-        println oldWarnings
     }
     
     stage ('Docker cleanup') {
@@ -77,8 +76,6 @@ fi'''
     }
        
     stage ('Ratcheting') {
-        println oldWarnings
-        println warningsMap
         compareWarningMaps oldWarnings, warningsMap
     }
     
