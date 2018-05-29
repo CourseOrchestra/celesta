@@ -15,7 +15,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>ru.curs</groupId>
-			<artifactId>celesta</artifactId>
+			<artifactId>celesta-jython</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

@@ -29,7 +29,7 @@ public abstract class BaseAppSettings {
         logger.setLevel(Level.INFO);
     }
 
-    public BaseAppSettings(Properties properties) {
+    public BaseAppSettings(final Properties properties) {
         this.properties = properties;
 
         StringBuffer sb = new StringBuffer();
@@ -99,7 +99,7 @@ public abstract class BaseAppSettings {
 
     }
 
-    static void checkEntries(String path, String propertyName, StringBuffer sb) {
+    protected static void checkEntries(String path, String propertyName, StringBuffer sb) {
         if (!path.isEmpty())
             for (String pathEntry : path.split(File.pathSeparator)) {
                 File pathFile = new File(pathEntry);

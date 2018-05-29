@@ -29,5 +29,5 @@ public abstract class SessionContext {
         return sessionId;
     }
 
-    abstract CallContext.CallContextBuilder callContextBuilder();
+    abstract protected CallContext.CallContextBuilder callContextBuilder();
 }

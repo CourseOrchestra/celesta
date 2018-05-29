@@ -27,7 +27,7 @@ public class InitTest {
 
     @AfterAll
     public static void destroy() throws SQLException {
-        celesta.connectionPool.get().createStatement().execute("SHUTDOWN");
+        celesta.callContext().getConn().createStatement().execute("SHUTDOWN");
         celesta.close();
     }
 
@@ -37,7 +37,7 @@ public class InitTest {
     }
 
     @Test
-    public void grainCusrorIsCallable() {
+    public void grainCursorIsCallable() {
         PySessionContext sc = new PySessionContext("user", "S");
         try (CallContext ctxt = celesta.callContext(sc)) {
             GrainsCursor g = new GrainsCursor(ctxt);

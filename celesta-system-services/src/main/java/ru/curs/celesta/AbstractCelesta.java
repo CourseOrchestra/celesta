@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractCelesta<T extends SessionContext> implements ICelesta, AutoCloseable {
 
-    static final String FILE_PROPERTIES = "celesta.properties";
+    protected static final String FILE_PROPERTIES = "celesta.properties";
 
     private final BaseAppSettings appSettings;
     private final Score score;
@@ -30,7 +30,7 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
     final PermissionManager permissionManager;
     final ProfilingManager profiler;
 
-    final ConcurrentHashMap<String, T> sessions = new ConcurrentHashMap<>();
+    final protected ConcurrentHashMap<String, T> sessions = new ConcurrentHashMap<>();
     final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
     public AbstractCelesta(BaseAppSettings appSettings, int phasesCount) {
@@ -175,13 +175,13 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
         server.ifPresent(Server::shutdown);
     }
 
-    abstract ScoreDiscovery getScoreDiscovery();
+    abstract protected ScoreDiscovery getScoreDiscovery();
 
     public abstract T getSystemSessionContext();
 
-    abstract T sessionContext(String userId, String sessionId);
+    protected abstract T sessionContext(String userId, String sessionId);
 
-    T getSessionContext(String sessionId) {
+    protected T getSessionContext(String sessionId) {
         T result = this.sessions.get(sessionId);
         if (result == null)
             throw new CelestaException("Session ID=%s is not logged in", sessionId);

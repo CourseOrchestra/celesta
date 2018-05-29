@@ -453,7 +453,7 @@ public final class Celesta extends AbstractCelesta<PySessionContext> implements 
 
 
     @Override
-    ScoreDiscovery getScoreDiscovery() {
+    protected ScoreDiscovery getScoreDiscovery() {
         return this.scoreDiscovery;
     }
 
@@ -463,7 +463,7 @@ public final class Celesta extends AbstractCelesta<PySessionContext> implements 
     }
 
     @Override
-    PySessionContext sessionContext(String userId, String sessionId) {
+    protected PySessionContext sessionContext(String userId, String sessionId) {
         return new PySessionContext(userId, sessionId);
     }
 }

@@ -43,7 +43,7 @@ public final class PySessionContext extends SessionContext {
 	}
 
 	@Override
-	CallContext.CallContextBuilder callContextBuilder() {
+	protected CallContext.CallContextBuilder callContextBuilder() {
 		return PyCallContext.builder();
 	}
 }

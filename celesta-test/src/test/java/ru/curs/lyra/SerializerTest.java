@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -40,7 +39,7 @@ public class SerializerTest {
 
 	@AfterAll
 	public static void destroy() throws SQLException {
-		connection.createStatement().execute("SHUTDOWN");
+		celesta.callContext().getConn().createStatement().execute("SHUTDOWN");
 		celesta.close();
 	}
 

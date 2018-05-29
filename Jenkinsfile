@@ -4,8 +4,8 @@ node {
     def server = Artifactory.server 'ART'
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo
-    def modules = ['celesta-sql', 'celesta-core', 'celesta-maven-plugin',
-                    'celesta-system-services', 'celesta-java', 'celesta-jython', 'dbschemasync']
+    def modules = ['celesta-sql', 'celesta-core', 'celesta-maven-plugin', 'celesta-system-services',
+                     'celesta-java', 'celesta-jython', 'dbschemasync', 'celesta-vintage']
     def warningsMap = [:]
     def oldWarnings
 

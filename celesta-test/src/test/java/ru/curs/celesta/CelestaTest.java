@@ -28,7 +28,7 @@ public class CelestaTest {
 
     @AfterAll
     static void afterAll() throws Exception {
-        celesta.connectionPool.get().createStatement().execute("SHUTDOWN");
+        celesta.callContext().getConn().createStatement().execute("SHUTDOWN");
         celesta.close();
     }
 
