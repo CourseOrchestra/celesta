@@ -1,4 +1,4 @@
-@Library('ratcheting') _
+@Library('ratcheting@spotbugs') _
 
 node {    
     def server = Artifactory.server 'ART'
@@ -45,7 +45,7 @@ fi'''
     } finally {
         junit '**/surefire-reports/**/*.xml'
         checkstyle pattern: '**/target/checkstyle-result.xml' //, canComputeNew: true, useDeltaValues: true, shouldDetectModules: true
-        findbugs pattern: '**/target/findbugsXml.xml'
+        findbugs pattern: '**/target/spotbugsXml.xml'
     }
        
     stage ('Ratcheting') {
