@@ -4,9 +4,6 @@ node {
     def server = Artifactory.server 'ART'
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo
-    def modules = ['celesta-sql', 'celesta-core', 'celesta-maven-plugin', 'celesta-system-services',
-                     'celesta-java', 'celesta-jython', 'dbschemasync', 'celesta-vintage']
-    def warningsMap = [:]
     def oldWarnings
 
     stage ('Clone') {
@@ -50,32 +47,17 @@ fi'''
         checkstyle pattern: '**/target/checkstyle-result.xml' //, canComputeNew: true, useDeltaValues: true, shouldDetectModules: true
         findbugs pattern: '**/target/findbugsXml.xml'
     }
-
-    stage ('Static analysis') {
-        for (module in modules) {
-            def checkStyleResultPath = findFiles(glob: module + "/target/checkstyle-result.xml")[0].path
-            def findBugsXmlPath = findFiles(glob: module + "/target/findbugsXml.xml")[0].path
-            def targetPath = checkStyleResultPath.substring(0, checkStyleResultPath.lastIndexOf("/"))
-
-            def shScript = $/{
-                            printf 'checkstyle: ' ;
-                            xmllint --xpath 'count(/checkstyle/file/error)' ${checkStyleResultPath} ;
-                            echo;
-                            printf 'findbugs: ' ;
-                            xmllint --xpath 'count(/BugCollection/BugInstance)' ${findBugsXmlPath} ;
-                            echo;
-                        } | sed -e 'N;s/count:\n/\n  count: /g' > ${targetPath}/warnings.yml/$
-            sh shScript
-
-            warnings = readYaml file: targetPath + '/warnings.yml'
-            echo "${module} checkstyle warnings count: ${warnings.checkstyle}"
-            echo "${module} findbugs warnings count: ${warnings.findbugs}"
-            warningsMap.put(module, warnings)
-        }
-        writeYaml file: 'target/warnings.yml', data: warningsMap
-    }
        
     stage ('Ratcheting') {
+        def warningsMap = countWarnings ['celesta-sql',
+                                         'celesta-core',
+                                         'celesta-maven-plugin',
+                                         'celesta-system-services',
+                                         'celesta-java',
+                                         'celesta-jython',
+                                         'dbschemasync',
+                                         'celesta-vintage']
+        writeYaml file: 'target/warnings.yml', data: warningsMap
         compareWarningMaps oldWarnings, warningsMap
     }
     
