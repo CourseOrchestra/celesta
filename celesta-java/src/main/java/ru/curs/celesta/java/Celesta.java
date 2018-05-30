@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
-public class Celesta extends AbstractCelesta<JSessionContext> implements ICelesta {
+public class Celesta extends AbstractCelesta<JSessionContext> {
 
     public static final JSessionContext SYSTEM_SESSION = new JSessionContext(
             SessionContext.SYSTEM_USER_ID, SessionContext.SYSTEM_SESSION_ID

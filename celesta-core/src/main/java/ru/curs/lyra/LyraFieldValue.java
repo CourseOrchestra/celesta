@@ -46,7 +46,7 @@ public final class LyraFieldValue extends LyraNamedElement {
 
 		if (val instanceof Date) {
 			SimpleDateFormat sdf = new SimpleDateFormat(XML_DATE_FORMAT);
-			xmlWriter.writeCharacters(val == null ? "" : sdf.format(val));
+			xmlWriter.writeCharacters(sdf.format(val));
 		} else {
 			xmlWriter.writeCharacters(val == null ? "" : val.toString());
 		}
