@@ -169,7 +169,6 @@
             <property name="max" value="15"/>
             <property name="switchBlockAsSingleDecisionPoint" value="true"/>
         </module>
-        <module name="CyclomaticComplexity"/>
 
         <module name="EqualsAvoidNull"/>
         <module name="EqualsHashCode"/>
