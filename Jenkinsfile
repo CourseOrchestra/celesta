@@ -49,14 +49,15 @@ fi'''
     }
        
     stage ('Ratcheting') {
-        def warningsMap = countWarnings ['celesta-sql',
-                                         'celesta-core',
-                                         'celesta-maven-plugin',
-                                         'celesta-system-services',
-                                         'celesta-java',
-                                         'celesta-jython',
-                                         'dbschemasync',
-                                         'celesta-vintage']
+        def modules = ['celesta-sql',
+                       'celesta-core',
+                       'celesta-maven-plugin',
+                       'celesta-system-services',
+                       'celesta-java',
+                       'celesta-jython',
+                       'dbschemasync',
+                       'celesta-vintage']
+        def warningsMap = countWarnings modules
         writeYaml file: 'target/warnings.yml', data: warningsMap
         compareWarningMaps oldWarnings, warningsMap
     }
