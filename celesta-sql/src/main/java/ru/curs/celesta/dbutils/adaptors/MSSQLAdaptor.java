@@ -529,7 +529,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
     sb.append("  RAISERROR ('record version check failure', 16, 1);\n");
 
     sb.append("END\n");
-    sb.append(String.format("update \"%s\".\"%s\" set recversion = recversion + 1 where\n",
+    sb.append(String.format("update \"%s\".\"%s\" set recversion = recversion + 1 where%n",
         t.getGrain().getName(), t.getName()));
     sb.append("exists (select * from inserted where \n");
 
@@ -546,7 +546,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
     for (String s : t.getPrimaryKey().keySet()) {
       if (needAnd)
         sb.append(" AND ");
-      sb.append(String.format("  %s.\"%s\" = %s.\"%s\"\n", left, s, right, s));
+      sb.append(String.format("  %s.\"%s\" = %s.\"%s\"%n", left, s, right, s));
       needAnd = true;
     }
   }
@@ -616,12 +616,12 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
   @Override
   String getSelectTriggerBodySql(TriggerQuery query) {
-    String sql = String.format(" SELECT OBJECT_DEFINITION (id)\n" +
-            "        FROM sysobjects\n" +
-            "    WHERE id IN(SELECT tr.object_id\n" +
-            "        FROM sys.triggers tr\n" +
-            "        INNER JOIN sys.tables t ON tr.parent_id = t.object_id\n" +
-            "        WHERE t.schema_id = SCHEMA_ID('%s')\n" +
+    String sql = String.format(" SELECT OBJECT_DEFINITION (id)%n" +
+            "        FROM sysobjects%n" +
+            "    WHERE id IN(SELECT tr.object_id%n" +
+            "        FROM sys.triggers tr%n" +
+            "        INNER JOIN sys.tables t ON tr.parent_id = t.object_id%n" +
+            "        WHERE t.schema_id = SCHEMA_ID('%s')%n" +
             "        AND tr.name = '%s');"
         , query.getSchema(), query.getName());
 
