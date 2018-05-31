@@ -64,9 +64,10 @@ public final class Celesta2DBSchema {
 				sw.writeStartElement("project");
 				sw.writeAttribute("name", "CelestaReversed");
 				sw.writeAttribute("database", "Celesta");
-				sw.writeAttribute("id", String.format("Project%d", (new Random()).nextInt()));
+				Random r = new Random();
+				sw.writeAttribute("id", String.format("Project%d", r.nextInt()));
 				sw.writeStartElement("layout");
-				sw.writeAttribute("id", String.format("Layout%d", (new Random()).nextInt()));
+				sw.writeAttribute("id", String.format("Layout%d", r.nextInt()));
 				sw.writeAttribute("name", "celesta");
 				sw.writeEndElement();
 				sw.writeEndElement();

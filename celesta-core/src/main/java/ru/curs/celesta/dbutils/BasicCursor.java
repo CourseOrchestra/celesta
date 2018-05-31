@@ -54,7 +54,7 @@ import ru.curs.celesta.score.ParseException;
 /**
  * Базовый класс курсора для чтения данных из представлений.
  */
-public abstract class BasicCursor extends BasicDataAccessor implements Closeable {
+public abstract class BasicCursor extends BasicDataAccessor {
 
 	private static final String DATABASE_CLOSING_ERROR =
 		"Database error when closing recordset for table '%s': %s";

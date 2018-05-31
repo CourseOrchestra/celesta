@@ -8,7 +8,7 @@ import java.math.BigInteger;
 public class DecimalColumn extends Column {
 
     //driven by MsSql
-    public static int MAX_PRECISION = 38;
+    public static final int MAX_PRECISION = 38;
 
     /**
      * Celesta-тип данных колонки.

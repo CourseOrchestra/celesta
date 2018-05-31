@@ -11,7 +11,7 @@ import java.util.Map;
  * Класс внешнего ключа.
  * 
  */
-public class ForeignKey {
+public final class ForeignKey {
 
 	private final Table parentTable;
 	private Table referencedTable;
@@ -367,13 +367,12 @@ public class ForeignKey {
 		parentTable.removeFK(this);
 	}
 
-	void save(PrintWriter bw, int count) throws IOException {
+	void save(PrintWriter bw) {
 		bw.write("ALTER TABLE ");
 		bw.write(getParentTable().getQuotedNameIfNeeded());
 		bw.write(" ADD CONSTRAINT ");
 		String name = getConstraintName();
-		if (name == null)
-			name = "fk" + count;
+
 		bw.write(name);
 		bw.write(" FOREIGN KEY (");
 		boolean comma = false;
