@@ -3,10 +3,7 @@ package ru.curs.celesta.dbutils.adaptors;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.DbUpdaterImpl;
-import ru.curs.celesta.dbutils.DbUpdaterBuilder;
-import ru.curs.celesta.dbutils.LoggingManager;
-import ru.curs.celesta.dbutils.PermissionManager;
+import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.mock.CelestaImpl;
 import ru.curs.celesta.score.AbstractScore;
@@ -48,19 +45,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
                 .scoreDiscovery(new PyScoreDiscovery())
                 .build();
 
-        CelestaImpl celesta = new CelestaImpl(dba, connectionPool, score);
-        PermissionManager permissionManager = celesta.getPermissionManager();
-        LoggingManager loggingManager = celesta.getLoggingManager();
-
-        DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
-                .dbAdaptor(dba)
-                .connectionPool(connectionPool)
-                .score(score)
-                .setCelesta(celesta)
-                .setPermissionManager(permissionManager)
-                .setLoggingManager(loggingManager)
-                .build();
-
+        DbUpdaterImpl dbUpdater = createDbUpdater(score, dba);
         dbUpdater.updateSysGrain();
     }
 
@@ -84,5 +69,4 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
     Connection getConnection() {
         return dba.connectionPool.get();
     }
-
 }

@@ -1,12 +1,6 @@
 @Library('ratcheting') _
 
 node {
-
-    if (env.BRANCH_NAME == 'master') {
-        currentBuild.result = 'SUCCESS'
-        return
-    }
-
     def server = Artifactory.server 'ART'
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo

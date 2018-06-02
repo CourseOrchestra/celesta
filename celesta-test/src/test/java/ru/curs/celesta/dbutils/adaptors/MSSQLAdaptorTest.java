@@ -17,7 +17,7 @@ import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.PyScoreDiscovery;
 
-public class MSSQLAdaptorTest extends AbstractAdaptorTest {
+public  class MSSQLAdaptorTest extends AbstractAdaptorTest {
 
     public static MSSQLServerContainer msSql = new MSSQLServerContainer()
             .withDatabaseName("celesta")
@@ -49,24 +49,14 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
                 .path(SCORE_NAME)
                 .scoreDiscovery(new PyScoreDiscovery())
                 .build();
-        CelestaImpl celesta = new CelestaImpl(dba, connectionPool, score);
-        PermissionManager permissionManager = celesta.getPermissionManager();
-        LoggingManager loggingManager = celesta.getLoggingManager();
 
-        DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
-                .dbAdaptor(dba)
-                .connectionPool(connectionPool)
-                .score(score)
-                .setCelesta(celesta)
-                .setPermissionManager(permissionManager)
-                .setLoggingManager(loggingManager)
-                .build();
-
+        DbUpdaterImpl dbUpdater = createDbUpdater(score, dba);
         dbUpdater.updateSysGrain();
     }
 
     @AfterAll
     public static void destroy() {
+        dba.connectionPool.close();
         msSql.stop();
     }
 

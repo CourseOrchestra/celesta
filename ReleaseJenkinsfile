@@ -61,7 +61,9 @@ node {
         def tagScript = "git tag " + releaseVersion
         sh tagScript
 
-        def newSnapshotVersion = (releaseVersion.split('.')[2].toInteger() + 1) + '-SNAPSHOT'
+        def splittedVersion = releaseVersion.split('\\.')
+        splittedVersion[2] = (splittedVersion[2].toInteger() + 1) as String
+        def newSnapshotVersion = splittedVersion.join('.') + '-SNAPSHOT'
         descriptor.version = newSnapshotVersion
         descriptor.failOnSnapshot = false
         descriptor.transform()
@@ -96,7 +98,7 @@ node {
             			    "-u $bintrayUserName:$bintrayPassword \\" +
             			    "-f \\" +
             			    "-X \\" +
-            			    "POST \"https://api.bintray.com/maven_central_sync/courseorchestra/libs-release-local/" + module + "/" + releaseVersion + "\""
+            			    "POST \"https://api.bintray.com/maven_central_sync/courseorchestra/libs-release-local/" + module + "/versions/" + releaseVersion + "\""
                     sh shScript
             }
         }

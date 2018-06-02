@@ -1,12 +1,16 @@
 package org.testcontainers.containers;
 
+import org.rnorth.ducttape.unreliables.Unreliables;
 import org.testcontainers.containers.wait.HostPortWaitStrategy;
 
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class MSSQLServerContainer<SELF extends MSSQLServerContainer<SELF>> extends JdbcDatabaseContainer<SELF>  {
     static final String NAME = "mssqlserver";
@@ -19,7 +23,7 @@ public class MSSQLServerContainer<SELF extends MSSQLServerContainer<SELF>> exten
     private boolean isCustomDbCreated;
 
     public MSSQLServerContainer() {
-        this(IMAGE + ":2017-latest");
+        this(IMAGE + ":2017-CU6");
     }
 
     public MSSQLServerContainer(final String dockerImageName) {
@@ -39,7 +43,6 @@ public class MSSQLServerContainer<SELF extends MSSQLServerContainer<SELF>> exten
         addExposedPort(MS_SQL_SERVER_PORT);
         addEnv("ACCEPT_EULA", "Y");
         addEnv("SA_PASSWORD", password);
-        //addEnv("MSSQL_COLLATION", collation);
         addEnv("TZ", System.getProperty("user.timezone"));
     }
 
@@ -58,8 +61,6 @@ public class MSSQLServerContainer<SELF extends MSSQLServerContainer<SELF>> exten
 
         return sb.toString();
     }
-
-
 
     @Override
     public String getUsername() {
@@ -117,6 +118,24 @@ public class MSSQLServerContainer<SELF extends MSSQLServerContainer<SELF>> exten
             isCustomDbCreated = true;
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+
+    // TODO: Replace with permanent solution to https://github.com/testcontainers/testcontainers-java/issues/568
+    @Override
+    public Connection createConnection(String queryString) throws SQLException {
+        final Properties info = new Properties();
+        info.put("user", this.getUsername());
+        info.put("password", this.getPassword());
+        final String url = this.getJdbcUrl() + queryString;
+
+        final Driver jdbcDriverInstance = getJdbcDriverInstance();
+
+        try {
+            return Unreliables.retryUntilSuccess(120, TimeUnit.SECONDS, () -> jdbcDriverInstance.connect(url, info));
+        } catch (Exception e) {
+            throw new SQLException("Could not create new connection", e);
         }
     }
 }
