@@ -1,4 +1,4 @@
-@Library('ratcheting@spotbugs') _
+@Library('ratcheting') _
 
 node {    
     def server = Artifactory.server 'ART'
