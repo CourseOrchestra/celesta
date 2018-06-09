@@ -1,6 +1,12 @@
 @Library('ratcheting') _
 
-node {    
+node {
+
+    if (env.BRANCH_NAME == 'master') {
+        currentBuild.result = 'SUCCESS'
+        return
+    }
+
     def server = Artifactory.server 'ART'
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo
@@ -14,6 +20,7 @@ node {
         rtMaven.tool = 'M3' 
         rtMaven.deployer releaseRepo: 'libs-release-local', snapshotRepo: 'libs-snapshot-local', server: server
         rtMaven.resolver releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot', server: server
+        rtMaven.deployer.artifactDeploymentPatterns.addExclude("*celesta-test*")
         buildInfo = Artifactory.newBuildInfo()
         buildInfo.env.capture = true
 
