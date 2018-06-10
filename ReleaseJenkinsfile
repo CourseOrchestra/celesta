@@ -1,3 +1,16 @@
+properties(
+[
+	pipelineTriggers([
+		triggers: [
+			 [
+				  $class: 'hudson.triggers.SCMTrigger',
+				  scmpoll_spec : 'H/10 * * * *'
+			 ]
+		]
+  ])
+]
+)
+
 node {
     def server = Artifactory.server 'ART'
     def rtMaven = Artifactory.newMavenBuild()
