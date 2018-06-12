@@ -17,6 +17,10 @@ node {
     def buildInfo
 
 
+    stage ('Old release branches cleanup') {
+        sh '''git branch | grep release/ | xargs --no-run-if-empty git branch -d'''
+    }
+
     stage ('Clone') {
         checkout scm
     }
