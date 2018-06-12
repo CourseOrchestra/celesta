@@ -42,7 +42,9 @@ public final class ConnectionPool implements AutoCloseable {
 	}
 
 	/**
-	 * Извлекает соединение из пула.
+	 * Returns a connection from pool.
+	 *
+	 * @return connection from pool
 	 */
 	public Connection get() {
 
@@ -129,14 +131,19 @@ public final class ConnectionPool implements AutoCloseable {
 
 	
 	/**
-	 * Возвращает число доступных соединений в пуле.
+	 * Returns the number of connections available in the pool.
+	 *
+	 * @return count of available connections
 	 */
 	public Object poolSize() {
 		return pool.size();
 	}
 	
 	/**
-	 * Закрыт ли пул.
+	 * If the poll is closed then this method will return true.
+	 *
+	 * @return <code>true</code> if the pool is closed;
+	 * 		   <code>false</code> otherwise.
 	 */
 	public boolean isClosed(){
 		return isClosed;
