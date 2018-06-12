@@ -18,7 +18,7 @@ node {
 
 
     stage ('Old release branches cleanup') {
-        sh '''git branch | grep release/ | xargs --no-run-if-empty git branch -d'''
+        sh '''git branch | grep release/ | xargs --no-run-if-empty git branch -D'''
     }
 
     stage ('Clone') {

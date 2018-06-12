@@ -24,7 +24,7 @@
             <plugin>
                 <groupId>ru.curs</groupId>
                 <artifactId>celesta-maven-plugin</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>${project.version}</version>
                 <configuration>
                     <scores>
                         <score>
