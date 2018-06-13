@@ -404,6 +404,7 @@
                             </flowInitContext>
                             <autoVersionSubmodules>true</autoVersionSubmodules>
                             <squash>true</squash>
+                            <noDeploy>true</noDeploy>
                         </configuration>
                     </plugin>
                 </plugins>
