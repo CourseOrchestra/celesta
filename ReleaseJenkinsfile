@@ -30,14 +30,16 @@ node {
         rtMaven.deployer releaseRepo: 'libs-release-local', snapshotRepo: 'libs-snapshot-local', server: server
         rtMaven.resolver releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot', server: server
         rtMaven.deployer.artifactDeploymentPatterns.addExclude("*celesta-test*")
-        buildInfo = Artifactory.newBuildInfo()
-        buildInfo.env.capture = true
     }
 
     stage ('Make release') {
         withCredentials([usernamePassword(credentialsId: 'd2156430-3faf-426d-8648-c6ec26e7da37', passwordVariable: 'gitPassword', usernameVariable: 'gitUserName')]) {
             rtMaven.run pom: 'pom.xml', goals: '-Dgit.username=${gitUserName} -Dgit.password=${gitPassword} -B jgitflow:release-start -P corchestra-release'
             rtMaven.run pom: 'pom.xml', goals: '-Dmaven.test.skip=true -Dgit.username=${gitUserName} -Dgit.password=${gitPassword} jgitflow:release-finish -P corchestra-release'
+            sh '''git checkout master'''
+            buildInfo = Artifactory.newBuildInfo()
+            buildInfo.env.capture = true
+            rtMaven.run pom: 'pom.xml', goals: '-Dmaven.test.skip=true clean install -P corchestra-release', buildInfo: buildInfo
         }
 
         def distributionConfig = [
