@@ -16,13 +16,13 @@ node {
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo
 
+    stage ('Clone') {
+        checkout scm
+        sh '''git reset --hard origin/dev'''
+    }
 
     stage ('Old release branches cleanup') {
         sh '''git branch | grep release/ | xargs --no-run-if-empty git branch -D'''
-    }
-
-    stage ('Clone') {
-        checkout scm
     }
 
     stage ('Artifactory configuration') {
@@ -37,8 +37,7 @@ node {
     stage ('Make release') {
         withCredentials([usernamePassword(credentialsId: 'd2156430-3faf-426d-8648-c6ec26e7da37', passwordVariable: 'gitPassword', usernameVariable: 'gitUserName')]) {
             rtMaven.run pom: 'pom.xml', goals: '-Dgit.username=${gitUserName} -Dgit.password=${gitPassword} -B jgitflow:release-start -P corchestra-release'
-            rtMaven.run pom: 'pom.xml', goals: '-Dgit.username=${gitUserName} -Dgit.password=${gitPassword} jgitflow:release-finish -P corchestra-release', buildInfo: buildInfo
-            server.publishBuildInfo buildInfo
+            rtMaven.run pom: 'pom.xml', goals: '-Dmaven.test.skip=true -Dgit.username=${gitUserName} -Dgit.password=${gitPassword} jgitflow:release-finish -P corchestra-release'
         }
 
         def distributionConfig = [
