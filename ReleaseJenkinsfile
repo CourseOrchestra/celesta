@@ -15,14 +15,11 @@ node {
     def server = Artifactory.server 'ART'
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo
+    def descriptor
+    def releaseVersion
 
     stage ('Clone') {
         checkout scm
-        sh '''git reset --hard origin/dev'''
-    }
-
-    stage ('Old release branches cleanup') {
-        sh '''git branch | grep release/ | xargs --no-run-if-empty git branch -D'''
     }
 
     stage ('Artifactory configuration') {
@@ -30,17 +27,19 @@ node {
         rtMaven.deployer releaseRepo: 'libs-release-local', snapshotRepo: 'libs-snapshot-local', server: server
         rtMaven.resolver releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot', server: server
         rtMaven.deployer.artifactDeploymentPatterns.addExclude("*celesta-test*")
+        buildInfo = Artifactory.newBuildInfo()
+        buildInfo.env.capture = true
+
+        descriptor = Artifactory.mavenDescriptor()
+        pom = readMavenPom file: 'pom.xml'
+        releaseVersion = pom.version.split('-')[0]
+        descriptor.version = releaseVersion
+        descriptor.failOnSnapshot = true
+        descriptor.transform()
     }
 
     stage ('Make release') {
-        withCredentials([usernamePassword(credentialsId: 'd2156430-3faf-426d-8648-c6ec26e7da37', passwordVariable: 'gitPassword', usernameVariable: 'gitUserName')]) {
-            rtMaven.run pom: 'pom.xml', goals: '-Dgit.username=${gitUserName} -Dgit.password=${gitPassword} -B jgitflow:release-start -P corchestra-release'
-            rtMaven.run pom: 'pom.xml', goals: '-Dmaven.test.skip=true -Dgit.username=${gitUserName} -Dgit.password=${gitPassword} jgitflow:release-finish -P corchestra-release'
-            sh '''git checkout master'''
-            buildInfo = Artifactory.newBuildInfo()
-            buildInfo.env.capture = true
-            rtMaven.run pom: 'pom.xml', goals: '-Dmaven.test.skip=true clean install -P corchestra-release', buildInfo: buildInfo
-        }
+        rtMaven.run pom: 'pom.xml', goals: '-Dmaven.test.skip=true clean install -P corchestra-release', buildInfo: buildInfo
 
         def distributionConfig = [
             // Mandatory parameters
@@ -51,5 +50,20 @@ node {
             'overrideExistingFiles' : true // Default: false. If true, Artifactory overwrites builds already existing in the target path in Bintray.
         ]
         server.distribute distributionConfig
+    }
+
+    stage ('Update repository') {
+        sh '''git commit -m "updating poms for ${releaseVersion} release"'''
+        sh '''git tag releaseVersion'''
+
+        def newSnapshotVersion = (releaseVersion.split('.')[2].toInteger() + 1) + '-SNAPSHOT'
+        descriptor.version = newSnapshotVersion
+        descriptor.failOnSnapshot = false
+        descriptor.transform()
+
+        sh '''git commit -m "updating poms for ${newSnapshotVersion} development"'''
+
+        sh '''git push origin dev'''
+        sh '''git push --tags'''
     }
 }
