@@ -299,7 +299,6 @@
     </build>
 
 
-
     <profiles>
         <profile>
             <id>dev</id>
@@ -390,22 +389,11 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
                     </plugin>
                     <plugin>
-                        <groupId>external.atlassian.jgitflow</groupId>
-                        <artifactId>jgitflow-maven-plugin</artifactId>
-                        <version>${jgitflow.maven.plugin.version}</version>
-                        <configuration>
-                            <username>${git.username}</username>
-                            <password>${git.password}</password>
-                            <flowInitContext>
-                                <developBranchName>dev</developBranchName>
-                            </flowInitContext>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <squash>true</squash>
-                            <noDeploy>true</noDeploy>
-                        </configuration>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
                     </plugin>
                 </plugins>
             </build>
