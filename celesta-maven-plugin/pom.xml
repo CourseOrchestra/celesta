@@ -3,12 +3,12 @@
     <parent>
         <artifactId>celesta-parent</artifactId>
         <groupId>ru.curs</groupId>
-        <version>6.1.1-SNAPSHOT</version>
+        <version>6.1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>celesta-maven-plugin</artifactId>
-    <version>6.1.1-SNAPSHOT</version>
+    <name>celesta-maven-plugin</name>
 
     <packaging>maven-plugin</packaging>
 
@@ -16,7 +16,7 @@
         <dependency>
             <groupId>ru.curs</groupId>
             <artifactId>celesta-core</artifactId>
-            <version>6.1.1-SNAPSHOT</version>
+            <version>6.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.squareup</groupId>
