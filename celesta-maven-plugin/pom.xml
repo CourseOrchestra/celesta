@@ -8,6 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>celesta-maven-plugin</artifactId>
+    <name>celesta-maven-plugin</name>
     <version>6.1.0-SNAPSHOT</version>
 
     <packaging>maven-plugin</packaging>

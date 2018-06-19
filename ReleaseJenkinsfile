@@ -54,17 +54,47 @@ node {
     }
 
     stage ('Update repository') {
-        sh '''git commit -m "updating poms for ${releaseVersion} release"'''
-        sh '''git tag releaseVersion'''
+        sh '''git add .'''
+        sh $/git commit -m "updating poms for ${releaseVersion} release"/$
+        sh '''git tag ${releaseVersion}'''
 
         def newSnapshotVersion = (releaseVersion.split('.')[2].toInteger() + 1) + '-SNAPSHOT'
         descriptor.version = newSnapshotVersion
         descriptor.failOnSnapshot = false
         descriptor.transform()
 
-        sh '''git commit -m "updating poms for ${newSnapshotVersion} development"'''
+        sh '''git add .'''
+        sh $/git commit -m "updating poms for ${newSnapshotVersion} development"/$
 
-        sh '''git push origin dev'''
-        sh '''git push --tags'''
+        sshagent(['cf816ae4-a98e-4eaa-98fd-18c588739711']) {
+            sh '''git push origin dev'''
+            sh '''git push --tags'''
+        }
+    }
+
+    stage ('Sync with maven central') {
+        def modules = ['celesta-parent',
+                       'celesta-sql',
+                       'celesta-core',
+                       'celesta-maven-plugin',
+                       'celesta-system-services',
+                       'celesta-java',
+                       'celesta-jython',
+                       'celesta-vintage']
+
+        withCredentials([usernamePassword(credentialsId: 'curs-bintray', passwordVariable: 'bintrayPassword', usernameVariable: 'bintrayUserName')]) {
+            for (module in modules) {
+                    def shScript = "\\" +
+                        "curl --verbose \\" +
+            			    "-s \\" +
+            			    "--connect-timeout 240 \\" +
+            			    "--max-time 2700 \\" +
+            			    "-u $bintrayUserName:$bintrayPassword \\" +
+            			    "-f \\" +
+            			    "-X \\" +
+            			    "POST \"https://api.bintray.com/maven_central_sync/courseorchestra/libs-release-local/" + module + "/" + releaseVersion + "/6.1.0\""
+                    sh shScript
+            }
+        }
     }
 }
