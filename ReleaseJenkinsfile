@@ -20,6 +20,7 @@ node {
 
     stage ('Clone') {
         checkout scm
+        sh '''git checkout dev'''
     }
 
     stage ('Artifactory configuration') {
@@ -56,7 +57,7 @@ node {
     stage ('Update repository') {
         sh '''git add .'''
 
-        def commitReleaseScript = "git commit -m \"updating poms for " + releaseVersion + " release\""
+        def commitReleaseScript = "git commit -m \"updating poms for " + releaseVersion + " release [ci skip]\""
         sh commitReleaseScript
         def tagScript = "git tag " + releaseVersion
         sh tagScript
@@ -69,7 +70,7 @@ node {
         descriptor.transform()
 
         sh '''git add .'''
-        def commitSnapshotScript = "git commit -m \"updating poms for " + newSnapshotVersion + " development\""
+        def commitSnapshotScript = "git commit -m \"updating poms for " + newSnapshotVersion + " development [ci skip]\""
         sh commitSnapshotScript
 
         sshagent(['cf816ae4-a98e-4eaa-98fd-18c588739711']) {
