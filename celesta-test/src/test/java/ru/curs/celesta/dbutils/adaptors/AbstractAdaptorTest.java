@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -23,6 +24,7 @@ import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
+import ru.curs.celesta.mock.CelestaImpl;
 import ru.curs.celesta.score.*;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.lyra.grid.VarcharFieldEnumerator;
@@ -30,6 +32,18 @@ import ru.curs.lyra.grid.VarcharFieldEnumerator;
 public abstract class AbstractAdaptorTest {
     final static String GRAIN_NAME = "gtest";
     final static String SCORE_NAME = "testScore";
+
+    final static String RESOURCES_SCORES_PATH = new StringJoiner(File.separator)
+            .add("src").add("test").add("resources").add("ru").add("curs").add("celesta")
+            .add("dbutils").add("adaptors").add("scores").toString();
+
+    final static String ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_1_SCORE_NAME = "addNotNullColumnWithDefaultValue1";
+    final static String ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_2_SCORE_NAME = "addNotNullColumnWithDefaultValue2";
+
+    final static String ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_1_SCORE_PATH = RESOURCES_SCORES_PATH
+            + File.separator + ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_1_SCORE_NAME;
+    final static String ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_2_SCORE_PATH = RESOURCES_SCORES_PATH
+            + File.separator + ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_2_SCORE_NAME;
 
     private DBAdaptor dba;
     private AbstractScore score;
@@ -144,6 +158,7 @@ public abstract class AbstractAdaptorTest {
             conn.rollback();
         }
         dba.createTable(conn, t);
+        conn.commit();
     }
 
     @AfterEach
@@ -1712,7 +1727,7 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void testVarcharFieldEnumeratorCollation() throws Exception {
+    void testVarcharFieldEnumeratorCollation() throws Exception {
         List<String> data = dba.selectStaticStrings(VarcharFieldEnumerator.CHARS, "\"id\"", "\"id\" ASC");
         VarcharFieldEnumerator varcharFieldEnumerator = new VarcharFieldEnumerator(dba, 1);
 
@@ -1728,4 +1743,67 @@ public abstract class AbstractAdaptorTest {
         }
     }
 
+
+    @Test
+    void testAddNotNullColumnWithDefaultValue() throws Exception {
+        Score score = new Score.ScoreBuilder<>(Score.class)
+                .path(ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_1_SCORE_PATH)
+                .build();
+        DbUpdater dbUpdater = createDbUpdater(score, this.dba);
+        dbUpdater.updateDb();
+
+        Table t = score.getGrain("test").getTable("t");
+
+        assertThrows(ParseException.class, () -> t.getColumn("description"));
+
+        boolean[] nullsMask = {false};
+
+        List<ParameterSetter> program = new ArrayList<>();
+        PreparedStatement pstmt = dba.getInsertRecordStatement(this.conn, t, nullsMask, program);
+        Object[] rowData = {"A"};
+        program.get(0).execute(pstmt, 1, rowData, 0);
+        pstmt.execute();
+        assertEquals(1, this.getCount(this.conn, t));
+        this.conn.commit();
+
+        score = new Score.ScoreBuilder<>(Score.class)
+                .path(ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_2_SCORE_PATH)
+                .build();
+        Table newT = score.getGrain("test").getTable("t");
+        dbUpdater = createDbUpdater(score, this.dba);
+        dbUpdater.updateDb();
+
+        WhereTerm w = WhereTermsMaker.getPKWhereTerm(newT);
+        pstmt = this.dba.getOneRecordStatement(this.conn, newT, w.getWhere(), Collections.emptySet());
+
+        program = new ArrayList<>();
+        w.programParams(program, this.dba);
+        program.get(0).execute(pstmt, 1, new String[]{"A"}, 0);
+
+        try (ResultSet rs = pstmt.executeQuery()) {
+
+            assertAll(
+                    () -> assertTrue(rs.next()),
+                    () -> assertEquals("DESC", rs.getString("description")),
+                    () -> assertFalse(rs.next())
+            );
+        }
+
+    }
+
+
+    static DbUpdaterImpl createDbUpdater(Score score, DBAdaptor dba) {
+        CelestaImpl celesta = new CelestaImpl(dba, dba.connectionPool, score);
+        PermissionManager permissionManager = celesta.getPermissionManager();
+        LoggingManager loggingManager = celesta.getLoggingManager();
+
+        return new DbUpdaterBuilder()
+                .dbAdaptor(dba)
+                .connectionPool(dba.connectionPool)
+                .score(score)
+                .setCelesta(celesta)
+                .setPermissionManager(permissionManager)
+                .setLoggingManager(loggingManager)
+                .build();
+    }
 }

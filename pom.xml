@@ -63,13 +63,13 @@
         <javacc.version>7.0.3</javacc.version>
         <jdbc.driver.oracle.version>12.1.2-0-0</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.1.3</jdbc.driver.postgres.version>
-        <jdbc.driver.sqlserver.version>6.2.2.jre8</jdbc.driver.sqlserver.version>
+        <jdbc.driver.sqlserver.version>6.4.0.jre8</jdbc.driver.sqlserver.version>
         <jython.version>2.7.1b3</jython.version>
         <junit.version>5.1.0</junit.version>
         <junit.platform.version>1.0.0</junit.platform.version>
         <org.json.version>20171018</org.json.version>
         <org.reflections.version>0.9.11</org.reflections.version>
-        <testcontainers.version>1.4.3</testcontainers.version>
+        <testcontainers.version>1.6.0</testcontainers.version>
 
         <!--plugin versions -->
         <spotbugs.maven.plugin.version>3.1.3</spotbugs.maven.plugin.version>
