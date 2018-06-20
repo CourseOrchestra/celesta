@@ -3,7 +3,7 @@
     <parent>
         <artifactId>celesta-parent</artifactId>
         <groupId>ru.curs</groupId>
-        <version>6.1.4-SNAPSHOT</version>
+        <version>6.1.4</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -14,7 +14,7 @@
         <dependency>
             <groupId>ru.curs</groupId>
             <artifactId>celesta-jython</artifactId>
-            <version>6.1.4-SNAPSHOT</version>
+            <version>6.1.4</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
