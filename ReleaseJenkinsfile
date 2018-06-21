@@ -21,6 +21,12 @@ node {
     stage ('Clone') {
         checkout scm
         sh '''git checkout dev'''
+
+        result = sh (script: "git log -1 | grep '\\[ci skip\\]'", returnStatus: true)
+        if (result == 0) {
+            currentBuild.result = 'SUCCESS'
+            return
+        }
     }
 
     stage ('Artifactory configuration') {
