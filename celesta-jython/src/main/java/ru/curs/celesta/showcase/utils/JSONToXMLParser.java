@@ -47,11 +47,11 @@ public class JSONToXMLParser {
 		}
 
 		if (newJson.contains("'{}'")) {
-			newJson = newJson.replaceAll("[{][}]", "{\"myTagForResolvingProblem\"=\"2\"}");
+			newJson = newJson.replaceAll("[{][}]", "{\"myTagForResolvingProblem\":\"2\"}");
 		}
 
 		if (newJson.contains("{}")) {
-			newJson = newJson.replaceAll("[{][}]", "{'myTagForResolvingProblem'='2'}");
+			newJson = newJson.replaceAll("[{][}]", "{'myTagForResolvingProblem':'2'}");
 		}
 
 		// Обработка тега <template> для объекта Chart
@@ -97,6 +97,7 @@ public class JSONToXMLParser {
 
 		try {
 			jo = new JSONObject(jt);
+			// jo = new JSONObject(newJson);
 		} catch (Exception e) {
 			System.out.println(e);
 		}
@@ -147,20 +148,40 @@ public class JSONToXMLParser {
 			outString = outString.replaceFirst("xmlns2", "xmlns");
 		}
 
-		while (outString.contains("{\"myTagForResolvingProblem\"=\"2\"}")) {
-			int ind = outString.indexOf("{\"myTagForResolvingProblem\"=\"2\"}");
+		while (outString.contains("{&#34;myTagForResolvingProblem&#34;:&#34;2&#34;}")) {
+			int ind = outString.indexOf("{&#34;myTagForResolvingProblem&#34;:&#34;2&#34;}");
 			String str1 = outString.substring(0, ind + 1).trim();
 			String str2 =
-				outString.substring(ind + "{\"myTagForResolvingProblem\"=\"2\"}".length() - 1,
+				outString.substring(
+						ind + "{&#34;myTagForResolvingProblem&#34;:&#34;2&#34;}".length() - 1,
 						outString.length()).trim();
 			outString = str1 + str2;
 		}
 
-		while (outString.contains("{'myTagForResolvingProblem'='2'}")) {
-			int ind = outString.indexOf("{'myTagForResolvingProblem'='2'}");
+		while (outString.contains("{&#10;myTagForResolvingProblem&#10;:&#10;2&#10;}")) {
+			int ind = outString.indexOf("{&#10;myTagForResolvingProblem&#10;:&#10;2&#10;}");
 			String str1 = outString.substring(0, ind + 1).trim();
 			String str2 =
-				outString.substring(ind + "{'myTagForResolvingProblem'='2'}".length() - 1,
+				outString.substring(
+						ind + "{&#10;myTagForResolvingProblem&#10;:&#10;2&#10;}".length() - 1,
+						outString.length()).trim();
+			outString = str1 + str2;
+		}
+
+		while (outString.contains("{\"myTagForResolvingProblem\":\"2\"}")) {
+			int ind = outString.indexOf("{\"myTagForResolvingProblem\":\"2\"}");
+			String str1 = outString.substring(0, ind + 1).trim();
+			String str2 =
+				outString.substring(ind + "{\"myTagForResolvingProblem\":\"2\"}".length() - 1,
+						outString.length()).trim();
+			outString = str1 + str2;
+		}
+
+		while (outString.contains("{'myTagForResolvingProblem':'2'}")) {
+			int ind = outString.indexOf("{'myTagForResolvingProblem':'2'}");
+			String str1 = outString.substring(0, ind + 1).trim();
+			String str2 =
+				outString.substring(ind + "{'myTagForResolvingProblem':'2'}".length() - 1,
 						outString.length()).trim();
 			outString = str1 + str2;
 		}
