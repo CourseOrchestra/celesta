@@ -4,7 +4,7 @@ properties(
 		triggers: [
 			 [
 				  $class: 'hudson.triggers.SCMTrigger',
-				  scmpoll_spec : 'H/10 * * * *'
+				  scmpoll_spec : 'H 0 * * 0'
 			 ]
 		]
   ])
