@@ -156,7 +156,9 @@ public abstract class BasicGridForm extends BasicLyraForm {
 		if (result.size() < h) {
 			for (int i = result.size(); i < h; i++) {
 				if (!c.previous())
+				{
 					break;
+				}
 				_beforeSending(c);
 				LyraFormData lfd = new LyraFormData(c, meta, id);
 				result.add(0, lfd);
