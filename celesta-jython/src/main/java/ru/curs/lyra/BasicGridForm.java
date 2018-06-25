@@ -250,4 +250,9 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * Should return a number of rows in grid.
 	 */
 	public abstract int getGridHeight();
+	
+	/**
+	 * Should return a summary row.
+	 */
+	public abstract String getSummaryRow();
 }
