@@ -147,8 +147,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			_beforeSending(c);
 			LyraFormData lfd = new LyraFormData(c, meta, id);
 			result.add(lfd);
-			if (!c.next())
-			{
+			if (!c.next()) {
 				break;
 			}
 		}
@@ -157,8 +156,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
 		if (result.size() < h) {
 			for (int i = result.size(); i < h; i++) {
-				if (!c.previous())
-				{
+				if (!c.previous()) {
 					break;
 				}
 				_beforeSending(c);
@@ -168,6 +166,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			}
 			c.copyFieldsFrom(copy);
 		}
+		
 		return result;
 	}
 
