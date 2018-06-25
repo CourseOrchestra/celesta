@@ -148,7 +148,9 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			LyraFormData lfd = new LyraFormData(c, meta, id);
 			result.add(lfd);
 			if (!c.next())
+			{
 				break;
+			}
 		}
 		// return to the beginning!
 		c.copyFieldsFrom(copy);
