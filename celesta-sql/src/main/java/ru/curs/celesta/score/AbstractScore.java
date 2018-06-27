@@ -52,6 +52,9 @@ import ru.curs.celesta.score.validator.IdentifierParser;
  */
 public abstract class AbstractScore {
 
+    static final String DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE
+            = "Couldn't parse schema '%s'. Dependency schema '%s' does not exist.";
+
     private final Map<String, Grain> grains = new HashMap<>();
 
     private final Map<String, List<GrainPart>> grainNameToGrainParts = new LinkedHashMap<>();
@@ -77,7 +80,7 @@ public abstract class AbstractScore {
      * разделённого точкой с запятой.
      *
      * @ в случае указания несуществующего пути или в случае двойного
-     *                          определения гранулы с одним и тем же именем.
+     * определения гранулы с одним и тем же именем.
      */
     void init(ScoreDiscovery scoreDiscovery) throws ParseException {
         for (String entry : this.path.split(File.pathSeparator)) {
@@ -108,7 +111,7 @@ public abstract class AbstractScore {
      *
      * @ при ошибке ввода-вывода.
      */
-    public void save()  {
+    public void save() {
         for (Grain g : grains.values())
             if (g.isModified())
                 g.save();
@@ -120,21 +123,21 @@ public abstract class AbstractScore {
         List<GrainPart> grainParts = new ArrayList<>();
 
         for (File f : files) {
-            GrainPart grainPart = extractGrainInfo( f, false);
+            GrainPart grainPart = extractGrainInfo(f, false);
             grainParts.add(grainPart);
         }
 
         grainParts.sort((o1, o2) -> {
             if (o1.isDefinition() && !o2.isDefinition())
                 return -1;
-             else if (o1.isDefinition() == o2.isDefinition())
+            else if (o1.isDefinition() == o2.isDefinition())
                 return 0;
-             else
-                 return 1;
+            else
+                return 1;
         });
 
 
-        for (GrainPart grainPart: grainParts) {
+        for (GrainPart grainPart : grainParts) {
 
             String grainName = grainPart.getGrain().getName().replace("\"", "");
 
@@ -152,7 +155,7 @@ public abstract class AbstractScore {
 
     private void parseGrains(StringBuilder errorScript) throws ParseException {
 
-        for (String grainName: grainNameToGrainParts.keySet()) {
+        for (String grainName : grainNameToGrainParts.keySet()) {
             try {
                 parseGrain(grainName);
             } catch (ParseException e) {
@@ -207,6 +210,14 @@ public abstract class AbstractScore {
     Grain getGrainAsDependency(Grain currentGrain, String dependencyGrain) throws ParseException {
         Grain g = grains.get(dependencyGrain);
 
+        if (g == null) {
+            throw new CelestaException(
+                    String.format(
+                            DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE, currentGrain.getName(), dependencyGrain
+                    )
+            );
+        }
+
         if (currentGrain == g)
             return currentGrain;
 
@@ -216,8 +227,8 @@ public abstract class AbstractScore {
         if (!g.isParsingComplete())
             throw new ParseException(
                     String.format("Error parsing grain %s "
-                            + "due to previous parsing errors or "
-                            + "cycle reference involving grains '%s' and '%s'.",
+                                    + "due to previous parsing errors or "
+                                    + "cycle reference involving grains '%s' and '%s'.",
                             currentGrain.getName(), currentGrain.getName(), dependencyGrain
                     ));
 
@@ -261,7 +272,7 @@ public abstract class AbstractScore {
         }
     }
 
-    private void initSystemGrain()  {
+    private void initSystemGrain() {
         ChecksumInputStream is = null;
 
         try {
@@ -279,7 +290,7 @@ public abstract class AbstractScore {
             result.setLength(is.getCount());
             result.finalizeParsing();
         } catch (Exception e) {
-          throw new CelestaException(e);
+            throw new CelestaException(e);
         } finally {
             try {
                 if (is != null)
@@ -330,7 +341,7 @@ public abstract class AbstractScore {
         private ScoreDiscovery scoreDiscovery;
         private Class<T> scoreClass;
 
-        public ScoreBuilder (Class<T> scoreClass) {
+        public ScoreBuilder(Class<T> scoreClass) {
             this.scoreClass = scoreClass;
         }
 
@@ -354,7 +365,7 @@ public abstract class AbstractScore {
                 t.init(this.scoreDiscovery);
 
                 return t;
-            } catch (InstantiationException | IllegalAccessException  e) {
+            } catch (InstantiationException | IllegalAccessException e) {
                 throw new CelestaException(e);
             }
         }
