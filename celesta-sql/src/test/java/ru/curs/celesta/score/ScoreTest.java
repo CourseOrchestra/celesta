@@ -2,6 +2,7 @@ package ru.curs.celesta.score;
 
 
 import java.io.*;
+import java.util.StringJoiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -9,13 +10,13 @@ import org.junit.jupiter.api.Test;
 
 public class ScoreTest {
 
-    private static final String SCORE_PATH_PREFIX = "src" + File.separator + "test" + File.separator + "resources"
-            + File.separator + "scores";
+    private static final String SCORE_PATH_PREFIX = new StringJoiner(File.separator)
+            .add("src").add("test").add("resources").add("scores").toString();
     public static final String TEST_SCORE_PATH = SCORE_PATH_PREFIX + File.separator + "testScore";
-    private static final String COMPOSITE_SCORE_PATH_1 = SCORE_PATH_PREFIX + File.separator
-            +"compositeScore" + File.separator + "score";
-    private static final String COMPOSITE_SCORE_PATH_2 = SCORE_PATH_PREFIX + File.separator
-            + "compositeScore" + File.separator + "score2";
+    private static final String COMPOSITE_SCORE_PATH_1 = new StringJoiner(File.separator)
+            .add(SCORE_PATH_PREFIX).add("compositeScore").add("score").toString();
+    private static final String COMPOSITE_SCORE_PATH_2 = new StringJoiner(File.separator)
+            .add(SCORE_PATH_PREFIX).add("compositeScore").add("score2").toString();
 
 
     @Test
