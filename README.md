@@ -9,4 +9,8 @@ A component of the [platform](https://corchestra.ru/en/) for rapid development o
 
 * Full documentation: https://corchestra.ru/wiki/index.php?title=Celesta
 
+* SECON2018: A concise overview talk (in Russian, 30 min): https://youtu.be/IEIzpqID2XI
+
+* JUG.MSK meetup, September 2018: A longer talk with more technical details (in Russian): https://youtu.be/16lB_c6pHfc?t=4143
+
 <img src="celesta_duke.png" width="200px">
