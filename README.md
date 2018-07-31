@@ -2,6 +2,7 @@
 
 [![Build Status](https://ci.corchestra.ru/buildStatus/icon?job=celesta/dev)](https://ci.corchestra.ru/job/celesta/job/dev/)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5ff36f37f97b4366825d4e57986408b2)](https://www.codacy.com/app/CourseOrchestra/celesta?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CourseOrchestra/celesta&amp;utm_campaign=Badge_Grade)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/ru.curs/celesta-parent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/ru.curs/celesta-parent)
 
 A component of the [platform](https://corchestra.ru/en/) for rapid development of business applications with relational databases.
 
