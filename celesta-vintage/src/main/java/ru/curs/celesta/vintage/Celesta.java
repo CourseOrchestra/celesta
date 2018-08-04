@@ -29,8 +29,14 @@ public final class Celesta implements VintageCelesta, AutoCloseable {
         this.jythonCelesta = ru.curs.celesta.Celesta.createInstance(jythonProperties);
 
         final Properties javaProperties = new Properties(jythonProperties);
-        javaProperties.put("score.path", appSettings.getJavaScorePath());
-        this.javaCelesta = ru.curs.celesta.java.Celesta.createInstance(javaProperties);
+        final String javaScorePath = appSettings.getJavaScorePath();
+
+        if (javaScorePath != null && !javaScorePath.trim().isEmpty()) {
+            javaProperties.put("score.path", appSettings.getJavaScorePath());
+            this.javaCelesta = ru.curs.celesta.java.Celesta.createInstance(javaProperties);
+        } else {
+            this.javaCelesta = null;
+        }
     }
 
     public static Celesta createInstance(Properties properties) {
@@ -177,7 +183,9 @@ public final class Celesta implements VintageCelesta, AutoCloseable {
     @Override
     public void close() {
         this.jythonCelesta.close();
-        this.javaCelesta.close();
+        if (this.javaCelesta != null) {
+            this.javaCelesta.close();
+        }
     }
 
     public CallContext callContext(PySessionContext sessionContext) {
