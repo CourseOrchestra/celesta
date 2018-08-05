@@ -22,19 +22,8 @@ public class VintageCelestaTest {
 
     @BeforeAll
     static void beforeAll() {
-        String scorePrefix = "src" + File.separator + "test" + File.separator
-                + "resources" + File.separator + "ru" + File.separator + "curs"
-                + File.separator + "celesta" + File.separator + "vintage" + File.separator;
-
-        Properties params = new Properties();
-        params.setProperty("score.path", scorePrefix + "jythonScore");
-        params.setProperty("score.java.path", scorePrefix + "javaScore");
-        params.setProperty("h2.in-memory", "true");
-        params.setProperty("pylib.path", "../celesta-test/pylib");
-        params.setProperty("celestaScan", "ru.curs.celesta.vintage");
-        celesta = Optional.of(Celesta.createInstance(params));
-        celesta.get().login(SessionContext.SYSTEM_SESSION_ID, SessionContext.SYSTEM_USER_ID);
-        celesta.get().javaLogin(SessionContext.SYSTEM_SESSION_ID, SessionContext.SYSTEM_USER_ID);
+        celesta = initCelestaVintage("javaScore");
+        loginInBothCelesta();
     }
 
     @AfterAll
@@ -65,6 +54,12 @@ public class VintageCelestaTest {
         );
     }
 
+    @Test
+    void testJavaCelestaNotInitializesWhenScoreJavaPathIsNull() {
+        try (Celesta celesta = initCelestaVintage(null).get()) {
+            assertThrows(NullPointerException.class, () -> celesta.getJavaCallContext());
+        }
+    }
 
     public static class Procedures {
 
@@ -84,6 +79,29 @@ public class VintageCelestaTest {
                     () -> assertEquals(Integer.valueOf(5), cursor.getVal())
             );
         }
+    }
+
+
+    static Optional<Celesta> initCelestaVintage(String relativeJavaScorePath) {
+        String scorePrefix = "src" + File.separator + "test" + File.separator
+                + "resources" + File.separator + "ru" + File.separator + "curs"
+                + File.separator + "celesta" + File.separator + "vintage" + File.separator;
+
+        Properties params = new Properties();
+        params.setProperty("score.path", scorePrefix + "jythonScore");
+        if (relativeJavaScorePath != null) {
+            params.setProperty("score.java.path", scorePrefix + relativeJavaScorePath);
+        }
+        params.setProperty("h2.in-memory", "true");
+        params.setProperty("pylib.path", "../celesta-test/pylib");
+        params.setProperty("celestaScan", "ru.curs.celesta.vintage");
+
+        return Optional.of(Celesta.createInstance(params));
+    }
+
+    static void loginInBothCelesta() {
+        celesta.get().login(SessionContext.SYSTEM_SESSION_ID, SessionContext.SYSTEM_USER_ID);
+        celesta.get().javaLogin(SessionContext.SYSTEM_SESSION_ID, SessionContext.SYSTEM_USER_ID);
     }
 
 }
