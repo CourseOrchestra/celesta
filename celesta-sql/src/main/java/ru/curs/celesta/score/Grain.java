@@ -31,7 +31,8 @@ public final class Grain extends NamedElement {
 
 	private Set<GrainPart> grainParts = new LinkedHashSet<>();
 
-	private final Map<Class<? extends GrainElement>, NamedElementHolder<? extends GrainElement>> grainElements = new HashMap<>();
+	private final Map<Class<? extends GrainElement>, NamedElementHolder<? extends GrainElement>> grainElements
+            = new HashMap<>();
 
 	private final NamedElementHolder<Index> indices = new NamedElementHolder<Index>() {
 		@Override
@@ -303,7 +304,12 @@ public final class Grain extends NamedElement {
 			String sequenceName = tableName + "_seq";
 			SequenceElement se = getElementsHolder(SequenceElement.class).get(sequenceName);
 			if (se != null)
-				throw new ParseException(String.format("Identifier %s can't be used for the naming of sequence as  it'is reserved by Celesta.", sequenceName));
+				throw new ParseException(
+						String.format(
+								"Identifier %s can't be used for the naming of sequence as  it'is reserved by Celesta.",
+								sequenceName
+						)
+				);
 		}
 
         parsingComplete = true;
