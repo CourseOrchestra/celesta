@@ -1,10 +1,11 @@
 package ru.curs.celesta;
 
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class SessionContext {
 
-    public static final String SYSTEM_USER_ID = String.format("SYS%08X", (new Random()).nextInt());
+    public static final String SYSTEM_USER_ID = String.format("SYS%08X", ThreadLocalRandom.current().nextInt());
     public static final String SYSTEM_SESSION_ID = "CELESTA";
 
     private final String userId;
