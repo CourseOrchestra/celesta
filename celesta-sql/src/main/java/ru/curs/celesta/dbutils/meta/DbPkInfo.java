@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.meta;
 
-import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.TableElement;
 
 import java.util.Iterator;

@@ -7,7 +7,6 @@ import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 

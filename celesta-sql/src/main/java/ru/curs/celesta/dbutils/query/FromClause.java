@@ -1,7 +1,6 @@
 package ru.curs.celesta.dbutils.query;
 
 import ru.curs.celesta.score.DataGrainElement;
-import ru.curs.celesta.score.GrainElement;
 
 import java.util.ArrayList;
 import java.util.List;
