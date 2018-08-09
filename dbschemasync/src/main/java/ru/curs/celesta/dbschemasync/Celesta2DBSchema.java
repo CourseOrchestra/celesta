@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -64,7 +65,7 @@ public final class Celesta2DBSchema {
 				sw.writeStartElement("project");
 				sw.writeAttribute("name", "CelestaReversed");
 				sw.writeAttribute("database", "Celesta");
-				Random r = new Random();
+				Random r = ThreadLocalRandom.current();
 				sw.writeAttribute("id", String.format("Project%d", r.nextInt()));
 				sw.writeStartElement("layout");
 				sw.writeAttribute("id", String.format("Layout%d", r.nextInt()));

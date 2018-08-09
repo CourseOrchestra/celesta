@@ -3,7 +3,6 @@ package ru.curs.celesta.score;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 public final class ZonedDateTimeColumn extends Column {
     /**

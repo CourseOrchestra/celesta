@@ -4,7 +4,7 @@ package ru.curs.celesta.dbutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ public class BLOBTest {
 			4, 65, -117, 8, 55, -2 };
 
 	@Test
-	public void test1() throws IOException {
+	public void test1() {
 		// 1. Нулевой BLOB
 		BLOB a = new BLOB();
 		assertTrue(a.isNull());
@@ -38,8 +38,7 @@ public class BLOBTest {
 	@Test
 	public void test3() throws IOException {
 		byte[] longData = new byte[100000];
-		Random rnd = new Random();
-		rnd.nextBytes(longData);
+		ThreadLocalRandom.current().nextBytes(longData);
 		subTest(longData);
 	}
 
@@ -51,8 +50,7 @@ public class BLOBTest {
 	@Test
 	public void test5() throws IOException {
 		byte[] longData = new byte[100000];
-		Random rnd = new Random();
-		rnd.nextBytes(longData);
+		ThreadLocalRandom.current().nextBytes(longData);
 		subTest2(longData);
 	}
 
@@ -68,8 +66,7 @@ public class BLOBTest {
 		});
 
 		byte[] longData = new byte[90000];
-		Random rnd = new Random();
-		rnd.nextBytes(longData);
+		ThreadLocalRandom.current().nextBytes(longData);
 
 		assertFalse(a.isModified());
 		OutputStream os = a.getOutStream();

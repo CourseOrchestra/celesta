@@ -34,32 +34,28 @@
  */
 package ru.curs.celesta;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import org.python.core.PyException;
+import org.python.core.PyObject;
+import org.python.util.PythonInterpreter;
+import ru.curs.celesta.ormcompiler.ORMCompiler;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.discovery.PyScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreDiscovery;
+
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.python.core.PyException;
-import org.python.core.PyObject;
-import org.python.util.PythonInterpreter;
-
-import ru.curs.celesta.ormcompiler.ORMCompiler;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.discovery.PyScoreDiscovery;
-import ru.curs.celesta.score.discovery.ScoreDiscovery;
 
 /**
  * Корневой класс приложения.
@@ -126,7 +122,7 @@ public final class Celesta extends AbstractCelesta<PySessionContext> implements 
                 System.arraycopy(args, 2, params, 0, args.length - 2);
 
                 String userId = args[0];
-                String sesId = String.format("TEMP%08X", (new Random()).nextInt());
+                String sesId = String.format("TEMP%08X", ThreadLocalRandom.current().nextInt());
                 // getInstance().setProfilemode(true);
                 celesta.login(sesId, userId);
                 celesta.runPython(sesId, args[1], params);

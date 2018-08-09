@@ -35,7 +35,6 @@
 
 package ru.curs.celesta.dbutils;
 
-import java.io.Closeable;
 import java.sql.*;
 import java.util.*;
 import java.util.Map.Entry;

@@ -2,7 +2,6 @@ package ru.curs.celesta.score;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 

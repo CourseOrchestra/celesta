@@ -5,7 +5,7 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.lyra.grid.KeyInterpolator;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class InterpolationInitializer {
 
@@ -16,7 +16,7 @@ public abstract class InterpolationInitializer {
 
     private final KeyInterpolator interpolator;
     private final DBAdaptor dbAdaptor;
-    private final Random rnd = new Random();
+    private final ThreadLocalRandom rnd = ThreadLocalRandom.current();
 
     public InterpolationInitializer(KeyInterpolator interpolator, DBAdaptor dbAdaptor) {
         this.interpolator = interpolator;
