@@ -14,10 +14,6 @@ import ru.curs.celesta.dbutils.adaptors.StaticDataAdaptor;
  */
 public class VarcharFieldEnumerator extends KeyEnumerator {
 
-	private static final Map<StaticDataAdaptor, String > RULES = new HashMap<>();
-
-	static final int[][] EMPTY_STRING = new int[0][0];
-
 	public final static List<String> CHARS = Arrays.asList(
 			"'", "-", "–", "—", " ", "!", "\"", "#", "$", "%", "&", "(", ")",
 			"*", ",", ".", "/", ":", ";",
@@ -36,6 +32,9 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 			"э", "Э", "ю", "Ю", "я", "Я"
 	);
 
+	private static final Map<StaticDataAdaptor, String > RULES = new HashMap<>();
+
+	private static final int[][] EMPTY_STRING = new int[0][0];
 
 	private final LyraCollator collator;
 

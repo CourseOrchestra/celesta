@@ -4,13 +4,14 @@ import java.math.BigInteger;
 import java.util.Date;
 
 public class DateFieldEnumerator extends KeyEnumerator {
+    public static final long MIN_TIMESTAMP = -2208988800000L;
+    public static final long MAX_TIMESTAMP = 4102444800000L;
+
+    private static final BigInteger MIN = BigInteger.valueOf(MIN_TIMESTAMP); // 1900-01-01
+    private static final BigInteger MAX = BigInteger.valueOf(MAX_TIMESTAMP); // 2100-01-01
+    private static final BigInteger CARD = MAX.subtract(MIN).add(BigInteger.ONE);
 
     private Date value;
-
-    public static BigInteger MIN = BigInteger.valueOf(-2208988800000L); // 1900-01-01
-    public static BigInteger MAX = BigInteger.valueOf(4102444800000L); // 2100-01-01
-
-    private static final BigInteger CARD = MAX.subtract(MIN).add(BigInteger.ONE);
 
     @Override
     public BigInteger cardinality() {

@@ -29,14 +29,11 @@ public class DateFieldNumeratorTest {
 
 
     static Stream<Date> wrongDates() {
-        return Stream.of(Date.from(
-                Instant.ofEpochMilli(
-                        DateFieldEnumerator.MIN.subtract(BigInteger.TEN).longValue()))
-                ,
-                Date.from(
-                        Instant.ofEpochMilli(
-                                DateFieldEnumerator.MAX.add(BigInteger.TEN).longValue()))
-        );
+        return Stream.of(
+                Date.from(Instant.ofEpochMilli(
+                        DateFieldEnumerator.MIN_TIMESTAMP - 100L)),
+                Date.from(Instant.ofEpochMilli(
+                        DateFieldEnumerator.MAX_TIMESTAMP + 100L)));
     }
 
     @ParameterizedTest
