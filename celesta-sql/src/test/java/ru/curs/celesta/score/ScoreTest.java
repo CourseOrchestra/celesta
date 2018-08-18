@@ -17,6 +17,7 @@ public class ScoreTest {
             .add(SCORE_PATH_PREFIX).add("compositeScore").add("score").toString();
     private static final String COMPOSITE_SCORE_PATH_2 = new StringJoiner(File.separator)
             .add(SCORE_PATH_PREFIX).add("compositeScore").add("score2").toString();
+    public static final String CANNOT_MODIFY_SYSTEM_GRAIN = "cannot modify system grain";
 
 
     @Test
@@ -73,7 +74,7 @@ public class ScoreTest {
                                                 + File.separator + "_grain3.sql")
                                 ).findFirst().isPresent()
                 )
-                );
+        );
 
         Grain sys = s.getGrain("celestaSql");
         a = sys.getElement("grains", Table.class);
@@ -147,13 +148,8 @@ public class ScoreTest {
         assertFalse(celesta.isModified());
         // Проверяем, что модифицировать элементы системной гранулы недопустимо.
         Table tables = celesta.getElement("tables", Table.class);
-        boolean itWas = false;
-        try {
-            new StringColumn(tables, "newcolumn");
-        } catch (ParseException e) {
-            itWas = true;
-        }
-        assertTrue(itWas);
+        ParseException e = assertThrows(ParseException.class, () -> new StringColumn(tables, "newcolumn"));
+        assertTrue(e.getMessage().contains(CANNOT_MODIFY_SYSTEM_GRAIN));
         assertFalse(celesta.isModified());
     }
 
@@ -182,14 +178,8 @@ public class ScoreTest {
         g3.modify();
         assertTrue(g3.isModified());
         assertFalse(g2.isModified());
-
-        boolean itWas = false;
-        try {
-            celesta.modify();
-        } catch (ParseException e) {
-            itWas = true;
-        }
-        assertTrue(itWas);
+        ParseException e = assertThrows(ParseException.class, celesta::modify);
+        assertTrue(e.getMessage().contains(CANNOT_MODIFY_SYSTEM_GRAIN));
         assertFalse(celesta.isModified());
 
     }
@@ -245,22 +235,13 @@ public class ScoreTest {
         Grain g2 = s.getGrain("grain2");
         GrainPart g2p = g2.getGrainParts().stream().findFirst().get();
         // Нельзя создать view с именем таблицы
-        boolean itWas = false;
-        try {
-            new View(g2p, "b");
-        } catch (ParseException e) {
-            itWas = true;
-        }
-        assertTrue(itWas);
+        ParseException e = assertThrows(ParseException.class, () -> new View(g2p, "b"));
+        assertTrue(e.getMessage().contains("Table with the same name already exists"));
+        Grain g1 = s.getGrain("grain1");
+        GrainPart g1p = g1.getGrainParts().stream().findFirst().get();
         // Нельзя создать таблицу с именем view
-        new View(g2p, "newView");
-        itWas = false;
-        try {
-            new Table(g2p, "newView");
-        } catch (ParseException e) {
-            itWas = true;
-        }
-        assertTrue(itWas);
+        e = assertThrows(ParseException.class, () -> new Table(g1p, "testView"));
+        assertTrue(e.getMessage().contains("View with the same name already exists"));
         new Table(g2p, "newView2");
     }
 
@@ -286,17 +267,12 @@ public class ScoreTest {
         GrainPart g1p = g1.getGrainParts().stream().findFirst().get();
         assertEquals(1, g1.getElements(View.class).size());
         assertFalse(g1.isModified());
-        boolean itWas = false;
-        View nv = null;
-        try {
-            nv = new View(g1p, "testit", "select postalcode, city from adresses where flat = 5");
-        } catch (ParseException e) {
-            itWas = true;
-        }
-        assertTrue(itWas);
+        assertTrue(assertThrows(ParseException.class, () ->
+                new View(g1p, "testit", "select postalcode, city from adresses where flat = 5"))
+                .getMessage().contains("is expected to be of TEXT type"));
         assertEquals(1, g1.getElements(View.class).size());
         assertTrue(g1.isModified());
-        nv = new View(g1p, "testit", "select postalcode, city from adresses where flat = '5'");
+        View nv = new View(g1p, "testit", "select postalcode, city from adresses where flat = '5'");
         assertEquals(2, nv.getColumns().size());
         assertEquals(2, g1.getElements(View.class).size());
         assertTrue(g1.isModified());
@@ -317,13 +293,13 @@ public class ScoreTest {
         assertEquals(" бла бла бла\r\n бла", t.getCelestaDoc());
         t.setCelestaDocLexem("/**бла\rбла\nбла\r\nбла*/");
         assertEquals("бла\rбла\nбла\r\nбла", t.getCelestaDoc());
-        boolean itWas = false;
-        try {
-            t.setCelestaDocLexem("/*бла\rбла\nбла\r\nбла*/");
-        } catch (ParseException e) {
-            itWas = true;
-        }
-        assertTrue(itWas);
+
+        assertTrue(
+                assertThrows(ParseException.class,
+                        () -> t.setCelestaDocLexem("/*бла\rбла\nбла\r\nбла*/"))
+                        .getMessage().contains("Celestadoc should match pattern")
+        );
+
     }
 
     @Test
@@ -349,14 +325,15 @@ public class ScoreTest {
         for (String l : actual)
             assertEquals(r.readLine(), l);
 
-        assertEquals("VARCHAR", t.getColumn("attrVarchar").getCelestaType());
-        assertEquals("INT", t.getColumn("attrInt").getCelestaType());
-        assertEquals("BIT", t.getColumn("f1").getCelestaType());
-        assertEquals("REAL", t.getColumn("f5").getCelestaType());
-        assertEquals("TEXT", t.getColumn("f6").getCelestaType());
-        assertEquals("DATETIME", t.getColumn("f8").getCelestaType());
-        assertEquals("BLOB", t.getColumn("f10").getCelestaType());
-
+        assertAll(
+                () -> assertEquals("VARCHAR", t.getColumn("attrVarchar").getCelestaType()),
+                () -> assertEquals("INT", t.getColumn("attrInt").getCelestaType()),
+                () -> assertEquals("BIT", t.getColumn("f1").getCelestaType()),
+                () -> assertEquals("REAL", t.getColumn("f5").getCelestaType()),
+                () -> assertEquals("TEXT", t.getColumn("f6").getCelestaType()),
+                () -> assertEquals("DATETIME", t.getColumn("f8").getCelestaType()),
+                () -> assertEquals("BLOB", t.getColumn("f10").getCelestaType())
+        );
     }
 
     @Test
@@ -467,14 +444,15 @@ public class ScoreTest {
         View v = g.getElement("testView4", View.class);
         String[] expected = {"  select f1 as f1, f4 as f4, f5 as f5, f4 + f5 as s, f5 * f5 + 1 as s2",
                 "  from testTable as testTable", "  where f1 = true"};
-        assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
-
-        // Checking nullability evaluation
-        assertFalse(v.getColumns().get("f1").isNullable());
-        assertTrue(v.getColumns().get("f4").isNullable());
-        assertFalse(v.getColumns().get("f5").isNullable());
-        assertTrue(v.getColumns().get("s").isNullable());
-        assertFalse(v.getColumns().get("s2").isNullable());
+        assertAll(
+                () -> assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n")),
+                // Checking nullability evaluation
+                () -> assertFalse(v.getColumns().get("f1").isNullable()),
+                () -> assertTrue(v.getColumns().get("f4").isNullable()),
+                () -> assertFalse(v.getColumns().get("f5").isNullable()),
+                () -> assertTrue(v.getColumns().get("s").isNullable()),
+                () -> assertFalse(v.getColumns().get("s2").isNullable())
+        );
     }
 
     @Test

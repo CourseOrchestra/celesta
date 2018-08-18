@@ -121,7 +121,7 @@ public abstract class AbstractAdaptorTest {
         dba.createSchemaIfNotExists(conn, GRAIN_NAME);
 
         final boolean hasRecordInGrainsTable;
-        String sql = "SELECT * FROM "  + dba.tableString("celesta", GrainsCursor.TABLE_NAME) + " WHERE \"id\"=?";
+        String sql = "SELECT * FROM " + dba.tableString("celesta", GrainsCursor.TABLE_NAME) + " WHERE \"id\"=?";
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, GRAIN_NAME);
             ResultSet rs = statement.executeQuery();
@@ -131,7 +131,7 @@ public abstract class AbstractAdaptorTest {
 
         if (!hasRecordInGrainsTable) {
             sql = "INSERT INTO " + dba.tableString("celesta", GrainsCursor.TABLE_NAME)
-                            + " (\"id\", \"version\", \"length\", \"checksum\",\"state\",\"lastmodified\",\"message\") "
+                    + " (\"id\", \"version\", \"length\", \"checksum\",\"state\",\"lastmodified\",\"message\") "
                     + " VALUES(?,?,?,?,?,?,?)";
 
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -311,16 +311,8 @@ public abstract class AbstractAdaptorTest {
 
         // we do not increment recversion value here, so we expect version check
         // failure
-        boolean itWas = false;
-        try {
-            pstmt2.executeUpdate();
-        } catch (SQLException e) {
-            // System.out.println(e.getMessage());
-            itWas = true;
-            assertTrue(e.getMessage().contains("record version check failure"));
-        }
-        assertTrue(itWas);
-
+        SQLException e = assertThrows(SQLException.class, () -> pstmt2.executeUpdate());
+        assertTrue(e.getMessage().contains("record version check failure"));
     }
 
     @Test
@@ -578,7 +570,7 @@ public abstract class AbstractAdaptorTest {
         assertEquals(false, c.isMax());
         assertEquals(false, c.isIdentity());
 
-        // f6 varchar(max) not null default 'abc',
+        // f6 varchar(MAX) not null default 'abc',
         c = dba.getColumnInfo(conn, t.getColumn("f6"));
         assertEquals("f6", c.getName());
         assertSame(StringColumn.class, c.getType());
@@ -772,7 +764,7 @@ public abstract class AbstractAdaptorTest {
         c = dba.getColumnInfo(conn, col);
         assertEquals("", c.getDefaultValue());
 
-        // f6 varchar(max) not null default 'abc',
+        // f6 varchar(MAX) not null default 'abc',
         col = t.getColumn("f6");
         c = dba.getColumnInfo(conn, col);
         assertEquals("f6", c.getName());
@@ -938,7 +930,7 @@ public abstract class AbstractAdaptorTest {
         assertEquals(19, c.getLength());
         assertFalse(c.isMax());
 
-        col.setLength("max");
+        col.setLength("MAX");
         assertTrue(col.isMax());
         dba.updateColumn(conn, col, c);
         c = dba.getColumnInfo(conn, col);
