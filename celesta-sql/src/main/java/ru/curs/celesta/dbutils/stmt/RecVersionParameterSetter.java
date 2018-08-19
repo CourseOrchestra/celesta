@@ -11,17 +11,17 @@ import java.sql.SQLException;
  */
 public final class RecVersionParameterSetter extends ParameterSetter {
 
-	public RecVersionParameterSetter(QueryBuildingHelper queryBuildingHelper) {
-		super(queryBuildingHelper);
-	}
+    public RecVersionParameterSetter(QueryBuildingHelper queryBuildingHelper) {
+        super(queryBuildingHelper);
+    }
 
-	@Override
-	public void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion)  {
-		try {
-			stmt.setInt(paramNum, recversion);
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-	}
+    @Override
+    public void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion)  {
+        try {
+            stmt.setInt(paramNum, recversion);
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
+        }
+    }
 
 }

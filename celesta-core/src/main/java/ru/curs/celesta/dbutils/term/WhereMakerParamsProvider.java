@@ -13,23 +13,23 @@ import java.util.Map;
  * testability.
  */
 public interface WhereMakerParamsProvider {
-	QueryBuildingHelper dba();
+    QueryBuildingHelper dba();
 
-	void initOrderBy();
+    void initOrderBy();
 
-	String[] sortFields();
+    String[] sortFields();
 
-	int[] sortFieldsIndices();
+    int[] sortFieldsIndices();
 
-	boolean[] descOrders();
+    boolean[] descOrders();
 
-	Object[] values();
+    Object[] values();
 
-	boolean isNullable(String columnName);
+    boolean isNullable(String columnName);
 
-	Map<String, AbstractFilter> filters();
+    Map<String, AbstractFilter> filters();
 
-	Expr complexFilter();
+    Expr complexFilter();
 
-	In inFilter();
+    In inFilter();
 }

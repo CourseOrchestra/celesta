@@ -30,7 +30,7 @@ public class MaterializedViewUpdateTrigger extends AbstractMaterializeViewTrigge
   }
 
   private boolean mvColumnsAreChanged(Object[] oldRow, Object[] newRow) {
-	  return getMvColumnRefs().keySet().stream()
+      return getMvColumnRefs().keySet().stream()
         .anyMatch(i -> !Objects.equals(oldRow[i], newRow[i]));
   }
 }

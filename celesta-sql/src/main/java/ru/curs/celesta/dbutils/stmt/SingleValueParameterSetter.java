@@ -9,15 +9,15 @@ import java.sql.PreparedStatement;
  * Parameter setter for single value filter.
  */
 public final class SingleValueParameterSetter extends ParameterSetter {
-	private final SingleValue v;
+    private final SingleValue v;
 
-	public SingleValueParameterSetter(QueryBuildingHelper queryBuildingHelper, SingleValue v) {
-		super(queryBuildingHelper);
-		this.v = v;
-	}
+    public SingleValueParameterSetter(QueryBuildingHelper queryBuildingHelper, SingleValue v) {
+        super(queryBuildingHelper);
+        this.v = v;
+    }
 
-	@Override
-	public void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion)  {
-		setParam(stmt, paramNum, v.getValue());
-	}
+    @Override
+    public void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion)  {
+        setParam(stmt, paramNum, v.getValue());
+    }
 }

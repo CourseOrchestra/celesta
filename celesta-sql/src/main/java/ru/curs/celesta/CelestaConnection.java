@@ -285,6 +285,6 @@ public abstract class CelestaConnection implements Connection {
   @Override
   public void close() {
     //Do nothing: to be overriden in pool
-	//here we declare it only to eliminate SQLException
+    //here we declare it only to eliminate SQLException
   }
 }

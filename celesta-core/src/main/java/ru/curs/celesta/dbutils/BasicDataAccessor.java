@@ -57,11 +57,11 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
 
 
     // CHECKSTYLE:OFF
-    	/*
-	 * Эта группа методов именуется по правилам Python, а не Java. В Python
-	 * имена protected-методов начинаются с underscore. Использование методов
-	 * без underscore приводит к конфликтам с именами атрибутов.
-	 */
+        /*
+     * Эта группа методов именуется по правилам Python, а не Java. В Python
+     * имена protected-методов начинаются с underscore. Использование методов
+     * без underscore приводит к конфликтам с именами атрибутов.
+     */
     protected abstract String _grainName();
 
     protected abstract String _objectName();

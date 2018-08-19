@@ -5,27 +5,27 @@ package ru.curs.celesta.score;
  */
 public interface ColumnMeta {
 
-	/**
-	 * Имя jdbcGetter-а, которое следует использовать для получения данных
-	 * столбца.
-	 */
-	String jdbcGetterName();
+    /**
+     * Имя jdbcGetter-а, которое следует использовать для получения данных
+     * столбца.
+     */
+    String jdbcGetterName();
 
-	/**
-	 * Тип данных Celesta,соответствующий полю.
-	 */
-	String getCelestaType();
+    /**
+     * Тип данных Celesta,соответствующий полю.
+     */
+    String getCelestaType();
 
-	Class getJavaClass();
+    Class getJavaClass();
 
-	/**
-	 * Является ли поле nullable.
-	 */
-	boolean isNullable();
+    /**
+     * Является ли поле nullable.
+     */
+    boolean isNullable();
 
-	/**
-	 * Column's CelestaDoc.
-	 */
-	String getCelestaDoc();
+    /**
+     * Column's CelestaDoc.
+     */
+    String getCelestaDoc();
 
 }

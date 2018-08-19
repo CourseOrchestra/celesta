@@ -364,7 +364,7 @@ public final class OraAdaptor extends DBAdaptor {
           c.getParentTable().getName());
       String sql = String.format(
           "SELECT COLUMN_NAME, DATA_TYPE, NULLABLE, CHAR_LENGTH, DATA_PRECISION, DATA_SCALE "
-              + "FROM user_tab_cols	WHERE table_name = '%s' and COLUMN_NAME = '%s'",
+              + "FROM user_tab_cols    WHERE table_name = '%s' and COLUMN_NAME = '%s'",
           tableName, c.getName());
       // System.out.println(sql);
       Statement stmt = conn.createStatement();
@@ -656,13 +656,13 @@ public final class OraAdaptor extends DBAdaptor {
           } else {
             /*
              * Если название индекса не соответствует ожидаемому
-						 * шаблону, то это -- индекс, добавленный вне Celesta и
-						 * его следует удалить. Мы добавляем знаки ## перед
-						 * именем индекса. Далее система, не найдя индекс с
-						 * такими метаданными, поставит такой индекс на
-						 * удаление. Метод удаления, обнаружив ## в начале имени
-						 * индекса, удалит их.
-						 */
+                         * шаблону, то это -- индекс, добавленный вне Celesta и
+                         * его следует удалить. Мы добавляем знаки ## перед
+                         * именем индекса. Далее система, не найдя индекс с
+                         * такими метаданными, поставит такой индекс на
+                         * удаление. Метод удаления, обнаружив ## в начале имени
+                         * индекса, удалит их.
+                         */
             indName = "##" + dbIndName;
           }
 

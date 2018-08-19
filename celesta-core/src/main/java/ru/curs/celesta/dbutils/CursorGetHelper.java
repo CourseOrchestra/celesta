@@ -61,12 +61,12 @@ class CursorGetHelper {
     PreparedStatement g = prepareGet(recversion, values);
     //System.out.println(g.toString());
     try (ResultSet rs = g.executeQuery()){
-    	boolean result = rs.next();
-    	if (result) {
+        boolean result = rs.next();
+        if (result) {
           parseResultFunc.apply(rs);
           initXRecFunc.ifPresent(ParseResultCallBack::apply);
         }
-    	return result;
+        return result;
     } catch (SQLException e) {
       throw new CelestaException(e.getMessage());
     }

@@ -467,8 +467,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
   @Override
   public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
     String sql = String.format("select count(*) from information_schema.triggers where "
-        + "		event_object_schema = '%s' and event_object_table= '%s'"
-        + "		and trigger_name = '%s'",
+        + "        event_object_schema = '%s' and event_object_table= '%s'"
+        + "        and trigger_name = '%s'",
             query.getSchema().replace("\"", ""),
             query.getTableName().replace("\"", ""),
             query.getName());

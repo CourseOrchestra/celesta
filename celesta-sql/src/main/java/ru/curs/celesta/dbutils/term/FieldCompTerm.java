@@ -9,24 +9,24 @@ import java.util.List;
  * Comparision of a field with a value.
  */
 public final class FieldCompTerm extends WhereTerm {
-	// quoted column name
-	private final String fieldName;
-	private final int fieldIndex;
-	private final String op;
+    // quoted column name
+    private final String fieldName;
+    private final int fieldIndex;
+    private final String op;
 
-	public FieldCompTerm(String fieldName, int fieldIndex, String op) {
-		this.fieldName = fieldName;
-		this.fieldIndex = fieldIndex;
-		this.op = op;
-	}
+    public FieldCompTerm(String fieldName, int fieldIndex, String op) {
+        this.fieldName = fieldName;
+        this.fieldIndex = fieldIndex;
+        this.op = op;
+    }
 
-	@Override
-	public String getWhere() {
-		return String.format("(%s %s ?)", fieldName, op);
-	}
+    @Override
+    public String getWhere() {
+        return String.format("(%s %s ?)", fieldName, op);
+    }
 
-	@Override
-	public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
-		program.add(ParameterSetter.create(fieldIndex, queryBuildingHelper));
-	}
+    @Override
+    public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
+        program.add(ParameterSetter.create(fieldIndex, queryBuildingHelper));
+    }
 }

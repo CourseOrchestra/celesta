@@ -5,16 +5,16 @@ package ru.curs.lyra.grid;
  */
 class LyraCollatorException extends Exception {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final char unknownChar;
+    private final char unknownChar;
 
-	LyraCollatorException(char c) {
-		unknownChar = c;
-	}
+    LyraCollatorException(char c) {
+        unknownChar = c;
+    }
 
-	char getUnknownChar() {
-		return unknownChar;
-	}
+    char getUnknownChar() {
+        return unknownChar;
+    }
 
 }
