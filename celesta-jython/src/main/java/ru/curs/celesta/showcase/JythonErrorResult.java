@@ -2,9 +2,9 @@ package ru.curs.celesta.showcase;
 
 /**
  * Объект возвращается из Jython скрипта в случае возникновение ошибки.
- * 
+ *
  * @author anlug
- * 
+ *
  */
 public class JythonErrorResult {
 	private final String message;
@@ -23,7 +23,7 @@ public class JythonErrorResult {
 
 	/**
 	 * Функция-getter для строкового параметра message.
-	 * 
+	 *
 	 * @return message
 	 */
 	public String getMessage() {
@@ -32,7 +32,7 @@ public class JythonErrorResult {
 
 	/**
 	 * Функция-getter для целочисленного параметра errorCode.
-	 * 
+	 *
 	 * @return errorCode
 	 */
 	public int getErrorCode() {

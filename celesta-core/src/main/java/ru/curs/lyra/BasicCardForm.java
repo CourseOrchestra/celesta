@@ -38,7 +38,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 	/**
 	 * Отменяет текущие изменения в курсоре и возвращает актуальную информацию
 	 * из базы данных.
-	 * 
+	 *
 	 * @param data
 	 *            сериализованный курсор
 	 */
@@ -61,11 +61,11 @@ public abstract class BasicCardForm extends BasicLyraForm {
 
 	/**
 	 * Перемещает курсор.
-	 * 
+	 *
 	 * @param cmd
 	 *            Команда перемещения (комбинация знаков &lt;, &gt;, =, +, -, см.
 	 *            документацию по методу курсора navigate)
-	 * 
+	 *
 	 * @param data
 	 *            сериализованный курсор.
 	 */
@@ -106,7 +106,7 @@ public abstract class BasicCardForm extends BasicLyraForm {
 
 	/**
 	 * Удаляет текущую запись.
-	 * 
+	 *
 	 * @param data
 	 *            сериализованный курсор.
 	 */

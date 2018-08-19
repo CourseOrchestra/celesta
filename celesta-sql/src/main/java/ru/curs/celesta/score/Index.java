@@ -48,7 +48,7 @@ public class Index extends GrainElement implements HasColumns {
 
 	/**
 	 * Добавляет колонку к индексу.
-	 * 
+	 *
 	 * @param columnName
 	 *            Имя колонки (такая колонка должна существовать в таблице).
 	 * @throws ParseException
@@ -83,7 +83,7 @@ public class Index extends GrainElement implements HasColumns {
 
 	/**
 	 * Финализирует индекс.
-	 * 
+	 *
 	 * @throws ParseException
 	 *             В случае, если на этой таблице обнаружен индекс,
 	 *             дублирующийся по составу полей.
@@ -131,7 +131,7 @@ public class Index extends GrainElement implements HasColumns {
 
 	/**
 	 * Удаляет индекс.
-	 * 
+	 *
 	 * @throws ParseException
 	 *             при попытке изменить системную гранулу
 	 */

@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 /**
  * Строка версии, которая обязана состоять из version-тэгов, перечисленных через
  * запятую.
- * 
+ *
  */
 public final class VersionString {
 
@@ -24,7 +24,7 @@ public final class VersionString {
 	 * Результат сравнения VersionStrings, на которых существует частичный
 	 * порядок (использование стандартного интерфейса Comparable невозможно, т.
 	 * к. он подразумевает линейный порядок).
-	 * 
+	 *
 	 */
 	public enum ComparisionState {
 		/**
@@ -102,10 +102,10 @@ public final class VersionString {
 
 	/**
 	 * Сравнение с учётом существования частичного порядка на версиях.
-	 * 
+	 *
 	 * @param o
 	 *            объект, с которым сравнивается текущая версия.
-	 * 
+	 *
 	 */
 	public ComparisionState compareTo(VersionString o) {
 		if (o == null)

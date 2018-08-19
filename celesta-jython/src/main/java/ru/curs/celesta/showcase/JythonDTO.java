@@ -3,8 +3,8 @@ package ru.curs.celesta.showcase;
 /**
  * DTO класс с сырыми данными для элементов Showcase: навигатора, инф. панели
  * или ее элементов. Данные передаются в виде строк.
- * 
- * 
+ *
+ *
  */
 public final class JythonDTO {
 	/**
@@ -70,7 +70,7 @@ public final class JythonDTO {
 
 	/**
 	 * Функция-getter для строкового объекта data.
-	 * 
+	 *
 	 * @return data
 	 */
 	public String getData() {
@@ -79,7 +79,7 @@ public final class JythonDTO {
 
 	/**
 	 * Функция-setter для строкового объекта data.
-	 * 
+	 *
 	 * @param aData
 	 *            - входная строка
 	 */
@@ -89,7 +89,7 @@ public final class JythonDTO {
 
 	/**
 	 * Функция-getter для строкового объекта settings.
-	 * 
+	 *
 	 * @return settings
 	 */
 	public String getSettings() {
@@ -98,7 +98,7 @@ public final class JythonDTO {
 
 	/**
 	 * Функция-setter для строкового объекта settings.
-	 * 
+	 *
 	 * @param aSettings
 	 *            - входная строка
 	 */
@@ -108,7 +108,7 @@ public final class JythonDTO {
 
 	/**
 	 * Функция-getter для строкового массива dataArray.
-	 * 
+	 *
 	 * @return dataArray
 	 */
 	public String[] getDataArray() {
@@ -117,7 +117,7 @@ public final class JythonDTO {
 
 	/**
 	 * Функция-setter для строкового массива dataArray.
-	 * 
+	 *
 	 * @param aDataArray
 	 *            - входной строковый массив
 	 */

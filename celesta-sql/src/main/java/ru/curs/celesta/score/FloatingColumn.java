@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 
 /**
  * Колонка с типом REAL.
- * 
+ *
  */
 public final class FloatingColumn extends Column {
 	/**

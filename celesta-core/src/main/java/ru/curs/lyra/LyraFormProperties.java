@@ -37,7 +37,7 @@ public class LyraFormProperties {
 
 	/**
 	 * Sets grid properties file.
-	 * 
+	 *
 	 * @param profile
 	 *            file name.
 	 */
@@ -54,7 +54,7 @@ public class LyraFormProperties {
 
 	/**
 	 * Sets grid width.
-	 * 
+	 *
 	 * @param gridwidth
 	 *            grid width in HTML units.
 	 */
@@ -71,7 +71,7 @@ public class LyraFormProperties {
 
 	/**
 	 * Sets grid height in HTML units.
-	 * 
+	 *
 	 * @param gridheight
 	 *            grid height in pixels.
 	 */
@@ -88,7 +88,7 @@ public class LyraFormProperties {
 
 	/**
 	 * Sets default action.
-	 * 
+	 *
 	 * @param defaultaction
 	 *            default action.
 	 */
@@ -105,7 +105,7 @@ public class LyraFormProperties {
 
 	/**
 	 * Set form's footer.
-	 * 
+	 *
 	 * @param footer
 	 *            new form's footer.
 	 */
@@ -115,7 +115,7 @@ public class LyraFormProperties {
 
 	/**
 	 * Gets form's header.
-	 * 
+	 *
 	 * @return form's header.
 	 */
 	public String getHeader() {
@@ -124,7 +124,7 @@ public class LyraFormProperties {
 
 	/**
 	 * Sets form's header.
-	 * 
+	 *
 	 * @param header
 	 *            new form's header.
 	 */

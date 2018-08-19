@@ -4,9 +4,9 @@ import java.io.Serializable;
 
 /**
  * Тип сообщения.
- * 
+ *
  * @author den
- * 
+ *
  */
 public enum MessageType implements Serializable {
 	/**

@@ -78,7 +78,7 @@ public class LyraFormField extends LyraNamedElement {
 
 	/**
 	 * Sets field type.
-	 * 
+	 *
 	 * @param type
 	 *            the type to set
 	 */
@@ -94,9 +94,9 @@ public class LyraFormField extends LyraNamedElement {
 	}
 
 	/**
-	 * 
+	 *
 	 * Sets editable property.
-	 * 
+	 *
 	 * @param editable
 	 *            editable property.
 	 */
@@ -113,7 +113,7 @@ public class LyraFormField extends LyraNamedElement {
 
 	/**
 	 * Sets visible property.
-	 * 
+	 *
 	 * @param visible
 	 *            the visible to set
 	 */
@@ -130,7 +130,7 @@ public class LyraFormField extends LyraNamedElement {
 
 	/**
 	 * Sets new caption.
-	 * 
+	 *
 	 * @param caption
 	 *            the caption to set
 	 */
@@ -147,7 +147,7 @@ public class LyraFormField extends LyraNamedElement {
 
 	/**
 	 * Sets lookup procedure.
-	 * 
+	 *
 	 * @param lookup
 	 *            the lookup procedure to set
 	 */
@@ -171,7 +171,7 @@ public class LyraFormField extends LyraNamedElement {
 
 	/**
 	 * Sets number of decimal places after dot.
-	 * 
+	 *
 	 * @param scale
 	 *            new value.
 	 */
@@ -188,7 +188,7 @@ public class LyraFormField extends LyraNamedElement {
 
 	/**
 	 * Sets width (in pixels) for a control.
-	 * 
+	 *
 	 * @param width
 	 *            width in pixels.
 	 */
@@ -205,7 +205,7 @@ public class LyraFormField extends LyraNamedElement {
 
 	/**
 	 * Sets required property for a field.
-	 * 
+	 *
 	 * @param required
 	 *            new value
 	 */
@@ -223,7 +223,7 @@ public class LyraFormField extends LyraNamedElement {
 	/**
 	 * Set field's subtype. Field's subtype defines the way the field is being
 	 * shown to the user.
-	 * 
+	 *
 	 * @param subtype
 	 *            new subtype.
 	 */
@@ -240,7 +240,7 @@ public class LyraFormField extends LyraNamedElement {
 
 	/**
 	 * Set field's linkId.
-	 * 
+	 *
 	 * @param linkId
 	 *            new linkId.
 	 */

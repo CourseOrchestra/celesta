@@ -13,9 +13,9 @@ import com.google.gson.JsonElement;
 
 /**
  * Класс преобразования xml в JSON и обратно - JSON в xml.
- * 
+ *
  * @author bogatov
- * 
+ *
  */
 public final class XMLJSONConverter {
 
@@ -30,7 +30,7 @@ public final class XMLJSONConverter {
 	 * с сохранением порядка следования в xml. Если тег содержащий атрибуты,
 	 * содержит также значение, то оно переносится в json в атрибут с именем
 	 * #text
-	 * 
+	 *
 	 * @param xml
 	 *            - XML строка.
 	 * @return строка в формате json.
@@ -53,7 +53,7 @@ public final class XMLJSONConverter {
 	 * массива с именем #sorted с сохранением порядка следования в xml. Если тег
 	 * содержащий атрибуты, содержит также значение, то оно переносится в json в
 	 * атрибут с именем #text
-	 * 
+	 *
 	 * @param xml
 	 *            - XML строка.
 	 * @param isAttributesPrefixPresented
@@ -153,13 +153,13 @@ public final class XMLJSONConverter {
 
 		newXml = "<tempRootForResolvingProblem>" + newXml + "</tempRootForResolvingProblem>";
 		newXml = newXml.replaceAll("&(?!amp;)", "xxxxxx");
-		
+
 		InputStream in = stringToStream(newXml);
 		parser.parse(in, handler);
 		JsonElement result = handler.getResult();
 		String str = result.toString();
 		str = str.replace("xxxxxx", "&");
-		
+
 		int ind = str.indexOf(':');
 		str = str.substring(ind + 1);
 		ind = str.lastIndexOf("}");
@@ -213,7 +213,7 @@ public final class XMLJSONConverter {
 	 * массиве(#sorted). В случа если встречен атрибут с именем #text, то его
 	 * значение переносится как значение соответствующего (с именем
 	 * родительского атрибута) тега.
-	 * 
+	 *
 	 * @param json
 	 *            - JSON строка
 	 * @return xml строка.
@@ -253,7 +253,7 @@ public final class XMLJSONConverter {
 		if (result.contains("\"\n ")) {
 			result = result.replace("\"\n ", "\"");
 		}
-		
+
 		return result;
 	}
 
@@ -264,7 +264,7 @@ public final class XMLJSONConverter {
 	 * #sorted с сохранением порядка следования в xml. Если тег содержащий
 	 * атрибуты, содержит также значение, то оно переносится в json в атрибут с
 	 * именем #text
-	 * 
+	 *
 	 * @param xml
 	 *            - XML строка.
 	 * @return объект JSONObject
@@ -291,7 +291,7 @@ public final class XMLJSONConverter {
 	 * элементами json массива с именем #sorted с сохранением порядка следования
 	 * в xml. Если тег содержащий атрибуты, содержит также значение, то оно
 	 * переносится в json в атрибут с именем #text
-	 * 
+	 *
 	 * @param xml
 	 *            - XML строка.
 	 * @param isAttributesPrefixPresented
@@ -312,7 +312,7 @@ public final class XMLJSONConverter {
 
 	/**
 	 * Стандартная функция для создания SAX XML Parser.
-	 * 
+	 *
 	 * @return парсер.
 	 */
 	public static SAXParser createSAXParser() {
@@ -332,7 +332,7 @@ public final class XMLJSONConverter {
 
 	/**
 	 * Стандартная функция для конвертаци строки в выходной поток.
-	 * 
+	 *
 	 * @param str
 	 *            - входная строка
 	 * @return байтовый выхоной поток

@@ -4,9 +4,9 @@ import java.io.InputStream;
 
 /**
  * Результат выполнение Jython скрипта, загрузка файла из компонента grid.
- * 
+ *
  * @author anlug
- * 
+ *
  */
 public class JythonDownloadResult {
 	private final InputStream inputStream;
@@ -37,7 +37,7 @@ public class JythonDownloadResult {
 
 	/**
 	 * Функция-getter для переменной inputStream.
-	 * 
+	 *
 	 * @return inputStream
 	 */
 	public InputStream getInputStream() {
@@ -46,7 +46,7 @@ public class JythonDownloadResult {
 
 	/**
 	 * Функция-getter для переменной fileName.
-	 * 
+	 *
 	 * @return fileName
 	 */
 	public String getFileName() {
@@ -55,7 +55,7 @@ public class JythonDownloadResult {
 
 	/**
 	 * Функция-getter для переменной error.
-	 * 
+	 *
 	 * @return error
 	 */
 	public JythonErrorResult getError() {

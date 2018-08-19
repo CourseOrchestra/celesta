@@ -4,9 +4,9 @@ import java.io.Serializable;
 
 /**
  * Сообщение для пользователя решения, созданного с помощью Showcase.
- * 
+ *
  * @author den
- * 
+ *
  */
 public class UserMessage implements Serializable {
 

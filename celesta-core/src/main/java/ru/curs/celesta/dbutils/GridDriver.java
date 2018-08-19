@@ -190,7 +190,7 @@ public final class GridDriver {
 	/**
 	 * Checks if this driver is valid for a given cursor with its filters and
 	 * sorting.
-	 * 
+	 *
 	 * @param c
 	 *            Cursor for checking.
 	 */
@@ -200,7 +200,7 @@ public final class GridDriver {
 
 	/**
 	 * Fills key fields of a cursor based on scroller knob position.
-	 * 
+	 *
 	 * @param position
 	 *            scrollbar knob position
 	 * @param c
@@ -250,7 +250,7 @@ public final class GridDriver {
 
 	/**
 	 * Adjusts internal state for pre-positioned cursor.
-	 * 
+	 *
 	 * @param c
 	 *            Cursor that is set to a certain position.
 	 */
@@ -347,7 +347,7 @@ public final class GridDriver {
 
 	/**
 	 * Returns (approximate) total record count.
-	 * 
+	 *
 	 * Just after creation of this object this method returns DEFAULT_COUNT
 	 * value, but it asynchronously requests total count right after constructor
 	 * execution.
@@ -359,7 +359,7 @@ public final class GridDriver {
 	/**
 	 * Sets change notifier (a method that is being called when grid metrics
 	 * update is ready).
-	 * 
+	 *
 	 * @param changeNotifier
 	 *            new change modifier.
 	 */
@@ -377,7 +377,7 @@ public final class GridDriver {
 	/**
 	 * If the grid is scrolled less than for given amount of records, the exact
 	 * positioning in cycle will be used instead of interpolation.
-	 * 
+	 *
 	 * @param smallScroll
 	 *            new value.
 	 */

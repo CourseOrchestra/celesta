@@ -22,7 +22,7 @@ public final class ProfilingManager {
 
 	/**
 	 * Записывает информацию о вызове в профилировщик.
-	 * 
+	 *
 	 * @param context
 	 *            контекст вызова.
 	 */
@@ -58,7 +58,7 @@ public final class ProfilingManager {
 
 	/**
 	 * Устанавливает режим профилирования.
-	 * 
+	 *
 	 * @param profilemode
 	 *            режим профилирования.
 	 */

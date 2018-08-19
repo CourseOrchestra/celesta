@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 
 /**
  * Строковая колонка.
- * 
+ *
  */
 public final class StringColumn extends Column {
 	/**
@@ -38,7 +38,7 @@ public final class StringColumn extends Column {
 
 	/**
 	 * Расковычивает строки в закавыченном формате.
-	 * 
+	 *
 	 * @param lexvalue
 	 *            закавыченная строка.
 	 * @throws ParseException
@@ -79,7 +79,7 @@ public final class StringColumn extends Column {
 
 	/**
 	 * Закавычевает строки.
-	 * 
+	 *
 	 * @param lexvalue
 	 *            строка для закавычивания.
 	 */
@@ -119,7 +119,7 @@ public final class StringColumn extends Column {
 
 	/**
 	 * Устанавливает длину текстового поля.
-	 * 
+	 *
 	 * @param length
 	 *            Новая длина
 	 * @throws ParseException

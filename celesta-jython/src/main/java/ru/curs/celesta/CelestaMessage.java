@@ -14,7 +14,7 @@ public class CelestaMessage {
 	public interface MessageReceiver {
 		/**
 		 * Получить сообщение.
-		 * 
+		 *
 		 * @param msg
 		 *            сообщение.
 		 */

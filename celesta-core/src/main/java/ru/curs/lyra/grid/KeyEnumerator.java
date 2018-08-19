@@ -22,7 +22,7 @@ public abstract class KeyEnumerator {
 
 	/**
 	 * Устанавливает порядковый номер ключа.
-	 * 
+	 *
 	 * @param value
 	 *            порядковый номер.
 	 */
@@ -30,7 +30,7 @@ public abstract class KeyEnumerator {
 
 	/**
 	 * Устанавливает новое значение ключа.
-	 * 
+	 *
 	 * @param value
 	 *            значение ключа.
 	 */
@@ -70,7 +70,7 @@ public abstract class KeyEnumerator {
 
 	/**
 	 * Устанавливает позицию в виде действительного числа от 0.0 до 1.0.
-	 * 
+	 *
 	 * @param p
 	 *            Позиция.
 	 */

@@ -30,7 +30,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 	/**
 	 * Специальная версия конструктора для того, чтобы сконструировать поле
 	 * recversion.
-	 * 
+	 *
 	 * @param parentTable
 	 *            Родительская таблица (не добавляется в перечень колонок)
 	 * @throws ParseException
@@ -48,7 +48,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 	/**
 	 * Возвращает опции (значение свойства option) для данного поля. Имеет
 	 * применение только для текстовых и Integer-полей.
-	 * 
+	 *
 	 * @
 	 *             в случае, если опции заданы неверно.
 	 */
@@ -63,7 +63,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 
 	/**
 	 * Устанаавливает значение по умолчанию.
-	 * 
+	 *
 	 * @param lexvalue
 	 *            Новое значение в строковом (лексическом) формате.
 	 * @throws ParseException
@@ -85,7 +85,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 
 	/**
 	 * Устанавливает свойство nullable и значение по умолчанию.
-	 * 
+	 *
 	 * @param nullable
 	 *            свойство Nullable
 	 * @param defaultValue
@@ -109,7 +109,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 
 	/**
 	 * Удаляет колонку.
-	 * 
+	 *
 	 * @throws ParseException
 	 *             Если удаляется составная часть первичного ключа, внешнего
 	 *             ключа или индекса.

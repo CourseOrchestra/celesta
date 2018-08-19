@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 /**
  * Именованный элемент метамодели (например, таблица или колонка), который
  * должен иметь уникальное имя-идентификатор.
- * 
+ *
  */
 public abstract class NamedElement {
 
@@ -35,7 +35,7 @@ public abstract class NamedElement {
 
 	/**
 	 * Ограничивает длину идентификатора максимальным числом символов.
-	 * 
+	 *
 	 * @param value
 	 *            Идентификатор произвольной длины.
 	 * @return "Подрезанный" идентификатор, последние 8 символов занимает
@@ -91,7 +91,7 @@ public abstract class NamedElement {
 
 	/**
 	 * Устанавливает значение документационной строки в закомментированном виде.
-	 * 
+	 *
 	 * @param celestaDoc
 	 *            новое значение.
 	 * @throws ParseException
@@ -110,7 +110,7 @@ public abstract class NamedElement {
 
 	/**
 	 * Устанавливает значение документационной строки.
-	 * 
+	 *
 	 * @param celestaDoc
 	 *            новое значение.
 	 * @throws ParseException

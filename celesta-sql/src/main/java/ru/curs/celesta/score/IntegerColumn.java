@@ -9,7 +9,7 @@ import ru.curs.celesta.CelestaException;
 
 /**
  * Целочисленная колонка.
- * 
+ *
  */
 public final class IntegerColumn extends Column {
 	/**

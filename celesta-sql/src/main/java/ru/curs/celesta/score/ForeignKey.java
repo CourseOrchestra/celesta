@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * Класс внешнего ключа.
- * 
+ *
  */
 public final class ForeignKey {
 
@@ -46,7 +46,7 @@ public final class ForeignKey {
 
 	/**
 	 * Устанавливает правило на удаление.
-	 * 
+	 *
 	 * @param deleteBehaviour
 	 *            Правило на удаление.
 	 * @throws ParseException
@@ -63,7 +63,7 @@ public final class ForeignKey {
 
 	/**
 	 * Устанавливает правило на обновление.
-	 * 
+	 *
 	 * @param updateBehaviour
 	 *            Правило на обновление.
 	 * @throws ParseException
@@ -124,7 +124,7 @@ public final class ForeignKey {
 
 	/**
 	 * Добавляет колонку. Колонка должна принадлежать родительской таблице.
-	 * 
+	 *
 	 * @param columnName
 	 *            имя колонки.
 	 * @throws ParseException
@@ -144,7 +144,7 @@ public final class ForeignKey {
 	/**
 	 * Добавляет таблицу, на которую имеется ссылка и финализирует создание
 	 * первичного ключа, добавляя его к родительской таблице.
-	 * 
+	 *
 	 * @param grain
 	 *            Имя гранулы
 	 * @param table
@@ -261,7 +261,7 @@ public final class ForeignKey {
 	 * первичном ключе таблицы (ссылки на UNIQUE-комбинации не применяются из-за
 	 * отсутствия поддержки UNIQUE-комбинаций). Механизм необходим для контроля
 	 * ссылочной корректности текста.
-	 * 
+	 *
 	 * @param columnName
 	 *            имя колонки
 	 * @throws ParseException
@@ -291,7 +291,7 @@ public final class ForeignKey {
 	 * тестирования и экономии памяти внутренний список ссылок подчищается сразу
 	 * за финализацией, он нигде не хранится и нигде не доступен. Его
 	 * единственная роль -- проверять правильность текста.
-	 * 
+	 *
 	 * @throws ParseException
 	 *             Если перечень полей не совпадает с перечнем полей первичного
 	 *             ключа.
@@ -344,7 +344,7 @@ public final class ForeignKey {
 
 	/**
 	 * Устанавливает имя ограничения FK.
-	 * 
+	 *
 	 * @param constraintName
 	 *            новое имя ограничения.
 	 * @throws ParseException
@@ -358,7 +358,7 @@ public final class ForeignKey {
 
 	/**
 	 * Удаляет внешний ключ.
-	 * 
+	 *
 	 * @throws ParseException
 	 *             при попытке изменить системную гранулу.
 	 */

@@ -2,7 +2,7 @@ package ru.curs.celesta.dbutils;
 
 /**
  * Тип действия.
- * 
+ *
  */
 public enum Action {
 

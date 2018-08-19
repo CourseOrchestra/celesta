@@ -13,9 +13,9 @@ import ru.curs.celesta.syscursors.UserrolesCursor;
  * Менеджер пермиссий. Определяет, имеет ли право тот или иной пользователь на
  * операции с таблицей. Права определяются по содержимому системных таблиц
  * распределения прав доступа.
- * 
+ *
  * Для оптимизации работы объект содержит кэш.
- * 
+ *
  */
 public final class PermissionManager implements IPermissionManager {
 	/**
@@ -40,7 +40,7 @@ public final class PermissionManager implements IPermissionManager {
 
 	/**
 	 * Базовый класс элемента кэша менеджера пермиссий.
-	 * 
+	 *
 	 */
 	private static class BaseCacheEntry {
 		private final long expirationTime;
@@ -57,7 +57,7 @@ public final class PermissionManager implements IPermissionManager {
 
 	/**
 	 * Запись во внутреннем кэше.
-	 * 
+	 *
 	 */
 	private static class PermissionCacheEntry extends BaseCacheEntry {
 		private final String userName;

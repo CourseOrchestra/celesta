@@ -37,7 +37,7 @@ public final class BitFieldEnumerator extends KeyEnumerator {
 
 	/**
 	 * Устанавливает текущее значение поля.
-	 * 
+	 *
 	 * @param value
 	 *            Новое значение.
 	 */

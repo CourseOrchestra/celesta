@@ -18,8 +18,8 @@ public abstract class AbstractView extends DataGrainElement {
   static final Map<Class<? extends Expr>, Function<Expr, Column>> EXPR_CLASSES_AND_COLUMN_EXTRACTORS = new HashMap<>();
 
   static {
-	EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Count.class, (Expr frExpr) -> null);  
-	  
+	EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Count.class, (Expr frExpr) -> null);
+
     EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(FieldRef.class, (Expr frExpr) -> {
       FieldRef fr = (FieldRef) frExpr;
       return fr.getColumn();

@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 
 /**
  * Булевская колонка (тип BIT).
- * 
+ *
  */
 public final class BooleanColumn extends Column {
 	/**
@@ -25,10 +25,10 @@ public final class BooleanColumn extends Column {
 
 	/**
 	 * Производит разбор строки в SQL-определении DEFAULT в boolean-значение.
-	 * 
+	 *
 	 * @param lexvalue
 	 *            строковое определение.
-	 * 
+	 *
 	 * @throws ParseException
 	 *             неверный формат строки.
 	 */

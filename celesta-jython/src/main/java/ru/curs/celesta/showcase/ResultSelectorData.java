@@ -4,9 +4,9 @@ import java.util.*;
 
 /**
  * Результат получения данных селектора.
- * 
+ *
  * @author anlug
- * 
+ *
  */
 
 public class ResultSelectorData {
@@ -37,7 +37,7 @@ public class ResultSelectorData {
 
 	/**
 	 * Функция-getter для списочного параметра dataRecordList.
-	 * 
+	 *
 	 * @return dataRecordList
 	 */
 	public List<DataRecord> getDataRecordList() {
@@ -46,7 +46,7 @@ public class ResultSelectorData {
 
 	/**
 	 * Функция-getter для целочисленного параметра count.
-	 * 
+	 *
 	 * @return count
 	 */
 

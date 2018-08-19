@@ -30,7 +30,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   private static final Pattern HEX_STRING = Pattern.compile("X'([0-9A-Fa-f]+)'");
 
-  
+
   public H2Adaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer, boolean isH2ReferentialIntegrity) {
     super(connectionPool, ddlConsumer);
     configureDb(isH2ReferentialIntegrity);

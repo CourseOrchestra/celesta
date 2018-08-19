@@ -44,7 +44,7 @@ public final class Celesta2DBSchema {
 
 	/**
 	 * Переводит score в DBS-файл.
-	 * 
+	 *
 	 * @param s
 	 *            Celesta score.
 	 * @param dbsFile

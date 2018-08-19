@@ -32,7 +32,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 			"э", "Э", "ю", "Ю", "я", "Я"
 	);
 
-	private static final Map<StaticDataAdaptor, String > RULES = new HashMap<>();
+	private static final Map<StaticDataAdaptor, String> RULES = new HashMap<>();
 
 	private static final int[][] EMPTY_STRING = new int[0][0];
 
@@ -98,7 +98,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 
 	/**
 	 * Установка минимального и максимального значения поля.
-	 * 
+	 *
 	 * @param min
 	 *            минимальное значение.
 	 * @param max
@@ -166,7 +166,7 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 
 	/**
 	 * Установка значения поля.
-	 * 
+	 *
 	 * @param value
 	 *            Значение (строка).
 	 */

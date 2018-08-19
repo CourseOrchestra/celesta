@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 
 /**
  * Бинарная колонка (тип IMAGE или BLOB).
- * 
+ *
  */
 public final class BinaryColumn extends Column {
 

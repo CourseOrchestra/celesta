@@ -48,7 +48,7 @@ public class TestLyraForm {
 		}
 
 	}
-	
+
 	private static String testJSON(String test){
 		return CelestaDocUtils.getCelestaDocJSON((new DummyMeta(test)).getCelestaDoc());
 	}

@@ -39,7 +39,7 @@ public final class LyraFormData implements Serializable {
 
 	/**
 	 * Creates a serializable cursor data representation.
-	 * 
+	 *
 	 * @param c
 	 *            A cursor.
 	 * @param map
@@ -86,7 +86,7 @@ public final class LyraFormData implements Serializable {
 
 	/**
 	 * Передаёт значения в курсор.
-	 * 
+	 *
 	 * @param c
 	 *            Курсор.
 	 * @param map
@@ -104,7 +104,7 @@ public final class LyraFormData implements Serializable {
 
 	/**
 	 * Сериализует данные формы в поток в формате XML.
-	 * 
+	 *
 	 * @param outputStream
 	 *            Поток.
 	 */

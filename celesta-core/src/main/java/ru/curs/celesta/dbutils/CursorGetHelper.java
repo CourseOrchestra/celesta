@@ -66,11 +66,11 @@ class CursorGetHelper {
           parseResultFunc.apply(rs);
           initXRecFunc.ifPresent(ParseResultCallBack::apply);
         }
-    	return result;	
+    	return result;
     } catch (SQLException e) {
       throw new CelestaException(e.getMessage());
     }
-    
+
   }
 
 

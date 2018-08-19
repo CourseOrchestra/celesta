@@ -136,7 +136,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 	/**
 	 * Gets WHERE clause for single record with respect to other filters on a
 	 * record.
-	 * 
+	 *
 	 * @param t
 	 *            Table meta.
 	 */
@@ -178,7 +178,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 	/**
 	 * Gets WHERE clause for navigational term with respect of filters and
 	 * database settings.
-	 * 
+	 *
 	 * @param op
 	 *            navigation operator: '>', '<', or '='.
 	 */

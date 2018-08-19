@@ -13,9 +13,9 @@ import org.w3c.dom.*;
 
 /**
  * Преобразование из json в xml.
- * 
+ *
  * @author borodanev
- * 
+ *
  */
 public class JSONToXMLParser {
 	private static final String UNSUCCESSFUL =
@@ -106,7 +106,7 @@ public class JSONToXMLParser {
 
 	/**
 	 * Функция, выдающая результирующую xml-строку.
-	 * 
+	 *
 	 * @return выходная xml-строка
 	 * @throws TransformerException
 	 *             вызывется в случае ошибки построениея DOM-модели документа,

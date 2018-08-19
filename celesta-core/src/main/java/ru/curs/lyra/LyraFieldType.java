@@ -58,10 +58,10 @@ public enum LyraFieldType {
 
 	/**
 	 * Определяет тип поля по метаданным столбца таблицы (Table).
-	 * 
+	 *
 	 * @param c
 	 *            столбец таблицы.
-	 * 
+	 *
 	 */
 	public static LyraFieldType lookupFieldType(ColumnMeta c) {
 		LyraFieldType result = C2L.get(c.getCelestaType());

@@ -392,11 +392,11 @@ public class NavigationQueriesMakerTest {
 		filters.put("е", new SingleValue(4));
 		p.setFilters(filters);
 
-		
+
 		WhereTermsMaker c = new WhereTermsMaker(p);
-		
+
 		assertEquals("((\"е\" = ?) and (\"a\" = 1 OR \"b\" = 3))", c.getWhereTerm().getWhere());
-		
+
 	}
 
 	@Test

@@ -11,11 +11,11 @@ import java.util.Map;
  * элементу каждого имени. Обеспечивает уникальность имён и доступ по имени.
  * Например, это могут быть таблицы в грануле, поля в таблице, поля в ключе и т.
  * д.
- * 
+ *
  * Реализация интерфейса Collection выполнена только лишь с той целью, чтобы
  * утилита ObjectAid правильно выстраивала UML-диаграмму (воспринимая поле с
  * типом NamedElementHolder как мульти-ссылку).
- * 
+ *
  * @param <T>
  *            Тип именованных элементов в перечне.
  */
@@ -34,7 +34,7 @@ public abstract class NamedElementHolder<T extends NamedElement> implements Coll
 
 	/**
 	 * Добавляет именованный элемент.
-	 * 
+	 *
 	 * @param element
 	 *            Добавляемый элемент.
 	 * @throws ParseException
@@ -50,7 +50,7 @@ public abstract class NamedElementHolder<T extends NamedElement> implements Coll
 
 	/**
 	 * Возвращает элемент по имени.
-	 * 
+	 *
 	 * @param name
 	 *            Имя (идентификатор) элемента.
 	 */
@@ -60,7 +60,7 @@ public abstract class NamedElementHolder<T extends NamedElement> implements Coll
 
 	/**
 	 * Возвращает индекс элемента по имени.
-	 * 
+	 *
 	 * @param name
 	 *            Имя (идентификатор) элемента.
 	 */

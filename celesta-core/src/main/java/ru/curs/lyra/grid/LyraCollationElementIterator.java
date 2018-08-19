@@ -26,7 +26,7 @@ public class LyraCollationElementIterator {
 
 	/**
 	 * Move to the next collation element.
-	 * 
+	 *
 	 * @return false if the end of the string is reached.
 	 * @throws LyraCollatorException
 	 *             for unknown character.

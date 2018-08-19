@@ -37,7 +37,7 @@ public class KeyInterpolator {
 
 	/**
 	 * Установка соответствия номера записи значению первичного ключа.
-	 * 
+	 *
 	 * @param ord
 	 *            Порядковое значение первичного ключа.
 	 * @param count
@@ -84,10 +84,10 @@ public class KeyInterpolator {
 	/**
 	 * Exact (not approximated) point or null if no such point exist in
 	 * approximator.
-	 * 
+	 *
 	 * @param count
 	 *            Record's number.
-	 * 
+	 *
 	 */
 	public BigInteger getExactPoint(int count) {
 		return negateIfDesc(data.get(count));
@@ -95,7 +95,7 @@ public class KeyInterpolator {
 
 	/**
 	 * The closest known position to to the given one.
-	 * 
+	 *
 	 * @param count
 	 *            The ordinal number of record.
 	 */
@@ -117,7 +117,7 @@ public class KeyInterpolator {
 
 	/**
 	 * Примерное значение первичного ключа по данному номеру.
-	 * 
+	 *
 	 * @param count
 	 *            Номер записи.
 	 */
@@ -167,7 +167,7 @@ public class KeyInterpolator {
 	/**
 	 * Returns an (approximate) position of a key in a set using inverse
 	 * interpolation.
-	 * 
+	 *
 	 * @param key
 	 *            Key ordinal value.
 	 */
@@ -218,7 +218,7 @@ public class KeyInterpolator {
 	/**
 	 * Gets the value that corresponds to the center of the biggest gap in this
 	 * interpolation table.
-	 * 
+	 *
 	 * Returns null if there is no gap big enough.
 	 */
 	public synchronized BigInteger getLeastAccurateValue() {

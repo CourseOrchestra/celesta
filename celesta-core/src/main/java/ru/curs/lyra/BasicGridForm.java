@@ -63,7 +63,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
 	/**
 	 * Returns contents of grid given scrollbar's position.
-	 * 
+	 *
 	 * @param position
 	 *            New scrollbar's position.
 	 */
@@ -103,7 +103,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
 	/**
 	 * Positions grid to a certain record.
-	 * 
+	 *
 	 * @param pk
 	 *            Values of primary key.
 	 */
@@ -166,13 +166,13 @@ public abstract class BasicGridForm extends BasicLyraForm {
 			}
 			c.copyFieldsFrom(copy);
 		}
-		
+
 		return result;
 	}
 
 	/**
 	 * Sets change notifier to be run when refined grid parameters are ready.
-	 * 
+	 *
 	 * @param callback
 	 *            A callback to be run.
 	 */
@@ -190,7 +190,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	/**
 	 * If the grid is scrolled less than for given amount of records, the exact
 	 * positioning in cycle will be used instead of interpolation.
-	 * 
+	 *
 	 * @param val
 	 *            new value.
 	 */
@@ -200,7 +200,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
 	/**
 	 * Returns (approximate) total record count.
-	 * 
+	 *
 	 * Just after creation of the form this method returns DEFAULT_COUNT value,
 	 * but it asynchronously requests total count right after constructor
 	 * execution.
@@ -238,7 +238,7 @@ public abstract class BasicGridForm extends BasicLyraForm {
 	 * Should return a number of rows in grid.
 	 */
 	public abstract int getGridHeight();
-	
+
 	/**
 	 * Should return a summary row.
 	 */

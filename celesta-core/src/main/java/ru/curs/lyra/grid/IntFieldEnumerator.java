@@ -22,7 +22,7 @@ public final class IntFieldEnumerator extends KeyEnumerator {
 
 	/**
 	 * Установка минимального и максимального значения поля.
-	 * 
+	 *
 	 * @param min
 	 *            минимальное значение.
 	 * @param max
@@ -57,7 +57,7 @@ public final class IntFieldEnumerator extends KeyEnumerator {
 
 	/**
 	 * Установка значения поля.
-	 * 
+	 *
 	 * @param value
 	 *            Значение (целое число).
 	 */

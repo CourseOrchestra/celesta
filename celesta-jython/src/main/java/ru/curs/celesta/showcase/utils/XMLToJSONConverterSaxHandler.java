@@ -10,9 +10,9 @@ import com.google.gson.*;
 
 /**
  * Sax handler преобразования xml в json.
- * 
+ *
  * @author bogatov
- * 
+ *
  */
 public class XMLToJSONConverterSaxHandler extends DefaultHandler {
 

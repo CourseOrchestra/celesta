@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 /**
  * Колонка дат (DATETIME).
- * 
+ *
  */
 public final class DateTimeColumn extends Column {
 
@@ -50,7 +50,7 @@ public final class DateTimeColumn extends Column {
 	/**
 	 * Выполняет разбор даты в формате YYYYMMDD и преобразование в Java-объект
 	 * Date.
-	 * 
+	 *
 	 * @param lexvalue
 	 *            текстовое значение.
 	 * @throws ParseException

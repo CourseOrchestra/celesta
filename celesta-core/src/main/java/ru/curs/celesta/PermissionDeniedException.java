@@ -5,7 +5,7 @@ import ru.curs.celesta.score.GrainElement;
 
 /**
  * Исключение, возникающее при отсутствии разрешений на таблицу.
- * 
+ *
  */
 public class PermissionDeniedException extends CelestaException {
 

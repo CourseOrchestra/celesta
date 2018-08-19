@@ -24,7 +24,7 @@ public final class LyraFieldValue extends LyraNamedElement {
 
 	/**
 	 * Сериализация.
-	 * 
+	 *
 	 * @param xmlWriter
 	 *            Объект, в который записывается XML-поток.
 	 * @throws XMLStreamException

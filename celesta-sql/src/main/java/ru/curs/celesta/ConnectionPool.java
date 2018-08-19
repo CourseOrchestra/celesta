@@ -11,7 +11,7 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 
 /**
  * Пул соединений с базой данных.
- * 
+ *
  */
 public final class ConnectionPool implements AutoCloseable {
 
@@ -101,7 +101,7 @@ public final class ConnectionPool implements AutoCloseable {
 
 	/**
 	 * Выполняет команду commit на коннекшне, не выдавая исключения.
-	 * 
+	 *
 	 * @param conn
 	 *            соединение для выполнения коммита.
 	 */
@@ -129,7 +129,7 @@ public final class ConnectionPool implements AutoCloseable {
 		}
 	}
 
-	
+
 	/**
 	 * Returns the number of connections available in the pool.
 	 *
@@ -138,7 +138,7 @@ public final class ConnectionPool implements AutoCloseable {
 	public Object poolSize() {
 		return pool.size();
 	}
-	
+
 	/**
 	 * If the poll is closed then this method will return true.
 	 *
@@ -153,7 +153,7 @@ public final class ConnectionPool implements AutoCloseable {
 /**
  * Класс-утилита для сокрытия пароля в строке JDBC-подключения. Скопировано из
  * проекта FormsServer.
- * 
+ *
  */
 final class PasswordHider {
 	// Пароль Oracle всегда между / и @ (и не может содержать @).
@@ -172,12 +172,12 @@ final class PasswordHider {
 	}
 
 	/**
-	 * 
+	 *
 	 * Метод, маскирующий пароль в строке JDBC-подключения.
-	 * 
+	 *
 	 * @param url
 	 *            Строка, содержащая URL JDBC-подключения
-	 * 
+	 *
 	 */
 	public static String maskPassword(String url) {
 		if (url == null)

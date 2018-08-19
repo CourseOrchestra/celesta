@@ -49,12 +49,12 @@ public abstract class NullableFieldEnumerator extends KeyEnumerator {
 	/**
 	 * Create NullableFieldEnumerator either for NULLS FIRST or NULLS LAST
 	 * database behaviour.
-	 * 
+	 *
 	 * @param nullsFirst
 	 *            true for NULLS FIRST.
 	 * @param parent
 	 *            parent enumerator.
-	 * 
+	 *
 	 */
 	public static NullableFieldEnumerator create(boolean nullsFirst, KeyEnumerator parent) {
 		return nullsFirst ? new NullsFirst(parent) : new NullsLast(parent);

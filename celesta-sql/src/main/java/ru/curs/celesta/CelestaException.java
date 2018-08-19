@@ -2,7 +2,7 @@ package ru.curs.celesta;
 
 /**
  * Критическая ошибка, приводящая к остановке Celesta.
- * 
+ *
  */
 public class CelestaException extends RuntimeException {
 

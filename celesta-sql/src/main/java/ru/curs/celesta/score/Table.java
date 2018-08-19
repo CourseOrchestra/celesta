@@ -9,7 +9,7 @@ import java.util.*;
 
 /**
  * Объект-таблица в метаданных.
- * 
+ *
  */
 public final class Table extends DataGrainElement implements TableElement, VersionedElement {
 
@@ -75,7 +75,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 
 	/**
 	 * Добавляет колонку к таблице.
-	 * 
+	 *
 	 * @param column
 	 *            Новая колонка.
 	 * @throws ParseException
@@ -97,7 +97,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 	/**
 	 * Устанавливает первичный ключ для таблицы в виде массива колонок.
 	 * Используется для динамического управления метаданными.
-	 * 
+	 *
 	 * @param columnNames
 	 *            перечень колонок
 	 * @throws ParseException
@@ -119,7 +119,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 
 	/**
 	 * Добавляет колонку первичного ключа.
-	 * 
+	 *
 	 * @param name
 	 *            Имя колонки первичного ключа.
 	 */
@@ -201,7 +201,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 
 	/**
 	 * Финализирует создание первичного ключа.
-	 * 
+	 *
 	 * @throws ParseException
 	 *             Если первичный ключ пуст.
 	 */
@@ -238,7 +238,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 
 	/**
 	 * Устанавливает имя ограничения PK.
-	 * 
+	 *
 	 * @param pkConstraintName
 	 *            имя
 	 * @throws ParseException
@@ -308,7 +308,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 
 	/**
 	 * Устанавливает опцию таблицы "только для чтения".
-	 * 
+	 *
 	 * @param isReadOnly
 	 *            только для чтения.
 	 * @throws ParseException
@@ -346,7 +346,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
 
 	/**
 	 * Устанавливает или сбрасывает опцию WITH NO STRUCTURE UPDATE.
-	 * 
+	 *
 	 * @param autoUpdate
 	 *            true, если таблица автоматически обновляется, false - в
 	 *            обратном случае.

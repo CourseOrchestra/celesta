@@ -9,7 +9,7 @@ import ru.curs.celesta.syscursors.LogsetupCursor;
 /**
  * Менеджер логирования. Записывает в лог изменённые значения (если это
  * необходимо).
- * 
+ *
  */
 public final class LoggingManager implements ILoggingManager {
 	/**

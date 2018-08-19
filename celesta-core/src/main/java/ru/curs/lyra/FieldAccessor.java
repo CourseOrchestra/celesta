@@ -11,7 +11,7 @@ import ru.curs.celesta.dbutils.BasicCursor;
 public interface FieldAccessor {
 	/**
 	 * Get field's value.
-	 * 
+	 *
 	 * @param c
 	 *            Cursor values (ignored for unbound field).
 	 */
@@ -19,7 +19,7 @@ public interface FieldAccessor {
 
 	/**
 	 * Set field's value.
-	 * 
+	 *
 	 * @param c
 	 *            Cursor (ignored for unbound field).
 	 * @param newValue

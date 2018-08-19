@@ -37,12 +37,12 @@ public final class LyraCollator {
 	/**
 	 * Gets an instance of Lyra Collator for given rules from pool or creates a
 	 * new one.
-	 * 
+	 *
 	 * @param rules
 	 *            collation rules.
 	 * @param name
 	 *            collator name.
-	 * 
+	 *
 	 */
 	public static synchronized LyraCollator getInstance(String rules, String name) {
 		LyraCollator result = CACHE.get(rules);

@@ -120,11 +120,11 @@ public class LyraCollatorTest {
 		assertEquals(lc1, lc3);
 		assertEquals("TEST1", lc1.getName());
 		assertEquals("TEST1", lc3.getName());
-		
+
 		assertEquals(lc2, lc4);
 		assertEquals("TEST2", lc2.getName());
 		assertEquals("TEST2", lc4.getName());
-		
+
 		assertTrue(lc1 != lc2);
 
 		assertEquals(3, lc1.getPrimOrderCount());

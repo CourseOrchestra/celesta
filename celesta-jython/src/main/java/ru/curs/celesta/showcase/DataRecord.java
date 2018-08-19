@@ -14,23 +14,23 @@ public class DataRecord implements Serializable {
 
 	/**
 	 * id.
-	 * 
+	 *
 	 */
 	private String id;
 	/**
 	 * name.
-	 * 
+	 *
 	 */
 	private String name;
 	/**
 	 * parameters.
-	 * 
+	 *
 	 */
 	private Map<String, String> parameters;
 
 	/**
 	 * Идентификатор.
-	 * 
+	 *
 	 * @return id
 	 */
 	public String getId() {
@@ -39,7 +39,7 @@ public class DataRecord implements Serializable {
 
 	/**
 	 * Устанавливает идентификатор.
-	 * 
+	 *
 	 * @param id1
 	 *            индентификатор
 	 */
@@ -49,7 +49,7 @@ public class DataRecord implements Serializable {
 
 	/**
 	 * Имя для пользователя (по которому идёт поиск).
-	 * 
+	 *
 	 * @return name
 	 */
 	public String getName() {
@@ -58,7 +58,7 @@ public class DataRecord implements Serializable {
 
 	/**
 	 * Устанавливает имя для пользователя.
-	 * 
+	 *
 	 * @param name1
 	 *            имя
 	 */
@@ -68,7 +68,7 @@ public class DataRecord implements Serializable {
 
 	/**
 	 * Возвращает набор произвольных полей.
-	 * 
+	 *
 	 * @return parameters
 	 */
 	public Map<String, String> getParameters() {
@@ -77,7 +77,7 @@ public class DataRecord implements Serializable {
 
 	/**
 	 * Устанавливает набор произвольных полей.
-	 * 
+	 *
 	 * @param parameters1
 	 *            набор произвольных полей
 	 */
@@ -87,7 +87,7 @@ public class DataRecord implements Serializable {
 
 	/**
 	 * Добавляет произвольное поле.
-	 * 
+	 *
 	 * @param name1
 	 *            имя поля
 	 * @param value

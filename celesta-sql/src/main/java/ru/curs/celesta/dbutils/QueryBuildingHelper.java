@@ -14,7 +14,7 @@ public interface QueryBuildingHelper {
 
 	/**
 	 * Translates date from ISO YYYYMMDD format into RDBMS-specific format.
-	 * 
+	 *
 	 * @param date
 	 *            date in ISO format.
 	 * @

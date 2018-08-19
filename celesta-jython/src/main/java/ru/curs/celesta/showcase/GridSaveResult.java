@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * Класс для результатов сохранения отредактированных данных в гриде.
- * 
+ *
  */
 public class GridSaveResult implements Serializable {
 	private static final long serialVersionUID = 830182167624371725L;

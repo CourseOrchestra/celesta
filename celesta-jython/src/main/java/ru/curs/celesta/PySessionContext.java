@@ -27,7 +27,7 @@ public final class PySessionContext extends SessionContext {
 
 	/**
 	 * Устанавливает приёмник сообщений.
-	 * 
+	 *
 	 * @param receiver
 	 *            приёмник сообщений.
 	 */

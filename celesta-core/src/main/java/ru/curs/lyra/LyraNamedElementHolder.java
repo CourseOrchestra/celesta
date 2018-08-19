@@ -31,7 +31,7 @@ public abstract class LyraNamedElementHolder<T extends LyraNamedElement> impleme
 
 	/**
 	 * Adds a named element.
-	 * 
+	 *
 	 * @param element
 	 *            Element to be added.
 	 */
@@ -45,7 +45,7 @@ public abstract class LyraNamedElementHolder<T extends LyraNamedElement> impleme
 
 	/**
 	 * Gets element by its name.
-	 * 
+	 *
 	 * @param name
 	 *            Name of the element.
 	 */

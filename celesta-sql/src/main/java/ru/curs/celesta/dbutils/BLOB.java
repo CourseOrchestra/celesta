@@ -22,7 +22,7 @@ public final class BLOB {
 
 	/**
 	 * BLOB на основе данных потока.
-	 * 
+	 *
 	 * @param source
 	 *            Поток, из которого данные прочитываются в BLOB.
 	 * @throws IOException

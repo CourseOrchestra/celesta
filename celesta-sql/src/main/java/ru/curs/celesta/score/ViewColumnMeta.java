@@ -63,7 +63,7 @@ public final class ViewColumnMeta implements ColumnMeta {
 
 	/**
 	 * Sets 'nullable' flag.
-	 * 
+	 *
 	 * @param nullable
 	 *            new value.
 	 */
@@ -73,7 +73,7 @@ public final class ViewColumnMeta implements ColumnMeta {
 
 	/**
 	 * Sets CelestaDoc lexem.
-	 * 
+	 *
 	 * @param celestaDoc
 	 *            new value.
 	 * @throws ParseException
@@ -92,7 +92,7 @@ public final class ViewColumnMeta implements ColumnMeta {
 
 	/**
 	 * Sets CelestaDoc lexem.
-	 * 
+	 *
 	 * @param celestaDoc
 	 *            new value.
 	 */

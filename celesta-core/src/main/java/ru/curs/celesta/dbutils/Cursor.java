@@ -1,8 +1,8 @@
 /*
-   (с) 2013 ООО "КУРС-ИТ"  
+   (с) 2013 ООО "КУРС-ИТ"
 
    Этот файл — часть КУРС:Celesta.
-   
+
    КУРС:Celesta — свободная программа: вы можете перераспространять ее и/или изменять
    ее на условиях Стандартной общественной лицензии GNU в том виде, в каком
    она была опубликована Фондом свободного программного обеспечения; либо
@@ -16,7 +16,7 @@
    Вы должны были получить копию Стандартной общественной лицензии GNU
    вместе с этой программой. Если это не так, см. http://www.gnu.org/licenses/.
 
-   
+
    Copyright 2013, COURSE-IT Ltd.
 
    This program is free software: you can redistribute it and/or modify
@@ -173,7 +173,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 		//TODO: одно из самых нуждающихся в переделке мест.
 		// на один insert--2 select-а, что вызывает справедливое возмущение тех, кто смотрит логи
 		// 1) Если у нас автоинкремент и автоинкрементное поле в None, то первый select не нужен
-		// 2) Хорошо бы результат инсерта выдавать в одной операции как resultset 
+		// 2) Хорошо бы результат инсерта выдавать в одной операции как resultset
  		PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
 		try {
 			ResultSet rs = g.executeQuery();
@@ -316,7 +316,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	/**
 	 * Сравнивает значения для того, чтобы определить: что именно было изменено
 	 * в записи. Возвращает true, если значения изменены не были.
-	 * 
+	 *
 	 * @param newVal
 	 *            новое значение
 	 * @param oldVal
@@ -380,7 +380,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	/**
 	 * Осуществляет поиск записи по ключевым полям, выбрасывает исключение, если
 	 * запись не найдена.
-	 * 
+	 *
 	 * @param values
 	 *            значения ключевых полей
 	 */
@@ -399,7 +399,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	/**
 	 * Осуществляет поиск записи по ключевым полям, возвращает значение --
 	 * найдена запись или нет.
-	 * 
+	 *
 	 * @param values
 	 *            значения ключевых полей
 	 */
@@ -424,7 +424,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	/**
 	 * Устанавливает версию записи.
-	 * 
+	 *
 	 * @param v
 	 *            новая версия.
 	 */
@@ -441,7 +441,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	/**
 	 * Прочитывает содержимое BLOB-поля в память.
-	 * 
+	 *
 	 * @param name
 	 *            имя поля
 	 */
@@ -494,7 +494,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 	/**
 	 * Возвращает максимальную длину текстового поля (если она определена).
-	 * 
+	 *
 	 * @param name
 	 *            Имя текстового поля.
 	 * @return длина текстового поля или -1 (минус единица) если вместо длины
@@ -613,7 +613,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 	 * Кроме того, как минимум в Oracle, в силу особенностей реализации, не
 	 * гарантируется надёжная работа этого метода в условиях конкурретного
 	 * доступа к таблице.
-	 * 
+	 *
 	 * @param newValue
 	 *            значение, которое должно принять поле IDENITITY при следующей
 	 *            вставке.

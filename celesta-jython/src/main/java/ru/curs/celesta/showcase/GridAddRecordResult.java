@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * Класс для результатов добавления записи в гриде.
- * 
+ *
  */
 public class GridAddRecordResult implements Serializable {
 	private static final long serialVersionUID = 4793925085602167821L;

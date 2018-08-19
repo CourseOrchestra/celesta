@@ -36,7 +36,7 @@ public abstract class GrainElement extends NamedElement {
 
 	/**
 	 * Возвращает Celesta-SQL представление объекта.
-	 * 
+	 *
 	 * @throws IOException
 	 *             ошибка ввода-вывода при сохранении.
 	 */
