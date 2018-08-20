@@ -28,7 +28,7 @@ public class DateFieldNumeratorTest {
     }
 
 
-    static Stream<Date> wrongDates() {
+    static Stream<Date> outOfRangeVaules() {
         return Stream.of(
                 Date.from(Instant.ofEpochMilli(
                         DateFieldEnumerator.MIN_TIMESTAMP - 100L)),
@@ -37,7 +37,7 @@ public class DateFieldNumeratorTest {
     }
 
     @ParameterizedTest
-    @MethodSource("wrongDates")
+    @MethodSource
     void outOfRangeVaules(Date wrong) {
         System.out.println(wrong);
         DateFieldEnumerator dfe = new DateFieldEnumerator();

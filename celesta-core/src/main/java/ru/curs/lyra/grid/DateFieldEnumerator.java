@@ -1,14 +1,15 @@
 package ru.curs.lyra.grid;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.Date;
 
 public class DateFieldEnumerator extends KeyEnumerator {
-    public static final long MIN_TIMESTAMP = -2208988800000L;
-    public static final long MAX_TIMESTAMP = 4102444800000L;
+    public static final long MIN_TIMESTAMP = Instant.parse("1900-01-01T00:00:00.00Z").toEpochMilli();
+    public static final long MAX_TIMESTAMP = Instant.parse("2100-01-01T00:00:00.00Z").toEpochMilli();
 
-    private static final BigInteger MIN = BigInteger.valueOf(MIN_TIMESTAMP); // 1900-01-01
-    private static final BigInteger MAX = BigInteger.valueOf(MAX_TIMESTAMP); // 2100-01-01
+    private static final BigInteger MIN = BigInteger.valueOf(MIN_TIMESTAMP);
+    private static final BigInteger MAX = BigInteger.valueOf(MAX_TIMESTAMP);
     private static final BigInteger CARD = MAX.subtract(MIN).add(BigInteger.ONE);
 
     private Date value;
