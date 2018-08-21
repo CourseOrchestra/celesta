@@ -14,61 +14,61 @@ import ru.curs.celesta.score.StringColumn;
  * Тип сериализуемого поля формы.
  */
 public enum LyraFieldType {
-	/**
-	 * BLOB.
-	 */
-	BLOB,
+    /**
+     * BLOB.
+     */
+    BLOB,
 
-	/**
-	 * BIT.
-	 */
-	BIT,
+    /**
+     * BIT.
+     */
+    BIT,
 
-	/**
-	 * DATETIME.
-	 */
-	DATETIME,
+    /**
+     * DATETIME.
+     */
+    DATETIME,
 
-	/**
-	 * REAL.
-	 */
-	REAL,
+    /**
+     * REAL.
+     */
+    REAL,
 
-	/**
-	 * INT.
-	 */
-	INT,
+    /**
+     * INT.
+     */
+    INT,
 
-	/**
-	 * VARCHAR.
-	 */
-	VARCHAR;
+    /**
+     * VARCHAR.
+     */
+    VARCHAR;
 
-	private static final HashMap<String, LyraFieldType> C2L = new HashMap<>();
+    private static final HashMap<String, LyraFieldType> C2L = new HashMap<>();
 
-	static {
-		C2L.put(IntegerColumn.CELESTA_TYPE, INT);
-		C2L.put(StringColumn.VARCHAR, VARCHAR);
-		C2L.put(StringColumn.TEXT, VARCHAR);
-		C2L.put(FloatingColumn.CELESTA_TYPE, REAL);
-		C2L.put(DateTimeColumn.CELESTA_TYPE, DATETIME);
-		C2L.put(BooleanColumn.CELESTA_TYPE, BIT);
-		C2L.put(BinaryColumn.CELESTA_TYPE, BLOB);
-	}
+    static {
+        C2L.put(IntegerColumn.CELESTA_TYPE, INT);
+        C2L.put(StringColumn.VARCHAR, VARCHAR);
+        C2L.put(StringColumn.TEXT, VARCHAR);
+        C2L.put(FloatingColumn.CELESTA_TYPE, REAL);
+        C2L.put(DateTimeColumn.CELESTA_TYPE, DATETIME);
+        C2L.put(BooleanColumn.CELESTA_TYPE, BIT);
+        C2L.put(BinaryColumn.CELESTA_TYPE, BLOB);
+    }
 
-	/**
-	 * Определяет тип поля по метаданным столбца таблицы (Table).
-	 * 
-	 * @param c
-	 *            столбец таблицы.
-	 * 
-	 */
-	public static LyraFieldType lookupFieldType(ColumnMeta c) {
-		LyraFieldType result = C2L.get(c.getCelestaType());
-		if (result == null) {
-			throw new RuntimeException(String.format("Invalid table column type: %s", c.getClass().toString()));
-		}
-		return result;
-	}
+    /**
+     * Определяет тип поля по метаданным столбца таблицы (Table).
+     *
+     * @param c
+     *            столбец таблицы.
+     *
+     */
+    public static LyraFieldType lookupFieldType(ColumnMeta c) {
+        LyraFieldType result = C2L.get(c.getCelestaType());
+        if (result == null) {
+            throw new RuntimeException(String.format("Invalid table column type: %s", c.getClass().toString()));
+        }
+        return result;
+    }
 
 }

@@ -27,19 +27,19 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
   }
 
   @Override
-	public boolean tableExists(Connection conn, String schema, String name) {
-		try (PreparedStatement check = conn
-				.prepareStatement(String.format("SELECT table_name FROM information_schema.tables  WHERE "
-						+ "table_schema = '%s' AND table_name = '%s'",
+    public boolean tableExists(Connection conn, String schema, String name) {
+        try (PreparedStatement check = conn
+                .prepareStatement(String.format("SELECT table_name FROM information_schema.tables  WHERE "
+                        + "table_schema = '%s' AND table_name = '%s'",
                         schema,
                         name
                 ))) {
-			ResultSet rs = check.executeQuery();
-			return rs.next();
-		} catch (SQLException e) {
-			throw new CelestaException(e.getMessage());
-		}
-	}
+            ResultSet rs = check.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
+        }
+    }
 
   @Override
   void createSchemaIfNotExists(Connection conn, String name) {

@@ -12,32 +12,32 @@ import java.util.List;
  */
 public interface QueryBuildingHelper {
 
-	/**
-	 * Translates date from ISO YYYYMMDD format into RDBMS-specific format.
-	 * 
-	 * @param date
-	 *            date in ISO format.
-	 * @
-	 *             wrong format.
-	 */
-	String translateDate(String date) ;
+    /**
+     * Translates date from ISO YYYYMMDD format into RDBMS-specific format.
+     *
+     * @param date
+     *            date in ISO format.
+     * @
+     *             wrong format.
+     */
+    String translateDate(String date) ;
 
-	/**
-	 * Does RDBMS sort nulls first?
-	 */
-	boolean nullsFirst();
+    /**
+     * Does RDBMS sort nulls first?
+     */
+    boolean nullsFirst();
 
-	/**
-	 * Returns SQL generator for Celesta views/complex filters.
-	 */
-	SQLGenerator getViewSQLGenerator();
+    /**
+     * Returns SQL generator for Celesta views/complex filters.
+     */
+    SQLGenerator getViewSQLGenerator();
 
-	//TODO: Javadoc
-	String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
-							 List<String> otherFields, String whereForOtherTable);
+    //TODO: Javadoc
+    String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
+                             List<String> otherFields, String whereForOtherTable);
 
-	//TODO: Javadoc
-	boolean supportsCortegeComparing();
+    //TODO: Javadoc
+    boolean supportsCortegeComparing();
 
-	ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z);
+    ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z);
 }

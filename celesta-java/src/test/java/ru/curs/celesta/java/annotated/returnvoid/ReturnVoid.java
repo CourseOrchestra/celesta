@@ -7,6 +7,6 @@ public class ReturnVoid {
 
     @CelestaProc
     public void noReturnValue(CallContext callContext, int a) {
-        
+
     }
 }

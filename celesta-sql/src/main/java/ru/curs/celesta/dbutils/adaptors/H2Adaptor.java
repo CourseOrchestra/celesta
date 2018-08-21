@@ -30,7 +30,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   private static final Pattern HEX_STRING = Pattern.compile("X'([0-9A-Fa-f]+)'");
 
-  
+
   public H2Adaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer, boolean isH2ReferentialIntegrity) {
     super(connectionPool, ddlConsumer);
     configureDb(isH2ReferentialIntegrity);
@@ -435,8 +435,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   @Override
   public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
     String sql = String.format("select count(*) from information_schema.triggers where "
-        + "		table_schema = '%s' and table_name = '%s'"
-        + "		and trigger_name = '%s'",
+        + "        table_schema = '%s' and table_name = '%s'"
+        + "        and trigger_name = '%s'",
             query.getSchema().replace("\"", ""),
             query.getTableName().replace("\"", ""),
             query.getName());
@@ -481,8 +481,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
   @Override
   String getSelectTriggerBodySql(TriggerQuery query) {
     String sql = String.format("select SQL from information_schema.triggers where "
-        + "		table_schema = '%s' and table_name = '%s'"
-        + "		and trigger_name = '%s'", query.getSchema(), query.getTableName(), query.getName());
+        + "        table_schema = '%s' and table_name = '%s'"
+        + "        and trigger_name = '%s'", query.getSchema(), query.getTableName(), query.getName());
 
     return sql;
   }

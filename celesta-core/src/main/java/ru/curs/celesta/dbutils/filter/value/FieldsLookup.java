@@ -63,7 +63,7 @@ public final class FieldsLookup {
      * @param otherTable
      * @param lookupChangeCallback
      * @param newLookupCallback
-     * 
+     *
      */
     public FieldsLookup(
             Table table, Table otherTable,
@@ -84,7 +84,7 @@ public final class FieldsLookup {
      * @param otherView
      * @param lookupChangeCallback
      * @param newLookupCallback
-     * 
+     *
      */
     public FieldsLookup(
             View view, View otherView,

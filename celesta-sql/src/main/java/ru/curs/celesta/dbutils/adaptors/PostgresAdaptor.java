@@ -1,8 +1,8 @@
 /*
-   (с) 2013 ООО "КУРС-ИТ"  
+   (с) 2013 ООО "КУРС-ИТ"
 
    Этот файл — часть КУРС:Celesta.
-   
+
    КУРС:Celesta — свободная программа: вы можете перераспространять ее и/или изменять
    ее на условиях Стандартной общественной лицензии GNU в том виде, в каком
    она была опубликована Фондом свободного программного обеспечения; либо
@@ -16,7 +16,7 @@
    Вы должны были получить копию Стандартной общественной лицензии GNU
    вместе с этой программой. Если это не так, см. http://www.gnu.org/licenses/.
 
-   
+
    Copyright 2013, COURSE-IT Ltd.
 
    This program is free software: you can redistribute it and/or modify
@@ -467,8 +467,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
   @Override
   public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
     String sql = String.format("select count(*) from information_schema.triggers where "
-        + "		event_object_schema = '%s' and event_object_table= '%s'"
-        + "		and trigger_name = '%s'",
+        + "        event_object_schema = '%s' and event_object_table= '%s'"
+        + "        and trigger_name = '%s'",
             query.getSchema().replace("\"", ""),
             query.getTableName().replace("\"", ""),
             query.getName());

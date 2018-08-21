@@ -102,10 +102,10 @@ public class ConnectionPoolTest {
         connectionPool.close();
 
         assertThrows(CelestaException.class, () -> connectionPool.get());
-        
+
         connectionPool.commit(conn2);
         conn3.close();
-        
+
         assertAll(
                 () -> assertTrue(conn1.isClosed()),
                 () -> assertFalse(conn2.isClosed()),

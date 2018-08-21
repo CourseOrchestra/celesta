@@ -12,103 +12,103 @@ import ru.curs.celesta.score.Score;
  */
 final class PythonSourceMonitor {
 
-	private static final long POLL_INTERVAL = 10000;
+    private static final long POLL_INTERVAL = 10000;
 
-	private final Runnable hook;
+    private final Runnable hook;
 
-	private long timestamp = 0L;
+    private long timestamp = 0L;
 
-	// the flat list of monitored modules
-	private final List<File> modules = new ArrayList<>();
-	private final Set<String> moduleNames = new LinkedHashSet<>();
+    // the flat list of monitored modules
+    private final List<File> modules = new ArrayList<>();
+    private final Set<String> moduleNames = new LinkedHashSet<>();
 
-	private final Timer t = new Timer(true);
+    private final Timer t = new Timer(true);
 
-	PythonSourceMonitor(Score s, Runnable hook) {
-		if (hook == null)
-			throw new NullPointerException();
-		this.hook = hook;
+    PythonSourceMonitor(Score s, Runnable hook) {
+        if (hook == null)
+            throw new NullPointerException();
+        this.hook = hook;
 
-		// initializing the list of monitored paths
-		for (Grain g : s.getGrains().values())
-			// skipping the built-in system grain
-			if (!"celesta".equals(g.getName())) {
-				for (GrainPart gp : g.getGrainParts()) {
-					File p = gp.getSourceFile().getParentFile();
-					if (p.isDirectory())
-						addWithSubPackages(p, g.getName());
-				}
-			}
+        // initializing the list of monitored paths
+        for (Grain g : s.getGrains().values())
+            // skipping the built-in system grain
+            if (!"celesta".equals(g.getName())) {
+                for (GrainPart gp : g.getGrainParts()) {
+                    File p = gp.getSourceFile().getParentFile();
+                    if (p.isDirectory())
+                        addWithSubPackages(p, g.getName());
+                }
+            }
 
-		// immediate first pass
-		reRead();
+        // immediate first pass
+        reRead();
 
-		// scheduling the poller
-		t.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				reRead();
-			}
-		}, POLL_INTERVAL, POLL_INTERVAL);
+        // scheduling the poller
+        t.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                reRead();
+            }
+        }, POLL_INTERVAL, POLL_INTERVAL);
 
-	}
+    }
 
-	private void addWithSubPackages(File p, String packageName) {
-		// we are interested in python [sub]packages only!
-		File f = new File(p, "__init__.py");
-		if (!(f.exists() && f.isFile()))
-			return;
-		modules.add(f);
-		moduleNames.add(packageName);
+    private void addWithSubPackages(File p, String packageName) {
+        // we are interested in python [sub]packages only!
+        File f = new File(p, "__init__.py");
+        if (!(f.exists() && f.isFile()))
+            return;
+        modules.add(f);
+        moduleNames.add(packageName);
 
-		for (String element : p.list()) {
-			// in python [sub]packages we are interested in user source files
-			// only!
-			f = new File(p, element);
-			if (f.isDirectory())
-				addWithSubPackages(f, packageName + "." + element);
-			else if (f.isFile() && element.endsWith(".py") && !"__init__.py".equals(element)) {
-				// we don't need to monitor ORM files, but we do need to
-				// reload'em.
-				if (!element.endsWith("_orm.py"))
-					modules.add(f);
-				moduleNames.add(packageName + "." + element.substring(0, element.length() - 3));
-			}
-		}
-	}
+        for (String element : p.list()) {
+            // in python [sub]packages we are interested in user source files
+            // only!
+            f = new File(p, element);
+            if (f.isDirectory())
+                addWithSubPackages(f, packageName + "." + element);
+            else if (f.isFile() && element.endsWith(".py") && !"__init__.py".equals(element)) {
+                // we don't need to monitor ORM files, but we do need to
+                // reload'em.
+                if (!element.endsWith("_orm.py"))
+                    modules.add(f);
+                moduleNames.add(packageName + "." + element.substring(0, element.length() - 3));
+            }
+        }
+    }
 
-	private void reRead() {
-		long max = timestamp;
-		File freshest = null;
-		for (File f : modules) {
-			long lm = f.lastModified();
-			if (lm > max) {
-				max = lm;
-				freshest = f;
-			}
-		}
-		if (timestamp != 0L && max > timestamp) {
-			Date newDate = new Date(max);
-			Date oldDate = new Date(timestamp);
-			System.out.printf("File timestamp change detected: '%s' --> %s, maximum timestamp was %s%n",
-					freshest.toString(), newDate.toString(), oldDate.toString());
-			timestamp = max;
-			hook.run();
-		} else {
-			timestamp = max;
-		}
+    private void reRead() {
+        long max = timestamp;
+        File freshest = null;
+        for (File f : modules) {
+            long lm = f.lastModified();
+            if (lm > max) {
+                max = lm;
+                freshest = f;
+            }
+        }
+        if (timestamp != 0L && max > timestamp) {
+            Date newDate = new Date(max);
+            Date oldDate = new Date(timestamp);
+            System.out.printf("File timestamp change detected: '%s' --> %s, maximum timestamp was %s%n",
+                    freshest.toString(), newDate.toString(), oldDate.toString());
+            timestamp = max;
+            hook.run();
+        } else {
+            timestamp = max;
+        }
 
-	}
+    }
 
-	public long getSourceTimestamp() {
-		return timestamp;
-	}
+    public long getSourceTimestamp() {
+        return timestamp;
+    }
 
-	public Set<String> getModules() {
-		return moduleNames;
-	}
+    public Set<String> getModules() {
+        return moduleNames;
+    }
 
-	public void cancel() {
-		t.cancel();
-	}
+    public void cancel() {
+        t.cancel();
+    }
 }

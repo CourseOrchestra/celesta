@@ -10,18 +10,18 @@ import java.util.List;
  */
 public final class AlwaysFalse extends WhereTerm {
 
-	public static final AlwaysFalse FALSE = new AlwaysFalse();
+    public static final AlwaysFalse FALSE = new AlwaysFalse();
 
-	private AlwaysFalse() {
-	};
+    private AlwaysFalse() {
+    };
 
-	@Override
-	public String getWhere() {
-		return "(1 = 0)";
-	}
+    @Override
+    public String getWhere() {
+        return "(1 = 0)";
+    }
 
-	@Override
-	public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
-		// do nothing, no parameters
-	}
+    @Override
+    public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
+        // do nothing, no parameters
+    }
 }

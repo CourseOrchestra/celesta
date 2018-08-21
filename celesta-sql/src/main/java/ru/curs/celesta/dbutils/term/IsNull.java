@@ -10,21 +10,21 @@ import java.util.List;
  */
 public final class IsNull extends WhereTerm {
 
-	// quoted column name
-	private final String fieldName;
+    // quoted column name
+    private final String fieldName;
 
-	public IsNull(String fieldName) {
-		this.fieldName = fieldName;
-	}
+    public IsNull(String fieldName) {
+        this.fieldName = fieldName;
+    }
 
-	@Override
-	public String getWhere() {
-		return String.format("(%s is null)", fieldName);
-	}
+    @Override
+    public String getWhere() {
+        return String.format("(%s is null)", fieldName);
+    }
 
-	@Override
-	public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
-		// do nothing - no parameters
-	}
+    @Override
+    public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
+        // do nothing - no parameters
+    }
 
 }

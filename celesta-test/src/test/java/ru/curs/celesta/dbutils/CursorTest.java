@@ -13,103 +13,99 @@ import ru.curs.celesta.syscursors.LogsetupCursor;
 
 public class CursorTest {
 
-	private static Celesta celesta;
+    private static Celesta celesta;
 
-	private PySessionContext sc = new PySessionContext("super", "foo");
-	private Cursor c;
+    private PySessionContext sc = new PySessionContext("super", "foo");
+    private Cursor c;
 
-	@BeforeAll
-	public static void init() {
-		Properties properties = new Properties();
-		properties.setProperty("score.path", "score");
-		properties.setProperty("h2.in-memory", "true");
+    @BeforeAll
+    public static void init() {
+        Properties properties = new Properties();
+        properties.setProperty("score.path", "score");
+        properties.setProperty("h2.in-memory", "true");
 
-		celesta = Celesta.createInstance(properties);
-	}
+        celesta = Celesta.createInstance(properties);
+    }
 
-	@AfterAll
-	public static void destroy() throws SQLException {
-		celesta.callContext(new PySessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
-		celesta.close();
-	}
+    @AfterAll
+    public static void destroy() throws SQLException {
+        celesta.callContext(new PySessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
+        celesta.close();
+    }
 
-	@BeforeEach
-	public void before() {
-		c = new LogsetupCursor(celesta.callContext(sc));
-	}
+    @BeforeEach
+    public void before() {
+        c = new LogsetupCursor(celesta.callContext(sc));
+    }
 
-	@AfterEach
-	public void after() {
-		c.close();
-	}
+    @AfterEach
+    public void after() {
+        c.close();
+    }
 
-	@Test
-	public void cursorIsNavigable() {
-		c.setFilter("grainid", "'b'%");
-		LogsetupCursor c2 = (LogsetupCursor) c;
-		c2.setGrainid("grainval");
-		c2.setTablename("tablenameval");
-		c2.setI(true);
-		c2.setM(false);
-		c2.setD(true);
-		boolean itWas = false;
-		try {
-			c.navigate("=s><+-");
-		} catch (CelestaException e) {
-			// System.out.println(e.getMessage());
-			itWas = true;
-		}
-		assertTrue(itWas);
-		c.navigate("=><+-");
-	}
+    @Test
+    public void cursorIsNavigable() {
+        c.setFilter("grainid", "'b'%");
+        LogsetupCursor c2 = (LogsetupCursor) c;
+        c2.setGrainid("grainval");
+        c2.setTablename("tablenameval");
+        c2.setI(true);
+        c2.setM(false);
+        c2.setD(true);
+        assertTrue(
+                assertThrows(CelestaException.class,
+                        () -> c.navigate("=s><+-")
+                ).getMessage().contains("Invalid navigation command")
+        );
 
-	@Test
-	public void fieldsAreAssignable() {
-		LogsetupCursor lsc = (LogsetupCursor) c;
-		assertNull(lsc.getGrainid());
-		lsc.setValue("grainid", "asdFsaf");
+        c.navigate("=><+-");
+    }
 
-		assertEquals("asdFsaf", lsc.getGrainid());
+    @Test
+    public void fieldsAreAssignable() {
+        LogsetupCursor lsc = (LogsetupCursor) c;
+        assertNull(lsc.getGrainid());
+        lsc.setValue("grainid", "asdFsaf");
 
-		boolean itWas = false;
-		try {
-			lsc.setValue("asdfasdf", "sswe");
-		} catch (CelestaException e) {
-			itWas = true;
-		}
-		assertTrue(itWas);
-	}
+        assertEquals("asdFsaf", lsc.getGrainid());
 
-	@Test
-	public void testClose() throws Exception {
-		BasicCursor xRec = c.getXRec();
+        assertTrue(
+                assertThrows(CelestaException.class,
+                        () -> lsc.setValue("asdfasdf", "sswe")).getMessage()
+                        .contains("No column")
+        );
+    }
 
-		Object[] rec = {"f1", "f2", "f3", "f4", "f5"};
+    @Test
+    public void testClose() throws Exception {
+        BasicCursor xRec = c.getXRec();
 
-		c.getHelper.getHolder().getStatement(rec, 0);
-		c.insert.getStatement(rec, 0);
+        Object[] rec = {"f1", "f2", "f3", "f4", "f5"};
 
-		boolean[] updateMask = {true, false, false, true, true};
-		c.updateMask = updateMask;
-		boolean[] nullUpdateMask = {false, true, true, false, false};
-		c.nullUpdateMask = nullUpdateMask;
+        c.getHelper.getHolder().getStatement(rec, 0);
+        c.insert.getStatement(rec, 0);
 
-		c.update.getStatement(rec, 0);
-		c.delete.getStatement(rec, 0);
+        boolean[] updateMask = {true, false, false, true, true};
+        c.updateMask = updateMask;
+        boolean[] nullUpdateMask = {false, true, true, false, false};
+        c.nullUpdateMask = nullUpdateMask;
 
-		c.set.getStatement(rec, 0);
-		c.forwards.getStatement(rec, 0);
-		c.backwards.getStatement(rec, 0);
-		c.here.getStatement(rec, 0);
-		c.first.getStatement(rec, 0);
-		c.last.getStatement(rec, 0);
-		c.count.getStatement(rec, 0);
-		c.position.getStatement(rec, 0);
+        c.update.getStatement(rec, 0);
+        c.delete.getStatement(rec, 0);
+
+        c.set.getStatement(rec, 0);
+        c.forwards.getStatement(rec, 0);
+        c.backwards.getStatement(rec, 0);
+        c.here.getStatement(rec, 0);
+        c.first.getStatement(rec, 0);
+        c.last.getStatement(rec, 0);
+        c.count.getStatement(rec, 0);
+        c.position.getStatement(rec, 0);
 
 
         assertAll(
-				() -> assertFalse(c.isClosed()),
-				() -> assertFalse(xRec.isClosed()),
+                () -> assertFalse(c.isClosed()),
+                () -> assertFalse(xRec.isClosed()),
                 () -> assertTrue(c.getHelper.getHolder().isStmtValid()),
                 () -> assertTrue(c.insert.isStmtValid()),
                 () -> assertTrue(c.update.isStmtValid()),
@@ -125,24 +121,24 @@ public class CursorTest {
                 () -> assertTrue(c.position.isStmtValid())
         );
 
-		c.close();
+        c.close();
 
-		assertAll(
-				() -> assertTrue(xRec.isClosed()),
-				() -> assertFalse(c.getHelper.getHolder().isStmtValid()),
-				() -> assertFalse(c.insert.isStmtValid()),
-				() -> assertFalse(c.update.isStmtValid()),
-				() -> assertFalse(c.delete.isStmtValid()),
+        assertAll(
+                () -> assertTrue(xRec.isClosed()),
+                () -> assertFalse(c.getHelper.getHolder().isStmtValid()),
+                () -> assertFalse(c.insert.isStmtValid()),
+                () -> assertFalse(c.update.isStmtValid()),
+                () -> assertFalse(c.delete.isStmtValid()),
 
-				() -> assertFalse(c.set.isStmtValid()),
-				() -> assertFalse(c.forwards.isStmtValid()),
-				() -> assertFalse(c.backwards.isStmtValid()),
-				() -> assertFalse(c.here.isStmtValid()),
-				() -> assertFalse(c.first.isStmtValid()),
-				() -> assertFalse(c.last.isStmtValid()),
-				() -> assertFalse(c.count.isStmtValid()),
-				() -> assertFalse(c.position.isStmtValid())
-		);
+                () -> assertFalse(c.set.isStmtValid()),
+                () -> assertFalse(c.forwards.isStmtValid()),
+                () -> assertFalse(c.backwards.isStmtValid()),
+                () -> assertFalse(c.here.isStmtValid()),
+                () -> assertFalse(c.first.isStmtValid()),
+                () -> assertFalse(c.last.isStmtValid()),
+                () -> assertFalse(c.count.isStmtValid()),
+                () -> assertFalse(c.position.isStmtValid())
+        );
 
-	}
+    }
 }

@@ -10,16 +10,16 @@ import java.sql.PreparedStatement;
  */
 public final class FieldParameterSetter extends ParameterSetter {
 
-	private final int fieldNum;
+    private final int fieldNum;
 
-	public FieldParameterSetter(QueryBuildingHelper queryBuildingHelper, int fieldNum) {
-		super(queryBuildingHelper);
-		this.fieldNum = fieldNum;
-	}
+    public FieldParameterSetter(QueryBuildingHelper queryBuildingHelper, int fieldNum) {
+        super(queryBuildingHelper);
+        this.fieldNum = fieldNum;
+    }
 
-	@Override
-	public void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion)  {
-		setParam(stmt, paramNum, rec[fieldNum]);
-	}
+    @Override
+    public void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion)  {
+        setParam(stmt, paramNum, rec[fieldNum]);
+    }
 
 }

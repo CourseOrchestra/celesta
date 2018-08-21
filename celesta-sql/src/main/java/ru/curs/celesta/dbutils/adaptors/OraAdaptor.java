@@ -1,8 +1,8 @@
 /*
-   (с) 2013 ООО "КУРС-ИТ"  
+   (с) 2013 ООО "КУРС-ИТ"
 
    Этот файл — часть КУРС:Celesta.
-   
+
    КУРС:Celesta — свободная программа: вы можете перераспространять ее и/или изменять
    ее на условиях Стандартной общественной лицензии GNU в том виде, в каком
    она была опубликована Фондом свободного программного обеспечения; либо
@@ -16,7 +16,7 @@
    Вы должны были получить копию Стандартной общественной лицензии GNU
    вместе с этой программой. Если это не так, см. http://www.gnu.org/licenses/.
 
-   
+
    Copyright 2013, COURSE-IT Ltd.
 
    This program is free software: you can redistribute it and/or modify
@@ -364,7 +364,7 @@ public final class OraAdaptor extends DBAdaptor {
           c.getParentTable().getName());
       String sql = String.format(
           "SELECT COLUMN_NAME, DATA_TYPE, NULLABLE, CHAR_LENGTH, DATA_PRECISION, DATA_SCALE "
-              + "FROM user_tab_cols	WHERE table_name = '%s' and COLUMN_NAME = '%s'",
+              + "FROM user_tab_cols    WHERE table_name = '%s' and COLUMN_NAME = '%s'",
           tableName, c.getName());
       // System.out.println(sql);
       Statement stmt = conn.createStatement();
@@ -656,13 +656,13 @@ public final class OraAdaptor extends DBAdaptor {
           } else {
             /*
              * Если название индекса не соответствует ожидаемому
-						 * шаблону, то это -- индекс, добавленный вне Celesta и
-						 * его следует удалить. Мы добавляем знаки ## перед
-						 * именем индекса. Далее система, не найдя индекс с
-						 * такими метаданными, поставит такой индекс на
-						 * удаление. Метод удаления, обнаружив ## в начале имени
-						 * индекса, удалит их.
-						 */
+                         * шаблону, то это -- индекс, добавленный вне Celesta и
+                         * его следует удалить. Мы добавляем знаки ## перед
+                         * именем индекса. Далее система, не найдя индекс с
+                         * такими метаданными, поставит такой индекс на
+                         * удаление. Метод удаления, обнаружив ## в начале имени
+                         * индекса, удалит их.
+                         */
             indName = "##" + dbIndName;
           }
 
