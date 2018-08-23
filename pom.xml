@@ -74,7 +74,6 @@
         <!--plugin versions -->
         <spotbugs.maven.plugin.version>3.1.3</spotbugs.maven.plugin.version>
         <javacc.maven.plugin.version>2.6</javacc.maven.plugin.version>
-        <jgitflow.maven.plugin.version>1.0-m4.3</jgitflow.maven.plugin.version>
         <maven.assembly.plugin.version>3.1.0</maven.assembly.plugin.version>
         <maven.checkstyle.plugin.version>3.0.0</maven.checkstyle.plugin.version>
         <maven.compiler.plugin.version>3.3</maven.compiler.plugin.version>

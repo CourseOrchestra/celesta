@@ -185,21 +185,36 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
     @Override
     public int getCurrentIdent(Connection conn, Table t) {
-        String sysSchemaName = t.getGrain().getScore().getSysSchemaName();
-        String sql = String.format("select seqvalue from " + sysSchemaName
-                        + ".sequences where grainid = '%s' and tablename = '%s'",
-                t.getGrain().getName(), t.getName());
-        try {
-            Statement stmt = conn.createStatement();
-            try {
-                ResultSet rs = stmt.executeQuery(sql);
-                if (!rs.next())
-                    throw new CelestaException(sysSchemaName + " sequense for %s.%s is not initialized.", t.getGrain().getName(),
-                            t.getName());
+        final String sql;
+
+        IntegerColumn idColumn = t.getPrimaryKey().values().stream()
+                .filter(c -> c instanceof IntegerColumn)
+                .map(c -> (IntegerColumn) c)
+                .filter(ic -> ic.isIdentity() || ic.getSequence() != null)
+                .findFirst().get();
+
+        if (idColumn.isIdentity()) {
+            String sysSchemaName = t.getGrain().getScore().getSysSchemaName();
+            sql = String.format("select seqvalue from " + sysSchemaName
+                            + ".sequences where grainid = '%s' and tablename = '%s'",
+                    t.getGrain().getName(), t.getName());
+        } else {
+            sql = String.format(
+                    "SELECT CURRENT_VALUE FROM SYS.sequences WHERE name = '%s'",
+                    idColumn.getSequence().getName());
+        }
+        try (Statement stmt = conn.createStatement()) {
+
+            ResultSet rs = stmt.executeQuery(sql);
+            if (!rs.next())
+                throw new CelestaException("Id sequence for %s.%s is not initialized.", t.getGrain().getName(),
+                        t.getName());
+            if (idColumn.isIdentity()) {
                 return rs.getInt(1);
-            } finally {
-                stmt.close();
+            } else {
+                return (int) rs.getLong(1);
             }
+
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }

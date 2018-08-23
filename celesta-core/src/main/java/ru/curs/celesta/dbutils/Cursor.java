@@ -207,9 +207,12 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 // e. g. using INSERT.. OUTPUT clause for MSSQL
                 loggingManager.log(this, Action.INSERT);
                 for (Column c : meta().getColumns().values())
-                    if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
-                        _setAutoIncrement(db().getCurrentIdent(conn(), meta()));
-                        break;
+                    if (c instanceof IntegerColumn) {
+                        IntegerColumn ic = (IntegerColumn)c;
+                        if (ic.isIdentity() || ic.getSequence() != null) {
+                            _setAutoIncrement(db().getCurrentIdent(conn(), meta()));
+                            break;
+                        }
                     }
             }
 

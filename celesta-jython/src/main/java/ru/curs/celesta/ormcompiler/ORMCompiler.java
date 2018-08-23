@@ -20,7 +20,7 @@ public final class ORMCompiler {
      * Версия компилятора. Данную константу следует инкрементировать, когда
      * необходимо инициировать автоматическое пересоздание orm-скриптов.
      */
-    private static final int COMPILERVER = 22;
+    private static final int COMPILERVER = 23;
 
     private static final String DEF_CLEAR_BUFFER_SELF_WITH_KEYS = "    def _clearBuffer(self, withKeys):";
     private static final String DEF_INIT_SELF_CONTEXT = "    def __init__(self, context):";
@@ -407,10 +407,13 @@ public final class ORMCompiler {
         w.println("    def _setAutoIncrement(self, val):");
         boolean hasCode = false;
         for (Column c : columns)
-            if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
-                w.printf("        self.%s = val%n", c.getName());
-                hasCode = true;
-                break;
+            if (c instanceof IntegerColumn) {
+                IntegerColumn ic = (IntegerColumn)c;
+                if (ic.isIdentity() || ic.getSequence() != null) {
+                    w.printf("        self.%s = val%n", c.getName());
+                    hasCode = true;
+                    break;
+                }
             }
         if (!hasCode)
             w.println("        pass");
