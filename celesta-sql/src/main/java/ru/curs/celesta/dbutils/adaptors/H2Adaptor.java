@@ -126,8 +126,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     String sql = String.format("SELECT ALIAS_NAME FROM INFORMATION_SCHEMA.FUNCTION_ALIASES where alias_schema = '%s'",
         g.getName());
     List<String> result = new LinkedList<>();
-    try (Statement stmt = conn.createStatement();) {
-      ResultSet rs = stmt.executeQuery(sql);
+    try (Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql)) {
       while (rs.next()) {
         result.add(rs.getString(1));
       }
@@ -456,8 +456,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
   @Override
   public int getDBPid(Connection conn) {
-    try (Statement stmt = conn.createStatement()) {
-      ResultSet rs = stmt.executeQuery("SELECT SESSION_ID()");
+    try (Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery("SELECT SESSION_ID()")) {
       if (rs.next())
         return rs.getInt(1);
     } catch (SQLException e) {

@@ -87,8 +87,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
   @Override
   public int getCurrentIdent(Connection conn, Table t) {
     String sql = String.format("select last_value from \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
-    try (Statement stmt = conn.createStatement()) {
-      ResultSet rs = stmt.executeQuery(sql);
+    try (Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql)) {
       rs.next();
       return rs.getInt(1);
     } catch (SQLException e) {
@@ -284,8 +284,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
             "           AND upper(pg_get_function_result(p.oid)) like upper('%%table%%'))",
         g.getName());
     List<String> result = new LinkedList<>();
-    try (Statement stmt = conn.createStatement();) {
-      ResultSet rs = stmt.executeQuery(sql);
+    try (Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql)) {
       while (rs.next()) {
         result.add(rs.getString(1));
       }
@@ -488,8 +488,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
   @Override
   public int getDBPid(Connection conn) {
-    try (Statement stmt = conn.createStatement()) {
-      ResultSet rs = stmt.executeQuery("select pg_backend_pid();");
+    try (Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery("select pg_backend_pid();")) {
       if (rs.next())
         return rs.getInt(1);
     } catch (SQLException e) {

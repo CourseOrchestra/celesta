@@ -582,8 +582,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
   @Override
   public int getDBPid(Connection conn) {
-    try (Statement stmt = conn.createStatement()) {
-      ResultSet rs = stmt.executeQuery("SELECT @@SPID;");
+    try (Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery("SELECT @@SPID;")) {
       if (rs.next())
         return rs.getInt(1);
     } catch (SQLException e) {
@@ -603,8 +603,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
             "where routine_schema = '%s' AND routine_type='FUNCTION'",
         g.getName());
     List<String> result = new LinkedList<>();
-    try (Statement stmt = conn.createStatement();) {
-      ResultSet rs = stmt.executeQuery(sql);
+    try (Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql)) {
       while (rs.next()) {
         result.add(rs.getString(1));
       }
@@ -637,8 +637,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
   public long nextSequenceValue(Connection conn, SequenceElement s) {
     String sql = "SELECT NEXT VALUE FOR " + tableString(s.getGrain().getName(), s.getName());
 
-    try (Statement stmt = conn.createStatement()) {
-      ResultSet rs = stmt.executeQuery(sql);
+    try (Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql)) {
       rs.next();
       return rs.getLong(1);
     } catch (SQLException e) {
@@ -685,8 +685,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
             schema.replace("\"", ""),
             name.replace("\"", "")
     );
-    try (Statement check = conn.createStatement()) {
-      ResultSet rs = check.executeQuery(sql);
+    try (Statement check = conn.createStatement();
+      ResultSet rs = check.executeQuery(sql)) {
       return rs.next() && rs.getInt(1) != -1;
     } catch (SQLException e) {
       throw new CelestaException(e.getMessage());
