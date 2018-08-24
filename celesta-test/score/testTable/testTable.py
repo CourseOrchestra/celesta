@@ -85,7 +85,7 @@ class TestTable(CelestaTestCase):
         self._assertXRecCursorFields(xRec, None, None, None, None, None, None)
         cursor.insert()
 
-        self._assertXRecCursorFields(xRec, None, None, None, None, None, None)
+        self._assertXRecCursorFields(xRec, id, num, cost, title, isActive, created)
         cursor.clear()
 
         xRec = cursor.getXRec()
@@ -121,6 +121,7 @@ class TestTable(CelestaTestCase):
     def test_iterate(self):
         cursor = tIterateCursor(self.context)
         cursor.insert()
+        cursor.clear()
         cursor.insert()
 
         idList = []
@@ -151,6 +152,7 @@ class TestTable(CelestaTestCase):
 
         for i in range(3):
             cursor.insert()
+            cursor.clear()
 
         idList = []
 

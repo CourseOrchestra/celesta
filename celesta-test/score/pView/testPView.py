@@ -177,6 +177,8 @@ class TestParameterizedView(CelestaTestCase):
         t = t3Cursor(self.context)
 
         t.insert()
+        t.clear()
+
         t.f2 = BigDecimal('0.0001')
         t.insert()
 
