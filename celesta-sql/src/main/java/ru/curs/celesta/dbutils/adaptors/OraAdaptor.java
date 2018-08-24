@@ -507,8 +507,10 @@ public final class OraAdaptor extends DBAdaptor {
         try {
             String sql = String.format("select cons.constraint_name, column_name from all_constraints cons "
                             + "inner join all_cons_columns cols on cons.constraint_name = cols.constraint_name  "
-                            + "and cons.owner = cols.owner where " + "cons.owner = sys_context('userenv','session_user') "
-                            + "and cons.table_name = '%s_%s'" + " and cons.constraint_type = 'P' order by cols.position",
+                            + "and cons.owner = cols.owner where "
+                            + "cons.owner = sys_context('userenv','session_user') "
+                            + "and cons.table_name = '%s_%s'"
+                            + " and cons.constraint_type = 'P' order by cols.position",
                     t.getGrain().getName(), t.getName());
             Statement check = conn.createStatement();
             ResultSet rs = check.executeQuery(sql);
@@ -620,7 +622,8 @@ public final class OraAdaptor extends DBAdaptor {
         return sql;
     }
 
-    private String getLimitedSqlWithOffset(String orderBy, Set<String> fields, FromClause from, String where, long offset, long rowCount) {
+    private String getLimitedSqlWithOffset(String orderBy, Set<String> fields, FromClause from, String where,
+                                           long offset, long rowCount) {
         return String.format(
                 "with a as (%s) select * from (select a.*, ROWNUM rnum "
                         + "from a where rownum <= %d) where rnum >= %d order by rnum",
