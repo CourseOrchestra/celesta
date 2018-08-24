@@ -699,8 +699,8 @@ public class OraDdlGenerator extends DdlGenerator {
 
         final boolean incSequenceExists;
 
-        try (Statement checkForTable = conn.createStatement()) {
-            ResultSet rs = checkForTable.executeQuery(sequenceExistsSql);
+        try (Statement checkForTable = conn.createStatement();
+            ResultSet rs = checkForTable.executeQuery(sequenceExistsSql)) {
             incSequenceExists = rs.next() && rs.getInt(1) > 0;
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());

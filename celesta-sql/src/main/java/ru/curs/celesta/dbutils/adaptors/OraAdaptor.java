@@ -123,14 +123,10 @@ public final class OraAdaptor extends DBAdaptor {
 
     @Override
     boolean userTablesExist(Connection conn) throws SQLException {
-        PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) FROM USER_TABLES");
-        ResultSet rs = pstmt.executeQuery();
-        try {
+        try (PreparedStatement pstmt = conn.prepareStatement("SELECT COUNT(*) FROM USER_TABLES");
+             ResultSet rs = pstmt.executeQuery()) {
             rs.next();
             return rs.getInt(1) > 0;
-        } finally {
-            rs.close();
-            pstmt.close();
         }
     }
 
@@ -692,9 +688,8 @@ public final class OraAdaptor extends DBAdaptor {
                         + "where owner = sys_context('userenv','session_user') and view_name like '%s@_%%' escape '@'",
                 g.getName());
         List<String> result = new LinkedList<>();
-        try {
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 String dbName = rs.getString(1);
                 result.add(convertNameFromDb(dbName, g));
@@ -713,9 +708,8 @@ public final class OraAdaptor extends DBAdaptor {
                         " and object_type = 'FUNCTION' and object_name like '%s@_%%' escape '@'",
                 g.getName());
         List<String> result = new LinkedList<>();
-        try {
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 String dbName = rs.getString(1);
                 result.add(convertNameFromDb(dbName, g));
@@ -891,7 +885,7 @@ public final class OraAdaptor extends DBAdaptor {
         );
 
         try (Statement checkForTable = conn.createStatement();
-            ResultSet rs = checkForTable.executeQuery(sql)) {
+             ResultSet rs = checkForTable.executeQuery(sql)) {
             return rs.next() && rs.getInt(1) > 0;
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
@@ -905,17 +899,15 @@ public final class OraAdaptor extends DBAdaptor {
 
         try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, String.format("%s_%s", s.getGrain().getName(), s.getName()));
-            ResultSet rs = preparedStatement.executeQuery();
-            rs.next();
-
-            DbSequenceInfo result = new DbSequenceInfo();
-
-            result.setIncrementBy(rs.getLong("INCREMENT_BY"));
-            result.setMinValue(rs.getLong("MIN_VALUE"));
-            result.setMaxValue(rs.getLong("MAX_VALUE"));
-            result.setCycle("Y".equals(rs.getString("CYCLE_FLAG")));
-
-            return result;
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                rs.next();
+                DbSequenceInfo result = new DbSequenceInfo();
+                result.setIncrementBy(rs.getLong("INCREMENT_BY"));
+                result.setMinValue(rs.getLong("MIN_VALUE"));
+                result.setMaxValue(rs.getLong("MAX_VALUE"));
+                result.setCycle("Y".equals(rs.getString("CYCLE_FLAG")));
+                return result;
+            }
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage(), e);
         }
