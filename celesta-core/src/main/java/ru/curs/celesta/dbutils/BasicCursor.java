@@ -966,8 +966,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     private int count(PreparedStatement stmt) {
         int result;
-        try {
-            ResultSet rs = stmt.executeQuery();
+        try (ResultSet rs = stmt.executeQuery()) {
             rs.next();
             result = rs.getInt(1);
         } catch (SQLException e) {

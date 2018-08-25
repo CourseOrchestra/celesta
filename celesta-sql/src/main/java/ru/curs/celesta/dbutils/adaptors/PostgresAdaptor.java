@@ -304,8 +304,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
         DbPkInfo result = new DbPkInfo();
 
         try (Statement stmt = conn.createStatement();
-             PreparedStatement stmt2 = conn.prepareStatement("select pg_get_indexdef(?, ?, false)")) {
-            ResultSet rs = stmt.executeQuery(sql);
+             PreparedStatement stmt2 = conn.prepareStatement("select pg_get_indexdef(?, ?, false)");
+             ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
                 String indName = rs.getString("indexname");
                 int colCount = rs.getInt("colcount");
