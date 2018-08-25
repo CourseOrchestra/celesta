@@ -72,870 +72,873 @@ import static ru.curs.celesta.dbutils.jdbc.SqlUtils.*;
  */
 public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdaptor {
 
-  /*
-   * N.B. for contributors. This class is great, so To avoid chaos,
-   * here is the order of (except constructors and fabric methods):
-   * first of all -- public final methods,
-   * then -- package-private static methods,
-   * then -- package-private final methods,
-   * then -- package-private methods,
-   * then -- package-private abstract methods,
-   * then -- public static methods,
-   * then -- public final methods,
-   * then -- public methods,
-   * then -- public abstract methods,
-   * then -- private methods
-   */
+    /*
+     * N.B. for contributors. This class is great, so To avoid chaos,
+     * here is the order of (except constructors and fabric methods):
+     * first of all -- public final methods,
+     * then -- package-private static methods,
+     * then -- package-private final methods,
+     * then -- package-private methods,
+     * then -- package-private abstract methods,
+     * then -- public static methods,
+     * then -- public final methods,
+     * then -- public methods,
+     * then -- public abstract methods,
+     * then -- private methods
+     */
 
-  static final List<Class<? extends Column>> COLUMN_CLASSES = Arrays.asList(IntegerColumn.class, StringColumn.class,
-          BooleanColumn.class, FloatingColumn.class, DecimalColumn.class, BinaryColumn.class, DateTimeColumn.class,
-          ZonedDateTimeColumn.class);
-  static final String COLUMN_NAME = "COLUMN_NAME";
+    static final List<Class<? extends Column>> COLUMN_CLASSES = Arrays.asList(IntegerColumn.class, StringColumn.class,
+            BooleanColumn.class, FloatingColumn.class, DecimalColumn.class, BinaryColumn.class, DateTimeColumn.class,
+            ZonedDateTimeColumn.class);
+    static final String COLUMN_NAME = "COLUMN_NAME";
 
-  protected final ConnectionPool connectionPool;
-  DdlAdaptor ddlAdaptor;
+    protected final ConnectionPool connectionPool;
+    DdlAdaptor ddlAdaptor;
 
-  //TODO: Javadoc
-  protected DBAdaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer) {
-    this.connectionPool = connectionPool;
-    this.ddlAdaptor = new DdlAdaptor(getDdlGenerator(), ddlConsumer);
-    connectionPool.setDbAdaptor(this);
-  }
-
-  abstract DdlGenerator getDdlGenerator();
-
-  // =========> PACKAGE-PRIVATE STATIC METHODS <=========
-
-  /**
-   * Creates a PreparedStatement object.
-   * @param conn Connection to use.
-   * @param sql SQL statement.
-   * @return new default PreparedStatement object.
-   * @if a {@link SQLException} occurs.
-   */
-  static PreparedStatement prepareStatement(Connection conn, String sql) {
-    try {
-      return conn.prepareStatement(sql);
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
+    //TODO: Javadoc
+    protected DBAdaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer) {
+        this.connectionPool = connectionPool;
+        this.ddlAdaptor = new DdlAdaptor(getDdlGenerator(), ddlConsumer);
+        connectionPool.setDbAdaptor(this);
     }
-  }
 
-  /**
-   * Transforms {@link Iterable<String>} of field names into comma separated {@link String} field names.
-   * Binary fields are excluded from result.
-   * @param t the {@link DataGrainElement} type, that's owner of fields.
-   * @param fields {@link Iterable<String>} fields to transform.
-   * @return Comma separated {@link String} field names.
-   */
-  static String getTableFieldsListExceptBlobs(DataGrainElement t, Set<String> fields) {
-    final List<String> flds;
+    abstract DdlGenerator getDdlGenerator();
 
-    Predicate<ColumnMeta> notBinary = c -> !BinaryColumn.CELESTA_TYPE.equals(c.getCelestaType());
+    // =========> PACKAGE-PRIVATE STATIC METHODS <=========
 
-    if (fields.isEmpty()) {
-      flds = t.getColumns().entrySet().stream()
-              .filter(e -> notBinary.test(e.getValue()))
-              .map(Map.Entry::getKey)
-              .collect(Collectors.toList());
-    } else {
-      flds = fields.stream()
-              .filter(f -> notBinary.test(t.getColumns().get(f)))
-              .collect(Collectors.toList());
-    }
-    // To the list of fields of the versioned tables we necessarily add "recversion"
-    if (t instanceof Table && ((Table) t).isVersioned())
-      flds.add(VersionedElement.REC_VERSION);
-
-    return getFieldList(flds);
-  }
-
-  /**
-   * Returns {@link FKRule} by input string rule.
-   * The method is case-insensitive for rule param.
-   * @param rule input string.
-   * @return Returns one of the values of {@link FKRule} or null in case of invalid input.
-   */
-  static FKRule getFKRule(String rule) {
-    if ("NO ACTION".equalsIgnoreCase(rule) || "RECTRICT".equalsIgnoreCase(rule))
-      return FKRule.NO_ACTION;
-    if ("SET NULL".equalsIgnoreCase(rule))
-      return FKRule.SET_NULL;
-    if ("CASCADE".equalsIgnoreCase(rule))
-      return FKRule.CASCADE;
-    return null;
-  }
-
-
-  /**
-   * Executes sql query and then adds a column values with index 1 to {@link Set<String>} to return.
-   * @param conn Connection to use.
-   * @param sql Sql query to execute.
-   * @return {@link Set<String>} with values of column with index 1,
-   *         which were received as a result of the sql query.
-   * @if a {@link SQLException} occurs.
-   */
-  static Set<String> sqlToStringSet(Connection conn, String sql) {
-    Set<String> result = new HashSet<>();
-    try {
-      Statement stmt = conn.createStatement();
-      ResultSet rs = stmt.executeQuery(sql);
-      try {
-        while (rs.next()) {
-          result.add(rs.getString(1));
+    /**
+     * Creates a PreparedStatement object.
+     *
+     * @param conn Connection to use.
+     * @param sql  SQL statement.
+     * @return new default PreparedStatement object.
+     * @if a {@link SQLException} occurs.
+     */
+    static PreparedStatement prepareStatement(Connection conn, String sql) {
+        try {
+            return conn.prepareStatement(sql);
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
         }
-      } finally {
-        stmt.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-    return result;
-  }
-
-  // =========> END PACKAGE-PRIVATE STATIC METHODS <=========
-
-  // =========> PACKAGE-PRIVATE FINAL METHODS <=========
-
-  /**
-   * Return String representation of sql query to select data with "ORDER BY" expression.
-   * @param from FROM metadata.
-   * @param whereClause WHERE clause to use in resulting query.
-   * @param orderBy ORDER BY clause to use in resulting query.
-   * @param fields fields for select by a resulting  query.
-   * @return Return String representation of sql query to select data with "ORDER BY" expression.
-   */
-  final String getSelectFromOrderBy(
-          FromClause from, String whereClause, String orderBy, Set<String> fields
-  ) {
-    final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
-    String sqlfrom = String.format("select %s from %s" , fieldList,
-            from.getExpression());
-
-    String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
-
-    return sqlfrom + sqlwhere + " order by " + orderBy;
-  }
-  // =========> END PACKAGE-PRIVATE FINAL METHODS <=========
-
-
-  // =========> PACKAGE-PRIVATE METHODS <=========
-  //TODO: Javadoc
-  String constantFromSql() {
-    return "";
-  }
-
-  //TODO: Javadoc
-  String prepareRowColumnForSelectStaticStrings(String value, String colName) {
-    return "? as " + colName;
-  }
-
-  ColumnDefiner getColumnDefiner(Class<? extends Column> c) {
-    return ColumnDefinerFactory.getColumnDefiner(getType(), c);
-  }
-  // =========> END PACKAGE-PRIVATE METHODS <=========
-
-
-  // =========> PACKAGE-PRIVATE ABSTRACT METHODS <=========
-  //TODO: Javadoc
-  abstract String getLimitedSQL(
-          FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
-  );
-
-  //TODO: Javadoc
-  abstract String getSelectTriggerBodySql(TriggerQuery query);
-
-  //TODO: Javadoc
-  abstract boolean userTablesExist(Connection conn) throws SQLException;
-
-  //TODO: Javadoc
-  abstract void createSchemaIfNotExists(Connection conn, String name);
-  // =========> END PACKAGE-PRIVATE ABSTRACT METHODS <=========
-
-  // =========> PUBLIC STATIC METHODS <=========
-  // =========> END PUBLIC STATIC METHODS <=========
-
-
-  // =========> PUBLIC FINAL METHODS <=========
-
-  /**
-   * Deletes table from RDBMS.
-   *
-   * @param conn Connection to use.
-   * @param t TableElement metadata of deleting table provided by Celesta.
-   * @if a {@link SQLException} occurs.
-   */
-  public final void dropTable(Connection conn, TableElement t) {
-    this.ddlAdaptor.dropTable(conn, t);
-  }
-
-  /**
-   * Возвращает true в том и только том случае, если база данных содержит
-   * пользовательские таблицы (т. е. не является пустой базой данных).
-   *
-   * @ошибка БД
-   */
-  //TODO: Javadoc In English
-  public final boolean userTablesExist() {
-    try (Connection conn = connectionPool.get()) {
-      return userTablesExist(conn);
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
-
-  /**
-   * Создаёт в базе данных схему с указанным именем, если таковая схема ранее
-   * не существовала.
-   *
-   * @param name имя схемы.
-   * @только в том случае, если возник критический сбой при
-   *                          создании схемы. Не выбрасывается в случае, если схема с
-   *                          данным именем уже существует в базе данных.
-   */
-  //TODO: Javadoc In English
-  public final void createSchemaIfNotExists(String name) {
-    try (Connection conn = connectionPool.get()) {
-      createSchemaIfNotExists(conn, name);
-    } catch (SQLException e) {
-      throw new CelestaException("Cannot create schema. " + e.getMessage());
-    }
-  }
-
-  public final void createColumn(Connection conn, Column c) {
-    this.ddlAdaptor.createColumn(conn, c);
-  }
-
-  // CHECKSTYLE:OFF 6 parameters
-  //TODO: Javadoc
-  public final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask,
-                                                          boolean[] nullsMask, List<ParameterSetter> program, String where)
-          {
-    // CHECKSTYLE:ON
-    StringBuilder setClause = new StringBuilder();
-    if (t.isVersioned()) {
-      setClause.append(String.format("\"%s\" = ?", VersionedElement.REC_VERSION));
-      program.add(ParameterSetter.createForRecversion(this));
     }
 
-    int i = 0;
-    for (String c : t.getColumns().keySet()) {
-      // Пропускаем ключевые поля и поля, не изменившие своего значения
-      if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
-        padComma(setClause);
-        if (nullsMask[i]) {
-          setClause.append(String.format("\"%s\" = NULL", c));
+    /**
+     * Transforms {@link Iterable<String>} of field names into comma separated {@link String} field names.
+     * Binary fields are excluded from result.
+     *
+     * @param t      the {@link DataGrainElement} type, that's owner of fields.
+     * @param fields {@link Iterable<String>} fields to transform.
+     * @return Comma separated {@link String} field names.
+     */
+    static String getTableFieldsListExceptBlobs(DataGrainElement t, Set<String> fields) {
+        final List<String> flds;
+
+        Predicate<ColumnMeta> notBinary = c -> !BinaryColumn.CELESTA_TYPE.equals(c.getCelestaType());
+
+        if (fields.isEmpty()) {
+            flds = t.getColumns().entrySet().stream()
+                    .filter(e -> notBinary.test(e.getValue()))
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
         } else {
-          setClause.append(String.format("\"%s\" = ?", c));
-          program.add(ParameterSetter.create(t.getColumnIndex(c), this));
+            flds = fields.stream()
+                    .filter(f -> notBinary.test(t.getColumns().get(f)))
+                    .collect(Collectors.toList());
         }
-      }
-      i++;
+        // To the list of fields of the versioned tables we necessarily add "recversion"
+        if (t instanceof Table && ((Table) t).isVersioned())
+            flds.add(VersionedElement.REC_VERSION);
+
+        return getFieldList(flds);
     }
 
-    String sql = String.format("update " + tableString(t.getGrain().getName(), t.getName()) + " set %s where %s",
-            setClause.toString(), where);
-
-    // System.out.println(sql);
-    return prepareStatement(conn, sql);
-  }
-
-  public final void createIndex(Connection conn, Index index) {
-    this.ddlAdaptor.createIndex(conn, index);
-  }
-
-  public final void createFK(Connection conn, ForeignKey fk) {
-    this.ddlAdaptor.createFk(conn, fk);
-  }
-
-  /**
-   * Удаляет в грануле индекс на таблице.
-   *
-   * @param g           Гранула
-   * @param dBIndexInfo Информация об индексе
-   * @Если что-то пошло не так.
-   */
-  //TODO: Javadoc In English
-  public final void dropIndex(Grain g, DbIndexInfo dBIndexInfo) {
-    try (Connection conn = connectionPool.get()) { //TODO: Why there is a new Connection instance
-        ddlAdaptor.dropIndex(conn, g, dBIndexInfo);
-    } catch (CelestaException | SQLException e) {
-      throw new CelestaException("Cannot drop index '%s': %s ", dBIndexInfo.getIndexName(), e.getMessage());
+    /**
+     * Returns {@link FKRule} by input string rule.
+     * The method is case-insensitive for rule param.
+     *
+     * @param rule input string.
+     * @return Returns one of the values of {@link FKRule} or null in case of invalid input.
+     */
+    static FKRule getFKRule(String rule) {
+        if ("NO ACTION".equalsIgnoreCase(rule) || "RECTRICT".equalsIgnoreCase(rule))
+            return FKRule.NO_ACTION;
+        if ("SET NULL".equalsIgnoreCase(rule))
+            return FKRule.SET_NULL;
+        if ("CASCADE".equalsIgnoreCase(rule))
+            return FKRule.CASCADE;
+        return null;
     }
-  }
-
-  /**
-   * Возвращает PreparedStatement, содержащий отфильтрованный набор записей.
-   *
-   * @param conn     Соединение.
-   * @param from     Объект для формирования from части запроса.
-   * @param orderBy  Порядок сортировки.
-   * @param offset   Количество строк для пропуска
-   * @param rowCount Количество строк для возврата (limit-фильтр).
-   * @param fields   Запрашиваемые столбцы. Если не пришло, то выбираются все.
-   * @Ошибка БД или некорректный фильтр.
-   */
-  //TODO: Javadoc In English
-  // CHECKSTYLE:OFF 6 parameters
-  public final PreparedStatement getRecordSetStatement(
-          Connection conn, FromClause from, String whereClause,
-          String orderBy, long offset, long rowCount, Set<String> fields
-  ) {
-    // CHECKSTYLE:ON
-    String sql;
-
-    if (offset == 0 && rowCount == 0) {
-      // Запрос не лимитированный -- одинаков для всех СУБД
-      // Соединяем полученные компоненты в стандартный запрос
-      // SELECT..FROM..WHERE..ORDER BY
-      sql = getSelectFromOrderBy(from, whereClause, orderBy, fields);
-    } else {
-      sql = getLimitedSQL(from, whereClause, orderBy, offset, rowCount, fields);
-
-      // System.out.println(sql);
-    }
-    try {
-      PreparedStatement result = conn.prepareStatement(sql);
-      return result;
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
-
-  //TODO: Javadoc
-  public final PreparedStatement getSetCountStatement(Connection conn, FromClause from, String whereClause)
-          {
-    String sql = "select count(*) from " + from.getExpression()
-            + ("".equals(whereClause) ? "" : " where " + whereClause);
-    PreparedStatement result = prepareStatement(conn, sql);
-
-    return result;
-  }
-
-  //TODO: Javadoc
-  public final void dropTrigger(Connection conn, TriggerQuery query) {
-    ddlAdaptor.dropTrigger(conn, query);
-  }
-
-  public final void manageAutoIncrement(Connection conn, TableElement t) {
-    ddlAdaptor.manageAutoIncrement(conn, t);
-  }
-
-  public void updateVersioningTrigger(Connection conn, TableElement t) {
-    ddlAdaptor.updateVersioningTrigger(conn, t);
-  }
-
-  public final void createPK(Connection conn, TableElement t) {
-    this.ddlAdaptor.createPk(conn, t);
-  }
-
-  public final SQLGenerator getViewSQLGenerator() {
-    return this.ddlAdaptor.getViewSQLGenerator();
-  }
-
-  /**
-   * Создаёт представление в базе данных на основе метаданных.
-   *
-   * @param conn Соединение с БД.
-   * @param v    Представление.
-   * @Ошибка БД.
-   */
-  //TODO: Javadoc In English
-  public final void createView(Connection conn, View v) {
-    this.ddlAdaptor.createView(conn, v);
-  }
 
 
-  public final void createParameterizedView(Connection conn, ParameterizedView pv) {
-    this.ddlAdaptor.createParameterizedView(conn, pv);
-  }
-
-  public final void dropTableTriggersForMaterializedViews(Connection conn, Table t) {
-    this.ddlAdaptor.dropTableTriggersForMaterializedViews(conn, t);
-  }
-
-  public final void createTableTriggersForMaterializedViews(Connection conn, Table t) {
-    this.ddlAdaptor.createTableTriggersForMaterializedViews(conn, t);
-  }
-
-  public final void executeNative(Connection conn, String sql) {
-    this.ddlAdaptor.executeNative(conn, sql);
-  }
-  // =========> END PUBLIC FINAL METHODS <=========
-
-
-  // =========> PUBLIC METHODS <=========
-  /**
-   * Проверка на валидность соединения.
-   *
-   * @param conn    соединение.
-   * @param timeout тайм-аут.
-   * @return true если соединение валидно, иначе false
-   * @при возникновении ошибки работы с БД.
-   */
-  //TODO: Javadoc In English
-  public boolean isValidConnection(Connection conn, int timeout) {
-    try {
-      return conn.isValid(timeout);
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
-    }
-  }
-
-  /**
-   * Получить шаблон имени таблицы.
-   */
-  //TODO: Javadoc In English
-  public String tableString(String schemaName, String tableName) {
-    StringBuilder sb = new StringBuilder();
-
-    if (schemaName.startsWith("\""))
-      sb.append(schemaName);
-    else
-      sb.append("\"").append(schemaName).append("\"");
-
-    sb.append(".");
-
-    if (tableName.startsWith("\""))
-      sb.append(tableName);
-    else
-      sb.append("\"").append(tableName).append("\"");
-
-    return sb.toString();
-  }
-
-  /**
-   * Создаёт в базе данных таблицу "с нуля".
-   *
-   * @param conn Соединение.
-   * @param te   Таблица для создания.
-   * @В случае возникновения критического сбоя при создании
-   *                          таблицы, в том числе в случае, если такая таблица существует.
-   */
-  //TODO: Javadoc In English
-  public void createTable(Connection conn, TableElement te) {
-    ddlAdaptor.createTable(conn, te);
-  }
-
-  /**
-   * Возвращает набор имён столбцов определённой таблицы.
-   *
-   * @param conn Соединение с БД.
-   * @param t    Таблица, по которой просматривать столбцы.
-   * @в случае сбоя связи с БД.
-   */
-  //TODO: Javadoc In English
-  public Set<String> getColumns(Connection conn, TableElement t) {
-    Set<String> result = new LinkedHashSet<>();
-    try {
-      DatabaseMetaData metaData = conn.getMetaData();
-      ResultSet rs = metaData.getColumns(null,
-              t.getGrain().getName(),
-              t.getName(), null);
-      try {
-        while (rs.next()) {
-          String rColumnName = rs.getString(COLUMN_NAME);
-          result.add(rColumnName);
+    /**
+     * Executes sql query and then adds a column values with index 1 to {@link Set<String>} to return.
+     *
+     * @param conn Connection to use.
+     * @param sql  Sql query to execute.
+     * @return {@link Set<String>} with values of column with index 1,
+     * which were received as a result of the sql query.
+     * @if a {@link SQLException} occurs.
+     */
+    static Set<String> sqlToStringSet(Connection conn, String sql) {
+        Set<String> result = new HashSet<>();
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            try {
+                while (rs.next()) {
+                    result.add(rs.getString(1));
+                }
+            } finally {
+                stmt.close();
+            }
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
         }
-      } finally {
-        rs.close();
-      }
-    } catch (SQLException e) {
-      throw new CelestaException(e.getMessage());
+        return result;
     }
-    return result;
-  }
 
-  /**
-   * Удаляет внешний ключ из базы данных.
-   *
-   * @param conn      Соединение с БД
-   * @param schemaName имя гранулы
-   * @param tableName Имя таблицы, на которой определён первичный ключ.
-   * @param fkName    Имя внешнего ключа.
-   * @В случае сбоя в базе данных.
-   */
-  //TODO: Javadoc In English
-  public void dropFK(Connection conn, String schemaName, String tableName, String fkName) {
-    try {
-      this.ddlAdaptor.dropFK(conn, schemaName, tableName, fkName);
-    } catch (CelestaException e) {
-        throw new CelestaException("Cannot drop foreign key '%s': %s", fkName, e.getMessage());
+    // =========> END PACKAGE-PRIVATE STATIC METHODS <=========
+
+    // =========> PACKAGE-PRIVATE FINAL METHODS <=========
+
+    /**
+     * Return String representation of sql query to select data with "ORDER BY" expression.
+     *
+     * @param from        FROM metadata.
+     * @param whereClause WHERE clause to use in resulting query.
+     * @param orderBy     ORDER BY clause to use in resulting query.
+     * @param fields      fields for select by a resulting  query.
+     * @return Return String representation of sql query to select data with "ORDER BY" expression.
+     */
+    final String getSelectFromOrderBy(
+            FromClause from, String whereClause, String orderBy, Set<String> fields
+    ) {
+        final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
+        String sqlfrom = String.format("select %s from %s", fieldList,
+                from.getExpression());
+
+        String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
+
+        return sqlfrom + sqlwhere + " order by " + orderBy;
     }
-  }
+    // =========> END PACKAGE-PRIVATE FINAL METHODS <=========
 
-  //TODO: Javadoc
-  public void dropParameterizedView(Connection conn, String schemaName, String viewName) {
-    this.ddlAdaptor.dropParameterizedView(conn, schemaName, viewName);
-  }
 
-  /**
-   * Возвращает перечень имён представлений в грануле.
-   *
-   * @param conn Соединение с БД.
-   * @param g    Гранула, перечень имён представлений которой необходимо
-   *             получить.
-   * @В случае сбоя связи с БД.
-   */
-  //TODO: Javadoc In English
-  public List<String> getViewList(Connection conn, Grain g) {
-    String sql = String.format("select table_name from information_schema.views where table_schema = '%s'",
-            g.getName());
-    List<String> result = new LinkedList<>();
-    try (ResultSet rs = executeQuery(conn, sql)) {
-        while (rs.next()) {
-          result.add(rs.getString(1));
-        }
-    } catch (SQLException | CelestaException e) {
-      throw new CelestaException("Cannot get views list: %s", e.toString());
+    // =========> PACKAGE-PRIVATE METHODS <=========
+    //TODO: Javadoc
+    String constantFromSql() {
+        return "";
     }
-    return result;
-  }
 
-  //TODO: Javadoc
-  public String getCallFunctionSql(ParameterizedView pv) {
-    return String.format(
-            tableString(pv.getGrain().getName(), pv.getName()) + "(%s)",
-            pv.getParameters().keySet().stream()
-                    .map(p -> "?")
-                    .collect(Collectors.joining(", "))
+    //TODO: Javadoc
+    String prepareRowColumnForSelectStaticStrings(String value, String colName) {
+        return "? as " + colName;
+    }
+
+    ColumnDefiner getColumnDefiner(Class<? extends Column> c) {
+        return ColumnDefinerFactory.getColumnDefiner(getType(), c);
+    }
+    // =========> END PACKAGE-PRIVATE METHODS <=========
+
+
+    // =========> PACKAGE-PRIVATE ABSTRACT METHODS <=========
+    //TODO: Javadoc
+    abstract String getLimitedSQL(
+            FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
     );
-  }
+
+    //TODO: Javadoc
+    abstract String getSelectTriggerBodySql(TriggerQuery query);
+
+    //TODO: Javadoc
+    abstract boolean userTablesExist(Connection conn) throws SQLException;
+
+    //TODO: Javadoc
+    abstract void createSchemaIfNotExists(Connection conn, String name);
+    // =========> END PACKAGE-PRIVATE ABSTRACT METHODS <=========
+
+    // =========> PUBLIC STATIC METHODS <=========
+    // =========> END PUBLIC STATIC METHODS <=========
 
 
-  //TODO: Javadoc
-  public void createSequence(Connection conn, SequenceElement s) {
-    ddlAdaptor.createSequence(conn, s);
-  }
+    // =========> PUBLIC FINAL METHODS <=========
 
-  //TODO: Javadoc
-  public void alterSequence(Connection conn, SequenceElement s) {
-    ddlAdaptor.alterSequence(conn, s);
-  }
-
-  //TODO: Javadoc
-  public void dropSequence(Connection conn, SequenceElement s) {
-    String sql = String.format("DROP SEQUENCE " + tableString(s.getGrain().getName(), s.getName()));
-    executeUpdate(conn, sql);
-  }
-
-  /**
-   * Удаление представления.
-   *
-   * @param conn      Соединение с БД.
-   * @param schemaName Имя гранулы.
-   * @param viewName  Имя представления.
-   * @Ошибка БД.
-   */
-  //TODO: Javadoc In English
-  public void dropView(Connection conn, String schemaName, String viewName) {
-    ddlAdaptor.dropView(conn, schemaName, viewName);
-  }
-
-  /**
-   * Создаёт или пересоздаёт прочие системные объекты (хранимые процедуры,
-   * функции), необходимые для функционирования Celesta на текущей СУБД.
-   *
-   * @param conn Соединение.
-   * @Ошибка создания объектов.
-   */
-  //TODO: Javadoc In English
-  public void createSysObjects(Connection conn, String sysSchemaName) {
-
-  }
-
-  /**
-   * Транслирует литерал даты Celesta в литерал даты, специфический для базы
-   * данных.
-   *
-   * @param date Литерал даты.
-   * @ошибка парсинга.
-   */
-  //TODO: Javadoc In English
-  public String translateDate(String date) {
-    try {
-      DateTimeColumn.parseISODate(date);
-    } catch (ParseException e) {
-      throw new CelestaException(e.getMessage());
+    /**
+     * Deletes table from RDBMS.
+     *
+     * @param conn Connection to use.
+     * @param t    TableElement metadata of deleting table provided by Celesta.
+     * @if a {@link SQLException} occurs.
+     */
+    public final void dropTable(Connection conn, TableElement t) {
+        this.ddlAdaptor.dropTable(conn, t);
     }
-    return date;
-  }
 
-  /**
-   * Сбрасывает счётчик IDENTITY на таблице (если он есть).
-   *
-   * @param conn Соединение с БД
-   * @param t    Таблица.
-   * @param i    Новое значение счётчика IDENTITY.
-   * @throws SQLException Ошибка соединения с БД.
-   */
-  //TODO: Javadoc In English
-  public void resetIdentity(Connection conn, Table t, int i) {
-
-      String sql = String.format(
-              "update \"celesta\".\"sequences\" set \"seqvalue\" = %d "
-                      + "where \"grainid\" = '%s' and \"tablename\" = '%s'",
-              i - 1, t.getGrain().getName(), t.getName());
-
-      // System.out.println(sql);
-      int v = executeUpdate(conn, sql);
-      if (v == 0) {
-        sql = String.format("insert into \"celesta\".\"sequences\" (\"grainid\", \"tablename\" , \"seqvalue\") "
-                + "values ('%s', '%s', %d)", t.getGrain().getName(), t.getName(), i - 1);
-        // System.out.println(sql);
-        executeUpdate(conn, sql);
-      }
-
-  }
-
-  //TODO: Javadoc
-  public Optional<String> getTriggerBody(Connection conn, TriggerQuery query) {
-    String sql = getSelectTriggerBodySql(query);
-
-    try (ResultSet rs = executeQuery(conn, sql)) {
-        Optional<String> result;
-
-        if (rs.next()) {
-          result = Optional.ofNullable(rs.getString(1));
-        } else {
-          result = Optional.empty();
+    /**
+     * Возвращает true в том и только том случае, если база данных содержит
+     * пользовательские таблицы (т. е. не является пустой базой данных).
+     *
+     * @ошибка БД
+     */
+    //TODO: Javadoc In English
+    public final boolean userTablesExist() {
+        try (Connection conn = connectionPool.get()) {
+            return userTablesExist(conn);
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
         }
+    }
+
+    /**
+     * Создаёт в базе данных схему с указанным именем, если таковая схема ранее
+     * не существовала.
+     *
+     * @param name имя схемы.
+     * @только в том случае, если возник критический сбой при
+     * создании схемы. Не выбрасывается в случае, если схема с
+     * данным именем уже существует в базе данных.
+     */
+    //TODO: Javadoc In English
+    public final void createSchemaIfNotExists(String name) {
+        try (Connection conn = connectionPool.get()) {
+            createSchemaIfNotExists(conn, name);
+        } catch (SQLException e) {
+            throw new CelestaException("Cannot create schema. " + e.getMessage());
+        }
+    }
+
+    public final void createColumn(Connection conn, Column c) {
+        this.ddlAdaptor.createColumn(conn, c);
+    }
+
+    // CHECKSTYLE:OFF 6 parameters
+    //TODO: Javadoc
+    public final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask,
+                                                            boolean[] nullsMask, List<ParameterSetter> program, String where) {
+        // CHECKSTYLE:ON
+        StringBuilder setClause = new StringBuilder();
+        if (t.isVersioned()) {
+            setClause.append(String.format("\"%s\" = ?", VersionedElement.REC_VERSION));
+            program.add(ParameterSetter.createForRecversion(this));
+        }
+
+        int i = 0;
+        for (String c : t.getColumns().keySet()) {
+            // Пропускаем ключевые поля и поля, не изменившие своего значения
+            if (!(equalsMask[i] || t.getPrimaryKey().containsKey(c))) {
+                padComma(setClause);
+                if (nullsMask[i]) {
+                    setClause.append(String.format("\"%s\" = NULL", c));
+                } else {
+                    setClause.append(String.format("\"%s\" = ?", c));
+                    program.add(ParameterSetter.create(t.getColumnIndex(c), this));
+                }
+            }
+            i++;
+        }
+
+        String sql = String.format("update " + tableString(t.getGrain().getName(), t.getName()) + " set %s where %s",
+                setClause.toString(), where);
+
+        // System.out.println(sql);
+        return prepareStatement(conn, sql);
+    }
+
+    public final void createIndex(Connection conn, Index index) {
+        this.ddlAdaptor.createIndex(conn, index);
+    }
+
+    public final void createFK(Connection conn, ForeignKey fk) {
+        this.ddlAdaptor.createFk(conn, fk);
+    }
+
+    /**
+     * Удаляет в грануле индекс на таблице.
+     *
+     * @param g           Гранула
+     * @param dBIndexInfo Информация об индексе
+     * @Если что-то пошло не так.
+     */
+    //TODO: Javadoc In English
+    public final void dropIndex(Grain g, DbIndexInfo dBIndexInfo) {
+        try (Connection conn = connectionPool.get()) { //TODO: Why there is a new Connection instance
+            ddlAdaptor.dropIndex(conn, g, dBIndexInfo);
+        } catch (CelestaException | SQLException e) {
+            throw new CelestaException("Cannot drop index '%s': %s ", dBIndexInfo.getIndexName(), e.getMessage());
+        }
+    }
+
+    /**
+     * Возвращает PreparedStatement, содержащий отфильтрованный набор записей.
+     *
+     * @param conn     Соединение.
+     * @param from     Объект для формирования from части запроса.
+     * @param orderBy  Порядок сортировки.
+     * @param offset   Количество строк для пропуска
+     * @param rowCount Количество строк для возврата (limit-фильтр).
+     * @param fields   Запрашиваемые столбцы. Если не пришло, то выбираются все.
+     * @Ошибка БД или некорректный фильтр.
+     */
+    //TODO: Javadoc In English
+    // CHECKSTYLE:OFF 6 parameters
+    public final PreparedStatement getRecordSetStatement(
+            Connection conn, FromClause from, String whereClause,
+            String orderBy, long offset, long rowCount, Set<String> fields
+    ) {
+        // CHECKSTYLE:ON
+        String sql;
+
+        if (offset == 0 && rowCount == 0) {
+            // Запрос не лимитированный -- одинаков для всех СУБД
+            // Соединяем полученные компоненты в стандартный запрос
+            // SELECT..FROM..WHERE..ORDER BY
+            sql = getSelectFromOrderBy(from, whereClause, orderBy, fields);
+        } else {
+            sql = getLimitedSQL(from, whereClause, orderBy, offset, rowCount, fields);
+
+            // System.out.println(sql);
+        }
+        try {
+            PreparedStatement result = conn.prepareStatement(sql);
+            return result;
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
+        }
+    }
+
+    //TODO: Javadoc
+    public final PreparedStatement getSetCountStatement(Connection conn, FromClause from, String whereClause) {
+        String sql = "select count(*) from " + from.getExpression()
+                + ("".equals(whereClause) ? "" : " where " + whereClause);
+        PreparedStatement result = prepareStatement(conn, sql);
 
         return result;
-    } catch (CelestaException | SQLException e) {
-      throw new CelestaException("Could't select body of trigger %s", query.getName());
     }
-  }
 
-  //TODO: Javadoc
-  public void initDataForMaterializedView(Connection conn, MaterializedView mv) {
-      this.ddlAdaptor.initDataForMaterializedView(conn, mv);
-  }
+    //TODO: Javadoc
+    public final void dropTrigger(Connection conn, TriggerQuery query) {
+        ddlAdaptor.dropTrigger(conn, query);
+    }
 
-  //TODO: Javadoc
-  @Override
-  public List<String> selectStaticStrings(
-          List<String> data, String columnName, String orderBy) {
+    public final void manageAutoIncrement(Connection conn, TableElement t) {
+        ddlAdaptor.manageAutoIncrement(conn, t);
+    }
 
-    //prepare sql
-    String sql = data.stream().map(
-            str -> {
-              final String rowStr = prepareRowColumnForSelectStaticStrings(str, columnName);
-              return String.format("SELECT %s %s", rowStr, constantFromSql());
-            })
-            .collect(Collectors.joining(" UNION ALL "));
+    public void updateVersioningTrigger(Connection conn, TableElement t) {
+        ddlAdaptor.updateVersioningTrigger(conn, t);
+    }
 
-    if (orderBy != null && !orderBy.isEmpty())
-      sql = sql + " ORDER BY " + orderBy;
+    public final void createPK(Connection conn, TableElement t) {
+        this.ddlAdaptor.createPk(conn, t);
+    }
 
-    try (Connection conn = connectionPool.get();
-         PreparedStatement ps = conn.prepareStatement(sql)
-    ) {
-      //fill preparedStatement
-      AtomicInteger paramCounter = new AtomicInteger(1);
-      data.forEach(
-              str -> {
-                try {
-                  ps.setString(paramCounter.getAndIncrement(), str);
-                } catch (SQLException e) {
-                  throw new RuntimeException(e);
+    public final SQLGenerator getViewSQLGenerator() {
+        return this.ddlAdaptor.getViewSQLGenerator();
+    }
+
+    /**
+     * Создаёт представление в базе данных на основе метаданных.
+     *
+     * @param conn Соединение с БД.
+     * @param v    Представление.
+     * @Ошибка БД.
+     */
+    //TODO: Javadoc In English
+    public final void createView(Connection conn, View v) {
+        this.ddlAdaptor.createView(conn, v);
+    }
+
+
+    public final void createParameterizedView(Connection conn, ParameterizedView pv) {
+        this.ddlAdaptor.createParameterizedView(conn, pv);
+    }
+
+    public final void dropTableTriggersForMaterializedViews(Connection conn, Table t) {
+        this.ddlAdaptor.dropTableTriggersForMaterializedViews(conn, t);
+    }
+
+    public final void createTableTriggersForMaterializedViews(Connection conn, Table t) {
+        this.ddlAdaptor.createTableTriggersForMaterializedViews(conn, t);
+    }
+
+    public final void executeNative(Connection conn, String sql) {
+        this.ddlAdaptor.executeNative(conn, sql);
+    }
+    // =========> END PUBLIC FINAL METHODS <=========
+
+
+    // =========> PUBLIC METHODS <=========
+
+    /**
+     * Проверка на валидность соединения.
+     *
+     * @param conn    соединение.
+     * @param timeout тайм-аут.
+     * @return true если соединение валидно, иначе false
+     * @при возникновении ошибки работы с БД.
+     */
+    //TODO: Javadoc In English
+    public boolean isValidConnection(Connection conn, int timeout) {
+        try {
+            return conn.isValid(timeout);
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
+        }
+    }
+
+    /**
+     * Получить шаблон имени таблицы.
+     */
+    //TODO: Javadoc In English
+    public String tableString(String schemaName, String tableName) {
+        StringBuilder sb = new StringBuilder();
+
+        if (schemaName.startsWith("\""))
+            sb.append(schemaName);
+        else
+            sb.append("\"").append(schemaName).append("\"");
+
+        sb.append(".");
+
+        if (tableName.startsWith("\""))
+            sb.append(tableName);
+        else
+            sb.append("\"").append(tableName).append("\"");
+
+        return sb.toString();
+    }
+
+    /**
+     * Создаёт в базе данных таблицу "с нуля".
+     *
+     * @param conn Соединение.
+     * @param te   Таблица для создания.
+     * @В случае возникновения критического сбоя при создании
+     * таблицы, в том числе в случае, если такая таблица существует.
+     */
+    //TODO: Javadoc In English
+    public void createTable(Connection conn, TableElement te) {
+        ddlAdaptor.createTable(conn, te);
+    }
+
+    /**
+     * Возвращает набор имён столбцов определённой таблицы.
+     *
+     * @param conn Соединение с БД.
+     * @param t    Таблица, по которой просматривать столбцы.
+     * @в случае сбоя связи с БД.
+     */
+    //TODO: Javadoc In English
+    public Set<String> getColumns(Connection conn, TableElement t) {
+        Set<String> result = new LinkedHashSet<>();
+        try {
+            DatabaseMetaData metaData = conn.getMetaData();
+            ResultSet rs = metaData.getColumns(null,
+                    t.getGrain().getName(),
+                    t.getName(), null);
+            try {
+                while (rs.next()) {
+                    String rColumnName = rs.getString(COLUMN_NAME);
+                    result.add(rColumnName);
                 }
-              });
-
-      //execute query and parse result
-      ResultSet rs = ps.executeQuery();
-
-      List<String> result = new ArrayList<>();
-
-      while (rs.next()) {
-        String str = rs.getString(1);
-        result.add(str);
-      }
-
-      return result;
-    } catch (Exception e) {
-      throw new CelestaException("Can't select static data", e);
+            } finally {
+                rs.close();
+            }
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
+        }
+        return result;
     }
-  }
 
-  //TODO: Javadoc
-  @Override
-  public int compareStrings(String left, String right) {
-
-    List<String> comparisons = Arrays.asList("<", "=", ">");
-
-    String sql = comparisons.stream()
-            .map(comparison ->
-                    "select count(*) " +
-                            " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("?" , "a")
-                            + " " + constantFromSql() +  ") r " +
-                            " where a " + comparison + " ?"
-            )
-            .collect(Collectors.joining(" UNION ALL "));
-
-    try (Connection conn = connectionPool.get();
-         PreparedStatement ps = conn.prepareStatement(sql)
-    ) {
-      for (int i = 1; i < comparisons.size() * 2; i += 2) {
-        ps.setString(i, left);
-        ps.setString(i + 1, right);
-      }
-
-      ResultSet rs = ps.executeQuery();
-
-      int result = -1;
-
-      while (rs.next()) {
-        boolean compareResult = rs.getBoolean(1);
-
-        if (compareResult)
-          break;
-
-        ++result;
-      }
-
-      return result;
-    } catch (Exception e) {
-      throw new CelestaException("Can't compare strings", e);
+    /**
+     * Удаляет внешний ключ из базы данных.
+     *
+     * @param conn       Соединение с БД
+     * @param schemaName имя гранулы
+     * @param tableName  Имя таблицы, на которой определён первичный ключ.
+     * @param fkName     Имя внешнего ключа.
+     * @В случае сбоя в базе данных.
+     */
+    //TODO: Javadoc In English
+    public void dropFK(Connection conn, String schemaName, String tableName, String fkName) {
+        try {
+            this.ddlAdaptor.dropFK(conn, schemaName, tableName, fkName);
+        } catch (CelestaException e) {
+            throw new CelestaException("Cannot drop foreign key '%s': %s", fkName, e.getMessage());
+        }
     }
-  }
 
-  //TODO: Javadoc
-  @Override
-  public boolean supportsCortegeComparing() {
-    return false;
-  }
+    //TODO: Javadoc
+    public void dropParameterizedView(Connection conn, String schemaName, String viewName) {
+        this.ddlAdaptor.dropParameterizedView(conn, schemaName, viewName);
+    }
 
-  /**
-   * Удаляет первичный ключ на таблице с использованием известного имени
-   * первичного ключа.
-   *
-   * @param conn   Соединение с базой данных.
-   * @param t      Таблица.
-   * @param pkName Имя первичного ключа.
-   * @в случае сбоя связи с БД.
-   */
-  //TODO: Javadoc In English
-  public void dropPk(Connection conn, TableElement t, String pkName) {
-    ddlAdaptor.dropPk(conn, t, pkName);
-  }
+    /**
+     * Возвращает перечень имён представлений в грануле.
+     *
+     * @param conn Соединение с БД.
+     * @param g    Гранула, перечень имён представлений которой необходимо
+     *             получить.
+     * @В случае сбоя связи с БД.
+     */
+    //TODO: Javadoc In English
+    public List<String> getViewList(Connection conn, Grain g) {
+        String sql = String.format("select table_name from information_schema.views where table_schema = '%s'",
+                g.getName());
+        List<String> result = new LinkedList<>();
+        try (ResultSet rs = executeQuery(conn, sql)) {
+            while (rs.next()) {
+                result.add(rs.getString(1));
+            }
+        } catch (SQLException | CelestaException e) {
+            throw new CelestaException("Cannot get views list: %s", e.toString());
+        }
+        return result;
+    }
 
-  /**
-   * Обновляет на таблице колонку.
-   *
-   * @param conn Соединение с БД.
-   * @param c    Колонка для обновления.
-   * @при ошибке обновления колонки.
-   */
-  //TODO: Javadoc In English
-  public void updateColumn(Connection conn, Column c, DbColumnInfo actual) {
-    ddlAdaptor.updateColumn(conn, c, actual);
-  }
-
-  @Override
-  public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
-    return z;
-  }
-
-  // =========> END PUBLIC METHODS <=========
-
-  // =========> PUBLIC ABSTRACT METHODS <=========
-  /**
-   * Возвращает навигационный PreparedStatement по фильтрованному набору
-   * записей.
-   *
-   * @param conn                  Соединение.
-   * @param orderBy               Порядок сортировки (прямой или обратный).
-   * @param navigationWhereClause Условие навигационного набора (от текущей записи).
-   */
-  //TODO: Javadoc In English
-  public abstract PreparedStatement getNavigationStatement(
-      Connection conn, FromClause from, String orderBy,
-      String navigationWhereClause, Set<String> fields, long offset
-  );
-
-  //TODO: Javadoc
-  public abstract boolean tableExists(Connection conn, String schema, String name);
-
-  //TODO: Javadoc
-  public abstract boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException;
-
-  //TODO: Javadoc
-  public abstract PreparedStatement getOneRecordStatement(Connection conn, TableElement t,
-                                                          String where, Set<String> fields);
-  //TODO: Javadoc
-  public abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where);
-
-  //TODO: Javadoc
-  public abstract PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where);
-
-  //TODO: Javadoc
-  public abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
-                                                             List<ParameterSetter> program);
-  //TODO: Javadoc
-  public abstract int getCurrentIdent(Connection conn, Table t);
-
-  //TODO: Javadoc
-  public abstract PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where);
+    //TODO: Javadoc
+    public String getCallFunctionSql(ParameterizedView pv) {
+        return String.format(
+                tableString(pv.getGrain().getName(), pv.getName()) + "(%s)",
+                pv.getParameters().keySet().stream()
+                        .map(p -> "?")
+                        .collect(Collectors.joining(", "))
+        );
+    }
 
 
-  /**
-   * Возвращает информацию о столбце.
-   *
-   * @param conn Соединение с БД.
-   * @param c    Столбец.
-   * @в случае сбоя связи с БД.
-   */
-  //TODO: Javadoc In English
-  public abstract DbColumnInfo getColumnInfo(Connection conn, Column c);
+    //TODO: Javadoc
+    public void createSequence(Connection conn, SequenceElement s) {
+        ddlAdaptor.createSequence(conn, s);
+    }
 
-  /**
-   * Возвращает информацию о первичном ключе таблицы.
-   *
-   * @param conn Соединение с БД.
-   * @param t    Таблица, информацию о первичном ключе которой необходимо
-   *             получить.
-   * @в случае сбоя связи с БД.
-   */
-  //TODO: Javadoc In English
-  public abstract DbPkInfo getPKInfo(Connection conn, TableElement t);
+    //TODO: Javadoc
+    public void alterSequence(Connection conn, SequenceElement s) {
+        ddlAdaptor.alterSequence(conn, s);
+    }
 
-  //TODO: Javadoc
-  public abstract List<DbFkInfo> getFKInfo(Connection conn, Grain g);
+    //TODO: Javadoc
+    public void dropSequence(Connection conn, SequenceElement s) {
+        String sql = String.format("DROP SEQUENCE " + tableString(s.getGrain().getName(), s.getName()));
+        executeUpdate(conn, sql);
+    }
 
-  /**
-   * Возвращает набор индексов, связанных с таблицами, лежащими в указанной
-   * грануле.
-   *
-   * @param conn Соединение с БД.
-   * @param g    Гранула, по таблицам которой следует просматривать индексы.
-   * @В случае сбоя связи с БД.
-   */
-  //TODO: Javadoc In English
-  public abstract Map<String, DbIndexInfo> getIndices(Connection conn, Grain g);
+    /**
+     * Удаление представления.
+     *
+     * @param conn       Соединение с БД.
+     * @param schemaName Имя гранулы.
+     * @param viewName   Имя представления.
+     * @Ошибка БД.
+     */
+    //TODO: Javadoc In English
+    public void dropView(Connection conn, String schemaName, String viewName) {
+        ddlAdaptor.dropView(conn, schemaName, viewName);
+    }
 
-  //TODO: Javadoc
-  public abstract List<String> getParameterizedViewList(Connection conn, Grain g);
+    /**
+     * Создаёт или пересоздаёт прочие системные объекты (хранимые процедуры,
+     * функции), необходимые для функционирования Celesta на текущей СУБД.
+     *
+     * @param conn Соединение.
+     * @Ошибка создания объектов.
+     */
+    //TODO: Javadoc In English
+    public void createSysObjects(Connection conn, String sysSchemaName) {
 
-  /**
-   * Возвращает Process Id текущего подключения к базе данных.
-   *
-   * @param conn Соединение с БД.
-   * @Если подключение закрылось.
-   */
-  //TODO: Javadoc In English
-  public abstract int getDBPid(Connection conn);
+    }
 
-  //TODO: Javadoc
-  public abstract DBType getType();
+    /**
+     * Транслирует литерал даты Celesta в литерал даты, специфический для базы
+     * данных.
+     *
+     * @param date Литерал даты.
+     * @ошибка парсинга.
+     */
+    //TODO: Javadoc In English
+    public String translateDate(String date) {
+        try {
+            DateTimeColumn.parseISODate(date);
+        } catch (ParseException e) {
+            throw new CelestaException(e.getMessage());
+        }
+        return date;
+    }
 
-  //TODO: Javadoc
-  public abstract long nextSequenceValue(Connection conn, SequenceElement s);
+    /**
+     * Сбрасывает счётчик IDENTITY на таблице (если он есть).
+     *
+     * @param conn Соединение с БД
+     * @param t    Таблица.
+     * @param i    Новое значение счётчика IDENTITY.
+     * @throws SQLException Ошибка соединения с БД.
+     */
+    //TODO: Javadoc In English
+    public void resetIdentity(Connection conn, Table t, int i) {
 
-  //TODO: Javadoc
-  public abstract boolean sequenceExists(Connection conn, String schema, String name);
+        String sql = String.format(
+                "update \"celesta\".\"sequences\" set \"seqvalue\" = %d "
+                        + "where \"grainid\" = '%s' and \"tablename\" = '%s'",
+                i - 1, t.getGrain().getName(), t.getName());
 
-  //TODO: Javadoc
-  public abstract DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s);
-  // =========> END PUBLIC ABSTRACT METHODS <=========
+        // System.out.println(sql);
+        int v = executeUpdate(conn, sql);
+        if (v == 0) {
+            sql = String.format("insert into \"celesta\".\"sequences\" (\"grainid\", \"tablename\" , \"seqvalue\") "
+                    + "values ('%s', '%s', %d)", t.getGrain().getName(), t.getName(), i - 1);
+            // System.out.println(sql);
+            executeUpdate(conn, sql);
+        }
+
+    }
+
+    //TODO: Javadoc
+    public Optional<String> getTriggerBody(Connection conn, TriggerQuery query) {
+        String sql = getSelectTriggerBodySql(query);
+
+        try (ResultSet rs = executeQuery(conn, sql)) {
+            Optional<String> result;
+
+            if (rs.next()) {
+                result = Optional.ofNullable(rs.getString(1));
+            } else {
+                result = Optional.empty();
+            }
+
+            return result;
+        } catch (CelestaException | SQLException e) {
+            throw new CelestaException("Could't select body of trigger %s", query.getName());
+        }
+    }
+
+    //TODO: Javadoc
+    public void initDataForMaterializedView(Connection conn, MaterializedView mv) {
+        this.ddlAdaptor.initDataForMaterializedView(conn, mv);
+    }
+
+    //TODO: Javadoc
+    @Override
+    public List<String> selectStaticStrings(
+            List<String> data, String columnName, String orderBy) {
+
+        //prepare sql
+        String sql = data.stream().map(
+                str -> {
+                    final String rowStr = prepareRowColumnForSelectStaticStrings(str, columnName);
+                    return String.format("SELECT %s %s", rowStr, constantFromSql());
+                })
+                .collect(Collectors.joining(" UNION ALL "));
+
+        if (orderBy != null && !orderBy.isEmpty())
+            sql = sql + " ORDER BY " + orderBy;
+
+        try (Connection conn = connectionPool.get();
+             PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
+            //fill preparedStatement
+            AtomicInteger paramCounter = new AtomicInteger(1);
+            data.forEach(
+                    str -> {
+                        try {
+                            ps.setString(paramCounter.getAndIncrement(), str);
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+
+            //execute query and parse result
+            try (ResultSet rs = ps.executeQuery()) {
+                List<String> result = new ArrayList<>();
+
+                while (rs.next()) {
+                    String str = rs.getString(1);
+                    result.add(str);
+                }
+                return result;
+            }
+        } catch (Exception e) {
+            throw new CelestaException("Can't select static data", e);
+        }
+    }
+
+    //TODO: Javadoc
+    @Override
+    public int compareStrings(String left, String right) {
+
+        List<String> comparisons = Arrays.asList("<", "=", ">");
+
+        String sql = comparisons.stream()
+                .map(comparison ->
+                        "select count(*) " +
+                                " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("?", "a")
+                                + " " + constantFromSql() + ") r " +
+                                " where a " + comparison + " ?"
+                )
+                .collect(Collectors.joining(" UNION ALL "));
+
+        try (Connection conn = connectionPool.get();
+             PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
+            for (int i = 1; i < comparisons.size() * 2; i += 2) {
+                ps.setString(i, left);
+                ps.setString(i + 1, right);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                int result = -1;
+                while (rs.next()) {
+                    boolean compareResult = rs.getBoolean(1);
+                    if (compareResult)
+                        break;
+                    ++result;
+                }
+                return result;
+            }
+
+        } catch (Exception e) {
+            throw new CelestaException("Can't compare strings", e);
+        }
+    }
+
+    //TODO: Javadoc
+    @Override
+    public boolean supportsCortegeComparing() {
+        return false;
+    }
+
+    /**
+     * Удаляет первичный ключ на таблице с использованием известного имени
+     * первичного ключа.
+     *
+     * @param conn   Соединение с базой данных.
+     * @param t      Таблица.
+     * @param pkName Имя первичного ключа.
+     * @в случае сбоя связи с БД.
+     */
+    //TODO: Javadoc In English
+    public void dropPk(Connection conn, TableElement t, String pkName) {
+        ddlAdaptor.dropPk(conn, t, pkName);
+    }
+
+    /**
+     * Обновляет на таблице колонку.
+     *
+     * @param conn Соединение с БД.
+     * @param c    Колонка для обновления.
+     * @при ошибке обновления колонки.
+     */
+    //TODO: Javadoc In English
+    public void updateColumn(Connection conn, Column c, DbColumnInfo actual) {
+        ddlAdaptor.updateColumn(conn, c, actual);
+    }
+
+    @Override
+    public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
+        return z;
+    }
+
+    // =========> END PUBLIC METHODS <=========
+
+    // =========> PUBLIC ABSTRACT METHODS <=========
+
+    /**
+     * Возвращает навигационный PreparedStatement по фильтрованному набору
+     * записей.
+     *
+     * @param conn                  Соединение.
+     * @param orderBy               Порядок сортировки (прямой или обратный).
+     * @param navigationWhereClause Условие навигационного набора (от текущей записи).
+     */
+    //TODO: Javadoc In English
+    public abstract PreparedStatement getNavigationStatement(
+            Connection conn, FromClause from, String orderBy,
+            String navigationWhereClause, Set<String> fields, long offset
+    );
+
+    //TODO: Javadoc
+    public abstract boolean tableExists(Connection conn, String schema, String name);
+
+    //TODO: Javadoc
+    public abstract boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException;
+
+    //TODO: Javadoc
+    public abstract PreparedStatement getOneRecordStatement(Connection conn, TableElement t,
+                                                            String where, Set<String> fields);
+
+    //TODO: Javadoc
+    public abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where);
+
+    //TODO: Javadoc
+    public abstract PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where);
+
+    //TODO: Javadoc
+    public abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+                                                               List<ParameterSetter> program);
+
+    //TODO: Javadoc
+    public abstract int getCurrentIdent(Connection conn, Table t);
+
+    //TODO: Javadoc
+    public abstract PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where);
+
+
+    /**
+     * Возвращает информацию о столбце.
+     *
+     * @param conn Соединение с БД.
+     * @param c    Столбец.
+     * @в случае сбоя связи с БД.
+     */
+    //TODO: Javadoc In English
+    public abstract DbColumnInfo getColumnInfo(Connection conn, Column c);
+
+    /**
+     * Возвращает информацию о первичном ключе таблицы.
+     *
+     * @param conn Соединение с БД.
+     * @param t    Таблица, информацию о первичном ключе которой необходимо
+     *             получить.
+     * @в случае сбоя связи с БД.
+     */
+    //TODO: Javadoc In English
+    public abstract DbPkInfo getPKInfo(Connection conn, TableElement t);
+
+    //TODO: Javadoc
+    public abstract List<DbFkInfo> getFKInfo(Connection conn, Grain g);
+
+    /**
+     * Возвращает набор индексов, связанных с таблицами, лежащими в указанной
+     * грануле.
+     *
+     * @param conn Соединение с БД.
+     * @param g    Гранула, по таблицам которой следует просматривать индексы.
+     * @В случае сбоя связи с БД.
+     */
+    //TODO: Javadoc In English
+    public abstract Map<String, DbIndexInfo> getIndices(Connection conn, Grain g);
+
+    //TODO: Javadoc
+    public abstract List<String> getParameterizedViewList(Connection conn, Grain g);
+
+    /**
+     * Возвращает Process Id текущего подключения к базе данных.
+     *
+     * @param conn Соединение с БД.
+     * @Если подключение закрылось.
+     */
+    //TODO: Javadoc In English
+    public abstract int getDBPid(Connection conn);
+
+    //TODO: Javadoc
+    public abstract DBType getType();
+
+    //TODO: Javadoc
+    public abstract long nextSequenceValue(Connection conn, SequenceElement s);
+
+    //TODO: Javadoc
+    public abstract boolean sequenceExists(Connection conn, String schema, String name);
+
+    //TODO: Javadoc
+    public abstract DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s);
+    // =========> END PUBLIC ABSTRACT METHODS <=========
 }
