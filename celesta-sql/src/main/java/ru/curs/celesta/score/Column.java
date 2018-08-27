@@ -20,9 +20,9 @@ public abstract class Column extends NamedElement implements ColumnMeta {
     Column(TableElement parentTable, String name) throws ParseException {
         super(name, parentTable.getGrain().getScore().getIdentifierParser());
         if (VersionedElement.REC_VERSION.equals(name))
-            throw new ParseException(String.format("Column name '%s' is reserved for system needs.", VersionedElement.REC_VERSION));
-        if (parentTable == null)
-            throw new IllegalArgumentException();
+            throw new ParseException(
+                    String.format("Column name '%s' is reserved for system needs.", VersionedElement.REC_VERSION)
+            );
         this.parentTable = parentTable;
         parentTable.addColumn(this);
     }
@@ -38,8 +38,6 @@ public abstract class Column extends NamedElement implements ColumnMeta {
      */
     Column(TableElement parentTable) throws ParseException {
         super(VersionedElement.REC_VERSION, parentTable.getGrain().getScore().getIdentifierParser());
-        if (parentTable == null)
-            throw new IllegalArgumentException();
         this.parentTable = parentTable;
         nullable = false;
         setDefault("1");

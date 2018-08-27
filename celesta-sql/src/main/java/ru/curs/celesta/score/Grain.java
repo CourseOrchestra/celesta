@@ -45,8 +45,6 @@ public final class Grain extends NamedElement {
 
     public Grain(AbstractScore score, String name) throws ParseException {
         super(name, score.getIdentifierParser());
-        if (score == null)
-            throw new IllegalArgumentException();
         if (name.indexOf("_") >= 0)
             throw new ParseException("Invalid grain name '" + name + "'. No underscores are allowed for grain names.");
         this.score = score;
