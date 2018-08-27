@@ -4,7 +4,7 @@
 
     <groupId>ru.curs</groupId>
     <artifactId>celesta-parent</artifactId>
-    <version>6.1.11-SNAPSHOT</version>
+    <version>6.1.12-SNAPSHOT</version>
     <name>celesta-parent</name>
     <description>celesta - GPL platform for business logic development</description>
     <packaging>pom</packaging>
@@ -334,6 +334,9 @@
                     <plugin>
                         <groupId>com.github.spotbugs</groupId>
                         <artifactId>spotbugs-maven-plugin</artifactId>
+                        <configuration>
+                            <excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>check</id>
