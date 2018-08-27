@@ -9,7 +9,7 @@ import java.sql.SQLException;
 /**
  * Класс для работы с BLOB-полями.
  */
-public final class BLOB {
+public final class BLOB implements Cloneable {
     private DataPage data;
     private boolean isModified;
     private int size;
@@ -45,6 +45,7 @@ public final class BLOB {
     /**
      * Клон-BLOB, указывающий на ту же самую страницу данных.
      */
+    @Override
     public BLOB clone() {
         BLOB result = new BLOB();
         result.data = data;

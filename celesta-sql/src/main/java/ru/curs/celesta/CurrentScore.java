@@ -2,23 +2,34 @@ package ru.curs.celesta;
 
 import ru.curs.celesta.score.AbstractScore;
 
-public class CurrentScore {
+/**
+ * ThreadLocal score accessor during the initialization of Celesta.
+ */
+public final class CurrentScore {
     private static final ThreadLocal<AbstractScore> CURRENT = new ThreadLocal<>();
     private static AbstractScore global = null;
     private static boolean globalMode;
 
+    private CurrentScore() {
+        throw new AssertionError();
+    }
+
     public static AbstractScore get() {
-        if (globalMode)
+        if (globalMode) {
             return global;
-        else
+        }
+        else {
             return CURRENT.get();
+        }
     }
 
     public static void set(AbstractScore score) {
-        if (globalMode)
+        if (globalMode) {
             global = score;
-        else
+        }
+        else {
             CURRENT.set(score);
+        }
     }
 
 
