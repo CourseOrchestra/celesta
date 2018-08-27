@@ -109,11 +109,10 @@ class TestSequence(CelestaTestCase):
         c = t1Cursor(self.context)
 
         c.insert()
-        c.last()
         self.assertEquals(4, c.id)
         c.clear()
+
         c.insert()
-        c.last()
         self.assertEquals(6, c.id)
 
 
@@ -129,6 +128,7 @@ class TestSequence(CelestaTestCase):
         #new cycle
         lastValue = s.nextValue()
         self.assertEquals(5L, lastValue)
+
 
 def nextVal(s):
     s.nextValue()

@@ -274,17 +274,25 @@ public final class OraAdaptor extends DBAdaptor {
 
     @Override
     public int getCurrentIdent(Connection conn, Table t) {
-        String sequenceName = getSequenceName(t);
-        String sql = String.format("SELECT \"%s\".CURRVAL FROM DUAL", sequenceName);
-        try {
-            Statement stmt = conn.createStatement();
-            try {
-                ResultSet rs = stmt.executeQuery(sql);
-                rs.next();
-                return rs.getInt(1);
-            } finally {
-                stmt.close();
-            }
+        final String sequenceName;
+
+        IntegerColumn idColumn = t.getPrimaryKey().values().stream()
+                .filter(c -> c instanceof IntegerColumn)
+                .map(c -> (IntegerColumn) c)
+                .filter(ic -> ic.isIdentity() || ic.getSequence() != null)
+                .findFirst().get();
+
+        if (idColumn.isIdentity()) {
+            sequenceName = String.format("\"%s\"", getSequenceName(t));
+        } else {
+            sequenceName = tableString(t.getGrain().getName(), idColumn.getSequence().getName());
+        }
+
+        String sql = String.format("SELECT %s.CURRVAL FROM DUAL", sequenceName);
+        try (Statement stmt = conn.createStatement()) {
+            ResultSet rs = stmt.executeQuery(sql);
+            rs.next();
+            return rs.getInt(1);
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }

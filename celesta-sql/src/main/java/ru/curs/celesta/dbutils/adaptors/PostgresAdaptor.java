@@ -118,9 +118,14 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
         String returning = "";
         for (Column c : t.getColumns().values())
-            if (c instanceof IntegerColumn && ((IntegerColumn) c).isIdentity()) {
-                returning = " returning " + c.getQuotedName();
-                break;
+            if (c instanceof IntegerColumn) {
+                IntegerColumn ic = (IntegerColumn) c;
+
+                if (ic.isIdentity() || ic.getSequence() != null) {
+                    returning = " returning " + c.getQuotedName();
+                    break;
+                }
+
             }
 
         final String sql;

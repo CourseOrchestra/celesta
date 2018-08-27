@@ -16,8 +16,6 @@ public abstract class GrainElement extends NamedElement {
 
     public GrainElement(GrainPart gp, String name) throws ParseException {
         super(name, gp.getGrain().getScore().getIdentifierParser());
-        if (gp == null)
-            throw new IllegalArgumentException();
         grainPart = gp;
     }
 

@@ -163,7 +163,9 @@ class TestMaterializedView(CelestaTestCase):
         mv = mView6Cursor(self.context)
 
         t.insert()
+        t.clear()
         t.insert()
+        t.clear()
         t.f1 = BigDecimal('24.02')
         t.insert()
 

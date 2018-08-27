@@ -116,7 +116,7 @@ public final class Celesta extends AbstractCelesta<PySessionContext> implements 
         }
         System.out.println("Celesta initialized successfully.");
 
-        if (args.length > 1)
+        if (args.length > 1) {
             try {
                 Object[] params = new String[args.length - 2];
                 System.arraycopy(args, 2, params, 0, args.length - 2);
@@ -132,6 +132,7 @@ public final class Celesta extends AbstractCelesta<PySessionContext> implements 
                 System.out.println("The following problems occured while trying to execute " + args[1] + ":");
                 System.out.println(e.getMessage());
             }
+        }
     }
 
     @Override
@@ -153,8 +154,9 @@ public final class Celesta extends AbstractCelesta<PySessionContext> implements 
     @Override
     public PyObject runPython(String sessionId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc,
                               Object... param) {
-        if (interpreterPool == null)
+        if (interpreterPool == null) {
             throw new CelestaException("Interpreter pool not initialized. Running in debug mode?");
+        }
 
         Matcher m = PROCNAME.matcher(proc);
 
@@ -172,8 +174,9 @@ public final class Celesta extends AbstractCelesta<PySessionContext> implements 
             }
 
             StringBuilder sb = new StringBuilder("context");
-            for (int i = 0; i < param.length; i++)
+            for (int i = 0; i < param.length; i++) {
                 sb.append(String.format(", arg%d", i));
+            }
 
             PySessionContext sesContext = this.getSessionContext(sessionId);
             sesContext.setMessageReceiver(rec);

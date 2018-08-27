@@ -146,8 +146,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
                     .collect(Collectors.toList());
         }
         // To the list of fields of the versioned tables we necessarily add "recversion"
-        if (t instanceof Table && ((Table) t).isVersioned())
+        if (t instanceof Table && ((Table) t).isVersioned()) {
             flds.add(VersionedElement.REC_VERSION);
+        }
 
         return getFieldList(flds);
     }
@@ -160,12 +161,15 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @return Returns one of the values of {@link FKRule} or null in case of invalid input.
      */
     static FKRule getFKRule(String rule) {
-        if ("NO ACTION".equalsIgnoreCase(rule) || "RECTRICT".equalsIgnoreCase(rule))
+        if ("NO ACTION".equalsIgnoreCase(rule) || "RECTRICT".equalsIgnoreCase(rule)) {
             return FKRule.NO_ACTION;
-        if ("SET NULL".equalsIgnoreCase(rule))
+        }
+        if ("SET NULL".equalsIgnoreCase(rule)) {
             return FKRule.SET_NULL;
-        if ("CASCADE".equalsIgnoreCase(rule))
+        }
+        if ("CASCADE".equalsIgnoreCase(rule)) {
             return FKRule.CASCADE;
+        }
         return null;
     }
 

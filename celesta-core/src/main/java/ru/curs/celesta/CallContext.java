@@ -18,7 +18,8 @@ import ru.curs.celesta.score.Score;
  *
  * @param <T> heir class of CallContext
  * @param <R> heir class of SessionContext
- * @param <E> class of data accessor to create and put into cash (crutch, must be removed, cuz it's a PyType in celesta-module)
+ * @param <E> class of data accessor to create and put into cash
+ *           (crutch, must be removed, cuz it's a PyType in celesta-module)
  * @param <F>  class of created data accessor (crutch, must be removed, cuz it's a PyObject in celesta-module)
  *           Types E and F are temporary parameters. CallContext must not resolve purposes of cursors caching.
  */

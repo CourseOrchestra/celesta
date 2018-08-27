@@ -38,9 +38,9 @@ public abstract class BaseAppSettings {
         // point.
 
         scorePath = properties.getProperty("score.path", "").trim();
-        if (scorePath.isEmpty())
+        if (scorePath.isEmpty()) {
             sb.append("No score path given (score.path).\n");
-        else {
+        } else {
             checkEntries(scorePath, "score.path", sb);
         }
 
@@ -66,8 +66,9 @@ public abstract class BaseAppSettings {
             password = "";
         } else {
             String url = properties.getProperty("database.connection", "").trim();
-            if ("".equals(url))
+            if ("".equals(url)) {
                 url = properties.getProperty("rdbms.connection.url", "").trim();
+            }
             databaseConnection = url;
             login = properties.getProperty("rdbms.connection.username", "").trim();
             password = properties.getProperty("rdbms.connection.password", "").trim();

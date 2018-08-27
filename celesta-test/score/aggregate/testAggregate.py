@@ -220,6 +220,7 @@ class TestAggregate(CelestaTestCase):
         v = viewWithDecimalCursor(self.context)
 
         t.insert()
+        t.clear()
         t.insert()
 
         v.first()

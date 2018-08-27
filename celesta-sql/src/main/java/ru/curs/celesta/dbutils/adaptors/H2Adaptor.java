@@ -71,11 +71,26 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
     @Override
     public int getCurrentIdent(Connection conn, Table t) {
-        String sql = String.format("select CURRVAL('\"%s\".\"%s_seq\"')", t.getGrain().getName(), t.getName());
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            rs.next();
-            return rs.getInt(1);
+        IntegerColumn idColumn = t.getPrimaryKey().values().stream()
+                .filter(c -> c instanceof IntegerColumn)
+                .map(c -> (IntegerColumn) c)
+                .filter(ic -> ic.isIdentity() || ic.getSequence() != null)
+                .findFirst().get();
+
+        String sequenceName = idColumn.isIdentity()
+                ? String.format("%s_seq", t.getName())
+                : idColumn.getSequence().getName();
+
+        String sql = String.format("select CURRVAL('\"%s\".\"%s\"')", t.getGrain().getName(), sequenceName);
+        try {
+            Statement stmt = conn.createStatement();
+            try {
+                ResultSet rs = stmt.executeQuery(sql);
+                rs.next();
+                return rs.getInt(1);
+            } finally {
+                stmt.close();
+            }
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }
