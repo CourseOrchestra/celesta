@@ -8,7 +8,7 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
-import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.exception.CelestaParseException;
 import ru.curs.celesta.score.View;
 
 /**
@@ -38,7 +38,7 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
             try {
                 meta = callContext().getScore()
                         .getGrain(_grainName()).getElement(_objectName(), View.class);
-            } catch (ParseException e) {
+            } catch (CelestaParseException e) {
                 throw new CelestaException(e.getMessage());
             }
         return meta;

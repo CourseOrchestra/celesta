@@ -17,6 +17,7 @@ public interface ScoreDiscovery {
             return Files.walk(scoreDir.toPath(), FileVisitOption.FOLLOW_LINKS)
                     .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".sql"))
                     .map(Path::toFile)
+                    .sorted()
                     .collect(Collectors.toCollection(LinkedHashSet::new));
         } catch (IOException e) {
             throw new RuntimeException(e); //TODO: Our analog of RuntimeException must be used

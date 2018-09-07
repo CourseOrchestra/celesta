@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -15,9 +16,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.Date;
+import java.util.function.BiConsumer;
 
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.CurrentScore;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
@@ -28,6 +31,8 @@ import ru.curs.celesta.mock.CelestaImpl;
 import ru.curs.celesta.score.*;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.lyra.grid.VarcharFieldEnumerator;
+
+import static ru.curs.celesta.score.ExprUtils.*;
 
 public abstract class AbstractAdaptorTest {
     final static String GRAIN_NAME = "gtest";
@@ -628,7 +633,7 @@ public abstract class AbstractAdaptorTest {
 
 
     @Test
-    public void testColumnInfoForMaterializedView() throws ParseException {
+    public void testColumnInfoForMaterializedView() {
 
         Grain g = score.getGrain(GRAIN_NAME);
         Table tableForMatView = g.getElement("tableForMatView", Table.class);
@@ -1783,6 +1788,242 @@ public abstract class AbstractAdaptorTest {
 
     }
 
+    /*
+create trigger "gtest"."tForAddSecondMv_upd" on "gtest"."tForAddSecondMv" for update as begin
+IF  exists (select * from inserted inner join deleted on
+  inserted."id" = deleted."id"
+where inserted.recversion <> deleted.recversion) BEGIN
+  RAISERROR ('record version check failure', 16, 1);
+END
+update "gtest"."tForAddSecondMv" set recversion = recversion + 1 where
+exists (select * from inserted where
+  inserted."id" = "gtest"."tForAddSecondMv"."id"
+);
+end
+
+alter trigger "gtest"."tForAddSecondMv_upd" on "gtest"."tForAddSecondMv" for update as begin
+
+MERGE INTO "gtest"."tForAddSecondMv1" WITH (HOLDLOCK) AS mv
+USING (SELECT SUM("num1") as "s", "num2" as "num2", COUNT(*) AS surrogate_count FROM deleted GROUP BY "num2") AS aggregate ON mv.num2 = aggregate.num2
+WHEN MATCHED AND mv.s = aggregate.s AND NOT EXISTS(SELECT * FROM "gtest"."tForAddSecondMv" AS t WHERE mv.num2 = t.num2 ) THEN DELETE
+ WHEN MATCHED AND (mv.s <> aggregate.s OR (mv.s = aggregate.s AND EXISTS(SELECT * FROM "gtest"."tForAddSecondMv" AS t WHERE mv.num2 = t.num2 ))) THEN
+UPDATE SET mv.s = mv.s - aggregate.s, mv.surrogate_count = mv.surrogate_count - aggregate.surrogate_count;
+
+
+MERGE INTO "gtest"."tForAddSecondMv1" WITH (HOLDLOCK) AS mv
+USING (SELECT SUM("num1") as "s", "num2" as "num2", COUNT(*) AS surrogate_count FROM inserted GROUP BY "num2") AS aggregate ON mv.num2 = aggregate.num2
+WHEN MATCHED THEN
+ UPDATE SET mv.s = mv.s + aggregate.s, mv.surrogate_count = mv.surrogate_count + aggregate.surrogate_count
+WHEN NOT MATCHED THEN
+INSERT (s, num2, surrogate_count) VALUES (aggregate.s, aggregate.num2, surrogate_count);
+
+end
+
+     */
+
+    @Test
+    @DisplayName("Adding of additional materialized view on same table works")
+    void testAddSecondMaterializedViewOnSameTable() throws Exception {
+
+        CurrentScore.set(this.score);
+        Grain g = this.score.getGrain(GRAIN_NAME);
+        SequenceElement seq = g.getElement("tForAddSecondMvNum", SequenceElement.class);
+        Table tForAddSecondMv = g.getElement("tForAddSecondMv", Table.class);
+        MaterializedView mv1 = g.getElement("tForAddSecondMv1", MaterializedView.class);
+
+        MaterializedView mv2 = new MaterializedView(mv1.getGrainPart(), "tForAddSecondMv2");
+
+        AbstractViewUtils.addColumn(mv2, "s", sum(fieldRef(tForAddSecondMv.getName(), "num2")));
+        AbstractViewUtils.addColumn(mv2,"num1", fieldRef(tForAddSecondMv.getName(), "num1"));
+
+        TableRef ref = new TableRef(tForAddSecondMv, tForAddSecondMv.getName());
+        AbstractViewUtils.addFromTableRef(mv2, ref);
+        AbstractViewUtils.addGroupByColumn(mv2, fieldRef(tForAddSecondMv.getName(), "num1"));
+        AbstractViewUtils.finalizeParsing(mv2);
+
+        try {
+            this.dba.createSequence(this.conn, seq);
+            this.dba.createTable(this.conn, tForAddSecondMv);
+
+            this.dba.createTable(this.conn, mv1);
+            this.dba.initDataForMaterializedView(this.conn, mv1);
+            this.dba.dropTableTriggerForMaterializedView(this.conn, mv1);
+            this.dba.createTableTriggerForMaterializedView(this.conn, mv1);
+
+            this.dba.createTable(this.conn, mv2);
+            this.dba.initDataForMaterializedView(this.conn, mv2);
+            this.dba.dropTableTriggerForMaterializedView(this.conn, mv2);
+            this.dba.createTableTriggerForMaterializedView(this.conn, mv2);
+
+            class Pair {
+                int num1;
+                int num2;
+
+                Pair (int num1, int num2) {
+                    this.num1 = num1;
+                    this.num2 = num2;
+                }
+            }
+
+            List<Pair> pairs = new ArrayList<>();
+            pairs.add(new Pair(1, 2));
+            pairs.add(new Pair(2, 2));
+            pairs.add(new Pair(1, 4));
+            pairs.add(new Pair(2, 5));
+
+            for (Pair pair : pairs) {
+                boolean[] nullsMask = {true, false, false, true};
+                Object[] rowData = {null, pair.num1, pair.num2};
+                List<ParameterSetter> program = new ArrayList<>();
+                PreparedStatement pstmt = this.dba.getInsertRecordStatement(
+                        this.conn, tForAddSecondMv, nullsMask, program
+                );
+
+                int i = 1;
+                for (ParameterSetter ps : program) {
+                    ps.execute(pstmt, i++, rowData, 0);
+                }
+                pstmt.execute();
+            }
+
+            FromClause from1 = new FromClause();
+            from1.setGe(mv1);
+            from1.setExpression(this.dba.tableString(g.getName(), mv1.getName()));
+
+
+            ResultSet rs11 = this.dba.getRecordSetStatement(
+                    this.conn, from1, "", "\"s\"", 0, 0, new HashSet<>()
+            ).executeQuery();
+
+            // check insert triggers
+            assertAll(
+                    () -> assertTrue(rs11.next()),
+                    () -> assertEquals(1, rs11.getInt("s")),
+                    () -> assertEquals(4, rs11.getInt("num2")),
+                    () -> assertTrue(rs11.next()),
+                    () -> assertEquals(2, rs11.getInt("s")),
+                    () -> assertEquals(5, rs11.getInt("num2")),
+                    () -> assertTrue(rs11.next()),
+                    () -> assertEquals(3, rs11.getInt("s")),
+                    () -> assertEquals(2, rs11.getInt("num2")),
+                    () -> assertFalse(rs11.next())
+            );
+
+            FromClause from2 = new FromClause();
+            from2.setGe(mv2);
+            from2.setExpression(this.dba.tableString(g.getName(), mv2.getName()));
+
+
+            ResultSet rs21 = this.dba.getRecordSetStatement(
+                    this.conn, from2, "", "\"s\"", 0, 0, new HashSet<>()
+            ).executeQuery();
+
+            assertAll(
+                    () -> assertTrue(rs21.next()),
+                    () -> assertEquals(6, rs21.getInt("s")),
+                    () -> assertEquals(1, rs21.getInt("num1")),
+                    () -> assertTrue(rs21.next()),
+                    () -> assertEquals(7, rs21.getInt("s")),
+                    () -> assertEquals(2, rs21.getInt("num1")),
+                    () -> assertFalse(rs21.next())
+            );
+
+            // check delete triggers
+            this.dba.deleteRecordSetStatement(conn, tForAddSecondMv, "\"num1\" = 1").execute();
+
+            ResultSet rs12 = this.dba.getRecordSetStatement(
+                    this.conn, from1, "", "\"num2\"", 0, 0, new HashSet<>()
+            ).executeQuery();
+
+            assertAll(
+                    () -> assertTrue(rs12.next()),
+                    () -> assertEquals(2, rs12.getInt("s")),
+                    () -> assertEquals(2, rs12.getInt("num2")),
+                    () -> assertTrue(rs12.next()),
+                    () -> assertEquals(2, rs12.getInt("s")),
+                    () -> assertEquals(5, rs12.getInt("num2")),
+                    () -> assertFalse(rs12.next())
+            );
+
+            ResultSet rs22 = this.dba.getRecordSetStatement(
+                    this.conn, from2, "", "\"num1\"", 0, 0, new HashSet<>()
+            ).executeQuery();
+
+            assertAll(
+                    () -> assertTrue(rs22.next()),
+                    () -> assertEquals(7, rs22.getInt("s")),
+                    () -> assertEquals(2, rs22.getInt("num1")),
+                    () -> assertFalse(rs22.next())
+            );
+
+            // check update triggers
+            boolean[] equalsMask = {true, true, false};
+            boolean[] nullsMask = {true, true, false};
+            Object[] rowData = {null, null, 6};
+            List<ParameterSetter> program = new ArrayList<>();
+            int i = 1;
+
+            PreparedStatement pstmt = this.dba.getUpdateRecordStatement(
+                    this.conn, tForAddSecondMv, equalsMask, nullsMask, program, "\"num2\" = 5");
+            for (ParameterSetter ps : program) {
+                ps.execute(pstmt, i++, rowData, 1);
+            }
+            pstmt.execute();
+
+            // RecVersion trigger works
+            FromClause fromT = new FromClause();
+            fromT.setGe(tForAddSecondMv);
+            fromT.setExpression(this.dba.tableString(g.getName(), tForAddSecondMv.getName()));
+
+            ResultSet rsT = this.dba.getOneRecordStatement(
+                    this.conn, tForAddSecondMv, "\"num2\" = 6", Collections.emptySet()
+            ).executeQuery();
+
+            assertAll(
+                    () -> assertTrue(rsT.next()),
+                    () -> assertEquals(2, rsT.getInt("recversion"))
+            );
+
+            ResultSet rs13 = this.dba.getRecordSetStatement(
+                    this.conn, from1, "", "\"num2\"", 0, 0, new HashSet<>()
+            ).executeQuery();
+
+            assertAll(
+                    () -> assertTrue(rs13.next()),
+                    () -> assertEquals(2, rs13.getInt("s")),
+                    () -> assertEquals(2, rs13.getInt("num2")),
+                    () -> assertTrue(rs13.next()),
+                    () -> assertEquals(2, rs13.getInt("s")),
+                    () -> assertEquals(6, rs13.getInt("num2")),
+                    () -> assertFalse(rs13.next())
+            );
+
+            ResultSet rs23 = this.dba.getRecordSetStatement(
+                    this.conn, from2, "", "\"num1\"", 0, 0, new HashSet<>()
+            ).executeQuery();
+
+            assertAll(
+                    () -> assertTrue(rs23.next()),
+                    () -> assertEquals(8, rs23.getInt("s")),
+                    () -> assertEquals(2, rs23.getInt("num1")),
+                    () -> assertFalse(rs23.next())
+            );
+        } finally {
+            if (dba.tableExists(conn, g.getName(), mv1.getName())) {
+                dba.dropTable(conn, mv1);
+            }
+            if (dba.tableExists(conn, g.getName(), mv2.getName())) {
+                dba.dropTable(conn, mv2);
+            }
+            if (dba.tableExists(conn, g.getName(), tForAddSecondMv.getName())) {
+                dba.dropTable(conn, tForAddSecondMv);
+            }
+            if (this.dba.sequenceExists(conn, g.getName(), seq.getName())) {
+                this.dba.dropSequence(conn, seq);
+            }
+
+        }
+    }
 
     static DbUpdaterImpl createDbUpdater(Score score, DBAdaptor dba) {
         CelestaImpl celesta = new CelestaImpl(dba, dba.connectionPool, score);

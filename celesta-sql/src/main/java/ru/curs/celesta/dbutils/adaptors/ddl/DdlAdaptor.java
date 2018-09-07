@@ -271,7 +271,6 @@ public final class DdlAdaptor {
      *
      * @param conn Connection to use.
      * @param t    TableElement metadata of deleting table provided by Celesta.
-     * @ if a {@link SQLException} occurs.
      */
     public final void dropTable(Connection conn, TableElement t)  {
         String sql = this.ddlGenerator.dropTable(t);
@@ -295,8 +294,8 @@ public final class DdlAdaptor {
     }
 
     //TODO: Javadoc
-    public void dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
-        List<String> sqlList = this.ddlGenerator.dropTableTriggersForMaterializedViews(conn, t);
+    public void dropTableTriggerForMaterializedView(Connection conn, MaterializedView mv)  {
+        List<String> sqlList = this.ddlGenerator.dropTableTriggerForMaterializedView(conn, mv);
         try {
             processSql(conn, sqlList);
         } catch (CelestaException e) {
@@ -304,15 +303,16 @@ public final class DdlAdaptor {
         }
     }
 
-    public void createTableTriggersForMaterializedViews(Connection conn, Table t)  {
-        List<String> sqlList = this.ddlGenerator.createTableTriggersForMaterializedViews(t);
+    public void createTableTriggerForMaterializedView(Connection conn, MaterializedView mv)  {
+        List<String> sqlList = this.ddlGenerator.createTableTriggerForMaterializedView(conn, mv);
         try {
             processSql(conn, sqlList);
         } catch (CelestaException e) {
+            Table t = mv.getRefTable().getTable();
             throw new CelestaException(
                     String.format(
-                            "Could not update triggers on %s.%s for materialized views: %s",
-                            t.getGrain().getName(), t.getName(), e.getMessage()
+                            "Could not update triggers on %s.%s for materialized views %s.%s: %s",
+                            t.getGrain().getName(), t.getName(), mv.getGrain().getName(), mv.getName(), e.getMessage()
                     ), e
             );
         }

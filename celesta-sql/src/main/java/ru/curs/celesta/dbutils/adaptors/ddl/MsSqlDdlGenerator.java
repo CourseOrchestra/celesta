@@ -25,6 +25,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -356,233 +358,231 @@ public class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
+    public List<String> dropTableTriggerForMaterializedView(Connection conn, MaterializedView mv) {
         List<String> result = new ArrayList<>();
+        Table t = mv.getRefTable().getTable();
 
-        List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-                .filter(mv -> mv.getRefTable().getTable().equals(t))
-                .collect(Collectors.toList());
+        String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+        String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
+        String updateTriggerName = String.format("%s_upd", t.getName());
 
         TriggerQuery query = new TriggerQuery()
                 .withSchema(t.getGrain().getName())
                 .withTableName(t.getName());
 
-        for (MaterializedView mv : mvList) {
+        query.withName(insertTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
+        query.withName(deleteTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
 
-            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
-
-            query.withName(insertTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-            query.withName(deleteTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-        }
-
-        if (!mvList.isEmpty()) {
-            //Обнуляем избыточный rec_version триггер.
-            query.withName(t.getName() + "_upd");
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-            if (t.isVersioned()) {
-                result.add(createVersioningTrigger(t));
-                this.rememberTrigger(query);
-            }
-        }
+        query.withName(updateTriggerName);
+        this.dmlAdaptor.getTriggerBody(conn, query)
+                .ifPresent(triggerBody -> {
+                    String sql = triggerBody.replaceFirst("(?i)create", "alter")
+                            .replaceAll(
+                                    String.format(
+                                            "((?i)MERGE INTO) \"%s\"\\.\"%s\"(.|\\s)*?;",
+                                            mv.getGrain().getName(), mv.getName()
+                                    ),
+                                    "");
+                    result.add(sql);
+                });
 
         return result;
     }
 
     @Override
-    public List<String> createTableTriggersForMaterializedViews(Table t) {
+    public List<String> createTableTriggerForMaterializedView(Connection conn, MaterializedView mv) {
         List<String> result = new ArrayList<>();
-
+        Table t = mv.getRefTable().getTable();
         String fullTableName = tableString(t.getGrain().getName(), t.getName());
-
-        List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-                .filter(mv -> mv.getRefTable().getTable().equals(t))
-                .collect(Collectors.toList());
-
-        if (mvList.isEmpty()) {
-            return result;
-        }
-
-        StringBuilder afterUpdateTriggerTsql = new StringBuilder();
-
-        if (t.isVersioned()) {
-            afterUpdateTriggerTsql.append(generateTsqlForVersioningTrigger(t)).append("\n");
-        }
 
         TriggerQuery query = new TriggerQuery()
                 .withSchema(t.getGrain().getName())
                 .withTableName(t.getName());
 
-        for (MaterializedView mv : mvList) {
-            String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
 
-            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
+        String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
 
-            String mvColumns = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .collect(Collectors.joining(", "))
-                    .concat(", " + MaterializedView.SURROGATE_COUNT);
+        StringBuilder afterUpdateTriggerTsql = new StringBuilder();
 
-            String aggregateColumns = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .map(alias -> "aggregate." + alias)
-                    .collect(Collectors.joining(", "))
-                    .concat(", " + MaterializedView.SURROGATE_COUNT);
+        String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+        String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
+
+        String mvColumns = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .collect(Collectors.joining(", "))
+                .concat(", " + MaterializedView.SURROGATE_COUNT);
+
+        String aggregateColumns = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> "aggregate." + alias)
+                .collect(Collectors.joining(", "))
+                .concat(", " + MaterializedView.SURROGATE_COUNT);
 
 
-            String rowConditionTemplate = mv.getColumns().keySet().stream()
-                    .filter(alias -> mv.isGroupByColumn(alias))
-                    .map(alias -> "mv." + alias + " = %1$s." + alias + " ")
-                    .collect(Collectors.joining(" AND "));
+        String rowConditionTemplate = mv.getColumns().keySet().stream()
+                .filter(alias -> mv.isGroupByColumn(alias))
+                .map(alias -> "mv." + alias + " = %1$s." + alias + " ")
+                .collect(Collectors.joining(" AND "));
 
-            String rowConditionForExistsTemplate = mv.getColumns().keySet().stream()
-                    .filter(alias -> mv.isGroupByColumn(alias))
-                    .map(alias -> {
-                        Column colRef = mv.getColumnRef(alias);
+        String rowConditionForExistsTemplate = mv.getColumns().keySet().stream()
+                .filter(alias -> mv.isGroupByColumn(alias))
+                .map(alias -> {
+                    Column colRef = mv.getColumnRef(alias);
 
-                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
-                            return "mv." + alias + " = cast(floor(cast(%1$s." + mv.getColumnRef(alias).getName() + " as float)) as datetime)";
-                        }
+                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+                        return "mv." + alias + " = cast(floor(cast(%1$s." + mv.getColumnRef(alias).getName() + " as float)) as datetime)";
+                    }
 
-                        return "mv." + alias + " = %1$s." + mv.getColumnRef(alias).getName() + " ";
-                    })
-                    .collect(Collectors.joining(" AND "));
+                    return "mv." + alias + " = %1$s." + mv.getColumnRef(alias).getName() + " ";
+                })
+                .collect(Collectors.joining(" AND "));
 
-            String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
-                    .map(e -> {
-                        StringBuilder sb = new StringBuilder();
-                        String alias = e.getKey();
+        String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
+                .map(e -> {
+                    StringBuilder sb = new StringBuilder();
+                    String alias = e.getKey();
 
-                        sb.append("mv.").append(alias)
-                                .append(" = mv.").append(alias)
-                                .append(" %1$s aggregate.").append(alias);
+                    sb.append("mv.").append(alias)
+                            .append(" = mv.").append(alias)
+                            .append(" %1$s aggregate.").append(alias);
 
-                        return sb.toString();
-                    }).collect(Collectors.joining(", "))
-                    .concat(", mv.").concat(MaterializedView.SURROGATE_COUNT).concat(" = ")
-                    .concat("mv.").concat(MaterializedView.SURROGATE_COUNT).concat(" %1$s aggregate.")
-                    .concat(MaterializedView.SURROGATE_COUNT);
+                    return sb.toString();
+                }).collect(Collectors.joining(", "))
+                .concat(", mv.").concat(MaterializedView.SURROGATE_COUNT).concat(" = ")
+                .concat("mv.").concat(MaterializedView.SURROGATE_COUNT).concat(" %1$s aggregate.")
+                .concat(MaterializedView.SURROGATE_COUNT);
 
-            String tableGroupByColumns = mv.getColumns().values().stream()
-                    .filter(v -> mv.isGroupByColumn(v.getName()))
-                    .map(v -> {
-                                if (DateTimeColumn.CELESTA_TYPE.equals(v.getCelestaType())) {
-                                    return "cast(floor(cast(\"" + v.getName() + "\" as float)) as datetime)";
-                                }
-                                return "\"" + mv.getColumnRef(v.getName()).getName() + "\"";
+        String tableGroupByColumns = mv.getColumns().values().stream()
+                .filter(v -> mv.isGroupByColumn(v.getName()))
+                .map(v -> {
+                            if (DateTimeColumn.CELESTA_TYPE.equals(v.getCelestaType())) {
+                                return "cast(floor(cast(\"" + v.getName() + "\" as float)) as datetime)";
                             }
-                    ).collect(Collectors.joining(", "));
+                            return "\"" + mv.getColumnRef(v.getName()).getName() + "\"";
+                        }
+                ).collect(Collectors.joining(", "));
 
 
-            String selectPartOfScript = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .map(alias -> {
-                        Column colRef = mv.getColumnRef(alias);
+        String selectPartOfScript = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> {
+                    Column colRef = mv.getColumnRef(alias);
 
-                        Map<String, Expr> aggrCols = mv.getAggregateColumns();
-                        if (aggrCols.containsKey(alias)) {
-                            if (colRef == null) {
-                                if (aggrCols.get(alias) instanceof Count) {
-                                    return "COUNT(*) as \"" + alias + "\"";
-                                }
-                                return "";
-                            } else if (aggrCols.get(alias) instanceof Sum) {
-                                return "SUM(\"" + colRef.getName() + "\") as \"" + alias + "\"";
-                            } else {
-                                return "";
+                    Map<String, Expr> aggrCols = mv.getAggregateColumns();
+                    if (aggrCols.containsKey(alias)) {
+                        if (colRef == null) {
+                            if (aggrCols.get(alias) instanceof Count) {
+                                return "COUNT(*) as \"" + alias + "\"";
                             }
+                            return "";
+                        } else if (aggrCols.get(alias) instanceof Sum) {
+                            return "SUM(\"" + colRef.getName() + "\") as \"" + alias + "\"";
+                        } else {
+                            return "";
                         }
+                    }
 
-                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
-                            return "cast(floor(cast(\"" + colRef.getName() + "\" as float)) as datetime) " +
-                                    "as \"" + alias + "\"";
-                        }
+                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+                        return "cast(floor(cast(\"" + colRef.getName() + "\" as float)) as datetime) " +
+                                "as \"" + alias + "\"";
+                    }
 
-                        return "\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
-                    })
-                    .filter(str -> !str.isEmpty())
-                    .collect(Collectors.joining(", "))
-                    .concat(", COUNT(*) AS " + MaterializedView.SURROGATE_COUNT);
+                    return "\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
+                })
+                .filter(str -> !str.isEmpty())
+                .collect(Collectors.joining(", "))
+                .concat(", COUNT(*) AS " + MaterializedView.SURROGATE_COUNT);
 
-            StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s WITH (HOLDLOCK) AS mv \n")
-                    .append("USING (SELECT %s FROM inserted GROUP BY %s) AS aggregate ON %s \n")
-                    .append("WHEN MATCHED THEN \n ")
-                    .append("UPDATE SET %s \n")
-                    .append("WHEN NOT MATCHED THEN \n")
-                    .append("INSERT (%s) VALUES (%s); \n");
+        StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s WITH (HOLDLOCK) AS mv \n")
+                .append("USING (SELECT %s FROM inserted GROUP BY %s) AS aggregate ON %s \n")
+                .append("WHEN MATCHED THEN \n ")
+                .append("UPDATE SET %s \n")
+                .append("WHEN NOT MATCHED THEN \n")
+                .append("INSERT (%s) VALUES (%s); \n");
 
-            String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
-                    selectPartOfScript, tableGroupByColumns, String.format(rowConditionTemplate, "aggregate"),
-                    String.format(setStatementTemplate, "+"), mvColumns, aggregateColumns);
+        String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
+                selectPartOfScript, tableGroupByColumns, String.format(rowConditionTemplate, "aggregate"),
+                String.format(setStatementTemplate, "+"), mvColumns, aggregateColumns);
 
-            String deleteMatchedCondTemplate = mv.getAggregateColumns().keySet().stream()
-                    .map(alias -> "mv." + alias + " %1$s aggregate." + alias)
-                    .collect(Collectors.joining(" %2$s "));
+        String deleteMatchedCondTemplate = mv.getAggregateColumns().keySet().stream()
+                .map(alias -> "mv." + alias + " %1$s aggregate." + alias)
+                .collect(Collectors.joining(" %2$s "));
 
-            String existsSql = "EXISTS(SELECT * FROM " + fullTableName + " AS t WHERE "
-                    + String.format(rowConditionForExistsTemplate, "t") + ")";
+        String existsSql = "EXISTS(SELECT * FROM " + fullTableName + " AS t WHERE "
+                + String.format(rowConditionForExistsTemplate, "t") + ")";
 
-            StringBuilder deleteSqlBuilder = new StringBuilder("MERGE INTO %s WITH (HOLDLOCK) AS mv \n")
-                    .append("USING (SELECT %s FROM deleted GROUP BY %s) AS aggregate ON %s \n")
-                    .append("WHEN MATCHED AND %s THEN DELETE\n ")
-                    .append("WHEN MATCHED AND (%s) THEN \n")
-                    .append("UPDATE SET %s; \n");
+        StringBuilder deleteSqlBuilder = new StringBuilder("MERGE INTO %s WITH (HOLDLOCK) AS mv \n")
+                .append("USING (SELECT %s FROM deleted GROUP BY %s) AS aggregate ON %s \n")
+                .append("WHEN MATCHED AND %s THEN DELETE\n ")
+                .append("WHEN MATCHED AND (%s) THEN \n")
+                .append("UPDATE SET %s; \n");
 
-            String deleteSql = String.format(deleteSqlBuilder.toString(), fullMvName,
-                    selectPartOfScript, tableGroupByColumns, String.format(rowConditionTemplate, "aggregate"),
-                    String.format(deleteMatchedCondTemplate, "=", "AND").concat(" AND NOT " + existsSql),
-                    String.format(deleteMatchedCondTemplate, "<>", "OR")
-                            .concat(" OR (" + String.format(deleteMatchedCondTemplate, "=", "AND")
-                                    .concat(" AND " + existsSql + ")")),
-                    String.format(setStatementTemplate, "-"));
+        String deleteSql = String.format(deleteSqlBuilder.toString(), fullMvName,
+                selectPartOfScript, tableGroupByColumns, String.format(rowConditionTemplate, "aggregate"),
+                String.format(deleteMatchedCondTemplate, "=", "AND").concat(" AND NOT " + existsSql),
+                String.format(deleteMatchedCondTemplate, "<>", "OR")
+                        .concat(" OR (" + String.format(deleteMatchedCondTemplate, "=", "AND")
+                                .concat(" AND " + existsSql + ")")),
+                String.format(setStatementTemplate, "-"));
 
-            String sql;
-            //INSERT
+        String sql;
+        //INSERT
 
-            sql = String.format("create trigger \"%s\".\"%s\" " +
-                            "on %s after insert as begin \n"
-                            + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
-                            + "\n %s \n END;",
-                    t.getGrain().getName(), insertTriggerName, fullTableName, mv.getChecksum(), insertSql);
-            //System.out.println(sql);
-            result.add(sql);
-            this.rememberTrigger(query.withName(insertTriggerName));
+        sql = String.format("create trigger \"%s\".\"%s\" " +
+                        "on %s after insert as begin \n"
+                        + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
+                        + "\n %s \n END;",
+                t.getGrain().getName(), insertTriggerName, fullTableName, mv.getChecksum(), insertSql);
+        //System.out.println(sql);
+        result.add(sql);
+        this.rememberTrigger(query.withName(insertTriggerName));
 
-            //UPDATE
-            //Инструкции для update-триггера нужно собирать и использовать после прогона главного цикла метода
-            afterUpdateTriggerTsql.append(String.format("\n%s\n \n%s\n", deleteSql, insertSql));
-            //DELETE
+        //UPDATE
+        //Инструкции для update-триггера нужно собирать и использовать после прогона главного цикла метода
+        afterUpdateTriggerTsql.append(String.format("\n%s\n \n%s\n", deleteSql, insertSql));
+        //DELETE
 
-            sql = String.format("create trigger \"%s\".\"%s\" " +
-                            "on %s after delete as begin \n %s \n END;",
-                    t.getGrain().getName(), deleteTriggerName, fullTableName, deleteSql);
+        sql = String.format("create trigger \"%s\".\"%s\" " +
+                        "on %s after delete as begin \n %s \n END;",
+                t.getGrain().getName(), deleteTriggerName, fullTableName, deleteSql);
 
-            //System.out.println(sql);
-            result.add(sql);
-            this.rememberTrigger(query.withName(deleteTriggerName));
-
-        }
+        //System.out.println(sql);
+        result.add(sql);
+        this.rememberTrigger(query.withName(deleteTriggerName));
 
 
         StringBuilder sb = new StringBuilder();
 
-        final String sqlPrefix = t.isVersioned() ? "alter" : "create";
-
         String updateTriggerName = String.format("%s_upd", t.getName());
-        sb.append(
-                String.format("%s trigger \"%s\".\"%s\" on \"%s\".\"%s\" for update as begin\n",
-                        sqlPrefix, t.getGrain().getName(), updateTriggerName, t.getGrain().getName(), t.getName()));
-        sb.append(afterUpdateTriggerTsql.toString());
+        query = query.withName(updateTriggerName);
+
+        if (this.triggerExists(conn, query)) {
+            String triggerBody = this.dmlAdaptor.getTriggerBody(conn, query).get();
+            triggerBody = triggerBody.replaceFirst("(?i)create", "alter");
+
+            Pattern pattern = Pattern.compile("(?i)end$");
+            Matcher matcher = pattern.matcher(triggerBody);
+            matcher.find();
+            triggerBody = triggerBody.substring(0, matcher.start());
+
+            sb.append(triggerBody);
+            sb.append(afterUpdateTriggerTsql.toString());
+        } else {
+            sb.append(
+                    String.format("create trigger \"%s\".\"%s\" on \"%s\".\"%s\" for update as begin\n",
+                            t.getGrain().getName(), updateTriggerName, t.getGrain().getName(), t.getName()));
+            sb.append(afterUpdateTriggerTsql.toString());
+        }
+
         sb.append("end\n");
 
         result.add(sb.toString());
+
         this.rememberTrigger(query.withName(updateTriggerName));
 
         return result;

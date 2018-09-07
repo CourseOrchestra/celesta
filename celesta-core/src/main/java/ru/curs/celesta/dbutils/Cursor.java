@@ -55,6 +55,7 @@ import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.event.TriggerType;
+import ru.curs.celesta.exception.CelestaParseException;
 import ru.curs.celesta.score.*;
 
 /**
@@ -547,7 +548,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
             try {
                 meta = callContext().getScore()
                         .getGrain(_grainName()).getElement(_objectName(), Table.class);
-            } catch (ParseException e) {
+            } catch (CelestaParseException e) {
                 throw new CelestaException(e.getMessage());
             }
         return meta;

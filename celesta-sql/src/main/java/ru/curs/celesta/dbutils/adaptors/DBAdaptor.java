@@ -457,12 +457,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         this.ddlAdaptor.createParameterizedView(conn, pv);
     }
 
-    public final void dropTableTriggersForMaterializedViews(Connection conn, Table t) {
-        this.ddlAdaptor.dropTableTriggersForMaterializedViews(conn, t);
+    public final void dropTableTriggerForMaterializedView(Connection conn, MaterializedView mv) {
+        this.ddlAdaptor.dropTableTriggerForMaterializedView(conn, mv);
     }
 
-    public final void createTableTriggersForMaterializedViews(Connection conn, Table t) {
-        this.ddlAdaptor.createTableTriggersForMaterializedViews(conn, t);
+    public final void createTableTriggerForMaterializedView(Connection conn, MaterializedView mv) {
+        this.ddlAdaptor.createTableTriggerForMaterializedView(conn, mv);
     }
 
     public final void executeNative(Connection conn, String sql) {
@@ -707,6 +707,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
                 result = Optional.ofNullable(rs.getString(1));
             } else {
                 result = Optional.empty();
+            }
+
+            if (this instanceof MSSQLAdaptor) {
+                // TODO: REMOVE!!!
+                System.out.println("MSSQL TRIGGER:\n" + result + "\n");
             }
 
             return result;

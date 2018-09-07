@@ -4,8 +4,6 @@ import org.junit.jupiter.api.*;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.LogsetupCursor;
 
-import java.sql.SQLException;
-import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 

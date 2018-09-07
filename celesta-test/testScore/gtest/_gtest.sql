@@ -44,8 +44,8 @@ create table  aLongIdentityTableNaaame(
 alter table test add constraint fk_testNameVeryVeryLongLonName
  foreign key (attrVarchar, attrInt) references refTo (k1, k2)
  on update cascade on delete set null;
- 
-create view testview as 
+
+create view testview as
   select id, descr, descr || 'foo' as descr2, k2 from test inner join refTo on attrVarchar = k1 and attrInt = k2;
 
 create table tableForMatView (
@@ -93,3 +93,19 @@ CREATE TABLE tableForTestSequence(
   numb int,
   CONSTRAINT Pk_gtest_tableForTestSequence PRIMARY KEY (id)
 );
+
+
+CREATE SEQUENCE tForAddSecondMvNum;
+
+CREATE TABLE tForAddSecondMv (
+  id int not null DEFAULT NEXTVAL(tForAddSecondMvNum),
+  num1 int not null,
+  num2 int not null,
+  CONSTRAINT Pk_gtest_tForAddSecondMv PRIMARY KEY (id)
+);
+
+CREATE MATERIALIZED VIEW tForAddSecondMv1 AS
+  select sum(num1) as s, num2
+  from tForAddSecondMv
+  group by num2;
+

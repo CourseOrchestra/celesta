@@ -287,81 +287,70 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
+    public List<String> dropTableTriggerForMaterializedView(Connection conn, MaterializedView mv) {
         List<String> result = new ArrayList<>();
 
-        List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-                .filter(mv -> mv.getRefTable().getTable().equals(t))
-                .collect(Collectors.toList());
+        Table t = mv.getRefTable().getTable();
 
-        for (MaterializedView mv : mvList) {
-            TriggerQuery query = new TriggerQuery()
-                    .withSchema(t.getGrain().getName())
-                    .withTableName(t.getName());
+        TriggerQuery query = new TriggerQuery()
+                .withSchema(t.getGrain().getName())
+                .withTableName(t.getName());
 
-            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-            String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
-            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
+        String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+        String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+        String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
-            query.withName(insertTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-            query.withName(updateTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-            query.withName(deleteTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-
-        }
+        query.withName(insertTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
+        query.withName(updateTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
+        query.withName(deleteTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
 
         return result;
     }
 
     @Override
-    public List<String> createTableTriggersForMaterializedViews(Table t) {
+    public List<String> createTableTriggerForMaterializedView(Connection conn, MaterializedView mv) {
         List<String> result = new ArrayList<>();
-        List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-                .filter(mv -> mv.getRefTable().getTable().equals(t))
-                .collect(Collectors.toList());
+        Table t = mv.getRefTable().getTable();
 
+        TriggerQuery query = new TriggerQuery()
+                .withSchema(t.getGrain().getName())
+                .withTableName(t.getName());
 
-        for (MaterializedView mv : mvList) {
+        String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+        String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+        String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
-            TriggerQuery query = new TriggerQuery()
-                    .withSchema(t.getGrain().getName())
-                    .withTableName(t.getName());
-
-            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-            String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
-            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
-
-            String sql;
-            //INSERT
-            sql = String.format(
-                    "CREATE TRIGGER \"" + insertTriggerName + "\" AFTER INSERT ON "
-                            + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL %n " +
-                            MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "%n" +
-                            "\"%s\"",
-                    mv.getChecksum(),
-                    MaterializedViewInsertTrigger.class.getName());
-            result.add(sql);
-            this.rememberTrigger(query.withName(insertTriggerName));
-            //UPDATE
-            sql = String.format(
-                    "CREATE TRIGGER \"" + updateTriggerName + "\" AFTER UPDATE ON "
-                            + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \"%s\"",
-                    MaterializedViewUpdateTrigger.class.getName());
-            result.add(sql);
-            this.rememberTrigger(query.withName(updateTriggerName));
-            //DELETE
-            sql = String.format(
-                    "CREATE TRIGGER \"" + deleteTriggerName + "\" AFTER DELETE ON "
-                            + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \"%s\"",
-                    MaterializedViewDeleteTrigger.class.getName());
-            result.add(sql);
-            this.rememberTrigger(query.withName(deleteTriggerName));
-        }
+        String sql;
+        //INSERT
+        sql = String.format(
+                "CREATE TRIGGER \"" + insertTriggerName + "\" AFTER INSERT ON "
+                        + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL %n " +
+                        MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "%n" +
+                        "\"%s\"",
+                mv.getChecksum(),
+                MaterializedViewInsertTrigger.class.getName());
+        result.add(sql);
+        this.rememberTrigger(query.withName(insertTriggerName));
+        //UPDATE
+        sql = String.format(
+                "CREATE TRIGGER \"" + updateTriggerName + "\" AFTER UPDATE ON "
+                        + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \"%s\"",
+                MaterializedViewUpdateTrigger.class.getName());
+        result.add(sql);
+        this.rememberTrigger(query.withName(updateTriggerName));
+        //DELETE
+        sql = String.format(
+                "CREATE TRIGGER \"" + deleteTriggerName + "\" AFTER DELETE ON "
+                        + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL \"%s\"",
+                MaterializedViewDeleteTrigger.class.getName());
+        result.add(sql);
+        this.rememberTrigger(query.withName(deleteTriggerName));
 
         return result;
     }

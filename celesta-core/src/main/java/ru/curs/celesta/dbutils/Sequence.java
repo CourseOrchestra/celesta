@@ -2,7 +2,7 @@ package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.exception.CelestaParseException;
 import ru.curs.celesta.score.SequenceElement;
 
 public abstract class Sequence extends BasicDataAccessor {
@@ -31,7 +31,7 @@ public abstract class Sequence extends BasicDataAccessor {
             try {
                 meta = callContext().getScore()
                         .getGrain(_grainName()).getElement(_objectName(), SequenceElement.class);
-            } catch (ParseException e) {
+            } catch (CelestaParseException e) {
                 throw new CelestaException(e.getMessage());
             }
         return meta;

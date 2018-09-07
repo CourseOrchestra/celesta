@@ -8,15 +8,15 @@ import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
+import ru.curs.celesta.syscursors.ISchemaElementCursor;
 import ru.curs.celesta.syscursors.ISchemaCursor;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class DbUpdater<T extends ICallContext> {
-
-    private static final Comparator<Grain> GRAIN_COMPARATOR = Comparator.comparingInt(Grain::getDependencyOrder);
 
     private static final Set<Integer> EXPECTED_STATUSES;
 
@@ -33,6 +33,7 @@ public abstract class DbUpdater<T extends ICallContext> {
     private final boolean forceDdInitialize;
     protected final ConnectionPool connectionPool;
     protected ISchemaCursor schemaCursor;
+    protected ISchemaElementCursor schemaElementCursor;
 
     public DbUpdater(ConnectionPool connectionPool, AbstractScore score, boolean forceDdInitialize, DBAdaptor dbAdaptor) {
         this.connectionPool = connectionPool;
@@ -47,6 +48,7 @@ public abstract class DbUpdater<T extends ICallContext> {
     protected abstract void initDataAccessors(T context);
 
     protected abstract String getSchemasTableName();
+    protected abstract String getSchemaElementsTableName();
 
     public void updateSystemSchema() {
         try (T context = createContext()) {
@@ -75,7 +77,8 @@ public abstract class DbUpdater<T extends ICallContext> {
      * @в случае ошибки обновления.
      */
     public void updateDb() {
-        String sysSchemaName = score.getSysSchemaName();
+        String sysSchemaName = this.score.getSysSchemaName();
+
         try (T context = createContext()) {
             updateSystemSchema(context);
 
@@ -106,33 +109,153 @@ public abstract class DbUpdater<T extends ICallContext> {
                 dbGrains.put(schemaCursor.getId(), gi);
             }
 
-            // Получаем список гранул на основе метамодели и сортируем его по
-            // порядку зависимости.
-            List<Grain> grains = new ArrayList<>(score.getGrains().values());
-            Collections.sort(grains, GRAIN_COMPARATOR);
-
-            // Выполняем итерацию по гранулам.
-            boolean success = true;
-            for (Grain g : grains) {
-                // Запись о грануле есть?
-                GrainInfo gi = dbGrains.get(g.getName());
-                if (gi == null) {
-                    insertGrainRec(g);
-                    success = updateGrain(g, connectionPool) & success;
-                } else {
-                    // Запись есть -- решение об апгрейде принимается на основе
-                    // версии и контрольной суммы.
-                    success = decideToUpgrade(g, gi, connectionPool) & success;
-                }
-            }
-            if (!success)
-                throw new CelestaException(
-                        "Not all %s were updated successfully, see %s.%s table data for details.",
-                        getSchemasTableName(), sysSchemaName, getSchemasTableName()
-                );
+            Set<Grain> notSystemGrains = score.getGrains().values().stream()
+                    .filter(g -> !g.getName().equals(sysSchemaName))
+                    .collect(Collectors.toSet());
+            updateGrains(notSystemGrains, dbGrains, true);
         }
     }
 
+    void updateGrains(Set<Grain> grains, Map<String, GrainInfo> dbGrains, boolean isNotSystem) {
+        String sysSchemaName = this.score.getSysSchemaName();
+        boolean success = true;
+
+        final List<GrainElement> grainElementsToUpdate = new ArrayList<>();
+        final Map<Grain, List<DbFkInfo>> grainToDbFkInfoList = new HashMap<>();
+        final Map<Grain, Collection<? extends GrainElement>> notProcessedElements = new HashMap<>();
+        final Set<Table> modifiedTables = new HashSet<>();
+
+        for (Grain g : grains) {
+
+            if (isNotSystem) {
+                GrainInfo gi = dbGrains.get(g.getName());
+
+                if (gi == null) {
+                    insertGrainRec(g);
+                } else {
+                    // The record exists
+                    // The decision to upgrade is based on the version and checksum.
+                    if (!needToUpgrade(g, gi)) {
+                        // No need for update.
+                        continue;
+                    }
+                }
+            }
+
+            beforeGrainUpdating(g);
+
+            // Delete all views
+            dropAllViews(g);
+            // Delete all parameterized views
+            dropAllParameterizedViews(g);
+
+            // Выполняем удаление ненужных индексов, чтобы облегчить задачу
+            // обновления столбцов на таблицах.
+            dropOrphanedGrainIndices(g);
+
+            // Сбрасываем внешние ключи, более не включённые в метаданные
+            grainToDbFkInfoList.put(g, dropOrphanedGrainForeignKeysAndGetActual(g));
+
+
+            Collection<SequenceElement> sequenceElements = g.getElements(SequenceElement.class).values();
+            Collection<Table> tables = g.getElements(Table.class).values();
+            Collection<Index> indices = g.getElements(Index.class).values();
+            Collection<View> views = g.getElements(View.class).values();
+            Collection<ParameterizedView> parameterizedViews = g.getElements(ParameterizedView.class).values();
+            Collection<MaterializedView> materializedViews = g.getElements(MaterializedView.class).values();
+
+            grainElementsToUpdate.addAll(sequenceElements);
+            grainElementsToUpdate.addAll(tables);
+            grainElementsToUpdate.addAll(indices);
+            grainElementsToUpdate.addAll(views);
+            grainElementsToUpdate.addAll(parameterizedViews);
+            grainElementsToUpdate.addAll(materializedViews);
+
+            Set<GrainElement> allGrainElements = new HashSet<>();
+            allGrainElements.addAll(sequenceElements);
+            allGrainElements.addAll(tables);
+            allGrainElements.addAll(indices);
+            allGrainElements.addAll(views);
+            allGrainElements.addAll(parameterizedViews);
+            allGrainElements.addAll(materializedViews);
+
+
+            notProcessedElements.put(g, allGrainElements);
+        }
+
+        GrainElementUpdatingComparator comparator = new GrainElementUpdatingComparator(this.score);
+        grainElementsToUpdate.sort(comparator);
+
+        final Map<Grain, Set<GrainElement>> failedMap = new HashMap<>();
+        final Set<Grain> upgradingGrains = new HashSet<>();
+
+        for (GrainElement ge : grainElementsToUpdate) {
+            Grain g = ge.getGrain();
+
+            if (!upgradingGrains.contains(g)) {
+                upgradingGrains.add(g);
+                // Create a schema, if not already created.
+                schemaCursor.get(g.getName());
+                schemaCursor.setState(ISchemaCursor.UPGRADING);
+                schemaCursor.update();
+                connectionPool.commit(schemaCursor.callContext().getConn());
+
+                dbAdaptor.createSchemaIfNotExists(g.getName());
+            }
+
+            success = updateGrainElement(ge, grainToDbFkInfoList, modifiedTables) && success;
+
+            if (!success) {
+                failedMap.computeIfAbsent(g, lambdaG -> new LinkedHashSet<>(Collections.singletonList(ge)))
+                        .add(ge);
+            } else {
+                notProcessedElements.get(g).remove(ge);
+
+                if (notProcessedElements.get(g).isEmpty()) {
+                    processGrainMeta(g);
+
+                    afterGrainUpdating(g);
+                    // По завершении -- обновление номера версии, контрольной суммы
+                    // и выставление в статус ready
+                    schemaCursor.setState(ISchemaCursor.READY);
+                    schemaCursor.setChecksum(String.format("%08X", g.getChecksum()));
+                    schemaCursor.setLength(g.getLength());
+                    schemaCursor.setLastmodified(new Date());
+                    schemaCursor.setMessage("");
+                    schemaCursor.setVersion(g.getVersion().toString());
+                    schemaCursor.update();
+                    connectionPool.commit(schemaCursor.callContext().getConn());
+                }
+            }
+
+        }
+
+        if (!success) {
+
+            failedMap.keySet().forEach(g -> {
+
+                String message = failedMap.get(g).stream()
+                        .map(GrainElement::getName)
+                        .collect(Collectors.joining(", "));
+
+                this.schemaCursor.get(g.getName());
+                this.schemaCursor.setState(ISchemaCursor.ERROR);
+                this.schemaCursor.setMessage(
+                        String.format(
+                                "%s/%d/%08X: failed to update elements %s",
+                                g.getVersion().toString(), g.getLength(), g.getChecksum(), message
+                        )
+                );
+                this.schemaCursor.update();
+                this.connectionPool.commit(this.schemaCursor.callContext().getConn());
+            });
+
+            throw new CelestaException(
+                    "Not all %s were updated successfully, see %s.%s table data for details.",
+                    getSchemasTableName(), sysSchemaName, getSchemaElementsTableName()
+            );
+        }
+    }
 
     void updateSysGrain(T context) {
         try {
@@ -140,7 +263,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             Grain sys = score.getGrain(score.getSysSchemaName());
             createSysObjects(conn, sys);
             insertGrainRec(sys);
-            updateGrain(sys, connectionPool);
+            this.updateGrains(Collections.singleton(sys), null, false);
         } catch (ParseException e) {
             throw new CelestaException("No '%s' grain definition found.", score.getSysSchemaName());
         }
@@ -149,6 +272,7 @@ public abstract class DbUpdater<T extends ICallContext> {
     void createSysObjects(Connection conn, Grain sys) throws ParseException {
         dbAdaptor.createSchemaIfNotExists(score.getSysSchemaName());
         dbAdaptor.createTable(conn, sys.getElement(getSchemasTableName(), Table.class));
+        dbAdaptor.createTable(conn, sys.getElement(getSchemaElementsTableName(), Table.class));
         dbAdaptor.createSysObjects(conn, score.getSysSchemaName());
     }
 
@@ -164,12 +288,23 @@ public abstract class DbUpdater<T extends ICallContext> {
         schemaCursor.insert();
     }
 
-    boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) {
+    private void insertGrainElementRec(GrainElement ge) {
+        schemaElementCursor.init();
+        schemaElementCursor.setId(ge.getName());
+        schemaElementCursor.setGrainId(ge.getGrain().getName());
+        schemaElementCursor.setType(ge.getClass().getSimpleName());
+        schemaElementCursor.setLastModified(new Date());
+        schemaElementCursor.setState(ISchemaElementCursor.UPGRADING);
+        schemaElementCursor.setMessage("");
+        schemaElementCursor.insert();
+    }
+
+    boolean needToUpgrade(Grain g, GrainInfo gi) {
         if (gi.lock)
-            return true;
+            return false;
 
         if (gi.recover)
-            return updateGrain(g, connectionPool);
+            return true;
 
         // Как соотносятся версии?
         switch (g.getVersion().compareTo(gi.version)) {
@@ -188,110 +323,89 @@ public abstract class DbUpdater<T extends ICallContext> {
                         g.getName(), g.getVersion().toString(), gi.version.toString());
             case GREATER:
                 // Версия выросла -- апгрейдим.
-                return updateGrain(g, connectionPool);
+                return true;
             case EQUALS:
                 // Версия не изменилась: апгрейдим лишь в том случае, если
                 // изменилась контрольная сумма.
-                if (gi.length != g.getLength() || gi.checksum != g.getChecksum())
-                    return updateGrain(g, connectionPool);
+                return (gi.length != g.getLength() || gi.checksum != g.getChecksum());
             default:
                 return true;
         }
     }
 
-    /**
-     * Выполняет обновление на уровне отдельной гранулы.
-     *
-     * @param g Гранула.
-     * @в случае ошибки обновления.
-     */
-    boolean updateGrain(Grain g, ConnectionPool connectionPool) {
-        // выставление в статус updating
-        schemaCursor.get(g.getName());
-        schemaCursor.setState(ISchemaCursor.UPGRADING);
-        schemaCursor.update();
-        connectionPool.commit(schemaCursor.callContext().getConn());
+    private boolean updateGrainElement(GrainElement ge, Map<Grain, List<DbFkInfo>> dbFKeysMap,
+                                       Set<Table> modifiedTablesSet) {
 
-        // теперь собственно обновление гранулы
+        Grain g = ge.getGrain();
+
+        if (this.schemaElementCursor.tryGet(ge.getName(), g.getName())) {
+            // Setting of status to UPDATING state
+            this.schemaElementCursor.setState(ISchemaElementCursor.UPGRADING);
+            this.schemaElementCursor.update();
+        } else {
+            this.insertGrainElementRec(ge);
+        }
+        this.connectionPool.commit(this.schemaCursor.callContext().getConn());
+
         try {
-            // Схему создаём, если ещё не создана.
-            dbAdaptor.createSchemaIfNotExists(g.getName());
+            final Connection conn = this.schemaCursor.callContext().getConn();
+            // TODO: We need to create separated elementUpgrader
+            if (ge instanceof SequenceElement) {
+                SequenceElement s = (SequenceElement) ge;
+                updateSequence(s);
+            } else if (ge instanceof Table) {
+                Table t = (Table) ge;
+                List<DbFkInfo> dbFKeys = dbFKeysMap.get(g);
+                boolean tableIsUpdated = updateTable(t, dbFKeys);
 
-            beforeGrainUpdating(g);
+                if (tableIsUpdated) {
+                    modifiedTablesSet.add(t);
+                }
 
-            // Удаляем все представления
-            dropAllViews(g);
-            // Удаляем все параметризованные представления
-            dropAllParameterizedViews(g);
-
-            // Выполняем удаление ненужных индексов, чтобы облегчить задачу
-            // обновления столбцов на таблицах.
-            dropOrphanedGrainIndices(g);
-
-            // Сбрасываем внешние ключи, более не включённые в метаданные
-            List<DbFkInfo> dbFKeys = dropOrphanedGrainFKeys(g);
-
-            Set<String> modifiedTablesMap = new HashSet<>();
-
-            updateSequences(g);
-
-            // Обновляем все таблицы.
-            for (Table t : g.getElements(Table.class).values())
-                if (updateTable(t, dbFKeys))
-                    modifiedTablesMap.add(t.getName());
-
-            // Обновляем все индексы.
-            updateGrainIndices(g);
-
-            // Обновляем внешние ключи
-            updateGrainFKeys(g);
-
-            // Создаём представления заново
-            createViews(g);
-
-            // Создаём параметризованные представления заново
-            createParameterizedViews(g);
-
-            // Обновляем все материализованные представления.
-            for (MaterializedView mv : g.getElements(MaterializedView.class).values()) {
-                String tableName = mv.getRefTable().getTable().getName();
-                updateMaterializedView(mv, modifiedTablesMap.contains(tableName));
+                if (t.isAutoUpdate()) {
+                    for (ForeignKey fk : t.getForeignKeys()) {
+                        updateFk(fk, dbFKeys, conn);
+                    }
+                }
+            } else if (ge instanceof Index) {
+                // TODO: Optimization is needed
+                Map<String, DbIndexInfo> dbIndices = this.dbAdaptor.getIndices(conn, g);
+                final Index index = (Index) ge;
+                updateIndex(index, dbIndices);
+            } else if (ge instanceof ParameterizedView) {
+                ParameterizedView parameterizedView = (ParameterizedView)ge;
+                this.dbAdaptor.createParameterizedView(conn, parameterizedView);
+            } else if (ge instanceof View) {
+                View view = (View)ge;
+                this.dbAdaptor.createView(conn, view);
+            } else if (ge instanceof MaterializedView) {
+                MaterializedView materializedView = (MaterializedView)ge;
+                Table table = materializedView.getRefTable().getTable();
+                updateMaterializedView(materializedView, modifiedTablesSet.contains(table));
             }
 
-            //Для всех таблиц обновляем триггеры материализованных представлений
-            for (Table t : g.getElements(Table.class).values()) {
-                final Connection conn = schemaCursor.callContext().getConn();
-                dbAdaptor.dropTableTriggersForMaterializedViews(conn, t);
-                dbAdaptor.createTableTriggersForMaterializedViews(conn, t);
-            }
+            this.schemaElementCursor.setState(ISchemaElementCursor.READY);
+            this.schemaElementCursor.setMessage("");
+            this.schemaElementCursor.setLastModified(new Date());
+            this.schemaElementCursor.update();
+            this.connectionPool.commit(this.schemaCursor.callContext().getConn());
 
-            processGrainMeta(g);
-
-            afterGrainUpdating(g);
-            // По завершении -- обновление номера версии, контрольной суммы
-            // и выставление в статус ready
-            schemaCursor.setState(ISchemaCursor.READY);
-            schemaCursor.setChecksum(String.format("%08X", g.getChecksum()));
-            schemaCursor.setLength(g.getLength());
-            schemaCursor.setLastmodified(new Date());
-            schemaCursor.setMessage("");
-            schemaCursor.setVersion(g.getVersion().toString());
-            schemaCursor.update();
-            connectionPool.commit(schemaCursor.callContext().getConn());
             return true;
-        } catch (CelestaException e) {
+        } catch (Exception e) {
             String newMsg = "";
             try {
-                schemaCursor.callContext().getConn().rollback();
+                this.schemaElementCursor.callContext().getConn().rollback();
             } catch (SQLException e1) {
                 newMsg = ", " + e1.getMessage();
             }
             // Если что-то пошло не так
-            schemaCursor.setState(ISchemaCursor.ERROR);
-            schemaCursor.setMessage(String.format("%s/%d/%08X: %s", g.getVersion().toString(), g.getLength(), g.getChecksum(),
-                    e.getMessage() + newMsg));
-            schemaCursor.update();
-            connectionPool.commit(schemaCursor.callContext().getConn());
+            this.schemaElementCursor.setState(ISchemaElementCursor.ERROR);
+            this.schemaElementCursor.setMessage(String.format(
+                    "%s/%d/%08X: %s",
+                    g.getVersion().toString(), g.getLength(), g.getChecksum(), e.getMessage() + newMsg)
+            );
+            this.schemaElementCursor.update();
+            this.connectionPool.commit(this.schemaElementCursor.callContext().getConn());
             return false;
         }
     }
@@ -320,6 +434,18 @@ public abstract class DbUpdater<T extends ICallContext> {
             dbAdaptor.createParameterizedView(conn, pv);
     }
 
+    void updateSequence(SequenceElement s) {
+        Grain g = s.getGrain();
+        Connection conn = schemaCursor.callContext().getConn();
+        if (dbAdaptor.sequenceExists(conn, g.getName(), s.getName())) {
+            DbSequenceInfo sequenceInfo = dbAdaptor.getSequenceInfo(conn, s);
+            if (sequenceInfo.reflects(s))
+                dbAdaptor.alterSequence(conn, s);
+        } else {
+            dbAdaptor.createSequence(conn, s);
+        }
+    }
+
     void updateSequences(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
 
@@ -339,6 +465,25 @@ public abstract class DbUpdater<T extends ICallContext> {
         Connection conn = schemaCursor.callContext().getConn();
         for (String viewName : dbAdaptor.getParameterizedViewList(conn, g))
             dbAdaptor.dropParameterizedView(conn, g.getName(), viewName);
+    }
+
+    void updateFk(ForeignKey fk, List<DbFkInfo> dbFKeys, Connection conn) {
+        Grain g = fk.getParentTable().getGrain();
+        Optional<DbFkInfo> dbFkInfoOpt = dbFKeys.stream()
+                .filter(dbFkInfo -> dbFkInfo.getName().equals(fk.getConstraintName()))
+                .findFirst();
+
+        if (dbFkInfoOpt.isPresent()) {
+            // FK is found in the database, update if necessary.
+            DbFkInfo dbi = dbFkInfoOpt.get();
+            if (!dbi.reflects(fk)) {
+                dbAdaptor.dropFK(conn, g.getName(), dbi.getTableName(), dbi.getName());
+                dbAdaptor.createFK(conn, fk);
+            }
+        } else {
+            // FK is not detected in the database, creation from scratch
+            dbAdaptor.createFK(conn, fk);
+        }
     }
 
     void updateGrainFKeys(Grain g) {
@@ -363,7 +508,7 @@ public abstract class DbUpdater<T extends ICallContext> {
                 }
     }
 
-    List<DbFkInfo> dropOrphanedGrainFKeys(Grain g) {
+    List<DbFkInfo> dropOrphanedGrainForeignKeysAndGetActual(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         List<DbFkInfo> dbFKeys = dbAdaptor.getFKInfo(conn, g);
         Map<String, ForeignKey> fKeys = new HashMap<>();
@@ -417,6 +562,24 @@ public abstract class DbUpdater<T extends ICallContext> {
                     }
                 }
             }
+        }
+    }
+
+    void updateIndex(Index index, Map<String, DbIndexInfo> dbIndices) {
+        final Connection conn = schemaCursor.callContext().getConn();
+
+        DbIndexInfo dBIndexInfo = dbIndices.get(index.getName());
+        if (dBIndexInfo != null) {
+            // The database contains an index with this name,
+            // it is necessary to check fields and re-create the index if necessary.
+            boolean reflects = dBIndexInfo.reflects(index);
+            if (!reflects) {
+                dbAdaptor.dropIndex(index.getGrain(), dBIndexInfo);
+                dbAdaptor.createIndex(conn, index);
+            }
+        } else {
+            // TCreating an index that did not exist before.
+            dbAdaptor.createIndex(conn, index);
         }
     }
 
@@ -495,9 +658,9 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
     void updateMaterializedView(MaterializedView mv, boolean refTableIsModified) {
-        final Connection conn = schemaCursor.callContext().getConn();
+        final Connection conn = this.schemaCursor.callContext().getConn();
 
-        boolean mViewExists = dbAdaptor.tableExists(conn, mv.getGrain().getName(), mv.getName());
+        boolean mViewExists = this.dbAdaptor.tableExists(conn, mv.getGrain().getName(), mv.getName());
 
         if (mViewExists) {
 
@@ -510,22 +673,26 @@ public abstract class DbUpdater<T extends ICallContext> {
                         .withTableName(mv.getRefTable().getTable().getName())
                         .withName(insertTriggerName);
 
-                Optional<String> insertTriggerBody = dbAdaptor.getTriggerBody(conn, query);
+                Optional<String> insertTriggerBody = this.dbAdaptor.getTriggerBody(conn, query);
                 boolean checksumIsMatched = insertTriggerBody.map(b -> b.contains(
-                        String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum()))).orElse(false);
+                        String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
+                        )).orElse(false);
                 if (checksumIsMatched) {
                     return;
                 }
             }
 
             //Удаляем materialized view
-            dbAdaptor.dropTable(conn, mv);
+            this.dbAdaptor.dropTable(conn, mv);
         }
 
         //1. Таблицы не существует в базе данных, создаём с нуля.
-        dbAdaptor.createTable(conn, mv);
+        this.dbAdaptor.createTable(conn, mv);
         //2. Проинициализировать данные материального представления
-        dbAdaptor.initDataForMaterializedView(conn, mv);
+        this.dbAdaptor.initDataForMaterializedView(conn, mv);
+
+        this.dbAdaptor.dropTableTriggerForMaterializedView(conn, mv);
+        this.dbAdaptor.createTableTriggerForMaterializedView(conn, mv);
     }
 
     private boolean updateColumns(TableElement t, final Connection conn, Set<String> dbColumns, List<DbFkInfo> dbFKeys)

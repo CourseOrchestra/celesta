@@ -40,9 +40,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.exception.CelestaParseException;
 import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
 import ru.curs.celesta.score.validator.IdentifierParser;
@@ -143,7 +145,7 @@ public abstract class AbstractScore {
 
             if (!grainNameToGrainParts.containsKey(grainName)) {
                 if (!grainPart.isDefinition()) {
-                    throw new ParseException(String.format("Grain %s has not definition", grainName));
+                    throw new CelestaParseException(String.format("Grain %s has not definition", grainName));
                 }
 
                 grainNameToGrainParts.put(grainName, new ArrayList<>());
@@ -167,7 +169,15 @@ public abstract class AbstractScore {
                 throw new ParseException(errorScript.toString());
         }
 
+
+        // References resolving
+        ReferenceResolver referenceResolver = new ReferenceResolver(this);
+        for (String grainName : grainNameToGrainParts.keySet()) {
+            Grain g = this.getGrain(grainName);
+            referenceResolver.resolveReferences(g);
+        }
     }
+
 
     void parseGrain(String grainName) throws ParseException {
         Grain g = grains.get(grainName);
@@ -197,12 +207,11 @@ public abstract class AbstractScore {
      * гранулы неизвестно, выводится исключение.
      *
      * @param name Имя гранулы.
-     * @throws ParseException Если имя гранулы неизвестно системе.
      */
-    public Grain getGrain(String name) throws ParseException {
+    public Grain getGrain(String name) {
         Grain result = grains.get(name);
         if (result == null) {
-            throw new ParseException(String.format("Unknown grain '%s'.", name));
+            throw new CelestaParseException("Unknown grain '%s'.", name);
         }
         return result;
     }
@@ -273,34 +282,31 @@ public abstract class AbstractScore {
     }
 
     private void initSystemGrain() {
-        ChecksumInputStream is = null;
-
         try {
             GrainPart grainPart = extractGrainInfo(null, true);
-            is = new ChecksumInputStream(getSysSchemaInputStream());
-            CelestaParser parser = new CelestaParser(is, "utf-8");
 
-            Grain result;
-            try {
-                result = parser.parseGrainPart(grainPart);
-            } catch (ParseException e) {
-                throw new CelestaException(e.getMessage());
+            try (InputStream is = getSysSchemaInputStream();
+                 ChecksumInputStream cis = new ChecksumInputStream(is))
+            {
+                CelestaParser parser = new CelestaParser(cis, "utf-8");
+
+                Grain result;
+                try {
+                    result = parser.parseGrainPart(grainPart);
+                } catch (ParseException e) {
+                    throw new CelestaException(e.getMessage());
+                }
+                result.setChecksum(cis.getCRC32());
+                result.setLength(cis.getCount());
+                result.finalizeParsing();
+
+                // References resolving
+                ReferenceResolver referenceResolver = new ReferenceResolver(this);
+                referenceResolver.resolveReferences(result);
             }
-            result.setChecksum(is.getCRC32());
-            result.setLength(is.getCount());
-            result.finalizeParsing();
         } catch (Exception e) {
             throw new CelestaException(e);
-        } finally {
-            try {
-                if (is != null)
-                    is.close();
-            } catch (IOException e) {
-                // This should never happen, however.
-                is = null;
-            }
         }
-
     }
 
     private InputStream getSysSchemaInputStream() {

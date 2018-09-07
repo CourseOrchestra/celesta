@@ -1,8 +1,8 @@
 /*
-   (с) 2013 ООО "КУРС-ИТ"  
+   (с) 2013 ООО "КУРС-ИТ"
 
    Этот файл — часть КУРС:Celesta.
-   
+
    КУРС:Celesta — свободная программа: вы можете перераспространять ее и/или изменять
    ее на условиях Стандартной общественной лицензии GNU в том виде, в каком
    она была опубликована Фондом свободного программного обеспечения; либо
@@ -16,7 +16,7 @@
    Вы должны были получить копию Стандартной общественной лицензии GNU
    вместе с этой программой. Если это не так, см. http://www.gnu.org/licenses/.
 
-   
+
    Copyright 2013, COURSE-IT Ltd.
 
    This program is free software: you can redistribute it and/or modify
@@ -34,13 +34,13 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.14';
+create grain celesta version '2.0';
 
 /**Active grains list.
    {implements: [ru.curs.celesta.syscursors.ISchemaCursor]}*/
 create table grains(
   /**grain prefix (id)*/
-  id varchar(30) not null primary key, 
+  id varchar(30) not null primary key,
   /**grain version tag*/
   version varchar(2000) not null,
   /**grain creation script length in bytes*/
@@ -48,13 +48,32 @@ create table grains(
   /**grain creation script CRC32 value*/
   checksum varchar(8) not null,
   /**grain status
-   {option: [ready, upgrading, error, recover, lock]}*/  
+   {option: [ready, upgrading, error, recover, lock]}*/
   state int not null default 3,
   /**date and time of last grain status update*/
-  lastmodified datetime not null default getdate(), 
+  lastmodified datetime not null default getdate(),
   /**comment (e. g. error message for the last failed auto-update)*/
-  message text not null default '' 
+  message text not null default ''
 ) with no version check;
+
+/**Active grains list.
+   {implements: [ru.curs.celesta.syscursors.ISchemaElementCursor]}*/
+create table grainElements(
+  /**grain prefix (id)*/
+  id varchar(30) not null ,
+  grainId varchar(30) not null,
+  type varchar(30) not null,
+  /**grain status
+   {option: [ready, upgrading, error]}*/
+  state int not null,
+  /**date and time of last grain status update*/
+  lastModified datetime not null default getdate(),
+  /**comment (e. g. error message for the last failed auto-update)*/
+  message text not null default '',
+  constraint pk_grainElements primary key (id, grainId),
+  constraint fk_grainElements_grains foreign key (grainId) references grains(id)
+) with no version check;
+
 
 /**Tables and views list.*/
 create table tables(
@@ -104,7 +123,7 @@ create table permissions(
   m bit not null default 'FALSE',
   /**can delete*/
   d bit not null default 'FALSE',
-  constraint pk_permissions primary key (roleid, grainid, tablename), 
+  constraint pk_permissions primary key (roleid, grainid, tablename),
   constraint fk_permissions_roles foreign key(roleid) references roles(id) on update cascade,
   constraint fk_permissions_tables foreign key(grainid, tablename) references tables(grainid, tablename)
 );
@@ -148,9 +167,9 @@ create table log(
   /**primary key field 3 value*/
   pkvalue3 varchar(100),
   /**old values in csv format*/
-  oldvalues varchar(2000), 
+  oldvalues varchar(2000),
   /**new values in csv format*/
-  newvalues varchar(2000), 
+  newvalues varchar(2000),
   constraint fk_log_tables foreign key(grainid, tablename) references tables(grainid, tablename)
 ) with no version check;
 

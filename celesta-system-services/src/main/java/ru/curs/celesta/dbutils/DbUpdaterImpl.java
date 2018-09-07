@@ -1,12 +1,11 @@
 package ru.curs.celesta.dbutils;
 
+import java.sql.Connection;
+
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.*;
-import ru.curs.celesta.syscursors.GrainsCursor;
-import ru.curs.celesta.syscursors.RolesCursor;
-import ru.curs.celesta.syscursors.TablesCursor;
-import ru.curs.celesta.syscursors.UserrolesCursor;
+import ru.curs.celesta.syscursors.*;
 
 import java.sql.Connection;
 
@@ -29,30 +28,34 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
     }
 
 
-    @Override
-    protected void initDataAccessors(CallContext context) {
-        schemaCursor = new GrainsCursor(context);
-        table = new TablesCursor(context);
-    }
+  @Override
+  protected void initDataAccessors(CallContext context) {
+    this.schemaCursor = new GrainsCursor(context);
+    this.schemaElementCursor = new GrainElementsCursor(context);
+    this.table = new TablesCursor(context);
+  }
 
     @Override
     protected String getSchemasTableName() {
         return GrainsCursor.TABLE_NAME;
     }
 
-    @Override
+  @Override
+  protected String getSchemaElementsTableName() {
+    return GrainElementsCursor.TABLE_NAME;
+  }
+
+  @Override
     protected CallContext createContext() {
         return new SystemCallContext(celesta);
     }
 
-    public void updateSysGrain() {
-        try (CallContext context = createContext()) {
-            schemaCursor = new GrainsCursor(context);
-            table = new TablesCursor(context);
-
-            updateSysGrain(context);
-        }
+  public void updateSysGrain() {
+    try (CallContext context = createContext()) {
+      this.initDataAccessors(context);
+      updateSysGrain(context);
     }
+  }
 
 
     @Override

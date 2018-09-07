@@ -170,7 +170,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                                 try {
                                     c.getParentTable().getGrain().getElement(sequenceName, SequenceElement.class);
                                     result.setDefaultValue("NEXTVAL(" + sequenceName + ")");
-                                } catch (ParseException e) {
+                                } catch (CelestaException e) {
                                     result.setIdentity(true);
                                 }
                             } else {

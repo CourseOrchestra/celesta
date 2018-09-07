@@ -2,6 +2,7 @@ package ru.curs.celesta.score.discovery;
 
 
 import org.junit.jupiter.api.Test;
+import ru.curs.celesta.exception.CelestaParseException;
 import ru.curs.celesta.score.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,7 +30,7 @@ public class DefaultScoreDiscoveryTest {
     @Test
     void testParseExceptionOccursWithoutSchemaDefinition() {
         assertThrows(
-                ParseException.class,
+                CelestaParseException.class,
                 () -> ScoreUtil.createCelestaSqlTestScore(
                         this.getClass(),
                         "no_schema_definition"

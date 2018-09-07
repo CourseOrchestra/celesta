@@ -3,8 +3,8 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
+import ru.curs.celesta.exception.CelestaParseException;
 import ru.curs.celesta.score.MaterializedView;
-import ru.curs.celesta.score.ParseException;
 
 
 import java.util.List;
@@ -54,7 +54,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
       try {
         meta = callContext().getScore()
             .getGrain(_grainName()).getElement(_objectName(), MaterializedView.class);
-      } catch (ParseException e) {
+      } catch (CelestaParseException e) {
         throw new CelestaException(e.getMessage());
       }
     return meta;

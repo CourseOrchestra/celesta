@@ -1,5 +1,8 @@
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.exception.CelestaParseException;
+
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -8,7 +11,6 @@ import java.util.Map;
 
 /**
  * Класс внешнего ключа.
- *
  */
 public final class ForeignKey {
 
@@ -28,6 +30,7 @@ public final class ForeignKey {
     };
 
     private final List<Column> referencedColumns = new LinkedList<>();
+    private final List<String> referencedColumnNames = new LinkedList<>();
 
     ForeignKey(Table parentTable) {
         if (parentTable == null)
@@ -36,7 +39,7 @@ public final class ForeignKey {
     }
 
     public ForeignKey(Table parentTable, Table referencedTable,
-            String[] columnNames) throws ParseException {
+                      String[] columnNames) throws ParseException {
         this(parentTable);
         for (String n : columnNames)
             addColumn(n);
@@ -47,10 +50,8 @@ public final class ForeignKey {
     /**
      * Устанавливает правило на удаление.
      *
-     * @param deleteBehaviour
-     *            Правило на удаление.
-     * @throws ParseException
-     *             При попытке модификации системной гранулы.
+     * @param deleteBehaviour Правило на удаление.
+     * @throws ParseException При попытке модификации системной гранулы.
      */
     public void setDeleteRule(FKRule deleteBehaviour) throws ParseException {
         if (deleteBehaviour == null)
@@ -64,10 +65,8 @@ public final class ForeignKey {
     /**
      * Устанавливает правило на обновление.
      *
-     * @param updateBehaviour
-     *            Правило на обновление.
-     * @throws ParseException
-     *             При попытке модификации системной гранулы.
+     * @param updateBehaviour Правило на обновление.
+     * @throws ParseException При попытке модификации системной гранулы.
      */
     public void setUpdateRule(FKRule updateBehaviour) throws ParseException {
         if (updateBehaviour == null)
@@ -125,10 +124,8 @@ public final class ForeignKey {
     /**
      * Добавляет колонку. Колонка должна принадлежать родительской таблице.
      *
-     * @param columnName
-     *            имя колонки.
-     * @throws ParseException
-     *             в случае, если колонка не найдена.
+     * @param columnName имя колонки.
+     * @throws ParseException в случае, если колонка не найдена.
      */
     void addColumn(String columnName) throws ParseException {
         columnName = getParentTable().getGrain().getScore().getIdentifierParser().parse(columnName);
@@ -145,62 +142,63 @@ public final class ForeignKey {
      * Добавляет таблицу, на которую имеется ссылка и финализирует создание
      * первичного ключа, добавляя его к родительской таблице.
      *
-     * @param grain
-     *            Имя гранулы
-     * @param table
-     *            Имя таблицы
-     * @throws ParseException
-     *             В случае, если ключ с таким набором полей (хотя не
-     *             обязательно ссылающийся на ту же таблицу) уже есть в таблице.
+     * @param grainName Имя гранулы
+     * @param table     Имя таблицы
+     * @throws ParseException В случае, если ключ с таким набором полей (хотя не
+     *                        обязательно ссылающийся на ту же таблицу) уже есть в таблице.
      */
-    void setReferencedTable(String grain, String table) throws ParseException {
+    void setReferencedTable(String grainName, String table) throws ParseException {
         table = getParentTable().getGrain().getScore().getIdentifierParser().parse(table);
         // Извлечение гранулы по имени.
-        Grain gm;
-        if ("".equals(grain) || parentTable.getGrain().getName().equals(grain)) {
-            gm = parentTable.getGrain();
+        final Grain grain;
+        if ("".equals(grainName) || parentTable.getGrain().getName().equals(grainName)) {
+            grain = parentTable.getGrain();
+            grainName = parentTable.getGrain().getName();
         } else {
             AbstractScore score = parentTable.getGrain().getScore();
-            gm = score.getGrain(grain);
-
-            if (gm.isModified()) //TODO:Костыль, используем как флаг того, что гранула начала парситься - must be removed
-                score.parseGrain(grain);
-
-
-            if (!gm.isParsingComplete())
-                throw new ParseException(
-                        String.format(
-                                "Error creating foreign key '%s'-->'%s.%s': "
-                                        + "due to previous parsing errors or "
-                                        + "cycle reference involving grains '%s' and '%s'.",
-                                parentTable.getName(), grain, table,
-                                parentTable.getGrain().getName(), grain));
+            grain = score.getGrains().get(grainName);
         }
 
+        //We always resolve FK references on second step of the parsing
+        GrainElementReference reference = new GrainElementReference(
+                grainName, table, Table.class, this::resolveReference
+        );
+        this.parentTable.addReference(reference);
+
+        // Добавление ключа к родительской таблице (с проверкой того факта, что
+        // ключа с таким же набором полей не существует).
+        this.parentTable.addFK(this);
+    }
+
+    private void resolveReference(GrainElementReference reference) {
         // Извлечение таблицы по имени.
-        Table t = gm.getElement(table, Table.class);
-        if (t == null)
-            throw new ParseException(
-                    String.format(
-                            "Error while creating FK for table '%s': no table '%s' defined in grain '%s'.",
-                            parentTable.getName(), table, grain));
-        referencedTable = t;
+        Grain grain = getParentTable().getGrain().getScore().getGrains().get(reference.getGrainName());
+        String table = reference.getName();
+
+        final Table t;
+
+        try {
+            t = grain.getElement(table, Table.class);
+        } catch (CelestaException e) {
+            throw new CelestaParseException(e);
+        }
+        this.referencedTable = t;
 
         // Проверка того факта, что поля ключа совпадают по типу
         // с полями первичного ключа таблицы, на которую ссылка
-
-        Map<String, Column> refpk = referencedTable.getPrimaryKey();
-        if (columns.size() != refpk.size())
-            throw new ParseException(
+        Map<String, Column> refpk = this.referencedTable.getPrimaryKey();
+        if (columns.size() != refpk.size()) {
+            throw new CelestaParseException(
                     String.format(
                             "Error creating foreign key for table %s: it has different size with PK of table '%s'",
                             parentTable.getName(), referencedTable.getName()));
+        }
         Iterator<Column> i = referencedTable.getPrimaryKey().values()
                 .iterator();
         for (Column c : columns) {
             Column c2 = i.next();
             if (c.getClass() != c2.getClass())
-                throw new ParseException(
+                throw new CelestaParseException(
                         String.format(
                                 "Error creating foreign key for table %s: its field "
                                         + "types do not coincide with field types of PK of table '%s'",
@@ -209,7 +207,7 @@ public final class ForeignKey {
             if (c2 instanceof StringColumn) {
                 if (((StringColumn) c2).getLength() != ((StringColumn) c)
                         .getLength()) {
-                    throw new ParseException(
+                    throw new CelestaParseException(
                             String.format(
                                     "Error creating foreign key for table %s: its string "
                                             + "field length do not coincide with field length of PK of table '%s'",
@@ -219,10 +217,9 @@ public final class ForeignKey {
             }
         }
 
-        // Добавление ключа к родительской таблице (с проверкой того факта, что
-        // ключа с таким же набором полей не существует).
-        parentTable.addFK(this);
-
+        this.getReferenceColumnNames().forEach(this::resolveReferencedColumn);
+        this.finalizeReferenceResolving();
+        this.getReferencedTable().getReferenced().add(this.getParentTable());
     }
 
     @Override
@@ -262,20 +259,28 @@ public final class ForeignKey {
      * отсутствия поддержки UNIQUE-комбинаций). Механизм необходим для контроля
      * ссылочной корректности текста.
      *
-     * @param columnName
-     *            имя колонки
-     * @throws ParseException
-     *             Если колонка не содержится в таблице, на которую ссылаются.
+     * @param columnName имя колонки
+     * @throws ParseException Если колонка не содержится в таблице, на которую ссылаются.
      */
-    void addReferencedColumn(String columnName) throws ParseException {
+    void addReferencedColumn(String columnName) {
+        referencedColumnNames.add(columnName);
+    }
+
+    private void resolveReferencedColumn(String columnName) {
         // Запускать этот метод можно только после простановки таблицы, на
         // которую ссылаемся.
-        if (referencedTable == null)
+        if (referencedTable == null) {
             throw new IllegalStateException();
-        columnName = getParentTable().getGrain().getScore().getIdentifierParser().parse(columnName);
+        }
+
+        try {
+            columnName = getParentTable().getGrain().getScore().getIdentifierParser().parse(columnName);
+        } catch (ParseException e) {
+            throw new CelestaParseException(e);
+        }
         Column c = referencedTable.getColumns().get(columnName);
         if (c == null)
-            throw new ParseException(
+            throw new CelestaParseException(
                     String.format(
                             "Error creating foreign key for table '%s': column '%s' is not defined in table '%s'",
                             parentTable.getName(), columnName,
@@ -283,8 +288,8 @@ public final class ForeignKey {
 
                     ));
         referencedColumns.add(c);
-
     }
+
 
     /**
      * Финализирует перечень полей, на который ссылается FK. Для удобства
@@ -292,19 +297,17 @@ public final class ForeignKey {
      * за финализацией, он нигде не хранится и нигде не доступен. Его
      * единственная роль -- проверять правильность текста.
      *
-     * @throws ParseException
-     *             Если перечень полей не совпадает с перечнем полей первичного
-     *             ключа.
+     * @throws ParseException Если перечень полей не совпадает с перечнем полей первичного
+     *                        ключа.
      */
-    void finalizeReference() throws ParseException {
-
+    private void finalizeReferenceResolving() {
         if (referencedTable == null)
             throw new IllegalStateException();
         Map<String, Column> pk = referencedTable.getPrimaryKey();
         int size = referencedColumns.size();
         if (pk.size() != size) {
             referencedColumns.clear();
-            throw new ParseException(String.format(
+            throw new CelestaParseException(String.format(
                     "Error creating foreign key for table '%s': primary key "
                             + "length in table '%s' is %d, but the number of "
                             + "reference fields is %d.", parentTable.getName(),
@@ -315,7 +318,7 @@ public final class ForeignKey {
             Column c2 = i.next();
             if (!c.getName().equals(c2.getName())) {
                 referencedColumns.clear();
-                throw new ParseException(String.format(
+                throw new CelestaParseException(String.format(
                         "Error creating foreign key for table '%s': expected primary key "
                                 + "field '%s'.'%s', but was '%s'.",
                         parentTable.getName(), referencedTable.getName(),
@@ -323,6 +326,10 @@ public final class ForeignKey {
             }
         }
         referencedColumns.clear();
+    }
+
+    List<String> getReferenceColumnNames() {
+        return this.referencedColumnNames;
     }
 
     /**
@@ -345,10 +352,8 @@ public final class ForeignKey {
     /**
      * Устанавливает имя ограничения FK.
      *
-     * @param constraintName
-     *            новое имя ограничения.
-     * @throws ParseException
-     *             неверное имя ограничения.
+     * @param constraintName новое имя ограничения.
+     * @throws ParseException неверное имя ограничения.
      */
     public void setConstraintName(String constraintName) throws ParseException {
         if (constraintName != null)
@@ -359,8 +364,7 @@ public final class ForeignKey {
     /**
      * Удаляет внешний ключ.
      *
-     * @throws ParseException
-     *             при попытке изменить системную гранулу.
+     * @throws ParseException при попытке изменить системную гранулу.
      */
     public void delete() throws ParseException {
         parentTable.removeFK(this);
@@ -397,26 +401,26 @@ public final class ForeignKey {
         }
         bw.write(")");
         switch (updateRule) {
-        case CASCADE:
-            bw.write(" ON UPDATE CASCADE");
-            break;
-        case SET_NULL:
-            bw.write(" ON UPDATE SET NULL");
-            break;
-        case NO_ACTION:
-        default:
-            break;
+            case CASCADE:
+                bw.write(" ON UPDATE CASCADE");
+                break;
+            case SET_NULL:
+                bw.write(" ON UPDATE SET NULL");
+                break;
+            case NO_ACTION:
+            default:
+                break;
         }
         switch (deleteRule) {
-        case CASCADE:
-            bw.write(" ON DELETE CASCADE");
-            break;
-        case SET_NULL:
-            bw.write(" ON DELETE SET NULL");
-            break;
-        case NO_ACTION:
-        default:
-            break;
+            case CASCADE:
+                bw.write(" ON DELETE CASCADE");
+                break;
+            case SET_NULL:
+                bw.write(" ON DELETE SET NULL");
+                break;
+            case NO_ACTION:
+            default:
+                break;
         }
 
         bw.println(";");

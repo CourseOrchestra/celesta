@@ -719,42 +719,35 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
+    public List<String> dropTableTriggerForMaterializedView(Connection conn, MaterializedView mv) {
         List<String> result = new ArrayList<>();
+        Table t = mv.getRefTable().getTable();
 
-        List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-                .filter(mv -> mv.getRefTable().getTable().equals(t))
-                .collect(Collectors.toList());
+        TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
+                .withTableName(t.getName());
 
-        for (MaterializedView mv : mvList) {
-            TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
-                    .withTableName(t.getName());
+        String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+        String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+        String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
-            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-            String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
-            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
-
-            query.withName(insertTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-            query.withName(updateTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-            query.withName(deleteTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-        }
+        query.withName(insertTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
+        query.withName(updateTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
+        query.withName(deleteTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
 
         return result;
     }
 
-    @Override
-    public List<String> createTableTriggersForMaterializedViews(Table t) {
-        List<String> result = new ArrayList<>();
 
-        List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-                .filter(mv -> mv.getRefTable().getTable().equals(t))
-                .collect(Collectors.toList());
+    @Override
+    public List<String> createTableTriggerForMaterializedView(Connection conn, MaterializedView mv) {
+        List<String> result = new ArrayList<>();
+        Table t = mv.getRefTable().getTable();
 
         String fullTableName = tableString(t.getGrain().getName(), t.getName());
 
@@ -762,161 +755,159 @@ public class OraDdlGenerator extends DdlGenerator {
                 .withSchema(t.getGrain().getName())
                 .withTableName(t.getName());
 
-        for (MaterializedView mv : mvList) {
-            String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
+        String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
 
-            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-            String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
-            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
+        String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+        String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+        String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
-            String lockTable = String.format("LOCK TABLE %s IN EXCLUSIVE MODE;\n", fullMvName);
+        String lockTable = String.format("LOCK TABLE %s IN EXCLUSIVE MODE;\n", fullMvName);
 
-            String mvColumns = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .map(alias -> "\"" + alias + "\"")
-                    .collect(Collectors.joining(", "));
+        String mvColumns = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> "\"" + alias + "\"")
+                .collect(Collectors.joining(", "));
 
-            String selectFromRowTemplate = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .map(alias -> {
-                        Column colRef = mv.getColumnRef(alias);
+        String selectFromRowTemplate = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> {
+                    Column colRef = mv.getColumnRef(alias);
 
-                        if (colRef == null) {
-                            Map<String, Expr> aggrCols = mv.getAggregateColumns();
-                            if (aggrCols.containsKey(alias) && aggrCols.get(alias) instanceof Count) {
-                                return "1 as \"" + alias + "\"";
-                            }
-                            return "";
+                    if (colRef == null) {
+                        Map<String, Expr> aggrCols = mv.getAggregateColumns();
+                        if (aggrCols.containsKey(alias) && aggrCols.get(alias) instanceof Count) {
+                            return "1 as \"" + alias + "\"";
                         }
+                        return "";
+                    }
 
-                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
-                            return "TRUNC(%1$s.\"" + mv.getColumnRef(alias).getName() + "\", 'DD') as \"" + alias + "\"";
-                        }
+                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+                        return "TRUNC(%1$s.\"" + mv.getColumnRef(alias).getName() + "\", 'DD') as \"" + alias + "\"";
+                    }
 
-                        return "%1$s.\"" + mv.getColumnRef(alias).getName() + "\" as \"" + alias + "\"";
-                    })
-                    .filter(str -> !str.isEmpty())
-                    .collect(Collectors.joining(", "));
-
-
-            String rowColumnsTemplate = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .map(alias -> "%1$s.\"" + alias + "\"")
-                    .collect(Collectors.joining(", "));
-
-            String rowConditionTemplate = mv.getColumns().keySet().stream()
-                    .filter(alias -> mv.isGroupByColumn(alias))
-                    .map(alias -> "mv.\"" + alias + "\" = %1$s.\"" + alias + "\"")
-                    .collect(Collectors.joining(" AND "));
-
-            String rowConditionTemplateForDelete = mv.getColumns().keySet().stream()
-                    .filter(alias -> mv.isGroupByColumn(alias))
-                    .map(alias -> {
-                        Column colRef = mv.getColumnRef(alias);
-
-                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
-                            return "mv.\"" + alias + "\" = TRUNC(%1$s.\"" + mv.getColumnRef(alias).getName() + "\", 'DD')";
-                        }
-
-                        return "mv.\"" + alias + "\" = %1$s.\"" + mv.getColumnRef(alias).getName() + "\"";
-                    })
-                    .collect(Collectors.joining(" AND "));
-
-            String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
-                    .map(e -> {
-                        StringBuilder sb = new StringBuilder();
-                        String alias = e.getKey();
-
-                        sb.append("mv.\"").append(alias)
-                                .append("\" = mv.\"").append(alias)
-                                .append("\" %1$s ");
-
-                        if (e.getValue() instanceof Sum) {
-                            sb.append("%2$s.\"").append(alias).append("\"");
-                        } else if (e.getValue() instanceof Count) {
-                            sb.append("1");
-                        }
-
-                        return sb.toString();
-                    }).collect(Collectors.joining(", "))
-                    .concat(", mv.\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
-                    .concat("mv.\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" %1$s 1");
+                    return "%1$s.\"" + mv.getColumnRef(alias).getName() + "\" as \"" + alias + "\"";
+                })
+                .filter(str -> !str.isEmpty())
+                .collect(Collectors.joining(", "));
 
 
-            String setStatementTemplateForDelete = mv.getAggregateColumns().entrySet().stream()
-                    .map(e -> {
-                        StringBuilder sb = new StringBuilder();
-                        String alias = e.getKey();
+        String rowColumnsTemplate = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> "%1$s.\"" + alias + "\"")
+                .collect(Collectors.joining(", "));
 
-                        sb.append("mv.\"").append(alias)
-                                .append("\" = mv.\"").append(alias)
-                                .append("\" %1$s ");
+        String rowConditionTemplate = mv.getColumns().keySet().stream()
+                .filter(alias -> mv.isGroupByColumn(alias))
+                .map(alias -> "mv.\"" + alias + "\" = %1$s.\"" + alias + "\"")
+                .collect(Collectors.joining(" AND "));
 
-                        if (e.getValue() instanceof Sum) {
-                            sb.append("%2$s.\"").append(mv.getColumnRef(alias).getName()).append("\"");
-                        } else if (e.getValue() instanceof Count) {
-                            sb.append("1");
-                        }
+        String rowConditionTemplateForDelete = mv.getColumns().keySet().stream()
+                .filter(alias -> mv.isGroupByColumn(alias))
+                .map(alias -> {
+                    Column colRef = mv.getColumnRef(alias);
 
-                        return sb.toString();
-                    }).collect(Collectors.joining(", "))
-                    .concat(", mv.\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
-                    .concat("mv.\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" %1$s 1");
+                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+                        return "mv.\"" + alias + "\" = TRUNC(%1$s.\"" + mv.getColumnRef(alias).getName() + "\", 'DD')";
+                    }
+
+                    return "mv.\"" + alias + "\" = %1$s.\"" + mv.getColumnRef(alias).getName() + "\"";
+                })
+                .collect(Collectors.joining(" AND "));
+
+        String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
+                .map(e -> {
+                    StringBuilder sb = new StringBuilder();
+                    String alias = e.getKey();
+
+                    sb.append("mv.\"").append(alias)
+                            .append("\" = mv.\"").append(alias)
+                            .append("\" %1$s ");
+
+                    if (e.getValue() instanceof Sum) {
+                        sb.append("%2$s.\"").append(alias).append("\"");
+                    } else if (e.getValue() instanceof Count) {
+                        sb.append("1");
+                    }
+
+                    return sb.toString();
+                }).collect(Collectors.joining(", "))
+                .concat(", mv.\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
+                .concat("mv.\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" %1$s 1");
 
 
-            StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s mv \n")
-                    .append("USING (SELECT %s FROM dual) \"inserted\" ON (%s) \n")
-                    .append("WHEN MATCHED THEN \n ")
-                    .append("UPDATE SET %s \n")
-                    .append("WHEN NOT MATCHED THEN \n")
-                    .append("INSERT (%s) VALUES (%s); \n");
+        String setStatementTemplateForDelete = mv.getAggregateColumns().entrySet().stream()
+                .map(e -> {
+                    StringBuilder sb = new StringBuilder();
+                    String alias = e.getKey();
 
-            String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
-                    String.format(selectFromRowTemplate, ":new"), String.format(rowConditionTemplate, "\"inserted\""),
-                    String.format(setStatementTemplate, "+", "\"inserted\""),
-                    mvColumns + ", \"" + MaterializedView.SURROGATE_COUNT + "\"",
-                    String.format(rowColumnsTemplate, "\"inserted\"") + ", 1");
+                    sb.append("mv.\"").append(alias)
+                            .append("\" = mv.\"").append(alias)
+                            .append("\" %1$s ");
 
-            String delStatement = String.format("mv.\"%s\" = 0", MaterializedView.SURROGATE_COUNT);
+                    if (e.getValue() instanceof Sum) {
+                        sb.append("%2$s.\"").append(mv.getColumnRef(alias).getName()).append("\"");
+                    } else if (e.getValue() instanceof Count) {
+                        sb.append("1");
+                    }
 
-            StringBuilder deleteSqlBuilder = new StringBuilder(String.format("UPDATE %s mv \n", fullMvName))
-                    .append("SET ").append(String.format(setStatementTemplateForDelete, "-", ":old")).append(" ")
-                    .append("WHERE ").append(String.format(rowConditionTemplateForDelete, ":old")).append(";\n")
-                    .append(String.format("DELETE FROM %s mv ", fullMvName))
-                    .append("WHERE ").append(delStatement).append(";\n");
+                    return sb.toString();
+                }).collect(Collectors.joining(", "))
+                .concat(", mv.\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
+                .concat("mv.\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" %1$s 1");
 
 
-            String sql;
+        StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s mv \n")
+                .append("USING (SELECT %s FROM dual) \"inserted\" ON (%s) \n")
+                .append("WHEN MATCHED THEN \n ")
+                .append("UPDATE SET %s \n")
+                .append("WHEN NOT MATCHED THEN \n")
+                .append("INSERT (%s) VALUES (%s); \n");
 
-            //INSERT
-            sql = String.format("create or replace trigger \"%s\" after insert " +
-                            "on %s for each row\n"
-                            + "begin \n" + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
-                            + "\n %s \n %s \n END;",
-                    insertTriggerName, fullTableName, mv.getChecksum(), lockTable, insertSql);
-            //System.out.println(sql);
-            result.add(sql);
-            this.rememberTrigger(query.withName(insertTriggerName));
+        String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
+                String.format(selectFromRowTemplate, ":new"), String.format(rowConditionTemplate, "\"inserted\""),
+                String.format(setStatementTemplate, "+", "\"inserted\""),
+                mvColumns + ", \"" + MaterializedView.SURROGATE_COUNT + "\"",
+                String.format(rowColumnsTemplate, "\"inserted\"") + ", 1");
 
-            //UPDATE
-            sql = String.format("create or replace trigger \"%s\" after update " +
-                            "on %s for each row\n"
-                            + "begin %s \n %s\n %s\n END;",
-                    updateTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString(), insertSql);
+        String delStatement = String.format("mv.\"%s\" = 0", MaterializedView.SURROGATE_COUNT);
 
-            //System.out.println(sql);
-            result.add(sql);
-            this.rememberTrigger(query.withName(updateTriggerName));
+        StringBuilder deleteSqlBuilder = new StringBuilder(String.format("UPDATE %s mv \n", fullMvName))
+                .append("SET ").append(String.format(setStatementTemplateForDelete, "-", ":old")).append(" ")
+                .append("WHERE ").append(String.format(rowConditionTemplateForDelete, ":old")).append(";\n")
+                .append(String.format("DELETE FROM %s mv ", fullMvName))
+                .append("WHERE ").append(delStatement).append(";\n");
 
-            //DELETE
-            sql = String.format("create or replace trigger \"%s\" after delete " +
-                            "on %s for each row\n "
-                            + " begin %s \n %s\n END;",
-                    deleteTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString());
 
-            result.add(sql);
-            this.rememberTrigger(query.withName(deleteTriggerName));
-        }
+        String sql;
+
+        //INSERT
+        sql = String.format("create or replace trigger \"%s\" after insert " +
+                        "on %s for each row\n"
+                        + "begin \n" + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
+                        + "\n %s \n %s \n END;",
+                insertTriggerName, fullTableName, mv.getChecksum(), lockTable, insertSql);
+        //System.out.println(sql);
+        result.add(sql);
+        this.rememberTrigger(query.withName(insertTriggerName));
+
+        //UPDATE
+        sql = String.format("create or replace trigger \"%s\" after update " +
+                        "on %s for each row\n"
+                        + "begin %s \n %s\n %s\n END;",
+                updateTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString(), insertSql);
+
+        //System.out.println(sql);
+        result.add(sql);
+        this.rememberTrigger(query.withName(updateTriggerName));
+
+        //DELETE
+        sql = String.format("create or replace trigger \"%s\" after delete " +
+                        "on %s for each row\n "
+                        + " begin %s \n %s\n END;",
+                deleteTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString());
+
+        result.add(sql);
+        this.rememberTrigger(query.withName(deleteTriggerName));
 
         return result;
     }

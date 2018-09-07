@@ -20,6 +20,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.exception.CelestaParseException;
 import ru.curs.celesta.score.*;
 
 /**
@@ -166,7 +167,7 @@ public final class DBSchema2Celesta {
                 bw.println("--");
             }
 
-        } catch (IOException | ParseException e) {
+        } catch (IOException | CelestaParseException e) {
             throw new CelestaException("Cannot save '%s': %s", docFile.getName(), e.getMessage());
         }
 

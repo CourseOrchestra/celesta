@@ -3,9 +3,9 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.query.FromClause;
+import ru.curs.celesta.exception.CelestaParseException;
 import ru.curs.celesta.score.DataGrainElement;
 import ru.curs.celesta.score.ParameterizedView;
-import ru.curs.celesta.score.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,7 +46,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
       try {
         meta = callContext().getScore()
             .getGrain(_grainName()).getElement(_objectName(), ParameterizedView.class);
-      } catch (ParseException e) {
+      } catch (CelestaParseException e) {
         throw new CelestaException(e.getMessage());
       }
     return meta;

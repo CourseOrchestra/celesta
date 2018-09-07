@@ -7,6 +7,7 @@ import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
+
 import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 
 

@@ -10,6 +10,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 
@@ -65,7 +67,7 @@ public class ParserTest extends AbstractParsingTest {
   }
 
   @Test
-  public void test1() throws Exception {
+  void test1() throws Exception {
     File f = ResourceUtil.getResourceAsFile(
             ParserTest.class,
             "test.sql"
@@ -238,10 +240,10 @@ public class ParserTest extends AbstractParsingTest {
   }
 
   @Test
-  public void test2() throws Exception {
+  void test2() throws Exception {
     File f = ResourceUtil.getResourceAsFile(
             ParserTest.class,
-            "test2.sql"
+              "test2.sql"
     );
     Grain g = parse(f);
     assertEquals("test2", g.getName());
@@ -258,7 +260,8 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals("a", fk.getParentTable().getName());
     assertEquals(1, fk.getColumns().size());
     assertEquals("kk", fk.getColumns().get("kk").getName());
-    assertEquals("d", fk.getReferencedTable().getName());
+    // At the first step of parsing referenced tables are not resolved
+    assertNull(fk.getReferencedTable());
     assertSame(FKRule.NO_ACTION, fk.getDeleteRule());
     assertSame(FKRule.SET_NULL, fk.getUpdateRule());
 
@@ -266,7 +269,7 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals("a", fk.getParentTable().getName());
     assertEquals(1, fk.getColumns().size());
     assertEquals("d", fk.getColumns().get("d").getName());
-    assertEquals("c", fk.getReferencedTable().getName());
+    assertNull(fk.getReferencedTable());
     assertSame(FKRule.NO_ACTION, fk.getDeleteRule());
     assertSame(FKRule.NO_ACTION, fk.getUpdateRule());
 
@@ -278,13 +281,33 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals(2, fk.getColumns().size());
     assertEquals("b", fk.getColumns().get("b").getName());
     assertEquals("a", fk.getColumns().get("a").getName());
-    assertEquals("a", fk.getReferencedTable().getName());
+    assertNull(fk.getReferencedTable());
     assertSame(FKRule.CASCADE, fk.getDeleteRule());
     assertSame(FKRule.CASCADE, fk.getUpdateRule());
+
+    // Referenced tables resolves after second step of parsing
+    g.getElements(Table.class).values().forEach(Table::resolveReferences);
+
+    i = a.getForeignKeys().iterator();
+    fk = i.next();
+    assertSame(d, fk.getReferencedTable());
+    Table c = g.getElement("c", Table.class);
+    fk = i.next();
+    assertSame(c, fk.getReferencedTable());
+
+    i = b.getForeignKeys().iterator();
+    fk = i.next();
+    assertSame(a, fk.getReferencedTable());
   }
 
   @Test
-  public void test3() throws Exception {
+  @DisplayName("SQL files with foreign keys parsed correctly")
+  void testForeignKeys() {
+
+  }
+
+  @Test
+  void test3() throws Exception {
     File f = ResourceUtil.getResourceAsFile(
             ParserTest.class,
             "test3.sql"
@@ -295,7 +318,7 @@ public class ParserTest extends AbstractParsingTest {
   }
 
   @Test
-  public void test4() throws Exception {
+  void test4() throws Exception {
     File f = ResourceUtil.getResourceAsFile(
             ParserTest.class,
             "test4.sql"

@@ -333,64 +333,54 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
+    public List<String> dropTableTriggerForMaterializedView(Connection conn, MaterializedView mv) {
         List<String> result = new ArrayList<>();
+        Table t = mv.getRefTable().getTable();
 
-        List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-                .filter(mv -> mv.getRefTable().getTable().equals(t))
-                .collect(Collectors.toList());
+        TriggerQuery query = new TriggerQuery()
+                .withSchema(t.getGrain().getName())
+                .withTableName(t.getName());
 
-        for (MaterializedView mv : mvList) {
+        String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+        String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+        String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
-            TriggerQuery query = new TriggerQuery()
-                    .withSchema(t.getGrain().getName())
-                    .withTableName(t.getName());
-
-            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-            String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
-            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
-
-            String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()", t.getGrain().getName(), mv.getName());
-            String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()", t.getGrain().getName(), mv.getName());
-            String deleteTriggerFunctionFullName = String.format("\"%s\".\"%s_deleteTriggerFunc\"()", t.getGrain().getName(), mv.getName());
+        String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()", t.getGrain().getName(), mv.getName());
+        String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()", t.getGrain().getName(), mv.getName());
+        String deleteTriggerFunctionFullName = String.format("\"%s\".\"%s_deleteTriggerFunc\"()", t.getGrain().getName(), mv.getName());
 
 
-            query.withName(insertTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-            query.withName(updateTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
-            query.withName(deleteTriggerName);
-            if (this.triggerExists(conn, query))
-                result.add(dropTrigger(query));
+        query.withName(insertTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
+        query.withName(updateTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
+        query.withName(deleteTriggerName);
+        if (this.triggerExists(conn, query))
+            result.add(dropTrigger(query));
 
-            String sqlTemplate = "DROP FUNCTION IF EXISTS %s";
+        String sqlTemplate = "DROP FUNCTION IF EXISTS %s";
 
-            String sql;
+        String sql;
 
-            //INSERT
-            sql = String.format(sqlTemplate, insertTriggerFunctionFullName);
-            result.add(sql);
-            //UPDATE
-            sql = String.format(sqlTemplate, updateTriggerFunctionFullName);
-            result.add(sql);
-            //DELETE
-            sql = String.format(sqlTemplate, deleteTriggerFunctionFullName);
-            result.add(sql);
-
-        }
+        //INSERT
+        sql = String.format(sqlTemplate, insertTriggerFunctionFullName);
+        result.add(sql);
+        //UPDATE
+        sql = String.format(sqlTemplate, updateTriggerFunctionFullName);
+        result.add(sql);
+        //DELETE
+        sql = String.format(sqlTemplate, deleteTriggerFunctionFullName);
+        result.add(sql);
 
         return result;
     }
 
     @Override
-    public List<String> createTableTriggersForMaterializedViews(Table t) {
+    public List<String> createTableTriggerForMaterializedView(Connection conn, MaterializedView mv) {
         List<String> result = new ArrayList<>();
-
-        List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-                .filter(mv -> mv.getRefTable().getTable().equals(t))
-                .collect(Collectors.toList());
+        Table t = mv.getRefTable().getTable();
 
         String fullTableName = tableString(t.getGrain().getName(), t.getName());
 
@@ -398,166 +388,164 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                 .withSchema(t.getGrain().getName())
                 .withTableName(t.getName());
 
-        for (MaterializedView mv : mvList) {
-            String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
+        String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
 
-            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-            String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
-            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
+        String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+        String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+        String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
-            //функции уникальны для postgres
-            String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()", t.getGrain().getName(), mv.getName());
-            String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()", t.getGrain().getName(), mv.getName());
-            String deleteTriggerFunctionFullName = String.format("\"%s\".\"%s_deleteTriggerFunc\"()", t.getGrain().getName(), mv.getName());
+        //функции уникальны для postgres
+        String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()", t.getGrain().getName(), mv.getName());
+        String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()", t.getGrain().getName(), mv.getName());
+        String deleteTriggerFunctionFullName = String.format("\"%s\".\"%s_deleteTriggerFunc\"()", t.getGrain().getName(), mv.getName());
 
-            String mvColumns = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .collect(Collectors.joining(", "));
+        String mvColumns = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .collect(Collectors.joining(", "));
 
-            String whereCondition = mv.getColumns().keySet().stream()
-                    .filter(alias -> mv.isGroupByColumn(alias))
-                    .map(alias -> alias + " = $1." + alias + " ")
-                    .collect(Collectors.joining(" AND "));
+        String whereCondition = mv.getColumns().keySet().stream()
+                .filter(alias -> mv.isGroupByColumn(alias))
+                .map(alias -> alias + " = $1." + alias + " ")
+                .collect(Collectors.joining(" AND "));
 
-            StringBuilder selectStmtBuilder = new StringBuilder(mv.getSelectPartOfScript())
-                    .append(" FROM ").append(fullTableName).append(" ");
-            selectStmtBuilder.append(" WHERE ").append(whereCondition)
-                    .append(mv.getGroupByPartOfScript());
+        StringBuilder selectStmtBuilder = new StringBuilder(mv.getSelectPartOfScript())
+                .append(" FROM ").append(fullTableName).append(" ");
+        selectStmtBuilder.append(" WHERE ").append(whereCondition)
+                .append(mv.getGroupByPartOfScript());
 
 
-            String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
-                    .map(e -> {
-                        StringBuilder sb = new StringBuilder();
-                        String alias = e.getKey();
+        String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
+                .map(e -> {
+                    StringBuilder sb = new StringBuilder();
+                    String alias = e.getKey();
 
-                        sb.append("\"").append(alias.replace("\"", ""))
-                                .append("\" = \"").append(alias.replace("\"", ""))
-                                .append("\" %1$s ");
+                    sb.append("\"").append(alias.replace("\"", ""))
+                            .append("\" = \"").append(alias.replace("\"", ""))
+                            .append("\" %1$s ");
 
-                        if (e.getValue() instanceof Sum) {
-                            sb.append("%2$s.\"").append(mv.getColumnRef(alias.replace("\"", "")).getName()).append("\"");
-                        } else if (e.getValue() instanceof Count) {
-                            sb.append("1");
-                        }
+                    if (e.getValue() instanceof Sum) {
+                        sb.append("%2$s.\"").append(mv.getColumnRef(alias.replace("\"", "")).getName()).append("\"");
+                    } else if (e.getValue() instanceof Count) {
+                        sb.append("1");
+                    }
 
-                        return sb.toString();
-                    }).collect(Collectors.joining(", "))
-                    .concat(", \"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
-                    .concat("\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" %1$s 1");
+                    return sb.toString();
+                }).collect(Collectors.joining(", "))
+                .concat(", \"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
+                .concat("\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" %1$s 1");
 
-            String rowConditionTemplate = mv.getColumns().keySet().stream()
-                    .filter(alias -> mv.isGroupByColumn(alias))
-                    .map(alias -> {
-                                Column colRef = mv.getColumnRef(alias);
-                                if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
-                                    return "\"" + alias + "\" = date_trunc('DAY', %1$s.\"" + colRef.getName() + "\")";
-                                return "\"" + alias + "\" = %1$s.\"" + colRef.getName() + "\"";
-                            }
-                    ).collect(Collectors.joining(" AND "));
-
-            String rowColumnsTemplate = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .map(alias -> {
-                        Map<String, Expr> aggrCols = mv.getAggregateColumns();
-
-                        if (aggrCols.containsKey(alias) && aggrCols.get(alias) instanceof Count) {
-                            return "1";
-                        } else {
+        String rowConditionTemplate = mv.getColumns().keySet().stream()
+                .filter(alias -> mv.isGroupByColumn(alias))
+                .map(alias -> {
                             Column colRef = mv.getColumnRef(alias);
-
                             if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
-                                return "date_trunc('DAY', %1$s.\"" + mv.getColumnRef(alias) + "\")";
-                            return "%1$s.\"" + mv.getColumnRef(alias) + "\"";
-
+                                return "\"" + alias + "\" = date_trunc('DAY', %1$s.\"" + colRef.getName() + "\")";
+                            return "\"" + alias + "\" = %1$s.\"" + colRef.getName() + "\"";
                         }
-                    })
-                    .collect(Collectors.joining(", "));
+                ).collect(Collectors.joining(" AND "));
 
-            String whereForDelete = new StringBuilder().append(String.format(rowConditionTemplate, "OLD"))
-                    .append(" AND \"" + MaterializedView.SURROGATE_COUNT + "\" = 0 ")
-                    .toString();
+        String rowColumnsTemplate = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> {
+                    Map<String, Expr> aggrCols = mv.getAggregateColumns();
 
-            String insertSql = String.format("UPDATE %s SET %s \n" +
-                            "WHERE %s ;\n" +
-                            "GET DIAGNOSTICS updatedCount = ROW_COUNT; \n" +
-                            "IF updatedCount = 0 THEN \n" +
-                            " INSERT INTO %s (%s) VALUES(%s); \n" +
-                            "END IF;\n", fullMvName, String.format(setStatementTemplate, "+", "NEW"),
-                    String.format(rowConditionTemplate, "NEW"), fullMvName,
-                    mvColumns + ", " + MaterializedView.SURROGATE_COUNT,
-                    String.format(rowColumnsTemplate, "NEW") + ", 1");
+                    if (aggrCols.containsKey(alias) && aggrCols.get(alias) instanceof Count) {
+                        return "1";
+                    } else {
+                        Column colRef = mv.getColumnRef(alias);
 
-            String deleteSql = String.format("UPDATE %s SET %s \n" +
-                            "WHERE %s ;\n" +
-                            "DELETE FROM %s WHERE %s ;\n", fullMvName, String.format(setStatementTemplate, "-", "OLD"),
-                    String.format(rowConditionTemplate, "OLD"), fullMvName, whereForDelete);
+                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+                            return "date_trunc('DAY', %1$s.\"" + mv.getColumnRef(alias) + "\")";
+                        return "%1$s.\"" + mv.getColumnRef(alias) + "\"";
 
-            String sql;
+                    }
+                })
+                .collect(Collectors.joining(", "));
 
-            //INSERT
-            sql = String.format("CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n " +
-                            "DECLARE\n" +
-                            "  updatedCount int;\n" +
-                            "BEGIN \n" +
-                            MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n" +
-                            "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n" +
-                            "%s " +
-                            "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
-                    insertTriggerFunctionFullName, mv.getChecksum(), fullMvName, insertSql);
+        String whereForDelete = new StringBuilder().append(String.format(rowConditionTemplate, "OLD"))
+                .append(" AND \"" + MaterializedView.SURROGATE_COUNT + "\" = 0 ")
+                .toString();
 
-            //System.out.println(sql);
-            result.add(sql);
+        String insertSql = String.format("UPDATE %s SET %s \n" +
+                        "WHERE %s ;\n" +
+                        "GET DIAGNOSTICS updatedCount = ROW_COUNT; \n" +
+                        "IF updatedCount = 0 THEN \n" +
+                        " INSERT INTO %s (%s) VALUES(%s); \n" +
+                        "END IF;\n", fullMvName, String.format(setStatementTemplate, "+", "NEW"),
+                String.format(rowConditionTemplate, "NEW"), fullMvName,
+                mvColumns + ", " + MaterializedView.SURROGATE_COUNT,
+                String.format(rowColumnsTemplate, "NEW") + ", 1");
 
-            sql = String.format("CREATE TRIGGER \"%s\" AFTER INSERT " +
-                            "ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
-                    insertTriggerName, fullTableName, insertTriggerFunctionFullName);
+        String deleteSql = String.format("UPDATE %s SET %s \n" +
+                        "WHERE %s ;\n" +
+                        "DELETE FROM %s WHERE %s ;\n", fullMvName, String.format(setStatementTemplate, "-", "OLD"),
+                String.format(rowConditionTemplate, "OLD"), fullMvName, whereForDelete);
 
-            //System.out.println(sql);
-            result.add(sql);
-            this.rememberTrigger(query.withName(insertTriggerName));
+        String sql;
 
-            //UPDATE
-            sql = String.format("CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n " +
-                            "DECLARE\n" +
-                            "  updatedCount int;\n" +
-                            "BEGIN \n" +
-                            "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n" +
-                            "%s " + //DELETE
-                            "%s " + //INSERT
-                            "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
-                    updateTriggerFunctionFullName, fullMvName, deleteSql, insertSql);
+        //INSERT
+        sql = String.format("CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n " +
+                        "DECLARE\n" +
+                        "  updatedCount int;\n" +
+                        "BEGIN \n" +
+                        MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n" +
+                        "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n" +
+                        "%s " +
+                        "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
+                insertTriggerFunctionFullName, mv.getChecksum(), fullMvName, insertSql);
 
-            //System.out.println(sql);
-            result.add(sql);
+        //System.out.println(sql);
+        result.add(sql);
 
-            sql = String.format("CREATE TRIGGER \"%s\" AFTER UPDATE " +
-                            "ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
-                    updateTriggerName, fullTableName, updateTriggerFunctionFullName);
+        sql = String.format("CREATE TRIGGER \"%s\" AFTER INSERT " +
+                        "ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
+                insertTriggerName, fullTableName, insertTriggerFunctionFullName);
 
-            //System.out.println(sql);
-            result.add(sql);
-            this.rememberTrigger(query.withName(updateTriggerName));
+        //System.out.println(sql);
+        result.add(sql);
+        this.rememberTrigger(query.withName(insertTriggerName));
 
-            //DELETE
-            sql = String.format("CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n " +
-                            "BEGIN \n" +
-                            "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n" +
-                            "%s" +
-                            "RETURN OLD; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
-                    deleteTriggerFunctionFullName, fullMvName, deleteSql
-            );
+        //UPDATE
+        sql = String.format("CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n " +
+                        "DECLARE\n" +
+                        "  updatedCount int;\n" +
+                        "BEGIN \n" +
+                        "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n" +
+                        "%s " + //DELETE
+                        "%s " + //INSERT
+                        "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
+                updateTriggerFunctionFullName, fullMvName, deleteSql, insertSql);
 
-            //System.out.println(sql);
-            result.add(sql);
+        //System.out.println(sql);
+        result.add(sql);
 
-            sql = String.format("CREATE TRIGGER \"%s\" AFTER DELETE " +
-                            "ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
-                    deleteTriggerName, fullTableName, deleteTriggerFunctionFullName);
+        sql = String.format("CREATE TRIGGER \"%s\" AFTER UPDATE " +
+                        "ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
+                updateTriggerName, fullTableName, updateTriggerFunctionFullName);
 
-            //System.out.println(sql);
-            result.add(sql);
-            this.rememberTrigger(query.withName(deleteTriggerName));
-        }
+        //System.out.println(sql);
+        result.add(sql);
+        this.rememberTrigger(query.withName(updateTriggerName));
+
+        //DELETE
+        sql = String.format("CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n " +
+                        "BEGIN \n" +
+                        "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n" +
+                        "%s" +
+                        "RETURN OLD; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
+                deleteTriggerFunctionFullName, fullMvName, deleteSql
+        );
+
+        //System.out.println(sql);
+        result.add(sql);
+
+        sql = String.format("CREATE TRIGGER \"%s\" AFTER DELETE " +
+                        "ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
+                deleteTriggerName, fullTableName, deleteTriggerFunctionFullName);
+
+        //System.out.println(sql);
+        result.add(sql);
+        this.rememberTrigger(query.withName(deleteTriggerName));
 
         return result;
     }
