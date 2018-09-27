@@ -22,17 +22,17 @@ public class Celesta implements ICelesta, AutoCloseable {
 
     private final BaseAppSettings appSettings;
     private final Score score;
-    final ConnectionPool connectionPool;
-    final DBAdaptor dbAdaptor;
+    private final ConnectionPool connectionPool;
+    private final DBAdaptor dbAdaptor;
     private final TriggerDispatcher triggerDispatcher = new TriggerDispatcher();
     private final ScoreDiscovery scoreDiscovery = new DefaultScoreDiscovery();
 
     private Optional<Server> server;
-    final LoggingManager loggingManager;
-    final PermissionManager permissionManager;
-    final ProfilingManager profiler;
+    private final LoggingManager loggingManager;
+    private final PermissionManager permissionManager;
+    private final ProfilingManager profiler;
 
-    final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
+    private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
     public Celesta(BaseAppSettings appSettings, int phasesCount) {
         this.appSettings = appSettings;
