@@ -23,7 +23,7 @@
             <plugin>
                 <groupId>ru.curs</groupId>
                 <artifactId>celesta-maven-plugin</artifactId>
-                <version>${project.version}</version>
+                <!--<version>${project.version}</version>-->
                 <configuration>
                     <scores>
                         <score>
