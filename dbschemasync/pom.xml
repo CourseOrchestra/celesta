@@ -15,10 +15,9 @@
 	<dependencies>
 		<dependency>
 			<groupId>ru.curs</groupId>
-			<artifactId>celesta-jython</artifactId>
+			<artifactId>celesta-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
