@@ -20,43 +20,20 @@ import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.TablesCursor;
 
-public class SerializerTest {
-    private static Celesta celesta;
-    private static Connection connection;
+public class SerializerTest extends AbstractCelestaTest {
 
-    private PySessionContext sc = new PySessionContext("super", "foo");
     private GrainsCursor c;
     private TablesCursor tt;
-    private CallContext callContext;
-
-    @BeforeAll
-    public static void init() {
-        Properties params = new Properties();
-        params.setProperty("score.path", "score");
-        params.setProperty("h2.in-memory", "true");
-        celesta = Celesta.createInstance(params);
-    }
-
-    @AfterAll
-    public static void destroy() throws SQLException {
-        celesta.callContext().getConn().createStatement().execute("SHUTDOWN");
-        celesta.close();
-    }
 
     @BeforeEach
     public void before() {
-        callContext = celesta.callContext(sc);
-
-        c = new GrainsCursor(callContext);
-        tt = new TablesCursor(callContext);
-
-        if (connection == null)
-            connection = callContext.getConn();
+        c = new GrainsCursor(cc());
+        tt = new TablesCursor(cc());
     }
 
-    @AfterEach
-    public void after() {
-        callContext.close();
+    @Override
+    protected String scorePath() {
+        return "score";
     }
 
     @Test
@@ -158,7 +135,7 @@ public class SerializerTest {
     @Test
     public void test2() throws UnsupportedEncodingException {
         BasicCardForm bcf = new BasicCardForm(
-                celesta.callContext(sc)
+                cc()
         ) {
             {
                 createAllBoundFields();
@@ -238,7 +215,7 @@ public class SerializerTest {
 
         ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
         GrainsCursor c2 = new GrainsCursor(
-                celesta.callContext(sc)
+                cc()
         );
         bcf.deserialize(c2, bis);
 

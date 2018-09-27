@@ -11,32 +11,21 @@ import java.util.Properties;
 import ru.curs.celesta.*;
 import ru.curs.celesta.syscursors.LogsetupCursor;
 
-public class CursorTest {
+public class CursorTest extends AbstractCelestaTest {
 
-    private static Celesta celesta;
+    @Override
+    protected String scorePath() {
+        return "score";
+    }
 
-    private PySessionContext sc = new PySessionContext("super", "foo");
     private Cursor c;
 
-    @BeforeAll
-    public static void init() {
-        Properties properties = new Properties();
-        properties.setProperty("score.path", "score");
-        properties.setProperty("h2.in-memory", "true");
-
-        celesta = Celesta.createInstance(properties);
-    }
-
-    @AfterAll
-    public static void destroy() throws SQLException {
-        celesta.callContext(new PySessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
-        celesta.close();
-    }
 
     @BeforeEach
     public void before() {
-        c = new LogsetupCursor(celesta.callContext(sc));
+        c = new LogsetupCursor(cc());
     }
+
 
     @AfterEach
     public void after() {

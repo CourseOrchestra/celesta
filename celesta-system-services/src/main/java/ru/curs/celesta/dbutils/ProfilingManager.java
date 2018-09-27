@@ -10,12 +10,12 @@ import ru.curs.celesta.syscursors.CalllogCursor;
  */
 public final class ProfilingManager {
 
-    private final AbstractCelesta celesta;
+    private final Celesta celesta;
     private final DBAdaptor dbAdaptor;
     private boolean profilemode = false;
 
 
-    public ProfilingManager(AbstractCelesta celesta, DBAdaptor dbAdaptor) {
+    public ProfilingManager(Celesta celesta, DBAdaptor dbAdaptor) {
         this.celesta = celesta;
         this.dbAdaptor = dbAdaptor;
     }
@@ -33,13 +33,11 @@ public final class ProfilingManager {
             try (
                     CallContext sysContext = context.getBuilder()
                             .setCallContext(context)
-                            .setSesContext(this.celesta.getSystemSessionContext())
-                            .setDbAdaptor(this.dbAdaptor)
+                            .setUserId(celesta.SUPER)
                             .createCallContext()
             ) {
                 CalllogCursor clc = new CalllogCursor(sysContext);
                 clc.setProcname(context.getProcName());
-                clc.setSessionid(context.getSessionId());
                 clc.setUserid(context.getUserId());
                 clc.setStarttime(context.getStartTime());
                 clc.setDuration((int) (finish - context.getStartTime().getTime()));

@@ -1,4 +1,4 @@
-package ru.curs.celesta.java;
+package ru.curs.celesta;
 
 import ru.curs.celesta.BaseAppSettings;
 
@@ -8,7 +8,7 @@ public class AppSettings extends BaseAppSettings {
 
     private final Set<String> celestaScan;
 
-    AppSettings(Properties properties) {
+    public AppSettings(Properties properties) {
         super(properties);
         this.celestaScan = extractCelestaScanFromProperties(properties);
     }

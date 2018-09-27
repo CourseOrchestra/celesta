@@ -11,53 +11,28 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class CallContextTest {
+public class CallContextTest extends AbstractCelestaTest {
 
-    private static Celesta celesta;
-
-    private PySessionContext sc = new PySessionContext("super", "foo");
-    private CallContext context;
-
-    @BeforeAll
-    public static void init() {
-        Properties properties = new Properties();
-        properties.setProperty("score.path", "score");
-        properties.setProperty("h2.in-memory", "true");
-
-        celesta = Celesta.createInstance(properties);
-    }
-
-    @AfterAll
-    public static void destroy() throws SQLException {
-        celesta.callContext(new PySessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
-        celesta.close();
-    }
-
-    @BeforeEach
-    public void before() {
-        context = celesta.callContext(sc);
-    }
-
-    @AfterEach
-    public void after() {
-        context.close();
+    @Override
+    protected String scorePath() {
+        return "score";
     }
 
     @Test
     public void testClose() {
-        GrainsCursor grainsCursor = new GrainsCursor(context);
-        LogsetupCursor logSetupCursor = new LogsetupCursor(context);
+        GrainsCursor grainsCursor = new GrainsCursor(cc());
+        LogsetupCursor logSetupCursor = new LogsetupCursor(cc());
 
         assertAll(
-                () -> assertFalse(context.isClosed()),
+                () -> assertFalse(cc().isClosed()),
                 () -> assertFalse(grainsCursor.isClosed()),
                 () -> assertFalse(logSetupCursor.isClosed())
         );
 
-        context.close();
+        cc().close();
 
         assertAll(
-                () -> assertTrue(context.isClosed()),
+                () -> assertTrue(cc().isClosed()),
                 () -> assertTrue(grainsCursor.isClosed()),
                 () -> assertTrue(logSetupCursor.isClosed())
         );

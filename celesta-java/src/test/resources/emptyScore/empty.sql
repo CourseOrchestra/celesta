@@ -1,1 +1,0 @@
-create schema empty version '1.0';

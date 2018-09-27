@@ -1,33 +1,23 @@
 package ru.curs.celesta;
 
-import java.sql.*;
+import ru.curs.celesta.dbutils.BasicDataAccessor;
+import ru.curs.celesta.dbutils.ILoggingManager;
+import ru.curs.celesta.dbutils.IPermissionManager;
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.score.Score;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-
-import ru.curs.celesta.dbutils.*;
-import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.score.Grain;
-import ru.curs.celesta.score.Score;
-
 /**
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
  * идентификатор пользователя.
- *
- * @param <T> heir class of CallContext
- * @param <R> heir class of SessionContext
- * @param <E> class of data accessor to create and put into cash
- *           (crutch, must be removed, cuz it's a PyType in celesta-module)
- * @param <F>  class of created data accessor (crutch, must be removed, cuz it's a PyObject in celesta-module)
- *           Types E and F are temporary parameters. CallContext must not resolve purposes of cursors caching.
  */
-public abstract class CallContext
-        <
-        T extends CallContext<T, R, E, F>, R extends SessionContext, E extends Object, F extends Object
-        >
-        implements ICallContext {
+public class CallContext implements ICallContext {
 
     /**
      * Максимальное число объектов доступа, которое может быть открыто в одном
@@ -36,77 +26,43 @@ public abstract class CallContext
     public static final int MAX_DATA_ACCESSORS = 1023;
 
     private static final Map<Connection, Integer> PIDSCACHE = Collections
-            .synchronizedMap(new WeakHashMap<Connection, Integer>());
-
+            .synchronizedMap(new WeakHashMap<>());
     protected final ICelesta celesta;
-    protected final ConnectionPool connectionPool;
     private final Connection conn;
-    protected final Score score;
-    protected final Grain grain;
     protected final String procName;
-    protected final R sesContext;
-    protected final ShowcaseContext showcaseContext;
-    protected final DBAdaptor dbAdaptor;
-    protected final IPermissionManager permissionManager;
-    protected final ILoggingManager loggingManager;
-
+    private final String userId;
     private final int dbPid;
     private final Date startTime = new Date();
 
     private BasicDataAccessor lastDataAccessor;
-    private int dataAccessorsCount;
 
+    private int dataAccessorsCount;
     private boolean closed = false;
 
-    public CallContext(CallContextBuilder<? extends CallContextBuilder, T, R> contextBuilder) {
-
+    public CallContext(CallContextBuilder contextBuilder) {
         CallContext context = contextBuilder.callContext;
 
         if (context != null) {
-            this.connectionPool = context.connectionPool;
-            this.score = context.score;
-            this.permissionManager = context.permissionManager;
-            this.loggingManager = context.loggingManager;
             this.celesta = context.celesta;
-            this.dbAdaptor = context.dbAdaptor;
+            this.userId = context.userId;
         } else {
-            this.connectionPool = contextBuilder.connectionPool;
-            this.score = contextBuilder.score;
-            this.permissionManager = contextBuilder.permissionManager;
-            this.loggingManager = contextBuilder.loggingManager;
             this.celesta = contextBuilder.celesta;
-            this.dbAdaptor = contextBuilder.dbAdaptor;
+            this.userId = contextBuilder.userId;
         }
 
-        this.conn = this.connectionPool.get();
-        this.sesContext = contextBuilder.sesContext;
-        this.grain = contextBuilder.curGrain;
+        this.conn = celesta.getConnectionPool().get();
         this.procName = contextBuilder.procName;
-        this.showcaseContext = contextBuilder.showcaseContext;
-
-        this.dbPid = PIDSCACHE.computeIfAbsent(this.conn, this.dbAdaptor::getDBPid);
+        this.dbPid = PIDSCACHE.computeIfAbsent(this.conn, getDbAdaptor()::getDBPid);
     }
 
-    /**
-     * Duplicates callcontext with another JDBC connection.
-     */
-    public abstract T getCopy();
 
     public Connection getConn() {
         return conn;
     }
 
     public String getUserId() {
-        return sesContext.getUserId();
+        return userId;
     }
-
-    /**
-     * Идентификатор сессии.
-     */
-    public String getSessionId() {
-        return sesContext.getSessionId();
-    }
-
 
 
     /**
@@ -125,14 +81,7 @@ public abstract class CallContext
     }
 
     public Score getScore() {
-        return score;
-    }
-
-    /**
-     * Возвращает текущую гранулу (к которой относится вызываемая функция).
-     */
-    public Grain getGrain() {
-        return grain;
+        return celesta.getScore();
     }
 
     public void setLastDataAccessor(BasicDataAccessor dataAccessor) {
@@ -190,27 +139,20 @@ public abstract class CallContext
         return startTime;
     }
 
-    /**
-     * Возвращает контексты Showcase.
-     */
-    public ShowcaseContext getShowcaseContext() {
-        return showcaseContext;
-    }
-
     public boolean isClosed() {
         return closed;
     }
 
     public IPermissionManager getPermissionManager() {
-        return permissionManager;
+        return celesta.getPermissionManager();
     }
 
     public ILoggingManager getLoggingManager() {
-        return loggingManager;
+        return celesta.getLoggingManager();
     }
 
     public DBAdaptor getDbAdaptor() {
-        return dbAdaptor;
+        return celesta.getDBAdaptor();
     }
 
     @Override
@@ -227,97 +169,59 @@ public abstract class CallContext
         conn.rollback();
     }
 
-
     /**
-     * Возвращает объект доступа dataAccessorClass.
-     *
-     * Все созданные объекты доступа кэшируются и возвращаются при последюущем запросе
-     * dataAccessorClass. Каждый возвращаемый объект доступа предварительно очищается
-     * (clear()).
-     *
-     * @param dataAccessorClass
-     *            класс объекта доступа
-     * @return объект доступа
+     * Duplicates callcontext with another JDBC connection.
      */
-    public abstract F create(E dataAccessorClass);
 
-    public abstract void removeFromCache(BasicDataAccessor dataAccessor);
+    public CallContext getCopy() {
+        //TODO!!
+        return null;
+    }
 
-    public abstract CallContextBuilder getBuilder();
 
-    public static abstract class CallContextBuilder<T extends CallContextBuilder<T, R, E>,
-            R extends CallContext, E extends SessionContext> {
+    public CallContextBuilder getBuilder() {
+        return builder();
+    }
 
-        protected R callContext = null;
+    public static CallContextBuilder builder() {
+        return new CallContextBuilder();
+    }
+
+    public static class CallContextBuilder {
+
+
+        protected CallContext callContext = null;
         protected ICelesta celesta = null;
-        protected ConnectionPool connectionPool = null;
-        protected E sesContext = null;
-        protected Score score = null;
-        protected ShowcaseContext showcaseContext = null;
-        protected Grain curGrain = null;
         protected String procName = null;
-        protected DBAdaptor dbAdaptor = null;
-        protected IPermissionManager permissionManager;
-        protected ILoggingManager loggingManager;
+        protected String userId;
 
 
-        protected abstract T getThis();
+        protected CallContextBuilder getThis() {
+            return this;
+        }
 
-        public T setCallContext(R callContext) {
+        public CallContextBuilder setCallContext(CallContext callContext) {
             this.callContext = callContext;
             return getThis();
         }
 
-        public T setCelesta(ICelesta celesta) {
+        public CallContextBuilder setCelesta(ICelesta celesta) {
             this.celesta = celesta;
             return getThis();
         }
 
-        public T setConnectionPool(ConnectionPool connectionPool) {
-            this.connectionPool = connectionPool;
-            return getThis();
-        }
-
-        public T setSesContext(E sesContext) {
-            this.sesContext = sesContext;
-            return getThis();
-        }
-
-        public T setScore(Score score) {
-            this.score = score;
-            return getThis();
-        }
-
-        public T setShowcaseContext(ShowcaseContext showcaseContext) {
-            this.showcaseContext = showcaseContext;
-            return getThis();
-        }
-
-        public T setCurGrain(Grain curGrain) {
-            this.curGrain = curGrain;
-            return getThis();
-        }
-
-        public T setProcName(String procName) {
+        public CallContextBuilder setProcName(String procName) {
             this.procName = procName;
             return getThis();
         }
 
-        public T setDbAdaptor(DBAdaptor dbAdaptor) {
-            this.dbAdaptor = dbAdaptor;
+        public CallContextBuilder setUserId(String userId) {
+            this.userId = userId;
             return getThis();
         }
 
-        public T setPermissionManager(IPermissionManager permissionManager) {
-            this.permissionManager = permissionManager;
-            return getThis();
+        public CallContext createCallContext() {
+            return new CallContext(this);
         }
-
-        public T setLoggingManager(ILoggingManager loggingManager) {
-            this.loggingManager = loggingManager;
-            return getThis();
-        }
-
-        public abstract R createCallContext();
     }
 }

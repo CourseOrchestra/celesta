@@ -8,13 +8,15 @@ import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class AbstractCelesta<T extends SessionContext> implements ICelesta, AutoCloseable {
+public class Celesta implements ICelesta, AutoCloseable {
 
     protected static final String FILE_PROPERTIES = "celesta.properties";
 
@@ -22,18 +24,17 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
     private final Score score;
     final ConnectionPool connectionPool;
     final DBAdaptor dbAdaptor;
-    private final Optional<SessionLogManager> sessionLogManager;
     private final TriggerDispatcher triggerDispatcher = new TriggerDispatcher();
+    private final ScoreDiscovery scoreDiscovery = new DefaultScoreDiscovery();
 
     private Optional<Server> server;
     final LoggingManager loggingManager;
     final PermissionManager permissionManager;
     final ProfilingManager profiler;
 
-    final protected ConcurrentHashMap<String, T> sessions = new ConcurrentHashMap<>();
     final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
-    public AbstractCelesta(BaseAppSettings appSettings, int phasesCount) {
+    public Celesta(BaseAppSettings appSettings, int phasesCount) {
         this.appSettings = appSettings;
         manageH2Server();
 
@@ -70,9 +71,6 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
 
         dbAdaptor = dac.createDbAdaptor();
 
-        this.sessionLogManager = appSettings.getLogLogins()
-                ? Optional.of(new SessionLogManager(this, appSettings.getLogLogins()))
-                : Optional.empty();
         this.loggingManager = new LoggingManager(this, dbAdaptor);
         this.permissionManager = new PermissionManager(this, dbAdaptor);
         this.profiler = new ProfilingManager(this, dbAdaptor);
@@ -95,52 +93,7 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
         } else {
             System.out.printf("Celesta initialization: phase 2/%s database upgrade...skipped.%n", phasesCount);
         }
-    }
 
-    /**
-     * Связывает идентификатор сессии и идентификатор пользователя.
-     *
-     * @param sessionId Имя сессии.
-     * @param userId    Имя пользователя.
-     */
-    public void login(String sessionId, String userId) {
-        if (sessionId == null)
-            throw new IllegalArgumentException("Session id is null.");
-        if (userId == null)
-            throw new IllegalArgumentException("User id is null.");
-        // Создавать новый SessionContext имеет смысл лишь в случае, когда
-        // нет старого.
-        T oldSession = sessions.get(sessionId);
-        if (oldSession == null || !userId.equals(oldSession.getUserId())) {
-            T session = sessionContext(userId, sessionId);
-            sessions.put(sessionId, session);
-
-            sessionLogManager.ifPresent(s -> s.logLogin(session));
-        }
-    }
-
-    /**
-     * Завершает сессию (удаляет связанные с ней данные).
-     *
-     * @param sessionId имя сессии.
-     * @param timeout   признак разлогинивания по таймауту.
-     */
-    public T logout(String sessionId, boolean timeout) {
-        T sc = sessions.remove(sessionId);
-        if (sc != null) {
-            sessionLogManager.ifPresent(s -> s.logLogout(sc, timeout));
-        }
-        return sc;
-    }
-
-
-    /**
-     * Фиксирует (при наличии включённой настройки log.logins) неудачный логин.
-     *
-     * @param userId Имя пользователя, под которым производился вход.
-     */
-    public void failedLogin(String userId) {
-        sessionLogManager.ifPresent(s -> s.logFailedLogin(userId));
     }
 
     /**
@@ -154,6 +107,26 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
     @Override
     public Properties getSetupProperties() {
         return appSettings.getSetupProperties();
+    }
+
+    @Override
+    public IPermissionManager getPermissionManager() {
+        return permissionManager;
+    }
+
+    @Override
+    public ILoggingManager getLoggingManager() {
+        return loggingManager;
+    }
+
+    @Override
+    public ConnectionPool getConnectionPool() {
+        return connectionPool;
+    }
+
+    @Override
+    public DBAdaptor getDBAdaptor() {
+        return dbAdaptor;
     }
 
     @Override
@@ -175,40 +148,51 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
         server.ifPresent(Server::shutdown);
     }
 
-    abstract protected ScoreDiscovery getScoreDiscovery();
-
-    public abstract T getSystemSessionContext();
-
-    protected abstract T sessionContext(String userId, String sessionId);
-
-    protected T getSessionContext(String sessionId) {
-        T result = this.sessions.get(sessionId);
-        if (result == null)
-            throw new CelestaException("Session ID=%s is not logged in", sessionId);
-        return result;
+    public static Celesta createInstance(Properties properties) {
+        AppSettings appSettings = preInit(properties);
+        return new Celesta(appSettings, 3);
     }
 
-    /**
-     * Initializes and returns new CallContext for specified SessionContext
-     *
-     * @param sessionContext
-     * @return CallContext
-     */
-    public CallContext callContext(T sessionContext) {
-        return sessionContext.callContextBuilder()
-                .setCelesta(this)
-                .setConnectionPool(connectionPool)
-                .setSesContext(sessionContext)
-                .setScore(score)
-                .setDbAdaptor(dbAdaptor)
-                .setPermissionManager(permissionManager)
-                .setLoggingManager(loggingManager)
-                .createCallContext();
+    public static Celesta createInstance() {
+        Properties properties = loadPropertiesDynamically();
+        return createInstance(properties);
     }
 
-    @Override
-    public CallContext callContext() {
-        return callContext(getSystemSessionContext());
+    private static AppSettings preInit(Properties properties) {
+        System.out.print("Celesta pre-initialization: phase 1/2 system settings reading...");
+        AppSettings appSettings = new AppSettings(properties);
+        System.out.println("done.");
+        return appSettings;
+    }
+
+    public static Properties loadPropertiesDynamically() {
+        // Разбираемся с настроечным файлом: читаем его и превращаем в
+        // Properties.
+        Properties properties = new Properties();
+        try {
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            InputStream in = loader.getResourceAsStream(FILE_PROPERTIES);
+            if (in == null) {
+                throw new CelestaException(
+                        String.format("Couldn't find file %s on classpath.", FILE_PROPERTIES)
+                );
+            }
+            try {
+                properties.load(in);
+            } finally {
+                in.close();
+            }
+        } catch (IOException e) {
+            throw new CelestaException(
+                    String.format("IOException while reading %s file: %s", FILE_PROPERTIES, e.getMessage())
+            );
+        }
+
+        return properties;
+    }
+
+    protected ScoreDiscovery getScoreDiscovery() {
+        return this.scoreDiscovery;
     }
 
     private void manageH2Server() {
@@ -229,5 +213,40 @@ public abstract class AbstractCelesta<T extends SessionContext> implements ICele
             server = Optional.empty();
             CurrentScore.global(false);
         }
+    }
+
+
+    /**
+     * Режим профилирования (записывается ли в таблицу calllog время вызовов
+     * процедур).
+     */
+    public boolean isProfilemode() {
+        return profiler.isProfilemode();
+    }
+
+    /**
+     * Возвращает поведение NULLS FIRST текущей базы данных.
+     */
+    public boolean nullsFirst() {
+        return dbAdaptor.nullsFirst();
+    }
+
+    /**
+     * Устанавливает режим профилирования.
+     *
+     * @param profilemode режим профилирования.
+     */
+    public void setProfilemode(boolean profilemode) {
+        profiler.setProfilemode(profilemode);
+    }
+
+    @Override
+    public CallContext callContext() {
+        return CallContext
+                .builder()
+                .setUserId(SUPER)
+                .setCelesta(this)
+                .setProcName("init")
+                .createCallContext();
     }
 }

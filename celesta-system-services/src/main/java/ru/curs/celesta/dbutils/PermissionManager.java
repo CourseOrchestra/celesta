@@ -107,7 +107,7 @@ public final class PermissionManager implements IPermissionManager {
     public boolean isActionAllowed(CallContext c, GrainElement t, Action a) {
         // Системному пользователю дозволяется всё без дальнейшего
         // разбирательства.
-        if (SessionContext.SYSTEM_USER_ID.equals(c.getUserId()))
+        if (ICelesta.SUPER.equals(c.getUserId()))
             return true;
 
         // Вычисляем местоположение данных в кэше.
@@ -144,8 +144,7 @@ public final class PermissionManager implements IPermissionManager {
         try (
                 CallContext sysContext = c.getBuilder()
                         .setCallContext(c)
-                        .setSesContext(this.celesta.getSystemSessionContext())
-                        .setDbAdaptor(this.dbAdaptor)
+                        .setUserId(celesta.SUPER)
                         .createCallContext()
         ) {
             RoleCacheEntry rce = getRce(c.getUserId(), sysContext);

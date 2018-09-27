@@ -104,8 +104,7 @@ public final class LoggingManager implements ILoggingManager {
         try (
                 CallContext sysContext = c.callContext().getBuilder()
                         .setCallContext(c.callContext())
-                        .setSesContext(celesta.getSystemSessionContext())
-                        .setDbAdaptor(dbAdaptor)
+                        .setUserId(celesta.SUPER)
                         .createCallContext()
         ) {
             if (!isLoggingNeeded(sysContext, c.meta(), a))
@@ -118,7 +117,6 @@ public final class LoggingManager implements ILoggingManager {
         LogCursor log = new LogCursor(sysContext);
         log.init();
         log.setUserid(c.callContext().getUserId());
-        log.setSessionid(c.callContext().getSessionId());
         log.setGrainid(c.meta().getGrain().getName());
         log.setTablename(c._objectName());
         log.setAction_type(a.shortId());

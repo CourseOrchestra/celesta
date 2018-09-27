@@ -71,7 +71,6 @@ public final class GridDriver {
             try (
                     CallContext sysContext = closedCopyCallContext.getBuilder()
                             .setCallContext(closedCopyCallContext)
-                            .setSesContext(celesta.getSystemSessionContext())
                             .createCallContext()
             ) {
 

@@ -39,7 +39,6 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
             previousDataAccessor.nextDataAccessor = nextDataAccessor;
         if (nextDataAccessor != null)
             nextDataAccessor.previousDataAccessor = previousDataAccessor;
-        callContext().removeFromCache(this);
         callContext().decDataAccessorsCount();
     }
 
