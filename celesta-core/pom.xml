@@ -15,7 +15,7 @@
         <dependency>
             <groupId>ru.curs</groupId>
             <artifactId>celesta-sql</artifactId>
-            <version>6.1.13-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- TEST DEPENDENCIES -->

@@ -14,7 +14,7 @@
         <dependency>
             <groupId>ru.curs</groupId>
             <artifactId>celesta-core</artifactId>
-            <version>6.1.13-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
@@ -23,7 +23,7 @@
             <plugin>
                 <groupId>ru.curs</groupId>
                 <artifactId>celesta-maven-plugin</artifactId>
-                <!--<version>${project.version}</version>-->
+                <version>${project.version}</version>
                 <configuration>
                     <scores>
                         <score>
