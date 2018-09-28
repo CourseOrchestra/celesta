@@ -6,9 +6,8 @@ import ru.curs.celesta.syscursors.CalllogCursor;
 
 /**
  * Менеджер профилирования вызовов.
- *
  */
-public final class ProfilingManager {
+public final class ProfilingManager implements IProfiler {
 
     private final Celesta celesta;
     private final DBAdaptor dbAdaptor;
@@ -23,24 +22,17 @@ public final class ProfilingManager {
     /**
      * Записывает информацию о вызове в профилировщик.
      *
-     * @param context
-     *            контекст вызова.
+     * @param context контекст вызова.
      */
     public void logCall(CallContext context) {
-        if (this.profilemode) {
-            long finish = System.currentTimeMillis();
-
-            try (
-                    CallContext sysContext = context.getBuilder()
-                            .setCallContext(context)
-                            .setUserId(celesta.SUPER)
-                            .createCallContext()
-            ) {
+        if (this.profilemode && !NO_LOG.equals(context.getProcName())) {
+            try (CallContext sysContext = new SystemCallContext(celesta)) {
                 CalllogCursor clc = new CalllogCursor(sysContext);
                 clc.setProcname(context.getProcName());
                 clc.setUserid(context.getUserId());
+
                 clc.setStarttime(context.getStartTime());
-                clc.setDuration((int) (finish - context.getStartTime().getTime()));
+                clc.setDuration((int) (context.getDurationNs() / 1000));
                 clc.insert();
             }
         }
@@ -57,8 +49,7 @@ public final class ProfilingManager {
     /**
      * Устанавливает режим профилирования.
      *
-     * @param profilemode
-     *            режим профилирования.
+     * @param profilemode режим профилирования.
      */
     public void setProfilemode(boolean profilemode) {
         this.profilemode = profilemode;

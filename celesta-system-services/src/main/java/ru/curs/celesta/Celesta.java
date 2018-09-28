@@ -125,6 +125,11 @@ public class Celesta implements ICelesta, AutoCloseable {
     }
 
     @Override
+    public IProfiler getProfiler() {
+        return profiler;
+    }
+
+    @Override
     public DBAdaptor getDBAdaptor() {
         return dbAdaptor;
     }
@@ -240,13 +245,4 @@ public class Celesta implements ICelesta, AutoCloseable {
         profiler.setProfilemode(profilemode);
     }
 
-    @Override
-    public CallContext callContext() {
-        return CallContext
-                .builder()
-                .setUserId(SUPER)
-                .setCelesta(this)
-                .setProcName("init")
-                .createCallContext();
-    }
 }

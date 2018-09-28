@@ -3,6 +3,7 @@ package ru.curs.celesta.mock;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.ICelesta;
+import ru.curs.celesta.dbutils.IProfiler;
 import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
@@ -35,16 +36,6 @@ public class CelestaImpl implements ICelesta {
     }
 
     @Override
-    public CallContext callContext() {
-        return CallContext.builder()
-                .setUserId(SUPER)
-                .setProcName("mock")
-                .setCelesta(this)
-                .createCallContext();
-    }
-
-
-    @Override
     public Score getScore() {
         return score;
     }
@@ -65,6 +56,13 @@ public class CelestaImpl implements ICelesta {
     @Override
     public ConnectionPool getConnectionPool() {
         return connectionPool;
+    }
+
+    @Override
+    public IProfiler getProfiler() {
+        //do-nothing mock profiler
+        return context -> {
+        };
     }
 
     @Override

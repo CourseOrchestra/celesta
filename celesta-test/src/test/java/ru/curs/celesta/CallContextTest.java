@@ -7,9 +7,7 @@ import ru.curs.celesta.syscursors.LogsetupCursor;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CallContextTest extends AbstractCelestaTest {
 
@@ -19,7 +17,7 @@ public class CallContextTest extends AbstractCelestaTest {
     }
 
     @Test
-    public void testClose() {
+    public void cursorsAreClosedWithCallContext() {
         GrainsCursor grainsCursor = new GrainsCursor(cc());
         LogsetupCursor logSetupCursor = new LogsetupCursor(cc());
 
@@ -36,6 +34,15 @@ public class CallContextTest extends AbstractCelestaTest {
                 () -> assertTrue(grainsCursor.isClosed()),
                 () -> assertTrue(logSetupCursor.isClosed())
         );
+    }
+
+    @Test
+    public void failsIfTooManyCursorsAreCreated() {
+        for (int i = 0; i < CallContext.MAX_DATA_ACCESSORS + 1; i++) {
+            new GrainsCursor(cc());
+        }
+        assertThrows(CelestaException.class,
+                () -> new GrainsCursor(cc()));
     }
 
 }

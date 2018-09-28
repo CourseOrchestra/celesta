@@ -8,16 +8,19 @@ import ru.curs.celesta.score.Score;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 
 /**
  * Контекст вызова, содержащий несущее транзакцию соединение с БД и
  * идентификатор пользователя.
  */
 public class CallContext implements ICallContext {
+
+    private enum State {
+        NEW,
+        ACTIVE,
+        CLOSED
+    }
 
     /**
      * Максимальное число объектов доступа, которое может быть открыто в одном
@@ -27,34 +30,51 @@ public class CallContext implements ICallContext {
 
     private static final Map<Connection, Integer> PIDSCACHE = Collections
             .synchronizedMap(new WeakHashMap<>());
-    protected final ICelesta celesta;
-    private final Connection conn;
-    protected final String procName;
+
     private final String userId;
-    private final int dbPid;
-    private final Date startTime = new Date();
+
+    private ICelesta celesta;
+    private Connection conn;
+    private String procName;
+
+    private int dbPid;
+    private Date startTime;
+    private long startMonotonicTime;
 
     private BasicDataAccessor lastDataAccessor;
 
     private int dataAccessorsCount;
-    private boolean closed = false;
+    private State state;
 
-    public CallContext(CallContextBuilder contextBuilder) {
-        CallContext context = contextBuilder.callContext;
-
-        if (context != null) {
-            this.celesta = context.celesta;
-            this.userId = context.userId;
-        } else {
-            this.celesta = contextBuilder.celesta;
-            this.userId = contextBuilder.userId;
+    public CallContext(String userId) {
+        if (Objects.requireNonNull(userId).isEmpty()) {
+            throw new CelestaException("Call context's user Id must not be empty");
         }
-
-        this.conn = celesta.getConnectionPool().get();
-        this.procName = contextBuilder.procName;
-        this.dbPid = PIDSCACHE.computeIfAbsent(this.conn, getDbAdaptor()::getDBPid);
+        this.userId = userId;
+        state = State.NEW;
     }
 
+    public CallContext(String userId, ICelesta celesta, String procName) {
+        this(userId);
+        activate(celesta, procName);
+    }
+
+    public void activate(ICelesta celesta,
+                         String procName) {
+        Objects.requireNonNull(celesta);
+        Objects.requireNonNull(procName);
+        if (state != State.NEW)
+            throw new CelestaException("Cannot activate CallContext in %s state (NEW expected).",
+                    state);
+
+        this.celesta = celesta;
+        this.procName = procName;
+        conn = celesta.getConnectionPool().get();
+        dbPid = PIDSCACHE.computeIfAbsent(conn,
+                getDbAdaptor()::getDBPid);
+        startTime = new Date();
+        startMonotonicTime = System.nanoTime();
+    }
 
     public Connection getConn() {
         return conn;
@@ -64,15 +84,29 @@ public class CallContext implements ICallContext {
         return userId;
     }
 
-
     /**
-     * Коммитит транзакцию.
+     * Commits the current transaction.
+     * <p>
+     * Wraps SQLException into CelestaException.
      */
     public void commit() {
         try {
             conn.commit();
         } catch (SQLException e) {
             throw new CelestaException("Commit unsuccessful: %s", e.getMessage());
+        }
+    }
+
+    /**
+     * Rollbacks the current transaction.
+     * <p>
+     * Wraps SQLException into CelestaException.
+     */
+    public void rollback() {
+        try {
+            conn.rollback();
+        } catch (SQLException e) {
+            throw new CelestaException("Rollback unsuccessful: %s", e.getMessage());
         }
     }
 
@@ -115,7 +149,6 @@ public class CallContext implements ICallContext {
         while (lastDataAccessor != null) {
             lastDataAccessor.close();
         }
-        closed = true;
     }
 
     /**
@@ -133,14 +166,21 @@ public class CallContext implements ICallContext {
     }
 
     /**
-     * Возвращает время создания контекста вызова.
+     * Returns the calendar date of CallContext activation.
      */
     public Date getStartTime() {
         return startTime;
     }
 
+    /**
+     * Returns number of nanoseconds since CallContext activation.
+     */
+    public long getDurationNs() {
+        return System.nanoTime() - startMonotonicTime;
+    }
+
     public boolean isClosed() {
-        return closed;
+        return state == State.CLOSED;
     }
 
     public IPermissionManager getPermissionManager() {
@@ -159,69 +199,22 @@ public class CallContext implements ICallContext {
     public void close() {
         try {
             closeDataAccessors();
-            conn.close();
+            if (conn != null)
+                conn.close();
+            celesta.getProfiler().logCall(this);
+            state = State.CLOSED;
         } catch (Exception e) {
             throw new CelestaException("Can't close callContext", e);
         }
     }
 
-    protected void rollback() throws SQLException {
-        conn.rollback();
-    }
-
     /**
      * Duplicates callcontext with another JDBC connection.
      */
-
     public CallContext getCopy() {
-        //TODO!!
-        return null;
+        CallContext cc = new CallContext(userId);
+        cc.activate(celesta, procName);
+        return cc;
     }
 
-
-    public CallContextBuilder getBuilder() {
-        return builder();
-    }
-
-    public static CallContextBuilder builder() {
-        return new CallContextBuilder();
-    }
-
-    public static class CallContextBuilder {
-
-
-        protected CallContext callContext = null;
-        protected ICelesta celesta = null;
-        protected String procName = null;
-        protected String userId;
-
-
-        protected CallContextBuilder getThis() {
-            return this;
-        }
-
-        public CallContextBuilder setCallContext(CallContext callContext) {
-            this.callContext = callContext;
-            return getThis();
-        }
-
-        public CallContextBuilder setCelesta(ICelesta celesta) {
-            this.celesta = celesta;
-            return getThis();
-        }
-
-        public CallContextBuilder setProcName(String procName) {
-            this.procName = procName;
-            return getThis();
-        }
-
-        public CallContextBuilder setUserId(String userId) {
-            this.userId = userId;
-            return getThis();
-        }
-
-        public CallContext createCallContext() {
-            return new CallContext(this);
-        }
-    }
 }

@@ -32,7 +32,9 @@ public abstract class AbstractCelestaTest {
     @AfterAll
     void tearDown() {
         try {
-            celesta.callContext().getConn().createStatement().execute("SHUTDOWN");
+            try (CallContext cc = new SystemCallContext(celesta)) {
+                cc.getConn().createStatement().execute("SHUTDOWN");
+            }
             celesta.close();
         } catch (Exception e) {
             throw new CelestaException(e);
@@ -41,11 +43,7 @@ public abstract class AbstractCelestaTest {
 
     @BeforeEach
     final void beforeEach(TestInfo ti) {
-        cc = CallContext.builder()
-                .setUserId(ICelesta.SUPER)
-                .setCelesta(celesta)
-                .setProcName(ti.getDisplayName())
-                .createCallContext();
+        cc = new SystemCallContext(celesta, ti.getDisplayName());
     }
 
     @AfterEach

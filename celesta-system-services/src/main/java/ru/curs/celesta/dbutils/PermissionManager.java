@@ -13,9 +13,8 @@ import ru.curs.celesta.syscursors.UserrolesCursor;
  * Менеджер пермиссий. Определяет, имеет ли право тот или иной пользователь на
  * операции с таблицей. Права определяются по содержимому системных таблиц
  * распределения прав доступа.
- *
+ * <p>
  * Для оптимизации работы объект содержит кэш.
- *
  */
 public final class PermissionManager implements IPermissionManager {
     /**
@@ -40,7 +39,6 @@ public final class PermissionManager implements IPermissionManager {
 
     /**
      * Базовый класс элемента кэша менеджера пермиссий.
-     *
      */
     private static class BaseCacheEntry {
         private final long expirationTime;
@@ -57,7 +55,6 @@ public final class PermissionManager implements IPermissionManager {
 
     /**
      * Запись во внутреннем кэше.
-     *
      */
     private static class PermissionCacheEntry extends BaseCacheEntry {
         private final String userName;
@@ -65,7 +62,7 @@ public final class PermissionManager implements IPermissionManager {
         private final int permissionMask;
 
         public PermissionCacheEntry(String userName, GrainElement table,
-                int permissionMask) {
+                                    int permissionMask) {
             super();
             if (userName == null)
                 throw new IllegalArgumentException();
@@ -107,7 +104,7 @@ public final class PermissionManager implements IPermissionManager {
     public boolean isActionAllowed(CallContext c, GrainElement t, Action a) {
         // Системному пользователю дозволяется всё без дальнейшего
         // разбирательства.
-        if (ICelesta.SUPER.equals(c.getUserId()))
+        if (c instanceof SystemCallContext)
             return true;
 
         // Вычисляем местоположение данных в кэше.
@@ -141,12 +138,7 @@ public final class PermissionManager implements IPermissionManager {
     }
 
     private PermissionCacheEntry refreshPermissions(CallContext c, GrainElement t) {
-        try (
-                CallContext sysContext = c.getBuilder()
-                        .setCallContext(c)
-                        .setUserId(celesta.SUPER)
-                        .createCallContext()
-        ) {
+        try (CallContext sysContext = new SystemCallContext(celesta, "refreshPermissions")) {
             RoleCacheEntry rce = getRce(c.getUserId(), sysContext);
             PermissionsCursor permissions = new PermissionsCursor(sysContext);
             int permissionsMask = 0;
@@ -155,11 +147,11 @@ public final class PermissionManager implements IPermissionManager {
                     break;
                 if (READER.equals(roleId)
                         || (t.getGrain().getName() + '.' + READER)
-                                .equals(roleId)) {
+                        .equals(roleId)) {
                     permissionsMask |= Action.READ.getMask();
                 } else if (EDITOR.equals(roleId)
                         || (t.getGrain().getName() + '.' + EDITOR)
-                                .equals(roleId)) {
+                        .equals(roleId)) {
                     permissionsMask = FULL_RIGHTS;
                 } else if (permissions.tryGet(roleId, t.getGrain().getName(),
                         t.getName())) {
