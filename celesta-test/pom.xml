@@ -53,6 +53,12 @@
         </dependency>
 
         <dependency>
+            <groupId>ru.curs</groupId>
+            <artifactId>celesta-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>test</scope>
@@ -82,6 +88,27 @@
                 <configuration>
                     <skip>true</skip>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>ru.curs</groupId>
+                <artifactId>celesta-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <scores>
+                        <score>
+                            <path>${project.basedir}/score</path>
+                        </score>
+                    </scores>
+                    <genSysCursors>true</genSysCursors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>gen-cursors</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
