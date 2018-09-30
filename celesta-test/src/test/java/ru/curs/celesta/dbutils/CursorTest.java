@@ -10,7 +10,6 @@ import java.util.Properties;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.syscursors.LogsetupCursor;
-
 public class CursorTest extends AbstractCelestaTest {
 
     @Override
