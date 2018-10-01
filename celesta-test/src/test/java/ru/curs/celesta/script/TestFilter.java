@@ -3,20 +3,17 @@ package ru.curs.celesta.script;
 import filters.*;
 import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.dbutils.BasicCursor;
+import ru.curs.celesta.dbutils.InFilterSupport;
+import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
+import ru.curs.celesta.score.ParseException;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.time.LocalDateTime;
-import java.sql.Timestamp;
-
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.dbutils.Cursor;
-import ru.curs.celesta.dbutils.InFilterSupport;
-import ru.curs.celesta.dbutils.filter.In;
-import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
-import ru.curs.celesta.score.ParseException;
 
 
 class TestFilters implements ScriptTest {
@@ -555,5 +552,26 @@ class TestFilters implements ScriptTest {
         FieldsLookup lookup = a.setIn(b);
         assertThrows(CelestaException.class,
                 () -> lookup.add("date", "numb1"));
+    }
+
+    @TestTemplate
+    void complexFilterWorksForTableCursor(CallContext context) {
+        AFilterCursor a = new AFilterCursor(context);
+        a.deleteAll();
+        a.clear();
+        a.setNumber1(1);
+        a.setNumber1(2);
+        a.insert();
+
+        a.clear();
+        a.setNumber1(2);
+        a.setNumber2(1);
+        a.insert();
+
+        assertEquals(2, a.count());
+        a.setComplexFilter("number1 > number2");
+        assertEquals(1, a.count());
+        a.first();
+        assertEquals(2, a.getNumber1().intValue());
     }
 }

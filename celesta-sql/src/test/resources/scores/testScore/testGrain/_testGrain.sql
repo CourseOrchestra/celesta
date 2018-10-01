@@ -56,6 +56,7 @@ create view testView4 as select f1, f4, f5, f4 + f5 as s, f5 * f5 + 1 as s2 from
 
 create view testView5 as select attrVarchar as foo, f7 as bar, attrVarchar || f7 as baz from testTable;
 
-
+create view testView6 as select -attrInt as foo from testTable
+where attrInt in (2, 3);
 
 

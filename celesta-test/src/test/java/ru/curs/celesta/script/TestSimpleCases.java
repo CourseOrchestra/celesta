@@ -1,7 +1,6 @@
 package ru.curs.celesta.script;
 
 import org.junit.jupiter.api.TestTemplate;
-import org.apache.commons.lang.mutable.MutableBoolean;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.syscursors.LogCursor;
 import simpleCases.*;
@@ -12,6 +11,22 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TestSimpleCases implements ScriptTest {
+
+    static class MutableBoolean {
+        private boolean value;
+
+        MutableBoolean(boolean value) {
+            this.value = value;
+        }
+
+        void setValue(boolean value) {
+            this.value = value;
+        }
+
+        boolean booleanValue() {
+            return value;
+        }
+    }
 
     @TestTemplate
     void test_getdate_in_view(CallContext context) {
