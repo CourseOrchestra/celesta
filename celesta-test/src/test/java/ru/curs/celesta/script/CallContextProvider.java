@@ -2,6 +2,8 @@ package ru.curs.celesta.script;
 
 import org.junit.jupiter.api.extension.*;
 import org.testcontainers.containers.JdbcDatabaseContainer;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
@@ -70,7 +72,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
 
     public void startCelestas() {
         celestas.put(Backend.H2, celestaFromH2());
-/*
+
         containers.put(Backend.PostgreSQL, new PostgreSQLContainer());
         celestas.put(Backend.PostgreSQL, celestaFromContainer(containers.get(Backend.PostgreSQL)));
 
@@ -82,7 +84,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
                 .withCollation("Cyrillic_General_CI_AS");
         containers.put(Backend.MSSQL, ms);
         celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.PostgreSQL)));
-*/
+
     }
 
     public void stopCelestas() {
