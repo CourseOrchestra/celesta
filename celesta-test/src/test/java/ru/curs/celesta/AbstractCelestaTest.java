@@ -31,10 +31,9 @@ public abstract class AbstractCelestaTest {
 
     @AfterAll
     void tearDown() {
+
         try {
-            try (CallContext cc = new SystemCallContext(celesta)) {
-                cc.getConn().createStatement().execute("SHUTDOWN");
-            }
+            celesta.getConnectionPool().get().createStatement().execute("SHUTDOWN");
             celesta.close();
         } catch (Exception e) {
             throw new CelestaException(e);
