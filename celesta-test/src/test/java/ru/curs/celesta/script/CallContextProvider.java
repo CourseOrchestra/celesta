@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 public class CallContextProvider implements TestTemplateInvocationContextProvider {
 
     enum Backend {
-        H2/*, PostgreSQL, Oracle, MSSQL*/
+        H2, PostgreSQL, Oracle, MSSQL
     }
 
     private final EnumMap<Backend, JdbcDatabaseContainer> containers = new EnumMap<>(Backend.class);
