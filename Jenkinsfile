@@ -11,7 +11,7 @@ node {
     }
 
     stage ('Artifactory configuration') {
-        rtMaven.tool = 'M3' 
+        rtMaven.tool = 'M3'
         rtMaven.deployer releaseRepo: 'libs-release-local', snapshotRepo: 'libs-snapshot-local', server: server
         rtMaven.resolver releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot', server: server
         rtMaven.deployer.artifactDeploymentPatterns.addExclude("*celesta-test*")
@@ -31,7 +31,7 @@ node {
         server.download spec: downloadSpec
         oldWarnings = readYaml file: 'previous.yml'
     }
-    
+
     stage ('Docker cleanup') {
         sh '''docker ps -a -q &> /dev/null
 if [ $? != 0 ]; then
@@ -45,10 +45,11 @@ fi'''
         }
     } finally {
         junit '**/surefire-reports/**/*.xml'
+        step( [ $class: 'JacocoPublisher', execPattern: '**/target/jacoco.exec' ] )
         checkstyle pattern: '**/target/checkstyle-result.xml' //, canComputeNew: true, useDeltaValues: true, shouldDetectModules: true
         findbugs pattern: '**/target/spotbugsXml.xml'
     }
-       
+
     stage ('Ratcheting') {
         def modules = ['celesta-sql',
                        'celesta-core',
@@ -59,7 +60,7 @@ fi'''
         writeYaml file: 'target/warnings.yml', data: warningsMap
         compareWarningMaps oldWarnings, warningsMap
     }
-    
+
     if (env.BRANCH_NAME == 'dev') {
         stage ('Publish build info') {
             def uploadSpec = """
@@ -71,7 +72,7 @@ fi'''
                 }
                 ]
             }"""
-            
+
             def buildInfo2 = server.upload spec: uploadSpec
             buildInfo.append(buildInfo2)
             server.publishBuildInfo buildInfo
