@@ -61,7 +61,7 @@ class TestParameterizedView implements ScriptTest {
         assertEquals("B", pvCursor.getF3());
 
         params = new HashMap<>();
-        params.put("p", 2);
+        params.put("p", 3);
         pvCursor = new PView1Cursor(context, params);
         assertEquals(1, pvCursor.count());
 

@@ -384,6 +384,9 @@ public final class CursorGenerator {
                     builder.endControlFlow();
                 } else {
                     builder.addStatement("this.$N = rs.$N($S)", name, meta.jdbcGetterName(), name);
+                    builder.beginControlFlow("if (rs.$N())", "wasNull");
+                    builder.addStatement("this.$N = null", name);
+                    builder.endControlFlow();
                 }
                 builder.endControlFlow();
             }
@@ -498,7 +501,8 @@ public final class CursorGenerator {
         builder.addParameter(param);
 
         columns.entrySet().stream().filter(
-                e -> e.getValue() instanceof IntegerColumn && ((IntegerColumn) e.getValue()).isIdentity()
+                e -> e.getValue() instanceof IntegerColumn && (((IntegerColumn) e.getValue()).isIdentity()
+                        || ((IntegerColumn)e.getValue()).getSequence() != null)
         ).findFirst()
                 .ifPresent(e -> builder.addStatement("this.$N = $N", e.getKey(), param.name));
 

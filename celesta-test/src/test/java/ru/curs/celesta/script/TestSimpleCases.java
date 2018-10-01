@@ -1,7 +1,7 @@
 package ru.curs.celesta.script;
 
 import org.junit.jupiter.api.TestTemplate;
-import org.testcontainers.shaded.org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang.mutable.MutableBoolean;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.syscursors.LogCursor;
 import simpleCases.*;
