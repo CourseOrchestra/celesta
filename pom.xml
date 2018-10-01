@@ -306,6 +306,14 @@
                             <goals>
                                 <goal>report</goal>
                             </goals>
+                            <configuration>
+                                <includes>
+                                    <!--Do not include generated test cursors-->
+                                    <include>
+                                        ru/curs/**/*
+                                    </include>
+                                </includes>
+                            </configuration>
                         </execution>
                         <execution>
                             <id>post-unit-test</id>
