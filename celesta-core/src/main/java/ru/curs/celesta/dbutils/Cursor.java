@@ -142,8 +142,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     @Override
     protected void closeInternal() {
         super.closeInternal();
-        if (xRec != null)
+        if (xRec != null) {
             xRec.close();
+        }
         closeStatements(getHelper.getHolder(), insert, delete, update);
     }
 
@@ -154,8 +155,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         if (!tryInsert()) {
             StringBuilder sb = new StringBuilder();
             for (Object value : _currentKeyValues()) {
-                if (sb.length() > 0)
+                if (sb.length() > 0) {
                     sb.append(", ");
+                }
                 sb.append(value == null ? "null" : value.toString());
             }
             throw new CelestaException("Record %s (%s) already exists", _objectName(), sb.toString());
@@ -166,8 +168,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * Осуществляет вставку курсора в БД.
      */
     public final boolean tryInsert() {
-        if (!canInsert())
+        if (!canInsert()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.INSERT);
+        }
 
         preInsert();
         //TODO: одно из самых нуждающихся в переделке мест.
@@ -184,8 +187,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                      * transmit recversion from xRec to rec for possible future
                      * record update
                      */
-                    if (getRecversion() == 0)
+                    if (getRecversion() == 0) {
                         setRecversion(xRec.getRecversion());
+                    }
                     return false;
                 }
             } finally {
@@ -245,16 +249,18 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     // CHECKSTYLE:OFF for cyclomatic complexity
     public final boolean tryUpdate() {
         // CHECKSTYLE:ON
-        if (!canModify())
+        if (!canModify()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.MODIFY);
+        }
 
         preUpdate();
         PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
         try {
             ResultSet rs = g.executeQuery();
             try {
-                if (!rs.next())
+                if (!rs.next()) {
                     return false;
+                }
                 // Прочитали из базы данных значения -- обновляем xRec
                 if (xRec == null) {
                     xRec = (Cursor) _getBufferCopy(callContext(), null);
@@ -279,8 +285,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
             }
             // Если ничего не изменилось -- выполнять дальнейшие действия нет
             // необходимости
-            if (notChanged)
+            if (notChanged) {
                 return true;
+            }
 
             if (!(Arrays.equals(myMask, updateMask) && Arrays.equals(myNullsMask, nullUpdateMask))) {
                 update.close();
@@ -289,16 +296,18 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
             }
 
             // for a completely new record
-            if (getRecversion() == 0)
+            if (getRecversion() == 0) {
                 setRecversion(xRec.getRecversion());
+            }
 
             PreparedStatement upd = update.getStatement(values, recversion);
 
             upd.execute();
             ILoggingManager loggingManager = callContext().getLoggingManager();
             loggingManager.log(this, Action.MODIFY);
-            if (meta().isVersioned())
+            if (meta().isVersioned()) {
                 recversion++;
+            }
             this.initXRec();
             postUpdate();
 
@@ -326,10 +335,12 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      *            старое значение
      */
     private static boolean compareValues(Object newVal, Object oldVal) {
-        if (newVal == null)
+        if (newVal == null) {
             return oldVal == null || (oldVal instanceof BLOB);
-        if (newVal instanceof BLOB)
+        }
+        if (newVal instanceof BLOB) {
             return !((BLOB) newVal).isModified();
+        }
         return newVal.equals(oldVal);
     }
 
@@ -337,8 +348,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * Удаляет текущую запись.
      */
     public final void delete() {
-        if (!canDelete())
+        if (!canDelete()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
+        }
 
         PreparedStatement del = delete.getStatement(_currentValues(), recversion);
 
@@ -366,8 +378,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * Удаляет все записи, попавшие в текущий фильтр.
      */
     public final void deleteAll() {
-        if (!canDelete())
+        if (!canDelete()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.DELETE);
+        }
         PreparedStatement stmt = deleteAll.getStatement(_currentValues(), recversion);
         try {
             try {

@@ -4,10 +4,13 @@ import ru.curs.celesta.dbutils.IProfiler;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * CallContext of system, which not need any user.
+ */
 public class SystemCallContext extends CallContext {
 
     //this is to avoid the temptation to hard-code a name of system user anywhere
-    private final static String SYSUSER = String.format("SYS%08X",
+    private static final String SYSUSER = String.format("SYS%08X",
             ThreadLocalRandom.current().nextInt());
 
     /**

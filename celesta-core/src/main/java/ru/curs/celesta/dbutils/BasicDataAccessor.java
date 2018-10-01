@@ -16,8 +16,9 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
         context.incDataAccessorsCount();
 
         previousDataAccessor = context.getLastDataAccessor();
-        if (previousDataAccessor != null)
+        if (previousDataAccessor != null) {
             previousDataAccessor.nextDataAccessor = this;
+        }
         context.setLastDataAccessor(this);
     }
 
@@ -25,31 +26,36 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
     @Override
     protected void validateInitContext(CallContext context) {
         super.validateInitContext(context);
-        if (context.getUserId() == null)
+        if (context.getUserId() == null) {
             throw new CelestaException(
                     "Invalid context passed to %s constructor: user id is null.",
                     this.getClass().getName());
+        }
     }
 
     @Override
     protected void closeInternal() {
-        if (this == callContext().getLastDataAccessor())
+        if (this == callContext().getLastDataAccessor()) {
             callContext().setLastDataAccessor(previousDataAccessor);
-        if (previousDataAccessor != null)
+        }
+        if (previousDataAccessor != null) {
             previousDataAccessor.nextDataAccessor = nextDataAccessor;
-        if (nextDataAccessor != null)
+        }
+        if (nextDataAccessor != null) {
             nextDataAccessor.previousDataAccessor = previousDataAccessor;
+        }
         callContext().decDataAccessorsCount();
     }
 
-    protected void clearSpecificState() {}
+    protected void clearSpecificState() { }
 
     /**
      * Есть ли у сессии права на чтение текущего объекта.
      */
     public final boolean canRead() {
-        if (isClosed())
+        if (isClosed()) {
             throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
+        }
         IPermissionManager permissionManager = callContext().getPermissionManager();
         return permissionManager.isActionAllowed(callContext(), meta(), Action.READ);
     }
