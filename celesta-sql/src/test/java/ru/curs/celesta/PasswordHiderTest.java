@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ConnectionPoolTest {
+public class PasswordHiderTest {
     @Test
     public void passwordInJDBCURLIsMasked() {
         assertEquals(null, PasswordHider.maskPassword(null));

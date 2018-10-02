@@ -6,7 +6,7 @@ import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-public class ContextSensitiveKeywordsUsage extends  AbstractParsingTest{
+public class ContextSensitiveKeywordsUsageTest extends  AbstractParsingTest{
     @Test
     void testParsingOnCorrectSyntax() throws Exception {
         File f = ResourceUtil.getResourceAsFile(
