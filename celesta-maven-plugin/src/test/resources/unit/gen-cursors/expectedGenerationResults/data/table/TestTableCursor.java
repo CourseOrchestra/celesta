@@ -141,25 +141,46 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     protected void _parseResultInternal(ResultSet rs) throws SQLException {
         if (this.inRec("id")) {
             this.id = rs.getInt("id");
+            if (rs.wasNull()) {
+                this.id = null;
+            }
         }
         if (this.inRec("str")) {
             this.str = rs.getString("str");
+            if (rs.wasNull()) {
+                this.str = null;
+            }
         }
         if (this.inRec("deleted")) {
             this.deleted = rs.getBoolean("deleted");
+            if (rs.wasNull()) {
+                this.deleted = null;
+            }
         }
         if (this.inRec("weight")) {
             this.weight = rs.getDouble("weight");
+            if (rs.wasNull()) {
+                this.weight = null;
+            }
         }
         if (this.inRec("content")) {
             this.content = rs.getString("content");
+            if (rs.wasNull()) {
+                this.content = null;
+            }
         }
         if (this.inRec("created")) {
             this.created = rs.getTimestamp("created");
+            if (rs.wasNull()) {
+                this.created = null;
+            }
         }
         this.rawData = null;
         if (this.inRec("cost")) {
             this.cost = rs.getBigDecimal("cost");
+            if (rs.wasNull()) {
+                this.cost = null;
+            }
         }
         if (this.inRec("toDelete")) {
             Timestamp ts = rs.getTimestamp("toDelete", Calendar.getInstance(TimeZone.getTimeZone("UTC")));
@@ -210,6 +231,7 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
 
     @Override
     protected void _setAutoIncrement(int val) {
+        this.id = val;
     }
 
 

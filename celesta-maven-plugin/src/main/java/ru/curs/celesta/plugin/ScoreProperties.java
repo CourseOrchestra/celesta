@@ -22,10 +22,12 @@ public class ScoreProperties {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null)
+        if (obj == null) {
             return false;
-        if (this == obj)
+        }
+        if (this == obj) {
             return true;
+        }
         if (obj instanceof ScoreProperties) {
             ScoreProperties that = (ScoreProperties)obj;
             return this.hashCode() == that.hashCode()

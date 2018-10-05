@@ -5,10 +5,9 @@ import org.junit.jupiter.api.BeforeAll;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
-import ru.curs.celesta.mock.CelestaImpl;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.PyScoreDiscovery;
+import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 
 
 import java.sql.Connection;
@@ -28,7 +27,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
         params.put("h2.in-memory", "true");
         params.put("h2.referential.integrity", "true");
 
-        BaseAppSettings appSettings = new JythonAppSettings(params);
+        BaseAppSettings appSettings = new AppSettings(params);
 
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
@@ -42,7 +41,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
 
         Score score = new AbstractScore.ScoreBuilder<>(Score.class)
                 .path(SCORE_NAME)
-                .scoreDiscovery(new PyScoreDiscovery())
+                .scoreDiscovery(new DefaultScoreDiscovery())
                 .build();
 
         DbUpdaterImpl dbUpdater = createDbUpdater(score, dba);
@@ -60,7 +59,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
         setScore(
                 new AbstractScore.ScoreBuilder<>(Score.class)
                         .path(SCORE_NAME)
-                        .scoreDiscovery(new PyScoreDiscovery())
+                        .scoreDiscovery(new DefaultScoreDiscovery())
                         .build()
         );
     }

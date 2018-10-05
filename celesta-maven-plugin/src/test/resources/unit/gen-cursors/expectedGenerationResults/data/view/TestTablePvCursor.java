@@ -50,6 +50,9 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
     protected void _parseResult(ResultSet rs) throws SQLException {
         if (this.inRec("s")) {
             this.s = rs.getInt("s");
+            if (rs.wasNull()) {
+                this.s = null;
+            }
         }
     }
 

@@ -60,6 +60,9 @@ public final class TestTableWithIdentityCursor extends Cursor implements Iterabl
     protected void _parseResultInternal(ResultSet rs) throws SQLException {
         if (this.inRec("identityId")) {
             this.identityId = rs.getInt("identityId");
+            if (rs.wasNull()) {
+                this.identityId = null;
+            }
         }
         this.setRecversion(rs.getInt("recversion"));
     }
