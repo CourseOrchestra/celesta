@@ -9,34 +9,24 @@ import java.util.Properties;
 
 
 import ru.curs.celesta.*;
+import ru.curs.celesta.syscursors.LogCursor;
 import ru.curs.celesta.syscursors.LogsetupCursor;
 
-public class CursorTest {
+public class CursorTest extends AbstractCelestaTest {
 
-    private static Celesta celesta;
+    @Override
+    protected String scorePath() {
+        return "score";
+    }
 
-    private PySessionContext sc = new PySessionContext("super", "foo");
     private Cursor c;
 
-    @BeforeAll
-    public static void init() {
-        Properties properties = new Properties();
-        properties.setProperty("score.path", "score");
-        properties.setProperty("h2.in-memory", "true");
-
-        celesta = Celesta.createInstance(properties);
-    }
-
-    @AfterAll
-    public static void destroy() throws SQLException {
-        celesta.callContext(new PySessionContext("super", "foo")).getConn().createStatement().execute("SHUTDOWN");
-        celesta.close();
-    }
 
     @BeforeEach
     public void before() {
-        c = new LogsetupCursor(celesta.callContext(sc));
+        c = new LogsetupCursor(cc());
     }
+
 
     @AfterEach
     public void after() {
@@ -140,5 +130,79 @@ public class CursorTest {
                 () -> assertFalse(c.position.isStmtValid())
         );
 
+    }
+
+    @Test
+    void copyFilterFromCopiesFilters() {
+        LogsetupCursor c2 = new LogsetupCursor(cc());
+        c2.setRange("m", true);
+        c2.setFilter("tablename", "foo%");
+        c2.setComplexFilter("i = m");
+        c2.limit(5, 10);
+
+        c.setRange("d", false);
+        c.copyFiltersFrom(c2);
+
+
+        assertAll(
+                () -> assertEquals(c2.getComplexFilter(), c.getComplexFilter()),
+                () -> assertNull(c.getFilters().get("d")),
+                () -> assertEquals("true", c.getFilters().get("m").toString()),
+                () -> assertEquals("foo%", c.getFilters().get("tablename").toString()),
+                () -> assertEquals("\"i\" = \"m\"", c.getComplexFilter())
+        );
+    }
+
+    @Test
+    void isEquivalentChecksForFilterEquivalence() {
+        LogsetupCursor c2 = new LogsetupCursor(cc());
+        c2.setRange("m", true);
+        c2.setFilter("tablename", "foo%");
+        c2.setComplexFilter("i = m");
+
+        assertFalse(c.isEquivalent(c2));
+        c.copyFiltersFrom(c2);
+        assertTrue(c.isEquivalent(c2));
+
+        c.orderBy("i");
+        assertFalse(c.isEquivalent(c2));
+        c2.orderBy("i");
+        assertTrue(c.isEquivalent(c2));
+    }
+
+    @Test
+    void positionCalculatesPosition() {
+        LogCursor lc = new LogCursor(cc());
+
+        setupLogCursor(lc);
+        lc.insert();
+        lc.clear();
+
+        setupLogCursor(lc);
+        lc.insert();
+        lc.clear();
+
+        setupLogCursor(lc);
+        lc.insert();
+        assertEquals(2, ((BasicCursor) lc).position());
+
+        lc.setFilter("entryno", ">1");
+        assertEquals(1, ((BasicCursor) lc).position());
+
+    }
+
+    private void setupLogCursor(LogCursor lc) {
+        lc.setUserid("foo");
+        lc.setGrainid("celesta");
+        lc.setTablename("logsetup");
+        lc.setAction_type(Action.INSERT.shortId());
+    }
+
+    @Test
+    void emptyCursorIsNotNavigable() {
+        c.deleteAll();
+        assertThrows(CelestaException.class, () -> c.first());
+        assertThrows(CelestaException.class, () -> c.last());
+        assertThrows(CelestaException.class, () -> c.get("foo", "bar"));
     }
 }

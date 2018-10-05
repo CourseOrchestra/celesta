@@ -64,18 +64,22 @@ public final class LyraCollator {
 
     int getElementCode(char c) throws LyraCollatorException {
         Integer e = elementToCode.get(c);
-        if (e == null)
+        if (e == null) {
             throw new LyraCollatorException(c);
+        }
         return e.intValue();
     }
 
     char getElement(int primOrder, int secOrder, int terOrder) {
-        if (primOrder < 0 || primOrder >= primOrderCount)
+        if (primOrder < 0 || primOrder >= primOrderCount) {
             throw new IndexOutOfBoundsException();
-        if (secOrder < 0 || secOrder >= secOrderCount)
+        }
+        if (secOrder < 0 || secOrder >= secOrderCount) {
             throw new IndexOutOfBoundsException();
-        if (terOrder < 0 || terOrder >= terOrderCount)
+        }
+        if (terOrder < 0 || terOrder >= terOrderCount) {
             throw new IndexOutOfBoundsException();
+        }
 
         int e = getElementCode(primOrder, secOrder, terOrder);
         Character c = codeToElement.floorEntry(e).getValue();

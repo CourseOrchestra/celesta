@@ -56,7 +56,7 @@ public abstract class BaseAppSettings {
         h2Port = h2PortTmp;
         //Если настройка h2.in-memory установлена в true - игнорируем настройку строки jdbc подключения и вводим свою
         if (h2InMemory) {
-            if (h2Port > 0){
+            if (h2Port > 0) {
                 databaseConnection = String.format(
                         "jdbc:h2:tcp://localhost:%d/mem:celesta", h2Port);
             } else {
@@ -73,16 +73,18 @@ public abstract class BaseAppSettings {
             login = properties.getProperty("rdbms.connection.username", "").trim();
             password = properties.getProperty("rdbms.connection.password", "").trim();
 
-            if ("".equals(databaseConnection))
+            if ("".equals(databaseConnection)) {
                 sb.append("No JDBC URL given (rdbms.connection.url).\n");
+            }
         }
 
         dbType = DBType.resolveByJdbcUrl(databaseConnection);
-        if (dbType == DBType.UNKNOWN)
+        if (dbType == DBType.UNKNOWN) {
             sb.append("Cannot recognize RDBMS type or unsupported database.");
+        }
 
         String lf = properties.getProperty("log.file");
-        if (lf != null)
+        if (lf != null) {
             try {
                 FileHandler fh = new FileHandler(lf, true);
                 fh.setFormatter(new SimpleFormatter());
@@ -90,24 +92,27 @@ public abstract class BaseAppSettings {
             } catch (IOException e) {
                 sb.append("Could not access or create log file ").append(lf).append('\n');
             }
+        }
 
         skipDBUpdate = Boolean.parseBoolean(properties.getProperty("skip.dbupdate", "").trim());
         forceDBInitialize = Boolean.parseBoolean(properties.getProperty("force.dbinitialize", "").trim());
         logLogins = Boolean.parseBoolean(properties.getProperty("log.logins", "").trim());
 
-        if (sb.length() > 0)
+        if (sb.length() > 0) {
             throw new CelestaException(sb.toString());
+        }
 
     }
 
     protected static void checkEntries(String path, String propertyName, StringBuffer sb) {
-        if (!path.isEmpty())
+        if (!path.isEmpty()) {
             for (String pathEntry : path.split(File.pathSeparator)) {
                 File pathFile = new File(pathEntry);
                 if (!(pathFile.isDirectory() && pathFile.canRead())) {
                     sb.append(String.format("Invalid %s entry: %s%n", propertyName, pathEntry));
                 }
             }
+        }
     }
 
 
@@ -169,7 +174,7 @@ public abstract class BaseAppSettings {
 
     /**
      * Флаг поддержки для uniq constraint (отключение позволяет, например,
-     * вставлять записи без наличия ссылок на обязательные внешние записи)
+     * вставлять записи без наличия ссылок на обязательные внешние записи).
      */
     public boolean isH2ReferentialIntegrity() {
         return h2ReferentialIntegrity;

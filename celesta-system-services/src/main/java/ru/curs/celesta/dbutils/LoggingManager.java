@@ -9,7 +9,6 @@ import ru.curs.celesta.syscursors.LogsetupCursor;
 /**
  * Менеджер логирования. Записывает в лог изменённые значения (если это
  * необходимо).
- *
  */
 public final class LoggingManager implements ILoggingManager {
     /**
@@ -101,13 +100,7 @@ public final class LoggingManager implements ILoggingManager {
                 || "tables".equals(c.meta().getName())))
             return;
 
-        try (
-                CallContext sysContext = c.callContext().getBuilder()
-                        .setCallContext(c.callContext())
-                        .setSesContext(celesta.getSystemSessionContext())
-                        .setDbAdaptor(dbAdaptor)
-                        .createCallContext()
-        ) {
+        try (CallContext sysContext = new SystemCallContext(celesta, "log")) {
             if (!isLoggingNeeded(sysContext, c.meta(), a))
                 return;
             writeToLog(c, a, sysContext);
@@ -118,7 +111,6 @@ public final class LoggingManager implements ILoggingManager {
         LogCursor log = new LogCursor(sysContext);
         log.init();
         log.setUserid(c.callContext().getUserId());
-        log.setSessionid(c.callContext().getSessionId());
         log.setGrainid(c.meta().getGrain().getName());
         log.setTablename(c._objectName());
         log.setAction_type(a.shortId());
@@ -144,22 +136,22 @@ public final class LoggingManager implements ILoggingManager {
 
         len = log.getMaxStrLen("newvalues");
         switch (a) {
-        case INSERT:
-            value = c.asCSVLine();
-            log.setNewvalues(trimValue(value, len));
-            break;
-        case MODIFY:
-            value = c.asCSVLine();
-            log.setNewvalues(trimValue(value, len));
+            case INSERT:
+                value = c.asCSVLine();
+                log.setNewvalues(trimValue(value, len));
+                break;
+            case MODIFY:
+                value = c.asCSVLine();
+                log.setNewvalues(trimValue(value, len));
 
-            value = c.getXRec().asCSVLine();
-            log.setOldvalues(trimValue(value, len));
-            break;
-        case DELETE:
-            value = c.getXRec().asCSVLine();
-            log.setOldvalues(trimValue(value, len));
-            break;
-        default:
+                value = c.getXRec().asCSVLine();
+                log.setOldvalues(trimValue(value, len));
+                break;
+            case DELETE:
+                value = c.getXRec().asCSVLine();
+                log.setOldvalues(trimValue(value, len));
+                break;
+            default:
         }
         log.insert();
     }

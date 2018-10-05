@@ -1,7 +1,9 @@
 package ru.curs.celesta.mock;
 
-import org.python.core.PyObject;
-import ru.curs.celesta.*;
+import ru.curs.celesta.CallContext;
+import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.ICelesta;
+import ru.curs.celesta.dbutils.IProfiler;
 import ru.curs.celesta.dbutils.LoggingManager;
 import ru.curs.celesta.dbutils.PermissionManager;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
@@ -9,9 +11,8 @@ import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.score.Score;
 
 import java.util.Properties;
-import java.util.concurrent.Future;
 
-public class CelestaImpl implements PyCelesta {
+public class CelestaImpl implements ICelesta {
 
     private final TriggerDispatcher triggerDispatcher = new TriggerDispatcher();
 
@@ -35,41 +36,8 @@ public class CelestaImpl implements PyCelesta {
     }
 
     @Override
-    public CallContext callContext() {
-        return PyCallContext.builder()
-                .setSesContext(getSystemSessionContext())
-                .setCelesta(this)
-                .setDbAdaptor(this.dbAdaptor)
-                .setConnectionPool(this.connectionPool)
-                .setScore(this.score)
-                .setPermissionManager(this.permissionManager)
-                .setLoggingManager(this.loggingManager)
-                .createCallContext();
-    }
-
-    @Override
-    public PySessionContext getSystemSessionContext() {
-        return Celesta.SYSTEM_SESSION;
-    }
-
-    @Override
-    public PyObject runPython(String sesId, String proc, Object... param) {
-        return null;
-    }
-
-    @Override
-    public PyObject runPython(String sesId, CelestaMessage.MessageReceiver rec, ShowcaseContext sc, String proc, Object... param) {
-        return null;
-    }
-
-    @Override
-    public Future<PyObject> runPythonAsync(String sesId, String proc, long delay, Object... param) {
-        return null;
-    }
-
-    @Override
     public Score getScore() {
-        return null;
+        return score;
     }
 
     @Override
@@ -83,5 +51,22 @@ public class CelestaImpl implements PyCelesta {
 
     public LoggingManager getLoggingManager() {
         return loggingManager;
+    }
+
+    @Override
+    public ConnectionPool getConnectionPool() {
+        return connectionPool;
+    }
+
+    @Override
+    public IProfiler getProfiler() {
+        //do-nothing mock profiler
+        return context -> {
+        };
+    }
+
+    @Override
+    public DBAdaptor getDBAdaptor() {
+        return dbAdaptor;
     }
 }

@@ -68,13 +68,10 @@ public final class GridDriver {
             CallContext closedCopyCallContext = closedCopy.callContext();
             ICelesta celesta = closedCopyCallContext.getCelesta();
 
-            try (
-                    CallContext sysContext = closedCopyCallContext.getBuilder()
-                            .setCallContext(closedCopyCallContext)
-                            .setSesContext(celesta.getSystemSessionContext())
-                            .createCallContext()
-            ) {
-
+            try (CallContext sysContext =
+                         new SystemCallContext(
+                                 closedCopyCallContext.getCelesta(),
+                                 "LyraCounterThread")) {
                 List<String> columns = Arrays.stream(closedCopy.orderByColumnNames()).map(WhereTermsMaker::unquot).collect(Collectors.toList());
                 BasicCursor c = closedCopy._getBufferCopy(sysContext, columns);
                 c.copyFiltersFrom(closedCopy);
@@ -191,8 +188,7 @@ public final class GridDriver {
      * Checks if this driver is valid for a given cursor with its filters and
      * sorting.
      *
-     * @param c
-     *            Cursor for checking.
+     * @param c Cursor for checking.
      */
     public boolean isValidFor(BasicCursor c) {
         return closedCopy.isEquivalent(c);
@@ -201,10 +197,8 @@ public final class GridDriver {
     /**
      * Fills key fields of a cursor based on scroller knob position.
      *
-     * @param position
-     *            scrollbar knob position
-     * @param c
-     *            Alive cursor to be modified
+     * @param position scrollbar knob position
+     * @param c        Alive cursor to be modified
      * @return false if record set is empty
      */
     public boolean setPosition(int position, BasicCursor c) {
@@ -251,8 +245,7 @@ public final class GridDriver {
     /**
      * Adjusts internal state for pre-positioned cursor.
      *
-     * @param c
-     *            Cursor that is set to a certain position.
+     * @param c Cursor that is set to a certain position.
      */
     public void setPosition(BasicCursor c) {
         checkMeta(c);
@@ -347,7 +340,7 @@ public final class GridDriver {
 
     /**
      * Returns (approximate) total record count.
-     *
+     * <p>
      * Just after creation of this object this method returns DEFAULT_COUNT
      * value, but it asynchronously requests total count right after constructor
      * execution.
@@ -360,8 +353,7 @@ public final class GridDriver {
      * Sets change notifier (a method that is being called when grid metrics
      * update is ready).
      *
-     * @param changeNotifier
-     *            new change modifier.
+     * @param changeNotifier new change modifier.
      */
     public void setChangeNotifier(Runnable changeNotifier) {
         this.changeNotifier = changeNotifier;
@@ -378,8 +370,7 @@ public final class GridDriver {
      * If the grid is scrolled less than for given amount of records, the exact
      * positioning in cycle will be used instead of interpolation.
      *
-     * @param smallScroll
-     *            new value.
+     * @param smallScroll new value.
      */
     public void setMaxExactScrollValue(int smallScroll) {
         this.smallScroll = smallScroll;

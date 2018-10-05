@@ -75,8 +75,9 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
     }
 
     private VarcharFieldEnumerator(StaticDataAdaptor staticDataAdaptor, int m, boolean setup) {
-        if (m <= 0)
+        if (m <= 0) {
             throw new IllegalArgumentException();
+        }
 
         String rules = RULES.computeIfAbsent(staticDataAdaptor, this::calcRules);
         // Setting up collator
@@ -112,8 +113,9 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
     }
 
     private int[][] toArray(String str) {
-        if (str.isEmpty())
+        if (str.isEmpty()) {
             return EMPTY_STRING;
+        }
         int[][] result = new int[str.length()][3];
         LyraCollationElementIterator i = collator.getCollationElementIterator(str);
         int j = 0;
@@ -133,15 +135,17 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 
     private BigInteger atomicOrd(int[][] s, int o) {
         BigInteger result = o == 0 ? BigInteger.valueOf(s.length) : BigInteger.ZERO;
-        for (int i = 0; i < s.length; i++)
+        for (int i = 0; i < s.length; i++) {
             result = result.add(q[i][o].multiply(BigInteger.valueOf(s[i][o])));
+        }
         return result;
     }
 
     private BigInteger ord(int[][] s) {
         BigInteger[] o = new BigInteger[3];
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 3; i++) {
             o[i] = atomicOrd(s, i);
+        }
         return o[0].multiply(c2).add(o[1]).multiply(c3).add(o[2]);
     }
 
@@ -199,19 +203,23 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
         for (int j = 0; j < 3; j++) {
             r = components[j];
             for (int i = 0; i < m; i++) {
-                if (j == 0)
+                if (j == 0) {
                     r = r.subtract(BigInteger.ONE);
+                }
                 cr = r.divideAndRemainder(q[i][j]);
                 r = cr[1];
                 int c = cr[0].intValue();
-                if (c < 0)
+                if (c < 0) {
                     c = 0;
-                else if (c >= collator.getPrimOrderCount())
+                }
+                else if (c >= collator.getPrimOrderCount()) {
                     c = collator.getPrimOrderCount() - 1;
+                }
                 arr[i][j] = c;
                 if (r.equals(BigInteger.ZERO)) {
-                    if (j == 0 && i + 1 < m)
+                    if (j == 0 && i + 1 < m) {
                         arr[i + 1][j] = -1;
+                    }
                     break;
                 }
             }
@@ -220,8 +228,9 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
         char[] buf = new char[m];
         int i;
         for (i = 0; i < m; i++) {
-            if (arr[i][0] < 0)
+            if (arr[i][0] < 0) {
                 break;
+            }
             buf[i] = collator.getElement(arr[i][0], arr[i][1], arr[i][2]);
         }
         this.value = new String(buf, 0, i);
@@ -238,19 +247,23 @@ public class VarcharFieldEnumerator extends KeyEnumerator {
 
             int comparisonResult = staticDataAdaptor.compareStrings(left, right);
 
-            if (comparisonResult < 0)
-                if (staticDataAdaptor.compareStrings(right, left + "1") < 0)
-                    if (left.equalsIgnoreCase(right))
+            if (comparisonResult < 0) {
+                if (staticDataAdaptor.compareStrings(right, left + "1") < 0) {
+                    if (left.equalsIgnoreCase(right)) {
                         ruleBuilder.append(",");
-                    else
+                    } else {
                         ruleBuilder.append(";");
-                else
+                    }
+                } else {
                     ruleBuilder.append("<");
-            else if (comparisonResult == 0)
-                if (left.equalsIgnoreCase(right))
+                }
+            } else if (comparisonResult == 0) {
+                if (left.equalsIgnoreCase(right)) {
                     ruleBuilder.append(",");
-                else
+                } else {
                     ruleBuilder.append(";");
+                }
+            }
 
             ruleBuilder.append("'" + right + "'");
         }

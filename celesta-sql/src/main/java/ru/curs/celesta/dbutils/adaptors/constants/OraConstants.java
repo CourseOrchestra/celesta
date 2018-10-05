@@ -7,6 +7,6 @@ public final class OraConstants {
     public static final String SNL = "snl_";
 
     private OraConstants() {
-        throw new AssertionError();
+
     }
 }

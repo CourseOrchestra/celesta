@@ -34,7 +34,7 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.13';
+create grain celesta version '1.14';
 
 /**Active grains list.
    {implements: [ru.curs.celesta.syscursors.ISchemaCursor]}*/
@@ -134,7 +134,7 @@ create table log(
   /**user id*/
   userid varchar(250) not null,
   /**session id**/
-  sessionid varchar(250) not null,
+  sessionid varchar(250), --no sessions anymore, can be null
   /**grain id*/
   grainid varchar(30) not null,
   /**table name*/

@@ -9,7 +9,7 @@ import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.mock.CelestaImpl;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.PyScoreDiscovery;
+import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -57,7 +57,7 @@ public class DbUpdaterTest {
         params.put("h2.in-memory", "true");
         params.put("h2.referential.integrity", "true");
 
-        BaseAppSettings appSettings = new JythonAppSettings(params);
+        BaseAppSettings appSettings = new AppSettings(params);
 
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
@@ -71,7 +71,7 @@ public class DbUpdaterTest {
 
         Score score = new AbstractScore.ScoreBuilder<>(Score.class)
                 .path(scorePath)
-                .scoreDiscovery(new PyScoreDiscovery())
+                .scoreDiscovery(new DefaultScoreDiscovery())
                 .build();
 
         CelestaImpl celesta = new CelestaImpl(dba, connectionPool, score);
