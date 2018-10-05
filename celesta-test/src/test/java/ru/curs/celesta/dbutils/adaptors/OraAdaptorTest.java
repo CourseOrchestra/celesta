@@ -16,7 +16,7 @@ import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.mock.CelestaImpl;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.PyScoreDiscovery;
+import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 
 public class OraAdaptorTest extends AbstractAdaptorTest {
 
@@ -38,7 +38,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
         params.put("rdbms.connection.username", oracle.getUsername());
         params.put("rdbms.connection.password", oracle.getPassword());
 
-        BaseAppSettings appSettings = new JythonAppSettings(params);
+        BaseAppSettings appSettings = new AppSettings(params);
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
         cpc.setDriverClassName(appSettings.getDbClassName());
@@ -50,7 +50,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
 
         Score score = new AbstractScore.ScoreBuilder<>(Score.class)
                 .path(SCORE_NAME)
-                .scoreDiscovery(new PyScoreDiscovery())
+                .scoreDiscovery(new DefaultScoreDiscovery())
                 .build();
 
         DbUpdaterImpl dbUpdater = createDbUpdater(score, dba);
@@ -68,7 +68,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
         setScore(
                 new AbstractScore.ScoreBuilder<>(Score.class)
                         .path(SCORE_NAME)
-                        .scoreDiscovery(new PyScoreDiscovery())
+                        .scoreDiscovery(new DefaultScoreDiscovery())
                         .build()
         );
     }

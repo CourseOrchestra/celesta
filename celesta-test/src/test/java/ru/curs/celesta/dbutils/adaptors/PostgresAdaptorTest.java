@@ -7,15 +7,11 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.DbUpdaterImpl;
-import ru.curs.celesta.dbutils.LoggingManager;
-import ru.curs.celesta.dbutils.PermissionManager;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
-import ru.curs.celesta.mock.CelestaImpl;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.PyScoreDiscovery;
+import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 
 public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
@@ -33,7 +29,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
         params.put("rdbms.connection.username", postgres.getUsername());
         params.put("rdbms.connection.password", postgres.getPassword());
 
-        BaseAppSettings appSettings = new JythonAppSettings(params);
+        BaseAppSettings appSettings = new AppSettings(params);
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
         cpc.setDriverClassName(appSettings.getDbClassName());
@@ -45,7 +41,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
         Score score = new AbstractScore.ScoreBuilder<>(Score.class)
                 .path(SCORE_NAME)
-                .scoreDiscovery(new PyScoreDiscovery())
+                .scoreDiscovery(new DefaultScoreDiscovery())
                 .build();
 
         DbUpdaterImpl dbUpdater = createDbUpdater(score, dba);
@@ -63,7 +59,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
         setScore(
                 new AbstractScore.ScoreBuilder<>(Score.class)
                         .path(SCORE_NAME)
-                        .scoreDiscovery(new PyScoreDiscovery())
+                        .scoreDiscovery(new DefaultScoreDiscovery())
                         .build());
     }
 

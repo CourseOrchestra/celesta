@@ -1,1 +1,0 @@
-CREATE GRAIN grainWithoutPyInit VERSION '1.0';
