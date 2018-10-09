@@ -156,7 +156,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                     DbColumnInfo result = new DbColumnInfo();
                     result.setName(rs.getString(COLUMN_NAME));
                     String typeName = rs.getString("TYPE_NAME");
-                    String columnDefault = rs.getString("COLUMN_DEFAULT");
+                    String columnDefault = rs.getString("COLUMN_DEF");
 
 
                     String columnDefaultForIdentity = "NEXTVAL('" + tableString(grainName, tableName + "_seq") + "')";
