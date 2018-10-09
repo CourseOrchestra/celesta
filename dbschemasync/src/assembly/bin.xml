@@ -7,22 +7,19 @@
 	<formats>
 		<format>zip</format>
 	</formats>
-	<includeBaseDirectory>false</includeBaseDirectory>
-	<dependencySets>
-		<dependencySet>
-			<unpack>false</unpack>
-			<scope>runtime</scope>
-			<excludes>
-				<exclude>org.postgresql:postgresql</exclude>
-				<exclude>com.microsoft.sqlserver:mssql-jdbc</exclude>
-				<exclude>com.oracle.weblogic:ojdbc6</exclude>
-			</excludes>
-		</dependencySet>
-	</dependencySets>
+
 	<fileSets>
 		<fileSet>
 			<directory>src/assembly/Celesta</directory>
 			<outputDirectory>Celesta</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<directory>target/appassembler/lib</directory>
+			<outputDirectory>lib</outputDirectory>
+		</fileSet>
+		<fileSet>
+			<directory>target/appassembler/bin</directory>
+			<outputDirectory>bin</outputDirectory>
 		</fileSet>
 	</fileSets>
 </assembly>
