@@ -19,6 +19,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
+/**
+ * Abstract class, that implements {@link Connection} interface via delegating mechanism.
+ */
 public abstract class CelestaConnection implements Connection {
 
   private final Connection connection;
@@ -27,6 +30,10 @@ public abstract class CelestaConnection implements Connection {
     this.connection = connection;
   }
 
+  /**
+   * Returns real {@link Connection} of this wrapper.
+   * @return wrapped connection
+   */
   public Connection getConnection() {
     return connection;
   }

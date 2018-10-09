@@ -18,21 +18,24 @@ public class SequenceElement extends GrainElement {
     }
 
     void startWith(Long startWith) throws ParseException {
-        if (arguments.putIfAbsent(Argument.START_WITH, startWith) != null)
+        if (arguments.putIfAbsent(Argument.START_WITH, startWith) != null) {
             throw new ParseException(
                     String.format(DUPLICATE_ENTRANCE_TEMPLATE, Argument.START_WITH, getName())
             );
+        }
     }
 
     void incrementBy(Long incrementBy) throws ParseException {
-        if (incrementBy == 0)
+        if (incrementBy == 0) {
             throw new ParseException(
                     String.format("Sequence %s has illegal value 0 for INCREMENT BY expression.", getName())
             );
-        if (arguments.putIfAbsent(Argument.INCREMENT_BY, incrementBy) != null)
+        }
+        if (arguments.putIfAbsent(Argument.INCREMENT_BY, incrementBy) != null) {
             throw new ParseException(
                     String.format(DUPLICATE_ENTRANCE_TEMPLATE, Argument.INCREMENT_BY, getName())
             );
+        }
     }
 
     void minValue(Long minValue) throws ParseException {

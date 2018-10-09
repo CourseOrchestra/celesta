@@ -340,10 +340,17 @@ public final class CursorGenerator {
                             .addModifiers(Modifier.PUBLIC)
                             .returns(fieldSpec.type)
                             .addStatement("return this.$N", fieldSpec.name).build();
-                    MethodSpec setter = MethodSpec.methodBuilder("set" + methodSuffix)
+                    MethodSpec.Builder setterSpecBuilder = MethodSpec.methodBuilder("set" + methodSuffix)
                             .addModifiers(Modifier.PUBLIC)
-                            .addParameter(fieldSpec.type, fieldSpec.name)
-                            .addStatement("this.$N = $N", fieldSpec.name, fieldSpec.name).build();
+                            .addParameter(fieldSpec.type, fieldSpec.name);
+
+                    if (Date.class.getName().equals(fieldSpec.type.toString())) {
+                        setterSpecBuilder.addStatement("this.$N = $N.clone()", fieldSpec.name, fieldSpec.name);
+                    } else {
+                        setterSpecBuilder.addStatement("this.$N = $N", fieldSpec.name, fieldSpec.name);
+                    }
+
+                    MethodSpec setter = setterSpecBuilder.build();
 
                     result.add(getter);
                     result.add(setter);

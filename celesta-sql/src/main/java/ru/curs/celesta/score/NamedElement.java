@@ -74,12 +74,19 @@ public abstract class NamedElement {
 
     @Override
     public final int hashCode() {
-        return name.hashCode();
+        return this.name.hashCode();
     }
 
     @Override
     public final boolean equals(Object obj) {
-        return obj instanceof NamedElement ? name.equals(((NamedElement) obj).getName()) : name.equals(obj);
+        if (obj == null || this != obj) {
+            return false;
+        }
+        if (obj instanceof NamedElement) {
+            NamedElement o = (NamedElement) obj;
+            return this.name.equals(o.getName());
+        }
+        return false;
     }
 
     /**

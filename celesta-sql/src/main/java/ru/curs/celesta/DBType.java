@@ -2,9 +2,12 @@ package ru.curs.celesta;
 
 import java.util.Arrays;
 
+/**
+ * Enum of supported db types.
+ */
 public enum DBType {
     /**
-     * Postgre.
+     * PostgreSql.
      */
     POSTGRESQL {
         @Override
@@ -31,7 +34,7 @@ public enum DBType {
         }
     },
     /**
-     * H2
+     * H2.
      */
     H2 {
         @Override
@@ -49,8 +52,18 @@ public enum DBType {
         }
     };
 
-    abstract public String getDriverClassName();
+    /**
+     * Returns {@link String} fully qualified class name of jdbc driver.
+     *
+     * @return fully qualified class name of jdbc driver
+     */
+    public abstract String getDriverClassName();
 
+    /**
+     * Calculates {@link DBType} from jdbcUrl {@link String} and returns it.
+     * @param url jdbc url
+     * @return DBType for input url
+     */
     public static DBType resolveByJdbcUrl(String url) {
         if (url.startsWith("jdbc:sqlserver")) {
             return DBType.MSSQL;
@@ -65,6 +78,11 @@ public enum DBType {
         }
     }
 
+    /**
+     * Searches {@link DBType} by its enum name {@link String} with ignore case rule and then returns it.
+     * @param name name of enum unit
+     * @return DBType for input name
+     */
     public static DBType getByNameIgnoreCase(String name) {
         return Arrays.stream(values())
                 .filter(n -> n.name().equalsIgnoreCase(name))

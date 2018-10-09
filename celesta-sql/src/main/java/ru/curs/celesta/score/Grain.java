@@ -45,13 +45,11 @@ public final class Grain extends NamedElement {
 
     public Grain(AbstractScore score, String name) throws ParseException {
         super(name, score.getIdentifierParser());
-        if (name.contains("_"))
+        if (name.contains("_")) {
             throw new ParseException("Invalid grain name '" + name + "'. No underscores are allowed for grain names.");
+        }
         this.score = score;
         score.addGrain(this);
-
-
-        //TODO: Что-то с этим надо сделать grainPath = new File(String.format("%s%s%s", score.getDefaultGrainPath(), File.separator, name));
     }
 
     @SuppressWarnings("unchecked")
@@ -88,8 +86,10 @@ public final class Grain extends NamedElement {
                 .map(entry -> entry.getValue().getClass().getSimpleName());
         if (typeNameOfElementWithSameName.isPresent()) {
             throw new ParseException(
-                    String.format("Cannot create grain element '%s', a %s with the same name already exists in grain '%s'.",
-                            element.getName(), typeNameOfElementWithSameName.get(), getName()));
+                    String.format(
+                            "Cannot create grain element '%s', a %s with the same name already exists in grain '%s'.",
+                            element.getName(), typeNameOfElementWithSameName.get(), getName())
+            );
         }
 
         modify();
@@ -152,11 +152,12 @@ public final class Grain extends NamedElement {
      */
     public <T extends GrainElement> T getElement(String name, Class<T> classOfElement) {
         T result = getElementsHolder(classOfElement).get(name);
-        if (result == null)
+        if (result == null) {
             throw new CelestaException(
                     "%s '%s' not found in grain '%s'",
                     classOfElement.getSimpleName(), name, getName()
             );
+        }
         return result;
     }
 
@@ -167,8 +168,9 @@ public final class Grain extends NamedElement {
      * @throws ParseException В случае, если индекс с таким именем уже существует.
      */
     public void addIndex(Index index) throws ParseException {
-        if (index.getGrain() != this)
+        if (index.getGrain() != this) {
             throw new IllegalArgumentException();
+        }
         modify();
         indices.addElement(index);
     }
@@ -194,22 +196,30 @@ public final class Grain extends NamedElement {
 
         // Удаляются все индексы на данной таблице
         List<Index> indToDelete = new LinkedList<>();
-        for (Index ind : indices)
-            if (ind.getTable() == table)
+        for (Index ind : indices) {
+            if (ind.getTable() == table) {
                 indToDelete.add(ind);
+            }
+        }
 
         // Удаляются все внешние ключи, ссылающиеся на данную таблицу
         List<ForeignKey> fkToDelete = new LinkedList<>();
-        for (Grain g : score.getGrains().values())
-            for (Table t : g.getElements(Table.class).values())
-                for (ForeignKey fk : t.getForeignKeys())
-                    if (fk.getReferencedTable() == table)
+        for (Grain g : score.getGrains().values()) {
+            for (Table t : g.getElements(Table.class).values()) {
+                for (ForeignKey fk : t.getForeignKeys()) {
+                    if (fk.getReferencedTable() == table) {
                         fkToDelete.add(fk);
+                    }
+                }
+            }
+        }
 
-        for (Index ind : indToDelete)
+        for (Index ind : indToDelete) {
             ind.delete();
-        for (ForeignKey fk : fkToDelete)
+        }
+        for (ForeignKey fk : fkToDelete) {
             fk.delete();
+        }
 
         // Удаляется сама таблица
         getElementsHolder(Table.class).remove(table);
@@ -274,8 +284,9 @@ public final class Grain extends NamedElement {
      */
     void addConstraintName(String name) throws ParseException {
         name = getScore().getIdentifierParser().parse(name);
-        if (constraintNames.contains(name))
+        if (constraintNames.contains(name)) {
             throw new ParseException(String.format("Constraint '%s' is defined more than once in a grain.", name));
+        }
         constraintNames.add(name);
     }
 
@@ -302,13 +313,14 @@ public final class Grain extends NamedElement {
         for (String tableName: getElements(Table.class).keySet()) {
             String sequenceName = tableName + "_seq";
             SequenceElement se = getElementsHolder(SequenceElement.class).get(sequenceName);
-            if (se != null)
+            if (se != null) {
                 throw new ParseException(
                         String.format(
                                 "Identifier %s can't be used for the naming of sequence as  it'is reserved by Celesta.",
                                 sequenceName
                         )
                 );
+            }
         }
 
         parsingComplete = true;
@@ -325,8 +337,9 @@ public final class Grain extends NamedElement {
     }
 
     void modify() throws ParseException {
-        if (getScore().getSysSchemaName().equals(getName()) && parsingComplete)
+        if (getScore().getSysSchemaName().equals(getName()) && parsingComplete) {
             throw new ParseException("You cannot modify system grain.");
+        }
         modified = true;
     }
 
@@ -338,33 +351,40 @@ public final class Grain extends NamedElement {
 
         bw.println("-- *** TABLES ***");
         List<Table> tables = getElements(Table.class, gp);
-        for (Table t : tables)
+        for (Table t : tables) {
             t.save(bw);
+        }
 
         bw.println("-- *** FOREIGN KEYS ***");
-        for (Table t : tables)
-            for (ForeignKey fk : t.getForeignKeys())
+        for (Table t : tables) {
+            for (ForeignKey fk : t.getForeignKeys()) {
                 fk.save(bw);
+            }
+        }
 
         bw.println("-- *** INDICES ***");
         List<Index> indices = getElements(Index.class, gp);
-        for (Index i : indices)
+        for (Index i : indices) {
             i.save(bw);
+        }
 
         bw.println("-- *** VIEWS ***");
         List<View> views = getElements(View.class, gp);
-        for (View v : views)
+        for (View v : views) {
             v.save(bw);
+        }
 
         bw.println("-- *** MATERIALIZED VIEWS ***");
         List<MaterializedView> materializedViews = getElements(MaterializedView.class, gp);
-        for (MaterializedView mv : materializedViews)
+        for (MaterializedView mv : materializedViews) {
             mv.save(bw);
+        }
 
         bw.println("-- *** PARAMETERIZED VIEWS ***");
         List<ParameterizedView> parameterizedViews = getElements(ParameterizedView.class, gp);
-        for (ParameterizedView pv : parameterizedViews)
+        for (ParameterizedView pv : parameterizedViews) {
             pv.save(bw);
+        }
     }
 
     /**
@@ -374,8 +394,9 @@ public final class Grain extends NamedElement {
      */
     void save()  {
         // Сохранять неизменённую гранулу нет смысла.
-        if (!modified)
+        if (!modified) {
             return;
+        }
 
         for (GrainPart gp : this.grainParts) {
 
@@ -437,15 +458,17 @@ public final class Grain extends NamedElement {
 
     void addNativeSql(String sql, boolean isBefore, DBType dbType, GrainPart grainPart) throws ParseException {
         Matcher m = NATIVE_SQL.matcher(sql);
-        if (!m.matches())
+        if (!m.matches()) {
             throw new ParseException("Native sql should match pattern --{{...--}}, was " + sql);
+        }
 
         final List<NativeSqlElement> sqlList;
 
-        if (isBefore)
+        if (isBefore) {
             sqlList = beforeSql.computeIfAbsent(dbType, (dbTypeVar) -> new ArrayList<>());
-        else
+        } else {
             sqlList = afterSql.computeIfAbsent(dbType, (dbTypeVar) -> new ArrayList<>());
+        }
 
         sqlList.add(
                 new NativeSqlElement(grainPart, m.group(1))

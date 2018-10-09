@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class ReferenceResolver {
 
-    public static String CYCLE_REFERENCE_ERROR_MESSAGE_TEMPLATE = "Cycle reference detected on chain: %s";
+    public static final String CYCLE_REFERENCE_ERROR_MESSAGE_TEMPLATE = "Cycle reference detected on chain: %s";
 
     private final AbstractScore score;
 

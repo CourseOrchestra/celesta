@@ -150,13 +150,10 @@ public final class ForeignKey {
     void setReferencedTable(String grainName, String table) throws ParseException {
         table = getParentTable().getGrain().getScore().getIdentifierParser().parse(table);
         // Извлечение гранулы по имени.
-        final Grain grain;
         if ("".equals(grainName) || parentTable.getGrain().getName().equals(grainName)) {
-            grain = parentTable.getGrain();
             grainName = parentTable.getGrain().getName();
         } else {
             AbstractScore score = parentTable.getGrain().getScore();
-            grain = score.getGrains().get(grainName);
         }
 
         //We always resolve FK references on second step of the parsing
