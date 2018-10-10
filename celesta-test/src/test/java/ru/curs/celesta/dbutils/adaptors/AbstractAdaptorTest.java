@@ -116,7 +116,6 @@ public abstract class AbstractAdaptorTest {
     public void setup() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
 
-
         conn = getConnection();
         dba.createSchemaIfNotExists(conn, GRAIN_NAME);
 
@@ -157,7 +156,17 @@ public abstract class AbstractAdaptorTest {
         } catch (CelestaException e) {
             conn.rollback();
         }
+
+        SequenceElement ts = g.getElement("test_id", SequenceElement.class);
+        try {
+            dba.dropSequence(conn, ts);
+        } catch (CelestaException e) {
+            conn.rollback();
+        }
+        
+        dba.createSequence(conn, ts);
         dba.createTable(conn, t);
+
         conn.commit();
     }
 
@@ -526,7 +535,7 @@ public abstract class AbstractAdaptorTest {
         assertEquals(false, c.isNullable());
         assertEquals(0, c.getLength());
         assertEquals(0, c.getScale());
-        assertEquals("", c.getDefaultValue());
+        assertFalse(c.getDefaultValue().isEmpty());
         assertEquals(false, c.isMax());
 
         // attrInt int default 3,
@@ -616,6 +625,7 @@ public abstract class AbstractAdaptorTest {
 
         Grain g = score.getGrain(GRAIN_NAME);
         Table tableForMatView = g.getElement("tableForMatView", Table.class);
+        SequenceElement seqTableForMatView = g.getElement("tableForMatView_id", SequenceElement.class);
         MaterializedView mView1gTest = g.getElement("mView1gTest", MaterializedView.class);
 
         boolean tablesAreCreated = false;
@@ -628,11 +638,18 @@ public abstract class AbstractAdaptorTest {
                 conn.rollback();
             }
             try {
+                dba.dropSequence(conn, seqTableForMatView);
+            } catch (CelestaException e) {
+                conn.rollback();
+            }
+            
+            try {
                 dba.dropTable(conn, mView1gTest);
             } catch (CelestaException e) {
                 conn.rollback();
             }
 
+            dba.createSequence(conn, seqTableForMatView);
             dba.createTable(conn, tableForMatView);
             dba.createTable(conn, mView1gTest);
             tablesAreCreated = true;
@@ -707,6 +724,7 @@ public abstract class AbstractAdaptorTest {
         } finally {
             if (tablesAreCreated) {
                 dba.dropTable(conn, tableForMatView);
+                dba.dropSequence(conn, seqTableForMatView);
                 dba.dropTable(conn, mView1gTest);
             }
         }
@@ -845,8 +863,8 @@ public abstract class AbstractAdaptorTest {
         assertFalse(c.isNullable());
 
         col = (IntegerColumn) t.getColumn("attrInt");
+        col.setNullableAndDefault(true, "1");
         c = dba.getColumnInfo(conn, col);
-        col.setNullableAndDefault(true, "identity");
         dba.updateColumn(conn, col, c);
         c = dba.getColumnInfo(conn, col);
         assertTrue(c.isNullable());
@@ -860,7 +878,7 @@ public abstract class AbstractAdaptorTest {
         c = dba.getColumnInfo(conn, col);
         assertFalse(c.isNullable());
 
-        col.setNullableAndDefault(false, "identity");
+        col.setNullableAndDefault(false, "1");
         dba.updateColumn(conn, col, c);
         c = dba.getColumnInfo(conn, col);
         assertFalse(c.isNullable());
@@ -1123,8 +1141,10 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void additionalCreateTableTest() throws ParseException {
         Grain g = score.getGrain(GRAIN_NAME);
+        SequenceElement t3s = g.getElement("aLongIdentityTableNxx_f1", SequenceElement.class);
         Table t3 = g.getElement("aLongIdentityTableNaaame", Table.class);
         try {
+            dba.createSequence(conn, t3s);
             dba.createTable(conn, t3);
             DbColumnInfo c = dba.getColumnInfo(conn, t3.getColumn("f1"));
             c = dba.getColumnInfo(conn, t3.getColumn("field2"));
@@ -1133,6 +1153,7 @@ public abstract class AbstractAdaptorTest {
             e.printStackTrace();
         } finally {
             dba.dropTable(conn, t3);
+            dba.dropSequence(conn, t3s);
         }
     }
 
@@ -1166,32 +1187,6 @@ public abstract class AbstractAdaptorTest {
             dba.dropTable(conn, t);
             dba.dropTable(conn, t2);
         }
-    }
-
-    @Test
-    public void resetIdentityTest() throws IOException, SQLException {
-        insertRow(conn, t, 110);
-        WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
-        PreparedStatement pstmt = dba.getOneRecordStatement(conn, t, w.getWhere(), Collections.emptySet());
-
-        assertNotNull(pstmt);
-
-        List<ParameterSetter> program = new ArrayList<>();
-        w.programParams(program, dba);
-        int i = 1;
-        for (ParameterSetter ps : program) {
-            ps.execute(pstmt, i++, new Integer[]{555 /* key value */}, 1);
-        }
-
-        ResultSet rs = pstmt.executeQuery();
-        assertFalse(rs.next());
-        rs.close();
-        insertRow(conn, t, 110);
-        assertEquals(555, dba.getCurrentIdent(conn, t));
-        rs = pstmt.executeQuery();
-        assertTrue(rs.next());
-        insertRow(conn, t, 110);
-        assertEquals(556, dba.getCurrentIdent(conn, t));
     }
 
     @Test
@@ -1266,6 +1261,8 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void testInitDataForMaterializedView() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
+        
+        SequenceElement ts = g.getElement("tableForInitMvData_id", SequenceElement.class);
         Table t = g.getElement("tableForInitMvData", Table.class);
         MaterializedView mv = g.getElement("mViewForInit", MaterializedView.class);
 
@@ -1279,11 +1276,17 @@ public abstract class AbstractAdaptorTest {
                 conn.rollback();
             }
             try {
+                dba.dropSequence(conn, ts);
+            } catch (CelestaException e) {
+                conn.rollback();
+            }
+            try {
                 dba.dropTable(conn, mv);
             } catch (CelestaException e) {
                 conn.rollback();
             }
 
+            dba.createSequence(conn, ts);
             dba.createTable(conn, t);
             dba.createTable(conn, mv);
 
@@ -1352,6 +1355,7 @@ public abstract class AbstractAdaptorTest {
             }
 
             dba.dropTable(conn, t);
+            dba.dropSequence(conn, ts);
             dba.dropTable(conn, mv);
         }
     }
@@ -1408,6 +1412,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void testGetInFilterClause() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
+        SequenceElement t2s = g.getElement("testInFilterClause_id", SequenceElement.class); 
         Table t2 = g.getElement("testInFilterClause", Table.class);
 
         boolean tableIsCreated = false;
@@ -1420,10 +1425,15 @@ public abstract class AbstractAdaptorTest {
             } catch (CelestaException e) {
                 conn.rollback();
             }
-
+            try {
+                dba.dropSequence(conn, t2s);
+            } catch (CelestaException e) {
+                conn.rollback();
+            }
+            
+            dba.createSequence(conn, t2s);
             dba.createTable(conn, t2);
             tableIsCreated = true;
-
 
             insertRow(conn, t, 1);
             insertRow(conn, t, 2);
@@ -1489,8 +1499,10 @@ public abstract class AbstractAdaptorTest {
                 pstmt.close();
             }
 
-            if (tableIsCreated)
+            if (tableIsCreated) {
                 dba.dropTable(conn, t2);
+                dba.dropSequence(conn, t2s);
+            }
         }
     }
 

@@ -83,7 +83,16 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
     @Override
     public int getCurrentIdent(Connection conn, Table t) {
-        String sql = String.format("select last_value from \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
+        
+        IntegerColumn idColumn = t.getPrimaryKey().values().stream()
+                .filter(c -> c instanceof IntegerColumn)
+                .map(c -> (IntegerColumn) c)
+                .filter(ic -> ic.getSequence() != null)
+                .findFirst().get();
+
+        String sequenceName = idColumn.getSequence().getName();
+        
+        String sql = String.format("select last_value from \"%s\".\"%s\"", t.getGrain().getName(), sequenceName);
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             rs.next();

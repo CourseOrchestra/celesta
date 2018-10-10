@@ -847,7 +847,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     //TODO: Javadoc
     public abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
                                                                List<ParameterSetter> program);
-
     //TODO: Javadoc
     public abstract int getCurrentIdent(Connection conn, Table t);
 

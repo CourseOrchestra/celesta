@@ -212,13 +212,13 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 loggingManager.log(this, Action.INSERT);
                 for (Column c : meta().getColumns().values())
                     if (c instanceof IntegerColumn) {
-                        IntegerColumn ic = (IntegerColumn)c;
+                        IntegerColumn ic = (IntegerColumn) c;
                         if (ic.getSequence() != null) {
                             _setAutoIncrement(db().getCurrentIdent(conn(), meta()));
                             break;
                         }
                     }
-            }
+                }
 
                 getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
                         recversion, _currentKeyValues());
