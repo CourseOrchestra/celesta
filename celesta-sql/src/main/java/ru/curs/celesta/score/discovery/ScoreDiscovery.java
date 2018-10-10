@@ -15,7 +15,8 @@ public interface ScoreDiscovery {
     default Set<File> discoverScore(final File scoreDir) {
         try {
             return Files.walk(scoreDir.toPath(), FileVisitOption.FOLLOW_LINKS)
-                    .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".sql"))
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.toString().endsWith(".sql"))
                     .map(Path::toFile)
                     .sorted()
                     .collect(Collectors.toCollection(LinkedHashSet::new));

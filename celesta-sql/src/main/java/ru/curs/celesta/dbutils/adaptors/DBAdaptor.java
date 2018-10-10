@@ -709,11 +709,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
                 result = Optional.empty();
             }
 
-            if (this instanceof MSSQLAdaptor) {
-                // TODO: REMOVE!!!
-                System.out.println("MSSQL TRIGGER:\n" + result + "\n");
-            }
-
             return result;
         } catch (CelestaException | SQLException e) {
             throw new CelestaException("Could't select body of trigger %s", query.getName());

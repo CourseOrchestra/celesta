@@ -79,8 +79,8 @@ public abstract class NamedElement {
 
     @Override
     public final boolean equals(Object obj) {
-        if (obj == null || this != obj) {
-            return false;
+        if (this == obj) {
+            return true;
         }
         if (obj instanceof NamedElement) {
             NamedElement o = (NamedElement) obj;

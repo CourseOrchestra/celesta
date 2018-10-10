@@ -1788,39 +1788,6 @@ public abstract class AbstractAdaptorTest {
 
     }
 
-    /*
-create trigger "gtest"."tForAddSecondMv_upd" on "gtest"."tForAddSecondMv" for update as begin
-IF  exists (select * from inserted inner join deleted on
-  inserted."id" = deleted."id"
-where inserted.recversion <> deleted.recversion) BEGIN
-  RAISERROR ('record version check failure', 16, 1);
-END
-update "gtest"."tForAddSecondMv" set recversion = recversion + 1 where
-exists (select * from inserted where
-  inserted."id" = "gtest"."tForAddSecondMv"."id"
-);
-end
-
-alter trigger "gtest"."tForAddSecondMv_upd" on "gtest"."tForAddSecondMv" for update as begin
-
-MERGE INTO "gtest"."tForAddSecondMv1" WITH (HOLDLOCK) AS mv
-USING (SELECT SUM("num1") as "s", "num2" as "num2", COUNT(*) AS surrogate_count FROM deleted GROUP BY "num2") AS aggregate ON mv.num2 = aggregate.num2
-WHEN MATCHED AND mv.s = aggregate.s AND NOT EXISTS(SELECT * FROM "gtest"."tForAddSecondMv" AS t WHERE mv.num2 = t.num2 ) THEN DELETE
- WHEN MATCHED AND (mv.s <> aggregate.s OR (mv.s = aggregate.s AND EXISTS(SELECT * FROM "gtest"."tForAddSecondMv" AS t WHERE mv.num2 = t.num2 ))) THEN
-UPDATE SET mv.s = mv.s - aggregate.s, mv.surrogate_count = mv.surrogate_count - aggregate.surrogate_count;
-
-
-MERGE INTO "gtest"."tForAddSecondMv1" WITH (HOLDLOCK) AS mv
-USING (SELECT SUM("num1") as "s", "num2" as "num2", COUNT(*) AS surrogate_count FROM inserted GROUP BY "num2") AS aggregate ON mv.num2 = aggregate.num2
-WHEN MATCHED THEN
- UPDATE SET mv.s = mv.s + aggregate.s, mv.surrogate_count = mv.surrogate_count + aggregate.surrogate_count
-WHEN NOT MATCHED THEN
-INSERT (s, num2, surrogate_count) VALUES (aggregate.s, aggregate.num2, surrogate_count);
-
-end
-
-     */
-
     @Test
     @DisplayName("Adding of additional materialized view on same table works")
     void testAddSecondMaterializedViewOnSameTable() throws Exception {

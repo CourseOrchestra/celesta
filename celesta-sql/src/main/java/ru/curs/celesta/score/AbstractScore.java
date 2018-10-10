@@ -145,7 +145,7 @@ public abstract class AbstractScore {
 
             if (!grainNameToGrainParts.containsKey(grainName)) {
                 if (!grainPart.isDefinition()) {
-                    throw new CelestaParseException(String.format("Grain %s has not definition", grainName));
+                    throw new CelestaParseException(String.format("Grain %s has no definition", grainName));
                 }
 
                 grainNameToGrainParts.put(grainName, new ArrayList<>());
