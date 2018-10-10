@@ -345,7 +345,12 @@ public final class CursorGenerator {
                             .addParameter(fieldSpec.type, fieldSpec.name);
 
                     if (Date.class.getName().equals(fieldSpec.type.toString())) {
-                        setterSpecBuilder.addStatement("this.$N = $N.clone()", fieldSpec.name, fieldSpec.name);
+                        setterSpecBuilder.beginControlFlow("if ($N == null)", fieldSpec.name)
+                                .addStatement("this.$N = null", fieldSpec.name)
+                                .endControlFlow()
+                                .beginControlFlow("else")
+                                .addStatement("this.$N = ($T)$N.clone()", fieldSpec.name, Date.class, fieldSpec.name)
+                                .endControlFlow();
                     } else {
                         setterSpecBuilder.addStatement("this.$N = $N", fieldSpec.name, fieldSpec.name);
                     }
@@ -509,7 +514,7 @@ public final class CursorGenerator {
 
         columns.entrySet().stream().filter(
                 e -> e.getValue() instanceof IntegerColumn && (((IntegerColumn) e.getValue()).isIdentity()
-                        || ((IntegerColumn)e.getValue()).getSequence() != null)
+                        || ((IntegerColumn) e.getValue()).getSequence() != null)
         ).findFirst()
                 .ifPresent(e -> builder.addStatement("this.$N = $N", e.getKey(), param.name));
 
@@ -600,8 +605,24 @@ public final class CursorGenerator {
 
         copyFieldsFromBuilder.addStatement("$T from = ($T)c", selfTypeName, selfTypeName);
 
-        columns.forEach(c ->
-                copyFieldsFromBuilder.addStatement("this.$N = from.$N", c, c)
+        columns.forEach(c -> {
+                    if (ge instanceof DataGrainElement) {
+                        DataGrainElement dge = (DataGrainElement) ge;
+                        String celestaType = dge.getColumns().get(c).getCelestaType();
+
+                        if (DateTimeColumn.CELESTA_TYPE.equals(celestaType)) {
+                            copyFieldsFromBuilder.beginControlFlow("if (from.$N == null)", c)
+                                    .addStatement("this.$N = null", c)
+                                    .endControlFlow()
+                                    .beginControlFlow("else")
+                                    .addStatement("this.$N = ($T)from.$N.clone()", c, Date.class, c)
+                                    .endControlFlow();
+                        } else {
+                            copyFieldsFromBuilder.addStatement("this.$N = from.$N", c, c);
+                        }
+                    }
+
+                }
         );
 
         if (isVersionedObject)

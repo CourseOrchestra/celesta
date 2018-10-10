@@ -91,7 +91,11 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     }
 
     public void setCreated(Date created) {
-        this.created = created;
+        if (created == null) {
+            this.created = null;
+        } else {
+            this.created = (Date)created.clone();
+        }
     }
 
     public BLOB getRawData() {
@@ -280,7 +284,11 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         this.deleted = from.deleted;
         this.weight = from.weight;
         this.content = from.content;
-        this.created = from.created;
+        if (from.created == null) {
+            this.created = null;
+        } else {
+            this.created = (Date)from.created.clone();
+        }
         this.rawData = from.rawData;
         this.cost = from.cost;
         this.toDelete = from.toDelete;
