@@ -58,7 +58,7 @@ import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
 /**
- * Базовый класс курсора для модификации данных в таблицах.
+ * Base cursor class for modification of data in tables.
  */
 public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
@@ -213,7 +213,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 for (Column c : meta().getColumns().values())
                     if (c instanceof IntegerColumn) {
                         IntegerColumn ic = (IntegerColumn)c;
-                        if (ic.isIdentity() || ic.getSequence() != null) {
+                        if (ic.getSequence() != null) {
                             _setAutoIncrement(db().getCurrentIdent(conn(), meta()));
                             break;
                         }
@@ -622,6 +622,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
+     * DEPRECATED: calling of this method will always throw {@link CelestaException} 
+     * <br/><br/>
      * Устанавливает текущее значение счётчика IDENTITY на таблице (если он
      * есть). Этот метод предназначен для реализации механизмов экспорта-импорта
      * данных из таблицы. Его следует применять с осторожностью, т.к. сбой в
@@ -633,19 +635,11 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @param newValue
      *            значение, которое должно принять поле IDENITITY при следующей
      *            вставке.
+     * @deprecated
      */
     public final void resetIdentity(int newValue) {
-        IntegerColumn ic = TableElement.findIdentityField(meta());
-        if (ic == null)
-            throw new CelestaException("Cannot reset identity: there is no IDENTITY field defined for table %s.%s.",
-                    _grainName(), _objectName());
-
-        try {
-            db().resetIdentity(conn(), meta(), newValue);
-        } catch (CelestaException e) {
-            throw new CelestaException("Cannot reset identity for table %s.%s with message '%s'.", _grainName(),
-                    _objectName(), e.getMessage());
-        }
+        throw new CelestaException("Cannot reset identity: there is no IDENTITY field defined for table %s.%s.",
+                _grainName(), _objectName());
     }
 
     /**

@@ -481,7 +481,8 @@ public final class DBSchema2Celesta {
         } else if (IntegerColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
             IntegerColumn ic = new IntegerColumn(t, columnName);
             if ("y".equals(column.getAttribute("autoincrement"))) {
-                ic.setNullableAndDefault(isNullable, "IDENTITY");
+                System.out.println("WARNING: 'autoincrement' attribute handling for INT columns is not supported!");
+                ic.setNullableAndDefault(isNullable, "1"); // TODO: NEXTVAL(<tableName>_<columnName>)
             } else {
                 ic.setNullableAndDefault(isNullable, defaultVal);
             }

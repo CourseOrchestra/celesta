@@ -481,14 +481,6 @@ public abstract class DbUpdater<T extends ICallContext> {
         if (pkInfo.isEmpty())
             dbAdaptor.createPK(conn, t);
 
-        if (modified)
-            try {
-                dbAdaptor.manageAutoIncrement(conn, t);
-            } catch (CelestaException e) {
-                throw new CelestaException("Updating table %s.%s failed: %s.", t.getGrain().getName(), t.getName(),
-                        e.getMessage());
-            }
-
         dbAdaptor.updateVersioningTrigger(conn, t);
 
         return modified;

@@ -453,7 +453,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f1 bit not null,
         c = dba.getColumnInfo(conn, t.getColumn("f1"));
@@ -464,7 +463,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f4 real,
         c = dba.getColumnInfo(conn, t.getColumn("f4"));
@@ -475,7 +473,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f7 varchar(8),
         c = dba.getColumnInfo(conn, t.getColumn("f7"));
@@ -486,7 +483,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f11 image not null
         c = dba.getColumnInfo(conn, t.getColumn("f11"));
@@ -497,7 +493,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f12 decimal(11, 7),
         c = dba.getColumnInfo(conn, t.getColumn("f12"));
@@ -508,7 +503,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(7, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         //f14 datetime with time zone
         c = dba.getColumnInfo(conn, t.getColumn("f14"));
@@ -519,7 +513,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
     }
 
     @Test
@@ -535,7 +528,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(true, c.isIdentity());
 
         // attrInt int default 3,
         c = dba.getColumnInfo(conn, t.getColumn("attrInt"));
@@ -546,7 +538,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("3", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f2 bit default 'true',
         c = dba.getColumnInfo(conn, t.getColumn("f2"));
@@ -557,7 +548,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("'TRUE'", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f5 real not null default 5.5,
         c = dba.getColumnInfo(conn, t.getColumn("f5"));
@@ -568,7 +558,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("5.5", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f6 varchar(MAX) not null default 'abc',
         c = dba.getColumnInfo(conn, t.getColumn("f6"));
@@ -579,7 +568,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("'abc'", c.getDefaultValue());
         assertEquals(true, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f8 datetime default '20130401',
         c = dba.getColumnInfo(conn, t.getColumn("f8"));
@@ -590,7 +578,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("'20130401'", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f9 datetime not null default getdate(),
         c = dba.getColumnInfo(conn, t.getColumn("f9"));
@@ -601,7 +588,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("GETDATE()", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f10 image default 0xFFAAFFAAFF,
         c = dba.getColumnInfo(conn, t.getColumn("f10"));
@@ -612,7 +598,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(0, c.getScale());
         assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
 
         // f13 decimal(5, 3) not null default 46.123
         c = dba.getColumnInfo(conn, t.getColumn("f13"));
@@ -623,7 +608,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals(3, c.getScale());
         assertEquals("46.123", c.getDefaultValue());
         assertEquals(false, c.isMax());
-        assertEquals(false, c.isIdentity());
     }
 
 
@@ -662,7 +646,6 @@ public abstract class AbstractAdaptorTest {
             assertSame(IntegerColumn.class, c.getType());
             assertEquals(true, c.isNullable());
             assertEquals("", c.getDefaultValue());
-            assertEquals(false, c.isIdentity());
             assertEquals(0, c.getLength());
             assertEquals(0, c.getScale());
 
@@ -672,7 +655,6 @@ public abstract class AbstractAdaptorTest {
             assertSame(StringColumn.class, c.getType());
             assertEquals(false, c.isNullable());
             assertEquals("", c.getDefaultValue());
-            assertEquals(false, c.isIdentity());
             assertEquals(2, c.getLength());
             assertEquals(0, c.getScale());
 
@@ -682,7 +664,6 @@ public abstract class AbstractAdaptorTest {
             assertSame(IntegerColumn.class, c.getType());
             assertEquals(false, c.isNullable());
             assertEquals("", c.getDefaultValue());
-            assertEquals(false, c.isIdentity());
             assertEquals(0, c.getLength());
             assertEquals(0, c.getScale());
 
@@ -692,7 +673,6 @@ public abstract class AbstractAdaptorTest {
             assertSame(BooleanColumn.class, c.getType());
             assertEquals(false, c.isNullable());
             assertEquals("", c.getDefaultValue());
-            assertEquals(false, c.isIdentity());
             assertEquals(0, c.getLength());
             assertEquals(0, c.getScale());
 
@@ -702,7 +682,6 @@ public abstract class AbstractAdaptorTest {
             assertSame(FloatingColumn.class, c.getType());
             assertEquals(false, c.isNullable());
             assertEquals("", c.getDefaultValue());
-            assertEquals(false, c.isIdentity());
             assertEquals(0, c.getLength());
             assertEquals(0, c.getScale());
 
@@ -712,7 +691,6 @@ public abstract class AbstractAdaptorTest {
             assertSame(DateTimeColumn.class, c.getType());
             assertEquals(false, c.isNullable());
             assertEquals("", c.getDefaultValue());
-            assertEquals(false, c.isIdentity());
             assertEquals(0, c.getLength());
             assertEquals(0, c.getScale());
 
@@ -722,7 +700,6 @@ public abstract class AbstractAdaptorTest {
             assertSame(DecimalColumn.class, c.getType());
             assertEquals(false, c.isNullable());
             assertEquals("", c.getDefaultValue());
-            assertEquals(false, c.isIdentity());
             assertEquals(2, c.getLength());
             assertEquals(1, c.getScale());
         } catch (Exception e) {
@@ -750,7 +727,6 @@ public abstract class AbstractAdaptorTest {
         assertSame(IntegerColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals("3", c.getDefaultValue());
-        assertEquals(false, c.isIdentity());
         col.setNullableAndDefault(false, "55");
         dba.updateColumn(conn, col, c);
         c = dba.getColumnInfo(conn, col);
@@ -758,7 +734,6 @@ public abstract class AbstractAdaptorTest {
         assertSame(IntegerColumn.class, c.getType());
         assertEquals(false, c.isNullable());
         assertEquals("55", c.getDefaultValue());
-        assertEquals(false, c.isIdentity());
         col.setNullableAndDefault(false, null);
         dba.updateColumn(conn, col, c);
         c = dba.getColumnInfo(conn, col);
@@ -829,7 +804,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals("0xFFAAFFAAFF", c.getDefaultValue());
         col.setNullableAndDefault(false, "0xBBCC");
         dba.updateColumn(conn, col, c);
-        dba.manageAutoIncrement(conn, t);
         c = dba.getColumnInfo(conn, col);
         assertEquals("0xBBCC", c.getDefaultValue());
         assertFalse(c.isNullable());
@@ -847,7 +821,6 @@ public abstract class AbstractAdaptorTest {
         dc.setPrecision(7);
         dc.setScale(4);
         dba.updateColumn(conn, col, c);
-        dba.manageAutoIncrement(conn, t);
         c = dba.getColumnInfo(conn, col);
         assertEquals("155.0216", c.getDefaultValue());
         assertEquals(7, c.getLength());
@@ -865,45 +838,31 @@ public abstract class AbstractAdaptorTest {
         insertRow(conn, t, 15);
 
         col = (IntegerColumn) t.getColumn("id");
-        assertTrue(col.isIdentity());
         c = dba.getColumnInfo(conn, col);
-        assertTrue(c.isIdentity());
         col.setNullableAndDefault(false, null);
-        assertFalse(col.isIdentity());
         dba.updateColumn(conn, col, c);
-        dba.manageAutoIncrement(conn, t);
         c = dba.getColumnInfo(conn, col);
-        assertFalse(c.isIdentity());
         assertFalse(c.isNullable());
 
         col = (IntegerColumn) t.getColumn("attrInt");
         c = dba.getColumnInfo(conn, col);
-        assertFalse(c.isIdentity());
         col.setNullableAndDefault(true, "identity");
         dba.updateColumn(conn, col, c);
-        dba.manageAutoIncrement(conn, t);
         c = dba.getColumnInfo(conn, col);
-        assertTrue(c.isIdentity());
         assertTrue(c.isNullable());
 
         col.setNullableAndDefault(true, null);
         dba.updateColumn(conn, col, c);
-        dba.manageAutoIncrement(conn, t);
         c = dba.getColumnInfo(conn, col);
-        assertFalse(c.isIdentity());
         assertTrue(c.isNullable());
 
         col = (IntegerColumn) t.getColumn("id");
-        assertFalse(col.isIdentity());
         c = dba.getColumnInfo(conn, col);
-        assertFalse(c.isIdentity());
         assertFalse(c.isNullable());
 
         col.setNullableAndDefault(false, "identity");
         dba.updateColumn(conn, col, c);
-        dba.manageAutoIncrement(conn, t);
         c = dba.getColumnInfo(conn, col);
-        assertTrue(c.isIdentity());
         assertFalse(c.isNullable());
 
     }
@@ -963,14 +922,12 @@ public abstract class AbstractAdaptorTest {
 
         col.setNullableAndDefault(false, "0xABABAB");
         dba.updateColumn(conn, col, c);
-        dba.manageAutoIncrement(conn, t);
         c = dba.getColumnInfo(conn, col);
         assertFalse(c.isNullable());
         assertEquals("0xABABAB", c.getDefaultValue());
 
         col.setNullableAndDefault(false, null);
         dba.updateColumn(conn, col, c);
-        dba.manageAutoIncrement(conn, t);
         c = dba.getColumnInfo(conn, col);
         assertFalse(c.isNullable());
         assertEquals("", c.getDefaultValue());
@@ -998,7 +955,6 @@ public abstract class AbstractAdaptorTest {
         assertSame(IntegerColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals("3", c.getDefaultValue());
-        assertEquals(false, c.isIdentity());
 
         t.getGrain().getIndices().get("idxTest").delete();
         // int --> varchar
@@ -1024,7 +980,6 @@ public abstract class AbstractAdaptorTest {
         assertSame(IntegerColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals("5", c.getDefaultValue());
-        assertEquals(false, c.isIdentity());
 
         // int --> boolean (test specially for Oracle!)
         col.delete();
@@ -1047,7 +1002,6 @@ public abstract class AbstractAdaptorTest {
         assertSame(IntegerColumn.class, c.getType());
         assertEquals(true, c.isNullable());
         assertEquals("", c.getDefaultValue());
-        assertEquals(false, c.isIdentity());
 
     }
 
@@ -1173,10 +1127,8 @@ public abstract class AbstractAdaptorTest {
         try {
             dba.createTable(conn, t3);
             DbColumnInfo c = dba.getColumnInfo(conn, t3.getColumn("f1"));
-            assertTrue(c.isIdentity());
             c = dba.getColumnInfo(conn, t3.getColumn("field2"));
             assertSame(BooleanColumn.class, c.getType());
-            assertFalse(c.isIdentity());
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -1234,7 +1186,6 @@ public abstract class AbstractAdaptorTest {
         ResultSet rs = pstmt.executeQuery();
         assertFalse(rs.next());
         rs.close();
-        dba.resetIdentity(conn, t, 555);
         insertRow(conn, t, 110);
         assertEquals(555, dba.getCurrentIdent(conn, t));
         rs = pstmt.executeQuery();

@@ -156,58 +156,6 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> manageAutoIncrement(Connection conn, TableElement t)  {
-        List<String> result = new ArrayList<>();
-        // 1. Firstly, we have to clean up table from any auto-increment
-        // triggers
-        String sequenceName = getSequenceName(t);
-        TriggerQuery query = new TriggerQuery()
-                .withSchema(t.getGrain().getName())
-                .withName(sequenceName)
-                .withTableName(t.getName())
-                .withType(TriggerType.PRE_INSERT);
-
-
-        if (this.triggerExists(conn, query))
-            result.add(dropTrigger(query));
-
-        // 2. Check if table has IDENTITY field, if it doesn't, no need to
-        // proceed.
-        IntegerColumn ic = TableElement.findIdentityField(t);
-        if (ic == null)
-            return result;
-
-        String sql;
-        Statement stmt;
-        // 2. Now, we know that we surely have IDENTITY field, and we have to
-        // be sure that we have an appropriate sequence.
-        boolean hasSequence = false;
-        sql = String.format(
-                "select count(*) from all_sequences where sequence_owner = "
-                        + "sys_context('userenv','session_user') and sequence_name = '%s'",
-                sequenceName);
-
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
-            hasSequence = rs.next() && rs.getInt(1) > 0;
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
-
-        if (!hasSequence) {
-            sql = String.format("CREATE SEQUENCE \"%s\"" + " START WITH 1 INCREMENT BY 1 MINVALUE 1 NOCACHE NOCYCLE",
-                    sequenceName);
-            result.add(sql);
-        }
-
-        // 3. Now we have to create or replace the auto-increment trigger
-        sql = createOrReplaceSequenceTriggerForColumn(sequenceName, ic, sequenceName);
-        result.add(sql);
-        this.rememberTrigger(query);
-
-        return result;
-    }
-
-    @Override
     List<String> updateVersioningTrigger(Connection conn, TableElement t)  {
         List<String> result = new ArrayList<>();
         // First of all, we are about to check if trigger exists

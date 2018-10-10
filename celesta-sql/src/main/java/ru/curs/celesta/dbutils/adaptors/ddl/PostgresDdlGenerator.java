@@ -60,72 +60,6 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> manageAutoIncrement(Connection conn, TableElement t)  {
-        List<String> result = new ArrayList<>();
-        String sql;
-
-        // 1. Firstly, we have to clean up table from any auto-increment
-        // defaults. Meanwhile we check if table has IDENTITY field, if it
-        // doesn't, no need to proceed.
-        IntegerColumn idColumn = null;
-        for (Column c : t.getColumns().values())
-            if (c instanceof IntegerColumn) {
-                IntegerColumn ic = (IntegerColumn) c;
-                if (ic.isIdentity())
-                    idColumn = ic;
-                else {
-                    if (ic.getDefaultValue() == null && ic.getSequence() == null) {
-                        sql = String.format("alter table %s.%s alter column %s drop default",
-                                t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
-                    } else if (ic.getDefaultValue() != null) {
-                        sql = String.format("alter table %s.%s alter column %s set default %d",
-                                t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName(),
-                                ic.getDefaultValue().intValue());
-                    } else {
-                        SequenceElement s = ic.getSequence();
-                        sql = String.format("alter table %s.%s alter column %s set default "
-                                        + "nextval('" + s.getGrain().getQuotedName() + "." + s.getQuotedName() + "')",
-                                t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
-                    }
-                    result.add(sql);
-                }
-            }
-
-        if (idColumn == null)
-            return result;
-
-        // 2. Now, we know that we surely have IDENTITY field, and we have
-        // to be sure that we have an appropriate sequence.
-        boolean hasSequence = false;
-        sql = String.format(
-                "select count(*) from pg_class c inner join pg_namespace n ON n.oid = c.relnamespace "
-                        + "where n.nspname = '%s' and c.relname = '%s_seq' and c.relkind = 'S'",
-                t.getGrain().getName(), t.getName());
-
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
-            rs.next();
-            hasSequence = rs.getInt(1) > 0;
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
-
-        if (!hasSequence) {
-            sql = String.format("create sequence \"%s\".\"%s_seq\" increment 1 minvalue 1", t.getGrain().getName(),
-                    t.getName());
-            result.add(sql);
-        }
-
-        // 3. Now we have to create the auto-increment default
-        sql = String.format(
-                "alter table %s.%s alter column %s set default " + "nextval('\"%s\".\"%s_seq\"'::regclass);",
-                t.getGrain().getQuotedName(), t.getQuotedName(), idColumn.getQuotedName(), t.getGrain().getName(),
-                t.getName());
-        result.add(sql);
-
-        return result;
-    }
-
-    @Override
     List<String> updateVersioningTrigger(Connection conn, TableElement t)  {
         List<String> result = new ArrayList<>();
         // First of all, we are about to check if trigger exists
@@ -173,7 +107,6 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
 
     @Override
     void updateColType(Column c, DbColumnInfo actual, List<String> sqlList) {
-        String sql;
         String colType;
         if (c.getClass() == StringColumn.class) {
             StringColumn sc = (StringColumn) c;

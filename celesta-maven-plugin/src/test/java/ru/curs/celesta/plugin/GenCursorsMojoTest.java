@@ -81,7 +81,6 @@ public class GenCursorsMojoTest extends AbstractMojoTestCase {
         List<String> paths = Arrays.asList(
                 "seq/SeqSequence.java",
                 "data/table/TestTableCursor.java",
-                "data/table/TestTableWithIdentityCursor.java",
                 "data/table/TestRoTableCursor.java",
                 "data/view/TestTableVCursor.java",
                 "data/view/TestTableMvCursor.java",

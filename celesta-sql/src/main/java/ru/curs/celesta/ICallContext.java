@@ -8,12 +8,12 @@ import java.sql.Connection;
 public interface ICallContext extends AutoCloseable {
 
     /**
-     * Соединение с базой данных.
+     * Connection with database
      */
     Connection getConn();
 
     /**
-     * Был ли контекст закрыт.
+     * Whether the context was closed.
      */
     boolean isClosed();
 
@@ -21,5 +21,6 @@ public interface ICallContext extends AutoCloseable {
 
     AbstractScore getScore();
 
+    @Override
     void close();
 }

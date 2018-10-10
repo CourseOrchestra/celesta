@@ -121,7 +121,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
             if (c instanceof IntegerColumn) {
                 IntegerColumn ic = (IntegerColumn) c;
 
-                if (ic.isIdentity() || ic.getSequence() != null) {
+                if (ic.getSequence() != null) {
                     returning = " returning " + c.getQuotedName();
                     break;
                 }
@@ -141,7 +141,6 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
         return prepareStatement(conn, sql);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public DbColumnInfo getColumnInfo(Connection conn, Column c) {
         try {
@@ -167,11 +166,12 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                             String tableName = c.getParentTable().getName();
 
                             if (sequenceName.equals(tableName + "_seq")) {
+                                // PP: probably dead code 
                                 try {
                                     c.getParentTable().getGrain().getElement(sequenceName, SequenceElement.class);
                                     result.setDefaultValue("NEXTVAL(" + sequenceName + ")");
                                 } catch (ParseException e) {
-                                    result.setIdentity(true);
+                                    // TODO: Log exception
                                 }
                             } else {
                                 result.setDefaultValue("NEXTVAL(" + sequenceName + ")");

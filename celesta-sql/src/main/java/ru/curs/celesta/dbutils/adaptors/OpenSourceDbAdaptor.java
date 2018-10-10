@@ -11,8 +11,6 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static ru.curs.celesta.dbutils.jdbc.SqlUtils.*;
-
 /**
  * Created by ioann on 02.05.2017.
  */
@@ -123,13 +121,6 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
                 from.getExpression(), useWhere ? " where " + w : w, offset == 0 ? 0 : offset - 1);
         // System.out.println(sql);
         return prepareStatement(conn, sql);
-    }
-
-    @Override
-    public void resetIdentity(Connection conn, Table t, int i) {
-        String sql = String.format("alter sequence \"%s\".\"%s_seq\" restart with %d", t.getGrain().getName(),
-                t.getName(), i);
-        executeUpdate(conn, sql);
     }
 
     @Override

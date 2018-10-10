@@ -279,14 +279,10 @@ public final class OraAdaptor extends DBAdaptor {
         IntegerColumn idColumn = t.getPrimaryKey().values().stream()
                 .filter(c -> c instanceof IntegerColumn)
                 .map(c -> (IntegerColumn) c)
-                .filter(ic -> ic.isIdentity() || ic.getSequence() != null)
+                .filter(ic -> ic.getSequence() != null)
                 .findFirst().get();
 
-        if (idColumn.isIdentity()) {
-            sequenceName = String.format("\"%s\"", getSequenceName(t));
-        } else {
-            sequenceName = tableString(t.getGrain().getName(), idColumn.getSequence().getName());
-        }
+        sequenceName = tableString(t.getGrain().getName(), idColumn.getSequence().getName());
 
         String sql = String.format("SELECT %s.CURRVAL FROM DUAL", sequenceName);
         try (Statement stmt = conn.createStatement()) {
@@ -340,29 +336,6 @@ public final class OraAdaptor extends DBAdaptor {
 
     }
 
-    private boolean checkForIncrementTrigger(Connection conn, Column c) throws SQLException {
-        String sql = String.format(
-                SELECT_TRIGGER_BODY
-                        + "and table_name = '%s_%s' and trigger_name = '%s' and triggering_event = 'INSERT'",
-                c.getParentTable().getGrain().getName(), c.getParentTable().getName(),
-                getSequenceName(c.getParentTable())
-        );
-        // System.out.println(sql);
-        PreparedStatement checkForTrigger = conn.prepareStatement(sql);
-        try {
-            ResultSet rs = checkForTrigger.executeQuery();
-            if (rs.next()) {
-                String body = rs.getString(1);
-                if (body != null && body.contains(".NEXTVAL") && body.contains("\"" + c.getName() + "\""))
-                    return true;
-            }
-        } finally {
-            checkForTrigger.close();
-        }
-        return false;
-    }
-
-    @SuppressWarnings("unchecked")
     @Override
     public DbColumnInfo getColumnInfo(Connection conn, Column c) {
         try {
@@ -408,14 +381,9 @@ public final class OraAdaptor extends DBAdaptor {
                         // В Oracle булевские столбцы имеют тот же тип данных,
                         // что и INT-столбцы: просматриваем, есть ли на них
                         // ограничение CHECK.
-                        if (checkForBoolean(conn, c))
+                        if (checkForBoolean(conn, c)) {
                             result.setType(BooleanColumn.class);
-                            // В Oracle признак IDENTITY имитируется триггером.
-                            // Просматриваем, есть ли на поле триггер, обладающий
-                            // признаками того, что это -- созданный Celesta
-                            // системный триггер.
-                        else if (checkForIncrementTrigger(conn, c))
-                            result.setIdentity(true);
+                        }
                     }
                     result.setNullable("Y".equalsIgnoreCase(rs.getString("NULLABLE")));
                     if (result.getType() == StringColumn.class) {
@@ -792,28 +760,6 @@ public final class OraAdaptor extends DBAdaptor {
     public String translateDate(String date) {
         return OraFunctions.translateDate(date);
     }
-
-    @Override
-    public void resetIdentity(Connection conn, Table t, int i) {
-        String sequenceName = getSequenceName(t);
-
-        String sql = String.format("select \"%s\".nextval from dual", sequenceName);
-
-        try (ResultSet rs = executeQuery(conn, sql)) {
-            rs.next();
-            int curVal = rs.getInt(1);
-            rs.close();
-            sql = String.format("alter sequence \"%s\" increment by %d minvalue 1", sequenceName, i - curVal - 1);
-            executeUpdate(conn, sql);
-            sql = String.format("select \"%s\".nextval from dual", sequenceName);
-            executeQuery(conn, sql).close();
-            sql = String.format("alter sequence \"%s\" increment by 1 minvalue 1", sequenceName);
-            executeUpdate(conn, sql);
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
-    }
-
 
     @Override
     public int getDBPid(Connection conn) {

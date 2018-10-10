@@ -125,10 +125,12 @@ create table logsetup(
   constraint fk_logsetup_tables foreign key (grainid, tablename) references tables(grainid, tablename)
 );
 
+create sequence log_entryno;
+
 /**Changelog.*/
 create table log(
   /**log entry number*/
-  entryno int identity not null primary key,
+  entryno int not null default nextval(log_entryno) primary key,
   /**log entry timestamp*/
   entry_time datetime not null default getdate(),
   /**user id*/
@@ -166,8 +168,10 @@ create table sequences(
   constraint fk_sequences_grains foreign key(grainid) references grains(id)
 ) with no version check;
 
+create sequence sessionlog_entryno;
+
 create table sessionlog (
-  entryno int identity not null primary key,
+  entryno int not null default nextval(sessionlog_entryno) primary key,
   sessionid varchar(250) not null default 'n/a',
   userid varchar(250) not null,
   logintime datetime not null default getdate(),
@@ -176,8 +180,10 @@ create table sessionlog (
   failedlogin bit not null default 0
 ) with no version check;
 
+create sequence calllog_entryno;
+
 create table calllog (
-  entryno int identity not null primary key,
+  entryno int not null default nextval(calllog_entryno) primary key,
   sessionid varchar(250) not null default 'n/a',
   userid varchar(250) not null,
   procname varchar(250) not null,

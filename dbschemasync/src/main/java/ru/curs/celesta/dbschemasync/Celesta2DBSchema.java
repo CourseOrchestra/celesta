@@ -138,10 +138,6 @@ public final class Celesta2DBSchema {
             } else {
                 column.setAttribute("length", Integer.toString(sc.getLength()));
             }
-        } else if (c instanceof IntegerColumn) {
-            IntegerColumn ic = (IntegerColumn) c;
-            if (ic.isIdentity())
-                column.setAttribute("autoincrement", "y");
         }
         if (!c.isNullable())
             column.setAttribute("mandatory", "y");

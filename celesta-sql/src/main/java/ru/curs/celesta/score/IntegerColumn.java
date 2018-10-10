@@ -17,7 +17,6 @@ public final class IntegerColumn extends Column {
      */
     public static final String CELESTA_TYPE = "INT";
     private Integer defaultvalue;
-    private boolean identity;
     private SequenceElement sequence;
 
     public IntegerColumn(TableElement table, String name) throws ParseException {
@@ -32,27 +31,16 @@ public final class IntegerColumn extends Column {
     protected void setDefault(String lexvalue) throws ParseException {
         if (lexvalue == null) {
             defaultvalue = null;
-            identity = false;
             sequence = null;
         } else {
             Pattern p = Pattern.compile("(?i)NEXTVAL\\((.*)\\)");
             Matcher m = p.matcher(lexvalue);
             if (m.matches()) {
                 defaultvalue = null;
-                identity = false;
                 String sequenceName = getParentTable().getGrain().getScore().getIdentifierParser().parse(m.group(1));
                 sequence = getParentTable().getGrain().getElement(sequenceName, SequenceElement.class);
-            } else if ("IDENTITY".equalsIgnoreCase(lexvalue)) {
-                for (Column c : getParentTable().getColumns().values())
-                    if (c instanceof IntegerColumn && c != this && ((IntegerColumn) c).isIdentity())
-                        throw new ParseException(
-                                "More than one identity columns are defined in table " + getParentTable().getName());
-                defaultvalue = null;
-                identity = true;
-                sequence = null;
             } else {
                 defaultvalue = Integer.parseInt(lexvalue);
-                identity = false;
                 sequence = null;
             }
         }
@@ -65,13 +53,6 @@ public final class IntegerColumn extends Column {
 
     public SequenceElement getSequence() {
         return sequence;
-    }
-
-    /**
-     * Является ли поле IDENTITY.
-     */
-    public boolean isIdentity() {
-        return identity;
     }
 
     @Override
@@ -90,8 +71,6 @@ public final class IntegerColumn extends Column {
             bw.write(" DEFAULT ");
             bw.write(defaultVal.toString());
         }
-        if (identity)
-            bw.write(" IDENTITY");
     }
 
     @Override

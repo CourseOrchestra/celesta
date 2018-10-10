@@ -89,7 +89,6 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals("column1", c.getName());
     assertTrue(c instanceof IntegerColumn);
     assertFalse(c.isNullable());
-    assertTrue(((IntegerColumn) c).isIdentity());
 
     c = ic.next();
     assertEquals("column2", c.getName());
@@ -166,7 +165,6 @@ public class ParserTest extends AbstractParsingTest {
     assertTrue(c instanceof IntegerColumn);
     assertFalse(c.isNullable());
     assertNull(((IntegerColumn) c).getDefaultValue());
-    assertTrue(((IntegerColumn) c).isIdentity());
 
     c = ic.next();
     assertEquals("column2", c.getName());

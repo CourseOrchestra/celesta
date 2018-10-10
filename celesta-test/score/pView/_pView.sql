@@ -1,15 +1,18 @@
 create grain pView version '1.0';
 
+CREATE SEQUENCE t1_id;
 
 CREATE table t1 (
-  id INT NOT NULL IDENTITY PRIMARY KEY,
+  id INT NOT NULL DEFAULT NEXTVAL(t1_id) PRIMARY KEY,
   f1 int,
   f2 int,
   f3 VARCHAR (2)
 );
 
+CREATE SEQUENCE t2_id;
+
 CREATE table t2 (
-  id INT NOT NULL IDENTITY PRIMARY KEY,
+  id INT NOT NULL DEFAULT NEXTVAL(t2_id) PRIMARY KEY,
   ff1 int,
   ff2 int,
   ff3 VARCHAR (2),

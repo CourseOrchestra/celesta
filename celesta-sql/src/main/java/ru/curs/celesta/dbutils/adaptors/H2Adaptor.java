@@ -74,12 +74,10 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         IntegerColumn idColumn = t.getPrimaryKey().values().stream()
                 .filter(c -> c instanceof IntegerColumn)
                 .map(c -> (IntegerColumn) c)
-                .filter(ic -> ic.isIdentity() || ic.getSequence() != null)
+                .filter(ic -> ic.getSequence() != null)
                 .findFirst().get();
 
-        String sequenceName = idColumn.isIdentity()
-                ? String.format("%s_seq", t.getName())
-                : idColumn.getSequence().getName();
+        String sequenceName = idColumn.getSequence().getName();
 
         String sql = String.format("select CURRVAL('\"%s\".\"%s\"')", t.getGrain().getName(), sequenceName);
         try {
@@ -143,7 +141,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public DbColumnInfo getColumnInfo(Connection conn, Column c) {
         try {
@@ -164,7 +161,6 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                     if ("integer".equalsIgnoreCase(typeName) &&
                             columnDefaultForIdentity.equals(columnDefault)) {
                         result.setType(IntegerColumn.class);
-                        result.setIdentity(true);
                         result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
                         return result;
                     } else if ("clob".equalsIgnoreCase(typeName)) {
@@ -202,7 +198,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     private String modifyDefault(DbColumnInfo ci, String defaultBody, Connection conn) {
         String result = defaultBody;
 
-        if (IntegerColumn.class == ci.getType() && !ci.isIdentity()) {
+        if (IntegerColumn.class == ci.getType()) {
             Pattern p = Pattern.compile("\\(NEXT VALUE FOR \"[^\"]+\"\\.\"([^\"]+)+\"\\)");
             Matcher m = p.matcher(defaultBody);
             if (m.matches()) {
