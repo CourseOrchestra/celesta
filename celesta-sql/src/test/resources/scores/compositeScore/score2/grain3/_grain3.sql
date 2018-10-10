@@ -1,7 +1,9 @@
 create grain grain3 version '1.0';
 
+create sequence c_idc;
+
 create table c (
-idc int identity not null ,
+idc int not null default nextval(c_idc),
 descr varchar(2),
 idb int foreign key references grain2.b(idb),
 aaa varchar(10),

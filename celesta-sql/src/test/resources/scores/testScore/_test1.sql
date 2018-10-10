@@ -1,9 +1,11 @@
 /**описание гранулы: * grain celestadoc*/
 CREATE SCHEMA test1 VERSION '2.0';
 
+CREATE SEQUENCE table1_column1;
+
 -- *** TABLES ***
 CREATE TABLE table1(
-  column1 INT NOT NULL IDENTITY,
+  column1 INT NOT NULL DEFAULT NEXTVAL(table1_column1),
   column2 REAL NOT NULL DEFAULT -12323.2,
   c3 BIT NOT NULL DEFAULT 'FALSE',
   aaa VARCHAR(23) NOT NULL DEFAULT 'testtes''ttest',
@@ -16,10 +18,12 @@ CREATE TABLE table1(
   CONSTRAINT pk_table1 PRIMARY KEY (column1, c3, column2)
 );
 
+CREATE SEQUENCE table2_column1;
+
 /**table2 celestadoc*/
 CREATE TABLE table2(
   /**описание первой колонки*/
-  column1 INT NOT NULL IDENTITY,
+  column1 INT NOT NULL DEFAULT NEXTVAL(table2_column1),
   /**описание второй колонки*/
   column2 DATETIME DEFAULT '20111231',
   column3 DATETIME NOT NULL DEFAULT GETDATE(),

@@ -1,5 +1,5 @@
 CREATE TABLE testTable(
-  id INT NOT NULL IDENTITY,
+  id INT NOT NULL,
   attrVarchar VARCHAR(2),
   attrInt INT DEFAULT 3,
   f1 BIT NOT NULL,

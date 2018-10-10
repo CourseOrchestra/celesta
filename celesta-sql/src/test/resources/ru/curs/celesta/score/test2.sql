@@ -1,7 +1,9 @@
 create grain test2 version '2.5';
 
+create sequence c_iii;
+
 create table c (
-iii int not null identity primary key,
+iii int not null default nextval(c_iii) primary key,
 bbb varchar(2),
 sss int -- identity (no more than one identity field is allowed!)
 );
