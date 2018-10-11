@@ -86,9 +86,7 @@ public final class DbColumnInfo {
                 return false;
         }
 
-        if (type == IntegerColumn.class) {
-            // Do nothing
-        } else if (type == StringColumn.class) {
+        if (type == StringColumn.class) {
             // Если параметры длин не совпали -- не проверяем
             StringColumn col = (StringColumn) value;
             if (!(isMax ? col.isMax() : length == col.getLength()))

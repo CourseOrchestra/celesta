@@ -868,6 +868,7 @@ public abstract class AbstractAdaptorTest {
         dba.updateColumn(conn, col, c);
         c = dba.getColumnInfo(conn, col);
         assertTrue(c.isNullable());
+        assertEquals("1", c.getDefaultValue());
 
         col.setNullableAndDefault(true, null);
         dba.updateColumn(conn, col, c);
@@ -882,7 +883,7 @@ public abstract class AbstractAdaptorTest {
         dba.updateColumn(conn, col, c);
         c = dba.getColumnInfo(conn, col);
         assertFalse(c.isNullable());
-
+        assertEquals("1", c.getDefaultValue());
     }
 
     @Test
@@ -1147,6 +1148,7 @@ public abstract class AbstractAdaptorTest {
             dba.createSequence(conn, t3s);
             dba.createTable(conn, t3);
             DbColumnInfo c = dba.getColumnInfo(conn, t3.getColumn("f1"));
+            assertEquals("NEXTVAL(aLongIdentityTableNxx_f1)", c.getDefaultValue());
             c = dba.getColumnInfo(conn, t3.getColumn("field2"));
             assertSame(BooleanColumn.class, c.getType());
         } catch (Exception e) {

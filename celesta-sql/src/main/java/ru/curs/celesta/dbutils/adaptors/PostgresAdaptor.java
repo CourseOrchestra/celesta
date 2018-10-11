@@ -172,19 +172,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
                         if (m.matches()) {
                             String sequenceName = m.group(1);
-                            String tableName = c.getParentTable().getName();
-
-                            if (sequenceName.equals(tableName + "_seq")) {
-                                // PP: probably dead code 
-                                try {
-                                    c.getParentTable().getGrain().getElement(sequenceName, SequenceElement.class);
-                                    result.setDefaultValue("NEXTVAL(" + sequenceName + ")");
-                                } catch (ParseException e) {
-                                    // TODO: Log exception
-                                }
-                            } else {
-                                result.setDefaultValue("NEXTVAL(" + sequenceName + ")");
-                            }
+                            result.setDefaultValue("NEXTVAL(" + sequenceName + ")");
                         }
 
                         return result;

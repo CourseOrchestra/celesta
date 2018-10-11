@@ -34,7 +34,7 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '1.14';
+create grain celesta version '2.01';
 
 /**Active grains list.
    {implements: [ru.curs.celesta.syscursors.ISchemaCursor]}*/
@@ -170,6 +170,7 @@ create table sequences(
 
 create sequence sessionlog_entryno;
 
+/**deprecated table -- to be removed*/
 create table sessionlog (
   entryno int not null default nextval(sessionlog_entryno) primary key,
   sessionid varchar(250) not null default 'n/a',
