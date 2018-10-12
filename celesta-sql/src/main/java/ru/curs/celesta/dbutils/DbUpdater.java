@@ -114,6 +114,9 @@ public abstract class DbUpdater<T extends ICallContext> {
             // Выполняем итерацию по гранулам.
             boolean success = true;
             for (Grain g : grains) {
+                if (! g.isAutoupdate()) {
+                    continue;
+                }
                 // Запись о грануле есть?
                 GrainInfo gi = dbGrains.get(g.getName());
                 if (gi == null) {

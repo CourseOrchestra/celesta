@@ -28,6 +28,8 @@ public final class Grain extends NamedElement {
     private boolean parsingComplete = false;
 
     private boolean modified = true;
+    
+    private boolean isAutoupdate = true; 
 
     private Set<GrainPart> grainParts = new LinkedHashSet<>();
 
@@ -49,7 +51,6 @@ public final class Grain extends NamedElement {
             throw new ParseException("Invalid grain name '" + name + "'. No underscores are allowed for grain names.");
         this.score = score;
         score.addGrain(this);
-
 
         //TODO: Что-то с этим надо сделать grainPath = new File(String.format("%s%s%s", score.getDefaultGrainPath(), File.separator, name));
     }
@@ -215,21 +216,37 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает модель, к которой принадлежит гранула.
+     * Returns model that the grain belongs to.
      */
     public AbstractScore getScore() {
         return score;
     }
+    
+    /**
+     * Value {@code false} indicates that grain was created with option WITH NO AUTOUPDATE,
+     * and won't be updated. Default value is {@code true}.
+     */
+    public boolean isAutoupdate() {
+        return isAutoupdate;
+    }
+    
+    /**
+     * Sets autoupdate option. Default value is {@code true}.
+     * @param isAutoupdate
+     */
+    public void setAutoupdate(boolean isAutoupdate) {
+        this.isAutoupdate = isAutoupdate;
+    }
 
     /**
-     * Возвращает номер версии гранулы.
+     * Returns the grain version.
      */
     public VersionString getVersion() {
         return version;
     }
 
     /**
-     * Возвращает длину файла-скрипта, на основе которого создана гранула.
+     * Returns length of the script file that the grain was created from.
      */
     public int getLength() {
         return length;
@@ -240,10 +257,9 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает контрольную сумму файла-скрипта, на основе которого создана
-     * гранула. Совпадение версии, длины и контрольной суммы считается
-     * достаточным условием для того, чтобы не заниматься чтением и обновлением
-     * структуры базы данных.
+     * Returns checksum of the script file that the grain was created from.
+     * Coincidence of version, length and checksum is considered to be a sufficient solution for
+     * skipping the reading and update of the database structure.
      */
     public int getChecksum() {
         return checksum;
@@ -254,11 +270,10 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Устанавливает версию гранулы.
+     * Sets the grain version.
      *
-     * @param version Quoted-string. В процессе установки обрамляющие и двойные
-     *                кавычки удаляются.
-     * @throws ParseException в случае, если имеется неверный формат quoted string.
+     * @param version  Quoted-string. In course of processing single and double quotes are removed.
+     * @throws ParseException  in case if format of quoted string is incorrect.
      */
     public void setVersion(String version) throws ParseException {
         modify();
@@ -266,10 +281,10 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Добавление имени ограничения (для проверерки, что оно уникальное).
+     * Adding of constraint name (for checking if it is unique).
      *
-     * @param name Имя ограничения.
-     * @throws ParseException В случае, если ограничение с таким именем уже определено.
+     * @param name  Constraint name.
+     * @throws ParseException  In case if a constraint with the same name has already been defined.
      */
     void addConstraintName(String name) throws ParseException {
         name = getScore().getIdentifierParser().parse(name);
@@ -279,22 +294,21 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Указывает на то, что разбор гранулы из файла завершён.
+     * Indicates that the grain parsing from file is completed.
      */
     public boolean isParsingComplete() {
         return parsingComplete;
     }
 
     /**
-     * Если одна гранула имеет номер больший, чем другая, то значит, что она
-     * может зависеть от первой.
+     * If a grain has a higher number than the other grain then it means that it can depend from the first one.
      */
     public int getDependencyOrder() {
         return dependencyOrder;
     }
 
     /**
-     * Указывает на то, что разбор гранулы завершен. Системный метод.
+     * Indicates that the grain parsing is completed. A system method.
      */
     public void finalizeParsing() throws ParseException {
 
@@ -316,8 +330,7 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает признак модификации гранулы (true, если составляющие части
-     * гранулы были модифицированы в runtime).
+     * Returns a flag of grain modification ({@code true} if parts of grain were modified in the runtime).
      */
     public boolean isModified() {
         return modified;
@@ -332,7 +345,11 @@ public final class Grain extends NamedElement {
 
     public void save(PrintWriter bw, GrainPart gp) throws IOException {
         writeCelestaDoc(this, bw);
-        bw.printf("CREATE SCHEMA %s VERSION '%s';%n", getName(), getVersion().toString());
+        bw.printf("CREATE SCHEMA %s VERSION '%s'", getName(), getVersion().toString());
+        if (! isAutoupdate) {
+            bw.printf(" WITH NO AUTOUPDATE");
+        }
+        bw.printf(";%n");
         bw.println();
 
         bw.println("-- *** TABLES ***");
@@ -397,11 +414,10 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает представление по его имени, либо исключение с сообщением о
-     * том, что представление не найдено.
+     * Returns a view by its name or an exception with a message that the view was not found.
      *
-     * @param name Имя
-     * @throws ParseException Если таблица с таким именем не найдена в грануле.
+     * @param name  View name
+     * @throws ParseException  If view with that name was not found in the grain.
      */
 
     public View getView(String name) throws ParseException {
@@ -419,11 +435,10 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает таблицу по её имени, либо исключение с сообщением о том, что
-     * таблица не найдена.
-     *
-     * @param name Имя
-     * @throws ParseException Если таблица с таким именем не найдена в грануле.
+     * Returns a table by its name or an exception with a message that the table was not found.
+     * 
+     * @param name  Table name
+     * @throws ParseException  If table with that name was not found in the grain.
      */
     public Table getTable(String name) throws ParseException {
         return getElement(name, Table.class);
@@ -463,4 +478,5 @@ public final class Grain extends NamedElement {
     public Set<GrainPart> getGrainParts() {
         return grainParts;
     }
+
 }

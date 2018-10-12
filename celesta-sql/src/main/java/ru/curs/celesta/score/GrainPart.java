@@ -24,6 +24,11 @@ public class GrainPart {
     public void setVersion(String version) throws ParseException {
         this.grain.setVersion(version);
     }
+    
+    public void setAutoupdate(boolean isAutoupdate) {
+        this.grain.setAutoupdate(isAutoupdate);
+        
+    }
 
     void modify() throws ParseException {
         this.grain.modify();
@@ -40,4 +45,5 @@ public class GrainPart {
     public boolean isDefinition() {
         return isDefinition;
     }
+
 }
