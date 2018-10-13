@@ -29,7 +29,9 @@ public final class Grain extends NamedElement {
 
     private boolean modified = true;
     
-    private boolean isAutoupdate = true; 
+    private boolean isAutoupdate = true;
+    
+    private boolean isLock = false;
 
     private Set<GrainPart> grainParts = new LinkedHashSet<>();
 
@@ -244,6 +246,34 @@ public final class Grain extends NamedElement {
     public VersionString getVersion() {
         return version;
     }
+    
+    /**
+     * Sets the grain version.
+     *
+     * @param version  Quoted-string. In course of processing single and double quotes are removed.
+     * @throws ParseException  in case if format of quoted string is incorrect.
+     */
+    public void setVersion(String version) throws ParseException {
+        modify();
+        this.version = new VersionString(StringColumn.unquoteString(version));
+    }
+    
+    /**
+     * Sets the grain to locked state which prevents it from being updated in database. Default is {@code false}.
+     * 
+     * @param isLock
+     */
+    public void setLock(boolean isLock) {
+        this.isLock = isLock;
+    }
+    
+    /**
+     * Returns locked state. If {@code true} the grain is not updated in database. Default is {@code false}.
+     * @return
+     */
+    public boolean isLock() {
+        return this.isLock;
+    }
 
     /**
      * Returns length of the script file that the grain was created from.
@@ -267,17 +297,6 @@ public final class Grain extends NamedElement {
 
     void setChecksum(int checksum) {
         this.checksum = checksum;
-    }
-
-    /**
-     * Sets the grain version.
-     *
-     * @param version  Quoted-string. In course of processing single and double quotes are removed.
-     * @throws ParseException  in case if format of quoted string is incorrect.
-     */
-    public void setVersion(String version) throws ParseException {
-        modify();
-        this.version = new VersionString(StringColumn.unquoteString(version));
     }
 
     /**

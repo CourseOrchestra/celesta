@@ -168,8 +168,9 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
     boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) {
-        if (gi.lock)
+        if (gi.lock || g.isLock()) {
             return true;
+        }
 
         if (gi.recover)
             return updateGrain(g, connectionPool);
