@@ -73,6 +73,7 @@ public class CallContext implements ICallContext {
                     state);
 
         this.celesta = celesta;
+        this.state = State.ACTIVE;
         this.procName = procName;
         conn = celesta.getConnectionPool().get();
         dbPid = PIDSCACHE.computeIfAbsent(conn,
