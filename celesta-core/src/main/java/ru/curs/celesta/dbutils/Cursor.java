@@ -622,27 +622,6 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * DEPRECATED: calling of this method will always throw {@link CelestaException} 
-     * <br/><br/>
-     * Устанавливает текущее значение счётчика IDENTITY на таблице (если он
-     * есть). Этот метод предназначен для реализации механизмов экспорта-импорта
-     * данных из таблицы. Его следует применять с осторожностью, т.к. сбой в
-     * отсчёте IDENTIY-счётчика может привести к нарушению первичного ключа.
-     * Кроме того, как минимум в Oracle, в силу особенностей реализации, не
-     * гарантируется надёжная работа этого метода в условиях конкурретного
-     * доступа к таблице.
-     *
-     * @param newValue
-     *            значение, которое должно принять поле IDENITITY при следующей
-     *            вставке.
-     * @deprecated
-     */
-    public final void resetIdentity(int newValue) {
-        throw new CelestaException("Cannot reset identity: there is no IDENTITY field defined for table %s.%s.",
-                _grainName(), _objectName());
-    }
-
-    /**
      * Возвращает в массиве значения полей первичного ключа.
      */
     public Object[] getCurrentKeyValues() {

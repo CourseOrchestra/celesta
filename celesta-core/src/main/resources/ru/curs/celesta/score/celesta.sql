@@ -34,7 +34,7 @@
  */
 
 /**Celesta system grain. Not for modification.*/
-create grain celesta version '2.01';
+create grain celesta version '1.15';
 
 /**Active grains list.
    {implements: [ru.curs.celesta.syscursors.ISchemaCursor]}*/
