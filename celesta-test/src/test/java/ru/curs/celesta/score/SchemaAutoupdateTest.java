@@ -24,7 +24,7 @@ import java.util.Properties;
  * @since 2018-10-12
  */
 public class SchemaAutoupdateTest {
-    
+
     private static CelestaImpl celesta;
 
     @AfterAll
@@ -37,11 +37,11 @@ public class SchemaAutoupdateTest {
 
     @Test
     void testWithNoAutoupdateOption() throws Exception {
-        
+
         CelestaImpl celesta = getCelesta("schema_autoupdate/scoreV1");
         DbUpdater<?> dbUpdater = createDbUpdater(celesta);
         dbUpdater.updateDb();
-        
+
         Connection conn = celesta.getConnectionPool().get();
         DBAdaptor dba = celesta.getDBAdaptor();
 
@@ -56,17 +56,17 @@ public class SchemaAutoupdateTest {
 
         conn = celesta.getConnectionPool().get();
         dba = celesta.getDBAdaptor();
-        
+
         Table tableAa = celesta.getScore().getGrain("A").getTable("a");
         assertFalse(dba.getColumns(conn, tableAa).contains("title"));
-        
+
         Table tableBb = celesta.getScore().getGrain("B").getTable("b");
         assertFalse(dba.getColumns(conn, tableBb).contains("title"));
-        
+
         Table tableCc = celesta.getScore().getGrain("C").getTable("c");
         assertTrue(dba.getColumns(conn, tableCc).contains("title"));       
     }
-    
+
     private static DbUpdater<?> createDbUpdater(CelestaImpl celesta) {
 
         DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
@@ -77,21 +77,21 @@ public class SchemaAutoupdateTest {
                 .setPermissionManager(celesta.getPermissionManager())
                 .setLoggingManager(celesta.getLoggingManager())
                 .build();
-        
+
         return dbUpdater;
     }
-    
+
     private static CelestaImpl getCelesta(String scoreResourcePath) throws Exception {
 
         String scorePath = SchemaAutoupdateTest.class.getResource(scoreResourcePath).getPath();
-        
+
         if ((celesta != null) && (! celesta.isClosed()) && (scorePath.equals(celesta.getScore().getPath()))) {
             return celesta;
         }
-        
+
         ConnectionPool connectionPool;
         DBAdaptor dba;
-        
+
         if ((celesta != null) && (! celesta.isClosed())) {
             connectionPool = celesta.getConnectionPool();
             dba = celesta.getDBAdaptor();
@@ -100,24 +100,24 @@ public class SchemaAutoupdateTest {
             params.put("score.path", scorePath);
             params.put("h2.in-memory", "true");
             params.put("h2.referential.integrity", "true");
-    
+
             BaseAppSettings appSettings = new AppSettings(params);
-    
+
             ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
             cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
             cpc.setDriverClassName(appSettings.getDbClassName());
             cpc.setLogin(appSettings.getDBLogin());
             cpc.setPassword(appSettings.getDBPassword());
-            
+
             connectionPool = ConnectionPool.create(cpc);
             dba = new H2Adaptor(connectionPool, new JdbcDdlConsumer(), appSettings.isH2ReferentialIntegrity());
         }
-        
+
         Score score = new AbstractScore.ScoreBuilder<>(Score.class)
                 .path(scorePath)
                 .scoreDiscovery(new DefaultScoreDiscovery())
                 .build();
-        
+
         return (celesta = new CelestaImpl(dba, connectionPool, score));
     }
 

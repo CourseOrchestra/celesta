@@ -72,7 +72,7 @@ public class CelestaImpl implements ICelesta {
     public void close() throws Exception {
         connectionPool.close();
     }
-    
+
     public boolean isClosed() {
         return connectionPool.isClosed();
     }
