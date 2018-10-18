@@ -118,11 +118,6 @@ PARSER_END(CelestaParser)
     <K_GRAIN_VERSION: "VERSION">
 }
 
-<SCHEMA_OPTIONS_STATE> TOKEN:
-{
-    <K_SCHEMA_AUTOUPDATE:  "AUTOUPDATE">
-}
-
 <SEQUENCE_STATE> TOKEN:
 {
     <K_SEQUENCE_CYCLE:        "CYCLE">
@@ -132,13 +127,13 @@ PARSER_END(CelestaParser)
 |   <K_SEQUENCE_INCREMENT:    "INCREMENT">
 }
 
-<TABLE_OPTIONS_STATE> TOKEN:
+<OPTIONS_STATE> TOKEN:
 {
      <K_READ:        "READ">
 |    <K_ONLY:        "ONLY">
 |    <K_VERSION:     "VERSION">
 |    <K_CHECK:       "CHECK">
-|    <K_TABLE_AUTOUPDATE:  "AUTOUPDATE">
+|    <K_AUTOUPDATE:  "AUTOUPDATE">
 }
 
 <EXEC_STATE> TOKEN:
@@ -241,7 +236,7 @@ Grain parseGrainPart(GrainPart grainPart) :
 
    Token t;
    Token doc = null;
-   boolean val;
+   boolean val = true;
 }
 {
    ((
@@ -256,10 +251,10 @@ Grain parseGrainPart(GrainPart grainPart) :
     t = <S_CHAR_LITERAL> {grainPart.setVersion(t.toString());}
     )
     [
-        <K_WITH> { token_source.SwitchTo(SCHEMA_OPTIONS_STATE); }
+        <K_WITH> { token_source.SwitchTo(OPTIONS_STATE); }
         (
-            {val = true;}  [ <K_NO> {val = false;} ]
-            <K_SCHEMA_AUTOUPDATE> { grainPart.setAutoupdate(val); }
+            [ <K_NO> {val = false;} ]
+            <K_AUTOUPDATE> { grainPart.setAutoupdate(val); }
         )
     ]
     |
@@ -305,13 +300,13 @@ void createTable(GrainPart g, String doc):
 		tableConstituent(table)	("," tableConstituent(table))*
 	")"
 
-	[<K_WITH> { token_source.SwitchTo(TABLE_OPTIONS_STATE); }
+	[<K_WITH> { token_source.SwitchTo(OPTIONS_STATE); }
 	   (
 	     (<K_READ> <K_ONLY> {table.setVersioned(false);
 	                       table.setReadOnly(true);})
 	   | ( {val = true;}  [ <K_NO> {val = false;} ]
 	       ( <K_VERSION> <K_CHECK> {table.setVersioned(val);}
-	       | <K_TABLE_AUTOUPDATE>        {table.setAutoUpdate(val);})
+	       | <K_AUTOUPDATE>        {table.setAutoUpdate(val);})
 	     )+
 	   )
 	]
