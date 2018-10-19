@@ -26,7 +26,8 @@ public abstract class InterpolationInitializer {
     /**
      * Initializes the interpolation table.
      *
-     * @param c
+     * @param c {@link BasicCursor}
+     * @param count
      * @return true - initialized completed, false - no need for initialization
      */
     public boolean initialize(final BasicCursor c, int count) {
@@ -40,8 +41,9 @@ public abstract class InterpolationInitializer {
     }
 
     private boolean initializeCommon(BasicCursor c) {
-        if (refinementsCount > MAX_REFINEMENTS_COUNT)
+        if (refinementsCount > MAX_REFINEMENTS_COUNT) {
             return false;
+        }
         refinementsCount++;
         BigInteger lav = interpolator.getLeastAccurateValue();
         if (lav == null) {
@@ -64,8 +66,9 @@ public abstract class InterpolationInitializer {
     }
 
     private boolean initializePostgres(BasicCursor c, int count) {
-        if (refinementsCount > 0)
+        if (refinementsCount > 0) {
             return false;
+        }
         refinementsCount = 1;
 
         int amountOfInterpolationPoints = (count > DEFAULT_AMOUNT_OF_INTERPOLATION_POINTS)
@@ -83,8 +86,9 @@ public abstract class InterpolationInitializer {
             int rowNumber = point * offset;
 
             //Срабатывает, когда число точек в интерполяционной таблице совпадает с числом записей в таблице БД
-            if (rowNumber == count)
+            if (rowNumber == count) {
                 break;
+            }
 
             c.navigate(">", offset);
             //System.out.printf("OFFSET SELECT ISSUED %d%n", point);

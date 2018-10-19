@@ -75,12 +75,21 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     protected void _parseResult(ResultSet rs) throws SQLException {
         if (this.inRec("surrogate_count")) {
             this.surrogate_count = rs.getInt("surrogate_count");
+            if (rs.wasNull()) {
+                this.surrogate_count = null;
+            }
         }
         if (this.inRec("c")) {
             this.c = rs.getInt("c");
+            if (rs.wasNull()) {
+                this.c = null;
+            }
         }
         if (this.inRec("cost")) {
             this.cost = rs.getBigDecimal("cost");
+            if (rs.wasNull()) {
+                this.cost = null;
+            }
         }
     }
 

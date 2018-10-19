@@ -3,7 +3,7 @@
     <parent>
         <artifactId>celesta-parent</artifactId>
         <groupId>ru.curs</groupId>
-        <version>6.1.13-SNAPSHOT</version>
+        <version>7.0.3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -11,19 +11,6 @@
     <name>celesta-test</name>
 
     <dependencies>
-        <dependency>
-            <groupId>ru.curs</groupId>
-            <artifactId>celesta-jython</artifactId>
-            <version>6.1.13-SNAPSHOT</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.python</groupId>
-                    <artifactId>jython-standalone</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -57,10 +44,38 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>org.python</groupId>
-            <artifactId>jython-standalone</artifactId>
-            <version>2.7.1</version>
+            <groupId>ru.curs</groupId>
+            <artifactId>celesta-system-services</artifactId>
+            <version>7.0.3-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.curs</groupId>
+            <artifactId>celesta-core</artifactId>
+            <version>7.0.3-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.weblogic</groupId>
+            <artifactId>ojdbc6</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -73,6 +88,27 @@
                 <configuration>
                     <skip>true</skip>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>ru.curs</groupId>
+                <artifactId>celesta-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <scores>
+                        <score>
+                            <path>${project.basedir}/score</path>
+                        </score>
+                    </scores>
+                    <genSysCursors>true</genSysCursors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>gen-cursors</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

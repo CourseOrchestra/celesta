@@ -9,7 +9,6 @@ public final class CommonConstants {
 
 
     private CommonConstants() {
-        throw new AssertionError();
     }
 
 }

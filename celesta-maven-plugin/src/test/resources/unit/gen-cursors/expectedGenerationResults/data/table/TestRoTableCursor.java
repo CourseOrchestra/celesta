@@ -49,6 +49,9 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
     protected void _parseResult(ResultSet rs) throws SQLException {
         if (this.inRec("id")) {
             this.id = rs.getInt("id");
+            if (rs.wasNull()) {
+                this.id = null;
+            }
         }
     }
 
