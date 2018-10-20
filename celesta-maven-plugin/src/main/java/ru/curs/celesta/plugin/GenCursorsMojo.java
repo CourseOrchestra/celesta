@@ -27,11 +27,13 @@ public class GenCursorsMojo extends AbstractMojo {
 
     static {
         Map<String, String> dirNameMap = new HashMap<>();
+        dirNameMap.put(null, "generated-sources");
         dirNameMap.put(LifecyclePhase.GENERATE_SOURCES.id(), "generated-sources");
         dirNameMap.put(LifecyclePhase.GENERATE_TEST_SOURCES.id(), "generated-test-sources");
         lifeCyclePhaseToGeneratedSourcesDirName = Collections.unmodifiableMap(dirNameMap);
 
         Map<String, Function<MavenProject, Consumer<String>>> consumerMap = new HashMap<>();
+        consumerMap.put(null, project -> project::addCompileSourceRoot);
         consumerMap.put(LifecyclePhase.GENERATE_SOURCES.id(), project -> project::addCompileSourceRoot);
         consumerMap.put(LifecyclePhase.GENERATE_TEST_SOURCES.id(), project -> project::addTestCompileSourceRoot);
         lifeCyclePhaseToAddCompileSourceRootConsumer = Collections.unmodifiableMap(consumerMap);
