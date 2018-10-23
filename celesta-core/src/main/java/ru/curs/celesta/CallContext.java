@@ -64,6 +64,10 @@ public class CallContext implements ICallContext {
         activate(celesta, procName);
     }
 
+    int getDataAccessorsCount() {
+        return dataAccessorsCount;
+    }
+
     public void activate(ICelesta celesta,
                          String procName) {
         Objects.requireNonNull(celesta);
