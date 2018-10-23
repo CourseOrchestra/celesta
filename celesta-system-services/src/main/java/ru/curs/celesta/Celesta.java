@@ -34,13 +34,13 @@ public class Celesta implements ICelesta, AutoCloseable {
 
     private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
-    public Celesta(BaseAppSettings appSettings, int phasesCount) {
+    public Celesta(BaseAppSettings appSettings) {
         this.appSettings = appSettings;
         manageH2Server();
 
         // CELESTA STARTUP SEQUENCE
         // 1. Разбор описания гранул.
-        System.out.printf("Celesta initialization: phase 1/%s score parsing...", phasesCount);
+        System.out.printf("Celesta initialization: score parsing...");
 
         try {
             this.score = new Score.ScoreBuilder<>(Score.class)
@@ -76,7 +76,7 @@ public class Celesta implements ICelesta, AutoCloseable {
         this.profiler = new ProfilingManager(this, dbAdaptor);
 
         if (!appSettings.getSkipDBUpdate()) {
-            System.out.printf("Celesta initialization: phase 2/%s database upgrade...", phasesCount);
+            System.out.printf("Celesta initialization: database upgrade...");
 
             DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                     .dbAdaptor(dbAdaptor)
@@ -91,7 +91,7 @@ public class Celesta implements ICelesta, AutoCloseable {
             dbUpdater.updateDb();
             System.out.println("done.");
         } else {
-            System.out.printf("Celesta initialization: phase 2/%s database upgrade...skipped.%n", phasesCount);
+            System.out.printf("Celesta initialization: database upgrade...skipped.%n");
         }
 
     }
@@ -155,7 +155,7 @@ public class Celesta implements ICelesta, AutoCloseable {
 
     public static Celesta createInstance(Properties properties) {
         AppSettings appSettings = preInit(properties);
-        return new Celesta(appSettings, 3);
+        return new Celesta(appSettings);
     }
 
     public static Celesta createInstance() {
@@ -164,7 +164,7 @@ public class Celesta implements ICelesta, AutoCloseable {
     }
 
     private static AppSettings preInit(Properties properties) {
-        System.out.print("Celesta pre-initialization: phase 1/2 system settings reading...");
+        System.out.print("Celesta pre-initialization: system settings reading...");
         AppSettings appSettings = new AppSettings(properties);
         System.out.println("done.");
         return appSettings;

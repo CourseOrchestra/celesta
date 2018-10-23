@@ -64,12 +64,12 @@ public class CallContext implements ICallContext {
         activate(celesta, procName);
     }
 
-    int getDataAccessorsCount() {
+    final int getDataAccessorsCount() {
         return dataAccessorsCount;
     }
 
     /**
-     * Activates CallContext with 'live' Celesta and procName
+     * Activates CallContext with 'live' Celesta and procName.
      * @param celesta Celesta to use CallContext with.
      * @param procName Name of the called procedure (for logging/audit needs).
      */
