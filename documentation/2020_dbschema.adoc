@@ -12,9 +12,9 @@ include::_doc_general_attributes.adoc[]
 
 == Синхронизация метаданных Celesta и проекта DBSchema
 
-Система DBSchema представляет собой удобный инструмент визуального моделирования структуры базы данных. Имеется возможность полностью замоделировать в DBSchema всю информацию Celesta о структуре БД (таблицы, поля, ключи, индексы), а также наоборот — превратить существующий Score в проект DBSchema.
+http://www.dbschema.com/[DBSchema] представляет собой удобный инструмент визуального моделирования структуры базы данных. Имеется возможность полностью замоделировать в DBSchema всю информацию Celesta о структуре БД (таблицы, поля, ключи, индексы), а также наоборот — превратить существующий Score в проект DBSchema.
 
-image::{img}/800px-Column.png[{image-100-width}]
+image::{img}/800px-Dbschemascreen.png[{image-100-width}]
 
 === Настройка системы
 
@@ -22,15 +22,15 @@ image::{img}/800px-Column.png[{image-100-width}]
 
 . DBSchema (программа проприетарная, для работы необходимо приобретать лицензию).
 
-. Утилита schemasync.jar.
+. Утилита `dbschemasync`.
 
 . Папка с настройками Celesta для DBSchema, которую надо поместить в %userprofile%\.DbSchema\config\rdbms\. В настройках прописаны шесть типов данных, доступных в Celesta.
 
-Актуальную версию утилиты schemasync.jar и папки с настройками для DBSchema (dbschemasync.zip) следует брать с Artifactory: https://artifactory.corchestra.ru/artifactory/list/corchestra-dev/
+Актуальную версию утилиты `dbschemasync` и папки с настройками для DBSchema (dbschemasync.zip) следует брать с Artifactory: https://artifactory.corchestra.ru/artifactory/list/corchestra-dev/
 
 === Запуск синхронизации
 
-Утилита schemasync.jar принимает два параметра:
+Утилита `dbschemasync` принимает два параметра:
 
 * Score path
 
@@ -38,17 +38,17 @@ image::{img}/800px-Column.png[{image-100-width}]
 
 Направление синхронизации определяется последовательностью аргументов: если первым аргументом идёт Score Path, то синхронизация идёт от Score к проекту DBSchema, если же первым аргументом идёт имя проекта DBSchema, то синхронизация идёт от DBSchema к Score.
 
-Так как в процессе работы синхронизация запускается часто, для облегчения работы рекомендуется завести два cmd-файла, в которых прописать необходимые аргументы.
+Пример команды для синхронизации от score к схеме:
 
-Пример файла score2schema.cmd:
+```
+dbschemasync "c:/temp/dbschema/score/" "c:/temp/dbschema/schema.dbs"
+```
 
-[source,sql]
-java -jar schemasync.jar "c:/temp/dbschema/score/" "c:/temp/dbschema/schema.dbs"
+Пример синхронизации от схемы к score:
 
-Пример файла schema2score.cmd:
-
-[source,sql]
-java -jar schemasync.jar "c:/temp/dbschema/schema.dbs" "c:/temp/dbschema/score/"
+```
+dbschemasync "c:/temp/dbschema/schema.dbs" "c:/temp/dbschema/score/"
+```
 
 === Особенности работы при дизайне структуры БД
 
@@ -84,6 +84,6 @@ image::{img}/Dbschemascreen2.png[{image-80-width}]
 
 == Выгрузка в PlantUML
 
-Третья опция командной строки -adoc в режиме конвертации из DBSchema в score параллельно формирует диаграммы в формате PlantUML для каждой из диаграмм DBSchema. Имена файлов диаграмм соответствуют названиям листов DBSchema с диаграммами.
+Третья опция командной строки `-adoc` в режиме конвертации из DBSchema в score параллельно формирует диаграммы в формате https://habr.com/post/416077/[PlantUML] для каждой из диаграмм DBSchema. Имена файлов диаграмм соответствуют названиям листов DBSchema с диаграммами.
 
 //end::dbschema[]
