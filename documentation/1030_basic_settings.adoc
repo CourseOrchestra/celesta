@@ -1,3 +1,4 @@
+[[basic_settings_section]]
 = Базовая настройка Celesta
 :lang: ru
 :is-main-doc:
