@@ -1,3 +1,4 @@
+[[DBSchema]]
 = Проектирование базы данных Celesta в DBSchema
 :lang: ru
 :is-main-doc:

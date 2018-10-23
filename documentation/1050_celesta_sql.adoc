@@ -1,3 +1,4 @@
+[[CelestaSQL]]
 = Язык Celesta-SQL
 :lang: ru
 :is-main-doc:
