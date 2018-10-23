@@ -68,6 +68,11 @@ public class CallContext implements ICallContext {
         return dataAccessorsCount;
     }
 
+    /**
+     * Activates CallContext with 'live' Celesta and procName
+     * @param celesta Celesta to use CallContext with.
+     * @param procName Name of the called procedure (for logging/audit needs).
+     */
     public void activate(ICelesta celesta,
                          String procName) {
         Objects.requireNonNull(celesta);
@@ -86,10 +91,16 @@ public class CallContext implements ICallContext {
         startMonotonicTime = System.nanoTime();
     }
 
+    /**
+     * Active database JDBC connection.
+     */
     public Connection getConn() {
         return conn;
     }
 
+    /**
+     * Name of the current user.
+     */
     public String getUserId() {
         return userId;
     }

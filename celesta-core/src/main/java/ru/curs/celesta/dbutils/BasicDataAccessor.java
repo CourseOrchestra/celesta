@@ -15,8 +15,9 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
 
         previousDataAccessor = context.getLastDataAccessor();
         if (previousDataAccessor != null) {
-            if (previousDataAccessor.nextDataAccessor != null)
+            if (previousDataAccessor.nextDataAccessor != null) {
                 throw new IllegalStateException();
+            }
             previousDataAccessor.nextDataAccessor = this;
         }
         context.setLastDataAccessor(this);
@@ -38,14 +39,12 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
         if (this == callContext().getLastDataAccessor()) {
             callContext().setLastDataAccessor(previousDataAccessor);
         }
-
         if (previousDataAccessor != null) {
             previousDataAccessor.nextDataAccessor = nextDataAccessor;
         }
         if (nextDataAccessor != null) {
             nextDataAccessor.previousDataAccessor = previousDataAccessor;
         }
-
         //Help GC to avoid 'floating garbage'
         previousDataAccessor = null;
         nextDataAccessor = null;
