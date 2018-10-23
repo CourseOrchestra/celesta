@@ -34,7 +34,7 @@ include::_doc_general_attributes.adoc[]
 
 == Основные понятия
 
-image::{img}/640px-Duke2-2.png[{image-50-width}]
+image::{img}/640px-Duke2-2.png[width=300]
 
 Партитура (Score):: совокупность гранул, с ко
 торыми работает данный экземпляр Celesta.
