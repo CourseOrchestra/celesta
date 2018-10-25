@@ -5,7 +5,7 @@ import ru.curs.celesta.dbutils.IProfiler;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * CallContext of system, which not need any user.
+ * CallContext of system, which does not need any user.
  */
 public class SystemCallContext extends CallContext {
 

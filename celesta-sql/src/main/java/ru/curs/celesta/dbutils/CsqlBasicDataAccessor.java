@@ -5,10 +5,11 @@ import ru.curs.celesta.ICallContext;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.GrainElement;
 
+import java.io.Closeable;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
+public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements Closeable {
     protected static final String DATA_ACCESSOR_IS_CLOSED = "DataAccessor is closed.";
 
     private final T context;
@@ -18,7 +19,7 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
     private boolean closed = false;
 
 
-    public CsqlBasicDataAccessor(T context)  {
+    public CsqlBasicDataAccessor(T context) {
         validateInitContext(context);
 
         this.context = context;
@@ -32,7 +33,7 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
         this.db = callContext().getDbAdaptor();
     }
 
-    protected void validateInitContext(T context)  {
+    protected void validateInitContext(T context) {
         if (context == null)
             throw new CelestaException(
                     "Invalid context passed to %s constructor: context should not be null.",
@@ -77,15 +78,14 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> {
 
     protected abstract void closeInternal();
 
-    public abstract void clear() ;
+    public abstract void clear();
 
     /**
      * Объект метаданных (таблица, представление или последовательность), на основе которого создан
      * данный объект доступа.
      *
-     * @
-     *             в случае ошибки извлечения метаинформации (в норме не должна
-     *             происходить).
+     * @ в случае ошибки извлечения метаинформации (в норме не должна
+     * происходить).
      */
-    public abstract GrainElement meta() ;
+    public abstract GrainElement meta();
 }
