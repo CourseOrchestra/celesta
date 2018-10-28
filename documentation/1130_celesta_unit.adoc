@@ -24,7 +24,7 @@ include::_doc_general_attributes.adoc[]
 
 Ниже приведен пример модульного теста. Для его запуска достаточно запустить его как Jython Unit Test из Eclipse или IDEA:
 
-[source, sql]
+[source, python]
 coding=UTF-8
 Import celestaunit должен идти первым
 from celestaunit import CelestaUnit

@@ -46,18 +46,22 @@ include::1070_call_context.adoc[leveloffset=+2, tag="call_context"]
 
 include::1080_classes.adoc[leveloffset=+2, tag="classes"]
 
+[[BLOB_fields]]
 === BLOB-поля
 
 include::1090_blob.adoc[leveloffset=+2, tag="blob"]
 
+[[Option_fields]]
 === Option-поля
 
 include::1100_option.adoc[leveloffset=+2, tag="option"]
 
+[[Lost_updates_protection]]
 === Защита от потерянных обновлений
 
 include::1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
 
+[[Celesta_metadata]]
 === Метаданные Celesta
 
 include::1120_meta.adoc[leveloffset=+2, tag="meta"]
@@ -68,6 +72,7 @@ include::1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
 
 == Celesta и Базы данных
 
+[[RDBMS_peculiarities]]
 === Особенности работы Celesta с поддерживаемыми типами СУБД
 
 include::2010_supported_rdbms.adoc[leveloffset=+2, tag="supported_rdbms"]
