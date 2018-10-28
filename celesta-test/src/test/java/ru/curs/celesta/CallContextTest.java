@@ -1,6 +1,7 @@
 package ru.curs.celesta;
 
 import org.junit.jupiter.api.*;
+import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.LogsetupCursor;
 
@@ -17,14 +18,15 @@ public class CallContextTest extends AbstractCelestaTest {
     }
 
     @Test
-    public void cursorsAreClosedWithCallContext() {
+    void cursorsAreClosedWithCallContext() {
         GrainsCursor grainsCursor = new GrainsCursor(cc());
         LogsetupCursor logSetupCursor = new LogsetupCursor(cc());
 
         assertAll(
                 () -> assertFalse(cc().isClosed()),
                 () -> assertFalse(grainsCursor.isClosed()),
-                () -> assertFalse(logSetupCursor.isClosed())
+                () -> assertFalse(logSetupCursor.isClosed()),
+                () -> assertEquals(2, cc().getDataAccessorsCount())
         );
 
         cc().close();
@@ -32,17 +34,59 @@ public class CallContextTest extends AbstractCelestaTest {
         assertAll(
                 () -> assertTrue(cc().isClosed()),
                 () -> assertTrue(grainsCursor.isClosed()),
-                () -> assertTrue(logSetupCursor.isClosed())
+                () -> assertTrue(logSetupCursor.isClosed()),
+                () -> assertEquals(0, cc().getDataAccessorsCount())
         );
     }
 
     @Test
-    public void failsIfTooManyCursorsAreCreated() {
+    void failsIfTooManyCursorsAreCreated() {
         for (int i = 0; i < CallContext.MAX_DATA_ACCESSORS + 1; i++) {
             new GrainsCursor(cc());
         }
         assertThrows(CelestaException.class,
                 () -> new GrainsCursor(cc()));
+    }
+
+    @Test
+    void chainOfCursorsShortensOnCursorClose() {
+        BasicCursor[] cursors = new BasicCursor[6];
+
+        for (int i = 0; i < cursors.length; i++) {
+            cursors[i] = new GrainsCursor(cc());
+            assertEquals(i + 1, cc().getDataAccessorsCount());
+            assertSame(cursors[i], cc().getLastDataAccessor());
+        }
+
+        for (int i = 1; i < 3; i++) {
+            cursors[i * 2 - 1].close();
+            assertEquals(cursors.length - i, cc().getDataAccessorsCount());
+        }
+
+        cc().close();
+        assertEquals(0, cc().getDataAccessorsCount());
+        assertNull(cc().getLastDataAccessor());
+
+        cc().close();
+    }
+
+    @Test
+    void closeAndCreateLastCursorInChain() {
+        BasicCursor[] cursors = new BasicCursor[3];
+
+        for (int i = 0; i < cursors.length; i++) {
+            cursors[i] = new GrainsCursor(cc());
+            assertEquals(i + 1, cc().getDataAccessorsCount());
+            assertSame(cursors[i], cc().getLastDataAccessor());
+        }
+
+        cursors[cursors.length - 1].close();
+        assertEquals(cursors.length - 1, cc().getDataAccessorsCount());
+        assertSame(cursors[cursors.length - 2], cc().getLastDataAccessor());
+
+        cursors[cursors.length - 1] = new GrainsCursor(cc());
+        assertEquals(cursors.length, cc().getDataAccessorsCount());
+        assertSame(cursors[cursors.length - 1], cc().getLastDataAccessor());
     }
 
 }
