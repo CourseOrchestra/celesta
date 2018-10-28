@@ -2,7 +2,6 @@ package ru.curs.celesta.score;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.DbUpdater;
@@ -40,7 +39,15 @@ public class SchemaAutoupdateTest {
     }
 
     @Test
-    void testWithNoAutoupdateOption(TestInfo ti) throws Exception {
+    void testScoreParsing() throws Exception {
+        celesta = getCelesta("schema_autoupdate/scoreV2");
+        assertTrue(celesta.getScore().getGrain("A").isAutoupdate());
+        assertFalse(celesta.getScore().getGrain("B").isAutoupdate());
+        assertTrue(celesta.getScore().getGrain("C").isAutoupdate());
+    }
+    
+    @Test
+    void testWithNoAutoupdateOption() throws Exception {
 
         CelestaImpl celesta = getCelesta("schema_autoupdate/scoreV1");
         DbUpdater<?> dbUpdater = createDbUpdater(celesta);
