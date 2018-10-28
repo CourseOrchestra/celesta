@@ -1,4 +1,3 @@
-[[DBSchema]]
 = Проектирование базы данных Celesta в DBSchema
 :lang: ru
 :is-main-doc:
@@ -10,7 +9,6 @@ include::_doc_general_attributes.adoc[]
 :source-highlighter: highlightjs
 
 //tag::dbschema[]
-
 == Синхронизация метаданных Celesta и проекта DBSchema
 
 http://www.dbschema.com/[DBSchema] представляет собой удобный инструмент визуального моделирования структуры базы данных. Имеется возможность полностью замоделировать в DBSchema всю информацию Celesta о структуре БД (таблицы, поля, ключи, индексы), а также наоборот — превратить существующий Score в проект DBSchema.

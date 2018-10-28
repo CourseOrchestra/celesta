@@ -1,4 +1,3 @@
-[[CelestaSQL]]
 = Язык Celesta-SQL
 :lang: ru
 :is-main-doc:
@@ -17,7 +16,7 @@ IMPORTANT: Скрипты на языке CelestaSQL должны иметь к�
 
 На языке Celesta SQL пишутся скрипты определения гранул. Скрипт на языке CelestaSQL состоит из конструкций
 
-* <<create_grain_statement,CREATE GRAIN>>,
+* <<create_schema_statement,CREATE GRAIN>>,
 * <<create_sequence_statement,CREATE SEQUENCE>>,
 * <<create_table_statement,CREATE TABLE>>,
 * <<foreign_keys_statements,ALTER TABLE ADD ... FOREIGN KEY>>,
@@ -318,6 +317,7 @@ CREATE TABLE empfiles(
   question_id varchar(30) NOT NULL,
   FOREIGN KEY (orgtype_id, question_id) REFERENCES schema.table(field, field)
 
+[[celestasql_with_options]]
 === Опции
 
 Celesta позволяет указывать следующие опции после определения таблицы:

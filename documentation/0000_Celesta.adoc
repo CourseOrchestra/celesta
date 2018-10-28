@@ -19,14 +19,17 @@ include::1010_intro.adoc[leveloffset=+2, tag="intro"]
 
 include::1020_celesta_start.adoc[leveloffset=+2, tag="celesta_start"]
 
+[[basic_settings_section]]
 === Базовая настройка Celesta
 
 include::1030_basic_settings.adoc[leveloffset=+2, tag="basic_settings"]
 
+[[system_tables]]
 === Системные таблицы Celesta
 
 include::1040_system_tables.adoc[leveloffset=+2, tag="system_tables"]
 
+[[CelestaSQL]]
 === Язык CelestaSQL
 
 include::1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
@@ -69,6 +72,7 @@ include::1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
 
 include::2010_supported_rdbms.adoc[leveloffset=+2, tag="supported_rdbms"]
 
+[[DBSchema]]
 === Проектирование базы данных Celesta в DBSchema
 
 include::2020_dbschema.adoc[leveloffset=+2, tag="dbschema"]

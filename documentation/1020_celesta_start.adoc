@@ -63,10 +63,10 @@ Celesta initialization: database upgrade...done.
 
 В Celesta имеется три способа отключить процесс автообновления:
 
-* *глобально* — с помощью опции skip.dbupdate в [[Базовая настройка Celesta|настроечном .properties-файле]].
+* *глобально* — с помощью опции skip.dbupdate в <<basic_settings_section,настроечном .properties-файле>>.
 
-* *на уровне гранулы* — выставив её статус в [[Системные таблицы Celesta#Таблица celesta.grains|таблице celesta.grains]] в 4.
+* *на уровне гранулы* — выставив её статус в <<celesta_grains_table,таблице celesta.grains>> в 4.
 
-* *на уровне таблицы* — объявив [[Язык Celesta-SQL#Опции|опцию WITH NO AUTOUPDATE]] в скрипте создания таблицы.
+* *на уровне таблицы* — объявив <<celestasql_with_options,опцию WITH NO AUTOUPDATE>> в скрипте создания таблицы.
 
 //end::celesta_start[]
