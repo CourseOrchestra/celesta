@@ -128,11 +128,12 @@ public abstract class DbUpdater<T extends ICallContext> {
                     success = decideToUpgrade(g, gi, connectionPool) & success;
                 }
             }
-            if (!success)
+            if (!success) {
                 throw new CelestaException(
                         "Not all %s were updated successfully, see %s.%s table data for details.",
                         getSchemasTableName(), sysSchemaName, getSchemasTableName()
                 );
+            }
         }
     }
 
@@ -167,8 +168,8 @@ public abstract class DbUpdater<T extends ICallContext> {
         schemaCursor.insert();
     }
 
-    boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) {
-        if (gi.lock || g.isLock()) {
+    private boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) {
+        if (gi.lock) {
             return true;
         }
 

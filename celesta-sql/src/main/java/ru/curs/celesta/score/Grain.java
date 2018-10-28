@@ -44,8 +44,6 @@ public final class Grain extends NamedElement {
 
     private boolean isAutoupdate = true;
 
-    private boolean isLock = false;
-
     private Set<GrainPart> grainParts = new LinkedHashSet<>();
 
     private final Map<Class<? extends GrainElement>, NamedElementHolder<? extends GrainElement>> grainElements
@@ -281,23 +279,6 @@ public final class Grain extends NamedElement {
     public void setVersion(String version) throws ParseException {
         modify();
         this.version = new VersionString(StringColumn.unquoteString(version));
-    }
-
-    /**
-     * Sets the grain to locked state which prevents it from being updated in database. Default is {@code false}.
-     *
-     * @param isLock
-     */
-    public void setLock(boolean isLock) {
-        this.isLock = isLock;
-    }
-
-    /**
-     * Returns locked state. If {@code true} the grain is not updated in database. Default is {@code false}.
-     * @return
-     */
-    public boolean isLock() {
-        return this.isLock;
     }
 
     /**

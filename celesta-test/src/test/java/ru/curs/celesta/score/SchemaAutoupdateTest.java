@@ -2,6 +2,8 @@ package ru.curs.celesta.score;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.DbUpdater;
 import ru.curs.celesta.dbutils.DbUpdaterBuilder;
@@ -13,6 +15,8 @@ import ru.curs.celesta.mock.CelestaImpl;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.syscursors.GrainsCursor;
+import ru.curs.celesta.syscursors.ISchemaCursor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -36,7 +40,7 @@ public class SchemaAutoupdateTest {
     }
 
     @Test
-    void testWithNoAutoupdateOption() throws Exception {
+    void testWithNoAutoupdateOption(TestInfo ti) throws Exception {
 
         CelestaImpl celesta = getCelesta("schema_autoupdate/scoreV1");
         DbUpdater<?> dbUpdater = createDbUpdater(celesta);
@@ -48,9 +52,10 @@ public class SchemaAutoupdateTest {
         assertTrue(dba.tableExists(conn, "A", "a"));
         assertTrue(dba.tableExists(conn, "B", "b"));
         assertTrue(dba.tableExists(conn, "C", "c"));
+        
+        lockGrain("A", celesta);
 
         celesta = getCelesta("schema_autoupdate/scoreV2");
-        celesta.getScore().getGrain("A").setLock(true);
         dbUpdater = createDbUpdater(celesta);
         dbUpdater.updateDb();
 
@@ -66,6 +71,16 @@ public class SchemaAutoupdateTest {
         Table tableCc = celesta.getScore().getGrain("C").getTable("c");
         assertTrue(dba.getColumns(conn, tableCc).contains("title"));       
     }
+    
+    private void lockGrain(String grainName, ICelesta celesta) {
+        try(CallContext cc = new SystemCallContext(celesta)) {
+            GrainsCursor gc = new GrainsCursor(cc); 
+            gc.get(grainName);
+            gc.setState(ISchemaCursor.LOCK);
+            gc.update();
+            gc.close();
+        }
+    }
 
     private static DbUpdater<?> createDbUpdater(CelestaImpl celesta) {
 
@@ -77,7 +92,7 @@ public class SchemaAutoupdateTest {
                 .setPermissionManager(celesta.getPermissionManager())
                 .setLoggingManager(celesta.getLoggingManager())
                 .build();
-
+        
         return dbUpdater;
     }
 
