@@ -1,6 +1,5 @@
 package ru.curs.celesta.mock;
 
-import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.IProfiler;
@@ -69,4 +68,13 @@ public class CelestaImpl implements ICelesta {
     public DBAdaptor getDBAdaptor() {
         return dbAdaptor;
     }
+
+    public void close() throws Exception {
+        connectionPool.close();
+    }
+
+    public boolean isClosed() {
+        return connectionPool.isClosed();
+    }
+
 }

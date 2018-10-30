@@ -1,8 +1,21 @@
 package ru.curs.celesta.score;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -29,6 +42,8 @@ public final class Grain extends NamedElement {
 
     private boolean modified = true;
 
+    private boolean isAutoupdate = true;
+
     private Set<GrainPart> grainParts = new LinkedHashSet<>();
 
     private final Map<Class<? extends GrainElement>, NamedElementHolder<? extends GrainElement>> grainElements
@@ -45,11 +60,11 @@ public final class Grain extends NamedElement {
 
     public Grain(AbstractScore score, String name) throws ParseException {
         super(name, score.getIdentifierParser());
-        if (name.indexOf("_") >= 0)
+        if (name.indexOf("_") >= 0) {
             throw new ParseException("Invalid grain name '" + name + "'. No underscores are allowed for grain names.");
+        }
         this.score = score;
         score.addGrain(this);
-
 
         //TODO: Что-то с этим надо сделать grainPath = new File(String.format("%s%s%s", score.getDefaultGrainPath(), File.separator, name));
     }
@@ -123,7 +138,7 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает набор материализованных представлений, определенных в грануле
+     * Возвращает набор материализованных представлений, определенных в грануле.
      */
     public Map<String, MaterializedView> getMaterializedViews() {
         return getElementsHolder(MaterializedView.class).getElements();
@@ -153,9 +168,11 @@ public final class Grain extends NamedElement {
      */
     public <T extends GrainElement> T getElement(String name, Class<T> classOfElement) throws ParseException {
         T result = getElementsHolder(classOfElement).get(name);
-        if (result == null)
+        if (result == null) {
             throw new ParseException(
                     String.format("%s '%s' not found in grain '%s'", classOfElement.getSimpleName(), name, getName()));
+        }
+
         return result;
     }
 
@@ -166,8 +183,9 @@ public final class Grain extends NamedElement {
      * @throws ParseException В случае, если индекс с таким именем уже существует.
      */
     public void addIndex(Index index) throws ParseException {
-        if (index.getGrain() != this)
+        if (index.getGrain() != this) {
             throw new IllegalArgumentException();
+        }
         modify();
         indices.addElement(index);
     }
@@ -193,43 +211,78 @@ public final class Grain extends NamedElement {
 
         // Удаляются все индексы на данной таблице
         List<Index> indToDelete = new LinkedList<>();
-        for (Index ind : indices)
-            if (ind.getTable() == table)
+        for (Index ind : indices) {
+            if (ind.getTable() == table) {
                 indToDelete.add(ind);
+            }
+        }
 
         // Удаляются все внешние ключи, ссылающиеся на данную таблицу
         List<ForeignKey> fkToDelete = new LinkedList<>();
-        for (Grain g : score.getGrains().values())
-            for (Table t : g.getElements(Table.class).values())
-                for (ForeignKey fk : t.getForeignKeys())
-                    if (fk.getReferencedTable() == table)
+        for (Grain g : score.getGrains().values()) {
+            for (Table t : g.getElements(Table.class).values()) {
+                for (ForeignKey fk : t.getForeignKeys()) {
+                    if (fk.getReferencedTable() == table) {
                         fkToDelete.add(fk);
+                    }
+                }
+            }
+        }
 
-        for (Index ind : indToDelete)
+        for (Index ind : indToDelete) {
             ind.delete();
-        for (ForeignKey fk : fkToDelete)
+        }
+        for (ForeignKey fk : fkToDelete) {
             fk.delete();
+        }
 
         // Удаляется сама таблица
         getElementsHolder(Table.class).remove(table);
     }
 
     /**
-     * Возвращает модель, к которой принадлежит гранула.
+     * Returns model that the grain belongs to.
      */
     public AbstractScore getScore() {
         return score;
     }
 
     /**
-     * Возвращает номер версии гранулы.
+     * Value {@code false} indicates that grain was created with option WITH NO AUTOUPDATE,
+     * and won't be updated. Default value is {@code true}.
+     */
+    public boolean isAutoupdate() {
+        return isAutoupdate;
+    }
+
+    /**
+     * Sets autoupdate option. Default value is {@code true}.
+     * @param isAutoupdate
+     */
+    public void setAutoupdate(boolean isAutoupdate) {
+        this.isAutoupdate = isAutoupdate;
+    }
+
+    /**
+     * Returns the grain version.
      */
     public VersionString getVersion() {
         return version;
     }
 
     /**
-     * Возвращает длину файла-скрипта, на основе которого создана гранула.
+     * Sets the grain version.
+     *
+     * @param version  Quoted-string. In course of processing single and double quotes are removed.
+     * @throws ParseException  in case if format of quoted string is incorrect.
+     */
+    public void setVersion(String version) throws ParseException {
+        modify();
+        this.version = new VersionString(StringColumn.unquoteString(version));
+    }
+
+    /**
+     * Returns length of the script file that the grain was created from.
      */
     public int getLength() {
         return length;
@@ -240,10 +293,9 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает контрольную сумму файла-скрипта, на основе которого создана
-     * гранула. Совпадение версии, длины и контрольной суммы считается
-     * достаточным условием для того, чтобы не заниматься чтением и обновлением
-     * структуры базы данных.
+     * Returns checksum of the script file that the grain was created from.
+     * Coincidence of version, length and checksum is considered to be a sufficient solution for
+     * skipping the reading and update of the database structure.
      */
     public int getChecksum() {
         return checksum;
@@ -254,60 +306,51 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Устанавливает версию гранулы.
+     * Adding of constraint name (for checking if it is unique).
      *
-     * @param version Quoted-string. В процессе установки обрамляющие и двойные
-     *                кавычки удаляются.
-     * @throws ParseException в случае, если имеется неверный формат quoted string.
-     */
-    public void setVersion(String version) throws ParseException {
-        modify();
-        this.version = new VersionString(StringColumn.unquoteString(version));
-    }
-
-    /**
-     * Добавление имени ограничения (для проверерки, что оно уникальное).
-     *
-     * @param name Имя ограничения.
-     * @throws ParseException В случае, если ограничение с таким именем уже определено.
+     * @param name  Constraint name.
+     * @throws ParseException  In case if a constraint with the same name has already been defined.
      */
     void addConstraintName(String name) throws ParseException {
         name = getScore().getIdentifierParser().parse(name);
-        if (constraintNames.contains(name))
+        if (constraintNames.contains(name)) {
             throw new ParseException(String.format("Constraint '%s' is defined more than once in a grain.", name));
+        }
         constraintNames.add(name);
     }
 
     /**
-     * Указывает на то, что разбор гранулы из файла завершён.
+     * Indicates that the grain parsing from file is completed.
      */
     public boolean isParsingComplete() {
         return parsingComplete;
     }
 
     /**
-     * Если одна гранула имеет номер больший, чем другая, то значит, что она
-     * может зависеть от первой.
+     * If a grain has a higher number than the other grain then it means that it can depend from the first one.
      */
     public int getDependencyOrder() {
         return dependencyOrder;
     }
 
     /**
-     * Указывает на то, что разбор гранулы завершен. Системный метод.
+     * Indicates that the grain parsing is completed. A system method.
+     * 
+     * @throws ParseException
      */
     public void finalizeParsing() throws ParseException {
 
         for (String tableName: getElements(Table.class).keySet()) {
             String sequenceName = tableName + "_seq";
             SequenceElement se = getElementsHolder(SequenceElement.class).get(sequenceName);
-            if (se != null)
+            if (se != null) {
                 throw new ParseException(
                         String.format(
                                 "Identifier %s can't be used for the naming of sequence as  it'is reserved by Celesta.",
                                 sequenceName
                         )
                 );
+            }
         }
 
         parsingComplete = true;
@@ -316,65 +359,77 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает признак модификации гранулы (true, если составляющие части
-     * гранулы были модифицированы в runtime).
+     * Returns a flag of grain modification ({@code true} if parts of grain were modified in the runtime).
      */
     public boolean isModified() {
         return modified;
     }
 
     void modify() throws ParseException {
-        if (getScore().getSysSchemaName().equals(getName()) && parsingComplete)
+        if (getScore().getSysSchemaName().equals(getName()) && parsingComplete) {
             throw new ParseException("You cannot modify system grain.");
+        }
         modified = true;
     }
 
 
     public void save(PrintWriter bw, GrainPart gp) throws IOException {
         writeCelestaDoc(this, bw);
-        bw.printf("CREATE SCHEMA %s VERSION '%s';%n", getName(), getVersion().toString());
+        bw.printf("CREATE SCHEMA %s VERSION '%s'", getName(), getVersion().toString());
+        if (!isAutoupdate) {
+            bw.printf(" WITH NO AUTOUPDATE");
+        }
+        bw.printf(";%n");
         bw.println();
 
         bw.println("-- *** TABLES ***");
         List<Table> tables = getElements(Table.class, gp);
-        for (Table t : tables)
+        for (Table t : tables) {
             t.save(bw);
+        }
 
         bw.println("-- *** FOREIGN KEYS ***");
-        for (Table t : tables)
-            for (ForeignKey fk : t.getForeignKeys())
+        for (Table t : tables) {
+            for (ForeignKey fk : t.getForeignKeys()) {
                 fk.save(bw);
+            }
+        }
 
         bw.println("-- *** INDICES ***");
         List<Index> indices = getElements(Index.class, gp);
-        for (Index i : indices)
+        for (Index i : indices) {
             i.save(bw);
+        }
 
         bw.println("-- *** VIEWS ***");
         List<View> views = getElements(View.class, gp);
-        for (View v : views)
+        for (View v : views) {
             v.save(bw);
+        }
 
         bw.println("-- *** MATERIALIZED VIEWS ***");
         List<MaterializedView> materializedViews = getElements(MaterializedView.class, gp);
-        for (MaterializedView mv : materializedViews)
+        for (MaterializedView mv : materializedViews) {
             mv.save(bw);
+        }
 
         bw.println("-- *** PARAMETERIZED VIEWS ***");
         List<ParameterizedView> parameterizedViews = getElements(ParameterizedView.class, gp);
-        for (ParameterizedView pv : parameterizedViews)
+        for (ParameterizedView pv : parameterizedViews) {
             pv.save(bw);
+        }
     }
 
     /**
-     * Saves grain back to source files
+     * Saves grain back to source files.
      *
      * @ io error
      */
     void save()  {
         // Сохранять неизменённую гранулу нет смысла.
-        if (!modified)
+        if (!modified) {
             return;
+        }
 
         for (GrainPart gp : this.grainParts) {
 
@@ -397,11 +452,10 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает представление по его имени, либо исключение с сообщением о
-     * том, что представление не найдено.
+     * Returns a view by its name or an exception with a message that the view was not found.
      *
-     * @param name Имя
-     * @throws ParseException Если таблица с таким именем не найдена в грануле.
+     * @param name  View name
+     * @throws ParseException  If view with that name was not found in the grain.
      */
 
     public View getView(String name) throws ParseException {
@@ -419,11 +473,10 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает таблицу по её имени, либо исключение с сообщением о том, что
-     * таблица не найдена.
+     * Returns a table by its name or an exception with a message that the table was not found.
      *
-     * @param name Имя
-     * @throws ParseException Если таблица с таким именем не найдена в грануле.
+     * @param name  Table name
+     * @throws ParseException  If table with that name was not found in the grain.
      */
     public Table getTable(String name) throws ParseException {
         return getElement(name, Table.class);
@@ -436,15 +489,17 @@ public final class Grain extends NamedElement {
 
     void addNativeSql(String sql, boolean isBefore, DBType dbType, GrainPart grainPart) throws ParseException {
         Matcher m = NATIVE_SQL.matcher(sql);
-        if (!m.matches())
+        if (!m.matches()) {
             throw new ParseException("Native sql should match pattern --{{...--}}, was " + sql);
+        }
 
         final List<NativeSqlElement> sqlList;
 
-        if (isBefore)
+        if (isBefore) {
             sqlList = beforeSql.computeIfAbsent(dbType, (dbTypeVar) -> new ArrayList<>());
-        else
+        } else {
             sqlList = afterSql.computeIfAbsent(dbType, (dbTypeVar) -> new ArrayList<>());
+        }
 
         sqlList.add(
                 new NativeSqlElement(grainPart, m.group(1))
@@ -459,8 +514,8 @@ public final class Grain extends NamedElement {
         return afterSql.getOrDefault(dbType, Collections.emptyList());
     }
 
-
     public Set<GrainPart> getGrainParts() {
         return grainParts;
     }
+
 }

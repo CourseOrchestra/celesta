@@ -1,6 +1,6 @@
 package ru.curs.celesta.score;
 
-import java.io.*;
+import java.io.File;
 
 public class GrainPart {
 
@@ -25,6 +25,10 @@ public class GrainPart {
         this.grain.setVersion(version);
     }
 
+    public void setAutoupdate(boolean isAutoupdate) {
+        this.grain.setAutoupdate(isAutoupdate);
+    }
+
     void modify() throws ParseException {
         this.grain.modify();
     }
@@ -40,4 +44,5 @@ public class GrainPart {
     public boolean isDefinition() {
         return isDefinition;
     }
+
 }

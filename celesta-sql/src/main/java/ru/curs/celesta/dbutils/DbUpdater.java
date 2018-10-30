@@ -114,6 +114,9 @@ public abstract class DbUpdater<T extends ICallContext> {
             // Выполняем итерацию по гранулам.
             boolean success = true;
             for (Grain g : grains) {
+                if (! g.isAutoupdate()) {
+                    continue;
+                }
                 // Запись о грануле есть?
                 GrainInfo gi = dbGrains.get(g.getName());
                 if (gi == null) {
@@ -125,11 +128,12 @@ public abstract class DbUpdater<T extends ICallContext> {
                     success = decideToUpgrade(g, gi, connectionPool) & success;
                 }
             }
-            if (!success)
+            if (!success) {
                 throw new CelestaException(
                         "Not all %s were updated successfully, see %s.%s table data for details.",
                         getSchemasTableName(), sysSchemaName, getSchemasTableName()
                 );
+            }
         }
     }
 
@@ -164,9 +168,10 @@ public abstract class DbUpdater<T extends ICallContext> {
         schemaCursor.insert();
     }
 
-    boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) {
-        if (gi.lock)
+    private boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) {
+        if (gi.lock) {
             return true;
+        }
 
         if (gi.recover)
             return updateGrain(g, connectionPool);
