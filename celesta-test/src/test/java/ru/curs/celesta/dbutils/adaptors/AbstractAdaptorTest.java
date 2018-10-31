@@ -1706,7 +1706,7 @@ public abstract class AbstractAdaptorTest {
         Score score = new Score.ScoreBuilder<>(Score.class)
                 .path(ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_1_SCORE_PATH)
                 .build();
-        DbUpdater dbUpdater = createDbUpdater(score, this.dba);
+        DbUpdater<?> dbUpdater = createDbUpdater(score, this.dba);
         dbUpdater.updateDb();
 
         Table t = score.getGrain("test").getTable("t");
@@ -1763,4 +1763,5 @@ public abstract class AbstractAdaptorTest {
                 .setLoggingManager(loggingManager)
                 .build();
     }
+
 }

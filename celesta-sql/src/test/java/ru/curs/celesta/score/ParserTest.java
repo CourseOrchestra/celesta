@@ -63,6 +63,27 @@ public class ParserTest extends AbstractParsingTest {
       g.save();
     }
   }
+  
+  @Test
+  void testSchemaWithNoAutoupdate() throws Exception {
+    String createSchema = "CREATE SCHEMA someGrain VERSION '1.0' WITH NO AUTOUPDATE;";
+
+    File scoreDir = new File(Files.createTempDirectory("testGrainWithNoAutoupdate").toUri());
+    scoreDir.deleteOnExit();
+
+        File grainDir = new File(scoreDir, "grain");
+    grainDir.mkdir();
+    grainDir.deleteOnExit();
+
+    parseAndSaveCsqlScript(createSchema, grainDir, "someGrain");
+
+    File grainScript = new File(grainDir, "_someGrain.sql");
+    grainScript.deleteOnExit();
+
+    String actualCreateSchema = Files.lines(grainScript.toPath()).findFirst().get();
+    
+    assertEquals(createSchema, actualCreateSchema);
+  }
 
   @Test
   public void test1() throws Exception {
