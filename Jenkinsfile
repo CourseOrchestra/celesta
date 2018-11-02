@@ -40,7 +40,7 @@ fi'''
     }
 
     stage ('Documentation processing') {
-        cureAscii 'documentation/0000_Celesta.adoc'
+        cureAscii '${workspace}/documentation/0000_Celesta.adoc'
     }
 
     try{
