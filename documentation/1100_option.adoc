@@ -61,4 +61,5 @@ foo.setRange("state", FooCursor.State.finished)
 if (foo.state2 == FooCursor.State2.closed){
     ....
 }
-//tag::option[]
+
+//end::option[]

@@ -34,12 +34,11 @@ image::{img}/1.file.png[{image-60-width}]
 CelestaSQL поддерживает стандартные однострочные и многострочные комментарии, а также комментарии <<1060_celesta_doc.adoc#,CelestaDoc>>:
 
 [source,sql]
-```
 -- однострочный комментарий
 /*многострочный
     комментарий*/
  /**комментарий CelestaDoc*/
-```
+
 
 Обычные комментарии могут использоваться в любом месте текста, комментарии CelestaDoc — только непосредственно перед определением гранулы, таблицы, поля или индекса.
 
@@ -453,8 +452,8 @@ image::{img}/Param_literal.png[{image-30-width}]
 Пример функции:
 
 [source, sql]
-```
 CREATE FUNCTION pView2(param int,/*TEST*/ param2 varchar) AS
   select f1, f2, f3 from t1
   where f2 = $param AND f3 = $param2 AND f3 = $param2;
-```
+
+//end::celesta_sql[]
