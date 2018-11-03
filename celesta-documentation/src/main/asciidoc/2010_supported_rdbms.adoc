@@ -4,7 +4,7 @@
 include::_doc_general_attributes.adoc[]
 :toclevels: 3
 :doctype: book
-:img: img
+:img: images
 :lupa: icon:search[]
 :source-highlighter: highlightjs
 

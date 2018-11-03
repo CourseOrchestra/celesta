@@ -4,7 +4,7 @@
 include::_doc_general_attributes.adoc[]
 :toclevels: 3
 :doctype: book
-:img: img
+:img: images
 :lupa: icon:search[]
 :source-highlighter: highlightjs
 :toc: left
@@ -63,7 +63,7 @@ Celesta initialization: database upgrade...done.
 
 В Celesta имеется три способа отключить процесс автообновления:
 
-* *глобально* — с помощью опции skip.dbupdate в <<basic_settings_sectionSS,настроечном .properties-файле>>.
+* *глобально* — с помощью опции skip.dbupdate в <<basic_settings_section,настроечном .properties-файле>>.
 
 * *на уровне гранулы* — выставив её статус в <<celesta_grains_table,таблице celesta.grains>> в 4.
 

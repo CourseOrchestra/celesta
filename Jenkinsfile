@@ -39,10 +39,6 @@ if [ $? != 0 ]; then
 fi'''
     }
 
-    stage ('Documentation processing') {
-        cureAscii "${workspace}/documentation/0000_Celesta.adoc"
-    }
-
     try{
         stage ('Exec Maven') {
             rtMaven.run pom: 'pom.xml', goals: 'clean install -P dev', buildInfo: buildInfo
