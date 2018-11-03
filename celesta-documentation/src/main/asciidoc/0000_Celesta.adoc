@@ -1,0 +1,83 @@
+= Справочник Celesta
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+:toc: left
+
+== Справочник Celesta
+
+=== Введение и основные понятия
+
+include::1010_intro.adoc[leveloffset=+2, tag="intro"]
+
+=== Запуск Celesta и авто-обновление БД
+
+include::1020_celesta_start.adoc[leveloffset=+2, tag="celesta_start"]
+
+[[basic_settings_section]]
+=== Базовая настройка Celesta
+
+include::1030_basic_settings.adoc[leveloffset=+2, tag="basic_settings"]
+
+[[system_tables]]
+=== Системные таблицы Celesta
+
+include::1040_system_tables.adoc[leveloffset=+2, tag="system_tables"]
+
+[[CelestaSQL]]
+=== Язык CelestaSQL
+
+include::1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
+
+=== CelestaDoc
+
+include::1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
+
+=== Контекст вызова
+
+include::1070_call_context.adoc[leveloffset=+2, tag="call_context"]
+
+=== Работа с данными через классы доступа к данным
+
+include::1080_classes.adoc[leveloffset=+2, tag="classes"]
+
+[[BLOB_fields]]
+=== BLOB-поля
+
+include::1090_blob.adoc[leveloffset=+2, tag="blob"]
+
+[[Option_fields]]
+=== Option-поля
+
+include::1100_option.adoc[leveloffset=+2, tag="option"]
+
+[[Lost_updates_protection]]
+=== Защита от потерянных обновлений
+
+include::1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
+
+[[Celesta_metadata]]
+=== Метаданные Celesta
+
+include::1120_meta.adoc[leveloffset=+2, tag="meta"]
+
+=== CelestaUnit
+
+include::1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
+
+== Celesta и Базы данных
+
+[[RDBMS_peculiarities]]
+=== Особенности работы Celesta с поддерживаемыми типами СУБД
+
+include::2010_supported_rdbms.adoc[leveloffset=+2, tag="supported_rdbms"]
+
+[[DBSchema]]
+=== Проектирование базы данных Celesta в DBSchema
+
+include::2020_dbschema.adoc[leveloffset=+2, tag="dbschema"]

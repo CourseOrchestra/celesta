@@ -11,6 +11,7 @@
     <url>https://corchestra.ru/wiki/index.php?title=Celesta</url>
 
     <modules>
+        <module>celesta-documentation</module>
         <module>celesta-test</module>
         <module>dbschemasync</module>
         <module>celesta-sql</module>
