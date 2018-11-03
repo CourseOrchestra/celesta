@@ -18,6 +18,7 @@
                 <version>1.5.7.1</version>
                 <configuration>
                     <sourceDocumentName>0000_Celesta.adoc</sourceDocumentName>
+                    <outputFile>index.html</outputFile>
                     <logHandler>
                         <outputToConsole>true</outputToConsole>
                         <failIf>
