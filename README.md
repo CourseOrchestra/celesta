@@ -8,7 +8,7 @@ A component of the [platform](https://corchestra.ru/en/) for rapid development o
 
 * Overview (in Russian): https://habrahabr.ru/post/335966/
 
-* Full documentation: https://corchestra.ru/wiki/index.php?title=Celesta
+* Full documentation: https://courseorchestra.github.io/celesta/
 
 * SECON2018: A concise overview talk (in Russian, 30 min): https://youtu.be/IEIzpqID2XI
 
