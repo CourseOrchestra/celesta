@@ -10,6 +10,7 @@
     <artifactId>celesta-documentation</artifactId>
     <name>celesta-documentation</name>
     <build>
+        <sourceDirectory>src/main/asciidoc</sourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.asciidoctor</groupId>
@@ -58,6 +59,7 @@
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 </project>
