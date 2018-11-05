@@ -1,0 +1,101 @@
+= Особенности работы Celesta с поддерживаемыми типами СУБД
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::supported_rdbms[]
+
+Система по возможности прозрачно для разработчиков решения поддерживает MS SQL Server, Oracle, Postgre SQL и H2.
+
+Хотя решения Celesta свободно переносимы между разными типами поддерживаемых СУБД, тем не менее, каждая из этих СУБД имеет особенности настройки. Кроме того, разные функциональные возможности Celesta по-разному реализованы в разных СУБД. Этим особенностям посвящён данный раздел.
+
+Соответствие типов данных Celesta и СУБД приведено в разделе «Язык Celesta-SQL: типы данных».
+
+image::img/Mssql.jpg[width=80,role="left"]
+== MS SQL Server
+
+=== Особенности реализации
+
+Понятию «гранула» соответствует понятие «схема» (SCHEMA).
+
+
+image::img/Ora.jpg[width=80,role="left"]
+== Oracle
+
+=== Особенности настройки
+
+*Ошибка ORA-12705: Cannot access NLS data files...* Если при запуске Celesta на Oracle Express Edition возникает ошибка "ORA-12705: Cannot access NLS data files or invalid environment specified", в числе аргументов JVM необходимо задать параметр
+
+[source]
+-Duser.country=US
+
+Если Celesta запускается из Flute или Showcase, то задать этот параметр можно на вкладке Java, поле Java Options программ Flute2w.exe или Tomcat7w.exe, используемых для управления сервисами Flute/Tomcat.
+
+Эта проблема является общей для связки Oracle XE + JDBC и актуальна только для Oracle Express Edition, в прочих (production) версиях Oracle Database она не актуальна.
+
+Минимальные настройки прав доступа для USER'а в БД *Oracle 11g*:
+
+[source,sql]
+GRANT
+	CONNECT,
+	RESOURCE,
+	CREATE TABLE,
+	CREATE PROCEDURE,
+	CREATE VIEW,
+	CREATE SEQUENCE,
+	CREATE TRIGGER,
+	SELECT ANY DICTIONARY
+	TO <USER>
+
+В некоторых организациях по умолчанию не дают право доступа SELECT ANY DICTIONARY, из-за чего может возникать ошибка "ORA-00942: table or view does not exist" при разворачивании системной гранулы Celesta.
+
+=== Особенности реализации
+
+* Гранула — префикс в имени таблицы, отделённый знаком подчёркивания, при этом работает ограничение Oracle на длину имени таблицы — 30 символов. Причина в том, что понятие «схема» в Oracle несколько отличается от такового для других СУБД, создание «схем» в Oracle связано с созданием новых пользователей, на что на практике не могут быть выданы права администраторами Oracle-серверов, на которых хранятся промышленные данные.
+
+* Oracle не поддерживает конструкцию FOREIGN KEY ... ON UPDATE/DELETE SET NULL, поэтому она эмулируется при помощи триггеров.
+
+image::img/Postgre.png[width=120,role="left"]
+== PostgreSQL
+
+=== Особенности реализации
+
+* Понятию «гранула» соответствует понятие «схема» (SCHEMA).
+
+=== Особенности использования
+
+При использовании Celesta для доступа к существующей заранее (а не создаваемой и обновляемой в Celesta) базе данных может возникнуть проблема с полями типа uuid. Сама Celesta типа данных uuid как такового не поддерживает, но может работать с ним через поле типа VARCHAR(36). При этом не возникает проблем в MS SQL Server, но для работы Celesta в Postgres требуется явно определить оператор сравнения varchar с uuid и имплицитное изменение типов при присвоении:
+
+[source,sql]
+CREATE OR REPLACE FUNCTION celesta.uuidequal(a1 uuid, a2 CHARACTER VARYING)
+  RETURNS BOOLEAN AS 'select a1::varchar = a2'
+  LANGUAGE SQL IMMUTABLE;
+CREATE OPERATOR = (
+    LEFTARG = uuid,
+    RIGHTARG = CHARACTER VARYING,
+    PROCEDURE = celesta.uuidequal
+);
+CREATE CAST (character varying AS uuid)
+    WITH  INOUT AS ASSIGNMENT;
+
+image::img/H2.png[width=120,role="left"]
+== H2
+
+=== Особенности настройки
+
+* Для упрощенной инициализации inmemory db в файл celesta.properties можно добавить настройку "h2.in-memory=true". В таком случае строка jdbc подключения будет игнорироваться, а также логин и пароль пользователя.
+
+* В celesta.properties добавлена поддержка настройки h2.referential.integrity=false(по умолчанию)/true. Выключенная настройка означает, что ограничения типа constraint будут проигнорированы при записи в БД. При включении ограничения будут обрабатываться как в других РСУБД. Для установки данной настройки не в inmemory БД пользователь должен обладать правами администратора(поле "ADMIN" в таблице "INFORMATION_SCHEMA.USERS") Данная настройка срабатывает один раз при инициализации приложения и для обновления требуется его перезапуск.
+
+=== Особенности реализации
+
+* Понятию «гранула» соответствует понятие «схема» (SCHEMA).
+
+* Поля 'recversion' управляются триггером, написанном на Java и реализующим интерфейс org.h2.api.Trigger. H2 не поддерживает триггеры, логика которых заключена в процедурном SQL.
+
+//end::supported_rdbms[]

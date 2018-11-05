@@ -1,0 +1,64 @@
+= CelestaUnit
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::celesta_unit[]
+
+В Celesta реализована поддержка модульных тестов процедур, редактирующих данные.
+
+Чтобы ей воспользоваться, необходимо скачать модуль celestaunit с SVN: https://share.curs.ru/svn/grains/celestaunit и включить его в ваш score path на верхний уровень (подпапка папки с вашими гранулами). Никакой другой установки/настройки инструментов в большинстве случаев не требуется.
+
+Юнит-тесты выполняются на встроенной непосредственно в Celesta базе H2, работающей в режиме in-memory. Эта база не требует установки, запускается моментально и исчезает после завершения тестов. По умолчанию в этой базе отключена проверка ссылочной целостности внешних ключей, что позволяет беспрепятственно заполнять таблицы небольшим количеством тестовых данных. Но при желании проверку ссылочной целостности можно включить.
+
+База H2 разворачивается пустой при каждом запуске группы тестов и сохраняется до окончания запуска, поэтому в setup-методе вы можете заполнять таблицы тестовыми данными. Celestaunit-тесты, как и прочие celesta-процедуры, могут быть запущены параллельно.
+
+Иногда может потребоваться очистка базы H2 между тестами, для этого в основной класс тестов добавлен метод setCleanDB. При передаче в этот метод значения True после завершения теста база H2 будет полностью очищена.
+
+== Пример пользования
+
+Ниже приведен пример модульного теста. Для его запуска достаточно запустить его как Jython Unit Test из Eclipse или IDEA:
+
+[source, python]
+coding=UTF-8
+Import celestaunit должен идти первым
+from celestaunit import CelestaUnit
+Импорт гранул и прочего должен идти после импорта celestaunit.
+from ztest._ztest_orm import viewWithGetDateCursor
+from ztest._ztest_orm import tableForGetDateInViewCursor
+from java.sql import Timestamp
+from java.time import LocalDateTime
+class TestGetDate(CelestaUnit):
+    def test_getdate_in_view(self):
+        viewCursor = viewWithGetDateCursor(self.context)
+        self.assertEqual(0, viewCursor.count())
+        tableCursor = tableForGetDateInViewCursor(self.context)
+        tableCursor.date = Timestamp.valueOf(LocalDateTime.now().minusDays(1))
+        tableCursor.insert()
+        self.assertEqual(0, viewCursor.count())
+        tableCursor.clear()
+        tableCursor.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
+        tableCursor.insert()
+        self.assertEqual(1, viewCursor.count())
+
+
+* Импорт модуля CelestaUnit должен всегда стоять первым в модуле с тестами. Это обеспечит корректное создание initcontext и инициализацию гранул таким же образом, как это происходит в Celesta при запуске в production-режиме.
+
+* По умолчанию celestaunit предполагает, что score path находится на один уровень выше, чем путь к модулю celestaunit, поэтому если так и есть, до дополнительной конфигурации не требуется.
+
+* По умолчанию celestaunit работает с H2 в inmemory-режиме с отключенной Reference Integrity check, но всё это можно сконфигурировать, в частности, можно перенастроиться на иную СУБД
+
+== Изменение настроек CelestaUnit по умолчанию
+
+Если мы всё-таки хотим конфигурировать, то это можно сделать через модификацию модуля testparams (заполняя глобальную переменную CELESTA_PROPERTIES нужными данными), при этом testparams необходимо импортировать ещё раньше, чем celestaunit: import testparams testparams.CELESTA_PROPERTIES.put('rdbms.connection.url', ....) #your preferred RDBMS connection url here from celestaunit import CelestaUnit
+
+== Каким образом уменьшить количество инициализируемых гранул
+
+Если на вашем score.path находится много гранул, и их полная инициализация занимает слишком много времени, вы можете явно указать, какие гранулы будут инициализироваться. Для этого надо добавить идентификаторы гранулы в список testparams.INITIALIZING_GRAINS. Если этот список пустой, то при инициализации celestaunit будут инициализироваться все гранулы.
+
+//end::celesta_unit[]

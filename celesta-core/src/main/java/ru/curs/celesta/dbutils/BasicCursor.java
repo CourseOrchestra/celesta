@@ -298,6 +298,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         this.fields = fields;
         prepareOrderBy();
         fillFieldsForStatement();
+
     }
 
     PreparedStmtHolder getHereHolder() {
