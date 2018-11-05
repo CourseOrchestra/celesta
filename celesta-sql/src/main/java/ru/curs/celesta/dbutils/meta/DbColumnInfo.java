@@ -17,7 +17,6 @@ public final class DbColumnInfo {
     private int length;
     private int scale;
     private boolean isMax;
-    private boolean isIdentity;
 
     public String getName() {
         return name;
@@ -41,10 +40,6 @@ public final class DbColumnInfo {
 
     public boolean isMax() {
         return isMax;
-    }
-
-    public boolean isIdentity() {
-        return isIdentity;
     }
 
     public void setName(String name) {
@@ -79,10 +74,6 @@ public final class DbColumnInfo {
         this.isMax = isMax;
     }
 
-    public void setIdentity(boolean isIdentity) {
-        this.isIdentity = isIdentity;
-    }
-
     public boolean reflects(Column value) {
         // Если тип не совпадает -- дальше не проверяем.
         if (value.getClass() != type)
@@ -95,11 +86,7 @@ public final class DbColumnInfo {
                 return false;
         }
 
-        if (type == IntegerColumn.class) {
-            // Если свойство IDENTITY не совпадает -- не проверяем
-            if (isIdentity != ((IntegerColumn) value).isIdentity())
-                return false;
-        } else if (type == StringColumn.class) {
+        if (type == StringColumn.class) {
             // Если параметры длин не совпали -- не проверяем
             StringColumn col = (StringColumn) value;
             if (!(isMax ? col.isMax() : length == col.getLength()))

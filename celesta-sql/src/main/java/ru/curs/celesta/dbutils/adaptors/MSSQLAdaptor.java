@@ -190,30 +190,22 @@ public final class MSSQLAdaptor extends DBAdaptor {
         IntegerColumn idColumn = t.getPrimaryKey().values().stream()
                 .filter(c -> c instanceof IntegerColumn)
                 .map(c -> (IntegerColumn) c)
-                .filter(ic -> ic.isIdentity() || ic.getSequence() != null)
+                .filter(ic -> ic.getSequence() != null)
                 .findFirst().get();
 
-        if (idColumn.isIdentity()) {
-            String sysSchemaName = t.getGrain().getScore().getSysSchemaName();
-            sql = String.format("select seqvalue from " + sysSchemaName
-                            + ".sequences where grainid = '%s' and tablename = '%s'",
-                    t.getGrain().getName(), t.getName());
-        } else {
-            sql = String.format(
-                    "SELECT CURRENT_VALUE FROM SYS.sequences WHERE name = '%s'",
-                    idColumn.getSequence().getName());
-        }
+
+        sql = String.format(
+                "SELECT CURRENT_VALUE FROM SYS.sequences WHERE name = '%s'",
+                idColumn.getSequence().getName());
+
         try (Statement stmt = conn.createStatement()) {
 
             ResultSet rs = stmt.executeQuery(sql);
             if (!rs.next())
                 throw new CelestaException("Id sequence for %s.%s is not initialized.", t.getGrain().getName(),
                         t.getName());
-            if (idColumn.isIdentity()) {
-                return rs.getInt(1);
-            } else {
-                return (int) rs.getLong(1);
-            }
+
+            return (int) rs.getLong(1);
 
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
@@ -261,23 +253,6 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
     }
 
-    private boolean checkForIncrementTrigger(Connection conn, Column c) throws SQLException {
-        PreparedStatement checkForTrigger = conn.prepareStatement(
-                String.format("select text from sys.syscomments where id = object_id('%s.\"%s_inc\"')",
-                        c.getParentTable().getGrain().getQuotedName(), c.getParentTable().getName()));
-        try {
-            ResultSet rs = checkForTrigger.executeQuery();
-            if (rs.next()) {
-                String body = rs.getString(1);
-                if (body != null && body.contains(String.format("/*IDENTITY %s*/", c.getName())))
-                    return true;
-            }
-        } finally {
-            checkForTrigger.close();
-        }
-        return false;
-    }
-
     /**
      * Возвращает информацию о столбце.
      *
@@ -286,7 +261,6 @@ public final class MSSQLAdaptor extends DBAdaptor {
      * @в случае сбоя связи с БД.
      */
     // CHECKSTYLE:OFF
-    @SuppressWarnings("unchecked")
     @Override
     public DbColumnInfo getColumnInfo(Connection conn, Column c) {
         // CHECKSTYLE:ON
@@ -303,7 +277,6 @@ public final class MSSQLAdaptor extends DBAdaptor {
                         result.setType(BinaryColumn.class);
                     } else if ("int".equalsIgnoreCase(typeName)) {
                         result.setType(IntegerColumn.class);
-                        result.setIdentity(checkForIncrementTrigger(conn, c));
                     } else if ("float".equalsIgnoreCase(typeName) && rs.getInt("COLUMN_SIZE") == DOUBLE_PRECISION) {
                         result.setType(FloatingColumn.class);
                     } else {

@@ -24,18 +24,18 @@ import ru.curs.celesta.score.validator.IdentifierParser;
 //CHECKSTYLE:OFF
 public class CelestaParser{
     public static Expr parseComplexFilter(String filter, IdentifierParser identifierParser) {
-         StringReader sr = new StringReader(filter);
-         try {
-                 CelestaParser parser = new CelestaParser(sr);
-                 try {
-                      return parser.sqlExpression(identifierParser);
-                 } catch (ParseException e) {
-                    throw new CelestaException("Invalid complex filter '%s': %s", filter, e.getMessage());
-                 }
-     } finally {
-         sr.close();
-     }
-   }
+        StringReader sr = new StringReader(filter);
+        try {
+            CelestaParser parser = new CelestaParser(sr);
+            try {
+                return parser.sqlExpression(identifierParser);
+            } catch (ParseException e) {
+                throw new CelestaException("Invalid complex filter '%s': %s", filter, e.getMessage());
+            }
+        } finally {
+            sr.close();
+        }
+    }
 }
 PARSER_END(CelestaParser)
 
@@ -72,7 +72,6 @@ PARSER_END(CelestaParser)
 |   <K_FULL:         "FULL">
 |   <K_GETDATE:      "GETDATE">
 |   <K_GROUP:        "GROUP">
-|   <K_IDENTITY:     "IDENTITY">
 |   <K_IN:           "IN">
 |   <K_INNER:        "INNER">
 |   <K_IS:           "IS">
@@ -351,7 +350,6 @@ void columnDefinition(Table table):
 	         (   <K_DEFAULT> ((["-" {negative = true;}] t = <S_INTEGER> {defaultValue = (negative? "-": "") + t.toString();})
 	           | ( defaultValue = sequenceNextVal() [<K_NOT> <K_NULL> {nullable = false;}]) )
 	         )
-	        | (t = <K_IDENTITY> [<K_NOT> <K_NULL> {nullable = false;}])
 	       ]
 	    )
     |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;}

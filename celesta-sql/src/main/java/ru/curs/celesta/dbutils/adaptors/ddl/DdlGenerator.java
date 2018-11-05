@@ -199,8 +199,6 @@ public abstract class DdlGenerator {
 
     abstract DBType getType();
 
-    abstract List<String> manageAutoIncrement(Connection conn, TableElement t) ;
-
     /**
      * Генерирует sql для обновления триггера контроля версий на таблице.
      *

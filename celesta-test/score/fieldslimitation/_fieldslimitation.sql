@@ -1,7 +1,9 @@
 create grain fieldslimitation version '1.0';
 
+create sequence a_id;
+
 create table a (
-  id int identity not null,
+  id int not null default nextval(a_id),
   var varchar(2) not null,
   numb int not null,
   age int not null,

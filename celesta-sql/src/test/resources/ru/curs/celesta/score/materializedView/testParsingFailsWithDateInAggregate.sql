@@ -1,7 +1,9 @@
 CREATE GRAIN test VERSION '1.0';
 
+CREATE SEQUENCE testTable_id;
+
 CREATE table testTable (
-  id INT NOT NULL IDENTITY PRIMARY KEY,
+  id INT NOT NULL DEFAULT NEXTVAL(testTable_id) PRIMARY KEY,
   created datetime
 );
 

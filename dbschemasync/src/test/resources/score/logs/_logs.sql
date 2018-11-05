@@ -1,9 +1,11 @@
 CREATE GRAIN logs VERSION '1.2';
 
+CREATE SEQUENCE SystemLog_id;
+
 /**This is Celesta doc.
 This is second line of Celestadoc.*/
 CREATE TABLE SystemLog(
-	id INT IDENTITY NOT NULL,
+	id INT NOT NULL DEFAULT NEXTVAL(SystemLog_id),
 	level INT NOT NULL,
 	sender_type INT NOT NULL,
 	sender_id VARCHAR(50) NOT NULL,
@@ -17,11 +19,12 @@ CREATE TABLE SystemLog(
 	CONSTRAINT Pk_SystemLog PRIMARY KEY (id)
 ) WITH NO VERSION CHECK;
 
+CREATE SEQUENCE BettorLog_id;
 
 /**This is Celesta doc.
 This is second line of Celestadoc.*/
 CREATE TABLE BettorLog(
-	id INT IDENTITY NOT NULL,
+	id INT NOT NULL DEFAULT NEXTVAL(BettorLog_id),
 	level INT NOT NULL,
 	sender_type INT NOT NULL,
 	/**{caption: 'SID сотрудника'}*/
@@ -39,8 +42,10 @@ CREATE TABLE BettorLog(
 	CONSTRAINT Pk_BettorLog PRIMARY KEY (id)
 ) WITH NO VERSION CHECK;
 
+CREATE SEQUENCE Notifications_id;
+
 CREATE TABLE Notifications(
-	id INT IDENTITY NOT NULL,
+	id INT NOT NULL DEFAULT NEXTVAL(Notifications_id),
 	level INT NOT NULL,
 	sender_type INT,
 	sender_id VARCHAR(50),
@@ -50,5 +55,6 @@ CREATE TABLE Notifications(
 	target_id VARCHAR(50),
 	result INT,
 	message VARCHAR(500),
+
 	CONSTRAINT Pk_Notifications PRIMARY KEY (id)
 );

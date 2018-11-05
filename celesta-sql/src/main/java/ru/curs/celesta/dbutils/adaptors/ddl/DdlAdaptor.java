@@ -90,9 +90,8 @@ public final class DdlAdaptor {
 
         try {
             processSql(conn, sql);
-            List<String> sqlList = ddlGenerator.manageAutoIncrement(conn, te);
-            processSql(conn, sqlList);
             processSql(conn, "COMMIT");
+            List<String> sqlList;
             sqlList = ddlGenerator.updateVersioningTrigger(conn, te);
             processSql(conn, sqlList);
             sqlList = ddlGenerator.afterCreateTable(te);
@@ -100,11 +99,6 @@ public final class DdlAdaptor {
         } catch (CelestaException e) {
             throw new CelestaException("Error of creating %s: %s", te.getName(), e.getMessage());
         }
-    }
-
-    public final void manageAutoIncrement(Connection conn, TableElement t)  {
-        List<String> sqlList = ddlGenerator.manageAutoIncrement(conn, t);
-        processSql(conn, sqlList);
     }
 
     public final void updateVersioningTrigger(Connection conn, TableElement t)  {

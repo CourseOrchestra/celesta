@@ -18,10 +18,6 @@ create table testTable(
   CONSTRAINT Pk_test_testTable PRIMARY KEY (id)
 );
 
-create table testTableWithIdentity(
- identityId int identity not null primary key
-);
-
 /*
   {implements: [java.io.Serializable, java.lang.Cloneable]}
  */

@@ -19,8 +19,10 @@ public class GrainModelTest {
 
         GrainPart gp = new GrainPart(g, true, null);
 
+        SequenceElement se = new SequenceElement(gp, "table1_a");
+        
         Table t = new Table(gp, "table1");
-        (new IntegerColumn(t, "a")).setNullableAndDefault(false, "IDENTITY");
+        (new IntegerColumn(t, "a")).setNullableAndDefault(false, "NEXTVAL(" + se.getName() + ")");
         new IntegerColumn(t, "b").setNullableAndDefault(false, "0");
         new IntegerColumn(t, "c").setNullableAndDefault(false, "0");
         new IntegerColumn(t, "d").setNullableAndDefault(false, "0");
@@ -142,18 +144,20 @@ public class GrainModelTest {
     void test3() throws ParseException {
         Grain g = new Grain(s, "grain3");
         GrainPart gp = new GrainPart(g, true, null);
+        SequenceElement st1 = new SequenceElement(gp, "t1_ida");
         Table t1 = new Table(gp, "t1");
         Column cc = new IntegerColumn(t1, "ida");
-        cc.setNullableAndDefault(false, "IDENTITY");
+        cc.setNullableAndDefault(false, "NEXTVAL(" + st1.getName() + ")");
 
         t1.addPK("ida");
         t1.finalizePK();
         new IntegerColumn(t1, "intcol");
         new DateTimeColumn(t1, "datecol");
 
+        SequenceElement st2 = new SequenceElement(gp, "t2_idb");
         Table t2 = new Table(gp, "t2");
         cc = new IntegerColumn(t2, "idb");
-        cc.setNullableAndDefault(false, "IDENTITY");
+        cc.setNullableAndDefault(false, "NEXTVAL(" + st2.getName() + ")");
         t2.addPK("idb");
         t2.finalizePK();
 
@@ -312,16 +316,18 @@ public class GrainModelTest {
     void test4() throws ParseException {
         Grain gm = new Grain(s, "grain4");
         GrainPart gp = new GrainPart(gm, true, null);
+        SequenceElement st1 = new SequenceElement(gp, "t1_c1");
         Table t1 = new Table(gp, "t1");
         IntegerColumn c = new IntegerColumn(t1, "c1");
-        c.setNullableAndDefault(false, "IDENTITY");
+        c.setNullableAndDefault(false, "NEXTVAL(" + st1.getName() + ")");
 
         t1.addPK("c1");
         t1.finalizePK();
 
+        SequenceElement st2 = new SequenceElement(gp, "t2_c1");
         Table t2 = new Table(gp, "t2");
         c = new IntegerColumn(t2, "c1");
-        c.setNullableAndDefault(false, "IDENTITY");
+        c.setNullableAndDefault(false, "NEXTVAL(" + st2.getName() + ")");
 
         t2.addPK("c1");
         t2.finalizePK();

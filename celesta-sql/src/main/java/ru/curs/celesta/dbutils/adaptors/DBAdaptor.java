@@ -424,10 +424,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         ddlAdaptor.dropTrigger(conn, query);
     }
 
-    public final void manageAutoIncrement(Connection conn, TableElement t) {
-        ddlAdaptor.manageAutoIncrement(conn, t);
-    }
-
     public void updateVersioningTrigger(Connection conn, TableElement t) {
         ddlAdaptor.updateVersioningTrigger(conn, t);
     }
@@ -669,33 +665,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         return date;
     }
 
-    /**
-     * Сбрасывает счётчик IDENTITY на таблице (если он есть).
-     *
-     * @param conn Соединение с БД
-     * @param t    Таблица.
-     * @param i    Новое значение счётчика IDENTITY.
-     * @throws SQLException Ошибка соединения с БД.
-     */
-    //TODO: Javadoc In English
-    public void resetIdentity(Connection conn, Table t, int i) {
-
-        String sql = String.format(
-                "update \"celesta\".\"sequences\" set \"seqvalue\" = %d "
-                        + "where \"grainid\" = '%s' and \"tablename\" = '%s'",
-                i - 1, t.getGrain().getName(), t.getName());
-
-        // System.out.println(sql);
-        int v = executeUpdate(conn, sql);
-        if (v == 0) {
-            sql = String.format("insert into \"celesta\".\"sequences\" (\"grainid\", \"tablename\" , \"seqvalue\") "
-                    + "values ('%s', '%s', %d)", t.getGrain().getName(), t.getName(), i - 1);
-            // System.out.println(sql);
-            executeUpdate(conn, sql);
-        }
-
-    }
-
     //TODO: Javadoc
     public Optional<String> getTriggerBody(Connection conn, TriggerQuery query) {
         String sql = getSelectTriggerBodySql(query);
@@ -878,7 +847,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     //TODO: Javadoc
     public abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
                                                                List<ParameterSetter> program);
-
     //TODO: Javadoc
     public abstract int getCurrentIdent(Connection conn, Table t);
 

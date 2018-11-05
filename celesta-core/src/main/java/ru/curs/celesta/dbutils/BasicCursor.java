@@ -51,7 +51,7 @@ import ru.curs.celesta.score.*;
 import ru.curs.celesta.score.ParseException;
 
 /**
- * Базовый класс курсора для чтения данных из представлений.
+ * Base cursor class for reading data from views.
  */
 public abstract class BasicCursor extends BasicDataAccessor {
 

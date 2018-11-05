@@ -500,11 +500,11 @@ public final class CursorGenerator {
 
         builder.addParameter(param);
 
-        columns.entrySet().stream().filter(
-                e -> e.getValue() instanceof IntegerColumn && (((IntegerColumn) e.getValue()).isIdentity()
-                        || ((IntegerColumn)e.getValue()).getSequence() != null)
-        ).findFirst()
-                .ifPresent(e -> builder.addStatement("this.$N = $N", e.getKey(), param.name));
+        columns.entrySet().stream()
+                          .filter(e -> e.getValue() instanceof IntegerColumn)
+                          .filter(e -> ((IntegerColumn) e.getValue()).getSequence() != null)
+                          .findAny()
+                          .ifPresent(e -> builder.addStatement("this.$N = $N", e.getKey(), param.name));
 
         return builder.build();
     }

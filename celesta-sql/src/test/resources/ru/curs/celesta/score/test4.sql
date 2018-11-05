@@ -19,8 +19,10 @@ CREATE TABLE app_division_add_info_el(
 )
 ) ;
 
+CREATE SEQUENCE app_division_currentstatus_id;
+
 CREATE TABLE app_division_currentstatus(
-	id int IDENTITY NOT NULL,
+    id INT NOT NULL DEFAULT NEXTVAL(app_division_currentstatus_id),
 	app_id int NOT NULL DEFAULT 0,
 	app_division_id int NOT NULL DEFAULT 0,
 	status_id int NOT NULL DEFAULT 0,
@@ -60,10 +62,12 @@ CREATE TABLE app_division_status(
 )
 ) ;
 
+CREATE SEQUENCE app_indicator_group_sort;
+
 CREATE TABLE app_indicator_group(
 	groupid varchar(30) NOT NULL DEFAULT '',
 	application_id int NOT NULL DEFAULT 0,
-	sort int IDENTITY NOT NULL,
+    sort INT NOT NULL DEFAULT NEXTVAL(app_indicator_group_sort),
 	readableName text NULL,
  CONSTRAINT pk_app_indicator_group PRIMARY KEY  
 (
@@ -169,8 +173,10 @@ CREATE TABLE app_type(
 )
 ) ;
 
+CREATE SEQUENCE app_version_ver;
+
 CREATE TABLE app_version(
-	ver int IDENTITY NOT NULL,
+    ver INT NOT NULL DEFAULT NEXTVAL(app_version_ver),
 	application_id int NOT NULL DEFAULT 0,
 	app_division_id int NOT NULL DEFAULT 0,
 	ver_date datetime NOT NULL,
@@ -253,8 +259,10 @@ CREATE TABLE application_type(
 )
 ) ;
 
+CREATE SEQUENCE application_views_id;
+
 CREATE TABLE application_views(
-	id int IDENTITY NOT NULL,
+    id INT NOT NULL DEFAULT NEXTVAL(application_views_id),
 	caption varchar(100) NOT NULL DEFAULT '',
 	employeeid int NULL,
 	fields varchar(1024) NULL,
@@ -611,8 +619,10 @@ CREATE TABLE ReportData(
 )
 ) ;
 
+CREATE SEQUENCE subgroup_id;
+
 CREATE TABLE subgroup(
-	id int IDENTITY NOT NULL,
+    id INT NOT NULL DEFAULT NEXTVAL(subgroup_id),
 	name varchar(250) NOT NULL,
 	groupid int NOT NULL DEFAULT 0,
  CONSTRAINT pk_subgroup PRIMARY KEY  
@@ -631,8 +641,10 @@ CREATE TABLE subgroup_org(
 )
 ) ;
 
+CREATE SEQUENCE t_group_orgs_id;
+
 CREATE TABLE t_group_orgs(
-	id int IDENTITY NOT NULL,
+    id INT NOT NULL DEFAULT NEXTVAL(t_group_orgs_id),
 	gr_id real NOT NULL,
 	gr_date datetime NOT NULL,
 	bank_id real NOT NULL,

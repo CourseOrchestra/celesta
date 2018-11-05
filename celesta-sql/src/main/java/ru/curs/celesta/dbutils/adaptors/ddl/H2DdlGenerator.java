@@ -9,8 +9,6 @@ import ru.curs.celesta.dbutils.h2.MaterializedViewDeleteTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewInsertTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewUpdateTrigger;
 import ru.curs.celesta.dbutils.h2.RecVersionCheckTrigger;
-import ru.curs.celesta.dbutils.jdbc.SqlUtils;
-
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
 import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.*;
 
@@ -23,8 +21,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -45,74 +41,6 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
     @Override
     DBType getType() {
         return DBType.H2;
-    }
-
-    @Override
-    List<String> manageAutoIncrement(Connection conn, TableElement t)  {
-        List<String> result = new ArrayList<>();
-        String sql;
-
-        // 1. Firstly, we have to clean up table from any auto-increment
-        // defaults. Meanwhile we check if table has IDENTITY field, if it
-        // doesn't, no need to proceed.
-        IntegerColumn idColumn = null;
-        for (Column c : t.getColumns().values())
-            if (c instanceof IntegerColumn) {
-                IntegerColumn ic = (IntegerColumn) c;
-                if (ic.isIdentity())
-                    idColumn = ic;
-                else {
-                    if (ic.getDefaultValue() == null && ic.getSequence() == null) {
-                        sql = String.format("alter table %s.%s alter column %s drop default",
-                                t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
-                    } else if (ic.getDefaultValue() != null) {
-                        sql = String.format("alter table %s.%s alter column %s set default %d",
-                                t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName(),
-                                ic.getDefaultValue().intValue());
-                    } else {
-                        SequenceElement s = ic.getSequence();
-                        sql = String.format("alter table %s.%s alter column %s set default "
-                                        + s.getGrain().getQuotedName() + "." + s.getQuotedName() + ".nextval",
-                                t.getGrain().getQuotedName(), t.getQuotedName(), ic.getQuotedName());
-                    }
-                    result.add(sql);
-                }
-            }
-
-        if (idColumn == null)
-            return result;
-
-        // 2. Now, we know that we surely have IDENTITY field, and we have
-        // to be sure that we have an appropriate sequence.
-        boolean hasSequence = false;
-
-        sql = String.format(
-                "SELECT COUNT(*) FROM information_schema.sequences " +
-                        "WHERE sequence_schema = '%s' " +
-                        "AND sequence_name = '%s_seq'",
-                t.getGrain().getName(), t.getName());
-
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
-            rs.next();
-            hasSequence = rs.getInt(1) > 0;
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
-
-        if (!hasSequence) {
-            sql = String.format("create sequence \"%s\".\"%s_seq\" increment 1 minvalue 1", t.getGrain().getName(),
-                    t.getName());
-            result.add(sql);
-        }
-
-        // 3. Now we have to create the auto-increment default
-        sql = String.format(
-                "alter table %s.%s alter column %s set default " + "nextval('\"%s\".\"%s_seq\"');",
-                t.getGrain().getQuotedName(), t.getQuotedName(), idColumn.getQuotedName(), t.getGrain().getName(),
-                t.getName());
-        result.add(sql);
-
-        return result;
     }
 
     @Override

@@ -1,20 +1,26 @@
 CREATE GRAIN BC VERSION '0.1';
 
+CREATE SEQUENCE element_type_id;
+
 CREATE TABLE element_type ( 
-	id                   int NOT NULL IDENTITY,
+	id                   INT NOT NULL DEFAULT NEXTVAL(element_type_id),
 	name                 varchar( 250 ) NOT NULL DEFAULT '',
 	is_human             bit NOT NULL  DEFAULT 0,
 	 PRIMARY KEY ( id )
  );
 
+CREATE SEQUENCE position_id;
+
 CREATE TABLE position ( 
-	id                   int NOT NULL IDENTITY,
+	id                   INT NOT NULL DEFAULT NEXTVAL(position_id),
 	name                 varchar( 250 ) NOT NULL DEFAULT '',
 	 PRIMARY KEY ( id )
  );
 
+CREATE SEQUENCE structure_elements_id;
+
 CREATE TABLE structure_elements ( 
-	id                   int NOT NULL IDENTITY,
+	id                   INT NOT NULL DEFAULT NEXTVAL(structure_elements_id),
 	bkey                 varchar( 32 ) NOT NULL DEFAULT '',
 	structure_type       int NOT NULL  DEFAULT 0,
 	create_date          datetime NOT NULL DEFAULT GETDATE(),
@@ -110,9 +116,11 @@ CREATE TABLE structure_element_errors_log (
 	import_row_id        int NOT NULL default 0,
 	primary key (import_row_id, element_id)
  );
- 
- CREATE TABLE structure_import_errors_log ( 
-	id                   int NOT NULL IDENTITY,
+
+CREATE SEQUENCE structure_import_errors_log_id;
+
+CREATE TABLE structure_import_errors_log ( 
+	id                   INT NOT NULL DEFAULT NEXTVAL(structure_import_errors_log_id),
 	errormessage         varchar( 255 ),
 	file_name            varchar( 2000 ) NOT NULL default '',
 	import_date          datetime,
@@ -137,8 +145,10 @@ CREATE TABLE mailattachments(
     PRIMARY KEY (inboxid, msgid, attachno)
 );
 
+CREATE SEQUENCE mail_spam_id;
+
 CREATE TABLE mail_spam(
-	id int  NOT NULL IDENTITY,
+    id INT NOT NULL DEFAULT NEXTVAL(mail_spam_id),
 	spamlist text NULL,
   PRIMARY KEY 
 (

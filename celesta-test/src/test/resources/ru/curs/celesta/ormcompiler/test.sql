@@ -1,9 +1,11 @@
 /**описание гранулы: * grain celestadoc*/
 CREATE GRAIN test1 VERSION '1.0';
 
+CREATE SEQUENCE table1_column1;
+
 CREATE TABLE table1 --single-line comment русские буквы
 (
-  column1  INT NOT NULL IDENTITY,
+  column1 INT NOT NULL DEFAULT NEXTVAL(table1_column1)
   column2  REAL NOT NULL DEFAULT -12323.2,
   c3       BIT NOT NULL DEFAULT 'FALSE',
   PRIMARY KEY (column1, c3, column2),
@@ -21,10 +23,12 @@ multi-line comment
 */
 ;
 
+CREATE SEQUENCE table2_column1;
+
 /**table2 celestadoc*/
 CREATE TABLE table2(
     /**описание первой колонки*/
-	column1 INT NOT NULL IDENTITY PRIMARY KEY,
+    column1 INT NOT NULL DEFAULT NEXTVAL(table2_column1) PRIMARY KEY,
 	/**описание второй колонки*/
 	column2 DATETIME DEFAULT '20111231',
 	column3 DATETIME NOT NULL DEFAULT GETDATE(),

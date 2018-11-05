@@ -13,10 +13,12 @@ create index aaidx on aa (idc, textvalue);
  * 
  * comment
  */
- 
+
+create sequence a_ida;
+
 /** описание таблицы */
 create table a (
-ida int identity not null primary key,
+ida int not null default nextval(a_ida) primary key,
 /** описание поля*/
 descr varchar(2),
 parent int foreign key references a(ida), --ссылка на саму себя

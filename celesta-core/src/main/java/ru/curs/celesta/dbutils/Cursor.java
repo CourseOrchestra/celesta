@@ -58,7 +58,7 @@ import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
 /**
- * Базовый класс курсора для модификации данных в таблицах.
+ * Base cursor class for modification of data in tables.
  */
 public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
@@ -212,13 +212,13 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 loggingManager.log(this, Action.INSERT);
                 for (Column c : meta().getColumns().values())
                     if (c instanceof IntegerColumn) {
-                        IntegerColumn ic = (IntegerColumn)c;
-                        if (ic.isIdentity() || ic.getSequence() != null) {
+                        IntegerColumn ic = (IntegerColumn) c;
+                        if (ic.getSequence() != null) {
                             _setAutoIncrement(db().getCurrentIdent(conn(), meta()));
                             break;
                         }
                     }
-            }
+                }
 
                 getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
                         recversion, _currentKeyValues());
@@ -619,33 +619,6 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     boolean isEquivalentSpecific(BasicCursor bc) {
         Cursor c = (Cursor) bc;
         return Objects.equals(inFilterHolder, c.inFilterHolder);
-    }
-
-    /**
-     * Устанавливает текущее значение счётчика IDENTITY на таблице (если он
-     * есть). Этот метод предназначен для реализации механизмов экспорта-импорта
-     * данных из таблицы. Его следует применять с осторожностью, т.к. сбой в
-     * отсчёте IDENTIY-счётчика может привести к нарушению первичного ключа.
-     * Кроме того, как минимум в Oracle, в силу особенностей реализации, не
-     * гарантируется надёжная работа этого метода в условиях конкурретного
-     * доступа к таблице.
-     *
-     * @param newValue
-     *            значение, которое должно принять поле IDENITITY при следующей
-     *            вставке.
-     */
-    public final void resetIdentity(int newValue) {
-        IntegerColumn ic = TableElement.findIdentityField(meta());
-        if (ic == null)
-            throw new CelestaException("Cannot reset identity: there is no IDENTITY field defined for table %s.%s.",
-                    _grainName(), _objectName());
-
-        try {
-            db().resetIdentity(conn(), meta(), newValue);
-        } catch (CelestaException e) {
-            throw new CelestaException("Cannot reset identity for table %s.%s with message '%s'.", _grainName(),
-                    _objectName(), e.getMessage());
-        }
     }
 
     /**

@@ -1,7 +1,9 @@
 create grain gtest version '1.0';
 
+create sequence test_id;
+
 create table test (
-id int identity not null primary key,
+id int not null default nextval(test_id) primary key,
 attrVarchar varchar(2),
 attrInt int default 3,
 f1 bit not null,
@@ -34,8 +36,10 @@ create table refTo2(
  f1 bit not null primary key
 );
 
+create sequence aLongIdentityTableNxx_f1;
+
 create table  aLongIdentityTableNaaame(
- f1 int identity not null primary key,
+ f1 int not null default nextval(aLongIdentityTableNxx_f1) primary key,
  field2 bit foreign key references refTo2(f1),
  field3 bit foreign key references refTo2(f1),
  aFieldwithAVeryVeryLongName bit
@@ -48,8 +52,10 @@ alter table test add constraint fk_testNameVeryVeryLongLonName
 create view testview as 
   select id, descr, descr || 'foo' as descr2, k2 from test inner join refTo on attrVarchar = k1 and attrInt = k2;
 
+create sequence tableForMatView_id;
+
 create table tableForMatView (
-  id int identity not null primary key,
+  id int not null default nextval(tableForMatView_id) primary key,
   f1 varchar(2) not null,
   f2 int not null default 3,
   f3 bit not null,
@@ -63,8 +69,10 @@ create materialized view mView1gTest as
   from tableForMatView
   group by f1, f2, f3, f4, f5, f6;
 
+create sequence tableForInitMvData_id;
+
 create table tableForInitMvData (
-  id int identity not null primary key,
+  id int not null default nextval(tableForInitMvData_id) primary key,
   var varchar(2) not null,
   numb int,
   d datetime not null
@@ -79,8 +87,10 @@ create function pView(p int) as
   select id from test
   where id = $p;
 
+create sequence testInFilterClause_id;
+
 create table testInFilterClause (
-  id int identity not null primary key,
+  id int not null default nextval(testInFilterClause_id) primary key,
   atVarchar varchar(2),
   atInt int default 3
 );

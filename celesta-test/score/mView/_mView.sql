@@ -1,27 +1,35 @@
 create grain mView version '1.0';
 
+create sequence table1_id;
+
 create table table1 (
-  id int identity not null primary key,
+  id int not null default nextval(table1_id) primary key,
   numb int,
   date datetime,
   var varchar(2) not null
 );
 
+create sequence table2_id;
+
 create table table2 (
-  id int identity not null primary key,
+  id int not null default nextval(table2_id) primary key,
   numb int,
   date datetime,
   var varchar(2) not null
 ) with no version check;
 
+create sequence table3_id;
+
 create table table3 (
-  id int identity not null primary key,
+  id int not null default nextval(table3_id) primary key,
   numb int not null,
   date datetime not null
 );
 
+create sequence table4_id;
+
 create table table4 (
-  id int identity not null primary key,
+  id int not null default nextval(table4_id) primary key,
   var1 VARCHAR (2) not null,
   var2 VARCHAR (2) not null,
   numb int

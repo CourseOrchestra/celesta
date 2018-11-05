@@ -16,8 +16,7 @@ import java.util.Objects;
 import java.util.WeakHashMap;
 
 /**
- * Контекст вызова, содержащий несущее транзакцию соединение с БД и
- * идентификатор пользователя.
+ * Call context containing a DB connection carrying a transaction and a user identifier. 
  */
 public class CallContext implements ICallContext {
 
@@ -28,8 +27,7 @@ public class CallContext implements ICallContext {
     }
 
     /**
-     * Максимальное число объектов доступа, которое может быть открыто в одном
-     * контексте.
+     * Maximal number of accessors that can be opened within single context.
      */
     public static final int MAX_DATA_ACCESSORS = 1023;
 

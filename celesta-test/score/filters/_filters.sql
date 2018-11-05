@@ -1,7 +1,9 @@
 create grain filters version '1.0';
 
+create sequence aFilter_id;
+
 create table aFilter (
-  id int identity not null primary key,
+  id int not null default nextval(aFilter_id) primary key,
   date datetime,
   number1 int,
   number2 int,
@@ -14,8 +16,10 @@ create view aFilterView as
   SELECT id, date, number1, number2, noIndexA
   FROM aFilter;
 
+create sequence bFilter_id;
+  
 create table bFilter (
-  id int identity not null primary key,
+  id int not null default nextval(bFilter_id) primary key,
   created datetime default GETDATE(),
   numb1 int,
   numb2 int,
@@ -36,7 +40,6 @@ create table dFilter (
   id int not null primary key
 );
 
-
 create table eFilter (
   id int not null,
   number int not null,
@@ -50,8 +53,10 @@ create table fFilter (
   CONSTRAINT Pk_filters_d PRIMARY KEY (id, numb)
 );
 
+create sequence gFilter_id;
+
 create table gFilter (
-  id int identity not null primary key,
+  id int not null default nextval(gFilter_id) primary key,
   createDate datetime default GETDATE(),
   num1 int,
   num2 int,

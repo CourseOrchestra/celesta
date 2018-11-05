@@ -83,7 +83,16 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
     @Override
     public int getCurrentIdent(Connection conn, Table t) {
-        String sql = String.format("select last_value from \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
+        
+        IntegerColumn idColumn = t.getPrimaryKey().values().stream()
+                .filter(c -> c instanceof IntegerColumn)
+                .map(c -> (IntegerColumn) c)
+                .filter(ic -> ic.getSequence() != null)
+                .findFirst().get();
+
+        String sequenceName = idColumn.getSequence().getName();
+        
+        String sql = String.format("select last_value from \"%s\".\"%s\"", t.getGrain().getName(), sequenceName);
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             rs.next();
@@ -121,7 +130,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
             if (c instanceof IntegerColumn) {
                 IntegerColumn ic = (IntegerColumn) c;
 
-                if (ic.isIdentity() || ic.getSequence() != null) {
+                if (ic.getSequence() != null) {
                     returning = " returning " + c.getQuotedName();
                     break;
                 }
@@ -141,7 +150,6 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
         return prepareStatement(conn, sql);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public DbColumnInfo getColumnInfo(Connection conn, Column c) {
         try {
@@ -164,18 +172,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
                         if (m.matches()) {
                             String sequenceName = m.group(1);
-                            String tableName = c.getParentTable().getName();
-
-                            if (sequenceName.equals(tableName + "_seq")) {
-                                try {
-                                    c.getParentTable().getGrain().getElement(sequenceName, SequenceElement.class);
-                                    result.setDefaultValue("NEXTVAL(" + sequenceName + ")");
-                                } catch (ParseException e) {
-                                    result.setIdentity(true);
-                                }
-                            } else {
-                                result.setDefaultValue("NEXTVAL(" + sequenceName + ")");
-                            }
+                            result.setDefaultValue("NEXTVAL(" + sequenceName + ")");
                         }
 
                         return result;

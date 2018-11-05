@@ -4,14 +4,10 @@ package ru.curs.celesta.dbutils.adaptors.ddl;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.adaptors.column.ColumnDefiner;
 import ru.curs.celesta.dbutils.adaptors.column.ColumnDefinerFactory;
-import ru.curs.celesta.dbutils.adaptors.column.MsSqlColumnDefiner;
-
 import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.*;
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
 
-import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.event.TriggerQuery;
@@ -22,8 +18,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,103 +57,6 @@ public class MsSqlDdlGenerator extends DdlGenerator {
     @Override
     DBType getType() {
         return DBType.MSSQL;
-    }
-
-    @Override
-    List<String> manageAutoIncrement(Connection conn, TableElement t)  {
-        List<String> result = new ArrayList<>();
-        // 1. Firstly, we have to clean up table from any auto-increment
-        // triggers
-        String schema = t.getGrain().getName();
-        String triggerName = t.getName() + "_inc";
-        TriggerQuery query = new TriggerQuery()
-                .withSchema(schema)
-                .withTableName(t.getName())
-                .withName(triggerName);
-
-        if (this.triggerExists(conn, query))
-            result.add(dropTrigger(query));
-
-        // 2. Check if table has IDENTITY field, if it doesn't, no need to
-        // proceed.
-        IntegerColumn ic = TableElement.findIdentityField(t);
-        if (ic == null)
-            return result;
-
-        String sql;
-        // 3. Now, we know that we surely have IDENTITY field, and we must
-        // assure that we have an appropriate sequence.
-        String sequencesTableName = String.format("%s.sequences", t.getGrain().getScore().getSysSchemaName());
-        sql = String.format(
-                "select * from %s where grainid = '%s' and tablename = '%s'",
-                sequencesTableName, t.getGrain().getName(), t.getName()
-        );
-
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
-            if (!rs.next()) {
-                sql = String.format("insert into %s (grainid, tablename) values ('%s', '%s')",
-                        sequencesTableName, t.getGrain().getName(), t.getName());
-                result.add(sql);
-            }
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
-
-        // 4. Now we have to create the auto-increment trigger
-        StringBuilder body = new StringBuilder();
-        body.append(String.format("create trigger \"%s\".\"%s\" on %s.%s instead of insert as begin\n",
-                schema, triggerName, t.getGrain().getQuotedName(), t.getQuotedName()));
-        body.append(String.format("  /*IDENTITY %s*/\n", ic.getName()));
-        body.append("  set nocount on;\n");
-        body.append("  begin transaction;\n");
-        body.append("  declare @id int;\n");
-        body.append("  declare @idt table (id int);\n");
-        body.append("  declare @tmp table (\n");
-
-        StringBuilder selectList = new StringBuilder();
-        StringBuilder insertList = new StringBuilder();
-        StringBuilder fullList = new StringBuilder();
-        Iterator<Column> i = t.getColumns().values().iterator();
-        while (i.hasNext()) {
-            Column c = i.next();
-            padComma(fullList);
-            fullList.append(c.getQuotedName());
-
-            MsSqlColumnDefiner d = (MsSqlColumnDefiner) ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass());
-            body.append("    ");
-            if (c == ic) {
-                body.append(c.getName());
-                body.append(" int not null identity");
-                padComma(insertList);
-                insertList.append("@id + ");
-                insertList.append(c.getQuotedName());
-            } else {
-                body.append(ColumnDefiner.join(d.getMainDefinition(c), d.getLightDefaultDefinition(c)));
-                padComma(selectList);
-                padComma(insertList);
-                selectList.append(c.getQuotedName());
-                insertList.append(c.getQuotedName());
-            }
-            body.append(i.hasNext() ? ",\n" : "\n");
-        }
-        body.append("  );\n");
-        body.append(String.format("  insert into @tmp (%s) select %s from inserted;\n", selectList, selectList));
-
-        body.append(String.format(
-                "  update " + t.getGrain().getScore().getSysSchemaName() + ".sequences set seqvalue = seqvalue + @@IDENTITY "
-                        + "output deleted.seqvalue into @idt where grainid = '%s' and tablename = '%s';\n",
-                t.getGrain().getName(), t.getName()));
-        body.append("  select @id = id from @idt;\n");
-        body.append(String.format("  insert into %s.%s (%s) select %s from @tmp;\n", t.getGrain().getQuotedName(),
-                t.getQuotedName(), fullList, insertList));
-        body.append("  commit transaction;\n");
-        body.append("end;\n");
-
-        // System.out.println(body.toString());
-
-        result.add(body.toString());
-        this.rememberTrigger(query);
-        return result;
     }
 
     @Override

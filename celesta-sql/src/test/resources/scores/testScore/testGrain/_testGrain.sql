@@ -1,7 +1,9 @@
 create grain testGrain version '1.0';
 
+create sequence testTable_id;
+
 create table testTable (
-id int identity not null primary key,
+id int not null default nextval(testTable_id) primary key,
 attrVarchar varchar(2),
 attrInt int default 3,
 f1 bit not null,
@@ -31,8 +33,10 @@ create table refTo2(
  f1 bit not null primary key
 );
 
+create sequence aLongIdentityTableNaaame_f1;
+
 create table  aLongIdentityTableNaaame(
- f1 int identity not null primary key,
+ f1 int not null default nextval(aLongIdentityTableNaaame_f1) primary key,
  field2 bit foreign key references refTo2(f1),
  field3 bit foreign key references refTo2(f1),
  aFieldwithAVeryVeryLongName bit
