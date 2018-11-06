@@ -16,7 +16,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.*;
 
-public class Celesta implements ICelesta, AutoCloseable {
+public class Celesta implements ICelesta {
 
     protected static final String FILE_PROPERTIES = "celesta.properties";
 

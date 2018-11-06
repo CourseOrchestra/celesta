@@ -69,6 +69,7 @@ public class CelestaImpl implements ICelesta {
         return dbAdaptor;
     }
 
+    @Override
     public void close() throws Exception {
         connectionPool.close();
     }
