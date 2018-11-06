@@ -1,8 +1,16 @@
 package ru.curs.celestaunit;
 
-import org.junit.jupiter.api.extension.*;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
-import ru.curs.celesta.*;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
+import ru.curs.celesta.CallContext;
+import ru.curs.celesta.Celesta;
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.Table;
@@ -20,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * <p>
  * Creates Celesta using Score Path parameter and H2 embedded in-memory database.
  */
-public class CelestaUnitExtension implements BeforeAllCallback,
+public final class CelestaUnitExtension implements BeforeAllCallback,
         AfterAllCallback, ParameterResolver, AfterEachCallback {
 
     static final String DEFAULT_SCORE = "src/main/resources/score";
@@ -56,7 +64,9 @@ public class CelestaUnitExtension implements BeforeAllCallback,
     @Override
     public void afterAll(ExtensionContext extensionContext) {
         try {
-            celesta.getConnectionPool().get().createStatement().execute("SHUTDOWN");
+            try (Statement statement = celesta.getConnectionPool().get().createStatement()) {
+                statement.execute("SHUTDOWN");
+            }
             celesta.close();
         } catch (Exception e) {
             throw new CelestaException(e);
@@ -143,12 +153,9 @@ public class CelestaUnitExtension implements BeforeAllCallback,
     }
 
     /**
-     * Returns Celesta instance.
+     * Builder for CelestaUnitExtension, that allows to
+     * override defaults.
      */
-    Celesta getCelesta() {
-        return celesta;
-    }
-
     public static final class Builder {
         private String scorePath = DEFAULT_SCORE;
         private boolean referentialIntegrity = false;
@@ -157,16 +164,28 @@ public class CelestaUnitExtension implements BeforeAllCallback,
         private Builder() {
         }
 
+        /**
+         * Sets score path.
+         * @param scorePath Score path (maybe relative to project root).
+         */
         public Builder withScorePath(String scorePath) {
             this.scorePath = scorePath;
             return this;
         }
 
+        /**
+         * Sets referential integrity.
+         * @param referentialIntegrity Set to false to disable.
+         */
         public Builder withReferentialIntegrity(boolean referentialIntegrity) {
             this.referentialIntegrity = referentialIntegrity;
             return this;
         }
 
+        /**
+         * Sets tables truncation after each test.
+         * @param truncateAfterEach Set to true to truncate each table after each test.
+         */
         public Builder withTruncateAfterEach(boolean truncateAfterEach) {
             this.truncateAfterEach = truncateAfterEach;
             return this;
