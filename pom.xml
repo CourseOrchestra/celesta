@@ -12,6 +12,7 @@
 
     <modules>
         <module>celesta-documentation</module>
+        <module>celesta-unit</module>
         <module>celesta-test</module>
         <module>dbschemasync</module>
         <module>celesta-sql</module>

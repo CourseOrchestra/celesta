@@ -10,55 +10,73 @@ include::_doc_general_attributes.adoc[]
 
 //tag::celesta_unit[]
 
-В Celesta реализована поддержка модульных тестов процедур, редактирующих данные.
+Обычно автоматическое тестирование систем, редактирующих данные, представляет определённые сложности и требует использования специальных приёмов (например, развёртывание базы данных в контейнере). Такие тесты обычно выполняются не быстро и разработчики избегают их.
 
-Чтобы ей воспользоваться, необходимо скачать модуль celestaunit с SVN: https://share.curs.ru/svn/grains/celestaunit и включить его в ваш score path на верхний уровень (подпапка папки с вашими гранулами). Никакой другой установки/настройки инструментов в большинстве случаев не требуется.
 
-Юнит-тесты выполняются на встроенной непосредственно в Celesta базе H2, работающей в режиме in-memory. Эта база не требует установки, запускается моментально и исчезает после завершения тестов. По умолчанию в этой базе отключена проверка ссылочной целостности внешних ключей, что позволяет беспрепятственно заполнять таблицы небольшим количеством тестовых данных. Но при желании проверку ссылочной целостности можно включить.
+В Celesta тестирование методов, редактирующих данные, осуществляется на уровне очень быстро выполняющихся модульных тестов, для чего разработано расширение https://junit.org/junit5/[JUnit5]. Модульные тесты выполняются на встроенной непосредственно в Celesta базе H2, работающей в режиме in-memory. Эта база не требует установки, запускается моментально и исчезает после завершения тестов. 
 
-База H2 разворачивается пустой при каждом запуске группы тестов и сохраняется до окончания запуска, поэтому в setup-методе вы можете заполнять таблицы тестовыми данными. Celestaunit-тесты, как и прочие celesta-процедуры, могут быть запущены параллельно.
+Чтобы воспользоваться данной функциональностью, необходимо добавить модуль celesta-unit Maven-зависимости проекта:
 
-Иногда может потребоваться очистка базы H2 между тестами, для этого в основной класс тестов добавлен метод setCleanDB. При передаче в этот метод значения True после завершения теста база H2 будет полностью очищена.
+```xml
+<dependency>
+    <groupId>ru.curs</groupId>
+    <artifactId>celesta-unit<artifactId>
+    <version>...</version>
+    <scope>test</scope>
+</dependency>
+```
+
+Также в тестовый scope проекта необходимо добавить зависимости JUnit5 (примеры см. в https://junit.org/junit5/docs/current/user-guide/#dependency-metadata-junit-jupiter-samples[документации Junit5]).
 
 == Пример пользования
 
-Ниже приведен пример модульного теста. Для его запуска достаточно запустить его как Jython Unit Test из Eclipse или IDEA:
 
-[source, python]
-coding=UTF-8
-Import celestaunit должен идти первым
-from celestaunit import CelestaUnit
-Импорт гранул и прочего должен идти после импорта celestaunit.
-from ztest._ztest_orm import viewWithGetDateCursor
-from ztest._ztest_orm import tableForGetDateInViewCursor
-from java.sql import Timestamp
-from java.time import LocalDateTime
-class TestGetDate(CelestaUnit):
-    def test_getdate_in_view(self):
-        viewCursor = viewWithGetDateCursor(self.context)
-        self.assertEqual(0, viewCursor.count())
-        tableCursor = tableForGetDateInViewCursor(self.context)
-        tableCursor.date = Timestamp.valueOf(LocalDateTime.now().minusDays(1))
-        tableCursor.insert()
-        self.assertEqual(0, viewCursor.count())
-        tableCursor.clear()
-        tableCursor.date = Timestamp.valueOf(LocalDateTime.now().plusDays(1))
-        tableCursor.insert()
-        self.assertEqual(1, viewCursor.count())
+```java
+/*Аннотация CelestaTest подключает JUnit5 extension class ru.curs.celestaunit.CelestaUnitExtension,
+обеспечивающий подстановку CallContext-объектов в параметры тестов.*/
+@CelestaTest
+public class DocumentServiceTest {
 
+    /*Сервис может быть создан как напрямую,
+    так и используя DI контейнеры */
+    
+    DocumentService srv = new DocumentService();
 
-* Импорт модуля CelestaUnit должен всегда стоять первым в модуле с тестами. Это обеспечит корректное создание initcontext и инициализацию гранул таким же образом, как это происходит в Celesta при запуске в production-режиме.
+    @Test
+    /*Параметр CallContext будет подставлен автоматически,
+    на основе временной базы данных H2*/
+    void documentIsPutToDb(CallContext context) throws ParseException {
+        /*Вызываем сервис*/
+        srv.postOrder(context, ...);
+        /*Проверяем, что данные попали в базу*/
+        OrderHeaderCursor header = new OrderHeaderCursor(context);
+        header.tryFirst();
+        assertEquals("no1", header.getId());
+    }
+}
+```
 
-* По умолчанию celestaunit предполагает, что score path находится на один уровень выше, чем путь к модулю celestaunit, поэтому если так и есть, до дополнительной конфигурации не требуется.
-
-* По умолчанию celestaunit работает с H2 в inmemory-режиме с отключенной Reference Integrity check, но всё это можно сконфигурировать, в частности, можно перенастроиться на иную СУБД
+Таким образом, каждый из тестов может получать в качестве параметра активный `CallContext`. Этот контекст формируется на основе базы данных H2, в которой развёрнута Celesta score, и может быть использован для создания курсоров.
 
 == Изменение настроек CelestaUnit по умолчанию
 
-Если мы всё-таки хотим конфигурировать, то это можно сделать через модификацию модуля testparams (заполняя глобальную переменную CELESTA_PROPERTIES нужными данными), при этом testparams необходимо импортировать ещё раньше, чем celestaunit: import testparams testparams.CELESTA_PROPERTIES.put('rdbms.connection.url', ....) #your preferred RDBMS connection url here from celestaunit import CelestaUnit
+CelestaUnit работает со следующими умолчаниями:
 
-== Каким образом уменьшить количество инициализируемых гранул
+* Score path: `src/main/resources/score`.
+* Ссылочная целостность по умолчанию отключена, что упрощает добавление тестовых данных в таблицы, связанные внешними ключами с другими таблицами.
+* Очистка таблиц после каждого теста по умолчанию включена.
 
-Если на вашем score.path находится много гранул, и их полная инициализация занимает слишком много времени, вы можете явно указать, какие гранулы будут инициализироваться. Для этого надо добавить идентификаторы гранулы в список testparams.INITIALIZING_GRAINS. Если этот список пустой, то при инициализации celestaunit будут инициализироваться все гранулы.
+Изменить умолчания можно, воспользовавшись в тестовом классе https://junit.org/junit5/docs/current/user-guide/#extensions-registration-programmatic[программной регистрацией] расширения JUnit5:
+
+```java
+public class DocumentServiceTest {
+    public static final String SCORE_PATH = "src/test/resources/score";
+    @RegisterExtension
+    static CelestaUnitExtension ext =
+            CelestaUnitExtension.builder()
+                    .withScorePath(SCORE_PATH)
+                    .withReferentialIntegrity(true)
+                    .withTruncateAfterEach(false).build();
+```
 
 //end::celesta_unit[]
