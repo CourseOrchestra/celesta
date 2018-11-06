@@ -3,11 +3,11 @@ package ru.curs.celestaunit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
 import s1.HeaderCursor;
 import s1.LineCursor;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class CelestaUnitExtensionNoTruncationNoIntegrityTest {
     public static final String SCORE_PATH = "src/test/resources/score";

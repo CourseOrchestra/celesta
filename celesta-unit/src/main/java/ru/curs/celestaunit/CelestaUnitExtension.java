@@ -15,7 +15,11 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-
+/**
+ * Extension class for JUnit5 tests.
+ * <p>
+ * Creates Celesta using Score Path parameter and H2 embedded in-memory database.
+ */
 public class CelestaUnitExtension implements BeforeAllCallback,
         AfterAllCallback, ParameterResolver, AfterEachCallback {
 
@@ -40,6 +44,10 @@ public class CelestaUnitExtension implements BeforeAllCallback,
         namespace = Namespace.create(this);
     }
 
+    /**
+     * Returns builder for CelestaUnitExtension instance, allowing
+     * to override default settings.
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -88,8 +96,9 @@ public class CelestaUnitExtension implements BeforeAllCallback,
         CallContext ctx = extensionContext
                 .getStore(namespace)
                 .remove(extensionContext.getUniqueId(), CallContext.class);
-        if (ctx != null)
+        if (ctx != null) {
             ctx.close();
+        }
 
         if (truncateAfterEach) {
             try (Connection conn = celesta.getConnectionPool().get();
@@ -112,24 +121,35 @@ public class CelestaUnitExtension implements BeforeAllCallback,
         }
     }
 
+    /**
+     * Score path.
+     */
     String getScorePath() {
         return scorePath;
     }
 
+    /**
+     * Is referential integrity check set on H2.
+     */
     boolean isReferentialIntegrity() {
         return referentialIntegrity;
     }
 
+    /**
+     * Is every table truncated after each test.
+     */
     boolean isTruncateAfterEach() {
         return truncateAfterEach;
     }
 
+    /**
+     * Returns Celesta instance.
+     */
     Celesta getCelesta() {
         return celesta;
     }
 
-
-    public static class Builder {
+    public static final class Builder {
         private String scorePath = DEFAULT_SCORE;
         private boolean referentialIntegrity = false;
         private boolean truncateAfterEach = true;
@@ -152,6 +172,9 @@ public class CelestaUnitExtension implements BeforeAllCallback,
             return this;
         }
 
+        /**
+         * Generates CelestaUnitExtension with given parameters.
+         */
         public CelestaUnitExtension build() {
             return new CelestaUnitExtension(this);
         }
