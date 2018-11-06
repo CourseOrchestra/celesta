@@ -12,7 +12,7 @@ import java.util.Properties;
 /**
  * Interface of Celesta instance.
  */
-public interface ICelesta {
+public interface ICelesta extends AutoCloseable {
 
     /**
      * Returns a {@link TriggerDispatcher} of this celesta instance.
