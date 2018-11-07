@@ -55,7 +55,8 @@ fi'''
                        'celesta-core',
                        'celesta-maven-plugin',
                        'celesta-system-services',
-                       'dbschemasync']
+                       'dbschemasync',
+                       'celesta-unit']
         def warningsMap = countWarnings modules
         writeYaml file: 'target/warnings.yml', data: warningsMap
         compareWarningMaps oldWarnings, warningsMap

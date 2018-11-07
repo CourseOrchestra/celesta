@@ -90,7 +90,8 @@ node {
                        'celesta-sql',
                        'celesta-core',
                        'celesta-maven-plugin',
-                       'celesta-system-services']
+                       'celesta-system-services',
+                       'celesta-unit']
 
         withCredentials([usernamePassword(credentialsId: 'curs-bintray', passwordVariable: 'bintrayPassword', usernameVariable: 'bintrayUserName')]) {
             for (module in modules) {
