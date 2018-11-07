@@ -57,7 +57,6 @@ public class SequencesMigrationTest {
                 () -> assertEquals(0, oldDbColumnInfo.getLength()),
                 () -> assertEquals(0, oldDbColumnInfo.getScale()),
                 () -> assertEquals(false, oldDbColumnInfo.isMax()),
-                () -> assertEquals(false, oldDbColumnInfo.isIdentity()),
                 //new
                 () -> assertEquals("id", newDbColumnInfo.getName()),
                 () -> assertEquals(IntegerColumn.class, newDbColumnInfo.getType()),
@@ -65,8 +64,7 @@ public class SequencesMigrationTest {
                 () -> assertEquals("NEXTVAL(idSeq)", newDbColumnInfo.getDefaultValue()),
                 () -> assertEquals(0, newDbColumnInfo.getLength()),
                 () -> assertEquals(0, newDbColumnInfo.getScale()),
-                () -> assertEquals(false, newDbColumnInfo.isMax()),
-                () -> assertEquals(false, newDbColumnInfo.isIdentity())
+                () -> assertEquals(false, newDbColumnInfo.isMax())
         );
     }
 }
