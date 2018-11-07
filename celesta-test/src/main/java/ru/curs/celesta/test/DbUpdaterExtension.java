@@ -138,7 +138,7 @@ public class DbUpdaterExtension implements TestTemplateInvocationContextProvider
         final ConnectionPoolConfiguration connectionPoolConfiguration = new ConnectionPoolConfiguration();
 
         final String jdbcUrl = Optional.ofNullable(container)
-                .map(JdbcDatabaseContainer::getJdbcUrl)
+                .map(c -> c.getJdbcUrl().replace("localhost", "0.0.0.0"))
                 .orElse(BaseAppSettings.H2_IN_MEMORY_URL);
 
         final String login = Optional.ofNullable(container)
