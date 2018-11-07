@@ -34,7 +34,7 @@ node {
 
     stage ('Spellcheck'){
         result = sh (returnStdout: true,
-           script: """for f in \$(find . -name '*.adoc'); do cat \$f | sed "s/-/ /g" | aspell --master=ru --add-filter=url --personal=./dict list; done | sort | uniq""")
+           script: """for f in \$(find . -name '*.adoc'); do cat \$f | sed "s/-/ /g" | aspell --master=ru --personal=./dict list; done | sort | uniq""")
               .trim()
         if (result) {
            echo "The following words are probaly misspelled:"
