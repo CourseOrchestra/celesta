@@ -63,8 +63,8 @@
         <jdbc.driver.oracle.version>12.1.2-0-0</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.1.3</jdbc.driver.postgres.version>
         <jdbc.driver.sqlserver.version>6.4.0.jre8</jdbc.driver.sqlserver.version>
-        <junit.version>5.1.0</junit.version>
-        <junit.platform.version>1.0.0</junit.platform.version>
+        <junit.version>5.3.1</junit.version>
+        <junit.platform.version>1.3.1</junit.platform.version>
         <org.json.version>20171018</org.json.version>
         <org.reflections.version>0.9.11</org.reflections.version>
         <testcontainers.version>1.6.0</testcontainers.version>
@@ -81,7 +81,7 @@
         <maven.javadoc.plugin.version>2.9.1</maven.javadoc.plugin.version>
         <maven.shade.plugin.version>3.0.0</maven.shade.plugin.version>
         <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
-        <maven.surefire.plugin.version>2.19.1</maven.surefire.plugin.version>
+        <maven.surefire.plugin.version>2.22.1</maven.surefire.plugin.version>
     </properties>
 
     <dependencyManagement>
