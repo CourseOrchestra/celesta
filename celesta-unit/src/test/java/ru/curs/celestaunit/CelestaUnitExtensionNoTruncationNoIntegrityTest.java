@@ -1,5 +1,6 @@
 package ru.curs.celestaunit;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import ru.curs.celesta.CallContext;
@@ -14,6 +15,7 @@ public class CelestaUnitExtensionNoTruncationNoIntegrityTest {
     @RegisterExtension
     static CelestaUnitExtension ext =
             CelestaUnitExtension.builder().withScorePath(SCORE_PATH)
+                    .withReferentialIntegrity(false)
                     .withTruncateAfterEach(false).build();
 
     @Test
@@ -33,11 +35,13 @@ public class CelestaUnitExtensionNoTruncationNoIntegrityTest {
 
 
     @Test
+    @DisplayName("When truncateAfterEach is off, tables that are filled in a test...")
     void tablesNotTruncated1(CallContext ctx) {
         CelestaUnitExtensionTest.fillTwoTables(ctx);
     }
 
     @Test
+    @DisplayName("...can be read in the following test.")
     void tablesNotTruncated2(CallContext ctx) {
         HeaderCursor hc = new HeaderCursor(ctx);
         LineCursor lc = new LineCursor(ctx);

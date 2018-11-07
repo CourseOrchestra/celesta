@@ -63,7 +63,7 @@ public class DocumentServiceTest {
 CelestaUnit работает со следующими умолчаниями:
 
 * Score path: `src/main/resources/score`.
-* Ссылочная целостность по умолчанию отключена, что упрощает добавление тестовых данных в таблицы, связанные внешними ключами с другими таблицами.
+* Проверка ссылочной целостности (по Foreign keys) по умолчанию включена.
 * Очистка таблиц после каждого теста по умолчанию включена.
 
 Изменить умолчания можно, воспользовавшись в тестовом классе https://junit.org/junit5/docs/current/user-guide/#extensions-registration-programmatic[программной регистрацией] расширения JUnit5:
@@ -78,5 +78,7 @@ public class DocumentServiceTest {
                     .withReferentialIntegrity(true)
                     .withTruncateAfterEach(false).build();
 ```
+
+Например, в ряде случаев бывает полезно отключить проверку ссылочной целостности, что упрощает добавление тестовых данных в таблицы, связанные внешними ключами с другими таблицами.
 
 //end::celesta_unit[]

@@ -113,9 +113,11 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
         if (truncateAfterEach) {
             try (Connection conn = celesta.getConnectionPool().get();
                  Statement stmt = conn.createStatement()) {
-                stmt.execute("SET REFERENTIAL_INTEGRITY FALSE");
+                if (referentialIntegrity) {
+                    stmt.execute("SET REFERENTIAL_INTEGRITY FALSE");
+                }
                 for (Map.Entry<String, Grain> e : celesta.getScore().getGrains().entrySet()) {
-                    if (!e.getKey().equals(Score.SYSTEM_SCHEMA_NAME)) {
+                    if (!Score.SYSTEM_SCHEMA_NAME.equals(e.getKey())) {
                         Grain grain = e.getValue();
                         for (Table table : grain.getTables().values()) {
                             stmt.execute(String.format("truncate table %s.%s",
@@ -124,7 +126,9 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
                         }
                     }
                 }
-                stmt.execute("SET REFERENTIAL_INTEGRITY " + referentialIntegrity);
+                if (referentialIntegrity) {
+                    stmt.execute("SET REFERENTIAL_INTEGRITY TRUE");
+                }
             } catch (SQLException e) {
                 throw new CelestaException(e);
             }
@@ -158,7 +162,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
      */
     public static final class Builder {
         private String builderScorePath = DEFAULT_SCORE;
-        private boolean builderReferentialIntegrity = false;
+        private boolean builderReferentialIntegrity = true;
         private boolean builderTruncateAfterEach = true;
 
         private Builder() {
