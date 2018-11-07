@@ -154,7 +154,6 @@ class TestTable implements ScriptTest {
 
         ArrayList<Integer> idList = new ArrayList<>();
         for (TIterateCursor c : cursor)
-
             idList.add(c.getId());
 
         assertEquals(2, idList.size());

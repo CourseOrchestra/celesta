@@ -2,22 +2,24 @@ package ru.curs.celesta.dbutils.migrations;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.DbUpdater;
+import ru.curs.celesta.dbutils.DbUpdaterAccessor;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.test.DbUpdaterTest;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.test.DbUpdaterExtension;
 import ru.curs.celesta.test.ScorePath;
-
-import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class SequencesMigrationTest implements DbUpdaterTest {
+@ExtendWith(DbUpdaterExtension.class)
+public class SequencesMigrationTest {
 
     private static final String MANUAL_INT_PK_TO_SEQ_BASED_PREFIX
             = "src/test/resources/ru/curs/celesta/dbutils/migrations/manual_int_pk_to_sequence_based/";
@@ -30,18 +32,10 @@ public class SequencesMigrationTest implements DbUpdaterTest {
             @ScorePath(MANUAL_INT_PK_TO_SEQ_BASED_PREFIX_V1) DbUpdater dbUpdater1,
             @ScorePath(MANUAL_INT_PK_TO_SEQ_BASED_PREFIX_V2) DbUpdater dbUpdater2
 
-    ) throws Exception {
-        Field dbAdaptorField = DbUpdater.class.getDeclaredField("dbAdaptor");
-        dbAdaptorField.setAccessible(true);
-        DBAdaptor dbAdaptor = (DBAdaptor) dbAdaptorField.get(dbUpdater1);
-
-        Field connectionPoolField = DbUpdater.class.getDeclaredField("connectionPool");
-        connectionPoolField.setAccessible(true);
-        ConnectionPool connectionPool = (ConnectionPool) connectionPoolField.get(dbUpdater1);
-
-        Field scoreField = DbUpdater.class.getDeclaredField("score");
-        scoreField.setAccessible(true);
-        AbstractScore abstractScore = (AbstractScore) scoreField.get(dbUpdater1);
+    ) throws ParseException {
+        DBAdaptor dbAdaptor = DbUpdaterAccessor.getDbAdaptor(dbUpdater1);
+        ConnectionPool connectionPool = DbUpdaterAccessor.getConnectionPool(dbUpdater1);
+        AbstractScore abstractScore = DbUpdaterAccessor.getScore(dbUpdater1);
 
         Column column = abstractScore.getGrain("manualIntPkToSeqBased")
                 .getTable("t")

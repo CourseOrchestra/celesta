@@ -82,21 +82,24 @@ public final class DbColumnInfo {
         // Проверяем nullability, но помним о том, что в Oracle DEFAULT
         // ''-строки всегда nullable
         if (type != StringColumn.class || !"''".equals(defaultValue)) {
-            if (value.isNullable() != isNullable)
+            if (value.isNullable() != isNullable) {
                 return false;
+            }
         }
 
         if (type == StringColumn.class) {
             // Если параметры длин не совпали -- не проверяем
             StringColumn col = (StringColumn) value;
-            if (!(isMax ? col.isMax() : length == col.getLength()))
+            if (!(isMax ? col.isMax() : length == col.getLength())) {
                 return false;
+            }
         }
 
         if (this.type == DecimalColumn.class) {
             DecimalColumn dc = (DecimalColumn)value;
-            if (dc.getPrecision() != this.length || dc.getScale() != this.scale)
+            if (dc.getPrecision() != this.length || dc.getScale() != this.scale) {
                 return false;
+            }
         }
 
         // Если в данных пустой default, а в метаданных -- не пустой -- то

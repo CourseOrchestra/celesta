@@ -15,6 +15,10 @@ import java.util.stream.Stream;
 
 public class CallContextProvider implements TestTemplateInvocationContextProvider {
 
+    static {
+        Locale.setDefault(Locale.US);
+    }
+
     enum Backend {
         H2, PostgreSQL, Oracle, MSSQL
     }

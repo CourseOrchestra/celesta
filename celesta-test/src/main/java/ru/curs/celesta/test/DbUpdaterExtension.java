@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DbUpdaterProvider implements TestTemplateInvocationContextProvider {
+public class DbUpdaterExtension implements TestTemplateInvocationContextProvider, BeforeAllCallback, AfterAllCallback {
 
     static {
         Locale.setDefault(Locale.US);
@@ -74,11 +74,21 @@ public class DbUpdaterProvider implements TestTemplateInvocationContextProvider 
                                                    ExtensionContext extensionContext)
                             throws ParameterResolutionException {
                         ScorePath scorePath = parameterContext.getParameter().getAnnotation(ScorePath.class);
-                        return DbUpdaterProvider.this.createDbUpdater(dbType, scorePath.value());
+                        return DbUpdaterExtension.this.createDbUpdater(dbType, scorePath.value());
                     }
                 });
             }
         };
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext context) throws Exception {
+        this.startDbs();
+    }
+
+    @Override
+    public void afterAll(ExtensionContext context) throws Exception {
+        this.stopDbs();
     }
 
     public void startDbs() {
