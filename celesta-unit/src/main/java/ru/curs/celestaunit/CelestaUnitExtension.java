@@ -115,7 +115,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
                  Statement stmt = conn.createStatement()) {
                 stmt.execute("SET REFERENTIAL_INTEGRITY FALSE");
                 for (Map.Entry<String, Grain> e : celesta.getScore().getGrains().entrySet()) {
-                    if ((!e.getKey().equals(Score.SYSTEM_SCHEMA_NAME))) {
+                    if (!e.getKey().equals(Score.SYSTEM_SCHEMA_NAME)) {
                         Grain grain = e.getValue();
                         for (Table table : grain.getTables().values()) {
                             stmt.execute(String.format("truncate table %s.%s",
