@@ -46,9 +46,9 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
     }
 
     private CelestaUnitExtension(Builder builder) {
-        scorePath = builder.scorePath;
-        referentialIntegrity = builder.referentialIntegrity;
-        truncateAfterEach = builder.truncateAfterEach;
+        scorePath = builder.builderScorePath;
+        referentialIntegrity = builder.builderReferentialIntegrity;
+        truncateAfterEach = builder.builderTruncateAfterEach;
         namespace = Namespace.create(this);
     }
 
@@ -157,9 +157,9 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
      * override defaults.
      */
     public static final class Builder {
-        private String scorePath = DEFAULT_SCORE;
-        private boolean referentialIntegrity = false;
-        private boolean truncateAfterEach = true;
+        private String builderScorePath = DEFAULT_SCORE;
+        private boolean builderReferentialIntegrity = false;
+        private boolean builderTruncateAfterEach = true;
 
         private Builder() {
         }
@@ -169,7 +169,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
          * @param scorePath Score path (maybe relative to project root).
          */
         public Builder withScorePath(String scorePath) {
-            this.scorePath = scorePath;
+            this.builderScorePath = scorePath;
             return this;
         }
 
@@ -178,7 +178,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
          * @param referentialIntegrity Set to false to disable.
          */
         public Builder withReferentialIntegrity(boolean referentialIntegrity) {
-            this.referentialIntegrity = referentialIntegrity;
+            this.builderReferentialIntegrity = referentialIntegrity;
             return this;
         }
 
@@ -187,7 +187,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
          * @param truncateAfterEach Set to true to truncate each table after each test.
          */
         public Builder withTruncateAfterEach(boolean truncateAfterEach) {
-            this.truncateAfterEach = truncateAfterEach;
+            this.builderTruncateAfterEach = truncateAfterEach;
             return this;
         }
 
