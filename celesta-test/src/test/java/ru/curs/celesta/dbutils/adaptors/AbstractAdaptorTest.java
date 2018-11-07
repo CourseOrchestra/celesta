@@ -24,7 +24,7 @@ import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
-import ru.curs.celesta.mock.CelestaImpl;
+import ru.curs.celesta.test.mock.CelestaImpl;
 import ru.curs.celesta.score.*;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.lyra.grid.VarcharFieldEnumerator;

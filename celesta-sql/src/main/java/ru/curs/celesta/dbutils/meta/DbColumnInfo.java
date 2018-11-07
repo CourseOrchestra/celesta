@@ -106,6 +106,9 @@ public final class DbColumnInfo {
                 //do not forget DateTime's special case
                 DateTimeColumn dtc = (DateTimeColumn) value;
                 return dtc.getDefaultValue() == null && dtc.isGetdate() == false;
+            } else if (type == IntegerColumn.class) {
+                IntegerColumn ic = (IntegerColumn) value;
+                return ic.getDefaultValue() == null && ic.getSequence() == null;
             } else {
                 return value.getDefaultValue() == null;
             }

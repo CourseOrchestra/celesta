@@ -6,7 +6,7 @@ import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.H2Adaptor;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
-import ru.curs.celesta.mock.CelestaImpl;
+import ru.curs.celesta.test.mock.CelestaImpl;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
@@ -74,7 +74,7 @@ public class DbUpdaterTest {
                 .scoreDiscovery(new DefaultScoreDiscovery())
                 .build();
 
-        CelestaImpl celesta = new CelestaImpl(dba, connectionPool, score);
+        CelestaImpl celesta = new CelestaImpl(dba, this.connectionPool, score);
         PermissionManager permissionManager = celesta.getPermissionManager();
         LoggingManager loggingManager = celesta.getLoggingManager();
 
