@@ -10,7 +10,7 @@ include::_doc_general_attributes.adoc[]
 :toc: left
 
 == Справочник Celesta
-фывафы фывафдывалофыв фыва
+
 === Введение и основные понятия
 
 include::1010_intro.adoc[leveloffset=+2, tag="intro"]

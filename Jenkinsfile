@@ -39,7 +39,7 @@ node {
         if (result) {
            echo "The following words are probaly misspelled:"
            echo result
-           error "Please correct the spelling or add the words to local dictionary."
+           error "Please correct the spelling or add the words above to the local dictionary."
         }
     }
 
