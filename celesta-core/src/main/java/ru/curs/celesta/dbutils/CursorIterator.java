@@ -31,12 +31,12 @@ public class CursorIterator<T extends BasicCursor> implements Iterator<T> {
 
     @Override
     public T next() {
-        if (!this.isRead) {
-            this.isRead = true;
-        } else {
+        if (this.isRead) {
             if (!this.cursor.nextInSet()) {
                 throw new NoSuchElementException();
             }
+        } else {
+            this.isRead = true;
         }
 
         return this.cursor;
