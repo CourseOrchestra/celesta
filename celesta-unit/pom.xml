@@ -17,6 +17,14 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+        </dependency>
+        <dependency>
             <groupId>ru.curs</groupId>
             <artifactId>celesta-core</artifactId>
             <version>${project.version}</version>
@@ -31,6 +39,10 @@
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>ru.curs</groupId>
                 <artifactId>celesta-maven-plugin</artifactId>

@@ -22,7 +22,7 @@ public class ConnectionPoolTest {
 
     static {
         cpc = new ConnectionPoolConfiguration();
-        String jdbcUrl = "jdbc:h2:mem:celesta;DB_CLOSE_DELAY=-1";
+        String jdbcUrl = BaseAppSettings.H2_IN_MEMORY_URL;
         cpc.setJdbcConnectionUrl(jdbcUrl);
         cpc.setDriverClassName(DBType.resolveByJdbcUrl(jdbcUrl).getDriverClassName());
         cpc.setLogin("");

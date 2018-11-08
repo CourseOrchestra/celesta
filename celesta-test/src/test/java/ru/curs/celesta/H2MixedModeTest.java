@@ -22,7 +22,7 @@ class H2MixedModeTest {
         params.setProperty("h2.in-memory", "true");
         BaseAppSettings as = new AppSettings(params);
         //embedded mode
-        assertEquals("jdbc:h2:mem:celesta;DB_CLOSE_DELAY=-1", as.getDatabaseConnection());
+        assertEquals(BaseAppSettings.H2_IN_MEMORY_URL, as.getDatabaseConnection());
 
         //mixed mode
         params.setProperty("h2.port", port);

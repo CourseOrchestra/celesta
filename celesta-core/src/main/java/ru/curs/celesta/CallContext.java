@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.WeakHashMap;
 
 /**
- * Call context containing a DB connection carrying a transaction and a user identifier. 
+ * Call context containing a DB connection carrying a transaction and a user identifier.
  */
 public class CallContext implements ICallContext {
 
@@ -71,13 +71,13 @@ public class CallContext implements ICallContext {
      * @param celesta Celesta to use CallContext with.
      * @param procName Name of the called procedure (for logging/audit needs).
      */
-    public void activate(ICelesta celesta,
-                         String procName) {
+    public void activate(ICelesta celesta, String procName) {
         Objects.requireNonNull(celesta);
         Objects.requireNonNull(procName);
-        if (state != State.NEW)
-            throw new CelestaException("Cannot activate CallContext in %s state (NEW expected).",
-                    state);
+
+        if (state != State.NEW) {
+            throw new CelestaException("Cannot activate CallContext in %s state (NEW expected).", state);
+        }
 
         this.celesta = celesta;
         this.state = State.ACTIVE;
@@ -142,8 +142,11 @@ public class CallContext implements ICallContext {
     }
 
     public void incDataAccessorsCount() {
-        if (dataAccessorsCount > MAX_DATA_ACCESSORS)
-            throw new CelestaException("Too many data accessors created in one Celesta procedure call. Check for leaks!");
+        if (dataAccessorsCount > MAX_DATA_ACCESSORS) {
+            throw new CelestaException(
+                    "Too many data accessors created in one Celesta procedure call. Check for leaks!"
+            );
+        }
         dataAccessorsCount++;
     }
 
@@ -218,8 +221,9 @@ public class CallContext implements ICallContext {
     public void close() {
         try {
             closeDataAccessors();
-            if (conn != null)
+            if (conn != null) {
                 conn.close();
+            }
             celesta.getProfiler().logCall(this);
             state = State.CLOSED;
         } catch (Exception e) {

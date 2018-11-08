@@ -10,9 +10,7 @@ import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.H2Adaptor;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
-import ru.curs.celesta.mock.CelestaImpl;
-import ru.curs.celesta.score.AbstractScore;
-import ru.curs.celesta.score.Score;
+import ru.curs.celesta.test.mock.CelestaImpl;
 import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.ISchemaCursor;
@@ -45,7 +43,7 @@ public class SchemaAutoupdateTest {
         assertFalse(celesta.getScore().getGrain("B").isAutoupdate());
         assertTrue(celesta.getScore().getGrain("C").isAutoupdate());
     }
-    
+
     @Test
     void testWithNoAutoupdateOption() throws Exception {
 
@@ -59,7 +57,7 @@ public class SchemaAutoupdateTest {
         assertTrue(dba.tableExists(conn, "A", "a"));
         assertTrue(dba.tableExists(conn, "B", "b"));
         assertTrue(dba.tableExists(conn, "C", "c"));
-        
+
         lockGrain("A", celesta);
 
         celesta = getCelesta("schema_autoupdate/scoreV2");
@@ -76,12 +74,12 @@ public class SchemaAutoupdateTest {
         assertFalse(dba.getColumns(conn, tableBb).contains("title"));
 
         Table tableCc = celesta.getScore().getGrain("C").getTable("c");
-        assertTrue(dba.getColumns(conn, tableCc).contains("title"));       
+        assertTrue(dba.getColumns(conn, tableCc).contains("title"));
     }
-    
+
     private void lockGrain(String grainName, ICelesta celesta) {
         try(CallContext cc = new SystemCallContext(celesta)) {
-            GrainsCursor gc = new GrainsCursor(cc); 
+            GrainsCursor gc = new GrainsCursor(cc);
             gc.get(grainName);
             gc.setState(ISchemaCursor.LOCK);
             gc.update();
@@ -99,7 +97,7 @@ public class SchemaAutoupdateTest {
                 .setPermissionManager(celesta.getPermissionManager())
                 .setLoggingManager(celesta.getLoggingManager())
                 .build();
-        
+
         return dbUpdater;
     }
 
