@@ -403,9 +403,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
             // System.out.println(sql);
         }
         try {
-            PreparedStatement result = conn.prepareStatement(
-                    sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY
-            );
+            PreparedStatement result = conn.prepareStatement(sql);
             return result;
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());

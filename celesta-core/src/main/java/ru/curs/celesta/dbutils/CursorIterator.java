@@ -1,15 +1,13 @@
 package ru.curs.celesta.dbutils;
 
-import ru.curs.celesta.CelestaException;
-
-import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class CursorIterator<T extends BasicCursor> implements Iterator<T> {
 
     private final T cursor;
     private final boolean hasResults;
-    private boolean justCreated = true;
+    private boolean isRead = false;
 
     public CursorIterator(T cursor) {
         this.cursor = cursor;
@@ -21,23 +19,26 @@ public class CursorIterator<T extends BasicCursor> implements Iterator<T> {
         if (!this.hasResults) {
             return false;
         }
-        if (this.justCreated) {
+
+        if (isRead) {
+            this.isRead = false;
+            return this.cursor.nextInSet();
+        } else {
             return true;
         }
-        try {
-            return !this.cursor.cursor.isLast();
-        } catch (SQLException e) {
-            throw new CelestaException(e);
-        }
+
     }
 
     @Override
     public T next() {
-        if (!this.justCreated) {
-            this.cursor.nextInSet();
+        if (!this.isRead) {
+            this.isRead = true;
         } else {
-            this.justCreated = false;
+            if (!this.cursor.nextInSet()) {
+                throw new NoSuchElementException();
+            }
         }
+
         return this.cursor;
     }
 }
