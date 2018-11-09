@@ -12,7 +12,7 @@ include::_doc_general_attributes.adoc[]
 
 == Новая функциональность
 
-фываф ыфавыфац3к к ыфапаыпыва
+Настоящее описание: <<create_schema_statement_,CREATE GRAIN>>
 
 == Язык CelestaSQL определения объектов базы данных
 
