@@ -1,4 +1,4 @@
-package ru.curs.celesta.mock;
+package ru.curs.celesta.test.mock;
 
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.ICelesta;

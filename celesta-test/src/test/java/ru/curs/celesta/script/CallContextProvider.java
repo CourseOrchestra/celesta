@@ -15,6 +15,10 @@ import java.util.stream.Stream;
 
 public class CallContextProvider implements TestTemplateInvocationContextProvider {
 
+    static {
+        Locale.setDefault(Locale.US);
+    }
+
     enum Backend {
         H2, PostgreSQL, Oracle, MSSQL
     }
@@ -77,13 +81,13 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
         celestas.put(Backend.PostgreSQL, celestaFromContainer(containers.get(Backend.PostgreSQL)));
 
         containers.put(Backend.Oracle, new OracleContainer());
-        celestas.put(Backend.Oracle, celestaFromContainer(containers.get(Backend.PostgreSQL)));
+        celestas.put(Backend.Oracle, celestaFromContainer(containers.get(Backend.Oracle)));
 
         MSSQLServerContainer ms = new MSSQLServerContainer()
                 .withDatabaseName("celesta")
                 .withCollation("Cyrillic_General_CI_AS");
         containers.put(Backend.MSSQL, ms);
-        celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.PostgreSQL)));
+        celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.MSSQL)));
 
     }
 

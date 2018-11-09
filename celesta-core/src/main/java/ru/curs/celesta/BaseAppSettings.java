@@ -10,6 +10,8 @@ import java.util.logging.SimpleFormatter;
 
 public abstract class BaseAppSettings {
 
+    public static final String H2_IN_MEMORY_URL = "jdbc:h2:mem:celesta;DB_CLOSE_DELAY=-1";
+
     private final Properties properties;
 
     private final String scorePath;
@@ -60,7 +62,7 @@ public abstract class BaseAppSettings {
                 databaseConnection = String.format(
                         "jdbc:h2:tcp://localhost:%d/mem:celesta", h2Port);
             } else {
-                databaseConnection = "jdbc:h2:mem:celesta;DB_CLOSE_DELAY=-1";
+                databaseConnection = H2_IN_MEMORY_URL;
             }
             login = "";
             password = "";

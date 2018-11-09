@@ -1,9 +1,9 @@
 create grain aggregate version '1.1';
 
-create sequence countConditionLess_id;
+create sequence countCondLessSeq;
 
 create table countConditionLess (
-  id int not null default nextval(countConditionLess_id) primary key,
+  id int not null default nextval(countCondLessSeq) primary key,
   date datetime
 );
 
