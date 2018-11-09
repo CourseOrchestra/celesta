@@ -32,6 +32,17 @@ node {
         oldWarnings = readYaml file: 'previous.yml'
     }
 
+    stage ('Spellcheck'){
+        result = sh (returnStdout: true,
+           script: """for f in \$(find celesta-documentation -name '*.adoc'); do cat \$f | sed "s/-/ /g" | aspell --master=ru --personal=./dict list; done | sort | uniq""")
+              .trim()
+        if (result) {
+           echo "The following words are probaly misspelled:"
+           echo result
+           error "Please correct the spelling or add the words above to the local dictionary."
+        }
+    }
+
     stage ('Docker cleanup') {
         sh '''docker ps -a -q &> /dev/null
 if [ $? != 0 ]; then
