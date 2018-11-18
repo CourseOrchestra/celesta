@@ -6,6 +6,11 @@ branches:
 sudo: required
 
 language: java
+jdk: oraclejdk8
+
+cache:
+  directories:
+  - $HOME/.m2
 
 services:
   - docker
@@ -13,6 +18,8 @@ services:
 before_install:
   - mkdir -p celesta-documentation/src/main/asciidoc/output
   - docker pull asciidoctor/docker-asciidoctor
+  
+install: true
 
 script:
   - docker run -v $TRAVIS_BUILD_DIR/celesta-documentation/src/main/asciidoc/:/documents/ --name asciidoc-to-html asciidoctor/docker-asciidoctor asciidoctor -D /documents/output 0000_Celesta.adoc
