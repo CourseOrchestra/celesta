@@ -17,19 +17,19 @@ include::_doc_general_attributes.adoc[]
 
 image::{img}/800px-Cursor.png[{image-100-width}]
 
-На UML-диаграмме показана иерархия классов доступа к данным. В основе иерархии стоит класс BasicDataAccessor. Каждый класс курсоров наследуется от класса BasicCursor, класс Sequence от BasicDataAccessor:
+На UML-диаграмме показана иерархия классов доступа к данным. В основе иерархии стоит класс https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/dbutils/BasicDataAccessor.html[`BasicDataAccessor`]. Каждый класс курсоров наследуется от класса https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/dbutils/BasicCursor.html[`BasicCursor`], класс https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/dbutils/Sequence.html[`Sequence`] от https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/dbutils/BasicDataAccessor.html[`BasicDataAccessor`]:
 
-Cursor:: предназначен для работы с таблицами. Наследует все методы BasicCursor, а также добавляет ряд собственных методов для возможности модификации данных.
+https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/dbutils/Cursor.htmlhtml[Cursor]:: предназначен для работы с таблицами. Наследует все методы BasicCursor, а также добавляет ряд собственных методов для возможности модификации данных.
 
-ViewCursor:: предназначен для работы с представлениями, никаких собственных методов к BasicCursor не добавляет.
+https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/dbutils/ViewCursor.html[ViewCursor]:: предназначен для работы с представлениями, никаких собственных методов к BasicCursor не добавляет.
 
-MaterializedViewCursor:: предназначен для работы с материализованными представлениями. Наследует все методы BasicCursor, а также добавляет ряд собственных методов для возможности получения данных по первичному ключу.
+https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/dbutils/MaterializedViewCursor.html[MaterializedViewCursor]:: предназначен для работы с материализованными представлениями. Наследует все методы BasicCursor, а также добавляет ряд собственных методов для возможности получения данных по первичному ключу.
 
-ParameterizedViewCursor:: предназначен для работы с функциями(параметризованными представлениями). Никаких собственных методов к BasicCursor не добавляет, однако имеет отличный от базового класса конструктор.
+https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/dbutils/ParameterizedViewCursor.html[ParameterizedViewCursor]:: предназначен для работы с функциями(параметризованными представлениями). Никаких собственных методов к BasicCursor не добавляет, однако имеет отличный от базового класса конструктор.
 
-ReadOnlyTableCursor:: предназначен для работы с таблицами, объявленными с опцией WITH READ ONLY, никаких собственных методов к BasicCursor не добавляет.
+https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/dbutils/ReadOnlyTableCursor.html[ReadOnlyTableCursor]:: предназначен для работы с таблицами, объявленными с опцией WITH READ ONLY, никаких собственных методов к BasicCursor не добавляет.
 
-Sequence:: предназначен для работы с последовательностями. Наследует все методы класса BasicDataAccessor и добавляет метод nextValue.
+https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/dbutils/Sequence.html[Sequence]:: предназначен для работы с последовательностями. Наследует все методы класса BasicDataAccessor и добавляет метод nextValue.
 
 Ниже описываются методы класса Cursor, но те методы, которые унаследованы от BasicCursor (и могут применяться при работе с представлениями и неизменяемыми таблицами) отмечены значком {lupa}.
 
