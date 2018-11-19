@@ -21,7 +21,7 @@ script:
 
 after_success:
   - mv celesta-core/target/site/apidocs celesta-documentation/target/generated-docs/apidocs
-  - cd celesta-documentation/target/generated-docs/apidocs
+  - cd celesta-documentation/target/generated-docs
   - git init
   - git config user.name "${GH_USER_NAME}"
   - git config user.email "{GH_USER_EMAIL}"
