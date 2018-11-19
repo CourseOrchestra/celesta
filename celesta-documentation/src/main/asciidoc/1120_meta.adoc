@@ -32,7 +32,7 @@ include::_doc_general_attributes.adoc[]
 
 == Состав метаданных
 
-Все метаданные (Score) делятся на гранулы (Grain), состоящие из таблиц (Table), индексов (Index) и представлений (View).
+Все метаданные (https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/score/Score.html[`Score`]) делятся на гранулы (Grain), состоящие из таблиц (Table), индексов (Index) и представлений (View).
 
 * Таблицы состоят из столбцов (Column) и содержат внешние ключи.
 

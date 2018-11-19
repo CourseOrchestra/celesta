@@ -5,24 +5,23 @@ branches:
 
 sudo: required
 
-services:
-  - docker
+language: java
+jdk: oraclejdk8
+
+cache:
+  directories:
+  - $HOME/.m2
 
 before_install:
-  - mkdir -p celesta-documentation/src/main/asciidoc/output
-  - docker pull asciidoctor/docker-asciidoctor
+  - cp .travis.settings.xml $HOME/.m2/settings.xml
 
 script:
-  - docker run -v $TRAVIS_BUILD_DIR/celesta-documentation/src/main/asciidoc/:/documents/ --name asciidoc-to-html asciidoctor/docker-asciidoctor asciidoctor -D /documents/output 0000_Celesta.adoc
-
-after_error:
-  - docker logs asciidoc-to-html
-
-after_failure:
-  - docker logs asciidoc-to-html
+  - mvn --projects celesta-core javadoc:javadoc
+  - mvn --projects celesta-documentation generate-resources
 
 after_success:
-  - cd celesta-documentation/src/main/asciidoc/output ; mv 0000_Celesta.html index.html ; cp -R ../images images
+  - mv celesta-core/target/site/apidocs celesta-documentation/target/generated-docs/apidocs
+  - cd celesta-documentation/target/generated-docs
   - git init
   - git config user.name "${GH_USER_NAME}"
   - git config user.email "{GH_USER_EMAIL}"

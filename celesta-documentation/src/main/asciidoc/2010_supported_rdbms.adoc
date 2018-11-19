@@ -16,7 +16,7 @@ include::_doc_general_attributes.adoc[]
 
 Соответствие типов данных Celesta и СУБД приведено в разделе «Язык Celesta-SQL: типы данных».
 
-image::img/Mssql.jpg[width=80,role="left"]
+image::images/Mssql.jpg[width=80,role="left"]
 == MS SQL Server
 
 === Особенности реализации
@@ -24,7 +24,7 @@ image::img/Mssql.jpg[width=80,role="left"]
 Понятию «гранула» соответствует понятие «схема» (SCHEMA).
 
 
-image::img/Ora.jpg[width=80,role="left"]
+image::images/Ora.jpg[width=80,role="left"]
 == Oracle
 
 === Особенности настройки
@@ -60,7 +60,7 @@ GRANT
 
 * Oracle не поддерживает конструкцию FOREIGN KEY ... ON UPDATE/DELETE SET NULL, поэтому она эмулируется при помощи триггеров.
 
-image::img/Postgre.png[width=120,role="left"]
+image::images/Postgre.png[width=120,role="left"]
 == PostgreSQL
 
 === Особенности реализации
@@ -83,7 +83,7 @@ CREATE OPERATOR = (
 CREATE CAST (character varying AS uuid)
     WITH  INOUT AS ASSIGNMENT;
 
-image::img/H2.png[width=120,role="left"]
+image::images/H2.png[width=120,role="left"]
 == H2
 
 === Особенности настройки
