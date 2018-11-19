@@ -22,7 +22,7 @@ before_install:
 
 script:
   - docker run -v $TRAVIS_BUILD_DIR/celesta-documentation/src/main/asciidoc/:/documents/ --name asciidoc-to-html asciidoctor/docker-asciidoctor asciidoctor -D /documents/output 0000_Celesta.adoc
-  - mvn -Dmaven.repo.remote=https://artifactory.corchestra.ru:443/artifactory/libs-release javadoc:javadoc
+  - mvn --projects celesta-core javadoc:javadoc
 
 after_error:
   - docker logs asciidoc-to-html
