@@ -51,7 +51,7 @@
                     <descriptors>
                         <descriptor>src/main/assembly/bin.xml</descriptor>
                     </descriptors>
-                    <finalName>celesta-documentation-${pom.version}</finalName>
+                    <finalName>celesta-documentation-${project.version}</finalName>
                 </configuration>
                 <executions>
                     <execution>
