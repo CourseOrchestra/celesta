@@ -20,19 +20,19 @@ public final class ColumnDefinerFactory {
     static {
         FACTORY_METHODS.put(
                 DBType.H2,
-                (cls) -> H2_METHODS.get(cls).get()
+                cls -> H2_METHODS.get(cls).get()
         );
         FACTORY_METHODS.put(
                 DBType.POSTGRESQL,
-                (cls) -> POSTGRES_METHODS.get(cls).get()
+                cls -> POSTGRES_METHODS.get(cls).get()
         );
         FACTORY_METHODS.put(
                 DBType.MSSQL,
-                (cls) -> MS_SQL_METHODS.get(cls).get()
+                cls -> MS_SQL_METHODS.get(cls).get()
         );
         FACTORY_METHODS.put(
                 DBType.ORACLE,
-                (cls) -> ORA_METHODS.get(cls).get()
+                cls -> ORA_METHODS.get(cls).get()
         );
 
         H2_METHODS.put(IntegerColumn.class, H2IntegerColumnDefiner::new);
@@ -79,12 +79,12 @@ public final class ColumnDefinerFactory {
     public static ColumnDefiner getColumnDefiner(DBType dbType, Class<? extends Column> cls) {
         Map<Class<? extends Column>, ColumnDefiner> definers = COLUMN_DEFINERS.computeIfAbsent(
                 dbType,
-                (dt) -> new HashMap<>()
+                dt -> new HashMap<>()
         );
 
         return definers.computeIfAbsent(
                 cls,
-                (c) -> FACTORY_METHODS.get(dbType).apply(c)
+                c -> FACTORY_METHODS.get(dbType).apply(c)
         );
     }
 

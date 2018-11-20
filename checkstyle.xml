@@ -180,6 +180,6 @@
         <module name="EqualsAvoidNull"/>
         <module name="EqualsHashCode"/>
         <module name="DeclarationOrder"/>
-        <!--<module name="UnnecessaryParentheses"/>-->
+        <module name="UnnecessaryParentheses"/>
     </module>
 </module>

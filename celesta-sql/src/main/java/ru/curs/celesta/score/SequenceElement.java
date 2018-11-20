@@ -78,7 +78,7 @@ public class SequenceElement extends GrainElement {
         }
 
         if (hasArgument(Argument.INCREMENT_BY)) {
-            bw.printf("INCREMENT BY %s ", getArgument((Argument.INCREMENT_BY)));
+            bw.printf("INCREMENT BY %s ", getArgument(Argument.INCREMENT_BY));
         }
 
         if (hasArgument(Argument.MINVALUE)) {
@@ -138,7 +138,7 @@ public class SequenceElement extends GrainElement {
                 );
             }
 
-            if (Math.abs(incrementBy) >= Math.abs((maxValue - minValue)))
+            if (Math.abs(incrementBy) >= Math.abs(maxValue - minValue))
                 throw new ParseException(
                         String.format("Absolute value of 'INCREMENT BY' must be less than absolute value of subtraction of MAXVALUE and MINVALUE " +
                                 "for sequence %s in case of descending increment", getName())

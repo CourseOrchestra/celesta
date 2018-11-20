@@ -45,11 +45,9 @@ public class DbSequenceInfo {
     }
 
     public boolean reflects(SequenceElement s) {
-        return (
-                !Objects.equals(incrementBy, s.getArgument(INCREMENT_BY))
-                        || !Objects.equals(minValue, s.getArgument(MINVALUE))
-                        || !Objects.equals(maxValue, s.getArgument(MAXVALUE))
-                        || !Objects.equals(isCycle, s.getArgument(CYCLE))
-        );
+        return !Objects.equals(incrementBy, s.getArgument(INCREMENT_BY))
+                || !Objects.equals(minValue, s.getArgument(MINVALUE))
+                || !Objects.equals(maxValue, s.getArgument(MAXVALUE))
+                || !Objects.equals(isCycle, s.getArgument(CYCLE));
     }
 }
