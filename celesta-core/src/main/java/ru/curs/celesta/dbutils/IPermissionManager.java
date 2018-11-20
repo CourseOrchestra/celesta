@@ -24,8 +24,6 @@ public interface IPermissionManager {
      *
      * @param a
      *            тип действия
-     * @
-     *             ошибка БД
      */
     boolean isActionAllowed(CallContext c, GrainElement t, Action a) ;
 }

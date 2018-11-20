@@ -28,8 +28,6 @@ public abstract class PreparedStmtHolder {
      * @param rec
      *            Array of record fields' values.
      *
-     * @
-     *             something wrong.
      */
     public synchronized PreparedStatement getStatement(Object[] rec, int recversion)  {
         if (!isStmtValid()) {

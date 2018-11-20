@@ -258,7 +258,6 @@ public final class MSSQLAdaptor extends DBAdaptor {
      *
      * @param conn Соединение с БД.
      * @param c    Столбец.
-     * @в случае сбоя связи с БД.
      */
     // CHECKSTYLE:OFF
     @Override

@@ -83,9 +83,6 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements C
     /**
      * Объект метаданных (таблица, представление или последовательность), на основе которого создан
      * данный объект доступа.
-     *
-     * @ в случае ошибки извлечения метаинформации (в норме не должна
-     * происходить).
      */
     public abstract GrainElement meta();
 }

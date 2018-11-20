@@ -16,8 +16,8 @@ public final class CommonFunctions {
     }
 
     /**
-     * Transforms {@link Iterable<String>} into comma separated {@link String} values.
-     * @param fields {@link Iterable<String>} values to transform.
+     * Transforms {@link Iterable} into comma separated {@link String} values.
+     * @param fields {@link Iterable} values to transform.
      * @return Comma separated {@link String} values.
      */
     public static String getFieldList(Iterable<String> fields) {

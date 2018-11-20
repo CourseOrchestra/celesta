@@ -12,7 +12,7 @@ include::_doc_general_attributes.adoc[]
 
 == Метаданные и их динамическое изменение
 
-Экземпляр класса Celesta доступен через метод *getCelesta()* переменной context, передаваемой в качестве аргумента в каждую процедуру обработки данных.
+Экземпляр класса {apidocs}ru/curs/celesta/Celesta.html[`Celesta`] доступен через метод *getCelesta()* переменной `{apidocs}ru/curs/celesta/CallContext.html[CallContext] context`, передаваемой в качестве аргумента в каждую процедуру обработки данных.
 
 Через метод *getScore()* экземпляра класса Celesta разработчик решения может получить доступ к метаданным системы, построенным при разборе «партитуры» (парсинге SQL-файлов). Доступ к метаданным необходим для двух целей:
 
@@ -32,13 +32,13 @@ include::_doc_general_attributes.adoc[]
 
 == Состав метаданных
 
-Все метаданные (https://courseorchestra.github.io/celesta/apidocs/index.html?ru/curs/celesta/score/Score.html[`Score`]) делятся на гранулы (Grain), состоящие из таблиц (Table), индексов (Index) и представлений (View).
+Все метаданные ({apidocs}ru/curs/celesta/score/Score.html[`Score`]) делятся на гранулы ({apidocs}ru/curs/celesta/score/Grain.html[`Grain`]), состоящие из таблиц ({apidocs}ru/curs/celesta/score/Table.html[`Table`]), индексов ({apidocs}ru/curs/celesta/score/Index.html[`Index`]) и представлений ({apidocs}ru/curs/celesta/score/View.html[`View`]).
 
-* Таблицы состоят из столбцов (Column) и содержат внешние ключи.
+* Таблицы состоят из столбцов ({apidocs}ru/curs/celesta/score/Column.html[`Column`]) и содержат внешние ключи.
 
 * Индексы относятся к таблицам и состоят из их столбцов (Column).
 
-* Представления состоят из столбцов представлений (ViewColumnMeta), которые отличаются от столбцов таблиц, но имеют ряд общих свойств.
+* Представления состоят из столбцов представлений ({apidocs}ru/curs/celesta/score/ViewColumnMeta.html[`ViewColumnMeta`]), которые отличаются от столбцов таблиц, но имеют ряд общих свойств.
 
 Ниже представлена диаграмма классов, описывающих метаданные.
 
@@ -149,6 +149,6 @@ getColumns() — возвращает перечень имён столбцов
 
 |====
 
-У каждого класса-наследника NamedElement (т. е. Grain, Table, Column и Index) имеются также методы *getCelestaDoc()* и *setCelestaDoc()* для чтения и установки документирующих данных CelestaDoc. При сохранении в файл динамически изменённых метаданных CelestaDoc-комментарии сохраняются.
+У каждого класса-наследника {apidocs}ru/curs/celesta/score/NamedElement.html[`NamedElement`] (т. е. Grain, Table, Column и Index) имеются также методы *getCelestaDoc()* и *setCelestaDoc()* для чтения и установки документирующих данных CelestaDoc. При сохранении в файл динамически изменённых метаданных CelestaDoc-комментарии сохраняются.
 
 //end::meta[]

@@ -138,7 +138,6 @@ public final class DdlAdaptor {
      *
      * @param conn Соединение с БД.
      * @param c    Колонка для добавления.
-     * @ при ошибке добавления колонки.
      */
     //TODO: Javadoc In English
     public final void createColumn(Connection conn, Column c)  {
@@ -161,8 +160,6 @@ public final class DdlAdaptor {
      *
      * @param conn Соединение с базой данных.
      * @param t    Таблица.
-     * @ неудача создания первичного ключа (например, неуникальные
-     *                          записи).
      */
     //TODO: Javadoc In English
     public final void createPk(Connection conn, TableElement t)  {
@@ -185,7 +182,6 @@ public final class DdlAdaptor {
      *
      * @param conn  Соединение с БД.
      * @param index описание индекса.
-     * @ Если что-то пошло не так.
      */
     //TODO: Javadoc In English
     public final void createIndex(Connection conn, Index index)  {
@@ -204,7 +200,6 @@ public final class DdlAdaptor {
      *
      * @param conn соединение с БД.
      * @param fk   первичный ключ
-     * @ в случае неудачи создания ключа
      */
     //TODO: Javadoc In English
     public final void createFk(Connection conn, ForeignKey fk)  {
@@ -224,7 +219,6 @@ public final class DdlAdaptor {
      *
      * @param conn Соединение с БД.
      * @param v    Представление.
-     * @ Ошибка БД.
      */
     //TODO: Javadoc In English
     public final void createView(Connection conn, View v)  {
@@ -265,7 +259,6 @@ public final class DdlAdaptor {
      *
      * @param conn Connection to use.
      * @param t    TableElement metadata of deleting table provided by Celesta.
-     * @ if a {@link SQLException} occurs.
      */
     public final void dropTable(Connection conn, TableElement t)  {
         String sql = this.ddlGenerator.dropTable(t);

@@ -20,8 +20,6 @@ public class CsqlWhereTermsMaker {
      *
      * @param t
      *            Table meta.
-     * @
-     *             Celesta error.
      */
     public static WhereTerm getPKWhereTerm(Table t)  {
         WhereTerm r = null;

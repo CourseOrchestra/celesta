@@ -17,8 +17,6 @@ public interface QueryBuildingHelper {
      *
      * @param date
      *            date in ISO format.
-     * @
-     *             wrong format.
      */
     String translateDate(String date) ;
 

@@ -37,18 +37,6 @@ WARNING: TODO сделать примеры для Spring Boot
 |c:/eDacha/score/;c:/celestabasic
 |-
 
-|pylib.path
-|путь к папке со стандартными библиотеками Jython
-|Нет
-|c:/Program Files/Apache Software Foundation/Tomcat 7.0/webapps/edacha/WEB-INF/libJython/
-|pylib
-
-|javalib.path
-|список папок с .jar-файлами, разделённый разделителем путей, каждый из которых будет добавлен в classpath при запуске Celesta и, как следствие, будет доступен в jython-скриптах
-|Нет
-|c:/pathto/javalib1;c:/pathto/javalib2
-|
-
 |rdbms.connection.url
 |URL подключения к JDBC-драйверу
 |Да
@@ -109,7 +97,5 @@ a|
 |false
 
 |====
-
-*Замечание*: При инициализации celesta в свойство score.path добавляется папка "general/score" с тем, что в ней могут храниться общесистемные гранулы для всех userdat.
 
 //end::basic_settings[]
