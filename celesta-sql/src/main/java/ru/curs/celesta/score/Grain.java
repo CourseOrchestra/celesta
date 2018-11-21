@@ -496,9 +496,9 @@ public final class Grain extends NamedElement {
         final List<NativeSqlElement> sqlList;
 
         if (isBefore) {
-            sqlList = beforeSql.computeIfAbsent(dbType, (dbTypeVar) -> new ArrayList<>());
+            sqlList = beforeSql.computeIfAbsent(dbType, dbTypeVar -> new ArrayList<>());
         } else {
-            sqlList = afterSql.computeIfAbsent(dbType, (dbTypeVar) -> new ArrayList<>());
+            sqlList = afterSql.computeIfAbsent(dbType, dbTypeVar -> new ArrayList<>());
         }
 
         sqlList.add(

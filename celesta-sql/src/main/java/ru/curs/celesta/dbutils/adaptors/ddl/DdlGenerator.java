@@ -122,7 +122,7 @@ public abstract class DdlGenerator {
         return s.getArguments().entrySet().stream()
                 .filter(e -> !Arrays.asList(excludedArguments).contains(e.getKey()))
                 .map(
-                        (e) -> e.getKey().getSql(e.getValue())
+                        e -> e.getKey().getSql(e.getValue())
                 ).collect(Collectors.joining());
     }
 
@@ -338,7 +338,7 @@ public abstract class DdlGenerator {
                 tableString(t.getGrain().getName(), t.getName())
         );
 
-        this.triggers.computeIfAbsent(t.getGrain().getName(), (s) -> new HashMap<>())
+        this.triggers.computeIfAbsent(t.getGrain().getName(), s -> new HashMap<>())
                 .remove(t.getName());
 
         return sql;
@@ -413,20 +413,20 @@ public abstract class DdlGenerator {
     }
 
     final void rememberTrigger(TriggerQuery query) {
-        this.triggers.computeIfAbsent(query.getSchema(), (s) -> new HashMap<>())
-                .computeIfAbsent(query.getTableName(), (t) -> new HashSet<>())
+        this.triggers.computeIfAbsent(query.getSchema(), s -> new HashMap<>())
+                .computeIfAbsent(query.getTableName(), t -> new HashSet<>())
                 .add(query.getName());
     }
 
     final void forgetTrigger(TriggerQuery query) {
-        this.triggers.computeIfAbsent(query.getSchema(), (s) -> new HashMap<>())
-                .computeIfAbsent(query.getTableName(), (t) -> new HashSet<>())
+        this.triggers.computeIfAbsent(query.getSchema(), s -> new HashMap<>())
+                .computeIfAbsent(query.getTableName(), t -> new HashSet<>())
                 .remove(query.getName());
     }
 
     final boolean isTriggerKnown(TriggerQuery query) {
-        return this.triggers.computeIfAbsent(query.getSchema(), (s) -> new HashMap<>())
-                .computeIfAbsent(query.getTableName(), (t) -> new HashSet<>())
+        return this.triggers.computeIfAbsent(query.getSchema(), s -> new HashMap<>())
+                .computeIfAbsent(query.getTableName(), t -> new HashSet<>())
                 .contains(query.getName());
     }
 

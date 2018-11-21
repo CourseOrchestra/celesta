@@ -17,7 +17,7 @@ public class ValuesCortegeTerm extends WhereTerm {
     @Override
     public String getWhere() {
         String placeHolders = fieldIndices.stream()
-                .map((i) -> "?")
+                .map(i -> "?")
                 .collect(Collectors.joining(", "));
 
         return String.format("(%s)", placeHolders);
@@ -26,7 +26,7 @@ public class ValuesCortegeTerm extends WhereTerm {
     @Override
     public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
         fieldIndices.forEach(
-                (i) -> program.add(ParameterSetter.create(i, queryBuildingHelper))
+                i -> program.add(ParameterSetter.create(i, queryBuildingHelper))
         );
     }
 

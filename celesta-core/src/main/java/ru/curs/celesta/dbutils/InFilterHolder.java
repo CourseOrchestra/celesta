@@ -26,7 +26,7 @@ public final class InFilterHolder {
                 cursor.closeSet();
         };
 
-        Function<FieldsLookup, Void> newLookupCallback = (lookup) -> {
+        Function<FieldsLookup, Void> newLookupCallback = lookup -> {
             inFilter.addLookup(lookup, lookup.getOtherCursor().getQmaker());
             return null;
         };
