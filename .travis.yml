@@ -16,11 +16,11 @@ before_install:
   - cp .travis.settings.xml $HOME/.m2/settings.xml
 
 script:
-  - mvn --projects celesta-core javadoc:javadoc
-  - mvn --projects celesta-documentation generate-resources
+  - mvn javadoc:aggregate -pl :celesta-parent,:celesta-sql,:celesta-core,:celesta-system-services,:celesta-unit
+  - mvn generate-resources -pl :celesta-documentation
 
 after_success:
-  - mv celesta-core/target/site/apidocs celesta-documentation/target/generated-docs/apidocs
+  - mv target/site/apidocs celesta-documentation/target/generated-docs/apidocs
   - cd celesta-documentation/target/generated-docs
   - git init
   - git config user.name "${GH_USER_NAME}"

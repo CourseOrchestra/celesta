@@ -72,7 +72,6 @@ public abstract class DbUpdater<T extends ICallContext> {
     /**
      * Выполняет обновление структуры БД на основе разобранной объектной модели.
      *
-     * @в случае ошибки обновления.
      */
     public void updateDb() {
         String sysSchemaName = score.getSysSchemaName();
@@ -208,7 +207,6 @@ public abstract class DbUpdater<T extends ICallContext> {
      * Выполняет обновление на уровне отдельной гранулы.
      *
      * @param g Гранула.
-     * @в случае ошибки обновления.
      */
     boolean updateGrain(Grain g, ConnectionPool connectionPool) {
         // выставление в статус updating

@@ -79,7 +79,7 @@ public abstract class AbstractScore {
      * Инициализация ядра путём указания набора путей к папкам score,
      * разделённого точкой с запятой.
      *
-     * @ в случае указания несуществующего пути или в случае двойного
+     * @throws CelestaException в случае указания несуществующего пути или в случае двойного
      * определения гранулы с одним и тем же именем.
      */
     void init(ScoreDiscovery scoreDiscovery) throws ParseException {
@@ -108,8 +108,6 @@ public abstract class AbstractScore {
     /**
      * Сохраняет содержимое метаданных обратно в SQL-файлы, при этом
      * перезаписывая их содержимое.
-     *
-     * @ при ошибке ввода-вывода.
      */
     public void save() {
         for (Grain g : grains.values())

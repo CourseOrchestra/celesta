@@ -10,8 +10,7 @@ public interface StaticDataAdaptor {
      * @param data List of String to select
      * @param columnName name of result column
      * @param orderBy expression to concat after "ORDER BY"
-     * @return {@link List<String> }
-     * @
+     * @return {@link List}
      */
     List<String> selectStaticStrings(
             List<String> data, String columnName, String orderBy
@@ -21,8 +20,7 @@ public interface StaticDataAdaptor {
      * Compares strings by db
      * @param left
      * @param right
-     * @return -1 if left < right, 0 if left == right, 1 if left > right
-     * @
+     * @return {@code -1 if left < right, 0 if left == right, 1 if left > right}
      */
     int compareStrings(String left, String right) ;
 }

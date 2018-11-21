@@ -10,6 +10,7 @@
 :example-caption: Пример
 :toc-title: Содержание
 :appendix-caption: Приложение
+:apidocs: https://courseorchestra.github.io/celesta/apidocs/index.html?
 :hyph: &#173;
 :zsp: &#8203;
 :numbered:

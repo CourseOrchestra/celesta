@@ -112,7 +112,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn Connection to use.
      * @param sql  SQL statement.
      * @return new default PreparedStatement object.
-     * @if a {@link SQLException} occurs.
      */
     static PreparedStatement prepareStatement(Connection conn, String sql) {
         try {
@@ -181,7 +180,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param sql  Sql query to execute.
      * @return {@link Set<String>} with values of column with index 1,
      * which were received as a result of the sql query.
-     * @if a {@link SQLException} occurs.
      */
     static Set<String> sqlToStringSet(Connection conn, String sql) {
         Set<String> result = new HashSet<>();
@@ -272,7 +270,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn Connection to use.
      * @param t    TableElement metadata of deleting table provided by Celesta.
-     * @if a {@link SQLException} occurs.
      */
     public final void dropTable(Connection conn, TableElement t) {
         this.ddlAdaptor.dropTable(conn, t);
@@ -282,7 +279,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * Возвращает true в том и только том случае, если база данных содержит
      * пользовательские таблицы (т. е. не является пустой базой данных).
      *
-     * @ошибка БД
      */
     //TODO: Javadoc In English
     public final boolean userTablesExist() {
@@ -298,9 +294,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * не существовала.
      *
      * @param name имя схемы.
-     * @только в том случае, если возник критический сбой при
-     * создании схемы. Не выбрасывается в случае, если схема с
-     * данным именем уже существует в базе данных.
      */
     //TODO: Javadoc In English
     public final void createSchemaIfNotExists(String name) {
@@ -361,7 +354,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param g           Гранула
      * @param dBIndexInfo Информация об индексе
-     * @Если что-то пошло не так.
      */
     //TODO: Javadoc In English
     public final void dropIndex(Grain g, DbIndexInfo dBIndexInfo) {
@@ -381,7 +373,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param offset   Количество строк для пропуска
      * @param rowCount Количество строк для возврата (limit-фильтр).
      * @param fields   Запрашиваемые столбцы. Если не пришло, то выбираются все.
-     * @Ошибка БД или некорректный фильтр.
      */
     //TODO: Javadoc In English
     // CHECKSTYLE:OFF 6 parameters
@@ -441,7 +432,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn Соединение с БД.
      * @param v    Представление.
-     * @Ошибка БД.
      */
     //TODO: Javadoc In English
     public final void createView(Connection conn, View v) {
@@ -475,7 +465,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn    соединение.
      * @param timeout тайм-аут.
      * @return true если соединение валидно, иначе false
-     * @при возникновении ошибки работы с БД.
      */
     //TODO: Javadoc In English
     public boolean isValidConnection(Connection conn, int timeout) {
@@ -513,7 +502,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn Соединение.
      * @param te   Таблица для создания.
-     * @В случае возникновения критического сбоя при создании
      * таблицы, в том числе в случае, если такая таблица существует.
      */
     //TODO: Javadoc In English
@@ -526,7 +514,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn Соединение с БД.
      * @param t    Таблица, по которой просматривать столбцы.
-     * @в случае сбоя связи с БД.
      */
     //TODO: Javadoc In English
     public Set<String> getColumns(Connection conn, TableElement t) {
@@ -557,7 +544,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param schemaName имя гранулы
      * @param tableName  Имя таблицы, на которой определён первичный ключ.
      * @param fkName     Имя внешнего ключа.
-     * @В случае сбоя в базе данных.
      */
     //TODO: Javadoc In English
     public void dropFK(Connection conn, String schemaName, String tableName, String fkName) {
@@ -579,7 +565,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn Соединение с БД.
      * @param g    Гранула, перечень имён представлений которой необходимо
      *             получить.
-     * @В случае сбоя связи с БД.
      */
     //TODO: Javadoc In English
     public List<String> getViewList(Connection conn, Grain g) {
@@ -629,7 +614,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn       Соединение с БД.
      * @param schemaName Имя гранулы.
      * @param viewName   Имя представления.
-     * @Ошибка БД.
      */
     //TODO: Javadoc In English
     public void dropView(Connection conn, String schemaName, String viewName) {
@@ -641,7 +625,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * функции), необходимые для функционирования Celesta на текущей СУБД.
      *
      * @param conn Соединение.
-     * @Ошибка создания объектов.
      */
     //TODO: Javadoc In English
     public void createSysObjects(Connection conn, String sysSchemaName) {
@@ -653,7 +636,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * данных.
      *
      * @param date Литерал даты.
-     * @ошибка парсинга.
      */
     //TODO: Javadoc In English
     public String translateDate(String date) {
@@ -786,7 +768,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn   Соединение с базой данных.
      * @param t      Таблица.
      * @param pkName Имя первичного ключа.
-     * @в случае сбоя связи с БД.
      */
     //TODO: Javadoc In English
     public void dropPk(Connection conn, TableElement t, String pkName) {
@@ -798,7 +779,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn Соединение с БД.
      * @param c    Колонка для обновления.
-     * @при ошибке обновления колонки.
      */
     //TODO: Javadoc In English
     public void updateColumn(Connection conn, Column c, DbColumnInfo actual) {
@@ -859,7 +839,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn Соединение с БД.
      * @param c    Столбец.
-     * @в случае сбоя связи с БД.
      */
     //TODO: Javadoc In English
     public abstract DbColumnInfo getColumnInfo(Connection conn, Column c);
@@ -870,7 +849,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn Соединение с БД.
      * @param t    Таблица, информацию о первичном ключе которой необходимо
      *             получить.
-     * @в случае сбоя связи с БД.
      */
     //TODO: Javadoc In English
     public abstract DbPkInfo getPKInfo(Connection conn, TableElement t);
@@ -884,7 +862,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn Соединение с БД.
      * @param g    Гранула, по таблицам которой следует просматривать индексы.
-     * @В случае сбоя связи с БД.
      */
     //TODO: Javadoc In English
     public abstract Map<String, DbIndexInfo> getIndices(Connection conn, Grain g);
@@ -896,7 +873,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * Возвращает Process Id текущего подключения к базе данных.
      *
      * @param conn Соединение с БД.
-     * @Если подключение закрылось.
      */
     //TODO: Javadoc In English
     public abstract int getDBPid(Connection conn);

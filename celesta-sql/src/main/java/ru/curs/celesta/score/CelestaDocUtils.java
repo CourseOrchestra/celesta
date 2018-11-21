@@ -20,7 +20,8 @@ public final class CelestaDocUtils {
     /**
      * Extracts first occurence of JSON object string from CelestaDoc.
      *
-     * @ Broken or truncated JSON.
+     * @throws CelestaException
+     *     Broken or truncated JSON.
      */
     public static String getCelestaDocJSON(String celestaDoc)  {
 

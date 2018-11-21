@@ -30,6 +30,7 @@ include::_doc_general_attributes.adoc[]
 
 == Пример пользования
 
+Наиболее простым способом использования является добавление аннотации {apidocs}ru/curs/celestaunit/CelestaTest.html[`@CelestaTest`] к тестовому классу и использование параметров с типом {apidocs}ru/curs/celesta/CallContext.html[`CallContext`] в тестах:
 
 ```java
 /*Аннотация CelestaTest подключает JUnit5 extension class ru.curs.celestaunit.CelestaUnitExtension,
@@ -66,7 +67,7 @@ CelestaUnit работает со следующими умолчаниями:
 * Проверка ссылочной целостности (по Foreign keys) по умолчанию включена.
 * Очистка таблиц после каждого теста по умолчанию включена.
 
-Изменить умолчания можно, воспользовавшись в тестовом классе https://junit.org/junit5/docs/current/user-guide/#extensions-registration-programmatic[программной регистрацией] расширения JUnit5:
+Изменить умолчания можно, воспользовавшись в тестовом классе https://junit.org/junit5/docs/current/user-guide/#extensions-registration-programmatic[программной регистрацией] расширения {apidocs}ru/curs/celestaunit/CelestaUnitExtension.html[`CelestaUnitExtension`] в JUnit5:
 
 ```java
 public class DocumentServiceTest {
