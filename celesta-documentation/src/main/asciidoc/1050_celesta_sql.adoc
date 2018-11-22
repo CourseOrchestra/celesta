@@ -14,7 +14,7 @@ include::_doc_general_attributes.adoc[]
 
 == Новая функциональность
 
-длфыовфыа фыжв ыавдыфоа вфыва ыффыва фыв а
+Настоящее описание <<create_schema_statement_,CREATE GRAIN>>
 
 IMPORTANT: Скрипты на языке CelestaSQL должны иметь кодировку UTF-8 без https://en.wikipedia.org/wiki/Byte_order_mark#UTF-8[символа BOM].
 
