@@ -12,6 +12,10 @@ include::_doc_general_attributes.adoc[]
 
 == Язык CelestaSQL определения объектов базы данных
 
+== Новая функциональность
+
+длфыовфыа фыжв ыавдыфоа вфыва ыффыва фыв а
+
 IMPORTANT: Скрипты на языке CelestaSQL должны иметь кодировку UTF-8 без https://en.wikipedia.org/wiki/Byte_order_mark#UTF-8[символа BOM].
 
 На языке Celesta SQL пишутся скрипты определения гранул. Скрипт на языке CelestaSQL состоит из конструкций
