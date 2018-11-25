@@ -13,7 +13,7 @@ include::_doc_general_attributes.adoc[]
 
 //tag::quickstart[]
 
-Для создания проекта Spring Boot с помощью Maven укажите в завимостях `ru.curs:spring-boot-starter-celesta`:
+Для создания проекта Spring Boot с помощью Maven укажите в зависимостях `ru.curs:spring-boot-starter-celesta`:
 
 ```xml
     <properties>
