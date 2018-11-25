@@ -6,9 +6,15 @@
 
 A component of the [platform](https://corchestra.ru/en/) for rapid development of business applications with relational databases.
 
-* Overview (in Russian): https://habrahabr.ru/post/335966/
+## Documentation
 
-* Full documentation: https://courseorchestra.github.io/celesta/
+* [User Guide](https://courseorchestra.github.io/celesta/)
+
+* [JavaDoc](https://courseorchestra.github.io/celesta/apidocs)
+
+## Useful Links
+
+* Overview (in Russian): https://habrahabr.ru/post/335966/
 
 * SECON2018: A concise overview talk (in Russian, 30 min): https://youtu.be/IEIzpqID2XI
 
