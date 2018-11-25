@@ -39,7 +39,7 @@ create table foo
 
 Например, для нашей таблицы foo будут автоматически созданы два вложенных класса в классе fooCursor:
 
-[source, sql]
+[source, java]
 public static final class State {
     public static final Integer new = 0;
     public static final Integer processing = 1;

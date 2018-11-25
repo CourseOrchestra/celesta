@@ -1,4 +1,4 @@
-= Справочник Celesta
+= Руководство пользователя Celesta
 :lang: ru
 :is-main-doc:
 include::_doc_general_attributes.adoc[]
@@ -9,13 +9,22 @@ include::_doc_general_attributes.adoc[]
 :source-highlighter: highlightjs
 :toc: left
 
-== Справочник Celesta
+== Что такое Celesta?
 
-=== Введение и основные понятия
+include::1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
 
-include::1010_intro.adoc[leveloffset=+2, tag="intro"]
+== Часть 1. Быстрый старт со Spring Boot
 
-=== Запуск Celesta и авто-обновление БД
+include::1012_quickstart.adoc[leveloffset=+2, tag="quickstart"]
+
+== Часть 2. Технические детали и настройка Celesta
+
+=== Определение основных понятий
+
+[[celesta_vocabulary]]
+include::1015_vocabulary.adoc[leveloffset=+2, tag="basic_terms"]
+
+=== Операции, выполняемые при инициализации Celesta
 
 include::1020_celesta_start.adoc[leveloffset=+2, tag="celesta_start"]
 
@@ -29,8 +38,10 @@ include::1030_basic_settings.adoc[leveloffset=+2, tag="basic_settings"]
 
 include::1040_system_tables.adoc[leveloffset=+2, tag="system_tables"]
 
+== Часть 3. Проектирование базы данных в Celesta
+
 [[CelestaSQL]]
-=== Язык CelestaSQL
+=== CelestaSQL
 
 include::1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
 
@@ -38,21 +49,24 @@ include::1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
 
 include::1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
 
+== Часть 4. Создание и тестирование методов, обращающихся к данным
+
 === Контекст вызова
 
 include::1070_call_context.adoc[leveloffset=+2, tag="call_context"]
 
+[[data_accessors_section]]
 === Работа с данными через классы доступа к данным
 
 include::1080_classes.adoc[leveloffset=+2, tag="classes"]
 
 [[BLOB_fields]]
-=== BLOB-поля
+==== BLOB-поля
 
 include::1090_blob.adoc[leveloffset=+2, tag="blob"]
 
 [[Option_fields]]
-=== Option-поля
+==== Option-поля
 
 include::1100_option.adoc[leveloffset=+2, tag="option"]
 
@@ -61,16 +75,18 @@ include::1100_option.adoc[leveloffset=+2, tag="option"]
 
 include::1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
 
+=== CelestaUnit
+
+include::1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
+
+== Часть 5. Работа с метаданными Celesta
+
 [[Celesta_metadata]]
 === Метаданные Celesta
 
 include::1120_meta.adoc[leveloffset=+2, tag="meta"]
 
-=== CelestaUnit
-
-include::1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
-
-== Celesta и Базы данных
+== Приложение
 
 [[RDBMS_peculiarities]]
 === Особенности работы Celesta с поддерживаемыми типами СУБД
