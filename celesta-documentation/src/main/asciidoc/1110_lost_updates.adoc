@@ -28,17 +28,17 @@ include::_doc_general_attributes.adoc[]
 
 Это наиболее расхожий пример, но на самом деле, разработчик решения может столкнуться с потерянными обновлениями и в гораздо более тривиальном случае, не в рамках многопользовательской работы. Предположим, что для модификации одной и той же таблицы используются два курсора:
 
-[source, sql]
-rec1 = FooTableCursor(context)
-rec2 = FooTableCursor(context)
+[source, java]
+FooTableCursor rec1 = new FooTableCursor(context);
+FooTableCursor rec2 = new FooTableCursor(context);
 
 Пусть в некий момент оба курсора получают данные об одной и той же записи, например, таким образом:
 
-[source, sql]
-rec1.get(1)
-rec2.copyFieldsFrom(rec1)
+[source, java]
+rec1.get(1);
+rec2.copyFieldsFrom(rec1);
 
-Допустим, запись таблицы FooTable с id = 1 состоит всего из трёх полей:
+Допустим, запись таблицы `FooTable` с id = 1 состоит всего из трёх полей:
 
 
 [cols="1, 2, 2, options="header"]
@@ -55,14 +55,14 @@ rec2.copyFieldsFrom(rec1)
 
 И пусть теперь оба курсора выполняют модификации записи:
 
-[source, sql]
-rec1.field1 = 'newvalue'
-rec1.update()
-#в rec1 и в базе данных уже запись 1 | newvalue | oldvalue
-#но в rec2 всё ещё                 1 | oldvalue | oldvalue
-rec2.field2 = 'newvalue'
-rec2.update()
-#в базе данных теперь будет запись 1 | oldvalue | newvalue ???
+[source, java]
+rec1.setField1("newvalue");
+rec1.update();
+//в rec1 и в базе данных уже запись 1 | newvalue | oldvalue
+//но в rec2 всё ещё                 1 | oldvalue | oldvalue
+rec2.setField2("newvalue");
+rec2.update();
+//в базе данных теперь будет запись 1 | oldvalue | newvalue ???
 
 Как видим, неудачно написанный код даже в рамках однопользовательской работы может столкнуться с явлением потери обновлений.
 

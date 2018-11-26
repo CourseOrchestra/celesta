@@ -34,7 +34,7 @@ WARNING: TODO сделать примеры для Spring Boot
 |score.path
 |score path Celesta (список папок, разделённый разделителем путей, специфичным для операционной системы)
 |Да
-|c:/eDacha/score/;c:/celestabasic
+|classpath:score
 |-
 
 |rdbms.connection.url
