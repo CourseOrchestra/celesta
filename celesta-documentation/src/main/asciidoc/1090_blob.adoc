@@ -37,7 +37,7 @@ size():: возвращает размер внутренних данных BLO
 
 Примеры кода для работы с BLOB-полем:
 
-[source, java]
+```java
 OrderLineCursor line = new LineCursor(context);
 //Далее подразумевается, что line.dat — BLOB-поле
 . . .
@@ -60,5 +60,5 @@ if (Objects.nonNull(ins)){
                 System.out.println(inr.readLine());
     }
 }
-
+```
 //end::blob[]
