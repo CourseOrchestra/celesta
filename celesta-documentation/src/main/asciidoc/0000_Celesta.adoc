@@ -75,6 +75,7 @@ include::1100_option.adoc[leveloffset=+2, tag="option"]
 
 include::1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
 
+[[celestaunit_section]]
 === CelestaUnit
 
 include::1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
