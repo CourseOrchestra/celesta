@@ -1,4 +1,4 @@
-= Основные понятия Celesta
+= Словарь основных понятий Celesta
 :lang: ru
 :is-main-doc:
 include::_doc_general_attributes.adoc[]

@@ -13,13 +13,13 @@ include::_doc_general_attributes.adoc[]
 
 include::1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
 
-== Часть 1. Быстрый старт со Spring Boot
+== Часть 1. Быстрый старт. Maven-зависимости
 
 include::1012_quickstart.adoc[leveloffset=+2, tag="quickstart"]
 
 == Часть 2. Технические детали и настройка Celesta
 
-=== Определение основных понятий
+=== Словарь основных понятий
 
 [[celesta_vocabulary]]
 include::1015_vocabulary.adoc[leveloffset=+2, tag="basic_terms"]

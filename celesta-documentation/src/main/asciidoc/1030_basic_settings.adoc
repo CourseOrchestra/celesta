@@ -13,15 +13,25 @@ include::_doc_general_attributes.adoc[]
 
 //tag::basic_settings[]
 
-К базовым настройкам Celesta относятся общесистемные параметры, такие как параметры подключения к базе данных и путь к партитуре (score path, определение этому термину см. в разделе <<celesta_vocabulary,Основные понятия>>).
+К базовым настройкам Celesta относятся общесистемные параметры, такие как параметры подключения к базе данных и путь к партитуре (score path, см. <<celesta_vocabulary,Основные понятия>>).
 
-Эти настройки выполняются в .properties-файле системы, в которую встроена Celesta.
+Эти настройки в виде экземпляра https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html[`Properties`] передаются в конструктор класса {apidocs}ru/curs/celesta/BaseAppSettings.html[`BaseAppSettings`], который,
+в свою очередь, является параметром конструктора класса {apidocs}ru/curs/celesta/Celesta.html[`Celesta`].
 
-WARNING: TODO сделать примеры для Spring Boot
+При использовании https://github.com/CourseOrchestra/spring-boot-starter-celesta[Celesta Spring Boot starter]
+эти настройки транслируются через конфигурацию любым из способов https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html[способов конфигурации] Spring Boot приложений, например, через файл
+`application.yml`. В последнем случае корневым ключом YAML-файла должен быть `celesta`, а остальные свойства записываются в иерархической структуре.
 
+Например, для задания свойств `jdbc.url`, `jdbc.username` и `jdbc.password` структура файла `application.yml` будет следующей:
 
-Базовыми настройками Celesta являются:
-
+```yaml
+celesta:
+  jdbc:
+    url: jdbc:postgresql://127.0.0.1:5432/celesta
+    username: foo
+    password: bar
+```
+Некоторые IDE, например, IntelliJ IDEA, выполняют контекстную подсказку при редактировании файла `application.yml`.
 
 [cols="1, 2, ^1, 2, ^1", options="header"]
 |====
