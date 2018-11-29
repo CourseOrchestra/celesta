@@ -402,7 +402,7 @@ image::{img}/25.aggregate.png[{image-80-width}]
 
 image::{img}/26.group_by.png[{image-60-width}]
 
-Особенность конструкции GROUP BY в Celesta-SQL заключается в необходимости всегда перечислять в ней все неагрегатные колоноки из выборки.
+Особенность конструкции GROUP BY в Celesta-SQL заключается в необходимости всегда перечислять в ней все неагрегатные колонки из выборки.
 
 [[create_materialized_view_statement]]
 == Конструкция CREATE MATERIALIZED VIEW
