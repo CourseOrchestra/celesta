@@ -67,8 +67,16 @@ include::1090_blob.adoc[leveloffset=+2, tag="blob"]
 
 [[Option_fields]]
 ==== Option-поля
-
 include::1100_option.adoc[leveloffset=+2, tag="option"]
+
+[[triggers_section]]
+=== Триггеры
+include::1105_triggers.adoc[leveloffset=+2, tag="triggers"]
+
+[[xrec_section]]
+=== Объект xRec
+include::1107_xrec.adoc[leveloffset=+2, tag="xrec"]
+
 
 [[Lost_updates_protection]]
 === Защита от потерянных обновлений
