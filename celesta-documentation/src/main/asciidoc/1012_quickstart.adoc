@@ -1,4 +1,4 @@
-= Быстрый старт в Spring Boot
+= Быстрый старт. Maven-зависимости
 :lang: ru
 :is-main-doc:
 include::_doc_general_attributes.adoc[]
@@ -13,17 +13,20 @@ include::_doc_general_attributes.adoc[]
 
 //tag::quickstart[]
 
-Для создания проекта Spring Boot с помощью Maven укажите в зависимостях `ru.curs:spring-boot-starter-celesta`:
+Работающий тестовый пример, демонстрирующий возможности Celesta, доступен здесь: https://github.com/inponomarev/celesta-demo/.
+
+Для создания проекта Spring Boot с помощью Maven необходимо указать следующие зависимости:
 
 ```xml
     <properties>
-        <!-- dependencies -->
-        <spring.boot.version>2.0.6.RELEASE</spring.boot.version>
-        <spring.boot.starter.celesta.version>2.0.1-SNAPSHOT</spring.boot.starter.celesta.version>
+       <spring.boot.version>2.0.6.RELEASE</spring.boot.version>
+       <!-- Проверьте свежую версию ru.curs:spring-boot-starter-web на Maven Central -->
+       <spring.boot.starter.celesta.version>2.0.1</spring.boot.starter.celesta.version>
+       <!-- Проверьте свежую версию ru.curs:celesta-parent на Maven Central -->
+       <celesta.version>7.0.9</celesta.version>
     </properties>
 
 . . .
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -33,12 +36,26 @@ include::_doc_general_attributes.adoc[]
         
         <dependency>
             <groupId>ru.curs</groupId>
+            <!-- Собственный Spring Boot starter облегчает конфигурацию Celesta в Spring Boot приложениях -->
             <artifactId>spring-boot-starter-celesta</artifactId>
             <version>${spring.boot.starter.celesta.version}</version>
+            <!-- Исключаем зависимость от Celesta, указанную в Celesta spring boot starter,
+                 чтобы ниже указать более актуальный номер версии Celesta -->
+            <exclusions>
+                <exclusion>
+                    <groupId>ru.curs</groupId>
+                    <artifactId>celesta-system-services</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- Подключаем Celesta более свежей версии, чем предлагает Spring Boot Starter-->
+            <groupId>ru.curs</groupId>
+            <artifactId>celesta-system-services</artifactId>
+            <version>${celesta.version}</version>
         </dependency>
     ...
     </dependencies>
-
 ```
 
 Также для кодогенерации <<data_accessors_section,классов доступа к данным>> понадобится `ru.curs:celesta-maven-plugin`. В его настройках необходимо указать путь к папке `score`:
@@ -49,7 +66,7 @@ include::_doc_general_attributes.adoc[]
             <plugin>
                 <groupId>ru.curs</groupId>
                 <artifactId>celesta-maven-plugin</artifactId>
-                <version>7.0.4</version>
+                <version>${celesta.version}</version>
                 <configuration>
                     <scores>
                         <score>
@@ -75,28 +92,50 @@ include::_doc_general_attributes.adoc[]
 -- score/ru/curs/demo/demo.sql
 CREATE SCHEMA demo VERSION '1.0';
 
+/**Заголовок счёта*/
 CREATE TABLE OrderHeader(
   id VARCHAR(30) NOT NULL,
   date DATETIME,
   customer_id VARCHAR(30),
+
+  /**Название клиента */
   customer_name VARCHAR(50),
   manager_id VARCHAR(30),
   CONSTRAINT Pk_OrderHeader PRIMARY KEY (id)
 );
+
+/**Строка счёта*/
+CREATE TABLE OrderLine(
+  order_id VARCHAR(30) NOT NULL,
+  line_no INT NOT NULL,
+  item_id VARCHAR(30) NOT NULL,
+  item_name VARCHAR(100),
+  qty INT NOT NULL DEFAULT 0,
+  cost REAL NOT NULL DEFAULT 0.0,
+  CONSTRAINT Idx_OrderLine PRIMARY KEY (order_id, line_no)
+);
+
+ALTER TABLE OrderLine ADD CONSTRAINT fk_OrderLine FOREIGN KEY (order_id) REFERENCES OrderHeader(id);
+create materialized view OrderedQty as
+select item_id, sum(qty) as qty from OrderLine group by item_id;
 ```
 
-Команда `mvn verify` приведёт к появлению файла  `target/generated-sources/celesta/ru/curs/demo/OrderHeaderCursor.java`. Этот файл можно использовать при создании сервисов: 
+Команда `mvn verify` приведёт к появлению Java-файлов `OrderHeaderCursor.java`
+ и `OrderLineCursor.java` с <<data_accessors_section,классами курсоров>> в папке  `target/generated-sources/celesta/...`.
+
+Эти классы можно использовать при создании сервисов (см. также более полный https://github.com/inponomarev/celesta-demo/blob/master/src/main/java/ru/curs/demo/service/DocumentService.java#L17[демонстрационный пример]):
 
 ```java
 @Service
 public class DocumentService {
-    private final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-
     @CelestaTransaction
-    public void postOrder(CallContext context, JsonObject doc) throws ParseException {
-        try (OrderHeaderCursor header = new OrderHeaderCursor(context)){
-         . . .
+    public void postOrder(CallContext context, OrderDto doc) {
+        try (OrderHeaderCursor header = new OrderHeaderCursor(context);
+             OrderLineCursor line = new OrderLineCursor(context)) {
+             . . .
     }
+}
 ```
 
+Управление <<basic_settings_section,настройками>> проекта осуществляется любым https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html[доступным для Spring Boot способом], в частности, с помощью файла https://github.com/inponomarev/celesta-demo/blob/master/src/main/resources/application.yml[application.yml].
 //end::quickstart[]

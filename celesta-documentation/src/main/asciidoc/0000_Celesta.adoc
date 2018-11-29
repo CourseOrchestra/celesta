@@ -13,13 +13,13 @@ include::_doc_general_attributes.adoc[]
 
 include::1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
 
-== Часть 1. Быстрый старт со Spring Boot
+== Часть 1. Быстрый старт. Maven-зависимости
 
 include::1012_quickstart.adoc[leveloffset=+2, tag="quickstart"]
 
 == Часть 2. Технические детали и настройка Celesta
 
-=== Определение основных понятий
+=== Словарь основных понятий
 
 [[celesta_vocabulary]]
 include::1015_vocabulary.adoc[leveloffset=+2, tag="basic_terms"]
@@ -67,14 +67,23 @@ include::1090_blob.adoc[leveloffset=+2, tag="blob"]
 
 [[Option_fields]]
 ==== Option-поля
-
 include::1100_option.adoc[leveloffset=+2, tag="option"]
+
+[[triggers_section]]
+=== Триггеры
+include::1105_triggers.adoc[leveloffset=+2, tag="triggers"]
+
+[[xrec_section]]
+=== Объект xRec
+include::1107_xrec.adoc[leveloffset=+2, tag="xrec"]
+
 
 [[Lost_updates_protection]]
 === Защита от потерянных обновлений
 
 include::1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
 
+[[celestaunit_section]]
 === CelestaUnit
 
 include::1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
