@@ -1,16 +1,20 @@
 package ru.curs.celesta;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.LogsetupCursor;
 
-import java.sql.SQLException;
-import java.util.Properties;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CallContextTest extends AbstractCelestaTest {
+    public static final String USER_ID = "foo";
 
     @Override
     protected String scorePath() {
@@ -89,4 +93,79 @@ public class CallContextTest extends AbstractCelestaTest {
         assertSame(cursors[cursors.length - 1], cc().getLastDataAccessor());
     }
 
+    @Test
+    void notActiveContextCanBeClosed() {
+        CallContext ctx = new CallContext(USER_ID);
+        assertEquals(USER_ID, ctx.getUserId());
+        assertFalse(ctx.isClosed());
+        ctx.close();
+        assertTrue(ctx.isClosed());
+    }
+
+    @Test
+    void contextCanBeClosedMultipleTimes() {
+        CallContext ctx = cc();
+        assertFalse(ctx.isClosed());
+        ctx.close();
+        ctx.close();
+        assertTrue(ctx.isClosed());
+    }
+
+    @Test
+    void activeContextCannotBeActivated() {
+        CallContext ctx = cc();
+        assertThrows(CelestaException.class, () ->
+                ctx.activate(ctx.getCelesta(), "foo"));
+    }
+
+    @Test
+    void nonActiveContextCanBeRolledBack() {
+        CallContext ctx = new CallContext(USER_ID);
+        ctx.rollback();
+
+        ctx = cc();
+        ctx.close();
+        ctx.rollback();
+    }
+
+    @Test
+    void nonActiveContextCannotBeCommitted() {
+        CallContext ctx = new CallContext(USER_ID);
+        assertThrows(CelestaException.class, () -> ctx.commit());
+    }
+
+    @Test
+    void closedContextCannotBeCommitted() {
+        CallContext ctx = cc();
+        ctx.close();
+        assertThrows(CelestaException.class, () -> ctx.commit());
+    }
+
+    @Test
+    void activeContextCanBeCommitedAndRolledBack() {
+        CallContext ctx = cc();
+        ctx.commit();
+        ctx.rollback();
+    }
+
+    @Test
+    void durationIsMeasuredForActiveContext() throws InterruptedException {
+        CallContext activeCtx = cc();
+        CallContext voidCtx = new CallContext(USER_ID);
+        Thread.sleep(1);
+        assertTrue(activeCtx.getDurationNs() > 1000);
+        assertEquals(0, voidCtx.getDurationNs());
+        activeCtx.close();
+        long d = activeCtx.getDurationNs();
+        Thread.sleep(1);
+        assertEquals(d, activeCtx.getDurationNs());
+    }
+
+    @Test
+    void dbPidIsCalculatedForActiveContext(){
+        CallContext activeCtx = cc();
+        CallContext voidCtx = new CallContext(USER_ID);
+        assertTrue(activeCtx.getDBPid() != 0);
+        assertEquals(0, voidCtx.getDBPid());
+    }
 }
