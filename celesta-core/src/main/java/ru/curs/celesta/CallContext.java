@@ -42,8 +42,8 @@ public class CallContext implements ICallContext {
 
     private int dbPid;
     private Date startTime;
-    private long startMonotonicTime;
-    private long endMonotonicTime;
+    private long activationTime;
+    private long closingTime;
 
     private BasicDataAccessor lastDataAccessor;
 
@@ -99,7 +99,7 @@ public class CallContext implements ICallContext {
         dbPid = PIDSCACHE.computeIfAbsent(conn,
                 getDbAdaptor()::getDBPid);
         startTime = new Date();
-        startMonotonicTime = System.nanoTime();
+        activationTime = System.nanoTime();
     }
 
     /**
@@ -126,7 +126,8 @@ public class CallContext implements ICallContext {
             try {
                 conn.commit();
             } catch (SQLException e) {
-                throw new CelestaException("Commit unsuccessful: %s", e.getMessage());
+                throw new CelestaException(
+                        String.format("Commit unsuccessful: %s", e.getMessage()), e);
             }
         } else {
             throw new CelestaException("Not active context cannot be commited");
@@ -143,7 +144,8 @@ public class CallContext implements ICallContext {
             try {
                 conn.rollback();
             } catch (SQLException e) {
-                throw new CelestaException("Rollback unsuccessful: %s", e.getMessage());
+                throw new CelestaException(
+                        String.format("Rollback unsuccessful: %s", e.getMessage()), e);
             }
         }
     }
@@ -223,11 +225,13 @@ public class CallContext implements ICallContext {
      * Returns number of nanoseconds since CallContext activation.
      */
     public long getDurationNs() {
-        switch (state){
-            case NEW: return 0;
-            case ACTIVE: return System.nanoTime() - startMonotonicTime;
+        switch (state) {
+            case NEW:
+                return 0;
+            case ACTIVE:
+                return System.nanoTime() - activationTime;
             default:
-                return endMonotonicTime - startMonotonicTime;
+                return closingTime - activationTime;
         }
 
     }
@@ -261,7 +265,7 @@ public class CallContext implements ICallContext {
             if (celesta != null) {
                 celesta.getProfiler().logCall(this);
             }
-            endMonotonicTime = System.nanoTime();
+            closingTime = System.nanoTime();
             state = State.CLOSED;
         } catch (Exception e) {
             throw new CelestaException("Can't close callContext", e);
