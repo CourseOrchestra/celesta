@@ -42,13 +42,19 @@ public class CallContext implements ICallContext {
 
     private int dbPid;
     private Date startTime;
-    private long startMonotonicTime;
+    private long activationTime;
+    private long closingTime;
 
     private BasicDataAccessor lastDataAccessor;
 
     private int dataAccessorsCount;
     private State state;
 
+    /**
+     * Creates new not activated context.
+     *
+     * @param userId User identifier. Cannot be null or empty.
+     */
     public CallContext(String userId) {
         if (Objects.requireNonNull(userId).isEmpty()) {
             throw new CelestaException("Call context's user Id must not be empty");
@@ -57,6 +63,13 @@ public class CallContext implements ICallContext {
         state = State.NEW;
     }
 
+    /**
+     * Creates activated context.
+     *
+     * @param userId   User identifier. Cannot be null or empty.
+     * @param celesta  Celesta instance.
+     * @param procName Procedure which is being called in this context.
+     */
     public CallContext(String userId, ICelesta celesta, String procName) {
         this(userId);
         activate(celesta, procName);
@@ -68,7 +81,8 @@ public class CallContext implements ICallContext {
 
     /**
      * Activates CallContext with 'live' Celesta and procName.
-     * @param celesta Celesta to use CallContext with.
+     *
+     * @param celesta  Celesta to use CallContext with.
      * @param procName Name of the called procedure (for logging/audit needs).
      */
     public void activate(ICelesta celesta, String procName) {
@@ -78,15 +92,14 @@ public class CallContext implements ICallContext {
         if (state != State.NEW) {
             throw new CelestaException("Cannot activate CallContext in %s state (NEW expected).", state);
         }
-
         this.celesta = celesta;
-        this.state = State.ACTIVE;
         this.procName = procName;
+        this.state = State.ACTIVE;
         conn = celesta.getConnectionPool().get();
         dbPid = PIDSCACHE.computeIfAbsent(conn,
                 getDbAdaptor()::getDBPid);
         startTime = new Date();
-        startMonotonicTime = System.nanoTime();
+        activationTime = System.nanoTime();
     }
 
     /**
@@ -104,35 +117,49 @@ public class CallContext implements ICallContext {
     }
 
     /**
-     * Commits the current transaction.
+     * Commits the current transaction. Will cause error for not-activated or closed context.
      * <p>
      * Wraps SQLException into CelestaException.
      */
     public void commit() {
-        try {
-            conn.commit();
-        } catch (SQLException e) {
-            throw new CelestaException("Commit unsuccessful: %s", e.getMessage());
+        if (state == State.ACTIVE) {
+            try {
+                conn.commit();
+            } catch (SQLException e) {
+                throw new CelestaException(
+                        String.format("Commit unsuccessful: %s", e.getMessage()), e);
+            }
+        } else {
+            throw new CelestaException("Not active context cannot be commited");
         }
     }
 
     /**
-     * Rollbacks the current transaction.
+     * Rollbacks the current transaction. Does nothing for not-activated context.
      * <p>
      * Wraps SQLException into CelestaException.
      */
     public void rollback() {
-        try {
-            conn.rollback();
-        } catch (SQLException e) {
-            throw new CelestaException("Rollback unsuccessful: %s", e.getMessage());
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException e) {
+                throw new CelestaException(
+                        String.format("Rollback unsuccessful: %s", e.getMessage()), e);
+            }
         }
     }
 
+    /**
+     * Celesta instance. Null for not activated context.
+     */
     public ICelesta getCelesta() {
         return celesta;
     }
 
+    /**
+     * Score of current Celesta instance.
+     */
     public Score getScore() {
         return celesta.getScore();
     }
@@ -198,9 +225,20 @@ public class CallContext implements ICallContext {
      * Returns number of nanoseconds since CallContext activation.
      */
     public long getDurationNs() {
-        return System.nanoTime() - startMonotonicTime;
+        switch (state) {
+            case NEW:
+                return 0;
+            case ACTIVE:
+                return System.nanoTime() - activationTime;
+            default:
+                return closingTime - activationTime;
+        }
+
     }
 
+    /**
+     * If this context is closed.
+     */
     public boolean isClosed() {
         return state == State.CLOSED;
     }
@@ -224,7 +262,10 @@ public class CallContext implements ICallContext {
             if (conn != null) {
                 conn.close();
             }
-            celesta.getProfiler().logCall(this);
+            if (celesta != null) {
+                celesta.getProfiler().logCall(this);
+            }
+            closingTime = System.nanoTime();
             state = State.CLOSED;
         } catch (Exception e) {
             throw new CelestaException("Can't close callContext", e);
