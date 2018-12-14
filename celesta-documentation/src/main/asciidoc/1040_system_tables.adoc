@@ -22,8 +22,8 @@ include::_doc_general_attributes.adoc[]
 * Распределения прав доступа к таблицам и представлениям (`permissions`, `roles`, `userroles`).
 * Настройки системы логирования (`logsetup`) и хранения логов (`log`).
 
-[plantuml, diagram-classes, png]
---
+[plantuml, systemtables, png]
+----
 @startuml
 
 class permissions {
@@ -108,7 +108,7 @@ permissions --> roles: roleid
 permissions --> tables: [grainid, tablename] 
 
 @enduml
---
+----
 
 
 Назначение таблиц:
