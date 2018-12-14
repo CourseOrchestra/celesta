@@ -1009,3 +1009,10 @@ CelestaDocUtils
 ctx
 getCelestaDocJSON
 sq
+description
+diagram
+enduml
+orphaned
+plantuml
+startuml
+

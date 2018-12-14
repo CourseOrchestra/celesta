@@ -13,7 +13,7 @@ include::_doc_general_attributes.adoc[]
 
 //tag::intro[]
 
-Celesta -- Java-библиотека и легковесный фреймворк, упрощающий работу с реляционной базой данных из сервисов, реализующих бизнес-логику. 
+https://github.com/CourseOrchestra/celesta[Celesta] -- Java-библиотека и легковесный фреймворк, упрощающий работу с реляционной базой данных из сервисов, реализующих бизнес-логику. 
 
 Может быть использована путём подключения внешней зависимости через https://search.maven.org/search?q=a:celesta-parent[Maven Central], также имеет собственный https://github.com/CourseOrchestra/spring-boot-starter-celesta[Spring Boot starter].
 
