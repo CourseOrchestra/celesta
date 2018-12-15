@@ -48,7 +48,47 @@ image::{img}/Score.png[{image-100-width}]
 
 Класс Column является абстрактным, и для шести типов полей, поддерживаемых Celesta, от него наследуются шесть субклассов:
 
-image::{img}/Column.png[{image-100-width}]
+[plantuml, systemtables, png]
+----
+
+
+@startuml
+interface ColumnMeta{
+ +jdbcGetterName(): String
+ +getCelestaType(): String
+ +getJavaClass(): Class
+ +isNullable(): boolean
+ +getCelestaDoc(): String
+}
+
+interface ViewColumnMeta {
+ +getColumnType(): ViewColumnType
+ +getLength(): int
+}
+
+
+abstract class Column {
+ +getParentTable: TableElement
+ +getDefaultValue: Object
+ +getCelestaDefault: String
+}
+
+
+
+ColumnMeta <|.. ViewColumnMeta
+ColumnMeta <|.. Column   
+
+Column <|-l- IntegerColumn
+Column <|-- FloatingColumn
+Column <|-- StringColumn
+Column <|-- BinaryColumn
+Column <|-- DateTimeColumn
+Column <|-- ZonedDateTimeColumn
+Column <|-- DecimalColumn
+Column <|-r- BooleanColumn
+@enduml
+----
+
 
 == Методы модификации метаданных
 

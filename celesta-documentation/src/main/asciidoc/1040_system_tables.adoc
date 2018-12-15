@@ -26,6 +26,8 @@ include::_doc_general_attributes.adoc[]
 ----
 @startuml
 
+hide circle
+
 class permissions {
   roleid: VARCHAR
   grainid: VARCHAR
