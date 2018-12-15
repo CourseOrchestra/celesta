@@ -15,7 +15,18 @@ include::_doc_general_attributes.adoc[]
 
 Каждый экземпляр класса доступа к данным (его мы также будем именовать «курсор») в каждый момент времени хранит информацию об одной записи (строке) в базе данных. Курсор можно передвигать по записям с учётом фильтров и сортировок. Если курсор создан для таблицы, его также можно использовать для вставки, модификации и удаления данных. В курсоре, созданном для представления, доступны только методы чтения записей.
 
-image::{img}/800px-Cursor.png[{image-100-width}]
+[plantuml, cursors, png]
+----
+@startuml
+BasicDataAccessor <|-- BasicCursor
+BasicDataAccessor <|-- Sequence
+BasicCursor       <|-- ParameterizedViewCursor
+BasicCursor       <|-- ViewCursor
+BasicCursor       <|-- MaterializedViewCursor
+BasicCursor       <|-- Cursor
+BasicCursor       <|-- ReadOnlyTableCursor
+@enduml
+----
 
 На UML-диаграмме показана иерархия классов доступа к данным. В основе иерархии стоит класс {apidocs}ru/curs/celesta/dbutils/BasicDataAccessor.html[`BasicDataAccessor`]. Каждый класс курсоров наследуется от класса {apidocs}ru/curs/celesta/dbutils/BasicCursor.html[`BasicCursor`], класс {apidocs}ru/curs/celesta/dbutils/Sequence.html[`Sequence`] от {apidocs}ru/curs/celesta/dbutils/BasicDataAccessor.html[`BasicDataAccessor`]:
 

@@ -18,11 +18,100 @@ include::_doc_general_attributes.adoc[]
 
 Системные таблицы предназначены для:
 
-Координирования автоапгрейда (таблица celesta.grains, подробно описанная в данном руководстве).
-Распределения прав доступа к таблицам и представлениям.
-Настройки системы логирования и хранения логов.
+* Координирования автоапгрейда (таблица `grains`).
+* Распределения прав доступа к таблицам и представлениям (`permissions`, `roles`, `userroles`).
+* Настройки системы логирования (`logsetup`) и хранения логов (`log`).
 
-image::{img}/Celestagrain.png[{image-100-width}]
+[plantuml, systemtables, png]
+----
+@startuml
+
+hide circle
+
+class permissions {
+  roleid: VARCHAR
+  grainid: VARCHAR
+  tablename: VARCHAR
+  r: BIT
+  i: BIT
+  m: BIT
+  d: BIT
+}
+
+class tables {
+  grainid: VARCHAR
+  tablename: VARCHAR
+  tabletype: VARCHAR
+  orphaned: BIT
+}
+
+class log {
+  entryno: INT
+  entry_time: DATETIME
+  userid: VARCHAR
+  sessionid: VARCHAR
+  grainid: VARCHAR
+  tablename: VARCHAR
+  action_type: VARCHAR
+  pkvalue1: VARCHAR
+  pkvalue2: VARCHAR
+  pkvalue3: VARCHAR
+  oldvalues: VARCHAR
+  newvalues: VARCHAR
+}
+
+class logsetup {
+  grainid: VARCHAR
+  tablename: VARCHAR
+  i: BIT
+  m: BIT
+  d: BIT
+}
+
+class calllog {
+  entryno: INT
+  sessionid: VARCHAR
+  userid: VARCHAR
+  procname: VARCHAR
+  starttime: DATETIME
+  duration: INT
+}
+
+class grains {
+  id: VARCHAR
+  version: VARCHAR
+  length: INT
+  checksum: VARCHAR
+  state: INT
+  lastmodified: DATETIME
+  message: TEXT
+}
+
+class userroles {
+  userid: VARCHAR
+  roleid: VARCHAR
+}
+
+class roles {
+  id: VARCHAR
+  description: VARCHAR
+}
+
+tables --> grains: grainid 
+
+logsetup --> tables: [grainid, tablename] 
+
+userroles --> roles: roleid 
+
+log --> tables: [grainid, tablename] 
+
+permissions --> roles: roleid 
+
+permissions --> tables: [grainid, tablename] 
+
+@enduml
+----
+
 
 Назначение таблиц:
 
@@ -90,7 +179,7 @@ a|статус гранулы:
 
 |====
 
-== Система распределения прав доступа.
+== Система распределения прав доступа
 
 Как видно из структуры таблиц, права на таблицы раздаются ролям, прямой раздачи прав пользователям не предусмотрено.
 
@@ -169,7 +258,7 @@ a|статус гранулы:
 
 == Система профилирования
 
-Для поиска и устранения проблем, связанных с быстродействием, Celesta может работать в режиме профилирования, включаемом при помощи метода setProfilemode(true) экземпляра Celesta.
+Для поиска и устранения проблем, связанных с быстродействием, Celesta может работать в режиме профилирования, включаемом при помощи метода `setProfilemode(true)` экземпляра {apidocs}ru/curs/celesta/Celesta.html[`Celesta`].
 
 В режиме профилирования информация обо всех вызовах процедур записывается в таблицу calllog, состоящую из следующих полей:
 

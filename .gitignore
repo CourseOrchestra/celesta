@@ -16,3 +16,4 @@ buildNumber.properties
 documentation/*.pdf
 documentation/*.html
 documentation/*.gz
+celesta-documentation/src/main/asciidoc/*.png

@@ -16,9 +16,19 @@
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
                 <version>1.5.7.1</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-diagram</artifactId>
+                        <version>1.5.11</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <sourceDocumentName>0000_Celesta.adoc</sourceDocumentName>
                     <outputFile>index.html</outputFile>
+                    <requires>
+                        <require>asciidoctor-diagram</require>
+                    </requires>
                     <logHandler>
                         <outputToConsole>true</outputToConsole>
                         <failIf>
