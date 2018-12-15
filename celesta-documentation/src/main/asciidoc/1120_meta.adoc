@@ -42,16 +42,101 @@ include::_doc_general_attributes.adoc[]
 
 Ниже представлена диаграмма классов, описывающих метаданные.
 
-image::{img}/Score.png[{image-100-width}]
+[plantuml, metaclasses, png]
+----
+@startuml
+abstract class GrainElement {
+ +getGrain(): Grain
+}
+
+abstract class AbstractView {
+
+}
+
+abstract class NamedElement {
+ +getName(): String
+ +getQuotedName(): String
+ +getCelestaDoc(): String
+}
+
+class Index {
+}
+
+class View {
+}
+
+class Table{
+}
+
+abstract class Column {
+
+}
+
+class Grain {
+ +getScore()
+ +getTables()
+ +getIndices()
+ +getViews()
+}
+
+class MaterializedView {
+
+}
+
+interface ViewColumnMeta {
+
+}
+
+GrainElement <|-- Index 
+GrainElement <|-- AbstractView
+AbstractView <|-- View
+AbstractView <|-- MaterializedView
+GrainElement <|-- Table
+GrainElement <|-- SequenceElement
+
+NamedElement <|-- GrainElement
+NamedElement <|-- Column
+NamedElement <|-- Grain
+
+View <|-- ParameterizedView
+
+class Score {
+ +getGrains()
+}
+
+Score "1" -- "*" Grain
+
+Grain "1" -- "*" Index
+
+Grain "1" -- "*" View
+
+Grain "1" -- "*" MaterializedView
+
+Grain "1" -- "*" SequenceElement
+
+Grain "1" -- "*" Table
+
+Table "1" -- "1..*" Column
+
+MaterializedView  "1" -- "1..*" Column
+
+Table "1" -- "1..*" ForeignKey
+
+ForeignKey "1" -- "1..*" Column
+
+Index "1" -- "1..*" Column
+
+View "1" -- "1..*" ViewColumnMeta
+
+@enduml
+----
 
 Базовым интерфейсом для столбцов таблиц и представлений является интерфейс ColumnMeta, с помощью которого можно узнать Celesta-тип данных столбца, его nullability и CelestaDoc, привязанный к данному столбцу. Данный интерфейс реализуют классы ViewColumnMeta для описания полей представлений и Column для описания полей таблиц.
 
 Класс Column является абстрактным, и для шести типов полей, поддерживаемых Celesta, от него наследуются шесть субклассов:
 
-[plantuml, systemtables, png]
+[plantuml, columnclasses, png]
 ----
-
-
 @startuml
 interface ColumnMeta{
  +jdbcGetterName(): String
@@ -66,14 +151,11 @@ interface ViewColumnMeta {
  +getLength(): int
 }
 
-
 abstract class Column {
  +getParentTable: TableElement
  +getDefaultValue: Object
  +getCelestaDefault: String
 }
-
-
 
 ColumnMeta <|.. ViewColumnMeta
 ColumnMeta <|.. Column   
@@ -102,10 +184,10 @@ Column <|-r- BooleanColumn
 ^.^|Метод удаления
 
 |Гранула
-|Grain(score, name) —
+|`Grain(score, name)` —
 конструктор создаёт объект-гранулу
-с именем name, привязанную к score.
-|setVersion(version) —
+с именем `name`, привязанную к `score`.
+|`setVersion(version)` —
 устанавливает тэг версии (version tag).
 |метод отсутствует,
 гранула может быть удалена только
@@ -113,81 +195,81 @@ Column <|-r- BooleanColumn
 с гранулой из Score.
 
 |Таблица
-|Table(grain, name) —
+|`Table(grain, name)` —
 конструктор создаёт объект-таблицу
-с именем name, привязанную к объекту-грануле grain.
-|setPK(columnName, ...) —
+с именем name, привязанную к объекту-грануле `grain`.
+|`setPK(columnName, ...)` —
 устанавливает первичный ключ таблицы на основе переданного
 массива имён столбцов. Попытка установки пустого
 первичного ключа приводит к ошибке.
-|delete() —
+|`delete()` —
 удаляет таблицу из гранулы
 
 |Поле
-|BinaryColumn(table, name)
-BooleanColumn(table, name)
-DateTimeColumn(table, name)
-ZonedDateTimeColumn(table, name)
-FloatingColumn(table, name)
-DecimalColumn(table, name, precision, scale)
-IntegerColumn(table, name)
-StringColumn(table, name) —
-создаёт поле нужного типа с именем name,
-привязанное к объекту-таблице table.
-|setNullableAndDefault(nullable, defaultValue) —
+|`BinaryColumn(table, name)`
+`BooleanColumn(table, name)`
+`DateTimeColumn(table, name)`
+`ZonedDateTimeColumn(table, name)`
+`FloatingColumn(table, name)`
+`DecimalColumn(table, name, precision, scale)`
+`IntegerColumn(table, name)`
+`StringColumn(table, name)` —
+создаёт поле нужного типа с именем `name`,
+привязанное к объекту-таблице `table`.
+|`setNullableAndDefault(nullable, defaultValue)` —
 первый (булевский) аргумент этого метода управляет
-свойством isNull, второй (строковый) — задаёт значение DEFAULT,
+свойством `isNull`, второй (строковый) — задаёт значение `DEFAULT`,
 используя синтаксис соответствующего определения поля. Например,
-для поля даты здесь допустимо использование слова GETDATE.
-setLength(length) —
-определён только для StringColumn,
+для поля даты здесь допустимо использование слова `GETDATE`.
+`setLength(length)` —
+определён только для `StringColumn`,
 устанавливает длину строки. Возможно использование
-слова MAX в качестве длины.
-setPrecision(precision) —
-определён только для DecimalColumn,
+слова `MAX` в качестве длины.
+`setPrecision(precision)` —
+определён только для `DecimalColumn`,
 устанавливает длину числа в символах.
-setScale(scale) —
-определён только для DecimalColumn,
+`setScale(scale)` —
+определён только для `DecimalColumn`,
 устанавливает длину дробной части в символах.
-|delete() —
+|`delete()` —
 удаляет поле из таблицы
 
 |Внешний ключ
-|ForeignKey(parentTable, referencedTable, columnNames) —
+|`ForeignKey(parentTable, referencedTable, columnNames)` —
 конструктор создаёт объект-внешний ключ,
-привязанный к таблице parentTable, ссылающийся на
-referencedTable. В массиве строк columnNames
+привязанный к таблице `parentTable`, ссылающийся на
+`referencedTable`. В массиве строк `columnNames`
 передаётся список имён столбцов, с которых идёт ссылка.
-|setUpdateRule(updateRule)
-setDeleteRule(deleteRule) —
+|`setUpdateRule(updateRule)`
+`setDeleteRule(deleteRule)` —
 устанавливает поведение внешнего ключа на обновление
 или удаление записи, на которую есть ссылка
-(SET NULL, CASCADE, NO_ACTION). В качестве аргумента
-следует передавать одно из значений перечисления FKRule.
-|delete() —
+(`SET NULL`, `CASCADE`, `NO_ACTION`). В качестве аргумента
+следует передавать одно из значений перечисления {apidocs}ru/curs/celesta/score/FKRule.html[`FKRule`].
+|`delete()` —
 удаляет внешний ключ
 
 |Индекс
-|Index(table, name, columnNames) —
-создаёт индекс на таблице table с именем name и списком
-полей columnNames, передаваемом как массив строк.
+|`Index(table, name, columnNames)` —
+создаёт индекс на таблице `table` с именем `name` и списком
+полей `columnNames`, передаваемом как массив строк.
 |
-|delete() —
+|`delete()` —
 удаляет индекс
 
 |Представление
-|View(grain, name, sql) —
-создаёт представление в грануле grain, с именем name,
-на основе sql-запроса sql.
+|`View(grain, name, sql)` —
+создаёт представление в грануле `grain`, с именем `name`,
+на основе sql-запроса `sql`.
 |Для того, чтобы изменить sql-запрос, на основе которого
 сделано представление, удалите существующее
 представление и создайте новое с тем же именем.
-getCelestaQueryString() — возвращает SQL-запрос представления
-getColumns() — возвращает перечень имён столбцов представления
-|delete() — удаляет представление
+`getCelestaQueryString()` — возвращает SQL-запрос представления
+`getColumns()` — возвращает перечень имён столбцов представления
+|`delete()` — удаляет представление
 
 |====
 
-У каждого класса-наследника {apidocs}ru/curs/celesta/score/NamedElement.html[`NamedElement`] (т. е. Grain, Table, Column и Index) имеются также методы *getCelestaDoc()* и *setCelestaDoc()* для чтения и установки документирующих данных CelestaDoc. При сохранении в файл динамически изменённых метаданных CelestaDoc-комментарии сохраняются.
+У каждого класса-наследника {apidocs}ru/curs/celesta/score/NamedElement.html[`NamedElement`] имеются также методы `getCelestaDoc()` и `setCelestaDoc()` для чтения и установки документирующих данных CelestaDoc. При сохранении в файл динамически изменённых метаданных CelestaDoc-комментарии сохраняются.
 
 //end::meta[]
