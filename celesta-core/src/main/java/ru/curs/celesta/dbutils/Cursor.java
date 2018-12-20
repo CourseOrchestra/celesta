@@ -133,7 +133,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 WhereTerm where = getQmaker().getHereWhereTerm(meta());
                 where.programParams(program, db());
                 return db().getNavigationStatement(
-                        conn(), getFrom(),"", where.getWhere(), fieldsForStatement, 0
+                        conn(), getFrom(), "", where.getWhere(), fieldsForStatement, 0
                 );
             }
         };
@@ -210,7 +210,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 // TODO: get rid of "getCurrentIdent" call where possible
                 // e. g. using INSERT.. OUTPUT clause for MSSQL
                 loggingManager.log(this, Action.INSERT);
-                for (Column c : meta().getColumns().values())
+                for (Column c : meta().getColumns().values()) {
                     if (c instanceof IntegerColumn) {
                         IntegerColumn ic = (IntegerColumn) c;
                         if (ic.getSequence() != null) {
@@ -219,10 +219,13 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                         }
                     }
                 }
+            }
 
-                getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
-                        recversion, _currentKeyValues());
+            getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
+                    recversion, _currentKeyValues());
+            
             postInsert();
+
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }
@@ -404,8 +407,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         if (!tryGet(values)) {
             StringBuilder sb = new StringBuilder();
             for (Object value : values) {
-                if (sb.length() > 0)
+                if (sb.length() > 0) {
                     sb.append(", ");
+                }
                 sb.append(value == null ? "null" : value.toString());
             }
             throw new CelestaException("There is no %s (%s).", _objectName(), sb.toString());
@@ -420,8 +424,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      *            значения ключевых полей
      */
     public final boolean tryGet(Object... values) {
-        if (!canRead())
+        if (!canRead()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+        }
         return getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
                 recversion, values);
     }
@@ -431,8 +436,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * ключа.
      */
     public final boolean tryGetCurrent() {
-        if (!canRead())
+        if (!canRead()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+        }
         return getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
                 recversion, _currentKeyValues());
     }
@@ -464,8 +470,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     protected BLOB calcBlob(String name) {
         validateColumName(name);
         Column c = meta().getColumns().get(name);
-        if (!(c instanceof BinaryColumn))
+        if (!(c instanceof BinaryColumn)) {
             throw new CelestaException("'%s' is not a BLOB column.", c.getName());
+        }
         BLOB result;
 
         List<ParameterSetter> program = new ArrayList<>();
@@ -533,8 +540,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     public final void init() {
         _clearBuffer(false);
         setRecversion(0);
-        if (xRec != null)
+        if (xRec != null) {
             xRec.close();
+        }
         xRec = null;
     }
 
@@ -543,13 +551,14 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      */
     @Override
     public final Table meta() {
-        if (meta == null)
+        if (meta == null) {
             try {
                 meta = callContext().getScore()
                         .getGrain(_grainName()).getElement(_objectName(), Table.class);
             } catch (ParseException e) {
                 throw new CelestaException(e.getMessage());
             }
+        }
         return meta;
     }
 
@@ -557,19 +566,21 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
         // Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
         // естественном порядке
-        for (String colName : meta().getPrimaryKey().keySet())
+        for (String colName : meta().getPrimaryKey().keySet()) {
             if (!colNames.contains(colName)) {
                 l.add(String.format("\"%s\"", colName));
                 ol.add(Boolean.FALSE);
             }
+        }
     }
 
     @Override
     public final void clear() {
         super.clear();
         setRecversion(0);
-        if (xRec != null)
+        if (xRec != null) {
             xRec.close();
+        }
         xRec = null;
     }
 

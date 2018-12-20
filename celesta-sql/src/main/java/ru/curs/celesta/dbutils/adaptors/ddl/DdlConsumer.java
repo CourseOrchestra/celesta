@@ -4,5 +4,5 @@ import java.sql.Connection;
 
 @FunctionalInterface
 public interface DdlConsumer {
-    void consume(Connection conn, String sql) ;
+    void consume(Connection conn, String sql);
 }

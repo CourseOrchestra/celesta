@@ -91,8 +91,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     final PreparedStmtHolder count = new PreparedStmtHolder() {
         @Override
-        protected PreparedStatement initStatement(List<ParameterSetter> program)
-                {
+        protected PreparedStatement initStatement(List<ParameterSetter> program) {
             FromClause from = getFrom();
 
             if (fromTerm == null) {
@@ -114,16 +113,16 @@ public abstract class BasicCursor extends BasicDataAccessor {
     abstract class OrderFieldsMaskedStatementHolder extends MaskedStatementHolder {
         @Override
         protected final int[] getNullsMaskIndices() {
-            if (orderByNames == null)
+            if (orderByNames == null) {
                 orderBy();
+            }
             return orderByIndices;
         }
     }
 
     final PreparedStmtHolder position = new OrderFieldsMaskedStatementHolder() {
         @Override
-        protected PreparedStatement initStatement(List<ParameterSetter> program)
-                {
+        protected PreparedStatement initStatement(List<ParameterSetter> program) {
             FromClause from = getFrom();
 
             if (fromTerm == null) {
@@ -140,8 +139,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     final PreparedStmtHolder forwards = new OrderFieldsMaskedStatementHolder() {
         @Override
-        protected PreparedStatement initStatement(List<ParameterSetter> program)
-                {
+        protected PreparedStatement initStatement(List<ParameterSetter> program) {
             FromClause from = getFrom();
 
             if (fromTerm == null) {
@@ -160,8 +158,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     final PreparedStmtHolder backwards = new OrderFieldsMaskedStatementHolder() {
 
         @Override
-        protected PreparedStatement initStatement(List<ParameterSetter> program)
-                {
+        protected PreparedStatement initStatement(List<ParameterSetter> program) {
             FromClause from = getFrom();
 
             if (fromTerm == null) {
@@ -183,8 +180,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     final PreparedStmtHolder first = new PreparedStmtHolder() {
 
         @Override
-        protected PreparedStatement initStatement(List<ParameterSetter> program)
-                {
+        protected PreparedStatement initStatement(List<ParameterSetter> program) {
             FromClause from = getFrom();
 
             if (fromTerm == null) {
@@ -202,8 +198,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     };
     final PreparedStmtHolder last = new PreparedStmtHolder() {
         @Override
-        protected PreparedStatement initStatement(List<ParameterSetter> program)
-                {
+        protected PreparedStatement initStatement(List<ParameterSetter> program) {
             FromClause from = getFrom();
 
             if (fromTerm == null) {
@@ -236,8 +231,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
         @Override
         public void initOrderBy() {
-            if (orderByNames == null)
+            if (orderByNames == null) {
                 orderBy();
+            }
         }
 
         @Override
@@ -306,12 +302,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
         return new OrderFieldsMaskedStatementHolder() {
 
             @Override
-            protected PreparedStatement initStatement(List<ParameterSetter> program)
-                    {
+            protected PreparedStatement initStatement(List<ParameterSetter> program) {
                 WhereTerm where = qmaker.getWhereTerm('=');
                 where.programParams(program, db());
                 return db().getNavigationStatement(
-                        conn(), getFrom(),"", where.getWhere(), fieldsForStatement, 0
+                        conn(), getFrom(), "", where.getWhere(), fieldsForStatement, 0
                 );
             }
 
@@ -345,8 +340,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Есть ли у сессии права на вставку в текущую таблицу.
      */
     public final boolean canInsert() {
-        if (isClosed())
+        if (isClosed()) {
             throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
+        }
         IPermissionManager permissionManager = callContext().getPermissionManager();
         return permissionManager.isActionAllowed(callContext(), meta(), Action.INSERT);
     }
@@ -355,8 +351,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Есть ли у сессии права на модификацию данных текущей таблицы.
      */
     public final boolean canModify() {
-        if (isClosed())
+        if (isClosed()) {
             throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
+        }
         IPermissionManager permissionManager = callContext().getPermissionManager();
         return permissionManager.isActionAllowed(callContext(), meta(), Action.MODIFY);
     }
@@ -365,8 +362,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Есть ли у сессии права на удаление данных текущей таблицы.
      */
     public final boolean canDelete() {
-        if (isClosed())
+        if (isClosed()) {
             throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
+        }
         IPermissionManager permissionManager = callContext().getPermissionManager();
         return permissionManager.isActionAllowed(callContext(), meta(), Action.DELETE);
     }
@@ -391,15 +389,18 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     private String getOrderBy(boolean reverse) {
-        if (orderByNames == null)
+        if (orderByNames == null) {
             orderBy();
+        }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < orderByNames.length; i++) {
-            if (i > 0)
+            if (i > 0) {
                 sb.append(", ");
+            }
             sb.append(orderByNames[i]);
-            if (reverse ^ descOrders[i])
+            if (reverse ^ descOrders[i]) {
                 sb.append(" desc");
+            }
         }
         return sb.toString();
 
@@ -410,8 +411,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     List<String> getOrderByFields() {
-        if (orderByNames == null)
+        if (orderByNames == null) {
             orderBy();
+        }
         return Arrays.asList(orderByNames);
     }
 
@@ -423,8 +425,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Returns column names that are in sorting.
      */
     public String[] orderByColumnNames() {
-        if (orderByNames == null)
+        if (orderByNames == null) {
             orderBy();
+        }
         return orderByNames;
     }
 
@@ -432,8 +435,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Returns mask of DESC orders.
      */
     public boolean[] descOrders() {
-        if (orderByNames == null)
+        if (orderByNames == null) {
             orderBy();
+        }
         return descOrders;
     }
 
@@ -444,14 +448,16 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @return true, если переход успешен, false -- если записей в наборе нет.
      */
     public final boolean tryFindSet() {
-        if (!canRead())
+        if (!canRead()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+        }
 
         PreparedStatement ps = set.getStatement(_currentValues(), 0);
         boolean result = false;
         try {
-            if (cursor != null)
+            if (cursor != null) {
                 cursor.close();
+            }
             cursor = ps.executeQuery();
             result = cursor.next();
             if (result) {
@@ -474,8 +480,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * То же, что tryFirst(), но вызывает ошибку, если запись не найдена.
      */
     public final void first() {
-        if (!navigate("-"))
+        if (!navigate("-")) {
             raiseNotFound();
+        }
     }
 
     /**
@@ -489,8 +496,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * То же, что tryLast(), но вызывает ошибку, если запись не найдена.
      */
     public final void last() {
-        if (!navigate("+"))
+        if (!navigate("+")) {
             raiseNotFound();
+        }
     }
 
     /**
@@ -510,8 +518,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     private void raiseNotFound() {
         StringBuilder sb = new StringBuilder();
         for (Entry<String, AbstractFilter> e : filters.entrySet()) {
-            if (sb.length() > 0)
+            if (sb.length() > 0) {
                 sb.append(", ");
+            }
             sb.append(String.format("%s=%s", e.getKey(), e.getValue().toString()));
         }
         throw new CelestaException("There is no %s (%s).", _objectName(), sb.toString());
@@ -522,8 +531,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * случае, если переход неудачен.
      */
     public final void findSet() {
-        if (!tryFindSet())
+        if (!tryFindSet()) {
             raiseNotFound();
+        }
     }
 
     /**
@@ -534,11 +544,12 @@ public abstract class BasicCursor extends BasicDataAccessor {
         Object[] values = _currentValues();
         StringBuilder sb = new StringBuilder();
         for (Object value : values) {
-            if (sb.length() > 0)
+            if (sb.length() > 0) {
                 sb.append(",");
-            if (value == null)
+            }
+            if (value == null) {
                 sb.append("NULL");
-            else {
+            } else {
                 quoteFieldForCSV(value.toString(), sb);
             }
         }
@@ -556,8 +567,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
             for (int i = 0; i < fieldValue.length(); i++) {
                 char c = fieldValue.charAt(i);
                 sb.append(c);
-                if (c == '"')
+                if (c == '"') {
                     sb.append('"');
+                }
             }
             sb.append('"');
         } else {
@@ -573,9 +585,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     public final boolean nextInSet() {
         boolean result = false;
         try {
-            if (cursor == null)
+            if (cursor == null) {
                 result = tryFindSet();
-            else {
+            } else {
                 result = cursor.next();
             }
             if (result) {
@@ -610,42 +622,48 @@ public abstract class BasicCursor extends BasicDataAccessor {
      *         противном случае.
      */
     public boolean navigate(String command) {
-        if (!canRead())
+        if (!canRead()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+        }
 
         Matcher m = NAVIGATION.matcher(command);
-        if (!m.matches())
+        if (!m.matches()) {
             throw new CelestaException(
                     "Invalid navigation command: '%s', should consist of '+', '-', '>', '<' and '=' only!",
                     command);
+        }
 
-
-        if (navigationOffset != 0)
+        if (navigationOffset != 0) {
             closeStatements(backwards, forwards);
+        }
 
         navigationOffset = 0;
         for (int i = 0; i < command.length(); i++) {
             char c = command.charAt(i);
             PreparedStatement navigator = chooseNavigator(c);
 
-            if (executeNavigator(navigator))
+            if (executeNavigator(navigator)) {
                 return true;
+            }
         }
         return false;
     }
 
     public boolean navigate(String command, long offset) {
-        if (!canRead())
+        if (!canRead()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+        }
 
         Matcher m = NAVIGATION_WITH_OFFSET.matcher(command);
-        if (!m.matches())
+        if (!m.matches()) {
             throw new CelestaException(
                     "Invalid navigation command: '%s', should consist only one of  '>' or '<'!",
                     command);
+        }
 
-        if (offset < 0)
+        if (offset < 0) {
             throw new CelestaException("Invalid navigation offset: offset should not be less than 0");
+        }
 
         if (navigationOffset != offset) {
             navigationOffset = offset;
@@ -702,8 +720,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     final void validateColumName(String name) {
-        if (!meta().getColumns().containsKey(name))
+        if (!meta().getColumns().containsKey(name)) {
             throw new CelestaException("No column %s exists in table %s.", name, _objectName());
+        }
     }
 
     /**
@@ -714,12 +733,14 @@ public abstract class BasicCursor extends BasicDataAccessor {
      */
     public final void setRange(String name) {
         validateColumName(name);
-        if (isClosed())
+        if (isClosed()) {
             return;
+        }
         // Если фильтр присутствовал на поле -- сбрасываем набор. Если не
         // присутствовал -- не сбрасываем.
-        if (filters.remove(name) != null)
+        if (filters.remove(name) != null) {
             closeSet();
+        }
     }
 
     /**
@@ -735,8 +756,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
             setFilter(name, "null");
         } else {
             validateColumName(name);
-            if (isClosed())
+            if (isClosed()) {
                 return;
+            }
             AbstractFilter oldFilter = filters.get(name);
             // Если один SingleValue меняется на другой SingleValue -- то
             // необязательно закрывать набор, можно использовать старый.
@@ -759,11 +781,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @param valueTo
      *            Значение до
      */
-    public final void setRange(String name, Object valueFrom, Object valueTo)
-            {
+    public final void setRange(String name, Object valueFrom, Object valueTo) {
         validateColumName(name);
-        if (isClosed())
+        if (isClosed()) {
             return;
+        }
         AbstractFilter oldFilter = filters.get(name);
         // Если один Range меняется на другой Range -- то
         // необязательно закрывать набор, можно использовать старый.
@@ -786,18 +808,21 @@ public abstract class BasicCursor extends BasicDataAccessor {
      */
     public final void setFilter(String name, String value) {
         validateColumName(name);
-        if (value == null || value.isEmpty())
+        if (value == null || value.isEmpty()) {
             throw new CelestaException(
                     "Filter for column %s is null or empty. "
                             + "Use setrange(fieldname) to remove any filters from the column.",
                     name);
+        }
         AbstractFilter oldFilter =
             filters.put(name, new Filter(value, meta().getColumns().get(name)));
-        if (isClosed())
+        if (isClosed()) {
             return;
+        }
         // Если заменили фильтр на тот же самый -- ничего делать не надо.
-        if (!(oldFilter instanceof Filter && value.equals(oldFilter.toString())))
+        if (!(oldFilter instanceof Filter && value.equals(oldFilter.toString()))) {
             closeSet();
+        }
     }
 
     /**
@@ -814,8 +839,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
             throw new CelestaException(e.getMessage());
         }
         complexFilter = buf;
-        if (isClosed())
+        if (isClosed()) {
             return;
+        }
         // пересоздаём набор
         closeSet();
     }
@@ -839,10 +865,12 @@ public abstract class BasicCursor extends BasicDataAccessor {
      *            - вернуть все записи).
      */
     public final void limit(long offset, long rowCount) {
-        if (offset < 0)
+        if (offset < 0) {
             throw new CelestaException("Negative offset (%d) in limit(...) call", offset);
-        if (rowCount < 0)
+        }
+        if (rowCount < 0) {
             throw new CelestaException("Negative rowCount (%d) in limit(...) call", rowCount);
+        }
         this.offset = offset;
         this.rowCount = rowCount;
         closeSet();
@@ -863,7 +891,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
         closeSet();
     }
 
-    protected void resetSpecificState() {}
+    protected void resetSpecificState() {
+    }
 
     /**
      * Установка сортировки.
@@ -888,15 +917,17 @@ public abstract class BasicCursor extends BasicDataAccessor {
         Set<String> colNames = new HashSet<>();
         for (String name : names) {
             Matcher m = COLUMN_NAME.matcher(name);
-            if (!m.matches())
+            if (!m.matches()) {
                 throw new CelestaException(
                         "orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
                         name);
+            }
             String colName = m.group(1);
             validateColumName(colName);
-            if (!colNames.add(colName))
+            if (!colNames.add(colName)) {
                 throw new CelestaException("Column '%s' is used more than once in orderby() call",
                         colName);
+            }
 
             boolean order = !(m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim()));
 
@@ -986,10 +1017,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
      *            Курсор, фильтры которого нужно скопировать.
      */
     public final void copyFiltersFrom(BasicCursor c) {
-        if (!(c._grainName().equals(_grainName()) && c._objectName().equals(_objectName())))
+        if (!(c._grainName().equals(_grainName()) && c._objectName().equals(_objectName()))) {
             throw new CelestaException(
                     "Cannot assign filters from cursor for %s.%s to cursor for %s.%s.",
                     c._grainName(), c._objectName(), _grainName(), _objectName());
+        }
         filters.clear();
         filters.putAll(c.filters);
         complexFilter = c.complexFilter;
@@ -999,7 +1031,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
         closeSet();
     }
 
-    protected void copySpecificFiltersFrom(BasicCursor c) {}
+    protected void copySpecificFiltersFrom(BasicCursor c) {
+    }
 
     /**
      * Получает копию сортировок из курсора того же типа.
@@ -1008,10 +1041,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
      *            Курсор, фильтры которого нужно скопировать.
      */
     public final void copyOrderFrom(BasicCursor c) {
-        if (!(c._grainName().equals(_grainName()) && c._objectName().equals(_objectName())))
+        if (!(c._grainName().equals(_grainName()) && c._objectName().equals(_objectName()))) {
             throw new CelestaException(
                     "Cannot assign ordering from cursor for %s.%s to cursor for %s.%s.",
                     c._grainName(), c._objectName(), _grainName(), _objectName());
+        }
         orderByNames = c.orderByNames;
         orderByIndices = c.orderByIndices;
         descOrders = c.descOrders;
@@ -1020,29 +1054,35 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     boolean isEquivalent(BasicCursor c) {
         // equality of all simple filters
-        if (filters.size() != c.filters.size())
+        if (filters.size() != c.filters.size()) {
             return false;
+        }
         for (Map.Entry<String, AbstractFilter> e : filters.entrySet()) {
-            if (!e.getValue().filterEquals(c.filters.get(e.getKey())))
+            if (!e.getValue().filterEquals(c.filters.get(e.getKey()))) {
                 return false;
+            }
         }
 
         // equality of complex filter
         if (!(complexFilter == null ? c.complexFilter == null
-                : complexFilter.getCSQL().equals(c.complexFilter.getCSQL())))
+                : complexFilter.getCSQL().equals(c.complexFilter.getCSQL()))) {
             return false;
+        }
         // equality of In filter
         if (!isEquivalentSpecific(c)) {
             return false;
         }
         // equality of sorting
-        if (orderByNames == null)
+        if (orderByNames == null) {
             orderBy();
-        if (c.orderByNames == null)
+        }
+        if (c.orderByNames == null) {
             c.orderBy();
+        }
 
-        if (!Arrays.equals(orderByNames, c.orderByNames))
+        if (!Arrays.equals(orderByNames, c.orderByNames)) {
             return false;
+        }
 
         return Arrays.equals(descOrders, c.descOrders);
     }
@@ -1090,7 +1130,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         fieldsForStatement.clear();
         fieldsForStatement = new HashSet<>(
                 Arrays.asList(orderByColumnNames()).stream()
-                        .map(f -> f.replaceAll("\"",""))
+                        .map(f -> f.replaceAll("\"", ""))
                         .collect(Collectors.toSet())
         );
         fieldsForStatement.addAll(fields);

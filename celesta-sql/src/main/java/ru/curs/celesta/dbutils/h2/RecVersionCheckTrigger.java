@@ -17,11 +17,11 @@ public class RecVersionCheckTrigger implements Trigger {
   @Override
   public void init(Connection connection, String schemaName, String triggerName, String tableName,
                    boolean before, int type) throws SQLException {
-    String sql = "SELECT ordinal_position - 1 " +
-        "FROM information_schema.columns " +
-        "WHERE table_schema = '%s' " +
-        "AND table_name = '%s' " +
-        "AND column_name = 'recversion'";
+    String sql = "SELECT ordinal_position - 1 "
+               + "FROM information_schema.columns "
+               + "WHERE table_schema = '%s' "
+                   + "AND table_name = '%s' "
+                   + "AND column_name = 'recversion'";
     sql = String.format(sql, schemaName, tableName);
 
     Statement statement = connection.createStatement();

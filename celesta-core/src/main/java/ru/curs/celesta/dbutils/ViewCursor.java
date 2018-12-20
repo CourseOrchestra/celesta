@@ -34,13 +34,15 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
      */
     @Override
     public View meta() {
-        if (meta == null)
+        if (meta == null) {
             try {
                 meta = callContext().getScore()
                         .getGrain(_grainName()).getElement(_objectName(), View.class);
             } catch (ParseException e) {
                 throw new CelestaException(e.getMessage());
             }
+        }
+
         return meta;
     }
 

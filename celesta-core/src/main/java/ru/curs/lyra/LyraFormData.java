@@ -115,8 +115,9 @@ public final class LyraFormData implements Serializable {
             xmlWriter.writeStartDocument();
             xmlWriter.writeStartElement("schema");
             xmlWriter.writeAttribute("recversion", Integer.toString(recversion));
-            if (formId != null)
+            if (formId != null) {
                 xmlWriter.writeAttribute("formId", formId);
+            }
 
             Iterator<LyraFieldValue> i = fields.iterator();
             while (i.hasNext()) {
@@ -190,8 +191,9 @@ public final class LyraFormData implements Serializable {
 
         @Override
         public void characters(char[] ch, int start, int length) throws SAXException {
-            if (status == 2)
+            if (status == 2) {
                 sb.append(ch, start, length);
+            }
         }
 
         @Override
@@ -211,8 +213,9 @@ public final class LyraFormData implements Serializable {
                         String buf = sb.toString();
                         switch (type) {
                         case DATETIME:
-                            if (sdf == null)
+                            if (sdf == null) {
                                 sdf = new SimpleDateFormat(LyraFieldValue.XML_DATE_FORMAT);
+                            }
                             Date d;
                             try {
                                 d = sdf.parse(buf);

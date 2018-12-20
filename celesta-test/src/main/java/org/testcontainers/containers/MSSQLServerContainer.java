@@ -53,7 +53,8 @@ public class MSSQLServerContainer<SELF extends MSSQLServerContainer<SELF>> exten
 
     @Override
     public String getJdbcUrl() {
-        StringBuilder sb = new StringBuilder("jdbc:sqlserver://" + getContainerIpAddress() + ":" + getMappedPort(MS_SQL_SERVER_PORT));
+        StringBuilder sb = new StringBuilder(
+                "jdbc:sqlserver://" + getContainerIpAddress() + ":" + getMappedPort(MS_SQL_SERVER_PORT));
 
         if (isCustomDbCreated) {
             sb.append(";databaseName=").append(databaseName);

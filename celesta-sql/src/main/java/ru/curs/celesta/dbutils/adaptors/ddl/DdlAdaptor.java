@@ -310,8 +310,9 @@ public final class DdlAdaptor {
     }
 
     private void processSql(Connection conn, Optional<String> sql)  {
-        if (sql.isPresent())
+        if (sql.isPresent()) {
             processSql(conn, sql.get());
+        }
     }
 
     private void processSql(Connection conn, String sql)  {

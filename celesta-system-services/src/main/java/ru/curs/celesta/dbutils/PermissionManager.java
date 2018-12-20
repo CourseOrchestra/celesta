@@ -64,8 +64,9 @@ public final class PermissionManager implements IPermissionManager {
         public PermissionCacheEntry(String userName, GrainElement table,
                                     int permissionMask) {
             super();
-            if (userName == null)
+            if (userName == null) {
                 throw new IllegalArgumentException();
+            }
             this.userName = userName;
             this.table = table;
             this.permissionMask = permissionMask;
@@ -104,8 +105,9 @@ public final class PermissionManager implements IPermissionManager {
     public boolean isActionAllowed(CallContext c, GrainElement t, Action a) {
         // Системному пользователю дозволяется всё без дальнейшего
         // разбирательства.
-        if (c instanceof SystemCallContext)
+        if (c instanceof SystemCallContext) {
             return true;
+        }
 
         // Вычисляем местоположение данных в кэше.
         int index = PermissionCacheEntry.hash(c.getUserId(), t)
@@ -143,8 +145,9 @@ public final class PermissionManager implements IPermissionManager {
             PermissionsCursor permissions = new PermissionsCursor(sysContext);
             int permissionsMask = 0;
             for (String roleId : rce.roles) {
-                if (permissionsMask == FULL_RIGHTS)
+                if (permissionsMask == FULL_RIGHTS) {
                     break;
+                }
                 if (READER.equals(roleId)
                         || (t.getGrain().getName() + '.' + READER)
                         .equals(roleId)) {

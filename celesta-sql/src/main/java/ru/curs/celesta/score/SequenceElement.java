@@ -18,52 +18,60 @@ public class SequenceElement extends GrainElement {
     }
 
     void startWith(Long startWith) throws ParseException {
-        if (arguments.putIfAbsent(Argument.START_WITH, startWith) != null)
+        if (arguments.putIfAbsent(Argument.START_WITH, startWith) != null) {
             throw new ParseException(
                     String.format(DUPLICATE_ENTRANCE_TEMPLATE, Argument.START_WITH, getName())
             );
+        }
     }
 
     void incrementBy(Long incrementBy) throws ParseException {
-        if (incrementBy == 0)
+        if (incrementBy == 0) {
             throw new ParseException(
                     String.format("Sequence %s has illegal value 0 for INCREMENT BY expression.", getName())
             );
-        if (arguments.putIfAbsent(Argument.INCREMENT_BY, incrementBy) != null)
+        }
+        if (arguments.putIfAbsent(Argument.INCREMENT_BY, incrementBy) != null) {
             throw new ParseException(
                     String.format(DUPLICATE_ENTRANCE_TEMPLATE, Argument.INCREMENT_BY, getName())
             );
+        }
     }
 
     void minValue(Long minValue) throws ParseException {
-        if (arguments.containsKey(Argument.MAXVALUE) && (Long)arguments.get(Argument.MAXVALUE) <= minValue)
+        if (arguments.containsKey(Argument.MAXVALUE) && (Long) arguments.get(Argument.MAXVALUE) <= minValue) {
             throw new ParseException(
                     String.format("MINVALUE for sequence %s must be less than MAXVALUE", getName())
             );
+        }
 
-        if (arguments.putIfAbsent(Argument.MINVALUE, minValue) != null)
+        if (arguments.putIfAbsent(Argument.MINVALUE, minValue) != null) {
             throw new ParseException(
                     String.format(DUPLICATE_ENTRANCE_TEMPLATE, Argument.MINVALUE, getName())
             );
+        }
     }
 
     void maxValue(Long maxValue) throws ParseException {
-        if (arguments.containsKey(Argument.MINVALUE) && (Long)(arguments.get(Argument.MINVALUE)) >= maxValue)
+        if (arguments.containsKey(Argument.MINVALUE) && ((Long) arguments.get(Argument.MINVALUE)) >= maxValue) {
             throw new ParseException(
                     String.format("MAXVALUE for sequence %s must be greater than MINVALUE", getName())
             );
+        }
 
-        if (arguments.putIfAbsent(Argument.MAXVALUE, maxValue) != null)
+        if (arguments.putIfAbsent(Argument.MAXVALUE, maxValue) != null) {
             throw new ParseException(
                     String.format(DUPLICATE_ENTRANCE_TEMPLATE, Argument.MINVALUE, getName())
             );
+        }
     }
 
     void setIsCycle(Boolean isCycle) throws ParseException {
-        if (arguments.putIfAbsent(Argument.CYCLE, isCycle) != null)
+        if (arguments.putIfAbsent(Argument.CYCLE, isCycle) != null) {
             throw new ParseException(
                     String.format(DUPLICATE_ENTRANCE_TEMPLATE, Argument.CYCLE, getName())
             );
+        }
     }
 
 
@@ -89,7 +97,7 @@ public class SequenceElement extends GrainElement {
             bw.printf("MAXVALUE %s ", getArgument(Argument.MAXVALUE));
         }
 
-        if (hasArgument(Argument.CYCLE) && (Boolean)getArgument(Argument.CYCLE)) {
+        if (hasArgument(Argument.CYCLE) && (Boolean) getArgument(Argument.CYCLE)) {
             bw.write("CYCLE ");
         }
 
@@ -133,17 +141,18 @@ public class SequenceElement extends GrainElement {
         if (incrementBy < 0) {
             if (startWith > 0 && (startWith + incrementBy) < minValue) {
                 throw new ParseException(
-                        String.format("Sum of arguments START WITH AND INCREMENT BY must be greater or equals MINVALUE " +
-                                "for sequence %s  in case of descending increment", getName())
+                        String.format("Sum of arguments START WITH AND INCREMENT BY must be greater or equals MINVALUE "
+                                + "for sequence %s  in case of descending increment", getName())
                 );
             }
 
-            if (Math.abs(incrementBy) >= Math.abs(maxValue - minValue))
+            if (Math.abs(incrementBy) >= Math.abs(maxValue - minValue)) {
                 throw new ParseException(
-                        String.format("Absolute value of 'INCREMENT BY' must be less than absolute value of subtraction of MAXVALUE and MINVALUE " +
-                                "for sequence %s in case of descending increment", getName())
+                        String.format("Absolute value of 'INCREMENT BY' must be less than "
+                                + "absolute value of subtraction of MAXVALUE and MINVALUE "
+                                + "for sequence %s in case of descending increment", getName())
                 );
-
+            }
         }
 
     }
@@ -179,8 +188,9 @@ public class SequenceElement extends GrainElement {
 
         public String getSql(Object value) {
 
-            if (this == CYCLE && Objects.equals(false, value))
+            if (this == CYCLE && Objects.equals(false, value)) {
                 return "";
+            }
 
             return String.format(sqlTemplate, value);
         }

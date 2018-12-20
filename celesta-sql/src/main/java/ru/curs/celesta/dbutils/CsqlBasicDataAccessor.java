@@ -25,8 +25,9 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements C
         this.context = context;
         this.conn = context.getConn();
         try {
-            if (conn.isClosed())
+            if (conn.isClosed()) {
                 throw new CelestaException("Trying to create a cursor on closed connection.");
+            }
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }
@@ -34,17 +35,20 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements C
     }
 
     protected void validateInitContext(T context) {
-        if (context == null)
+        if (context == null) {
             throw new CelestaException(
                     "Invalid context passed to %s constructor: context should not be null.",
                     this.getClass().getName());
-        if (context.getConn() == null)
+        }
+        if (context.getConn() == null) {
             throw new CelestaException(
                     "Invalid context passed to %s constructor: connection is null.",
                     this.getClass().getName());
-        if (context.isClosed())
+        }
+        if (context.isClosed()) {
             throw new CelestaException("Cannot create %s on a closed CallContext.",
                     this.getClass().getName());
+        }
     }
 
     /**

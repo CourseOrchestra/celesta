@@ -10,7 +10,8 @@ import ru.curs.celesta.dbutils.Cursor;
  */
 public class TriggerDispatcher {
 
-    private final EnumMap<TriggerType, Map<Class<? extends Cursor>, List<Consumer<Cursor>>>> triggerMap = new EnumMap<>(TriggerType.class);
+    private final EnumMap<TriggerType, Map<Class<? extends Cursor>, List<Consumer<Cursor>>>> triggerMap =
+            new EnumMap<>(TriggerType.class);
 
     public TriggerDispatcher() {
         Arrays.stream(TriggerType.values()).forEach(t -> triggerMap.put(t, new HashMap<>()));

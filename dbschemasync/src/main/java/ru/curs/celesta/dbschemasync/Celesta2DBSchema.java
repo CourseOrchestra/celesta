@@ -87,10 +87,11 @@ public final class Celesta2DBSchema {
         Node layout = null;
         for (int i = 0; i < l.getLength(); i++) {
             Node n = l.item(i);
-            if ("schema".equals(n.getNodeName()))
+            if ("schema".equals(n.getNodeName())) {
                 root.removeChild(n);
-            else if ("layout".equals(n.getNodeName()) && layout == null)
+            } else if ("layout".equals(n.getNodeName()) && layout == null) {
                 layout = n;
+            }
         }
 
         for (Grain g : s.getGrains().values()) {
@@ -101,11 +102,13 @@ public final class Celesta2DBSchema {
             root.insertBefore(schema, layout);
             writeComment(g.getCelestaDoc(), doc, schema);
 
-            for (Table t : g.getTables().values())
+            for (Table t : g.getTables().values()) {
                 writeTable(g, t, doc, schema);
+            }
 
-            for (View v : g.getViews().values())
+            for (View v : g.getViews().values()) {
                 writeView(g, v, doc, schema);
+            }
 
             Element procedure = doc.createElement("procedure");
             procedure.setAttribute("name", g.getName());
@@ -139,14 +142,16 @@ public final class Celesta2DBSchema {
                 column.setAttribute("length", Integer.toString(sc.getLength()));
             }
         }
-        if (!c.isNullable())
+        if (!c.isNullable()) {
             column.setAttribute("mandatory", "y");
+        }
 
         String def = c.getCelestaDefault();
         if (def != null) {
             Element defo = doc.createElement("defo");
-            if ("GETDATE()".equalsIgnoreCase(def))
+            if ("GETDATE()".equalsIgnoreCase(def)) {
                 def = "GETDATE";
+            }
             defo.setTextContent(def);
             column.appendChild(defo);
         }
@@ -171,8 +176,9 @@ public final class Celesta2DBSchema {
         writeComment(t.getCelestaDoc(), doc, table);
 
         // Writing columns
-        for (Column c : t.getColumns().values())
+        for (Column c : t.getColumns().values()) {
             writeColumn(c, doc, table);
+        }
 
         // Writing primary key
         Element index = doc.createElement("index");
@@ -222,7 +228,7 @@ public final class Celesta2DBSchema {
         }
 
         // Writing indices
-        for (Index ix : g.getIndices().values())
+        for (Index ix : g.getIndices().values()) {
             if (ix.getTable() == t) {
                 index = doc.createElement("index");
                 index.setAttribute("name", ix.getName());
@@ -235,6 +241,7 @@ public final class Celesta2DBSchema {
                     index.appendChild(column);
                 }
             }
+        }
 
         // Writing storage options
         writeOptions(t, doc, table);
@@ -250,9 +257,9 @@ public final class Celesta2DBSchema {
         view.appendChild(viewScript);
 
         // Writing columns
-        for (Map.Entry<String, ViewColumnMeta> c : v.getColumns().entrySet())
+        for (Map.Entry<String, ViewColumnMeta> c : v.getColumns().entrySet()) {
             writeColumn(c, doc, view);
-
+        }
     }
 
     private static void writeColumn(Map.Entry<String, ViewColumnMeta> c, Document doc, Element view) {

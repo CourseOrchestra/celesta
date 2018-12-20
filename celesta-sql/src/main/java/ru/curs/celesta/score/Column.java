@@ -19,10 +19,11 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 
     Column(TableElement parentTable, String name) throws ParseException {
         super(name, parentTable.getGrain().getScore().getIdentifierParser());
-        if (VersionedElement.REC_VERSION.equals(name))
+        if (VersionedElement.REC_VERSION.equals(name)) {
             throw new ParseException(
                     String.format("Column name '%s' is reserved for system needs.", VersionedElement.REC_VERSION)
             );
+        }
         this.parentTable = parentTable;
         parentTable.addColumn(this);
     }
@@ -118,8 +119,9 @@ public abstract class Column extends NamedElement implements ColumnMeta {
 
     void save(PrintWriter bw) throws IOException {
         bw.write("  ");
-        if (Grain.writeCelestaDoc(this, bw))
+        if (Grain.writeCelestaDoc(this, bw)) {
             bw.write("  ");
+        }
         bw.write(getName());
     }
 

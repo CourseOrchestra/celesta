@@ -38,12 +38,14 @@ public class SQLGenerator extends ExprVisitor {
     StringBuilder result = new StringBuilder();
     String op = BinaryLogicalOp.OPS[expr.getOperator()];
     LinkedList<String> operands = new LinkedList<>();
-    for (int i = 0; i < expr.getOperands().size(); i++)
+    for (int i = 0; i < expr.getOperands().size(); i++) {
       operands.push(stack.pop());
+    }
     boolean needOp = false;
     for (String operand : operands) {
-      if (needOp)
+      if (needOp) {
         result.append(op);
+      }
       result.append(operand);
       needOp = true;
     }
@@ -54,8 +56,9 @@ public class SQLGenerator extends ExprVisitor {
   final void visitBinaryTermOp(BinaryTermOp expr) throws ParseException {
     StringBuilder result = new StringBuilder();
     LinkedList<String> operands = new LinkedList<>();
-    for (int i = 0; i < expr.getOperands().size(); i++)
+    for (int i = 0; i < expr.getOperands().size(); i++) {
       operands.push(stack.pop());
+    }
 
     if (expr.getOperator() == BinaryTermOp.CONCAT) {
       concat(result, operands);
@@ -63,8 +66,9 @@ public class SQLGenerator extends ExprVisitor {
       String op = BinaryTermOp.OPS[expr.getOperator()];
       boolean needOp = false;
       for (String operand : operands) {
-        if (needOp)
+        if (needOp) {
           result.append(op);
+        }
         result.append(operand);
         needOp = true;
       }
@@ -77,18 +81,22 @@ public class SQLGenerator extends ExprVisitor {
     StringBuilder result = new StringBuilder();
 
     if (expr.getTableNameOrAlias() != null) {
-      if (quoteNames())
+      if (quoteNames()) {
         result.append("\"");
+      }
       result.append(expr.getTableNameOrAlias());
-      if (quoteNames())
+      if (quoteNames()) {
         result.append("\"");
+      }
       result.append(".");
     }
-    if (quoteNames())
+    if (quoteNames()) {
       result.append("\"");
+    }
     result.append(expr.getColumnName());
-    if (quoteNames())
+    if (quoteNames()) {
       result.append("\"");
+    }
     stack.push(result.toString());
   }
 
@@ -101,14 +109,16 @@ public class SQLGenerator extends ExprVisitor {
   final void visitIn(In expr) throws ParseException {
     StringBuilder result = new StringBuilder();
     LinkedList<String> operands = new LinkedList<>();
-    for (int i = 0; i < expr.getOperands().size(); i++)
+    for (int i = 0; i < expr.getOperands().size(); i++) {
       operands.push(stack.pop());
+    }
     result.append(stack.pop());
     result.append(" IN (");
     boolean needComma = false;
     for (String operand : operands) {
-      if (needComma)
+      if (needComma) {
         result.append(", ");
+      }
       result.append(operand);
       needComma = true;
     }
@@ -196,8 +206,9 @@ public class SQLGenerator extends ExprVisitor {
   protected void concat(StringBuilder result, List<String> operands) {
     boolean needOp = false;
     for (String operand : operands) {
-      if (needOp)
+      if (needOp) {
         result.append(concat());
+      }
       result.append(operand);
       needOp = true;
     }

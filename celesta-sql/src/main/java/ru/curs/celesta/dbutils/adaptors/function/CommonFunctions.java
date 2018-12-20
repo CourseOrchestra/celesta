@@ -11,8 +11,9 @@ public final class CommonFunctions {
      * @param insertList {@link StringBuilder} to process.
      */
     public static void padComma(StringBuilder insertList) {
-        if (insertList.length() > 0)
+        if (insertList.length() > 0) {
             insertList.append(", ");
+        }
     }
 
     /**
@@ -23,8 +24,9 @@ public final class CommonFunctions {
     public static String getFieldList(Iterable<String> fields) {
         StringBuilder sb = new StringBuilder();
         for (String c : fields) {
-            if (sb.length() > 0)
+            if (sb.length() > 0) {
                 sb.append(", ");
+            }
             sb.append('"');
             sb.append(c);
             sb.append('"');

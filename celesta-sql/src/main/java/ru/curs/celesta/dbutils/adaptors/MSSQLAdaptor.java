@@ -78,7 +78,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
     @Override
     public boolean tableExists(Connection conn, String schema, String name) {
-        //TODO: It's a not good idea. We must check more concretely, cuz this method will work for other objects such as view etc.
+        //TODO: It's a not good idea. We must check more concretely, cuz
+        //      this method will work for other objects such as view etc.
         return objectExists(conn, schema, name);
     }
 
@@ -137,8 +138,9 @@ public final class MSSQLAdaptor extends DBAdaptor {
         StringBuilder params = new StringBuilder();
         for (int i = 0; i < t.getColumns().size(); i++) {
             String c = columns.next();
-            if (nullsMask[i])
+            if (nullsMask[i]) {
                 continue;
+            }
             if (params.length() > 0) {
                 fields.append(", ");
                 params.append(", ");
@@ -201,9 +203,10 @@ public final class MSSQLAdaptor extends DBAdaptor {
         try (Statement stmt = conn.createStatement()) {
 
             ResultSet rs = stmt.executeQuery(sql);
-            if (!rs.next())
+            if (!rs.next()) {
                 throw new CelestaException("Id sequence for %s.%s is not initialized.", t.getGrain().getName(),
                         t.getName());
+            }
 
             return (int) rs.getLong(1);
 
@@ -279,11 +282,12 @@ public final class MSSQLAdaptor extends DBAdaptor {
                     } else if ("float".equalsIgnoreCase(typeName) && rs.getInt("COLUMN_SIZE") == DOUBLE_PRECISION) {
                         result.setType(FloatingColumn.class);
                     } else {
-                        for (Class<? extends Column> cc : COLUMN_CLASSES)
+                        for (Class<? extends Column> cc : COLUMN_CLASSES) {
                             if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(typeName)) {
                                 result.setType(cc);
                                 break;
                             }
+                        }
                     }
                     result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
                     if (result.getType() == StringColumn.class) {
@@ -312,8 +316,10 @@ public final class MSSQLAdaptor extends DBAdaptor {
                             }
                         }
                         if (BooleanColumn.class == result.getType()
-                                || DateTimeColumn.class == result.getType() || ZonedDateTimeColumn.class == result.getType())
+                                || DateTimeColumn.class == result.getType()
+                                || ZonedDateTimeColumn.class == result.getType()) {
                             defaultBody = defaultBody.toUpperCase();
+                        }
                         result.setDefaultValue(defaultBody);
                     }
                     return result;
@@ -414,8 +420,9 @@ public final class MSSQLAdaptor extends DBAdaptor {
     String getLimitedSQL(
             FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
     ) {
-        if (offset == 0 && rowCount == 0)
+        if (offset == 0 && rowCount == 0) {
             throw new IllegalArgumentException();
+        }
         String sql;
         String sqlwhere = "".equals(whereClause) ? "" : " where " + whereClause;
         String rowFilter;
@@ -439,7 +446,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
         return sql;
     }
 
-    private String getLimitedSqlWithOffset(String orderBy, String fieldList, String from, String where, String rowFilter) {
+    private String getLimitedSqlWithOffset(
+            String orderBy, String fieldList, String from, String where, String rowFilter) {
         return String.format(
                 "with a as " + "(select ROW_NUMBER() OVER (ORDER BY %s) as [limit_row_number], %s from %s %s) "
                         + " select * from a where [limit_row_number] %s",
@@ -528,8 +536,9 @@ public final class MSSQLAdaptor extends DBAdaptor {
     private void addPKJoin(StringBuilder sb, String left, String right, TableElement t) {
         boolean needAnd = false;
         for (String s : t.getPrimaryKey().keySet()) {
-            if (needAnd)
+            if (needAnd) {
                 sb.append(" AND ");
+            }
             sb.append(String.format("  %s.\"%s\" = %s.\"%s\"%n", left, s, right, s));
             needAnd = true;
         }
@@ -540,8 +549,9 @@ public final class MSSQLAdaptor extends DBAdaptor {
             Connection conn, FromClause from, String orderBy,
             String navigationWhereClause, Set<String> fields, long offset
     ) {
-        if (navigationWhereClause == null)
+        if (navigationWhereClause == null) {
             throw new IllegalArgumentException();
+        }
 
         StringBuilder w = new StringBuilder(navigationWhereClause);
         final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
@@ -551,13 +561,15 @@ public final class MSSQLAdaptor extends DBAdaptor {
         final String sql;
 
         if (offset == 0) {
-            if (orderBy.length() > 0)
+            if (orderBy.length() > 0) {
                 w.append(" order by " + orderBy);
+            }
 
             sql = String.format(SELECT_TOP_1 + " %s %s;", fieldList,
                     from.getExpression(), useWhere ? " where " + w : w);
         } else {
-            sql = getLimitedSqlWithOffset(orderBy, fieldList, from.getExpression(), useWhere ? " where " + w : w.toString(), "=" + offset);
+            sql = getLimitedSqlWithOffset(
+                    orderBy, fieldList, from.getExpression(), useWhere ? " where " + w : w.toString(), "=" + offset);
         }
 
         // System.out.println(sql);
@@ -568,8 +580,9 @@ public final class MSSQLAdaptor extends DBAdaptor {
     public int getDBPid(Connection conn) {
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT @@SPID;")) {
-            if (rs.next())
+            if (rs.next()) {
                 return rs.getInt(1);
+            }
         } catch (SQLException e) {
             // do nothing
         }
@@ -583,9 +596,9 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
     @Override
     public List<String> getParameterizedViewList(Connection conn, Grain g) {
-        String sql = String.format("SELECT routine_name FROM INFORMATION_SCHEMA.ROUTINES " +
-                        "where routine_schema = '%s' AND routine_type='FUNCTION'",
-                g.getName());
+        String sql = String.format("SELECT routine_name FROM INFORMATION_SCHEMA.ROUTINES "
+                                 + "WHERE routine_schema = '%s' AND routine_type='FUNCTION'",
+                                   g.getName());
         List<String> result = new LinkedList<>();
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -600,14 +613,14 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
     @Override
     String getSelectTriggerBodySql(TriggerQuery query) {
-        String sql = String.format(" SELECT OBJECT_DEFINITION (id)%n" +
-                        "        FROM sysobjects%n" +
-                        "    WHERE id IN(SELECT tr.object_id%n" +
-                        "        FROM sys.triggers tr%n" +
-                        "        INNER JOIN sys.tables t ON tr.parent_id = t.object_id%n" +
-                        "        WHERE t.schema_id = SCHEMA_ID('%s')%n" +
-                        "        AND tr.name = '%s');"
-                , query.getSchema(), query.getName());
+        String sql = String.format(" SELECT OBJECT_DEFINITION (id)%n"
+                                 + "        FROM sysobjects%n"
+                                 + "    WHERE id IN(SELECT tr.object_id%n"
+                                 + "        FROM sys.triggers tr%n"
+                                 + "        INNER JOIN sys.tables t ON tr.parent_id = t.object_id%n"
+                                 + "        WHERE t.schema_id = SCHEMA_ID('%s')%n"
+                                 + "        AND tr.name = '%s');",
+                query.getSchema(), query.getName());
 
         return sql;
     }
@@ -634,15 +647,18 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
     @Override
     public boolean sequenceExists(Connection conn, String schema, String name) {
-        //TODO: It's a not good idea. We must check more concretely, cuz this method will work for other objects such as view etc.
+        //TODO: It's a not good idea. We must check more concretely, cuz
+        //      this method will work for other objects such as view etc.
         return objectExists(conn, schema, name);
     }
 
     @Override
     public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
-        String sql = "SELECT CAST(INCREMENT AS varchar(max)) AS INCREMENT, CAST(MINIMUM_VALUE AS varchar(max)) AS MINIMUM_VALUE, " +
-                "CAST(MAXIMUM_VALUE AS varchar(max)) AS MAXIMUM_VALUE, CAST(IS_CYCLING AS varchar(max)) AS IS_CYCLING" +
-                " FROM SYS.SEQUENCES WHERE SCHEMA_ID = SCHEMA_ID (?) AND NAME = ?";
+        String sql = "SELECT CAST(INCREMENT AS varchar(max)) AS INCREMENT,"
+                         + " CAST(MINIMUM_VALUE AS varchar(max)) AS MINIMUM_VALUE,"
+                         + " CAST(MAXIMUM_VALUE AS varchar(max)) AS MAXIMUM_VALUE,"
+                         + " CAST(IS_CYCLING AS varchar(max)) AS IS_CYCLING"
+                  + " FROM SYS.SEQUENCES WHERE SCHEMA_ID = SCHEMA_ID (?) AND NAME = ?";
 
         try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, s.getGrain().getName());

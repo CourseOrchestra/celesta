@@ -59,10 +59,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     @Override
     boolean userTablesExist(Connection conn) throws SQLException {
         try (
-                PreparedStatement check = conn
-                        .prepareStatement("select count(*) from information_schema.tables " +
-                                "WHERE table_type = 'TABLE' " +
-                                "AND table_schema <> 'INFORMATION_SCHEMA';");
+                PreparedStatement check = conn.prepareStatement(
+                        "SELECT COUNT(*) FROM information_schema.tables "
+                      + "WHERE table_type = 'TABLE' AND table_schema <> 'INFORMATION_SCHEMA';");
                 ResultSet rs = check.executeQuery()) {
             rs.next();
             return rs.getInt(1) != 0;
@@ -96,15 +95,18 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
 
     @Override
-    public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask, List<ParameterSetter> program) {
+    public PreparedStatement getInsertRecordStatement(
+            Connection conn, Table t, boolean[] nullsMask, List<ParameterSetter> program) {
+
         Iterator<String> columns = t.getColumns().keySet().iterator();
         // Создаём параметризуемую часть запроса, пропуская нулевые значения.
         StringBuilder fields = new StringBuilder();
         StringBuilder params = new StringBuilder();
         for (int i = 0; i < t.getColumns().size(); i++) {
             String c = columns.next();
-            if (nullsMask[i])
+            if (nullsMask[i]) {
                 continue;
+            }
             if (params.length() > 0) {
                 fields.append(", ");
                 params.append(", ");
@@ -118,8 +120,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
 
         String sql = String.format(
-                "insert into " + tableString(t.getGrain().getName(), t.getName()) + " (%s) " +
-                        "values (%s)", fields.toString(), params.toString()
+                "insert into " + tableString(t.getGrain().getName(), t.getName()) + " (%s) "
+                     + "values (%s)", fields.toString(), params.toString()
         );
 
         return prepareStatement(conn, sql);
@@ -127,7 +129,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
     @Override
     public List<String> getParameterizedViewList(Connection conn, Grain g) {
-        String sql = String.format("SELECT ALIAS_NAME FROM INFORMATION_SCHEMA.FUNCTION_ALIASES where alias_schema = '%s'",
+        String sql = String.format(
+                "SELECT ALIAS_NAME FROM INFORMATION_SCHEMA.FUNCTION_ALIASES where alias_schema = '%s'",
                 g.getName());
         List<String> result = new LinkedList<>();
         try (Statement stmt = conn.createStatement();
@@ -158,8 +161,8 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
                     String columnDefaultForIdentity = "NEXTVAL('" + tableString(grainName, tableName + "_seq") + "')";
 
-                    if ("integer".equalsIgnoreCase(typeName) &&
-                            columnDefaultForIdentity.equals(columnDefault)) {
+                    if ("integer".equalsIgnoreCase(typeName)
+                            && columnDefaultForIdentity.equals(columnDefault)) {
                         result.setType(IntegerColumn.class);
                         result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
                         return result;
@@ -167,11 +170,12 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                         result.setType(StringColumn.class);
                         result.setMax(true);
                     } else {
-                        for (Class<? extends Column> cc : COLUMN_CLASSES)
+                        for (Class<? extends Column> cc : COLUMN_CLASSES) {
                             if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(typeName)) {
                                 result.setType(cc);
                                 break;
                             }
+                        }
                     }
                     result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
                     if (result.getType() == StringColumn.class || result.getType() == DecimalColumn.class) {
@@ -206,9 +210,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                 result = "NEXTVAL(" + sequenceName + ")";
             }
         } else if (DateTimeColumn.class == ci.getType()) {
-            if (NOW.equalsIgnoreCase(defaultBody))
+            if (NOW.equalsIgnoreCase(defaultBody)) {
                 result = "GETDATE()";
-            else {
+            } else {
                 Matcher m = DATEPATTERN.matcher(defaultBody);
                 m.find();
                 result = String.format("'%s%s%s'", m.group(1), m.group(2), m.group(3));
@@ -217,8 +221,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
             result = "'" + defaultBody.toUpperCase() + "'";
         } else if (BinaryColumn.class == ci.getType()) {
             Matcher m = HEX_STRING.matcher(defaultBody);
-            if (m.find())
+            if (m.find()) {
                 result = "0x" + m.group(1).toUpperCase();
+            }
         } else if (StringColumn.class == ci.getType()) {
             if (defaultBody.contains("STRINGDECODE")) {
                 //H2 отдает default для срок в виде функции, которую нужно выполнить отдельным запросом
@@ -252,11 +257,11 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     @Override
     public DbPkInfo getPKInfo(Connection conn, TableElement t) {
         String sql = String.format(
-                "SELECT constraint_name AS indexName, column_name as colName " +
-                        "FROM  INFORMATION_SCHEMA.INDEXES " +
-                        "WHERE table_schema = '%s' " +
-                        "AND table_name = '%s' " +
-                        "AND index_type_name = 'PRIMARY KEY'",
+                "SELECT constraint_name AS indexName, column_name as colName "
+              + "FROM  INFORMATION_SCHEMA.INDEXES "
+              + "WHERE table_schema = '%s' "
+                      + "AND table_name = '%s' "
+                      + "AND index_type_name = 'PRIMARY KEY'",
                 t.getGrain().getName(), t.getName());
         DbPkInfo result = new DbPkInfo();
 
@@ -286,17 +291,16 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     @Override
     public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
 
-        String sql = "SELECT " +
-                "FK_NAME AS FK_CONSTRAINT_NAME, " +
-                "FKTABLE_NAME AS FK_TABLE_NAME, " +
-                "FKCOLUMN_NAME AS FK_COLUMN_NAME, " +
-                "PKTABLE_SCHEMA AS REF_GRAIN, " +
-                "PKTABLE_NAME AS REF_TABLE_NAME, " +
-                "UPDATE_RULE, " +
-                "DELETE_RULE " +
-                "FROM INFORMATION_SCHEMA.CROSS_REFERENCES " +
-                "WHERE FKTABLE_SCHEMA = '%s' " +
-                "ORDER BY FK_CONSTRAINT_NAME, ORDINAL_POSITION";
+        String sql = "SELECT FK_NAME AS FK_CONSTRAINT_NAME, "
+                          + "FKTABLE_NAME AS FK_TABLE_NAME, "
+                          + "FKCOLUMN_NAME AS FK_COLUMN_NAME, "
+                          + "PKTABLE_SCHEMA AS REF_GRAIN, "
+                          + "PKTABLE_NAME AS REF_TABLE_NAME, "
+                          + "UPDATE_RULE, "
+                          + "DELETE_RULE "
+                   + "FROM INFORMATION_SCHEMA.CROSS_REFERENCES "
+                   + "WHERE FKTABLE_SCHEMA = '%s' "
+                   + "ORDER BY FK_CONSTRAINT_NAME, ORDINAL_POSITION";
         sql = String.format(sql, g.getName());
 
         List<DbFkInfo> result = new LinkedList<>();
@@ -378,14 +382,17 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     String getLimitedSQL(
             FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
     ) {
-        if (offset == 0 && rowCount == 0)
+        if (offset == 0 && rowCount == 0) {
             throw new IllegalArgumentException();
+        }
         String sql;
-        if (offset == 0)
-            sql = getSelectFromOrderBy(from, whereClause, orderBy, fields) + String.format(" limit %d", rowCount);
-        else if (rowCount == 0)
-            sql = getSelectFromOrderBy(from, whereClause, orderBy, fields) + String.format(" limit -1 offset %d", offset);
-        else {
+        if (offset == 0) {
+            sql = getSelectFromOrderBy(from, whereClause, orderBy, fields)
+                    + String.format(" limit %d", rowCount);
+        } else if (rowCount == 0) {
+            sql = getSelectFromOrderBy(from, whereClause, orderBy, fields)
+                    + String.format(" limit -1 offset %d", offset);
+        } else {
             sql = getSelectFromOrderBy(from, whereClause, orderBy, fields)
                     + String.format(" limit %d offset %d", rowCount, offset);
         }
@@ -397,10 +404,10 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         Map<String, DbIndexInfo> result = new HashMap<>();
 
         String sql = String.format(
-                "SELECT table_name as tableName, index_name as indexName, column_name as colName " +
-                        "FROM  INFORMATION_SCHEMA.INDEXES " +
-                        "WHERE table_schema = '%s' AND primary_key <> true",
-                g.getName());
+                "SELECT table_name as tableName, index_name as indexName, column_name as colName "
+              + "FROM INFORMATION_SCHEMA.INDEXES "
+              + "WHERE table_schema = '%s' AND primary_key <> true",
+              g.getName());
 
         try {
             Statement stmt = conn.createStatement();
@@ -453,8 +460,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     public int getDBPid(Connection conn) {
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT SESSION_ID()")) {
-            if (rs.next())
+            if (rs.next()) {
                 return rs.getInt(1);
+            }
         } catch (SQLException e) {
             //do nothing
         }
@@ -496,8 +504,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
     @Override
     public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
-        String sql = "SELECT INCREMENT, MIN_VALUE, MAX_VALUE, IS_CYCLE " +
-                "FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
+        String sql = "SELECT INCREMENT, MIN_VALUE, MAX_VALUE, IS_CYCLE "
+                   + "FROM INFORMATION_SCHEMA.SEQUENCES "
+                   + "WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
 
         try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, s.getGrain().getName());

@@ -64,7 +64,7 @@ class PostgresDecimalColumnDefiner extends ColumnDefiner {
 
     @Override
     public String getMainDefinition(Column c) {
-        DecimalColumn dc = (DecimalColumn)c;
+        DecimalColumn dc = (DecimalColumn) c;
         String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
         return join(c.getQuotedName(), fieldType, nullable(c));
     }

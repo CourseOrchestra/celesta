@@ -97,8 +97,9 @@ public class DecimalColumn extends Column {
     void save(PrintWriter bw) throws IOException {
         super.save(bw);
         bw.write(" DECIMAL");
-        if (!isNullable())
+        if (!isNullable()) {
             bw.write(" NOT NULL");
+        }
         BigDecimal defaultVal = getDefaultValue();
         if (defaultVal != null) {
             bw.write(" DEFAULT ");

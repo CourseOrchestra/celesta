@@ -68,8 +68,9 @@ public abstract class NamedElementHolder<T extends NamedElement> implements Coll
         int i = -1;
         for (String c : namespace.keySet()) {
             i++;
-            if (c.equals(name))
+            if (c.equals(name)) {
                 return i;
+            }
         }
         return i;
     }

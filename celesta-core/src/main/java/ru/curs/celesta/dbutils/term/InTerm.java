@@ -30,10 +30,11 @@ public final class InTerm extends WhereTerm {
 
   @Override
   public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
-    for (WhereTermsMaker wtm : filter.getOtherWhereTermMakers())
+    for (WhereTermsMaker wtm : filter.getOtherWhereTermMakers()) {
       if (wtm != null) {
         wtm.getWhereTerm().programParams(program, queryBuildingHelper);
       }
+    }
   }
 
 

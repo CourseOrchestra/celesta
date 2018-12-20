@@ -34,15 +34,19 @@ public final class LyraFieldValue extends LyraNamedElement {
         xmlWriter.writeStartElement(getName());
         xmlWriter.writeAttribute("type", lff.getType().toString());
 
-        if (lff.getSubtype() != null)
+        if (lff.getSubtype() != null) {
             xmlWriter.writeAttribute(SUBTYPE, lff.getSubtype());
+        }
 
-        if (val == null)
+        if (val == null) {
             xmlWriter.writeAttribute("null", Boolean.toString(true));
-        if (lff.getScale() != DEFAULT_SCALE)
+        }
+        if (lff.getScale() != DEFAULT_SCALE) {
             xmlWriter.writeAttribute(SCALE, Integer.toString(lff.getScale()));
-        if (lff.isRequired())
+        }
+        if (lff.isRequired()) {
             xmlWriter.writeAttribute(REQUIRED, Boolean.toString(true));
+        }
 
         if (val instanceof Date) {
             SimpleDateFormat sdf = new SimpleDateFormat(XML_DATE_FORMAT);

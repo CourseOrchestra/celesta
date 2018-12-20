@@ -10,12 +10,18 @@ import java.util.function.Supplier;
 
 public final class ColumnDefinerFactory {
 
-    private static final Map<DBType, Map<Class<? extends Column>, ColumnDefiner>> COLUMN_DEFINERS = new HashMap<>();
-    private static final Map<DBType, Function<Class<? extends Column>, ColumnDefiner>> FACTORY_METHODS = new HashMap<>();
-    private static final Map<Class<? extends Column>, Supplier<? extends ColumnDefiner>> H2_METHODS = new HashMap<>();
-    private static final Map<Class<? extends Column>, Supplier<? extends ColumnDefiner>> POSTGRES_METHODS = new HashMap<>();
-    private static final Map<Class<? extends Column>, Supplier<? extends ColumnDefiner>> MS_SQL_METHODS = new HashMap<>();
-    private static final Map<Class<? extends Column>, Supplier<? extends ColumnDefiner>> ORA_METHODS = new HashMap<>();
+    private static final Map<DBType, Map<Class<? extends Column>, ColumnDefiner>>
+                         COLUMN_DEFINERS = new HashMap<>();
+    private static final Map<DBType, Function<Class<? extends Column>, ColumnDefiner>>
+                         FACTORY_METHODS = new HashMap<>();
+    private static final Map<Class<? extends Column>, Supplier<? extends ColumnDefiner>>
+                         H2_METHODS = new HashMap<>();
+    private static final Map<Class<? extends Column>, Supplier<? extends ColumnDefiner>>
+                         POSTGRES_METHODS = new HashMap<>();
+    private static final Map<Class<? extends Column>, Supplier<? extends ColumnDefiner>>
+                         MS_SQL_METHODS = new HashMap<>();
+    private static final Map<Class<? extends Column>, Supplier<? extends ColumnDefiner>>
+                         ORA_METHODS = new HashMap<>();
 
     static {
         FACTORY_METHODS.put(

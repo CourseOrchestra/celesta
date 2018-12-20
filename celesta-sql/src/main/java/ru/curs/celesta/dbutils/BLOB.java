@@ -33,8 +33,9 @@ public final class BLOB implements Cloneable {
             @Override
             public int read() throws IOException {
                 int result = source.read();
-                if (result >= 0)
+                if (result >= 0) {
                     size++;
+                }
                 return result;
             }
         };
@@ -93,8 +94,9 @@ public final class BLOB implements Cloneable {
             i += b.setBytes(i, currPage.data);
             currPage = currPage.nextPage;
         }
-        if (currPage != null)
+        if (currPage != null) {
             b.setBytes(i, currPage.data, 0, currPage.pos);
+        }
     }
 
     /**
@@ -167,9 +169,9 @@ public final class BLOB implements Cloneable {
 
                 @Override
                 public int read() {
-                    if (i < currentPage.pos)
+                    if (i < currentPage.pos) {
                         return (int) currentPage.data[i++] & BYTE_MASK;
-                    else if (currentPage.nextPage != null) {
+                    } else if (currentPage.nextPage != null) {
                         i = 0;
                         currentPage = currentPage.nextPage;
                         return read();

@@ -112,8 +112,9 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
         StringBuilder params = new StringBuilder();
         for (int i = 0; i < t.getColumns().size(); i++) {
             String c = columns.next();
-            if (nullsMask[i])
+            if (nullsMask[i]) {
                 continue;
+            }
             if (params.length() > 0) {
                 fields.append(", ");
                 params.append(", ");
@@ -126,7 +127,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
         }
 
         String returning = "";
-        for (Column c : t.getColumns().values())
+        for (Column c : t.getColumns().values()) {
             if (c instanceof IntegerColumn) {
                 IntegerColumn ic = (IntegerColumn) c;
 
@@ -134,8 +135,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                     returning = " returning " + c.getQuotedName();
                     break;
                 }
-
             }
+        }
 
         final String sql;
 
@@ -180,11 +181,12 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                         result.setType(StringColumn.class);
                         result.setMax(true);
                     } else {
-                        for (Class<? extends Column> cc : COLUMN_CLASSES)
+                        for (Class<? extends Column> cc : COLUMN_CLASSES) {
                             if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(typeName)) {
                                 result.setType(cc);
                                 break;
                             }
+                        }
                     }
                     result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
                     if (result.getType() == StringColumn.class || result.getType() == DecimalColumn.class) {
@@ -211,9 +213,9 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     private String modifyDefault(DbColumnInfo ci, String defaultBody) {
         String result = defaultBody;
         if (DateTimeColumn.class == ci.getType()) {
-            if (NOW.equalsIgnoreCase(defaultBody))
+            if (NOW.equalsIgnoreCase(defaultBody)) {
                 result = "GETDATE()";
-            else {
+            } else {
                 Matcher m = DATEPATTERN.matcher(defaultBody);
                 m.find();
                 result = String.format("'%s%s%s'", m.group(1), m.group(2), m.group(3));
@@ -221,14 +223,16 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
         } else if (BooleanColumn.class == ci.getType()) {
             result = "'" + defaultBody.toUpperCase() + "'";
         } else if (StringColumn.class == ci.getType()) {
-            if (result.endsWith("::text"))
+            if (result.endsWith("::text")) {
                 result = result.substring(0, result.length() - "::text".length());
-            else if (result.endsWith("::character varying"))
+            } else if (result.endsWith("::character varying")) {
                 result = result.substring(0, result.length() - "::character varying".length());
+            }
         } else if (BinaryColumn.class == ci.getType()) {
             Matcher m = HEX_STRING.matcher(defaultBody);
-            if (m.find())
+            if (m.find()) {
                 result = "0x" + m.group(1).toUpperCase();
+            }
         }
         return result;
     }
@@ -257,14 +261,17 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     String getLimitedSQL(
             FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
     ) {
-        if (offset == 0 && rowCount == 0)
+        if (offset == 0 && rowCount == 0) {
             throw new IllegalArgumentException();
+        }
         String sql;
-        if (offset == 0)
-            sql = getSelectFromOrderBy(from, whereClause, orderBy, fields) + String.format(" limit %d", rowCount);
-        else if (rowCount == 0)
-            sql = getSelectFromOrderBy(from, whereClause, orderBy, fields) + String.format(" limit all offset %d", offset);
-        else {
+        if (offset == 0) {
+            sql = getSelectFromOrderBy(from, whereClause, orderBy, fields)
+                    + String.format(" limit %d", rowCount);
+        } else if (rowCount == 0) {
+            sql = getSelectFromOrderBy(from, whereClause, orderBy, fields)
+                    + String.format(" limit all offset %d", offset);
+        } else {
             sql = getSelectFromOrderBy(from, whereClause, orderBy, fields)
                     + String.format(" limit %d offset %d", rowCount, offset);
         }
@@ -275,11 +282,11 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     @Override
     public List<String> getParameterizedViewList(Connection conn, Grain g) {
         String sql = String.format(
-                " SELECT r.routine_name FROM INFORMATION_SCHEMA.ROUTINES r " +
-                        "where r.routine_schema = '%s' AND r.routine_type='FUNCTION' " +
-                        "AND exists (select * from pg_proc p\n" +
-                        "           where p.proname = r.routine_name\n" +
-                        "           AND upper(pg_get_function_result(p.oid)) like upper('%%table%%'))",
+                " SELECT r.routine_name FROM INFORMATION_SCHEMA.ROUTINES r "
+               + "WHERE r.routine_schema = '%s' AND r.routine_type='FUNCTION' "
+                   + "AND exists (select * from pg_proc p\n"
+                       + "        where p.proname = r.routine_name\n"
+                           + "        AND upper(pg_get_function_result(p.oid)) like upper('%%table%%'))",
                 g.getName());
         List<String> result = new LinkedList<>();
         try (Statement stmt = conn.createStatement();
@@ -394,8 +401,9 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                 while (rs.next()) {
                     String tabName = rs.getString("tablename");
                     String indName = rs.getString("indexname");
-                    if (indName.endsWith(CONJUGATE_INDEX_POSTFIX))
+                    if (indName.endsWith(CONJUGATE_INDEX_POSTFIX)) {
                         continue;
+                    }
                     DbIndexInfo ii = new DbIndexInfo(tabName, indName);
                     result.put(indName, ii);
                     int colCount = rs.getInt("colcount");
@@ -476,8 +484,9 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     public int getDBPid(Connection conn) {
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("select pg_backend_pid();")) {
-            if (rs.next())
+            if (rs.next()) {
                 return rs.getInt(1);
+            }
         } catch (SQLException e) {
             // do nothing
         }
@@ -494,14 +503,15 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
     @Override
     String getSelectTriggerBodySql(TriggerQuery query) {
-        String sql = String.format("select DISTINCT(prosrc)\n" +
-                        "  from pg_trigger, pg_proc, information_schema.triggers\n" +
-                        "  where\n" +
-                        "    pg_proc.oid=pg_trigger.tgfoid\n" +
-                        "    and information_schema.triggers.trigger_schema='%s'\n" +
-                        "    and information_schema.triggers.event_object_table='%s'" +
-                        "    and pg_trigger.tgname = '%s'\n"
-                , query.getSchema(), query.getTableName(), query.getName());
+        String sql = String.format(
+                "select DISTINCT(prosrc)\n"
+             + " from pg_trigger, pg_proc, information_schema.triggers\n"
+             + " where\n"
+                 + " pg_proc.oid=pg_trigger.tgfoid\n"
+                 + " and information_schema.triggers.trigger_schema='%s'\n"
+                 + " and information_schema.triggers.event_object_table='%s'"
+                 + " and pg_trigger.tgname = '%s'\n",
+                query.getSchema(), query.getTableName(), query.getName());
 
         return sql;
     }
@@ -518,8 +528,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 
     @Override
     public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
-        String sql = "SELECT INCREMENT, MINIMUM_VALUE, MAXIMUM_VALUE, CYCLE_OPTION" +
-                " FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
+        String sql = "SELECT INCREMENT, MINIMUM_VALUE, MAXIMUM_VALUE, CYCLE_OPTION"
+                  + " FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
 
         try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, s.getGrain().getName().replace("\"", ""));

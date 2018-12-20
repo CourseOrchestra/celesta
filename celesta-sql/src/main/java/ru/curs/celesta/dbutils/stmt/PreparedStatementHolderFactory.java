@@ -24,8 +24,9 @@ public class PreparedStatementHolderFactory {
             protected int[] getNullsMaskIndices()  {
                 // we monitor all columns for nulls
                 int[] result = new int[meta.getColumns().size()];
-                for (int i = 0; i < result.length; i++)
+                for (int i = 0; i < result.length; i++) {
                     result[i] = i;
+                }
                 return result;
             }
 

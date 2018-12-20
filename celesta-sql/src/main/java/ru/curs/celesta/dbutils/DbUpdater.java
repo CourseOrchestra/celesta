@@ -34,7 +34,9 @@ public abstract class DbUpdater<T extends ICallContext> {
     protected final ConnectionPool connectionPool;
     protected ISchemaCursor schemaCursor;
 
-    public DbUpdater(ConnectionPool connectionPool, AbstractScore score, boolean forceDdInitialize, DBAdaptor dbAdaptor) {
+    public DbUpdater(
+            ConnectionPool connectionPool, AbstractScore score, boolean forceDdInitialize, DBAdaptor dbAdaptor) {
+
         this.connectionPool = connectionPool;
         this.score = score;
         this.forceDdInitialize = forceDdInitialize;
@@ -61,9 +63,10 @@ public abstract class DbUpdater<T extends ICallContext> {
         // Проверяем наличие главной системной таблицы.
         if (!dbAdaptor.tableExists(conn, score.getSysSchemaName(), getSchemasTableName())) {
             // Если главной таблицы нет, а другие таблицы есть -- ошибка.
-            if (dbAdaptor.userTablesExist() && !forceDdInitialize)
+            if (dbAdaptor.userTablesExist() && !forceDdInitialize) {
                 throw new CelestaException("No %s.%s table found in non-empty database.",
                         score.getSysSchemaName(), getSchemasTableName());
+            }
             // Если база вообще пустая, то создаём системные таблицы.
             updateSysGrain(context);
         }
@@ -84,9 +87,10 @@ public abstract class DbUpdater<T extends ICallContext> {
             Map<String, GrainInfo> dbGrains = new HashMap<>();
             while (schemaCursor.nextInSet()) {
 
-                if (!(EXPECTED_STATUSES.contains(schemaCursor.getState())))
-                    throw new CelestaException("Cannot proceed with database upgrade: there are %s " +
-                            "not in 'ready', 'recover' or 'lock' state.", getSchemasTableName());
+                if (!(EXPECTED_STATUSES.contains(schemaCursor.getState()))) {
+                    throw new CelestaException("Cannot proceed with database upgrade: there are %s "
+                            + "not in 'ready', 'recover' or 'lock' state.", getSchemasTableName());
+                }
                 GrainInfo gi = new GrainInfo();
                 gi.checksum = (int) Long.parseLong(schemaCursor.getChecksum(), 16);
                 gi.length = schemaCursor.getLength();
@@ -172,8 +176,9 @@ public abstract class DbUpdater<T extends ICallContext> {
             return true;
         }
 
-        if (gi.recover)
+        if (gi.recover) {
             return updateGrain(g, connectionPool);
+        }
 
         // Как соотносятся версии?
         switch (g.getVersion().compareTo(gi.version)) {
@@ -196,8 +201,9 @@ public abstract class DbUpdater<T extends ICallContext> {
             case EQUALS:
                 // Версия не изменилась: апгрейдим лишь в том случае, если
                 // изменилась контрольная сумма.
-                if (gi.length != g.getLength() || gi.checksum != g.getChecksum())
+                if (gi.length != g.getLength() || gi.checksum != g.getChecksum()) {
                     return updateGrain(g, connectionPool);
+                }
             default:
                 return true;
         }
@@ -239,9 +245,11 @@ public abstract class DbUpdater<T extends ICallContext> {
             updateSequences(g);
 
             // Обновляем все таблицы.
-            for (Table t : g.getElements(Table.class).values())
-                if (updateTable(t, dbFKeys))
+            for (Table t : g.getElements(Table.class).values()) {
+                if (updateTable(t, dbFKeys)) {
                     modifiedTablesMap.add(t.getName());
+                }
+            }
 
             // Обновляем все индексы.
             updateGrainIndices(g);
@@ -291,8 +299,8 @@ public abstract class DbUpdater<T extends ICallContext> {
             }
             // Если что-то пошло не так
             schemaCursor.setState(ISchemaCursor.ERROR);
-            schemaCursor.setMessage(String.format("%s/%d/%08X: %s", g.getVersion().toString(), g.getLength(), g.getChecksum(),
-                    e.getMessage() + newMsg));
+            schemaCursor.setMessage(String.format("%s/%d/%08X: %s",
+                    g.getVersion().toString(), g.getLength(), g.getChecksum(), e.getMessage() + newMsg));
             schemaCursor.update();
             connectionPool.commit(schemaCursor.callContext().getConn());
             return false;
@@ -307,20 +315,23 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     void createViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
-        for (View v : g.getElements(View.class).values())
+        for (View v : g.getElements(View.class).values()) {
             dbAdaptor.createView(conn, v);
+        }
     }
 
     void dropAllViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
-        for (String viewName : dbAdaptor.getViewList(conn, g))
+        for (String viewName : dbAdaptor.getViewList(conn, g)) {
             dbAdaptor.dropView(conn, g.getName(), viewName);
+        }
     }
 
     void createParameterizedViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
-        for (ParameterizedView pv : g.getElements(ParameterizedView.class).values())
+        for (ParameterizedView pv : g.getElements(ParameterizedView.class).values()) {
             dbAdaptor.createParameterizedView(conn, pv);
+        }
     }
 
     void updateSequences(Grain g) {
@@ -329,8 +340,9 @@ public abstract class DbUpdater<T extends ICallContext> {
         for (SequenceElement s : g.getElements(SequenceElement.class).values()) {
             if (dbAdaptor.sequenceExists(conn, g.getName(), s.getName())) {
                 DbSequenceInfo sequenceInfo = dbAdaptor.getSequenceInfo(conn, s);
-                if (sequenceInfo.reflects(s))
+                if (sequenceInfo.reflects(s)) {
                     dbAdaptor.alterSequence(conn, s);
+                }
             } else {
                 dbAdaptor.createSequence(conn, s);
             }
@@ -340,17 +352,19 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     void dropAllParameterizedViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
-        for (String viewName : dbAdaptor.getParameterizedViewList(conn, g))
+        for (String viewName : dbAdaptor.getParameterizedViewList(conn, g)) {
             dbAdaptor.dropParameterizedView(conn, g.getName(), viewName);
+        }
     }
 
     void updateGrainFKeys(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         Map<String, DbFkInfo> dbFKeys = new HashMap<>();
-        for (DbFkInfo dbi : dbAdaptor.getFKInfo(conn, g))
+        for (DbFkInfo dbi : dbAdaptor.getFKInfo(conn, g)) {
             dbFKeys.put(dbi.getName(), dbi);
-        for (Table t : g.getElements(Table.class).values())
-            if (t.isAutoUpdate())
+        }
+        for (Table t : g.getElements(Table.class).values()) {
+            if (t.isAutoUpdate()) {
                 for (ForeignKey fk : t.getForeignKeys()) {
                     if (dbFKeys.containsKey(fk.getConstraintName())) {
                         // FK обнаружен в базе, апдейтим при необходимости.
@@ -364,15 +378,19 @@ public abstract class DbUpdater<T extends ICallContext> {
                         dbAdaptor.createFK(conn, fk);
                     }
                 }
+            }
+        }
     }
 
     List<DbFkInfo> dropOrphanedGrainFKeys(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         List<DbFkInfo> dbFKeys = dbAdaptor.getFKInfo(conn, g);
         Map<String, ForeignKey> fKeys = new HashMap<>();
-        for (Table t : g.getElements(Table.class).values())
-            for (ForeignKey fk : t.getForeignKeys())
+        for (Table t : g.getElements(Table.class).values()) {
+            for (ForeignKey fk : t.getForeignKeys()) {
                 fKeys.put(fk.getConstraintName(), fk);
+            }
+        }
         Iterator<DbFkInfo> i = dbFKeys.iterator();
         while (i.hasNext()) {
             DbFkInfo dbFKey = i.next();
@@ -397,9 +415,11 @@ public abstract class DbUpdater<T extends ICallContext> {
         Map<String, DbIndexInfo> dbIndices = dbAdaptor.getIndices(conn, g);
         Map<String, Index> myIndices = g.getIndices();
         // Удаление несуществующих в метаданных индексов.
-        for (DbIndexInfo dBIndexInfo : dbIndices.values())
-            if (!myIndices.containsKey(dBIndexInfo.getIndexName()))
+        for (DbIndexInfo dBIndexInfo : dbIndices.values()) {
+            if (!myIndices.containsKey(dBIndexInfo.getIndexName())) {
                 dbAdaptor.dropIndex(g, dBIndexInfo);
+            }
+        }
 
         // Удаление индексов, которые будут в дальнейшем изменены, перед
         // обновлением таблиц.
@@ -407,8 +427,9 @@ public abstract class DbUpdater<T extends ICallContext> {
             DbIndexInfo dBIndexInfo = dbIndices.get(e.getKey());
             if (dBIndexInfo != null) {
                 boolean reflects = dBIndexInfo.reflects(e.getValue());
-                if (!reflects)
+                if (!reflects) {
                     dbAdaptor.dropIndex(g, dBIndexInfo);
+                }
 
                 // Удаление индексов на тех полях, которые подвергнутся
                 // изменению
@@ -449,8 +470,9 @@ public abstract class DbUpdater<T extends ICallContext> {
     boolean updateTable(Table t, List<DbFkInfo> dbFKeys) {
         // Если таблица скомпилирована с опцией NO AUTOUPDATE, то ничего не
         // делаем с ней
-        if (!t.isAutoUpdate())
+        if (!t.isAutoUpdate()) {
             return false;
+        }
 
         final Connection conn = schemaCursor.callContext().getConn();
 
@@ -465,7 +487,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         boolean modified = updateColumns(t, conn, dbColumns, dbFKeys);
 
         // Для версионированных таблиц синхронизируем поле recversion
-        if (t.isVersioned())
+        if (t.isVersioned()) {
             if (dbColumns.contains(VersionedElement.REC_VERSION)) {
                 DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, t.getRecVersionField());
                 if (!ci.reflects(t.getRecVersionField())) {
@@ -476,13 +498,15 @@ public abstract class DbUpdater<T extends ICallContext> {
                 dbAdaptor.createColumn(conn, t.getRecVersionField());
                 modified = true;
             }
+        }
 
 
         // Ещё раз проверяем первичный ключ и при необходимости (если его нет
         // или он был сброшен) создаём.
         pkInfo = dbAdaptor.getPKInfo(conn, t);
-        if (pkInfo.isEmpty())
+        if (pkInfo.isEmpty()) {
             dbAdaptor.createPK(conn, t);
+        }
 
         dbAdaptor.updateVersioningTrigger(conn, t);
 

@@ -64,8 +64,8 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
                     try {
                         return String.format("(\"%s\" = %s)",
                                 alias,
-                                DateTimeColumn.CELESTA_TYPE.equals(mv.getColumn(alias).getCelestaType()) ?
-                                        "TRUNC(?)" : "?");
+                                DateTimeColumn.CELESTA_TYPE.equals(
+                                        mv.getColumn(alias).getCelestaType()) ? "TRUNC(?)" : "?");
                     } catch (ParseException e) {
                         throw new RuntimeException(e);
                     }
@@ -107,9 +107,9 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
         String whereCondition = groupByColumnValues.keySet().stream()
                 .map(alias -> {
                     try {
-                        return DateTimeColumn.CELESTA_TYPE.equals(t.getColumn(alias).getCelestaType()) ?
-                                "TRUNC(\"" + alias + "\") = TRUNC(?)"
-                                : "\"" + alias + "\" = ?";
+                        return DateTimeColumn.CELESTA_TYPE.equals(
+                                t.getColumn(alias).getCelestaType()) ? "TRUNC(\"" + alias + "\") = TRUNC(?)"
+                                                                     : "\"" + alias + "\" = ?";
                     } catch (ParseException e) {
                         throw new RuntimeException(e);
                     }
@@ -159,7 +159,9 @@ abstract public class AbstractMaterializeViewTrigger implements Trigger {
         setParamsAndRun(conn, groupByColumnValues, insertSql);
     }
 
-    private void setParamsAndRun(Connection conn, HashMap<String, Object> groupByColumnValues, String insertSql) throws SQLException {
+    private void setParamsAndRun(
+            Connection conn, HashMap<String, Object> groupByColumnValues, String insertSql) throws SQLException {
+
         try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
             int i = 0;
             for (Object value : groupByColumnValues.values()) {

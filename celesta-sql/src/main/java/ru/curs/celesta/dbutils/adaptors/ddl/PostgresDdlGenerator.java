@@ -35,12 +35,12 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     List<String> dropParameterizedView(String schemaName, String viewName, Connection conn)  {
         List<String> result = new ArrayList<>();
 
-        String sql = "select format('DROP FUNCTION IF EXISTS %s(%s);',\n" +
-                "  p.oid::regproc, pg_get_function_identity_arguments(p.oid))\n" +
-                "  FROM pg_catalog.pg_proc p\n" +
-                "    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace\n" +
-                "  WHERE\n" +
-                "    p.oid::regproc::text = '" + String.format("%s.%s", schemaName, viewName) + "';";
+        String sql = "SELECT format('DROP FUNCTION IF EXISTS %s(%s);',\n"
+                     + "  p.oid::regproc, pg_get_function_identity_arguments(p.oid))\n"
+                  + " FROM pg_catalog.pg_proc p\n"
+                      + " LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace\n"
+                  + " WHERE\n"
+                      + " p.oid::regproc::text = '" + String.format("%s.%s", schemaName, viewName) + "';";
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             if (rs.next()) {
@@ -85,9 +85,10 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                         this.rememberTrigger(query);
                     }
                 } else {
-                    if (triggerExists)
+                    if (triggerExists) {
                         // DROP TRIGGER
                         result.add(dropTrigger(query));
+                    }
                 }
             }
         } catch (CelestaException e) {
@@ -134,10 +135,11 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
 
         // Если тип не совпадает
         if (c.getClass() != actual.getType()) {
-            if (c.getClass() == IntegerColumn.class)
+            if (c.getClass() == IntegerColumn.class) {
                 alterSql.append(String.format(" USING (%s::integer);", c.getQuotedName()));
-            else if (c.getClass() == BooleanColumn.class)
+            } else if (c.getClass() == BooleanColumn.class) {
                 alterSql.append(String.format(" USING (%s::boolean);", c.getQuotedName()));
+            }
 
             sqlList.add(alterSql.toString());
         } else if (c.getClass() == StringColumn.class) {
@@ -146,7 +148,7 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                 sqlList.add(alterSql.toString());
             }
         } else if (c.getClass() == DecimalColumn.class) {
-            DecimalColumn dc = (DecimalColumn)c;
+            DecimalColumn dc = (DecimalColumn) c;
             if (dc.getPrecision() != actual.getLength() || dc.getScale() != dc.getScale()) {
                 sqlList.add(alterSql.toString());
             }
@@ -237,12 +239,13 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                             StringBuilder sb = new StringBuilder(e.getKey()).append(" ");
 
                             if (pv.getAggregateColumns().containsKey(e.getKey())
-                                    && e.getValue().getColumnType() != ViewColumnType.DECIMAL)
+                                    && e.getValue().getColumnType() != ViewColumnType.DECIMAL) {
                                 sb.append("bigint");
-                            else
+                            } else {
                                 sb.append(ColumnDefinerFactory.getColumnDefiner(getType(),
                                         CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType()))
                                         .dbFieldType());
+                            }
 
                             return sb.toString();
                         }
@@ -283,20 +286,26 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
             String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
             String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
-            String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()", t.getGrain().getName(), mv.getName());
-            String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()", t.getGrain().getName(), mv.getName());
-            String deleteTriggerFunctionFullName = String.format("\"%s\".\"%s_deleteTriggerFunc\"()", t.getGrain().getName(), mv.getName());
+            String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()",
+                    t.getGrain().getName(), mv.getName());
+            String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()",
+                    t.getGrain().getName(), mv.getName());
+            String deleteTriggerFunctionFullName = String.format("\"%s\".\"%s_deleteTriggerFunc\"()",
+                    t.getGrain().getName(), mv.getName());
 
 
             query.withName(insertTriggerName);
-            if (this.triggerExists(conn, query))
+            if (this.triggerExists(conn, query)) {
                 result.add(dropTrigger(query));
+            }
             query.withName(updateTriggerName);
-            if (this.triggerExists(conn, query))
+            if (this.triggerExists(conn, query)) {
                 result.add(dropTrigger(query));
+            }
             query.withName(deleteTriggerName);
-            if (this.triggerExists(conn, query))
+            if (this.triggerExists(conn, query)) {
                 result.add(dropTrigger(query));
+            }
 
             String sqlTemplate = "DROP FUNCTION IF EXISTS %s";
 
@@ -339,9 +348,12 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
             String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
             //функции уникальны для postgres
-            String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()", t.getGrain().getName(), mv.getName());
-            String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()", t.getGrain().getName(), mv.getName());
-            String deleteTriggerFunctionFullName = String.format("\"%s\".\"%s_deleteTriggerFunc\"()", t.getGrain().getName(), mv.getName());
+            String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()",
+                    t.getGrain().getName(), mv.getName());
+            String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()",
+                    t.getGrain().getName(), mv.getName());
+            String deleteTriggerFunctionFullName = String.format("\"%s\".\"%s_deleteTriggerFunc\"()",
+                    t.getGrain().getName(), mv.getName());
 
             String mvColumns = mv.getColumns().keySet().stream()
                     .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
@@ -368,7 +380,9 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                                 .append("\" %1$s ");
 
                         if (e.getValue() instanceof Sum) {
-                            sb.append("%2$s.\"").append(mv.getColumnRef(alias.replace("\"", "")).getName()).append("\"");
+                            sb.append("%2$s.\"")
+                              .append(mv.getColumnRef(alias.replace("\"", "")).getName())
+                              .append("\"");
                         } else if (e.getValue() instanceof Count) {
                             sb.append("1");
                         }
@@ -382,8 +396,9 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                     .filter(alias -> mv.isGroupByColumn(alias))
                     .map(alias -> {
                                 Column colRef = mv.getColumnRef(alias);
-                                if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+                                if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
                                     return "\"" + alias + "\" = date_trunc('DAY', %1$s.\"" + colRef.getName() + "\")";
+                                }
                                 return "\"" + alias + "\" = %1$s.\"" + colRef.getName() + "\"";
                             }
                     ).collect(Collectors.joining(" AND "));
@@ -398,10 +413,10 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                         } else {
                             Column colRef = mv.getColumnRef(alias);
 
-                            if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+                            if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
                                 return "date_trunc('DAY', %1$s.\"" + mv.getColumnRef(alias) + "\")";
+                            }
                             return "%1$s.\"" + mv.getColumnRef(alias) + "\"";
-
                         }
                     })
                     .collect(Collectors.joining(", "));
@@ -410,39 +425,42 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                     .append(" AND \"" + MaterializedView.SURROGATE_COUNT + "\" = 0 ")
                     .toString();
 
-            String insertSql = String.format("UPDATE %s SET %s \n" +
-                            "WHERE %s ;\n" +
-                            "GET DIAGNOSTICS updatedCount = ROW_COUNT; \n" +
-                            "IF updatedCount = 0 THEN \n" +
-                            " INSERT INTO %s (%s) VALUES(%s); \n" +
-                            "END IF;\n", fullMvName, String.format(setStatementTemplate, "+", "NEW"),
+            String insertSql = String.format(
+                    "UPDATE %s SET %s WHERE %s ;\n"
+                  + "GET DIAGNOSTICS updatedCount = ROW_COUNT; \n"
+                  + "IF updatedCount = 0 THEN \n"
+                     + " INSERT INTO %s (%s) VALUES(%s); \n"
+                  + "END IF;\n",
+                    fullMvName, String.format(setStatementTemplate, "+", "NEW"),
                     String.format(rowConditionTemplate, "NEW"), fullMvName,
                     mvColumns + ", " + MaterializedView.SURROGATE_COUNT,
                     String.format(rowColumnsTemplate, "NEW") + ", 1");
 
-            String deleteSql = String.format("UPDATE %s SET %s \n" +
-                            "WHERE %s ;\n" +
-                            "DELETE FROM %s WHERE %s ;\n", fullMvName, String.format(setStatementTemplate, "-", "OLD"),
+            String deleteSql = String.format(
+                    "UPDATE %s SET %s WHERE %s ;\n"
+                  + "DELETE FROM %s WHERE %s ;\n",
+                    fullMvName, String.format(setStatementTemplate, "-", "OLD"),
                     String.format(rowConditionTemplate, "OLD"), fullMvName, whereForDelete);
 
             String sql;
 
             //INSERT
-            sql = String.format("CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n " +
-                            "DECLARE\n" +
-                            "  updatedCount int;\n" +
-                            "BEGIN \n" +
-                            MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n" +
-                            "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n" +
-                            "%s " +
-                            "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
+            sql = String.format(
+                    "CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n "
+                  + "DECLARE\n"
+                      + "updatedCount int;\n"
+                      + "BEGIN \n"
+                          + MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n"
+                          + "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n"
+                          + "%s "
+                          + "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
                     insertTriggerFunctionFullName, mv.getChecksum(), fullMvName, insertSql);
 
             //System.out.println(sql);
             result.add(sql);
 
-            sql = String.format("CREATE TRIGGER \"%s\" AFTER INSERT " +
-                            "ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
+            sql = String.format(
+                    "CREATE TRIGGER \"%s\" AFTER INSERT ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
                     insertTriggerName, fullTableName, insertTriggerFunctionFullName);
 
             //System.out.println(sql);
@@ -450,21 +468,22 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
             this.rememberTrigger(query.withName(insertTriggerName));
 
             //UPDATE
-            sql = String.format("CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n " +
-                            "DECLARE\n" +
-                            "  updatedCount int;\n" +
-                            "BEGIN \n" +
-                            "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n" +
-                            "%s " + //DELETE
-                            "%s " + //INSERT
-                            "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
+            sql = String.format(
+                    "CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n "
+                  + "DECLARE\n"
+                      + "updatedCount int;\n"
+                          + "BEGIN \n"
+                              + "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n"
+                              + "%s " //DELETE
+                              + "%s " //INSERT
+                              + "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
                     updateTriggerFunctionFullName, fullMvName, deleteSql, insertSql);
 
             //System.out.println(sql);
             result.add(sql);
 
-            sql = String.format("CREATE TRIGGER \"%s\" AFTER UPDATE " +
-                            "ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
+            sql = String.format(
+                    "CREATE TRIGGER \"%s\" AFTER UPDATE ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
                     updateTriggerName, fullTableName, updateTriggerFunctionFullName);
 
             //System.out.println(sql);
@@ -472,19 +491,20 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
             this.rememberTrigger(query.withName(updateTriggerName));
 
             //DELETE
-            sql = String.format("CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n " +
-                            "BEGIN \n" +
-                            "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n" +
-                            "%s" +
-                            "RETURN OLD; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
+            sql = String.format(
+                    "CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n "
+                  + "BEGIN \n"
+                      + "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n"
+                          + "%s"
+                          + "RETURN OLD; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
                     deleteTriggerFunctionFullName, fullMvName, deleteSql
             );
 
             //System.out.println(sql);
             result.add(sql);
 
-            sql = String.format("CREATE TRIGGER \"%s\" AFTER DELETE " +
-                            "ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
+            sql = String.format(
+                    "CREATE TRIGGER \"%s\" AFTER DELETE ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
                     deleteTriggerName, fullTableName, deleteTriggerFunctionFullName);
 
             //System.out.println(sql);

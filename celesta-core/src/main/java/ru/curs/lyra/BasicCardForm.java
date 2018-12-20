@@ -76,8 +76,9 @@ public abstract class BasicCardForm extends BasicLyraForm {
                 Cursor c = (Cursor) rec;
                 ByteArrayInputStream dataIS = new ByteArrayInputStream(data.getBytes(UTF_8));
                 deserialize(c, dataIS);
-                if (!c.tryUpdate())
+                if (!c.tryUpdate()) {
                     c.insert();
+                }
             }
             rec.navigate(cmd);
             ByteArrayOutputStream result = new ByteArrayOutputStream();

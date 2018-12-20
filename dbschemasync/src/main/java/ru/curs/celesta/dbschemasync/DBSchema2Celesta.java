@@ -61,8 +61,9 @@ public final class DBSchema2Celesta {
                     continue;
                 }
                 Grain g = refScore.getGrains().get(grainName);
-                if (g == null)
+                if (g == null) {
                     g = new Grain(refScore, schema.getAttribute("name"));
+                }
                 updateGrain(schema, g);
                 g.finalizeParsing();
             }
@@ -150,17 +151,19 @@ public final class DBSchema2Celesta {
                 }
                 // Добавляем ссылки между таблицами, присутствующими на
                 // диаграмме
-                for (Table t : tables)
+                for (Table t : tables) {
                     for (ForeignKey fk : t.getForeignKeys()) {
                         Table refTable = fk.getReferencedTable();
 
                         String columns = fk.getColumns().size() == 1 ? fk.getColumns().keySet().iterator().next()
                                 : fk.getColumns().keySet().toString();
 
-                        if (tables.contains(refTable))
+                        if (tables.contains(refTable)) {
                             bw.write(String.format("%s --> %s: %s %n%n", fk.getParentTable().getName(),
                                     fk.getReferencedTable().getName(), columns));
+                        }
                     }
+                }
 
                 bw.println("@enduml");
                 bw.println("--");
@@ -187,14 +190,17 @@ public final class DBSchema2Celesta {
     private static void updateGrain(Element schema, Grain g) throws Exception {
         // Зачищаем старый score.
         List<Index> indices = new ArrayList<>(g.getIndices().values());
-        for (Index i : indices)
+        for (Index i : indices) {
             i.delete();
+        }
         List<Table> tables = new ArrayList<>(g.getTables().values());
-        for (Table t : tables)
+        for (Table t : tables) {
             t.delete();
+        }
         List<View> views = new ArrayList<>(g.getViews().values());
-        for (View v : views)
+        for (View v : views) {
             v.delete();
+        }
 
         NodeList l = schema.getChildNodes();
         for (int i = 0; i < l.getLength(); i++) {
@@ -237,8 +243,9 @@ public final class DBSchema2Celesta {
                 celestaDoc = extractComment((Element) vn);
             }
         }
-        if (cview != null)
+        if (cview != null) {
             cview.setCelestaDoc(celestaDoc);
+        }
     }
 
     private static void updateTableFK(Element table, Table t) throws ParseException {
@@ -288,7 +295,7 @@ public final class DBSchema2Celesta {
     private static void parseOptions(List<String> options, Table t) throws ParseException {
         // CHECKSTYLE:ON
         int state = 0;
-        for (String option : options)
+        for (String option : options) {
             switch (state) {
                 // beginning
                 case 0:
@@ -362,6 +369,8 @@ public final class DBSchema2Celesta {
                 default:
                     break;
             }
+        }
+
         if (!(state == 0 || state == 5 || state == 7)) {
             throwPE("", t.getName());
         }
@@ -393,8 +402,9 @@ public final class DBSchema2Celesta {
         }
         ForeignKey fkey = new ForeignKey(t, referencedTable, columns.toArray(new String[0]));
 
-        if (!name.isEmpty())
+        if (!name.isEmpty()) {
             fkey.setConstraintName(name);
+        }
 
         String deleteRule = fk.getAttribute("delete_action");
         if ("cascade".equals(deleteRule)) {
@@ -422,8 +432,9 @@ public final class DBSchema2Celesta {
             if ("column".equals(n.getNodeName())) {
                 Element column = (Element) n;
                 columns.add(column.getAttribute("name"));
-            } else if ("comment".equals(n.getNodeName()))
+            } else if ("comment".equals(n.getNodeName())) {
                 celestaDoc = extractComment((Element) n);
+            }
         }
 
         if ("PRIMARY_KEY".equals(index.getAttribute("unique"))) {

@@ -127,7 +127,9 @@ public abstract class CelestaConnection implements Connection {
   }
 
   @Override
-  public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+  public PreparedStatement prepareStatement(
+          String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+
     return connection.prepareStatement(sql, resultSetType, resultSetConcurrency);
   }
 
@@ -177,17 +179,22 @@ public abstract class CelestaConnection implements Connection {
   }
 
   @Override
-  public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+  public Statement createStatement(
+          int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+
     return connection.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
   }
 
   @Override
-  public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+  public PreparedStatement prepareStatement(
+          String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
     return connection.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
   }
 
   @Override
-  public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+  public CallableStatement prepareCall(
+          String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+
     return connection.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
   }
 

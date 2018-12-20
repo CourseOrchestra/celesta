@@ -55,7 +55,7 @@ public abstract class DdlGenerator {
 
     abstract List<String> dropParameterizedView(
             String schemaName, String viewName, Connection conn
-    ) ;
+    );
 
     abstract List<String> dropIndex(Grain g, DbIndexInfo dBIndexInfo);
 
@@ -83,17 +83,19 @@ public abstract class DdlGenerator {
     String tableString(String schemaName, String tableName) {
         StringBuilder sb = new StringBuilder();
 
-        if (schemaName.startsWith("\""))
+        if (schemaName.startsWith("\"")) {
             sb.append(schemaName);
-        else
+        } else {
             sb.append("\"").append(schemaName).append("\"");
+        }
 
         sb.append(".");
 
-        if (tableName.startsWith("\""))
+        if (tableName.startsWith("\"")) {
             sb.append(tableName);
-        else
+        } else {
             sb.append("\"").append(tableName).append("\"");
+        }
 
         return sb.toString();
     }
@@ -118,7 +120,9 @@ public abstract class DdlGenerator {
         return sql;
     }
 
-    String generateArgumentsForCreateSequenceExpression(SequenceElement s, SequenceElement.Argument... excludedArguments) {
+    String generateArgumentsForCreateSequenceExpression(
+            SequenceElement s, SequenceElement.Argument... excludedArguments) {
+
         return s.getArguments().entrySet().stream()
                 .filter(e -> !Arrays.asList(excludedArguments).contains(e.getKey()))
                 .map(
@@ -140,8 +144,9 @@ public abstract class DdlGenerator {
         );
         boolean multiple = false;
         for (Column c : te.getColumns().values()) {
-            if (multiple)
+            if (multiple) {
                 sb.append(",\n");
+            }
             sb.append("  " + columnDef(c));
             multiple = true;
         }
@@ -149,8 +154,9 @@ public abstract class DdlGenerator {
         if (te instanceof VersionedElement) {
             VersionedElement ve = (VersionedElement) te;
             // For versioned tables, the "recversion" column
-            if (ve.isVersioned())
+            if (ve.isVersioned()) {
                 sb.append(",\n").append("  " + columnDef(ve.getRecVersionField()));
+            }
         }
 
         if (te.hasPrimeKey()) {
@@ -159,8 +165,9 @@ public abstract class DdlGenerator {
             sb.append(String.format("  constraint \"%s\" primary key (", te.getPkConstraintName()));
             multiple = false;
             for (String s : te.getPrimaryKey().keySet()) {
-                if (multiple)
+                if (multiple) {
                     sb.append(", ");
+                }
                 sb.append('"');
                 sb.append(s);
                 sb.append('"');
@@ -206,7 +213,7 @@ public abstract class DdlGenerator {
      * @param t    Таблица (версионируемая или не версионируемая).
      * @ Ошибка создания или удаления триггера.
      */
-    abstract List<String> updateVersioningTrigger(Connection conn, TableElement t) ;
+    abstract List<String> updateVersioningTrigger(Connection conn, TableElement t);
 
     abstract List<String> createIndex(Index index);
 
@@ -217,7 +224,7 @@ public abstract class DdlGenerator {
      * @ при ошибке обновления колонки.
      */
     //TODO: Javadoc In English
-    abstract List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) ;
+    abstract List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual);
 
     final String createPk(TableElement t) {
         StringBuilder sb = new StringBuilder();
@@ -231,8 +238,9 @@ public abstract class DdlGenerator {
 
         boolean multiple = false;
         for (String s : t.getPrimaryKey().keySet()) {
-            if (multiple)
+            if (multiple) {
                 sb.append(", ");
+            }
             sb.append('"');
             sb.append(s);
             sb.append('"');
@@ -255,8 +263,9 @@ public abstract class DdlGenerator {
         sql.append("\" foreign key (");
         boolean needComma = false;
         for (String name : fk.getColumns().keySet()) {
-            if (needComma)
+            if (needComma) {
                 sql.append(", ");
+            }
             sql.append('"');
             sql.append(name);
             sql.append('"');
@@ -268,8 +277,9 @@ public abstract class DdlGenerator {
         sql.append("(");
         needComma = false;
         for (String name : fk.getReferencedTable().getPrimaryKey().keySet()) {
-            if (needComma)
+            if (needComma) {
                 sql.append(", ");
+            }
             sql.append('"');
             sql.append(name);
             sql.append('"');
@@ -360,8 +370,9 @@ public abstract class DdlGenerator {
                     Column colRef = mv.getColumnRef(v.getName());
                     String groupByColStr = "\"" + mv.getColumnRef(v.getName()).getName() + "\"";
 
-                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
                         return truncDate(groupByColStr);
+                    }    
                     return groupByColStr;
                 })
                 .collect(Collectors.joining(", "));
@@ -389,8 +400,9 @@ public abstract class DdlGenerator {
                             );
                         }
                     } else {
-                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType()))
+                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
                             return truncDate("\"" + colRef.getName() + "\"");
+                        }
                         return "\"" + colRef.getName() + "\"";
 
                     }
@@ -436,11 +448,11 @@ public abstract class DdlGenerator {
     //TODO: Javadoc In English
     abstract SQLGenerator getViewSQLGenerator();
 
-    abstract List<String> createParameterizedView(ParameterizedView pv) ;
+    abstract List<String> createParameterizedView(ParameterizedView pv);
 
-    abstract Optional<String> dropAutoIncrement(Connection conn, TableElement t) ;
+    abstract Optional<String> dropAutoIncrement(Connection conn, TableElement t);
 
-    public abstract List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t) ;
+    public abstract List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t);
 
     public abstract List<String> createTableTriggersForMaterializedViews(Table t);
 

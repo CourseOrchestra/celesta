@@ -23,7 +23,8 @@ import static ru.curs.celesta.plugin.CursorGenerator.generateCursor;
 public class GenCursorsMojo extends AbstractMojo {
 
     private static final Map<String, String> lifeCyclePhaseToGeneratedSourcesDirName;
-    private static final Map<String, Function<MavenProject, Consumer<String>>> lifeCyclePhaseToAddCompileSourceRootConsumer;
+    private static final Map<String, Function<MavenProject, Consumer<String>>>
+                                             lifeCyclePhaseToAddCompileSourceRootConsumer;
 
     static {
         Map<String, String> dirNameMap = new HashMap<>();

@@ -26,8 +26,9 @@ public abstract class AbstractView extends DataGrainElement {
     });
     EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Sum.class, (Expr sumExpr) -> {
       Sum sum = (Sum) sumExpr;
-      if (sum.term instanceof BinaryTermOp)
+      if (sum.term instanceof BinaryTermOp) {
         return null;
+      }
       FieldRef fr = (FieldRef) sum.term;
       return fr.getColumn();
     });
@@ -59,13 +60,15 @@ public abstract class AbstractView extends DataGrainElement {
 
   void writeSelectPart(final PrintWriter bw, SQLGenerator gen, BWWrapper bww) throws IOException {
     bww.append("  select ", bw);
-    if (distinct)
+    if (distinct) {
       bww.append("distinct ", bw);
+    }
 
     boolean cont = false;
     for (Map.Entry<String, Expr> e : columns.entrySet()) {
-      if (cont)
+      if (cont) {
         bww.append(", ", bw);
+      }
       String st = gen.generateSQL(e.getValue()) + " as ";
       if (gen.quoteNames()) {
         st = st + "\"" + e.getKey() + "\"";
@@ -123,16 +126,19 @@ public abstract class AbstractView extends DataGrainElement {
    * @throws ParseException Неуникальное имя алиаса или иная семантическая ошибка
    */
   void addColumn(String alias, Expr expr) throws ParseException {
-    if (expr == null)
+    if (expr == null) {
       throw new IllegalArgumentException();
+    }
 
-    if (alias == null || alias.isEmpty())
+    if (alias == null || alias.isEmpty()) {
       throw new ParseException(String.format("%s '%s' contains a column with undefined alias.", viewType(), getName()));
+    }
     alias = getGrain().getScore().getIdentifierParser().parse(alias);
-    if (columns.containsKey(alias))
+    if (columns.containsKey(alias)) {
       throw new ParseException(String.format(
           "%s '%s' already contains column with name or alias '%s'. Use unique aliases for %s columns.",
           viewType(), getName(), alias, viewType()));
+    }
 
     columns.put(alias, expr);
   }
@@ -145,15 +151,17 @@ public abstract class AbstractView extends DataGrainElement {
    * @throws ParseException Неуникальное имя алиаса, отсутствие колонки в выборке или иная семантическая ошибка
    */
   void addGroupByColumn(FieldRef fr) throws ParseException {
-    if (fr == null)
+    if (fr == null) {
       throw new IllegalArgumentException();
+    }
 
     String alias = fr.getColumnName();
 
-    if (groupByColumns.containsKey(alias))
+    if (groupByColumns.containsKey(alias)) {
       throw new ParseException(String.format(
           "Duplicate column '%s' in GROUP BY expression for %s '%s.%s'.",
           alias, viewType(), getGrain().getName(), getName()));
+    }
 
     Expr existedColumn = columns.get(fr.getColumnName());
 
@@ -162,7 +170,7 @@ public abstract class AbstractView extends DataGrainElement {
     }
 
     if (existedColumn.getClass().equals(FieldRef.class)) {
-      FieldRef existedColumnFr = (FieldRef)existedColumn;
+      FieldRef existedColumnFr = (FieldRef) existedColumn;
       fr.setTableNameOrAlias(existedColumnFr.getTableNameOrAlias());
       fr.setColumnName(existedColumnFr.getColumnName());
       fr.setColumn(existedColumnFr.getColumn());
@@ -178,16 +186,19 @@ public abstract class AbstractView extends DataGrainElement {
    * @throws ParseException Неуникальный алиас или иная ошибка.
    */
   void addFromTableRef(TableRef ref) throws ParseException {
-    if (ref == null)
+    if (ref == null) {
       throw new IllegalArgumentException();
+    }
 
     String alias = ref.getAlias();
-    if (alias == null || alias.isEmpty())
+    if (alias == null || alias.isEmpty()) {
       throw new ParseException(String.format("%s '%s' contains a table with undefined alias.", viewType(), getName()));
-    if (getTables().containsKey(alias))
+    }
+    if (getTables().containsKey(alias)) {
       throw new ParseException(String.format(
           "%s, '%s' already contains table with name or alias '%s'. Use unique aliases for %s tables.",
           viewType(), getName(), alias, viewType()));
+    }
 
     getTables().put(alias, ref);
 
@@ -197,7 +208,6 @@ public abstract class AbstractView extends DataGrainElement {
       onCondition.validateTypes();
     }
   }
-
 
   /**
    * Финализирует разбор представления, разрешая ссылки на поля и проверяя
@@ -231,8 +241,8 @@ public abstract class AbstractView extends DataGrainElement {
       boolean hasErrorOpt = columns.entrySet().stream()
           .anyMatch(e -> !(e.getValue() instanceof Aggregate) && !groupByColumns.containsKey(e.getKey()));
       if (hasErrorOpt) {
-        throw new ParseException(String.format("%s '%s.%s' contains a column(s) " +
-                "which was not specified in aggregate function and GROUP BY expression.",
+        throw new ParseException(String.format("%s '%s.%s' contains a column(s) "
+                + "which was not specified in aggregate function and GROUP BY expression.",
             viewType(), getGrain().getName(), getName()));
       }
     }
@@ -269,8 +279,9 @@ public abstract class AbstractView extends DataGrainElement {
     int i = -1;
     for (String c : getColumns().keySet()) {
       i++;
-      if (c.equals(name))
+      if (c.equals(name)) {
         return i;
+      }
     }
     return i;
   }
@@ -330,7 +341,8 @@ public abstract class AbstractView extends DataGrainElement {
       if (t.getGrain() == getGrain()) {
         return String.format("%s as %s", t.getQuotedNameIfNeeded(), tRef.getAlias());
       } else {
-        return String.format("%s.%s as %s", t.getGrain().getQuotedNameIfNeeded(), t.getQuotedNameIfNeeded(), tRef.getAlias());
+        return String.format("%s.%s as %s",
+                             t.getGrain().getQuotedNameIfNeeded(), t.getQuotedNameIfNeeded(), tRef.getAlias());
       }
     }
 

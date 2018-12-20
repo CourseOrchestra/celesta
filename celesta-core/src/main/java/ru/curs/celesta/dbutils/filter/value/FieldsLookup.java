@@ -32,16 +32,19 @@ public final class FieldsLookup {
     public FieldsLookup(Cursor cursor, Cursor otherCursor,
                         Runnable lookupChangeCallback,
                         Function<FieldsLookup, Void> newLookupCallback) {
-        this(Table.class, cursor, cursor.meta(), otherCursor, otherCursor.meta(), lookupChangeCallback, newLookupCallback);
+        this(Table.class, cursor, cursor.meta(), otherCursor,
+                otherCursor.meta(), lookupChangeCallback, newLookupCallback);
     }
 
     public FieldsLookup(ViewCursor cursor, ViewCursor otherCursor,
                         Runnable lookupChangeCallback,
                         Function<FieldsLookup, Void> newLookupCallback) {
-        this(View.class, cursor, cursor.meta(), otherCursor, otherCursor.meta(), lookupChangeCallback, newLookupCallback);
+        this(View.class, cursor, cursor.meta(), otherCursor,
+                otherCursor.meta(), lookupChangeCallback, newLookupCallback);
     }
 
-    private FieldsLookup(Class<? extends DataGrainElement> targetClass, BasicCursor cursor, DataGrainElement filtered, BasicCursor otherCursor,
+    private FieldsLookup(Class<? extends DataGrainElement> targetClass, BasicCursor cursor,
+                         DataGrainElement filtered, BasicCursor otherCursor,
                          DataGrainElement filtering, Runnable lookupChangeCallback,
                          Function<FieldsLookup, Void> newLookupCallback) {
         validateCursors(cursor, otherCursor);
@@ -113,15 +116,18 @@ public final class FieldsLookup {
 
     public FieldsLookup and(BasicCursor otherCursor) {
         if (Table.class.equals(targetClass)) {
-            FieldsLookup fieldsLookup = new FieldsLookup((Cursor) cursor, (Cursor) otherCursor, lookupChangeCallback, newLookupCallback);
+            FieldsLookup fieldsLookup = new FieldsLookup(
+                    (Cursor) cursor, (Cursor) otherCursor, lookupChangeCallback, newLookupCallback);
             newLookupCallback.apply(fieldsLookup);
             return fieldsLookup;
         } else if (View.class.equals(targetClass)) {
-            FieldsLookup fieldsLookup = new FieldsLookup((ViewCursor) cursor, (ViewCursor) otherCursor, lookupChangeCallback, newLookupCallback);
+            FieldsLookup fieldsLookup = new FieldsLookup(
+                    (ViewCursor) cursor, (ViewCursor) otherCursor, lookupChangeCallback, newLookupCallback);
             newLookupCallback.apply(fieldsLookup);
             return fieldsLookup;
         } else {
-            throw new CelestaException("Can't apply %s to %s for FieldsLookup", otherCursor.meta().getClass().getSimpleName(), filtered.getClass().getSimpleName());
+            throw new CelestaException("Can't apply %s to %s for FieldsLookup",
+                    otherCursor.meta().getClass().getSimpleName(), filtered.getClass().getSimpleName());
         }
     }
 
@@ -129,7 +135,8 @@ public final class FieldsLookup {
 
         if (filtered instanceof Table) {
             Table filteredTable = (Table) filtered;
-            FieldsLookup fieldsLookup = new FieldsLookup(filteredTable, filtering, lookupChangeCallback, newLookupCallback);
+            FieldsLookup fieldsLookup = new FieldsLookup(
+                    filteredTable, filtering, lookupChangeCallback, newLookupCallback);
             newLookupCallback.apply(fieldsLookup);
             return fieldsLookup;
         } else {
@@ -141,7 +148,8 @@ public final class FieldsLookup {
 
         if (filtered instanceof View) {
             View filteredView = (View) filtered;
-            FieldsLookup fieldsLookup = new FieldsLookup(filteredView, filtering, lookupChangeCallback, newLookupCallback);
+            FieldsLookup fieldsLookup = new FieldsLookup(
+                    filteredView, filtering, lookupChangeCallback, newLookupCallback);
             newLookupCallback.apply(fieldsLookup);
             return fieldsLookup;
         } else {
@@ -164,7 +172,8 @@ public final class FieldsLookup {
         if (otherColumn == null) {
             throw new ParseException(
                     String.format("Column '%s' not found in %s '%s.%s'",
-                            otherField, targetClass.getSimpleName(), filtering.getGrain().getName(), filtering.getName()));
+                            otherField, targetClass.getSimpleName(),
+                            filtering.getGrain().getName(), filtering.getName()));
         }
 
 
@@ -177,18 +186,20 @@ public final class FieldsLookup {
         if (Table.class.equals(targetClass)) {
             List<String> fieldsToValidate = new ArrayList<>(fields);
             fieldsToValidate.add(field);
-            Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fieldsToValidate, (Table)filtered);
+            Set<List<Integer>> columnOrdersInIndicesSet =
+                    getColumnOrdersInIndicesSet(fieldsToValidate, (Table) filtered);
 
             List<String> otherFieldsToValidate = new ArrayList<>(otherFields);
             otherFieldsToValidate.add(otherField);
             Set<List<Integer>> otherColumnOrdersInIndicesSet = getColumnOrdersInIndicesSet(otherFieldsToValidate,
-                    (Table)filtering);
+                    (Table) filtering);
 
             columnOrdersInIndicesSet.retainAll(otherColumnOrdersInIndicesSet);
 
             if (columnOrdersInIndicesSet.isEmpty()) {
                 throw new CelestaException(
-                        "There is no indices with the same order of column(s) (\"%s\") from table table %s.%s and (\"%s\") from table table %s.%s",
+                        "There is no indices with the same order of column(s) (\"%s\") from table"
+                            + " table %s.%s and (\"%s\") from table table %s.%s",
                         String.join(",", new HashSet<>(fieldsToValidate)), filtered.getGrain().getName(),
                         filtered.getName(), String.join(",", new HashSet<>(otherFieldsToValidate)),
                         filtering.getGrain().getName(), filtering.getName());
@@ -206,8 +217,9 @@ public final class FieldsLookup {
 
     public void validate() {
         if (Table.class.equals(targetClass)) {
-            Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fields, (Table)filtered);
-            Set<List<Integer>> otherColumnOrdersInIndicesSet = getColumnOrdersInIndicesSet(otherFields, (Table)filtering);
+            Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fields, (Table) filtered);
+            Set<List<Integer>> otherColumnOrdersInIndicesSet =
+                    getColumnOrdersInIndicesSet(otherFields, (Table) filtering);
 
             columnOrdersInIndicesSet.retainAll(otherColumnOrdersInIndicesSet);
 
@@ -216,14 +228,14 @@ public final class FieldsLookup {
                     .filter(l -> l.equals(IntStream.range(0, l.size()).boxed().collect(Collectors.toList()))).findAny();
 
             match.orElseThrow(() -> new CelestaException(
-                    "'In' filter validation failed. Fields matched for the filter for tables %s.%s and %s.%s " +
-                            "are not covered by pks or indices on these tables.",
-                    filtered.getGrain().getName(), filtered.getName(), filtering.getGrain().getName(), filtering.getName()));
+                    "'In' filter validation failed. Fields matched for the filter for tables %s.%s and %s.%s"
+                        + " are not covered by pks or indices on these tables.",
+                    filtered.getGrain().getName(), filtered.getName(),
+                    filtering.getGrain().getName(), filtering.getName()));
         }
     }
 
-    private Set<List<Integer>> getColumnOrdersInIndicesSet(List<String> fieldsToValidate, Table table)
-            {
+    private Set<List<Integer>> getColumnOrdersInIndicesSet(List<String> fieldsToValidate, Table table) {
 
         final List<Index> indexesToValidate;
         // Сперва определяем, есть ли указанные поля в первичном ключе

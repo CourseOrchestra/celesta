@@ -26,8 +26,9 @@ public class KeyInterpolator {
         if (count > 0) {
             data.put(count - 1, negateIfDesc(maxOrd));
             // self-testing count/maxOrd consistency for extremal cases
-            if (count == 1 && !minOrd.equals(maxOrd))
+            if (count == 1 && !minOrd.equals(maxOrd)) {
                 throw new IllegalArgumentException();
+            }
         } else if (count < 0) {
             throw new IllegalArgumentException();
         }
@@ -44,8 +45,9 @@ public class KeyInterpolator {
      *            Номер записи.
      */
     public void setPoint(BigInteger ord, int count) {
-        if (count < 0)
+        if (count < 0) {
             throw new IllegalArgumentException();
+        }
         final BigInteger neword = negateIfDesc(ord);
 
         synchronized (this) {
@@ -100,15 +102,18 @@ public class KeyInterpolator {
      *            The ordinal number of record.
      */
     public int getClosestPosition(int count) {
-        if (count < 0)
+        if (count < 0) {
             throw new IllegalArgumentException();
+        }
         synchronized (this) {
-            if (data.isEmpty())
+            if (data.isEmpty()) {
                 throw new IllegalStateException();
+            }
             Integer floor = data.floorKey(count);
             int e0 = floor == null ? data.firstKey() : floor;
-            if (e0 == count)
+            if (e0 == count) {
                 return e0;
+            }
             Integer ceiling = data.ceilingKey(count);
             int e1 = ceiling == null ? data.lastKey() : ceiling;
             return (count - e0 < e1 - count) ? e0 : e1;
@@ -122,17 +127,20 @@ public class KeyInterpolator {
      *            Номер записи.
      */
     public BigInteger getPoint(int count) {
-        if (count < 0)
+        if (count < 0) {
             throw new IllegalArgumentException();
+        }
         Entry<Integer, BigInteger> e0, e1;
         synchronized (this) {
             e0 = data.floorEntry(count);
-            if (e0.getKey() == count)
+            if (e0.getKey() == count) {
                 return negateIfDesc(e0.getValue());
+            }
             e1 = data.ceilingEntry(count);
             // when count > maxcount
-            if (e1 == null)
+            if (e1 == null) {
                 return negateIfDesc(data.lastEntry().getValue());
+            }
         }
         BigInteger result = (e1.getValue().subtract(e0.getValue()).subtract(BigInteger.ONE))
                 .multiply(BigInteger.valueOf(count - e0.getKey() - 1));
@@ -179,8 +187,9 @@ public class KeyInterpolator {
             int cmax = data.lastEntry().getKey();
             while (cmax > cmin) {
                 cmid = (cmax + cmin) >> 1;
-                if (cmid == cmin)
+                if (cmid == cmin) {
                     cmid = cmax;
+                }
                 Entry<Integer, BigInteger> ceiling = data.ceilingEntry(cmid);
                 int delta = ceiling.getValue().compareTo(newkey);
                 if (delta == 0) {
@@ -193,9 +202,9 @@ public class KeyInterpolator {
                     // Ceiling is strictly greater than key!
                     Entry<Integer, BigInteger> lower = data.lowerEntry(cmid);
                     delta = lower.getValue().compareTo(newkey);
-                    if (delta == 0)
+                    if (delta == 0) {
                         return lower.getKey();
-                    else if (delta > 0) {
+                    } else if (delta > 0) {
                         // Lower entry is strictly greater than key: we should
                         // try
                         // lower cmax
@@ -222,8 +231,9 @@ public class KeyInterpolator {
      * Returns null if there is no gap big enough.
      */
     public synchronized BigInteger getLeastAccurateValue() {
-        if (isLAVValid)
+        if (isLAVValid) {
             return negateIfDesc(leastAccurateValue);
+        }
 
         isLAVValid = true;
         // only one point, nothing to talk about
@@ -237,8 +247,9 @@ public class KeyInterpolator {
         int cMax = data.lastKey();
 
         int deltaMin = cMax / MIN_GAP_QUOTIENT;
-        if (deltaMin < MIN_GAP_VALUE)
+        if (deltaMin < MIN_GAP_VALUE) {
             deltaMin = MIN_GAP_VALUE;
+        }
 
         Iterator<Entry<Integer, BigInteger>> i = data.entrySet().iterator();
         Entry<Integer, BigInteger> c = i.next();

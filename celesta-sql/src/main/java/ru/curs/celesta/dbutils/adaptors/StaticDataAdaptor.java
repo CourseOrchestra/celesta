@@ -14,13 +14,14 @@ public interface StaticDataAdaptor {
      */
     List<String> selectStaticStrings(
             List<String> data, String columnName, String orderBy
-    ) ;
+    );
 
     /**
-     * Compares strings by db
+     * Compares strings by db.
+     *
      * @param left
      * @param right
      * @return {@code -1 if left < right, 0 if left == right, 1 if left > right}
      */
-    int compareStrings(String left, String right) ;
+    int compareStrings(String left, String right);
 }

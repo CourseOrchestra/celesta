@@ -64,8 +64,9 @@ public final class IntegerColumn extends Column {
     void save(PrintWriter bw) throws IOException {
         super.save(bw);
         bw.write(" INT");
-        if (!isNullable())
+        if (!isNullable()) {
             bw.write(" NOT NULL");
+        }
         Integer defaultVal = getDefaultValue();
         if (defaultVal != null) {
             bw.write(" DEFAULT ");

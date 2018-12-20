@@ -53,12 +53,14 @@ public class OraDdlGenerator extends DdlGenerator {
         result.add(dropFunction);
         //Удаление табличного типа
         String tableTypeName = String.format("%s_%s_t", schemaName, viewName);
-        if (hasTypeInteractive(tableTypeName, "COLLECTION", conn))
+        if (hasTypeInteractive(tableTypeName, "COLLECTION", conn)) {
             result.add(dropType(tableTypeName));
+        }
         //Удаление объекта
         String objectTypeName = String.format("%s_%s_o", schemaName, viewName);
-        if (hasTypeInteractive(objectTypeName, "OBJECT", conn))
+        if (hasTypeInteractive(objectTypeName, "OBJECT", conn)) {
             result.add(dropType(objectTypeName));
+        }
 
         return result;
     }
@@ -106,9 +108,10 @@ public class OraDdlGenerator extends DdlGenerator {
 
     private boolean hasTypeInteractive(String typeName, String typeCode, Connection conn)  {
         String sql = String.format(
-                "select TYPE_NAME from DBA_TYPES WHERE owner = sys_context('userenv','session_user')\n" +
-                        " and TYPECODE = '%s' and TYPE_NAME = '%s'",
-                typeCode, typeName);
+                "SELECT TYPE_NAME from DBA_TYPES "
+              + "WHERE owner = sys_context('userenv','session_user')\n"
+                  + " and TYPECODE = '%s' and TYPE_NAME = '%s'",
+                                   typeCode, typeName);
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             return rs.next();
@@ -126,15 +129,15 @@ public class OraDdlGenerator extends DdlGenerator {
     String tableString(String schemaName, String tableName) {
         StringBuilder sb = new StringBuilder();
 
-        if (schemaName.startsWith("\""))
+        if (schemaName.startsWith("\"")) {
             sb.append(schemaName.substring(0, schemaName.length() - 1));
-        else {
+        } else {
             sb.append("\"").append(schemaName);
         }
         sb.append("_");
-        if (tableName.startsWith("\""))
+        if (tableName.startsWith("\"")) {
             sb.append(tableName.substring(1));
-        else {
+        } else {
             sb.append(tableName).append("\"");
         }
 
@@ -142,7 +145,9 @@ public class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    String generateArgumentsForCreateSequenceExpression(SequenceElement s, SequenceElement.Argument... excludedArguments) {
+    String generateArgumentsForCreateSequenceExpression(
+            SequenceElement s, SequenceElement.Argument... excludedArguments) {
+
         String result = super.generateArgumentsForCreateSequenceExpression(s, excludedArguments);
         if (s.hasArgument(SequenceElement.Argument.CYCLE)) {
             result = result + " NOCACHE";
@@ -177,9 +182,12 @@ public class OraDdlGenerator extends DdlGenerator {
                     if (!triggerExists) {
                         // CREATE TRIGGER
                         sql = String.format("CREATE OR REPLACE TRIGGER \"%s\" BEFORE UPDATE ON \"%s_%s\" FOR EACH ROW\n"
-                                        + "BEGIN\n" + "  IF :new.\"recversion\" <> :old.\"recversion\" THEN\n"
-                                        + "    raise_application_error( -20001, 'record version check failure' );\n"
-                                        + "  END IF;\n" + "  :new.\"recversion\" := :new.\"recversion\" + 1;\n" + "END;",
+                                          + "BEGIN\n"
+                                          + "  IF :new.\"recversion\" <> :old.\"recversion\" THEN\n"
+                                          + "    raise_application_error( -20001, 'record version check failure' );\n"
+                                          + "  END IF;\n"
+                                          + "  :new.\"recversion\" := :new.\"recversion\" + 1;\n"
+                                          + "END;",
                                 triggerName, t.getGrain().getName(), t.getName());
                         // System.out.println(sql);
                         result.add(sql);
@@ -206,7 +214,7 @@ public class OraDdlGenerator extends DdlGenerator {
         List<String> result = new ArrayList<>();
         //creating of triggers to emulate default sequence values
 
-        for (Column column : t.getColumns().values())
+        for (Column column : t.getColumns().values()) {
             if (IntegerColumn.class.equals(column.getClass())) {
                 IntegerColumn ic = (IntegerColumn) column;
 
@@ -224,6 +232,7 @@ public class OraDdlGenerator extends DdlGenerator {
                     this.rememberTrigger(query);
                 }
             }
+        }
         return result;
     }
 
@@ -250,8 +259,9 @@ public class OraDdlGenerator extends DdlGenerator {
 
 
         boolean triggerExists = this.triggerExists(conn, query);
-        if (triggerExists)
+        if (triggerExists) {
             result.add(dropTrigger(query));
+        }
 
         if (actual.getType() == BooleanColumn.class && !(c instanceof BooleanColumn)) {
             // Тип Boolean меняется на что-то другое, надо сбросить constraint
@@ -277,8 +287,9 @@ public class OraDdlGenerator extends DdlGenerator {
 
         // Явно задавать nullable в Oracle можно только если действительно надо
         // изменить
-        if (actual.isNullable() != c.isNullable())
+        if (actual.isNullable() != c.isNullable()) {
             def = OraColumnDefiner.join(def, definer.nullable(c));
+        }
 
         // Перенос из NCLOB и в NCLOB надо производить с осторожностью
 
@@ -286,8 +297,8 @@ public class OraDdlGenerator extends DdlGenerator {
 
             String tempName = "\"" + c.getName() + "2\"";
             String sql = String.format(
-                    ALTER_TABLE + tableFullName + " add %s"
-                    , columnDef(c)
+                    ALTER_TABLE + tableFullName + " add %s",
+                    columnDef(c)
             );
             sql = sql.replace(c.getQuotedName(), tempName);
             // System.out.println(sql);
@@ -326,7 +337,8 @@ public class OraDdlGenerator extends DdlGenerator {
 
             if ("".equals(actual.getDefaultValue())) { //old defaultValue Is null - create trigger if necessary
                 if (((IntegerColumn) c).getSequence() != null) {
-                    String sequenceName = String.format("%s_%s", c.getParentTable().getGrain().getName(), ic.getSequence().getName());
+                    String sequenceName = String.format("%s_%s",
+                            c.getParentTable().getGrain().getName(), ic.getSequence().getName());
                     String sequenceTriggerName = generateSequenceTriggerName(ic);
                     String sql = createOrReplaceSequenceTriggerForColumn(sequenceTriggerName, ic, sequenceName);
                     result.add(sql);
@@ -351,14 +363,17 @@ public class OraDdlGenerator extends DdlGenerator {
 
                         triggerExists = this.triggerExists(conn, query);
 
-                        if (triggerExists)
+                        if (triggerExists) {
                             result.add(dropTrigger(triggerQuery));
+                        }
                     } else {
                         String oldSequenceName = m.group(1);
 
                         if (!oldSequenceName.equals(ic.getSequence().getName())) { //using of new sequence
-                            String sequenceName = String.format("%s_%s", c.getParentTable().getGrain().getName(), ic.getSequence().getName());
-                            String sql = createOrReplaceSequenceTriggerForColumn(generateSequenceTriggerName(ic), ic, sequenceName);
+                            String sequenceName = String.format("%s_%s",
+                                    c.getParentTable().getGrain().getName(), ic.getSequence().getName());
+                            String sql = createOrReplaceSequenceTriggerForColumn(
+                                    generateSequenceTriggerName(ic), ic, sequenceName);
                             result.add(sql);
 
                             TriggerQuery triggerQuery = new TriggerQuery()
@@ -371,8 +386,10 @@ public class OraDdlGenerator extends DdlGenerator {
                         }
                     }
                 } else if (ic.getSequence() != null) {
-                    String sequenceName = String.format("%s_%s", c.getParentTable().getGrain().getName(), ic.getSequence().getName());
-                    String sql = createOrReplaceSequenceTriggerForColumn(generateSequenceTriggerName(ic), ic, sequenceName);
+                    String sequenceName = String.format("%s_%s",
+                            c.getParentTable().getGrain().getName(), ic.getSequence().getName());
+                    String sql = createOrReplaceSequenceTriggerForColumn(
+                            generateSequenceTriggerName(ic), ic, sequenceName);
                     result.add(sql);
                 }
             }
@@ -476,8 +493,9 @@ public class OraDdlGenerator extends DdlGenerator {
         Table t = fk.getReferencedTable();
         boolean needComma = false;
         for (Column c : t.getPrimaryKey().values()) {
-            if (needComma)
+            if (needComma) {
                 sb.append(", ");
+            }
             sb.append(c.getQuotedName());
             needComma = true;
         }
@@ -657,8 +675,9 @@ public class OraDdlGenerator extends DdlGenerator {
         if (incSequenceExists) {
             String sql = String.format("DROP SEQUENCE \"%s\"", sequenceName);
             return Optional.of(sql);
-        } else
+        } else {
             return Optional.empty();
+        }
     }
 
     @Override
@@ -683,14 +702,17 @@ public class OraDdlGenerator extends DdlGenerator {
             String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
             query.withName(insertTriggerName);
-            if (this.triggerExists(conn, query))
+            if (this.triggerExists(conn, query)) {
                 result.add(dropTrigger(query));
+            }
             query.withName(updateTriggerName);
-            if (this.triggerExists(conn, query))
+            if (this.triggerExists(conn, query)) {
                 result.add(dropTrigger(query));
+            }
             query.withName(deleteTriggerName);
-            if (this.triggerExists(conn, query))
+            if (this.triggerExists(conn, query)) {
                 result.add(dropTrigger(query));
+            }
         }
 
         return result;
@@ -837,8 +859,9 @@ public class OraDdlGenerator extends DdlGenerator {
             String sql;
 
             //INSERT
-            sql = String.format("create or replace trigger \"%s\" after insert " +
-                            "on %s for each row\n"
+            sql = String.format(
+                    "create or replace trigger \"%s\" after insert "
+                            + "on %s for each row\n"
                             + "begin \n" + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
                             + "\n %s \n %s \n END;",
                     insertTriggerName, fullTableName, mv.getChecksum(), lockTable, insertSql);
@@ -847,8 +870,9 @@ public class OraDdlGenerator extends DdlGenerator {
             this.rememberTrigger(query.withName(insertTriggerName));
 
             //UPDATE
-            sql = String.format("create or replace trigger \"%s\" after update " +
-                            "on %s for each row\n"
+            sql = String.format(
+                    "create or replace trigger \"%s\" after update "
+                            + "on %s for each row\n"
                             + "begin %s \n %s\n %s\n END;",
                     updateTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString(), insertSql);
 
@@ -857,8 +881,9 @@ public class OraDdlGenerator extends DdlGenerator {
             this.rememberTrigger(query.withName(updateTriggerName));
 
             //DELETE
-            sql = String.format("create or replace trigger \"%s\" after delete " +
-                            "on %s for each row\n "
+            sql = String.format(
+                    "create or replace trigger \"%s\" after delete "
+                            + "on %s for each row\n "
                             + " begin %s \n %s\n END;",
                     deleteTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString());
 
@@ -869,29 +894,31 @@ public class OraDdlGenerator extends DdlGenerator {
         return result;
     }
 
-    private List<String> updateDecimalColumn(Connection conn, DecimalColumn dc, DbColumnInfo actual, String def)
-         {
+    private List<String> updateDecimalColumn(Connection conn, DecimalColumn dc, DbColumnInfo actual, String def) {
         List<String> result = new ArrayList<>();
-        final String tableFullName = tableString(dc.getParentTable().getGrain().getName(), dc.getParentTable().getName());
+        final String tableFullName = tableString(
+                dc.getParentTable().getGrain().getName(), dc.getParentTable().getName());
         //If there is any decreasing of scale or whole part, we must use additional column to perform alter.
         int actualScale = actual.getScale(), scale = dc.getScale();
         int actualWholePartLength = actual.getLength() - actualScale,
                 wholePartLength = dc.getPrecision() - scale;
 
         if (scale < actualScale || wholePartLength < actualWholePartLength) {
-            if (!actual.isNullable())
+            if (!actual.isNullable()) {
                 result.add(
                         String.format(
                                 "alter table %s modify (%s null)", tableFullName, dc.getQuotedName()
                         )
                 );
+            }
 
             String tempColumnName = String.format(
                     "\"%s\"",
                     NamedElement.limitName(String.format("temp%s%s", dc.getName(), UUID.randomUUID().toString()))
             );
 
-            OraColumnDefiner columnDefiner = (OraColumnDefiner)ColumnDefinerFactory.getColumnDefiner(getType(), dc.getClass());
+            OraColumnDefiner columnDefiner =
+                    (OraColumnDefiner) ColumnDefinerFactory.getColumnDefiner(getType(), dc.getClass());
 
             String sql = String.format(
                     ALTER_TABLE + " %s add %s %s(%s,%s)",
@@ -907,7 +934,8 @@ public class OraDdlGenerator extends DdlGenerator {
                     "update %s set %s = %s", tableFullName, dc.getQuotedName(), tempColumnName
             );
 
-            String selectSql = String.format("select count(*) from %s where %s is null", tableFullName, dc.getQuotedName());
+            String selectSql = String.format("select count(*) from %s where %s is null",
+                    tableFullName, dc.getQuotedName());
 
             final boolean hasNullValues;
 
@@ -947,8 +975,9 @@ public class OraDdlGenerator extends DdlGenerator {
     private String defaultDefForAlter(Column c, ColumnDefiner cd, DbColumnInfo actual) {
         // В Oracle нельзя снять default, можно только установить его в Null
         String result = cd.getDefaultDefinition(c);
-        if ("".equals(result) && !"".equals(actual.getDefaultValue()))
+        if ("".equals(result) && !"".equals(actual.getDefaultValue())) {
             result = "default null";
+        }
         return result;
     }
 }

@@ -46,7 +46,9 @@ public class DbUpdaterExtension implements TestTemplateInvocationContextProvider
     }
 
     @Override
-    public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext extensionContext) {
+    public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(
+            ExtensionContext extensionContext) {
+
         return supportedDbTypes.stream()
                 .map(this::invocationContext);
     }

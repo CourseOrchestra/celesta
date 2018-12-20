@@ -29,7 +29,7 @@ public class ScoreProperties {
             return true;
         }
         if (obj instanceof ScoreProperties) {
-            ScoreProperties that = (ScoreProperties)obj;
+            ScoreProperties that = (ScoreProperties) obj;
             return this.hashCode() == that.hashCode()
                     && Objects.equals(this.path, that.path);
         }

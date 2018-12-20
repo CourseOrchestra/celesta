@@ -50,13 +50,15 @@ public abstract class MaterializedViewCursor extends BasicCursor {
    */
   @Override
   public MaterializedView meta() {
-    if (meta == null)
+    if (meta == null) {
       try {
         meta = callContext().getScore()
             .getGrain(_grainName()).getElement(_objectName(), MaterializedView.class);
       } catch (ParseException e) {
         throw new CelestaException(e.getMessage());
       }
+    }
+
     return meta;
   }
 
@@ -65,11 +67,12 @@ public abstract class MaterializedViewCursor extends BasicCursor {
   final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
     // Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
     // естественном порядке
-    for (String colName : meta().getPrimaryKey().keySet())
+    for (String colName : meta().getPrimaryKey().keySet()) {
       if (!colNames.contains(colName)) {
         l.add(String.format("\"%s\"", colName));
         ol.add(Boolean.FALSE);
       }
+    }
   }
 
   /**
@@ -83,8 +86,9 @@ public abstract class MaterializedViewCursor extends BasicCursor {
     if (!tryGet(values)) {
       StringBuilder sb = new StringBuilder();
       for (Object value : values) {
-        if (sb.length() > 0)
+        if (sb.length() > 0) {
           sb.append(", ");
+        }
         sb.append(value == null ? "null" : value.toString());
       }
       throw new CelestaException("There is no %s (%s).", _objectName(), sb.toString());
@@ -99,8 +103,9 @@ public abstract class MaterializedViewCursor extends BasicCursor {
    *            значения ключевых полей
    */
   public final boolean tryGet(Object... values) {
-    if (!canRead())
+    if (!canRead()) {
       throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+    }
 
     return getHelper.internalGet(this::_parseResult, Optional.empty(),
         0, values);
@@ -112,8 +117,9 @@ public abstract class MaterializedViewCursor extends BasicCursor {
    * ключа.
    */
   public final boolean tryGetCurrent() {
-    if (!canRead())
+    if (!canRead()) {
       throw new PermissionDeniedException(callContext(), meta(), Action.READ);
+    }
     return getHelper.internalGet(this::_parseResult, Optional.empty(),
         0, _currentKeyValues());
   }

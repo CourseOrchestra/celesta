@@ -39,15 +39,17 @@ public final class DbIndexInfo {
 
     public boolean reflects(Index ind) {
         boolean result = ind.getName().equals(indexName) && ind.getTable().getName().equals(tableName);
-        if (!result)
+        if (!result) {
             return false;
+        }
         Collection<String> dbIndexCols = columnNames;
         Collection<String> metaIndexCols = ind.getColumns().keySet();
         Iterator<String> i1 = dbIndexCols.iterator();
         Iterator<String> i2 = metaIndexCols.iterator();
         result = dbIndexCols.size() == metaIndexCols.size();
-        if (!result)
+        if (!result) {
             return false;
+        }
         while (i1.hasNext() && result) {
             result = i1.next().equals(i2.next()) && result;
         }

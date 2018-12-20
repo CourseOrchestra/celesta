@@ -21,9 +21,10 @@ public final class InFilterHolder {
     final FieldsLookup setIn(BasicCursor otherCursor) {
 
         Runnable lookupChangeCallback = () -> {
-            if (!cursor.isClosed())
+            if (!cursor.isClosed()) {
                 // пересоздаём набор
                 cursor.closeSet();
+            }
         };
 
         Function<FieldsLookup, Void> newLookupCallback = lookup -> {
@@ -33,12 +34,15 @@ public final class InFilterHolder {
 
         FieldsLookup fieldsLookup;
 
-        if (cursor instanceof Cursor)
-            fieldsLookup = new FieldsLookup((Cursor) cursor, (Cursor)otherCursor, lookupChangeCallback, newLookupCallback);
-        else if (cursor instanceof ViewCursor)
-            fieldsLookup = new FieldsLookup((ViewCursor) cursor, (ViewCursor)otherCursor, lookupChangeCallback, newLookupCallback);
-        else
+        if (cursor instanceof Cursor) {
+            fieldsLookup = new FieldsLookup(
+                    (Cursor) cursor, (Cursor) otherCursor, lookupChangeCallback, newLookupCallback);
+        } else if (cursor instanceof ViewCursor) {
+            fieldsLookup = new FieldsLookup(
+                    (ViewCursor) cursor, (ViewCursor) otherCursor, lookupChangeCallback, newLookupCallback);
+        } else {
             throw new CelestaException("Not supported cursor type: %s", cursor.getClass().getSimpleName());
+        }
 
         WhereTermsMaker otherWhereTermMaker = otherCursor.getQmaker();
         inFilter = new In(fieldsLookup, otherWhereTermMaker);
