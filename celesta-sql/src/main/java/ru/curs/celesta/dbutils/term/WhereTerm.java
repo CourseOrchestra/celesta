@@ -13,5 +13,5 @@ public abstract class WhereTerm {
 
     public abstract void programParams(
             List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper
-    ) ;
+    );
 }

@@ -40,8 +40,9 @@ public final class BinaryColumn extends Column {
     void save(PrintWriter bw) throws IOException {
         super.save(bw);
         bw.write(" BLOB");
-        if (!isNullable())
+        if (!isNullable()) {
             bw.write(" NOT NULL");
+        }
         String defaultVal = getDefaultValue();
         if (defaultVal != null) {
             bw.write(" DEFAULT ");

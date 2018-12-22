@@ -89,8 +89,9 @@ public final class StringColumn extends Column {
         for (int i = 0; i < lexvalue.length(); i++) {
             char c = lexvalue.charAt(i);
             sb.append(c);
-            if (c == '\'')
+            if (c == '\'') {
                 sb.append('\'');
+            }
         }
         sb.append('\'');
         return sb.toString();
@@ -140,9 +141,10 @@ public final class StringColumn extends Column {
                         String.format("Invalid string column length '%s' for column '%s' of table '%s'", length,
                                 getName(), getParentTable().getName()));
             }
-            if (newLength <= 0)
+            if (newLength <= 0) {
                 throw new ParseException(
                         String.format("String column length for column '%s' must be greater than zero.", getName()));
+            }
             getParentTable().getGrain().modify();
             this.length = newLength;
         }
@@ -156,16 +158,17 @@ public final class StringColumn extends Column {
     @Override
     void save(PrintWriter bw) throws IOException {
         super.save(bw);
-        if (isMax())
+        if (isMax()) {
             bw.write(" TEXT");
-        else {
+        } else {
             bw.write(" VARCHAR(");
             bw.write(Integer.toString(getLength()));
             bw.write(")");
         }
 
-        if (!isNullable())
+        if (!isNullable()) {
             bw.write(" NOT NULL");
+        }
         String defaultVal = getDefaultValue();
         if (defaultVal != null) {
             bw.write(" DEFAULT ");

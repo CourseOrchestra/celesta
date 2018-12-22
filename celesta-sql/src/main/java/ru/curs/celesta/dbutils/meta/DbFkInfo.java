@@ -73,24 +73,31 @@ public final class DbFkInfo {
     }
 
     public boolean reflects(ForeignKey fk) {
-        if (!fk.getParentTable().getName().equals(tableName))
+        if (!fk.getParentTable().getName().equals(tableName)) {
             return false;
-        if (!fk.getReferencedTable().getGrain().getName().equals(refGrainName))
+        }
+        if (!fk.getReferencedTable().getGrain().getName().equals(refGrainName)) {
             return false;
-        if (!fk.getReferencedTable().getName().equals(refTableName))
+        }
+        if (!fk.getReferencedTable().getName().equals(refTableName)) {
             return false;
-        if (fk.getColumns().size() != columnNames.size())
+        }
+        if (fk.getColumns().size() != columnNames.size()) {
             return false;
+        }
         Iterator<String> i1 = fk.getColumns().keySet().iterator();
         Iterator<String> i2 = columnNames.iterator();
         while (i1.hasNext()) {
-            if (!i1.next().equals(i2.next()))
+            if (!i1.next().equals(i2.next())) {
                 return false;
+            }
         }
-        if (!fk.getDeleteRule().equals(deleteRule))
+        if (!fk.getDeleteRule().equals(deleteRule)) {
             return false;
-        if (!fk.getUpdateRule().equals(updateRule))
+        }
+        if (!fk.getUpdateRule().equals(updateRule)) {
             return false;
+        }
         return true;
     }
 

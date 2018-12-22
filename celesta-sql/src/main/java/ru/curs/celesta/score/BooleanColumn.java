@@ -58,8 +58,9 @@ public final class BooleanColumn extends Column {
     void save(PrintWriter bw) throws IOException {
         super.save(bw);
         bw.write(" BIT");
-        if (!isNullable())
+        if (!isNullable()) {
             bw.write(" NOT NULL");
+        }
         Boolean defaultVal = getDefaultValue();
         if (defaultVal != null) {
             bw.write(" DEFAULT '");

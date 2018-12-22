@@ -165,8 +165,9 @@ public final class OraAdaptor extends DBAdaptor {
         StringBuilder params = new StringBuilder();
         for (int i = 0; i < t.getColumns().size(); i++) {
             String c = columns.next();
-            if (nullsMask[i])
+            if (nullsMask[i]) {
                 continue;
+            }
             if (params.length() > 0) {
                 fields.append(", ");
                 params.append(", ");
@@ -257,15 +258,15 @@ public final class OraAdaptor extends DBAdaptor {
     public String tableString(String schemaName, String tableName) {
         StringBuilder sb = new StringBuilder();
 
-        if (schemaName.startsWith("\""))
+        if (schemaName.startsWith("\"")) {
             sb.append(schemaName.substring(0, schemaName.length() - 1));
-        else {
+        } else {
             sb.append("\"").append(schemaName);
         }
         sb.append("_");
-        if (tableName.startsWith("\""))
+        if (tableName.startsWith("\"")) {
             sb.append(tableName.substring(1));
-        else {
+        } else {
             sb.append(tableName).append("\"");
         }
 
@@ -326,8 +327,9 @@ public final class OraAdaptor extends DBAdaptor {
             while (rs.next()) {
                 String buf = rs.getString(1);
                 Matcher m = BOOLEAN_CHECK.matcher(buf);
-                if (m.find() && m.group(1).equals(c.getName()))
+                if (m.find() && m.group(1).equals(c.getName())) {
                     return true;
+                }
             }
         } finally {
             checkForBool.close();
@@ -356,10 +358,11 @@ public final class OraAdaptor extends DBAdaptor {
                     String typeName = rs.getString("DATA_TYPE");
 
                     if (typeName.startsWith("TIMESTAMP")) {
-                        if (typeName.endsWith("WITH TIME ZONE"))
+                        if (typeName.endsWith("WITH TIME ZONE")) {
                             result.setType(ZonedDateTimeColumn.class);
-                        else
+                        } else {
                             result.setType(DateTimeColumn.class);
+                        }
                     } else if ("float".equalsIgnoreCase(typeName)) {
                         result.setType(FloatingColumn.class);
                     } else if ("nclob".equalsIgnoreCase(typeName)) {
@@ -371,11 +374,12 @@ public final class OraAdaptor extends DBAdaptor {
                         result.setLength(rs.getInt("DATA_PRECISION"));
                         result.setScale(rs.getInt("DATA_SCALE"));
                     } else {
-                        for (Class<? extends Column> cc : COLUMN_CLASSES)
+                        for (Class<? extends Column> cc : COLUMN_CLASSES) {
                             if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(typeName)) {
                                 result.setType(cc);
                                 break;
                             }
+                        }
                     }
                     if (IntegerColumn.class == result.getType()) {
                         // В Oracle булевские столбцы имеют тот же тип данных,
@@ -416,8 +420,9 @@ public final class OraAdaptor extends DBAdaptor {
                 g.getName(), te.getName(), c.getName()));
         try {
             rs = getDefault.executeQuery();
-            if (!rs.next())
+            if (!rs.next()) {
                 return;
+            }
             String body = rs.getString(1);
             if (body == null || "null".equalsIgnoreCase(body)) {
 
@@ -425,37 +430,43 @@ public final class OraAdaptor extends DBAdaptor {
                     IntegerColumn ic = (IntegerColumn) c;
                     String sequenceTriggerName = generateSequenceTriggerName(ic);
 
-                    String sql = String.format("SELECT REFERENCED_NAME FROM USER_DEPENDENCIES " +
-                            " WHERE NAME = '%s' " +
-                            " AND TYPE = 'TRIGGER' " +
-                            " AND REFERENCED_TYPE = 'SEQUENCE'", sequenceTriggerName);
+                    String sql = String.format(
+                            "SELECT REFERENCED_NAME FROM USER_DEPENDENCIES "
+                         + " WHERE NAME = '%s' "
+                              + " AND TYPE = 'TRIGGER' "
+                              + " AND REFERENCED_TYPE = 'SEQUENCE'",
+                                               sequenceTriggerName);
 
                     try (Statement stmt = conn.createStatement();
                          ResultSet sequenceRs = stmt.executeQuery(sql)) {
                         if (sequenceRs.next()) {
                             String sequenceName = sequenceRs.getString(1);
                             body = "NEXTVAL(" + sequenceName.replace(g.getName() + "_", "") + ")";
-                        } else
+                        } else {
                             return;
+                        }
                     }
 
-                } else
+                } else {
                     return;
+                }
             }
-            if (BooleanColumn.class == result.getType())
+            if (BooleanColumn.class == result.getType()) {
                 body = "0".equals(body.trim()) ? "'FALSE'" : "'TRUE'";
-            else if (DateTimeColumn.class == result.getType()) {
-                if (body.toLowerCase().contains("sysdate"))
+            } else if (DateTimeColumn.class == result.getType()) {
+                if (body.toLowerCase().contains("sysdate")) {
                     body = "GETDATE()";
-                else {
+                } else {
                     Matcher m = DATE_PATTERN.matcher(body);
-                    if (m.find())
+                    if (m.find()) {
                         body = String.format("'%s%s%s'", m.group(1), m.group(2), m.group(3));
+                    }
                 }
             } else if (BinaryColumn.class == result.getType()) {
                 Matcher m = HEX_STRING.matcher(body);
-                if (m.find())
+                if (m.find()) {
                     body = "0x" + m.group(1);
+                }
             } else {
                 body = body.trim();
             }
@@ -560,10 +571,11 @@ public final class OraAdaptor extends DBAdaptor {
             ResultSet rs = stmt.executeQuery(sql);
             if (rs.next()) {
                 sql = rs.getString("TRIGGER_NAME");
-                if (sql.startsWith(CSC))
+                if (sql.startsWith(CSC)) {
                     return FKRule.CASCADE;
-                else if (sql.startsWith(SNL))
+                } else if (sql.startsWith(SNL)) {
                     return FKRule.SET_NULL;
+                }
             }
             return FKRule.NO_ACTION;
         } finally {
@@ -575,8 +587,9 @@ public final class OraAdaptor extends DBAdaptor {
     String getLimitedSQL(
             FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
     ) {
-        if (offset == 0 && rowCount == 0)
+        if (offset == 0 && rowCount == 0) {
             throw new IllegalArgumentException();
+        }
         String sql;
         if (offset == 0) {
             // No offset -- simpler query
@@ -679,9 +692,9 @@ public final class OraAdaptor extends DBAdaptor {
     @Override
     public List<String> getParameterizedViewList(Connection conn, Grain g) {
         String sql = String.format(
-                "select OBJECT_NAME from all_objects\n" +
-                        " where owner = sys_context('userenv','session_user')\n" +
-                        " and object_type = 'FUNCTION' and object_name like '%s@_%%' escape '@'",
+                "select OBJECT_NAME from all_objects\n"
+             + " where owner = sys_context('userenv','session_user')\n"
+                 + " and object_type = 'FUNCTION' and object_name like '%s@_%%' escape '@'",
                 g.getName());
         List<String> result = new LinkedList<>();
         try (Statement stmt = conn.createStatement();
@@ -732,8 +745,9 @@ public final class OraAdaptor extends DBAdaptor {
             Connection conn, FromClause from, String orderBy,
             String navigationWhereClause, Set<String> fields, long offset
     ) {
-        if (navigationWhereClause == null)
+        if (navigationWhereClause == null) {
             throw new IllegalArgumentException();
+        }
 
         StringBuilder w = new StringBuilder(navigationWhereClause);
         final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
@@ -741,8 +755,9 @@ public final class OraAdaptor extends DBAdaptor {
         final String sql;
 
         if (offset == 0) {
-            if (orderBy.length() > 0)
+            if (orderBy.length() > 0) {
                 w.append(" order by " + orderBy);
+            }
 
             sql = String.format(SELECT_S_FROM
                             + " (" + SELECT_S_FROM + " %s  %s)"
@@ -765,8 +780,9 @@ public final class OraAdaptor extends DBAdaptor {
     public int getDBPid(Connection conn) {
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("select sys_context('userenv','sessionid') from dual")) {
-            if (rs.next())
+            if (rs.next()) {
                 return rs.getInt(1);
+            }
         } catch (SQLException e) {
             // do nothing
         }
@@ -848,8 +864,8 @@ public final class OraAdaptor extends DBAdaptor {
 
     @Override
     public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
-        String sql = "SELECT INCREMENT_BY, MIN_VALUE, MAX_VALUE, CYCLE_FLAG" +
-                " FROM USER_SEQUENCES WHERE SEQUENCE_NAME = ?";
+        String sql = "SELECT INCREMENT_BY, MIN_VALUE, MAX_VALUE, CYCLE_FLAG"
+                  + " FROM USER_SEQUENCES WHERE SEQUENCE_NAME = ?";
 
         try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, String.format("%s_%s", s.getGrain().getName(), s.getName()));
@@ -874,8 +890,9 @@ public final class OraAdaptor extends DBAdaptor {
             name = dbName.substring(g.getName().length() + 1);
         } else {
             Matcher m = TABLE_PATTERN.matcher(dbName);
-            if (!m.find())
+            if (!m.find()) {
                 return null;
+            }
             name = m.group(2);
         }
         return name;

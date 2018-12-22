@@ -85,12 +85,15 @@ public abstract class AbstractScore {
     void init(ScoreDiscovery scoreDiscovery) throws ParseException {
         for (String entry : this.path.split(File.pathSeparator)) {
             File path = new File(entry.trim());
-            if (!path.exists())
+            if (!path.exists()) {
                 throw new CelestaException("Score path entry '%s' does not exist.", path.toString());
-            if (!path.canRead())
+            }
+            if (!path.canRead()) {
                 throw new CelestaException("Cannot read score path entry '%s'.", path.toString());
-            if (!path.isDirectory())
+            }
+            if (!path.isDirectory()) {
                 throw new CelestaException("Score path entry '%s' is not a directory.", path.toString());
+            }
 
             defaultGrainPath = path;
             grainFiles.addAll(scoreDiscovery.discoverScore(path));
@@ -110,11 +113,12 @@ public abstract class AbstractScore {
      * перезаписывая их содержимое.
      */
     public void save() {
-        for (Grain g : grains.values())
-            if (g.isModified())
+        for (Grain g : grains.values()) {
+            if (g.isModified()) {
                 g.save();
+            }
+        }
     }
-
 
     private void fillGrainNameToFilesMap(Set<File> files) throws ParseException {
 
@@ -126,12 +130,13 @@ public abstract class AbstractScore {
         }
 
         grainParts.sort((o1, o2) -> {
-            if (o1.isDefinition() && !o2.isDefinition())
+            if (o1.isDefinition() && !o2.isDefinition()) {
                 return -1;
-            else if (o1.isDefinition() == o2.isDefinition())
+            } else if (o1.isDefinition() == o2.isDefinition()) {
                 return 0;
-            else
+            } else {
                 return 1;
+            }
         });
 
 
@@ -157,12 +162,14 @@ public abstract class AbstractScore {
             try {
                 parseGrain(grainName);
             } catch (ParseException e) {
-                if (errorScript.length() > 0)
+                if (errorScript.length() > 0) {
                     errorScript.append("\n\n");
+                }
                 errorScript.append(e.getMessage());
             }
-            if (errorScript.length() > 0)
+            if (errorScript.length() > 0) {
                 throw new ParseException(errorScript.toString());
+            }
         }
 
     }
@@ -170,23 +177,27 @@ public abstract class AbstractScore {
     void parseGrain(String grainName) throws ParseException {
         Grain g = grains.get(grainName);
 
-        if (g.isParsingComplete())
+        if (g.isParsingComplete()) {
             return;
+        }
 
         ChecksumInputStream cis = null;
 
-        for (GrainPart grainPart : grainNameToGrainParts.get(grainName))
+        for (GrainPart grainPart : grainNameToGrainParts.get(grainName)) {
             cis = parseGrainPart(grainPart, cis);
+        }
         g.setChecksum(cis.getCRC32());
         g.setLength(cis.getCount());
         g.finalizeParsing();
     }
 
     void addGrain(Grain grain) throws ParseException {
-        if (grain.getScore() != this)
+        if (grain.getScore() != this) {
             throw new IllegalArgumentException();
-        if (grains.containsKey(grain.getName()))
+        }
+        if (grains.containsKey(grain.getName())) {
             throw new ParseException(String.format("Grain '%s' is already defined.", grain.getName()));
+        }
         grains.put(grain.getName(), grain);
     }
 
@@ -216,19 +227,22 @@ public abstract class AbstractScore {
             );
         }
 
-        if (currentGrain == g)
+        if (currentGrain == g) {
             return currentGrain;
+        }
 
-        if (g.isModified())
+        if (g.isModified()) {
             parseGrain(dependencyGrain);
+        }
 
-        if (!g.isParsingComplete())
+        if (!g.isParsingComplete()) {
             throw new ParseException(
                     String.format("Error parsing grain %s "
                                     + "due to previous parsing errors or "
                                     + "cycle reference involving grains '%s' and '%s'.",
                             currentGrain.getName(), currentGrain.getName(), dependencyGrain
                     ));
+        }
 
         return g;
     }
@@ -258,12 +272,14 @@ public abstract class AbstractScore {
     }
 
     private GrainPart extractGrainInfo(File f, boolean isSystem) throws ParseException {
-        try (ChecksumInputStream is = isSystem ? new ChecksumInputStream(getSysSchemaInputStream()) : new ChecksumInputStream(new FileInputStream(f))) {
+        try (ChecksumInputStream is = isSystem ? new ChecksumInputStream(getSysSchemaInputStream())
+                                               : new ChecksumInputStream(new FileInputStream(f))) {
             CelestaParser parser = new CelestaParser(is, "utf-8");
             try {
                 return parser.extractGrainInfo(this, f);
             } catch (ParseException | TokenMgrError e) {
-                throw new ParseException(String.format("Error extracting of grain name '%s': %s", f.toString(), e.getMessage()));
+                throw new ParseException(String.format(
+                        "Error extracting of grain name '%s': %s", f.toString(), e.getMessage()));
             }
         } catch (IOException e) {
             throw new ParseException(String.format("Cannot open file '%s'.", f.toString()));
@@ -291,8 +307,9 @@ public abstract class AbstractScore {
             throw new CelestaException(e);
         } finally {
             try {
-                if (is != null)
+                if (is != null) {
                     is.close();
+                }
             } catch (IOException e) {
                 // This should never happen, however.
                 is = null;
@@ -354,8 +371,9 @@ public abstract class AbstractScore {
         }
 
         public T build() throws ParseException {
-            if (scoreDiscovery == null)
+            if (scoreDiscovery == null) {
                 scoreDiscovery = new DefaultScoreDiscovery();
+            }
 
             try {
                 T t = scoreClass.newInstance();

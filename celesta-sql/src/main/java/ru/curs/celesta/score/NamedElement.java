@@ -27,8 +27,9 @@ public abstract class NamedElement {
     public NamedElement(String name, IdentifierParser identifierParser) throws ParseException {
         // Не должно быть name==null, т. к. все методы написаны исходя из того,
         // что name != null.
-        if (name == null)
+        if (name == null) {
             throw new IllegalArgumentException();
+        }
         this.name = identifierParser.parse(name);
         this.quotedName = String.format("\"%s\"", this.name);
     }
@@ -66,10 +67,11 @@ public abstract class NamedElement {
 
     public final String getQuotedNameIfNeeded() {
         Pattern p = Pattern.compile(IdentifierParser.PLAIN_NAME_PATTERN_STR);
-        if (p.matcher(name).matches())
+        if (p.matcher(name).matches()) {
             return name;
-        else
+        } else {
             return quotedName;
+        }
     }
 
     @Override
@@ -98,12 +100,13 @@ public abstract class NamedElement {
      *             Если комментарий имеет неверный формат.
      */
     void setCelestaDocLexem(String celestaDoc) throws ParseException {
-        if (celestaDoc == null)
+        if (celestaDoc == null) {
             this.celestaDoc = null;
-        else {
+        } else {
             Matcher m = COMMENT.matcher(celestaDoc);
-            if (!m.matches())
+            if (!m.matches()) {
                 throw new ParseException("Celestadoc should match pattern /**...*/, was " + celestaDoc);
+            }
             setCelestaDoc(m.group(1));
         }
     }

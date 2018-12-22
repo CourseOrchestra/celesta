@@ -25,8 +25,9 @@ public final class CelestaDocUtils {
      */
     public static String getCelestaDocJSON(String celestaDoc)  {
 
-        if (celestaDoc == null)
+        if (celestaDoc == null) {
             return "{}";
+        }
         StringBuilder sb = new StringBuilder();
         int state = 0;
         int bracescount = 0;
@@ -45,8 +46,9 @@ public final class CelestaDocUtils {
                     if (c == '{') {
                         bracescount++;
                     } else if (c == '}') {
-                        if (--bracescount == 0)
+                        if (--bracescount == 0) {
                             return sb.toString();
+                        }
                     } else if (c == '"') {
                         state = 2;
                     }
@@ -67,8 +69,9 @@ public final class CelestaDocUtils {
             }
         }
         // No valid json!
-        if (state != 0)
+        if (state != 0) {
             throw new CelestaException("Broken or truncated JSON: %s", sb.toString());
+        }
         return "{}";
     }
 

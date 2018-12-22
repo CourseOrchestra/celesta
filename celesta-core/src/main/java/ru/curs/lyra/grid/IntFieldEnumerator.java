@@ -31,8 +31,9 @@ public final class IntFieldEnumerator extends KeyEnumerator {
     public void setBounds(int min, int max) {
         // We should have min < max, or else arythmetic errors will occur
         // min == max is no good either, since max-min == 0 division.
-        if (max <= min)
+        if (max <= min) {
             throw new IllegalArgumentException();
+        }
         this.min = min;
         this.max = max;
         this.card = BigInteger.valueOf(this.max - this.min + 1);

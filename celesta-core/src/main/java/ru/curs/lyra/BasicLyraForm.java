@@ -122,17 +122,19 @@ public abstract class BasicLyraForm {
         if (m == null) {
             // UNBOUND FIELD
             LyraFormField result = _createUnboundField(fieldsMeta, name);
-            if (result == null)
+            if (result == null) {
                 throw new CelestaException(String.format("Column '%s' not found in '%s.%s'", name,
                         meta.getGrain().getName(), meta.getName()));
+            }
             return result;
         } else {
             // BOUND FIELD
             // finding out field's index
             int index = 0;
             for (String n : meta.getColumns().keySet()) {
-                if (n.equals(name))
+                if (n.equals(name)) {
                     break;
+                }
                 index++;
             }
             return createBoundField(name, index, m);

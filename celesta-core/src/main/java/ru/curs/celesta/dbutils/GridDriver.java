@@ -72,7 +72,8 @@ public final class GridDriver {
                          new SystemCallContext(
                                  closedCopyCallContext.getCelesta(),
                                  "LyraCounterThread")) {
-                List<String> columns = Arrays.stream(closedCopy.orderByColumnNames()).map(WhereTermsMaker::unquot).collect(Collectors.toList());
+                List<String> columns = Arrays.stream(
+                        closedCopy.orderByColumnNames()).map(WhereTermsMaker::unquot).collect(Collectors.toList());
                 BasicCursor c = closedCopy._getBufferCopy(sysContext, columns);
                 c.copyFiltersFrom(closedCopy);
                 c.copyOrderFrom(closedCopy);
@@ -81,8 +82,9 @@ public final class GridDriver {
                     RequestTask myRequest = task;
                     if (myRequest == null) {
                         int count = interpolator.getApproximateCount();
-                        if (interpolationInitializer.initialize(c, count))
+                        if (interpolationInitializer.initialize(c, count)) {
                             continue;
+                        }
                         return;
                     }
 
@@ -99,8 +101,9 @@ public final class GridDriver {
                     setCursorOrdinal(c, myRequest.getKey());
                     int result = c.position();
                     interpolator.setPoint(myRequest.getKey(), result);
-                    if (changeNotifier != null)
+                    if (changeNotifier != null) {
                         changeNotifier.run();
+                    }
                 }
             } catch (CelestaException | InterruptedException e) {
                 // terminate thread silently
@@ -127,8 +130,9 @@ public final class GridDriver {
         final boolean[] descOrders = c.descOrders();
         final boolean desc = descOrders[0];
         for (int i = 1; i < descOrders.length; i++) {
-            if (desc != descOrders[i])
+            if (desc != descOrders[i]) {
                 throw new CelestaException("Mixed ASC/DESC ordering for grid: %s", c.getOrderBy());
+            }
         }
 
         // KeyEnumerator factory
@@ -255,8 +259,9 @@ public final class GridDriver {
 
     private void requestRefinement(BigInteger key, boolean immediate) {
         // do not process one request twice in a row
-        if (key.equals(latestRequest))
+        if (key.equals(latestRequest)) {
             return;
+        }
         latestRequest = key;
 
         task = new RequestTask(key, immediate);
@@ -276,8 +281,9 @@ public final class GridDriver {
         KeyEnumerator km;
         for (String cname : fields) {
             km = keyEnumerators.get(cname);
-            if (km != null)
+            if (km != null) {
                 km.setValue(values[i]);
+            }
             i++;
         }
         return rootKeyEnumerator.getOrderValue();
@@ -301,11 +307,11 @@ public final class GridDriver {
         KeyEnumerator result;
 
         final String celestaType = m.getCelestaType();
-        if (BooleanColumn.CELESTA_TYPE.equals(celestaType))
+        if (BooleanColumn.CELESTA_TYPE.equals(celestaType)) {
             result = new BitFieldEnumerator();
-        else if (IntegerColumn.CELESTA_TYPE.equals(celestaType))
+        } else if (IntegerColumn.CELESTA_TYPE.equals(celestaType)) {
             result = new IntFieldEnumerator();
-        else if (StringColumn.VARCHAR.equals(celestaType)) {
+        } else if (StringColumn.VARCHAR.equals(celestaType)) {
             final int length;
             if (m instanceof StringColumn) {
                 StringColumn s = (StringColumn) m;
@@ -334,8 +340,9 @@ public final class GridDriver {
     }
 
     private void checkMeta(BasicCursor c) {
-        if (c.meta() != closedCopy.meta())
+        if (c.meta() != closedCopy.meta()) {
             throw new CelestaException("Metaobjects for cursor and cursor position specifier don't match.");
+        }
     }
 
     /**

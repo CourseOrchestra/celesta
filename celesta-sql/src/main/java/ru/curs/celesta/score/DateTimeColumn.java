@@ -59,11 +59,12 @@ public final class DateTimeColumn extends Column {
      */
     public static Date parseISODate(String lexvalue) throws ParseException {
         Matcher m = P.matcher(lexvalue);
-        if (!m.matches())
+        if (!m.matches()) {
             throw new ParseException(
                     String.format(
                             "Invalid datetime value %s. It should match 'YYYYMMDD' pattern.",
                             lexvalue));
+        }
         int y = Integer.parseInt(m.group(1));
         int mo = Integer.parseInt(m.group(2));
         int d = Integer.parseInt(m.group(3));
@@ -96,11 +97,12 @@ public final class DateTimeColumn extends Column {
     void save(PrintWriter bw) throws IOException {
         super.save(bw);
         bw.write(" DATETIME");
-        if (!isNullable())
+        if (!isNullable()) {
             bw.write(" NOT NULL");
-        if (isGetdate())
+        }
+        if (isGetdate()) {
             bw.write(" DEFAULT GETDATE()");
-        else {
+        } else {
             Date defaultVal = getDefaultValue();
             if (defaultVal != null) {
                 bw.write(" DEFAULT '");

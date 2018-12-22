@@ -110,13 +110,15 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
             Connection conn, FromClause from, String orderBy,
             String navigationWhereClause, Set<String> fields, long offset
     ) {
-        if (navigationWhereClause == null)
+        if (navigationWhereClause == null) {
             throw new IllegalArgumentException();
+        }
         StringBuilder w = new StringBuilder(navigationWhereClause);
         final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
         boolean useWhere = w.length() > 0;
-        if (orderBy.length() > 0)
+        if (orderBy.length() > 0) {
             w.append(" order by " + orderBy);
+        }
         String sql = String.format(SELECT_S_FROM + " %s %s  limit 1 offset %d;", fieldList,
                 from.getExpression(), useWhere ? " where " + w : w, offset == 0 ? 0 : offset - 1);
         // System.out.println(sql);

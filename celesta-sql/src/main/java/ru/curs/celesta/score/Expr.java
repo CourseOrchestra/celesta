@@ -13,14 +13,16 @@ public abstract class Expr {
         final ViewColumnType columnType = getMeta().getColumnType();
         if (t == ViewColumnType.INT || t == ViewColumnType.REAL || t == ViewColumnType.DECIMAL) {
             if (!(columnType == ViewColumnType.INT || columnType == ViewColumnType.REAL
-                    || columnType == ViewColumnType.DECIMAL))
+                    || columnType == ViewColumnType.DECIMAL)) {
                 throw new ParseException(
                         String.format("Expression '%s' is expected to be of numeric type, but it is %s", getCSQL(),
                                 getMeta().toString()));
+            }
         } else {
-            if (columnType != t)
+            if (columnType != t) {
                 throw new ParseException(String.format("Expression '%s' is expected to be of %s type, but it is %s",
                         getCSQL(), t.toString(), getMeta().toString()));
+            }
         }
     }
 
@@ -73,7 +75,7 @@ public abstract class Expr {
      */
     public final void resolveFieldRefs(GrainElement ge) throws ParseException {
         if (ge instanceof DataGrainElement) {
-            FilterFieldResolver fr = new FilterFieldResolver((DataGrainElement)ge);
+            FilterFieldResolver fr = new FilterFieldResolver((DataGrainElement) ge);
             accept(fr);
         }
     }
@@ -196,8 +198,9 @@ final class Relop extends LogicValuedExpr {
     private final int relop;
 
     public Relop(Expr left, Expr right, int relop) {
-        if (relop < 0 || relop >= OPS.length)
+        if (relop < 0 || relop >= OPS.length) {
             throw new IllegalArgumentException();
+        }
         this.left = left;
         this.right = right;
         this.relop = relop;
@@ -261,8 +264,9 @@ final class In extends LogicValuedExpr {
     @Override
     public void accept(ExprVisitor visitor) throws ParseException {
         left.accept(visitor);
-        for (Expr operand : operands)
+        for (Expr operand : operands) {
             operand.accept(visitor);
+        }
         visitor.visitIn(this);
     }
 
@@ -320,9 +324,10 @@ final class IsNull extends LogicValuedExpr {
     private final Expr expr;
 
     IsNull(Expr expr) throws ParseException {
-        if (expr.getMeta().getColumnType() == ViewColumnType.LOGIC)
+        if (expr.getMeta().getColumnType() == ViewColumnType.LOGIC) {
             throw new ParseException(String.format(
                     "Expression '%s' is logical condition and cannot be an argument of IS NULL operator.", getCSQL()));
+        }
         this.expr = expr;
     }
 
@@ -376,15 +381,19 @@ final class BinaryLogicalOp extends LogicValuedExpr {
     private final List<Expr> operands;
 
     BinaryLogicalOp(int operator, List<Expr> operands) throws ParseException {
-        if (operator < 0 || operator >= OPS.length)
+        if (operator < 0 || operator >= OPS.length) {
             throw new IllegalArgumentException();
-        if (operands.isEmpty())
+        }
+        if (operands.isEmpty()) {
             throw new IllegalArgumentException();
+        }
         // все операнды должны быть логическими
-        for (Expr e : operands)
-            if (e.getMeta().getColumnType() != ViewColumnType.LOGIC)
+        for (Expr e : operands) {
+            if (e.getMeta().getColumnType() != ViewColumnType.LOGIC) {
                 throw new ParseException(
                         String.format("Expression '%s' is expected to be logical condition.", e.getCSQL()));
+            }
+        }
         this.operands = operands;
         this.operator = operator;
     }
@@ -405,8 +414,9 @@ final class BinaryLogicalOp extends LogicValuedExpr {
 
     @Override
     public void accept(ExprVisitor visitor) throws ParseException {
-        for (Expr e : operands)
+        for (Expr e : operands) {
             e.accept(visitor);
+        }
         visitor.visitBinaryLogicalOp(this);
     }
 }
@@ -428,11 +438,12 @@ final class BinaryTermOp extends Expr {
     private final List<Expr> operands;
 
     BinaryTermOp(int operator, List<Expr> operands) {
-        if (operator < 0 || operator >= OPS.length)
+        if (operator < 0 || operator >= OPS.length) {
             throw new IllegalArgumentException();
-        if (operands.isEmpty())
+        }
+        if (operands.isEmpty()) {
             throw new IllegalArgumentException();
-
+        }
         this.operands = operands;
         this.operator = operator;
     }
@@ -491,8 +502,9 @@ final class BinaryTermOp extends Expr {
 
     @Override
     public void accept(ExprVisitor visitor) throws ParseException {
-        for (Expr e : operands)
+        for (Expr e : operands) {
             e.accept(visitor);
+        }
         visitor.visitBinaryTermOp(this);
     }
 }
@@ -669,8 +681,9 @@ final class FieldRef extends Expr {
     private ViewColumnMeta meta;
 
     public FieldRef(String tableNameOrAlias, String columnName) throws ParseException {
-        if (columnName == null)
+        if (columnName == null) {
             throw new IllegalArgumentException();
+        }
         this.tableNameOrAlias = tableNameOrAlias;
         this.columnName = columnName;
 
@@ -694,29 +707,30 @@ final class FieldRef extends Expr {
     public ViewColumnMeta getMeta() {
         if (meta == null) {
             if (column != null) {
-                if (column instanceof IntegerColumn)
+                if (column instanceof IntegerColumn) {
                     meta = new ViewColumnMeta(ViewColumnType.INT);
-                else if (column instanceof FloatingColumn)
+                } else if (column instanceof FloatingColumn) {
                     meta = new ViewColumnMeta(ViewColumnType.REAL);
-                else if (column instanceof DecimalColumn)
+                } else if (column instanceof DecimalColumn) {
                     meta = new ViewColumnMeta(ViewColumnType.DECIMAL);
-                else if (column instanceof StringColumn) {
+                } else if (column instanceof StringColumn) {
                     StringColumn sc = (StringColumn) column;
-                    if (sc.isMax())
+                    if (sc.isMax()) {
                         meta = new ViewColumnMeta(ViewColumnType.TEXT);
-                    else
+                    } else {
                         meta = new ViewColumnMeta(ViewColumnType.TEXT, sc.getLength());
-                } else if (column instanceof BooleanColumn)
+                    }
+                } else if (column instanceof BooleanColumn) {
                     meta = new ViewColumnMeta(ViewColumnType.BIT);
-                else if (column instanceof DateTimeColumn)
+                } else if (column instanceof DateTimeColumn) {
                     meta = new ViewColumnMeta(ViewColumnType.DATE);
-                else if (column instanceof ZonedDateTimeColumn)
+                } else if (column instanceof ZonedDateTimeColumn) {
                     meta = new ViewColumnMeta(ViewColumnType.DATE_WITH_TIME_ZONE);
-                else if (column instanceof BinaryColumn)
+                } else if (column instanceof BinaryColumn) {
                     meta = new ViewColumnMeta(ViewColumnType.BLOB);
                 // This should not happen unless we introduced new types in
                 // Celesta
-                else {
+                } else {
                     throw new IllegalStateException();
                 }
                 meta.setNullable(column.isNullable());

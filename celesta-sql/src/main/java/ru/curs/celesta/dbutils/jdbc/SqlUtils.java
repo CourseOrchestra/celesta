@@ -29,15 +29,16 @@ public final class SqlUtils {
         try  {
             stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-            return (ResultSet)Proxy.newProxyInstance(rs.getClass().getClassLoader(), new Class<?>[] { ResultSet.class},
+            return (ResultSet) Proxy.newProxyInstance(rs.getClass().getClassLoader(), new Class<?>[] { ResultSet.class},
                     new ResultSetInvocationHandler(rs));
         } catch (SQLException e) {
-            if (stmt != null)
+            if (stmt != null) {
                 try {
                     stmt.close();
                 } catch (SQLException ex) {
                     throw new CelestaException(ex);
                 }
+            }
             throw new CelestaException(e);
         }
     }
@@ -54,8 +55,9 @@ public final class SqlUtils {
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             if (method.equals(ResultSet.class.getMethod("close"))) {
                 Statement statement = rs.getStatement();
-                if (!statement.isClosed())
+                if (!statement.isClosed()) {
                     statement.close();
+                }
             } else {
                 return method.invoke(rs, args);
             }

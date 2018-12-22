@@ -21,20 +21,22 @@ public abstract class LyraNamedElement {
     private final String name;
 
     public LyraNamedElement(String name) {
-        if (name == null)
+        if (name == null) {
             throw new IllegalArgumentException();
+        }
         validateIdentifier(name);
         this.name = name;
     }
 
     static void validateIdentifier(String name) {
         Matcher m = NAME_PATTERN.matcher(name);
-        if (!m.matches())
+        if (!m.matches()) {
             throw new CelestaException("Invalid identifier: '" + name + "'.");
-        if (name.length() > MAX_IDENTIFIER_LENGTH)
+        }
+        if (name.length() > MAX_IDENTIFIER_LENGTH) {
             throw new CelestaException(
                     "Identifier '" + name + "' is longer than " + MAX_IDENTIFIER_LENGTH + " characters.");
-
+        }
     }
 
     /**

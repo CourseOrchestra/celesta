@@ -31,8 +31,9 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   }
 
   private void initParameters(Map<String, Object> parameters) {
-    if (!meta().getParameters().keySet().containsAll(parameters.keySet()))
+    if (!meta().getParameters().keySet().containsAll(parameters.keySet())) {
       throw new CelestaException("Not all required parameters were passed");
+    }
 
     this.parameters = parameters;
   }
@@ -42,13 +43,15 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
    */
   @Override
   public ParameterizedView meta() {
-    if (meta == null)
+    if (meta == null) {
       try {
         meta = callContext().getScore()
             .getGrain(_grainName()).getElement(_objectName(), ParameterizedView.class);
       } catch (ParseException e) {
         throw new CelestaException(e.getMessage());
       }
+    }
+
     return meta;
   }
 

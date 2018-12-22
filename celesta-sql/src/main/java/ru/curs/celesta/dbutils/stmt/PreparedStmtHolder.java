@@ -34,8 +34,9 @@ public abstract class PreparedStmtHolder {
             program.clear();
             stmt = initStatement(program);
             // everything should be initialized at this point
-            if (!isStmtValid())
+            if (!isStmtValid()) {
                 throw new IllegalStateException();
+            }
         }
         int i = 1;
         for (ParameterSetter f : program) {
@@ -47,8 +48,9 @@ public abstract class PreparedStmtHolder {
 
     public synchronized void close() {
         try {
-            if (stmt != null)
+            if (stmt != null) {
                 stmt.close();
+            }
         } catch (SQLException e) {
             e = null;
         }

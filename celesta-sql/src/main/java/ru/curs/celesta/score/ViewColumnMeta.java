@@ -16,15 +16,17 @@ public final class ViewColumnMeta implements ColumnMeta {
     private final int length;
 
     public ViewColumnMeta(ViewColumnType type) {
-        if (type == null)
+        if (type == null) {
             throw new IllegalArgumentException();
+        }
         this.type = type;
         this.length = -1;
     }
 
     public ViewColumnMeta(ViewColumnType type, int length) {
-        if (type == null)
+        if (type == null) {
             throw new IllegalArgumentException();
+        }
         this.type = type;
         this.length = length;
     }
@@ -80,12 +82,13 @@ public final class ViewColumnMeta implements ColumnMeta {
      *             wrong CelestaDoc.
      */
     void setCelestaDocLexem(String celestaDoc) throws ParseException {
-        if (celestaDoc == null)
+        if (celestaDoc == null) {
             this.celestaDoc = null;
-        else {
+        } else {
             Matcher m = COMMENT.matcher(celestaDoc);
-            if (!m.matches())
+            if (!m.matches()) {
                 throw new ParseException("Celestadoc should match pattern /**...*/, was " + celestaDoc);
+            }
             this.celestaDoc = m.group(1);
         }
     }

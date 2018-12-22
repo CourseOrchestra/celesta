@@ -43,8 +43,9 @@ public class ParameterizedView extends View {
 
 
   public void addParameter(Parameter parameter) throws ParseException {
-    if (parameter == null)
+    if (parameter == null) {
       throw new IllegalArgumentException();
+    }
 
     if (parameter.getName() == null || parameter.getName().isEmpty()) {
       throw new ParseException(String.format("%s '%s' contains a parameter with undefined name.",

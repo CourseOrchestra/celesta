@@ -24,16 +24,18 @@ class MsSqlIntegerColumnDefiner extends MsSqlColumnDefiner {
         SequenceElement s = ic.getSequence();
         if (s != null) {
             return msSQLDefault(c) + "next value for " + s.getGrain().getQuotedName() + "." + s.getQuotedName();
-        } else if (ic.getDefaultValue() != null)
+        } else if (ic.getDefaultValue() != null) {
             return msSQLDefault(c) + ic.getDefaultValue();
+        }
         return "";
     }
 
     @Override
     public String getLightDefaultDefinition(Column c) {
         IntegerColumn ic = (IntegerColumn) c;
-        if (ic.getDefaultValue() != null)
+        if (ic.getDefaultValue() != null) {
             return DEFAULT + ic.getDefaultValue();
+        }
         return "";
     }
 }
@@ -78,14 +80,14 @@ class MsSqlDecimalColumnDefiner extends MsSqlColumnDefiner {
 
     @Override
     public String getMainDefinition(Column c) {
-        DecimalColumn dc = (DecimalColumn)c;
+        DecimalColumn dc = (DecimalColumn) c;
         String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
         return join(c.getQuotedName(), fieldType, nullable(c));
     }
 
     @Override
     public String getDefaultDefinition(Column c) {
-        DecimalColumn dc = (DecimalColumn)c;
+        DecimalColumn dc = (DecimalColumn) c;
         String defaultStr = "";
         if (dc.getDefaultValue() != null) {
             defaultStr = msSQLDefault(c) + dc.getDefaultValue();

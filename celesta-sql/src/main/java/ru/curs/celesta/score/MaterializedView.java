@@ -29,11 +29,14 @@ public class MaterializedView extends AbstractView implements TableElement {
         Column apply(MaterializedView mView, Column colRef, String alias) throws ParseException;
     }
 
-    private static final Map<Class<? extends Column>, MatColFabricFunction> COL_CLASSES_AND_FABRIC_FUNCS = new HashMap<>();
+    private static final Map<Class<? extends Column>, MatColFabricFunction>
+                         COL_CLASSES_AND_FABRIC_FUNCS = new HashMap<>();
 
     static {
-        COL_CLASSES_AND_FABRIC_FUNCS.put(IntegerColumn.class, (mView, colRef, alias) -> new IntegerColumn(mView, alias));
-        COL_CLASSES_AND_FABRIC_FUNCS.put(FloatingColumn.class, (mView, colRef, alias) -> new FloatingColumn(mView, alias));
+        COL_CLASSES_AND_FABRIC_FUNCS.put(IntegerColumn.class,
+                                         (mView, colRef, alias) -> new IntegerColumn(mView, alias));
+        COL_CLASSES_AND_FABRIC_FUNCS.put(FloatingColumn.class,
+                                         (mView, colRef, alias) -> new FloatingColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(
                 DecimalColumn.class, (mView, colRef, alias) -> {
                     DecimalColumn dc = (DecimalColumn) colRef;
@@ -42,10 +45,14 @@ public class MaterializedView extends AbstractView implements TableElement {
                     return new DecimalColumn(mView, alias, precision, scale);
                 }
         );
-        COL_CLASSES_AND_FABRIC_FUNCS.put(BooleanColumn.class, (mView, colRef, alias) -> new BooleanColumn(mView, alias));
-        COL_CLASSES_AND_FABRIC_FUNCS.put(BinaryColumn.class, (mView, colRef, alias) -> new BinaryColumn(mView, alias));
-        COL_CLASSES_AND_FABRIC_FUNCS.put(DateTimeColumn.class, (mView, colRef, alias) -> new DateTimeColumn(mView, alias));
-        COL_CLASSES_AND_FABRIC_FUNCS.put(ZonedDateTimeColumn.class, (mView, colRef, alias) -> new ZonedDateTimeColumn(mView, alias));
+        COL_CLASSES_AND_FABRIC_FUNCS.put(BooleanColumn.class,
+                                         (mView, colRef, alias) -> new BooleanColumn(mView, alias));
+        COL_CLASSES_AND_FABRIC_FUNCS.put(BinaryColumn.class,
+                                         (mView, colRef, alias) -> new BinaryColumn(mView, alias));
+        COL_CLASSES_AND_FABRIC_FUNCS.put(DateTimeColumn.class,
+                                         (mView, colRef, alias) -> new DateTimeColumn(mView, alias));
+        COL_CLASSES_AND_FABRIC_FUNCS.put(ZonedDateTimeColumn.class,
+                                         (mView, colRef, alias) -> new ZonedDateTimeColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(StringColumn.class, (mView, colRef, alias) -> {
             StringColumn result = new StringColumn(mView, alias);
             StringColumn strColRef = (StringColumn) colRef;
@@ -88,8 +95,8 @@ public class MaterializedView extends AbstractView implements TableElement {
                 .anyMatch(e -> e.getValue() instanceof Aggregate);
 
         if (!aggregate) {
-            throw new ParseException(String.format("%s %s.%s must have at least one aggregate column"
-                    , viewType(), getGrain().getName(), getName()));
+            throw new ParseException(String.format("%s %s.%s must have at least one aggregate column",
+                    viewType(), getGrain().getName(), getName()));
         }
 
         finalizeColumnsParsing();
@@ -156,8 +163,9 @@ public class MaterializedView extends AbstractView implements TableElement {
 
     @Override
     void setWhereCondition(Expr whereCondition) throws ParseException {
-        throw new ParseException(String.format("Exception while parsing materialized view %s.%s " +
-                "Materialized views doesn't support where condition.", getGrain().getName(), getName()));
+        throw new ParseException(String.format(
+                "Exception while parsing materialized view %s.%s Materialized views doesn't support where condition.",
+                getGrain().getName(), getName()));
     }
 
     @Override
@@ -184,16 +192,20 @@ public class MaterializedView extends AbstractView implements TableElement {
     @Override
     public Column getColumn(String colName) throws ParseException {
         Column result = realColumns.get(colName);
-        if (result == null)
+        if (result == null) {
             throw new ParseException(
-                    String.format("Column '%s' not found in materialized view '%s.%s'", colName, getGrain().getName(), getName()));
+                    String.format("Column '%s' not found in materialized view '%s.%s'",
+                                  colName, getGrain().getName(), getName()));
+        }
+
         return result;
     }
 
     @Override
     public void addColumn(Column column) throws ParseException {
-        if (column.getParentTable() != this)
+        if (column.getParentTable() != this) {
             throw new IllegalArgumentException();
+        }
         getGrain().modify();
         realColumns.addElement(column);
     }
@@ -201,16 +213,19 @@ public class MaterializedView extends AbstractView implements TableElement {
     @Override
     public synchronized void removeColumn(Column column) throws ParseException {
         // Составную часть первичного ключа нельзя удалить
-        if (pk.contains(column))
+        if (pk.contains(column)) {
             throw new ParseException(
                     String.format(YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO + "a primary key. Change primary key first.",
                             getGrain().getName(), getName(), column.getName()));
+        }
         // Составную часть индекса нельзя удалить
-        for (Index ind : getGrain().getIndices().values())
-            if (ind.getColumns().containsValue(column))
+        for (Index ind : getGrain().getIndices().values()) {
+            if (ind.getColumns().containsValue(column)) {
                 throw new ParseException(String.format(
                         YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO + "an index. Drop or change relevant index first.",
                         getGrain().getName(), getName(), column.getName()));
+            }
+        }
 
         getGrain().modify();
         realColumns.remove(column);

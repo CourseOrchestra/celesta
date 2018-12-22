@@ -59,7 +59,8 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
         if (c.isNullable() != actual.isNullable()) {
             sql = String.format(
                     ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                            + " ALTER COLUMN \"%s\" %s", c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
+                            + " ALTER COLUMN \"%s\" %s",
+                    c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
             result.add(sql);
         }
 
@@ -69,7 +70,8 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
             sql = String.format(
                     ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
                             + " ALTER COLUMN \"%s\" SET %s",
-                    c.getName(), ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).getDefaultDefinition(c));
+                    c.getName(), ColumnDefinerFactory.getColumnDefiner(getType(),
+                    c.getClass()).getDefaultDefinition(c));
             result.add(sql);
         }
 

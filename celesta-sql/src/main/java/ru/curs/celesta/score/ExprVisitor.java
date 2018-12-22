@@ -85,8 +85,9 @@ final class FieldResolver extends ExprVisitor {
   @Override
   void visitFieldRef(FieldRef fr) throws ParseException {
 
-    if (fr.getColumn() != null)
+    if (fr.getColumn() != null) {
       return;
+    }
     int foundCounter = 0;
     for (TableRef tRef : tables) {
       if (fr.getTableNameOrAlias() != null && fr.getTableNameOrAlias().equals(tRef.getAlias())) {
@@ -97,11 +98,12 @@ final class FieldResolver extends ExprVisitor {
         foundCounter++;
       }
     }
-    if (foundCounter == 0)
+    if (foundCounter == 0) {
       throw new ParseException(String.format("Cannot resolve field reference '%s'", fr.getCSQL()));
-    if (foundCounter > 1)
+    }
+    if (foundCounter > 1) {
       throw new ParseException(String.format("Ambiguous field reference '%s'", fr.getCSQL()));
-
+    }
   }
 }
 
@@ -120,15 +122,17 @@ final class ParameterResolver extends ExprVisitor {
 
   @Override
   void visitParameterRef(ParameterRef pr) throws ParseException {
-    if (pr.getParameter() != null)
+    if (pr.getParameter() != null) {
       return;
+    }
 
     Parameter parameter = parameters.get(pr.getName());
 
-    if (parameter == null)
+    if (parameter == null) {
       throw new ParseException(
           String.format("Cannot resolve parameter '%s'", pr.getCSQL())
       );
+    }
 
     pr.setParameter(parameter);
     result.getUnusedParameters().remove(parameter.getName());
@@ -175,8 +179,9 @@ final class TypeChecker extends ExprVisitor {
   void visitBinaryTermOp(BinaryTermOp expr) throws ParseException {
     // для CONCAT все операнды должны быть TEXT, для остальных -- NUMERIC
     final ViewColumnType t = expr.getOperator() == BinaryTermOp.CONCAT ? ViewColumnType.TEXT : ViewColumnType.REAL;
-    for (Expr e : expr.getOperands())
+    for (Expr e : expr.getOperands()) {
       e.assertType(t);
+    }
   }
 
   void visitIn(In expr) throws ParseException {
@@ -204,8 +209,9 @@ final class TypeChecker extends ExprVisitor {
       // сравнивать можно только однотипные термы
       expr.getRight().assertType(t);
       // при этом like действует только на строковых термах
-      if (expr.getRelop() == Relop.LIKE)
+      if (expr.getRelop() == Relop.LIKE) {
         expr.getLeft().assertType(ViewColumnType.TEXT);
+      }
     } else if (t == ViewColumnType.BIT && expr.getRelop() == Relop.EQ) {
       if (expr.getRight().getMeta().getColumnType() != ViewColumnType.BIT) {
         throw new ParseException(String.format(

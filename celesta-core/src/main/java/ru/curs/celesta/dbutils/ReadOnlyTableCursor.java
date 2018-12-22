@@ -24,13 +24,15 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
 
     @Override
     public final Table meta() {
-        if (meta == null)
+        if (meta == null) {
             try {
                 meta = callContext().getScore()
                         .getGrain(_grainName()).getElement(_objectName(), Table.class);
             } catch (ParseException e) {
                 throw new CelestaException(e.getMessage());
             }
+        }
+
         return meta;
     }
 
@@ -44,11 +46,12 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
         } else {
             // Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
             // естественном порядке
-            for (String colName : meta().getPrimaryKey().keySet())
+            for (String colName : meta().getPrimaryKey().keySet()) {
                 if (!colNames.contains(colName)) {
                     l.add(String.format("\"%s\"", colName));
                     ol.add(Boolean.FALSE);
                 }
+            }
         }
     }
 }

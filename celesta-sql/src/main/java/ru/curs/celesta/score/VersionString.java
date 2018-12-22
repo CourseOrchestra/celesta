@@ -60,10 +60,12 @@ public final class VersionString {
     private final int hashCode;
 
     public VersionString(String versionString) throws ParseException {
-        if (versionString == null)
+        if (versionString == null) {
             throw new IllegalArgumentException();
-        if ("".equals(versionString))
+        }
+        if ("".equals(versionString)) {
             throw new ParseException("Empty grain version string.");
+        }
         this.versionString = versionString;
         int h = 0;
         for (String version : versionString.split(",")) {
@@ -84,8 +86,9 @@ public final class VersionString {
 
     private int compareValues(Double v1, Double v2) {
 
-        if (v1 == null && v2 == null)
+        if (v1 == null && v2 == null) {
             throw new IllegalArgumentException();
+        }
 
         if (v1 != null) {
             if (v2 == null || v2 < v1) {
@@ -108,8 +111,9 @@ public final class VersionString {
      *
      */
     public ComparisionState compareTo(VersionString o) {
-        if (o == null)
+        if (o == null) {
             throw new IllegalArgumentException();
+        }
 
         Set<String> tags = new HashSet<>();
         tags.addAll(versions.keySet());
@@ -122,23 +126,27 @@ public final class VersionString {
             int compare = compareValues(versions.get(tag), o.versions.get(tag));
             switch (result) {
             case EQUALS:
-                if (compare > 0)
+                if (compare > 0) {
                     result = ComparisionState.GREATER;
-                else if (compare < 0)
+                } else if (compare < 0) {
                     result = ComparisionState.LOWER;
+                }
                 break;
             case GREATER:
-                if (compare < 0)
+                if (compare < 0) {
                     result = ComparisionState.INCONSISTENT;
+                }
                 break;
             case LOWER:
-                if (compare > 0)
+                if (compare > 0) {
                     result = ComparisionState.INCONSISTENT;
+                }
                 break;
             default:
             }
-            if (result == ComparisionState.INCONSISTENT)
+            if (result == ComparisionState.INCONSISTENT) {
                 break;
+            }
         }
         return result;
     }

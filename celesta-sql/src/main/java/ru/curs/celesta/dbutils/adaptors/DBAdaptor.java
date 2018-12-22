@@ -310,8 +310,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
     // CHECKSTYLE:OFF 6 parameters
     //TODO: Javadoc
-    public final PreparedStatement getUpdateRecordStatement(Connection conn, Table t, boolean[] equalsMask,
-                                                            boolean[] nullsMask, List<ParameterSetter> program, String where) {
+    public final PreparedStatement getUpdateRecordStatement(
+            Connection conn, Table t, boolean[] equalsMask,
+            boolean[] nullsMask, List<ParameterSetter> program, String where) {
+
         // CHECKSTYLE:ON
         StringBuilder setClause = new StringBuilder();
         if (t.isVersioned()) {
@@ -482,17 +484,19 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     public String tableString(String schemaName, String tableName) {
         StringBuilder sb = new StringBuilder();
 
-        if (schemaName.startsWith("\""))
+        if (schemaName.startsWith("\"")) {
             sb.append(schemaName);
-        else
+        } else {
             sb.append("\"").append(schemaName).append("\"");
+        }
 
         sb.append(".");
 
-        if (tableName.startsWith("\""))
+        if (tableName.startsWith("\"")) {
             sb.append(tableName);
-        else
+        } else {
             sb.append("\"").append(tableName).append("\"");
+        }
 
         return sb.toString();
     }
@@ -684,8 +688,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
                 })
                 .collect(Collectors.joining(" UNION ALL "));
 
-        if (orderBy != null && !orderBy.isEmpty())
+        if (orderBy != null && !orderBy.isEmpty()) {
             sql = sql + " ORDER BY " + orderBy;
+        }
 
         try (Connection conn = connectionPool.get();
              PreparedStatement ps = conn.prepareStatement(sql)
@@ -724,10 +729,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
         String sql = comparisons.stream()
                 .map(comparison ->
-                        "select count(*) " +
-                                " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("?", "a")
-                                + " " + constantFromSql() + ") r " +
-                                " where a " + comparison + " ?"
+                        "SELECT COUNT(*) "
+                     + " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("?", "a")
+                                + " " + constantFromSql() + ") r "
+                     + " WHERE a " + comparison + " ?"
                 )
                 .collect(Collectors.joining(" UNION ALL "));
 
@@ -743,8 +748,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
                 int result = -1;
                 while (rs.next()) {
                     boolean compareResult = rs.getBoolean(1);
-                    if (compareResult)
+                    if (compareResult) {
                         break;
+                    }
                     ++result;
                 }
                 return result;

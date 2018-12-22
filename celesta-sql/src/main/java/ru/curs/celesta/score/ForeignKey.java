@@ -30,16 +30,18 @@ public final class ForeignKey {
     private final List<Column> referencedColumns = new LinkedList<>();
 
     ForeignKey(Table parentTable) {
-        if (parentTable == null)
+        if (parentTable == null) {
             throw new IllegalArgumentException();
+        }
         this.parentTable = parentTable;
     }
 
     public ForeignKey(Table parentTable, Table referencedTable,
             String[] columnNames) throws ParseException {
         this(parentTable);
-        for (String n : columnNames)
+        for (String n : columnNames) {
             addColumn(n);
+        }
         setReferencedTable(referencedTable.getGrain().getName(),
                 referencedTable.getName());
     }
@@ -53,10 +55,12 @@ public final class ForeignKey {
      *             При попытке модификации системной гранулы.
      */
     public void setDeleteRule(FKRule deleteBehaviour) throws ParseException {
-        if (deleteBehaviour == null)
+        if (deleteBehaviour == null) {
             throw new IllegalArgumentException();
-        if (deleteBehaviour == FKRule.SET_NULL)
+        }
+        if (deleteBehaviour == FKRule.SET_NULL) {
             checkNullable();
+        }
         parentTable.getGrain().modify();
         this.deleteRule = deleteBehaviour;
     }
@@ -70,21 +74,25 @@ public final class ForeignKey {
      *             При попытке модификации системной гранулы.
      */
     public void setUpdateRule(FKRule updateBehaviour) throws ParseException {
-        if (updateBehaviour == null)
+        if (updateBehaviour == null) {
             throw new IllegalArgumentException();
-        if (updateBehaviour == FKRule.SET_NULL)
+        }
+        if (updateBehaviour == FKRule.SET_NULL) {
             checkNullable();
+        }
         parentTable.getGrain().modify();
         this.updateRule = updateBehaviour;
     }
 
     private void checkNullable() throws ParseException {
-        for (Column c : columns)
-            if (!c.isNullable())
+        for (Column c : columns) {
+            if (!c.isNullable()) {
                 throw new ParseException(String.format("Error while "
                         + "creating FK for table '%s': column '%s' is not "
                         + "nullable and therefore 'SET NULL' behaviour cannot "
                         + "be applied.", parentTable.getName(), c.getName()));
+            }
+        }
     }
 
     /**
@@ -133,11 +141,12 @@ public final class ForeignKey {
     void addColumn(String columnName) throws ParseException {
         columnName = getParentTable().getGrain().getScore().getIdentifierParser().parse(columnName);
         Column c = parentTable.getColumns().get(columnName);
-        if (c == null)
+        if (c == null) {
             throw new ParseException(
                     String.format(
                             "Error while creating FK: no column '%s' defined in table '%s'.",
                             columnName, parentTable.getName()));
+        }
         columns.addElement(c);
     }
 
@@ -163,11 +172,12 @@ public final class ForeignKey {
             AbstractScore score = parentTable.getGrain().getScore();
             gm = score.getGrain(grain);
 
-            if (gm.isModified()) //TODO:Костыль, используем как флаг того, что гранула начала парситься - must be removed
+            if (gm.isModified()) {
+                //TODO:Костыль, используем как флаг того, что гранула начала парситься - must be removed
                 score.parseGrain(grain);
+            }
 
-
-            if (!gm.isParsingComplete())
+            if (!gm.isParsingComplete()) {
                 throw new ParseException(
                         String.format(
                                 "Error creating foreign key '%s'-->'%s.%s': "
@@ -175,37 +185,41 @@ public final class ForeignKey {
                                         + "cycle reference involving grains '%s' and '%s'.",
                                 parentTable.getName(), grain, table,
                                 parentTable.getGrain().getName(), grain));
+            }
         }
 
         // Извлечение таблицы по имени.
         Table t = gm.getElement(table, Table.class);
-        if (t == null)
+        if (t == null) {
             throw new ParseException(
                     String.format(
                             "Error while creating FK for table '%s': no table '%s' defined in grain '%s'.",
                             parentTable.getName(), table, grain));
+        }
         referencedTable = t;
 
         // Проверка того факта, что поля ключа совпадают по типу
         // с полями первичного ключа таблицы, на которую ссылка
 
         Map<String, Column> refpk = referencedTable.getPrimaryKey();
-        if (columns.size() != refpk.size())
+        if (columns.size() != refpk.size()) {
             throw new ParseException(
                     String.format(
                             "Error creating foreign key for table %s: it has different size with PK of table '%s'",
                             parentTable.getName(), referencedTable.getName()));
+        }
         Iterator<Column> i = referencedTable.getPrimaryKey().values()
                 .iterator();
         for (Column c : columns) {
             Column c2 = i.next();
-            if (c.getClass() != c2.getClass())
+            if (c.getClass() != c2.getClass()) {
                 throw new ParseException(
                         String.format(
                                 "Error creating foreign key for table %s: its field "
                                         + "types do not coincide with field types of PK of table '%s'",
                                 parentTable.getName(),
                                 referencedTable.getName()));
+            }
             if (c2 instanceof StringColumn) {
                 if (((StringColumn) c2).getLength() != ((StringColumn) c)
                         .getLength()) {
@@ -243,8 +257,9 @@ public final class ForeignKey {
                 Iterator<Column> i = fk.columns.iterator();
                 for (Column c : columns) {
                     Column c2 = i.next();
-                    if (!c.getName().equals(c2.getName()))
+                    if (!c.getName().equals(c2.getName())) {
                         return false;
+                    }
                 }
                 return true;
             } else {
@@ -270,11 +285,12 @@ public final class ForeignKey {
     void addReferencedColumn(String columnName) throws ParseException {
         // Запускать этот метод можно только после простановки таблицы, на
         // которую ссылаемся.
-        if (referencedTable == null)
+        if (referencedTable == null) {
             throw new IllegalStateException();
+        }
         columnName = getParentTable().getGrain().getScore().getIdentifierParser().parse(columnName);
         Column c = referencedTable.getColumns().get(columnName);
-        if (c == null)
+        if (c == null) {
             throw new ParseException(
                     String.format(
                             "Error creating foreign key for table '%s': column '%s' is not defined in table '%s'",
@@ -282,6 +298,7 @@ public final class ForeignKey {
                             referencedTable.getName()
 
                     ));
+        }
         referencedColumns.add(c);
 
     }
@@ -298,8 +315,9 @@ public final class ForeignKey {
      */
     void finalizeReference() throws ParseException {
 
-        if (referencedTable == null)
+        if (referencedTable == null) {
             throw new IllegalStateException();
+        }
         Map<String, Column> pk = referencedTable.getPrimaryKey();
         int size = referencedColumns.size();
         if (pk.size() != size) {
@@ -329,8 +347,9 @@ public final class ForeignKey {
      * Возвращает имя ограничения FK (или генерирует его, если оно не задано).
      */
     public String getConstraintName() {
-        if (constraintName != null)
+        if (constraintName != null) {
             return constraintName;
+        }
 
         String result = String.format("fk_%s_%s_%s_%s_%s", parentTable
                 .getGrain().getName(), parentTable.getName(), referencedTable
@@ -351,8 +370,9 @@ public final class ForeignKey {
      *             неверное имя ограничения.
      */
     public void setConstraintName(String constraintName) throws ParseException {
-        if (constraintName != null)
+        if (constraintName != null) {
             parentTable.getGrain().getScore().getIdentifierParser().parse(constraintName);
+        }    
         this.constraintName = constraintName;
     }
 
@@ -376,8 +396,9 @@ public final class ForeignKey {
         bw.write(" FOREIGN KEY (");
         boolean comma = false;
         for (Column c : getColumns().values()) {
-            if (comma)
+            if (comma) {
                 bw.write(", ");
+            }
             bw.write(c.getQuotedNameIfNeeded());
             comma = true;
         }
@@ -390,8 +411,9 @@ public final class ForeignKey {
         bw.write("(");
         comma = false;
         for (Column c : referencedTable.getPrimaryKey().values()) {
-            if (comma)
+            if (comma) {
                 bw.write(", ");
+            }
             bw.write(c.getQuotedNameIfNeeded());
             comma = true;
         }

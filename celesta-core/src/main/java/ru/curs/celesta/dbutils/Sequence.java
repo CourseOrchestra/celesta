@@ -27,13 +27,15 @@ public abstract class Sequence extends BasicDataAccessor {
      */
     @Override
     public final SequenceElement meta() {
-        if (meta == null)
+        if (meta == null) {
             try {
                 meta = callContext().getScore()
                         .getGrain(_grainName()).getElement(_objectName(), SequenceElement.class);
             } catch (ParseException e) {
                 throw new CelestaException(e.getMessage());
             }
+        }
+
         return meta;
     }
 }

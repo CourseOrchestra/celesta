@@ -171,7 +171,8 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 
 
         l = r == null ? AlwaysTrue.TRUE : r;
-        r = paramsProvider.inFilter() == null ? AlwaysTrue.TRUE : new InTerm(paramsProvider.inFilter(), paramsProvider.dba());
+        r = paramsProvider.inFilter() == null ? AlwaysTrue.TRUE
+                                              : new InTerm(paramsProvider.inFilter(), paramsProvider.dba());
         return AndTerm.construct(l, r);
     }
 
@@ -203,8 +204,9 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
         if (paramsProvider.dba().supportsCortegeComparing()) {
             Set<Boolean> set = new HashSet<>();
 
-            for (boolean b: paramsProvider.descOrders())
+            for (boolean b: paramsProvider.descOrders()) {
                 set.add(b);
+            }
 
             //Проверки возможности использовать кортежи
             boolean allDescOrdersAreEquals = set.size() == 1;
@@ -223,14 +225,16 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
 
 
                 if (allOfSortFieldsAreNotNull) {
-                    FieldsCortegeTerm fieldsCortegeTerm = new FieldsCortegeTerm(Arrays.asList(paramsProvider.sortFields()));
+                    FieldsCortegeTerm fieldsCortegeTerm =
+                            new FieldsCortegeTerm(Arrays.asList(paramsProvider.sortFields()));
                     ValuesCortegeTerm valuesCortegeTerm = new ValuesCortegeTerm(
                             Arrays.stream(paramsProvider.sortFieldsIndices()).boxed().collect(Collectors.toList())
                     );
 
                     String operator = invert ^ paramsProvider.descOrders()[0] ? "<" : ">";
 
-                    return AndTerm.construct(getWhereTerm(), new WhereTermCompareTerm(fieldsCortegeTerm, valuesCortegeTerm, operator));
+                    return AndTerm.construct(getWhereTerm(),
+                            new WhereTermCompareTerm(fieldsCortegeTerm, valuesCortegeTerm, operator));
                 }
             }
         }

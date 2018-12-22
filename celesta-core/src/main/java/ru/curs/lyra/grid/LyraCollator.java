@@ -159,13 +159,15 @@ public final class LyraCollator {
     }
 
     private void updateMaxSecOrder(int s) {
-        if (s > secOrderCount)
+        if (s > secOrderCount) {
             secOrderCount = s;
+        }
     }
 
     private void updateMaxTerOrder(int t) {
-        if (t > terOrderCount)
+        if (t > terOrderCount) {
             terOrderCount = t;
+        }
     }
 
     /**

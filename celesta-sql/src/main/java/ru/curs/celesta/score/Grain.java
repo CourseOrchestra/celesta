@@ -66,7 +66,8 @@ public final class Grain extends NamedElement {
         this.score = score;
         score.addGrain(this);
 
-        //TODO: Что-то с этим надо сделать grainPath = new File(String.format("%s%s%s", score.getDefaultGrainPath(), File.separator, name));
+        //TODO: Что-то с этим надо сделать
+        //      grainPath = new File(String.format("%s%s%s", score.getDefaultGrainPath(), File.separator, name));
     }
 
     @SuppressWarnings("unchecked")
@@ -102,9 +103,9 @@ public final class Grain extends NamedElement {
                 .filter(entry -> entry.getKey().equals(element.getName())).findAny()
                 .map(entry -> entry.getValue().getClass().getSimpleName());
         if (typeNameOfElementWithSameName.isPresent()) {
-            throw new ParseException(
-                    String.format("Cannot create grain element '%s', a %s with the same name already exists in grain '%s'.",
-                            element.getName(), typeNameOfElementWithSameName.get(), getName()));
+            throw new ParseException(String.format(
+                    "Cannot create grain element '%s', a %s with the same name already exists in grain '%s'.",
+                    element.getName(), typeNameOfElementWithSameName.get(), getName()));
         }
 
         modify();
@@ -335,7 +336,7 @@ public final class Grain extends NamedElement {
 
     /**
      * Indicates that the grain parsing is completed. A system method.
-     * 
+     *
      * @throws ParseException
      */
     public void finalizeParsing() throws ParseException {

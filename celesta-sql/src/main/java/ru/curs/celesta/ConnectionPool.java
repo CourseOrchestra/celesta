@@ -56,8 +56,9 @@ public final class ConnectionPool implements AutoCloseable {
         Connection c = pool.poll();
         while (c != null) {
             try {
-                if (dbAdaptor.isValidConnection(c, 1))
+                if (dbAdaptor.isValidConnection(c, 1)) {
                     return c;
+                }
             } catch (CelestaException e) {
                 // do something to make CheckStyle happy ))
                 c = null;
@@ -107,8 +108,9 @@ public final class ConnectionPool implements AutoCloseable {
      */
     public void commit(Connection conn) {
         try {
-            if (conn != null)
+            if (conn != null) {
                 conn.commit();
+            }
         } catch (SQLException e) {
             // do something to make CheckStyle happy ))
             return;
@@ -180,8 +182,9 @@ final class PasswordHider {
      *
      */
     public static String maskPassword(String url) {
-        if (url == null)
+        if (url == null) {
             return null;
+        }
         Matcher m;
         StringBuffer sb = new StringBuffer();
         if (url.toLowerCase().startsWith("jdbc:oracle")) {

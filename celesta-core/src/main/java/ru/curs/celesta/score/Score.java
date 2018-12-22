@@ -9,7 +9,8 @@ public class Score extends AbstractScore {
 
     private IdentifierParser identifierParser = new PlainIdentifierParser();
 
-    public Score() {}
+    public Score() {
+    }
 
     @Override
     public String getSysSchemaName() {

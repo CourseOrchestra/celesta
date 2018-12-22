@@ -35,14 +35,18 @@ public class DbAdaptorFactory {
 
   public DBAdaptor createDbAdaptor() {
 
-    if (DBType.H2.equals(dbType))
+    if (DBType.H2.equals(dbType)) {
       return new H2Adaptor(this.connectionPool, this.ddlConsumer, this.h2ReferentialIntegrity);
-    if (DBType.POSTGRESQL.equals(dbType))
+    }
+    if (DBType.POSTGRESQL.equals(dbType)) {
       return new PostgresAdaptor(this.connectionPool, this.ddlConsumer);
-    if (DBType.MSSQL.equals(dbType))
+    }
+    if (DBType.MSSQL.equals(dbType)) {
       return new MSSQLAdaptor(this.connectionPool, this.ddlConsumer);
-    if (DBType.ORACLE.equals(dbType))
+    }
+    if (DBType.ORACLE.equals(dbType)) {
       return new OraAdaptor(this.connectionPool, this.ddlConsumer);
+    }
 
     return null;
   }

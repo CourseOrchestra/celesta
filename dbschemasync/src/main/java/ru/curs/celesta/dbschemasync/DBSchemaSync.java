@@ -24,8 +24,9 @@ public final class DBSchemaSync {
     public static void main(String[] args) throws Exception {
         // "c:/Users/Ivan/workspace/celesta/score/"
         // "c:/Users/Ivan/Desktop/test2.dbs"
-        if (args.length < 2)
+        if (args.length < 2) {
             throw new Exception("There should be two arguments: score path and .dbs-file.");
+        }
 
         if (args[0].trim().toLowerCase().endsWith(".dbs")) {
             System.out.println("DBS-->SCORE");

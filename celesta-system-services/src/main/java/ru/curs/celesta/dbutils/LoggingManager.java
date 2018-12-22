@@ -53,8 +53,9 @@ public final class LoggingManager implements ILoggingManager {
         }
 
         public boolean isLoggingNeeded(Action a) {
-            if (a == Action.READ)
+            if (a == Action.READ) {
                 throw new IllegalArgumentException();
+            }
             return (loggingMask & a.getMask()) != 0;
         }
 
@@ -91,18 +92,21 @@ public final class LoggingManager implements ILoggingManager {
     }
 
     public void log(Cursor c, Action a) {
-        if (a == Action.READ)
+        if (a == Action.READ) {
             throw new IllegalArgumentException();
+        }
         // No logging for celesta.grains (this is needed for smooth update from
         // versions having no recversion fields).
         if ("celesta".equals(c.meta().getGrain().getName())
                 && ("grains".equals(c.meta().getName())
-                || "tables".equals(c.meta().getName())))
+                || "tables".equals(c.meta().getName()))) {
             return;
+        }
 
         try (CallContext sysContext = new SystemCallContext(celesta, "log")) {
-            if (!isLoggingNeeded(sysContext, c.meta(), a))
+            if (!isLoggingNeeded(sysContext, c.meta(), a)) {
                 return;
+            }
             writeToLog(c, a, sysContext);
         }
     }

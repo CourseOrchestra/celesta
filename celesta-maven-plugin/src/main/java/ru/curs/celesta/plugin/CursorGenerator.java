@@ -38,10 +38,11 @@ public final class CursorGenerator {
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(SequenceElement.class, ge -> Sequence.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(Table.class, ge -> {
             Table t = (Table) ge;
-            if (t.isReadOnly())
+            if (t.isReadOnly()) {
                 return ReadOnlyTableCursor.class;
-            else
+            } else {
                 return Cursor.class;
+            }
         });
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(View.class, ge -> ViewCursor.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(MaterializedView.class, ge -> MaterializedViewCursor.class);
@@ -69,11 +70,12 @@ public final class CursorGenerator {
     protected static void generateCursor(GrainElement ge, File srcDir, String scorePath) {
         final String sourcePackage = calcSourcePackage(ge, scorePath);
 
-        if (sourcePackage.isEmpty())
+        if (sourcePackage.isEmpty()) {
             throw new CelestaException(
                     "Couldn't generate class file for %s.%s without package",
                     ge.getGrain().getName(), ge.getName()
             );
+        }
 
         final String sourceFileNamePrefix = StringUtils.capitalize(ge.getName());
 
@@ -165,18 +167,20 @@ public final class CursorGenerator {
             final String grainPartRelativePath = grainPartPath.replace(scorePath, "");
             result = grainPartRelativePath.replace(File.separator, ".");
 
-            if (result.startsWith("."))
+            if (result.startsWith(".")) {
                 result = result.substring(1);
+            }
         }
 
         return result;
     }
 
     private static String calcClassName(GrainElement ge, String sourceFileNamePrefix) {
-        if (ge instanceof SequenceElement)
+        if (ge instanceof SequenceElement) {
             return sourceFileNamePrefix + "Sequence";
-        else
+        } else {
             return sourceFileNamePrefix + "Cursor";
+        }
     }
 
     private static TypeSpec.Builder buildClassDefinition(GrainElement ge, String className) {
@@ -192,18 +196,20 @@ public final class CursorGenerator {
         }
         if (ge instanceof Table) {
             Table t = (Table) ge;
-            if (!t.isReadOnly())
+            if (!t.isReadOnly()) {
                 t.getImplements().forEach(
                         i -> builder.addSuperinterface(ClassName.bestGuess(i))
                 );
+            }
 
-            if (ge.getGrain().getName().equals(ge.getGrain().getScore().getSysSchemaName()))
+            if (ge.getGrain().getName().equals(ge.getGrain().getScore().getSysSchemaName())) {
                 builder.addField(
                         FieldSpec.builder(
                                 String.class, "TABLE_NAME",
                                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL
                         ).initializer("$S", ge.getName()).build()
                 );
+            }
         }
 
         return builder;
@@ -279,8 +285,9 @@ public final class CursorGenerator {
 
         result.add(builder.build());
 
-        if (ge instanceof SequenceElement)
+        if (ge instanceof SequenceElement) {
             return result;
+        }
 
         builder = msp.get();
         //Constructor with fields limitation
@@ -333,8 +340,9 @@ public final class CursorGenerator {
                 fieldSpec -> {
                     String methodSuffix = String.valueOf(Character.toUpperCase(fieldSpec.name.charAt(0)));
 
-                    if (fieldSpec.name.length() > 1)
+                    if (fieldSpec.name.length() > 1) {
                         methodSuffix = methodSuffix + fieldSpec.name.substring(1);
+                    }
 
                     MethodSpec getter = MethodSpec.methodBuilder("get" + methodSuffix)
                             .addModifiers(Modifier.PUBLIC)
@@ -597,8 +605,9 @@ public final class CursorGenerator {
                 copyFieldsFromBuilder.addStatement("this.$N = from.$N", c, c)
         );
 
-        if (isVersionedObject)
+        if (isVersionedObject) {
             copyFieldsFromBuilder.addStatement("this.setRecversion(from.getRecversion())");
+        }
 
         return Arrays.asList(getBufferCopy, copyFieldsFromBuilder.build());
     }

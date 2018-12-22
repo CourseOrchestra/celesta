@@ -131,7 +131,7 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
                 sqlList.add(alterSql);
             }
         } else if (c.getClass() == DecimalColumn.class) {
-            DecimalColumn dc = (DecimalColumn)c;
+            DecimalColumn dc = (DecimalColumn) c;
             if (dc.getPrecision() != actual.getLength() || dc.getScale() != dc.getScale()) {
                 sqlList.add(alterSql);
             }
@@ -197,12 +197,12 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
         selectSql = selectSql.replaceAll("\\R", "");
 
         String sql = String.format(
-                "CREATE ALIAS " + tableString(pv.getGrain().getName(), pv.getName()) + " AS $$ " +
-                        " java.sql.ResultSet %s(java.sql.Connection conn, %s) throws java.sql.SQLException {" +
-                        "java.sql.PreparedStatement ps = conn.prepareStatement(\"%s\");" +
-                        "%s" +
-                        "return ps.executeQuery();" +
-                        "} $$;",
+                "CREATE ALIAS " + tableString(pv.getGrain().getName(), pv.getName()) + " AS $$ "
+                      + "java.sql.ResultSet %s(java.sql.Connection conn, %s) throws java.sql.SQLException {"
+                          + "java.sql.PreparedStatement ps = conn.prepareStatement(\"%s\");"
+                          + "%s"
+                          + "return ps.executeQuery();"
+                      + "} $$;",
                 pv.getName(),
                 inputParams, selectSql, paramSettingBuilder.toString());
 
@@ -232,15 +232,17 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
             String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
             query.withName(insertTriggerName);
-            if (this.triggerExists(conn, query))
+            if (this.triggerExists(conn, query)) {
                 result.add(dropTrigger(query));
+            }
             query.withName(updateTriggerName);
-            if (this.triggerExists(conn, query))
+            if (this.triggerExists(conn, query)) {
                 result.add(dropTrigger(query));
+            }
             query.withName(deleteTriggerName);
-            if (this.triggerExists(conn, query))
+            if (this.triggerExists(conn, query)) {
                 result.add(dropTrigger(query));
-
+            }
         }
 
         return result;
@@ -268,9 +270,9 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
             //INSERT
             sql = String.format(
                     "CREATE TRIGGER \"" + insertTriggerName + "\" AFTER INSERT ON "
-                            + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL %n " +
-                            MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "%n" +
-                            "\"%s\"",
+                            + tableString(t.getGrain().getName(), t.getName()) + " FOR EACH ROW CALL %n "
+                            + MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "%n"
+                            + "\"%s\"",
                     mv.getChecksum(),
                     MaterializedViewInsertTrigger.class.getName());
             result.add(sql);

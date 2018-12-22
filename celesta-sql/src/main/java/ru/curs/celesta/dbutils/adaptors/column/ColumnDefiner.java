@@ -53,15 +53,16 @@ public abstract class ColumnDefiner {
     public static String join(String... ss) {
         StringBuilder sb = new StringBuilder();
         boolean multiple = false;
-        for (String s : ss)
+        for (String s : ss) {
             if (!"".equals(s)) {
-                if (multiple)
+                if (multiple) {
                     sb.append(' ' + s);
-                else {
+                } else {
                     sb.append(s);
                     multiple = true;
                 }
             }
+        }
         return sb.toString();
     }
 

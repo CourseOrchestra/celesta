@@ -76,8 +76,9 @@ public final class DbColumnInfo {
 
     public boolean reflects(Column value) {
         // Если тип не совпадает -- дальше не проверяем.
-        if (value.getClass() != type)
+        if (value.getClass() != type) {
             return false;
+        }
 
         // Проверяем nullability, но помним о том, что в Oracle DEFAULT
         // ''-строки всегда nullable
@@ -96,7 +97,7 @@ public final class DbColumnInfo {
         }
 
         if (this.type == DecimalColumn.class) {
-            DecimalColumn dc = (DecimalColumn)value;
+            DecimalColumn dc = (DecimalColumn) value;
             if (dc.getPrecision() != this.length || dc.getScale() != this.scale) {
                 return false;
             }
@@ -130,27 +131,28 @@ public final class DbColumnInfo {
             }
         } else if (type == IntegerColumn.class) {
             Pattern p = Pattern.compile("(?i)NEXTVAL\\((.*)\\)");
-            IntegerColumn iValue = (IntegerColumn)value;
+            IntegerColumn iValue = (IntegerColumn) value;
             if (iValue.getSequence() != null) {
                 Matcher m = p.matcher(defaultValue);
-                if (result = m.matches()) {
+                result = m.matches();
+                if (result) {
                     String sequenceName = m.group(1);
                     result = sequenceName.equals(iValue.getSequence().getName());
                 }
-            }
-            else if (!p.matcher(defaultValue).matches())
+            } else if (!p.matcher(defaultValue).matches()) {
                 result = Integer.valueOf(defaultValue).equals(value.getDefaultValue());
-            else
+            } else {
                 result = false;
+            }
         } else if (type == FloatingColumn.class) {
             result = Double.valueOf(defaultValue).equals(value.getDefaultValue());
         } else if (type == DecimalColumn.class) {
-            DecimalColumn dc = (DecimalColumn)value;
+            DecimalColumn dc = (DecimalColumn) value;
             result = new BigDecimal(defaultValue).equals(dc.getDefaultValue());
         } else if (type == DateTimeColumn.class) {
-            if ("GETDATE()".equalsIgnoreCase(defaultValue))
+            if ("GETDATE()".equalsIgnoreCase(defaultValue)) {
                 result = ((DateTimeColumn) value).isGetdate();
-            else {
+            } else {
                 try {
                     result = DateTimeColumn.parseISODate(defaultValue).equals(value.getDefaultValue());
                 } catch (ParseException e) {

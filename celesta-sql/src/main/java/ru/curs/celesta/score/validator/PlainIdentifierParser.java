@@ -11,9 +11,10 @@ public class PlainIdentifierParser extends IdentifierParser {
     @Override
     void validate(String name) throws ParseException {
         super.validate(name);
-        if (name.length() > NamedElement.MAX_IDENTIFIER_LENGTH)
-            throw new ParseException(
-                    String.format("Identifier '%s' is longer than %d characters.", name, NamedElement.MAX_IDENTIFIER_LENGTH));
+        if (name.length() > NamedElement.MAX_IDENTIFIER_LENGTH) {
+            throw new ParseException(String.format("Identifier '%s' is longer than %d characters.",
+                    name, NamedElement.MAX_IDENTIFIER_LENGTH));
+        }
     }
 
     @Override

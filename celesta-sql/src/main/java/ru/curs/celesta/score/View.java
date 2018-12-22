@@ -71,8 +71,9 @@ public class View extends AbstractView {
   public Map<String, ViewColumnMeta> getColumns()  {
     if (columnTypes == null) {
       columnTypes = new LinkedHashMap<>();
-      for (Map.Entry<String, Expr> e : columns.entrySet())
+      for (Map.Entry<String, Expr> e : columns.entrySet()) {
         columnTypes.put(e.getKey(), e.getValue().getMeta());
+      }
     }
     return columnTypes;
   }
@@ -114,8 +115,9 @@ public class View extends AbstractView {
    * представление.
    */
   public String getCelestaQueryString() {
-    if (queryString != null)
+    if (queryString != null) {
       return queryString;
+    }
     StringWriter sw = new StringWriter();
     PrintWriter bw = new PrintWriter(sw);
     SQLGenerator gen = new CelestaSQLGen();

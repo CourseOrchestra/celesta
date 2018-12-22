@@ -75,9 +75,10 @@ class CursorGetHelper {
 
 
   final PreparedStatement prepareGet(int recversion, Object... values) {
-    if (meta.getPrimaryKey().size() != values.length)
+    if (meta.getPrimaryKey().size() != values.length) {
       throw new CelestaException("Invalid number of 'get' arguments for '%s': expected %d, provided %d.",
           tableName, meta.getPrimaryKey().size(), values.length);
+    }
     PreparedStatement result = get.getStatement(values, recversion);
     return result;
   }
@@ -111,8 +112,9 @@ class CursorGetHelper {
     }
 
     CursorGetHelperBuilder withFields(Set<String> fields) {
-      if (!fields.isEmpty())
+      if (!fields.isEmpty()) {
         this.fields = fields;
+      }
       return this;
     }
 

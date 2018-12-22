@@ -15,8 +15,9 @@ public abstract class IdentifierParser {
 
     void validate(String name) throws ParseException {
         Matcher m = getNamePattern().matcher(name);
-        if (!m.matches())
+        if (!m.matches()) {
             throw new ParseException(String.format("Invalid identifier: '%s'.", name));
+        }
     }
 
     abstract String strip(String name);

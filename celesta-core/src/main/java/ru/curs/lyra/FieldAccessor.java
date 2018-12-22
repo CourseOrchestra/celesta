@@ -82,12 +82,12 @@ final class FieldAccessorFactory {
 
                 @Override
                 public void setValue(BasicCursor c, Object val, String buf) {
-                    if (val instanceof Date)
+                    if (val instanceof Date) {
                         c.setValue(name(), val);
-                    else {
-                        if (sdf == null)
+                    } else {
+                        if (sdf == null) {
                             sdf = new SimpleDateFormat(LyraFieldValue.XML_DATE_FORMAT);
-
+                        }
                         Date d;
                         try {
                             d = sdf.parse(buf);

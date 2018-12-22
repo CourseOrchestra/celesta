@@ -36,8 +36,9 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
     public <T> T externalAction(ExternalAction<T> f, T fallBack) {
         CallContext context = getContext();
-        if (context == null)
+        if (context == null) {
             return fallBack;
+        }
         boolean closeContext = context.isClosed();
         if (closeContext) {
             setCallContext(context.getCopy());
@@ -113,10 +114,11 @@ public abstract class BasicGridForm extends BasicLyraForm {
 
             if (bc instanceof Cursor) {
                 Cursor c = (Cursor) bc;
-                if (c.meta().getPrimaryKey().size() != pk.length)
+                if (c.meta().getPrimaryKey().size() != pk.length) {
                     throw new CelestaException(
                             "Invalid number of 'setPosition' arguments for '%s': expected %d, provided %d.",
                             c.meta().getName(), c.meta().getPrimaryKey().size(), pk.length);
+                }
                 int i = 0;
                 for (String name : c.meta().getPrimaryKey().keySet()) {
                     c.setValue(name, pk[i++]);
