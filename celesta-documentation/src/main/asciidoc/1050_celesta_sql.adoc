@@ -111,6 +111,7 @@ image::{img}/6.table_ref.png[{image-60-width}]
 
 Определение синтаксиса правил внешних ключей (*fk_rules*) см. в разделе <<foreign_keys_statements,Внешние ключи»>>.
 
+[[datatypes_mapping]]
 === Типы данных
 
 Используется следующая система типов данных.

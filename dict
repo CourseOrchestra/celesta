@@ -933,7 +933,6 @@ zsp
 кодогенерации
 Кодогенерируемый
 коммитить
-конкуретного
 логин
 Логин
 логинов
@@ -1046,3 +1045,7 @@ SequenceElement
 systemtables
 TableElement
 ViewColumnType
+datatypes
+mapping
+package
+syscursors

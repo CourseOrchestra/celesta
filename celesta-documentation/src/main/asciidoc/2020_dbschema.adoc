@@ -51,7 +51,7 @@ dbschemasync "c:/temp/dbschema/schema.dbs" "c:/temp/dbschema/score/"
 
 === Особенности работы при дизайне структуры БД
 
-Всё, что находится в CelestaDoc, переводится в Documentation-поля DBSchema, и наоборот.
+Всё, что находится в <<CelestaDoc,CelestaDoc>>, переводится в Documentation-поля DBSchema, и наоборот.
 
 image::{img}/800px-Dbschemascreen3.png[{image-100-width}]
 
