@@ -432,7 +432,7 @@ public final class CursorGenerator {
         ParameterSpec param = ParameterSpec.builder(boolean.class, "withKeys").build();
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("_clearBuffer")
-                .addModifiers(Modifier.PROTECTED)
+                .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .addParameter(param);
 
