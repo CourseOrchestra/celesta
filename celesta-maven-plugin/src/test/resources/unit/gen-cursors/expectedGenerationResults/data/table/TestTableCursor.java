@@ -194,7 +194,7 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     }
 
     @Override
-    protected void _clearBuffer(boolean withKeys) {
+    public void _clearBuffer(boolean withKeys) {
         if (withKeys) {
             this.id = null;
         }

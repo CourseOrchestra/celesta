@@ -68,7 +68,7 @@ public final class TestTableWithIdentityCursor extends Cursor implements Iterabl
     }
 
     @Override
-    protected void _clearBuffer(boolean withKeys) {
+    public void _clearBuffer(boolean withKeys) {
         if (withKeys) {
             this.identityId = null;
         }

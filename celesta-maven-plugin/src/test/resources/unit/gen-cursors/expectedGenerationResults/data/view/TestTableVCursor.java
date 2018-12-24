@@ -56,7 +56,7 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
     }
 
     @Override
-    protected void _clearBuffer(boolean withKeys) {
+    public void _clearBuffer(boolean withKeys) {
         this.id = null;
     }
 
