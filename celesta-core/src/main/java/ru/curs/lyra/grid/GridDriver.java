@@ -1,14 +1,14 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.lyra.grid;
 
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.*;
+import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.score.*;
-import ru.curs.lyra.grid.*;
 
 /**
  * Specifies the record position asynchronously, using separate execution

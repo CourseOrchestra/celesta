@@ -1,6 +1,7 @@
-package ru.curs.celesta.dbutils;
+package ru.curs.lyra.grid;
 
 import ru.curs.celesta.DBType;
+import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.lyra.grid.KeyInterpolator;
 
