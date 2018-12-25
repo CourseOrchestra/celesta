@@ -409,7 +409,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Returns "order by" clause for the cursor.
      */
-    public String getOrderBy() {
+    public final String getOrderBy() {
         return getOrderBy(false);
     }
 
