@@ -406,7 +406,10 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     }
 
-    String getOrderBy() {
+    /**
+     * Returns "order by" clause for the cursor.
+     */
+    public final String getOrderBy() {
         return getOrderBy(false);
     }
 
@@ -985,12 +988,12 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * A hidden method that returns total count of rows that precede the current
+     * Method that returns total count of rows that precede the current
      * one in the set. This method is intended for internal use by GridDriver.
-     * Since rows counting is a resource-consuming operation, this method should
-     * not be public.
+     * Since rows counting is a resource-consuming operation, usage of this method should
+     * be avoided.
      */
-    final int position() {
+    public final int position() {
         PreparedStatement stmt = position.getStatement(_currentValues(), 0);
         // System.out.println(stmt);
         return count(stmt);
@@ -1052,7 +1055,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
         closeSet();
     }
 
-    boolean isEquivalent(BasicCursor c) {
+    /**
+     * Checks if filters and ordering are equivalent for this and other cursor.
+     * @param c Other cursor.
+     */
+    public boolean isEquivalent(BasicCursor c) {
         // equality of all simple filters
         if (filters.size() != c.filters.size()) {
             return false;
@@ -1154,7 +1161,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     public abstract Object[] _currentValues();
 
-    protected abstract void _clearBuffer(boolean withKeys);
+    public abstract void _clearBuffer(boolean withKeys);
 
     protected abstract void _setFieldValue(String name, Object value);
 

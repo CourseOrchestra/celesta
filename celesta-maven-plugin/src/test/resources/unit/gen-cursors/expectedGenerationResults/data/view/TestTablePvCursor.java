@@ -57,7 +57,7 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
     }
 
     @Override
-    protected void _clearBuffer(boolean withKeys) {
+    public void _clearBuffer(boolean withKeys) {
         this.s = null;
     }
 

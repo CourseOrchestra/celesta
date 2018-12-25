@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -27,7 +26,6 @@ import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.test.mock.CelestaImpl;
 import ru.curs.celesta.score.*;
 import ru.curs.celesta.syscursors.GrainsCursor;
-import ru.curs.lyra.grid.VarcharFieldEnumerator;
 
 public abstract class AbstractAdaptorTest {
     final static String GRAIN_NAME = "gtest";
@@ -1683,23 +1681,31 @@ public abstract class AbstractAdaptorTest {
         assertEquals(1, comparisonResult);
     }
 
+
     @Test
     void testVarcharFieldEnumeratorCollation() throws Exception {
-        List<String> data = dba.selectStaticStrings(VarcharFieldEnumerator.CHARS, "\"id\"", "\"id\" ASC");
-        VarcharFieldEnumerator varcharFieldEnumerator = new VarcharFieldEnumerator(dba, 1);
-
-        BigInteger prevOrder = BigInteger.valueOf(-1);
-
-        for (int i = 0; i < data.size(); ++i) {
-            String ch = data.get(i);
-            varcharFieldEnumerator.setValue(ch);
-
-            BigInteger currentOrder = varcharFieldEnumerator.getOrderValue();
-            assertTrue(prevOrder.longValue() < currentOrder.longValue());
-            prevOrder = currentOrder;
-        }
+        List<String> test = Arrays.asList(
+                "'", "-", "–", "—", " ", "!", "\"", "#", "$", "%", "&", "(", ")",
+                "*", ",", ".", "/", ":", ";",
+                "?", "@", "[", "\\", "]", "^", "_", "`", "{", "|", "}",
+                "~", "¦", "‘", "’", "‚", "“", "”", "„", "‹", "›", "+",
+                "<", "=", ">", "«", "»", "§", "©", "¬", "®", "°", "†", "‡", "•", "‰",
+                "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+                "a", "A", "b", "B", "c", "C", "d", "D", "e", "E", "f", "F", "g", "G",
+                "h", "H", "i", "I", "j", "J", "k", "K", "l", "L", "m", "M", "n", "N", "№", "o", "O", "p", "P",
+                "q", "Q", "r", "R", "s", "S", "t", "T", "™", "u", "U", "v", "V", "w", "W",
+                "x", "X", "y", "Y", "z", "Z",
+                "а", "А", "б", "Б", "в", "В", "г", "Г", "д", "Д", "е", "Е", "ё", "Ё",
+                "ж", "Ж", "з", "З", "и", "И", "й", "Й", "к", "К", "л", "Л", "м", "М", "н", "Н",
+                "о", "О", "п", "П", "р", "Р", "с", "С", "т", "Т",
+                "у", "У", "ф", "Ф", "х", "Х", "ц", "Ц", "ч", "Ч", "ш", "Ш", "щ", "Щ", "ъ", "Ъ", "ы", "Ы", "ь", "Ь",
+                "э", "Э", "ю", "Ю", "я", "Я"
+        );
+        List<String> data = dba.selectStaticStrings(test, "\"id\"", "\"id\" ASC");
+        Collections.sort(test);
+        Collections.sort(data);
+        assertLinesMatch(test, data);
     }
-
 
     @Test
     void testAddNotNullColumnWithDefaultValue() throws Exception {

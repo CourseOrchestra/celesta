@@ -56,7 +56,7 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
     }
 
     @Override
-    protected void _clearBuffer(boolean withKeys) {
+    public void _clearBuffer(boolean withKeys) {
         this.id = null;
     }
 
