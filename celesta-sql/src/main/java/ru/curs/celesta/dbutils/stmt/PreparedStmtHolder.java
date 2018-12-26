@@ -14,6 +14,11 @@ public abstract class PreparedStmtHolder {
     private PreparedStatement stmt;
     private final List<ParameterSetter> program = new LinkedList<>();
 
+    /**
+     * Whether statement is valid.
+     *
+     * @return
+     */
     public boolean isStmtValid()  {
         try {
             return !(stmt == null || stmt.isClosed());
@@ -25,11 +30,11 @@ public abstract class PreparedStmtHolder {
     /**
      * Returns prepared statement with refreshed parameters.
      *
-     * @param rec
-     *            Array of record fields' values.
+     * @param rec         Array of record fields' values.
+     * @param recversion  record version
      *
      */
-    public synchronized PreparedStatement getStatement(Object[] rec, int recversion)  {
+    public synchronized PreparedStatement getStatement(Object[] rec, int recversion) {
         if (!isStmtValid()) {
             program.clear();
             stmt = initStatement(program);
@@ -46,6 +51,9 @@ public abstract class PreparedStmtHolder {
         return stmt;
     }
 
+    /**
+     * Closes the statement.
+     */
     public synchronized void close() {
         try {
             if (stmt != null) {
@@ -58,6 +66,6 @@ public abstract class PreparedStmtHolder {
         program.clear();
     }
 
-    protected abstract PreparedStatement initStatement(List<ParameterSetter> program) ;
+    protected abstract PreparedStatement initStatement(List<ParameterSetter> program);
 
 }

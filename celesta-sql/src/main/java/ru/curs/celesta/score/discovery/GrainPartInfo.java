@@ -2,7 +2,11 @@ package ru.curs.celesta.score.discovery;
 
 import java.io.File;
 
-//TODO: This class is redundant. GrainPart must be used instead.
+/**
+ * Grain part information.<br/>
+ * <br/>
+ * @deprecated  This class is redundant. {@link GrainPart} must be used instead.
+ */
 public class GrainPartInfo {
     private String grainName;
     private boolean isDefinition;

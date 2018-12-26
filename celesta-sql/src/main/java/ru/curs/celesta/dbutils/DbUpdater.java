@@ -50,6 +50,9 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     protected abstract String getSchemasTableName();
 
+    /**
+     * Updates system schema.
+     */
     public void updateSystemSchema() {
         try (T context = createContext()) {
             updateSystemSchema(context);
@@ -73,8 +76,7 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
     /**
-     * Выполняет обновление структуры БД на основе разобранной объектной модели.
-     *
+     * Performs update of DB structure based on the decomposed object model.
      */
     public void updateDb() {
         String sysSchemaName = score.getSysSchemaName();
@@ -117,7 +119,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             // Выполняем итерацию по гранулам.
             boolean success = true;
             for (Grain g : grains) {
-                if (! g.isAutoupdate()) {
+                if (!g.isAutoupdate()) {
                     continue;
                 }
                 // Запись о грануле есть?
@@ -210,9 +212,11 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
     /**
-     * Выполняет обновление на уровне отдельной гранулы.
+     * Performs update at the level of individual grain.
      *
-     * @param g Гранула.
+     * @param g  grain
+     * @param connectionPool  connection pool
+     * @return
      */
     boolean updateGrain(Grain g, ConnectionPool connectionPool) {
         // выставление в статус updating
@@ -405,24 +409,23 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     void dropOrphanedGrainIndices(Grain g) {
         /*
-         * В целом метод повторяет код updateGrainIndices, но только в части
-         * удаления индексов. Зачистить все индексы, подвергшиеся удалению или
-         * изменению необходимо перед тем, как будет выполняться обновление
-         * структуры таблиц, чтобы увеличить вероятность успешного результата:
-         * висящие на полях индексы могут помешать процессу.
+         * In general this method repeats the code from updateGrainIndices but only
+         * in the part of deletion of indices. It is needed to clear up all indices
+         * that were undergone a deletion or a change before an update of table
+         * structure is performed. That raises the probability of a successful outcome:
+         * hanging at fields indices may interfere with the process.
          */
         final Connection conn = schemaCursor.callContext().getConn();
         Map<String, DbIndexInfo> dbIndices = dbAdaptor.getIndices(conn, g);
         Map<String, Index> myIndices = g.getIndices();
-        // Удаление несуществующих в метаданных индексов.
+        // Deletion of indices that don't exist in the metadata.
         for (DbIndexInfo dBIndexInfo : dbIndices.values()) {
             if (!myIndices.containsKey(dBIndexInfo.getIndexName())) {
                 dbAdaptor.dropIndex(g, dBIndexInfo);
             }
         }
 
-        // Удаление индексов, которые будут в дальнейшем изменены, перед
-        // обновлением таблиц.
+        // Deletion of indices that will be changed later before tables update.
         for (Map.Entry<String, Index> e : myIndices.entrySet()) {
             DbIndexInfo dBIndexInfo = dbIndices.get(e.getKey());
             if (dBIndexInfo != null) {
@@ -431,8 +434,7 @@ public abstract class DbUpdater<T extends ICallContext> {
                     dbAdaptor.dropIndex(g, dBIndexInfo);
                 }
 
-                // Удаление индексов на тех полях, которые подвергнутся
-                // изменению
+                // Deletion of indices at those fields that will undergo a change
                 for (Map.Entry<String, Column> ee : e.getValue().getColumns().entrySet()) {
                     DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, ee.getValue());
                     if (ci == null || !ci.reflects(ee.getValue())) {
@@ -547,8 +549,8 @@ public abstract class DbUpdater<T extends ICallContext> {
         dbAdaptor.initDataForMaterializedView(conn, mv);
     }
 
-    private boolean updateColumns(TableElement t, final Connection conn, Set<String> dbColumns, List<DbFkInfo> dbFKeys)
-            {
+    private boolean updateColumns(
+            TableElement t, final Connection conn, Set<String> dbColumns, List<DbFkInfo> dbFKeys) {
         // Таблица существует в базе данных, определяем: надо ли удалить
         // первичный ключ
         DbPkInfo pkInfo = dbAdaptor.getPKInfo(conn, t);
@@ -599,7 +601,7 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
     /**
-     * Буфер для хранения информации о грануле.
+     * Buffer for storing grain information.
      */
     class GrainInfo {
         private boolean recover;
@@ -608,4 +610,5 @@ public abstract class DbUpdater<T extends ICallContext> {
         private int checksum;
         private VersionString version;
     }
+
 }

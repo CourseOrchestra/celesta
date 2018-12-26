@@ -17,6 +17,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Base class for SQL generation of data definition of open source DBs (PostgreSQL, H2).
+ */
 public abstract class OpenSourceDdlGenerator extends DdlGenerator {
 
     public OpenSourceDdlGenerator(DBAdaptor dmlAdaptor) {
@@ -24,7 +27,7 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> dropIndex(Grain g, DbIndexInfo dBIndexInfo) {
+    final List<String> dropIndex(Grain g, DbIndexInfo dBIndexInfo) {
         String sql = dropIndex(g.getName(), dBIndexInfo.getIndexName());
         String sql2 = dropIndex(
                 g.getName(),
@@ -35,7 +38,7 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    String dropTriggerSql(TriggerQuery query) {
+    final String dropTriggerSql(TriggerQuery query) {
         String sql = String.format(
                 "DROP TRIGGER \"%s\" ON %s",
                 query.getName(), tableString(query.getSchema(), query.getTableName())
@@ -44,7 +47,7 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) {
+    final List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) {
         List<String> result = new LinkedList<>();
         // Начинаем с удаления default-значения
         String sql = String.format(
@@ -79,7 +82,7 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    Optional<String> dropAutoIncrement(Connection conn, TableElement t) {
+    final Optional<String> dropAutoIncrement(Connection conn, TableElement t) {
         String sql = String.format("drop sequence if exists \"%s\".\"%s_seq\"", t.getGrain().getName(), t.getName());
         return Optional.of(sql);
     }
@@ -91,4 +94,5 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
                 "DROP INDEX IF EXISTS %s", tableString(schemaName, indexName)
         );
     }
+
 }

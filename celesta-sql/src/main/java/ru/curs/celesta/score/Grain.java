@@ -24,7 +24,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 
 /**
- * Гранула.
+ * Grain.
  */
 public final class Grain extends NamedElement {
 
@@ -81,10 +81,10 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Добавляет элемент в гранулу.
+     * Adds an element to the grain.
      *
-     * @param element Новый элемент гранулы.
-     * @throws ParseException В случае, если элемент с таким именем уже существует.
+     * @param element  new grain element
+     * @throws ParseException  In the case if an element with the same name already exists.
      */
     @SuppressWarnings("unchecked")
     <T extends GrainElement> void addElement(T element) throws ParseException {
@@ -113,18 +113,21 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает набор элементов указанного типа, определённый в грануле.
+     * Returns a set of elements of specified type defined in the grain.
      *
-     * @param classOfElement Класс элементов из набора
+     * @param classOfElement  class of elements from the set
+     * @param <T> class of element
+     * @return
      */
     public <T extends GrainElement> Map<String, T> getElements(Class<T> classOfElement) {
         return getElementsHolder(classOfElement).getElements();
     }
 
     /**
-     * Возвращает набор элементов указанного типа, определённый в грануле.
+     * Returns a set of elements of specified type defined in the grain.
      *
-     * @param classOfElement Класс элементов из набора
+     * @param classOfElement  class of elements from the set
+     * @return
      */
     private <T extends GrainElement> List<T> getElements(Class<T> classOfElement, GrainPart gp) {
         return getElements(classOfElement).values().stream()
@@ -132,40 +135,50 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Возвращает набор индексов, определённых в грануле.
+     * Returns a set of indices defined in the grain.
+     *
+     * @return
      */
     public Map<String, Index> getIndices() {
         return indices.getElements();
     }
 
     /**
-     * Возвращает набор материализованных представлений, определенных в грануле.
+     * Returns a set of materialized views defined in the grain.
+     *
+     * @return
      */
     public Map<String, MaterializedView> getMaterializedViews() {
         return getElementsHolder(MaterializedView.class).getElements();
     }
 
     /**
-     * Возвращает набор таблиц, определённый в грануле.
+     * Returns a set of tables defined in the grain.
+     *
+     * @return
      */
     public Map<String, Table> getTables() {
         return getElementsHolder(Table.class).getElements();
     }
 
     /**
-     * Возвращает набор представлений, определённый в грануле.
+     * Returns a set of views defined in the grain.
+     *
+     * @return
      */
     public Map<String, View> getViews() {
         return getElementsHolder(View.class).getElements();
     }
 
     /**
-     * Возвращает элемент по его имени и классу, либо исключение с сообщением о
-     * том, что элемент не найден.
+     * Returns an element by its name and class or throws an exception with the message
+     * that element is not found.
      *
-     * @param name           Имя
-     * @param classOfElement Класс элемента
-     * @throws ParseException Если элемент с таким именем и классом не найден в грануле.
+     * @param name            element name
+     * @param classOfElement  element class
+     * @param <T>             class of element
+     * @return
+     * @throws ParseException  if element with such name and class is not found in the grain
      */
     public <T extends GrainElement> T getElement(String name, Class<T> classOfElement) throws ParseException {
         T result = getElementsHolder(classOfElement).get(name);
@@ -178,10 +191,10 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Добавляет индекс.
+     * Adds an index.
      *
-     * @param index Новый индекс гранулы.
-     * @throws ParseException В случае, если индекс с таким именем уже существует.
+     * @param index  new index of the grain.
+     * @throws ParseException  In case if an index with the same name already exists.
      */
     public void addIndex(Index index) throws ParseException {
         if (index.getGrain() != this) {
@@ -243,6 +256,8 @@ public final class Grain extends NamedElement {
 
     /**
      * Returns model that the grain belongs to.
+     *
+     * @return
      */
     public AbstractScore getScore() {
         return score;
@@ -251,6 +266,8 @@ public final class Grain extends NamedElement {
     /**
      * Value {@code false} indicates that grain was created with option WITH NO AUTOUPDATE,
      * and won't be updated. Default value is {@code true}.
+     *
+     * @return
      */
     public boolean isAutoupdate() {
         return isAutoupdate;
@@ -258,7 +275,7 @@ public final class Grain extends NamedElement {
 
     /**
      * Sets autoupdate option. Default value is {@code true}.
-     * @param isAutoupdate
+     * @param isAutoupdate  autoupdate flag
      */
     public void setAutoupdate(boolean isAutoupdate) {
         this.isAutoupdate = isAutoupdate;
@@ -266,6 +283,8 @@ public final class Grain extends NamedElement {
 
     /**
      * Returns the grain version.
+     *
+     * @return
      */
     public VersionString getVersion() {
         return version;
@@ -284,6 +303,8 @@ public final class Grain extends NamedElement {
 
     /**
      * Returns length of the script file that the grain was created from.
+     *
+     * @return
      */
     public int getLength() {
         return length;
@@ -297,6 +318,8 @@ public final class Grain extends NamedElement {
      * Returns checksum of the script file that the grain was created from.
      * Coincidence of version, length and checksum is considered to be a sufficient solution for
      * skipping the reading and update of the database structure.
+     *
+     * @return
      */
     public int getChecksum() {
         return checksum;
@@ -322,6 +345,8 @@ public final class Grain extends NamedElement {
 
     /**
      * Indicates that the grain parsing from file is completed.
+     *
+     * @return
      */
     public boolean isParsingComplete() {
         return parsingComplete;
@@ -329,6 +354,8 @@ public final class Grain extends NamedElement {
 
     /**
      * If a grain has a higher number than the other grain then it means that it can depend from the first one.
+     *
+     * @return
      */
     public int getDependencyOrder() {
         return dependencyOrder;
@@ -337,7 +364,7 @@ public final class Grain extends NamedElement {
     /**
      * Indicates that the grain parsing is completed. A system method.
      *
-     * @throws ParseException
+     * @throws ParseException  thrown when there are tables with illegal names.
      */
     public void finalizeParsing() throws ParseException {
 
@@ -361,6 +388,8 @@ public final class Grain extends NamedElement {
 
     /**
      * Returns a flag of grain modification ({@code true} if parts of grain were modified in the runtime).
+     *
+     * @return
      */
     public boolean isModified() {
         return modified;
@@ -427,7 +456,7 @@ public final class Grain extends NamedElement {
      * @ io error
      */
     void save()  {
-        // Сохранять неизменённую гранулу нет смысла.
+        // There's no reason to save unmodified grain.
         if (!modified) {
             return;
         }
@@ -456,6 +485,7 @@ public final class Grain extends NamedElement {
      * Returns a view by its name or an exception with a message that the view was not found.
      *
      * @param name  View name
+     * @return
      * @throws ParseException  If view with that name was not found in the grain.
      */
 
@@ -477,6 +507,7 @@ public final class Grain extends NamedElement {
      * Returns a table by its name or an exception with a message that the table was not found.
      *
      * @param name  Table name
+     * @return
      * @throws ParseException  If table with that name was not found in the grain.
      */
     public Table getTable(String name) throws ParseException {

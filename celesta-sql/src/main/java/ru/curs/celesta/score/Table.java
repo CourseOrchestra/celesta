@@ -8,8 +8,7 @@ import java.io.PrintWriter;
 import java.util.*;
 
 /**
- * Объект-таблица в метаданных.
- *
+ * Table object in metadata.
  */
 public final class Table extends DataGrainElement implements TableElement, VersionedElement {
 
@@ -50,7 +49,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
     }
 
     /**
-     * Неизменяемый перечень столбцов таблицы.
+     * Unmodified list of table columns.
      */
     @Override
     public Map<String, Column> getColumns() {
@@ -75,12 +74,10 @@ public final class Table extends DataGrainElement implements TableElement, Versi
     }
 
     /**
-     * Добавляет колонку к таблице.
+     * Adds a column to the table.
      *
-     * @param column
-     *            Новая колонка.
-     * @throws ParseException
-     *             Если колонка с таким именем уже определена.
+     * @param column  new column
+     * @throws ParseException  if a column with the same name is already defined
      */
     @Override
     public void addColumn(Column column) throws ParseException {
@@ -97,13 +94,13 @@ public final class Table extends DataGrainElement implements TableElement, Versi
     }
 
     /**
-     * Устанавливает первичный ключ для таблицы в виде массива колонок.
-     * Используется для динамического управления метаданными.
+     * Sets primary key on the table in a form of array of columns.
+     * It is used for dynamic metadata management.
      *
      * @param columnNames
-     *            перечень колонок
+     *            array of columns
      * @throws ParseException
-     *             в случае, когда передаётся пустой перечень
+     *            in case when an empty array is passed in
      */
     public void setPK(String... columnNames) throws ParseException {
         if (columnNames == null || (columnNames.length == 0 && !isReadOnly)) {
@@ -123,10 +120,9 @@ public final class Table extends DataGrainElement implements TableElement, Versi
     }
 
     /**
-     * Добавляет колонку первичного ключа.
+     * Adds a column of the primary key.
      *
-     * @param name
-     *            Имя колонки первичного ключа.
+     * @param name  primary key column name
      */
     void addPK(String name) throws ParseException {
         name = getGrain().getScore().getIdentifierParser().parse(name);
@@ -217,10 +213,9 @@ public final class Table extends DataGrainElement implements TableElement, Versi
     }
 
     /**
-     * Финализирует создание первичного ключа.
+     * Finalizes the creation of the primary key.
      *
-     * @throws ParseException
-     *             Если первичный ключ пуст.
+     * @throws ParseException  if the primary key is empty.
      */
     public void finalizePK() throws ParseException {
         if (pk.isEmpty() && !isReadOnly) {
@@ -230,19 +225,22 @@ public final class Table extends DataGrainElement implements TableElement, Versi
     }
 
     /**
-     * Возвращает перечень внешних ключей таблицы.
+     * Returns a set of foreign keys for the table.
+     *
+     * @return
      */
     public Set<ForeignKey> getForeignKeys() {
         return Collections.unmodifiableSet(fKeys);
     }
 
     /**
-     * Возвращает перечень индексов таблицы.
+     * Returns a set of indices for the table.
+     *
+     * @return
      */
     public Set<Index> getIndices() {
         return Collections.unmodifiableSet(indices);
     }
-
 
     @Override
     public boolean hasPrimeKey() {
@@ -255,12 +253,10 @@ public final class Table extends DataGrainElement implements TableElement, Versi
     }
 
     /**
-     * Устанавливает имя ограничения PK.
+     * Sets the name of constraint for the primary key.
      *
-     * @param pkConstraintName
-     *            имя
-     * @throws ParseException
-     *             неверное имя
+     * @param pkConstraintName  PK constraint name
+     * @throws ParseException  incorrect name
      */
     public void setPkConstraintName(String pkConstraintName) throws ParseException {
         if (pkConstraintName != null) {
@@ -282,7 +278,7 @@ public final class Table extends DataGrainElement implements TableElement, Versi
             comma = true;
         }
 
-        // Здесь мы пишем PK
+        // Here we write the PK
         if (!getPrimaryKey().isEmpty()) {
             if (comma) {
                 bw.write(",");
@@ -322,19 +318,19 @@ public final class Table extends DataGrainElement implements TableElement, Versi
     }
 
     /**
-     * Является ли таблица таблицей только на чтение (WITH READ ONLY).
+     * Whether the table is read only (WITH READ ONLY).
+     *
+     * @return
      */
     public boolean isReadOnly() {
         return isReadOnly;
     }
 
     /**
-     * Устанавливает опцию таблицы "только для чтения".
+     * Sets to the table option "read only".
      *
-     * @param isReadOnly
-     *            только для чтения.
-     * @throws ParseException
-     *             Если данная опция включается вместе с versioned.
+     * @param isReadOnly  only for reading
+     * @throws ParseException  if this option is included together with "versioned".
      */
     public void setReadOnly(boolean isReadOnly) throws ParseException {
         if (isReadOnly && isVersioned) {
@@ -349,7 +345,12 @@ public final class Table extends DataGrainElement implements TableElement, Versi
         return isVersioned;
     }
 
-    public void setVersioned(boolean isVersioned){
+    /**
+     * Sets to the table option "versioned".
+     *
+     * @param isVersioned  "versioned" option value
+     */
+    public void setVersioned(boolean isVersioned) {
         this.isVersioned = isVersioned;
     }
 
@@ -359,20 +360,24 @@ public final class Table extends DataGrainElement implements TableElement, Versi
     }
 
     /**
-     * Значение false yказывает на то, что таблица создана с опцией WITH NO
-     * STRUCTURE UPDATE и не будет участвовать в автообновлении базы данных. По
-     * умолчанию - true.
+     * Whether autoupdate is on/off.<br/>
+     * <br/>
+     * {@code false} value indicates that the table was created with the option
+     * WITH NO STRUCTURE UPDATE and it won't take part in the DB autoupdate.
+     * Default is {@code true}.
+     *
+     * @return
      */
     public boolean isAutoUpdate() {
         return autoUpdate;
     }
 
     /**
-     * Устанавливает или сбрасывает опцию WITH NO STRUCTURE UPDATE.
+     * Sets or clears the option WITH NO STRUCTURE UPDATE.
      *
      * @param autoUpdate
-     *            true, если таблица автоматически обновляется, false - в
-     *            обратном случае.
+     *            {@code true} if the table is updated automatically,
+     *            {@code false} - in the opposite case.
      */
     public void setAutoUpdate(boolean autoUpdate) {
         this.autoUpdate = autoUpdate;
@@ -391,9 +396,11 @@ public final class Table extends DataGrainElement implements TableElement, Versi
         indices.remove(index);
     }
 
-
     /**
-     * Возвращает интерфейсы, реализуемые курсором (значение свойства implements) для данной таблицы.
+     * Returns interfaces that are implemented by the cursor (values of
+     * 'implements' property) for this table.
+     *
+     * @return
      */
     public List<String> getImplements() {
         try {

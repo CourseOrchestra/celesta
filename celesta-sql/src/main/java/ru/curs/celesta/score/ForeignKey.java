@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Класс внешнего ключа.
- *
+ * Foreign key class.
  */
 public final class ForeignKey {
 

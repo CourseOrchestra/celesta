@@ -1,7 +1,15 @@
 package ru.curs.celesta.score;
 
 /**
- * Created by ioann on 09.08.2017.
+ * Parent class for grain elements containing data:
+ * <ul>
+ *   <li>Tables</li>
+ *   <li>Views</li>
+ *   <li>Materialized views</li>
+ * </ul>
+ *
+ * @author ioann
+ * @since 2017-08-09
  */
 public abstract class DataGrainElement extends GrainElement implements HasColumns {
   public DataGrainElement(GrainPart gp, String name) throws ParseException {
@@ -9,9 +17,9 @@ public abstract class DataGrainElement extends GrainElement implements HasColumn
   }
 
   /**
-   * Удаляет элемент.
+   * Deletes element.
    *
-   * @throws ParseException при попытке изменить системную гранулу
+   * @throws ParseException  on a try to change the system grain
    */
   public void delete() throws ParseException {
     getGrain().removeElement(this);

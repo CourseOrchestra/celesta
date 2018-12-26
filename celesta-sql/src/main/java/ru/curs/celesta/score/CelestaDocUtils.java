@@ -8,9 +8,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Utility class for Celesta documents.
+ */
 public final class CelestaDocUtils {
 
+    /**
+     * "option" constant.
+     */
     public static final String OPTION = "option";
+
+    /**
+     * "implements" constant.
+     */
     public static final String IMPLEMENTS = "implements";
 
     private CelestaDocUtils() {
@@ -18,10 +28,12 @@ public final class CelestaDocUtils {
     }
 
     /**
-     * Extracts first occurence of JSON object string from CelestaDoc.
+     * Extracts first occurrence of JSON object string from CelestaDoc.
      *
-     * @throws CelestaException
-     *     Broken or truncated JSON.
+     * @param celestaDoc  Celesta document.
+     * @return
+     *
+     * @throws CelestaException  thrown if broken or truncated JSON.
      */
     public static String getCelestaDocJSON(String celestaDoc)  {
 
@@ -75,7 +87,13 @@ public final class CelestaDocUtils {
         return "{}";
     }
 
-
+    /**
+     * Returns array for {@code key} as a value list.
+     *
+     * @param celestaDoc  Celesta document.
+     * @param key  array key.
+     * @return
+     */
     public static List<String> getList(String celestaDoc, String key)  {
         String json = getCelestaDocJSON(celestaDoc);
 

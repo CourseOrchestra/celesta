@@ -8,6 +8,11 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * Column definer factory.<br/>
+ * <br/>
+ * Usage pattern: {@code ColumnDefinerFactory.getColumnDefiner(...);}
+ */
 public final class ColumnDefinerFactory {
 
     private static final Map<DBType, Map<Class<? extends Column>, ColumnDefiner>>
@@ -82,6 +87,13 @@ public final class ColumnDefinerFactory {
         throw new AssertionError();
     }
 
+    /**
+     * Returns a column definer depending on the DB type and column type.
+     *
+     * @param dbType  DB type.
+     * @param cls  column class
+     * @return
+     */
     public static ColumnDefiner getColumnDefiner(DBType dbType, Class<? extends Column> cls) {
         Map<Class<? extends Column>, ColumnDefiner> definers = COLUMN_DEFINERS.computeIfAbsent(
                 dbType,

@@ -5,7 +5,12 @@ import ru.curs.celesta.score.ParseException;
 
 import java.util.regex.Pattern;
 
-public class PlainIdentifierParser extends IdentifierParser {
+/**
+ * Plain identifier parser and validator.<br/>
+ * <br/>
+ * Identifiers like <b>celestaIdentifier</b> are processed.
+ */
+public final class PlainIdentifierParser extends IdentifierParser {
     private static final Pattern NAME_PATTERN = Pattern.compile(PLAIN_NAME_PATTERN_STR);
 
     @Override

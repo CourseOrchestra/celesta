@@ -26,7 +26,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class H2DdlGenerator extends OpenSourceDdlGenerator {
+/**
+ * Class for SQL generation of data definition of H2.
+ */
+public final class H2DdlGenerator extends OpenSourceDdlGenerator {
 
     public H2DdlGenerator(DBAdaptor dmlAdaptor) {
         super(dmlAdaptor);
@@ -122,7 +125,7 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
                         + " ALTER COLUMN \"%s\" %s", c.getName(), colType
         );
 
-        // Если тип не совпадает
+        // If type doesn't match
         if (c.getClass() != actual.getType()) {
             sqlList.add(alterSql);
         } else if (c.getClass() == StringColumn.class) {
@@ -295,4 +298,5 @@ public class H2DdlGenerator extends OpenSourceDdlGenerator {
 
         return result;
     }
+
 }

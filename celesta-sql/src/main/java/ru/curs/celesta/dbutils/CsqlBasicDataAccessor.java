@@ -52,7 +52,7 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements C
     }
 
     /**
-     * Возвращает контекст вызова, в котором создан данный курсор.
+     * Returns call context that current cursor is created in.
      */
     public final T callContext() {
         return context;
@@ -67,12 +67,16 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements C
     }
 
     /**
-     * Является ли объект доступа закрытым.
+     * Whether data accessor object is closed.
      */
     public boolean isClosed() {
         return closed;
     }
 
+    /**
+     * Closes data accessor if it hasn't been closed already.
+     */
+    @Override
     public final void close() {
         if (!isClosed()) {
             closed = true;
@@ -85,8 +89,7 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements C
     public abstract void clear();
 
     /**
-     * Объект метаданных (таблица, представление или последовательность), на основе которого создан
-     * данный объект доступа.
+     * Metadata object (table, view or sequence) on the basis of which current data object was created.
      */
     public abstract GrainElement meta();
 }

@@ -6,9 +6,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Created by ioann on 09.08.2017.
+ * Parameterized View object in metadata.
+ *
+ * @author ioann
+ * @since 2017-08-09
  */
-public class ParameterizedView extends View {
+public final class ParameterizedView extends View {
 
   private final Map<String, Parameter> parameters = new LinkedHashMap<>();
   private final List<String> parameterRefsWithOrder = new ArrayList<>();
@@ -41,7 +44,12 @@ public class ParameterizedView extends View {
     }
   }
 
-
+  /**
+   * Adds a parameter to the view.
+   *
+   * @param parameter  parameter
+   * @throws ParseException  if parameter name is empty or parameter already exists in the view
+   */
   public void addParameter(Parameter parameter) throws ParseException {
     if (parameter == null) {
       throw new IllegalArgumentException();
@@ -62,6 +70,11 @@ public class ParameterizedView extends View {
     parameters.put(parameter.getName(), parameter);
   }
 
+  /**
+   * Returns a map <b>parameter name</b> -> <b>parameter</b>.
+   *
+   * @return
+   */
   public Map<String, Parameter> getParameters() {
     return new LinkedHashMap<>(parameters);
   }
@@ -80,7 +93,7 @@ public class ParameterizedView extends View {
   }
 
   /**
-   * Генератор CelestaSQL.
+   * CelestaSQL generator.
    */
   class CelestaSQLGen extends AbstractView.CelestaSQLGen {
     @Override

@@ -5,12 +5,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 /**
- * Базовый класс для элементов гранулы (таблиц, индексов и представлений).
+ * Base class for grain elements (tables, indices and views).
  */
 public abstract class GrainElement extends NamedElement {
 
     /**
-     * Гранула, к которой относится данный элемент.
+     * Grain that current element belongs to.
      */
     private final GrainPart grainPart;
 
@@ -20,7 +20,9 @@ public abstract class GrainElement extends NamedElement {
     }
 
     /**
-     * Возвращает гранулу, к которой относится элемент.
+     * Returns grain that the element belongs to.
+     *
+     * @return
      */
     public final Grain getGrain() {
         return this.grainPart.getGrain();
@@ -33,10 +35,10 @@ public abstract class GrainElement extends NamedElement {
     abstract void save(PrintWriter bw) throws IOException;
 
     /**
-     * Возвращает Celesta-SQL представление объекта.
+     * Returns Celesta-SQL representation of object.
      *
-     * @throws IOException
-     *             ошибка ввода-вывода при сохранении.
+     * @return
+     * @throws IOException  IO exception when saving
      */
     public String getCelestaSQL() throws IOException {
         StringWriter sw = new StringWriter();
@@ -45,4 +47,5 @@ public abstract class GrainElement extends NamedElement {
         bw.flush();
         return sw.toString();
     }
+
 }

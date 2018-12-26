@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.ZonedDateTime;
 
+/**
+ * Column for date with time zone type.
+ */
 public final class ZonedDateTimeColumn extends Column {
     /**
-     * Celesta-тип данных колонки.
+     * Celesta type of the column data.
      */
     public static final String CELESTA_TYPE = "DATETIME WITH TIME ZONE";
 
@@ -48,7 +51,7 @@ public final class ZonedDateTimeColumn extends Column {
     }
 
     @Override
-    public Class getJavaClass() {
+    public Class<?> getJavaClass() {
         return ZonedDateTime.class;
     }
 
@@ -56,4 +59,5 @@ public final class ZonedDateTimeColumn extends Column {
     public String getCelestaDefault() {
         return "";
     }
+
 }

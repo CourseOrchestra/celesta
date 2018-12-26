@@ -10,6 +10,9 @@ import java.util.List;
  */
 public final class AlwaysTrue extends WhereTerm {
 
+    /**
+     * TRUE constant singleton.
+     */
     public static final AlwaysTrue TRUE = new AlwaysTrue();
 
     private AlwaysTrue() {

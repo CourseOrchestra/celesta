@@ -1,5 +1,8 @@
 package ru.curs.celesta.dbutils.adaptors.constants;
 
+/**
+ * Constants holder class for Oracle.
+ */
 public final class OraConstants {
 
     public static final String DROP_TRIGGER = "drop trigger ";
@@ -7,6 +10,6 @@ public final class OraConstants {
     public static final String SNL = "snl_";
 
     private OraConstants() {
-
     }
+
 }

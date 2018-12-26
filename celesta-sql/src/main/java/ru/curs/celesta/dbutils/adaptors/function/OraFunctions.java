@@ -8,6 +8,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Utility class for Oracle functions.
+ */
 public final class OraFunctions {
 
     private OraFunctions() {
@@ -57,4 +60,5 @@ public final class OraFunctions {
     private static boolean isNclob(Column c) {
         return c instanceof StringColumn && ((StringColumn) c).isMax();
     }
+
 }

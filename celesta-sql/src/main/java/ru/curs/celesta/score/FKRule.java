@@ -1,18 +1,20 @@
 package ru.curs.celesta.score;
 
 /**
- * Тип поведения внешнего ключа при удалении или обновлении первичного ключа
- * родительской записи.
+ * Foreign key rule type when deleting or updating primary key
+ * of the parent record.
  */
 public enum FKRule {
     /**
-     * Запрет модификации родительской записи.
+     * Prohibits modification of the parent record.
      */
-    NO_ACTION, /**
-     * Каскадная модификация ссылающихся записей.
+    NO_ACTION,
+    /**
+     * Cascade modification of referring records.
      */
-    CASCADE, /**
-     * Обнуление полей в ссылающихся записях.
+    CASCADE,
+    /**
+     * Setting referring fields to {@code null}.
      */
     SET_NULL
 }

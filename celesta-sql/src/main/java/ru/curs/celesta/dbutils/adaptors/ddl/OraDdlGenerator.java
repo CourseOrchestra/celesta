@@ -31,7 +31,10 @@ import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.*;
 import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.*;
 import static ru.curs.celesta.dbutils.adaptors.function.OraFunctions.*;
 
-public class OraDdlGenerator extends DdlGenerator {
+/**
+ * Class for SQL generation of data definition of Oracle.
+ */
+public final class OraDdlGenerator extends DdlGenerator {
 
     public OraDdlGenerator(DBAdaptor dmlAdaptor) {
         super(dmlAdaptor);
@@ -39,8 +42,7 @@ public class OraDdlGenerator extends DdlGenerator {
 
     @Override
     Optional<String> createSchema(String name) {
-        // Ничего не делает для Oracle. Схемы имитируются префиксами на именах
-        // таблиц.
+        // Does nothing for Oracle. Schemes are imitated by prefixes in the table names.
         return Optional.empty();
     }
 
@@ -980,4 +982,5 @@ public class OraDdlGenerator extends DdlGenerator {
         }
         return result;
     }
+
 }

@@ -10,12 +10,22 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * SQL Utility class.
+ */
 public final class SqlUtils {
 
     private SqlUtils() {
         throw new AssertionError();
     }
 
+    /**
+     * Executes update statement on DB connection.
+     *
+     * @param conn  DB connection
+     * @param sql  SQL update statement
+     * @return
+     */
     public static int executeUpdate(Connection conn, String sql)  {
         try (Statement stmt = conn.createStatement()) {
             return stmt.executeUpdate(sql);
@@ -24,6 +34,13 @@ public final class SqlUtils {
         }
     }
 
+    /**
+     * Executes query statement on DB connection.
+     *
+     * @param conn  DB connection
+     * @param sql  SQL query statement
+     * @return  retrieved data
+     */
     public static ResultSet executeQuery(Connection conn, String sql)  {
         Statement stmt = null;
         try  {
@@ -47,7 +64,7 @@ public final class SqlUtils {
 
         private final ResultSet rs;
 
-        public ResultSetInvocationHandler(ResultSet rs) {
+        ResultSetInvocationHandler(ResultSet rs) {
             this.rs = rs;
         }
 
@@ -64,4 +81,5 @@ public final class SqlUtils {
             return null;
         }
     }
+
 }

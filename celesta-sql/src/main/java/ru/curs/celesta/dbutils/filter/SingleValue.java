@@ -2,9 +2,9 @@ package ru.curs.celesta.dbutils.filter;
 
 
 /**
- * Фильтр в виде единичного значения.
+ * Single value filter.
  */
-public class SingleValue extends AbstractFilter {
+public final class SingleValue extends AbstractFilter {
     private Object value;
 
     public SingleValue(Object value) {
@@ -16,10 +16,18 @@ public class SingleValue extends AbstractFilter {
         return String.format("%s", value);
     }
 
+    /**
+     * Returns filter value.
+     * @return
+     */
     public Object getValue() {
         return value;
     }
 
+    /**
+     * Sets filter value.
+     * @param value
+     */
     public void setValue(Object value) {
         this.value = value;
     }

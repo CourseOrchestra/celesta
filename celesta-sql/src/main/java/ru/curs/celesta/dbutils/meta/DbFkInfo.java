@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Информация о внешнем ключе, полученная из базы данных.
+ * Information on foreign key taken from the database.
  */
 public final class DbFkInfo {
 
@@ -24,22 +24,48 @@ public final class DbFkInfo {
         this.name = name;
     }
 
+    /**
+     * Returns foreign key name.
+     *
+     * @return
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Returns table name for which foreign key is defined.
+     *
+     * @return
+     */
     public String getTableName() {
         return tableName;
     }
 
+    /**
+     * Sets table name for which foreign key is defined.
+     *
+     * @param tableName  table name
+     * @return
+     */
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
 
+    /**
+     * Returns table name that foreign key refers to.
+     *
+     * @return
+     */
     public String getRefTableName() {
         return refTableName;
     }
 
+    /**
+     * Sets name of a table that the foreign key refers to.
+     *
+     * @param refTableName  referenced table name
+     */
     public void setRefTableName(String refTableName) {
         this.refTableName = refTableName;
     }
@@ -48,26 +74,56 @@ public final class DbFkInfo {
         return columnNames;
     }
 
+    /**
+     * Returns referenced grain name.
+     *
+     * @return
+     */
     public String getRefGrainName() {
         return refGrainName;
     }
 
+    /**
+     * Set referenced grain name.
+     *
+     * @param refGrainName  referenced grain name
+     */
     public void setRefGrainName(String refGrainName) {
         this.refGrainName = refGrainName;
     }
 
+    /**
+     * Returns foreign key rule type on deletion.
+     *
+     * @return
+     */
     public FKRule getDeleteRule() {
         return deleteRule;
     }
 
+    /**
+     * Sets foreign key rule type on deletion.
+     *
+     * @param deleteBehaviour  deletion rule type
+     */
     public void setDeleteRule(FKRule deleteBehaviour) {
         this.deleteRule = deleteBehaviour;
     }
 
+    /**
+     * Returns foreign key rule type on update.
+     *
+     * @return
+     */
     public FKRule getUpdateRule() {
         return updateRule;
     }
 
+    /**
+     * Sets foreign key rule type on update.
+     *
+     * @param updateBehaviour  update rule type
+     */
     public void setUpdateRule(FKRule updateBehaviour) {
         this.updateRule = updateBehaviour;
     }

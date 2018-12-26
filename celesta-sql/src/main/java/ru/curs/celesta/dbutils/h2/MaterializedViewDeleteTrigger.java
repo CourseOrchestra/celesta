@@ -4,11 +4,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Created by ioann on 07.07.2017.
+ * Delete trigger of materialized view.
+ *
+ * @author ioann
+ * @since 2017-07-07
  */
-public class MaterializedViewDeleteTrigger extends AbstractMaterializeViewTrigger {
+public final class MaterializedViewDeleteTrigger extends AbstractMaterializeViewTrigger {
 
-  public static final String NAME_PREFIX = "mvDeleteFrom";
+  private static final String NAME_PREFIX = "mvDeleteFrom";
 
   @Override
   public void fire(Connection connection, Object[] oldRow, Object[] newRow) throws SQLException {
@@ -20,4 +23,5 @@ public class MaterializedViewDeleteTrigger extends AbstractMaterializeViewTrigge
   String getNamePrefix() {
     return NAME_PREFIX;
   }
+
 }

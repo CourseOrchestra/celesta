@@ -5,11 +5,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Created by ioann on 07.07.2017.
+ * Insert trigger of materialized view.
+ *
+ * @author ioann
+ * @since 2017-07-07
  */
-public class MaterializedViewInsertTrigger extends AbstractMaterializeViewTrigger {
+public final class MaterializedViewInsertTrigger extends AbstractMaterializeViewTrigger {
 
-  public static final String NAME_PREFIX = "mvInsertFrom";
+  private static final String NAME_PREFIX = "mvInsertFrom";
 
   @Override
   public void fire(Connection connection, Object[] oldRow, Object[] newRow) throws SQLException {
@@ -21,4 +24,5 @@ public class MaterializedViewInsertTrigger extends AbstractMaterializeViewTrigge
   String getNamePrefix() {
     return NAME_PREFIX;
   }
+
 }

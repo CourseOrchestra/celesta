@@ -3,7 +3,7 @@ package ru.curs.celesta.dbutils.adaptors.column;
 import ru.curs.celesta.score.Column;
 
 /**
- * Определитель колонок для MsSql.
+ * Column definer for MsSql.
  */
 public abstract class MsSqlColumnDefiner extends ColumnDefiner {
     public abstract String getLightDefaultDefinition(Column c);

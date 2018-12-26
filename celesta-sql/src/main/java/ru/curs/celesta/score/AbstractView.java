@@ -7,7 +7,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Created by ioann on 08.06.2017.
+ * Base class for all view data elements.
+ *
+ * @author ioann
+ * @since 2017-06-08
  */
 public abstract class AbstractView extends DataGrainElement {
 
@@ -41,13 +44,20 @@ public abstract class AbstractView extends DataGrainElement {
   abstract String viewType();
 
   /**
-   * Устанавливает условие where для SQL-запроса.
+   * Sets where condition for SQL query.
    *
-   * @param whereCondition условие where.
-   * @throws ParseException если тип выражения неверный.
+   * @param whereCondition  where condition.
+   * @throws ParseException  if expression type is incorrect.
    */
   abstract void setWhereCondition(Expr whereCondition) throws ParseException;
 
+  /**
+   * Writes SELECT script to the stream.
+   *
+   * @param bw  output stream
+   * @param gen  SQL generator (visitor)
+   * @throws IOException  if writing to stream fails
+   */
   public void selectScript(final PrintWriter bw, SQLGenerator gen) throws IOException {
     BWWrapper bww = new BWWrapper();
 
@@ -57,7 +67,14 @@ public abstract class AbstractView extends DataGrainElement {
     writeGroupByPart(bw, gen);
   }
 
-
+  /**
+   * Writes SELECT part to the stream.
+   *
+   * @param bw  output stream
+   * @param gen  SQL generator (visitor)
+   * @param bww  line break wrapper
+   * @throws IOException  if writing to stream fails
+   */
   void writeSelectPart(final PrintWriter bw, SQLGenerator gen, BWWrapper bww) throws IOException {
     bww.append("  select ", bw);
     if (distinct) {
@@ -81,6 +98,13 @@ public abstract class AbstractView extends DataGrainElement {
     bw.println();
   }
 
+  /**
+   * Writes FROM part to the stream.
+   *
+   * @param bw  output stream
+   * @param gen  SQL generator (visitor)
+   * @throws IOException  if writing to stream fails
+   */
   void writeFromPart(final PrintWriter bw, SQLGenerator gen) throws IOException {
     bw.write("  from ");
     boolean cont = false;
@@ -99,8 +123,23 @@ public abstract class AbstractView extends DataGrainElement {
     }
   }
 
-  void writeWherePart(final PrintWriter bw, SQLGenerator gen) throws IOException {}
+  /**
+   * Writes WHERE part to the stream.
+   *
+   * @param bw  output stream
+   * @param gen  SQL generator (visitor)
+   * @throws IOException  if writing to stream fails
+   */
+  void writeWherePart(final PrintWriter bw, SQLGenerator gen) throws IOException {
+  }
 
+  /**
+   * Writes GROUP BY part to the stream.
+   *
+   * @param bw  output stream
+   * @param gen  SQL generator (visitor)
+   * @throws IOException  if writing to stream fails
+   */
   void writeGroupByPart(final PrintWriter bw, SQLGenerator gen) throws IOException {
     if (!groupByColumns.isEmpty()) {
       bw.println();
@@ -119,11 +158,11 @@ public abstract class AbstractView extends DataGrainElement {
   }
 
   /**
-   * Добавляет колонку к представлению.
+   * Adds a column to the view.
    *
-   * @param alias Алиас колонки.
-   * @param expr  Выражение колонки.
-   * @throws ParseException Неуникальное имя алиаса или иная семантическая ошибка
+   * @param alias  column alias.
+   * @param expr  column expression.
+   * @throws ParseException  Non-unique alias name or some other semantic error
    */
   void addColumn(String alias, Expr expr) throws ParseException {
     if (expr == null) {
@@ -145,10 +184,10 @@ public abstract class AbstractView extends DataGrainElement {
 
 
   /**
-   * Добавляет колонку к выражению "GROUP BY" представления.
+   * Adds a column to the "GROUP BY" clause of the view.
    *
-   * @param fr Выражение колонки.
-   * @throws ParseException Неуникальное имя алиаса, отсутствие колонки в выборке или иная семантическая ошибка
+   * @param fr  Column expression.
+   * @throws ParseException  Non-unique alias name, missing column in selection or some other semantic error
    */
   void addGroupByColumn(FieldRef fr) throws ParseException {
     if (fr == null) {
@@ -180,10 +219,10 @@ public abstract class AbstractView extends DataGrainElement {
   }
 
   /**
-   * Добавляет ссылку на таблицу к представлению.
+   * Adds a table reference to the view.
    *
-   * @param ref Ссылка на таблицу.
-   * @throws ParseException Неуникальный алиас или иная ошибка.
+   * @param ref  Table reference.
+   * @throws ParseException  Non-unique alias or some other semantic error.
    */
   void addFromTableRef(TableRef ref) throws ParseException {
     if (ref == null) {
@@ -210,10 +249,9 @@ public abstract class AbstractView extends DataGrainElement {
   }
 
   /**
-   * Финализирует разбор представления, разрешая ссылки на поля и проверяя
-   * типы выражений.
+   * Finalizes view parsing, resolving field references and checking expression types.
    *
-   * @throws ParseException ошибка проверки типов или разрешения ссылок.
+   * @throws ParseException  Error on types checking or reference resolving.
    */
   abstract void finalizeParsing() throws ParseException;
 
@@ -227,7 +265,7 @@ public abstract class AbstractView extends DataGrainElement {
 
 
   void finalizeGroupByParsing() throws ParseException {
-    //Проверяем, что колонки, не использованные для агрегации, перечислены в выражении GROUP BY
+    //Check that columns which were not used for aggregation are mentioned in GROUP BY clause
     Set<String> aggregateAliases = columns.entrySet().stream()
         .filter(e -> e.getValue() instanceof Aggregate)
         .map(Map.Entry::getKey)
@@ -236,8 +274,8 @@ public abstract class AbstractView extends DataGrainElement {
     if (!((aggregateAliases.isEmpty() || aggregateAliases.size() == columns.size())
         && groupByColumns.isEmpty())) {
 
-      //Бежим по колонкам, которые не агрегаты, и бросаем исключение,
-      // если хотя бы одна из них не присутствует в groupByColumns
+      //Iterate by columns which are not aggregates and throw an exception
+      // if at least one of them is absent from groupByColumns
       boolean hasErrorOpt = columns.entrySet().stream()
           .anyMatch(e -> !(e.getValue() instanceof Aggregate) && !groupByColumns.containsKey(e.getKey()));
       if (hasErrorOpt) {
@@ -249,23 +287,27 @@ public abstract class AbstractView extends DataGrainElement {
   }
 
   /**
-   * Использовано ли слово DISTINCT в запросе представления.
+   * Whether DISTINCT keyword was used in the view query.
+   *
+   * @return
    */
   boolean isDistinct() {
     return distinct;
   }
 
   /**
-   * Устанавливает использование слова DISTINCT в запросе представления.
+   * Sets the use of keyword DISTINCT in the view query.
    *
-   * @param distinct Если запрос имеет вид SELECT DISTINCT.
+   * @param distinct  Whether the query has the form of SELECT DISTINCT.
    */
   void setDistinct(boolean distinct) {
     this.distinct = distinct;
   }
 
   /**
-   * Возвращает перечень столбцов представления.
+   * Returns a map of columns of the view.
+   *
+   * @return
    */
   public abstract Map<String, ? extends ColumnMeta> getColumns();
 
@@ -274,6 +316,9 @@ public abstract class AbstractView extends DataGrainElement {
     return tables;
   }
 
+  /**
+   * Returns column index by column name.
+   */
   @Override
   public int getColumnIndex(String name) {
     int i = -1;
@@ -296,6 +341,12 @@ public abstract class AbstractView extends DataGrainElement {
             }, LinkedHashMap::new));
   }
 
+  /**
+   * Returns column reference by column name.
+   *
+   * @param colName  Column name.
+   * @return
+   */
   public Column getColumnRef(String colName) {
     Expr expr = columns.get(colName);
     return EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
@@ -321,7 +372,7 @@ public abstract class AbstractView extends DataGrainElement {
   }
 
   /**
-   * Генератор CelestaSQL.
+   * Generator of CelestaSQL.
    */
   class CelestaSQLGen extends SQLGenerator {
 
@@ -351,4 +402,5 @@ public abstract class AbstractView extends DataGrainElement {
       return false;
     }
   }
+
 }

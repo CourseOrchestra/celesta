@@ -5,11 +5,14 @@ import java.sql.SQLException;
 import java.util.Objects;
 
 /**
- * Created by ioann on 07.07.2017.
+ * Update trigger of materialized view.
+ *
+ * @author ioann
+ * @since 2017-07-07
  */
-public class MaterializedViewUpdateTrigger extends AbstractMaterializeViewTrigger {
+public final class MaterializedViewUpdateTrigger extends AbstractMaterializeViewTrigger {
 
-  public static final String NAME_PREFIX = "mvUpdateFrom";
+  private static final String NAME_PREFIX = "mvUpdateFrom";
 
 
   @Override
@@ -33,4 +36,5 @@ public class MaterializedViewUpdateTrigger extends AbstractMaterializeViewTrigge
       return getMvColumnRefs().keySet().stream()
         .anyMatch(i -> !Objects.equals(oldRow[i], newRow[i]));
   }
+
 }

@@ -6,13 +6,14 @@ import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import java.util.List;
 
 /**
- * Created by ioann on 16.08.2017.
+ * @author ioann
+ * @since 2017-08-16
  */
 public class FromTerm {
 
-  private final List values;
+  private final List<?> values;
 
-  public FromTerm(List values) {
+  public FromTerm(List<?> values) {
     this.values = values;
   }
 

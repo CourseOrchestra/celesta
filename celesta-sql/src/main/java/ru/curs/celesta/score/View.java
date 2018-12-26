@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Объект-представление в метаданных.
+ * View object in metadata.
  */
 public class View extends AbstractView {
 
@@ -68,7 +68,8 @@ public class View extends AbstractView {
     this.whereCondition = whereCondition;
   }
 
-  public Map<String, ViewColumnMeta> getColumns()  {
+  @Override
+  public Map<String, ViewColumnMeta> getColumns() {
     if (columnTypes == null) {
       columnTypes = new LinkedHashMap<>();
       for (Map.Entry<String, Expr> e : columns.entrySet()) {
@@ -79,12 +80,11 @@ public class View extends AbstractView {
   }
 
   /**
-   * Создаёт скрипт CREATE VIEW в различных диалектах SQL, используя паттерн
-   * visitor.
+   * Creates CREATE VIEW script in different SQL dialects by using 'visitor' pattern.
    *
-   * @param bw  поток, в который происходит сохранение.
-   * @param gen генератор-visitor
-   * @throws IOException ошибка записи в поток
+   * @param bw  stream that the saving is performed into
+   * @param gen  generator-visitor
+   * @throws IOException  error on writing to stream
    */
   public void createViewScript(PrintWriter bw, SQLGenerator gen) throws IOException {
     bw.println(gen.preamble(this));
@@ -92,7 +92,7 @@ public class View extends AbstractView {
   }
 
   @Override
-  void writeWherePart(PrintWriter bw, SQLGenerator gen) throws IOException {
+  final void writeWherePart(PrintWriter bw, SQLGenerator gen) throws IOException {
     if (whereCondition != null) {
       bw.println();
       bw.write("  where ");

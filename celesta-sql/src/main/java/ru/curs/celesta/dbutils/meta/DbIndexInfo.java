@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Информация об индексе, полученная из метаданых базы данных.
+ * Index information taken from metadata of the database.
  */
 public final class DbIndexInfo {
     private final String tableName;
@@ -20,14 +20,29 @@ public final class DbIndexInfo {
         this.indexName = indexName;
     }
 
+    /**
+     * Table name for which index is defined.
+     *
+     * @return
+     */
     public String getTableName() {
         return tableName;
     }
 
+    /**
+     * Index name.
+     *
+     * @return
+     */
     public String getIndexName() {
         return indexName;
     }
 
+    /**
+     * Column names of the index.
+     *
+     * @return
+     */
     public List<String> getColumnNames() {
         return columnNames;
     }
@@ -55,4 +70,5 @@ public final class DbIndexInfo {
         }
         return result;
     }
+
 }

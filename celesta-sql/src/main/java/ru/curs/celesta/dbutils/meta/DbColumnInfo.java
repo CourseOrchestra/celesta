@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Данные о колонке в базе данных в виде, необходимом для Celesta.
+ * Column data in the database in form that is needed for Celesta.
  */
 public final class DbColumnInfo {
     private String name;
@@ -18,22 +18,47 @@ public final class DbColumnInfo {
     private int scale;
     private boolean isMax;
 
+    /**
+     * Returns column name.
+     *
+     * @return
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Returns column type.
+     *
+     * @return
+     */
     public Class<? extends Column> getType() {
         return type;
     }
 
+    /**
+     * Whether column is nullable.
+     *
+     * @return
+     */
     public boolean isNullable() {
         return isNullable;
     }
 
+    /**
+     * Column default value.
+     *
+     * @return
+     */
     public String getDefaultValue() {
         return defaultValue;
     }
 
+    /**
+     * Column length.
+     *
+     * @return
+     */
     public int getLength() {
         return length;
     }
@@ -42,22 +67,47 @@ public final class DbColumnInfo {
         return isMax;
     }
 
+    /**
+     * Sets column name.
+     *
+     * @param name  column name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Sets column type.
+     *
+     * @param type  column type
+     */
     public void setType(Class<? extends Column> type) {
         this.type = type;
     }
 
+    /**
+     * Sets if column is nullable.
+     *
+     * @param isNullable  {@code true} if column is nullable otherwise {@code false}
+     */
     public void setNullable(boolean isNullable) {
         this.isNullable = isNullable;
     }
 
+    /**
+     * Sets column default value.
+     *
+     * @param defaultValue  column default value
+     */
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
     }
 
+    /**
+     * Sets column length.
+     *
+     * @param length  column length
+     */
     public void setLength(int length) {
         this.length = length;
     }
@@ -109,7 +159,7 @@ public final class DbColumnInfo {
             if (type == DateTimeColumn.class) {
                 //do not forget DateTime's special case
                 DateTimeColumn dtc = (DateTimeColumn) value;
-                return dtc.getDefaultValue() == null && dtc.isGetdate() == false;
+                return dtc.getDefaultValue() == null && (!dtc.isGetdate());
             } else if (type == IntegerColumn.class) {
                 IntegerColumn ic = (IntegerColumn) value;
                 return ic.getDefaultValue() == null && ic.getSequence() == null;
@@ -166,4 +216,5 @@ public final class DbColumnInfo {
         }
         return result;
     }
+
 }
