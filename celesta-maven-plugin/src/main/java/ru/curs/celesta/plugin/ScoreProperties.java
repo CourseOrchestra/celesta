@@ -4,7 +4,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.util.Objects;
 
-public class ScoreProperties {
+public final class ScoreProperties {
 
     @Parameter(property = "path", required = true)
     private String path;
@@ -16,6 +16,10 @@ public class ScoreProperties {
         this.path = path;
     }
 
+    /**
+     * Returns score path.
+     * @return
+     */
     public String getPath() {
         return path;
     }
@@ -40,4 +44,5 @@ public class ScoreProperties {
     public int hashCode() {
         return this.path.hashCode();
     }
+
 }

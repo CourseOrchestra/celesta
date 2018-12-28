@@ -24,7 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DbUpdaterExtension implements TestTemplateInvocationContextProvider, BeforeAllCallback, AfterAllCallback {
+public final class DbUpdaterExtension implements TestTemplateInvocationContextProvider, BeforeAllCallback, AfterAllCallback {
 
     static {
         Locale.setDefault(Locale.US);
@@ -93,7 +93,7 @@ public class DbUpdaterExtension implements TestTemplateInvocationContextProvider
         this.stopDbs();
     }
 
-    public void startDbs() {
+    private void startDbs() {
 
         final String emptyScorePath = "src/test/resources/emptyScore";
 
@@ -126,7 +126,7 @@ public class DbUpdaterExtension implements TestTemplateInvocationContextProvider
         );
     }
 
-    public void stopDbs() {
+    private void stopDbs() {
         try {
             this.connectionPools.get(DBType.H2).get().createStatement().execute("SHUTDOWN");
         } catch (SQLException e) {
@@ -159,7 +159,7 @@ public class DbUpdaterExtension implements TestTemplateInvocationContextProvider
         return ConnectionPool.create(connectionPoolConfiguration);
     }
 
-    private DbUpdater createDbUpdater(DBType dbType, String scorePath) {
+    private DbUpdater<?> createDbUpdater(DBType dbType, String scorePath) {
 
         final Score score;
 
@@ -184,4 +184,5 @@ public class DbUpdaterExtension implements TestTemplateInvocationContextProvider
         return new DbUpdaterImpl(connectionPool, score, true, dbAdaptor,
                 celesta, permissionManager, loggingManager);
     }
+
 }

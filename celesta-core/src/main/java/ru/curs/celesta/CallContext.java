@@ -103,14 +103,18 @@ public class CallContext implements ICallContext {
     }
 
     /**
-     * Active database JDBC connection.
+     * Returns active database JDBC connection.
+     *
+     * @return
      */
     public Connection getConn() {
         return conn;
     }
 
     /**
-     * Name of the current user.
+     * Returns name of the current user.
+     *
+     * @return
      */
     public String getUserId() {
         return userId;
@@ -151,14 +155,18 @@ public class CallContext implements ICallContext {
     }
 
     /**
-     * Celesta instance. Null for not activated context.
+     * Returns Celesta instance.
+     *
+     * @return {@code null} for not activated context
      */
     public ICelesta getCelesta() {
         return celesta;
     }
 
     /**
-     * Score of current Celesta instance.
+     * Returns score of current Celesta instance.
+     *
+     * @return
      */
     public Score getScore() {
         return celesta.getScore();
@@ -178,21 +186,23 @@ public class CallContext implements ICallContext {
     }
 
     /**
-     * Уменьшает счетчик открытых объектов доступа.
+     * Decrements counter of open data accessor objects.
      */
     public void decDataAccessorsCount() {
         dataAccessorsCount--;
     }
 
     /**
-     * Получает последний объект доступа.
+     * Returns the last data accessor object.
+     *
+     * @return
      */
     public BasicDataAccessor getLastDataAccessor() {
         return lastDataAccessor;
     }
 
     /**
-     * Закрытие всех классов доступа.
+     * Closes all data accessor classes.
      */
     private void closeDataAccessors() {
         while (lastDataAccessor != null) {
@@ -201,14 +211,18 @@ public class CallContext implements ICallContext {
     }
 
     /**
-     * Возвращает Process Id текущего подключения к базе данных.
+     * Returns Process Id of current connection to the database.
+     *
+     * @return
      */
     public int getDBPid() {
         return dbPid;
     }
 
     /**
-     * Возвращает имя процедуры, которая была изначально вызвана.
+     * Returns procedure name that was initially called.
+     *
+     * @return
      */
     public String getProcName() {
         return procName;
@@ -216,6 +230,8 @@ public class CallContext implements ICallContext {
 
     /**
      * Returns the calendar date of CallContext activation.
+     *
+     * @return
      */
     public Date getStartTime() {
         return startTime;
@@ -223,6 +239,8 @@ public class CallContext implements ICallContext {
 
     /**
      * Returns number of nanoseconds since CallContext activation.
+     *
+     * @return
      */
     public long getDurationNs() {
         switch (state) {
@@ -238,25 +256,42 @@ public class CallContext implements ICallContext {
 
     /**
      * If this context is closed.
+     *
+     * @return
      */
     public boolean isClosed() {
         return state == State.CLOSED;
     }
 
+    /**
+     * Returns a {@link IPermissionManager} of current Celesta instance.
+     *
+     * @return
+     */
     public IPermissionManager getPermissionManager() {
         return celesta.getPermissionManager();
     }
 
+    /**
+     * Returns a {@link ILoggingManager} of current Celesta instance.
+     *
+     * @return
+     */
     public ILoggingManager getLoggingManager() {
         return celesta.getLoggingManager();
     }
 
+    /**
+     * Returns a {@link DBAdaptor} of current Celesta instance.
+     *
+     * @return
+     */
     public DBAdaptor getDbAdaptor() {
         return celesta.getDBAdaptor();
     }
 
     @Override
-    public void close() {
+    public final void close() {
         try {
             closeDataAccessors();
             if (conn != null) {
@@ -274,6 +309,8 @@ public class CallContext implements ICallContext {
 
     /**
      * Duplicates callcontext with another JDBC connection.
+     *
+     * @return
      */
     public CallContext getCopy() {
         CallContext cc = new CallContext(userId);

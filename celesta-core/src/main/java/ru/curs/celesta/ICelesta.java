@@ -21,14 +21,18 @@ public interface ICelesta extends AutoCloseable {
     TriggerDispatcher getTriggerDispatcher();
 
     /**
-     * Возвращает метаданные Celesta (описание таблиц).
+     * Returns Celesta metadata (tables description).
+     *
+     *  @return
      */
     Score getScore();
 
     /**
-     * Возвращает свойства, с которыми была инициализирована Челеста. Внимание:
-     * данный объект имеет смысл использовать только на чтение, динамическое
-     * изменение этих свойств не приводит ни к чему.
+     * Returns properties that were used to initialize Celesta. Attention:
+     * it makes sense using this object as read only, dynamic change of these
+     * properties does lead to nothing.
+     *
+     * @return
      */
     Properties getSetupProperties();
 

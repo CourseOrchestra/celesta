@@ -22,7 +22,7 @@ public final class InFilterHolder {
 
         Runnable lookupChangeCallback = () -> {
             if (!cursor.isClosed()) {
-                // пересоздаём набор
+                // recreate the data set
                 cursor.closeSet();
             }
         };

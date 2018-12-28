@@ -55,7 +55,9 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
     }
 
     /**
-     * Есть ли у сессии права на чтение текущего объекта.
+     * Whether the session has rights to read current object.
+     *
+     * @return
      */
     public final boolean canRead() {
         if (isClosed()) {
@@ -68,9 +70,10 @@ public abstract class BasicDataAccessor extends CsqlBasicDataAccessor<CallContex
 
     // CHECKSTYLE:OFF
     /*
-     * Эта группа методов именуется по правилам Python, а не Java. В Python
-     * имена protected-методов начинаются с underscore. Использование методов
-     * без underscore приводит к конфликтам с именами атрибутов.
+     * This group of methods is named according to Python rules, and not Java.
+     * In Python names of protected methods are started with an underscore symbol.
+     * When using methods without an underscore symbol conflicts with attribute names
+     * may be caused.
      */
     protected abstract String _grainName();
 

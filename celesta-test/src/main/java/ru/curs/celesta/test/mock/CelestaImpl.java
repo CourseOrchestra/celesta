@@ -11,7 +11,10 @@ import ru.curs.celesta.score.Score;
 
 import java.util.Properties;
 
-public class CelestaImpl implements ICelesta {
+/**
+ * Mock Celesta instance.
+ */
+public final class CelestaImpl implements ICelesta {
 
     private final TriggerDispatcher triggerDispatcher = new TriggerDispatcher();
 
@@ -44,10 +47,12 @@ public class CelestaImpl implements ICelesta {
         return null;
     }
 
+    @Override
     public PermissionManager getPermissionManager() {
         return permissionManager;
     }
 
+    @Override
     public LoggingManager getLoggingManager() {
         return loggingManager;
     }
@@ -74,6 +79,11 @@ public class CelestaImpl implements ICelesta {
         connectionPool.close();
     }
 
+    /**
+     * Whether connection pool is closed.
+     *
+     * @return
+     */
     public boolean isClosed() {
         return connectionPool.isClosed();
     }

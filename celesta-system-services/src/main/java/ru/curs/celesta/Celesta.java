@@ -16,7 +16,10 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.*;
 
-public class Celesta implements ICelesta {
+/**
+ * Celesta instance.
+ */
+public final class Celesta implements ICelesta {
 
     protected static final String FILE_PROPERTIES = "celesta.properties";
 
@@ -39,7 +42,7 @@ public class Celesta implements ICelesta {
         manageH2Server();
 
         // CELESTA STARTUP SEQUENCE
-        // 1. Разбор описания гранул.
+        // 1. Parsing of grains description.
         System.out.printf("Celesta initialization: score parsing...");
 
         try {
@@ -53,9 +56,9 @@ public class Celesta implements ICelesta {
         CurrentScore.set(this.score);
         System.out.println("done.");
 
-        // 2. Обновление структуры базы данных.
-        // Т. к. на данном этапе уже используется метаинформация, то theCelesta и ConnectionPool
-        // необходимо проинициализировать.
+        // 2. Updating database structure.
+        // Since at this stage meta information is already in use, theCelesta and ConnectionPool
+        // have to be initialized.
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
         cpc.setDriverClassName(appSettings.getDbClassName());
@@ -99,6 +102,8 @@ public class Celesta implements ICelesta {
     /**
      * Returns the set of active (running) call contexts (for monitoring/debug
      * purposes).
+     *
+     * @return
      */
     public Collection<CallContext> getActiveContexts() {
         return Collections.unmodifiableCollection(contexts);
@@ -145,7 +150,7 @@ public class Celesta implements ICelesta {
     }
 
     /**
-     * Останавливает работу Celesta. После вызова экземпляр Celesta становится непригодным для использования.
+     * Stops working of Celesta. After the call the instance of Celesta becomes unusable.
      */
     @Override
     public void close() {
@@ -153,11 +158,23 @@ public class Celesta implements ICelesta {
         server.ifPresent(Server::shutdown);
     }
 
+    /**
+     * Creates Celesta instance with the specified properties.
+     *
+     * @param properties  properties to initialize the Celesta instance with
+     * @return
+     */
     public static Celesta createInstance(Properties properties) {
         AppSettings appSettings = preInit(properties);
         return new Celesta(appSettings);
     }
 
+    /**
+     * Creates Celesta instance with properties specified in <b>celesta.properties</b>
+     * file.
+     *
+     * @return
+     */
     public static Celesta createInstance() {
         Properties properties = loadPropertiesDynamically();
         return createInstance(properties);
@@ -170,6 +187,11 @@ public class Celesta implements ICelesta {
         return appSettings;
     }
 
+    /**
+     * Reads and returns properties from <b>celesta.properties</b> file.
+     *
+     * @return
+     */
     public static Properties loadPropertiesDynamically() {
         // Разбираемся с настроечным файлом: читаем его и превращаем в
         // Properties.
@@ -222,24 +244,28 @@ public class Celesta implements ICelesta {
 
 
     /**
-     * Режим профилирования (записывается ли в таблицу calllog время вызовов
-     * процедур).
+     * Returns if profiling mode is set (whether the time of method calls
+     * is written to 'calllog' table).
+     *
+     * @return
      */
     public boolean isProfilemode() {
         return profiler.isProfilemode();
     }
 
     /**
-     * Возвращает поведение NULLS FIRST текущей базы данных.
+     * Returns the behavior {@code NULLS FIRST} of current database.
+     *
+     * @return
      */
     public boolean nullsFirst() {
         return dbAdaptor.nullsFirst();
     }
 
     /**
-     * Устанавливает режим профилирования.
+     * Sets profiling mode.
      *
-     * @param profilemode режим профилирования.
+     * @param profilemode  profiling mode
      */
     public void setProfilemode(boolean profilemode) {
         profiler.setProfilemode(profilemode);

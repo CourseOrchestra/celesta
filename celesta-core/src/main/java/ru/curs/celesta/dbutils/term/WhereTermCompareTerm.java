@@ -5,7 +5,7 @@ import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
 import java.util.List;
 
-public class WhereTermCompareTerm extends WhereTerm {
+public final class WhereTermCompareTerm extends WhereTerm {
 
     private final WhereTerm lTerm;
     private final WhereTerm rTerm;

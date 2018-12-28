@@ -178,7 +178,6 @@ public abstract class BasicCursor extends BasicDataAccessor {
     final PreparedStmtHolder here = getHereHolder();
 
     final PreparedStmtHolder first = new PreparedStmtHolder() {
-
         @Override
         protected PreparedStatement initStatement(List<ParameterSetter> program) {
             FromClause from = getFrom();
@@ -196,6 +195,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
 
     };
+
     final PreparedStmtHolder last = new PreparedStmtHolder() {
         @Override
         protected PreparedStatement initStatement(List<ParameterSetter> program) {
@@ -214,7 +214,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
     };
 
-    // Поля фильтров и сортировок
+    // Filter and sort fields
     private final Map<String, AbstractFilter> filters = new HashMap<>();
     private String[] orderByNames;
     private int[] orderByIndices;
@@ -320,7 +320,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Высвобождает все PreparedStatements курсора.
+     * Releases all PreparedStatements of the cursor.
      */
     @Override
     protected void closeInternal() {
@@ -337,7 +337,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
 
     /**
-     * Есть ли у сессии права на вставку в текущую таблицу.
+     * Whether the session has rights to insert data into current table.
+     *
+     * @return
      */
     public final boolean canInsert() {
         if (isClosed()) {
@@ -348,7 +350,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Есть ли у сессии права на модификацию данных текущей таблицы.
+     * Whether the session has rights to modify data of current table.
+     *
+     * @return
      */
     public final boolean canModify() {
         if (isClosed()) {
@@ -359,7 +363,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Есть ли у сессии права на удаление данных текущей таблицы.
+     * Whether the session has rights to delete data from current table.
+     *
+     * @return
      */
     public final boolean canDelete() {
         if (isClosed()) {
@@ -377,7 +383,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
     }
 
-    protected void closeSet() {
+    protected final void closeSet() {
         cursor = null;
         set.close();
         forwards.close();
@@ -408,24 +414,28 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     /**
      * Returns "order by" clause for the cursor.
+     *
+     * @return
      */
     public final String getOrderBy() {
         return getOrderBy(false);
     }
 
-    List<String> getOrderByFields() {
+    final List<String> getOrderByFields() {
         if (orderByNames == null) {
             orderBy();
         }
         return Arrays.asList(orderByNames);
     }
 
-    String getReversedOrderBy() {
+    final String getReversedOrderBy() {
         return getOrderBy(true);
     }
 
     /**
      * Returns column names that are in sorting.
+     *
+     * @return
      */
     public String[] orderByColumnNames() {
         if (orderByNames == null) {
@@ -436,6 +446,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     /**
      * Returns mask of DESC orders.
+     *
+     * @return
      */
     public boolean[] descOrders() {
         if (orderByNames == null) {
@@ -445,10 +457,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Переходит к первой записи в отфильтрованном наборе и возвращает
-     * информацию об успешности перехода.
+     * Moves to the first record in the filtered data set and returns information
+     * about the success of transition.
      *
-     * @return true, если переход успешен, false -- если записей в наборе нет.
+     * @return  {@code true} if the transition was successful,
+     *          {@code false} if there are no records in the data set.
      */
     public final boolean tryFindSet() {
         if (!canRead()) {
@@ -473,14 +486,18 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * То же, что navigate("-").
+     * The same as navigate("-").
+     *
+     * @return
      */
     public final boolean tryFirst() {
         return navigate("-");
     }
 
     /**
-     * То же, что tryFirst(), но вызывает ошибку, если запись не найдена.
+     * The same as tryFirst() but causes an error if no record is found.
+     *
+     * @return
      */
     public final void first() {
         if (!navigate("-")) {
@@ -489,14 +506,18 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * То же, что navigate("+").
+     * The same as navigate("+").
+     *
+     * @return
      */
     public final boolean tryLast() {
         return navigate("+");
     }
 
     /**
-     * То же, что tryLast(), но вызывает ошибку, если запись не найдена.
+     * The same as tryLast() but causes an error if no record is found.
+     *
+     * @return
      */
     public final void last() {
         if (!navigate("+")) {
@@ -505,14 +526,18 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * То же, что navigate("&gt;").
+     * The same as navigate("&gt;").
+     *
+     * @return
      */
     public final boolean next() {
         return navigate(">");
     }
 
     /**
-     * То же, что navigate("&lt").
+     * The same as navigate("&lt").
+     *
+     * @return
      */
     public final boolean previous() {
         return navigate("<");
@@ -530,8 +555,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Переходит к первой записи в отфильтрованном наборе, вызывая ошибку в
-     * случае, если переход неудачен.
+     * Moves to the first record in the filtered data set causing an error in the case
+     * if the transition was not successful.
      */
     public final void findSet() {
         if (!tryFindSet()) {
@@ -540,8 +565,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Возвращает текущее состояние курсора в виде CSV-строки с
-     * разделителями-запятыми.
+     * Returns current state of the cursor in form of CSV string with comma delimiters.
+     *
+     * @return
      */
     public final String asCSVLine() {
         Object[] values = _currentValues();
@@ -582,8 +608,10 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Переходит к следующей записи в отсортированном наборе. Возвращает false,
-     * если достигнут конец набора.
+     * Moves to the next record in the sorted data set. Returns {@code false} if
+     * the end of the set is reached.
+     *
+     * @return
      */
     public final boolean nextInSet() {
         boolean result = false;
@@ -606,23 +634,19 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Метод навигации (пошагового перехода в отфильтрованном и отсортированном
-     * наборе).
+     * Navigation method (step-by-step transition in the filtered and sorted data set).
      *
      * @param command
-     *            Команда, состоящая из последовательности символов:
+     *            Command consisting of a sequence of symbols:
      *            <ul>
-     *            <li>=обновить текущую запись (если она имеется в
-     *            отфильтрованном наборе)</li>
-     *            <li>&gt; перейти к следующей записи в отфильтрованном наборе
-     *            </li>
-     *            <li>&lt; перейти к предыдущей записи в отфильтрованном наборе
-     *            </li>
-     *            <li>- перейти к первой записи в отфильтрованном наборе</li>
-     *            <li>+ перейти к последней записи в отфильтрованном наборе</li>
+     *            <li>= update current record (if it exists in the filtered data set)
+     *            <li>&gt; move to the next record in the filtered data set</li>
+     *            <li>&lt; move to the previous record in the filtered data set</li>
+     *            <li>- move to the first record in the filtered data set</li>
+     *            <li>+ move to the last record in the filtered data set</li>
      *            </ul>
-     * @return true, если запись найдена и переход совершился, false — в
-     *         противном случае.
+     * @return {@code true} if the record was found and the transition completed
+     *         {@code false} - otherwise.
      */
     public boolean navigate(String command) {
         if (!canRead()) {
@@ -718,7 +742,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     }
 
-    WhereTermsMaker getQmaker() {
+    final WhereTermsMaker getQmaker() {
         return qmaker;
     }
 
@@ -729,30 +753,26 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Сброс любого фильтра на поле.
+     * Resets any filter on a field.
      *
-     * @param name
-     *            Имя поля.
+     * @param name  field name
      */
     public final void setRange(String name) {
         validateColumName(name);
         if (isClosed()) {
             return;
         }
-        // Если фильтр присутствовал на поле -- сбрасываем набор. Если не
-        // присутствовал -- не сбрасываем.
+        // If filter was present on the field - reset the data set. If not - do nothing.
         if (filters.remove(name) != null) {
             closeSet();
         }
     }
 
     /**
-     * Установка диапазона из единственного значения на поле.
+     * Sets range from a single value on the field.
      *
-     * @param name
-     *            Имя поля.
-     * @param value
-     *            Значение, по которому осуществляется фильтрация.
+     * @param name  field name
+     * @param value  value along which filtering is performed
      */
     public final void setRange(String name, Object value) {
         if (value == null) {
@@ -763,8 +783,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
                 return;
             }
             AbstractFilter oldFilter = filters.get(name);
-            // Если один SingleValue меняется на другой SingleValue -- то
-            // необязательно закрывать набор, можно использовать старый.
+            // If one SingleValue is changed to another one - it is not needed
+            // to close up the data set - the old one can be used.
             if (oldFilter instanceof SingleValue) {
                 ((SingleValue) oldFilter).setValue(value);
             } else {
@@ -775,14 +795,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Установка диапазона от..до на поле.
+     * Sets range from..to on the field.
      *
-     * @param name
-     *            Имя поля
-     * @param valueFrom
-     *            Значение от
-     * @param valueTo
-     *            Значение до
+     * @param name  field name
+     * @param valueFrom  value <em>from</em>
+     * @param valueTo  value <em>to</em>
      */
     public final void setRange(String name, Object valueFrom, Object valueTo) {
         validateColumName(name);
@@ -790,8 +807,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
             return;
         }
         AbstractFilter oldFilter = filters.get(name);
-        // Если один Range меняется на другой Range -- то
-        // необязательно закрывать набор, можно использовать старый.
+        // If one Range is changed to another one - it is not needed
+        // to close up the data set - the old one can be used.
         if (oldFilter instanceof Range) {
             ((Range) oldFilter).setValues(valueFrom, valueTo);
         } else {
@@ -802,12 +819,10 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
 
     /**
-     * Установка фильтра на поле.
+     * Sets filter to the field.
      *
-     * @param name
-     *            Имя поля
-     * @param value
-     *            Фильтр
+     * @param name  field name
+     * @param value  filter
      */
     public final void setFilter(String name, String value) {
         validateColumName(name);
@@ -822,17 +837,16 @@ public abstract class BasicCursor extends BasicDataAccessor {
         if (isClosed()) {
             return;
         }
-        // Если заменили фильтр на тот же самый -- ничего делать не надо.
+        // If the old filter is replaced with the same - do nothing.
         if (!(oldFilter instanceof Filter && value.equals(oldFilter.toString()))) {
             closeSet();
         }
     }
 
     /**
-     * Устанавливает сложное условие на набор данных.
+     * Sets complex condition to the data set.
      *
-     * @param condition
-     *            Условие, соответствующее выражению where.
+     * @param condition  condition that corresponds to WHERE clause.
      */
     public final void setComplexFilter(String condition) {
         Expr buf = CelestaParser.parseComplexFilter(condition, meta().getGrain().getScore().getIdentifierParser());
@@ -845,27 +859,22 @@ public abstract class BasicCursor extends BasicDataAccessor {
         if (isClosed()) {
             return;
         }
-        // пересоздаём набор
+        // recreate the data set
         closeSet();
     }
 
     /**
-     * Возвращает (переформатированное) выражение сложного фильтра в диалекте
-     * CelestaSQL.
+     * Returns (reformatted) expression of the complex filter in CelestaSQL dialect.
      */
     public final String getComplexFilter() {
         return complexFilter == null ? null : complexFilter.getCSQL();
     }
 
     /**
-     * Устанавливает фильтр на диапазон возвращаемых курсором записей.
+     * Sets filter to a range of records returned by the cursor.
      *
-     * @param offset
-     *            Количество записей, которое необходимо пропустить (0 -
-     *            начинать с начала).
-     * @param rowCount
-     *            Максимальное количество записей, которое необходимо вернуть (0
-     *            - вернуть все записи).
+     * @param offset  number of records that has to be skipped (0 - start from the beginning).
+     * @param rowCount  maximal number of records that has to be returned (0 - return all records).
      */
     public final void limit(long offset, long rowCount) {
         if (offset < 0) {
@@ -880,7 +889,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Сброс фильтров и сортировки.
+     * Resets filters and sorting.
      */
     public final void reset() {
         filters.clear();
@@ -898,10 +907,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Установка сортировки.
+     * Sets sorting.
      *
-     * @param names
-     *            Перечень полей для сортировки.
+     * @param names  array of fields for sorting
      */
     public final void orderBy(String... names) {
         prepareOrderBy(names);
@@ -954,7 +962,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     abstract void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames);
 
     /**
-     * Сброс фильтров, сортировки и полная очистка буфера.
+     * Resets filters, sorting and fully cleans the buffer.
      */
     @Override
     public void clear() {
@@ -977,7 +985,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Возвращает число записей в отфильтрованном наборе.
+     * Returns number of records in the filtered data set.
+     *
+     * @return
      */
     public final int count() {
         PreparedStatement stmt = count.getStatement(_currentValues(), 0);
@@ -992,6 +1002,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * one in the set. This method is intended for internal use by GridDriver.
      * Since rows counting is a resource-consuming operation, usage of this method should
      * be avoided.
+     *
+     * @return
      */
     public final int position() {
         PreparedStatement stmt = position.getStatement(_currentValues(), 0);
@@ -1013,11 +1025,10 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Получает копию фильтров, а также значений limit (offset и rowcount) из
-     * курсора того же типа.
+     * Gets a copy of filters along with values of limit (offset and rowcount) from
+     * a cursor of the same type.
      *
-     * @param c
-     *            Курсор, фильтры которого нужно скопировать.
+     * @param c  cursor the filters of which have to be copied
      */
     public final void copyFiltersFrom(BasicCursor c) {
         if (!(c._grainName().equals(_grainName()) && c._objectName().equals(_objectName()))) {
@@ -1038,10 +1049,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Получает копию сортировок из курсора того же типа.
+     * Gets a copy of sortings from a cursor of the same type.
      *
-     * @param c
-     *            Курсор, фильтры которого нужно скопировать.
+     * @param c  cursor the sortings of which have to be copied
      */
     public final void copyOrderFrom(BasicCursor c) {
         if (!(c._grainName().equals(_grainName()) && c._objectName().equals(_objectName()))) {
@@ -1056,8 +1066,10 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Checks if filters and ordering are equivalent for this and other cursor.
+     * Checks if filters and sorting are equivalent for this and the other cursor.
      * @param c Other cursor.
+     *
+     * @return
      */
     public boolean isEquivalent(BasicCursor c) {
         // equality of all simple filters
@@ -1100,21 +1112,19 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Устанавливает значение поля по его имени. Необходимо для косвенного
-     * заполнения данными курсора из Java (в Python, естественно, для этой цели
-     * есть процедура setattr(...)).
+     * Sets value of a field by its name. This is needed for an indirect filling
+     * of the cursor with data from Java (in Python, naturally, there is <code>setattr(...)</code>
+     * procedure for this goal).
      *
-     * @param name
-     *            Имя поля.
-     * @param value
-     *            Значение поля.
+     * @param name  field name
+     * @param value  field value
      */
     public final void setValue(String name, Object value) {
         validateColumName(name);
         _setFieldValue(name, value);
     }
 
-    protected boolean inRec(String field) {
+    protected final boolean inRec(String field) {
         return fieldsForStatement.isEmpty() || fieldsForStatement.contains(field);
     }
 
@@ -1144,18 +1154,18 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Копировать значения полей из курсора того же типа.
+     * Copy field values from a cursor of the same type.
      *
-     * @param from
-     *            курсор, из которого следует скопировать значения полей
+     * @param from  cursor that field values have to be copied from
      */
     public abstract void copyFieldsFrom(BasicCursor from);
 
     // CHECKSTYLE:OFF
     /*
-     * Эта группа методов именуется по правилам Python, а не Java. В Python
-     * имена protected-методов начинаются с underscore. Использование методов
-     * без underscore приводит к конфликтам с именами атрибутов.
+     * This group of methods is named according to Python rules, and not Java.
+     * In Python names of protected methods are started with an underscore symbol.
+     * When using methods without an underscore symbol conflicts with attribute names
+     * can be caused.
      */
     public abstract BasicCursor _getBufferCopy(CallContext context, List<String> fields);
 

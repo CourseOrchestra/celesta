@@ -13,7 +13,12 @@ public abstract class Sequence extends BasicDataAccessor {
         super(context);
     }
 
-    public long nextValue() {
+    /**
+     * Returns the <em>next value</em> of the sequence.
+     *
+     * @return
+     */
+    public final long nextValue() {
         return db().nextSequenceValue(conn(), meta());
     }
 
@@ -23,7 +28,9 @@ public abstract class Sequence extends BasicDataAccessor {
     }
 
     /**
-     * Описание представления (метаинформация).
+     * Description of representation (meta information).
+     *
+     * @return
      */
     @Override
     public final SequenceElement meta() {
@@ -38,4 +45,5 @@ public abstract class Sequence extends BasicDataAccessor {
 
         return meta;
     }
+
 }

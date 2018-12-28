@@ -137,15 +137,17 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
      * Gets WHERE clause for single record with respect to other filters on a
      * record.
      *
-     * @param t
-     *            Table meta.
+     * @param t  Table meta.
+     * @return
      */
     public WhereTerm getHereWhereTerm(Table t) {
         return AndTerm.construct(getPKWhereTerm(t), getWhereTerm());
     }
 
     /**
-     * Gets WHERE clause for filtered rowset.
+     * Gets WHERE clause for filtered row set.
+     *
+     * @return
      */
     public WhereTerm getWhereTerm() {
         paramsProvider.initOrderBy();
@@ -180,8 +182,8 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
      * Gets WHERE clause for navigational term with respect of filters and
      * database settings.
      *
-     * @param op
-     *            navigation operator: '>', '<', or '='.
+     * @param op  navigation operator: '>', '<', or '='.
+     * @return
      */
     public WhereTerm getWhereTerm(char op) {
         paramsProvider.initOrderBy();
@@ -297,6 +299,14 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
         }
     }
 
+    /**
+     * Unquotes the name.
+     * <p>
+     * <b>'name'</b> -> <b>name</b>
+     *
+     * @param name  name to be unquoted
+     * @return
+     */
     public static String unquot(String name) {
         return name.substring(1, name.length() - 1);
     }
@@ -309,7 +319,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
         private final String fieldName;
         private final Filter filter;
 
-        public FilterTerm(String fieldName, Filter filter) {
+        FilterTerm(String fieldName, Filter filter) {
             this.fieldName = fieldName;
             this.filter = filter;
         }
