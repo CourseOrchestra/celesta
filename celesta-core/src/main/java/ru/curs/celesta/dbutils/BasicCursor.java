@@ -837,7 +837,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         if (isClosed()) {
             return;
         }
-        // If the old filter is replaced with the same - do nothing.
+        // If the old filter is changed towards the same - do nothing.
         if (!(oldFilter instanceof Filter && value.equals(oldFilter.toString()))) {
             closeSet();
         }
@@ -1049,7 +1049,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Gets a copy of sortings from a cursor of the same type.
+     * Gets a copy of orderings from a cursor of the same type.
      *
      * @param c  cursor the sortings of which have to be copied
      */
@@ -1066,7 +1066,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Checks if filters and sorting are equivalent for this and the other cursor.
+     * Checks if filters and sorting are equivalent for this and other cursor.
      * @param c Other cursor.
      *
      * @return

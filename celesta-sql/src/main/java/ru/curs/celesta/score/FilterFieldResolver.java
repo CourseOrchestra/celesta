@@ -1,8 +1,8 @@
 package ru.curs.celesta.score;
 
 /**
- * Вспомогательный класс для проверки корректности ссылок на имена полей в
- * сложных фильтрах.
+ * Auxiliary class for correctness validation of references to field names in
+ * complex filters.
  */
 final class FilterFieldResolver extends ExprVisitor {
     private final DataGrainElement ge;
@@ -26,4 +26,5 @@ final class FilterFieldResolver extends ExprVisitor {
                             ge.getName(), expr.getColumnName()));
         }
     }
+
 }

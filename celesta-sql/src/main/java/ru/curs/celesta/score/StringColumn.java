@@ -4,16 +4,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
- * Строковая колонка.
- *
+ * String column.
  */
 public final class StringColumn extends Column {
     /**
-     * Celesta-тип данных колонки для короткой строки.
+     * Celesta type of the column data for short string.
      */
     public static final String VARCHAR = "VARCHAR";
     /**
-     * Celesta-тип данных колонки для длинной строки.
+     * Celesta type of the column data for long string.
      */
     public static final String TEXT = "TEXT";
 
@@ -37,12 +36,10 @@ public final class StringColumn extends Column {
     }
 
     /**
-     * Расковычивает строки в закавыченном формате.
+     * Unquotes a string that is quoted.
      *
-     * @param lexvalue
-     *            закавыченная строка.
-     * @throws ParseException
-     *             неверный формат.
+     * @param lexvalue  quoted string
+     * @throws ParseException  incorrect format
      */
     public static String unquoteString(String lexvalue) throws ParseException {
         StringBuilder sb = new StringBuilder();
@@ -78,10 +75,9 @@ public final class StringColumn extends Column {
     }
 
     /**
-     * Закавычевает строки.
+     * Quotes a string.
      *
-     * @param lexvalue
-     *            строка для закавычивания.
+     * @param lexvalue  string for quoting
      */
     public static String quoteString(String lexvalue) {
         StringBuilder sb = new StringBuilder();
@@ -103,28 +99,30 @@ public final class StringColumn extends Column {
     }
 
     /**
-     * Максимальная длина текстового поля. Не должна учитываться, если
-     * isMax()==true.
+     * Maximal length of the text field. It should not be taken into account if
+     * <code>isMax()==true</code>.
+     *
+     * @return
      */
     public int getLength() {
         return length;
     }
 
     /**
-     * Указывает на то, что при определении поля вместо длины был передан
-     * параметр MAX.
+     * Indicates that on the field definition MAX parameter was provided
+     * instead of the length.
+     *
+     * @return
      */
     public boolean isMax() {
         return max;
     }
 
     /**
-     * Устанавливает длину текстового поля.
+     * Sets length of the text field.
      *
-     * @param length
-     *            Новая длина
-     * @throws ParseException
-     *             Если указана нулевая или отрицательная длина.
+     * @param length  new length
+     * @throws ParseException  if zero or negative length is specified.
      */
     public void setLength(String length) throws ParseException {
         if ("MAX".equalsIgnoreCase(length)) {
@@ -182,7 +180,7 @@ public final class StringColumn extends Column {
     }
 
     @Override
-    public Class getJavaClass() {
+    public Class<?> getJavaClass() {
         return String.class;
     }
 
@@ -190,4 +188,5 @@ public final class StringColumn extends Column {
     public String getCelestaDefault() {
         return defaultvalue == null ? null : quoteString(defaultvalue);
     }
+
 }

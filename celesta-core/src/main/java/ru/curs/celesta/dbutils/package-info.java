@@ -34,7 +34,7 @@
 */
 
 /**
- * Содержит инструменты работы с базой данных, в том числе систему
- * автоматического обновления структуры базы данных.
+ * Contains tools for working with the database, including the system
+ * for an automatic update of the database structure.
  */
 package ru.curs.celesta.dbutils;

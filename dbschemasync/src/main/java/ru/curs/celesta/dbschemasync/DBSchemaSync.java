@@ -7,7 +7,7 @@ import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 
 /**
- * Класс синхронизации с проектом DBSchema.
+ * Synchronizer class with DBSchema project.
  */
 public final class DBSchemaSync {
 
@@ -16,10 +16,10 @@ public final class DBSchemaSync {
     }
 
     /**
-     * Главный метод.
+     * The main method.
      *
-     * @param args аргументы.
-     * @throws Exception Если что-то пошло не так.
+     * @param args  arguments
+     * @throws Exception  if something went wrong
      */
     public static void main(String[] args) throws Exception {
         // "c:/Users/Ivan/workspace/celesta/score/"
@@ -32,7 +32,7 @@ public final class DBSchemaSync {
             System.out.println("DBS-->SCORE");
             File dbsFile = new File(args[0]);
             System.out.println("parsing score...");
-            AbstractScore s = new AbstractScore.ScoreBuilder(Score.class)
+            AbstractScore s = new AbstractScore.ScoreBuilder<>(Score.class)
                     .path(args[1])
                     .scoreDiscovery(new DefaultScoreDiscovery())
                     .build();
@@ -44,7 +44,7 @@ public final class DBSchemaSync {
             File dbsFile = new File(args[1]);
             System.out.println("SCORE-->DBS");
             System.out.println("parsing score...");
-            AbstractScore s = new AbstractScore.ScoreBuilder(Score.class)
+            AbstractScore s = new AbstractScore.ScoreBuilder<>(Score.class)
                     .path(args[0])
                     .scoreDiscovery(new DefaultScoreDiscovery())
                     .build();
@@ -53,4 +53,5 @@ public final class DBSchemaSync {
             System.out.println("done.");
         }
     }
+
 }

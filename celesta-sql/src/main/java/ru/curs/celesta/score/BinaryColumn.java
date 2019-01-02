@@ -6,13 +6,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
- * Бинарная колонка (тип IMAGE или BLOB).
- *
+ * Binary column (IMAGE or BLOB type).
  */
 public final class BinaryColumn extends Column {
 
     /**
-     * Celesta-тип данных колонки.
+     * Celesta type of the column data.
      */
     public static final String CELESTA_TYPE = "BLOB";
     private String defaultvalue;
@@ -56,7 +55,7 @@ public final class BinaryColumn extends Column {
     }
 
     @Override
-    public Class getJavaClass() {
+    public Class<?> getJavaClass() {
         return BLOB.class;
     }
 

@@ -87,19 +87,19 @@ public abstract class NamedElement {
     }
 
     /**
-     * Возвращает значение документационной строки для данного элемента.
+     * Returns value of document string for this element.
+     *
+     * @return
      */
     public String getCelestaDoc() {
         return celestaDoc;
     }
 
     /**
-     * Устанавливает значение документационной строки в закомментированном виде.
+     * Sets value of document string in commented form. 
      *
-     * @param celestaDoc
-     *            новое значение.
-     * @throws ParseException
-     *             Если комментарий имеет неверный формат.
+     * @param celestaDoc  new value
+     * @throws ParseException  if the comment has a wrong format
      */
     void setCelestaDocLexem(String celestaDoc) throws ParseException {
         if (celestaDoc == null) {
@@ -114,14 +114,13 @@ public abstract class NamedElement {
     }
 
     /**
-     * Устанавливает значение документационной строки.
+     * Sets value of document string.
      *
-     * @param celestaDoc
-     *            новое значение.
-     * @throws ParseException
-     *            неверный CelestaDoc.
+     * @param celestaDoc  new value
+     * @throws ParseException  incorrect CelestaDoc
      */
     public void setCelestaDoc(String celestaDoc) throws ParseException {
         this.celestaDoc = celestaDoc;
     }
+
 }

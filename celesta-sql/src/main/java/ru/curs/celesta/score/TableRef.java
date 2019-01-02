@@ -1,13 +1,13 @@
 package ru.curs.celesta.score;
 
 /**
- * Ссылка на таблицу в SQL-запросе.
+ * Table reference in SQL query.
  */
 public class TableRef {
     /**
-     * Тип JOIN. Не поддерживается FULL JOIN из исторических соображений,
-     * возможно когда-нибудь будет добавлен
-     * , и CROSS JOIN из соображений безопасности быстродействия.
+     * JOIN type. FULL JOIN isn't supported because of historical reasons,
+     * maybe someday it will be added. CROSS JOIN isn't supported for
+     * security and speed reasons.
      */
     public enum JoinType {
 
@@ -35,21 +35,27 @@ public class TableRef {
     }
 
     /**
-     * Тип JOIN.
+     * Returns JOIN type.
+     *
+     * @return
      */
     public JoinType getJoinType() {
         return joinType;
     }
 
     /**
-     * Таблица.
+     * Returns table.
+     *
+     * @return
      */
     public Table getTable() {
         return table;
     }
 
     /**
-     * Условие ON...
+     * Returns condition ON...
+     *
+     * @return
      */
     public Expr getOnExpr() {
         return onExpr;
@@ -65,13 +71,21 @@ public class TableRef {
     }
 
     /**
-     * Псевдоним таблицы.
+     * Returns table alias.
+     *
+     * @return
      */
     public String getAlias() {
         return alias;
     }
 
+    /**
+     * Sets JOIN type.
+     *
+     * @param joinType  JOIN type
+     */
     void setJoinType(JoinType joinType) {
         this.joinType = joinType;
     }
+
 }

@@ -4,12 +4,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
- * Колонка с типом REAL.
- *
+ * Column REAL type.
  */
 public final class FloatingColumn extends Column {
     /**
-     * Celesta-тип данных колонки.
+     * Celesta type of the column data.
      */
     public static final String CELESTA_TYPE = "REAL";
 
@@ -54,7 +53,7 @@ public final class FloatingColumn extends Column {
     }
 
     @Override
-    public Class getJavaClass() {
+    public Class<?> getJavaClass() {
         return Double.class;
     }
 

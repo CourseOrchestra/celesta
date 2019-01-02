@@ -111,8 +111,10 @@ public class View extends AbstractView {
 
 
   /**
-   * Возвращает SQL-запрос на языке Celesta, на основании которого построено
-   * представление.
+   * Returns an SQL query in Celesta language, based on which the view is going
+   * to be created.
+   *
+   * @return
    */
   public String getCelestaQueryString() {
     if (queryString != null) {

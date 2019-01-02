@@ -1,13 +1,12 @@
 package ru.curs.celesta.dbutils;
 
 /**
- * Тип действия.
- *
+ * Action type.
  */
 public enum Action {
 
     /**
-     * Читать.
+     * Read.
      */
     READ {
         @Override
@@ -21,7 +20,7 @@ public enum Action {
         }
     },
     /**
-     * Вставлять.
+     * Insert.
      */
     INSERT {
         @Override
@@ -35,7 +34,7 @@ public enum Action {
         }
     },
     /**
-     * Изменять.
+     * Modify.
      */
     MODIFY {
         @Override
@@ -49,7 +48,7 @@ public enum Action {
         }
     },
     /**
-     * Удалять.
+     * Delete.
      */
     DELETE {
         @Override

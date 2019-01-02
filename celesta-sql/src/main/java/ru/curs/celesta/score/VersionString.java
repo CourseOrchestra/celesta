@@ -8,36 +8,37 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Строка версии, которая обязана состоять из version-тэгов, перечисленных через
- * запятую.
- *
+ * Version string that has to consist of comma separated version tags.
  */
 public final class VersionString {
 
     /**
-     * Строка версии по умолчанию для вновь создаваемых динамически гранул,
-     * соответствует "1.00".
+     * Default version string for newly created dynamic grains.
+     * Corresponds to "1.00".
      */
     public static final VersionString DEFAULT;
 
     /**
-     * Результат сравнения VersionStrings, на которых существует частичный
-     * порядок (использование стандартного интерфейса Comparable невозможно, т.
-     * к. он подразумевает линейный порядок).
+     * The result of comparison of VersionStrings on which a partial order is
+     * defined. (the use of standard interface Comparable is impossible, for it
+     * implies a linear order).
      *
      */
     public enum ComparisionState {
         /**
-         * Текущая версия больше чем сравниваемая.
+         * Current version is greater than the compared one.
          */
-        GREATER, /**
-         * Текущая версия равна сравниваемой.
+        GREATER,
+        /**
+         * Current version equals to the compared one.
          */
-        EQUALS, /**
-         * Текущая версия меньше сравниваемой.
+        EQUALS,
+        /**
+         * Current version is lesser than the compared one.
          */
-        LOWER, /**
-         * Текущие версии несравнимы.
+        LOWER,
+        /**
+         * Current versions are incomparable. 
          */
         INCONSISTENT
     }
@@ -104,10 +105,9 @@ public final class VersionString {
     }
 
     /**
-     * Сравнение с учётом существования частичного порядка на версиях.
+     * Comparison based on the existence of partial order on versions.
      *
-     * @param o
-     *            объект, с которым сравнивается текущая версия.
+     * @param o  object that current version is being compared with.
      *
      */
     public ComparisionState compareTo(VersionString o) {

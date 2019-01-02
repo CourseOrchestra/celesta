@@ -75,7 +75,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
 
     /**
-     * Records initialization in security tables. It is run once during the creation
+     * Records initialization in security tables. It is run once during creation
      * of the system grain. 
      */
     private void initSecurity(CallContext context) {

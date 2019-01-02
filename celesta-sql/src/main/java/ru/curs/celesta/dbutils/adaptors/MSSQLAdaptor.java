@@ -60,7 +60,7 @@ import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 /**
- * Адаптер MSSQL.
+ * MSSQL Adaptor.
  */
 public final class MSSQLAdaptor extends DBAdaptor {
 
@@ -257,10 +257,10 @@ public final class MSSQLAdaptor extends DBAdaptor {
     }
 
     /**
-     * Возвращает информацию о столбце.
+     * Returns information on column.
      *
-     * @param conn Соединение с БД.
-     * @param c    Столбец.
+     * @param conn DB connection
+     * @param c    column
      */
     // CHECKSTYLE:OFF
     @Override

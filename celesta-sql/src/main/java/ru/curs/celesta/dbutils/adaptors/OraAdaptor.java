@@ -66,7 +66,7 @@ import ru.curs.celesta.score.validator.AnsiQuotedIdentifierParser;
 import static ru.curs.celesta.dbutils.jdbc.SqlUtils.*;
 
 /**
- * Адаптер Oracle Database.
+ * Oracle Database Adaptor.
  */
 public final class OraAdaptor extends DBAdaptor {
     private static final String SELECT_S_FROM = "select %s from ";

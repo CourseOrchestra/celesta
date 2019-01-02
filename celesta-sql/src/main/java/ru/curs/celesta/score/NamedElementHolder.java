@@ -7,23 +7,25 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Перечень именованных элементов, который может содежать только по одному
- * элементу каждого имени. Обеспечивает уникальность имён и доступ по имени.
- * Например, это могут быть таблицы в грануле, поля в таблице, поля в ключе и т.д.
+ * A collection of named elements that may only contain one element per each name.
+ * Provides uniqueness of names and access by name. For example these may be tables
+ * in a grain, fields in a key etc.
  *
- * Реализация интерфейса Collection выполнена только лишь с той целью, чтобы
- * утилита ObjectAid правильно выстраивала UML-диаграмму (воспринимая поле с
- * типом NamedElementHolder как мульти-ссылку).
+ * The implementation of interface Collection is done only for the purpose of
+ * ObjectAid utility to correctly build a UML diagram (taking a field of
+ * NamedElementHolder type as a multi-reference).
+ * 
  *
- * @param <T>
- *            Тип именованных элементов в перечне.
+ * @param <T>  type of named elements in the collection.
  */
 public abstract class NamedElementHolder<T extends NamedElement> implements Collection<T> {
     private final LinkedHashMap<String, T> namespace = new LinkedHashMap<>();
     private final Map<String, T> namespaceReadOnly = Collections.unmodifiableMap(namespace);
 
     /**
-     * Возвращает копию словаря элементов только для чтения.
+     * Returns a copy of elements map only for reading.
+     *
+     * @return
      */
     public Map<String, T> getElements() {
         return namespaceReadOnly;
@@ -32,12 +34,10 @@ public abstract class NamedElementHolder<T extends NamedElement> implements Coll
     protected abstract String getErrorMsg(String name);
 
     /**
-     * Добавляет именованный элемент.
+     * Adds a named element.
      *
-     * @param element
-     *            Добавляемый элемент.
-     * @throws ParseException
-     *             Если элемент с таким именем уже существует.
+     * @param element  element to add
+     * @throws ParseException  if an element with the same name already exists.
      */
     public final void addElement(T element) throws ParseException {
         T oldValue = namespace.put(element.getName(), element);
@@ -48,20 +48,20 @@ public abstract class NamedElementHolder<T extends NamedElement> implements Coll
     }
 
     /**
-     * Возвращает элемент по имени.
+     * Returns element by name.
      *
-     * @param name
-     *            Имя (идентификатор) элемента.
+     * @param name  element name (identifier)
+     * @return
      */
     public final T get(String name) {
         return namespace.get(name);
     }
 
     /**
-     * Возвращает индекс элемента по имени.
+     * Returns index of element by name.
      *
-     * @param name
-     *            Имя (идентификатор) элемента.
+     * @param name  element name (identifier)
+     * @return
      */
     public int getIndex(String name) {
         int i = -1;

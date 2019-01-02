@@ -9,8 +9,8 @@ import org.json.JSONException;
 import ru.curs.celesta.CelestaException;
 
 /**
- * Базовый класс описания столбца таблицы. Наследники этого класса соответствуют
- * разным типам столбцов.
+ * Base class for describing a table column. Subclasses of this class correspond
+ * to different column types.
  */
 public abstract class Column extends NamedElement implements ColumnMeta {
 
@@ -29,13 +29,10 @@ public abstract class Column extends NamedElement implements ColumnMeta {
     }
 
     /**
-     * Специальная версия конструктора для того, чтобы сконструировать поле
-     * recversion.
+     * Special version of constructor for construction of <code>recversion</code> field.
      *
-     * @param parentTable
-     *            Родительская таблица (не добавляется в перечень колонок)
-     * @throws ParseException
-     *             Не должно возникать.
+     * @param parentTable  parent table (this is not added to the list of columns)
+     * @throws ParseException  should not happen.
      */
     Column(TableElement parentTable) throws ParseException {
         super(VersionedElement.REC_VERSION, parentTable.getGrain().getScore().getIdentifierParser());
@@ -45,11 +42,12 @@ public abstract class Column extends NamedElement implements ColumnMeta {
     }
 
     /**
-     * Возвращает опции (значение свойства option) для данного поля. Имеет
-     * применение только для текстовых и Integer-полей.
+     * Returns options (the value of <code>option</code> property) for current field.
+     * It is applicable only for text and Integer fields.
      *
-     * @throws  CelestaException
-     *             в случае, если опции заданы неверно.
+     * @return
+     *
+     * @throws CelestaException  in case if options are provided incorrectly.
      */
     public List<String> getOptions()  {
         try {
@@ -61,12 +59,10 @@ public abstract class Column extends NamedElement implements ColumnMeta {
     }
 
     /**
-     * Устанаавливает значение по умолчанию.
+     * Sets default value.
      *
-     * @param lexvalue
-     *            Новое значение в строковом (лексическом) формате.
-     * @throws ParseException
-     *             Если формат значения по умолчанию неверен.
+     * @param lexvalue  new value in string (lexical) format.
+     * @throws ParseException  if format of default value is incorrect.
      */
     protected abstract void setDefault(String lexvalue) throws ParseException;
 
@@ -76,21 +72,20 @@ public abstract class Column extends NamedElement implements ColumnMeta {
     }
 
     /**
-     * Возвращает таблицу, к которой относится данная колонка.
+     * Returns table that current column belongs to.
+     *
+     * @return
      */
     public final TableElement getParentTable() {
         return parentTable;
     }
 
     /**
-     * Устанавливает свойство nullable и значение по умолчанию.
+     * Sets property Nullable and default value.
      *
-     * @param nullable
-     *            свойство Nullable
-     * @param defaultValue
-     *            значение по умолчанию
-     * @throws ParseException
-     *             в случае, если значение DEFAULT имеет неверный формат.
+     * @param nullable  property Nullable
+     * @param defaultValue  default value
+     * @throws ParseException  in case if DEFAULT value has an incorrect format.
      */
     public final void setNullableAndDefault(boolean nullable, String defaultValue) throws ParseException {
         parentTable.getGrain().modify();
@@ -100,18 +95,19 @@ public abstract class Column extends NamedElement implements ColumnMeta {
     }
 
     /**
-     * Возвращает значение свойства Nullable.
+     * Returns the value of Nullable property.
+     *
+     * @return
      */
     public final boolean isNullable() {
         return nullable;
     }
 
     /**
-     * Удаляет колонку.
+     * Delets the column.
      *
-     * @throws ParseException
-     *             Если удаляется составная часть первичного ключа, внешнего
-     *             ключа или индекса.
+     * @throws ParseException  if a part of the primary key, or a foreign key, or an index
+     *                         is being deleted.
      */
     public final void delete() throws ParseException {
         parentTable.removeColumn(this);
@@ -126,12 +122,15 @@ public abstract class Column extends NamedElement implements ColumnMeta {
     }
 
     /**
-     * Возвращает значение по умолчанию.
+     * Returns default value.
+     *
+     * @return
      */
     public abstract Object getDefaultValue();
 
     /**
-     * DEFAULT-значение поля в языке CelestaSQL.
+     * DEFAULT value of the field in CelestaSQL language.
      */
     public abstract String getCelestaDefault();
+
 }

@@ -56,7 +56,7 @@ import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 /**
- * Адаптер Postgres.
+ * Postgres adaptor.
  */
 final public class PostgresAdaptor extends OpenSourceDbAdaptor {
 

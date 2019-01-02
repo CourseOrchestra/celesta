@@ -5,15 +5,16 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Класс-генератор SQL-выражений.
+ * Generator class of SQL expressions.
  */
 public class SQLGenerator extends ExprVisitor {
   private Deque<String> stack = new LinkedList<>();
 
   /**
-   * Возвращает SQL-представление для SQL-выражения.
+   * Returns SQL view of SQL expression.
    *
-   * @param e выражение.
+   * @param e  expression
+   * @return
    */
   final String generateSQL(Expr e) {
     try {

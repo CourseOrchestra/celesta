@@ -4,7 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Метаданные столбца представления.
+ * View column metadata.
  */
 public final class ViewColumnMeta implements ColumnMeta {
 
@@ -32,7 +32,9 @@ public final class ViewColumnMeta implements ColumnMeta {
     }
 
     /**
-     * Тип колонки.
+     * Returns column type.
+     *
+     * @return
      */
     public ViewColumnType getColumnType() {
         return type;
@@ -49,7 +51,7 @@ public final class ViewColumnMeta implements ColumnMeta {
     }
 
     @Override
-    public Class getJavaClass() {
+    public Class<?> getJavaClass() {
         return type.getJavaClass();
     }
 
@@ -105,6 +107,8 @@ public final class ViewColumnMeta implements ColumnMeta {
 
     /**
      * Returns field's length (or -1 if undefined).
+     *
+     * @return
      */
     public int getLength() {
         return length;
