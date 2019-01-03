@@ -25,7 +25,10 @@ import java.util.stream.Collectors;
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
 import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.*;
 
-public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
+/**
+ * Class for SQL generation of data definition of PostgreSQL.
+ */
+public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
 
     public PostgresDdlGenerator(DBAdaptor dmlAdaptor) {
         super(dmlAdaptor);
@@ -133,7 +136,7 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                 )
         );
 
-        // Если тип не совпадает
+        // If type doesn't match
         if (c.getClass() != actual.getType()) {
             if (c.getClass() == IntegerColumn.class) {
                 alterSql.append(String.format(" USING (%s::integer);", c.getQuotedName()));
@@ -347,7 +350,7 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
             String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
             String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
-            //функции уникальны для postgres
+            //functions are unique for postgres
             String insertTriggerFunctionFullName = String.format("\"%s\".\"%s_insertTriggerFunc\"()",
                     t.getGrain().getName(), mv.getName());
             String updateTriggerFunctionFullName = String.format("\"%s\".\"%s_updateTriggerFunc\"()",
@@ -514,4 +517,5 @@ public class PostgresDdlGenerator extends OpenSourceDdlGenerator {
 
         return result;
     }
+
 }

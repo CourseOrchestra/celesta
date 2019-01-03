@@ -4,8 +4,7 @@ import ru.curs.celesta.dbutils.Action;
 import ru.curs.celesta.score.GrainElement;
 
 /**
- * Исключение, возникающее при отсутствии разрешений на таблицу.
- *
+ * Exception that is thrown if there are no permissions to access some table.
  */
 public class PermissionDeniedException extends CelestaException {
 

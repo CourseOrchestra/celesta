@@ -5,7 +5,7 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.syscursors.CalllogCursor;
 
 /**
- * Менеджер профилирования вызовов.
+ * Call profiling manager.
  */
 public final class ProfilingManager implements IProfiler {
 
@@ -20,9 +20,9 @@ public final class ProfilingManager implements IProfiler {
     }
 
     /**
-     * Записывает информацию о вызове в профилировщик.
+     * Logs information on the call to the profiler.
      *
-     * @param context контекст вызова.
+     * @param context  call context
      */
     public void logCall(CallContext context) {
         if (this.profilemode && !NO_LOG.equals(context.getProcName())) {
@@ -39,19 +39,22 @@ public final class ProfilingManager implements IProfiler {
     }
 
     /**
-     * Режим профилирования (записывается ли в таблицу calllog время вызовов
-     * процедур).
+     * Whether the profiling mode is on (is the procedures call time logged to
+     * <em>calllog</em> table.
+     *
+     * @return
      */
     public boolean isProfilemode() {
         return this.profilemode;
     }
 
     /**
-     * Устанавливает режим профилирования.
+     * Sets the profiling mode.
      *
-     * @param profilemode режим профилирования.
+     * @param profilemode  profiling mode flag ({@code true} - on, {@code false} - off)
      */
     public void setProfilemode(boolean profilemode) {
         this.profilemode = profilemode;
     }
+
 }

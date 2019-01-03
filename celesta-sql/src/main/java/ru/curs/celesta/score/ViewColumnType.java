@@ -5,11 +5,11 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 
 /**
- * Тип выражения.
+ * Expression type.
  */
 public enum ViewColumnType {
     /**
-     * Логическое условие.
+     * Logical condition.
      */
     LOGIC {
         @Override
@@ -23,12 +23,12 @@ public enum ViewColumnType {
         }
 
         @Override
-        public Class getJavaClass() {
+        public Class<?> getJavaClass() {
             return Boolean.class;
         }
     },
     /**
-     * Числовое значение с дробной частью.
+     * Numeric value with fractional part.
      */
     REAL {
         @Override
@@ -42,12 +42,12 @@ public enum ViewColumnType {
         }
 
         @Override
-        public Class getJavaClass() {
+        public Class<?> getJavaClass() {
             return Double.class;
         }
     },
     /**
-     * Числовое значение с дробной частью с фиксированной точкой
+     * Numeric value with fractional part and fixed decimal point.
      */
     DECIMAL {
         @Override
@@ -61,12 +61,12 @@ public enum ViewColumnType {
         }
 
         @Override
-        public Class getJavaClass() {
+        public Class<?> getJavaClass() {
             return BigDecimal.class;
         }
     },
     /**
-     * Целочисленное значение.
+     * Integer value.
      */
     INT {
         @Override
@@ -80,12 +80,12 @@ public enum ViewColumnType {
         }
 
         @Override
-        public Class getJavaClass() {
+        public Class<?> getJavaClass() {
             return Integer.class;
         }
     },
     /**
-     * Текстовое значение.
+     * Text value.
      */
     TEXT {
         @Override
@@ -99,12 +99,12 @@ public enum ViewColumnType {
         }
 
         @Override
-        public Class getJavaClass() {
+        public Class<?> getJavaClass() {
             return String.class;
         }
     },
     /**
-     * Дата.
+     * Date.
      */
     DATE {
         @Override
@@ -118,13 +118,13 @@ public enum ViewColumnType {
         }
 
         @Override
-        public Class getJavaClass() {
+        public Class<?> getJavaClass() {
             return Date.class;
         }
     },
 
     /**
-     * Дата с часовым поясом.
+     * Date with time zone.
      */
     DATE_WITH_TIME_ZONE {
         @Override
@@ -138,13 +138,13 @@ public enum ViewColumnType {
         }
 
         @Override
-        public Class getJavaClass() {
+        public Class<?> getJavaClass() {
             return ZonedDateTime.class;
         }
     },
 
     /**
-     * Булевское значение.
+     * Boolean value.
      */
     BIT {
         @Override
@@ -163,7 +163,7 @@ public enum ViewColumnType {
         }
     },
     /**
-     * Большой объект.
+     * Binary large object.
      */
     BLOB {
         @Override
@@ -177,12 +177,12 @@ public enum ViewColumnType {
         }
 
         @Override
-        public Class getJavaClass() {
+        public Class<?> getJavaClass() {
             return String.class;
         }
     },
     /**
-     * Неопределённое значение.
+     * Undefined value.
      */
     UNDEFINED {
         @Override
@@ -196,20 +196,30 @@ public enum ViewColumnType {
         }
 
         @Override
-        public Class getJavaClass() {
+        public Class<?> getJavaClass() {
             return null;
         }
     };
 
     /**
      * JDBC getter.
+     *
+     * @return
      */
     abstract String jdbcGetterName();
 
     /**
      * Celesta type.
+     *
+     * @return
      */
     public abstract String getCelestaType();
 
-    public abstract Class getJavaClass();
+    /**
+     * Returns Java type.
+     *
+     * @return
+     */
+    public abstract Class<?> getJavaClass();
+
 }

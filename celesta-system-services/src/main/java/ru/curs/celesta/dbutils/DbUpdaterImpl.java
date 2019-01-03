@@ -11,7 +11,7 @@ import ru.curs.celesta.syscursors.UserrolesCursor;
 import java.sql.Connection;
 
 /**
- * Класс, выполняющий процедуру обновления базы данных.
+ * Class performing update procedure of the database.
  */
 public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
@@ -45,6 +45,9 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
         return new SystemCallContext(celesta);
     }
 
+    /**
+     * Updates the system grain.
+     */
     public void updateSysGrain() {
         try (CallContext context = createContext()) {
             schemaCursor = new GrainsCursor(context);
@@ -72,8 +75,8 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
 
     /**
-     * Инициализация записей в security-таблицах. Производится один раз при
-     * создании системной гранулы.
+     * Records initialization in security tables. It is run once during creation
+     * of the system grain. 
      */
     private void initSecurity(CallContext context) {
         RolesCursor roles = new RolesCursor(context);
@@ -96,7 +99,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
     @Override
     protected void processGrainMeta(Grain g) {
-        // Обновляем справочник celesta.tables.
+        // Update directory celesta.tables.
         table.setRange("grainid", g.getName());
         while (table.nextInSet()) {
             switch (TableType.getByAbbreviation(table.getTabletype())) {

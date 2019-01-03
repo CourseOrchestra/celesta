@@ -7,15 +7,23 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
- * Created by ioann on 08.06.2017.
+ * Materialized view data element.
+ *
+ * @author ioann
+ * @since 2017-06-08
  */
-public class MaterializedView extends AbstractView implements TableElement {
+public final class MaterializedView extends AbstractView implements TableElement {
 
     /**
-     * Имя системного поля, содержащего результат COUNT().
+     * System field name that contains result of COUNT().
      */
     public static final String SURROGATE_COUNT = "surrogate_count";
-    public static final String CHECKSUM_SEPARATOR = "CHECKSUM";
+
+    private static final String CHECKSUM_SEPARATOR = "CHECKSUM";
+
+    /**
+     * Checksum comment template.
+     */
     public static final String CHECKSUM_COMMENT_TEMPLATE = "/*" + CHECKSUM_SEPARATOR + "%s" + CHECKSUM_SEPARATOR + "*/";
 
     private final IntegerColumn surrogateCount;
@@ -305,7 +313,6 @@ public class MaterializedView extends AbstractView implements TableElement {
         }
     }
 
-
     public String getTriggerName(TriggerType type) {
         Table t = getRefTable().getTable();
 
@@ -318,7 +325,7 @@ public class MaterializedView extends AbstractView implements TableElement {
         return tnb.build();
     }
 
-    public static class TriggerNameBuilder {
+    static final class TriggerNameBuilder {
         private static final Map<TriggerType, String> TRIGGER_TYPES_TO_NAME_PARTS = new HashMap<>();
         private static final String TEMPLATE = "mv%sFrom%s_%sTo%s_%s";
 

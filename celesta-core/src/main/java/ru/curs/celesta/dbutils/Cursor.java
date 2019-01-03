@@ -149,7 +149,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Осуществляет вставку курсора в БД.
+     * Performs cursor insert into the DB.
      */
     public final void insert() {
         if (!tryInsert()) {
@@ -165,7 +165,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Осуществляет вставку курсора в БД.
+     * Tries to perform cursor insert into the DB.
+     *
+     * @return  {@code TRUE} if inserted successfully, otherwise - {@code FALSE}. 
      */
     public final boolean tryInsert() {
         if (!canInsert()) {
@@ -233,8 +235,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Осуществляет сохранение содержимого курсора в БД, выбрасывая исключение в
-     * случае, если запись с такими ключевыми полями не найдена.
+     * Performs an update of the cursor content in the DB, throwing an exception
+     * in case if a record with such key fields is not found.
      */
     public final void update() {
         if (!tryUpdate()) {
@@ -247,7 +249,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Осуществляет сохранение содержимого курсора в БД.
+     * Tries to perform an update of the cursor content in the DB.
+     *
+     * @return  {@code TRUE} if updated successfully, otherwise - {@code FALSE}. 
      */
     // CHECKSTYLE:OFF for cyclomatic complexity
     public final boolean tryUpdate() {
@@ -329,13 +333,11 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Сравнивает значения для того, чтобы определить: что именно было изменено
-     * в записи. Возвращает true, если значения изменены не были.
+     * Compares the values in order to find: what exactly was changed in the record.
      *
-     * @param newVal
-     *            новое значение
-     * @param oldVal
-     *            старое значение
+     * @param newVal  new value
+     * @param oldVal  old value
+     * @return  {@code true} if the values were not changed, otherwise - {@code false}
      */
     private static boolean compareValues(Object newVal, Object oldVal) {
         if (newVal == null) {
@@ -348,7 +350,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Удаляет текущую запись.
+     * Deletes current record.
      */
     public final void delete() {
         if (!canDelete()) {
@@ -378,7 +380,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Удаляет все записи, попавшие в текущий фильтр.
+     * Deletes all records that were caught by current filter.
      */
     public final void deleteAll() {
         if (!canDelete()) {
@@ -397,11 +399,10 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Осуществляет поиск записи по ключевым полям, выбрасывает исключение, если
-     * запись не найдена.
+     * Performs a search of a record by key fields, throwing an exception if
+     * the record is not found.
      *
-     * @param values
-     *            значения ключевых полей
+     * @param values  values of the key fields
      */
     public final void get(Object... values) {
         if (!tryGet(values)) {
@@ -417,11 +418,11 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Осуществляет поиск записи по ключевым полям, возвращает значение --
-     * найдена запись или нет.
+     * Tries to perform a search of a record by the key fields, returning a value whether
+     * the record was found or not.
      *
-     * @param values
-     *            значения ключевых полей
+     * @param values  values of the key fields
+     * @return  {@code true} if the record is found, otherwise - {@code false}
      */
     public final boolean tryGet(Object... values) {
         if (!canRead()) {
@@ -432,8 +433,10 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Получает из базы данных запись, соответствующую полям текущего первичного
-     * ключа.
+     * Retrieves a record from the database that corresponds to the fields of current
+     * primary key.
+     *
+     * @return  {@code true} if the record is retrieved, otherwise - {@code false}
      */
     public final boolean tryGetCurrent() {
         if (!canRead()) {
@@ -445,27 +448,28 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
 
     /**
-     * Устанавливает версию записи.
+     * Sets version of the record.
      *
-     * @param v
-     *            новая версия.
+     * @param v  new version.
      */
     public final void setRecversion(int v) {
         recversion = v;
     }
 
     /**
-     * Читает версию записи.
+     * Returns version of the record.
+     *
+     * @return
      */
     public final int getRecversion() {
         return recversion;
     }
 
     /**
-     * Прочитывает содержимое BLOB-поля в память.
+     * Reads the content of BLOB field to memory.
      *
-     * @param name
-     *            имя поля
+     * @param name  field name
+     * @return
      */
     protected BLOB calcBlob(String name) {
         validateColumName(name);
@@ -516,12 +520,10 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Возвращает максимальную длину текстового поля (если она определена).
+     * Returns maximal length of the text field (if it is defined).
      *
-     * @param name
-     *            Имя текстового поля.
-     * @return длина текстового поля или -1 (минус единица) если вместо длины
-     *         указано MAX.
+     * @param name  name of the text field
+     * @return  length of the text field or -1 (minus one) if MAX is indicated instead of the length.
      */
     public final int getMaxStrLen(String name) {
         validateColumName(name);
@@ -535,7 +537,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Очистка всех полей буфера, кроме ключевых.
+     * Resets all fields of the buffer except for the key ones.
      */
     public final void init() {
         _clearBuffer(false);
@@ -547,7 +549,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Описание таблицы (метаинформация).
+     * Returns table description (meta information).
+     *
+     * @return
      */
     @Override
     public final Table meta() {
@@ -585,8 +589,10 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Возвращает копию буфера, содержащую значения, полученные при последнем
-     * чтении данных из базы.
+     * Returns a copy of the buffer containing values that were received by the
+     * last read from the database.
+     *
+     * @return
      */
     public final Cursor getXRec() {
         if (xRec == null) {
@@ -633,7 +639,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     /**
-     * Возвращает в массиве значения полей первичного ключа.
+     * Returns an array of field values of the primary key.
+     *
+     * @return
      */
     public Object[] getCurrentKeyValues() {
         return _currentKeyValues();
@@ -669,11 +677,11 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         callContext().getCelesta().getTriggerDispatcher().fireTrigger(TriggerType.POST_INSERT, this);
     }
 
-
     /*
-     * Эта группа методов именуется по правилам Python, а не Java. В Python
-     * имена protected-методов начинаются с underscore. Использование методов
-     * без underscore приводит к конфликтам с именами атрибутов.
+     * This group of methods is named according to Python rules, and not Java.
+     * In Python names of protected methods are started with an underscore symbol.
+     * When using methods without an underscore symbol conflicts with attribute names
+     * may happen.
      */
 
     protected abstract Object[] _currentKeyValues();

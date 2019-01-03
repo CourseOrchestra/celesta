@@ -20,27 +20,55 @@ public final class DdlAdaptor {
         this.ddlConsumer = ddlConsumer;
     }
 
-    public final void createSchema(Connection conn, String name)  {
+    /**
+     * Creates DB schema.
+     *
+     * @param conn  DB connection
+     * @param name  schema name
+     */
+    public void createSchema(Connection conn, String name)  {
         Optional<String> sql = ddlGenerator.createSchema(name);
         processSql(conn, sql);
     }
 
-    public final void dropView(Connection conn, String schemaName, String viewName)  {
+    /**
+     * Drops view from a DB schema.
+     *
+     * @param conn  DB connection
+     * @param schemaName  schema name
+     * @param viewName  view name
+     */
+    public void dropView(Connection conn, String schemaName, String viewName)  {
         String sql = ddlGenerator.dropView(schemaName, viewName);
         processSql(conn, sql);
     }
 
-    public final void dropParameterizedView(Connection conn, String schemaName, String viewName)  {
+    public void dropParameterizedView(Connection conn, String schemaName, String viewName)  {
         List<String> sqlList = ddlGenerator.dropParameterizedView(schemaName, viewName, conn);
         processSql(conn, sqlList);
     }
 
-    public final void dropIndex(Connection conn, Grain g, DbIndexInfo dBIndexInfo)  {
+    /**
+     * Drops index of a grain.
+     *
+     * @param conn  DB connection
+     * @param g  grain
+     * @param dBIndexInfo  index information
+     */
+    public void dropIndex(Connection conn, Grain g, DbIndexInfo dBIndexInfo)  {
         List<String> sqlList = ddlGenerator.dropIndex(g, dBIndexInfo);
         processSql(conn, sqlList);
     }
 
-    public final void dropFK(Connection conn, String schemaName, String tableName, String fkName)  {
+    /**
+     * Drops foreign key of table in a scheme.
+     *
+     * @param conn       DB connection
+     * @param schemaName grain name
+     * @param tableName  table name for column(s) of which FK is declared
+     * @param fkName     name of foreign key
+     */
+    public void dropFK(Connection conn, String schemaName, String tableName, String fkName)  {
         String sql = ddlGenerator.dropFk(schemaName, tableName, fkName);
         try {
             processSql(conn, sql);
@@ -57,13 +85,24 @@ public final class DdlAdaptor {
 
     }
 
-    public final void dropTrigger(Connection conn, TriggerQuery query)  {
+    /**
+     * Drops a trigger from DB.
+     *
+     * @param conn  Connection
+     * @param query  Trigger query
+     */
+    public void dropTrigger(Connection conn, TriggerQuery query)  {
         String sql = ddlGenerator.dropTrigger(query);
         processSql(conn, sql);
     }
 
-
-    public final void createSequence(Connection conn, SequenceElement s)  {
+    /**
+     * Creates a sequence in the database.
+     *
+     * @param conn  DB connection
+     * @param s  sequence element
+     */
+    public void createSequence(Connection conn, SequenceElement s)  {
         String sql = ddlGenerator.createSequence(s);
 
         try {
@@ -74,7 +113,13 @@ public final class DdlAdaptor {
         }
     }
 
-    public final void alterSequence(Connection conn, SequenceElement s)  {
+    /**
+     * Alters sequence in the database.
+     *
+     * @param conn DB connection
+     * @param s sequence element
+     */
+    public void alterSequence(Connection conn, SequenceElement s)  {
         String sql = ddlGenerator.alterSequence(s);
 
         try {
@@ -85,7 +130,13 @@ public final class DdlAdaptor {
         }
     }
 
-    public final void createTable(Connection conn, TableElement te)  {
+    /**
+     * Creates a table "from scratch" in the database.
+     *
+     * @param conn Connection
+     * @param te   Table for creation (accepts also table in case if such table exists)
+     */
+    public void createTable(Connection conn, TableElement te)  {
         String sql = ddlGenerator.createTable(te);
 
         try {
@@ -101,12 +152,19 @@ public final class DdlAdaptor {
         }
     }
 
-    public final void updateVersioningTrigger(Connection conn, TableElement t)  {
+    public void updateVersioningTrigger(Connection conn, TableElement t)  {
         List<String> sqlList = ddlGenerator.updateVersioningTrigger(conn, t);
         processSql(conn, sqlList);
     }
 
-    public final void dropPk(Connection conn, TableElement t, String pkName)  {
+    /**
+     * Drops primary key from the table by using known name of the primary key.
+     *
+     * @param conn  DB connection
+     * @param t  table
+     * @param pkName  primary key name
+     */
+    public void dropPk(Connection conn, TableElement t, String pkName)  {
         String sql = ddlGenerator.dropPk(t, pkName);
 
         try {
@@ -118,7 +176,14 @@ public final class DdlAdaptor {
         }
     }
 
-    public final void updateColumn(Connection conn, Column c, DbColumnInfo actual)  {
+    /**
+     * Updates a table column.
+     *
+     * @param conn    DB connection
+     * @param c       Column to update
+     * @param actual  Actual column info
+     */
+    public void updateColumn(Connection conn, Column c, DbColumnInfo actual)  {
         List<String> sqlList = ddlGenerator.updateColumn(conn, c, actual);
 
         try {
@@ -134,13 +199,12 @@ public final class DdlAdaptor {
     }
 
     /**
-     * Добавляет к таблице новую колонку.
+     * Adds a new column to the table.
      *
-     * @param conn Соединение с БД.
-     * @param c    Колонка для добавления.
+     * @param conn  DB connection
+     * @param c  column
      */
-    //TODO: Javadoc In English
-    public final void createColumn(Connection conn, Column c)  {
+    public void createColumn(Connection conn, Column c) {
         String sql = ddlGenerator.createColumn(c);
         try {
             processSql(conn, sql);
@@ -156,13 +220,12 @@ public final class DdlAdaptor {
 
 
     /**
-     * Создаёт первичный ключ на таблице в соответствии с метаописанием.
+     * Creates primary key in the table according to meta description.
      *
-     * @param conn Соединение с базой данных.
-     * @param t    Таблица.
+     * @param conn  database connection
+     * @param t     table
      */
-    //TODO: Javadoc In English
-    public final void createPk(Connection conn, TableElement t)  {
+    public void createPk(Connection conn, TableElement t)  {
         String sql = ddlGenerator.createPk(t);
 
         try {
@@ -178,13 +241,12 @@ public final class DdlAdaptor {
 
 
     /**
-     * Создаёт в грануле индекс на таблице.
+     * Creates a table index in the grain.
      *
-     * @param conn  Соединение с БД.
-     * @param index описание индекса.
+     * @param conn   DB connection
+     * @param index  index description
      */
-    //TODO: Javadoc In English
-    public final void createIndex(Connection conn, Index index)  {
+    public void createIndex(Connection conn, Index index)  {
         List<String> sqlList = ddlGenerator.createIndex(index);
 
         try {
@@ -196,13 +258,12 @@ public final class DdlAdaptor {
     }
 
     /**
-     * Создаёт первичный ключ.
+     * Creates foreign key in the DB.
      *
-     * @param conn соединение с БД.
-     * @param fk   первичный ключ
+     * @param conn  DB connection
+     * @param fk    foreign key from score
      */
-    //TODO: Javadoc In English
-    public final void createFk(Connection conn, ForeignKey fk)  {
+    public void createFk(Connection conn, ForeignKey fk)  {
         try {
             List<String> sqlList = ddlGenerator.createFk(conn, fk);
             for (String slq : sqlList) {
@@ -215,13 +276,12 @@ public final class DdlAdaptor {
     }
 
     /**
-     * Создаёт представление в базе данных на основе метаданных.
+     * Creates a view in the database from metadata.
      *
-     * @param conn Соединение с БД.
-     * @param v    Представление.
+     * @param conn  DB connection
+     * @param v     View from scrore
      */
-    //TODO: Javadoc In English
-    public final void createView(Connection conn, View v)  {
+    public void createView(Connection conn, View v)  {
         String sql = this.ddlGenerator.createView(v);
 
         try {
@@ -233,12 +293,12 @@ public final class DdlAdaptor {
         }
     }
 
-    public final SQLGenerator getViewSQLGenerator() {
+    public SQLGenerator getViewSQLGenerator() {
         return this.ddlGenerator.getViewSQLGenerator();
     }
 
     //TODO: Javadoc
-    public final void createParameterizedView(Connection conn, ParameterizedView pv)  {
+    public void createParameterizedView(Connection conn, ParameterizedView pv)  {
         List<String> sqlList = this.ddlGenerator.createParameterizedView(pv);
 
         try {
@@ -253,14 +313,13 @@ public final class DdlAdaptor {
         }
     }
 
-
     /**
      * Deletes table from RDBMS.
      *
-     * @param conn Connection to use.
-     * @param t    TableElement metadata of deleting table provided by Celesta.
+     * @param conn  Connection to use.
+     * @param t     TableElement metadata of deletable table provided by Celesta.
      */
-    public final void dropTable(Connection conn, TableElement t)  {
+    public void dropTable(Connection conn, TableElement t)  {
         String sql = this.ddlGenerator.dropTable(t);
         processSql(conn, sql);
         Optional<String> sqlOpt = this.ddlGenerator.dropAutoIncrement(conn, t);
@@ -269,7 +328,7 @@ public final class DdlAdaptor {
     }
 
     //TODO: Javadoc
-    public final void initDataForMaterializedView(Connection conn, MaterializedView mv)  {
+    public void initDataForMaterializedView(Connection conn, MaterializedView mv)  {
         List<String> sqlList = this.ddlGenerator.initDataForMaterializedView(mv);
 
         try {
@@ -305,6 +364,12 @@ public final class DdlAdaptor {
         }
     }
 
+    /**
+     * Executes native SQL query.
+     *
+     * @param conn  DB connection
+     * @param sql   SQL to execute
+     */
     public void executeNative(Connection conn, String sql)  {
         processSql(conn, sql);
     }
@@ -324,4 +389,5 @@ public final class DdlAdaptor {
             processSql(conn, sql);
         }
     }
+
 }

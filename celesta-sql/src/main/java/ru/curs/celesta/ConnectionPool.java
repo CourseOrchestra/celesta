@@ -10,8 +10,7 @@ import java.util.regex.Pattern;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 
 /**
- * Пул соединений с базой данных.
- *
+ * Database connection pool.
  */
 public final class ConnectionPool implements AutoCloseable {
 
@@ -23,6 +22,12 @@ public final class ConnectionPool implements AutoCloseable {
     private DBAdaptor dbAdaptor;
     private volatile boolean isClosed;
 
+    /**
+     * Factory method for connection pool creation.
+     *
+     * @param configuration  connection pool configuration.
+     * @return
+     */
     public static ConnectionPool create(ConnectionPoolConfiguration configuration) {
         return new ConnectionPool(configuration.getJdbcConnectionUrl(), configuration.getDriverClassName(),
                 configuration.getLogin(), configuration.getPassword());
@@ -37,6 +42,11 @@ public final class ConnectionPool implements AutoCloseable {
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
+    /**
+     * Sets DB adaptor.
+     *
+     * @param dbAdaptor  DB adaptor.
+     */
     public void setDbAdaptor(DBAdaptor dbAdaptor) {
         this.dbAdaptor = dbAdaptor;
     }
@@ -85,7 +95,7 @@ public final class ConnectionPool implements AutoCloseable {
                             commit();
                             pool.add(this);
                         }
-                    } catch (SQLException e){
+                    } catch (SQLException e) {
                         //ignore everything
                         e.printStackTrace();
                     }
@@ -101,10 +111,9 @@ public final class ConnectionPool implements AutoCloseable {
     }
 
     /**
-     * Выполняет команду commit на коннекшне, не выдавая исключения.
+     * Executes 'commit' command on a connection without throwing exception.
      *
-     * @param conn
-     *            соединение для выполнения коммита.
+     * @param conn  connection for commit execution.
      */
     public void commit(Connection conn) {
         try {
@@ -118,7 +127,7 @@ public final class ConnectionPool implements AutoCloseable {
     }
 
     /**
-     * Закрывает пул, все его соединения и делает пул недоступным.
+     * Closes up connection pool and all its connections, and makes it inaccessible.
      */
     @Override
     public void close() {
@@ -147,26 +156,25 @@ public final class ConnectionPool implements AutoCloseable {
      * @return <code>true</code> if the pool is closed;
      *            <code>false</code> otherwise.
      */
-    public boolean isClosed(){
+    public boolean isClosed() {
         return isClosed;
     }
 }
 
 /**
- * Класс-утилита для сокрытия пароля в строке JDBC-подключения. Скопировано из
- * проекта FormsServer.
- *
+ * Utility class for hiding password in JDBC connection string. Copied out from
+ * FormsServer project.
  */
 final class PasswordHider {
-    // Пароль Oracle всегда между / и @ (и не может содержать @).
+    // Password for Oracle is always between / and @ (and cannot contain @).
     private static final Pattern ORA_PATTERN = Pattern.compile("/[^@]+@");
-    // В MS SQL всё продумано и если пароль содержит ;, она меняется на {;}
+    // In MS SQL is everything thought out and if password contains ;, it is exchanged to {;}
     private static final Pattern MSSQL_PATTERN = Pattern.compile("(password)=([^{;]|(\\{(;\\})|[^;]?))+(;|$)",
             Pattern.CASE_INSENSITIVE);
-    // В POSTGRESQL JDBC-URL не сработает правильно, если пароль содержит &
+    // In POSTGRESQL JDBC-URL will work incorrectly if password contains &
     private static final Pattern POSTGRESQL_PATTERN = Pattern.compile("(password)=[^&]+(&|$)",
             Pattern.CASE_INSENSITIVE);
-    // А это на случай неизвестного науке JDBC-драйвера
+    // And this is for the case if JDBC driver is unknown to the science
     private static final Pattern GENERIC_PATTERN = Pattern.compile("(password)=.+$", Pattern.CASE_INSENSITIVE);
 
     private PasswordHider() {
@@ -174,12 +182,9 @@ final class PasswordHider {
     }
 
     /**
+     * Method that masks password in the JDBC connection string.
      *
-     * Метод, маскирующий пароль в строке JDBC-подключения.
-     *
-     * @param url
-     *            Строка, содержащая URL JDBC-подключения
-     *
+     * @param url  String containing JDBC connection URL
      */
     public static String maskPassword(String url) {
         if (url == null) {
@@ -211,4 +216,5 @@ final class PasswordHider {
         m.appendTail(sb);
         return sb.toString();
     }
+
 }

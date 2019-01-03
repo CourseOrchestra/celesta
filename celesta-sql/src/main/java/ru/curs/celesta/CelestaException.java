@@ -1,8 +1,7 @@
 package ru.curs.celesta;
 
 /**
- * Критическая ошибка, приводящая к остановке Celesta.
- *
+ * Critical error that leads to stopping of Celesta.
  */
 public class CelestaException extends RuntimeException {
 
@@ -23,4 +22,5 @@ public class CelestaException extends RuntimeException {
     public CelestaException(Throwable cause) {
         super(cause);
     }
+
 }

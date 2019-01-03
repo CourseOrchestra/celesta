@@ -142,7 +142,7 @@ public class CallContextTest extends AbstractCelestaTest {
     }
 
     @Test
-    void activeContextCanBeCommitedAndRolledBack() {
+    void activeContextCanBeCommittedAndRolledBack() {
         CallContext ctx = cc();
         ctx.commit();
         ctx.rollback();

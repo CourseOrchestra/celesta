@@ -1,25 +1,28 @@
 package ru.curs.celesta.score;
 
 /**
- * Информация о типе столбца таблицы или представления .
+ * Information about column type of a table or a view.
  */
 public interface ColumnMeta {
 
     /**
-     * Имя jdbcGetter-а, которое следует использовать для получения данных
-     * столбца.
+     * Name of jdbcGetter that should be used for getting column data.
      */
     String jdbcGetterName();
 
     /**
-     * Тип данных Celesta,соответствующий полю.
+     * Celesta data type that corresponds to the field.
      */
     String getCelestaType();
 
-    Class getJavaClass();
+    /**
+     * Returns corresponding Java data type.
+     * @return
+     */
+    Class<?> getJavaClass();
 
     /**
-     * Является ли поле nullable.
+     * Whether the field is nullable.
      */
     boolean isNullable();
 

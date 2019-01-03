@@ -39,7 +39,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.CRC32;
 
 import ru.curs.celesta.CelestaException;
@@ -48,7 +55,7 @@ import ru.curs.celesta.score.discovery.ScoreDiscovery;
 import ru.curs.celesta.score.validator.IdentifierParser;
 
 /**
- * Корневой класс полной модели данных гранул.
+ * Root class for complete data model of grains.
  */
 public abstract class AbstractScore {
 
@@ -64,23 +71,24 @@ public abstract class AbstractScore {
     private File defaultGrainPath;
     private int orderCounter;
 
-    public AbstractScore() {
+    AbstractScore() {
         //TODO!!! Used only for test and must be replaced. Must be private!!!
     }
 
     /**
-     * @param scorePath набор путей к папкам score, разделённый точкой с запятой.
+     * Sets a score path.
+     * @param scorePath  a set of paths to 'score' directories delimited by a semicolon.
      */
     void setScorePath(String scorePath) {
         this.path = scorePath;
     }
 
     /**
-     * Инициализация ядра путём указания набора путей к папкам score,
-     * разделённого точкой с запятой.
+     * Core initialization by providing a set of paths to 'score' directories
+     * delimited by semicolon.
      *
-     * @throws CelestaException в случае указания несуществующего пути или в случае двойного
-     * определения гранулы с одним и тем же именем.
+     * @throws CelestaException  in case if non-existing path is provided or in case if
+     * there's a double definition of a grain with the same name.
      */
     void init(ScoreDiscovery scoreDiscovery) throws ParseException {
         for (String entry : this.path.split(File.pathSeparator)) {
@@ -109,8 +117,7 @@ public abstract class AbstractScore {
     }
 
     /**
-     * Сохраняет содержимое метаданных обратно в SQL-файлы, при этом
-     * перезаписывая их содержимое.
+     * Saves metadata content back to SQL-files rewriting their content.
      */
     public void save() {
         for (Grain g : grains.values()) {
@@ -174,7 +181,7 @@ public abstract class AbstractScore {
 
     }
 
-    void parseGrain(String grainName) throws ParseException {
+    final void parseGrain(String grainName) throws ParseException {
         Grain g = grains.get(grainName);
 
         if (g.isParsingComplete()) {
@@ -191,7 +198,7 @@ public abstract class AbstractScore {
         g.finalizeParsing();
     }
 
-    void addGrain(Grain grain) throws ParseException {
+    final void addGrain(Grain grain) throws ParseException {
         if (grain.getScore() != this) {
             throw new IllegalArgumentException();
         }
@@ -202,11 +209,10 @@ public abstract class AbstractScore {
     }
 
     /**
-     * Получение гранулы по её имени. В случае, если имя
-     * гранулы неизвестно, выводится исключение.
+     * Returns grain by its name. In case if the grain name is unknown an exception is thrown.
      *
-     * @param name Имя гранулы.
-     * @throws ParseException Если имя гранулы неизвестно системе.
+     * @param name  Grain name.
+     * @throws ParseException  If grain name is unknown to the system.
      */
     public Grain getGrain(String name) throws ParseException {
         Grain result = grains.get(name);
@@ -216,7 +222,7 @@ public abstract class AbstractScore {
         return result;
     }
 
-    Grain getGrainAsDependency(Grain currentGrain, String dependencyGrain) throws ParseException {
+    final Grain getGrainAsDependency(Grain currentGrain, String dependencyGrain) throws ParseException {
         Grain g = grains.get(dependencyGrain);
 
         if (g == null) {
@@ -322,36 +328,54 @@ public abstract class AbstractScore {
         return this.getClass().getResourceAsStream(getSysSchemaName() + ".sql");
     }
 
+    /**
+     * Returns system schema name.
+     *
+     * @return
+     */
     public abstract String getSysSchemaName();
 
+    /**
+     * Returns identifier parser.
+     *
+     * @return
+     */
     public abstract IdentifierParser getIdentifierParser();
 
     /**
-     * Возвращает неизменяемый набор гранул.
+     * Returns an unmodifiable grain set.
      */
     public Map<String, Grain> getGrains() {
         return Collections.unmodifiableMap(grains);
     }
 
     /**
-     * Возвращает путь по умолчанию для создаваемых динамически гранул. Значение
-     * равно последней записи в score.path.
+     * Returns a default path for dynamically created grains. The value equals to
+     * the last entry in <em>score.path</em>.
      */
     File getDefaultGrainPath() {
         return defaultGrainPath;
     }
 
-
+    /**
+     * Returns path to the score.
+     *
+     * @return
+     */
     public String getPath() {
         return path;
     }
 
-    int nextOrderCounter() {
+    final int nextOrderCounter() {
         return ++orderCounter;
     }
 
-
-    public static class ScoreBuilder<T extends AbstractScore> {
+    /**
+     * Score builder for subclasses of {@link AbstractScore}.
+     *
+     * @param <T>
+     */
+    public static final class ScoreBuilder<T extends AbstractScore> {
         private String path;
         private ScoreDiscovery scoreDiscovery;
         private Class<T> scoreClass;
@@ -360,16 +384,34 @@ public abstract class AbstractScore {
             this.scoreClass = scoreClass;
         }
 
+        /**
+         * Sets score path.
+         *
+         * @param path  score path
+         * @return
+         */
         public ScoreBuilder<T> path(String path) {
             this.path = path;
             return this;
         }
 
+        /**
+         * Sets score discovery.
+         *
+         * @param scoreDiscovery  score discovery
+         * @return
+         */
         public ScoreBuilder<T> scoreDiscovery(ScoreDiscovery scoreDiscovery) {
             this.scoreDiscovery = scoreDiscovery;
             return this;
         }
 
+        /**
+         * Builds the score.
+         *
+         * @return
+         * @throws ParseException  when score parsing fails
+         */
         public T build() throws ParseException {
             if (scoreDiscovery == null) {
                 scoreDiscovery = new DefaultScoreDiscovery();
@@ -386,10 +428,11 @@ public abstract class AbstractScore {
             }
         }
     }
+
 }
 
 /**
- * Обёртка InputStream для подсчёта контрольной суммы при чтении.
+ * Wrapper of {@link InputStream} for checksum calculation on grain reading.
  */
 final class ChecksumInputStream extends InputStream {
     private final CRC32 checksum;

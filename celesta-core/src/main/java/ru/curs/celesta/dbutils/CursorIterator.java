@@ -14,6 +14,9 @@ public class CursorIterator<T extends BasicCursor> implements Iterator<T> {
         this.hasResults = cursor.tryFindSet();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean hasNext() {
         if (!this.hasResults) {
@@ -29,6 +32,9 @@ public class CursorIterator<T extends BasicCursor> implements Iterator<T> {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public T next() {
         if (this.isRead) {
@@ -41,4 +47,5 @@ public class CursorIterator<T extends BasicCursor> implements Iterator<T> {
 
         return this.cursor;
     }
+
 }

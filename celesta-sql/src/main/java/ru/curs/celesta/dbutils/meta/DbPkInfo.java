@@ -7,28 +7,56 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created by ioann on 10.05.2017.
+ * Information on primary key taken from the database.
+ *
+ * @author ioann
+ * @since 2017-05-10
  */
 public final class DbPkInfo {
   private String name;
   private final List<String> columnNames = new LinkedList<>();
 
+  /**
+   * Adds a column to the primary key.
+   *
+   * @param columnName  column name
+   */
   public void addColumnName(String columnName) {
     columnNames.add(columnName);
   }
 
+  /**
+   * Sets primary key name.
+   *
+   * @param name  primary key name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Returns primary key name.
+   *
+   * @return
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Returns columns of the primary key.
+   *
+   * @return
+   */
   public List<String> getColumnNames() {
     return columnNames;
   }
 
+  /**
+   * Whether primary key contains any columns.
+   *
+   * @return
+   */
   public boolean isEmpty() {
     return columnNames.isEmpty();
   }
@@ -42,4 +70,5 @@ public final class DbPkInfo {
     }
     return result;
   }
+
 }

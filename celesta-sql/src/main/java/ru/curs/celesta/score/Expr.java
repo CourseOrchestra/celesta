@@ -5,7 +5,9 @@ import java.util.Map;
 
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 
-/** Скалярное выражение SQL. */
+/**
+ * Scalar SQL expression.
+ */
 public abstract class Expr {
 
     final void assertType(ViewColumnType t) throws ParseException {
@@ -27,7 +29,9 @@ public abstract class Expr {
     }
 
     /**
-     * Возвращает Celesta-SQL представление выражения.
+     * Returns a Celesta-SQL view of the expression.
+     *
+     * @return
      */
     public final String getCSQL() {
         SQLGenerator gen = new SQLGenerator();
@@ -35,10 +39,10 @@ public abstract class Expr {
     }
 
     /**
-     * Возвращает SQL-представление выражения в диалекте текущей БД.
+     * Returns an SQL view of the expression in dialect of current DB.
      *
-     * @param dba
-     *            Адаптер БД.
+     * @param dba  DB adapter.
+     * @return
      */
     public final String getSQL(QueryBuildingHelper dba) {
         SQLGenerator gen = dba.getViewSQLGenerator();
@@ -46,18 +50,18 @@ public abstract class Expr {
     }
 
     /**
-     * Возвращает тип выражения.
+     * Returns the expression type.
+     *
+     * @return
      */
     public abstract ViewColumnMeta getMeta();
 
     /**
-     * Разрешает ссылки на поля таблиц, используя контекст объявленных таблиц с
-     * их псевдонимами.
+     * Resolves references to the fields of tables using the context of the defined
+     * tables with their aliases.
      *
-     * @param tables
-     *            перечень таблиц.
-     * @throws ParseException
-     *             в случае, если ссылка не может быть разрешена.
+     * @param tables  list of tables.
+     * @throws ParseException  in case if a reference can't be resolved
      */
     final void resolveFieldRefs(List<TableRef> tables) throws ParseException {
         FieldResolver r = new FieldResolver(tables);
@@ -65,13 +69,11 @@ public abstract class Expr {
     }
 
     /**
-     * Разрешает ссылки на поля таблиц, используя контекст текущего объекта
-     * партитуры.
+     * Resolves references to the fields of tables using the context of current
+     * object of the score.
      *
-     * @param ge
-     *            таблица или представление.
-     * @throws ParseException
-     *             в случае, если ссылка не может быть разрешена.
+     * @param ge  table or view
+     * @throws ParseException  in case if a reference can't be resolved
      */
     public final void resolveFieldRefs(GrainElement ge) throws ParseException {
         if (ge instanceof DataGrainElement) {
@@ -87,10 +89,9 @@ public abstract class Expr {
     }
 
     /**
-     * Проверяет типы всех входящих в выражение субвыражений.
+     * Validates the types of all subexpressions in the expression.
      *
-     * @throws ParseException
-     *             в случае, если контроль типов не проходит.
+     * @throws ParseException  in case if types check fails.
      */
     final void validateTypes() throws ParseException {
         TypeChecker c = new TypeChecker();
@@ -98,20 +99,17 @@ public abstract class Expr {
     }
 
     /**
-     * Принимает посетителя при обходе дерева разбора для решения задач контроля
-     * типов, кодогенерации и проч.
+     * Accepts a visitor during a traversal of the parse tree for solving tasks of
+     * types validation, code generation etc.
      *
-     * @param visitor
-     *            Универсальный элемент visitor, выполняющий задачи с деревом
-     *            разбора.
-     * @throws ParseException
-     *             семантическая ошибка при обходе дерева.
+     * @param visitor  universal visitor element performing tasks with the parse tree.
+     * @throws ParseException  semantic error during the tree traversal
      */
     abstract void accept(ExprVisitor visitor) throws ParseException;
 }
 
 /**
- * Выражение в скобках.
+ * Expression in parentheses.
  */
 final class ParenthesizedExpr extends Expr {
     private final Expr parenthesized;
@@ -121,7 +119,9 @@ final class ParenthesizedExpr extends Expr {
     }
 
     /**
-     * Возвращает выражение, заключенное в скобки.
+     * Returns the expression encompassed by parentheses.
+     *
+     * @return
      */
     public Expr getParenthesized() {
         return parenthesized;
@@ -158,7 +158,7 @@ abstract class LogicValuedExpr extends Expr {
 }
 
 /**
- * Отношение (>=, <=, <>, =, <, >).
+ * Relation (>=, <=, <>, =, <, >).
  */
 final class Relop extends LogicValuedExpr {
     /**
@@ -207,21 +207,27 @@ final class Relop extends LogicValuedExpr {
     }
 
     /**
-     * Левая сторона.
+     * Returns the left part.
+     *
+     * @return
      */
     public Expr getLeft() {
         return left;
     }
 
     /**
-     * Правая сторона.
+     * Returns the right part.
+     *
+     * @return
      */
     public Expr getRight() {
         return right;
     }
 
     /**
-     * Отношение.
+     * Returns the relation.
+     *
+     * @return
      */
     public int getRelop() {
         return relop;
@@ -248,14 +254,18 @@ final class In extends LogicValuedExpr {
     }
 
     /**
-     * Оператор.
+     * Returns the operator.
+     *
+     * @return
      */
     public Expr getLeft() {
         return left;
     }
 
     /**
-     * Операнды.
+     * Returns the operands.
+     *
+     * @return
      */
     public List<Expr> getOperands() {
         return operands;
@@ -287,21 +297,27 @@ final class Between extends LogicValuedExpr {
     }
 
     /**
-     * Левая часть.
+     * Returns the left part.
+     *
+     * @return
      */
     public Expr getLeft() {
         return left;
     }
 
     /**
-     * Часть от...
+     * Returns the part <em>from...</em>.
+     *
+     * @return
      */
     public Expr getRight1() {
         return right1;
     }
 
     /**
-     * Часть до...
+     * Returns the part <em>to...</em>.
+     *
+     * @return
      */
     public Expr getRight2() {
         return right2;
@@ -332,7 +348,9 @@ final class IsNull extends LogicValuedExpr {
     }
 
     /**
-     * Выражение, от которого берётся IS NULL.
+     * The expression that <em>IS NULL</em> is taken from.
+     *
+     * @return
      */
     public Expr getExpr() {
         return expr;
@@ -356,7 +374,9 @@ final class NotExpr extends LogicValuedExpr {
     }
 
     /**
-     * Выражение, от которого берётся NOT.
+     * The expression that <em>NOT</em> is taken from.
+     *
+     * @return
      */
     public Expr getExpr() {
         return expr;
@@ -387,7 +407,7 @@ final class BinaryLogicalOp extends LogicValuedExpr {
         if (operands.isEmpty()) {
             throw new IllegalArgumentException();
         }
-        // все операнды должны быть логическими
+        // all operands should be logical
         for (Expr e : operands) {
             if (e.getMeta().getColumnType() != ViewColumnType.LOGIC) {
                 throw new ParseException(
@@ -399,14 +419,18 @@ final class BinaryLogicalOp extends LogicValuedExpr {
     }
 
     /**
-     * Оператор.
+     * Returns the operator.
+     *
+     * @return
      */
     public int getOperator() {
         return operator;
     }
 
     /**
-     * Операнды.
+     * Returns the operands.
+     *
+     * @return
      */
     public List<Expr> getOperands() {
         return operands;
@@ -449,14 +473,18 @@ final class BinaryTermOp extends Expr {
     }
 
     /**
-     * Оператор.
+     * Returns the operator.
+     *
+     * @return
      */
     public int getOperator() {
         return operator;
     }
 
     /**
-     * Операнды.
+     * Returns the operands.
+     *
+     * @return
      */
     public List<Expr> getOperands() {
         return operands;
@@ -510,7 +538,7 @@ final class BinaryTermOp extends Expr {
 }
 
 /**
- * Унарный минус.
+ * Unary minus.
  */
 final class UnaryMinus extends Expr {
     private final Expr arg;
@@ -558,7 +586,7 @@ abstract class Literal extends Expr {
 }
 
 /**
- * Числовой нумерал с плавающей точкой.
+ * Numeric numeral with a floating point.
  */
 final class RealLiteral extends Literal {
     private final String lexValue;
@@ -569,7 +597,9 @@ final class RealLiteral extends Literal {
     }
 
     /**
-     * Возвращает лексическое значение.
+     * Returns the lexical value.
+     *
+     * @return
      */
     public String getLexValue() {
         return lexValue;
@@ -582,7 +612,7 @@ final class RealLiteral extends Literal {
 }
 
 /**
- * Числовой нумерал.
+ * Numeric numeral.
  */
 final class IntegerLiteral extends Literal {
     private final String lexValue;
@@ -593,7 +623,9 @@ final class IntegerLiteral extends Literal {
     }
 
     /**
-     * Возвращает лексическое значение.
+     * Returns the lexical value.
+     *
+     * @return
      */
     public String getLexValue() {
         return lexValue;
@@ -606,7 +638,7 @@ final class IntegerLiteral extends Literal {
 }
 
 /**
- * Литерал TRUE или FALSE.
+ * {@code TRUE} or {@code FALSE} literal.
  */
 final class BooleanLiteral extends Literal {
 
@@ -629,7 +661,7 @@ final class BooleanLiteral extends Literal {
 }
 
 /**
- * Текстовый литерал.
+ * Text literal.
  */
 final class TextLiteral extends Literal {
     private final String lexValue;
@@ -640,7 +672,9 @@ final class TextLiteral extends Literal {
     }
 
     /**
-     * Возвращает лексическое значение.
+     * Returns the lexical value.
+     *
+     * @return
      */
     public String getLexValue() {
         return lexValue;
@@ -672,7 +706,7 @@ abstract class Aggregate extends Expr {
 
 
 /**
- * Ссылка на колонку таблицы.
+ * Reference to a table column.
  */
 final class FieldRef extends Expr {
     private String tableNameOrAlias;
@@ -690,14 +724,18 @@ final class FieldRef extends Expr {
     }
 
     /**
-     * Имя или алиас таблицы.
+     * Returns table name or alias.
+     *
+     * @return
      */
     public String getTableNameOrAlias() {
         return tableNameOrAlias;
     }
 
     /**
-     * Имя колонки.
+     * Returns column name.
+     *
+     * @return
      */
     public String getColumnName() {
         return columnName;
@@ -743,14 +781,18 @@ final class FieldRef extends Expr {
     }
 
     /**
-     * Возвращает столбец, на который указывает ссылка.
+     * Returns the column that the reference is pointing to.
+     *
+     * @return
      */
     public Column getColumn() {
         return column;
     }
 
     /**
-     * Устанавливает столбец ссылки.
+     * Sets the column of the reference.
+     *
+     * @param column  reference column
      */
     public void setColumn(Column column) {
         this.column = column;
@@ -809,4 +851,5 @@ final class ParameterRef extends Expr {
     public String getName() {
         return name;
     }
+
 }

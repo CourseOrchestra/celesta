@@ -9,7 +9,7 @@ import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Table;
 
 /**
- * Курсор для таблиц, определённых только для чтения.
+ * Cursor for tables that are defined only for reading.
  */
 public abstract class ReadOnlyTableCursor extends BasicCursor {
     private Table meta = null;
@@ -40,12 +40,12 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
     final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
 
         if (meta().getPrimaryKey().isEmpty() && colNames.isEmpty()) {
-            // Если никакой сортировки нет вовсе, сортируем по первому полю.
+            // If there's absolutely no sorting it will be sorted by the first field. 
             l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));
             ol.add(Boolean.FALSE);
         } else {
-            // Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
-            // естественном порядке
+            // Always add to the end of OrderBy the fields of the primary key following in
+            // a natural order.
             for (String colName : meta().getPrimaryKey().keySet()) {
                 if (!colNames.contains(colName)) {
                     l.add(String.format("\"%s\"", colName));
@@ -54,4 +54,5 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
             }
         }
     }
+
 }

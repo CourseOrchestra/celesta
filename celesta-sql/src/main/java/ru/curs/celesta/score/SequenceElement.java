@@ -6,7 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class SequenceElement extends GrainElement {
+/**
+ * Sequence object in metadata.
+ */
+public final class SequenceElement extends GrainElement {
 
     private static final String DUPLICATE_ENTRANCE_TEMPLATE = "Duplicate entrance of %s was detected for sequence %s";
 
@@ -17,6 +20,12 @@ public class SequenceElement extends GrainElement {
         getGrain().addElement(this);
     }
 
+    /**
+     * Sets value for {@code START_WITH} argument of the sequence.
+     *
+     * @param startWith  value of {@code START_WITH} argument
+     * @throws ParseException
+     */
     void startWith(Long startWith) throws ParseException {
         if (arguments.putIfAbsent(Argument.START_WITH, startWith) != null) {
             throw new ParseException(
@@ -25,6 +34,12 @@ public class SequenceElement extends GrainElement {
         }
     }
 
+    /**
+     * Sets value for {@code INCREMENT_BY} argument of the sequence.
+     *
+     * @param startWith  value of {@code INCREMENT_BY} argument
+     * @throws ParseException
+     */
     void incrementBy(Long incrementBy) throws ParseException {
         if (incrementBy == 0) {
             throw new ParseException(
@@ -38,6 +53,12 @@ public class SequenceElement extends GrainElement {
         }
     }
 
+    /**
+     * Sets value for {@code MAXVALUE} argument of the sequence.
+     *
+     * @param startWith  value of {@code MAXVALUE} argument
+     * @throws ParseException
+     */
     void minValue(Long minValue) throws ParseException {
         if (arguments.containsKey(Argument.MAXVALUE) && (Long) arguments.get(Argument.MAXVALUE) <= minValue) {
             throw new ParseException(
@@ -52,6 +73,12 @@ public class SequenceElement extends GrainElement {
         }
     }
 
+    /**
+     * Sets value for {@code MINVALUE} argument of the sequence.
+     *
+     * @param startWith  value of {@code MINVALUE} argument
+     * @throws ParseException
+     */
     void maxValue(Long maxValue) throws ParseException {
         if (arguments.containsKey(Argument.MINVALUE) && ((Long) arguments.get(Argument.MINVALUE)) >= maxValue) {
             throw new ParseException(
@@ -66,6 +93,12 @@ public class SequenceElement extends GrainElement {
         }
     }
 
+    /**
+     * Sets value for {@code CYCLE} argument of the sequence.
+     *
+     * @param startWith  value of {@code CYCLE} argument
+     * @throws ParseException
+     */
     void setIsCycle(Boolean isCycle) throws ParseException {
         if (arguments.putIfAbsent(Argument.CYCLE, isCycle) != null) {
             throw new ParseException(
@@ -74,9 +107,8 @@ public class SequenceElement extends GrainElement {
         }
     }
 
-
     @Override
-    void save(PrintWriter bw) throws IOException {
+    final void save(PrintWriter bw) throws IOException {
         Grain.writeCelestaDoc(this, bw);
         bw.printf("CREATE SEQUENCE %s ", getName());
 
@@ -157,25 +189,58 @@ public class SequenceElement extends GrainElement {
 
     }
 
-
+    /**
+     * Returns a map of all arguments with values for the sequence.
+     *
+     * @return
+     */
     public Map<Argument, Object> getArguments() {
         return arguments;
     }
 
+    /**
+     * Whether the sequence contains the specified argument.
+     *
+     * @param argument  argument
+     * @return
+     */
     public boolean hasArgument(Argument argument) {
         return arguments.containsKey(argument);
     }
 
+    /**
+     * Returns value of the specified argument.
+     *
+     * @param argument  argument
+     * @return
+     */
     public Object getArgument(Argument argument) {
         return arguments.get(argument);
     }
 
-
+    /**
+     * Sequence arguments.
+     */
     public enum Argument {
+        /**
+         * {@code START_WITH} argument.
+         */
         START_WITH("START WITH", "START WITH %s "),
+        /**
+         * {@code INCREMENT_BY} argument.
+         */
         INCREMENT_BY("INCREMENT BY", "INCREMENT BY %s "),
+        /**
+         * {@code MINVALUE} argument.
+         */
         MINVALUE("MINVALUE", "MINVALUE %s "),
+        /**
+         * {@code MAXVALUE} argument.
+         */
         MAXVALUE("MAXVALUE", "MAXVALUE %s "),
+        /**
+         * {@code CYCLE} argument.
+         */
         CYCLE("CYCLE", "CYCLE ");
 
         private final String type;
@@ -186,6 +251,12 @@ public class SequenceElement extends GrainElement {
             this.sqlTemplate = sqlTemplate;
         }
 
+        /**
+         * Returns SQL for argument with the specified {@code value}.
+         *
+         * @param value  argument value
+         * @return
+         */
         public String getSql(Object value) {
 
             if (this == CYCLE && Objects.equals(false, value)) {
@@ -195,10 +266,10 @@ public class SequenceElement extends GrainElement {
             return String.format(sqlTemplate, value);
         }
 
-
         @Override
         public String toString() {
             return type;
         }
     }
+
 }

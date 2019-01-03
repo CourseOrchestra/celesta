@@ -7,18 +7,17 @@ import ru.curs.celesta.syscursors.LogCursor;
 import ru.curs.celesta.syscursors.LogsetupCursor;
 
 /**
- * Менеджер логирования. Записывает в лог изменённые значения (если это
- * необходимо).
+ * Logging manager. Writes to log changed values (if needed).
  */
 public final class LoggingManager implements ILoggingManager {
     /**
-     * Размер кэша (в записях). ДОЛЖЕН БЫТЬ СТЕПЕНЬЮ ДВОЙКИ!! Этот кэш может
-     * быть меньше кэша системы распределения прав доступа, т. к. хранит записи
-     * на уровне таблицы, а не на уровне комбинации "пользователь, таблица".
+     * Cache size (in number of entries). MUST BE POWER OF TWO!! This cache may be
+     * smaller than access rights system cache, because it stores entries
+     * at the level of a table and not at the level of combination "user, table".
      */
     private static final int CACHE_SIZE = 1024;
     /**
-     * "Срок годности" записи кэша (в миллисекундах).
+     * "Shelf life" of a cache entry (in milliseconds).
      */
     private static final int CACHE_ENTRY_SHELF_LIFE = 20000;
 
@@ -28,7 +27,7 @@ public final class LoggingManager implements ILoggingManager {
     private CacheEntry[] cache = new CacheEntry[CACHE_SIZE];
 
     /**
-     * Запись во внутреннем кэше.
+     * Entry of the internal cache.
      */
     private static class CacheEntry {
         private final Table table;
@@ -67,11 +66,11 @@ public final class LoggingManager implements ILoggingManager {
     }
 
     boolean isLoggingNeeded(CallContext sysContext, Table t, Action a) {
-        // Вычисляем местоположение данных в кэше.
+        // Calculate the location of data in the cache.
         int index = CacheEntry.hash(t) & (CACHE_SIZE - 1);
 
-        // Прежде всего смотрим, нет ли в кэше подходящей непросроченной записи
-        // (в противном случае -- обновляем кэш).
+        // First of all look up if there is a suitable non-stale entry
+        // (otherwise - update the cache).
         CacheEntry ce = cache[index];
         if (ce == null || ce.isExpired() || ce.table != t) {
             ce = refreshLogging(sysContext, t);
@@ -91,6 +90,11 @@ public final class LoggingManager implements ILoggingManager {
         return new CacheEntry(t, loggingMask);
     }
 
+    /**
+     * Log an action on cursor.
+     * <p>
+     * Cursors from <b>celesta</b> grain will be ignored.
+     */
     public void log(Cursor c, Action a) {
         if (a == Action.READ) {
             throw new IllegalArgumentException();
@@ -163,4 +167,5 @@ public final class LoggingManager implements ILoggingManager {
     private static String trimValue(String value, int len) {
         return value.length() > len ? value.substring(0, len) : value;
     }
+
 }

@@ -3,32 +3,36 @@ package ru.curs.celesta.score;
 import java.util.Arrays;
 
 /**
- * Тип таблицы.
+ * Table type.
  */
 public enum TableType {
     /**
-     * Таблица.
+     * Table.
      */
     TABLE("T"),
     /**
-     * Представление.
+     * View.
      */
     VIEW("V"),
     /**
-     * Материализованное представление
+     * Materialized view.
      */
     MATERIALIZED_VIEW("MV"),
     /**
-     * Параметризованное представление
+     * Parameterized view.
      */
     FUNCTION("F");
 
-    private String abbreviation;
+    private final String abbreviation;
 
     TableType(String abbreviation) {
         this.abbreviation = abbreviation;
     }
 
+    /**
+     * Returns abbreviation for the table type.
+     * @return
+     */
     public String getAbbreviation() {
         return abbreviation;
     }

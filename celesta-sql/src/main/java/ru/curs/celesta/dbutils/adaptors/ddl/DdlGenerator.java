@@ -20,6 +20,9 @@ import java.util.stream.Collectors;
 
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
 
+/**
+ * Base class for SQL generation of data definition.
+ */
 public abstract class DdlGenerator {
 
     static final Map<String, Class<? extends Column>> CELESTA_TYPES_COLUMN_CLASSES = new HashMap<>();
@@ -43,11 +46,24 @@ public abstract class DdlGenerator {
         this.dmlAdaptor = dmlAdaptor;
     }
 
+    /**
+     * Generates SQL for schema creation in the DB.
+     *
+     * @param name  schema names
+     * @return
+     */
     Optional<String> createSchema(String name) {
         String sql = String.format("create schema \"%s\"", name);
         return Optional.of(sql);
     }
 
+    /**
+     * Generates SQL for dropping view in the schema.
+     *
+     * @param schemaName  schema name
+     * @param viewName  view name
+     * @return
+     */
     String dropView(String schemaName, String viewName) {
         String sql = String.format("DROP VIEW %s", tableString(schemaName, viewName));
         return sql;
@@ -100,7 +116,7 @@ public abstract class DdlGenerator {
         return sb.toString();
     }
 
-    String createSequence(SequenceElement s) {
+    final String createSequence(SequenceElement s) {
         String sql = String.format(
                 "CREATE SEQUENCE %s %s",
                 tableString(s.getGrain().getName(), s.getName()),
@@ -110,7 +126,7 @@ public abstract class DdlGenerator {
         return sql;
     }
 
-    String alterSequence(SequenceElement s) {
+    final String alterSequence(SequenceElement s) {
         String sql = String.format(
                 "ALTER SEQUENCE %s %s",
                 tableString(s.getGrain().getName(), s.getName()),
@@ -181,6 +197,14 @@ public abstract class DdlGenerator {
         return sb.toString();
     }
 
+    /**
+     * Generates SQL for dropping primary key from the table by using
+     * known name of the primary key.
+     *
+     * @param t  table table name
+     * @param pkName  primary key name
+     * @return
+     */
     public abstract String dropPk(TableElement t, String pkName);
 
 
@@ -207,23 +231,22 @@ public abstract class DdlGenerator {
     abstract DBType getType();
 
     /**
-     * Генерирует sql для обновления триггера контроля версий на таблице.
+     * Generates SQL for versioning trigger update on a table.
      *
-     * @param conn Соединение.
-     * @param t    Таблица (версионируемая или не версионируемая).
-     * @ Ошибка создания или удаления триггера.
+     * @param conn Connection
+     * @param t    Table (versioned or unversioned)
+     * @throws RuntimeException  on trigger creation or deletion
      */
     abstract List<String> updateVersioningTrigger(Connection conn, TableElement t);
 
     abstract List<String> createIndex(Index index);
 
     /**
-     * Обновляет на таблице колонку.
+     * Alters a table column.
      *
-     * @param c Колонка для обновления.
-     * @ при ошибке обновления колонки.
+     * @param c  column for update
+     * @throws RuntimeException  on column update error
      */
-    //TODO: Javadoc In English
     abstract List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual);
 
     final String createPk(TableElement t) {
@@ -254,7 +277,7 @@ public abstract class DdlGenerator {
     final List<String> createFk(Connection conn, ForeignKey fk)  {
         LinkedList<StringBuilder> sqlQueue = new LinkedList<>();
 
-        // Строим запрос на создание FK
+        // Building a query for FK creation
         StringBuilder sql = new StringBuilder();
         sql.append(ALTER_TABLE);
         sql.append(tableString(fk.getParentTable().getGrain().getName(), fk.getParentTable().getName()));
@@ -338,6 +361,12 @@ public abstract class DdlGenerator {
         }
     }
 
+    /**
+     * This method is called after a table creation.
+     *
+     * @param t  table
+     * @return  list of SQLs to be processed after a table creation
+     */
     List<String> afterCreateTable(TableElement t) {
         return Collections.emptyList();
     }
@@ -372,7 +401,7 @@ public abstract class DdlGenerator {
 
                     if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
                         return truncDate(groupByColStr);
-                    }    
+                    }
                     return groupByColStr;
                 })
                 .collect(Collectors.joining(", "));
@@ -443,9 +472,10 @@ public abstract class DdlGenerator {
     }
 
     /**
-     * Возвращает транслятор из языка CelestaSQL в язык нужного диалекта БД.
+     * Returns a translator from CelestaSQL language to the language of desired DB dialect.
+     *
+     * @return
      */
-    //TODO: Javadoc In English
     abstract SQLGenerator getViewSQLGenerator();
 
     abstract List<String> createParameterizedView(ParameterizedView pv);
@@ -457,11 +487,10 @@ public abstract class DdlGenerator {
     public abstract List<String> createTableTriggersForMaterializedViews(Table t);
 
     /**
-     * Возвращает sql с функцией округления timestamp до даты.
+     * Returns an SQL with the rounding function of timestamp to date.
      *
-     * @param dateStr значение, которое нужно округлить
+     * @param dateStr  value that has to be rounded
      * @return
      */
-    //TODO: Javadoc In English
     abstract String truncDate(String dateStr);
 }

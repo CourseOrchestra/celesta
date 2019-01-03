@@ -7,8 +7,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Табличный индекс. Celesta допускает создание только простых индексов, без
- * ограничения UNIQUE.
+ * Table index. Celesta permits only creation of simple indices without
+ * UNIQUE restriction.
  */
 public class Index extends GrainElement implements HasColumns {
     private static final String INDEX_CREATION_ERROR = "Error while creating index '%s': column '%s' in table '%s' is ";
@@ -43,20 +43,20 @@ public class Index extends GrainElement implements HasColumns {
     }
 
     /**
-     * Таблица индекса.
+     * Returns table of the index.
+     *
+     * @return
      */
     public Table getTable() {
         return table;
     }
 
     /**
-     * Добавляет колонку к индексу.
+     * Adds a column to the index.
      *
-     * @param columnName
-     *            Имя колонки (такая колонка должна существовать в таблице).
-     * @throws ParseException
-     *             В случае, если колонка не найдена, или уже встречается в
-     *             индексе, или имеет тип IMAGE.
+     * @param columnName  column name (such column should exist in the table)
+     * @throws ParseException  in case if the column is not found, or is already
+     *                         available in the index, or is of type IMAGE
      */
     void addColumn(String columnName) throws ParseException {
         if (columnName == null) {
@@ -89,11 +89,10 @@ public class Index extends GrainElement implements HasColumns {
     }
 
     /**
-     * Финализирует индекс.
+     * Finalizes the index.
      *
-     * @throws ParseException
-     *             В случае, если на этой таблице обнаружен индекс,
-     *             дублирующийся по составу полей.
+     * @throws ParseException  in case if there's already an index on the table
+     *                         that duplicates the set of fields of this index.
      */
     void finalizeIndex() throws ParseException {
         if (Arrays.equals(
@@ -134,17 +133,18 @@ public class Index extends GrainElement implements HasColumns {
     }
 
     /**
-     * Колонки индекса.
+     * Returns columns of the index.
+     *
+     * @return
      */
     public Map<String, Column> getColumns() {
         return columns.getElements();
     }
 
     /**
-     * Удаляет индекс.
+     * Deletes the index.
      *
-     * @throws ParseException
-     *             при попытке изменить системную гранулу
+     * @throws ParseException  when trying to change the system grain
      */
     public void delete() throws ParseException {
         getGrain().removeIndex(this);
@@ -173,4 +173,5 @@ public class Index extends GrainElement implements HasColumns {
     public int getColumnIndex(String name) {
         return columns.getIndex(name);
     }
+
 }

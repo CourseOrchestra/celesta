@@ -34,8 +34,13 @@ public interface QueryBuildingHelper {
     String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
                              List<String> otherFields, String whereForOtherTable);
 
-    //TODO: Javadoc
+    /**
+     * Whether cortege comparing is supported by RDBMS.
+     *
+     * @return
+     */
     boolean supportsCortegeComparing();
 
     ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z);
+
 }

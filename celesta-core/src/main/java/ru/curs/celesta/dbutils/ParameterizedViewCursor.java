@@ -12,7 +12,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Created by ioann on 15.08.2017.
+ * Parameterized view cursor.
+ *
+ * @author ioann
+ * @since 2017-08-15
  */
 public abstract class ParameterizedViewCursor extends BasicCursor {
 
@@ -39,7 +42,9 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   }
 
   /**
-   * Описание представления (метаинформация).
+   * Returns parameterized view description (meta information).
+   *
+   * @return
    */
   @Override
   public ParameterizedView meta() {
@@ -57,8 +62,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
 
   @Override
   final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
-    // для представлений мы сортируем всегда по первому столбцу, если
-    // сортировки нет вообще
+    // The views are always sorted by the first column if there's no sorting at all.
     if (colNames.isEmpty()) {
       l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));
       ol.add(Boolean.FALSE);
@@ -74,11 +78,12 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
     result.setGe(ge);
     result.setExpression(db().getCallFunctionSql(meta));
 
-    List paramValues = meta().getParameters().keySet().stream()
+    List<Object> paramValues = meta().getParameters().keySet().stream()
         .map(pName -> parameters.get(pName))
         .collect(Collectors.toList());
     result.setParameters(paramValues);
 
     return result;
   }
+
 }

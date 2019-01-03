@@ -12,7 +12,7 @@ import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.View;
 
 /**
- * Базовый класс курсора для посмотра данных в представлениях.
+ * Base class of cursor for viewing data in views.
  */
 public abstract class ViewCursor extends BasicCursor implements InFilterSupport {
 
@@ -30,7 +30,9 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
     }
 
     /**
-     * Описание представления (метаинформация).
+     * Returns view description (meta information).
+     *
+     * @return
      */
     @Override
     public View meta() {
@@ -48,8 +50,7 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
 
     @Override
     final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
-        // для представлений мы сортируем всегда по первому столбцу, если
-        // сортировки нет вообще
+        // The views are always sorted by the first column if there's no sorting at all.
         if (colNames.isEmpty()) {
             l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));
             ol.add(Boolean.FALSE);
@@ -88,4 +89,5 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
         ViewCursor c = (ViewCursor) bc;
         return Objects.equals(inFilterHolder, c.inFilterHolder);
     }
+
 }

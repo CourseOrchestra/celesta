@@ -21,8 +21,10 @@ import java.sql.Connection;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
-public class MsSqlDdlGenerator extends DdlGenerator {
+/**
+ * Class for SQL generation of data definition of MsSql.
+ */
+public final class MsSqlDdlGenerator extends DdlGenerator {
 
     public MsSqlDdlGenerator(DBAdaptor dmlAdaptor) {
         super(dmlAdaptor);
@@ -489,4 +491,5 @@ public class MsSqlDdlGenerator extends DdlGenerator {
 
         return result;
     }
+
 }

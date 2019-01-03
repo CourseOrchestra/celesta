@@ -11,9 +11,12 @@ import java.util.stream.Collectors;
 
 
 /**
- * Created by ioann on 07.07.2017.
+ * Base class for all triggers of materialized view.
+ *
+ * @author ioann
+ * @since 2017-07-07
  */
-abstract public class AbstractMaterializeViewTrigger implements Trigger {
+public abstract class AbstractMaterializeViewTrigger implements Trigger {
 
     private static final Map<Integer, TriggerType> TRIGGER_TYPE_MAP = new HashMap<>();
 

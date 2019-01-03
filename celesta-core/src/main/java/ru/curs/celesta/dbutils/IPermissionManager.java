@@ -5,25 +5,21 @@ import ru.curs.celesta.score.GrainElement;
 
 public interface IPermissionManager {
     /**
-     * Имя роли, обладающей правами на редактирование всех таблиц.
+     * Role name that has rights to edit all tables.
      */
     String EDITOR = "editor";
     /**
-     * Имя роли, обладающей правами на чтение всех таблиц.
+     * Role name that has rights to read from all tables.
      */
     String READER = "reader";
 
-
     /**
-     * Разрешено ли действие.
+     * Whether the action is allowed.
      *
-     * @param c
-     *            контекст вызова.
-     * @param t
-     *            таблица.
-     *
-     * @param a
-     *            тип действия
+     * @param c  call context
+     * @param t  table
+     * @param a  action type
+     * @return
      */
-    boolean isActionAllowed(CallContext c, GrainElement t, Action a) ;
+    boolean isActionAllowed(CallContext c, GrainElement t, Action a);
 }

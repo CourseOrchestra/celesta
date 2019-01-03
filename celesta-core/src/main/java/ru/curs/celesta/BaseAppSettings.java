@@ -8,8 +8,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+/**
+ * Base class for application settings.
+ */
 public abstract class BaseAppSettings {
 
+    /**
+     * In memory H2 DB connection url.
+     */
     public static final String H2_IN_MEMORY_URL = "jdbc:h2:mem:celesta;DB_CLOSE_DELAY=-1";
 
     private final Properties properties;
@@ -117,95 +123,124 @@ public abstract class BaseAppSettings {
         }
     }
 
-
     /**
-     * Возвращает тип базы данных на основе JDBC-строки подключения.
+     * Returns database type on the basis of JDBC connection string.
+     *
+     * @return
      */
     public DBType getDBType() {
         return dbType;
     }
 
     /**
-     * Возвращает логгер, в который можно записывать сообщения.
+     * Returns logger that can be used to log messages.
+     *
+     * @return
      */
     public Logger getLogger() {
         return logger;
     }
 
     /**
-     * Значение параметра "пропускать фазу обновления базы данных".
+     * Returns parameter value "Skip database update phase".
+     *
+     * @return
      */
     public boolean getSkipDBUpdate() {
         return skipDBUpdate;
     }
 
     /**
-     * Значение параметра "заставлять обновлять непустую базу данных".
+     * Returns parameter value "Force non-empty database initialization".
+     *
+     * @return
      */
     public boolean getForceDBInitialize() {
         return forceDBInitialize;
     }
 
     /**
-     * Значение параметра "логировать входы и выходы пользователей".
+     * Returns parameter value "logging of log-ins and log-outs of users".
+     *
+     * @return
      */
     public boolean getLogLogins() {
         return logLogins;
     }
 
     /**
-     * Значение параметра "score.path".
+     * Returns parameter value "score.path".
+     *
+     * @return
      */
     public String getScorePath() {
         return scorePath;
     }
 
     /**
-     * Значение параметра "Класс JDBC-подключения".
+     * Returns parameter value "JDBC connection class".
+     *
+     * @return
      */
     public String getDbClassName() {
         return dbType.getDriverClassName();
     }
 
     /**
-     * Значение параметра "Строка JDBC-подключения".
+     * Returns parameter value "JDBC connection string".
+     *
+     * @return
      */
     public String getDatabaseConnection() {
         return databaseConnection;
     }
 
     /**
-     * Флаг поддержки для uniq constraint (отключение позволяет, например,
-     * вставлять записи без наличия ссылок на обязательные внешние записи).
+     * Returns flag of support for unique constraint (if it is switched off then
+     * it is possible to insert records without referencing mandatory external records).
+     *
+     * @return
      */
     public boolean isH2ReferentialIntegrity() {
         return h2ReferentialIntegrity;
     }
 
     /**
-     * Логин к базе данных.
+     * Returns login for the database.
+     *
+     * @return
      */
     public String getDBLogin() {
         return login;
     }
 
     /**
-     * Пароль к базе данных.
+     * Returns password for the database.
+     *
+     * @return
      */
     public String getDBPassword() {
         return password;
     }
 
     /**
-     * Возвращает свойства, с которыми была инициализирована Челеста. Внимание:
-     * данный объект имеет смысл использовать только на чтение, динамическое
-     * изменение этих свойств не приводит ни к чему.
+     * Returns properties that were used to initialize Celesta. Attention:
+     * it makes sense using this object as read only, dynamic change of these
+     * properties doesn't lead to anything.
+     *
+     * @return
      */
     public Properties getSetupProperties() {
         return properties;
     }
 
+    /**
+     * Returns port of H2 DB.
+     *
+     * @return
+     */
     public int getH2Port() {
         return h2Port;
     }
+
 }

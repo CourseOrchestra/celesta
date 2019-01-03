@@ -4,7 +4,10 @@ import ru.curs.celesta.BaseAppSettings;
 
 import java.util.*;
 
-public class AppSettings extends BaseAppSettings {
+/**
+ * Application settings.
+ */
+public final class AppSettings extends BaseAppSettings {
 
     private final Set<String> celestaScan;
 
@@ -15,7 +18,7 @@ public class AppSettings extends BaseAppSettings {
 
     public static Set<String> extractCelestaScanFromProperties(Properties properties) {
         final String celestaScanProperty = properties.getProperty("celestaScan");
-        final Set<String> celestaScanVar = new LinkedHashSet();
+        final Set<String> celestaScanVar = new LinkedHashSet<>();
 
         if (celestaScanProperty != null) {
             Arrays.stream(celestaScanProperty.split(","))
@@ -29,4 +32,5 @@ public class AppSettings extends BaseAppSettings {
     public Set<String> getCelestaScan() {
         return this.celestaScan;
     }
+
 }

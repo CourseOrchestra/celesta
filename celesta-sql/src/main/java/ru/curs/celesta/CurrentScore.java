@@ -14,25 +14,37 @@ public final class CurrentScore {
         throw new AssertionError();
     }
 
+    /**
+     * Returns score object. If global mode is on, single global score is returned.
+     * Otherwise score object on a per thread basis is returned.
+     */
     public static AbstractScore get() {
         if (globalMode) {
             return global;
-        }
-        else {
+        } else {
             return CURRENT.get();
         }
     }
 
+    /**
+     * Sets score object. If global mode is on, the score is saved as a global score.
+     * Otherwise score object on a per thread basis is saved.
+     *
+     * @param score  Score object.
+     */
     public static void set(AbstractScore score) {
         if (globalMode) {
             global = score;
-        }
-        else {
+        } else {
             CURRENT.set(score);
         }
     }
 
-
+    /**
+     * Sets if current score is in global mode.
+     *
+     * @param globalMode  {@code true} - global mode on, {@code false} - off.
+     */
     public static void global(boolean globalMode) {
         CurrentScore.globalMode = globalMode;
     }

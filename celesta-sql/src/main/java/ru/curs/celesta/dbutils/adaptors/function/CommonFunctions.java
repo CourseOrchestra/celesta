@@ -1,5 +1,8 @@
 package ru.curs.celesta.dbutils.adaptors.function;
 
+/**
+ * Utility class for common functions.
+ */
 public final class CommonFunctions {
 
     private CommonFunctions() {
@@ -33,4 +36,5 @@ public final class CommonFunctions {
         }
         return sb.toString();
     }
+
 }

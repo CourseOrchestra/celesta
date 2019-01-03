@@ -3,8 +3,8 @@ package ru.curs.celesta.score;
 import java.util.*;
 
 /**
- * Посетитель синтаксического дерева для реализации процедур контроля типов,
- * кодогенерации и проч. (см. паттерн Visitor).
+ * Syntax tree visitor for procedure implementation of types validation, code
+ * generation etc. (see Visitor pattern).
  */
 public abstract class ExprVisitor {
   void visitBetween(Between expr) throws ParseException {
@@ -72,7 +72,7 @@ public abstract class ExprVisitor {
 }
 
 /**
- * Класс разрешения ссылок в контексте имеющихся таблиц.
+ * Class for reference resolving in the context of existing tables.
  */
 final class FieldResolver extends ExprVisitor {
 
@@ -108,7 +108,7 @@ final class FieldResolver extends ExprVisitor {
 }
 
 /**
- * Класс разрешения ссылок в контексте имеющихся параметров.
+ * Class for reference resolving in the context of existing parameters.
  */
 final class ParameterResolver extends ExprVisitor {
   private final Map<String, Parameter> parameters;
@@ -158,15 +158,15 @@ final class ParameterResolverResult {
 }
 
 /**
- * Проверяльщик типов.
+ * Types checker.
  */
 final class TypeChecker extends ExprVisitor {
   void visitBetween(Between expr) throws ParseException {
     final ViewColumnType t = expr.getLeft().getMeta().getColumnType();
-    // Сравнивать можно не все типы.
+    // It's not needed to compare all types.
     if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.INT
         || t == ViewColumnType.TEXT) {
-      // все операнды должны быть однотипны
+      // all operands should be of the same type
       expr.getRight1().assertType(t);
       expr.getRight2().assertType(t);
     } else {
@@ -177,7 +177,7 @@ final class TypeChecker extends ExprVisitor {
   }
 
   void visitBinaryTermOp(BinaryTermOp expr) throws ParseException {
-    // для CONCAT все операнды должны быть TEXT, для остальных -- NUMERIC
+    // for CONCAT all operands should be of TEXT, for the others -- NUMERIC
     final ViewColumnType t = expr.getOperator() == BinaryTermOp.CONCAT ? ViewColumnType.TEXT : ViewColumnType.REAL;
     for (Expr e : expr.getOperands()) {
       e.assertType(t);
@@ -186,10 +186,10 @@ final class TypeChecker extends ExprVisitor {
 
   void visitIn(In expr) throws ParseException {
     final ViewColumnType t = expr.getLeft().getMeta().getColumnType();
-    // Сравнивать можно не все типы.
+    // It's not needed to compare all types.
     if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.INT
         || t == ViewColumnType.TEXT) {
-      // все операнды должны быть однотипны
+      // all operands should be of the same type
       for (Expr operand : expr.getOperands()) {
         operand.assertType(t);
       }
@@ -203,12 +203,12 @@ final class TypeChecker extends ExprVisitor {
 
   void visitRelop(Relop expr) throws ParseException {
     final ViewColumnType t = expr.getLeft().getMeta().getColumnType();
-    // Сравнивать можно не все типы.
+    // It's not needed to compare all types.
     if (t == ViewColumnType.DATE || t == ViewColumnType.REAL || t == ViewColumnType.DECIMAL
             || t == ViewColumnType.INT || t == ViewColumnType.TEXT) {
-      // сравнивать можно только однотипные термы
+      // only terms of the same type may be compared
       expr.getRight().assertType(t);
-      // при этом like действует только на строковых термах
+      // wherein 'like' is valid only for string terms
       if (expr.getRelop() == Relop.LIKE) {
         expr.getLeft().assertType(ViewColumnType.TEXT);
       }
@@ -226,7 +226,7 @@ final class TypeChecker extends ExprVisitor {
   }
 
   void visitUnaryMinus(UnaryMinus expr) throws ParseException {
-    // операнд должен быть NUMERIC
+    // operand should be of NUMERIC
     expr.getExpr().assertType(ViewColumnType.REAL);
   }
 
@@ -239,6 +239,5 @@ final class TypeChecker extends ExprVisitor {
   void visitSum(Sum expr) throws ParseException {
     expr.term.assertType(ViewColumnType.REAL);
   }
-
 
 }

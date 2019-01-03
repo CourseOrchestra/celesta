@@ -6,33 +6,74 @@ import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.*;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
 
-public class DbAdaptorFactory {
+/**
+ * DB adaptor builder.<br/>
+ * <br/>
+ * Depending on DB type the following descendants of {@link DBAdaptor} are returned:
+ * <ul>
+ *   <li><b>H2</b> - {@link H2Adaptor}</li>
+ *   <li><b>Postgre SQL</b> - {@link PostgresAdaptor}</li>
+ *   <li><b>MS SQL</b> - {@link MSSQLAdaptor}</li>
+ *   <li><b>Oracle</b> - {@link OraAdaptor}</li>
+ * </ul>
+ */
+public final class DbAdaptorFactory {
 
   private DBType dbType;
   private ConnectionPool connectionPool;
   private DdlConsumer ddlConsumer;
   private boolean h2ReferentialIntegrity;
 
+  /**
+   * Sets DB type.
+   *
+   * @param dbType DB type
+   * @return  {@code this}
+   */
   public DbAdaptorFactory setDbType(DBType dbType) {
     this.dbType = dbType;
     return this;
   }
 
+  /**
+   * Sets DDL Consumer.
+   *
+   * @param ddlConsumer  DDL consumer
+   * @return  @return  {@code this}
+   */
   public DbAdaptorFactory setDdlConsumer(DdlConsumer ddlConsumer) {
     this.ddlConsumer = ddlConsumer;
     return this;
   }
 
+  /**
+   * Sets Connection pool.
+   *
+   * @param connectionPool  connection pool
+   * @return  @return  {@code this}
+   */
   public DbAdaptorFactory setConnectionPool(ConnectionPool connectionPool) {
     this.connectionPool = connectionPool;
     return this;
   }
 
+  /**
+   * Whether referential integrity for H2 DB has to be switched on/off.
+   *
+   * @param h2ReferentialIntegrity  {@code true} - switch on, {@code false} - switch off.
+   *        Defaul value is {@code false}.
+   * @return
+   */
   public DbAdaptorFactory setH2ReferentialIntegrity(boolean h2ReferentialIntegrity) {
     this.h2ReferentialIntegrity = h2ReferentialIntegrity;
     return this;
   }
 
+  /**
+   * Builds DB adaptor for concrete DB type.
+   *
+   * @return
+   */
   public DBAdaptor createDbAdaptor() {
 
     if (DBType.H2.equals(dbType)) {
@@ -50,6 +91,5 @@ public class DbAdaptorFactory {
 
     return null;
   }
-
 
 }

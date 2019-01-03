@@ -1,6 +1,9 @@
 package ru.curs.celesta.score;
 
-public class NativeSqlElement {
+/**
+ * Native SQL holder for a grain part.
+ */
+public final class NativeSqlElement {
 
     private GrainPart grainPart;
     private String sql;
@@ -10,11 +13,22 @@ public class NativeSqlElement {
         this.sql = sql;
     }
 
+    /**
+     * Returns grain part.
+     *
+     * @return
+     */
     public GrainPart getGrainPart() {
         return grainPart;
     }
 
+    /**
+     * Returns native SQL.
+     *
+     * @return
+     */
     public String getSql() {
         return sql;
     }
+
 }

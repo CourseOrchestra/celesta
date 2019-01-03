@@ -3,17 +3,15 @@ package ru.curs.celesta.score;
 import java.util.Map;
 
 public interface HasColumns {
-
     /**
-     * Перечень столбцов с именами.
+     * List of columns with names.
      */
     Map<String, ? extends ColumnMeta> getColumns();
 
     /**
-     * Номер столбца в перечне столбцов.
+     * Column index in the list of columns.
      *
-     * @param name
-     *            Имя столбца.
+     * @param name  column name.
      */
     int getColumnIndex(String name);
 }

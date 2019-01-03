@@ -6,9 +6,9 @@ import ru.curs.celesta.score.*;
 import java.util.HashMap;
 
 /**
- * Фильтр по одному полю.
+ * Single field filter.
  */
-public class Filter extends AbstractFilter {
+public final class Filter extends AbstractFilter {
 
     private static final HashMap<String, FilterParser.FilterType> C2F = new HashMap<>();
 

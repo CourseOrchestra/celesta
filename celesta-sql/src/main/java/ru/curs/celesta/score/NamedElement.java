@@ -6,14 +6,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Именованный элемент метамодели (например, таблица или колонка), который
- * должен иметь уникальное имя-идентификатор.
- *
+ * A named element of metamodel (e.g. table or column) that must have
+ * a unique identifier name.
  */
 public abstract class NamedElement {
 
     /**
-     * Максимальная длина идентификатора Celesta.
+     * The maximal length of an identifier of Celesta.
      */
     public static final int MAX_IDENTIFIER_LENGTH = 30;
 
@@ -25,8 +24,8 @@ public abstract class NamedElement {
     private String celestaDoc;
 
     public NamedElement(String name, IdentifierParser identifierParser) throws ParseException {
-        // Не должно быть name==null, т. к. все методы написаны исходя из того,
-        // что name != null.
+        // name==null should not happen, for all methods are written assuming
+        // that name != null.
         if (name == null) {
             throw new IllegalArgumentException();
         }
@@ -35,12 +34,11 @@ public abstract class NamedElement {
     }
 
     /**
-     * Ограничивает длину идентификатора максимальным числом символов.
+     * Restricts identifier length by maximal number of symbols.
      *
-     * @param value
-     *            Идентификатор произвольной длины.
-     * @return "Подрезанный" идентификатор, последние 8 символов занимает
-     *         хэш-код исходного идентификатора.
+     * @param value  Identifier of arbitrary length.
+     * @return "Shortcut" identifier that has a hash code of the original one as its
+     *         last 8 symbols.
      */
     public static String limitName(String value) {
         String result = value;
@@ -52,19 +50,23 @@ public abstract class NamedElement {
     }
 
     /**
-     * Возвращает имя.
+     * Returns the name.
      */
     public final String getName() {
         return name;
     }
 
     /**
-     * Возвращает имя в прямых кавычках ("ANSI quotes").
+     * Returns the name in ANSI quotes (e.g. <b>"celestaIdentifier"</b>).
      */
     public final String getQuotedName() {
         return quotedName;
     }
 
+    /**
+     * Returns the name in ANSI quotes if needed.
+     * @return
+     */
     public final String getQuotedNameIfNeeded() {
         Pattern p = Pattern.compile(IdentifierParser.PLAIN_NAME_PATTERN_STR);
         if (p.matcher(name).matches()) {
@@ -85,19 +87,19 @@ public abstract class NamedElement {
     }
 
     /**
-     * Возвращает значение документационной строки для данного элемента.
+     * Returns value of document string for this element.
+     *
+     * @return
      */
     public String getCelestaDoc() {
         return celestaDoc;
     }
 
     /**
-     * Устанавливает значение документационной строки в закомментированном виде.
+     * Sets value of document string in commented form. 
      *
-     * @param celestaDoc
-     *            новое значение.
-     * @throws ParseException
-     *             Если комментарий имеет неверный формат.
+     * @param celestaDoc  new value
+     * @throws ParseException  if the comment has a wrong format
      */
     void setCelestaDocLexem(String celestaDoc) throws ParseException {
         if (celestaDoc == null) {
@@ -112,14 +114,13 @@ public abstract class NamedElement {
     }
 
     /**
-     * Устанавливает значение документационной строки.
+     * Sets value of document string.
      *
-     * @param celestaDoc
-     *            новое значение.
-     * @throws ParseException
-     *            неверный CelestaDoc.
+     * @param celestaDoc  new value
+     * @throws ParseException  incorrect CelestaDoc
      */
     public void setCelestaDoc(String celestaDoc) throws ParseException {
         this.celestaDoc = celestaDoc;
     }
+
 }

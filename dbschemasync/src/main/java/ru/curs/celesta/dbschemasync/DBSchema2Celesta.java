@@ -23,7 +23,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.*;
 
 /**
- * Переносит данные из DBSchema в Celesta.
+ * Converts data from DBSchema to Celesta.
  */
 public final class DBSchema2Celesta {
 
@@ -33,12 +33,12 @@ public final class DBSchema2Celesta {
     }
 
     /**
-     * Преобразует DBS в Score.
+     * Converts DBS to Score.
      *
-     * @param dbs          DBS-файл
-     * @param refScore     score.
-     * @param withPlantUml также вывести PlantUml-диаграммы для каждого из View.
-     * @throws Exception любая ошибка.
+     * @param dbs           DBS file
+     * @param refScore      score.
+     * @param withPlantUml  also render PlantUml diagrams for every View.
+     * @throws Exception    any error
      */
     public static void dBSToScore(File dbs, AbstractScore refScore, boolean withPlantUml) throws Exception {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -57,7 +57,7 @@ public final class DBSchema2Celesta {
                 if (grainName == null || grainName.isEmpty()) {
                     throw new Exception("Empty schema name found.");
                 } else if ("celesta".equals(grainName)) {
-                    // Схему celesta не трогаем!
+                    // Don't touch Celesta schema!
                     continue;
                 }
                 Grain g = refScore.getGrains().get(grainName);
@@ -69,7 +69,7 @@ public final class DBSchema2Celesta {
             }
         }
 
-        // Вторым проходом отдельно обновляем внешние ключи на всех таблицах.
+        // On the second pass separately update the foreign keys on all tables.
         for (int i = 0; i < l.getLength(); i++) {
             Node n = l.item(i);
             if ("schema".equals(n.getNodeName())) {
@@ -78,7 +78,7 @@ public final class DBSchema2Celesta {
                 if (grainName == null || grainName.isEmpty()) {
                     throw new Exception("Empty schema name found.");
                 } else if ("celesta".equals(grainName)) {
-                    // Схему celesta не трогаем!
+                    // Don't touch Celesta schema!
                     continue;
                 }
                 Grain g = refScore.getGrains().get(grainName);
@@ -149,8 +149,7 @@ public final class DBSchema2Celesta {
                         }
                     }
                 }
-                // Добавляем ссылки между таблицами, присутствующими на
-                // диаграмме
+                // Add references between the tables that are present on the diagram.
                 for (Table t : tables) {
                     for (ForeignKey fk : t.getForeignKeys()) {
                         Table refTable = fk.getReferencedTable();
@@ -188,7 +187,7 @@ public final class DBSchema2Celesta {
     }
 
     private static void updateGrain(Element schema, Grain g) throws Exception {
-        // Зачищаем старый score.
+        // Clean up the old score
         List<Index> indices = new ArrayList<>(g.getIndices().values());
         for (Index i : indices) {
             i.delete();
@@ -286,10 +285,10 @@ public final class DBSchema2Celesta {
     }
 
     /**
-     * Финализирует таблицу с перечнем WITH-опций.
+     * Finalizes the table with the list of WITH options.
      *
-     * @param options Перечень опций.
-     * @throws ParseException Ошибка определения таблицы.
+     * @param options  list of options
+     * @throws ParseException  error on table definition
      */
     // CHECKSTYLE:OFF for cyclomatic complexity: this is finite state machine
     private static void parseOptions(List<String> options, Table t) throws ParseException {
@@ -510,4 +509,5 @@ public final class DBSchema2Celesta {
             sc.setCelestaDoc(celestaDoc);
         }
     }
+
 }

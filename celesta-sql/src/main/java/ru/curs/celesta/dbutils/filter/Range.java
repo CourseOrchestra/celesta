@@ -2,10 +2,9 @@ package ru.curs.celesta.dbutils.filter;
 
 
 /**
- * Фильтр в виде диапазона значений от..до.
- *
+ * Filter as a range of values from..to.
  */
-public class Range extends AbstractFilter {
+public final class Range extends AbstractFilter {
     private Object valueFrom;
     private Object valueTo;
 
@@ -19,14 +18,28 @@ public class Range extends AbstractFilter {
         return String.format("%s..%s", valueFrom.toString(), valueTo.toString());
     }
 
+    /**
+     * Returns a <em>from</em> value.
+     * @return
+     */
     public Object getValueFrom() {
         return valueFrom;
     }
 
+    /**
+     * Returns a <em>to</em> value.
+     * @return
+     */
     public Object getValueTo() {
         return valueTo;
     }
 
+    /**
+     * Sets <em>from</em> and <em>to</em> values.
+     *
+     * @param valueFrom
+     * @param valueTo
+     */
     public void setValues(Object valueFrom, Object valueTo) {
         this.valueFrom = valueFrom;
         this.valueTo = valueTo;

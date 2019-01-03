@@ -8,17 +8,26 @@ import java.sql.Connection;
 public interface ICallContext extends AutoCloseable {
 
     /**
-     * Connection with database
+     * Connection with database.
+     *
+     * @return
      */
     Connection getConn();
 
     /**
      * Whether the context was closed.
+     *
+     * @return
      */
     boolean isClosed();
 
     DBAdaptor getDbAdaptor();
 
+    /**
+     * Returns Celesta score.
+     *
+     * @return
+     */
     AbstractScore getScore();
 
     @Override

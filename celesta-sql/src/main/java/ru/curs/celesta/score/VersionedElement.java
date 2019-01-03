@@ -1,25 +1,30 @@
 package ru.curs.celesta.score;
 
 /**
- * Интерфейс, определяющий возможность версионирования метасущности в бд
+ * Interface that defines a versioning possibility for a meta entity in the DB. 
  *
- * Created by ioann on 13.06.2017.
+ * @author ioann
+ * @since 2017-06-13
  */
 public interface VersionedElement {
 
   /**
-   * Имя системного поля, содержащего версию записи.
+   * Name of the system field containing version of the entry.
    */
   String REC_VERSION = "recversion";
 
 
   /**
-   * Является ли таблица версионированной (WITH VERSION CHECK).
+   * Whether the table is versioned (WITH VERSION CHECK).
+   *
+   * @return
    */
   boolean isVersioned();
 
   /**
-   * Возвращает описание поля recversion.
+   * Returns a description of <em>recversion</em> field.
+   *
+   * @return
    */
   IntegerColumn getRecVersionField();
 

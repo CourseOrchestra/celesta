@@ -7,7 +7,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 /**
- * Класс для работы с BLOB-полями.
+ * Class for working with BLOB fields.
  */
 public final class BLOB implements Cloneable {
     private DataPage data;
@@ -15,18 +15,16 @@ public final class BLOB implements Cloneable {
     private int size;
 
     /**
-     * Пустой (NULL) BLOB.
+     * Empty (NULL) BLOB.
      */
     public BLOB() {
     }
 
     /**
-     * BLOB на основе данных потока.
+     * BLOB based on data from stream.
      *
-     * @param source
-     *            Поток, из которого данные прочитываются в BLOB.
-     * @throws IOException
-     *             При ошибке чтения.
+     * @param source  Stream from which the data is being read to BLOB
+     * @throws IOException  on reading error
      */
     BLOB(final InputStream source) throws IOException {
         InputStream counter = new InputStream() {
@@ -44,7 +42,9 @@ public final class BLOB implements Cloneable {
     }
 
     /**
-     * Клон-BLOB, указывающий на ту же самую страницу данных.
+     * Returns a BLOB clone pointing at the same data page.
+     *
+     * @return
      */
     @Override
     public BLOB clone() {
@@ -55,22 +55,27 @@ public final class BLOB implements Cloneable {
     }
 
     /**
-     * Были ли данные BLOB-а изменены.
+     * Whether BLOB data has been changed.
+     *
+     * @return
      */
     public boolean isModified() {
         return isModified;
     }
 
     /**
-     * Возвращает поток для чтения данных.
+     * Returns a stream for data reading.
+     *
+     * @return
      */
     public InputStream getInStream() {
         return data == null ? null : data.getInStream();
     }
 
     /**
-     * Возвращает поток для записи данных, сбросив при этом текущие данные
-     * BLOB-а.
+     * Returns a stream for data writing, at the same time dropping off current data from BLOB.
+     *
+     * @return
      */
     public OutputStream getOutStream() {
         isModified = true;
@@ -100,14 +105,16 @@ public final class BLOB implements Cloneable {
     }
 
     /**
-     * Принимает ли данное поле в таблице значение NULL.
+     * Whether current field accepts a value of {@code NULL}.
+     *
+     * @return
      */
     public boolean isNull() {
         return data == null;
     }
 
     /**
-     * Сбрасывает BLOB в значение NULL.
+     * Resets BLOB to {@code NULL}.
      */
     public void setNull() {
         isModified = isModified || (data != null);
@@ -116,14 +123,16 @@ public final class BLOB implements Cloneable {
     }
 
     /**
-     * Возвращает размер данных.
+     * Returns data size.
+     *
+     * @return
      */
     public int size() {
         return size;
     }
 
     /**
-     * Данные BLOB-поля.
+     * Data of BLOB field.
      */
     private static final class DataPage {
         private static final int DEFAULT_PAGE_SIZE = 0xFFFF;

@@ -3,53 +3,58 @@ package ru.curs.celesta.dbutils.adaptors.column;
 import ru.curs.celesta.score.Column;
 
 /**
- * Класс, ответственный за генерацию определения столбца таблицы в разных СУБД.
+ * Class responsible for generation of table column definition in different DBMS.
  */
-//TODO: Javadoc In English
 public abstract class ColumnDefiner {
     static final String DEFAULT = "default ";
 
-    //TODO: Javadoc
+    /**
+     * Returns column field type, e.g. "boolean", "double","int" etc.
+     * depending on the DBMS in question.
+     *
+     * @return
+     */
     public abstract String dbFieldType();
 
     /**
-     * Возвращает определение колонки, содержащее имя, тип и NULL/NOT NULL (без
-     * DEFAULT). Требуется для механизма изменения колонок.
+     * Returns column definition that contains name, type and NULL/NOT NULL (
+     * without DEFAULT). It is needed for the column change mechanism.
      *
-     * @param c колонка.
+     * @param c  column.
      */
-    //TODO: Javadoc In English
     public abstract String getMainDefinition(Column c);
 
     /**
-     * Отдельно возвращает DEFAULT-определение колонки.
+     * Returns separately DEFAULT definition of the column.
      *
-     * @param c колонка.
+     * @param c  column.
      */
-    //TODO: Javadoc In English
     public abstract String getDefaultDefinition(Column c);
 
     /**
-     * Возвращает полное определение колонки (для создания колонки).
+     * Returns full definition of the column (for column creation).
      *
-     * @param c колонка
+     * @param c  column.
      */
-    //TODO: Javadoc In English
     public String getFullDefinition(Column c) {
         return join(getMainDefinition(c), getDefaultDefinition(c));
     }
 
-    //TODO: Javadoc
+    /**
+     * Whether the column is nullable.
+     *
+     * @param c  column.
+     * @return  "null" | "not null"
+     */
     public String nullable(Column c) {
         return c.isNullable() ? "null" : "not null";
     }
 
     /**
-     * Соединяет строки через пробел.
+     * Concatenates strings separated by a space symbol.
      *
-     * @param ss массив строк для соединения в виде свободного параметра.
+     * @param ss  strings array for concatenation in form of a free parameter.
      */
-    //TODO: Javadoc In English
     public static String join(String... ss) {
         StringBuilder sb = new StringBuilder();
         boolean multiple = false;

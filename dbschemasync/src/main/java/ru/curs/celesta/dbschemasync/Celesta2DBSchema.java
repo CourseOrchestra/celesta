@@ -34,7 +34,7 @@ import ru.curs.celesta.score.View;
 import ru.curs.celesta.score.ViewColumnMeta;
 
 /**
- * Класс-преобразователь Score в DBS-файл.
+ * Converter class: Score to DBS file.
  */
 public final class Celesta2DBSchema {
 
@@ -43,14 +43,11 @@ public final class Celesta2DBSchema {
     }
 
     /**
-     * Переводит score в DBS-файл.
+     * Converts score to DBS file.
      *
-     * @param s
-     *            Celesta score.
-     * @param dbsFile
-     *            Файл DBSChema.
-     * @throws Exception
-     *             Любая ошибка.
+     * @param s  Celesta score
+     * @param dbsFile  DBSchema file
+     * @throws Exception  any error
      */
     public static void scoreToDBS(AbstractScore s, File dbsFile) throws Exception {
 
@@ -82,8 +79,8 @@ public final class Celesta2DBSchema {
         Element root = doc.getDocumentElement();
 
         NodeList l = root.getChildNodes();
-        // Находим первое упоминание layout: таблицы надо вставить до него,
-        // иначе некорректно прочитается файл проекта.
+        // Find the first mentioning of layout: tables should be inserted before it,
+        // otherwise the project file would be read incorrectly.
         Node layout = null;
         for (int i = 0; i < l.getLength(); i++) {
             Node n = l.item(i);

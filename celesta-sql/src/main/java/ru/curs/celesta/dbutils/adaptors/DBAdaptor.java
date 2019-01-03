@@ -68,7 +68,7 @@ import ru.curs.celesta.score.*;
 import static ru.curs.celesta.dbutils.jdbc.SqlUtils.*;
 
 /**
- * Adapter for connection to the database.
+ * Adaptor for connection to the database.
  */
 public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdaptor {
 
@@ -227,7 +227,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
 
     // =========> PACKAGE-PRIVATE METHODS <=========
-    //TODO: Javadoc
+    /**
+     * Returns FROM clause for selection of a constant in SQL.
+     * @return
+     */
     String constantFromSql() {
         return "";
     }
@@ -237,14 +240,25 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         return "? as " + colName;
     }
 
-    ColumnDefiner getColumnDefiner(Class<? extends Column> c) {
+    final ColumnDefiner getColumnDefiner(Class<? extends Column> c) {
         return ColumnDefinerFactory.getColumnDefiner(getType(), c);
     }
     // =========> END PACKAGE-PRIVATE METHODS <=========
 
 
     // =========> PACKAGE-PRIVATE ABSTRACT METHODS <=========
-    //TODO: Javadoc
+    /**
+     * Builds SELECT expression that selects restricted amount of records starting
+     * from an offset.
+     *
+     * @param from
+     * @param whereClause
+     * @param orderBy
+     * @param offset
+     * @param rowCount
+     * @param fields
+     * @return
+     */
     abstract String getLimitedSQL(
             FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
     );
@@ -252,10 +266,21 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     //TODO: Javadoc
     abstract String getSelectTriggerBodySql(TriggerQuery query);
 
-    //TODO: Javadoc
+    /**
+     * Whether user defined tables exist in the DB.
+     *
+     * @param conn  DB connection
+     * @return
+     * @throws SQLException
+     */
     abstract boolean userTablesExist(Connection conn) throws SQLException;
 
-    //TODO: Javadoc
+    /**
+     * Creates DB schema if it is absent.
+     *
+     * @param conn  DB connection
+     * @param name  schema name
+     */
     abstract void createSchemaIfNotExists(Connection conn, String name);
     // =========> END PACKAGE-PRIVATE ABSTRACT METHODS <=========
 
@@ -276,11 +301,9 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
-     * Возвращает true в том и только том случае, если база данных содержит
-     * пользовательские таблицы (т. е. не является пустой базой данных).
-     *
+     * Returns {@code true} in that and only that case if DB contains user tables
+     * (i.e. DB is not empty).
      */
-    //TODO: Javadoc In English
     public final boolean userTablesExist() {
         try (Connection conn = connectionPool.get()) {
             return userTablesExist(conn);
@@ -290,12 +313,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
-     * Создаёт в базе данных схему с указанным именем, если таковая схема ранее
-     * не существовала.
+     * Creates DB schema with the specified name if such didn't exist before.
      *
-     * @param name имя схемы.
+     * @param name  schema name.
      */
-    //TODO: Javadoc In English
     public final void createSchemaIfNotExists(String name) {
         try (Connection conn = connectionPool.get()) {
             createSchemaIfNotExists(conn, name);
@@ -304,12 +325,33 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         }
     }
 
+    /**
+     * Adds a new column to the table.
+     *
+     * @param conn  DB connection
+     * @param c  column
+     */
     public final void createColumn(Connection conn, Column c) {
         this.ddlAdaptor.createColumn(conn, c);
     }
 
     // CHECKSTYLE:OFF 6 parameters
-    //TODO: Javadoc
+    /**
+     * Builds prepared statement for records UPDATE.<br/>
+     * <br/>
+     * {@code equalsMask[columnIndex]} should contain {@code true} for the column with
+     * index equal to {@code columnIndex} to take part in the evaluation.<br/>
+     * If {@code nullsMask[columnIndex]} contains {@code true} {@code IS NULL} check
+     * has a priority above {@code program[columnIndex]} check - {@code column = ?}.
+     *
+     * @param conn  DB connection
+     * @param t  updatable table
+     * @param equalsMask  equals mask
+     * @param nullsMask  nulls mask
+     * @param program  collects parameter predicates
+     * @param where  WHERE clause
+     * @return
+     */
     public final PreparedStatement getUpdateRecordStatement(
             Connection conn, Table t, boolean[] equalsMask,
             boolean[] nullsMask, List<ParameterSetter> program, String where) {
@@ -343,21 +385,32 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         return prepareStatement(conn, sql);
     }
 
+    /**
+     * Creates a table index in the DB.
+     *
+     * @param conn  DB connection
+     * @param index  table index
+     */
     public final void createIndex(Connection conn, Index index) {
         this.ddlAdaptor.createIndex(conn, index);
     }
 
+    /**
+     * Creates a foreign key in the DB.
+     *
+     * @param conn  DB connection
+     * @param fk  foreign key
+     */
     public final void createFK(Connection conn, ForeignKey fk) {
         this.ddlAdaptor.createFk(conn, fk);
     }
 
     /**
-     * Удаляет в грануле индекс на таблице.
+     * Removes table index in the grain.
      *
-     * @param g           Гранула
-     * @param dBIndexInfo Информация об индексе
+     * @param g           Grain
+     * @param dBIndexInfo Information on index
      */
-    //TODO: Javadoc In English
     public final void dropIndex(Grain g, DbIndexInfo dBIndexInfo) {
         try (Connection conn = connectionPool.get()) { //TODO: Why there is a new Connection instance
             ddlAdaptor.dropIndex(conn, g, dBIndexInfo);
@@ -367,16 +420,15 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
-     * Возвращает PreparedStatement, содержащий отфильтрованный набор записей.
+     * Returns {@link PreparedStatement} containing a filtered set of entries.
      *
-     * @param conn     Соединение.
-     * @param from     Объект для формирования from части запроса.
-     * @param orderBy  Порядок сортировки.
-     * @param offset   Количество строк для пропуска
-     * @param rowCount Количество строк для возврата (limit-фильтр).
-     * @param fields   Запрашиваемые столбцы. Если не пришло, то выбираются все.
+     * @param conn     Connection
+     * @param from     Object for forming FROM part of the query
+     * @param orderBy  Sort order
+     * @param offset   Number of entries to skip
+     * @param rowCount Number of entries to return (limit filter)
+     * @param fields   Requested columns. If none are provided all columns are requested
      */
-    //TODO: Javadoc In English
     // CHECKSTYLE:OFF 6 parameters
     public final PreparedStatement getRecordSetStatement(
             Connection conn, FromClause from, String whereClause,
@@ -386,8 +438,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         String sql;
 
         if (offset == 0 && rowCount == 0) {
-            // Запрос не лимитированный -- одинаков для всех СУБД
-            // Соединяем полученные компоненты в стандартный запрос
+            // The query is not limited -- it is same for all DBMS
+            // Joining all received components into a standard query
             // SELECT..FROM..WHERE..ORDER BY
             sql = getSelectFromOrderBy(from, whereClause, orderBy, fields);
         } else {
@@ -403,7 +455,14 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         }
     }
 
-    //TODO: Javadoc
+    /**
+     * Builds a SELECT COUNT statement.
+     *
+     * @param conn  Connection
+     * @param from  From clause
+     * @param whereClause  Where clause
+     * @return
+     */
     public final PreparedStatement getSetCountStatement(Connection conn, FromClause from, String whereClause) {
         String sql = "select count(*) from " + from.getExpression()
                 + ("".equals(whereClause) ? "" : " where " + whereClause);
@@ -412,15 +471,26 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         return result;
     }
 
-    //TODO: Javadoc
+    /**
+     * Drops a trigger from DB.
+     *
+     * @param conn  Connection
+     * @param query  Trigger query
+     */
     public final void dropTrigger(Connection conn, TriggerQuery query) {
         ddlAdaptor.dropTrigger(conn, query);
     }
 
-    public void updateVersioningTrigger(Connection conn, TableElement t) {
+    public final void updateVersioningTrigger(Connection conn, TableElement t) {
         ddlAdaptor.updateVersioningTrigger(conn, t);
     }
 
+    /**
+     * Creates primary key on a table.
+     *
+     * @param conn  DB connection
+     * @param t  table
+     */
     public final void createPK(Connection conn, TableElement t) {
         this.ddlAdaptor.createPk(conn, t);
     }
@@ -430,16 +500,14 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
-     * Создаёт представление в базе данных на основе метаданных.
+     * Creates a view in the DB based on metadata.
      *
-     * @param conn Соединение с БД.
-     * @param v    Представление.
+     * @param conn DB connection
+     * @param v    View
      */
-    //TODO: Javadoc In English
     public final void createView(Connection conn, View v) {
         this.ddlAdaptor.createView(conn, v);
     }
-
 
     public final void createParameterizedView(Connection conn, ParameterizedView pv) {
         this.ddlAdaptor.createParameterizedView(conn, pv);
@@ -462,13 +530,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     // =========> PUBLIC METHODS <=========
 
     /**
-     * Проверка на валидность соединения.
+     * Checking for connection validity.
      *
-     * @param conn    соединение.
-     * @param timeout тайм-аут.
-     * @return true если соединение валидно, иначе false
+     * @param conn    connection
+     * @param timeout time-out
+     * @return {@code true} if connection is valid, otherwise {@code false}
      */
-    //TODO: Javadoc In English
     public boolean isValidConnection(Connection conn, int timeout) {
         try {
             return conn.isValid(timeout);
@@ -478,9 +545,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
-     * Получить шаблон имени таблицы.
+     * Returns template by table name.
+     *
+     * @param schemaName  schema name
+     * @param tableName  table name
      */
-    //TODO: Javadoc In English
     public String tableString(String schemaName, String tableName) {
         StringBuilder sb = new StringBuilder();
 
@@ -502,24 +571,22 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
-     * Создаёт в базе данных таблицу "с нуля".
+     * Creates a table "from scratch" in the database.
      *
-     * @param conn Соединение.
-     * @param te   Таблица для создания.
-     * таблицы, в том числе в случае, если такая таблица существует.
+     * @param conn Connection
+     * @param te   Table for creation.
+     * tables also in case if such table exists.
      */
-    //TODO: Javadoc In English
     public void createTable(Connection conn, TableElement te) {
         ddlAdaptor.createTable(conn, te);
     }
 
     /**
-     * Возвращает набор имён столбцов определённой таблицы.
+     * Returns a set of column names for a specific table.
      *
-     * @param conn Соединение с БД.
-     * @param t    Таблица, по которой просматривать столбцы.
+     * @param conn DB connection
+     * @param t    Table to look the columns in.
      */
-    //TODO: Javadoc In English
     public Set<String> getColumns(Connection conn, TableElement t) {
         Set<String> result = new LinkedHashSet<>();
         try {
@@ -542,14 +609,13 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
-     * Удаляет внешний ключ из базы данных.
+     * Drops a foreign key from the database.
      *
-     * @param conn       Соединение с БД
-     * @param schemaName имя гранулы
-     * @param tableName  Имя таблицы, на которой определён первичный ключ.
-     * @param fkName     Имя внешнего ключа.
+     * @param conn       DB connection
+     * @param schemaName schema name
+     * @param tableName  table possessing the foreign key
+     * @param fkName     name of foreign key
      */
-    //TODO: Javadoc In English
     public void dropFK(Connection conn, String schemaName, String tableName, String fkName) {
         try {
             this.ddlAdaptor.dropFK(conn, schemaName, tableName, fkName);
@@ -558,19 +624,23 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         }
     }
 
-    //TODO: Javadoc
+    /**
+     * Drops parameterized view from the database.
+     *
+     * @param conn       DB connection
+     * @param schemaName schema name
+     * @param viewName   view name
+     */
     public void dropParameterizedView(Connection conn, String schemaName, String viewName) {
         this.ddlAdaptor.dropParameterizedView(conn, schemaName, viewName);
     }
 
     /**
-     * Возвращает перечень имён представлений в грануле.
+     * Returns list of view names in the grain.
      *
-     * @param conn Соединение с БД.
-     * @param g    Гранула, перечень имён представлений которой необходимо
-     *             получить.
+     * @param conn DB connection
+     * @param g    Grain for which the list of view names have to be returned.
      */
-    //TODO: Javadoc In English
     public List<String> getViewList(Connection conn, Grain g) {
         String sql = String.format("select table_name from information_schema.views where table_schema = '%s'",
                 g.getName());
@@ -595,53 +665,65 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         );
     }
 
-
-    //TODO: Javadoc
+    /**
+     * Creates a sequence in the database.
+     *
+     * @param conn  DB connection
+     * @param s  sequence element
+     */
     public void createSequence(Connection conn, SequenceElement s) {
         ddlAdaptor.createSequence(conn, s);
     }
 
-    //TODO: Javadoc
+    /**
+     * Alters sequence in the database.
+     *
+     * @param conn DB connection
+     * @param s sequence element
+     */
     public void alterSequence(Connection conn, SequenceElement s) {
         ddlAdaptor.alterSequence(conn, s);
     }
 
-    //TODO: Javadoc
+    /**
+     * Drops sequence from the database.
+     *
+     * @param conn DB connection
+     * @param s sequence element
+     */
     public void dropSequence(Connection conn, SequenceElement s) {
         String sql = String.format("DROP SEQUENCE " + tableString(s.getGrain().getName(), s.getName()));
         executeUpdate(conn, sql);
     }
 
     /**
-     * Удаление представления.
+     * Drops view.
      *
-     * @param conn       Соединение с БД.
-     * @param schemaName Имя гранулы.
-     * @param viewName   Имя представления.
+     * @param conn       DB connection
+     * @param schemaName grain name
+     * @param viewName   view name
      */
-    //TODO: Javadoc In English
     public void dropView(Connection conn, String schemaName, String viewName) {
         ddlAdaptor.dropView(conn, schemaName, viewName);
     }
 
     /**
-     * Создаёт или пересоздаёт прочие системные объекты (хранимые процедуры,
-     * функции), необходимые для функционирования Celesta на текущей СУБД.
+     * Creates or recreates other system objects (stored procedures, functions)
+     * needed for Celesta functioning on current RDBMS.
      *
-     * @param conn Соединение.
+     * @param conn  DB connection
+     * @param sysSchemaName  system schema name
      */
-    //TODO: Javadoc In English
     public void createSysObjects(Connection conn, String sysSchemaName) {
 
     }
 
     /**
-     * Транслирует литерал даты Celesta в литерал даты, специфический для базы
-     * данных.
+     * Translates Celesta date literal to the one from specific database.
      *
-     * @param date Литерал даты.
+     * @param date  Date literal
+     * @return
      */
-    //TODO: Javadoc In English
     public String translateDate(String date) {
         try {
             DateTimeColumn.parseISODate(date);
@@ -761,32 +843,34 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         }
     }
 
-    //TODO: Javadoc
+    /**
+     * Whether DB supports cortege comparing.
+     *
+     * @return
+     */
     @Override
     public boolean supportsCortegeComparing() {
         return false;
     }
 
     /**
-     * Удаляет первичный ключ на таблице с использованием известного имени
-     * первичного ключа.
+     * Drops primary key from the table by using known name of the primary key.
      *
-     * @param conn   Соединение с базой данных.
-     * @param t      Таблица.
-     * @param pkName Имя первичного ключа.
+     * @param conn   DB connection
+     * @param t      Table
+     * @param pkName name of the primary key
      */
-    //TODO: Javadoc In English
     public void dropPk(Connection conn, TableElement t, String pkName) {
         ddlAdaptor.dropPk(conn, t, pkName);
     }
 
     /**
-     * Обновляет на таблице колонку.
+     * Updates a table column.
      *
-     * @param conn Соединение с БД.
-     * @param c    Колонка для обновления.
+     * @param conn   DB connection
+     * @param c      Column to update
+     * @param actual Actual column info
      */
-    //TODO: Javadoc In English
     public void updateColumn(Connection conn, Column c, DbColumnInfo actual) {
         ddlAdaptor.updateColumn(conn, c, actual);
     }
@@ -801,98 +885,181 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     // =========> PUBLIC ABSTRACT METHODS <=========
 
     /**
-     * Возвращает навигационный PreparedStatement по фильтрованному набору
-     * записей.
+     * Returns navigable PreparedStatement by a filtered set of records.
      *
-     * @param conn                  Соединение.
-     * @param orderBy               Порядок сортировки (прямой или обратный).
-     * @param navigationWhereClause Условие навигационного набора (от текущей записи).
+     * @param conn                  Connection
+     * @param from                  From clause
+     * @param orderBy               Sorting order (ascending or descending)
+     * @param navigationWhereClause Navigable set condition (from current record)
+     * @param fields                Fields of selection
+     * @param offset                First record offset
      */
-    //TODO: Javadoc In English
     public abstract PreparedStatement getNavigationStatement(
             Connection conn, FromClause from, String orderBy,
             String navigationWhereClause, Set<String> fields, long offset
     );
 
-    //TODO: Javadoc
+    /**
+     * Checks if table exists in the DB.
+     *
+     * @param conn  DB connection
+     * @param schema  schema name
+     * @param name  table name
+     * @return
+     */
     public abstract boolean tableExists(Connection conn, String schema, String name);
 
-    //TODO: Javadoc
+    /**
+     * Checks if trigger exists in the DB.
+     *
+     * @param conn  DB connection.
+     * @param query  trigger query parameters
+     * @return
+     * @throws SQLException  thrown if resulting query fails
+     */
     public abstract boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException;
 
-    //TODO: Javadoc
+    /**
+     * Creates a PreparedStatement object for a SELECT statement containing at most one record.
+     *
+     * @param conn  DB connection
+     * @param t  table
+     * @param where  WHERE condition
+     * @param fields  fields of selection
+     * @return
+     */
     public abstract PreparedStatement getOneRecordStatement(Connection conn, TableElement t,
                                                             String where, Set<String> fields);
 
-    //TODO: Javadoc
+    /**
+     * Creates a PreparedStatement object for a SELECT statement of a single column containing
+     * at most one record.
+     *
+     * @param conn  DB connection
+     * @param c  column to select
+     * @param where  WHERE condition
+     * @return
+     */
     public abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where);
 
-    //TODO: Javadoc
+    /**
+     * Creates a PreparedStatement object for a DELETE statement for deleting a set of records that
+     * satisfy a condition.
+     *
+     * @param conn  DB connection
+     * @param t  table
+     * @param where  condition
+     * @return
+     */
     public abstract PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where);
 
-    //TODO: Javadoc
+    /**
+     * Creates a PreparedStatement object for an INSERT statement to insert a record into a table.
+     *
+     * @param conn  DB connection
+     * @param t  table
+     * @param nullsMask  null-flags (if set the corresponding field at n-th position becomes {@code null})
+     * @param program  collects parameters that can be set with the query
+     * @return
+     */
     public abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
                                                                List<ParameterSetter> program);
-    //TODO: Javadoc
+    /**
+     * Returns current identity value for the table.
+     *
+     * @param conn  DB connection
+     * @param t  table
+     * @return
+     */
     public abstract int getCurrentIdent(Connection conn, Table t);
 
-    //TODO: Javadoc
+    /**
+     * Creates a PreparedStatement object for a DELETE statement for deleting a set of records that
+     * satisfy a condition.
+     *
+     * @param conn  DB connection
+     * @param t  table
+     * @param where  condition (can be {@code null})
+     * @return
+     */
     public abstract PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where);
 
-
     /**
-     * Возвращает информацию о столбце.
+     * Returns information on a column.
      *
-     * @param conn Соединение с БД.
-     * @param c    Столбец.
+     * @param conn  DB connection
+     * @param c     column
      */
-    //TODO: Javadoc In English
     public abstract DbColumnInfo getColumnInfo(Connection conn, Column c);
 
     /**
-     * Возвращает информацию о первичном ключе таблицы.
+     * Returns information on the primary key of a table.
      *
-     * @param conn Соединение с БД.
-     * @param t    Таблица, информацию о первичном ключе которой необходимо
-     *             получить.
+     * @param conn  DB connection
+     * @param t     Table that the information on the primary key has to be returned from
      */
-    //TODO: Javadoc In English
     public abstract DbPkInfo getPKInfo(Connection conn, TableElement t);
 
-    //TODO: Javadoc
+    /**
+     * Returns information on the foreign keys from grain.
+     *
+     * @param conn  DB connection
+     * @param g  grain name
+     * @return  list where each item contain information on a separate foreign key
+     */
     public abstract List<DbFkInfo> getFKInfo(Connection conn, Grain g);
 
     /**
-     * Возвращает набор индексов, связанных с таблицами, лежащими в указанной
-     * грануле.
+     * Returns a set of indices referring to tables specified in the indicated grain.
      *
-     * @param conn Соединение с БД.
-     * @param g    Гранула, по таблицам которой следует просматривать индексы.
+     * @param conn  DB connection
+     * @param g     Grain the tables of which have to be traversed for the indices.
      */
-    //TODO: Javadoc In English
     public abstract Map<String, DbIndexInfo> getIndices(Connection conn, Grain g);
 
     //TODO: Javadoc
     public abstract List<String> getParameterizedViewList(Connection conn, Grain g);
 
     /**
-     * Возвращает Process Id текущего подключения к базе данных.
+     * Returns process id of current database connection.
      *
-     * @param conn Соединение с БД.
+     * @param conn  DB connection
      */
-    //TODO: Javadoc In English
     public abstract int getDBPid(Connection conn);
 
-    //TODO: Javadoc
+    /**
+     * Returns current database type. E.g. <b>H2</b>, <b>POSTGRESQL</b> etc.
+     *
+     * @return
+     */
     public abstract DBType getType();
 
-    //TODO: Javadoc
+    /**
+     * Retrieves next value from the sequence.
+     *
+     * @param conn  DB connection
+     * @param s  sequence
+     * @return
+     */
     public abstract long nextSequenceValue(Connection conn, SequenceElement s);
 
-    //TODO: Javadoc
+    /**
+     * Checks if sequence exists in the DB.
+     *
+     * @param conn  DB connection
+     * @param schema  schema name
+     * @param name  sequence name
+     * @return
+     */
     public abstract boolean sequenceExists(Connection conn, String schema, String name);
 
-    //TODO: Javadoc
+    /**
+     * Returns information on a sequence.
+     *
+     * @param conn  DB connection
+     * @param s  sequence
+     * @return
+     */
     public abstract DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s);
     // =========> END PUBLIC ABSTRACT METHODS <=========
 }

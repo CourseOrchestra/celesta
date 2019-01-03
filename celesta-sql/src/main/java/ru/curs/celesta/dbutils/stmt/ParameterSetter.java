@@ -83,4 +83,5 @@ public abstract class ParameterSetter {
     public static ArbitraryParameterSetter createArbitrary(Object v, QueryBuildingHelper queryBuildingHelper) {
         return new ArbitraryParameterSetter(queryBuildingHelper, v);
     }
+
 }

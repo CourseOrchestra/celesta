@@ -5,7 +5,7 @@ import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 
 import java.util.List;
 
-public class FieldsCortegeTerm extends WhereTerm {
+public final class FieldsCortegeTerm extends WhereTerm {
     // quoted column names
     final List<String> fieldNames;
 

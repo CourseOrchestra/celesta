@@ -6,7 +6,7 @@ import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ValuesCortegeTerm extends WhereTerm {
+public final class ValuesCortegeTerm extends WhereTerm {
 
     final List<Integer> fieldIndices;
 

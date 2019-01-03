@@ -10,6 +10,9 @@ import java.util.List;
  */
 public final class AlwaysFalse extends WhereTerm {
 
+    /**
+     * FALSE constant singleton.
+     */
     public static final AlwaysFalse FALSE = new AlwaysFalse();
 
     private AlwaysFalse() {

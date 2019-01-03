@@ -5,13 +5,16 @@ import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-public class DecimalColumn extends Column {
+/**
+ * Column with a fixed decimal point type.
+ */
+public final class DecimalColumn extends Column {
 
     //driven by MsSql
     public static final int MAX_PRECISION = 38;
 
     /**
-     * Celesta-тип данных колонки.
+     * Celesta type of the column data.
      */
     public static final String CELESTA_TYPE = "DECIMAL";
 
@@ -89,7 +92,7 @@ public class DecimalColumn extends Column {
     }
 
     @Override
-    public Class getJavaClass() {
+    public Class<?> getJavaClass() {
         return BigDecimal.class;
     }
 
@@ -107,19 +110,40 @@ public class DecimalColumn extends Column {
         }
     }
 
+    /**
+     * Returns precision.
+     *
+     * @return
+     */
     public int getPrecision() {
         return precision;
     }
 
+    /**
+     * Sets precision.
+     *
+     * @param precision  precision
+     */
     public void setPrecision(int precision) {
         this.precision = precision;
     }
 
+    /**
+     * Returns scale.
+     *
+     * @return
+     */
     public int getScale() {
         return scale;
     }
 
+    /**
+     * Sets scale.
+     *
+     * @param scale  scale
+     */
     public void setScale(int scale) {
         this.scale = scale;
     }
+
 }

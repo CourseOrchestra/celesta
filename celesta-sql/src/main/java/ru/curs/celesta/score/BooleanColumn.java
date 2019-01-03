@@ -4,12 +4,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
- * Булевская колонка (тип BIT).
- *
+ * Boolean column (BIT type).
  */
 public final class BooleanColumn extends Column {
     /**
-     * Celesta-тип данных колонки.
+     * Celesta type of the column data.
      */
     public static final String CELESTA_TYPE = "BIT";
     private Boolean defaultvalue;
@@ -24,13 +23,12 @@ public final class BooleanColumn extends Column {
     }
 
     /**
-     * Производит разбор строки в SQL-определении DEFAULT в boolean-значение.
+     * Parses a string in SQL definition DEFAULT to a boolean value. 
      *
-     * @param lexvalue
-     *            строковое определение.
+     * @param lexvalue  string definition
+     * @return
      *
-     * @throws ParseException
-     *             неверный формат строки.
+     * @throws ParseException  incorrect string format
      */
     public static Boolean parseSQLBool(String lexvalue) throws ParseException {
         if (lexvalue == null) {
@@ -76,7 +74,7 @@ public final class BooleanColumn extends Column {
     }
 
     @Override
-    public Class getJavaClass() {
+    public Class<?> getJavaClass() {
         return Boolean.class;
     }
 
@@ -84,4 +82,5 @@ public final class BooleanColumn extends Column {
     public String getCelestaDefault() {
         return defaultvalue == null ? null : ("'" + defaultvalue.toString().toUpperCase() + "'");
     }
+
 }

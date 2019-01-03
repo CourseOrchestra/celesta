@@ -12,7 +12,10 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Created by ioann on 06.07.2017.
+ * Materialized view Cursor.
+ *
+ * @author ioann
+ * @since 2017-07-06
  */
 public abstract class MaterializedViewCursor extends BasicCursor {
 
@@ -46,7 +49,9 @@ public abstract class MaterializedViewCursor extends BasicCursor {
   }
 
   /**
-   * Описание представления (метаинформация).
+   * Returns materialized view description (meta information).
+   *
+   * @return
    */
   @Override
   public MaterializedView meta() {
@@ -76,11 +81,10 @@ public abstract class MaterializedViewCursor extends BasicCursor {
   }
 
   /**
-   * Осуществляет поиск записи по ключевым полям, выбрасывает исключение, если
-   * запись не найдена.
+   * Performs a search of a record by the key fields, throwing an exception if
+   * the record is not found.
    *
-   * @param values
-   *            значения ключевых полей
+   * @param values   values of the key fields
    */
   public final void get(Object... values) {
     if (!tryGet(values)) {
@@ -96,11 +100,11 @@ public abstract class MaterializedViewCursor extends BasicCursor {
   }
 
   /**
-   * Осуществляет поиск записи по ключевым полям, возвращает значение --
-   * найдена запись или нет.
+   * Tries to perform a search of a record by the key fields, returning a value whether
+   * the record was found or not.
    *
-   * @param values
-   *            значения ключевых полей
+   * @param values  values of the key fields
+   * @return  {@code true} if the record is found, otherwise - {@code false}
    */
   public final boolean tryGet(Object... values) {
     if (!canRead()) {
@@ -111,10 +115,11 @@ public abstract class MaterializedViewCursor extends BasicCursor {
         0, values);
   }
 
-
   /**
-   * Получает из базы данных запись, соответствующую полям текущего первичного
-   * ключа.
+   * Retrieves a record from the database that corresponds to the fields of current
+   * primary key.
+   *
+   * @return  {@code true} if the record is retrieved, otherwise - {@code false}
    */
   public final boolean tryGetCurrent() {
     if (!canRead()) {
@@ -125,19 +130,22 @@ public abstract class MaterializedViewCursor extends BasicCursor {
   }
 
   /**
-   * Возвращает в массиве значения полей первичного ключа.
+   * Returns an array of field values of the primary key.
+   *
+   * @return
    */
   public Object[] getCurrentKeyValues() {
     return _currentKeyValues();
   }
 
-
   // CHECKSTYLE:OFF
     /*
-     * Эта группа методов именуется по правилам Python, а не Java. В Python
-     * имена protected-методов начинаются с underscore. Использование методов
-     * без underscore приводит к конфликтам с именами атрибутов.
+     * This group of methods is named according to Python rules, and not Java.
+     * In Python names of protected methods are started with an underscore symbol.
+     * When using methods without an underscore symbol conflicts with attribute names
+     * may happen.
      */
 
   protected abstract Object[] _currentKeyValues();
+
 }

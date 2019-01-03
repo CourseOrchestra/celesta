@@ -8,12 +8,11 @@ import java.util.regex.Pattern;
 import ru.curs.celesta.CelestaException;
 
 /**
- * Целочисленная колонка.
- *
+ * Integer column.
  */
 public final class IntegerColumn extends Column {
     /**
-     * Celesta-тип данных колонки.
+     * Celesta type of the column data.
      */
     public static final String CELESTA_TYPE = "INT";
     private Integer defaultvalue;
@@ -51,6 +50,10 @@ public final class IntegerColumn extends Column {
         return defaultvalue;
     }
 
+    /**
+     * Returns sequence of the column. 
+     * @return
+     */
     public SequenceElement getSequence() {
         return sequence;
     }
@@ -80,7 +83,7 @@ public final class IntegerColumn extends Column {
     }
 
     @Override
-    public Class getJavaClass() {
+    public Class<?> getJavaClass() {
         return Integer.class;
     }
 

@@ -10,21 +10,20 @@ import ru.curs.celesta.syscursors.PermissionsCursor;
 import ru.curs.celesta.syscursors.UserrolesCursor;
 
 /**
- * Менеджер пермиссий. Определяет, имеет ли право тот или иной пользователь на
- * операции с таблицей. Права определяются по содержимому системных таблиц
- * распределения прав доступа.
+ * Permission manager. It determines if a user has rights for operations with a table.
+ * The rights are defined by contents of the system tables for access rights distribution.
  * <p>
- * Для оптимизации работы объект содержит кэш.
+ * To optimize work the object contains cache.
  */
 public final class PermissionManager implements IPermissionManager {
     /**
-     * Размер кэша (в записях). ДОЛЖЕН БЫТЬ СТЕПЕНЬЮ ДВОЙКИ!!
+     * Cache size (in number of entries). MUST BE POWER OF TWO!!
      */
     private static final int CACHE_SIZE = 8192;
 
     private static final int ROLE_CACHE_SIZE = 2048;
     /**
-     * "Срок годности" записи кэша (в миллисекундах).
+     * "Shelf life" of a cache entry (in milliseconds).
      */
     private static final int CACHE_ENTRY_SHELF_LIFE = 20000;
 
@@ -38,7 +37,7 @@ public final class PermissionManager implements IPermissionManager {
     private RoleCacheEntry[] rolesCache = new RoleCacheEntry[ROLE_CACHE_SIZE];
 
     /**
-     * Базовый класс элемента кэша менеджера пермиссий.
+     * Base class for entry of permission manager cache.
      */
     private static class BaseCacheEntry {
         private final long expirationTime;
@@ -54,14 +53,14 @@ public final class PermissionManager implements IPermissionManager {
     }
 
     /**
-     * Запись во внутреннем кэше.
+     * Entry of the internal cache.
      */
     private static class PermissionCacheEntry extends BaseCacheEntry {
         private final String userName;
         private final GrainElement table;
         private final int permissionMask;
 
-        public PermissionCacheEntry(String userName, GrainElement table,
+        PermissionCacheEntry(String userName, GrainElement table,
                                     int permissionMask) {
             super();
             if (userName == null) {
@@ -84,7 +83,7 @@ public final class PermissionManager implements IPermissionManager {
     }
 
     /**
-     * Запись в кэше ролей пользователя.
+     * User roles entry for the cache.
      */
     private static class RoleCacheEntry extends BaseCacheEntry {
         private final String userId;
@@ -102,6 +101,14 @@ public final class PermissionManager implements IPermissionManager {
         this.dbAdaptor = dbAdaptor;
     }
 
+    /**
+     * Returns {@code true} if action is allowed on a grain element.
+     *
+     * @param c  call context
+     * @param t  grain element
+     * @param a  action
+     * @return
+     */
     public boolean isActionAllowed(CallContext c, GrainElement t, Action a) {
         // Системному пользователю дозволяется всё без дальнейшего
         // разбирательства.
@@ -170,6 +177,6 @@ public final class PermissionManager implements IPermissionManager {
             }
             return new PermissionCacheEntry(c.getUserId(), t, permissionsMask);
         }
-
     }
+
 }

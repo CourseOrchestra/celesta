@@ -10,13 +10,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Колонка дат (DATETIME).
- *
+ * Date column (DATETIME).
  */
 public final class DateTimeColumn extends Column {
 
     /**
-     * Celesta-тип данных колонки.
+     * Celesta type of the column data.
      */
     public static final String CELESTA_TYPE = "DATETIME";
 
@@ -48,14 +47,12 @@ public final class DateTimeColumn extends Column {
     }
 
     /**
-     * Выполняет разбор даты в формате YYYYMMDD и преобразование в Java-объект
-     * Date.
+     * Parses the date in YYYYMMDD format and translates it to Java object.
      *
-     * @param lexvalue
-     *            текстовое значение.
-     * @throws ParseException
-     *             В случае, если текстовое значение не соответствует паттерну
-     *             YYYYMMDD.
+     * @param lexvalue  text value.
+     * @return
+     * @throws ParseException  in case if the text value doesn't correspond to 
+     *                         YYYYMMDD pattern.
      */
     public static Date parseISODate(String lexvalue) throws ParseException {
         Matcher m = P.matcher(lexvalue);
@@ -82,7 +79,9 @@ public final class DateTimeColumn extends Column {
     }
 
     /**
-     * Используется ли конструкция GETDATE() в качестве значения по умолчанию.
+     * Whether the construction GETDATE() is used as a default value.
+     *
+     * @return
      */
     public boolean isGetdate() {
         return getdate;
@@ -119,7 +118,7 @@ public final class DateTimeColumn extends Column {
     }
 
     @Override
-    public Class getJavaClass() {
+    public Class<?> getJavaClass() {
         return Date.class;
     }
 

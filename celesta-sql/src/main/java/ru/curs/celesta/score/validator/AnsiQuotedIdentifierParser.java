@@ -2,7 +2,12 @@ package ru.curs.celesta.score.validator;
 
 import java.util.regex.Pattern;
 
-public class AnsiQuotedIdentifierParser extends IdentifierParser {
+/**
+ * ANSI quotes identifier parser and validator.<br/>
+ * <br/>
+ * Identifiers like <b>"celestaIdentifier"</b> are processed.
+ */
+public final class AnsiQuotedIdentifierParser extends IdentifierParser {
     private static final Pattern NAME_PATTERN = Pattern.compile(
             "(\"([^\"]+)\")|(" + PLAIN_NAME_PATTERN_STR + ")"
     );

@@ -16,13 +16,12 @@ import java.util.stream.IntStream;
  */
 public final class FieldsLookup {
 
-
     private final Class<? extends DataGrainElement> targetClass;
     private final DataGrainElement filtered;
     private final DataGrainElement filtering;
 
-    final private List<String> fields = new ArrayList<>();
-    final private List<String> otherFields = new ArrayList<>();
+    private final List<String> fields = new ArrayList<>();
+    private final List<String> otherFields = new ArrayList<>();
 
     private BasicCursor cursor;
     private BasicCursor otherCursor;
@@ -60,7 +59,7 @@ public final class FieldsLookup {
     }
 
     /**
-     * This constructor is for tests and must be removed in future
+     * This constructor is for tests and must be removed in future.
      *
      * @param table
      * @param otherTable
@@ -81,7 +80,7 @@ public final class FieldsLookup {
     }
 
     /**
-     * This constructor is for tests and must be removed in future
+     * This constructor is for tests and must be removed in future.
      *
      * @param view
      * @param otherView

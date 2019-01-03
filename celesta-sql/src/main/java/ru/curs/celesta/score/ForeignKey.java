@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Класс внешнего ключа.
- *
+ * Foreign key class.
  */
 public final class ForeignKey {
 
@@ -47,12 +46,10 @@ public final class ForeignKey {
     }
 
     /**
-     * Устанавливает правило на удаление.
+     * Sets rule for deletion.
      *
-     * @param deleteBehaviour
-     *            Правило на удаление.
-     * @throws ParseException
-     *             При попытке модификации системной гранулы.
+     * @param deleteBehaviour  rule for deletion.
+     * @throws ParseException  When trying to modify the system grain.
      */
     public void setDeleteRule(FKRule deleteBehaviour) throws ParseException {
         if (deleteBehaviour == null) {
@@ -66,12 +63,10 @@ public final class ForeignKey {
     }
 
     /**
-     * Устанавливает правило на обновление.
+     * Sets rule for update.
      *
-     * @param updateBehaviour
-     *            Правило на обновление.
-     * @throws ParseException
-     *             При попытке модификации системной гранулы.
+     * @param updateBehaviour  rule for update.
+     * @throws ParseException  When trying to modify the system grain.
      */
     public void setUpdateRule(FKRule updateBehaviour) throws ParseException {
         if (updateBehaviour == null) {
@@ -96,47 +91,56 @@ public final class ForeignKey {
     }
 
     /**
-     * Неизменяемый перечень столбцов внешнего ключа.
+     * Unmodified list of columns for the foreign key.
+     *
+     * @return
      */
     public Map<String, Column> getColumns() {
         return columns.getElements();
     }
 
     /**
-     * Таблица, частью которой является внешний ключ.
+     * Table that the foreign key is part of.
+     *
+     * @return
      */
     public Table getParentTable() {
         return parentTable;
     }
 
     /**
-     * Таблица, на которую ссылается внешний ключ.
+     * Table that is being referenced by the foreign key.
+     *
+     * @return
      */
     public Table getReferencedTable() {
         return referencedTable;
     }
 
     /**
-     * Поведение при удалении.
+     * Returns rule for deletion.
+     *
+     * @return
      */
     public FKRule getDeleteRule() {
         return deleteRule;
     }
 
     /**
-     * Поведение при обновлении.
+     * Returns rule for update.
+     *
+     * @return
      */
     public FKRule getUpdateRule() {
         return updateRule;
     }
 
     /**
-     * Добавляет колонку. Колонка должна принадлежать родительской таблице.
+     * Adds a column. The column must belong to the parent table.
      *
-     * @param columnName
-     *            имя колонки.
-     * @throws ParseException
-     *             в случае, если колонка не найдена.
+     * @param columnName  column name
+     * @return
+     * @throws ParseException  in case if the column is not found
      */
     void addColumn(String columnName) throws ParseException {
         columnName = getParentTable().getGrain().getScore().getIdentifierParser().parse(columnName);
@@ -151,16 +155,14 @@ public final class ForeignKey {
     }
 
     /**
-     * Добавляет таблицу, на которую имеется ссылка и финализирует создание
-     * первичного ключа, добавляя его к родительской таблице.
+     * Adds table that is being referenced, and finalizes the creation of
+     * the primary key, adding it to the parent table.
      *
-     * @param grain
-     *            Имя гранулы
-     * @param table
-     *            Имя таблицы
-     * @throws ParseException
-     *             В случае, если ключ с таким набором полей (хотя не
-     *             обязательно ссылающийся на ту же таблицу) уже есть в таблице.
+     * @param grain  grain name
+     * @param table  table name
+     * @throws ParseException  in case if there's already a key with the same set of
+     *                         fields (not necessarily referencing the same table) in
+     *                         the table. 
      */
     void setReferencedTable(String grain, String table) throws ParseException {
         table = getParentTable().getGrain().getScore().getIdentifierParser().parse(table);
@@ -271,16 +273,15 @@ public final class ForeignKey {
     }
 
     /**
-     * Добавляет колонку, на которую имеется ссылка. Список этих колонок не
-     * хранится в Foreign Key, т. к. достаточно знания имени таблицы и знания о
-     * первичном ключе таблицы (ссылки на UNIQUE-комбинации не применяются из-за
-     * отсутствия поддержки UNIQUE-комбинаций). Механизм необходим для контроля
-     * ссылочной корректности текста.
+     * Adds a column that is being referenced. A list of such columns is not
+     * stored in the Foreign Key, for it is necessary to know the table name and
+     * the primary key of table (references to UNIQUE combinations are not used
+     * because the support of UNIQUE combinations is missing). The mechanism is
+     * needed for control of text reference correctness.
      *
-     * @param columnName
-     *            имя колонки
-     * @throws ParseException
-     *             Если колонка не содержится в таблице, на которую ссылаются.
+     * @param columnName  column name
+     * @throws ParseException  if the column is not present in the table that is
+     *                         being referenced
      */
     void addReferencedColumn(String columnName) throws ParseException {
         // Запускать этот метод можно только после простановки таблицы, на
@@ -304,14 +305,13 @@ public final class ForeignKey {
     }
 
     /**
-     * Финализирует перечень полей, на который ссылается FK. Для удобства
-     * тестирования и экономии памяти внутренний список ссылок подчищается сразу
-     * за финализацией, он нигде не хранится и нигде не доступен. Его
-     * единственная роль -- проверять правильность текста.
+     * Finalizes the list of fields that is being referenced by the FK. For ease of
+     * testing and to save memory, the internal list of references is garbage
+     * collected right after the finalization. It is neither stored or available
+     * anywhere. Its sole role is to check the text correctness.
      *
-     * @throws ParseException
-     *             Если перечень полей не совпадает с перечнем полей первичного
-     *             ключа.
+     * @throws ParseException  if the set of fields doesn't correspond to the one
+     *                         of the primary key.
      */
     void finalizeReference() throws ParseException {
 
@@ -344,7 +344,9 @@ public final class ForeignKey {
     }
 
     /**
-     * Возвращает имя ограничения FK (или генерирует его, если оно не задано).
+     * Returns the name of FK constraint (or generates it if it's not provided).
+     *
+     * @return
      */
     public String getConstraintName() {
         if (constraintName != null) {
@@ -362,12 +364,10 @@ public final class ForeignKey {
     }
 
     /**
-     * Устанавливает имя ограничения FK.
+     * Sets name for FK constraint.
      *
-     * @param constraintName
-     *            новое имя ограничения.
-     * @throws ParseException
-     *             неверное имя ограничения.
+     * @param constraintName  new name of constraint
+     * @throws ParseException  incorrect name of constraint
      */
     public void setConstraintName(String constraintName) throws ParseException {
         if (constraintName != null) {
@@ -377,10 +377,9 @@ public final class ForeignKey {
     }
 
     /**
-     * Удаляет внешний ключ.
+     * Deletes the foreign key.
      *
-     * @throws ParseException
-     *             при попытке изменить системную гранулу.
+     * @throws ParseException  When trying to modify the system grain.
      */
     public void delete() throws ParseException {
         parentTable.removeFK(this);
@@ -443,4 +442,5 @@ public final class ForeignKey {
 
         bw.println(";");
     }
+
 }
