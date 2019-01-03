@@ -625,7 +625,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
-     * Drops parametrized view from the database.
+     * Drops parameterized view from the database.
      *
      * @param conn       DB connection
      * @param schemaName schema name
@@ -844,7 +844,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
-     * Whether DB supports cortage comparing.
+     * Whether DB supports cortege comparing.
      *
      * @return
      */

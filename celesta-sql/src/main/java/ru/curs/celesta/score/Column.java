@@ -104,7 +104,7 @@ public abstract class Column extends NamedElement implements ColumnMeta {
     }
 
     /**
-     * Delets the column.
+     * Deletes the column.
      *
      * @throws ParseException  if a part of the primary key, or a foreign key, or an index
      *                         is being deleted.

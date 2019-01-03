@@ -374,7 +374,7 @@ public final class Grain extends NamedElement {
             if (se != null) {
                 throw new ParseException(
                         String.format(
-                                "Identifier %s can't be used for the naming of sequence as  it'is reserved by Celesta.",
+                                "Identifier %s can't be used for the naming of sequence as it is reserved by Celesta.",
                                 sequenceName
                         )
                 );

@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
 /**
- * Naitive SQL holder for a grain part.
+ * Native SQL holder for a grain part.
  */
 public final class NativeSqlElement {
 

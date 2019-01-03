@@ -268,11 +268,11 @@ public class ScoreTest {
         assertEquals(1, g1.getElements(View.class).size());
         assertFalse(g1.isModified());
         assertTrue(assertThrows(ParseException.class, () ->
-                new View(g1p, "testit", "select postalcode, city from adresses where flat = 5"))
+                new View(g1p, "testit", "select postalcode, city from addresses where flat = 5"))
                 .getMessage().contains("is expected to be of TEXT type"));
         assertEquals(1, g1.getElements(View.class).size());
         assertTrue(g1.isModified());
-        View nv = new View(g1p, "testit", "select postalcode, city from adresses where flat = '5'");
+        View nv = new View(g1p, "testit", "select postalcode, city from addresses where flat = '5'");
         assertEquals(2, nv.getColumns().size());
         assertEquals(2, g1.getElements(View.class).size());
         assertTrue(g1.isModified());

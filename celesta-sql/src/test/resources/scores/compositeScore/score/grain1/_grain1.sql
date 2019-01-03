@@ -28,7 +28,7 @@ fff int foreign key references aa(idaa) on delete cascade --первая час�
 
  --alter table aa add constraint fk1 foreign key (idc) references a(ida); --вторая часть круговой ссылки
 
- create table adresses (
+ create table addresses (
  postalcode varchar(10) not null,
  country varchar(30) not null,
  city varchar(30) not null,

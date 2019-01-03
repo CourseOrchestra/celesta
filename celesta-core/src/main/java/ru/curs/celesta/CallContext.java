@@ -134,7 +134,7 @@ public class CallContext implements ICallContext {
                         String.format("Commit unsuccessful: %s", e.getMessage()), e);
             }
         } else {
-            throw new CelestaException("Not active context cannot be commited");
+            throw new CelestaException("Not active context cannot be committed");
         }
     }
 

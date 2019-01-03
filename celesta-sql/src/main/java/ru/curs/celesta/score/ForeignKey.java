@@ -136,7 +136,7 @@ public final class ForeignKey {
     }
 
     /**
-     * Adds a column. The column must belog to the parent table.
+     * Adds a column. The column must belong to the parent table.
      *
      * @param columnName  column name
      * @return
