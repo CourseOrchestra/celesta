@@ -8,12 +8,12 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-public class GenCursorsMojoTest extends AbstractCelestaMojoTestCase {
+public class GenTestCursorsMojoTest extends AbstractCelestaMojoTestCase {
 
-    private final static String CELESTA_SQL_SOURCES_DIR = TEST_UNIT_DIR + "/src/main/celestasql";
+    private final static String CELESTA_SQL_TEST_SOURCES_DIR = TEST_UNIT_DIR + "/src/test/celestasql";
 
-    private final static String CELESTA_GENERATED_SOURCES_DIR =
-            TEST_UNIT_DIR + "/target/generated-sources/celesta";
+    private final static String CELESTA_GENERATED_TEST_SOURCES_DIR =
+            TEST_UNIT_DIR + "/target/generated-test-sources/celesta";
 
     @Override
     protected void setUp() throws Exception {
@@ -30,7 +30,7 @@ public class GenCursorsMojoTest extends AbstractCelestaMojoTestCase {
     
     public void testScoresConfig() throws Exception {
         File pom = setupPom("pom_score.xml");
-        GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
+        GenTestCursorsMojo mojo = (GenTestCursorsMojo) lookupMojo("gen-test-cursors", pom);
         assertNotNull(mojo);
         assertEquals(2, mojo.scores.size());
 
@@ -47,48 +47,25 @@ public class GenCursorsMojoTest extends AbstractCelestaMojoTestCase {
 
     public void testExecuteGenCursors() throws Exception {
         File pom = setupPom("pom.xml");
-        setupScore("scorePart1", CELESTA_SQL_SOURCES_DIR);
+        setupScore("scorePart1", CELESTA_SQL_TEST_SOURCES_DIR);
         
-        GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
+        GenTestCursorsMojo mojo = (GenTestCursorsMojo) lookupMojo("gen-test-cursors", pom);
         mojo.execute();
         assertGeneratedCursors(
-            CELESTA_GENERATED_SOURCES_DIR,
+            CELESTA_GENERATED_TEST_SOURCES_DIR,
             Arrays.asList(
                 "seq/SeqSequence.java",
                 "data/table/TestTableCursor.java",
                 "data/table/TestRoTableCursor.java")
         );
     }
-
-    /*
-     * This test fails since partial grains are not resolved properly.")
-     */
-/*
-    public void testExecuteGenCursors() throws Exception {
-        File pom = setupPom("pom.xml");
-        setupScore("scorePart1", CELESTA_SQL_SOURCES_DIR);
-        setupScore("scorePart2", CELESTA_SQL_SOURCES_DIR);
-        
-        GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
-        mojo.execute();
-        assertGeneratedCursors(
-            CELESTA_GENERATED_SOURCES_DIR,
-            Arrays.asList(
-                "seq/SeqSequence.java",
-                "data/table/TestTableCursor.java",
-                "data/table/TestRoTableCursor.java",
-                "data/view/TestTableVCursor.java",
-                "data/view/TestTableMvCursor.java",
-                "data/view/TestTablePvCursor.java")
-        );
-    }
-*/
+    
     public void testExecuteGenCursors_score() throws Exception {
         File pom = setupPom("pom_score.xml");
-        GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
+        GenTestCursorsMojo mojo = (GenTestCursorsMojo) lookupMojo("gen-test-cursors", pom);
         mojo.execute();
         assertGeneratedCursors(
-            CELESTA_GENERATED_SOURCES_DIR,
+            CELESTA_GENERATED_TEST_SOURCES_DIR,
             Arrays.asList(
                 "seq/SeqSequence.java",
                 "data/table/TestTableCursor.java",
@@ -101,7 +78,7 @@ public class GenCursorsMojoTest extends AbstractCelestaMojoTestCase {
 
     public void testFailOnGeneratingClassWithoutPackage() throws Exception {
         File pom = setupPom("pom_badScore.xml");
-        GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
+        GenTestCursorsMojo mojo = (GenTestCursorsMojo) lookupMojo("gen-test-cursors", pom);
 
         assertThrows(CelestaException.class, () ->  mojo.execute());
     }

@@ -13,22 +13,17 @@ import java.util.List;
 /*
  * Got from http://maven.apache.org/plugin-testing/maven-plugin-testing-harness/examples/complex-mojo-parameters.html
  */
-public class CelestaMavenPluginStub extends MavenProjectStub
-{
-    /**
-     * Default constructor
-     */
-    public CelestaMavenPluginStub()
-    {
+public class CelestaMavenPluginStub extends MavenProjectStub {
+
+    final static String UNIT_DIR = "/src/test/resources/unit";
+
+    public CelestaMavenPluginStub() {
         MavenXpp3Reader pomReader = new MavenXpp3Reader();
         Model model;
-        try
-        {
+        try {
             model = pomReader.read( ReaderFactory.newXmlReader( new File( getBasedir(), "pom.xml" ) ) );
             setModel( model );
-        }
-        catch ( Exception e )
-        {
+        } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
 
@@ -50,19 +45,19 @@ public class CelestaMavenPluginStub extends MavenProjectStub
 
         getProperties().put("path.separator", File.pathSeparator);
 
-        List compileSourceRoots = new ArrayList();
+        List<String> compileSourceRoots = new ArrayList<>();
         compileSourceRoots.add( getBasedir() + "/src/main/java" );
         setCompileSourceRoots( compileSourceRoots );
 
-        List testCompileSourceRoots = new ArrayList();
+        List<String> testCompileSourceRoots = new ArrayList<>();
         testCompileSourceRoots.add( getBasedir() + "/src/test/java" );
         setTestCompileSourceRoots( testCompileSourceRoots );
-        getProperties().put("path.separator", File.pathSeparator);
     }
 
     /** {@inheritDoc} */
-    public File getBasedir()
-    {
-        return new File( super.getBasedir() + "/src/test/resources/unit/gen-cursors/" );
+    @Override
+    public File getBasedir() {
+        return new File( super.getBasedir() + UNIT_DIR );
     }
+
 }

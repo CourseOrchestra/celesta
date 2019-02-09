@@ -16,12 +16,20 @@
             <configuration>
                 <scores>
                     <score>
-                        <path>src/test/resources/scorePart1${path.separator}src/test/resources/scorePart2</path>
+                        <path>src/test/resources/score/scorePart1${path.separator}src/test/resources/score/scorePart2</path>
                     </score>
                     <score>
-                        <path>src/test/resources/emptyScore</path>
+                        <path>src/test/resources/score/emptyScore</path>
                     </score>
                 </scores>
+                <testScores>
+                    <score>
+                        <path>src/test/resources/score/scorePart1${path.separator}src/test/resources/score/scorePart2</path>
+                    </score>
+                    <score>
+                        <path>src/test/resources/score/emptyScore</path>
+                    </score>
+                </testScores>
                 <project implementation="ru.curs.celesta.plugin.CelestaMavenPluginStub"/>
             </configuration>
         </plugin>
