@@ -9,9 +9,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
@@ -23,6 +25,7 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
 
     Supplier<Collection<ScoreProperties>> getScorePaths;
     String generatedResourcesDirName;
+    Consumer<Resource> addResource;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -44,6 +47,12 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
 
         copyGrainSourceFilesToResources(grainsSources);
         generateScoreFiles(grainsSources);
+        
+        Resource scoreResource = new Resource();
+        scoreResource.setDirectory(getResourcesRoot().getAbsolutePath());
+        scoreResource.setTargetPath("score");
+        
+        addResource.accept(scoreResource);
     }
 
     private void copyGrainSourceFilesToResources(

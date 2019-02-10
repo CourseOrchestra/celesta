@@ -14,6 +14,7 @@ public final class GenTestScoreResourcesMojo extends AbstractGenScoreResourcesMo
     public final void execute() throws MojoExecutionException, MojoFailureException {
         getScorePaths = this::getTestScorePaths;
         generatedResourcesDirName = "generated-test-resources";
+        addResource = project::addTestResource;
 
         super.execute();
     }
