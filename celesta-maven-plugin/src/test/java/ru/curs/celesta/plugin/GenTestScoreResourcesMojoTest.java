@@ -9,10 +9,10 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 
-public class GenScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
+public class GenTestScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
 
-    private final static String CELESTA_GENERATED_RESOURCES_DIR =
-            TEST_UNIT_DIR + "/target/generated-resources/score";
+    private final static String CELESTA_GENERATED_TEST_RESOURCES_DIR =
+            TEST_UNIT_DIR + "/target/generated-test-resources/score";
 
     @Override
     protected void setUp() throws Exception {
@@ -29,7 +29,7 @@ public class GenScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
 
     public void testScoresConfig() throws Exception {
         File pom = setupPom("pom_score.xml");
-        GenScoreResourcesMojo mojo = (GenScoreResourcesMojo) lookupMojo("gen-score-resources", pom);
+        GenTestScoreResourcesMojo mojo = (GenTestScoreResourcesMojo) lookupMojo("gen-test-score-resources", pom);
         assertNotNull(mojo);
         assertEquals(2, mojo.scores.size());
 
@@ -46,9 +46,9 @@ public class GenScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
 
     public void testExecuteGenScoreResources() throws Exception {
         File pom = setupPom("pom.xml");
-        setupScore("scorePart1", CELESTASQL_SOURCES_DIR);
+        setupScore("scorePart1", CELESTASQL_TEST_SOURCES_DIR);
 
-        GenScoreResourcesMojo mojo = (GenScoreResourcesMojo) lookupMojo("gen-score-resources", pom);
+        GenTestScoreResourcesMojo mojo = (GenTestScoreResourcesMojo) lookupMojo("gen-test-score-resources", pom);
         mojo.execute();
 
         List<String> grainPaths = Arrays.asList(
@@ -56,17 +56,17 @@ public class GenScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
             "seq/sequence.sql"
         );
 
-        assertGeneratedScore("scorePart1", CELESTA_GENERATED_RESOURCES_DIR, grainPaths);
+        assertGeneratedScore("scorePart1", CELESTA_GENERATED_TEST_RESOURCES_DIR, grainPaths);
 
         List<String> generatedGrainPaths = Files.readAllLines(
-                getTestFile(CELESTA_GENERATED_RESOURCES_DIR).toPath()
-                    .resolve(GenScoreResourcesMojo.SCORE_FILES_FILE_NAME));
+                getTestFile(CELESTA_GENERATED_TEST_RESOURCES_DIR).toPath()
+                    .resolve(GenTestScoreResourcesMojo.SCORE_FILES_FILE_NAME));
         assertEquals(grainPaths, generatedGrainPaths);
     }
 
     public void testFailOnGeneratingScoresWithoutPackage() throws Exception {
         File pom = setupPom("pom_badScore.xml");
-        GenScoreResourcesMojo mojo = (GenScoreResourcesMojo) lookupMojo("gen-score-resources", pom);
+        GenTestScoreResourcesMojo mojo = (GenTestScoreResourcesMojo) lookupMojo("gen-test-score-resources", pom);
 
         assertThrows(CelestaException.class, () ->  mojo.execute());
     }

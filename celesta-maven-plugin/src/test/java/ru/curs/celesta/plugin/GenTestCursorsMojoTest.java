@@ -25,7 +25,7 @@ public class GenTestCursorsMojoTest extends AbstractCelestaMojoTestCase {
         removeDir(getTestFile(TEST_UNIT_DIR));
         super.tearDown();
     }
-    
+
     public void testScoresConfig() throws Exception {
         File pom = setupPom("pom_score.xml");
         GenTestCursorsMojo mojo = (GenTestCursorsMojo) lookupMojo("gen-test-cursors", pom);
@@ -57,7 +57,7 @@ public class GenTestCursorsMojoTest extends AbstractCelestaMojoTestCase {
                 "data/table/TestRoTableCursor.java")
         );
     }
-    
+
     public void testExecuteGenCursors_score() throws Exception {
         File pom = setupPom("pom_score.xml");
         GenTestCursorsMojo mojo = (GenTestCursorsMojo) lookupMojo("gen-test-cursors", pom);

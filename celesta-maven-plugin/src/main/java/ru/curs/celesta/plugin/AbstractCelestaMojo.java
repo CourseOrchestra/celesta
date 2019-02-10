@@ -26,13 +26,13 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
 
     @Parameter(property = "scores", required = false)
     List<ScoreProperties> scores = Collections.emptyList();
-    
+
     @Parameter(property = "testScores", required = false)
     List<ScoreProperties> testScores = Collections.emptyList();
 
     @Parameter(property = "genSysCursors", required = false)
     boolean genSysCursors;
-    
+
     @Component
     MavenProject project;
 
@@ -44,10 +44,10 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
             scorePaths.add(new ScoreProperties(celestaSqlPath.getAbsolutePath()));
         }
         scorePaths.addAll(scores);
-        
+
         return scorePaths;
     }
-    
+
     final Collection<ScoreProperties> getTestScorePaths() {
         List<ScoreProperties> scorePaths = new ArrayList<>();
 
@@ -56,10 +56,10 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
             scorePaths.add(new ScoreProperties(celestaSqlPath.getAbsolutePath()));
         }
         scorePaths.addAll(testScores);
-        
+
         return scorePaths;
     }
-    
+
     final Score initScore(String scorePath) {
         try {
             Score score = new AbstractScore.ScoreBuilder<>(Score.class)
@@ -75,5 +75,5 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
     final boolean isAllowGrain(Grain grain) {
         return genSysCursors || !Objects.equals(grain.getScore().getSysSchemaName(),grain.getName());
     }
-    
+
 }

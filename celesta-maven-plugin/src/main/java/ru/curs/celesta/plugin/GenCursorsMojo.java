@@ -13,7 +13,7 @@ public final class GenCursorsMojo extends AbstractGenCursorsMojo {
         getScorePaths = this::getScorePaths;
         generatedSourcesDirName = "generated-sources";
         addCompileSourceRoot = project::addCompileSourceRoot;
-        
+
         super.execute();
     }
 

@@ -25,7 +25,7 @@ public class GenCursorsMojoTest extends AbstractCelestaMojoTestCase {
         removeDir(getTestFile(TEST_UNIT_DIR));
         super.tearDown();
     }
-    
+
     public void testScoresConfig() throws Exception {
         File pom = setupPom("pom_score.xml");
         GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
@@ -46,7 +46,7 @@ public class GenCursorsMojoTest extends AbstractCelestaMojoTestCase {
     public void testExecuteGenCursors() throws Exception {
         File pom = setupPom("pom.xml");
         setupScore("scorePart1", CELESTASQL_SOURCES_DIR);
-        
+
         GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
         mojo.execute();
         assertGeneratedCursors(
@@ -66,7 +66,7 @@ public class GenCursorsMojoTest extends AbstractCelestaMojoTestCase {
         File pom = setupPom("pom.xml");
         setupScore("scorePart1", CELESTA_SQL_SOURCES_DIR);
         setupScore("scorePart2", CELESTA_SQL_SOURCES_DIR);
-        
+
         GenCursorsMojo mojo = (GenCursorsMojo) lookupMojo("gen-cursors", pom);
         mojo.execute();
         assertGeneratedCursors(

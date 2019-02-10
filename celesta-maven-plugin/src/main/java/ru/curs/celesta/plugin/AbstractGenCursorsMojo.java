@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import static ru.curs.celesta.plugin.CursorGenerator.generateCursor;
 
 abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
-    
+
     Supplier<Collection<ScoreProperties>> getScorePaths;
     String generatedSourcesDirName;
     Consumer<String> addCompileSourceRoot;
@@ -21,7 +21,7 @@ abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
         getScorePaths.get().forEach(this::processScore);
         addSourceRoot(getSourceRoot());
     }
-    
+
     private void processScore(ScoreProperties properties) {
         Score score = initScore(properties.getPath());
         score.getGrains().values()

@@ -5,15 +5,15 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 
 @Mojo(
-        name = "gen-score-resources",
-        defaultPhase = LifecyclePhase.GENERATE_RESOURCES
+        name = "gen-test-score-resources",
+        defaultPhase = LifecyclePhase.GENERATE_TEST_RESOURCES
 )
-public final class GenScoreResourcesMojo extends AbstractGenScoreResourcesMojo {
+public final class GenTestScoreResourcesMojo extends AbstractGenScoreResourcesMojo {
 
     @Override
     public final void execute() throws MojoExecutionException, MojoFailureException {
-        getScorePaths = this::getScorePaths;
-        generatedResourcesDirName = "generated-resources";
+        getScorePaths = this::getTestScorePaths;
+        generatedResourcesDirName = "generated-test-resources";
 
         super.execute();
     }
