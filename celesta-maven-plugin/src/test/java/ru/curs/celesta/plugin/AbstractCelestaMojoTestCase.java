@@ -18,7 +18,10 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
     
     final static String TEST_RESOURCES_DIR = "/src/test/resources";
     final static String TEST_UNIT_DIR = CelestaMavenPluginStub.UNIT_DIR;
-    
+
+    final static String CELESTASQL_SOURCES_DIR = TEST_UNIT_DIR + "/src/main/celestasql";
+    final static String CELESTASQL_TEST_SOURCES_DIR = TEST_UNIT_DIR + "/src/test/celestasql";
+
     void removeDir(File dir) throws IOException {
         if (dir.isDirectory() && dir.exists()) {
             Files.walk(dir.toPath())
@@ -38,7 +41,7 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
     
     void setupScore(String scoreName, String celestaSqlDir) throws IOException {
 
-        Path fromPath = new File(getTestFile(TEST_RESOURCES_DIR + "/score"), scoreName).toPath();
+        Path fromPath = getTestScorePath(scoreName);
         Path toPath = getTestFile(celestaSqlDir).toPath();
         
         Files.walk(fromPath)
@@ -54,6 +57,10 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
              });
     }
     
+    private Path getTestScorePath(String scoreName) {
+        return getTestFile(TEST_RESOURCES_DIR).toPath().resolve("score").resolve(scoreName);
+    }
+
     void assertGeneratedCursors(String generatedSourcesDir, List<String> cursorPaths) {
 
         File prefix = getTestFile(generatedSourcesDir);
@@ -79,4 +86,17 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
 
     }
     
+    void assertGeneratedScore(
+            String expectedScoreName, String generatedResourcesDir, List<String> grainPaths) throws IOException {
+        
+        Path expectedScorePath = getTestScorePath(expectedScoreName);
+        Path generatedResourcesPath = getTestFile(generatedResourcesDir).toPath();
+        
+        for (String grainPath : grainPaths) {
+            String expectedGrain = FileUtils.readFileToString(expectedScorePath.resolve(grainPath).toFile());
+            String generatedGrain = FileUtils.readFileToString(generatedResourcesPath.resolve(grainPath).toFile());
+            assertEquals(expectedGrain, generatedGrain);
+        }
+    }
+
 }

@@ -10,8 +10,6 @@ import java.util.List;
 
 public class GenTestCursorsMojoTest extends AbstractCelestaMojoTestCase {
 
-    private final static String CELESTA_SQL_TEST_SOURCES_DIR = TEST_UNIT_DIR + "/src/test/celestasql";
-
     private final static String CELESTA_GENERATED_TEST_SOURCES_DIR =
             TEST_UNIT_DIR + "/target/generated-test-sources/celesta";
 
@@ -47,8 +45,8 @@ public class GenTestCursorsMojoTest extends AbstractCelestaMojoTestCase {
 
     public void testExecuteGenCursors() throws Exception {
         File pom = setupPom("pom.xml");
-        setupScore("scorePart1", CELESTA_SQL_TEST_SOURCES_DIR);
-        
+        setupScore("scorePart1", CELESTASQL_TEST_SOURCES_DIR);
+
         GenTestCursorsMojo mojo = (GenTestCursorsMojo) lookupMojo("gen-test-cursors", pom);
         mojo.execute();
         assertGeneratedCursors(

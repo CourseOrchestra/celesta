@@ -57,7 +57,7 @@ public class CelestaMavenPluginStub extends MavenProjectStub {
     /** {@inheritDoc} */
     @Override
     public File getBasedir() {
-        return new File( super.getBasedir() + UNIT_DIR );
+        return new File( super.getBasedir(), UNIT_DIR );
     }
 
 }
