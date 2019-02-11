@@ -1,4 +1,4 @@
-package ru.curs.celesta.plugin;
+package ru.curs.celesta.plugin.maven;
 
 import ru.curs.celesta.score.*;
 
@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static ru.curs.celesta.plugin.CursorGenerator.generateCursor;
+import static ru.curs.celesta.plugin.maven.CursorGenerator.generateCursor;
 
 abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
 

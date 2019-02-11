@@ -1,4 +1,4 @@
-package ru.curs.celesta.plugin;
+package ru.curs.celesta.plugin.maven;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -73,7 +73,7 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
     }
 
     final boolean isAllowGrain(Grain grain) {
-        return genSysCursors || !Objects.equals(grain.getScore().getSysSchemaName(),grain.getName());
+        return genSysCursors || !Objects.equals(grain.getScore().getSysSchemaName(), grain.getName());
     }
 
 }

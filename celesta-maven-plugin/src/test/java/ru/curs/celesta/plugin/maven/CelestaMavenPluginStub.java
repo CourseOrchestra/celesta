@@ -1,4 +1,4 @@
-package ru.curs.celesta.plugin;
+package ru.curs.celesta.plugin.maven;
 
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;

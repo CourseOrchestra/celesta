@@ -1,4 +1,4 @@
-package ru.curs.celesta.plugin;
+package ru.curs.celesta.plugin.maven;
 
 import ru.curs.celesta.CelestaException;
 

@@ -1,4 +1,4 @@
-package ru.curs.celesta.plugin;
+package ru.curs.celesta.plugin.maven;
 
 import org.apache.maven.plugins.annotations.*;
 
@@ -9,7 +9,7 @@ import org.apache.maven.plugins.annotations.*;
 public final class GenCursorsMojo extends AbstractGenCursorsMojo {
 
     @Override
-    public final void execute() {
+    public void execute() {
         getScorePaths = this::getScorePaths;
         generatedSourcesDirName = "generated-sources";
         addCompileSourceRoot = project::addCompileSourceRoot;

@@ -30,7 +30,7 @@
                         <path>src/test/resources/score/emptyScore</path>
                     </score>
                 </testScores>
-                <project implementation="ru.curs.celesta.plugin.CelestaMavenPluginStub"/>
+                <project implementation="ru.curs.celesta.plugin.maven.CelestaMavenPluginStub"/>
             </configuration>
         </plugin>
     </plugins>

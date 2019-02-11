@@ -362,7 +362,6 @@
         </pluginManagement>
     </build>
 
-
     <profiles>
         <profile>
             <id>dev</id>

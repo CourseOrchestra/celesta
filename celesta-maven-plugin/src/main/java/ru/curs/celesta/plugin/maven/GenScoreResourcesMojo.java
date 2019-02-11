@@ -1,4 +1,4 @@
-package ru.curs.celesta.plugin;
+package ru.curs.celesta.plugin.maven;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -11,7 +11,7 @@ import org.apache.maven.plugins.annotations.*;
 public final class GenScoreResourcesMojo extends AbstractGenScoreResourcesMojo {
 
     @Override
-    public final void execute() throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         getScorePaths = this::getScorePaths;
         generatedResourcesDirName = "generated-resources";
         addResource = project::addResource;

@@ -1,4 +1,4 @@
-package ru.curs.celesta.plugin;
+package ru.curs.celesta.plugin.maven;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,21 +37,21 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
             File scorePath = new File(score.getPath());
             score.getGrains().values().stream()
                 .filter(this::isAllowGrain)
-                .flatMap((g) -> g.getGrainParts().stream())
-                .map((gp) -> gp.getSourceFile())
+                .flatMap(g -> g.getGrainParts().stream())
+                .map(gp -> gp.getSourceFile())
                 .filter(Objects::nonNull)
-                .forEach((sf) -> {
+                .forEach(sf -> {
                     grainsSources.add(new GrainSourceBag(scorePath.toPath(), sf.toPath()));
                 });
         }
 
         copyGrainSourceFilesToResources(grainsSources);
         generateScoreFiles(grainsSources);
-        
+
         Resource scoreResource = new Resource();
         scoreResource.setDirectory(getResourcesRoot().getAbsolutePath());
         scoreResource.setTargetPath("score");
-        
+
         addResource.accept(scoreResource);
     }
 
@@ -62,8 +62,13 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
         for (GrainSourceBag gs : grainSources) {
             Path to = gs.resolve(resourcesRootPath);
             try {
-                Files.createDirectories(to.getParent());
-                Files.copy(gs.grainSourcePath, to);
+                if (to != null) {
+                    Path toParent = to.getParent();
+                    if (toParent != null) {
+                        Files.createDirectories(toParent);
+                    }
+                    Files.copy(gs.grainSourcePath, to);
+                }
             } catch (IOException ex) {
                 throw new MojoExecutionException(
                         String.format("Copying of grain source file failed: %s", gs.grainSourcePath),
@@ -80,7 +85,7 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
     private void generateScoreFiles(List<GrainSourceBag> grainsSources) throws MojoExecutionException {
 
         Collection<String> relativeSourcesPaths = grainsSources.stream()
-                .map((gs) -> gs.getGrainSourceRelativePath().toString())
+                .map(gs -> gs.getGrainSourceRelativePath().toString())
                 .collect(Collectors.toCollection(TreeSet::new));
 
         Path scoreFilesPath = new File(getResourcesRoot(), SCORE_FILES_FILE_NAME).toPath();
