@@ -1,4 +1,4 @@
-= Быстрый старт. Maven-зависимости
+= Maven-зависимости
 :lang: ru
 :is-main-doc:
 include::_doc_general_attributes.adoc[]
@@ -11,7 +11,7 @@ include::_doc_general_attributes.adoc[]
 
 //image::{img}/
 
-//tag::quickstart[]
+//tag::maven_dependencies[]
 
 Работающий тестовый пример, демонстрирующий возможности Celesta, доступен здесь: https://github.com/inponomarev/celesta-demo/.
 
@@ -78,6 +78,9 @@ include::_doc_general_attributes.adoc[]
                     <execution>
                         <goals>
                             <goal>gen-cursors</goal>
+                            <goal>gen-score-resources</goal>
+                            <goal>gen-test-cursors</goal>
+                            <goal>gen-test-score-resources</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -138,4 +141,4 @@ public class DocumentService {
 ```
 
 Управление <<basic_settings_section,настройками>> проекта осуществляется любым https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html[доступным для Spring Boot способом], в частности, с помощью файла https://github.com/inponomarev/celesta-demo/blob/master/src/main/resources/application.yml[application.yml].
-//end::quickstart[]
+//end::maven_dependencies[]

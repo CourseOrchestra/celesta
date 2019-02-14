@@ -13,9 +13,15 @@ include::_doc_general_attributes.adoc[]
 
 include::1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
 
-== Часть 1. Быстрый старт. Maven-зависимости
+== Часть 1. Быстрый старт
 
-include::1012_quickstart.adoc[leveloffset=+2, tag="quickstart"]
+=== Maven-зависимости
+
+include::1012_maven_dependencies.adoc[leveloffset=+2, tag="maven_dependencies"]
+
+=== Maven-плагин
+
+include::1013_maven_plugin.adoc[leveloffset=+2, tag="maven_plugin"]
 
 == Часть 2. Технические детали и настройка Celesta
 

@@ -148,6 +148,7 @@ columnNames
 command
 commit
 company
+Compile
 condition
 config
 configuration
@@ -224,6 +225,7 @@ dev
 df
 DI
 DICTIONARY
+discovery
 DISTINCT
 doc
 docbook
@@ -309,6 +311,7 @@ function
 FUNCTION
 gen
 general
+generate
 Generate
 generated
 get
@@ -673,6 +676,7 @@ rollback
 ru
 rules
 run
+runtime
 samples
 save
 scale
@@ -931,7 +935,9 @@ zsp
 инкрементироваться
 инкрементируется
 кодогенерации
+кодогенерация
 Кодогенерируемый
+Кодогенерирует
 коммитить
 логин
 Логин
@@ -973,6 +979,7 @@ zsp
 перезагрузился
 переинициализация
 питоновском
+плагин
 подпапки
 проинициализирована
 проинтерпретировано

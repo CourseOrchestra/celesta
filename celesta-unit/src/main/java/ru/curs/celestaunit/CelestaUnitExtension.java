@@ -39,7 +39,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
         String testScore = "src/test/celestasql";
         File f = new File(testScore);
         if (f.isDirectory() && f.canRead()) {
-            score += File.pathSeparator + testScore; 
+            score += File.pathSeparator + testScore;
         }
         DEFAULT_SCORE = score;
     }
