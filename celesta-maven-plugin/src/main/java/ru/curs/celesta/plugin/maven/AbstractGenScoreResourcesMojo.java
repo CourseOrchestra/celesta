@@ -45,6 +45,10 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
                 });
         }
 
+        if (grainsSources.isEmpty()) {
+            return;
+        }
+
         copyGrainSourceFilesToResources(grainsSources);
         generateScoreFiles(grainsSources);
 

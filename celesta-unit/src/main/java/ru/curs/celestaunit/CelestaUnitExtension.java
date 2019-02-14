@@ -15,6 +15,7 @@ import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.Table;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -31,7 +32,17 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 public final class CelestaUnitExtension implements BeforeAllCallback,
         AfterAllCallback, ParameterResolver, AfterEachCallback {
 
-    static final String DEFAULT_SCORE = "src/main/resources/score";
+    static final String DEFAULT_SCORE;
+
+    static {
+        String score = "src/main/celestasql";
+        String testScore = "src/test/celestasql";
+        File f = new File(testScore);
+        if (f.isDirectory() && f.canRead()) {
+            score += File.pathSeparator + testScore; 
+        }
+        DEFAULT_SCORE = score;
+    }
 
     private final String scorePath;
     private final boolean referentialIntegrity;
@@ -39,7 +50,6 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
     private final Namespace namespace;
 
     private Celesta celesta;
-
 
     public CelestaUnitExtension() {
         this(builder());
@@ -59,7 +69,6 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
     public static Builder builder() {
         return new Builder();
     }
-
 
     @Override
     public void afterAll(ExtensionContext extensionContext) {
@@ -202,4 +211,5 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
             return new CelestaUnitExtension(this);
         }
     }
+
 }
