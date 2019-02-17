@@ -47,17 +47,15 @@
                 <artifactId>celesta-maven-plugin</artifactId>
                 <version>${project.version}</version>
                 <configuration>
-                    <scores>
-                        <score>
-                            <path>${project.basedir}/src/test/resources/score</path>
-                        </score>
-                    </scores>
                     <genSysCursors>true</genSysCursors>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
                             <goal>gen-cursors</goal>
+                            <goal>gen-score-resources</goal>
+                            <goal>gen-test-cursors</goal>
+                            <goal>gen-test-score-resources</goal>
                         </goals>
                     </execution>
                 </executions>

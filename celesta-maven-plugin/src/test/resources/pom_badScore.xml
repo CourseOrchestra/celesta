@@ -16,10 +16,15 @@
                 <configuration>
                     <scores>
                         <score>
-                            <path>src/test/resources/badScore</path>
+                            <path>src/test/score/resources/badScore</path>
                         </score>
                     </scores>
-                    <project implementation="ru.curs.celesta.plugin.CelestaMavenPluginStub"/>
+                    <testScores>
+                        <score>
+                            <path>src/test/score/resources/badScore</path>
+                        </score>
+                    </testScores>
+                    <project implementation="ru.curs.celesta.plugin.maven.CelestaMavenPluginStub"/>
                 </configuration>
             </plugin>
         </plugins>

@@ -1,4 +1,4 @@
-package ru.curs.celesta.plugin;
+package ru.curs.celesta.plugin.maven;
 
 import com.squareup.javapoet.*;
 import org.apache.commons.lang3.StringUtils;
