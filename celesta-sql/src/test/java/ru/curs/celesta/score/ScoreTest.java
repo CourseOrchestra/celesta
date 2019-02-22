@@ -204,7 +204,7 @@ public class ScoreTest {
 
     @Test
     public void modificationTest5() throws ParseException {
-        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_1 + File.pathSeparator + COMPOSITE_SCORE_PATH_2)
                 .build();
         Grain g2 = s.getGrain("grain2");
@@ -230,7 +230,7 @@ public class ScoreTest {
 
     @Test
     public void modificationTest6() throws ParseException {
-        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
                 .build();
         Grain g2 = s.getGrain("grain2");
         GrainPart g2p = g2.getGrainParts().stream().findFirst().get();
@@ -247,7 +247,7 @@ public class ScoreTest {
 
     @Test
     public void modificationTest7() throws ParseException, IOException {
-        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
                 .build();
         Grain g1 = s.getGrain("grain1");
         assertEquals(1, g1.getElements(View.class).size());
@@ -260,7 +260,7 @@ public class ScoreTest {
 
     @Test
     public void modificationTest8() throws ParseException, IOException {
-        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(COMPOSITE_SCORE_PATH_1)
                 .build();
         Grain g1 = s.getGrain("grain1");
@@ -281,7 +281,7 @@ public class ScoreTest {
 
     @Test
     public void setCelestaDoc() throws ParseException {
-        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(TEST_SCORE_PATH)
                 .build();
         Grain g = s.getGrain("testGrain");
@@ -305,7 +305,7 @@ public class ScoreTest {
     @Test
     public void saveTest() throws ParseException, IOException {
         // Проверяется функциональность записи динамически изменённых объектов.
-        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(TEST_SCORE_PATH)
                 .build();
         Grain g = s.getGrain("testGrain");
@@ -372,7 +372,7 @@ public class ScoreTest {
 
     @Test
     public void fknameTest() throws ParseException {
-        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(TEST_SCORE_PATH)
                 .build();
         Grain g = s.getGrain("testGrain");
@@ -386,7 +386,7 @@ public class ScoreTest {
 
     @Test
     public void viewTest() throws ParseException {
-        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(TEST_SCORE_PATH)
                 .build();
         Grain g = s.getGrain("testGrain");
@@ -414,7 +414,7 @@ public class ScoreTest {
 
     @Test
     public void vewTest2() throws ParseException {
-        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .path(TEST_SCORE_PATH)
                 .build();
         Grain g = s.getGrain("testGrain");
@@ -438,7 +438,7 @@ public class ScoreTest {
 
     @Test
     public void viewTest3() throws ParseException {
-        AbstractScore s = new AbstractScore.ScoreBuilder(CelestaSqlTestScore.class).path(TEST_SCORE_PATH)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class).path(TEST_SCORE_PATH)
                 .build();
         Grain g = s.getGrain("testGrain");
         View v = g.getElement("testView4", View.class);

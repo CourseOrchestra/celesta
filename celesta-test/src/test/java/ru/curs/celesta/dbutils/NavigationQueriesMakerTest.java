@@ -352,7 +352,7 @@ public class NavigationQueriesMakerTest {
             }
 
             @Override
-            public Class getJavaClass() {
+            public Class<?> getJavaClass() {
                 return String.class;
             }
 

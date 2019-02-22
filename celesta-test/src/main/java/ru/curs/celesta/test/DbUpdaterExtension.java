@@ -16,7 +16,7 @@ import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.test.mock.CelestaImpl;
 
 import java.sql.SQLException;
@@ -34,7 +34,7 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
             .filter(dbType -> !DBType.UNKNOWN.equals(dbType))
             .collect(Collectors.toList());
 
-    private final EnumMap<DBType, JdbcDatabaseContainer> containers = new EnumMap<>(DBType.class);
+    private final EnumMap<DBType, JdbcDatabaseContainer<?>> containers = new EnumMap<>(DBType.class);
     private final EnumMap<DBType, DBAdaptor> dbAdaptors = new EnumMap<>(DBType.class);
 
     private final Map<DBType, ConnectionPool> connectionPools = new HashMap<>();
@@ -97,13 +97,13 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
 
         final String emptyScorePath = "src/test/resources/emptyScore";
 
-        PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer();
+        PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>();
         postgreSQLContainer.start();
         containers.put(DBType.POSTGRESQL, postgreSQLContainer);
-        OracleContainer oracleContainer = new OracleContainer();
+        OracleContainer<?> oracleContainer = new OracleContainer<>();
         oracleContainer.start();
         containers.put(DBType.ORACLE, oracleContainer);
-        MSSQLServerContainer mssqlServerContainer = new MSSQLServerContainer();
+        MSSQLServerContainer<?> mssqlServerContainer = new MSSQLServerContainer<>();
         mssqlServerContainer.start();
         containers.put(DBType.MSSQL, mssqlServerContainer);
 
@@ -136,7 +136,7 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
         this.containers.forEach((b, c) -> c.stop());
     }
 
-    private ConnectionPool createConnectionPool(DBType dbType, JdbcDatabaseContainer container) {
+    private ConnectionPool createConnectionPool(DBType dbType, JdbcDatabaseContainer<?> container) {
         final ConnectionPoolConfiguration connectionPoolConfiguration = new ConnectionPoolConfiguration();
 
         final String jdbcUrl = Optional.ofNullable(container)
@@ -165,8 +165,7 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
 
         try {
             score = new AbstractScore.ScoreBuilder<>(Score.class)
-                    .path(scorePath)
-                    .scoreDiscovery(new DefaultScoreDiscovery())
+                    .scoreDiscovery(new ScoreByScorePathDiscovery(scorePath))
                     .build();
         } catch (ParseException e) {
             throw new CelestaException(e);

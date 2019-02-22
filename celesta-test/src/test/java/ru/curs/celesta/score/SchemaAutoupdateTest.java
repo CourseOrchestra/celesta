@@ -11,7 +11,7 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.H2Adaptor;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.test.mock.CelestaImpl;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.ISchemaCursor;
 
@@ -105,7 +105,7 @@ public class SchemaAutoupdateTest {
 
         String scorePath = SchemaAutoupdateTest.class.getResource(scoreResourcePath).getPath();
 
-        if ((celesta != null) && (! celesta.isClosed()) && (scorePath.equals(celesta.getScore().getPath()))) {
+        if ((celesta != null) && (! celesta.isClosed()) && scorePath.equals(celesta.getScorePath())) {
             return celesta;
         }
 
@@ -134,11 +134,10 @@ public class SchemaAutoupdateTest {
         }
 
         Score score = new AbstractScore.ScoreBuilder<>(Score.class)
-                .path(scorePath)
-                .scoreDiscovery(new DefaultScoreDiscovery())
+                .scoreDiscovery(new ScoreByScorePathDiscovery(scorePath))
                 .build();
 
-        return (celesta = new CelestaImpl(dba, connectionPool, score));
+        return (celesta = new CelestaImpl(dba, connectionPool, score, scorePath));
     }
 
 }

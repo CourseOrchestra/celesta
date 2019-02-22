@@ -43,14 +43,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.CRC32;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
 import ru.curs.celesta.score.validator.IdentifierParser;
 
@@ -65,22 +64,12 @@ public abstract class AbstractScore {
     private final Map<String, Grain> grains = new HashMap<>();
 
     private final Map<String, List<GrainPart>> grainNameToGrainParts = new LinkedHashMap<>();
-    private final Set<File> grainFiles = new LinkedHashSet<>();
+    private Set<File> grainFiles;
 
-    private String path;
-    private File defaultGrainPath;
     private int orderCounter;
 
     AbstractScore() {
         //TODO!!! Used only for test and must be replaced. Must be private!!!
-    }
-
-    /**
-     * Sets a score path.
-     * @param scorePath  a set of paths to 'score' directories delimited by a semicolon.
-     */
-    void setScorePath(String scorePath) {
-        this.path = scorePath;
     }
 
     /**
@@ -91,28 +80,15 @@ public abstract class AbstractScore {
      * there's a double definition of a grain with the same name.
      */
     void init(ScoreDiscovery scoreDiscovery) throws ParseException {
-        for (String entry : this.path.split(File.pathSeparator)) {
-            File path = new File(entry.trim());
-            if (!path.exists()) {
-                throw new CelestaException("Score path entry '%s' does not exist.", path.toString());
-            }
-            if (!path.canRead()) {
-                throw new CelestaException("Cannot read score path entry '%s'.", path.toString());
-            }
-            if (!path.isDirectory()) {
-                throw new CelestaException("Score path entry '%s' is not a directory.", path.toString());
-            }
 
-            defaultGrainPath = path;
-            grainFiles.addAll(scoreDiscovery.discoverScore(path));
-        }
+        grainFiles = scoreDiscovery.discoverScore();
 
         initSystemGrain();
 
         //The first parsing step - the grouping of files by grain names.
         fillGrainNameToFilesMap(grainFiles);
-        // В этот момент в таблице grainFiles содержится перечень распознанных
-        // имён гранул с именами файлов-скриптов.
+        // At this moment in the table 'grainFiles' a recognized set of grain names
+        // with the names of script files is contained.
         parseGrains(new StringBuilder());
     }
 
@@ -349,23 +325,6 @@ public abstract class AbstractScore {
         return Collections.unmodifiableMap(grains);
     }
 
-    /**
-     * Returns a default path for dynamically created grains. The value equals to
-     * the last entry in <em>score.path</em>.
-     */
-    File getDefaultGrainPath() {
-        return defaultGrainPath;
-    }
-
-    /**
-     * Returns path to the score.
-     *
-     * @return
-     */
-    public String getPath() {
-        return path;
-    }
-
     final int nextOrderCounter() {
         return ++orderCounter;
     }
@@ -376,7 +335,6 @@ public abstract class AbstractScore {
      * @param <T>
      */
     public static final class ScoreBuilder<T extends AbstractScore> {
-        private String path;
         private ScoreDiscovery scoreDiscovery;
         private Class<T> scoreClass;
 
@@ -389,9 +347,13 @@ public abstract class AbstractScore {
          *
          * @param path  score path
          * @return
+         *
+         * @deprecated  Use {@link #scoreDiscovery(ScoreDiscovery)} explicitly.
          */
+        @Deprecated
         public ScoreBuilder<T> path(String path) {
-            this.path = path;
+            this.scoreDiscovery = new ScoreByScorePathDiscovery(path);
+
             return this;
         }
 
@@ -413,16 +375,12 @@ public abstract class AbstractScore {
          * @throws ParseException  when score parsing fails
          */
         public T build() throws ParseException {
-            if (scoreDiscovery == null) {
-                scoreDiscovery = new DefaultScoreDiscovery();
-            }
-
             try {
                 T t = scoreClass.newInstance();
-                t.setScorePath(this.path);
                 t.init(this.scoreDiscovery);
 
                 return t;
+
             } catch (InstantiationException | IllegalAccessException e) {
                 throw new CelestaException(e);
             }

@@ -11,11 +11,11 @@ import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 
-    public static MSSQLServerContainer msSql = new MSSQLServerContainer()
+    public static MSSQLServerContainer<?> msSql = new MSSQLServerContainer<>()
             .withDatabaseName("celesta")
             .withCollation("Cyrillic_General_CI_AI");
 
@@ -42,8 +42,7 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
         dba = new MSSQLAdaptor(connectionPool, new JdbcDdlConsumer());
 
         Score score = new AbstractScore.ScoreBuilder<>(Score.class)
-                .path(SCORE_NAME)
-                .scoreDiscovery(new DefaultScoreDiscovery())
+                .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_NAME))
                 .build();
 
         DbUpdaterImpl dbUpdater = createDbUpdater(score, dba);
@@ -60,8 +59,7 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
         setDba(dba);
         setScore(
                 new AbstractScore.ScoreBuilder<>(Score.class)
-                        .path(SCORE_NAME)
-                        .scoreDiscovery(new DefaultScoreDiscovery())
+                        .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_NAME))
                         .build()
         );
     }

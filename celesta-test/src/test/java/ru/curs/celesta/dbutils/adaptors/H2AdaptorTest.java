@@ -7,7 +7,7 @@ import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 
 import java.sql.Connection;
@@ -40,8 +40,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
         dba = new H2Adaptor(connectionPool, new JdbcDdlConsumer(), appSettings.isH2ReferentialIntegrity());
 
         Score score = new AbstractScore.ScoreBuilder<>(Score.class)
-                .path(SCORE_NAME)
-                .scoreDiscovery(new DefaultScoreDiscovery())
+                .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_NAME))
                 .build();
 
         DbUpdaterImpl dbUpdater = createDbUpdater(score, dba);
@@ -58,8 +57,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
         setDba(dba);
         setScore(
                 new AbstractScore.ScoreBuilder<>(Score.class)
-                        .path(SCORE_NAME)
-                        .scoreDiscovery(new DefaultScoreDiscovery())
+                        .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_NAME))
                         .build()
         );
     }

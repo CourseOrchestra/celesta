@@ -5,7 +5,7 @@ import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.GrainPart;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -18,9 +18,8 @@ public class SchemaSyncTest {
     @Test
     void celestaToDbs() throws Exception {
         String scorePath = getScorePath();
-        AbstractScore s = new AbstractScore.ScoreBuilder(Score.class)
-                .path(scorePath)
-                .scoreDiscovery(new DefaultScoreDiscovery())
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(Score.class)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(scorePath))
                 .build();
         File tmp = File.createTempFile("sst", "tmp");
         tmp.delete();
@@ -50,9 +49,8 @@ public class SchemaSyncTest {
         File adoc = new File(scorePath, "../Layout_.adoc");
         adoc.delete();
         assertFalse(adoc.exists());
-        AbstractScore s = new AbstractScore.ScoreBuilder(Score.class)
-                .path(scorePath)
-                .scoreDiscovery(new DefaultScoreDiscovery())
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(Score.class)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(scorePath))
                 .build();
         DBSchema2Celesta.dBSToScore(new File(dbs), s, true);
         assertTrue(adoc.exists());
@@ -62,8 +60,7 @@ public class SchemaSyncTest {
     void bothWays() throws Exception {
         String scorePath = getScorePath();
         Score s = new Score.ScoreBuilder<>(Score.class)
-                .path(scorePath)
-                .scoreDiscovery(new DefaultScoreDiscovery())
+                .scoreDiscovery(new ScoreByScorePathDiscovery(scorePath))
                 .build();
         StringWriter oldval = new StringWriter();
         PrintWriter oldvalPrintWriter = new PrintWriter(oldval);

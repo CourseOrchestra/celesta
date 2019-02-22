@@ -1,6 +1,6 @@
 package ru.curs.celesta.score;
 
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 public final class ScoreUtil {
 
@@ -9,12 +9,11 @@ public final class ScoreUtil {
     }
 
 
-    public static CelestaSqlTestScore createCelestaSqlTestScore(Class c, String relativePath) throws ParseException {
+    public static CelestaSqlTestScore createCelestaSqlTestScore(Class<?> c, String relativePath) throws ParseException {
         String scorePath = ResourceUtil.getResourcePath(c, relativePath);
 
         return new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(scorePath)
-                .scoreDiscovery(new DefaultScoreDiscovery())
+                .scoreDiscovery(new ScoreByScorePathDiscovery(scorePath))
                 .build();
     }
 }

@@ -17,7 +17,7 @@ import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 abstract class AbstractCelestaMojo extends AbstractMojo {
 
@@ -63,8 +63,7 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
     final Score initScore(String scorePath) {
         try {
             Score score = new AbstractScore.ScoreBuilder<>(Score.class)
-                    .path(scorePath)
-                    .scoreDiscovery(new DefaultScoreDiscovery())
+                    .scoreDiscovery(new ScoreByScorePathDiscovery(scorePath))
                     .build();
             return score;
         } catch (CelestaException | ParseException e) {

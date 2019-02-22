@@ -21,13 +21,19 @@ public final class CelestaImpl implements ICelesta {
     private final DBAdaptor dbAdaptor;
     private final ConnectionPool connectionPool;
     private final Score score;
+    private final String scorePath;
     private final PermissionManager permissionManager;
     private final LoggingManager loggingManager;
 
     public CelestaImpl(DBAdaptor dbAdaptor, ConnectionPool connectionPool, Score score) {
+        this(dbAdaptor, connectionPool, score, null);
+    }
+
+    public CelestaImpl(DBAdaptor dbAdaptor, ConnectionPool connectionPool, Score score, String scorePath) {
         this.dbAdaptor = dbAdaptor;
         this.connectionPool = connectionPool;
         this.score = score;
+        this.scorePath = scorePath;
         this.permissionManager = new PermissionManager(this, dbAdaptor);
         this.loggingManager = new LoggingManager(this, dbAdaptor);
     }
@@ -86,6 +92,15 @@ public final class CelestaImpl implements ICelesta {
      */
     public boolean isClosed() {
         return connectionPool.isClosed();
+    }
+
+    /**
+     * Returns Celesta's score path.
+     *
+     * @return
+     */
+    public String getScorePath() {
+        return scorePath;  
     }
 
 }

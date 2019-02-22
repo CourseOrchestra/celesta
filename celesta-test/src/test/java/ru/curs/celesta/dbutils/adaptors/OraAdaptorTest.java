@@ -12,7 +12,7 @@ import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 public class OraAdaptorTest extends AbstractAdaptorTest {
 
@@ -20,7 +20,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
         Locale.setDefault(Locale.US);
     }
 
-    public static OracleContainer oracle = new OracleContainer();
+    public static OracleContainer<?> oracle = new OracleContainer<>();
 
     private static OraAdaptor dba;
 
@@ -45,8 +45,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
         dba = new OraAdaptor(connectionPool, new JdbcDdlConsumer());
 
         Score score = new AbstractScore.ScoreBuilder<>(Score.class)
-                .path(SCORE_NAME)
-                .scoreDiscovery(new DefaultScoreDiscovery())
+                .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_NAME))
                 .build();
 
         DbUpdaterImpl dbUpdater = createDbUpdater(score, dba);
@@ -63,8 +62,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
         setDba(dba);
         setScore(
                 new AbstractScore.ScoreBuilder<>(Score.class)
-                        .path(SCORE_NAME)
-                        .scoreDiscovery(new DefaultScoreDiscovery())
+                        .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_NAME))
                         .build()
         );
     }

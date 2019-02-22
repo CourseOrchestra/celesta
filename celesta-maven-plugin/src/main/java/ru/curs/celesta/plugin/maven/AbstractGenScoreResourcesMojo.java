@@ -34,7 +34,7 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
         List<GrainSourceBag> grainsSources = new ArrayList<>();
         for (ScoreProperties sp : getScorePaths.get()) {
             Score score = initScore(sp.getPath());
-            File scorePath = new File(score.getPath());
+            File scorePath = new File(sp.getPath());
             score.getGrains().values().stream()
                 .filter(this::isAllowGrain)
                 .flatMap(g -> g.getGrainParts().stream())

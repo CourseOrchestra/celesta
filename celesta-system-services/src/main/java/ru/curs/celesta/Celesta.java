@@ -8,8 +8,7 @@ import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
-import ru.curs.celesta.score.discovery.ScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +27,6 @@ public final class Celesta implements ICelesta {
     private final ConnectionPool connectionPool;
     private final DBAdaptor dbAdaptor;
     private final TriggerDispatcher triggerDispatcher = new TriggerDispatcher();
-    private final ScoreDiscovery scoreDiscovery = new DefaultScoreDiscovery();
 
     private Optional<Server> server;
     private final LoggingManager loggingManager;
@@ -39,6 +37,7 @@ public final class Celesta implements ICelesta {
 
     public Celesta(BaseAppSettings appSettings) {
         this.appSettings = appSettings;
+
         manageH2Server();
 
         // CELESTA STARTUP SEQUENCE
@@ -47,8 +46,7 @@ public final class Celesta implements ICelesta {
 
         try {
             this.score = new Score.ScoreBuilder<>(Score.class)
-                    .path(appSettings.getScorePath())
-                    .scoreDiscovery(getScoreDiscovery())
+                    .scoreDiscovery(new ScoreByScorePathDiscovery(appSettings.getScorePath()))
                     .build();
         } catch (ParseException e) {
             throw new CelestaException(e);
@@ -216,10 +214,6 @@ public final class Celesta implements ICelesta {
         }
 
         return properties;
-    }
-
-    protected ScoreDiscovery getScoreDiscovery() {
-        return this.scoreDiscovery;
     }
 
     private void manageH2Server() {

@@ -23,14 +23,15 @@ abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
     }
 
     private void processScore(ScoreProperties properties) {
-        Score score = initScore(properties.getPath());
+        final String scorePath = properties.getPath();
+        Score score = initScore(scorePath);
         score.getGrains().values()
                 .stream()
                 .filter(this::isAllowGrain)
-                .forEach(g -> generateCursors(g, score));
+                .forEach(g -> generateCursors(g, scorePath));
     }
 
-    private void generateCursors(Grain g, Score score) {
+    private void generateCursors(Grain g, String scorePath) {
 
         final boolean isSysSchema = g.getName().equals(g.getScore().getSysSchemaName());
 
@@ -50,21 +51,21 @@ abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
 
         partsToElements.entrySet().stream().forEach(
                 e -> {
-                    final String scorePath;
+                    final String sp;
                     if (isSysSchema) {
-                        scorePath = "";
+                        sp = "";
                     } else {
                         final String grainPartPath = e.getKey().getSourceFile().getAbsolutePath();
-                        final String scoreRelativeOrAbsolutePath = Arrays.stream(score.getPath()
+                        final String scoreRelativeOrAbsolutePath = Arrays.stream(scorePath
                                 .split(File.pathSeparator)).filter(
                                 path -> grainPartPath.contains(new File(path).getAbsolutePath())
                         )
                                 .findFirst().get();
                         File scoreDir = new File(scoreRelativeOrAbsolutePath);
-                        scorePath = scoreDir.getAbsolutePath();
+                        sp = scoreDir.getAbsolutePath();
                     }
                     e.getValue().forEach(
-                            ge -> generateCursor(ge, getSourceRoot(), scorePath)
+                            ge -> generateCursor(ge, getSourceRoot(), sp)
                     );
                 }
 
