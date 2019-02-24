@@ -1,6 +1,8 @@
 package ru.curs.celesta.plugin.maven;
 
 import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.io.FileResource;
+import ru.curs.celesta.score.io.Resource;
 
 import java.io.File;
 import java.util.*;
@@ -55,11 +57,9 @@ abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
                     if (isSysSchema) {
                         sp = "";
                     } else {
-                        final String grainPartPath = e.getKey().getSourceFile().getAbsolutePath();
-                        final String scoreRelativeOrAbsolutePath = Arrays.stream(scorePath
-                                .split(File.pathSeparator)).filter(
-                                path -> grainPartPath.contains(new File(path).getAbsolutePath())
-                        )
+                        final Resource grainPartSource = e.getKey().getSource();
+                        final String scoreRelativeOrAbsolutePath = Arrays.stream(scorePath.split(File.pathSeparator))
+                                .filter(path -> new FileResource(new File(path)).contains(grainPartSource))
                                 .findFirst().get();
                         File scoreDir = new File(scoreRelativeOrAbsolutePath);
                         sp = scoreDir.getAbsolutePath();
@@ -68,7 +68,6 @@ abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
                             ge -> generateCursor(ge, getSourceRoot(), sp)
                     );
                 }
-
         );
 
     }

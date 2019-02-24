@@ -8,6 +8,7 @@ import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.io.FileResource;
 
 import javax.lang.model.element.Modifier;
 import java.io.File;
@@ -163,10 +164,11 @@ public final class CursorGenerator {
         if (g.getName().equals(g.getScore().getSysSchemaName())) {
             result = "ru.curs.celesta.syscursors";
         } else {
-            final String grainPartPath = ge.getGrainPart().getSourceFile().getParentFile().getAbsolutePath();
-            final String grainPartRelativePath = grainPartPath.replace(scorePath, "");
-            result = grainPartRelativePath.replace(File.separator, ".");
-
+            String grainPartRelativePath =
+                    new FileResource(new File(scorePath)).getRelativePath(ge.getGrainPart().getSource());
+            result = grainPartRelativePath
+                    .substring(0, grainPartRelativePath.lastIndexOf(File.separatorChar))
+                    .replace(File.separator, ".");
             if (result.startsWith(".")) {
                 result = result.substring(1);
             }

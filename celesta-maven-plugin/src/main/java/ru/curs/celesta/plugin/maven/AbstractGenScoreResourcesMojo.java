@@ -13,11 +13,12 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
 import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.io.FileResource;
+import ru.curs.celesta.score.io.Resource;
 
 abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
 
@@ -25,7 +26,7 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
 
     Supplier<Collection<ScoreProperties>> getScorePaths;
     String generatedResourcesDirName;
-    Consumer<Resource> addResource;
+    Consumer<org.apache.maven.model.Resource> addResource;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -34,14 +35,14 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
         List<GrainSourceBag> grainsSources = new ArrayList<>();
         for (ScoreProperties sp : getScorePaths.get()) {
             Score score = initScore(sp.getPath());
-            File scorePath = new File(sp.getPath());
+            Resource scoreSource = new FileResource(new File(sp.getPath()));
             score.getGrains().values().stream()
                 .filter(this::isAllowGrain)
                 .flatMap(g -> g.getGrainParts().stream())
-                .map(gp -> gp.getSourceFile())
+                .map(gp -> gp.getSource())
                 .filter(Objects::nonNull)
-                .forEach(sf -> {
-                    grainsSources.add(new GrainSourceBag(scorePath.toPath(), sf.toPath()));
+                .forEach(s -> {
+                    grainsSources.add(new GrainSourceBag(scoreSource, s));
                 });
         }
 
@@ -52,7 +53,7 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
         copyGrainSourceFilesToResources(grainsSources);
         generateScoreFiles(grainsSources);
 
-        Resource scoreResource = new Resource();
+        org.apache.maven.model.Resource scoreResource = new org.apache.maven.model.Resource();
         scoreResource.setDirectory(getResourcesRoot().getAbsolutePath());
         scoreResource.setTargetPath("score");
 
@@ -71,11 +72,11 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
                     if (toParent != null) {
                         Files.createDirectories(toParent);
                     }
-                    Files.copy(gs.grainSourcePath, to);
+                    Files.copy(gs.grainSource.getInputStream(), to);
                 }
             } catch (IOException ex) {
                 throw new MojoExecutionException(
-                        String.format("Copying of grain source file failed: %s", gs.grainSourcePath),
+                        String.format("Copying of grain source file failed: %s", gs.grainSource),
                         ex);
             }
         }
@@ -101,17 +102,17 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
     }
 
     private static class GrainSourceBag {
-        final Path scorePath;
-        final Path grainSourcePath;
-        GrainSourceBag(Path scorePath, Path grainSourcePath) {
-            this.scorePath = scorePath.toAbsolutePath();
-            this.grainSourcePath = grainSourcePath.toAbsolutePath();
+        final Resource scoreSource;
+        final Resource grainSource;
+        GrainSourceBag(Resource scoreSource, Resource grainSource) {
+            this.scoreSource = scoreSource;
+            this.grainSource = grainSource;
         }
         Path resolve(Path rootPath) {
             return rootPath.resolve(getGrainSourceRelativePath());
         }
         Path getGrainSourceRelativePath() {
-            return scorePath.relativize(grainSourcePath);
+            return new File(scoreSource.getRelativePath(grainSource)).toPath();
         }
     }
 

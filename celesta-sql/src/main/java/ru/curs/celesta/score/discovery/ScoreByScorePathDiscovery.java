@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.io.FileResource;
+import ru.curs.celesta.score.io.Resource;
 
 public final class ScoreByScorePathDiscovery implements ScoreDiscovery {
 
@@ -20,9 +22,9 @@ public final class ScoreByScorePathDiscovery implements ScoreDiscovery {
     }
 
     @Override
-    public Set<File> discoverScore() {
+    public Set<Resource> discoverScore() {
 
-        Set<File> scoreFiles = new LinkedHashSet<>();
+        Set<Resource> scoreSources = new LinkedHashSet<>();
 
         for (String entry : this.scorePath.split(File.pathSeparator)) {
             File path = new File(entry.trim());
@@ -36,17 +38,19 @@ public final class ScoreByScorePathDiscovery implements ScoreDiscovery {
                 throw new CelestaException("Score path entry '%s' is not a directory.", path.toString());
             }
 
-            scoreFiles.addAll(discoverScore(path));
+            scoreSources.addAll(discoverScore(path));
         }
 
-        return scoreFiles;
+        return scoreSources;
     }
 
-    private Set<File> discoverScore(final File scoreDir) {
+    private Set<Resource> discoverScore(final File scoreDir) {
         try {
             return Files.walk(scoreDir.toPath(), FileVisitOption.FOLLOW_LINKS)
                     .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".sql"))
+                    .map(Path::toAbsolutePath)
                     .map(Path::toFile)
+                    .map(FileResource::new)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
         } catch (IOException ex) {
             throw new CelestaException(ex);

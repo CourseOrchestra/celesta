@@ -1,8 +1,7 @@
 package ru.curs.celesta.score;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +21,7 @@ import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
+import ru.curs.celesta.score.io.Resource;
 
 /**
  * Grain.
@@ -462,21 +462,21 @@ public final class Grain extends NamedElement {
         }
 
         for (GrainPart gp : this.grainParts) {
+            Resource source = gp.getSource();
+            try {
+                OutputStream sourceOutputStream = source.getOutputStream();
+                if (sourceOutputStream == null) {
+                    throw new CelestaException("Cannot save '%s' grain script to resouce %s. The resource is not writable!",
+                                               getName(), source.toString());
+                }
+                
+                try (PrintWriter bw = new PrintWriter(
+                        new OutputStreamWriter(sourceOutputStream, StandardCharsets.UTF_8))) {
+                    save(bw, gp);
+                }
 
-            File sourceFile = gp.getSourceFile();
-
-            if (!sourceFile.exists()) {
-                sourceFile.getParentFile().mkdirs();
-            }
-
-            try (
-                    PrintWriter bw = new PrintWriter(
-                            new OutputStreamWriter(
-                                    new FileOutputStream(sourceFile), StandardCharsets.UTF_8))
-            ) {
-                save(bw, gp);
-            } catch (IOException e) {
-                throw new CelestaException("Cannot save '%s' grain script: %s", getName(), e.getMessage());
+            } catch (IOException ex) {
+                throw new CelestaException("Cannot save '%s' grain script: %s", getName(), ex.getMessage());
             }
         }
     }

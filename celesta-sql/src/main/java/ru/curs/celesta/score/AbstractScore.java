@@ -34,8 +34,6 @@
  */
 package ru.curs.celesta.score;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,6 +49,7 @@ import java.util.zip.CRC32;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
+import ru.curs.celesta.score.io.Resource;
 import ru.curs.celesta.score.validator.IdentifierParser;
 
 /**
@@ -64,7 +63,7 @@ public abstract class AbstractScore {
     private final Map<String, Grain> grains = new HashMap<>();
 
     private final Map<String, List<GrainPart>> grainNameToGrainParts = new LinkedHashMap<>();
-    private Set<File> grainFiles;
+    private Set<Resource> grainResources;
 
     private int orderCounter;
 
@@ -81,12 +80,12 @@ public abstract class AbstractScore {
      */
     void init(ScoreDiscovery scoreDiscovery) throws ParseException {
 
-        grainFiles = scoreDiscovery.discoverScore();
+        grainResources = scoreDiscovery.discoverScore();
 
         initSystemGrain();
 
         //The first parsing step - the grouping of files by grain names.
-        fillGrainNameToFilesMap(grainFiles);
+        fillGrainNameToFilesMap(grainResources);
         // At this moment in the table 'grainFiles' a recognized set of grain names
         // with the names of script files is contained.
         parseGrains(new StringBuilder());
@@ -103,12 +102,12 @@ public abstract class AbstractScore {
         }
     }
 
-    private void fillGrainNameToFilesMap(Set<File> files) throws ParseException {
+    private void fillGrainNameToFilesMap(Set<Resource> resources) throws ParseException {
 
         List<GrainPart> grainParts = new ArrayList<>();
 
-        for (File f : files) {
-            GrainPart grainPart = extractGrainInfo(f, false);
+        for (Resource r : resources) {
+            GrainPart grainPart = extractGrainInfo(r, false);
             grainParts.add(grainPart);
         }
 
@@ -230,22 +229,22 @@ public abstract class AbstractScore {
     }
 
     private ChecksumInputStream parseGrainPart(GrainPart grainPart, ChecksumInputStream cis) throws ParseException {
-        File f = grainPart.getSourceFile();
+        Resource r = grainPart.getSource();
         try (
                 ChecksumInputStream is =
                         cis == null
-                                ? new ChecksumInputStream(new FileInputStream(f))
-                                : new ChecksumInputStream(new FileInputStream(f), cis)
+                                ? new ChecksumInputStream(r.getInputStream())
+                                : new ChecksumInputStream(r.getInputStream(), cis)
         ) {
             CelestaParser parser = new CelestaParser(is, "utf-8");
             try {
                 parser.parseGrainPart(grainPart);
             } catch (ParseException | TokenMgrError e) {
-                throw new ParseException(String.format("Error parsing '%s': %s", f.toString(), e.getMessage()));
+                throw new ParseException(String.format("Error parsing '%s': %s", r.toString(), e.getMessage()));
             }
             return is;
         } catch (FileNotFoundException e) {
-            throw new ParseException(String.format("Cannot open file '%s'.", f.toString()));
+            throw new ParseException(String.format("Cannot open resource '%s'.", r.toString()));
         } catch (IOException e) {
             //TODO: Throw new CelestaException (runtime)
             // This should never happen, however.
@@ -253,18 +252,18 @@ public abstract class AbstractScore {
         }
     }
 
-    private GrainPart extractGrainInfo(File f, boolean isSystem) throws ParseException {
+    private GrainPart extractGrainInfo(Resource r, boolean isSystem) throws ParseException {
         try (ChecksumInputStream is = isSystem ? new ChecksumInputStream(getSysSchemaInputStream())
-                                               : new ChecksumInputStream(new FileInputStream(f))) {
+                                               : new ChecksumInputStream(r.getInputStream())) {
             CelestaParser parser = new CelestaParser(is, "utf-8");
             try {
-                return parser.extractGrainInfo(this, f);
+                return parser.extractGrainInfo(this, r);
             } catch (ParseException | TokenMgrError e) {
                 throw new ParseException(String.format(
-                        "Error extracting of grain name '%s': %s", f.toString(), e.getMessage()));
+                        "Error on extracting grain name '%s': %s", r.toString(), e.getMessage()));
             }
         } catch (IOException e) {
-            throw new ParseException(String.format("Cannot open file '%s'.", f.toString()));
+            throw new ParseException(String.format("Cannot open resource '%s'.", r.toString()));
         }
     }
 

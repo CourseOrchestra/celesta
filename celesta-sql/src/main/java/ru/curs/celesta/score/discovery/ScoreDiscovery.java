@@ -1,10 +1,11 @@
 package ru.curs.celesta.score.discovery;
 
-import java.io.File;
 import java.util.Set;
+
+import ru.curs.celesta.score.io.Resource;
 
 public interface ScoreDiscovery {
 
-    Set<File> discoverScore();
+    Set<Resource> discoverScore();
 
 }

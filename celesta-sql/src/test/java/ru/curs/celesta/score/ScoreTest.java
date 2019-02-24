@@ -8,22 +8,28 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
+import ru.curs.celesta.score.io.FileResource;
+import ru.curs.celesta.score.io.Resource;
+
 public class ScoreTest {
 
     private static final String SCORE_PATH_PREFIX = new StringJoiner(File.separator)
             .add("src").add("test").add("resources").add("scores").toString();
     public static final String TEST_SCORE_PATH = SCORE_PATH_PREFIX + File.separator + "testScore";
+
     private static final String COMPOSITE_SCORE_PATH_1 = new StringJoiner(File.separator)
             .add(SCORE_PATH_PREFIX).add("compositeScore").add("score").toString();
     private static final String COMPOSITE_SCORE_PATH_2 = new StringJoiner(File.separator)
             .add(SCORE_PATH_PREFIX).add("compositeScore").add("score2").toString();
-    public static final String CANNOT_MODIFY_SYSTEM_GRAIN = "cannot modify system grain";
 
+    public static final String CANNOT_MODIFY_SYSTEM_GRAIN = "cannot modify system grain";
 
     @Test
     public void test1() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(COMPOSITE_SCORE_PATH_2 + File.pathSeparator + COMPOSITE_SCORE_PATH_1)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(
+                        COMPOSITE_SCORE_PATH_2 + File.pathSeparator + COMPOSITE_SCORE_PATH_1))
                 .build();
         assertTrue(s.getGrains().size() < 20, () -> String.format("Too many grains?: %d", s.getGrains().size()));
         Grain g1 = s.getGrain("grain1");
@@ -42,37 +48,35 @@ public class ScoreTest {
         int o3 = g3.getDependencyOrder();
         assertTrue(o1 < o2);
         assertTrue(o2 < o3);
+        
+        final Resource grain1Resource = new FileResource(new File(
+                COMPOSITE_SCORE_PATH_1 + File.separator + "grain1" + File.separator + "_grain1.sql"));
+        final Resource grain2Resource = new FileResource(new File(
+                COMPOSITE_SCORE_PATH_1 + File.separator + "grain2" + File.separator + "_grain2.sql"));
+        final Resource grain3Resource = new FileResource(new File(
+                COMPOSITE_SCORE_PATH_2 + File.separator + "grain3" + File.separator + "_grain3.sql"));
 
         assertAll(
                 () -> assertEquals(1, g1.getGrainParts().size()),
                 () -> assertTrue(
                         g1.getGrainParts().stream()
-                                .map(GrainPart::getSourceFile)
-                                .map(File::toString)
-                                .filter(
-                                        p -> p.equals(COMPOSITE_SCORE_PATH_1 + File.separator + "grain1"
-                                                + File.separator + "_grain1.sql")
-                                ).findFirst().isPresent()
+                                .map(GrainPart::getSource)
+                                .filter(r -> r.equals(grain1Resource))
+                                .findFirst().isPresent()
                 ),
                 () -> assertEquals(1, g2.getGrainParts().size()),
                 () -> assertTrue(
                         g2.getGrainParts().stream()
-                                .map(GrainPart::getSourceFile)
-                                .map(File::toString)
-                                .filter(
-                                        p -> p.equals(COMPOSITE_SCORE_PATH_1 + File.separator + "grain2"
-                                                + File.separator + "_grain2.sql")
-                                ).findFirst().isPresent()
+                                .map(GrainPart::getSource)
+                                .filter(r -> r.equals(grain2Resource))
+                                .findFirst().isPresent()
                 ),
                 () -> assertEquals(1, g3.getGrainParts().size()),
                 () -> assertTrue(
                         g3.getGrainParts().stream()
-                                .map(GrainPart::getSourceFile)
-                                .map(File::toString)
-                                .filter(
-                                        p -> p.equals(COMPOSITE_SCORE_PATH_2 + File.separator + "grain3"
-                                                + File.separator + "_grain3.sql")
-                                ).findFirst().isPresent()
+                                .map(GrainPart::getSource)
+                                .filter(r -> r.equals(grain3Resource))
+                                .findFirst().isPresent()
                 )
         );
 
@@ -87,7 +91,7 @@ public class ScoreTest {
     @Test
     public void test2() throws ParseException, IOException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(COMPOSITE_SCORE_PATH_1)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
                 .build();
 
         Grain g1 = s.getGrain("grain1");
@@ -112,7 +116,8 @@ public class ScoreTest {
     @Test
     public void modificationTest1() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(COMPOSITE_SCORE_PATH_1 + File.pathSeparator + COMPOSITE_SCORE_PATH_2)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(
+                        COMPOSITE_SCORE_PATH_1 + File.pathSeparator + COMPOSITE_SCORE_PATH_2))
                 .build();
         Grain g1 = s.getGrain("grain1");
         Grain g2 = s.getGrain("grain2");
@@ -142,7 +147,7 @@ public class ScoreTest {
     @Test
     public void modificationTest2() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(COMPOSITE_SCORE_PATH_1)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
                 .build();
         Grain celesta = s.getGrain("celestaSql");
         assertFalse(celesta.isModified());
@@ -156,7 +161,8 @@ public class ScoreTest {
     @Test
     public void modificationTest3() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(COMPOSITE_SCORE_PATH_2 + File.pathSeparator + COMPOSITE_SCORE_PATH_1)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(
+                        COMPOSITE_SCORE_PATH_2 + File.pathSeparator + COMPOSITE_SCORE_PATH_1))
                 .build();
         Grain g1 = s.getGrain("grain1");
         Grain g2 = s.getGrain("grain2");
@@ -187,7 +193,7 @@ public class ScoreTest {
     @Test
     public void modificationTest4() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(COMPOSITE_SCORE_PATH_1)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
                 .build();
         Grain g2 = s.getGrain("grain2");
         assertFalse(g2.isModified());
@@ -205,7 +211,8 @@ public class ScoreTest {
     @Test
     public void modificationTest5() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(COMPOSITE_SCORE_PATH_1 + File.pathSeparator + COMPOSITE_SCORE_PATH_2)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(
+                        COMPOSITE_SCORE_PATH_1 + File.pathSeparator + COMPOSITE_SCORE_PATH_2))
                 .build();
         Grain g2 = s.getGrain("grain2");
         Grain g3 = s.getGrain("grain3");
@@ -230,7 +237,8 @@ public class ScoreTest {
 
     @Test
     public void modificationTest6() throws ParseException {
-        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
                 .build();
         Grain g2 = s.getGrain("grain2");
         GrainPart g2p = g2.getGrainParts().stream().findFirst().get();
@@ -247,7 +255,8 @@ public class ScoreTest {
 
     @Test
     public void modificationTest7() throws ParseException, IOException {
-        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class).path(COMPOSITE_SCORE_PATH_1)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
                 .build();
         Grain g1 = s.getGrain("grain1");
         assertEquals(1, g1.getElements(View.class).size());
@@ -261,7 +270,7 @@ public class ScoreTest {
     @Test
     public void modificationTest8() throws ParseException, IOException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(COMPOSITE_SCORE_PATH_1)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
                 .build();
         Grain g1 = s.getGrain("grain1");
         GrainPart g1p = g1.getGrainParts().stream().findFirst().get();
@@ -282,7 +291,7 @@ public class ScoreTest {
     @Test
     public void setCelestaDoc() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(TEST_SCORE_PATH)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
         Table t = g.getElement("testTable", Table.class);
@@ -306,7 +315,7 @@ public class ScoreTest {
     public void saveTest() throws ParseException, IOException {
         // Проверяется функциональность записи динамически изменённых объектов.
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(TEST_SCORE_PATH)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
         Table t = g.getElement("testTable", Table.class);
@@ -343,10 +352,10 @@ public class ScoreTest {
         AbstractScore s = new CelestaSqlTestScore();
 
         String filePath = this.getClass().getResource("test.sql").getPath();
-        File f = new File(filePath);
-        CelestaParser cp1 = new CelestaParser(new FileInputStream(f), "utf-8");
-        GrainPart gp = cp1.extractGrainInfo(s, f);
-        CelestaParser cp2 = new CelestaParser(new FileInputStream(f), "utf-8");
+        FileResource fr = new FileResource(new File(filePath));
+        CelestaParser cp1 = new CelestaParser(fr.getInputStream(), "utf-8");
+        GrainPart gp = cp1.extractGrainInfo(s, fr);
+        CelestaParser cp2 = new CelestaParser(fr.getInputStream(), "utf-8");
         Grain g = cp2.parseGrainPart(gp);
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
@@ -373,7 +382,7 @@ public class ScoreTest {
     @Test
     public void fknameTest() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(TEST_SCORE_PATH)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
         Table t = g.getElement("aLongIdentityTableNaaame", Table.class);
@@ -387,7 +396,7 @@ public class ScoreTest {
     @Test
     public void viewTest() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(TEST_SCORE_PATH)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
 
@@ -415,7 +424,7 @@ public class ScoreTest {
     @Test
     public void vewTest2() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(TEST_SCORE_PATH)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
         View v = g.getElement("testView3", View.class);
@@ -438,7 +447,8 @@ public class ScoreTest {
 
     @Test
     public void viewTest3() throws ParseException {
-        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class).path(TEST_SCORE_PATH)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
         View v = g.getElement("testView4", View.class);
@@ -457,7 +467,8 @@ public class ScoreTest {
 
     @Test
     public void viewTest4() throws ParseException {
-        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class).path(TEST_SCORE_PATH)
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
         View v = g.getElement("testView5", View.class);
@@ -484,7 +495,8 @@ public class ScoreTest {
     @Test
     void testGrainWithAnsiQuotedIdentifiers() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlAnsiQuotedTestScore.class)
-                .path(SCORE_PATH_PREFIX + File.separator + "scoreWithAnsiQuotedIdentifiers")
+                .scoreDiscovery(new ScoreByScorePathDiscovery(
+                        SCORE_PATH_PREFIX + File.separator + "scoreWithAnsiQuotedIdentifiers"))
                 .build();
 
         String grainName = "schema номер 1";

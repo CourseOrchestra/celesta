@@ -1,18 +1,18 @@
 package ru.curs.celesta.score;
 
-import java.io.File;
+import ru.curs.celesta.score.io.Resource;
 
-public class GrainPart {
+public final class GrainPart {
 
     private final Grain grain;
     private final boolean isDefinition;
 
-    private File sourceFile;
+    private final Resource source;
 
-    public GrainPart(Grain grain, boolean isDefinition, File sourceFile) {
+    public GrainPart(Grain grain, boolean isDefinition, Resource source) {
         this.grain = grain;
         this.isDefinition = isDefinition;
-        this.sourceFile = sourceFile;
+        this.source = source;
 
         grain.getGrainParts().add(this);
     }
@@ -37,8 +37,8 @@ public class GrainPart {
         return this.grain;
     }
 
-    public File getSourceFile() {
-        return sourceFile;
+    public Resource getSource() {
+        return source;
     }
 
     public boolean isDefinition() {
