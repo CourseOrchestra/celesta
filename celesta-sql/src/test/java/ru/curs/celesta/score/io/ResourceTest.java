@@ -44,6 +44,12 @@ public class ResourceTest {
         child = parent.createRelative("/child/file.test");
         
         assertEquals("file:/parent/child/file.test", child.toString());
+        
+        parent = new UrlResource(new URL("file:/parent/file.test"));
+        child = parent.createRelative("/child/file.test");
+        
+        assertEquals("file:/parent/child/file.test", child.toString());
+
     }
 
 }

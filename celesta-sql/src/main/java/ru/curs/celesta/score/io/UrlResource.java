@@ -17,9 +17,11 @@ import java.util.Objects;
 public final class UrlResource implements Resource {
 
     private final URL url;
+    private final String urlString;
 
     public UrlResource(URL url) {
         this.url = url;
+        this.urlString = url.toString();
     }
 
     @Override
@@ -47,12 +49,12 @@ public final class UrlResource implements Resource {
 
     @Override
     public String toString() {
-        return url.toString();
+        return urlString;
     }
 
     @Override
     public int hashCode() {
-        return url.hashCode();
+        return urlString.hashCode();
     }
 
     @Override
@@ -66,7 +68,7 @@ public final class UrlResource implements Resource {
 
         UrlResource other = (UrlResource) obj;
 
-        return Objects.equals(url, other.url);
+        return Objects.equals(urlString, other.urlString);
     }
 
 }

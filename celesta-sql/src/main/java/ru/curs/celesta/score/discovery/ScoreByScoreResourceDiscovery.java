@@ -21,7 +21,7 @@ import ru.curs.celesta.score.io.UrlResource;
  */
 public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
 
-    private static final String SCORE_LOCATION = "score";
+    private static final String SCORE_FILES_LOCATION = "score/score.files";
 
     @Override
     public Set<Resource> discoverScore() {
@@ -31,12 +31,11 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
             Enumeration<URL> urls = (classLoader != null)
-                    ? classLoader.getResources(SCORE_LOCATION)
-                    : ClassLoader.getSystemResources(SCORE_LOCATION);
+                    ? classLoader.getResources(SCORE_FILES_LOCATION)
+                    : ClassLoader.getSystemResources(SCORE_FILES_LOCATION);
 
             while (urls.hasMoreElements()) {
-                Resource scoreResource = new UrlResource(urls.nextElement());
-                Resource scoreFilesResource = scoreResource.createRelative("score.files");
+                Resource scoreFilesResource = new UrlResource(urls.nextElement());
 
                 InputStream scoreFilesInputStream;
                 try {
@@ -51,7 +50,7 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
                     Iterable<String> li = reader.lines()::iterator;
                     for (String gp : li) {
                         final String grainName = getGrainName(gp);
-                        Resource grainResource = scoreResource.createRelative(gp);
+                        Resource grainResource = scoreFilesResource.createRelative(gp);
                         Resource existingGrainResource = grainNameToResourceMap.put(grainName, grainResource);
                         if (existingGrainResource != null) {
                             throw new CelestaException("Duplicate resources encountered for the grain '%s': %s, %s",
