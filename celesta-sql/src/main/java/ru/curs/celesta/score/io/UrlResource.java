@@ -10,18 +10,18 @@ import java.util.Objects;
 
 /**
  * Score resource located in a JAR-file.
- * 
+ *
  * @author Pavel Perminov (packpaul@mail.ru)
  * @since 2019-02-23
  */
 public final class UrlResource implements Resource {
-    
+
     private final URL url;
-    
+
     public UrlResource(URL url) {
         this.url = url;
     }
-    
+
     @Override
     public InputStream getInputStream() throws IOException {
         URLConnection con = this.url.openConnection();

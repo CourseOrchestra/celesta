@@ -9,20 +9,20 @@ import java.util.Objects;
 
 /**
  * Score resource located in the file system.
- * 
+ *
  * @author Pavel Perminov (packpaul@mail.ru)
  * @since 2019-02-23
  */
 public final class FileResource implements Resource {
-    
+
     private final File file;
     private final File canonicalFile;
-    
+
     public FileResource(File file) {
         this.file = file;
         this.canonicalFile = getCanonicalFile();
     }
-    
+
     private File getCanonicalFile() {
         try {
             return file.getCanonicalFile();
@@ -43,22 +43,22 @@ public final class FileResource implements Resource {
 
     @Override
     public boolean contains(Resource childResource) {
-        if (! (childResource instanceof FileResource)) {
+        if (!(childResource instanceof FileResource)) {
             return false;
         }
-        
+
         File childFile = ((FileResource) childResource).file;
         try {
             return childFile.getCanonicalPath().startsWith(
                     file.getCanonicalPath() + File.separator);
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             return false;
         }
     }
 
     @Override
     public String getRelativePath(Resource childResource) {
-        if (! this.contains(childResource)) {
+        if (!this.contains(childResource)) {
             return null;
         }
 
@@ -93,8 +93,8 @@ public final class FileResource implements Resource {
 
         FileResource other = (FileResource) obj;
 
-        return (canonicalFile != null && other.canonicalFile != null) ?
-                Objects.equals(canonicalFile, other.canonicalFile) : Objects.equals(file, other.file);
+        return (canonicalFile != null && other.canonicalFile != null)
+                ? Objects.equals(canonicalFile, other.canonicalFile) : Objects.equals(file, other.file);
     }
 
 }

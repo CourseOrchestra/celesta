@@ -1,7 +1,5 @@
 package ru.curs.celesta;
 
-import ru.curs.celesta.BaseAppSettings;
-
 import java.util.*;
 
 /**

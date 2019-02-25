@@ -47,9 +47,9 @@ public final class Celesta implements ICelesta {
         System.out.printf("Celesta initialization: score parsing...");
 
         try {
-            ScoreDiscovery scoreDiscovery = this.appSettings.getScorePath().isEmpty() ?
-                    new ScoreByScoreResourceDiscovery() :
-                    new ScoreByScorePathDiscovery(appSettings.getScorePath());
+            ScoreDiscovery scoreDiscovery = this.appSettings.getScorePath().isEmpty()
+                    ? new ScoreByScoreResourceDiscovery()
+                    : new ScoreByScorePathDiscovery(appSettings.getScorePath());
             this.score = new Score.ScoreBuilder<>(Score.class)
                     .scoreDiscovery(scoreDiscovery)
                     .build();

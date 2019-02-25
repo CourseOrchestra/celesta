@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -15,6 +16,9 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.io.Resource;
 import ru.curs.celesta.score.io.UrlResource;
 
+/**
+ * Implementation of score discovery based on JAR-files resources look up.
+ */
 public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
 
     private static final String SCORE_LOCATION = "score";
@@ -26,9 +30,9 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
-            Enumeration<URL> urls = (classLoader != null ?
-                    classLoader.getResources(SCORE_LOCATION) :
-                    ClassLoader.getSystemResources(SCORE_LOCATION));
+            Enumeration<URL> urls = (classLoader != null)
+                    ? classLoader.getResources(SCORE_LOCATION)
+                    : ClassLoader.getSystemResources(SCORE_LOCATION);
 
             while (urls.hasMoreElements()) {
                 Resource scoreResource = new UrlResource(urls.nextElement());
@@ -37,12 +41,13 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
                 InputStream scoreFilesInputStream;
                 try {
                     scoreFilesInputStream = scoreFilesResource.getInputStream();
-                } catch(IOException ex) {
+                } catch (IOException ex) {
                     System.out.println("score index file is missing: " + scoreFilesResource.toString());
                     continue;
                 }
 
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(scoreFilesInputStream))) {
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(scoreFilesInputStream, StandardCharsets.UTF_8))) {
                     Iterable<String> li = reader.lines()::iterator;
                     for (String gp : li) {
                         final String grainName = getGrainName(gp);
@@ -56,7 +61,7 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
                 }
             }
 
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             throw new CelestaException("Unable to load score files from resources!", ex);
         }
 

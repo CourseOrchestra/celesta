@@ -13,6 +13,9 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.io.FileResource;
 import ru.curs.celesta.score.io.Resource;
 
+/**
+ * Implementation of score discovery based on score path look up.
+ */
 public final class ScoreByScorePathDiscovery implements ScoreDiscovery {
 
     private final String scorePath;

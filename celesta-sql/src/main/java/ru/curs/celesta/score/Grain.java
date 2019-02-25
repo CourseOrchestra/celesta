@@ -28,6 +28,8 @@ import ru.curs.celesta.score.io.Resource;
  */
 public final class Grain extends NamedElement {
 
+    private static final Pattern NATIVE_SQL = Pattern.compile("--\\{\\{(.*)--}}", Pattern.DOTALL);
+
     private final AbstractScore score;
 
     private VersionString version = VersionString.DEFAULT;
@@ -57,6 +59,9 @@ public final class Grain extends NamedElement {
     };
 
     private final Set<String> constraintNames = new HashSet<>();
+
+    private final Map<DBType, List<NativeSqlElement>> beforeSql = new HashMap<>();
+    private final Map<DBType, List<NativeSqlElement>> afterSql = new HashMap<>();
 
     public Grain(AbstractScore score, String name) throws ParseException {
         super(name, score.getIdentifierParser());
@@ -466,10 +471,11 @@ public final class Grain extends NamedElement {
             try {
                 OutputStream sourceOutputStream = source.getOutputStream();
                 if (sourceOutputStream == null) {
-                    throw new CelestaException("Cannot save '%s' grain script to resouce %s. The resource is not writable!",
-                                               getName(), source.toString());
+                    throw new CelestaException(
+                            "Cannot save '%s' grain script to resouce %s. The resource is not writable!",
+                            getName(), source.toString());
                 }
-                
+
                 try (PrintWriter bw = new PrintWriter(
                         new OutputStreamWriter(sourceOutputStream, StandardCharsets.UTF_8))) {
                     save(bw, gp);
@@ -513,11 +519,6 @@ public final class Grain extends NamedElement {
     public Table getTable(String name) throws ParseException {
         return getElement(name, Table.class);
     }
-
-    private static final Pattern NATIVE_SQL = Pattern.compile("--\\{\\{(.*)--}}", Pattern.DOTALL);
-
-    private final Map<DBType, List<NativeSqlElement>> beforeSql = new HashMap<>();
-    private final Map<DBType, List<NativeSqlElement>> afterSql = new HashMap<>();
 
     void addNativeSql(String sql, boolean isBefore, DBType dbType, GrainPart grainPart) throws ParseException {
         Matcher m = NATIVE_SQL.matcher(sql);

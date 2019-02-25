@@ -46,7 +46,7 @@ public abstract class BaseAppSettings {
         // point.
 
         scorePath = properties.getProperty("score.path", "").trim();
-        if (! scorePath.isEmpty()) {
+        if (!scorePath.isEmpty()) {
             checkEntries(scorePath, "score.path", sb);
         }
 

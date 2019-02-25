@@ -245,7 +245,6 @@ public final class ForeignKey {
     public int hashCode() {
         int result = 0;
         for (Column c : columns) {
-            Integer.rotateLeft(result, 3);
             result ^= c.getName().hashCode();
         }
         return result;
