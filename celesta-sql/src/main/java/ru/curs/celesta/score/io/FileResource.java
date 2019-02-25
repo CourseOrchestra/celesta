@@ -68,6 +68,11 @@ public final class FileResource implements Resource {
     }
 
     @Override
+    public FileResource createRelative(String relativePath) throws IOException {
+        return new FileResource(new File(this.file, relativePath));
+    }
+
+    @Override
     public String toString() {
         return file.toString();
     }

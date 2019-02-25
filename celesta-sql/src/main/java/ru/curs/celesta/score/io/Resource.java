@@ -26,14 +26,18 @@ public interface Resource {
      * @return
      * @throws IOException
      */
-    OutputStream getOutputStream() throws IOException;
+    default OutputStream getOutputStream() throws IOException {
+        return null;
+    }
 
     /**
      * Checks if the passed-in resource is child of {@code this} resource.
      * @param childResource
      * @return
      */
-    boolean contains(Resource childResource);
+    default boolean contains(Resource childResource) {
+        return false;
+    }
     
     /**
      * Returns relative path from {@code this} resource to the child one, or
@@ -42,6 +46,17 @@ public interface Resource {
      * @param childResource
      * @return
      */
-    String getRelativePath(Resource childResource);
+    default String getRelativePath(Resource childResource) {
+        return null;
+    }
+
+    /**
+     * Creates a resource relative to this resource.
+     *
+     * @param relativePath
+     * @return
+     * @throws IOException
+     */
+    Resource createRelative(String relativePath) throws IOException;
 
 }

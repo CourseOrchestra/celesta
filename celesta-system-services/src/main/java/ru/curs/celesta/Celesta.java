@@ -9,6 +9,8 @@ import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScoreResourceDiscovery;
+import ru.curs.celesta.score.discovery.ScoreDiscovery;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,8 +47,11 @@ public final class Celesta implements ICelesta {
         System.out.printf("Celesta initialization: score parsing...");
 
         try {
+            ScoreDiscovery scoreDiscovery = this.appSettings.getScorePath().isEmpty() ?
+                    new ScoreByScoreResourceDiscovery() :
+                    new ScoreByScorePathDiscovery(appSettings.getScorePath());
             this.score = new Score.ScoreBuilder<>(Score.class)
-                    .scoreDiscovery(new ScoreByScorePathDiscovery(appSettings.getScorePath()))
+                    .scoreDiscovery(scoreDiscovery)
                     .build();
         } catch (ParseException e) {
             throw new CelestaException(e);

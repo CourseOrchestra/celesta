@@ -46,12 +46,9 @@ public abstract class BaseAppSettings {
         // point.
 
         scorePath = properties.getProperty("score.path", "").trim();
-        if (scorePath.isEmpty()) {
-            sb.append("No score path given (score.path).\n");
-        } else {
+        if (! scorePath.isEmpty()) {
             checkEntries(scorePath, "score.path", sb);
         }
-
 
         h2ReferentialIntegrity = Boolean.parseBoolean(properties.getProperty("h2.referential.integrity", "false"));
         final boolean h2InMemory = Boolean.parseBoolean(properties.getProperty("h2.in-memory", "false"));
