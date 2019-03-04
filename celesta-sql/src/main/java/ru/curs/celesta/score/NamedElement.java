@@ -90,9 +90,6 @@ public abstract class NamedElement {
         if (obj instanceof NamedElement) {
             return Objects.equals(this.name, ((NamedElement) obj).getName());
         }
-        if (obj instanceof String) {
-            return Objects.equals(this.name, (String) obj);
-        }
         
         return false;
     }

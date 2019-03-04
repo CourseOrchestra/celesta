@@ -26,60 +26,64 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
     @Override
     public Set<Resource> discoverScore() {
 
-        Map<String, Resource> grainNameToResourceMap = new LinkedHashMap<>();
-
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
             Enumeration<URL> urls = (classLoader != null)
                     ? classLoader.getResources(SCORE_FILES_LOCATION)
                     : ClassLoader.getSystemResources(SCORE_FILES_LOCATION);
 
-            while (urls.hasMoreElements()) {
-                Resource scoreFilesResource = new UrlResource(urls.nextElement());
+            return discoverScore(urls);
 
-                InputStream scoreFilesInputStream;
-                try {
-                    scoreFilesInputStream = scoreFilesResource.getInputStream();
-                } catch (IOException ex) {
-                    System.out.println("score index file is missing: " + scoreFilesResource.toString());
-                    continue;
-                }
+        } catch(IOException ex) {
+            throw new CelestaException("Unable to load score files from resources.", ex);
+        }
+    }
 
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(scoreFilesInputStream, StandardCharsets.UTF_8))) {
-                    Iterable<String> li = reader.lines()::iterator;
-                    for (String gp : li) {
-                        final String grainName = getGrainName(gp);
-                        Resource grainResource = scoreFilesResource.createRelative(gp);
-                        Resource existingGrainResource = grainNameToResourceMap.put(grainName, grainResource);
-                        if (existingGrainResource != null) {
-                            throw new CelestaException("Duplicate resources encountered for the grain '%s': %s, %s",
-                                                       grainName, existingGrainResource, grainResource);
-                        }
+    Set<Resource> discoverScore(Enumeration<URL> scoreFilesUrls) throws IOException {
+
+        Map<String, Resource> grainNameToResourceMap = new LinkedHashMap<>();
+
+        while (scoreFilesUrls.hasMoreElements()) {
+            Resource scoreFilesResource = new UrlResource(scoreFilesUrls.nextElement());
+
+            InputStream scoreFilesInputStream;
+            try {
+                scoreFilesInputStream = scoreFilesResource.getInputStream();
+            } catch (IOException ex) {
+                System.out.println("score index file is missing: " + scoreFilesResource.toString());
+                continue;
+            }
+
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(scoreFilesInputStream, StandardCharsets.UTF_8))) {
+                String gp;
+                while ((gp = reader.readLine()) != null) {
+                    final String grainName = getGrainName(gp);
+                    Resource grainResource = scoreFilesResource.createRelative(gp);
+                    Resource existingGrainResource = grainNameToResourceMap.put(grainName, grainResource);
+                    if (existingGrainResource != null) {
+                        throw new CelestaException("Duplicate resources encountered for the grain '%s': %s, %s",
+                                                   grainName, existingGrainResource, grainResource);
                     }
                 }
             }
-
-        } catch (IOException ex) {
-            throw new CelestaException("Unable to load score files from resources!", ex);
         }
 
         return new LinkedHashSet<>(grainNameToResourceMap.values());
     }
 
-
-    private String getGrainName(String grainPath) {
+    String getGrainName(String grainPath) {
 
         String result = grainPath.toLowerCase();
 
-        int i = grainPath.lastIndexOf('/');
+        int i = result.lastIndexOf('/');
         if (i >= 0) {
-            result = grainPath.substring(i + 1);
+            result = result.substring(i + 1);
         }
 
-        i = grainPath.lastIndexOf('.');
+        i = result.lastIndexOf('.');
         if (i >= 0) {
-            result = grainPath.substring(0, i);
+            result = result.substring(0, i);
         }
 
         return result;

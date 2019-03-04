@@ -27,7 +27,7 @@ public class ResourceTest {
         Resource nonChild = new FileResource(new File("/parent/child/../../file.test"));
         
         String relativePath = parent.getRelativePath(child);
-        assertEquals("child/file.test", relativePath);
+        assertEquals("child" + File.separator + "file.test", relativePath);
         
         relativePath = parent.getRelativePath(nonChild);
         assertNull(relativePath);
