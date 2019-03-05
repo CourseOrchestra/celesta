@@ -6,15 +6,15 @@ import ru.curs.celesta.score.AbstractScore;
 
 public class DbUpdaterAccessor {
 
-    public static AbstractScore getScore(DbUpdater dbUpdater) {
+    public static AbstractScore getScore(DbUpdater<?> dbUpdater) {
         return dbUpdater.score;
     }
 
-    public static ConnectionPool getConnectionPool(DbUpdater dbUpdater) {
+    public static ConnectionPool getConnectionPool(DbUpdater<?> dbUpdater) {
         return dbUpdater.connectionPool;
     }
 
-    public static DBAdaptor getDbAdaptor(DbUpdater dbUpdater) {
+    public static DBAdaptor getDbAdaptor(DbUpdater<?> dbUpdater) {
         return dbUpdater.dbAdaptor;
     }
 }

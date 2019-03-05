@@ -1,25 +1,19 @@
 package ru.curs.celesta.score.discovery;
 
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import ru.curs.celesta.score.io.Resource;
+
+/**
+ * Score discovery interface.
+ */
 public interface ScoreDiscovery {
 
-    default Set<File> discoverScore(final File scoreDir) {
-        try {
-            return Files.walk(scoreDir.toPath(), FileVisitOption.FOLLOW_LINKS)
-                    .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".sql"))
-                    .map(Path::toFile)
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
-        } catch (IOException e) {
-            throw new RuntimeException(e); //TODO: Our analog of RuntimeException must be used
-        }
-    }
+    /**
+     * Discovers grains in the score.
+     *
+     * @return  a set of resources pointing to grain scripts of the score.
+     */
+    Set<Resource> discoverScore();
+
 }

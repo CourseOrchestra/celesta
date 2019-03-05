@@ -94,6 +94,9 @@ public final class LoggingManager implements ILoggingManager {
      * Log an action on cursor.
      * <p>
      * Cursors from <b>celesta</b> grain will be ignored.
+     *
+     * @param c  cursor
+     * @param a  action
      */
     public void log(Cursor c, Action a) {
         if (a == Action.READ) {

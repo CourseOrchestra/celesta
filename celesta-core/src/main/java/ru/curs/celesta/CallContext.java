@@ -172,10 +172,20 @@ public class CallContext implements ICallContext {
         return celesta.getScore();
     }
 
+    /**
+     * Set the last data accessor object.
+     *
+     * @param dataAccessor  data accessor object
+     */
     public void setLastDataAccessor(BasicDataAccessor dataAccessor) {
         lastDataAccessor = dataAccessor;
     }
 
+    /**
+     * Increments counter of open data accessor objects.
+     *
+     * @throws CelestaException  if the maximal limit of data accessors is exceeded.
+     */
     public void incDataAccessorsCount() {
         if (dataAccessorsCount > MAX_DATA_ACCESSORS) {
             throw new CelestaException(

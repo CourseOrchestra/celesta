@@ -10,16 +10,15 @@ PARSER_BEGIN(CelestaParser)
 package ru.curs.celesta.score;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.ArrayList;
 import java.io.StringReader;
-import java.io.File;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 
 import ru.curs.celesta.score.GrainPart;
 import ru.curs.celesta.score.validator.IdentifierParser;
+import ru.curs.celesta.score.io.Resource;
 
 //CHECKSTYLE:OFF
 public class CelestaParser{
@@ -192,7 +191,7 @@ SPECIAL_TOKEN:
 }
 
 
-GrainPart extractGrainInfo(AbstractScore s, File f):
+GrainPart extractGrainInfo(AbstractScore s, Resource r):
 {
     Token t;
     boolean isDefinition = false;
@@ -222,7 +221,7 @@ GrainPart extractGrainInfo(AbstractScore s, File f):
 
         if (grain == null) grain = new Grain(s, t.toString());
 
-        return new GrainPart(grain, isDefinition, f);
+        return new GrainPart(grain, isDefinition, r);
     }
 }
 

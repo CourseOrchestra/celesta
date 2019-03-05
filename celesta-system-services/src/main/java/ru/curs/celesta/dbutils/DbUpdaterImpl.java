@@ -15,10 +15,10 @@ import java.sql.Connection;
  */
 public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
+    static final String EXEC_NATIVE_NOT_SUPPORTED_MESSAGE = "\"EXECUTE NATIVE\" expression is not supported";
+
     private final ICelesta celesta;
     private TablesCursor table;
-
-    static final String EXEC_NATIVE_NOT_SUPPORTED_MESSAGE = "\"EXECUTE NATIVE\" expression is not supported";
 
     public DbUpdaterImpl(ConnectionPool connectionPool, Score score, boolean forceDdInitialize, DBAdaptor dba,
                          ICelesta celesta, PermissionManager permissionManager, LoggingManager loggingManager) {
@@ -76,7 +76,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
 
     /**
      * Records initialization in security tables. It is run once during creation
-     * of the system grain. 
+     * of the system grain.
      */
     private void initSecurity(CallContext context) {
         RolesCursor roles = new RolesCursor(context);

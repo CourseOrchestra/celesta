@@ -8,7 +8,8 @@ import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScoreResourceDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
 
 import java.io.IOException;
@@ -28,7 +29,6 @@ public final class Celesta implements ICelesta {
     private final ConnectionPool connectionPool;
     private final DBAdaptor dbAdaptor;
     private final TriggerDispatcher triggerDispatcher = new TriggerDispatcher();
-    private final ScoreDiscovery scoreDiscovery = new DefaultScoreDiscovery();
 
     private Optional<Server> server;
     private final LoggingManager loggingManager;
@@ -39,6 +39,7 @@ public final class Celesta implements ICelesta {
 
     public Celesta(BaseAppSettings appSettings) {
         this.appSettings = appSettings;
+
         manageH2Server();
 
         // CELESTA STARTUP SEQUENCE
@@ -46,9 +47,11 @@ public final class Celesta implements ICelesta {
         System.out.printf("Celesta initialization: score parsing...");
 
         try {
+            ScoreDiscovery scoreDiscovery = this.appSettings.getScorePath().isEmpty()
+                    ? new ScoreByScoreResourceDiscovery()
+                    : new ScoreByScorePathDiscovery(appSettings.getScorePath());
             this.score = new Score.ScoreBuilder<>(Score.class)
-                    .path(appSettings.getScorePath())
-                    .scoreDiscovery(getScoreDiscovery())
+                    .scoreDiscovery(scoreDiscovery)
                     .build();
         } catch (ParseException e) {
             throw new CelestaException(e);
@@ -216,10 +219,6 @@ public final class Celesta implements ICelesta {
         }
 
         return properties;
-    }
-
-    protected ScoreDiscovery getScoreDiscovery() {
-        return this.scoreDiscovery;
     }
 
     private void manageH2Server() {

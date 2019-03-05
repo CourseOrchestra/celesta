@@ -2,6 +2,7 @@ package ru.curs.celesta.score;
 
 import ru.curs.celesta.score.validator.IdentifierParser;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -83,7 +84,14 @@ public abstract class NamedElement {
 
     @Override
     public final boolean equals(Object obj) {
-        return obj instanceof NamedElement ? name.equals(((NamedElement) obj).getName()) : name.equals(obj);
+        if (obj == this) {
+            return true;
+        }
+        if (obj instanceof NamedElement) {
+            return Objects.equals(this.name, ((NamedElement) obj).getName());
+        }
+        
+        return false;
     }
 
     /**

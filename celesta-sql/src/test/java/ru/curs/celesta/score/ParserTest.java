@@ -13,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import ru.curs.celesta.score.io.FileResource;
+
 public class ParserTest extends AbstractParsingTest {
 
   @Test
@@ -53,7 +55,7 @@ public class ParserTest extends AbstractParsingTest {
     try (InputStream is = new ByteArrayInputStream(csqlScript.getBytes(StandardCharsets.UTF_8))) {
       CelestaParser cp = new CelestaParser(is, "utf-8");
       CelestaSqlTestScore s = new CelestaSqlTestScore();
-      gp = cp.extractGrainInfo(s, new File(grainPath,"_" + grainName + ".sql"));
+      gp = cp.extractGrainInfo(s, new FileResource(new File(grainPath,"_" + grainName + ".sql")));
     }
 
     try (InputStream is = new ByteArrayInputStream(csqlScript.getBytes(StandardCharsets.UTF_8))) {

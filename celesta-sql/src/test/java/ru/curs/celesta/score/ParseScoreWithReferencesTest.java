@@ -2,6 +2,7 @@ package ru.curs.celesta.score;
 
 import org.junit.jupiter.api.Test;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 import java.io.File;
 import java.util.StringJoiner;
@@ -24,8 +25,8 @@ public class ParseScoreWithReferencesTest {
 
     @Test
     void testReferenceToNotExistingSchema() {
-        AbstractScore.ScoreBuilder scoreBuilder = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(SCORE_WITH_REFERENCE_TO_NOT_EXISTING_SCHEMA);
+        AbstractScore.ScoreBuilder<?> scoreBuilder = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_WITH_REFERENCE_TO_NOT_EXISTING_SCHEMA));
 
         CelestaException e = assertThrows(CelestaException.class, () -> scoreBuilder.build());
         String expectedMessage = String.format(DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE, "a", "b");
@@ -35,14 +36,14 @@ public class ParseScoreWithReferencesTest {
     @Test
     void testSelfReference() throws Exception {
         new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(SCORE_WITH_SELF_REFERENCE)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_WITH_SELF_REFERENCE))
                 .build();
     }
 
     @Test
     void testReferenceToExistingSchema() throws Exception {
         new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
-                .path(SCORE_WITH_REFERENCE_TO_EXISTING_SCHEMA)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_WITH_REFERENCE_TO_EXISTING_SCHEMA))
                 .build();
     }
 }

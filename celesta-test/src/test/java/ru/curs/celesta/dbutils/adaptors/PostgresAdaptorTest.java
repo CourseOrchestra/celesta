@@ -11,11 +11,11 @@ import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
-    public static PostgreSQLContainer postgres = new PostgreSQLContainer();
+    public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>();
 
     private static PostgresAdaptor dba;
 
@@ -40,8 +40,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
         dba = new PostgresAdaptor(connectionPool, new JdbcDdlConsumer());
 
         Score score = new AbstractScore.ScoreBuilder<>(Score.class)
-                .path(SCORE_NAME)
-                .scoreDiscovery(new DefaultScoreDiscovery())
+                .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_NAME))
                 .build();
 
         DbUpdaterImpl dbUpdater = createDbUpdater(score, dba);
@@ -58,8 +57,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
         setDba(dba);
         setScore(
                 new AbstractScore.ScoreBuilder<>(Score.class)
-                        .path(SCORE_NAME)
-                        .scoreDiscovery(new DefaultScoreDiscovery())
+                        .scoreDiscovery(new ScoreByScorePathDiscovery(SCORE_NAME))
                         .build());
     }
 

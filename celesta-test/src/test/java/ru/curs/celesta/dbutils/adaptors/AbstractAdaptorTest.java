@@ -25,6 +25,7 @@ import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.test.mock.CelestaImpl;
 import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.syscursors.GrainsCursor;
 
 public abstract class AbstractAdaptorTest {
@@ -1710,7 +1711,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     void testAddNotNullColumnWithDefaultValue() throws Exception {
         Score score = new Score.ScoreBuilder<>(Score.class)
-                .path(ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_1_SCORE_PATH)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_1_SCORE_PATH))
                 .build();
         DbUpdater<?> dbUpdater = createDbUpdater(score, this.dba);
         dbUpdater.updateDb();
@@ -1730,7 +1731,7 @@ public abstract class AbstractAdaptorTest {
         this.conn.commit();
 
         score = new Score.ScoreBuilder<>(Score.class)
-                .path(ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_2_SCORE_PATH)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_2_SCORE_PATH))
                 .build();
         Table newT = score.getGrain("test").getTable("t");
         dbUpdater = createDbUpdater(score, this.dba);

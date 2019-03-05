@@ -4,7 +4,7 @@ import java.io.File;
 
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 /**
  * Synchronizer class with DBSchema project.
@@ -33,8 +33,7 @@ public final class DBSchemaSync {
             File dbsFile = new File(args[0]);
             System.out.println("parsing score...");
             AbstractScore s = new AbstractScore.ScoreBuilder<>(Score.class)
-                    .path(args[1])
-                    .scoreDiscovery(new DefaultScoreDiscovery())
+                    .scoreDiscovery(new ScoreByScorePathDiscovery(args[1]))
                     .build();
             System.out.println("processing...");
             DBSchema2Celesta.dBSToScore(dbsFile, s, args.length > 2 && "-adoc".equalsIgnoreCase(args[2]));
@@ -45,8 +44,7 @@ public final class DBSchemaSync {
             System.out.println("SCORE-->DBS");
             System.out.println("parsing score...");
             AbstractScore s = new AbstractScore.ScoreBuilder<>(Score.class)
-                    .path(args[0])
-                    .scoreDiscovery(new DefaultScoreDiscovery())
+                    .scoreDiscovery(new ScoreByScorePathDiscovery(args[0]))
                     .build();
             System.out.println("processing...");
             Celesta2DBSchema.scoreToDBS(s, dbsFile);

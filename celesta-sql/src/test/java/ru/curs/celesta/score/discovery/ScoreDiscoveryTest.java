@@ -6,7 +6,7 @@ import ru.curs.celesta.score.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class DefaultScoreDiscoveryTest {
+public class ScoreDiscoveryTest {
 
     @Test
     void testMultipleFilesSchemaWithFlatLayout() throws Exception {
@@ -59,7 +59,6 @@ public class DefaultScoreDiscoveryTest {
 
     }
 
-
     @Test
     void testNestedDirStructure() throws Exception {
         AbstractScore s = ScoreUtil.createCelestaSqlTestScore(
@@ -80,4 +79,5 @@ public class DefaultScoreDiscoveryTest {
                 () -> assertNotNull(g.getElement("s2", SequenceElement.class))
         );
     }
+
 }

@@ -29,8 +29,8 @@ public class SequencesMigrationTest {
     @TestTemplate
     @DisplayName("Migration like [id int not null] -> [id int default NEXTVAL(id_sequence) not null] is successful")
     void testMigrationPkFromIntWithoutDefaultToSequenceBased(
-            @ScorePath(MANUAL_INT_PK_TO_SEQ_BASED_PREFIX_V1) DbUpdater dbUpdater1,
-            @ScorePath(MANUAL_INT_PK_TO_SEQ_BASED_PREFIX_V2) DbUpdater dbUpdater2
+            @ScorePath(MANUAL_INT_PK_TO_SEQ_BASED_PREFIX_V1) DbUpdater<?> dbUpdater1,
+            @ScorePath(MANUAL_INT_PK_TO_SEQ_BASED_PREFIX_V2) DbUpdater<?> dbUpdater2
 
     ) throws ParseException {
         DBAdaptor dbAdaptor = DbUpdaterAccessor.getDbAdaptor(dbUpdater1);

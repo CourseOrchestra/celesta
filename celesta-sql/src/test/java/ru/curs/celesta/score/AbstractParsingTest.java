@@ -1,8 +1,9 @@
 package ru.curs.celesta.score;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+
+import ru.curs.celesta.score.io.FileResource;
 
 /**
  * Created by ioann on 15.06.2017.
@@ -13,13 +14,13 @@ abstract public class AbstractParsingTest {
     Grain parse(File f) throws ParseException, IOException {
         final GrainPart gp;
 
-        try (ChecksumInputStream is = new ChecksumInputStream(new FileInputStream(f))) {
+        FileResource fr = new FileResource(f);
+        try (ChecksumInputStream is = new ChecksumInputStream(fr.getInputStream())) {
             CelestaParser cp1 = new CelestaParser(is, "utf-8");
-
-            gp = cp1.extractGrainInfo(s, f);
+            gp = cp1.extractGrainInfo(s, fr);
         }
 
-        try (ChecksumInputStream is = new ChecksumInputStream(new FileInputStream(f))) {
+        try (ChecksumInputStream is = new ChecksumInputStream(fr.getInputStream())) {
             CelestaParser cp2 = new CelestaParser(is, "utf-8");
             Grain g = cp2.parseGrainPart(gp);
 
@@ -29,6 +30,6 @@ abstract public class AbstractParsingTest {
 
             return g;
         }
-
     }
+
 }
