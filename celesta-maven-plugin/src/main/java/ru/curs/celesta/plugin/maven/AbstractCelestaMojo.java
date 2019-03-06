@@ -37,25 +37,21 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
     MavenProject project;
 
     final Collection<ScoreProperties> getScorePaths() {
+        return getPaths(CELESTASQL_DIR, scores);
+    }
+
+    final Collection<ScoreProperties> getTestScorePaths() {
+        return getPaths(CELESTASQL_TEST_DIR, testScores);
+    }
+
+    private Collection<ScoreProperties> getPaths(String celestasqlDir, List<ScoreProperties> scores) {
         List<ScoreProperties> scorePaths = new ArrayList<>();
 
-        File celestaSqlPath = new File(project.getBasedir(), CELESTASQL_DIR);
+        File celestaSqlPath = new File(project.getBasedir(), celestasqlDir);
         if (celestaSqlPath.exists()) {
             scorePaths.add(new ScoreProperties(celestaSqlPath.getAbsolutePath()));
         }
         scorePaths.addAll(scores);
-
-        return scorePaths;
-    }
-
-    final Collection<ScoreProperties> getTestScorePaths() {
-        List<ScoreProperties> scorePaths = new ArrayList<>();
-
-        File celestaSqlPath = new File(project.getBasedir(), CELESTASQL_TEST_DIR);
-        if (celestaSqlPath.exists()) {
-            scorePaths.add(new ScoreProperties(celestaSqlPath.getAbsolutePath()));
-        }
-        scorePaths.addAll(testScores);
 
         return scorePaths;
     }

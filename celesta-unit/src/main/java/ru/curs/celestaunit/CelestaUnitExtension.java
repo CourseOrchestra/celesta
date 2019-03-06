@@ -21,6 +21,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 
@@ -35,13 +37,13 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
     static final String DEFAULT_SCORE;
 
     static {
-        String score = "src/main/celestasql";
-        String testScore = "src/test/celestasql";
-        File f = new File(testScore);
-        if (f.isDirectory() && f.canRead()) {
-            score += File.pathSeparator + testScore;
-        }
-        DEFAULT_SCORE = score;
+        DEFAULT_SCORE = Stream.of("src/main/celestasql", "src/test/celestasql")
+                .filter(
+                        s -> {
+                            File f = new File(s);
+                            return f.isDirectory() && f.canRead();
+                        }
+                ).collect(Collectors.joining(File.pathSeparator));
     }
 
     private final String scorePath;
@@ -179,6 +181,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
 
         /**
          * Sets score path.
+         *
          * @param scorePath Score path (maybe relative to project root).
          */
         public Builder withScorePath(String scorePath) {
@@ -188,6 +191,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
 
         /**
          * Sets referential integrity.
+         *
          * @param referentialIntegrity Set to false to disable.
          */
         public Builder withReferentialIntegrity(boolean referentialIntegrity) {
@@ -197,6 +201,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
 
         /**
          * Sets tables truncation after each test.
+         *
          * @param truncateAfterEach Set to true to truncate each table after each test.
          */
         public Builder withTruncateAfterEach(boolean truncateAfterEach) {
