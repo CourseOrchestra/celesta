@@ -34,17 +34,13 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 public final class CelestaUnitExtension implements BeforeAllCallback,
         AfterAllCallback, ParameterResolver, AfterEachCallback {
 
-    static final String DEFAULT_SCORE;
-
-    static {
-        DEFAULT_SCORE = Stream.of("src/main/celestasql", "src/test/celestasql")
+    static final String DEFAULT_SCORE = Stream.of("src/main/celestasql", "src/test/celestasql")
                 .filter(
                         s -> {
                             File f = new File(s);
                             return f.isDirectory() && f.canRead();
                         }
                 ).collect(Collectors.joining(File.pathSeparator));
-    }
 
     private final String scorePath;
     private final boolean referentialIntegrity;

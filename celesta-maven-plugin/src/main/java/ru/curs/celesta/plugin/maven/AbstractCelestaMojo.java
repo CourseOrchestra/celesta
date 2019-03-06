@@ -44,14 +44,14 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
         return getPaths(CELESTASQL_TEST_DIR, testScores);
     }
 
-    private Collection<ScoreProperties> getPaths(String celestasqlDir, List<ScoreProperties> scores) {
+    private Collection<ScoreProperties> getPaths(String celestasqlDir, List<ScoreProperties> scoresCollection) {
         List<ScoreProperties> scorePaths = new ArrayList<>();
 
         File celestaSqlPath = new File(project.getBasedir(), celestasqlDir);
         if (celestaSqlPath.exists()) {
             scorePaths.add(new ScoreProperties(celestaSqlPath.getAbsolutePath()));
         }
-        scorePaths.addAll(scores);
+        scorePaths.addAll(scoresCollection);
 
         return scorePaths;
     }
