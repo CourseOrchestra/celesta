@@ -67,8 +67,7 @@ public abstract class AbstractScore {
 
     private int orderCounter;
 
-    AbstractScore() {
-        //TODO!!! Used only for test and must be replaced. Must be private!!!
+    protected AbstractScore() {
     }
 
     /**
