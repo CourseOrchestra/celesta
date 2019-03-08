@@ -2,6 +2,7 @@ package ru.curs.celesta.dbschemasync;
 
 import org.junit.jupiter.api.Test;
 import ru.curs.celesta.score.AbstractScore;
+import ru.curs.celesta.score.CelestaSerializer;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.GrainPart;
 import ru.curs.celesta.score.Score;
@@ -62,11 +63,14 @@ public class SchemaSyncTest {
         Score s = new Score.ScoreBuilder<>(Score.class)
                 .scoreDiscovery(new ScoreByScorePathDiscovery(scorePath))
                 .build();
-        StringWriter oldval = new StringWriter();
-        PrintWriter oldvalPrintWriter = new PrintWriter(oldval);
         Grain g = s.getGrain("logs");
-        for (GrainPart gp : g.getGrainParts())
-            g.save(oldvalPrintWriter, gp);
+        StringWriter oldval = new StringWriter();
+        try (PrintWriter oldvalPrintWriter = new PrintWriter(oldval)) {
+            CelestaSerializer serializer = new CelestaSerializer(oldvalPrintWriter);
+            for (GrainPart gp : g.getGrainParts()) {
+                serializer.save(gp);
+            }
+        }
         File tmp = File.createTempFile("sst", "tmp");
         tmp.delete();
         try {
@@ -76,9 +80,12 @@ public class SchemaSyncTest {
             tmp.delete();
         }
         StringWriter newval = new StringWriter();
-        PrintWriter newvalPrintWriter = new PrintWriter(newval);
-        for (GrainPart gp : g.getGrainParts())
-            g.save(newvalPrintWriter, gp);
+        try (PrintWriter newvalPrintWriter = new PrintWriter(newval)) {
+            CelestaSerializer serializer = new CelestaSerializer(newvalPrintWriter);
+            for (GrainPart gp : g.getGrainParts()) {
+                serializer.save(gp);
+            }
+        }
         assertEquals(oldval.toString().replaceAll("\\r\\n", "\n"),
                 newval.toString().replaceAll("\\r\\n", "\n"));
     }

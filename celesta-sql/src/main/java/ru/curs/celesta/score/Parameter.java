@@ -13,13 +13,11 @@ import java.sql.Timestamp;
  */
 public final class Parameter extends NamedElement {
 
-  private final String celestaType;
   private final ViewColumnType type;
 
   public Parameter(String name, ViewColumnType type) throws ParseException {
     super(name, new PlainIdentifierParser());
     this.type = type;
-    celestaType = type.getCelestaType();
   }
 
   /**

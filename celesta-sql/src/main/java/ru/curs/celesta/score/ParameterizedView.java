@@ -1,9 +1,10 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Parameterized View object in metadata.
@@ -76,34 +77,11 @@ public final class ParameterizedView extends View {
    * @return
    */
   public Map<String, Parameter> getParameters() {
-    return new LinkedHashMap<>(parameters);
+    return Collections.unmodifiableMap(parameters);
   }
 
   public List<String> getParameterRefsWithOrder() {
     return parameterRefsWithOrder;
   }
 
-  @Override
-  void save(PrintWriter bw) throws IOException {
-    SQLGenerator gen = new CelestaSQLGen();
-    Grain.writeCelestaDoc(this, bw);
-    createViewScript(bw, gen);
-    bw.println(";");
-    bw.println();
-  }
-
-  /**
-   * CelestaSQL generator.
-   */
-  class CelestaSQLGen extends AbstractView.CelestaSQLGen {
-    @Override
-    protected String preamble(AbstractView view) {
-      return String.format("create %s %s (%s) as",
-          viewType(),
-          viewName(view),
-          parameters.values().stream()
-              .map(p -> p.getName() + " " + p.getType().toString())
-              .collect(Collectors.joining(", ")));
-    }
-  }
 }

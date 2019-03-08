@@ -1,7 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -105,36 +103,6 @@ public final class SequenceElement extends GrainElement {
                     String.format(DUPLICATE_ENTRANCE_TEMPLATE, Argument.CYCLE, getName())
             );
         }
-    }
-
-    @Override
-    final void save(PrintWriter bw) throws IOException {
-        Grain.writeCelestaDoc(this, bw);
-        bw.printf("CREATE SEQUENCE %s ", getName());
-
-
-        if (hasArgument(Argument.START_WITH)) {
-            bw.printf("START WITH %s ", getArgument(Argument.START_WITH));
-        }
-
-        if (hasArgument(Argument.INCREMENT_BY)) {
-            bw.printf("INCREMENT BY %s ", getArgument(Argument.INCREMENT_BY));
-        }
-
-        if (hasArgument(Argument.MINVALUE)) {
-            bw.printf("MINVALUE %s ", getArgument(Argument.MINVALUE));
-        }
-
-        if (hasArgument(Argument.MAXVALUE)) {
-            bw.printf("MAXVALUE %s ", getArgument(Argument.MAXVALUE));
-        }
-
-        if (hasArgument(Argument.CYCLE) && (Boolean) getArgument(Argument.CYCLE)) {
-            bw.write("CYCLE ");
-        }
-
-        bw.println(";");
-        bw.println();
     }
 
     void finalizeParsing() throws ParseException {

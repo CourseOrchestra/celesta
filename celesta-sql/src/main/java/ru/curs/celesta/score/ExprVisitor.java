@@ -68,7 +68,6 @@ public abstract class ExprVisitor {
   void visitMin(Min expr) throws ParseException {
   }
 
-
 }
 
 /**

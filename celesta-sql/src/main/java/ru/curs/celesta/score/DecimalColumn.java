@@ -1,7 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -94,20 +92,6 @@ public final class DecimalColumn extends Column {
     @Override
     public Class<?> getJavaClass() {
         return BigDecimal.class;
-    }
-
-    @Override
-    void save(PrintWriter bw) throws IOException {
-        super.save(bw);
-        bw.write(" DECIMAL");
-        if (!isNullable()) {
-            bw.write(" NOT NULL");
-        }
-        BigDecimal defaultVal = getDefaultValue();
-        if (defaultVal != null) {
-            bw.write(" DEFAULT ");
-            bw.write(defaultVal.toString());
-        }
     }
 
     /**

@@ -2,6 +2,7 @@ package ru.curs.celesta.dbschemasync;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
@@ -26,8 +27,8 @@ import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
-import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.AbstractScore;
+import ru.curs.celesta.score.CelestaSerializer;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
@@ -244,13 +245,13 @@ public final class Celesta2DBSchema {
         writeOptions(t, doc, table);
     }
 
-    private static void writeView(Grain g, View v, Document doc, Element schema) {
+    private static void writeView(Grain g, View v, Document doc, Element schema) throws IOException {
         Element view = doc.createElement("view");
         view.setAttribute("name", v.getName());
         schema.appendChild(view);
         writeComment(v.getCelestaDoc(), doc, view);
         Element viewScript = doc.createElement("view_script");
-        viewScript.appendChild(doc.createCDATASection(v.getCelestaQueryString()));
+        viewScript.appendChild(doc.createCDATASection(CelestaSerializer.toQueryString(v)));
         view.appendChild(viewScript);
 
         // Writing columns

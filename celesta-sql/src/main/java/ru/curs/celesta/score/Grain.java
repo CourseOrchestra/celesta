@@ -134,7 +134,7 @@ public final class Grain extends NamedElement {
      * @param classOfElement  class of elements from the set
      * @return
      */
-    private <T extends GrainElement> List<T> getElements(Class<T> classOfElement, GrainPart gp) {
+    <T extends GrainElement> List<T> getElements(Class<T> classOfElement, GrainPart gp) {
         return getElements(classOfElement).values().stream()
                 .filter(t -> gp == t.getGrainPart()).collect(Collectors.toList());
     }
@@ -407,54 +407,6 @@ public final class Grain extends NamedElement {
         modified = true;
     }
 
-
-    public void save(PrintWriter bw, GrainPart gp) throws IOException {
-        writeCelestaDoc(this, bw);
-        bw.printf("CREATE SCHEMA %s VERSION '%s'", getName(), getVersion().toString());
-        if (!isAutoupdate) {
-            bw.printf(" WITH NO AUTOUPDATE");
-        }
-        bw.printf(";%n");
-        bw.println();
-
-        bw.println("-- *** TABLES ***");
-        List<Table> tables = getElements(Table.class, gp);
-        for (Table t : tables) {
-            t.save(bw);
-        }
-
-        bw.println("-- *** FOREIGN KEYS ***");
-        for (Table t : tables) {
-            for (ForeignKey fk : t.getForeignKeys()) {
-                fk.save(bw);
-            }
-        }
-
-        bw.println("-- *** INDICES ***");
-        List<Index> indices = getElements(Index.class, gp);
-        for (Index i : indices) {
-            i.save(bw);
-        }
-
-        bw.println("-- *** VIEWS ***");
-        List<View> views = getElements(View.class, gp);
-        for (View v : views) {
-            v.save(bw);
-        }
-
-        bw.println("-- *** MATERIALIZED VIEWS ***");
-        List<MaterializedView> materializedViews = getElements(MaterializedView.class, gp);
-        for (MaterializedView mv : materializedViews) {
-            mv.save(bw);
-        }
-
-        bw.println("-- *** PARAMETERIZED VIEWS ***");
-        List<ParameterizedView> parameterizedViews = getElements(ParameterizedView.class, gp);
-        for (ParameterizedView pv : parameterizedViews) {
-            pv.save(bw);
-        }
-    }
-
     /**
      * Saves grain back to source files.
      *
@@ -476,9 +428,11 @@ public final class Grain extends NamedElement {
                             getName(), source.toString());
                 }
 
-                try (PrintWriter bw = new PrintWriter(
+                try (PrintWriter pw = new PrintWriter(
                         new OutputStreamWriter(sourceOutputStream, StandardCharsets.UTF_8))) {
-                    save(bw, gp);
+
+                    CelestaSerializer serializer = new CelestaSerializer(pw);
+                    serializer.save(gp);
                 }
 
             } catch (IOException ex) {
@@ -497,16 +451,6 @@ public final class Grain extends NamedElement {
 
     public View getView(String name) throws ParseException {
         return getElement(name, View.class);
-    }
-
-    static boolean writeCelestaDoc(NamedElement e, PrintWriter bw) {
-        String doc = e.getCelestaDoc();
-        if (doc == null) {
-            return false;
-        } else {
-            bw.printf("/**%s*/%n", doc);
-            return true;
-        }
     }
 
     /**

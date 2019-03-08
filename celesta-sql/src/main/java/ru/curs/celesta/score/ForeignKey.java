@@ -1,6 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -382,64 +381,6 @@ public final class ForeignKey {
      */
     public void delete() throws ParseException {
         parentTable.removeFK(this);
-    }
-
-    void save(PrintWriter bw) {
-        bw.write("ALTER TABLE ");
-        bw.write(getParentTable().getQuotedNameIfNeeded());
-        bw.write(" ADD CONSTRAINT ");
-        String name = getConstraintName();
-
-        bw.write(name);
-        bw.write(" FOREIGN KEY (");
-        boolean comma = false;
-        for (Column c : getColumns().values()) {
-            if (comma) {
-                bw.write(", ");
-            }
-            bw.write(c.getQuotedNameIfNeeded());
-            comma = true;
-        }
-        bw.write(") REFERENCES ");
-
-        bw.write(referencedTable.getGrain().getQuotedNameIfNeeded());
-        bw.write(".");
-
-        bw.write(referencedTable.getQuotedNameIfNeeded());
-        bw.write("(");
-        comma = false;
-        for (Column c : referencedTable.getPrimaryKey().values()) {
-            if (comma) {
-                bw.write(", ");
-            }
-            bw.write(c.getQuotedNameIfNeeded());
-            comma = true;
-        }
-        bw.write(")");
-        switch (updateRule) {
-        case CASCADE:
-            bw.write(" ON UPDATE CASCADE");
-            break;
-        case SET_NULL:
-            bw.write(" ON UPDATE SET NULL");
-            break;
-        case NO_ACTION:
-        default:
-            break;
-        }
-        switch (deleteRule) {
-        case CASCADE:
-            bw.write(" ON DELETE CASCADE");
-            break;
-        case SET_NULL:
-            bw.write(" ON DELETE SET NULL");
-            break;
-        case NO_ACTION:
-        default:
-            break;
-        }
-
-        bw.println(";");
     }
 
 }

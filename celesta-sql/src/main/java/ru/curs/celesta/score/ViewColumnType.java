@@ -158,7 +158,7 @@ public enum ViewColumnType {
         }
 
         @Override
-        public Class getJavaClass() {
+        public Class<?> getJavaClass() {
             return Boolean.class;
         }
     },

@@ -12,7 +12,6 @@ import java.util.Map;
 public class View extends AbstractView {
 
   Map<String, ViewColumnMeta> columnTypes = null;
-  private String queryString;
   Expr whereCondition;
 
   View(GrainPart grainPart, String name) throws ParseException {
@@ -98,41 +97,6 @@ public class View extends AbstractView {
       bw.write("  where ");
       bw.write(gen.generateSQL(whereCondition));
     }
-  }
-
-  @Override
-  void save(PrintWriter bw) throws IOException {
-    SQLGenerator gen = new CelestaSQLGen();
-    Grain.writeCelestaDoc(this, bw);
-    createViewScript(bw, gen);
-    bw.println(";");
-    bw.println();
-  }
-
-
-  /**
-   * Returns an SQL query in Celesta language, based on which the view is going
-   * to be created.
-   *
-   * @return
-   */
-  public String getCelestaQueryString() {
-    if (queryString != null) {
-      return queryString;
-    }
-    StringWriter sw = new StringWriter();
-    PrintWriter bw = new PrintWriter(sw);
-    SQLGenerator gen = new CelestaSQLGen();
-    try {
-      selectScript(bw, gen);
-      bw.flush();
-    } catch (IOException e) {
-      // This should never happen for in-memory streams
-      throw new RuntimeException(e);
-    }
-
-    queryString = sw.toString();
-    return queryString;
   }
 
 }
