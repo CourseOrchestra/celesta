@@ -1,7 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
 
 import org.json.JSONException;
@@ -111,14 +109,6 @@ public abstract class Column extends NamedElement implements ColumnMeta {
      */
     public final void delete() throws ParseException {
         parentTable.removeColumn(this);
-    }
-
-    void save(PrintWriter bw) throws IOException {
-        bw.write("  ");
-        if (Grain.writeCelestaDoc(this, bw)) {
-            bw.write("  ");
-        }
-        bw.write(getName());
     }
 
     /**

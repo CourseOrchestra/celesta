@@ -1,7 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -90,26 +88,6 @@ public final class DateTimeColumn extends Column {
     @Override
     public String jdbcGetterName() {
         return "getTimestamp";
-    }
-
-    @Override
-    void save(PrintWriter bw) throws IOException {
-        super.save(bw);
-        bw.write(" DATETIME");
-        if (!isNullable()) {
-            bw.write(" NOT NULL");
-        }
-        if (isGetdate()) {
-            bw.write(" DEFAULT GETDATE()");
-        } else {
-            Date defaultVal = getDefaultValue();
-            if (defaultVal != null) {
-                bw.write(" DEFAULT '");
-                DateFormat df = new SimpleDateFormat("yyyyMMdd");
-                bw.write(df.format(defaultVal));
-                bw.write("'");
-            }
-        }
     }
 
     @Override

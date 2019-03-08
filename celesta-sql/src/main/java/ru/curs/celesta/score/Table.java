@@ -1,11 +1,14 @@
 package ru.curs.celesta.score;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.json.JSONException;
 import ru.curs.celesta.CelestaException;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.*;
 
 /**
  * Table object in metadata.
@@ -263,58 +266,6 @@ public final class Table extends DataGrainElement implements TableElement, Versi
             pkConstraintName = getGrain().getScore().getIdentifierParser().parse(pkConstraintName);
         }
         this.pkConstraintName = pkConstraintName;
-    }
-
-    @Override
-    void save(PrintWriter bw) throws IOException {
-        Grain.writeCelestaDoc(this, bw);
-        bw.printf("CREATE TABLE %s(%n", getQuotedNameIfNeeded());
-        boolean comma = false;
-        for (Column c : getColumns().values()) {
-            if (comma) {
-                bw.println(",");
-            }
-            c.save(bw);
-            comma = true;
-        }
-
-        // Here we write the PK
-        if (!getPrimaryKey().isEmpty()) {
-            if (comma) {
-                bw.write(",");
-            }
-            bw.println();
-            bw.write("  CONSTRAINT ");
-            bw.write(getPkConstraintName());
-            bw.write(" PRIMARY KEY (");
-            comma = false;
-            for (Column c : getPrimaryKey().values()) {
-                if (comma) {
-                    bw.write(", ");
-                }
-                bw.write(c.getQuotedNameIfNeeded());
-                comma = true;
-            }
-            bw.println(")");
-        }
-
-        bw.write(")");
-        boolean withEmitted = false;
-        if (isReadOnly) {
-            bw.write(" WITH READ ONLY");
-            withEmitted = true;
-        } else if (!isVersioned) {
-            bw.write(" WITH NO VERSION CHECK");
-            withEmitted = true;
-        }
-        if (!autoUpdate) {
-            if (!withEmitted) {
-                bw.write(" WITH");
-            }
-            bw.write(" NO AUTOUPDATE");
-        }
-        bw.println(";");
-        bw.println();
     }
 
     /**

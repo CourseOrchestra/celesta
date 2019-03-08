@@ -371,36 +371,4 @@ public abstract class AbstractView extends DataGrainElement {
     }
   }
 
-  /**
-   * Generator of CelestaSQL.
-   */
-  class CelestaSQLGen extends SQLGenerator {
-
-    @Override
-    protected String preamble(AbstractView view) {
-      return String.format("create %s %s as", viewType(), viewName(view));
-    }
-
-    @Override
-    protected String viewName(AbstractView v) {
-      return getQuotedNameIfNeeded();
-    }
-
-    @Override
-    protected String tableName(TableRef tRef) {
-      Table t = tRef.getTable();
-      if (t.getGrain() == getGrain()) {
-        return String.format("%s as %s", t.getQuotedNameIfNeeded(), tRef.getAlias());
-      } else {
-        return String.format("%s.%s as %s",
-                             t.getGrain().getQuotedNameIfNeeded(), t.getQuotedNameIfNeeded(), tRef.getAlias());
-      }
-    }
-
-    @Override
-    protected boolean quoteNames() {
-      return false;
-    }
-  }
-
 }

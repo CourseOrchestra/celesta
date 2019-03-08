@@ -2,9 +2,6 @@ package ru.curs.celesta.score;
 
 import ru.curs.celesta.dbutils.BLOB;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-
 /**
  * Binary column (IMAGE or BLOB type).
  */
@@ -36,20 +33,6 @@ public final class BinaryColumn extends Column {
     }
 
     @Override
-    void save(PrintWriter bw) throws IOException {
-        super.save(bw);
-        bw.write(" BLOB");
-        if (!isNullable()) {
-            bw.write(" NOT NULL");
-        }
-        String defaultVal = getDefaultValue();
-        if (defaultVal != null) {
-            bw.write(" DEFAULT ");
-            bw.write(defaultVal);
-        }
-    }
-
-    @Override
     public String getCelestaType() {
         return CELESTA_TYPE;
     }
@@ -63,4 +46,5 @@ public final class BinaryColumn extends Column {
     public String getCelestaDefault() {
         return defaultvalue;
     }
+
 }
