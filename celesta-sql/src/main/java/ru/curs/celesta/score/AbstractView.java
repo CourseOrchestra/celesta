@@ -355,12 +355,12 @@ public abstract class AbstractView extends DataGrainElement {
   /**
    * Wrapper for automatic line-breaks.
    */
-  class BWWrapper {
+  static class BWWrapper {
     private static final int LINE_SIZE = 80;
     private static final String PADDING = "    ";
     private int l = 0;
 
-    private void append(String s, PrintWriter bw) throws IOException {
+    void append(String s, PrintWriter bw) throws IOException {
       bw.write(s);
       l += s.length();
       if (l >= LINE_SIZE) {

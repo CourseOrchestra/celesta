@@ -298,8 +298,8 @@ public final class MaterializedView extends AbstractView implements TableElement
         )) {
             while (is.read() != -1) ;
             return String.format("%08X", is.getCRC32());
-        } catch (Exception e) {
-            throw new RuntimeException();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
