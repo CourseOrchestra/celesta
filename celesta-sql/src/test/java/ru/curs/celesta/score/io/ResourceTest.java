@@ -14,7 +14,7 @@ public class ResourceTest {
         Resource parent = new FileResource(new File("/parent/"));
         Resource child = new FileResource(new File("/parent/child/../child/file.test"));
         Resource nonChild = new FileResource(new File("/parent/child/../../file.test"));
-        
+
         assertTrue(parent.contains(child));
         assertFalse(child.contains(parent));
         assertFalse(parent.contains(nonChild));
@@ -25,14 +25,14 @@ public class ResourceTest {
         Resource parent = new FileResource(new File("/parent/"));
         Resource child = new FileResource(new File("/parent/child/file.test"));
         Resource nonChild = new FileResource(new File("/parent/child/../../file.test"));
-        
+
         String relativePath = parent.getRelativePath(child);
         assertEquals("child" + File.separator + "file.test", relativePath);
-        
+
         relativePath = parent.getRelativePath(nonChild);
         assertNull(relativePath);
     }
-    
+
     @Test
     public void testCreateRelative() throws IOException {
         Resource parent = new FileResource(new File("/parent/"));
@@ -42,12 +42,12 @@ public class ResourceTest {
 
         parent = new UrlResource(new URL("file:/parent/"));
         child = parent.createRelative("/child/file.test");
-        
+
         assertEquals("file:/parent/child/file.test", child.toString());
-        
+
         parent = new UrlResource(new URL("file:/parent/file.test"));
         child = parent.createRelative("/child/file.test");
-        
+
         assertEquals("file:/parent/child/file.test", child.toString());
 
     }

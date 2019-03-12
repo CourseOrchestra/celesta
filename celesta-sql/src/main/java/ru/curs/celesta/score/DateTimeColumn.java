@@ -49,7 +49,7 @@ public final class DateTimeColumn extends Column {
      *
      * @param lexvalue  text value.
      * @return
-     * @throws ParseException  in case if the text value doesn't correspond to 
+     * @throws ParseException  in case if the text value doesn't correspond to
      *                         YYYYMMDD pattern.
      */
     public static Date parseISODate(String lexvalue) throws ParseException {

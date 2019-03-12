@@ -93,7 +93,7 @@ public final class Celesta2DBSchema {
             Element schema = doc.createElement("schema");
             final String schemaName = Optional.ofNullable(g.getNamespace())
                                               .map(ns -> ns.getValue() + "." + g.getName())
-                                              .orElse(g.getName()); 
+                                              .orElse(g.getName());
             schema.setAttribute("name", schemaName);
             schema.setAttribute("schemaname", schemaName);
             schema.setAttribute("defo", "y");
@@ -117,12 +117,12 @@ public final class Celesta2DBSchema {
                     String.format("create grain %s version '%s';", g.getName(), g.getVersion().toString()));
             procedure.appendChild(string);
         }
-        
+
         // TODO:
         // Schema name is included as name attribute of schema node to be shown in DbSchema.
         // This may however break existing layouts. As a workaround it is suggested to re-map layout.entity.schema
         // attributes f.e:
-        // if layout.entity.schema ~= "*.log" { layout.entity.schema = "new.namespace.log" } 
+        // if layout.entity.schema ~= "*.log" { layout.entity.schema = "new.namespace.log" }
 
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();

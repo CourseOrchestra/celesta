@@ -17,10 +17,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ScoreByScoreResourceDiscoveryTest {
-    
-    private static final String SCORE_FILES = "score.files"; 
-    
-    private final ScoreByScoreResourceDiscovery scoreDiscovery = new ScoreByScoreResourceDiscovery(); 
+
+    private static final String SCORE_FILES = "score.files";
+
+    private final ScoreByScoreResourceDiscovery scoreDiscovery = new ScoreByScoreResourceDiscovery();
 
     @Test
     void testGetGrainName() {
@@ -48,49 +48,49 @@ public class ScoreByScoreResourceDiscoveryTest {
 
     @Test
     void testDiscoverScore_uniqueGrainNames() throws IOException {
-        
+
         final URL scoreAUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_A/");
         final URL scoreBUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_B/");
-        
+
         Set<Resource> grainUrls =  scoreDiscovery.discoverScore(Collections.enumeration(Arrays.asList(
                 new URL(scoreAUrl, SCORE_FILES),
                 new URL(scoreBUrl, SCORE_FILES))));
-        
+
         Set<Resource> expectedGrainUrls = new HashSet<>(Arrays.asList(
                 new UrlResource(scoreAUrl).createRelative("a/score/A.sql"),
                 new UrlResource(scoreBUrl).createRelative("b/score/B.sql")));
-        
+
         assertEquals(expectedGrainUrls, grainUrls);
     }
 
     @Test
     void testDiscoverScore_missingScoreFiles() throws IOException {
-        
+
         final URL scoreAUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_A/");
         final URL scoreZUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_Z/");
-        
+
         Set<Resource> grainUrls =  scoreDiscovery.discoverScore(Collections.enumeration(Arrays.asList(
                 new URL(scoreAUrl, SCORE_FILES),
                 new URL(scoreZUrl, SCORE_FILES))));
-        
+
         Set<Resource> expectedGrainUrls = new HashSet<>(Arrays.asList(
                 new UrlResource(scoreAUrl).createRelative("a/score/A.sql")));
-        
+
         assertEquals(expectedGrainUrls, grainUrls);
     }
 
     @Test
     void testDiscoverScore_nonUniqueGrainNames() throws IOException {
-        
+
         final URL scoreAUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_A/");
         final URL scoreA1Url = getClass().getResource("/scores/resourceDiscoveryScore/score_A1/");
-        
+
         CelestaException ex = assertThrows(CelestaException.class, () -> {
             scoreDiscovery.discoverScore(Collections.enumeration(Arrays.asList(
                     new URL(scoreAUrl, SCORE_FILES),
                     new URL(scoreA1Url, SCORE_FILES))));
         });
-        
+
         System.out.println(ex.getMessage());
     }
 

@@ -20,7 +20,7 @@ public class GrainModelTest {
         GrainPart gp = new GrainPart(g, true, null);
 
         SequenceElement se = new SequenceElement(gp, "table1_a");
-        
+
         Table t = new Table(gp, "table1");
         (new IntegerColumn(t, "a")).setNullableAndDefault(false, "NEXTVAL(" + se.getName() + ")");
         new IntegerColumn(t, "b").setNullableAndDefault(false, "0");

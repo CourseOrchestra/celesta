@@ -47,7 +47,7 @@ public class ScoreTest {
         int o3 = g3.getDependencyOrder();
         assertTrue(o1 < o2);
         assertTrue(o2 < o3);
-        
+
         final Resource grain1Resource = new FileResource(new File(
                 COMPOSITE_SCORE_PATH_1 + File.separator + "grain1" + File.separator + "_grain1.sql"));
         final Resource grain2Resource = new FileResource(new File(
@@ -359,7 +359,7 @@ public class ScoreTest {
         StringWriter sw = new StringWriter();
 
         try (PrintWriter bw = new PrintWriter(sw)) {
-            CelestaSerializer serializer = new CelestaSerializer(bw); 
+            CelestaSerializer serializer = new CelestaSerializer(bw);
             Table t = g.getElement("ttt1", Table.class);
             serializer.save(t);
             t = g.getElement("ttt2", Table.class);

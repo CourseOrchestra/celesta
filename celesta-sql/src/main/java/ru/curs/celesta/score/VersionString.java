@@ -38,7 +38,7 @@ public final class VersionString {
          */
         LOWER,
         /**
-         * Current versions are incomparable. 
+         * Current versions are incomparable.
          */
         INCONSISTENT
     }

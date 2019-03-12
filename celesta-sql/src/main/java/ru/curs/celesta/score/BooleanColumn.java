@@ -20,7 +20,7 @@ public final class BooleanColumn extends Column {
     }
 
     /**
-     * Parses a string in SQL definition DEFAULT to a boolean value. 
+     * Parses a string in SQL definition DEFAULT to a boolean value.
      *
      * @param lexvalue  string definition
      * @return

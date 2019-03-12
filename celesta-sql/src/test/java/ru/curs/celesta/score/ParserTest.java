@@ -65,7 +65,7 @@ public class ParserTest extends AbstractParsingTest {
       new GrainSaver().save(g, gp.getSource());
     }
   }
-  
+
   @Test
   void testSchemaWithNoAutoupdate() throws Exception {
     String createSchema = "CREATE SCHEMA someGrain VERSION '1.0' WITH NO AUTOUPDATE;";
@@ -83,7 +83,7 @@ public class ParserTest extends AbstractParsingTest {
     grainScript.deleteOnExit();
 
     String actualCreateSchema = Files.lines(grainScript.toPath()).findFirst().get();
-    
+
     assertEquals(createSchema, actualCreateSchema);
   }
 

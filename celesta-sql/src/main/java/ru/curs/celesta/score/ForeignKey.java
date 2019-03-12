@@ -161,7 +161,7 @@ public final class ForeignKey {
      * @param table  table name
      * @throws ParseException  in case if there's already a key with the same set of
      *                         fields (not necessarily referencing the same table) in
-     *                         the table. 
+     *                         the table.
      */
     void setReferencedTable(String grain, String table) throws ParseException {
         table = getParentTable().getGrain().getScore().getIdentifierParser().parse(table);
@@ -370,7 +370,7 @@ public final class ForeignKey {
     public void setConstraintName(String constraintName) throws ParseException {
         if (constraintName != null) {
             parentTable.getGrain().getScore().getIdentifierParser().parse(constraintName);
-        }    
+        }
         this.constraintName = constraintName;
     }
 

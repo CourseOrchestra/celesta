@@ -22,7 +22,7 @@ public class SchemaSyncTest {
 
     @Test
     void celestaToDbs() throws Exception {
-        
+
         File tmpDir = Files.createTempDirectory("celestaTest").toFile();
         try {
             String scorePath = getScorePath("score");
@@ -90,10 +90,10 @@ public class SchemaSyncTest {
         File tmpDir = Files.createTempDirectory("celestaTest").toFile();
         try {
             File dbs = copyFile(new File(getResourcePath("test.dbs")), tmpDir);
-    
+
             File score = new File(tmpDir, "score");
             copyDir(new File(getScorePath("legacyScore")), score);
-    
+
             File scoreLogsLegacy = new File(score, "logs/_logs.sql");
             File scoreLogs = new File(score, "logs/logs.sql");
 

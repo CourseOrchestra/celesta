@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
 /**
- * Interface that defines a versioning possibility for a meta entity in the DB. 
+ * Interface that defines a versioning possibility for a meta entity in the DB.
  *
  * @author ioann
  * @since 2017-06-13

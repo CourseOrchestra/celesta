@@ -90,7 +90,7 @@ public abstract class NamedElement {
         if (obj instanceof NamedElement) {
             return Objects.equals(this.name, ((NamedElement) obj).getName());
         }
-        
+
         return false;
     }
 
@@ -104,7 +104,7 @@ public abstract class NamedElement {
     }
 
     /**
-     * Sets value of document string in commented form. 
+     * Sets value of document string in commented form.
      *
      * @param celestaDoc  new value
      * @throws ParseException  if the comment has a wrong format

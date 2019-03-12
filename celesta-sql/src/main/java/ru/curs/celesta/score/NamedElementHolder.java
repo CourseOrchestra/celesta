@@ -14,7 +14,7 @@ import java.util.Map;
  * The implementation of interface Collection is done only for the purpose of
  * ObjectAid utility to correctly build a UML diagram (taking a field of
  * NamedElementHolder type as a multi-reference).
- * 
+ *
  *
  * @param <T>  type of named elements in the collection.
  */

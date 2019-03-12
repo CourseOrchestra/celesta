@@ -130,14 +130,14 @@ public final class Grain extends NamedElement {
      * @return
      */
     <T extends GrainElement> Collection<T> getElements(Class<T> classOfElement, GrainPart gp) {
-        
+
         Collection<T> elements = getElements(classOfElement).values();
         if (gp != null) {
             elements = elements.stream()
                     .filter(t -> gp == t.getGrainPart())
                     .collect(Collectors.toList());
         }
-        
+
         return elements;
     }
 

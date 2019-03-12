@@ -49,7 +49,7 @@ public final class IntegerColumn extends Column {
     }
 
     /**
-     * Returns sequence of the column. 
+     * Returns sequence of the column.
      * @return
      */
     public SequenceElement getSequence() {
