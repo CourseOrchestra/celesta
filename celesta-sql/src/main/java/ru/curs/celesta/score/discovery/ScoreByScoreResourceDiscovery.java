@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.Namespace;
 import ru.curs.celesta.score.io.Resource;
 import ru.curs.celesta.score.io.UrlResource;
 
@@ -59,7 +60,7 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
                 String gp;
                 while ((gp = reader.readLine()) != null) {
                     final String grainName = getGrainName(gp);
-                    Resource grainResource = scoreFilesResource.createRelative(gp);
+                    Resource grainResource = scoreFilesResource.createRelative(gp, getGrainNamespace(gp));
                     Resource existingGrainResource = grainNameToResourceMap.put(grainName, grainResource);
                     if (existingGrainResource != null) {
                         throw new CelestaException("Duplicate resources encountered for the grain '%s': %s, %s",
@@ -87,6 +88,21 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
         }
 
         return result;
+    }
+
+    Namespace getGrainNamespace(String grainPath) {
+
+        String value = grainPath.toLowerCase();
+
+        int i = value.lastIndexOf('/');
+        if (i < 0) {
+            return null;
+        }
+
+        value = value.substring(0, i);
+        value = value.replace('/', '.');
+
+        return new Namespace(value);
     }
 
 }

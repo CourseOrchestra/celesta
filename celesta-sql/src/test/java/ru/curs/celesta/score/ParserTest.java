@@ -55,14 +55,14 @@ public class ParserTest extends AbstractParsingTest {
     try (InputStream is = new ByteArrayInputStream(csqlScript.getBytes(StandardCharsets.UTF_8))) {
       CelestaParser cp = new CelestaParser(is, "utf-8");
       CelestaSqlTestScore s = new CelestaSqlTestScore();
-      gp = cp.extractGrainInfo(s, new FileResource(new File(grainPath,"_" + grainName + ".sql")));
+      gp = cp.extractGrainInfo(s, new FileResource(new File(grainPath, "_" + grainName + ".sql")));
     }
 
     try (InputStream is = new ByteArrayInputStream(csqlScript.getBytes(StandardCharsets.UTF_8))) {
       CelestaParser cp = new CelestaParser(is, "utf-8");
       Grain g = cp.parseGrainPart(gp);
       g.modify();
-      g.save();
+      new GrainSaver().save(g, gp.getSource());
     }
   }
   

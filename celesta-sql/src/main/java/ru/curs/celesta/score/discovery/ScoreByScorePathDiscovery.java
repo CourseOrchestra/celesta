@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.Namespace;
 import ru.curs.celesta.score.io.FileResource;
 import ru.curs.celesta.score.io.Resource;
 
@@ -49,15 +50,29 @@ public final class ScoreByScorePathDiscovery implements ScoreDiscovery {
 
     private Set<Resource> discoverScore(final File scoreDir) {
         try {
-            return Files.walk(scoreDir.toPath(), FileVisitOption.FOLLOW_LINKS)
+            Path scorePath = scoreDir.toPath().toAbsolutePath();
+            return Files.walk(scorePath, FileVisitOption.FOLLOW_LINKS)
                     .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".sql"))
-                    .map(Path::toAbsolutePath)
-                    .map(Path::toFile)
-                    .map(FileResource::new)
+                    .map(p -> {
+                        return new FileResource(p.toFile(), getNamespaceFromPath(scorePath.relativize(p)));
+                     })
                     .collect(Collectors.toCollection(LinkedHashSet::new));
         } catch (IOException ex) {
             throw new CelestaException(ex);
         }
+    }
+
+    Namespace getNamespaceFromPath(Path p) {
+        if (p.getNameCount() <= 1) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder(p.getName(0).toString());
+        for (int i = 1; i < p.getNameCount() - 1; i++) {
+            sb.append('.').append(p.getName(i).toString());
+        }
+
+        return new Namespace(sb.toString().toLowerCase());
     }
 
 }

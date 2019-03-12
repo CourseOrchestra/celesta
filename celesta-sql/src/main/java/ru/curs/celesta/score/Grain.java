@@ -1,14 +1,11 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,9 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
-import ru.curs.celesta.score.io.Resource;
 
 /**
  * Grain.
@@ -48,6 +43,8 @@ public final class Grain extends NamedElement {
 
     private Set<GrainPart> grainParts = new LinkedHashSet<>();
 
+    private Namespace namespace;
+
     private final Map<Class<? extends GrainElement>, NamedElementHolder<? extends GrainElement>> grainElements
             = new HashMap<>();
 
@@ -70,9 +67,6 @@ public final class Grain extends NamedElement {
         }
         this.score = score;
         score.addGrain(this);
-
-        //TODO: Что-то с этим надо сделать
-        //      grainPath = new File(String.format("%s%s%s", score.getDefaultGrainPath(), File.separator, name));
     }
 
     @SuppressWarnings("unchecked")
@@ -132,11 +126,19 @@ public final class Grain extends NamedElement {
      * Returns a set of elements of specified type defined in the grain.
      *
      * @param classOfElement  class of elements from the set
+     * @param gp  grain part to which the returned elements should belong
      * @return
      */
-    <T extends GrainElement> List<T> getElements(Class<T> classOfElement, GrainPart gp) {
-        return getElements(classOfElement).values().stream()
-                .filter(t -> gp == t.getGrainPart()).collect(Collectors.toList());
+    <T extends GrainElement> Collection<T> getElements(Class<T> classOfElement, GrainPart gp) {
+        
+        Collection<T> elements = getElements(classOfElement).values();
+        if (gp != null) {
+            elements = elements.stream()
+                    .filter(t -> gp == t.getGrainPart())
+                    .collect(Collectors.toList());
+        }
+        
+        return elements;
     }
 
     /**
@@ -408,40 +410,6 @@ public final class Grain extends NamedElement {
     }
 
     /**
-     * Saves grain back to source files.
-     *
-     * @ io error
-     */
-    void save()  {
-        // There's no reason to save unmodified grain.
-        if (!modified) {
-            return;
-        }
-
-        for (GrainPart gp : this.grainParts) {
-            Resource source = gp.getSource();
-            try {
-                OutputStream sourceOutputStream = source.getOutputStream();
-                if (sourceOutputStream == null) {
-                    throw new CelestaException(
-                            "Cannot save '%s' grain script to resouce %s. The resource is not writable!",
-                            getName(), source.toString());
-                }
-
-                try (PrintWriter pw = new PrintWriter(
-                        new OutputStreamWriter(sourceOutputStream, StandardCharsets.UTF_8))) {
-
-                    CelestaSerializer serializer = new CelestaSerializer(pw);
-                    serializer.save(gp);
-                }
-
-            } catch (IOException ex) {
-                throw new CelestaException("Cannot save '%s' grain script: %s", getName(), ex.getMessage());
-            }
-        }
-    }
-
-    /**
      * Returns a view by its name or an exception with a message that the view was not found.
      *
      * @param name  View name
@@ -491,8 +459,36 @@ public final class Grain extends NamedElement {
         return afterSql.getOrDefault(dbType, Collections.emptyList());
     }
 
-    public Set<GrainPart> getGrainParts() {
+    public Set<? extends GrainPart> getGrainParts() {
         return grainParts;
+    }
+
+    void addGrainPart(GrainPart grainPart) {
+        grainParts.add(grainPart);
+    }
+
+    public Namespace getNamespace() {
+        if (namespace != null) {
+            return namespace;
+        }
+
+        if (grainParts.isEmpty()) {
+            return null;
+        }
+
+        Iterator<GrainPart> i = grainParts.iterator();
+        Namespace ns = i.next().getNamespace();
+        while (i.hasNext()) {
+            if ((ns == null) || !ns.equals(i.next().getNamespace())) {
+                return null;
+            }
+        }
+
+        return ns;
+    }
+
+    public void setNamespace(Namespace namespace) {
+        this.namespace = namespace;
     }
 
 }

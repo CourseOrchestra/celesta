@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import ru.curs.celesta.score.Namespace;
+
 /**
  * Score resource abstraction. Its implementation may point to a physical file or a resource in
  * a JAR-file.
@@ -31,6 +33,16 @@ public interface Resource {
     }
 
     /**
+     * Deletes physical resource that {@code this} resource points at.
+     *
+     * @return {@code true} if successfully deleted or {@code false} otherwise.
+     * @throws IOException  when an error happened during deletion.
+     */
+    default boolean delete() throws IOException {
+        return false;
+    }
+
+    /**
      * Checks if the passed-in resource is a child of {@code this} resource.
      *
      * @param childResource  the checked resource.
@@ -54,10 +66,40 @@ public interface Resource {
     /**
      * Creates a resource relative to this resource.
      *
+     * @param namespace  name space path relative to {@code this} resource.
+     * @return
+     * @throws IOException  when resource creation failed.
+     */
+    default Resource createRelative(Namespace namespace) throws IOException {
+        return createRelative((namespace != null) ? namespace.getValue().replace('.', '/') : "", null);
+    }
+
+    /**
+     * Creates a resource relative to this resource.
+     *
      * @param relativePath  path relative to {@code this} resource.
      * @return
      * @throws IOException  when resource creation failed.
      */
-    Resource createRelative(String relativePath) throws IOException;
+    default Resource createRelative(String relativePath) throws IOException {
+        return createRelative(relativePath, null);
+    }
+
+    /**
+     * Creates a resource relative to this resource.
+     *
+     * @param relativePath  path relative to {@code this} resource.
+     * @param namespace  name space of the created resource.
+     * @return
+     * @throws IOException  when resource creation failed.
+     */
+    Resource createRelative(String relativePath, Namespace namespace) throws IOException;
+
+    /**
+     * Returns namespace of current resource.
+     *
+     * @return
+     */
+    Namespace getNamespace();
 
 }

@@ -14,7 +14,7 @@ public final class GrainPart {
         this.isDefinition = isDefinition;
         this.source = source;
 
-        grain.getGrainParts().add(this);
+        grain.addGrainPart(this);
     }
 
     void setCelestaDocLexem(String celestaDoc) throws ParseException {
@@ -37,6 +37,20 @@ public final class GrainPart {
         return this.grain;
     }
 
+    /**
+     * Returns resource the grain part was loaded from.
+     *
+     * @return
+     */
+    public Namespace getNamespace() {
+        return source != null ? source.getNamespace() : null;
+    }
+
+    /**
+     * Returns resource the grain part was loaded from.
+     *
+     * @return
+     */
     public Resource getSource() {
         return source;
     }

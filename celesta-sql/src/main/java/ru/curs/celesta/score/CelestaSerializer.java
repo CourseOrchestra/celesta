@@ -6,15 +6,15 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import ru.curs.celesta.score.SequenceElement.Argument;
 
 /**
  * Serializes grain and its components to CelestaSQL.
- * <br/>
+ * <p>
  * <i>The class name reflects its counterpart - {@link CelestaParser}</i>
  *
  * @author Pavel Perminov (packpaul@mail.ru)
@@ -56,8 +56,20 @@ public final class CelestaSerializer {
      * @throws IOException  if serialization fails
      */
     public void save(GrainPart gp) throws IOException {
+        save(gp.getGrain(), gp);
+    }
 
-        final Grain grain = gp.getGrain();
+    /**
+     * Serializes grain to its CelestaSQL representation.
+     *
+     * @param grain  grain
+     * @throws IOException  if serialization fails
+     */
+    public void save(Grain grain) throws IOException {
+        save(grain, null);
+    }
+
+    private void save(Grain grain, GrainPart gp) throws IOException {
 
         writeCelestaDoc(grain);
         writer.printf("CREATE SCHEMA %s VERSION '%s'", grain.getName(), grain.getVersion());
@@ -69,13 +81,13 @@ public final class CelestaSerializer {
         writer.println();
 
         writer.println("-- *** SEQUENCES ***");
-        List<SequenceElement> sequences = grain.getElements(SequenceElement.class, gp);
+        Collection<SequenceElement> sequences = grain.getElements(SequenceElement.class, gp);
         for (SequenceElement s : sequences) {
             save(s);
         }
 
         writer.println("-- *** TABLES ***");
-        List<Table> tables = grain.getElements(Table.class, gp);
+        Collection<Table> tables = grain.getElements(Table.class, gp);
         for (Table t : tables) {
             save(t);
         }
@@ -88,25 +100,25 @@ public final class CelestaSerializer {
         }
 
         writer.println("-- *** INDICES ***");
-        List<Index> indices = grain.getElements(Index.class, gp);
+        Collection<Index> indices = grain.getElements(Index.class, gp);
         for (Index i : indices) {
             save(i);
         }
 
         writer.println("-- *** VIEWS ***");
-        List<View> views = grain.getElements(View.class, gp);
+        Collection<View> views = grain.getElements(View.class, gp);
         for (View v : views) {
             save(v);
         }
 
         writer.println("-- *** MATERIALIZED VIEWS ***");
-        List<MaterializedView> materializedViews = grain.getElements(MaterializedView.class, gp);
+        Collection<MaterializedView> materializedViews = grain.getElements(MaterializedView.class, gp);
         for (MaterializedView mv : materializedViews) {
             save(mv);
         }
 
         writer.println("-- *** PARAMETERIZED VIEWS ***");
-        List<ParameterizedView> parameterizedViews = grain.getElements(ParameterizedView.class, gp);
+        Collection<ParameterizedView> parameterizedViews = grain.getElements(ParameterizedView.class, gp);
         for (ParameterizedView pv : parameterizedViews) {
             save(pv);
         }

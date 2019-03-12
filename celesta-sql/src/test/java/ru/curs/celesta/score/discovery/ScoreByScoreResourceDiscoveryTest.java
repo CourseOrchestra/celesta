@@ -3,6 +3,7 @@ package ru.curs.celesta.score.discovery;
 import org.junit.jupiter.api.Test;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.Namespace;
 import ru.curs.celesta.score.io.Resource;
 import ru.curs.celesta.score.io.UrlResource;
 
@@ -34,6 +35,15 @@ public class ScoreByScoreResourceDiscoveryTest {
 
         grainName = scoreDiscovery.getGrainName("Table.sql");
         assertEquals("table", grainName);
+    }
+
+    @Test
+    void testGetGrainNamespace() {
+        Namespace ns = scoreDiscovery.getGrainNamespace("table.sql");
+        assertNull(ns);
+
+        ns = scoreDiscovery.getGrainNamespace("data/table/Table.sql");
+        assertEquals("data.table", ns.getValue());
     }
 
     @Test

@@ -63,7 +63,6 @@ public abstract class AbstractScore {
     private final Map<String, Grain> grains = new HashMap<>();
 
     private final Map<String, List<GrainPart>> grainNameToGrainParts = new LinkedHashMap<>();
-    private Set<Resource> grainResources;
 
     private int orderCounter;
 
@@ -79,29 +78,19 @@ public abstract class AbstractScore {
      */
     void init(ScoreDiscovery scoreDiscovery) throws ParseException {
 
-        grainResources = scoreDiscovery.discoverScore();
+        Set<Resource> grainResources = scoreDiscovery.discoverScore();
 
         initSystemGrain();
 
-        //The first parsing step - the grouping of files by grain names.
-        fillGrainNameToFilesMap(grainResources);
+        //The first parsing step - the grouping of resources by grain names.
+        fillGrainNameToGrainParts(grainResources);
+
         // At this moment in the table 'grainFiles' a recognized set of grain names
         // with the names of script files is contained.
         parseGrains(new StringBuilder());
     }
 
-    /**
-     * Saves metadata content back to SQL-files rewriting their content.
-     */
-    public void save() {
-        for (Grain g : grains.values()) {
-            if (g.isModified()) {
-                g.save();
-            }
-        }
-    }
-
-    private void fillGrainNameToFilesMap(Set<Resource> resources) throws ParseException {
+    private void fillGrainNameToGrainParts(Set<Resource> resources) throws ParseException {
 
         List<GrainPart> grainParts = new ArrayList<>();
 
@@ -127,7 +116,7 @@ public abstract class AbstractScore {
 
             if (!grainNameToGrainParts.containsKey(grainName)) {
                 if (!grainPart.isDefinition()) {
-                    throw new ParseException(String.format("Grain %s has not definition", grainName));
+                    throw new ParseException(String.format("Grain %s has no definition", grainName));
                 }
 
                 grainNameToGrainParts.put(grainName, new ArrayList<>());

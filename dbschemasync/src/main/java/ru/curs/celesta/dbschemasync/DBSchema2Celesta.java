@@ -21,6 +21,8 @@ import org.w3c.dom.NodeList;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.io.FileResource;
+import ru.curs.celesta.score.io.Resource;
 
 /**
  * Converts data from DBSchema to Celesta.
@@ -36,11 +38,14 @@ public final class DBSchema2Celesta {
      * Converts DBS to Score.
      *
      * @param dbs           DBS file
-     * @param refScore      score.
-     * @param withPlantUml  also render PlantUml diagrams for every View.
+     * @param refScore      score
+     * @param scoreFile     score file
+     * @param withPlantUml  also render PlantUml diagrams for every View
      * @throws Exception    any error
      */
-    public static void dBSToScore(File dbs, AbstractScore refScore, boolean withPlantUml) throws Exception {
+    public static void dBSToScore(
+            File dbs, AbstractScore refScore, File scoreFile, boolean withPlantUml) throws Exception {
+
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         Document doc;
@@ -52,18 +57,28 @@ public final class DBSchema2Celesta {
             Node n = l.item(i);
             if ("schema".equals(n.getNodeName())) {
                 Element schema = (Element) n;
-                String grainName = schema.getAttribute("name");
+                final String schemaName = schema.getAttribute("name");
 
+                Namespace namespace = extractNamespace(schemaName);
+                String grainName = extractGrainName(schemaName);
                 if (grainName == null || grainName.isEmpty()) {
                     throw new Exception("Empty schema name found.");
-                } else if ("celesta".equals(grainName)) {
+                }
+                if ("celesta".equals(grainName)) {
                     // Don't touch Celesta schema!
                     continue;
                 }
+
                 Grain g = refScore.getGrains().get(grainName);
                 if (g == null) {
-                    g = new Grain(refScore, schema.getAttribute("name"));
+                    g = new Grain(refScore, grainName);
+                    Resource source = new FileResource(scoreFile).createRelative(namespace)
+                                                                 .createRelative(grainName + ".sql", namespace);
+                    new GrainPart(g, true, source);
                 }
+
+                g.setNamespace(namespace);
+
                 updateGrain(schema, g);
                 g.finalizeParsing();
             }
@@ -74,34 +89,50 @@ public final class DBSchema2Celesta {
             Node n = l.item(i);
             if ("schema".equals(n.getNodeName())) {
                 Element schema = (Element) n;
-                String grainName = schema.getAttribute("name");
+                String grainName = extractGrainName(schema.getAttribute("name"));
                 if (grainName == null || grainName.isEmpty()) {
                     throw new Exception("Empty schema name found.");
-                } else if ("celesta".equals(grainName)) {
+                }
+                if ("celesta".equals(grainName)) {
                     // Don't touch Celesta schema!
                     continue;
                 }
                 Grain g = refScore.getGrains().get(grainName);
+
                 updateGrainFK(schema, g);
                 // Only to raise "modified" flag
                 g.setVersion("'" + g.getVersion().toString() + "'");
             }
         }
 
-        plantUml(withPlantUml, dbs, refScore, l);
+        if (withPlantUml) {
+            plantUml(dbs, refScore, l);
+        }
 
-        refScore.save();
-
+        new GrainSaver().save(refScore, new FileResource(scoreFile));
     }
 
-    private static void plantUml(boolean withPlantUml, File dbs, AbstractScore refScore, NodeList l) {
-        if (withPlantUml) {
-            for (int i = 0; i < l.getLength(); i++) {
-                Node n = l.item(i);
-                if ("layout".equals(n.getNodeName())) {
-                    Element layout = (Element) n;
-                    writeADoc(dbs, layout, refScore);
-                }
+    private static String extractGrainName(String schemaName) {
+        int i = schemaName.lastIndexOf('.');
+
+        return i < 0 ? schemaName : schemaName.substring(i + 1);
+    }
+
+    private static Namespace extractNamespace(String schemaName) {
+        int i = schemaName.lastIndexOf('.');
+        if (i < 0) {
+            return null;
+        }
+
+        return new Namespace(schemaName.substring(0, i).toLowerCase());
+    }
+
+    private static void plantUml(File dbs, AbstractScore refScore, NodeList l) {
+        for (int i = 0; i < l.getLength(); i++) {
+            Node n = l.item(i);
+            if ("layout".equals(n.getNodeName())) {
+                Element layout = (Element) n;
+                writeADoc(dbs, layout, refScore);
             }
         }
     }
@@ -125,7 +156,7 @@ public final class DBSchema2Celesta {
                     Node n = l.item(i);
                     if ("entity".equals(n.getNodeName())) {
                         Element entity = (Element) n;
-                        Grain g = refScore.getGrain(entity.getAttribute("schema"));
+                        Grain g = refScore.getGrain(extractGrainName(entity.getAttribute("schema")));
                         String eName = entity.getAttribute("name");
                         Table t = g.getTables().get(eName);
                         if (t != null) {
