@@ -459,7 +459,7 @@ public final class Grain extends NamedElement {
         return afterSql.getOrDefault(dbType, Collections.emptyList());
     }
 
-    public Set<? extends GrainPart> getGrainParts() {
+    public Set<GrainPart> getGrainParts() {
         return grainParts;
     }
 
@@ -473,14 +473,14 @@ public final class Grain extends NamedElement {
         }
 
         if (grainParts.isEmpty()) {
-            return null;
+            return Namespace.DEFAULT;
         }
 
         Iterator<GrainPart> i = grainParts.iterator();
         Namespace ns = i.next().getNamespace();
         while (i.hasNext()) {
-            if ((ns == null) || !ns.equals(i.next().getNamespace())) {
-                return null;
+            if (ns.equals(Namespace.DEFAULT) || !ns.equals(i.next().getNamespace())) {
+                return Namespace.DEFAULT;
             }
         }
 

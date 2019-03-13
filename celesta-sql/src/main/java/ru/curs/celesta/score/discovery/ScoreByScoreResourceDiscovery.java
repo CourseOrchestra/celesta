@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -92,17 +93,13 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
 
     Namespace getGrainNamespace(String grainPath) {
 
-        String value = grainPath.toLowerCase();
-
-        int i = value.lastIndexOf('/');
-        if (i < 0) {
-            return null;
-        }
-
-        value = value.substring(0, i);
-        value = value.replace('/', '.');
-
-        return new Namespace(value);
+        String[] parts = grainPath.split("/");
+        
+        return Arrays.stream(parts, 0, parts.length - 1)
+                .map(String::toLowerCase)
+                .reduce((ns1, ns2) -> ns1 + "." + ns2)
+                .map(Namespace::new)
+                .orElse(Namespace.DEFAULT);
     }
 
 }

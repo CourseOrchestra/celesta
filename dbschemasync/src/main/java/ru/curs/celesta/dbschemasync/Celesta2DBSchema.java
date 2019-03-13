@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -28,6 +29,7 @@ import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.Namespace;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.CelestaSerializer;
 import ru.curs.celesta.score.StringColumn;
@@ -91,7 +93,8 @@ public final class Celesta2DBSchema {
 
         for (Grain g : s.getGrains().values()) {
             Element schema = doc.createElement("schema");
-            final String schemaName = Optional.ofNullable(g.getNamespace())
+            final String schemaName = Optional.of(g.getNamespace())
+                                              .filter(Predicate.isEqual(Namespace.DEFAULT).negate())
                                               .map(ns -> ns.getValue() + "." + g.getName())
                                               .orElse(g.getName());
             schema.setAttribute("name", schemaName);

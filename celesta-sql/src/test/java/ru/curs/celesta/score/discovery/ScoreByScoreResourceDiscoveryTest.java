@@ -40,7 +40,7 @@ public class ScoreByScoreResourceDiscoveryTest {
     @Test
     void testGetGrainNamespace() {
         Namespace ns = scoreDiscovery.getGrainNamespace("table.sql");
-        assertNull(ns);
+        assertSame(Namespace.DEFAULT, ns);
 
         ns = scoreDiscovery.getGrainNamespace("data/table/Table.sql");
         assertEquals("data.table", ns.getValue());

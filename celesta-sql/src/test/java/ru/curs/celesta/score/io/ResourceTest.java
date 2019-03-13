@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.junit.jupiter.api.Test;
+
+import ru.curs.celesta.score.Namespace;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ResourceTest {
@@ -34,7 +37,7 @@ public class ResourceTest {
     }
 
     @Test
-    public void testCreateRelative() throws IOException {
+    public void testCreateRelative_path() throws IOException {
         Resource parent = new FileResource(new File("/parent/"));
         Resource child = parent.createRelative("/child/file.test");
 
@@ -49,7 +52,16 @@ public class ResourceTest {
         child = parent.createRelative("/child/file.test");
 
         assertEquals("file:/parent/child/file.test", child.toString());
+    }
 
+    @Test
+    public void testCreateRelative_namespace() throws IOException {
+        
+        Resource parent = new FileResource(new File("/parent/"));
+        Resource child = new  FileResource(new File("/parent/child"));
+        
+        assertEquals(parent, parent.createRelative(Namespace.DEFAULT));
+        assertEquals(child, parent.createRelative(new Namespace("child")));
     }
 
 }

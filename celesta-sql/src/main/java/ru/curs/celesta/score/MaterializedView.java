@@ -293,6 +293,8 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public String getChecksum() {
+        // TODO: CelestaSerializer is not intended to be used from GrainElement classes.
+        //       Consider using a different approach for checksum calculation.
         try (ChecksumInputStream is = new ChecksumInputStream(
                 new ByteArrayInputStream(CelestaSerializer.toString(this).getBytes(StandardCharsets.UTF_8))
         )) {

@@ -71,7 +71,7 @@ public interface Resource {
      * @throws IOException  when resource creation failed.
      */
     default Resource createRelative(Namespace namespace) throws IOException {
-        return createRelative((namespace != null) ? namespace.getValue().replace('.', '/') : "", null);
+        return createRelative(namespace.getValue().replace('.', '/'), Namespace.DEFAULT);
     }
 
     /**
@@ -82,7 +82,7 @@ public interface Resource {
      * @throws IOException  when resource creation failed.
      */
     default Resource createRelative(String relativePath) throws IOException {
-        return createRelative(relativePath, null);
+        return createRelative(relativePath, Namespace.DEFAULT);
     }
 
     /**

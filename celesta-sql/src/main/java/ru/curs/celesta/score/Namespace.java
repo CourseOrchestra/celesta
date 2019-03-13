@@ -3,8 +3,8 @@ package ru.curs.celesta.score;
 /**
  * Grain name space.
  * <p>
- * A name space is defined as a set of sets of at least one lower case letter separated by dots, f.e.
- * <b>name.space.one</b>
+ * A name space is defined as a set of sets of at least one lower case letter or digit separated by dots, f.e.
+ * <b>name.space.1</b>
  * <p>
  * <i>
  * Since a grain may consist of several grain parts the name space concept deems it to be applied
@@ -16,7 +16,13 @@ package ru.curs.celesta.score;
  */
 public final class Namespace {
 
+    public static final Namespace DEFAULT = new Namespace();
+
     private final String value;
+
+    private Namespace() {
+        value = "";
+    }
 
     public Namespace(String value) {
         if (!value.matches("[a-z0-9]+(\\.[a-z0-9]+)*")) {

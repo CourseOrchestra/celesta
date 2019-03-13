@@ -22,13 +22,13 @@ public final class FileResource implements Resource {
     private final Namespace namespace;
 
     public FileResource(File file) {
-        this(file, null);
+        this(file, Namespace.DEFAULT);
     }
 
     public FileResource(File file, Namespace namespace) {
         this.file = file;
         this.canonicalFile = getCanonicalFile();
-        this.namespace = namespace;
+        this.namespace = Objects.requireNonNull(namespace);
     }
 
     private File getCanonicalFile() {

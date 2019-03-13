@@ -38,12 +38,12 @@ public final class GrainPart {
     }
 
     /**
-     * Returns resource the grain part was loaded from.
+     * Returns name space of {@code this} grain part.
      *
      * @return
      */
     public Namespace getNamespace() {
-        return source != null ? source.getNamespace() : null;
+        return source != null ? source.getNamespace() : Namespace.DEFAULT;
     }
 
     /**

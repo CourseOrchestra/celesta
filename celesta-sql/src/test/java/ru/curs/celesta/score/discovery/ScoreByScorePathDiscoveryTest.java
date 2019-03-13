@@ -16,7 +16,7 @@ public class ScoreByScorePathDiscoveryTest {
     void testGetNamespaceFromPath() {
         File f = new File("/table.sql");
         Namespace ns = scoreDiscovery.getNamespaceFromPath(f.toPath());
-        assertNull(ns);
+        assertSame(Namespace.DEFAULT, ns);
 
         f = new File("data/table/Table.sql");
         ns = scoreDiscovery.getNamespaceFromPath(f.toPath());
