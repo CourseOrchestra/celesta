@@ -17,7 +17,7 @@ include::1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
 
 === Демонстрационный пример
 
-include::1012_maven_dependencies.adoc[leveloffset=+2, tag="maven_dependencies"]
+include::1012_demo.adoc[leveloffset=+2, tag="demo"]
 
 == Часть 2. Технические детали и настройка Celesta
 

@@ -65,6 +65,6 @@ Celesta Maven Plugin производит следующие операции:
 ** На фазе `generate-resources` -> `generated-resources/score/score.files`
 ** На фазе `generate-test-resources` ->`generated-test-resources/score/score.files`
 
-Эти файлы используются для во время выполнения Celesta для того, чтобы найти пути ко всем CelestaSQL-файлам внутри jar-файлов на classpath.
+Эти файлы используются во время выполнения Celesta для того, чтобы найти пути ко всем CelestaSQL-файлам внутри jar-файлов на classpath.
 
 //end::maven_plugin[]
