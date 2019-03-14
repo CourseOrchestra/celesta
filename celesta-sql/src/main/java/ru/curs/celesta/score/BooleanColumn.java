@@ -1,8 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-
 /**
  * Boolean column (BIT type).
  */
@@ -23,7 +20,7 @@ public final class BooleanColumn extends Column {
     }
 
     /**
-     * Parses a string in SQL definition DEFAULT to a boolean value. 
+     * Parses a string in SQL definition DEFAULT to a boolean value.
      *
      * @param lexvalue  string definition
      * @return
@@ -50,22 +47,6 @@ public final class BooleanColumn extends Column {
     @Override
     public String jdbcGetterName() {
         return "getBoolean";
-    }
-
-    @Override
-    void save(PrintWriter bw) throws IOException {
-        super.save(bw);
-        bw.write(" BIT");
-        if (!isNullable()) {
-            bw.write(" NOT NULL");
-        }
-        Boolean defaultVal = getDefaultValue();
-        if (defaultVal != null) {
-            bw.write(" DEFAULT '");
-            bw.write(defaultVal.toString().toUpperCase());
-            bw.write("'");
-        }
-
     }
 
     @Override

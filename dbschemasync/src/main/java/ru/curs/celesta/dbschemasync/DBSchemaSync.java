@@ -31,12 +31,13 @@ public final class DBSchemaSync {
         if (args[0].trim().toLowerCase().endsWith(".dbs")) {
             System.out.println("DBS-->SCORE");
             File dbsFile = new File(args[0]);
+            File scoreFile = new File(args[1]);
             System.out.println("parsing score...");
             AbstractScore s = new AbstractScore.ScoreBuilder<>(Score.class)
                     .scoreDiscovery(new ScoreByScorePathDiscovery(args[1]))
                     .build();
             System.out.println("processing...");
-            DBSchema2Celesta.dBSToScore(dbsFile, s, args.length > 2 && "-adoc".equalsIgnoreCase(args[2]));
+            DBSchema2Celesta.dBSToScore(dbsFile, s, scoreFile, args.length > 2 && "-adoc".equalsIgnoreCase(args[2]));
 
             System.out.println("done.");
         } else {

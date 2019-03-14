@@ -33,13 +33,12 @@ public class ParserTest extends AbstractParsingTest {
     grainDir.mkdir();
     grainDir.deleteOnExit();
 
-
     parseAndSaveCsqlScript(createSchema, schemaDir, "someGrain");
     parseAndSaveCsqlScript(createGrain, grainDir, "someGrain");
 
-    File schemaScript = new File(schemaDir, "_someGrain.sql");
+    File schemaScript = new File(schemaDir, "someGrain.sql");
     schemaScript.deleteOnExit();
-    File grainScript = new File(grainDir, "_someGrain.sql");
+    File grainScript = new File(grainDir, "someGrain.sql");
     grainScript.deleteOnExit();
 
     assertEquals(
@@ -50,22 +49,23 @@ public class ParserTest extends AbstractParsingTest {
   }
 
   private void parseAndSaveCsqlScript(String csqlScript, File grainPath, String grainName) throws Exception {
+
     final GrainPart gp;
 
     try (InputStream is = new ByteArrayInputStream(csqlScript.getBytes(StandardCharsets.UTF_8))) {
       CelestaParser cp = new CelestaParser(is, "utf-8");
       CelestaSqlTestScore s = new CelestaSqlTestScore();
-      gp = cp.extractGrainInfo(s, new FileResource(new File(grainPath,"_" + grainName + ".sql")));
+      gp = cp.extractGrainInfo(s, new FileResource(new File(grainPath, grainName + ".sql")));
     }
 
     try (InputStream is = new ByteArrayInputStream(csqlScript.getBytes(StandardCharsets.UTF_8))) {
       CelestaParser cp = new CelestaParser(is, "utf-8");
       Grain g = cp.parseGrainPart(gp);
       g.modify();
-      g.save();
+      new GrainSaver().save(g, new FileResource(grainPath));
     }
   }
-  
+
   @Test
   void testSchemaWithNoAutoupdate() throws Exception {
     String createSchema = "CREATE SCHEMA someGrain VERSION '1.0' WITH NO AUTOUPDATE;";
@@ -73,17 +73,17 @@ public class ParserTest extends AbstractParsingTest {
     File scoreDir = new File(Files.createTempDirectory("testGrainWithNoAutoupdate").toUri());
     scoreDir.deleteOnExit();
 
-        File grainDir = new File(scoreDir, "grain");
+    File grainDir = new File(scoreDir, "grain");
     grainDir.mkdir();
     grainDir.deleteOnExit();
 
     parseAndSaveCsqlScript(createSchema, grainDir, "someGrain");
 
-    File grainScript = new File(grainDir, "_someGrain.sql");
+    File grainScript = new File(grainDir, "someGrain.sql");
     grainScript.deleteOnExit();
 
     String actualCreateSchema = Files.lines(grainScript.toPath()).findFirst().get();
-    
+
     assertEquals(createSchema, actualCreateSchema);
   }
 

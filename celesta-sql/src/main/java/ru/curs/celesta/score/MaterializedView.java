@@ -160,16 +160,6 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     @Override
-    void save(PrintWriter bw) throws IOException {
-        SQLGenerator gen = new CelestaSQLGen();
-        Grain.writeCelestaDoc(this, bw);
-        bw.println(gen.preamble(this));
-        selectScript(bw, gen);
-        bw.println(";");
-        bw.println();
-    }
-
-    @Override
     void setWhereCondition(Expr whereCondition) throws ParseException {
         throw new ParseException(String.format(
                 "Exception while parsing materialized view %s.%s Materialized views doesn't support where condition.",
@@ -303,13 +293,15 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public String getChecksum() {
+        // TODO: CelestaSerializer is not intended to be used from GrainElement classes.
+        //       Consider using a different approach for checksum calculation.
         try (ChecksumInputStream is = new ChecksumInputStream(
-                new ByteArrayInputStream(getCelestaSQL().getBytes(StandardCharsets.UTF_8))
+                new ByteArrayInputStream(CelestaSerializer.toString(this).getBytes(StandardCharsets.UTF_8))
         )) {
             while (is.read() != -1) ;
             return String.format("%08X", is.getCRC32());
-        } catch (Exception e) {
-            throw new RuntimeException();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
     }
 

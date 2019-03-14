@@ -1,6 +1,5 @@
 package ru.curs.celesta.score;
 
-
 import java.io.*;
 import java.util.StringJoiner;
 
@@ -48,7 +47,7 @@ public class ScoreTest {
         int o3 = g3.getDependencyOrder();
         assertTrue(o1 < o2);
         assertTrue(o2 < o3);
-        
+
         final Resource grain1Resource = new FileResource(new File(
                 COMPOSITE_SCORE_PATH_1 + File.separator + "grain1" + File.separator + "_grain1.sql"));
         final Resource grain2Resource = new FileResource(new File(
@@ -110,7 +109,7 @@ public class ScoreTest {
                 "    INNER join celestaSql.grains as grains on ta.grainid = grains.id",
                 "  where tablename >= 'aa' AND 5 BETWEEN 0 AND 6 OR '55' > '1'"};
 
-        assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
+        assertArrayEquals(expected, CelestaSerializer.toQueryString(v).split("\\r?\\n"));
     }
 
     @Test
@@ -322,7 +321,7 @@ public class ScoreTest {
         StringWriter sw = new StringWriter();
 
         PrintWriter bw = new PrintWriter(sw);
-        t.save(bw);
+        new CelestaSerializer(bw).save(t);
         bw.flush();
         // System.out.println(sw);
 
@@ -358,17 +357,18 @@ public class ScoreTest {
         CelestaParser cp2 = new CelestaParser(fr.getInputStream(), "utf-8");
         Grain g = cp2.parseGrainPart(gp);
         StringWriter sw = new StringWriter();
-        PrintWriter bw = new PrintWriter(sw);
 
-        Table t = g.getElement("ttt1", Table.class);
-        t.save(bw);
-        t = g.getElement("ttt2", Table.class);
-        t.save(bw);
-        t = g.getElement("ttt3", Table.class);
-        t.save(bw);
-        t = g.getElement("table1", Table.class);
-        t.save(bw);
-        bw.flush();
+        try (PrintWriter bw = new PrintWriter(sw)) {
+            CelestaSerializer serializer = new CelestaSerializer(bw);
+            Table t = g.getElement("ttt1", Table.class);
+            serializer.save(t);
+            t = g.getElement("ttt2", Table.class);
+            serializer.save(t);
+            t = g.getElement("ttt3", Table.class);
+            serializer.save(t);
+            t = g.getElement("table1", Table.class);
+            serializer.save(t);
+        }
         // System.out.println(sw);
 
         String[] actual = sw.toString().split("\r?\n");
@@ -394,7 +394,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void viewTest() throws ParseException {
+    public void viewTest() throws ParseException, IOException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
@@ -406,7 +406,7 @@ public class ScoreTest {
         assertEquals(4, v.getColumns().size());
         exp = String.format("  select id as id, descr as descr, descr || 'foo' as descr2, k2 as k2%n"
                 + "  from testTable as testTable%n" + "    INNER join refTo as refTo on attrVarchar = k1 AND attrInt = k2");
-        assertEquals(exp, v.getCelestaQueryString());
+        assertEquals(exp, CelestaSerializer.toQueryString(v));
 
         assertTrue(v.getColumns().get("descr").isNullable());
         assertTrue(v.getColumns().get("descr2").isNullable());
@@ -417,12 +417,11 @@ public class ScoreTest {
         assertEquals(ViewColumnType.INT, v.getColumns().get("id").getColumnType());
         exp = String.format("  select id as id, descr as descr%n" + "  from testTable as t1%n"
                 + "    INNER join refTo as t2 on attrVarchar = k1 AND NOT t2.descr IS NULL AND attrInt = k2");
-        assertEquals(exp, v.getCelestaQueryString());
-
+        assertEquals(exp, CelestaSerializer.toQueryString(v));
     }
 
     @Test
-    public void vewTest2() throws ParseException {
+    public void vewTest2() throws ParseException, IOException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
@@ -439,7 +438,7 @@ public class ScoreTest {
         assertEquals("test celestadoc", v.getColumns().get("b").getCelestaDoc());
         assertEquals("test celestadoc2", v.getColumns().get("c").getCelestaDoc());
 
-        assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n"));
+        assertArrayEquals(expected, CelestaSerializer.toQueryString(v).split("\\r?\\n"));
 
         assertEquals(3, v.getColumnIndex("d"));
         assertEquals(1, v.getColumnIndex("b"));
@@ -455,7 +454,7 @@ public class ScoreTest {
         String[] expected = {"  select f1 as f1, f4 as f4, f5 as f5, f4 + f5 as s, f5 * f5 + 1 as s2",
                 "  from testTable as testTable", "  where f1 = true"};
         assertAll(
-                () -> assertArrayEquals(expected, v.getCelestaQueryString().split("\\r?\\n")),
+                () -> assertArrayEquals(expected, CelestaSerializer.toQueryString(v).split("\\r?\\n")),
                 // Checking nullability evaluation
                 () -> assertFalse(v.getColumns().get("f1").isNullable()),
                 () -> assertTrue(v.getColumns().get("f4").isNullable()),

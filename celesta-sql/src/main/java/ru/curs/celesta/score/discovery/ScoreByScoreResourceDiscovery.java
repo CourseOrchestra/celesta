@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.Namespace;
 import ru.curs.celesta.score.io.Resource;
 import ru.curs.celesta.score.io.UrlResource;
 
@@ -59,7 +61,7 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
                 String gp;
                 while ((gp = reader.readLine()) != null) {
                     final String grainName = getGrainName(gp);
-                    Resource grainResource = scoreFilesResource.createRelative(gp);
+                    Resource grainResource = scoreFilesResource.createRelative(gp, getGrainNamespace(gp));
                     Resource existingGrainResource = grainNameToResourceMap.put(grainName, grainResource);
                     if (existingGrainResource != null) {
                         throw new CelestaException("Duplicate resources encountered for the grain '%s': %s, %s",
@@ -87,6 +89,17 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
         }
 
         return result;
+    }
+
+    Namespace getGrainNamespace(String grainPath) {
+
+        String[] parts = grainPath.split("/");
+        
+        return Arrays.stream(parts, 0, parts.length - 1)
+                .map(String::toLowerCase)
+                .reduce((ns1, ns2) -> ns1 + "." + ns2)
+                .map(Namespace::new)
+                .orElse(Namespace.DEFAULT);
     }
 
 }

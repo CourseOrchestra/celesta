@@ -355,12 +355,12 @@ public abstract class AbstractView extends DataGrainElement {
   /**
    * Wrapper for automatic line-breaks.
    */
-  class BWWrapper {
+  static class BWWrapper {
     private static final int LINE_SIZE = 80;
     private static final String PADDING = "    ";
     private int l = 0;
 
-    private void append(String s, PrintWriter bw) throws IOException {
+    void append(String s, PrintWriter bw) throws IOException {
       bw.write(s);
       l += s.length();
       if (l >= LINE_SIZE) {
@@ -368,38 +368,6 @@ public abstract class AbstractView extends DataGrainElement {
         bw.write(PADDING);
         l = PADDING.length();
       }
-    }
-  }
-
-  /**
-   * Generator of CelestaSQL.
-   */
-  class CelestaSQLGen extends SQLGenerator {
-
-    @Override
-    protected String preamble(AbstractView view) {
-      return String.format("create %s %s as", viewType(), viewName(view));
-    }
-
-    @Override
-    protected String viewName(AbstractView v) {
-      return getQuotedNameIfNeeded();
-    }
-
-    @Override
-    protected String tableName(TableRef tRef) {
-      Table t = tRef.getTable();
-      if (t.getGrain() == getGrain()) {
-        return String.format("%s as %s", t.getQuotedNameIfNeeded(), tRef.getAlias());
-      } else {
-        return String.format("%s.%s as %s",
-                             t.getGrain().getQuotedNameIfNeeded(), t.getQuotedNameIfNeeded(), tRef.getAlias());
-      }
-    }
-
-    @Override
-    protected boolean quoteNames() {
-      return false;
     }
   }
 

@@ -2,10 +2,13 @@ package ru.curs.celesta.dbschemasync;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -26,8 +29,9 @@ import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
-import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.Namespace;
 import ru.curs.celesta.score.AbstractScore;
+import ru.curs.celesta.score.CelestaSerializer;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
@@ -51,12 +55,8 @@ public final class Celesta2DBSchema {
      */
     public static void scoreToDBS(AbstractScore s, File dbsFile) throws Exception {
 
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-        Document doc;
         if (!dbsFile.exists()) {
-            FileOutputStream fos = new FileOutputStream(dbsFile);
-            try {
+            try (FileOutputStream fos = new FileOutputStream(dbsFile)) {
                 XMLStreamWriter sw = XMLOutputFactory.newInstance().createXMLStreamWriter(fos, "utf-8");
                 sw.writeStartDocument();
                 sw.writeStartElement("project");
@@ -70,12 +70,12 @@ public final class Celesta2DBSchema {
                 sw.writeEndElement();
                 sw.writeEndElement();
                 sw.writeEndDocument();
-                sw.flush();
-            } finally {
-                fos.close();
             }
         }
-        doc = docBuilder.parse(dbsFile);
+
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+        Document doc = docBuilder.parse(dbsFile);
         Element root = doc.getDocumentElement();
 
         NodeList l = root.getChildNodes();
@@ -93,8 +93,12 @@ public final class Celesta2DBSchema {
 
         for (Grain g : s.getGrains().values()) {
             Element schema = doc.createElement("schema");
-            schema.setAttribute("name", g.getName());
-            schema.setAttribute("schemaname", g.getName());
+            final String schemaName = Optional.of(g.getNamespace())
+                                              .filter(Predicate.isEqual(Namespace.DEFAULT).negate())
+                                              .map(ns -> ns.getValue() + "." + g.getName())
+                                              .orElse(g.getName());
+            schema.setAttribute("name", schemaName);
+            schema.setAttribute("schemaname", schemaName);
             schema.setAttribute("defo", "y");
             root.insertBefore(schema, layout);
             writeComment(g.getCelestaDoc(), doc, schema);
@@ -116,6 +120,13 @@ public final class Celesta2DBSchema {
                     String.format("create grain %s version '%s';", g.getName(), g.getVersion().toString()));
             procedure.appendChild(string);
         }
+
+        // TODO:
+        // Schema name is included as name attribute of schema node to be shown in DbSchema.
+        // This may however break existing layouts. As a workaround it is suggested to re-map layout.entity.schema
+        // attributes f.e:
+        // if layout.entity.schema ~= "*.log" { layout.entity.schema = "new.namespace.log" }
+
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.METHOD, "xml");
@@ -244,13 +255,13 @@ public final class Celesta2DBSchema {
         writeOptions(t, doc, table);
     }
 
-    private static void writeView(Grain g, View v, Document doc, Element schema) {
+    private static void writeView(Grain g, View v, Document doc, Element schema) throws IOException {
         Element view = doc.createElement("view");
         view.setAttribute("name", v.getName());
         schema.appendChild(view);
         writeComment(v.getCelestaDoc(), doc, view);
         Element viewScript = doc.createElement("view_script");
-        viewScript.appendChild(doc.createCDATASection(v.getCelestaQueryString()));
+        viewScript.appendChild(doc.createCDATASection(CelestaSerializer.toQueryString(v)));
         view.appendChild(viewScript);
 
         // Writing columns

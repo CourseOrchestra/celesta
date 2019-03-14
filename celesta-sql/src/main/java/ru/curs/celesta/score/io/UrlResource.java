@@ -8,6 +8,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Objects;
 
+import ru.curs.celesta.score.Namespace;
+
 /**
  * Score resource located in a JAR-file.
  *
@@ -18,10 +20,16 @@ public final class UrlResource implements Resource {
 
     private final URL url;
     private final String urlString;
+    private final Namespace namespace;
 
     public UrlResource(URL url) {
+        this(url, null);
+    }
+
+    public UrlResource(URL url, Namespace namespace) {
         this.url = url;
         this.urlString = url.toString();
+        this.namespace = namespace;
     }
 
     @Override
@@ -39,12 +47,19 @@ public final class UrlResource implements Resource {
     }
 
     @Override
-    public UrlResource createRelative(String relativePath) throws MalformedURLException {
+    public UrlResource createRelative(
+            String relativePath, Namespace namespace) throws MalformedURLException {
+
         if (relativePath.startsWith("/")) {
                 relativePath = relativePath.substring(1);
         }
 
-        return new UrlResource(new URL(this.url, relativePath));
+        return new UrlResource(new URL(this.url, relativePath), namespace);
+    }
+
+    @Override
+    public Namespace getNamespace() {
+        return namespace;
     }
 
     @Override

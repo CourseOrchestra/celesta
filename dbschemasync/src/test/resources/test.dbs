@@ -271,7 +271,7 @@
 			<string><![CDATA[create grain celesta version '1.12';]]></string>
 		</procedure>
 	</schema>
-	<schema name="logs" schemaname="logs" >
+	<schema name="logs.logs" schemaname="logs.logs" >
 		<table name="BettorLog" >
 			<column name="id" type="int" jt="4" mandatory="y" autoincrement="y" />
 			<column name="level" type="int" jt="4" mandatory="y" />
@@ -329,9 +329,9 @@
 		</procedure>
 	</schema>
 	<layout id="Layout_15f035b1" name="Layout_" >
-		<entity schema="logs" name="BettorLog" color="c0d4f3" x="45" y="45" />
-		<entity schema="logs" name="Notifications" color="c0d4f3" x="195" y="45" />
-		<entity schema="logs" name="SystemLog" color="c0d4f3" x="195" y="300" />
+		<entity schema="logs.logs" name="BettorLog" color="c0d4f3" x="45" y="45" />
+		<entity schema="logs.logs" name="Notifications" color="c0d4f3" x="195" y="45" />
+		<entity schema="logs.logs" name="SystemLog" color="c0d4f3" x="195" y="300" />
 	</layout>
 	<layout id="Layout-604853291" name="celesta" />
 </project>

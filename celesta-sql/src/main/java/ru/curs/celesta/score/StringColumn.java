@@ -1,8 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-
 /**
  * String column.
  */
@@ -151,27 +148,6 @@ public final class StringColumn extends Column {
     @Override
     public String jdbcGetterName() {
         return "getString";
-    }
-
-    @Override
-    void save(PrintWriter bw) throws IOException {
-        super.save(bw);
-        if (isMax()) {
-            bw.write(" TEXT");
-        } else {
-            bw.write(" VARCHAR(");
-            bw.write(Integer.toString(getLength()));
-            bw.write(")");
-        }
-
-        if (!isNullable()) {
-            bw.write(" NOT NULL");
-        }
-        String defaultVal = getDefaultValue();
-        if (defaultVal != null) {
-            bw.write(" DEFAULT ");
-            bw.write(quoteString(defaultVal));
-        }
     }
 
     @Override

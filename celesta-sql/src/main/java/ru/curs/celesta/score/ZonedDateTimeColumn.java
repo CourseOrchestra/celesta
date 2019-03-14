@@ -1,7 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.time.ZonedDateTime;
 
 /**
@@ -34,15 +32,6 @@ public final class ZonedDateTimeColumn extends Column {
     @Override
     public String jdbcGetterName() {
         return "getTimestamp";
-    }
-
-    @Override
-    void save(PrintWriter bw) throws IOException {
-        super.save(bw);
-        bw.write(" " + CELESTA_TYPE);
-        if (!isNullable()) {
-            bw.write(" NOT NULL");
-        }
     }
 
     @Override

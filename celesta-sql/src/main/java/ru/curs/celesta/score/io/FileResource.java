@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Objects;
 
+import ru.curs.celesta.score.Namespace;
+
 /**
  * Score resource located in the file system.
  *
@@ -17,10 +19,16 @@ public final class FileResource implements Resource {
 
     private final File file;
     private final File canonicalFile;
+    private final Namespace namespace;
 
     public FileResource(File file) {
+        this(file, Namespace.DEFAULT);
+    }
+
+    public FileResource(File file, Namespace namespace) {
         this.file = file;
         this.canonicalFile = getCanonicalFile();
+        this.namespace = Objects.requireNonNull(namespace);
     }
 
     private File getCanonicalFile() {
@@ -38,7 +46,13 @@ public final class FileResource implements Resource {
 
     @Override
     public OutputStream getOutputStream() throws IOException {
+        Files.createDirectories(file.toPath().getParent());
         return Files.newOutputStream(file.toPath());
+    }
+
+    @Override
+    public boolean delete() throws IOException {
+        return Files.deleteIfExists(file.toPath());
     }
 
     @Override
@@ -68,8 +82,13 @@ public final class FileResource implements Resource {
     }
 
     @Override
-    public FileResource createRelative(String relativePath) throws IOException {
-        return new FileResource(new File(this.file, relativePath));
+    public Resource createRelative(String relativePath, Namespace namespace) throws IOException {
+        return new FileResource(new File(this.file, relativePath), namespace);
+    }
+
+    @Override
+    public Namespace getNamespace() {
+        return this.namespace;
     }
 
     @Override

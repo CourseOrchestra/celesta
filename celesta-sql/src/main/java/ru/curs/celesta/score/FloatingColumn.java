@@ -1,8 +1,5 @@
 package ru.curs.celesta.score;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-
 /**
  * Column REAL type.
  */
@@ -31,20 +28,6 @@ public final class FloatingColumn extends Column {
     @Override
     public String jdbcGetterName() {
         return "getDouble";
-    }
-
-    @Override
-    void save(PrintWriter bw) throws IOException {
-        super.save(bw);
-        bw.write(" REAL");
-        if (!isNullable()) {
-            bw.write(" NOT NULL");
-        }
-        Double defaultVal = getDefaultValue();
-        if (defaultVal != null) {
-            bw.write(" DEFAULT ");
-            bw.write(defaultVal.toString());
-        }
     }
 
     @Override
