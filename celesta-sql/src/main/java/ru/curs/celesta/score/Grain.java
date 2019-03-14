@@ -479,7 +479,7 @@ public final class Grain extends NamedElement {
         Iterator<GrainPart> i = grainParts.iterator();
         Namespace ns = i.next().getNamespace();
         while (i.hasNext()) {
-            if (ns.equals(Namespace.DEFAULT) || !ns.equals(i.next().getNamespace())) {
+            if (Namespace.DEFAULT.equals(ns) || !ns.equals(i.next().getNamespace())) {
                 return Namespace.DEFAULT;
             }
         }
