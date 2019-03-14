@@ -15,13 +15,9 @@ include::1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
 
 == Часть 1. Быстрый старт
 
-=== Maven-зависимости
+=== Демонстрационный пример
 
 include::1012_maven_dependencies.adoc[leveloffset=+2, tag="maven_dependencies"]
-
-=== Maven-плагин
-
-include::1013_maven_plugin.adoc[leveloffset=+2, tag="maven_plugin"]
 
 == Часть 2. Технические детали и настройка Celesta
 
@@ -30,8 +26,14 @@ include::1013_maven_plugin.adoc[leveloffset=+2, tag="maven_plugin"]
 [[celesta_vocabulary]]
 include::1015_vocabulary.adoc[leveloffset=+2, tag="basic_terms"]
 
+=== Maven-плагин
+
+[[maven_plugin_section]]
+include::1013_maven_plugin.adoc[leveloffset=+2, tag="maven_plugin"]
+
 === Операции, выполняемые при инициализации Celesta
 
+[[startup_sequence]]
 include::1020_celesta_start.adoc[leveloffset=+2, tag="celesta_start"]
 
 [[basic_settings_section]]
