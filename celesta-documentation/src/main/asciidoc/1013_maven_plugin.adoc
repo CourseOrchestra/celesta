@@ -1,4 +1,4 @@
-= Maven-зависимости
+= Maven-плагин
 :lang: ru
 :is-main-doc:
 include::_doc_general_attributes.adoc[]
@@ -13,24 +13,58 @@ include::_doc_general_attributes.adoc[]
 
 //tag::maven_plugin[]
 
+Подключение плагина:
+
+```xml
+<plugin>
+    <groupId>ru.curs</groupId>
+    <artifactId>celesta-maven-plugin</artifactId>
+    <version>${celesta.version}</version>
+    <configuration>
+        <scores>
+            <score>. . .</score>
+        </scores>
+        <testScores>
+            <testScore>. . .</testScore>
+        </testScores>
+    </configuration>
+    <executions>
+        <execution>
+            <goals>
+                <goal>gen-cursors</goal>
+                <goal>gen-score-resources</goal>
+                <goal>gen-test-cursors</goal>
+                <goal>gen-test-score-resources</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+Параметры конфигурации плагина:
+
+* `scores` — пути к папкам в проекте, где размещены <<CelestaSQL>>-скрипты, описывающие рабочую базу данных. По умолчанию содержит путь `src/main/celestasql`.
+* `testScores` — пути к папкам в проекте, где размещены <<CelestaSQL>>-скрипты, описывающие базу данных, используемую только для <<celestaunit_section,модульного тестирования>>. По умолчанию содержит путь `src/test/celestasql`.
+
 Celesta Maven Plugin производит следующие операции:
 
-1. Кодогенерирует курсоры на основе CelestaSQL: 
+1. Кодогенерирует <<data_accessors_section,курсоры>> на основе <<CelestaSQL>>: 
 
-** На фазе `generate-sources` происходит кодогенерация курсоров из `src/main/celestasql` и опционально папки `score` в `target/generated-sources/celesta`, 
+** На фазе `generate-sources` происходит кодогенерация курсоров из `scores` и опционально папки `score` в `target/generated-sources/celesta`, 
 
-** На фазе `generate-test-sources` -- из `src/test/celestasql` в `target/generated-test-sources/celesta`.
+** На фазе `generate-test-sources` -- из `testScores` в `target/generated-test-sources/celesta`.
 
 2. Копирует CelestaSQL файлы в ресурсы:
 
-** На фазе `generate-resources` происходит копирование файлов CelestaSQL из `src/main/celestasql` и опционально папки `score` в `generated-resources/score`
+** На фазе `generate-resources` происходит копирование файлов CelestaSQL из `scores` и опционально папки `score` в `generated-resources/score`
 
-** На фазе `generate-test-resources` -- из `src/test/celestasql` в `generated-test-resources/score`
+** На фазе `generate-test-resources` -- из `testScores` в `generated-test-resources/score`
 
 3. Генерирует индекс `score.files` с перечнем относительных путей к .sql-файлам в ресурсах:
 
 ** На фазе `generate-resources` -> `generated-resources/score/score.files`
 ** На фазе `generate-test-resources` ->`generated-test-resources/score/score.files`
 
-Данные файлы используются для score discovery во время выполнения Celesta, избавляя от необходимости в runtime исследовать содержимое всех jar-файлов на classpath.
+Эти файлы используются во время выполнения Celesta для того, чтобы найти пути ко всем CelestaSQL-файлам внутри jar-файлов на classpath.
+
 //end::maven_plugin[]
