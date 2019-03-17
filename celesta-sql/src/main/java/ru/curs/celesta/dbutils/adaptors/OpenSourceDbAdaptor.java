@@ -11,10 +11,16 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Created by ioann on 02.05.2017.
  */
 public abstract class OpenSourceDbAdaptor extends DBAdaptor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenSourceDbAdaptor.class);
+
     protected static final String SELECT_S_FROM = "select %s from ";
     protected static final Pattern DATEPATTERN = Pattern.compile("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)");
 
@@ -72,7 +78,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
                 + " where %s limit 1;", fieldList, where);
 
         PreparedStatement result = prepareStatement(conn, sql);
-        //System.out.println(result.toString());
+        LOGGER.trace("{}", result);
         return result;
     }
 
@@ -121,7 +127,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
         }
         String sql = String.format(SELECT_S_FROM + " %s %s  limit 1 offset %d;", fieldList,
                 from.getExpression(), useWhere ? " where " + w : w, offset == 0 ? 0 : offset - 1);
-        // System.out.println(sql);
+        LOGGER.trace(sql);
         return prepareStatement(conn, sql);
     }
 

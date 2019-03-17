@@ -13,8 +13,12 @@ import javax.tools.ToolProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractCelestaMojoTestCase.class);
 
     final static String TEST_RESOURCES_DIR = "/src/test/resources";
     final static String TEST_UNIT_DIR = CelestaMavenPluginStub.UNIT_DIR;
@@ -52,7 +56,7 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
                      Files.createDirectories(to.getParent());
                      Files.copy(from, to);
                  } catch (IOException ex) {
-                     ex.printStackTrace();
+                     LOGGER.error("Error during score setup", ex);
                  }
              });
     }

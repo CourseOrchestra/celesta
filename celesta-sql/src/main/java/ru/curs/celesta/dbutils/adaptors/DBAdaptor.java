@@ -47,6 +47,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.DBType;
@@ -86,6 +89,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * then -- public abstract methods,
      * then -- private methods
      */
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBAdaptor.class);
 
     static final List<Class<? extends Column>> COLUMN_CLASSES = Arrays.asList(IntegerColumn.class, StringColumn.class,
             BooleanColumn.class, FloatingColumn.class, DecimalColumn.class, BinaryColumn.class, DateTimeColumn.class,
@@ -381,7 +386,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         String sql = String.format("update " + tableString(t.getGrain().getName(), t.getName()) + " set %s where %s",
                 setClause.toString(), where);
 
-        // System.out.println(sql);
+        LOGGER.trace(sql);
         return prepareStatement(conn, sql);
     }
 
@@ -445,7 +450,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         } else {
             sql = getLimitedSQL(from, whereClause, orderBy, offset, rowCount, fields);
 
-            // System.out.println(sql);
+            LOGGER.trace(sql);
         }
         try {
             PreparedStatement result = conn.prepareStatement(sql);

@@ -41,6 +41,9 @@ import java.util.Map.Entry;
 import java.util.regex.*;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.filter.In;
@@ -54,6 +57,8 @@ import ru.curs.celesta.score.ParseException;
  * Base cursor class for reading data from views.
  */
 public abstract class BasicCursor extends BasicDataAccessor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BasicCursor.class);
 
     private static final String DATABASE_CLOSING_ERROR =
         "Database error when closing recordset for table '%s': %s";
@@ -698,14 +703,14 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
 
         PreparedStatement navigator = chooseNavigator(command.charAt(0));
-        // System.out.println(navigator);
+        LOGGER.trace("{}", navigator);
         return executeNavigator(navigator);
 
     }
 
     private boolean executeNavigator(PreparedStatement navigator) {
         try {
-            // System.out.println(navigator);
+            LOGGER.trace("{}", navigator);
             ResultSet rs = navigator.executeQuery();
             try {
                 if (rs.next()) {
@@ -1007,7 +1012,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      */
     public final int position() {
         PreparedStatement stmt = position.getStatement(_currentValues(), 0);
-        // System.out.println(stmt);
+        LOGGER.trace("{}", stmt);
         return count(stmt);
     }
 

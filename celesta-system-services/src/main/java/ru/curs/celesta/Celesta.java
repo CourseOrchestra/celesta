@@ -1,6 +1,9 @@
 package ru.curs.celesta;
 
 import org.h2.tools.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorFactory;
@@ -21,6 +24,8 @@ import java.util.*;
  * Celesta instance.
  */
 public final class Celesta implements ICelesta {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Celesta.class);
 
     protected static final String FILE_PROPERTIES = "celesta.properties";
 
@@ -44,7 +49,7 @@ public final class Celesta implements ICelesta {
 
         // CELESTA STARTUP SEQUENCE
         // 1. Parsing of grains description.
-        System.out.printf("Celesta initialization: score parsing...");
+        LOGGER.info("Celesta initialization: score parsing...");
 
         try {
             ScoreDiscovery scoreDiscovery = this.appSettings.getScorePath().isEmpty()
@@ -57,7 +62,7 @@ public final class Celesta implements ICelesta {
             throw new CelestaException(e);
         }
         CurrentScore.set(this.score);
-        System.out.println("done.");
+        LOGGER.info("done.");
 
         // 2. Updating database structure.
         // Since at this stage meta information is already in use, theCelesta and ConnectionPool
@@ -82,7 +87,7 @@ public final class Celesta implements ICelesta {
         this.profiler = new ProfilingManager(this, dbAdaptor);
 
         if (!appSettings.getSkipDBUpdate()) {
-            System.out.printf("Celesta initialization: database upgrade...");
+            LOGGER.info("Celesta initialization: database upgrade...");
 
             DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                     .dbAdaptor(dbAdaptor)
@@ -95,9 +100,9 @@ public final class Celesta implements ICelesta {
                     .build();
 
             dbUpdater.updateDb();
-            System.out.println("done.");
+            LOGGER.info("done.");
         } else {
-            System.out.printf("Celesta initialization: database upgrade...skipped.%n");
+            LOGGER.info("Celesta initialization: database upgrade...skipped.");
         }
 
     }
@@ -184,9 +189,9 @@ public final class Celesta implements ICelesta {
     }
 
     private static AppSettings preInit(Properties properties) {
-        System.out.print("Celesta pre-initialization: system settings reading...");
+        LOGGER.info("Celesta pre-initialization: system settings reading...");
         AppSettings appSettings = new AppSettings(properties);
-        System.out.println("done.");
+        LOGGER.info("done.");
         return appSettings;
     }
 
@@ -224,12 +229,12 @@ public final class Celesta implements ICelesta {
     private void manageH2Server() {
         if (appSettings.getH2Port() > 0) {
             try {
-                System.out.printf("H2 server starting on port %d...", appSettings.getH2Port());
+                LOGGER.info("H2 server starting on port {}...", appSettings.getH2Port());
                 server = Optional.of(Server.createTcpServer(
                         "-tcpPort",
                         Integer.toString(appSettings.getH2Port()),
                         "-tcpAllowOthers").start());
-                System.out.println("done.");
+                LOGGER.info("done.");
 
                 CurrentScore.global(true);
             } catch (SQLException e) {

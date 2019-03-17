@@ -5,10 +5,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Foreign key class.
  */
 public final class ForeignKey {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ForeignKey.class);
 
     private final Table parentTable;
     private Table referencedTable;
@@ -357,7 +362,8 @@ public final class ForeignKey {
                 .getElements().keySet().iterator().next());
 
         result = NamedElement.limitName(result);
-        // System.out.println(result);
+        LOGGER.trace("{}", result);
+
         return result;
     }
 

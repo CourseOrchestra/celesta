@@ -1,6 +1,8 @@
 package ru.curs.celesta.script;
 
 import org.junit.jupiter.api.extension.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.OracleContainer;
@@ -15,6 +17,8 @@ import java.util.stream.Stream;
 
 public class CallContextProvider implements TestTemplateInvocationContextProvider {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CallContextProvider.class);
+
     static {
         Locale.setDefault(Locale.US);
     }
@@ -23,7 +27,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
         H2, PostgreSQL, Oracle, MSSQL
     }
 
-    private final EnumMap<Backend, JdbcDatabaseContainer> containers = new EnumMap<>(Backend.class);
+    private final EnumMap<Backend, JdbcDatabaseContainer<?>> containers = new EnumMap<>(Backend.class);
     private final EnumMap<Backend, Celesta> celestas = new EnumMap<>(Backend.class);
 
     private CallContext currentContext;
@@ -96,8 +100,8 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
                 (b, c) -> {
                     try {
                         c.getConnectionPool().get().createStatement().execute("SHUTDOWN");
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+                    } catch (SQLException ex) {
+                        LOGGER.error("Error during DB shutdown", ex);
                     }
                     return null;
                 });

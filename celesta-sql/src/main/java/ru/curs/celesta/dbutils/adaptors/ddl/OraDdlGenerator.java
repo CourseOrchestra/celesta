@@ -25,6 +25,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
 import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.*;
@@ -35,6 +37,8 @@ import static ru.curs.celesta.dbutils.adaptors.function.OraFunctions.*;
  * Class for SQL generation of data definition of Oracle.
  */
 public final class OraDdlGenerator extends DdlGenerator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OraDdlGenerator.class);
 
     public OraDdlGenerator(DBAdaptor dmlAdaptor) {
         super(dmlAdaptor);
@@ -191,7 +195,7 @@ public final class OraDdlGenerator extends DdlGenerator {
                                           + "  :new.\"recversion\" := :new.\"recversion\" + 1;\n"
                                           + "END;",
                                 triggerName, t.getGrain().getName(), t.getName());
-                        // System.out.println(sql);
+                        LOGGER.trace(sql);
                         result.add(sql);
                         this.rememberTrigger(query);
                     }
@@ -303,22 +307,22 @@ public final class OraDdlGenerator extends DdlGenerator {
                     columnDef(c)
             );
             sql = sql.replace(c.getQuotedName(), tempName);
-            // System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
             sql = String.format("update " + tableFullName + " set %s = \"%s\"",
                     tempName, c.getName());
-            // System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
             sql = String.format(
                     ALTER_TABLE + tableFullName
                             + " drop column %s", c.getQuotedName()
             );
-            // System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
             sql = String.format(
                     ALTER_TABLE + tableFullName
                             + " rename column %s to %s", tempName, c.getQuotedName());
-            // System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
         } else if (actual.getType() == DecimalColumn.class && c instanceof DecimalColumn) {
             result.addAll(updateDecimalColumn(conn, (DecimalColumn) c, actual, def));
@@ -581,7 +585,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     List<String> createParameterizedView(ParameterizedView pv)  {
         List<String> result = new ArrayList<>();
 
-        //Создаем тип
+        // Create type
         String colsDef = pv.getColumns().entrySet().stream()
                 .map(e -> {
                     StringBuilder sb = new StringBuilder("\"").append(e.getKey()).append("\" ")
@@ -603,16 +607,16 @@ public final class OraDdlGenerator extends DdlGenerator {
                 "create type " + tableString(pv.getGrain().getName(), pv.getName() + "_o")
                         + " as object\n" + "(%s)", colsDef
         );
-        //System.out.println(sql);
+        LOGGER.trace(sql);
         result.add(sql);
 
-        //Создаем коллекцию типов
+        // Create collection of types
         sql = "create type " + tableString(pv.getGrain().getName(), pv.getName() + "_t")
                 + " as TABLE OF " + tableString(pv.getGrain().getName(), pv.getName() + "_o");
-        //System.out.println(sql);
+        LOGGER.trace(sql);
         result.add(sql);
 
-        //Создаем функцию
+        // Create function
         SQLGenerator gen = getViewSQLGenerator();
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
@@ -867,7 +871,7 @@ public final class OraDdlGenerator extends DdlGenerator {
                             + "begin \n" + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
                             + "\n %s \n %s \n END;",
                     insertTriggerName, fullTableName, mv.getChecksum(), lockTable, insertSql);
-            //System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
             this.rememberTrigger(query.withName(insertTriggerName));
 
@@ -878,7 +882,7 @@ public final class OraDdlGenerator extends DdlGenerator {
                             + "begin %s \n %s\n %s\n END;",
                     updateTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString(), insertSql);
 
-            //System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
             this.rememberTrigger(query.withName(updateTriggerName));
 

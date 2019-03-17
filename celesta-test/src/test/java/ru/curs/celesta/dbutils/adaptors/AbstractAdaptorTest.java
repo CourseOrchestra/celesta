@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +31,9 @@ import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.syscursors.GrainsCursor;
 
 public abstract class AbstractAdaptorTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAdaptorTest.class);
+
     final static String GRAIN_NAME = "gtest";
     final static String SCORE_NAME = "testScore";
 
@@ -80,9 +85,9 @@ public abstract class AbstractAdaptorTest {
         try {
             int rowCount = pstmt.execute() ? 1 : pstmt.getUpdateCount(); // pstmt.executeUpdate();
             return rowCount;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw e;
+        } catch (SQLException ex) {
+            LOGGER.error("Error on counting rows", ex);
+            throw ex;
         }
     }
 
@@ -174,8 +179,8 @@ public abstract class AbstractAdaptorTest {
         conn.rollback();
         try {
             dba.dropTable(conn, t);
-        } catch (Exception e) {
-            // e.printStackTrace();
+        } catch (Exception ex) {
+            // LOGGER.error("Error on table droping table {}", t.getName(), ex);
         }
         conn.close();
     }
@@ -287,7 +292,7 @@ public abstract class AbstractAdaptorTest {
 
         PreparedStatement pstmt2 = dba.getUpdateRecordStatement(conn, t, mask, nullsMask, program, w.getWhere());
 
-        // System.out.println(pstmt2.toString());
+        // LOGGER.info("{}", pstmt2);
         assertNotNull(pstmt2);
 
         w.programParams(program, dba);
@@ -354,8 +359,7 @@ public abstract class AbstractAdaptorTest {
         assertFalse(columnSet.contains("nonExistentColumn"));
         // String[] columnNames = { "id", "attrVarchar", "attrInt", "f1",
         // "f2", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13" };
-        // System.out
-        // .println(Arrays.toString(columnSet.toArray(new String[0])));
+        // LOGGER.info(Arrays.toString(columnSet.toArray(new String[0])));
     }
 
     @Test
@@ -1110,7 +1114,7 @@ public abstract class AbstractAdaptorTest {
             String[] expected = {"attrVarchar", "attrInt"};
             String[] actual = info.getColumnNames().toArray(new String[0]);
 
-            // System.out.println(Arrays.toString(actual));
+            // LOGGER.info(Arrays.toString(actual));
             assertTrue(Arrays.equals(expected, actual));
             assertEquals(FKRule.CASCADE, info.getUpdateRule());
             assertEquals(FKRule.SET_NULL, info.getDeleteRule());
@@ -1120,17 +1124,17 @@ public abstract class AbstractAdaptorTest {
 
             assertTrue(info.reflects(fk));
 
-            // Проверяем, что не произошло "запутки" первичных и внешних ключей
-            // (существовавший когда-то баг)
+            // Check that there was no entanglement of primary and foreign keys.
+            // (a bug that existed at some point)
             assertTrue(dba.getPKInfo(conn, t).reflects(t));
             assertTrue(dba.getPKInfo(conn, t2).reflects(t2));
 
             dba.dropFK(conn, t.getGrain().getName(), t.getName(), fk.getConstraintName());
             l = dba.getFKInfo(conn, g);
             assertEquals(0, l.size());
-        } catch (CelestaException e) {
-            e.printStackTrace();
-            throw e;
+        } catch (CelestaException ex) {
+            LOGGER.error("Celesta error", ex);
+            throw ex;
         } finally {
             conn.rollback();
             dba.dropTable(conn, t);
@@ -1150,8 +1154,9 @@ public abstract class AbstractAdaptorTest {
             assertEquals("NEXTVAL(aLongIdentityTableNxx_f1)", c.getDefaultValue());
             c = dba.getColumnInfo(conn, t3.getColumn("field2"));
             assertSame(BooleanColumn.class, c.getType());
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            // TODO: When can it happen?
+            LOGGER.error("Error", ex);
         } finally {
             dba.dropTable(conn, t3);
             dba.dropSequence(conn, t3s);

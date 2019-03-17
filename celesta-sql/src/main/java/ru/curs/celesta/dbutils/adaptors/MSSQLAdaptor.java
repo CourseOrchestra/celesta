@@ -45,6 +45,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.DBType;
@@ -63,6 +66,8 @@ import ru.curs.celesta.score.*;
  * MSSQL Adaptor.
  */
 public final class MSSQLAdaptor extends DBAdaptor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MSSQLAdaptor.class);
 
     private static final String SELECT_TOP_1 = "select top 1 %s from ";
     private static final String WHERE_S = " where %s;";
@@ -348,7 +353,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
                             + "where cons.CONSTRAINT_TYPE = 'PRIMARY KEY' and cons.TABLE_SCHEMA = '%s' "
                             + "and cons.TABLE_NAME = '%s' order by ORDINAL_POSITION",
                     t.getGrain().getName(), t.getName());
-            // System.out.println(sql);
+            LOGGER.trace(sql);
             Statement check = conn.createStatement();
             ResultSet rs = check.executeQuery(sql);
             try {
@@ -386,7 +391,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
                         + "WHERE RC.CONSTRAINT_SCHEMA = '%s' " + "ORDER BY KCU1.CONSTRAINT_NAME, KCU1.ORDINAL_POSITION",
                 g.getName());
 
-        // System.out.println(sql);
+        LOGGER.trace(sql);
 
         List<DbFkInfo> result = new LinkedList<>();
         try {
@@ -465,7 +470,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
                 + "where i.is_primary_key = 0 and o.[type] = 'U' " + " and s.name = '%s' "
                 + " order by o.name,  i.[name], ic.key_ordinal;", g.getName());
 
-        // System.out.println(sql);
+        LOGGER.trace(sql);
 
         Map<String, DbIndexInfo> result = new HashMap<>();
         try {
@@ -572,7 +577,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
                     orderBy, fieldList, from.getExpression(), useWhere ? " where " + w : w.toString(), "=" + offset);
         }
 
-        // System.out.println(sql);
+        LOGGER.trace(sql);
         return prepareStatement(conn, sql);
     }
 
