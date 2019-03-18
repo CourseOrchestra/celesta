@@ -90,12 +90,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * then -- private methods
      */
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBAdaptor.class);
-
     static final List<Class<? extends Column>> COLUMN_CLASSES = Arrays.asList(IntegerColumn.class, StringColumn.class,
             BooleanColumn.class, FloatingColumn.class, DecimalColumn.class, BinaryColumn.class, DateTimeColumn.class,
             ZonedDateTimeColumn.class);
     static final String COLUMN_NAME = "COLUMN_NAME";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBAdaptor.class);
 
     protected final ConnectionPool connectionPool;
     DdlAdaptor ddlAdaptor;

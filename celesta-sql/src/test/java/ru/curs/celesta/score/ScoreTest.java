@@ -6,8 +6,8 @@ import java.util.StringJoiner;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.score.io.FileResource;
@@ -15,7 +15,7 @@ import ru.curs.celesta.score.io.Resource;
 
 public class ScoreTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ScoreTest.class);
+//    private static final Logger LOGGER = LoggerFactory.getLogger(ScoreTest.class);
 
     private static final String SCORE_PATH_PREFIX = new StringJoiner(File.separator)
             .add("src").add("test").add("resources").add("scores").toString();

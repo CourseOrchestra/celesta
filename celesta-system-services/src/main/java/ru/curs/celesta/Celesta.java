@@ -25,9 +25,9 @@ import java.util.*;
  */
 public final class Celesta implements ICelesta {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Celesta.class);
-
     protected static final String FILE_PROPERTIES = "celesta.properties";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Celesta.class);
 
     private final BaseAppSettings appSettings;
     private final Score score;

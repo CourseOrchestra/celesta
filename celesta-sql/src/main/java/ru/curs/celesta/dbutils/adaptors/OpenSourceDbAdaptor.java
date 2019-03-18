@@ -19,12 +19,12 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OpenSourceDbAdaptor.class);
-
     protected static final String SELECT_S_FROM = "select %s from ";
     protected static final Pattern DATEPATTERN = Pattern.compile("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)");
 
     protected static final Pattern QUOTED_NAME = Pattern.compile("\"?([^\"]+)\"?");
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenSourceDbAdaptor.class);
 
     public OpenSourceDbAdaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer) {
         super(connectionPool, ddlConsumer);
