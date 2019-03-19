@@ -8,6 +8,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GenTestScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
 
@@ -52,8 +54,8 @@ public class GenTestScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
         mojo.execute();
 
         List<String> grainPaths = Arrays.asList(
-            "data/table/table.sql",
-            "seq/sequence.sql"
+            Stream.of("data", "table", "table.sql").collect(Collectors.joining(File.separator)),
+            Stream.of("seq", "sequence.sql").collect(Collectors.joining(File.separator))
         );
 
         assertGeneratedScore("scorePart1", CELESTA_GENERATED_TEST_RESOURCES_DIR, grainPaths);
