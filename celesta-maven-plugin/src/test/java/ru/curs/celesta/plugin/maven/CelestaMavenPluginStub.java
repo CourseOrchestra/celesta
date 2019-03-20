@@ -7,6 +7,7 @@ import org.apache.maven.plugin.testing.stubs.MavenProjectStub;
 import org.codehaus.plexus.util.ReaderFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,8 +21,8 @@ public class CelestaMavenPluginStub extends MavenProjectStub {
     public CelestaMavenPluginStub() {
         MavenXpp3Reader pomReader = new MavenXpp3Reader();
         Model model;
-        try {
-            model = pomReader.read( ReaderFactory.newXmlReader( new File( getBasedir(), "pom.xml" ) ) );
+        try (FileInputStream in = new FileInputStream(new File( getBasedir(), "pom.xml" ) )) {
+            model = pomReader.read( ReaderFactory.newXmlReader( in ));
             setModel( model );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
