@@ -8,8 +8,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class GenScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
 
@@ -54,8 +52,8 @@ public class GenScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
         mojo.execute();
 
         List<String> grainPaths = Arrays.asList(
-                "data/table/table.sql",
-                "seq/sequence.sql"
+            "data/table/table.sql",
+            "seq/sequence.sql"
         );
 
         assertGeneratedScore("scorePart1", CELESTA_GENERATED_RESOURCES_DIR, grainPaths);
