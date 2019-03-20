@@ -54,8 +54,8 @@ public class GenScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
         mojo.execute();
 
         List<String> grainPaths = Arrays.asList(
-                Stream.of("data", "table", "table.sql").collect(Collectors.joining(File.separator)),
-                Stream.of("seq", "sequence.sql").collect(Collectors.joining(File.separator))
+                "data/table/table.sql",
+                "seq/sequence.sql"
         );
 
         assertGeneratedScore("scorePart1", CELESTA_GENERATED_RESOURCES_DIR, grainPaths);

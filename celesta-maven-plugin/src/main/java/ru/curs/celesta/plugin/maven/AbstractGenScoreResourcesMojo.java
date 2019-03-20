@@ -87,10 +87,19 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
                         + File.separator + generatedResourcesDirName + File.separator + "score");
     }
 
+    private String convertSeparatorChar(String path){
+        if (File.separatorChar != '/') {
+            return path.replace(File.separatorChar, '/');
+        } else {
+            return path;
+        }
+    }
+
     private void generateScoreFiles(List<GrainSourceBag> grainsSources) throws MojoExecutionException {
 
         Collection<String> relativeSourcesPaths = grainsSources.stream()
                 .map(gs -> gs.getGrainSourceRelativePath().toString())
+                .map(this::convertSeparatorChar)
                 .collect(Collectors.toCollection(TreeSet::new));
 
         Path scoreFilesPath = new File(getResourcesRoot(), SCORE_FILES_FILE_NAME).toPath();
