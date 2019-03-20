@@ -11,7 +11,7 @@ import org.apache.maven.plugins.annotations.*;
 public final class GenTestScoreResourcesMojo extends AbstractGenScoreResourcesMojo {
 
     @Override
-    public final void execute() throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         getScorePaths = this::getTestScorePaths;
         generatedResourcesDirName = "generated-test-resources";
         addResource = project::addTestResource;

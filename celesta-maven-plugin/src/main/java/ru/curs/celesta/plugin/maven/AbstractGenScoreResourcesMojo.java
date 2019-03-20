@@ -87,7 +87,7 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
                         + File.separator + generatedResourcesDirName + File.separator + "score");
     }
 
-    private String convertSeparatorChar(String path){
+    private String convertSeparatorChar(String path) {
         if (File.separatorChar != '/') {
             return path.replace(File.separatorChar, '/');
         } else {
