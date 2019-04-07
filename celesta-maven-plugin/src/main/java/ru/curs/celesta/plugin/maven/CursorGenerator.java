@@ -157,7 +157,7 @@ public final class CursorGenerator {
         }
     }
 
-    private static String calcSourcePackage(GrainElement ge, String scorePath) {
+    static String calcSourcePackage(GrainElement ge, String scorePath) {
         String result;
 
         Grain g = ge.getGrain();
