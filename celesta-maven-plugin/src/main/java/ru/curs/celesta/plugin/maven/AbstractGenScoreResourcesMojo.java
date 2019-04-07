@@ -4,10 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -78,17 +81,27 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
     private void copyGrainSourceFilesToResources(
             Collection<GrainSourceBag> grainSources) throws MojoExecutionException {
 
-        Path resourcesRootPath = getResourcesRoot().toPath();
+        final Path resourcesRootPath = getResourcesRoot().toPath();
+
+        Set<Path> tos = new HashSet<>();
+
         for (GrainSourceBag gs : grainSources) {
             Path to = gs.resolve(resourcesRootPath);
+            if (to == null) {
+                continue;
+            }
+
+            if (!tos.add(to)) {
+                throw new MojoExecutionException(
+                        String.format("There are more than one grain source files being copied to %s", to));
+            }
+
             try {
-                if (to != null) {
-                    Path toParent = to.getParent();
-                    if (toParent != null) {
-                        Files.createDirectories(toParent);
-                    }
-                    Files.copy(gs.grainSource.getInputStream(), to);
+                Path toParent = to.getParent();
+                if (toParent != null) {
+                    Files.createDirectories(toParent);
                 }
+                Files.copy(gs.grainSource.getInputStream(), to, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException ex) {
                 throw new MojoExecutionException(
                         String.format("Copying of grain source file failed: %s", gs.grainSource),

@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.maven.plugin.MojoExecutionException;
+
 public class GenTestScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
 
     private final static String CELESTA_GENERATED_TEST_RESOURCES_DIR =
@@ -69,6 +71,13 @@ public class GenTestScoreResourcesMojoTest extends AbstractCelestaMojoTestCase {
         GenTestScoreResourcesMojo mojo = (GenTestScoreResourcesMojo) lookupMojo("gen-test-score-resources", pom);
 
         assertThrows(CelestaException.class, () ->  mojo.execute());
+    }
+
+    public void testFailOnGeneratingScoresFromDuplicateSqls() throws Exception {
+        File pom = setupPom("pom_duplicateSql.xml");
+        GenScoreResourcesMojo mojo = (GenScoreResourcesMojo) lookupMojo("gen-score-resources", pom);
+
+        assertThrows(MojoExecutionException.class, () ->  mojo.execute());
     }
 
 }
