@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.Namespace;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.io.FileResource;
 import ru.curs.celesta.score.io.Resource;
@@ -34,15 +36,28 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
 
         List<GrainSourceBag> grainsSources = new ArrayList<>();
         for (ScoreProperties sp : getScorePaths.get()) {
-            Score score = initScore(sp.getPath());
-            Resource scoreSource = new FileResource(new File(sp.getPath()));
+            final String scorePath = sp.getPath();
+            List<FileResource> scoreResources =  Arrays.stream(scorePath.split(File.pathSeparator))
+                    .map(File::new)
+                    .map(File::getAbsoluteFile)
+                    .map(FileResource::new)
+                    .collect(Collectors.toList());
+            Score score = initScore(scorePath);
             score.getGrains().values().stream()
                 .filter(this::isAllowGrain)
                 .flatMap(g -> g.getGrainParts().stream())
-                .map(gp -> gp.getSource())
-                .filter(Objects::nonNull)
-                .forEach(s -> {
-                    grainsSources.add(new GrainSourceBag(scoreSource, s));
+                .forEach(gp -> {
+                    if (gp.getSource() != null) {
+                        if (Namespace.DEFAULT.equals(gp.getNamespace())) {
+                            throw new CelestaException(
+                                "Couldn't generate score resource for %s without package",
+                                gp.getSource());
+                        }
+                        FileResource scoreSource = scoreResources.stream()
+                            .filter(sr -> sr.contains(gp.getSource()))
+                            .findFirst().get();
+                        grainsSources.add(new GrainSourceBag(scoreSource, gp.getSource()));
+                    }
                 });
         }
 

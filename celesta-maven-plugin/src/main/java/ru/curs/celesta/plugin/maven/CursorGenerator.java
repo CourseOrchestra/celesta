@@ -157,7 +157,7 @@ public final class CursorGenerator {
         }
     }
 
-    private static String calcSourcePackage(GrainElement ge, String scorePath) {
+    static String calcSourcePackage(GrainElement ge, String scorePath) {
         String result;
 
         Grain g = ge.getGrain();
@@ -166,9 +166,10 @@ public final class CursorGenerator {
         } else {
             String grainPartRelativePath =
                     new FileResource(new File(scorePath)).getRelativePath(ge.getGrainPart().getSource());
-            result = grainPartRelativePath
-                    .substring(0, grainPartRelativePath.lastIndexOf(File.separatorChar))
-                    .replace(File.separator, ".");
+            result = Optional.of(grainPartRelativePath.lastIndexOf(File.separatorChar))
+                .filter(i -> i >= 0)
+                .map(i -> grainPartRelativePath.substring(0, i).replace(File.separator, "."))
+                .orElse("");
             if (result.startsWith(".")) {
                 result = result.substring(1);
             }
