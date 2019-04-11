@@ -16,6 +16,7 @@ public interface ICelesta extends AutoCloseable {
 
     /**
      * Returns a {@link TriggerDispatcher} of this celesta instance.
+     *
      * @return a trigger dispatcher of this celesta instance.
      */
     TriggerDispatcher getTriggerDispatcher();
@@ -44,24 +45,28 @@ public interface ICelesta extends AutoCloseable {
 
     /**
      * Returns a {@link ILoggingManager} of this celesta instance.
+     *
      * @return a logging manager of this celesta instance.
      */
     ILoggingManager getLoggingManager();
 
     /**
      * Returns a {@link ConnectionPool} of this celesta instance.
+     *
      * @return a connection poll of this celesta instance.
      */
     ConnectionPool getConnectionPool();
 
     /**
      * Returns a {@link IProfiler} of this celesta instance.
+     *
      * @return a profiler of this celesta instance.
      */
     IProfiler getProfiler();
 
     /**
      * Returns a {@link DBAdaptor} of this celesta instance.
+     *
      * @return a db adaptor of this celesta instance.
      */
     DBAdaptor getDBAdaptor();
