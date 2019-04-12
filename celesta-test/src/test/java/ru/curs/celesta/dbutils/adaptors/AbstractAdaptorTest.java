@@ -292,7 +292,6 @@ public abstract class AbstractAdaptorTest {
 
         PreparedStatement pstmt2 = dba.getUpdateRecordStatement(conn, t, mask, nullsMask, program, w.getWhere());
 
-        // LOGGER.info("{}", pstmt2);
         assertNotNull(pstmt2);
 
         w.programParams(program, dba);
@@ -1114,7 +1113,6 @@ public abstract class AbstractAdaptorTest {
             String[] expected = {"attrVarchar", "attrInt"};
             String[] actual = info.getColumnNames().toArray(new String[0]);
 
-            // LOGGER.info(Arrays.toString(actual));
             assertTrue(Arrays.equals(expected, actual));
             assertEquals(FKRule.CASCADE, info.getUpdateRule());
             assertEquals(FKRule.SET_NULL, info.getDeleteRule());

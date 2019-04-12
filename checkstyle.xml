@@ -34,7 +34,7 @@
     <module name="FileTabCharacter"/>
 
     <!-- Miscellaneous other checks.                   -->
-    <!-- See http://checkstyle.sf.net/config_misc.html -->
+    <!-- See http://checkstyle.sourceforge.net/config_regexp.html#RegexpSingleline -->
     <module name="RegexpSingleline">
         <property name="format" value="\s+$"/>
         <property name="minimum" value="0"/>
@@ -173,7 +173,6 @@
         <!-- <module name="FinalParameters"/>-->
         <module name="UpperEll"/>
 
-
         <module name="CyclomaticComplexity">
             <property name="max" value="15"/>
             <property name="switchBlockAsSingleDecisionPoint" value="true"/>
@@ -183,5 +182,12 @@
         <module name="EqualsHashCode"/>
         <module name="DeclarationOrder"/>
         <module name="UnnecessaryParentheses"/>
+
+        <!-- See http://checkstyle.sourceforge.net/config_regexp.html#RegexpSinglelineJava -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="System\.(out|err)\.print(ln|f){0,1}\(.*\)"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message" value="Line has Sysout print statement."/>
+        </module>
     </module>
 </module>

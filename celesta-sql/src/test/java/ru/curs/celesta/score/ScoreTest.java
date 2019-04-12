@@ -6,16 +6,12 @@ import java.util.StringJoiner;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
 
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.score.io.FileResource;
 import ru.curs.celesta.score.io.Resource;
 
 public class ScoreTest {
-
-//    private static final Logger LOGGER = LoggerFactory.getLogger(ScoreTest.class);
 
     private static final String SCORE_PATH_PREFIX = new StringJoiner(File.separator)
             .add("src").add("test").add("resources").add("scores").toString();
@@ -327,11 +323,8 @@ public class ScoreTest {
         PrintWriter bw = new PrintWriter(sw);
         new CelestaSerializer(bw).save(t);
         bw.flush();
-        // LOGGER.info("{}", sw);
 
         String[] actual = sw.toString().split("\r?\n");
-        // for (String l : actual)
-        //     LOGGER.info(l);
         BufferedReader r = new BufferedReader(
                 new InputStreamReader(ScoreTest.class.getResourceAsStream("expectedsave.sql"), "utf-8"));
         for (String l : actual)
@@ -373,7 +366,6 @@ public class ScoreTest {
             t = g.getElement("table1", Table.class);
             serializer.save(t);
         }
-        // LOGGER.info("{}", sw);
 
         String[] actual = sw.toString().split("\r?\n");
         BufferedReader r = new BufferedReader(
