@@ -20,7 +20,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
         Locale.setDefault(Locale.US);
     }
 
-    public static OracleContainer<?> oracle = new OracleContainer<>();
+    public static OracleContainer oracle = new OracleContainer();
 
     private static OraAdaptor dba;
 

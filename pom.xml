@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ru.curs</groupId>
@@ -68,7 +69,7 @@
         <junit.platform.version>1.3.1</junit.platform.version>
         <org.json.version>20171018</org.json.version>
         <org.reflections.version>0.9.11</org.reflections.version>
-        <testcontainers.version>1.6.0</testcontainers.version>
+        <testcontainers.version>1.11.1</testcontainers.version>
 
         <!--plugin versions -->
         <spotbugs.maven.plugin.version>3.1.8</spotbugs.maven.plugin.version>
@@ -188,6 +189,18 @@
                     <exclusion>
                         <groupId>com.oracle</groupId>
                         <artifactId>ojdbc6</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>mssqlserver</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.microsoft.sqlserver</groupId>
+                        <artifactId>mssql-jdbc</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>

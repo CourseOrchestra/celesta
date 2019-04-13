@@ -10,6 +10,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.SystemCallContext;
+import ru.curs.celesta.common.CollatedMSSQLServerContainer;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -87,8 +88,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
         containers.put(Backend.Oracle, new OracleContainer());
         celestas.put(Backend.Oracle, celestaFromContainer(containers.get(Backend.Oracle)));
 
-        MSSQLServerContainer ms = new MSSQLServerContainer()
-                .withDatabaseName("celesta")
+        CollatedMSSQLServerContainer<?> ms = new CollatedMSSQLServerContainer()
                 .withCollation("Cyrillic_General_CI_AS");
         containers.put(Backend.MSSQL, ms);
         celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.MSSQL)));
