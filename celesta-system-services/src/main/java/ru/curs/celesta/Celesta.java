@@ -14,6 +14,7 @@ import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.score.discovery.ScoreByScoreResourceDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
+import ru.curs.celesta.ver.CelestaVersion;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +25,13 @@ import java.util.*;
  * Celesta instance.
  */
 public final class Celesta implements ICelesta {
+
+    /**
+     * Celesta version.
+     *
+     * @see CelestaVersion
+     */
+    public static final String VERSION = CelestaVersion.VERSION;
 
     protected static final String FILE_PROPERTIES = "celesta.properties";
 
@@ -173,6 +181,7 @@ public final class Celesta implements ICelesta {
      * @return
      */
     public static Celesta createInstance(Properties properties) {
+        LOGGER.info("Celesta ver. {}", VERSION != null ? VERSION : "N/A (invalid build?)");
         AppSettings appSettings = preInit(properties);
         return new Celesta(appSettings);
     }

@@ -21,6 +21,25 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Specification-Version>${project.version}</Specification-Version>
+                        </manifestEntries>
+                        <manifestSections>
+                            <manifestSection>
+                                <name>ru/curs/celesta/ver/</name>
+                                <manifestEntries>
+                                    <Sealed>true</Sealed>
+                                </manifestEntries>
+                            </manifestSection>
+                        </manifestSections>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>ru.curs</groupId>
                 <artifactId>celesta-maven-plugin</artifactId>
                 <version>${project.version}</version>
