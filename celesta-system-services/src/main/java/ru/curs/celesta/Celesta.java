@@ -181,7 +181,7 @@ public final class Celesta implements ICelesta {
      * @return
      */
     public static Celesta createInstance(Properties properties) {
-        System.out.printf("Celesta ver. %s%n", VERSION != null ? VERSION : "N/A (invalid build?)");
+        LOGGER.info("Celesta ver. {}", VERSION != null ? VERSION : "N/A (invalid build?)");
         AppSettings appSettings = preInit(properties);
         return new Celesta(appSettings);
     }
