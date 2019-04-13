@@ -1,6 +1,8 @@
 package ru.curs.celesta.test;
 
 import org.junit.jupiter.api.extension.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.OracleContainer;
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class DbUpdaterExtension implements TestTemplateInvocationContextProvider, BeforeAllCallback, AfterAllCallback {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DbUpdaterExtension.class);
 
     static {
         Locale.setDefault(Locale.US);
@@ -129,8 +133,8 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
     private void stopDbs() {
         try {
             this.connectionPools.get(DBType.H2).get().createStatement().execute("SHUTDOWN");
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            LOGGER.error("Error on shutting down DB", ex);
         }
 
         this.containers.forEach((b, c) -> c.stop());

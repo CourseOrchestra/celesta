@@ -323,11 +323,8 @@ public class ScoreTest {
         PrintWriter bw = new PrintWriter(sw);
         new CelestaSerializer(bw).save(t);
         bw.flush();
-        // System.out.println(sw);
 
         String[] actual = sw.toString().split("\r?\n");
-        // for (String l : actual)
-        // System.out.println(l);
         BufferedReader r = new BufferedReader(
                 new InputStreamReader(ScoreTest.class.getResourceAsStream("expectedsave.sql"), "utf-8"));
         for (String l : actual)
@@ -369,7 +366,6 @@ public class ScoreTest {
             t = g.getElement("table1", Table.class);
             serializer.save(t);
         }
-        // System.out.println(sw);
 
         String[] actual = sw.toString().split("\r?\n");
         BufferedReader r = new BufferedReader(

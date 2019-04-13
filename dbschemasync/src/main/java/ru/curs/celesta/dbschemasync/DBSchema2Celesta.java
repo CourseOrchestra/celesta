@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -28,6 +30,8 @@ import ru.curs.celesta.score.io.Resource;
  * Converts data from DBSchema to Celesta.
  */
 public final class DBSchema2Celesta {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBSchema2Celesta.class);
 
     private static final Pattern VERSION = Pattern.compile("version *('[^']+') *;", Pattern.CASE_INSENSITIVE);
 
@@ -522,7 +526,7 @@ public final class DBSchema2Celesta {
         } else if (IntegerColumn.CELESTA_TYPE.equalsIgnoreCase(celestaType)) {
             IntegerColumn ic = new IntegerColumn(t, columnName);
             if ("y".equals(column.getAttribute("autoincrement"))) {
-                System.out.println("WARNING: 'autoincrement' attribute handling for INT columns is not supported!");
+                LOGGER.warn("'autoincrement' attribute handling for INT columns is not supported!");
                 ic.setNullableAndDefault(isNullable, "1"); // TODO: NEXTVAL(<tableName>_<columnName>)
             } else {
                 ic.setNullableAndDefault(isNullable, defaultVal);

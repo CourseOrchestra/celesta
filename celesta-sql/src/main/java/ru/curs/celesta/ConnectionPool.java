@@ -7,12 +7,17 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 
 /**
  * Database connection pool.
  */
 public final class ConnectionPool implements AutoCloseable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionPool.class);
 
     private final ConcurrentLinkedQueue<CelestaConnection> pool = new ConcurrentLinkedQueue<>();
     private final String jdbcConnectionUrl;
@@ -95,9 +100,8 @@ public final class ConnectionPool implements AutoCloseable {
                             commit();
                             pool.add(this);
                         }
-                    } catch (SQLException e) {
-                        //ignore everything
-                        e.printStackTrace();
+                    } catch (SQLException ex) {
+                        LOGGER.error("Error on connection closing", ex);
                     }
                 }
             };

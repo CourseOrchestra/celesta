@@ -7,10 +7,16 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A container for parameterized prepared statement.
  */
 public abstract class PreparedStmtHolder {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PreparedStmtHolder.class);
+
     private PreparedStatement stmt;
     private final List<ParameterSetter> program = new LinkedList<>();
 
@@ -47,7 +53,7 @@ public abstract class PreparedStmtHolder {
         for (ParameterSetter f : program) {
             f.execute(stmt, i++, rec, recversion);
         }
-        //System.out.println(stmt.toString());
+        LOGGER.trace("{}", stmt);
         return stmt;
     }
 

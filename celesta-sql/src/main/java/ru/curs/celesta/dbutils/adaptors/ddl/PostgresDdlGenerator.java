@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
 import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.*;
 
@@ -29,6 +32,8 @@ import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.*;
  * Class for SQL generation of data definition of PostgreSQL.
  */
 public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresDdlGenerator.class);
 
     public PostgresDdlGenerator(DBAdaptor dmlAdaptor) {
         super(dmlAdaptor);
@@ -459,14 +464,14 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                           + "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
                     insertTriggerFunctionFullName, mv.getChecksum(), fullMvName, insertSql);
 
-            //System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
 
             sql = String.format(
                     "CREATE TRIGGER \"%s\" AFTER INSERT ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
                     insertTriggerName, fullTableName, insertTriggerFunctionFullName);
 
-            //System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
             this.rememberTrigger(query.withName(insertTriggerName));
 
@@ -482,14 +487,14 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                               + "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
                     updateTriggerFunctionFullName, fullMvName, deleteSql, insertSql);
 
-            //System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
 
             sql = String.format(
                     "CREATE TRIGGER \"%s\" AFTER UPDATE ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
                     updateTriggerName, fullTableName, updateTriggerFunctionFullName);
 
-            //System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
             this.rememberTrigger(query.withName(updateTriggerName));
 
@@ -503,14 +508,14 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                     deleteTriggerFunctionFullName, fullMvName, deleteSql
             );
 
-            //System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
 
             sql = String.format(
                     "CREATE TRIGGER \"%s\" AFTER DELETE ON %s FOR EACH ROW EXECUTE PROCEDURE %s",
                     deleteTriggerName, fullTableName, deleteTriggerFunctionFullName);
 
-            //System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
             this.rememberTrigger(query.withName(deleteTriggerName));
         }

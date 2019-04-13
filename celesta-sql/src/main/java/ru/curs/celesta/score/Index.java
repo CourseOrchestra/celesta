@@ -4,11 +4,17 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Table index. Celesta permits only creation of simple indices without
  * UNIQUE restriction.
  */
 public class Index extends GrainElement implements HasColumns {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GrainElement.class);
+
     private static final String INDEX_CREATION_ERROR = "Error while creating index '%s': column '%s' in table '%s' is ";
     private final Table table;
     private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
@@ -77,10 +83,9 @@ public class Index extends GrainElement implements HasColumns {
         }
 
         if (c.isNullable()) {
-            String err = String.format(
-                    "WARNING for index '%s': column '%s' in table '%s' is nullable and this can affect performance.",
+            LOGGER.warn(
+                    "WARNING for index '{}': column '{}' in table '{}' is nullable and this can affect performance.",
                     getName(), columnName, table.getName());
-            System.out.println(err);
         }
 
         columns.addElement(c);
@@ -103,7 +108,7 @@ public class Index extends GrainElement implements HasColumns {
                             getName(), table.getGrain().getName(), table.getName())
             );
         }
-        // Ищем дублирующиеся по составу полей индексы
+        // Finding indices duplicated by fields content
         for (Index ind : getGrain().getIndices().values()) {
             if (ind == this) {
                 continue;

@@ -42,6 +42,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.DBType;
@@ -59,6 +62,8 @@ import ru.curs.celesta.score.*;
  * Postgres adaptor.
  */
 final public class PostgresAdaptor extends OpenSourceDbAdaptor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresAdaptor.class);
 
     private static final Pattern HEX_STRING = Pattern.compile("'\\\\x([0-9A-Fa-f]+)'");
 
@@ -358,7 +363,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                         + "WHERE RC.CONSTRAINT_SCHEMA = '%s' " + "ORDER BY KCU1.CONSTRAINT_NAME, KCU1.ORDINAL_POSITION",
                 g.getName());
 
-        // System.out.println(sql);
+        LOGGER.trace(sql);
 
         List<DbFkInfo> result = new LinkedList<>();
         try (Statement stmt = conn.createStatement()) {

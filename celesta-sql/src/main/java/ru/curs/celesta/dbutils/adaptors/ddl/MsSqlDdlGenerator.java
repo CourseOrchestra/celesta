@@ -21,10 +21,15 @@ import java.sql.Connection;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Class for SQL generation of data definition of MsSql.
  */
 public final class MsSqlDdlGenerator extends DdlGenerator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MsSqlDdlGenerator.class);
 
     public MsSqlDdlGenerator(DBAdaptor dmlAdaptor) {
         super(dmlAdaptor);
@@ -104,7 +109,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
         sb.append(generateTsqlForVersioningTrigger(t));
         sb.append("end\n");
         // CREATE TRIGGER
-        // System.out.println(sb.toString());
+        LOGGER.trace("{}", sb);
         return sb.toString();
     }
 
@@ -456,7 +461,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
                             + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
                             + "\n %s \n END;",
                     t.getGrain().getName(), insertTriggerName, fullTableName, mv.getChecksum(), insertSql);
-            //System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
             this.rememberTrigger(query.withName(insertTriggerName));
 
@@ -467,8 +472,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
 
             sql = String.format("create trigger \"%s\".\"%s\" on %s after delete as begin \n %s \n END;",
                                 t.getGrain().getName(), deleteTriggerName, fullTableName, deleteSql);
-
-            //System.out.println(sql);
+            LOGGER.trace(sql);
             result.add(sql);
             this.rememberTrigger(query.withName(deleteTriggerName));
 

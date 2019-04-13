@@ -1,6 +1,9 @@
 package ru.curs.celesta.script;
 
 import org.junit.jupiter.api.TestTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.syscursors.LogCursor;
 import simpleCases.*;
@@ -11,6 +14,8 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TestSimpleCases implements ScriptTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestSimpleCases.class);
 
     static class MutableBoolean {
         private boolean value;
@@ -54,10 +59,8 @@ class TestSimpleCases implements ScriptTest {
         c.deleteAll();
 
         c.insert();
-        System.out.println(c.getId());
-        System.out.println(c.getDate());
-
-
+        LOGGER.info("{}", c.getId());
+        LOGGER.info("{}", c.getDate());
     }
 
     @TestTemplate

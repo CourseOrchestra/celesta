@@ -13,6 +13,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Namespace;
 import ru.curs.celesta.score.io.Resource;
@@ -22,6 +25,8 @@ import ru.curs.celesta.score.io.UrlResource;
  * Implementation of score discovery based on JAR-files resources look up.
  */
 public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScoreByScoreResourceDiscovery.class);
 
     private static final String SCORE_FILES_LOCATION = "score/score.files";
 
@@ -52,7 +57,7 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
             try {
                 scoreFilesInputStream = scoreFilesResource.getInputStream();
             } catch (IOException ex) {
-                System.out.println("score index file is missing: " + scoreFilesResource.toString());
+                LOGGER.warn("score index file is missing: {}", scoreFilesResource);
                 continue;
             }
 

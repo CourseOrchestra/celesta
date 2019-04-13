@@ -1,6 +1,8 @@
 package ru.curs.celesta.score.discovery;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Namespace;
@@ -17,6 +19,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ScoreByScoreResourceDiscoveryTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScoreByScoreResourceDiscoveryTest.class);
 
     private static final String SCORE_FILES = "score.files";
 
@@ -91,7 +95,7 @@ public class ScoreByScoreResourceDiscoveryTest {
                     new URL(scoreA1Url, SCORE_FILES))));
         });
 
-        System.out.println(ex.getMessage());
+        LOGGER.info(ex.getMessage());
     }
 
 }

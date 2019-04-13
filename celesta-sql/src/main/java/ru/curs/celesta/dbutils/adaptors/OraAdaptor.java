@@ -46,6 +46,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
@@ -69,6 +72,9 @@ import static ru.curs.celesta.dbutils.jdbc.SqlUtils.*;
  * Oracle Database Adaptor.
  */
 public final class OraAdaptor extends DBAdaptor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OraAdaptor.class);
+
     private static final String SELECT_S_FROM = "select %s from ";
 
     private static final String SELECT_TRIGGER_BODY = "select TRIGGER_BODY  from all_triggers "
@@ -214,7 +220,7 @@ public final class OraAdaptor extends DBAdaptor {
             String tableName = String.format("%s_%s", t.getGrain().getName(), t.getName());
             String sql = String.format(
                     "SELECT column_name FROM user_tab_cols WHERE table_name = '%s' order by column_id", tableName);
-            // System.out.println(sql);
+            LOGGER.trace(sql);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             try {
@@ -320,7 +326,7 @@ public final class OraAdaptor extends DBAdaptor {
                 "SELECT SEARCH_CONDITION FROM ALL_CONSTRAINTS WHERE " + "OWNER = sys_context('userenv','session_user')"
                         + " AND TABLE_NAME = '%s_%s'" + "AND CONSTRAINT_TYPE = 'C'",
                 c.getParentTable().getGrain().getName(), c.getParentTable().getName());
-        // System.out.println(sql);
+        LOGGER.trace(sql);
         PreparedStatement checkForBool = conn.prepareStatement(sql);
         try {
             ResultSet rs = checkForBool.executeQuery();
@@ -347,7 +353,7 @@ public final class OraAdaptor extends DBAdaptor {
                     "SELECT COLUMN_NAME, DATA_TYPE, NULLABLE, CHAR_LENGTH, DATA_PRECISION, DATA_SCALE "
                             + "FROM user_tab_cols    WHERE table_name = '%s' and COLUMN_NAME = '%s'",
                     tableName, c.getName());
-            // System.out.println(sql);
+            LOGGER.trace(sql);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             DbColumnInfo result;
@@ -527,7 +533,7 @@ public final class OraAdaptor extends DBAdaptor {
                         + "and  cons.table_name like '%s@_%%' escape '@' order by cols.constraint_name, cols.position",
                 g.getName());
 
-        // System.out.println(sql);
+        LOGGER.trace(sql);
         List<DbFkInfo> result = new LinkedList<>();
         try {
             Statement stmt = conn.createStatement();
@@ -626,7 +632,7 @@ public final class OraAdaptor extends DBAdaptor {
                         + "and ind.table_name like '%s@_%%' escape '@'"
                         + "order by ind.table_name, ind.index_name, cols.column_position", g.getName());
 
-        // System.out.println(sql);
+        LOGGER.trace(sql);
 
         Map<String, DbIndexInfo> result = new HashMap<>();
         try {
@@ -767,7 +773,7 @@ public final class OraAdaptor extends DBAdaptor {
             sql = getLimitedSqlWithOffset(orderBy, fields, from, w.toString(), offset - 1, offset);
         }
 
-        // System.out.println(sql);
+        LOGGER.trace(sql);
         return prepareStatement(conn, sql);
     }
 

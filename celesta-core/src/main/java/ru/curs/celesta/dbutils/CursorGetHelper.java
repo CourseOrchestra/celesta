@@ -14,10 +14,16 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * Created by ioann on 06.07.2017.
+ * @author ioann
+ * @since 2017-07-06
  */
 class CursorGetHelper {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(CursorGetHelper.class);
 
   @FunctionalInterface
   interface ParseResultFunction {
@@ -36,8 +42,6 @@ class CursorGetHelper {
   private final Set<String> fields;
 
   private final PreparedStmtHolder get;
-
-
 
   public CursorGetHelper(DBAdaptor db, Connection conn, TableElement meta,
                          String tableName, Set<String> fields) {
@@ -59,7 +63,7 @@ class CursorGetHelper {
   final boolean internalGet(ParseResultFunction parseResultFunc, Optional<ParseResultCallBack> initXRecFunc,
                             int recversion, Object... values) {
     PreparedStatement g = prepareGet(recversion, values);
-    //System.out.println(g.toString());
+    LOGGER.trace("{}", g);
     try (ResultSet rs = g.executeQuery()){
         boolean result = rs.next();
         if (result) {

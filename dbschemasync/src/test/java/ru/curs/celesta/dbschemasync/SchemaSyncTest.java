@@ -1,6 +1,9 @@
 package ru.curs.celesta.dbschemasync;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.CelestaSerializer;
 import ru.curs.celesta.score.Grain;
@@ -19,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SchemaSyncTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SchemaSyncTest.class);
 
     @Test
     void celestaToDbs() throws Exception {
@@ -135,7 +140,7 @@ public class SchemaSyncTest {
                      Files.createDirectories(to.getParent());
                      Files.copy(from, to);
                  } catch (IOException ex) {
-                     ex.printStackTrace();
+                     LOGGER.error("Error during file copying", ex);
                  }
              });
     }
