@@ -4,7 +4,6 @@ import org.junit.jupiter.api.extension.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.CallContext;
@@ -88,7 +87,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
         containers.put(Backend.Oracle, new OracleContainer());
         celestas.put(Backend.Oracle, celestaFromContainer(containers.get(Backend.Oracle)));
 
-        CollatedMSSQLServerContainer<?> ms = new CollatedMSSQLServerContainer()
+        CollatedMSSQLServerContainer<?> ms = new CollatedMSSQLServerContainer<>()
                 .withCollation("Cyrillic_General_CI_AS");
         containers.put(Backend.MSSQL, ms);
         celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.MSSQL)));

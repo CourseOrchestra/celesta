@@ -5,7 +5,6 @@ import java.util.Properties;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.MSSQLServerContainer;
 import ru.curs.celesta.*;
 import ru.curs.celesta.common.CollatedMSSQLServerContainer;
 import ru.curs.celesta.dbutils.DbUpdaterImpl;
