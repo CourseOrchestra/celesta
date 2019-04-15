@@ -104,7 +104,7 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
         PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>();
         postgreSQLContainer.start();
         containers.put(DBType.POSTGRESQL, postgreSQLContainer);
-        OracleContainer<?> oracleContainer = new OracleContainer<>();
+        OracleContainer oracleContainer = new OracleContainer();
         oracleContainer.start();
         containers.put(DBType.ORACLE, oracleContainer);
         MSSQLServerContainer<?> mssqlServerContainer = new MSSQLServerContainer<>();
