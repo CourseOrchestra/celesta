@@ -60,7 +60,7 @@
         <junit.version>5.0.0</junit.version>
         <junit.platform.version>1.0.0</junit.platform.version>
         <org.json.version>20171018</org.json.version>
-        <testcontainers.version>1.4.3</testcontainers.version>
+        <testcontainers.version>1.11.1</testcontainers.version>
 
         <!--plugin versions -->
         <javacc.maven.plugin.version>2.6</javacc.maven.plugin.version>
