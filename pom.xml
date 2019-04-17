@@ -5,13 +5,13 @@
     <groupId>ru.curs</groupId>
     <artifactId>celesta-parent</artifactId>
     <!--<version>6.0RC1</version>-->
-    <version>6.1.0-SNAPSHOT</version>
+    <version>6.2.0-SNAPSHOT</version>
     <description>celesta - GPL platform for business logic development</description>
     <packaging>pom</packaging>
     <url>https://corchestra.ru/wiki/index.php?title=Celesta</url>
 
     <modules>
-        <module>celesta-core</module>
+        <module>celesta-jython</module>
         <module>celesta-test</module>
         <module>dbschemasync</module>
         <module>celesta-sql</module>
@@ -73,7 +73,6 @@
         <maven.shade.plugin.version>3.0.0</maven.shade.plugin.version>
         <maven.source.plugin.version>2.2.1</maven.source.plugin.version>
         <maven.surefire.plugin.version>2.19.1</maven.surefire.plugin.version>
-        <nexus.staging.maven.plugin.version>1.6.3</nexus.staging.maven.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -211,6 +210,16 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
                     <version>${maven.source.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <!-- This id must match the -Prelease-profile id value
+                            or else sources will be "uploaded" twice, which causes repo to fail -->
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -221,36 +230,32 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>${maven.javadoc.plugin.version}</version>
+                    <configuration>
+                        <show>public</show>
+                        <attach>true</attach>
+                        <maxmemory>1024m</maxmemory>
+                        <additionalparam>-Xdoclint:none</additionalparam>
+                        <failOnError>false</failOnError>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>aggregate</id>
+                            <goals>
+                                <goal>aggregate</goal>
+                            </goals>
+                            <phase>site</phase>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>${maven.jar.plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>${nexus.staging.maven.plugin.version}</version>
-                    <extensions>true</extensions>
-                    <configuration>
-                        <serverId>ossrh</serverId>
-                        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>${maven.gpg.plugin.version}</version>
-                    <executions>
-                        <execution>
-                            <id>sign-artifacts</id>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>sign</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -282,5 +287,24 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>corchestra-release</id>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
