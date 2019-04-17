@@ -16,19 +16,6 @@ node {
         rtMaven.deployer.deployArtifacts = (env.BRANCH_NAME == 'dev6')
         buildInfo = Artifactory.newBuildInfo()
         buildInfo.env.capture = true
-
-        def downloadSpec = """
-                 {"files": [
-                    {
-                      "pattern": "warn/celesta/*/warnings.yml",
-                      "build": "celesta :: dev6/LATEST",
-                      "target": "previous.yml",
-                      "flat": "true"
-                    }
-                    ]
-                }"""
-        server.download spec: downloadSpec
-        oldWarnings = readYaml file: 'previous.yml'
     }
 
     stage ('Spellcheck'){
@@ -59,18 +46,6 @@ fi'''
 
     if (env.BRANCH_NAME == 'dev6') {
         stage ('Publish build info') {
-            def uploadSpec = """
-            {
-             "files": [
-                {
-                  "pattern": "target/warnings.yml",
-                  "target": "warn/celesta/${currentBuild.number}/warnings.yml"
-                }
-                ]
-            }"""
-
-            def buildInfo2 = server.upload spec: uploadSpec
-            buildInfo.append(buildInfo2)
             server.publishBuildInfo buildInfo
         }
     }
