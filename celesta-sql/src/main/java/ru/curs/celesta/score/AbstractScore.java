@@ -1,8 +1,8 @@
 /*
-   (с) 2013 ООО "КУРС-ИТ"  
+   (с) 2013 ООО "КУРС-ИТ"
 
    Этот файл — часть КУРС:Celesta.
-   
+
    КУРС:Celesta — свободная программа: вы можете перераспространять ее и/или изменять
    ее на условиях Стандартной общественной лицензии GNU в том виде, в каком
    она была опубликована Фондом свободного программного обеспечения; либо
@@ -16,7 +16,7 @@
    Вы должны были получить копию Стандартной общественной лицензии GNU
    вместе с этой программой. Если это не так, см. http://www.gnu.org/licenses/.
 
-   
+
    Copyright 2013, COURSE-IT Ltd.
 
    This program is free software: you can redistribute it and/or modify
@@ -52,6 +52,11 @@ import ru.curs.celesta.score.validator.IdentifierParser;
  */
 public abstract class AbstractScore {
 
+    static final String GRAIN_PART_PARSING_ERROR_TEMPLATE = "Error parsing '%s': %s";
+
+    static final String DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE
+            = "Couldn't parse schema '%s'. Dependency schema '%s' does not exist.";
+
     private final Map<String, Grain> grains = new HashMap<>();
 
     private final Map<String, List<GrainPart>> grainNameToGrainParts = new LinkedHashMap<>();
@@ -60,6 +65,8 @@ public abstract class AbstractScore {
     private String path;
     private File defaultGrainPath;
     private int orderCounter;
+
+    private final Set<GrainPart> currentlyParsingGrainParts = new HashSet<>();
 
     public AbstractScore() {
         //TODO!!! Used only for test and must be replaced. Must be private!!!
@@ -207,6 +214,14 @@ public abstract class AbstractScore {
     Grain getGrainAsDependency(Grain currentGrain, String dependencyGrain) throws ParseException {
         Grain g = grains.get(dependencyGrain);
 
+        if (g == null) {
+            throw new ParseException(
+                    String.format(
+                            DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE, currentGrain.getName(), dependencyGrain
+                    )
+            );
+        }
+
         if (currentGrain == g)
             return currentGrain;
 
@@ -235,7 +250,7 @@ public abstract class AbstractScore {
             try {
                 parser.parseGrainPart(grainPart);
             } catch (ParseException | TokenMgrError e) {
-                throw new ParseException(String.format("Error parsing '%s': %s", f.toString(), e.getMessage()));
+                throw new ParseException(String.format(GRAIN_PART_PARSING_ERROR_TEMPLATE, f.toString(), e.getMessage()));
             }
             return is;
         } catch (FileNotFoundException e) {
