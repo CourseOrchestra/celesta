@@ -63,10 +63,8 @@ class TestFilters implements ScriptTest {
         d.insert();
         d.clear();
 
-        FieldsLookup lookup = c.setIn(d).add("id", "id");
+        c.setIn(d).add("id", "id");
         assertEquals(2, c.count());
-
-
     }
 
     @TestTemplate
@@ -100,7 +98,7 @@ class TestFilters implements ScriptTest {
         f.insert();
         f.clear();
 
-        FieldsLookup lookup = e.setIn(f).add("id", "id").add("number", "numb");
+        e.setIn(f).add("id", "id").add("number", "numb");
         assertEquals(2, e.count());
 
 
@@ -195,7 +193,7 @@ class TestFilters implements ScriptTest {
         i.insert();
         i.clear();
 
-        FieldsLookup lookup = h.setIn(i).add("id", "hFilterId");
+        h.setIn(i).add("id", "hFilterId");
         assertEquals(1, h.count());
 
     }
@@ -347,10 +345,10 @@ class TestFilters implements ScriptTest {
         bTableCursor.insert();
         bTableCursor.clear();
 
-        FieldsLookup lookup = ((InFilterSupport) a).setIn(b).add("date", "created");
+        ((InFilterSupport) a).setIn(b).add("date", "created");
         assertEquals(2, a.count());
 
-        lookup = ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1");
+        ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1");
         assertEquals(1, a.count());
 
         ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1").add("number2", "numb2");
@@ -397,7 +395,7 @@ class TestFilters implements ScriptTest {
         bTableCursor.clear();
 
         a.setRange("number1", 5);
-        FieldsLookup lookup = ((InFilterSupport) a).setIn(b).add("date", "created");
+        ((InFilterSupport) a).setIn(b).add("date", "created");
         assertEquals(1, a.count());
         a.first();
 
@@ -436,7 +434,7 @@ class TestFilters implements ScriptTest {
         _fillTablesForTestInFilterWithRangeOnOtherCursor(aTableCursor, bTableCursor, timestamp);
 
         b.setRange("numb2", -40);
-        FieldsLookup lookup = ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1");
+        ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1");
 
         assertEquals(2, a.count());
 
@@ -460,7 +458,7 @@ class TestFilters implements ScriptTest {
         _fillTablesForTestInFilterWithRangeOnOtherCursor(aTableCursor, bTableCursor, timestamp);
 
 
-        FieldsLookup lookup = ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1");
+        ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1");
 
         assertEquals(3, a.count());
 
@@ -515,7 +513,7 @@ class TestFilters implements ScriptTest {
 
 
         FieldsLookup lookup = ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1");
-        FieldsLookup additionalLookup = lookup.and(g).add("date", "createDate").add("number1", "num1");
+        lookup.and(g).add("date", "createDate").add("number1", "num1");
 
         assertEquals(3, a.count());
 

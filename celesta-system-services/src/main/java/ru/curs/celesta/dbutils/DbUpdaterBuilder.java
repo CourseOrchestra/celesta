@@ -102,7 +102,7 @@ public final class DbUpdaterBuilder {
      */
     public DbUpdaterImpl build() {
         return new DbUpdaterImpl(connectionPool, score, forceDdInitialize,
-                dbAdaptor, celesta, permissionManager, loggingManager);
+                dbAdaptor, celesta);
     }
 
 }

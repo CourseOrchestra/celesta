@@ -196,12 +196,6 @@ public final class ForeignKey {
 
         // Извлечение таблицы по имени.
         Table t = gm.getElement(table, Table.class);
-        if (t == null) {
-            throw new ParseException(
-                    String.format(
-                            "Error while creating FK for table '%s': no table '%s' defined in grain '%s'.",
-                            parentTable.getName(), table, grain));
-        }
         referencedTable = t;
 
         // Проверка того факта, что поля ключа совпадают по типу

@@ -181,11 +181,9 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
 
 
         CelestaImpl celesta = new CelestaImpl(dbAdaptor, connectionPool, score);
-        PermissionManager permissionManager = celesta.getPermissionManager();
-        LoggingManager loggingManager = celesta.getLoggingManager();
 
         return new DbUpdaterImpl(connectionPool, score, true, dbAdaptor,
-                celesta, permissionManager, loggingManager);
+                celesta);
     }
 
 }
