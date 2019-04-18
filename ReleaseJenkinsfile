@@ -86,7 +86,7 @@ node {
     }
 
     stage ('Sync with maven central') {
-        def modules = ['celesta-jython']
+        def modules = ['celesta-parent', 'celesta-jython']
 
         withCredentials([usernamePassword(credentialsId: 'curs-bintray', passwordVariable: 'bintrayPassword', usernameVariable: 'bintrayUserName')]) {
             for (module in modules) {
