@@ -14,8 +14,6 @@ public final class DbUpdaterBuilder {
     private Score score;
     private boolean forceDdInitialize;
     private ICelesta celesta;
-    private PermissionManager permissionManager;
-    private LoggingManager loggingManager;
 
     /**
      * Sets a DB adaptor.
@@ -70,28 +68,6 @@ public final class DbUpdaterBuilder {
      */
     public DbUpdaterBuilder setCelesta(ICelesta celesta) {
         this.celesta = celesta;
-        return this;
-    }
-
-    /**
-     * Sets permission manager.
-     *
-     * @param permissionManager  permission manager
-     * @return {@code this}
-     */
-    public DbUpdaterBuilder setPermissionManager(PermissionManager permissionManager) {
-        this.permissionManager = permissionManager;
-        return this;
-    }
-
-    /**
-     * Sets logging manager.
-     *
-     * @param loggingManager  logging manager
-     * @return {@code this}
-     */
-    public DbUpdaterBuilder setLoggingManager(LoggingManager loggingManager) {
-        this.loggingManager = loggingManager;
         return this;
     }
 

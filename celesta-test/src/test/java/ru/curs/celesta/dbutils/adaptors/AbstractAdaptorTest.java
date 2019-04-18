@@ -1761,16 +1761,11 @@ public abstract class AbstractAdaptorTest {
 
     static DbUpdaterImpl createDbUpdater(Score score, DBAdaptor dba) {
         CelestaImpl celesta = new CelestaImpl(dba, dba.connectionPool, score);
-        PermissionManager permissionManager = celesta.getPermissionManager();
-        LoggingManager loggingManager = celesta.getLoggingManager();
-
         return new DbUpdaterBuilder()
                 .dbAdaptor(dba)
                 .connectionPool(dba.connectionPool)
                 .score(score)
                 .setCelesta(celesta)
-                .setPermissionManager(permissionManager)
-                .setLoggingManager(loggingManager)
                 .build();
     }
 
