@@ -43,6 +43,7 @@ import java.util.*;
 import java.util.zip.CRC32;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.RepeatedParseException;
 import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
 import ru.curs.celesta.score.validator.IdentifierParser;
@@ -56,6 +57,10 @@ public abstract class AbstractScore {
 
     static final String DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE
             = "Couldn't parse schema '%s'. Dependency schema '%s' does not exist.";
+
+    static final String CYCLIC_REFERENCES_ERROR_TEMPLATE = "Error parsing grain %s "
+            + "due to previous parsing errors or "
+            + "cycle reference involving grains '%s' and '%s'.";
 
     private final Map<String, Grain> grains = new HashMap<>();
 
@@ -181,8 +186,13 @@ public abstract class AbstractScore {
 
         ChecksumInputStream cis = null;
 
-        for (GrainPart grainPart : grainNameToGrainParts.get(grainName))
+        for (GrainPart grainPart : grainNameToGrainParts.get(grainName)) {
+            if (!currentlyParsingGrainParts.add(grainPart)) {
+                throw new RepeatedParseException(grainPart);
+            }
+
             cis = parseGrainPart(grainPart, cis);
+        }
         g.setChecksum(cis.getCRC32());
         g.setLength(cis.getCount());
         g.finalizeParsing();
@@ -211,13 +221,13 @@ public abstract class AbstractScore {
         return result;
     }
 
-    Grain getGrainAsDependency(Grain currentGrain, String dependencyGrain) throws ParseException {
-        Grain g = grains.get(dependencyGrain);
+    Grain getGrainAsDependency(Grain currentGrain, String dependencyGrainName) throws ParseException {
+        Grain g = grains.get(dependencyGrainName);
 
         if (g == null) {
             throw new ParseException(
                     String.format(
-                            DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE, currentGrain.getName(), dependencyGrain
+                            DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE, currentGrain.getName(), dependencyGrainName
                     )
             );
         }
@@ -226,16 +236,25 @@ public abstract class AbstractScore {
             return currentGrain;
 
         if (g.isModified())
-            parseGrain(dependencyGrain);
+            try {
+                parseGrain(dependencyGrainName);
+            } catch (RepeatedParseException e) {
+                throwParseExceptionOnCyclicReferences(currentGrain.getName(), dependencyGrainName);
+            }
 
-        if (!g.isParsingComplete())
-            throw new ParseException(
-                    String.format("Error parsing grain %s "
-                            + "due to previous parsing errors or "
-                            + "cycle reference involving grains '%s' and '%s'.", currentGrain.getName(), dependencyGrain
-                    ));
+        if (!g.isParsingComplete()) {
+            throwParseExceptionOnCyclicReferences(currentGrain.getName(), dependencyGrainName);
+        }
 
         return g;
+    }
+
+    private void throwParseExceptionOnCyclicReferences(String currentGrainName, String dependencyGrainName)
+        throws ParseException {
+        throw new ParseException(
+                String.format(CYCLIC_REFERENCES_ERROR_TEMPLATE,
+                        currentGrainName, currentGrainName, dependencyGrainName
+                ));
     }
 
     private ChecksumInputStream parseGrainPart(GrainPart grainPart, ChecksumInputStream cis) throws ParseException {

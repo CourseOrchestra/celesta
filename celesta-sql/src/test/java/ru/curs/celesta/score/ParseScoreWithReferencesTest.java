@@ -8,6 +8,8 @@ import java.util.StringJoiner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static ru.curs.celesta.score.AbstractScore.CYCLIC_REFERENCES_ERROR_TEMPLATE;
 import static ru.curs.celesta.score.AbstractScore.DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE;
 import static ru.curs.celesta.score.AbstractScore.GRAIN_PART_PARSING_ERROR_TEMPLATE;
 
@@ -29,6 +31,7 @@ public class ParseScoreWithReferencesTest {
                 .path(SCORE_WITH_REFERENCE_TO_NOT_EXISTING_SCHEMA);
 
         ParseException e = assertThrows(ParseException.class, scoreBuilder::build);
+
         String expectedDescription = String.format(DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE, "a", "b");
         String expectedMessage = String.format(
                 GRAIN_PART_PARSING_ERROR_TEMPLATE,
@@ -40,19 +43,17 @@ public class ParseScoreWithReferencesTest {
 
 
     @Test
-    void testCyclicReferences() throws Exception {
+    void testCyclicReferences() {
         AbstractScore.ScoreBuilder<?> scoreBuilder = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .scoreDiscovery(new DefaultScoreDiscovery())
                 .path(SCORE_WITH_CYCLIC_REFERENCES);
 
-        scoreBuilder.build();
-        /*ParseException e = assertThrows(ParseException.class, scoreBuilder::build);
-        String expectedDescription = String.format(DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE, "a", "b");
-        String expectedMessage = String.format(
-                GRAIN_PART_PARSING_ERROR_TEMPLATE,
-                SCORE_WITH_REFERENCE_TO_NOT_EXISTING_SCHEMA + File.separator + "schema.sql",
-                expectedDescription
+        ParseException e = assertThrows(ParseException.class, scoreBuilder::build);
+
+        String expectedMessagePart = String.format(
+                CYCLIC_REFERENCES_ERROR_TEMPLATE,
+                "a", "a", "b"
         );
-        assertEquals(expectedMessage, e.getMessage());*/
+        assertTrue(e.getMessage().contains(expectedMessagePart));
     }
 }
