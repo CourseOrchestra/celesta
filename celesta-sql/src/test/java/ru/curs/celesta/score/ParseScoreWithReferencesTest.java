@@ -50,10 +50,16 @@ public class ParseScoreWithReferencesTest {
 
         ParseException e = assertThrows(ParseException.class, scoreBuilder::build);
 
-        String expectedMessagePart = String.format(
+        String expectedMessagePart1 = String.format(
                 CYCLIC_REFERENCES_ERROR_TEMPLATE,
                 "a", "a", "b"
         );
-        assertTrue(e.getMessage().contains(expectedMessagePart));
+        String expectedMessagePart2 = String.format(
+                CYCLIC_REFERENCES_ERROR_TEMPLATE,
+                "b", "b", "a"
+        );
+        assertTrue(
+                e.getMessage().contains(expectedMessagePart1) || e.getMessage().contains(expectedMessagePart2)
+        );
     }
 }
