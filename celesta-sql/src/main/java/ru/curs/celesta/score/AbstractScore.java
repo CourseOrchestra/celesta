@@ -1,8 +1,8 @@
 /*
-   (с) 2013 ООО "КУРС-ИТ"  
+   (с) 2013 ООО "КУРС-ИТ"
 
    Этот файл — часть КУРС:Celesta.
-   
+
    КУРС:Celesta — свободная программа: вы можете перераспространять ее и/или изменять
    ее на условиях Стандартной общественной лицензии GNU в том виде, в каком
    она была опубликована Фондом свободного программного обеспечения; либо
@@ -16,7 +16,7 @@
    Вы должны были получить копию Стандартной общественной лицензии GNU
    вместе с этой программой. Если это не так, см. http://www.gnu.org/licenses/.
 
-   
+
    Copyright 2013, COURSE-IT Ltd.
 
    This program is free software: you can redistribute it and/or modify
@@ -43,6 +43,7 @@ import java.util.*;
 import java.util.zip.CRC32;
 
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.RepeatedParseException;
 import ru.curs.celesta.score.discovery.DefaultScoreDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
 import ru.curs.celesta.score.validator.IdentifierParser;
@@ -52,6 +53,15 @@ import ru.curs.celesta.score.validator.IdentifierParser;
  */
 public abstract class AbstractScore {
 
+    static final String GRAIN_PART_PARSING_ERROR_TEMPLATE = "Error parsing '%s': %s";
+
+    static final String DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE
+            = "Couldn't parse schema '%s'. Dependency schema '%s' does not exist.";
+
+    static final String CYCLIC_REFERENCES_ERROR_TEMPLATE = "Error parsing grain %s "
+            + "due to previous parsing errors or "
+            + "cycle reference involving grains '%s' and '%s'.";
+
     private final Map<String, Grain> grains = new HashMap<>();
 
     private final Map<String, List<GrainPart>> grainNameToGrainParts = new LinkedHashMap<>();
@@ -60,6 +70,8 @@ public abstract class AbstractScore {
     private String path;
     private File defaultGrainPath;
     private int orderCounter;
+
+    private final Set<GrainPart> currentlyParsingGrainParts = new HashSet<>();
 
     public AbstractScore() {
         //TODO!!! Used only for test and must be replaced. Must be private!!!
@@ -174,8 +186,13 @@ public abstract class AbstractScore {
 
         ChecksumInputStream cis = null;
 
-        for (GrainPart grainPart : grainNameToGrainParts.get(grainName))
+        for (GrainPart grainPart : grainNameToGrainParts.get(grainName)) {
+            if (!currentlyParsingGrainParts.add(grainPart)) {
+                throw new RepeatedParseException(grainPart);
+            }
+
             cis = parseGrainPart(grainPart, cis);
+        }
         g.setChecksum(cis.getCRC32());
         g.setLength(cis.getCount());
         g.finalizeParsing();
@@ -204,23 +221,40 @@ public abstract class AbstractScore {
         return result;
     }
 
-    Grain getGrainAsDependency(Grain currentGrain, String dependencyGrain) throws ParseException {
-        Grain g = grains.get(dependencyGrain);
+    Grain getGrainAsDependency(Grain currentGrain, String dependencyGrainName) throws ParseException {
+        Grain g = grains.get(dependencyGrainName);
+
+        if (g == null) {
+            throw new ParseException(
+                    String.format(
+                            DEPENDENCY_SCHEMA_DOES_NOT_EXIST_ERROR_TEMPLATE, currentGrain.getName(), dependencyGrainName
+                    )
+            );
+        }
 
         if (currentGrain == g)
             return currentGrain;
 
         if (g.isModified())
-            parseGrain(dependencyGrain);
+            try {
+                parseGrain(dependencyGrainName);
+            } catch (RepeatedParseException e) {
+                throwParseExceptionOnCyclicReferences(currentGrain.getName(), dependencyGrainName);
+            }
 
-        if (!g.isParsingComplete())
-            throw new ParseException(
-                    String.format("Error parsing grain %s "
-                            + "due to previous parsing errors or "
-                            + "cycle reference involving grains '%s' and '%s'.", currentGrain.getName(), dependencyGrain
-                    ));
+        if (!g.isParsingComplete()) {
+            throwParseExceptionOnCyclicReferences(currentGrain.getName(), dependencyGrainName);
+        }
 
         return g;
+    }
+
+    private void throwParseExceptionOnCyclicReferences(String currentGrainName, String dependencyGrainName)
+        throws ParseException {
+        throw new ParseException(
+                String.format(CYCLIC_REFERENCES_ERROR_TEMPLATE,
+                        currentGrainName, currentGrainName, dependencyGrainName
+                ));
     }
 
     private ChecksumInputStream parseGrainPart(GrainPart grainPart, ChecksumInputStream cis) throws ParseException {
@@ -235,7 +269,7 @@ public abstract class AbstractScore {
             try {
                 parser.parseGrainPart(grainPart);
             } catch (ParseException | TokenMgrError e) {
-                throw new ParseException(String.format("Error parsing '%s': %s", f.toString(), e.getMessage()));
+                throw new ParseException(String.format(GRAIN_PART_PARSING_ERROR_TEMPLATE, f.toString(), e.getMessage()));
             }
             return is;
         } catch (FileNotFoundException e) {
