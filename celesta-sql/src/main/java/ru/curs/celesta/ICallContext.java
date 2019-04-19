@@ -5,6 +5,11 @@ import ru.curs.celesta.score.AbstractScore;
 
 import java.sql.Connection;
 
+/**
+ * It's a base interface of call context.
+ * Its implementations allow to execute db operations in one transaction
+ * and provides methods to access base units of celesta.
+ */
 public interface ICallContext extends AutoCloseable {
 
     /**
@@ -21,6 +26,11 @@ public interface ICallContext extends AutoCloseable {
      */
     boolean isClosed();
 
+    /**
+     * Returns actual implementation of {@link DBAdaptor}
+     *
+     * @return
+     */
     DBAdaptor getDbAdaptor();
 
     /**
