@@ -21,7 +21,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
     private TablesCursor table;
 
     public DbUpdaterImpl(ConnectionPool connectionPool, Score score, boolean forceDdInitialize, DBAdaptor dba,
-                         ICelesta celesta, PermissionManager permissionManager, LoggingManager loggingManager) {
+                         ICelesta celesta) {
 
         super(connectionPool, score, forceDdInitialize, dba);
 

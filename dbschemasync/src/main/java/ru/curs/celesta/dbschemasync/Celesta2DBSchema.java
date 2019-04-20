@@ -108,7 +108,7 @@ public final class Celesta2DBSchema {
             }
 
             for (View v : g.getViews().values()) {
-                writeView(g, v, doc, schema);
+                writeView(v, doc, schema);
             }
 
             Element procedure = doc.createElement("procedure");
@@ -255,7 +255,7 @@ public final class Celesta2DBSchema {
         writeOptions(t, doc, table);
     }
 
-    private static void writeView(Grain g, View v, Document doc, Element schema) throws IOException {
+    private static void writeView(View v, Document doc, Element schema) throws IOException {
         Element view = doc.createElement("view");
         view.setAttribute("name", v.getName());
         schema.appendChild(view);

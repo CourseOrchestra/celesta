@@ -30,10 +30,6 @@ public class Index extends GrainElement implements HasColumns {
             throw new IllegalArgumentException();
         }
         table = getGrain().getElement(tableName, Table.class);
-        if (table == null) {
-            throw new ParseException(
-                    String.format("Error while creating index '%s': table '%s' not found.", name, tableName));
-        }
         getGrain().addIndex(this);
         table.addIndex(this);
     }

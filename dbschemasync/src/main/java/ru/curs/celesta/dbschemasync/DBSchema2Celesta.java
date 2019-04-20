@@ -65,7 +65,7 @@ public final class DBSchema2Celesta {
 
                 Namespace namespace = extractNamespace(schemaName);
                 String grainName = extractGrainName(schemaName);
-                if (grainName == null || grainName.isEmpty()) {
+                if (grainName.isEmpty()) {
                     throw new Exception("Empty schema name found.");
                 }
                 if ("celesta".equals(grainName)) {
@@ -94,7 +94,7 @@ public final class DBSchema2Celesta {
             if ("schema".equals(n.getNodeName())) {
                 Element schema = (Element) n;
                 String grainName = extractGrainName(schema.getAttribute("name"));
-                if (grainName == null || grainName.isEmpty()) {
+                if (grainName.isEmpty()) {
                     throw new Exception("Empty schema name found.");
                 }
                 if ("celesta".equals(grainName)) {

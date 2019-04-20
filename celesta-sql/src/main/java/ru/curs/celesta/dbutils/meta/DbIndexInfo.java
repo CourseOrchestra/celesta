@@ -66,7 +66,7 @@ public final class DbIndexInfo {
             return false;
         }
         while (i1.hasNext() && result) {
-            result = i1.next().equals(i2.next()) && result;
+            result = i1.next().equals(i2.next());
         }
         return result;
     }

@@ -94,8 +94,6 @@ public class SchemaAutoupdateTest {
                 .connectionPool(celesta.getConnectionPool())
                 .score(celesta.getScore())
                 .setCelesta(celesta)
-                .setPermissionManager(celesta.getPermissionManager())
-                .setLoggingManager(celesta.getLoggingManager())
                 .build();
 
         return dbUpdater;

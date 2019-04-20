@@ -8,6 +8,7 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 .idea/
+.PVS-Studio/
 *.iml
 *.class
 *_orm.py

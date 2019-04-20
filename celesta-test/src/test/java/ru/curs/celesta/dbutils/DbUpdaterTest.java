@@ -74,16 +74,12 @@ public class DbUpdaterTest {
                 .build();
 
         CelestaImpl celesta = new CelestaImpl(dba, this.connectionPool, score);
-        PermissionManager permissionManager = celesta.getPermissionManager();
-        LoggingManager loggingManager = celesta.getLoggingManager();
 
         DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                 .dbAdaptor(dba)
                 .connectionPool(this.connectionPool)
                 .score(score)
                 .setCelesta(celesta)
-                .setPermissionManager(permissionManager)
-                .setLoggingManager(loggingManager)
                 .build();
 
         return dbUpdater;

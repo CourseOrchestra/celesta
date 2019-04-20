@@ -103,8 +103,6 @@ public final class Celesta implements ICelesta {
                     .score(score)
                     .forceDdInitialize(appSettings.getForceDBInitialize())
                     .setCelesta(this)
-                    .setPermissionManager(permissionManager)
-                    .setLoggingManager(loggingManager)
                     .build();
 
             dbUpdater.updateDb();
