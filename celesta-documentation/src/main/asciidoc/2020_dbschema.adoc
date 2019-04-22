@@ -27,6 +27,8 @@ image::{img}/800px-Dbschemascreen.png[{image-100-width}]
 
 Актуальную версию утилиты `dbschemasync` и папки с настройками для DBSchema (dbschemasync.zip) следует брать с Artifactory: https://artifactory.corchestra.ru/artifactory/list/corchestra-dev/
 
+Исходный код утилиты находится в репозитории: https://github.com/CourseOrchestra/dbschemasync
+
 === Запуск синхронизации
 
 Утилита `dbschemasync` принимает два параметра:
