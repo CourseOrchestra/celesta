@@ -12,6 +12,12 @@ A component of the [platform](https://corchestra.ru/en/) for rapid development o
 
 * [JavaDoc](https://courseorchestra.github.io/celesta/apidocs)
 
+## See Also
+
+* [DBSchemaSync](https://github.com/CourseOrchestra/dbschemasync): Celesta -- DBSchema sync utility.
+
+* [2Bass](https://github.com/CourseOrchestra/2bass): Database configuration-as-code tool.
+
 ## Useful Links
 
 * Overview (in Russian): https://habrahabr.ru/post/335966/
