@@ -4,8 +4,8 @@
 
     <groupId>ru.curs</groupId>
     <artifactId>celesta-parent</artifactId>
-    <!--<version>6.0RC1</version>-->
     <version>6.2.2-SNAPSHOT</version>
+    <name>celesta-parent</name>
     <description>celesta - GPL platform for business logic development</description>
     <packaging>pom</packaging>
     <url>https://corchestra.ru/wiki/index.php?title=Celesta</url>
@@ -23,7 +23,9 @@
     </organization>
 
     <scm>
-        <url>https://github.com/CourseOrchestra/celesta.git</url>
+        <url>https://github.com/CourseOrchestra/celesta</url>
+        <connection>scm:git:git://github.com/CourseOrchestra/celesta.git</connection>
+        <developerConnection>scm:git:git://github.com/CourseOrchestra/celesta.git</developerConnection>
     </scm>
 
     <licenses>
