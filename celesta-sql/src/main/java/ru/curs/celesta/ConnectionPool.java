@@ -27,6 +27,15 @@ public final class ConnectionPool implements AutoCloseable {
     private DBAdaptor dbAdaptor;
     private volatile boolean isClosed;
 
+    private ConnectionPool(String jdbcConnectionUrl, String driverClassName, String login, String password) {
+        this.driverClassName = driverClassName;
+        this.login = login;
+        this.password = password;
+        this.jdbcConnectionUrl = jdbcConnectionUrl;
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+    }
+
     /**
      * Factory method for connection pool creation.
      *
@@ -36,15 +45,6 @@ public final class ConnectionPool implements AutoCloseable {
     public static ConnectionPool create(ConnectionPoolConfiguration configuration) {
         return new ConnectionPool(configuration.getJdbcConnectionUrl(), configuration.getDriverClassName(),
                 configuration.getLogin(), configuration.getPassword());
-    }
-
-    private ConnectionPool(String jdbcConnectionUrl, String driverClassName, String login, String password) {
-        this.driverClassName = driverClassName;
-        this.login = login;
-        this.password = password;
-        this.jdbcConnectionUrl = jdbcConnectionUrl;
-
-        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     /**
