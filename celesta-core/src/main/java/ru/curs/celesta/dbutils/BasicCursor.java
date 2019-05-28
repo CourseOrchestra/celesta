@@ -76,7 +76,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
     final PreparedStmtHolder set = PreparedStatementHolderFactory.createFindSetHolder(
             BasicCursor.this.db(),
             BasicCursor.this.conn(),
-            BasicCursor.this::getFrom,
+            //NB: do not replace with method reference, this will cause NPE in initializer
+            () -> BasicCursor.this.getFrom(),
             () -> {
                 if (BasicCursor.this.fromTerm == null) {
                     BasicCursor.this.fromTerm = new FromTerm(BasicCursor.this.getFrom().getParameters());
@@ -84,8 +85,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
                 }
                 return BasicCursor.this.fromTerm;
             },
-            BasicCursor.this.qmaker::getWhereTerm,
-            BasicCursor.this::getOrderBy,
+            () -> BasicCursor.this.qmaker.getWhereTerm(),
+            () -> BasicCursor.this.getOrderBy(),
             () -> BasicCursor.this.offset,
             () -> BasicCursor.this.rowCount,
             () -> BasicCursor.this.fieldsForStatement
