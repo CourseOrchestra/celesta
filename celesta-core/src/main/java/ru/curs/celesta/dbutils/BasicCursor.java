@@ -61,11 +61,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicCursor.class);
 
     private static final String DATABASE_CLOSING_ERROR =
-        "Database error when closing recordset for table '%s': %s";
+            "Database error when closing recordset for table '%s': %s";
     private static final String NAVIGATING_ERROR = "Error while navigating cursor: %s";
 
     private static final Pattern COLUMN_NAME =
-        Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)( +([Aa]|[Dd][Ee])[Ss][Cc])?");
+            Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)( +([Aa]|[Dd][Ee])[Ss][Cc])?");
 
     private static final Pattern NAVIGATION = Pattern.compile("[+-<>=]+");
     private static final Pattern NAVIGATION_WITH_OFFSET = Pattern.compile("[<>]");
@@ -76,6 +76,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     final PreparedStmtHolder set = PreparedStatementHolderFactory.createFindSetHolder(
             BasicCursor.this.db(),
             BasicCursor.this.conn(),
+            //NB: do not replace with method reference, this will cause NPE in initializer
             () -> BasicCursor.this.getFrom(),
             () -> {
                 if (BasicCursor.this.fromTerm == null) {
@@ -465,8 +466,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Moves to the first record in the filtered data set and returns information
      * about the success of transition.
      *
-     * @return  {@code true} if the transition was successful,
-     *          {@code false} if there are no records in the data set.
+     * @return {@code true} if the transition was successful,
+     * {@code false} if there are no records in the data set.
      */
     public final boolean tryFindSet() {
         if (!canRead()) {
@@ -474,7 +475,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
 
         PreparedStatement ps = set.getStatement(_currentValues(), 0);
-        boolean result = false;
+        boolean result;
         try {
             if (cursor != null) {
                 cursor.close();
@@ -619,7 +620,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @return
      */
     public final boolean nextInSet() {
-        boolean result = false;
+        boolean result;
         try {
             if (cursor == null) {
                 result = tryFindSet();
@@ -641,17 +642,16 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Navigation method (step-by-step transition in the filtered and sorted data set).
      *
-     * @param command
-     *            Command consisting of a sequence of symbols:
-     *            <ul>
-     *            <li>= update current record (if it exists in the filtered data set)
-     *            <li>&gt; move to the next record in the filtered data set</li>
-     *            <li>&lt; move to the previous record in the filtered data set</li>
-     *            <li>- move to the first record in the filtered data set</li>
-     *            <li>+ move to the last record in the filtered data set</li>
-     *            </ul>
+     * @param command Command consisting of a sequence of symbols:
+     *                <ul>
+     *                <li>= update current record (if it exists in the filtered data set)
+     *                <li>&gt; move to the next record in the filtered data set</li>
+     *                <li>&lt; move to the previous record in the filtered data set</li>
+     *                <li>- move to the first record in the filtered data set</li>
+     *                <li>+ move to the last record in the filtered data set</li>
+     *                </ul>
      * @return {@code true} if the record was found and the transition completed
-     *         {@code false} - otherwise.
+     * {@code false} - otherwise.
      */
     public boolean navigate(String command) {
         if (!canRead()) {
@@ -711,14 +711,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
     private boolean executeNavigator(PreparedStatement navigator) {
         try {
             LOGGER.trace("{}", navigator);
-            ResultSet rs = navigator.executeQuery();
-            try {
+            try (ResultSet rs = navigator.executeQuery()) {
                 if (rs.next()) {
                     _parseResult(rs);
                     return true;
                 }
-            } finally {
-                rs.close();
             }
         } catch (SQLException e) {
             throw new CelestaException(NAVIGATING_ERROR, e.getMessage());
@@ -730,19 +727,19 @@ public abstract class BasicCursor extends BasicDataAccessor {
         Object[] rec = _currentValues();
 
         switch (c) {
-        case '<':
-            return backwards.getStatement(rec, 0);
-        case '>':
-            return forwards.getStatement(rec, 0);
-        case '=':
-            return here.getStatement(rec, 0);
-        case '-':
-            return first.getStatement(rec, 0);
-        case '+':
-            return last.getStatement(rec, 0);
-        default:
-            // THIS WILL NEVER EVER HAPPEN, WE'VE ALREADY CHECKED
-            return null;
+            case '<':
+                return backwards.getStatement(rec, 0);
+            case '>':
+                return forwards.getStatement(rec, 0);
+            case '=':
+                return here.getStatement(rec, 0);
+            case '-':
+                return first.getStatement(rec, 0);
+            case '+':
+                return last.getStatement(rec, 0);
+            default:
+                // THIS WILL NEVER EVER HAPPEN, WE'VE ALREADY CHECKED
+                return null;
         }
 
     }
@@ -760,7 +757,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Resets any filter on a field.
      *
-     * @param name  field name
+     * @param name field name
      */
     public final void setRange(String name) {
         validateColumName(name);
@@ -777,7 +774,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Sets range from a single value on the field.
      *
      * @param name  field name
-     * @param value  value along which filtering is performed
+     * @param value value along which filtering is performed
      */
     public final void setRange(String name, Object value) {
         if (value == null) {
@@ -802,9 +799,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets range from..to on the field.
      *
-     * @param name  field name
-     * @param valueFrom  value <em>from</em>
-     * @param valueTo  value <em>to</em>
+     * @param name      field name
+     * @param valueFrom value <em>from</em>
+     * @param valueTo   value <em>to</em>
      */
     public final void setRange(String name, Object valueFrom, Object valueTo) {
         validateColumName(name);
@@ -827,7 +824,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Sets filter to the field.
      *
      * @param name  field name
-     * @param value  filter
+     * @param value filter
      */
     public final void setFilter(String name, String value) {
         validateColumName(name);
@@ -838,7 +835,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
                     name);
         }
         AbstractFilter oldFilter =
-            filters.put(name, new Filter(value, meta().getColumns().get(name)));
+                filters.put(name, new Filter(value, meta().getColumns().get(name)));
         if (isClosed()) {
             return;
         }
@@ -851,7 +848,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets complex condition to the data set.
      *
-     * @param condition  condition that corresponds to WHERE clause.
+     * @param condition condition that corresponds to WHERE clause.
      */
     public final void setComplexFilter(String condition) {
         Expr buf = CelestaParser.parseComplexFilter(condition, meta().getGrain().getScore().getIdentifierParser());
@@ -878,8 +875,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets filter to a range of records returned by the cursor.
      *
-     * @param offset  number of records that has to be skipped (0 - start from the beginning).
-     * @param rowCount  maximal number of records that has to be returned (0 - return all records).
+     * @param offset   number of records that has to be skipped (0 - start from the beginning).
+     * @param rowCount maximal number of records that has to be returned (0 - return all records).
      */
     public final void limit(long offset, long rowCount) {
         if (offset < 0) {
@@ -914,7 +911,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets sorting.
      *
-     * @param names  array of fields for sorting
+     * @param names array of fields for sorting
      */
     public final void orderBy(String... names) {
         prepareOrderBy(names);
@@ -1033,7 +1030,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Gets a copy of filters along with values of limit (offset and rowcount) from
      * a cursor of the same type.
      *
-     * @param c  cursor the filters of which have to be copied
+     * @param c cursor the filters of which have to be copied
      */
     public final void copyFiltersFrom(BasicCursor c) {
         if (!(c._grainName().equals(_grainName()) && c._objectName().equals(_objectName()))) {
@@ -1056,7 +1053,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Gets a copy of orderings from a cursor of the same type.
      *
-     * @param c  cursor the sortings of which have to be copied
+     * @param c cursor the sortings of which have to be copied
      */
     public final void copyOrderFrom(BasicCursor c) {
         if (!(c._grainName().equals(_grainName()) && c._objectName().equals(_objectName()))) {
@@ -1072,8 +1069,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     /**
      * Checks if filters and sorting are equivalent for this and other cursor.
-     * @param c Other cursor.
      *
+     * @param c Other cursor.
      * @return
      */
     public boolean isEquivalent(BasicCursor c) {
@@ -1087,11 +1084,18 @@ public abstract class BasicCursor extends BasicDataAccessor {
             }
         }
 
-        // equality of complex filter
-        if (!(complexFilter == null ? c.complexFilter == null
-                : complexFilter.getCSQL().equals(c.complexFilter.getCSQL()))) {
-            return false;
+        // equality of complex filters
+        if (complexFilter != null && c.complexFilter != null) {
+            if (!complexFilter.getCSQL().equals(c.complexFilter.getCSQL())) {
+                return false;
+            }
+        } else {
+            //one of them is null
+            if (complexFilter != c.complexFilter) {
+                return false;
+            }
         }
+
         // equality of In filter
         if (!isEquivalentSpecific(c)) {
             return false;
@@ -1122,7 +1126,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * procedure for this goal).
      *
      * @param name  field name
-     * @param value  field value
+     * @param value field value
      */
     public final void setValue(String name, Object value) {
         validateColumName(name);
@@ -1150,18 +1154,15 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     private void fillFieldsForStatement() {
         fieldsForStatement.clear();
-        fieldsForStatement = new HashSet<>(
-                Arrays.asList(orderByColumnNames()).stream()
-                        .map(f -> f.replaceAll("\"", ""))
-                        .collect(Collectors.toSet())
-        );
+        fieldsForStatement = Arrays.stream(orderByColumnNames())
+                .map(f -> f.replaceAll("\"", "")).collect(Collectors.toSet());
         fieldsForStatement.addAll(fields);
     }
 
     /**
      * Copy field values from a cursor of the same type.
      *
-     * @param from  cursor that field values have to be copied from
+     * @param from cursor that field values have to be copied from
      */
     public abstract void copyFieldsFrom(BasicCursor from);
 
