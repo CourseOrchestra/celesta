@@ -1086,12 +1086,14 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
         // equality of complex filters
         if (complexFilter != null && c.complexFilter != null) {
-            if (!complexFilter.getCSQL().equals(c.complexFilter.getCSQL()))
+            if (!complexFilter.getCSQL().equals(c.complexFilter.getCSQL())) {
                 return false;
+            }
         } else {
             //one of them is null
-            if (complexFilter != c.complexFilter)
+            if (complexFilter != c.complexFilter) {
                 return false;
+            }
         }
 
         // equality of In filter
