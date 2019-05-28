@@ -154,6 +154,7 @@ public class CursorTest extends AbstractCelestaTest {
         LogsetupCursor c2 = new LogsetupCursor(cc());
         c2.setRange("m", true);
         c2.setFilter("tablename", "foo%");
+        //c2 has complexFilter, no complexFilter on c
         c2.setComplexFilter("i = m");
 
         assertFalse(c.isEquivalent(c2));
@@ -163,6 +164,35 @@ public class CursorTest extends AbstractCelestaTest {
         c.orderBy("i");
         assertFalse(c.isEquivalent(c2));
         c2.orderBy("i");
+        assertTrue(c.isEquivalent(c2));
+
+        c.reset();
+        assertFalse(c.isEquivalent(c2));
+        c2.reset();
+        assertTrue(c.isEquivalent(c2));
+
+        //c has complexFilter, no complexFilter on c2
+        c.setComplexFilter("i > m");
+        assertFalse(c.isEquivalent(c2));
+    }
+
+    @Test
+    void isEquivalentChecksDeepForFilterEquivalence() {
+        LogsetupCursor c2 = new LogsetupCursor(cc());
+        c2.setRange("m", true);
+        assertFalse(c.isEquivalent(c2));
+
+        c.setRange("m", false);
+        assertFalse(c.isEquivalent(c2));
+
+        c.setRange("m", true);
+        assertTrue(c.isEquivalent(c2));
+
+        c.setComplexFilter("i > m");
+        c2.setComplexFilter("i = m");
+        assertFalse(c.isEquivalent(c2));
+        //extra spaces are intentional: filter should be still equal
+        c.setComplexFilter("i   =   m");
         assertTrue(c.isEquivalent(c2));
     }
 
