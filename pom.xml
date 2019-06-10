@@ -6,7 +6,7 @@
     <artifactId>celesta-parent</artifactId>
     <version>7.1.6-SNAPSHOT</version>
     <name>celesta-parent</name>
-    <description>celesta - GPL platform for business logic development</description>
+    <description>celesta - LGPL platform for business logic development</description>
     <packaging>pom</packaging>
     <url>https://corchestra.ru/wiki/index.php?title=Celesta</url>
 
@@ -33,8 +33,8 @@
 
     <licenses>
         <license>
-            <name>GNU General Public License (GPL), Version 3</name>
-            <url>https://www.gnu.org/licenses/gpl.txt</url>
+            <name>GNU Lesser General Public License (LGPL), Version 3</name>
+            <url>https://www.gnu.org/licenses/lgpl-3.0.txt</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
