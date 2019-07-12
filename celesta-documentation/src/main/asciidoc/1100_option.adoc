@@ -58,7 +58,7 @@ public static final class State2 {
 [source, java]
 FooCursor foo = new FooCursor(context)
 foo.setRange("state", FooCursor.State.finished)
-if (foo.state2 == FooCursor.State2.closed){
+if (FooCursor.State2.closed.equals(foo.getState2()){
     ....
 }
 
