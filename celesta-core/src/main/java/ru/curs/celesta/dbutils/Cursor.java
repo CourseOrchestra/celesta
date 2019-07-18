@@ -62,7 +62,7 @@ import ru.curs.celesta.score.*;
  */
 public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
-    private Table meta = null;
+    private WritableTable meta = null;
     final CursorGetHelper getHelper;
     private InFilterHolder inFilterHolder;
 
@@ -554,11 +554,11 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @return
      */
     @Override
-    public final Table meta() {
+    public final WritableTable meta() {
         if (meta == null) {
             try {
                 meta = callContext().getScore()
-                        .getGrain(_grainName()).getElement(_objectName(), Table.class);
+                        .getGrain(_grainName()).getElement(_objectName(), WritableTable.class);
             } catch (ParseException e) {
                 throw new CelestaException(e.getMessage());
             }

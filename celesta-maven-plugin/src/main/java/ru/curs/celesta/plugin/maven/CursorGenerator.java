@@ -37,14 +37,8 @@ public final class CursorGenerator {
 
     static {
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(SequenceElement.class, ge -> Sequence.class);
-        GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(Table.class, ge -> {
-            Table t = (Table) ge;
-            if (t.isReadOnly()) {
-                return ReadOnlyTableCursor.class;
-            } else {
-                return Cursor.class;
-            }
-        });
+        GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(WritableTable.class, ge -> Cursor.class);
+        GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(ReadOnlyTable.class, ge -> ReadOnlyTableCursor.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(View.class, ge -> ViewCursor.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(MaterializedView.class, ge -> MaterializedViewCursor.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(ParameterizedView.class, ge -> ParameterizedViewCursor.class);
@@ -101,21 +95,14 @@ public final class CursorGenerator {
 
             StringBuilder parseResultOverridingMethodNameBuilder = new StringBuilder("_parseResult");
 
-            final Set<Column> pk;
-            if (dge instanceof TableElement) {
+            Set<Column> pk = Collections.emptySet();
+            if ((dge instanceof TableElement) && !(dge instanceof ReadOnlyTable)) {
                 TableElement te = (TableElement) dge;
-
-                if (te instanceof Table && ((Table) te).isReadOnly()) {
-                    pk = Collections.emptySet();
-                } else {
-                    pk = new LinkedHashSet<>(te.getPrimaryKey().values());
-                    cursorClass.addMethod(buildCurrentKeyValues(pk));
-                    if (te instanceof Table) {
-                        parseResultOverridingMethodNameBuilder.append("Internal");
-                    }
+                pk = new LinkedHashSet<>(te.getPrimaryKey().values());
+                cursorClass.addMethod(buildCurrentKeyValues(pk));
+                if (te instanceof WritableTable) {
+                    parseResultOverridingMethodNameBuilder.append("Internal");
                 }
-            } else {
-                pk = Collections.emptySet();
             }
 
             MethodSpec buildParseResultMethod = buildParseResult(
@@ -129,7 +116,7 @@ public final class CursorGenerator {
 
             if (dge instanceof Table) {
                 Table t = (Table) dge;
-                if (!t.isReadOnly()) {
+                if (t instanceof WritableTable) {
                     cursorClass.addMethods(buildCalcBlobs(columns, className));
                     cursorClass.addMethod(buildSetAutoIncrement(columns));
                     cursorClass.addMethods(buildTriggerRegistration(className));
@@ -199,7 +186,7 @@ public final class CursorGenerator {
         }
         if (ge instanceof Table) {
             Table t = (Table) ge;
-            if (!t.isReadOnly()) {
+            if (!(t instanceof ReadOnlyTable)) {
                 t.getImplements().forEach(
                         i -> builder.addSuperinterface(ClassName.bestGuess(i))
                 );
