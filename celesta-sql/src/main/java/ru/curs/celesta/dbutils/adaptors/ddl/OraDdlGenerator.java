@@ -476,7 +476,7 @@ public final class OraDdlGenerator extends DdlGenerator {
             query.withName(triggerName);
         }
         sb.append("\" after update of ");
-        Table t = fk.getReferencedTable();
+        BasicTable t = fk.getReferencedTable();
         boolean needComma = false;
         for (Column c : t.getPrimaryKey().values()) {
             if (needComma) {

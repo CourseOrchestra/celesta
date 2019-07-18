@@ -36,7 +36,7 @@ public class ScoreTest {
         assertEquals("grain2", g2.getName());
         Table b = g2.getElement("b", Table.class);
         assertEquals(1, b.getForeignKeys().size());
-        Table a = b.getForeignKeys().iterator().next().getReferencedTable();
+        BasicTable a = b.getForeignKeys().iterator().next().getReferencedTable();
         assertEquals("a", a.getName());
         assertSame(g1, a.getGrain());
 
@@ -357,9 +357,9 @@ public class ScoreTest {
 
         try (PrintWriter bw = new PrintWriter(sw)) {
             CelestaSerializer serializer = new CelestaSerializer(bw);
-            Table t = g.getElement("ttt1", Table.class);
-            serializer.save(t);
-            t = g.getElement("ttt2", Table.class);
+            ReadOnlyTable rot = g.getElement("ttt1", ReadOnlyTable.class);
+            serializer.save(rot);
+            Table t = g.getElement("ttt2", Table.class);
             serializer.save(t);
             t = g.getElement("ttt3", Table.class);
             serializer.save(t);
