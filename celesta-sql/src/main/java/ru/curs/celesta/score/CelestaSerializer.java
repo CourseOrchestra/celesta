@@ -87,9 +87,13 @@ public final class CelestaSerializer {
         }
 
         writer.println("-- *** TABLES ***");
-        Collection<Table> tables = grain.getElements(Table.class, gp);
-        for (Table t : tables) {
+        Collection<WritableTable> tables = grain.getElements(WritableTable.class, gp);
+        for (WritableTable t : tables) {
             save(t);
+        }
+        Collection<ReadOnlyTable> roTables = grain.getElements(ReadOnlyTable.class, gp);
+        for (ReadOnlyTable rot : roTables) {
+            save(rot);
         }
 
         writer.println("-- *** FOREIGN KEYS ***");
@@ -170,7 +174,7 @@ public final class CelestaSerializer {
      * @param t  table
      * @throws IOException  if serialization fails
      */
-    void save(Table t) throws IOException {
+    void save(WritableTable t) throws IOException {
         saveHead(t);
         if (!t.isVersioned()) {
             writer.write(" WITH NO VERSION CHECK");
@@ -192,7 +196,7 @@ public final class CelestaSerializer {
         saveTail(t, false);
     }
 
-    private void saveHead(BasicTable t) throws IOException {
+    private void saveHead(Table t) throws IOException {
 
         writeCelestaDoc(t);
 
@@ -229,7 +233,7 @@ public final class CelestaSerializer {
         writer.write(")");
     }
 
-    private void saveTail(BasicTable t, boolean isWith) {
+    private void saveTail(Table t, boolean isWith) {
         if (!t.isAutoUpdate()) {
             if (isWith) {
                 writer.write(" WITH");

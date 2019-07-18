@@ -17,10 +17,10 @@ final class TableBuilder {
 
     private List<BuildAction> actions = new ArrayList<>();
     
-    private BasicTable table;
+    private Table table;
     private boolean isReadOnly;
 
-    public TableBuilder(BasicTable table) {
+    public TableBuilder(Table table) {
         this(table.getGrainPart(), table.getName());
         this.table = table;
     }
@@ -34,19 +34,19 @@ final class TableBuilder {
         return this.grainPart.getGrain();
     }
 
-    public BasicTable build() throws ParseException {
+    public Table build() throws ParseException {
 
-        if (table == null) {
-            BasicTable table = isReadOnly ? new ReadOnlyTable(grainPart, name) : new Table(grainPart, name);
+        if (this.table == null) {
+            this.table = isReadOnly ? new ReadOnlyTable(grainPart, name) : new WritableTable(grainPart, name);
         }
 
         for (BuildAction action : actions) {
             action.execute();
         }
 
-        table.finalizePK();
+        this.table.finalizePK();
 
-        return table;
+        return this.table;
     }
 
     public void setCelestaDocLexem(String celestaDoc) {
@@ -56,7 +56,7 @@ final class TableBuilder {
     public void setVersioned(boolean isVersioned) {
         actions.add(() -> {
             if (!isReadOnly) {
-                ((Table) table).setVersioned(isVersioned);
+                ((WritableTable) table).setVersioned(isVersioned);
             }
         });
     }

@@ -498,7 +498,7 @@ Index ind;
 
 void alterTable(GrainPart g):{
   Token t;
-  BasicTable table;
+  Table table;
   TableBuilder tb;
   String name;
   TableBuilder.ForeignKeyBuilder fk;
@@ -507,9 +507,6 @@ void alterTable(GrainPart g):{
 {
 <K_TABLE> t = <S_IDENTIFIER> {
   table = g.getGrain().getElement(identifierParser.parse(t.toString()), Table.class);
-  if (table == null) {
-    table = g.getGrain().getElement(identifierParser.parse(t.toString()), ReadOnlyTable.class);
-  }
 }
 <K_ADD> name = constraint(g.getGrain())  fk = foreignKey(tb = new TableBuilder(table)) {
     fk.setConstraintName(name);

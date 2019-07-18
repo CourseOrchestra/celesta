@@ -21,7 +21,7 @@ public class GrainModelTest {
 
         SequenceElement se = new SequenceElement(gp, "table1_a");
 
-        Table t = new Table(gp, "table1");
+        Table t = new WritableTable(gp, "table1");
         (new IntegerColumn(t, "a")).setNullableAndDefault(false, "NEXTVAL(" + se.getName() + ")");
         new IntegerColumn(t, "b").setNullableAndDefault(false, "0");
         new IntegerColumn(t, "c").setNullableAndDefault(false, "0");
@@ -87,11 +87,11 @@ public class GrainModelTest {
         // Корректное и некорректное добавление таблицы
         Grain g = new Grain(s, "grain2");
         GrainPart gp = new GrainPart(g, true, null);
-        new Table(gp, "aa");
-        new Table(gp, "bb");
+        new WritableTable(gp, "aa");
+        new WritableTable(gp, "bb");
         assertEquals(2, g.getElements(Table.class).size());
         assertThrows(ParseException.class,
-                () -> new Table(gp, "aa"));
+                () -> new WritableTable(gp, "aa"));
 
         assertEquals(2, g.getElements(Table.class).size());
 
@@ -145,7 +145,7 @@ public class GrainModelTest {
         Grain g = new Grain(s, "grain3");
         GrainPart gp = new GrainPart(g, true, null);
         SequenceElement st1 = new SequenceElement(gp, "t1_ida");
-        Table t1 = new Table(gp, "t1");
+        Table t1 = new WritableTable(gp, "t1");
         Column cc = new IntegerColumn(t1, "ida");
         cc.setNullableAndDefault(false, "NEXTVAL(" + st1.getName() + ")");
 
@@ -155,7 +155,7 @@ public class GrainModelTest {
         new DateTimeColumn(t1, "datecol");
 
         SequenceElement st2 = new SequenceElement(gp, "t2_idb");
-        Table t2 = new Table(gp, "t2");
+        Table t2 = new WritableTable(gp, "t2");
         cc = new IntegerColumn(t2, "idb");
         cc.setNullableAndDefault(false, "NEXTVAL(" + st2.getName() + ")");
         t2.addPK("idb");
@@ -218,7 +218,7 @@ public class GrainModelTest {
         assertThrows(ParseException.class,
                 () -> fk2.setReferencedTable("", "t2"));
 
-        Table t3 = new Table(gp, "t3");
+        Table t3 = new WritableTable(gp, "t3");
         c = new StringColumn(t3, "idc");
         c.setLength("5");
         c.setNullableAndDefault(false, "");
@@ -254,7 +254,7 @@ public class GrainModelTest {
         fk5.addReferencedColumn("idc");
         fk5.finalizeReference();
 
-        Table t4 = new Table(gp, "t4");
+        Table t4 = new WritableTable(gp, "t4");
         cc = new IntegerColumn(t4, "idd1");
         cc.setNullableAndDefault(false, "-1");
 
@@ -317,7 +317,7 @@ public class GrainModelTest {
         Grain gm = new Grain(s, "grain4");
         GrainPart gp = new GrainPart(gm, true, null);
         SequenceElement st1 = new SequenceElement(gp, "t1_c1");
-        Table t1 = new Table(gp, "t1");
+        Table t1 = new WritableTable(gp, "t1");
         IntegerColumn c = new IntegerColumn(t1, "c1");
         c.setNullableAndDefault(false, "NEXTVAL(" + st1.getName() + ")");
 
@@ -325,7 +325,7 @@ public class GrainModelTest {
         t1.finalizePK();
 
         SequenceElement st2 = new SequenceElement(gp, "t2_c1");
-        Table t2 = new Table(gp, "t2");
+        Table t2 = new WritableTable(gp, "t2");
         c = new IntegerColumn(t2, "c1");
         c.setNullableAndDefault(false, "NEXTVAL(" + st2.getName() + ")");
 

@@ -150,7 +150,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
                     .collect(Collectors.toList());
         }
         // To the list of fields of the versioned tables we necessarily add "recversion"
-        if (t instanceof Table && ((Table) t).isVersioned()) {
+        if (t instanceof WritableTable && ((WritableTable) t).isVersioned()) {
             flds.add(VersionedElement.REC_VERSION);
         }
 
@@ -363,7 +363,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
         // CHECKSTYLE:ON
         StringBuilder setClause = new StringBuilder();
-        if (t.isVersioned()) {
+        if (t instanceof WritableTable && ((WritableTable) t).isVersioned()) {
             setClause.append(String.format("\"%s\" = ?", VersionedElement.REC_VERSION));
             program.add(ParameterSetter.createForRecversion(this));
         }

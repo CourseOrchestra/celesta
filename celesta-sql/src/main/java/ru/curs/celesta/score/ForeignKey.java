@@ -15,8 +15,8 @@ public final class ForeignKey {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ForeignKey.class);
 
-    private final BasicTable parentTable;
-    private BasicTable referencedTable;
+    private final Table parentTable;
+    private Table referencedTable;
     private FKRule deleteRule = FKRule.NO_ACTION;
     private FKRule updateRule = FKRule.NO_ACTION;
     private String constraintName;
@@ -32,14 +32,14 @@ public final class ForeignKey {
 
     private final List<Column> referencedColumns = new LinkedList<>();
 
-    ForeignKey(BasicTable parentTable) {
+    ForeignKey(Table parentTable) {
         if (parentTable == null) {
             throw new IllegalArgumentException();
         }
         this.parentTable = parentTable;
     }
 
-    public ForeignKey(BasicTable parentTable, BasicTable referencedTable,
+    public ForeignKey(Table parentTable, Table referencedTable,
             String[] columnNames) throws ParseException {
         this(parentTable);
         for (String n : columnNames) {
@@ -108,7 +108,7 @@ public final class ForeignKey {
      *
      * @return
      */
-    public BasicTable getParentTable() {
+    public Table getParentTable() {
         return parentTable;
     }
 
@@ -117,7 +117,7 @@ public final class ForeignKey {
      *
      * @return
      */
-    public BasicTable getReferencedTable() {
+    public Table getReferencedTable() {
         return referencedTable;
     }
 

@@ -108,7 +108,11 @@ public final class Grain extends NamedElement {
         }
 
         modify();
+
         getElementsHolder((Class<T>) element.getClass()).addElement(element);
+        if (element instanceof Table) {
+            getElementsHolder((Class<T>) Table.class).addElement(element);
+        }
     }
 
     /**
@@ -166,6 +170,15 @@ public final class Grain extends NamedElement {
      */
     public Map<String, Table> getTables() {
         return getElementsHolder(Table.class).getElements();
+    }
+
+    /**
+     * Returns a set of tables defined in the grain by a table class.
+     *
+     * @return
+     */
+    public <T extends Table> Map<String, T> getTables(Class<T> tableClass) {
+        return getElementsHolder(tableClass).getElements();
     }
 
     /**
@@ -430,6 +443,17 @@ public final class Grain extends NamedElement {
      */
     public Table getTable(String name) throws ParseException {
         return getElement(name, Table.class);
+    }
+
+    /**
+     * Returns a table by its name and a table class.
+     *
+     * @param name  Table name
+     * @return
+     * @throws ParseException  If table with that name was not found in the grain.
+     */
+    public <T extends Table> T getTable(String name, Class<T> tableClass) throws ParseException {
+        return getElement(name, tableClass);
     }
 
     void addNativeSql(String sql, boolean isBefore, DBType dbType, GrainPart grainPart) throws ParseException {

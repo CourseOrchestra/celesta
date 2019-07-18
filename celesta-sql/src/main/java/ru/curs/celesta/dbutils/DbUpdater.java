@@ -470,8 +470,7 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
     boolean updateTable(Table t, List<DbFkInfo> dbFKeys) {
-        // Если таблица скомпилирована с опцией NO AUTOUPDATE, то ничего не
-        // делаем с ней
+        // If table was compiled with option NO AUTOUPDATE then nothing is to be done
         if (!t.isAutoUpdate()) {
             return false;
         }
@@ -479,7 +478,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         final Connection conn = schemaCursor.callContext().getConn();
 
         if (!dbAdaptor.tableExists(conn, t.getGrain().getName(), t.getName())) {
-            // Таблицы не существует в базе данных, создаём с нуля.
+            // Table doesn't exist in the DB, create it from scratch.
             dbAdaptor.createTable(conn, t);
             return true;
         }
@@ -488,23 +487,25 @@ public abstract class DbUpdater<T extends ICallContext> {
         Set<String> dbColumns = dbAdaptor.getColumns(conn, t);
         boolean modified = updateColumns(t, conn, dbColumns, dbFKeys);
 
-        // Для версионированных таблиц синхронизируем поле recversion
-        if (t.isVersioned()) {
-            if (dbColumns.contains(VersionedElement.REC_VERSION)) {
-                DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, t.getRecVersionField());
-                if (!ci.reflects(t.getRecVersionField())) {
-                    dbAdaptor.updateColumn(conn, t.getRecVersionField(), ci);
+        // For versioned tables synchronize 'recversion' field
+        if (t instanceof WritableTable) {
+            WritableTable wt = (WritableTable) t;
+            if (wt.isVersioned()) {
+                if (dbColumns.contains(VersionedElement.REC_VERSION)) {
+                    DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, wt.getRecVersionField());
+                    if (!ci.reflects(wt.getRecVersionField())) {
+                        dbAdaptor.updateColumn(conn, wt.getRecVersionField(), ci);
+                        modified = true;
+                    }
+                } else {
+                    dbAdaptor.createColumn(conn, wt.getRecVersionField());
                     modified = true;
                 }
-            } else {
-                dbAdaptor.createColumn(conn, t.getRecVersionField());
-                modified = true;
             }
         }
 
-
-        // Ещё раз проверяем первичный ключ и при необходимости (если его нет
-        // или он был сброшен) создаём.
+        // Once again check the primary key, and if needed (in case it doesn't exist or
+        // had been dropped) create it.
         pkInfo = dbAdaptor.getPKInfo(conn, t);
         if (pkInfo.isEmpty()) {
             dbAdaptor.createPK(conn, t);

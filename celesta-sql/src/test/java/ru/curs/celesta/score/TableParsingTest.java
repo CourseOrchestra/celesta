@@ -45,28 +45,22 @@ public class TableParsingTest extends AbstractParsingTest {
             "table/testTableOptionsCombinations.sql"
     );
     Grain g = parse(f);
-    Table t = g.getTable("t1");
-    assertTrue(t.isReadOnly());
+    ReadOnlyTable rot = g.getTable("t1", ReadOnlyTable.class);
+    assertTrue(rot.isAutoUpdate());
+
+    WritableTable t = g.getTable("t2", WritableTable.class);
     assertTrue(t.isAutoUpdate());
     assertFalse(t.isVersioned());
 
-    t = g.getTable("t2");
-    assertFalse(t.isReadOnly());
-    assertTrue(t.isAutoUpdate());
-    assertFalse(t.isVersioned());
-
-    t = g.getTable("t3");
-    assertFalse(t.isReadOnly());
+    t = g.getTable("t3", WritableTable.class);
     assertFalse(t.isAutoUpdate());
     assertTrue(t.isVersioned());
 
-    t = g.getTable("t4");
-    assertFalse(t.isReadOnly());
+    t = g.getTable("t4", WritableTable.class);
     assertFalse(t.isAutoUpdate());
     assertFalse(t.isVersioned());
 
-    t = g.getTable("t5");
-    assertFalse(t.isReadOnly());
+    t = g.getTable("t5", WritableTable.class);
     assertTrue(t.isAutoUpdate());
     assertTrue(t.isVersioned());
   }

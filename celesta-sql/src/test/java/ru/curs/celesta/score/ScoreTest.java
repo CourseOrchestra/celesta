@@ -36,7 +36,7 @@ public class ScoreTest {
         assertEquals("grain2", g2.getName());
         Table b = g2.getElement("b", Table.class);
         assertEquals(1, b.getForeignKeys().size());
-        BasicTable a = b.getForeignKeys().iterator().next().getReferencedTable();
+        Table a = b.getForeignKeys().iterator().next().getReferencedTable();
         assertEquals("a", a.getName());
         assertSame(g1, a.getGrain());
 
@@ -136,7 +136,7 @@ public class ScoreTest {
 
         GrainPart g3p = g3.getGrainParts().stream().findFirst().get();
 
-        new Table(g3p, "newtable");
+        new WritableTable(g3p, "newtable");
         assertFalse(g1.isModified());
         assertTrue(g2.isModified());
         assertTrue(g3.isModified());
@@ -247,9 +247,9 @@ public class ScoreTest {
         Grain g1 = s.getGrain("grain1");
         GrainPart g1p = g1.getGrainParts().stream().findFirst().get();
         // Нельзя создать таблицу с именем view
-        e = assertThrows(ParseException.class, () -> new Table(g1p, "testView"));
+        e = assertThrows(ParseException.class, () -> new WritableTable(g1p, "testView"));
         assertTrue(e.getMessage().contains("View with the same name already exists"));
-        new Table(g2p, "newView2");
+        new WritableTable(g2p, "newView2");
     }
 
     @Test
@@ -312,12 +312,12 @@ public class ScoreTest {
 
     @Test
     public void saveTest() throws ParseException, IOException {
-        // Проверяется функциональность записи динамически изменённых объектов.
+        // Checking for functionality of dynamically changed objects saving.
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
-        Table t = g.getElement("testTable", Table.class);
+        WritableTable t = g.getElement("testTable", WritableTable.class);
         StringWriter sw = new StringWriter();
 
         PrintWriter bw = new PrintWriter(sw);
@@ -359,11 +359,11 @@ public class ScoreTest {
             CelestaSerializer serializer = new CelestaSerializer(bw);
             ReadOnlyTable rot = g.getElement("ttt1", ReadOnlyTable.class);
             serializer.save(rot);
-            Table t = g.getElement("ttt2", Table.class);
+            WritableTable t = g.getElement("ttt2", WritableTable.class);
             serializer.save(t);
-            t = g.getElement("ttt3", Table.class);
+            t = g.getElement("ttt3", WritableTable.class);
             serializer.save(t);
-            t = g.getElement("table1", Table.class);
+            t = g.getElement("table1", WritableTable.class);
             serializer.save(t);
         }
 
