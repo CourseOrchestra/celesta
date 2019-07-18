@@ -175,6 +175,7 @@ public final class Grain extends NamedElement {
     /**
      * Returns a set of tables defined in the grain by a table class.
      *
+     * @param tableClass  Table class
      * @return
      */
     public <T extends Table> Map<String, T> getTables(Class<T> tableClass) {
@@ -449,6 +450,7 @@ public final class Grain extends NamedElement {
      * Returns a table by its name and a table class.
      *
      * @param name  Table name
+     * @param tableClass  Table class
      * @return
      * @throws ParseException  If table with that name was not found in the grain.
      */
@@ -483,6 +485,11 @@ public final class Grain extends NamedElement {
         return afterSql.getOrDefault(dbType, Collections.emptyList());
     }
 
+    /**
+     * Returns grain parts that this grain consists of.
+     *
+     * @return
+     */
     public Set<GrainPart> getGrainParts() {
         return grainParts;
     }
@@ -491,6 +498,11 @@ public final class Grain extends NamedElement {
         grainParts.add(grainPart);
     }
 
+    /**
+     * Returns namespace of the grain.
+     *
+     * @return
+     */
     public Namespace getNamespace() {
         if (namespace != null) {
             return namespace;
@@ -511,6 +523,11 @@ public final class Grain extends NamedElement {
         return ns;
     }
 
+    /**
+     * Sets namespace of the grain.
+     *
+     * @param namespace
+     */
     public void setNamespace(Namespace namespace) {
         this.namespace = namespace;
     }

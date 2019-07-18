@@ -20,18 +20,18 @@ import ru.curs.celesta.CelestaException;
  */
 public abstract class Table extends DataGrainElement implements TableElement {
 
-    private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
-        @Override
-        protected String getErrorMsg(String name) {
-            return String.format("Column '%s' defined more than once in table '%s'.", name, getName());
-        }
-
-    };
-
     final NamedElementHolder<Column> pk = new NamedElementHolder<Column>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' defined more than once for primary key in table '%s'.", name, getName());
+        }
+
+    };
+
+    private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
+        @Override
+        protected String getErrorMsg(String name) {
+            return String.format("Column '%s' defined more than once in table '%s'.", name, getName());
         }
 
     };
@@ -64,7 +64,7 @@ public abstract class Table extends DataGrainElement implements TableElement {
 
 
     @Override
-    public Column getColumn(String colName) throws ParseException {
+    public final Column getColumn(String colName) throws ParseException {
         Column result = columns.get(colName);
         if (result == null) {
             throw new ParseException(
@@ -74,7 +74,7 @@ public abstract class Table extends DataGrainElement implements TableElement {
     }
 
     @Override
-    public Map<String, Column> getPrimaryKey() {
+    public final Map<String, Column> getPrimaryKey() {
         return pk.getElements();
     }
 
@@ -94,7 +94,7 @@ public abstract class Table extends DataGrainElement implements TableElement {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "name: " + getName() + " " + columns.toString();
     }
 
@@ -164,7 +164,7 @@ public abstract class Table extends DataGrainElement implements TableElement {
         return c;
     }
 
-    void addFK(ForeignKey fk) throws ParseException {
+    final void addFK(ForeignKey fk) throws ParseException {
         if (fk.getParentTable() != this) {
             throw new IllegalArgumentException();
         }
@@ -183,14 +183,14 @@ public abstract class Table extends DataGrainElement implements TableElement {
         fKeys.add(fk);
     }
 
-    synchronized void removeFK(ForeignKey foreignKey) throws ParseException {
+    synchronized final void removeFK(ForeignKey foreignKey) throws ParseException {
         getGrain().modify();
         fKeys.remove(foreignKey);
     }
 
 
     @Override
-    public synchronized void removeColumn(Column column) throws ParseException {
+    public synchronized final void removeColumn(Column column) throws ParseException {
         // Составную часть первичного ключа нельзя удалить
         if (pk.contains(column)) {
             throw new ParseException(
@@ -291,15 +291,15 @@ public abstract class Table extends DataGrainElement implements TableElement {
     }
 
     @Override
-    public int getColumnIndex(String name) {
+    public final int getColumnIndex(String name) {
         return columns.getIndex(name);
     }
 
-    void addIndex(Index index) {
+    final void addIndex(Index index) {
         indices.add(index);
     }
 
-    void removeIndex(Index index) {
+    final void removeIndex(Index index) {
         indices.remove(index);
     }
 

@@ -16,16 +16,16 @@ final class TableBuilder {
     private final String name;
 
     private List<BuildAction> actions = new ArrayList<>();
-    
+
     private Table table;
     private boolean isReadOnly;
 
-    public TableBuilder(Table table) {
+    TableBuilder(Table table) {
         this(table.getGrainPart(), table.getName());
         this.table = table;
     }
 
-    public TableBuilder(GrainPart grainPart, String name) {
+    TableBuilder(GrainPart grainPart, String name) {
         this.grainPart = grainPart;
         this.name = name;
     }
