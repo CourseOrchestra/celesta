@@ -17,7 +17,6 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.Date;
 
-
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.meta.*;

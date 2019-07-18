@@ -41,7 +41,7 @@ public class FieldsLookupTest {
     }
 
     private static Table generateTable(GrainPart gp, String name) throws ParseException {
-        Table table = new Table(gp, name);
+        Table table = new WritableTable(gp, name);
 
         Column c1 = new IntegerColumn(table, name + "1");
         Column c2 = new IntegerColumn(table, name + "2");
