@@ -37,7 +37,7 @@ public final class CursorGenerator {
 
     static {
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(SequenceElement.class, ge -> Sequence.class);
-        GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(WritableTable.class, ge -> Cursor.class);
+        GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(Table.class, ge -> Cursor.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(ReadOnlyTable.class, ge -> ReadOnlyTableCursor.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(View.class, ge -> ViewCursor.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(MaterializedView.class, ge -> MaterializedViewCursor.class);
@@ -100,7 +100,7 @@ public final class CursorGenerator {
                 TableElement te = (TableElement) dge;
                 pk = new LinkedHashSet<>(te.getPrimaryKey().values());
                 cursorClass.addMethod(buildCurrentKeyValues(pk));
-                if (te instanceof WritableTable) {
+                if (te instanceof Table) {
                     parseResultOverridingMethodNameBuilder.append("Internal");
                 }
             }
@@ -114,9 +114,9 @@ public final class CursorGenerator {
 
             cursorClass.addMethod(buildCurrentValues(columns));
 
-            if (dge instanceof Table) {
-                Table t = (Table) dge;
-                if (t instanceof WritableTable) {
+            if (dge instanceof BasicTable) {
+                BasicTable t = (BasicTable) dge;
+                if (t instanceof Table) {
                     cursorClass.addMethods(buildCalcBlobs(columns, className));
                     cursorClass.addMethod(buildSetAutoIncrement(columns));
                     cursorClass.addMethods(buildTriggerRegistration(className));
@@ -184,8 +184,8 @@ public final class CursorGenerator {
                     ParameterizedTypeName.get(ClassName.get(Iterable.class), selfTypeName)
             );
         }
-        if (ge instanceof Table) {
-            Table t = (Table) ge;
+        if (ge instanceof BasicTable) {
+            BasicTable t = (BasicTable) ge;
             if (!(t instanceof ReadOnlyTable)) {
                 t.getImplements().forEach(
                         i -> builder.addSuperinterface(ClassName.bestGuess(i))

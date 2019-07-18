@@ -41,7 +41,7 @@ abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
 
         List<GrainElement> elements = new ArrayList<>();
         elements.addAll(g.getElements(SequenceElement.class).values());
-        elements.addAll(g.getElements(WritableTable.class).values());
+        elements.addAll(g.getElements(Table.class).values());
         elements.addAll(g.getElements(ReadOnlyTable.class).values());
         elements.addAll(g.getElements(View.class).values());
         elements.addAll(g.getElements(MaterializedView.class).values());

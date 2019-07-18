@@ -2,7 +2,7 @@ package ru.curs.celesta.dbutils;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.BasicTable;
 import ru.curs.celesta.syscursors.LogCursor;
 import ru.curs.celesta.syscursors.LogsetupCursor;
 
@@ -30,11 +30,11 @@ public final class LoggingManager implements ILoggingManager {
      * Entry of the internal cache.
      */
     private static class CacheEntry {
-        private final Table table;
+        private final BasicTable table;
         private final int loggingMask;
         private final long expirationTime;
 
-        CacheEntry(Table table, int loggingMask) {
+        CacheEntry(BasicTable table, int loggingMask) {
             this.table = table;
             this.loggingMask = loggingMask;
             expirationTime = System.currentTimeMillis()
@@ -42,7 +42,7 @@ public final class LoggingManager implements ILoggingManager {
 
         }
 
-        public static int hash(Table table) {
+        public static int hash(BasicTable table) {
             return (table.getGrain().getName() + '|' + table.getName())
                     .hashCode();
         }
@@ -65,7 +65,7 @@ public final class LoggingManager implements ILoggingManager {
         this.dbAdaptor = dbAdaptor;
     }
 
-    boolean isLoggingNeeded(CallContext sysContext, Table t, Action a) {
+    boolean isLoggingNeeded(CallContext sysContext, BasicTable t, Action a) {
         // Calculate the location of data in the cache.
         int index = CacheEntry.hash(t) & (CACHE_SIZE - 1);
 
@@ -79,7 +79,7 @@ public final class LoggingManager implements ILoggingManager {
         return ce.isLoggingNeeded(a);
     }
 
-    private CacheEntry refreshLogging(CallContext sysContext, Table t) {
+    private CacheEntry refreshLogging(CallContext sysContext, BasicTable t) {
         LogsetupCursor logsetup = new LogsetupCursor(sysContext);
         int loggingMask = 0;
         if (logsetup.tryGet(t.getGrain().getName(), t.getName())) {

@@ -26,7 +26,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
         TRIGGER_TYPE_MAP.put(4, TriggerType.POST_DELETE);
     }
 
-    private Table t;
+    private BasicTable t;
     private MaterializedView mv;
 
     private String tFullName;
@@ -44,7 +44,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
             AbstractScore score = CurrentScore.get();
             Map<String, Grain> grains = score.getGrains();
             Grain g = grains.get(schemaName);
-            t = g.getElement(tableName, Table.class);
+            t = g.getElement(tableName, BasicTable.class);
 
             mv = g.getElements(MaterializedView.class).values().stream()
                     .filter(mv -> triggerName.equals(mv.getTriggerName(TRIGGER_TYPE_MAP.get(type))))

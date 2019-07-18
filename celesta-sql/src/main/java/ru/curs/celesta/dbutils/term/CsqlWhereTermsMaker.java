@@ -1,6 +1,6 @@
 package ru.curs.celesta.dbutils.term;
 
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.BasicTable;
 import ru.curs.celesta.score.TableElement;
 
 public class CsqlWhereTermsMaker {
@@ -21,7 +21,7 @@ public class CsqlWhereTermsMaker {
      * @param t
      *            Table meta.
      */
-    public static WhereTerm getPKWhereTerm(Table t)  {
+    public static WhereTerm getPKWhereTerm(BasicTable t)  {
         WhereTerm r = null;
         for (String colName : t.getPrimaryKey().keySet()) {
             WhereTerm l = new FieldCompTerm("\"" + colName + "\"", t.getColumnIndex(colName), "=");

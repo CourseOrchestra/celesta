@@ -5,7 +5,7 @@ import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.term.CsqlWhereTermsMaker;
 import ru.curs.celesta.dbutils.term.FromTerm;
 import ru.curs.celesta.dbutils.term.WhereTerm;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.BasicTable;
 import ru.curs.celesta.score.TableElement;
 
 import java.sql.Connection;
@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 
 public class PreparedStatementHolderFactory {
 
-    public static MaskedStatementHolder createInsertHolder(Table meta, DBAdaptor dbAdaptor, Connection conn) {
+    public static MaskedStatementHolder createInsertHolder(BasicTable meta, DBAdaptor dbAdaptor, Connection conn) {
         return new MaskedStatementHolder() {
 
             @Override
@@ -49,7 +49,7 @@ public class PreparedStatementHolderFactory {
         };
     }
 
-    public static PreparedStmtHolder createUpdateHolder(Table meta, DBAdaptor dbAdaptor, Connection conn,
+    public static PreparedStmtHolder createUpdateHolder(BasicTable meta, DBAdaptor dbAdaptor, Connection conn,
                                                         Supplier<boolean[]> updateMaskSupplier,
                                                         Supplier<boolean[]> nullUpdateMaskSupplier) {
         return new PreparedStmtHolder() {

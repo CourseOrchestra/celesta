@@ -34,9 +34,9 @@ public class ScoreTest {
         Grain g1 = s.getGrain("grain1");
         Grain g2 = s.getGrain("grain2");
         assertEquals("grain2", g2.getName());
-        Table b = g2.getElement("b", Table.class);
+        BasicTable b = g2.getElement("b", BasicTable.class);
         assertEquals(1, b.getForeignKeys().size());
-        Table a = b.getForeignKeys().iterator().next().getReferencedTable();
+        BasicTable a = b.getForeignKeys().iterator().next().getReferencedTable();
         assertEquals("a", a.getName());
         assertSame(g1, a.getGrain());
 
@@ -80,7 +80,7 @@ public class ScoreTest {
         );
 
         Grain sys = s.getGrain("celestaSql");
-        a = sys.getElement("grains", Table.class);
+        a = sys.getElement("grains", BasicTable.class);
         assertEquals("grains", a.getName());
         assertTrue(sys.getDependencyOrder() < o1);
         IntegerColumn c = (IntegerColumn) a.getColumns().get("state");
@@ -126,7 +126,7 @@ public class ScoreTest {
         assertFalse(g2.isModified());
         assertFalse(g3.isModified());
 
-        Table b = g2.getElement("b", Table.class);
+        BasicTable b = g2.getElement("b", BasicTable.class);
         int oldSize = b.getColumns().size();
         new StringColumn(b, "newcolumn");
         assertEquals(oldSize + 1, b.getColumns().size());
@@ -136,7 +136,7 @@ public class ScoreTest {
 
         GrainPart g3p = g3.getGrainParts().stream().findFirst().get();
 
-        new WritableTable(g3p, "newtable");
+        new Table(g3p, "newtable");
         assertFalse(g1.isModified());
         assertTrue(g2.isModified());
         assertTrue(g3.isModified());
@@ -151,7 +151,7 @@ public class ScoreTest {
         Grain celesta = s.getGrain("celestaSql");
         assertFalse(celesta.isModified());
         // Проверяем, что модифицировать элементы системной гранулы недопустимо.
-        Table tables = celesta.getElement("tables", Table.class);
+        BasicTable tables = celesta.getElement("tables", BasicTable.class);
         ParseException e = assertThrows(ParseException.class, () -> new StringColumn(tables, "newcolumn"));
         assertTrue(e.getMessage().contains(CANNOT_MODIFY_SYSTEM_GRAIN));
         assertFalse(celesta.isModified());
@@ -197,7 +197,7 @@ public class ScoreTest {
         Grain g2 = s.getGrain("grain2");
         assertFalse(g2.isModified());
 
-        Table b = g2.getElement("b", Table.class);
+        BasicTable b = g2.getElement("b", BasicTable.class);
         assertEquals(1, b.getPrimaryKey().size());
         b.getColumns().get("descr").setNullableAndDefault(false, null);
         assertTrue(g2.isModified());
@@ -218,16 +218,16 @@ public class ScoreTest {
         assertFalse(g2.isModified());
         assertFalse(g3.isModified());
 
-        Table b = g2.getElement("b", Table.class);
-        Table c = g3.getElement("c", Table.class);
+        BasicTable b = g2.getElement("b", BasicTable.class);
+        BasicTable c = g3.getElement("c", BasicTable.class);
 
         assertEquals(1, c.getForeignKeys().size());
         ForeignKey fk = c.getForeignKeys().iterator().next();
         assertSame(b, fk.getReferencedTable());
 
-        assertTrue(g2.getElements(Table.class).containsKey("b"));
+        assertTrue(g2.getElements(BasicTable.class).containsKey("b"));
         b.delete();
-        assertFalse(g2.getElements(Table.class).containsKey("b"));
+        assertFalse(g2.getElements(BasicTable.class).containsKey("b"));
         assertTrue(g2.isModified());
         assertEquals(0, c.getForeignKeys().size());
 
@@ -247,9 +247,9 @@ public class ScoreTest {
         Grain g1 = s.getGrain("grain1");
         GrainPart g1p = g1.getGrainParts().stream().findFirst().get();
         // Нельзя создать таблицу с именем view
-        e = assertThrows(ParseException.class, () -> new WritableTable(g1p, "testView"));
+        e = assertThrows(ParseException.class, () -> new Table(g1p, "testView"));
         assertTrue(e.getMessage().contains("View with the same name already exists"));
-        new WritableTable(g2p, "newView2");
+        new Table(g2p, "newView2");
     }
 
     @Test
@@ -293,7 +293,7 @@ public class ScoreTest {
                 .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
-        Table t = g.getElement("testTable", Table.class);
+        BasicTable t = g.getElement("testTable", BasicTable.class);
         t.setCelestaDocLexem("/** бла бла бла бла*/");
         assertEquals(" бла бла бла бла", t.getCelestaDoc());
         // Была ошибка -- не брал многострочный комментарий
@@ -317,7 +317,7 @@ public class ScoreTest {
                 .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
-        WritableTable t = g.getElement("testTable", WritableTable.class);
+        Table t = g.getElement("testTable", Table.class);
         StringWriter sw = new StringWriter();
 
         PrintWriter bw = new PrintWriter(sw);
@@ -359,11 +359,11 @@ public class ScoreTest {
             CelestaSerializer serializer = new CelestaSerializer(bw);
             ReadOnlyTable rot = g.getElement("ttt1", ReadOnlyTable.class);
             serializer.save(rot);
-            WritableTable t = g.getElement("ttt2", WritableTable.class);
+            Table t = g.getElement("ttt2", Table.class);
             serializer.save(t);
-            t = g.getElement("ttt3", WritableTable.class);
+            t = g.getElement("ttt3", Table.class);
             serializer.save(t);
-            t = g.getElement("table1", WritableTable.class);
+            t = g.getElement("table1", Table.class);
             serializer.save(t);
         }
 
@@ -381,7 +381,7 @@ public class ScoreTest {
                 .scoreDiscovery(new ScoreByScorePathDiscovery(TEST_SCORE_PATH))
                 .build();
         Grain g = s.getGrain("testGrain");
-        Table t = g.getElement("aLongIdentityTableNaaame", Table.class);
+        BasicTable t = g.getElement("aLongIdentityTableNaaame", BasicTable.class);
         ForeignKey[] ff = t.getForeignKeys().toArray(new ForeignKey[0]);
         assertEquals(2, ff.length);
         assertEquals(30, ff[0].getConstraintName().length());
@@ -467,7 +467,7 @@ public class ScoreTest {
                 .build();
         Grain g = s.getGrain("testGrain");
         View v = g.getElement("testView5", View.class);
-        Table t = g.getElement("testTable", Table.class);
+        BasicTable t = g.getElement("testTable", BasicTable.class);
 
         ViewColumnMeta vcm = v.getColumns().get("foo");
         assertTrue(vcm.isNullable());

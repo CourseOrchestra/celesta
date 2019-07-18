@@ -68,9 +68,9 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
     void createSysObjects(Connection conn, Grain sys) throws ParseException {
         super.createSysObjects(conn, sys);
 
-        dbAdaptor.createTable(conn, sys.getElement("tables", Table.class));
-        dbAdaptor.createTable(conn, sys.getElement("sequences", Table.class));
-        dbAdaptor.createTable(conn, sys.getElement("logsetup", Table.class));
+        dbAdaptor.createTable(conn, sys.getElement("tables", BasicTable.class));
+        dbAdaptor.createTable(conn, sys.getElement("sequences", BasicTable.class));
+        dbAdaptor.createTable(conn, sys.getElement("logsetup", BasicTable.class));
     }
 
 
@@ -104,7 +104,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
         while (table.nextInSet()) {
             switch (TableType.getByAbbreviation(table.getTabletype())) {
                 case TABLE:
-                    table.setOrphaned(!g.getElements(Table.class).containsKey(table.getTablename()));
+                    table.setOrphaned(!g.getElements(BasicTable.class).containsKey(table.getTablename()));
                     break;
                 case VIEW:
                     table.setOrphaned(!g.getElements(View.class).containsKey(table.getTablename()));
@@ -120,7 +120,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
             }
             table.update();
         }
-        for (Table t : g.getElements(Table.class).values()) {
+        for (BasicTable t : g.getElements(BasicTable.class).values()) {
             table.setGrainid(g.getName());
             table.setTablename(t.getName());
             table.setTabletype(TableType.TABLE.getAbbreviation());

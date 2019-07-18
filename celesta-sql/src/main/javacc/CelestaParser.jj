@@ -498,7 +498,7 @@ Index ind;
 
 void alterTable(GrainPart g):{
   Token t;
-  Table table;
+  BasicTable table;
   TableBuilder tb;
   String name;
   TableBuilder.ForeignKeyBuilder fk;
@@ -506,7 +506,7 @@ void alterTable(GrainPart g):{
 }
 {
 <K_TABLE> t = <S_IDENTIFIER> {
-  table = g.getGrain().getElement(identifierParser.parse(t.toString()), Table.class);
+  table = g.getGrain().getElement(identifierParser.parse(t.toString()), BasicTable.class);
 }
 <K_ADD> name = constraint(g.getGrain())  fk = foreignKey(tb = new TableBuilder(table)) {
     fk.setConstraintName(name);
@@ -909,11 +909,11 @@ TableRef tableReference(AbstractView v):
 	  [<K_AS>] [t = <S_IDENTIFIER> {alias = t.toString();} ]
   
   {
-     Table tab;
+     BasicTable tab;
      if (grainName == null) {
-	    tab = v.getGrain().getElement(identifierParser.parse(tableName), Table.class);
+	    tab = v.getGrain().getElement(identifierParser.parse(tableName), BasicTable.class);
 	 } else {
-	    tab = v.getGrain().getScore().getGrainAsDependency(v.getGrain(), grainName).getElement(identifierParser.parse(tableName), Table.class);
+	    tab = v.getGrain().getScore().getGrainAsDependency(v.getGrain(), grainName).getElement(identifierParser.parse(tableName), BasicTable.class);
 	 }
 	 return new TableRef(tab, identifierParser.parse(alias));
   }

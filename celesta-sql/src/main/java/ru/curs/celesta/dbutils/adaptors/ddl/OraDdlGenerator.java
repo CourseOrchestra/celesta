@@ -476,7 +476,7 @@ public final class OraDdlGenerator extends DdlGenerator {
             query.withName(triggerName);
         }
         sb.append("\" after update of ");
-        Table t = fk.getReferencedTable();
+        BasicTable t = fk.getReferencedTable();
         boolean needComma = false;
         for (Column c : t.getPrimaryKey().values()) {
             if (needComma) {
@@ -530,7 +530,7 @@ public final class OraDdlGenerator extends DdlGenerator {
 
             @Override
             protected String tableName(TableRef tRef) {
-                Table t = tRef.getTable();
+                BasicTable t = tRef.getTable();
                 return String.format(tableString(t.getGrain().getName(), t.getName()) + " \"%s\"", tRef.getAlias());
             }
 
@@ -672,7 +672,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
+    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t)  {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
@@ -705,7 +705,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    public List<String> createTableTriggersForMaterializedViews(Table t) {
+    public List<String> createTableTriggersForMaterializedViews(BasicTable t) {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()

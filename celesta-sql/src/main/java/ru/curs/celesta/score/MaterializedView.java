@@ -306,7 +306,7 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public String getTriggerName(TriggerType type) {
-        Table t = getRefTable().getTable();
+        BasicTable t = getRefTable().getTable();
 
         TriggerNameBuilder tnb = new TriggerNameBuilder()
                 .withSchema(getGrain().getName())

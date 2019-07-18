@@ -157,7 +157,7 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     void createSysObjects(Connection conn, Grain sys) throws ParseException {
         dbAdaptor.createSchemaIfNotExists(score.getSysSchemaName());
-        dbAdaptor.createTable(conn, sys.getElement(getSchemasTableName(), Table.class));
+        dbAdaptor.createTable(conn, sys.getElement(getSchemasTableName(), BasicTable.class));
         dbAdaptor.createSysObjects(conn, score.getSysSchemaName());
     }
 
@@ -249,7 +249,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             updateSequences(g);
 
             // Обновляем все таблицы.
-            for (Table t : g.getElements(Table.class).values()) {
+            for (BasicTable t : g.getElements(BasicTable.class).values()) {
                 if (updateTable(t, dbFKeys)) {
                     modifiedTablesMap.add(t.getName());
                 }
@@ -274,7 +274,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             }
 
             //Для всех таблиц обновляем триггеры материализованных представлений
-            for (Table t : g.getElements(Table.class).values()) {
+            for (BasicTable t : g.getElements(BasicTable.class).values()) {
                 final Connection conn = schemaCursor.callContext().getConn();
                 dbAdaptor.dropTableTriggersForMaterializedViews(conn, t);
                 dbAdaptor.createTableTriggersForMaterializedViews(conn, t);
@@ -367,7 +367,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         for (DbFkInfo dbi : dbAdaptor.getFKInfo(conn, g)) {
             dbFKeys.put(dbi.getName(), dbi);
         }
-        for (Table t : g.getElements(Table.class).values()) {
+        for (BasicTable t : g.getElements(BasicTable.class).values()) {
             if (t.isAutoUpdate()) {
                 for (ForeignKey fk : t.getForeignKeys()) {
                     if (dbFKeys.containsKey(fk.getConstraintName())) {
@@ -390,7 +390,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         Connection conn = schemaCursor.callContext().getConn();
         List<DbFkInfo> dbFKeys = dbAdaptor.getFKInfo(conn, g);
         Map<String, ForeignKey> fKeys = new HashMap<>();
-        for (Table t : g.getElements(Table.class).values()) {
+        for (BasicTable t : g.getElements(BasicTable.class).values()) {
             for (ForeignKey fk : t.getForeignKeys()) {
                 fKeys.put(fk.getConstraintName(), fk);
             }
@@ -469,7 +469,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    boolean updateTable(Table t, List<DbFkInfo> dbFKeys) {
+    boolean updateTable(BasicTable t, List<DbFkInfo> dbFKeys) {
         // If table was compiled with option NO AUTOUPDATE then nothing is to be done
         if (!t.isAutoUpdate()) {
             return false;
@@ -488,17 +488,17 @@ public abstract class DbUpdater<T extends ICallContext> {
         boolean modified = updateColumns(t, conn, dbColumns, dbFKeys);
 
         // For versioned tables synchronize 'recversion' field
-        if (t instanceof WritableTable) {
-            WritableTable wt = (WritableTable) t;
-            if (wt.isVersioned()) {
+        if (t instanceof Table) {
+            Table tab = (Table) t;
+            if (tab.isVersioned()) {
                 if (dbColumns.contains(VersionedElement.REC_VERSION)) {
-                    DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, wt.getRecVersionField());
-                    if (!ci.reflects(wt.getRecVersionField())) {
-                        dbAdaptor.updateColumn(conn, wt.getRecVersionField(), ci);
+                    DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, tab.getRecVersionField());
+                    if (!ci.reflects(tab.getRecVersionField())) {
+                        dbAdaptor.updateColumn(conn, tab.getRecVersionField(), ci);
                         modified = true;
                     }
                 } else {
-                    dbAdaptor.createColumn(conn, wt.getRecVersionField());
+                    dbAdaptor.createColumn(conn, tab.getRecVersionField());
                     modified = true;
                 }
             }

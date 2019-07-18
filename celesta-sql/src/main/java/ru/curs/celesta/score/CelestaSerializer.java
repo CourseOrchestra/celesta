@@ -87,8 +87,8 @@ public final class CelestaSerializer {
         }
 
         writer.println("-- *** TABLES ***");
-        Collection<WritableTable> tables = grain.getElements(WritableTable.class, gp);
-        for (WritableTable t : tables) {
+        Collection<Table> tables = grain.getElements(Table.class, gp);
+        for (Table t : tables) {
             save(t);
         }
         Collection<ReadOnlyTable> roTables = grain.getElements(ReadOnlyTable.class, gp);
@@ -97,7 +97,7 @@ public final class CelestaSerializer {
         }
 
         writer.println("-- *** FOREIGN KEYS ***");
-        for (Table t : tables) {
+        for (BasicTable t : tables) {
             for (ForeignKey fk : t.getForeignKeys()) {
                 save(fk);
             }
@@ -174,7 +174,7 @@ public final class CelestaSerializer {
      * @param t  table
      * @throws IOException  if serialization fails
      */
-    void save(WritableTable t) throws IOException {
+    void save(Table t) throws IOException {
         saveHead(t);
         if (!t.isVersioned()) {
             writer.write(" WITH NO VERSION CHECK");
@@ -196,7 +196,7 @@ public final class CelestaSerializer {
         saveTail(t, false);
     }
 
-    private void saveHead(Table t) throws IOException {
+    private void saveHead(BasicTable t) throws IOException {
 
         writeCelestaDoc(t);
 
@@ -233,7 +233,7 @@ public final class CelestaSerializer {
         writer.write(")");
     }
 
-    private void saveTail(Table t, boolean isWith) {
+    private void saveTail(BasicTable t, boolean isWith) {
         if (!t.isAutoUpdate()) {
             if (isWith) {
                 writer.write(" WITH");
@@ -550,7 +550,7 @@ public final class CelestaSerializer {
 
         @Override
         protected String tableName(TableRef tRef) {
-            Table t = tRef.getTable();
+            BasicTable t = tRef.getTable();
             if (t.getGrain() == view.getGrain()) {
                 return String.format("%s as %s", t.getQuotedNameIfNeeded(), tRef.getAlias());
             } else {

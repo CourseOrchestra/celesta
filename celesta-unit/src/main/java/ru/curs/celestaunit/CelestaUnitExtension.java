@@ -13,7 +13,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Score;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.BasicTable;
 
 import java.io.File;
 import java.sql.Connection;
@@ -126,7 +126,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
                 for (Map.Entry<String, Grain> e : celesta.getScore().getGrains().entrySet()) {
                     if (!Score.SYSTEM_SCHEMA_NAME.equals(e.getKey())) {
                         Grain grain = e.getValue();
-                        for (Table table : grain.getTables().values()) {
+                        for (BasicTable table : grain.getTables().values()) {
                             stmt.execute(String.format("truncate table %s.%s",
                                     grain.getQuotedName(),
                                     table.getQuotedName()));

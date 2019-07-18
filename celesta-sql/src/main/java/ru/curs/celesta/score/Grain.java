@@ -110,8 +110,8 @@ public final class Grain extends NamedElement {
         modify();
 
         getElementsHolder((Class<T>) element.getClass()).addElement(element);
-        if (element instanceof Table) {
-            getElementsHolder((Class<T>) Table.class).addElement(element);
+        if (element instanceof BasicTable) {
+            getElementsHolder((Class<T>) BasicTable.class).addElement(element);
         }
     }
 
@@ -168,8 +168,8 @@ public final class Grain extends NamedElement {
      *
      * @return
      */
-    public Map<String, Table> getTables() {
-        return getElementsHolder(Table.class).getElements();
+    public Map<String, BasicTable> getTables() {
+        return getElementsHolder(BasicTable.class).getElements();
     }
 
     /**
@@ -178,7 +178,7 @@ public final class Grain extends NamedElement {
      * @param tableClass  Table class
      * @return
      */
-    public <T extends Table> Map<String, T> getTables(Class<T> tableClass) {
+    public <T extends BasicTable> Map<String, T> getTables(Class<T> tableClass) {
         return getElementsHolder(tableClass).getElements();
     }
 
@@ -232,15 +232,15 @@ public final class Grain extends NamedElement {
     }
 
     synchronized <T extends DataGrainElement> void removeElement(T element) throws ParseException {
-        if (element instanceof Table) {
-            removeTable((Table) element);
+        if (element instanceof BasicTable) {
+            removeTable((BasicTable) element);
         } else {
             modify();
             getElementsHolder(element.getClass()).remove(element);
         }
     }
 
-    private synchronized void removeTable(Table table) throws ParseException {
+    private synchronized void removeTable(BasicTable table) throws ParseException {
         // Проверяем, не системную ли таблицу хотим удалить
         modify();
 
@@ -255,7 +255,7 @@ public final class Grain extends NamedElement {
         // Удаляются все внешние ключи, ссылающиеся на данную таблицу
         List<ForeignKey> fkToDelete = new LinkedList<>();
         for (Grain g : score.getGrains().values()) {
-            for (Table t : g.getElements(Table.class).values()) {
+            for (BasicTable t : g.getElements(BasicTable.class).values()) {
                 for (ForeignKey fk : t.getForeignKeys()) {
                     if (fk.getReferencedTable() == table) {
                         fkToDelete.add(fk);
@@ -272,7 +272,7 @@ public final class Grain extends NamedElement {
         }
 
         // Удаляется сама таблица
-        getElementsHolder(Table.class).remove(table);
+        getElementsHolder(BasicTable.class).remove(table);
     }
 
     /**
@@ -389,7 +389,7 @@ public final class Grain extends NamedElement {
      */
     public void finalizeParsing() throws ParseException {
 
-        for (String tableName: getElements(Table.class).keySet()) {
+        for (String tableName: getElements(BasicTable.class).keySet()) {
             String sequenceName = tableName + "_seq";
             SequenceElement se = getElementsHolder(SequenceElement.class).get(sequenceName);
             if (se != null) {
@@ -442,8 +442,8 @@ public final class Grain extends NamedElement {
      * @return
      * @throws ParseException  If table with that name was not found in the grain.
      */
-    public Table getTable(String name) throws ParseException {
-        return getElement(name, Table.class);
+    public BasicTable getTable(String name) throws ParseException {
+        return getElement(name, BasicTable.class);
     }
 
     /**
@@ -454,7 +454,7 @@ public final class Grain extends NamedElement {
      * @return
      * @throws ParseException  If table with that name was not found in the grain.
      */
-    public <T extends Table> T getTable(String name, Class<T> tableClass) throws ParseException {
+    public <T extends BasicTable> T getTable(String name, Class<T> tableClass) throws ParseException {
         return getElement(name, tableClass);
     }
 

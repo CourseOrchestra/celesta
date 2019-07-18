@@ -277,7 +277,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
+    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t)  {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
@@ -335,7 +335,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    public List<String> createTableTriggersForMaterializedViews(Table t) {
+    public List<String> createTableTriggersForMaterializedViews(BasicTable t) {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()

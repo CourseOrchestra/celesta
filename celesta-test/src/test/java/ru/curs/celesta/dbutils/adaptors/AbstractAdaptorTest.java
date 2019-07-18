@@ -52,11 +52,11 @@ public abstract class AbstractAdaptorTest {
     private AbstractScore score;
 
     private Connection conn;
-    Table t;
+    BasicTable t;
 
     abstract Connection getConnection();
 
-    private int insertRow(Connection conn, Table t, int val) throws IOException, SQLException {
+    private int insertRow(Connection conn, BasicTable t, int val) throws IOException, SQLException {
         int count = t.getColumns().size();
         assertEquals(16, count);
         boolean[] nullsMask = {
@@ -151,7 +151,7 @@ public abstract class AbstractAdaptorTest {
 
         conn.commit();
 
-        t = g.getElement("test", Table.class);
+        t = g.getElement("test", BasicTable.class);
         try {
             // Могла остаться от незавершившегося теста
             dba.dropTable(conn, t);
@@ -624,7 +624,7 @@ public abstract class AbstractAdaptorTest {
     public void testColumnInfoForMaterializedView() throws ParseException {
 
         Grain g = score.getGrain(GRAIN_NAME);
-        Table tableForMatView = g.getElement("tableForMatView", Table.class);
+        BasicTable tableForMatView = g.getElement("tableForMatView", BasicTable.class);
         SequenceElement seqTableForMatView = g.getElement("tableForMatView_id", SequenceElement.class);
         MaterializedView mView1gTest = g.getElement("mView1gTest", MaterializedView.class);
 
@@ -1092,7 +1092,7 @@ public abstract class AbstractAdaptorTest {
         assertFalse(dba.tableExists(conn, "gtest", "refTo"));
 
         Grain g = score.getGrain(GRAIN_NAME);
-        Table t2 = g.getElement("refTo", Table.class);
+        BasicTable t2 = g.getElement("refTo", BasicTable.class);
         ForeignKey fk = t.getForeignKeys().iterator().next();
         assertEquals("fk_testNameVeryVeryLongLonName", fk.getConstraintName());
         try {
@@ -1149,7 +1149,7 @@ public abstract class AbstractAdaptorTest {
     public void additionalCreateTableTest() throws ParseException {
         Grain g = score.getGrain(GRAIN_NAME);
         SequenceElement t3s = g.getElement("aLongIdentityTableNxx_f1", SequenceElement.class);
-        Table t3 = g.getElement("aLongIdentityTableNaaame", Table.class);
+        BasicTable t3 = g.getElement("aLongIdentityTableNaaame", BasicTable.class);
         try {
             dba.createSequence(conn, t3s);
             dba.createTable(conn, t3);
@@ -1169,7 +1169,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void viewTest() throws ParseException, SQLException {
         Grain g = score.getGrain(GRAIN_NAME);
-        Table t2 = g.getElement("refTo", Table.class);
+        BasicTable t2 = g.getElement("refTo", BasicTable.class);
         try {
             ForeignKey fk = t.getForeignKeys().iterator().next();
             View v = g.getElement("testview", View.class);
@@ -1272,7 +1272,7 @@ public abstract class AbstractAdaptorTest {
         Grain g = score.getGrain(GRAIN_NAME);
         
         SequenceElement ts = g.getElement("tableForInitMvData_id", SequenceElement.class);
-        Table t = g.getElement("tableForInitMvData", Table.class);
+        BasicTable t = g.getElement("tableForInitMvData", BasicTable.class);
         MaterializedView mv = g.getElement("mViewForInit", MaterializedView.class);
 
         PreparedStatement pstmt = null;
@@ -1422,7 +1422,7 @@ public abstract class AbstractAdaptorTest {
     public void testGetInFilterClause() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
         SequenceElement t2s = g.getElement("testInFilterClause_id", SequenceElement.class); 
-        Table t2 = g.getElement("testInFilterClause", Table.class);
+        BasicTable t2 = g.getElement("testInFilterClause", BasicTable.class);
 
         boolean tableIsCreated = false;
         Statement stmt = conn.createStatement();
@@ -1584,7 +1584,7 @@ public abstract class AbstractAdaptorTest {
         Grain g = score.getGrain(GRAIN_NAME);
         SequenceElement sequence = g.getElement("testSequence", SequenceElement.class);
         SequenceElement sequence2 = g.getElement("testSequence2", SequenceElement.class);
-        Table table = g.getElement("tableForTestSequence", Table.class);
+        BasicTable table = g.getElement("tableForTestSequence", BasicTable.class);
 
         if (dba.sequenceExists(conn, g.getName(), sequence.getName()))
             dba.dropSequence(conn, sequence);
@@ -1724,7 +1724,7 @@ public abstract class AbstractAdaptorTest {
         DbUpdater<?> dbUpdater = createDbUpdater(score, this.dba);
         dbUpdater.updateDb();
 
-        Table t = score.getGrain("test").getTable("t");
+        BasicTable t = score.getGrain("test").getTable("t");
 
         assertThrows(ParseException.class, () -> t.getColumn("description"));
 
@@ -1741,7 +1741,7 @@ public abstract class AbstractAdaptorTest {
         score = new Score.ScoreBuilder<>(Score.class)
                 .scoreDiscovery(new ScoreByScorePathDiscovery(ADD_NOT_NULL_COLUMN_WITH_DEFAULT_VALUE_2_SCORE_PATH))
                 .build();
-        Table newT = score.getGrain("test").getTable("t");
+        BasicTable newT = score.getGrain("test").getTable("t");
         dbUpdater = createDbUpdater(score, this.dba);
         dbUpdater.updateDb();
 

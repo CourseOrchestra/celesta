@@ -134,7 +134,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
     }
 
     @Override
-    public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+    public PreparedStatement getInsertRecordStatement(Connection conn, BasicTable t, boolean[] nullsMask,
                                                       List<ParameterSetter> program) {
 
         Iterator<String> columns = t.getColumns().keySet().iterator();
@@ -191,7 +191,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
     }
 
     @Override
-    public int getCurrentIdent(Connection conn, Table t) {
+    public int getCurrentIdent(Connection conn, BasicTable t) {
         final String sql;
 
         IntegerColumn idColumn = t.getPrimaryKey().values().stream()

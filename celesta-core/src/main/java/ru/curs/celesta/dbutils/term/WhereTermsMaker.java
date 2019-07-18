@@ -11,7 +11,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.*;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.BasicTable;
 
 /**
  * Produces navigation queries.
@@ -140,7 +140,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
      * @param t  Table meta.
      * @return
      */
-    public WhereTerm getHereWhereTerm(Table t) {
+    public WhereTerm getHereWhereTerm(BasicTable t) {
         return AndTerm.construct(getPKWhereTerm(t), getWhereTerm());
     }
 

@@ -16,7 +16,7 @@ public class Index extends GrainElement implements HasColumns {
     private static final Logger LOGGER = LoggerFactory.getLogger(GrainElement.class);
 
     private static final String INDEX_CREATION_ERROR = "Error while creating index '%s': column '%s' in table '%s' is ";
-    private final Table table;
+    private final BasicTable table;
     private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
         @Override
         protected String getErrorMsg(String name) {
@@ -29,12 +29,12 @@ public class Index extends GrainElement implements HasColumns {
         if (tableName == null || name == null) {
             throw new IllegalArgumentException();
         }
-        table = getGrain().getElement(tableName, Table.class);
+        table = getGrain().getElement(tableName, BasicTable.class);
         getGrain().addIndex(this);
         table.addIndex(this);
     }
 
-    public Index(Table t, String name, String[] columns) throws ParseException {
+    public Index(BasicTable t, String name, String[] columns) throws ParseException {
         this(t.getGrainPart(), t.getName(), name);
         for (String n : columns) {
             addColumn(n);
@@ -47,7 +47,7 @@ public class Index extends GrainElement implements HasColumns {
      *
      * @return
      */
-    public Table getTable() {
+    public BasicTable getTable() {
         return table;
     }
 

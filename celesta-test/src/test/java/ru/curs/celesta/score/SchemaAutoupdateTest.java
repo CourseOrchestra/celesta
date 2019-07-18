@@ -67,13 +67,13 @@ public class SchemaAutoupdateTest {
         conn = celesta.getConnectionPool().get();
         dba = celesta.getDBAdaptor();
 
-        Table tableAa = celesta.getScore().getGrain("A").getTable("a");
+        BasicTable tableAa = celesta.getScore().getGrain("A").getTable("a");
         assertFalse(dba.getColumns(conn, tableAa).contains("title"));
 
-        Table tableBb = celesta.getScore().getGrain("B").getTable("b");
+        BasicTable tableBb = celesta.getScore().getGrain("B").getTable("b");
         assertFalse(dba.getColumns(conn, tableBb).contains("title"));
 
-        Table tableCc = celesta.getScore().getGrain("C").getTable("c");
+        BasicTable tableCc = celesta.getScore().getGrain("C").getTable("c");
         assertTrue(dba.getColumns(conn, tableCc).contains("title"));
     }
 

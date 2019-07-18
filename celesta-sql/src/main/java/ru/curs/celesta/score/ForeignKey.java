@@ -15,8 +15,8 @@ public final class ForeignKey {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ForeignKey.class);
 
-    private final Table parentTable;
-    private Table referencedTable;
+    private final BasicTable parentTable;
+    private BasicTable referencedTable;
     private FKRule deleteRule = FKRule.NO_ACTION;
     private FKRule updateRule = FKRule.NO_ACTION;
     private String constraintName;
@@ -32,14 +32,14 @@ public final class ForeignKey {
 
     private final List<Column> referencedColumns = new LinkedList<>();
 
-    ForeignKey(Table parentTable) {
+    ForeignKey(BasicTable parentTable) {
         if (parentTable == null) {
             throw new IllegalArgumentException();
         }
         this.parentTable = parentTable;
     }
 
-    public ForeignKey(Table parentTable, Table referencedTable,
+    public ForeignKey(BasicTable parentTable, BasicTable referencedTable,
             String[] columnNames) throws ParseException {
         this(parentTable);
         for (String n : columnNames) {
@@ -108,7 +108,7 @@ public final class ForeignKey {
      *
      * @return
      */
-    public Table getParentTable() {
+    public BasicTable getParentTable() {
         return parentTable;
     }
 
@@ -117,7 +117,7 @@ public final class ForeignKey {
      *
      * @return
      */
-    public Table getReferencedTable() {
+    public BasicTable getReferencedTable() {
         return referencedTable;
     }
 
@@ -195,7 +195,7 @@ public final class ForeignKey {
         }
 
         // Извлечение таблицы по имени.
-        Table t = gm.getElement(table, Table.class);
+        BasicTable t = gm.getElement(table, BasicTable.class);
         referencedTable = t;
 
         // Проверка того факта, что поля ключа совпадают по типу

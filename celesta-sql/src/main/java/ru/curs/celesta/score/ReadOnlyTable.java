@@ -6,7 +6,7 @@ package ru.curs.celesta.score;
  * @author Pavel Perminov (packpaul@mail.ru)
  * @since 2019-07-14
  */
-public final class ReadOnlyTable extends Table {
+public final class ReadOnlyTable extends BasicTable {
 
     public ReadOnlyTable(GrainPart gp, String name) throws ParseException {
         super(gp, name, true);

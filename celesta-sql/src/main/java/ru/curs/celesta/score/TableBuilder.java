@@ -17,10 +17,10 @@ final class TableBuilder {
 
     private List<BuildAction> actions = new ArrayList<>();
 
-    private Table table;
+    private BasicTable table;
     private boolean isReadOnly;
 
-    TableBuilder(Table table) {
+    TableBuilder(BasicTable table) {
         this(table.getGrainPart(), table.getName());
         this.table = table;
     }
@@ -34,10 +34,10 @@ final class TableBuilder {
         return this.grainPart.getGrain();
     }
 
-    public Table build() throws ParseException {
+    public BasicTable build() throws ParseException {
 
         if (this.table == null) {
-            this.table = isReadOnly ? new ReadOnlyTable(grainPart, name) : new WritableTable(grainPart, name);
+            this.table = isReadOnly ? new ReadOnlyTable(grainPart, name) : new Table(grainPart, name);
         }
 
         for (BuildAction action : actions) {
@@ -56,7 +56,7 @@ final class TableBuilder {
     public void setVersioned(boolean isVersioned) {
         actions.add(() -> {
             if (!isReadOnly) {
-                ((WritableTable) table).setVersioned(isVersioned);
+                ((Table) table).setVersioned(isVersioned);
             }
         });
     }
