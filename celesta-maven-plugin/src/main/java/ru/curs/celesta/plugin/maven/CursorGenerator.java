@@ -91,6 +91,7 @@ public final class CursorGenerator {
             DataGrainElement dge = (DataGrainElement) ge;
             Map<String, ? extends ColumnMeta> columns = dge.getColumns();
 
+            cursorClass.addMethod(buildGetFieldValue());
             cursorClass.addMethod(buildSetFieldValue());
 
             StringBuilder parseResultOverridingMethodNameBuilder = new StringBuilder("_parseResult");
@@ -395,6 +396,25 @@ public final class CursorGenerator {
         }
 
         return builder.build();
+    }
+
+    private static MethodSpec buildGetFieldValue() {
+        String nameParam = "name";
+
+        return MethodSpec.methodBuilder("_getFieldValue")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PROTECTED)
+                .returns(TypeName.OBJECT)
+                .addParameter(String.class, nameParam)
+                .beginControlFlow("try")
+                .addStatement("$T f = getClass().getDeclaredField($N)", Field.class, nameParam)
+                .addStatement("f.setAccessible(true)")
+                .addStatement("return f.get(this)")
+                .endControlFlow()
+                .beginControlFlow("catch ($T e)", Exception.class)
+                .addStatement("throw new $T(e)", RuntimeException.class)
+                .endControlFlow()
+                .build();
     }
 
     private static MethodSpec buildSetFieldValue() {

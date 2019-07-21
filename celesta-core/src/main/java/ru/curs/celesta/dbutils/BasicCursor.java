@@ -300,7 +300,33 @@ public abstract class BasicCursor extends BasicDataAccessor {
         this.fields = fields;
         prepareOrderBy();
         fillFieldsForStatement();
+    }
 
+    static BasicCursor create(DataGrainElement element, CallContext callContext) {
+        try {
+            return BasicCursor.class.cast(
+                    getCursorClass(element).getConstructor(CallContext.class).newInstance(callContext));
+        } catch(ReflectiveOperationException ex) {
+            throw new CelestaException("Cursor creation failed for grain element: " + element.getName(), ex);
+        }
+    }
+
+    static BasicCursor create(DataGrainElement element, CallContext callContext, Set<String> fields) {
+        try {
+            return BasicCursor.class.cast(
+                    getCursorClass(element).getConstructor(CallContext.class, Set.class).newInstance(callContext, fields));
+        } catch(ReflectiveOperationException ex) {
+            throw new CelestaException("Cursor creation failed for grain element: " + element.getName(), ex);
+        }
+    }
+
+    static Class<?> getCursorClass(DataGrainElement element) throws ClassNotFoundException {
+        final String namespace = element.getGrain().getNamespace().getValue();
+        String cursorClassName =
+                element.getName().substring(0, 1).toUpperCase() + element.getName().substring(1) + "Cursor";
+        cursorClassName = (namespace.isEmpty() ? "" : namespace + ".") + cursorClassName;
+
+        return Class.forName(cursorClassName, true, Thread.currentThread().getContextClassLoader());
     }
 
     PreparedStmtHolder getHereHolder() {
@@ -1133,6 +1159,18 @@ public abstract class BasicCursor extends BasicDataAccessor {
         _setFieldValue(name, value);
     }
 
+    /**
+     * Returns a value of a field by its name. This is needed for accessing data when using generic cursors,
+     * such as {@link Cursor}.
+     *
+     * @param name  field name
+     * @return
+     */
+    public final Object getValue(String name) {
+        validateColumName(name);
+        return _getFieldValue(name);
+    }
+
     protected final boolean inRec(String field) {
         return fieldsForStatement.isEmpty() || fieldsForStatement.contains(field);
     }
@@ -1180,6 +1218,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
     public abstract void _clearBuffer(boolean withKeys);
 
     protected abstract void _setFieldValue(String name, Object value);
+
+    protected abstract Object _getFieldValue(String name);
 
     protected abstract void _parseResult(ResultSet rs) throws SQLException;
 

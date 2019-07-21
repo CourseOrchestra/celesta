@@ -30,6 +30,29 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
     }
 
     /**
+     * Creates a view specific cursor.
+     *
+     * @param view  Cursor related view
+     * @param callContext  Call context that is used for cursor creation
+     * @return
+     */
+    public static ViewCursor create(View view, CallContext callContext) {
+        return ViewCursor.class.cast(BasicCursor.create(view, callContext));
+    }
+
+    /**
+     * Creates a view specific cursor.
+     *
+     * @param view  Cursor related view
+     * @param callContext  Call context that is used for cursor creation
+     * @param fields  Fields the cursor should operate on
+     * @return
+     */
+    public static ViewCursor create(View view, CallContext callContext, Set<String> fields) {
+        return ViewCursor.class.cast(BasicCursor.create(view, callContext, fields));
+    }
+
+    /**
      * Returns view description (meta information).
      *
      * @return

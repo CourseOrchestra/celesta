@@ -14,6 +14,30 @@ public abstract class Sequence extends BasicDataAccessor {
     }
 
     /**
+     * Creates a sequence for a sequence grain element.
+     *
+     * @param sequence  Sequence element
+     * @param callContext  Call context that is used for sequence creation
+     * @return
+     */
+    public static Sequence create(SequenceElement sequence, CallContext callContext) {
+        try {
+            final String namespace = sequence.getGrain().getNamespace().getValue();
+            String sequenceClassName =
+                    sequence.getName().substring(0, 1).toUpperCase() + sequence.getName().substring(1) + "Sequence";
+            sequenceClassName =
+                    (namespace.isEmpty() ? "" : namespace + ".") + sequenceClassName;
+            Class<?> sequenceClass =
+                    Class.forName(sequenceClassName, true, Thread.currentThread().getContextClassLoader());
+
+            return Sequence.class.cast(sequenceClass.getConstructor(CallContext.class).newInstance(callContext));
+            
+        } catch(ReflectiveOperationException ex) {
+            throw new CelestaException("Sequence creation failed for grain element: " + sequence.getName(), ex);
+        }
+    }
+
+    /**
      * Returns the <em>next value</em> of the sequence.
      *
      * @return

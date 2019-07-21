@@ -164,6 +164,15 @@ public final class Grain extends NamedElement {
     }
 
     /**
+     * Returns a set of parameterized views defined in the grain.
+     *
+     * @return
+     */
+    public Map<String, ParameterizedView> getParameterizedViews() {
+        return getElementsHolder(ParameterizedView.class).getElements();
+    }
+
+    /**
      * Returns a set of tables defined in the grain.
      *
      * @return
@@ -433,6 +442,30 @@ public final class Grain extends NamedElement {
 
     public View getView(String name) throws ParseException {
         return getElement(name, View.class);
+    }
+
+    /**
+     * Returns a materialized view by its name or an exception with a message
+     * that the view was not found.
+     *
+     * @param name  Materialized view name
+     * @return
+     * @throws ParseException  If materialized view with that name was not found in the grain.
+     */
+    public MaterializedView getMaterializedView(String name) throws ParseException {
+        return getElement(name, MaterializedView.class);
+    }
+
+    /**
+     * Returns a parameterized view by its name or an exception with a message
+     * that the view was not found.
+     *
+     * @param name  Parameterized view name
+     * @return
+     * @throws ParseException  If parameterized view with that name was not found in the grain.
+     */
+    public ParameterizedView getParameterizedView(String name) throws ParseException {
+        return getElement(name, ParameterizedView.class);
     }
 
     /**

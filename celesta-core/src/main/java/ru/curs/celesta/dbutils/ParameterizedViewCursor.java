@@ -6,6 +6,7 @@ import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.score.DataGrainElement;
 import ru.curs.celesta.score.ParameterizedView;
 import ru.curs.celesta.score.ParseException;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,45 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   public ParameterizedViewCursor(CallContext context, Set<String> fields, Map<String, Object> parameters) {
     super(context, fields);
     initParameters(parameters);
+  }
+
+  /**
+   * Creates a parameterized view specific cursor.
+   *
+   * @param view  Cursor related view
+   * @param callContext  Call context that is used for cursor creation
+   * @param parameters   A map with parameterizing parameters
+   * @return
+   */
+  public static ParameterizedViewCursor create(ParameterizedView view, CallContext callContext,
+          Map<String, Object> parameters) {
+      try {
+          return ParameterizedViewCursor.class.cast(
+                  getCursorClass(view).getConstructor(CallContext.class, Map.class)
+                  .newInstance(callContext, parameters));
+      } catch(ReflectiveOperationException ex) {
+          throw new CelestaException("Cursor creation failed for grain element: " + view.getName(), ex);
+      }
+  }
+
+  /**
+   * Creates a parameterized view specific cursor.
+   *
+   * @param view  Cursor related parameterized view
+   * @param callContext  Call context that is used for cursor creation
+   * @param fields  Fields the cursor should operate on
+   * @param parameters   A map with parameterizing parameters
+   * @return
+   */
+  public static ParameterizedViewCursor create(ParameterizedView view, CallContext callContext,
+          Set<String> fields, Map<String, Object> parameters) {
+      try {
+          return ParameterizedViewCursor.class.cast(
+                  getCursorClass(view).getConstructor(CallContext.class, Set.class, Map.class)
+                  .newInstance(callContext, fields, parameters));
+      } catch(ReflectiveOperationException ex) {
+          throw new CelestaException("Cursor creation failed for grain element: " + view.getName(), ex);
+      }
   }
 
   private void initParameters(Map<String, Object> parameters) {

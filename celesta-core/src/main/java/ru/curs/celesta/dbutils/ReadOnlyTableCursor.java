@@ -22,6 +22,29 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
         super(context, fields);
     }
 
+    /**
+     * Creates a read only table specific cursor.
+     *
+     * @param table  Cursor related table
+     * @param callContext  Call context that is used for cursor creation
+     * @return
+     */
+    public static ReadOnlyTableCursor create(ReadOnlyTable table, CallContext callContext) {
+        return ReadOnlyTableCursor.class.cast(BasicCursor.create(table, callContext));
+    }
+
+    /**
+     * Creates a table specific cursor.
+     *
+     * @param table  Cursor related table
+     * @param callContext  Call context that is used for cursor creation
+     * @param fields  Fields the cursor should operate on
+     * @return
+     */
+    public static ReadOnlyTableCursor create(ReadOnlyTable table, CallContext callContext, Set<String> fields) {
+        return ReadOnlyTableCursor.class.cast(BasicCursor.create(table, callContext, fields));
+    }
+
     @Override
     public final ReadOnlyTable meta() {
         if (meta == null) {

@@ -125,6 +125,29 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         inFilterHolder = new InFilterHolder(this);
     }
 
+    /**
+     * Creates a table specific cursor.
+     *
+     * @param table  Cursor related table
+     * @param callContext  Call context that is used for cursor creation
+     * @return
+     */
+    public static Cursor create(Table table, CallContext callContext) {
+        return Cursor.class.cast(BasicCursor.create(table, callContext));
+    }
+
+    /**
+     * Creates a table specific cursor.
+     *
+     * @param table  Cursor related table
+     * @param callContext  Call context that is used for cursor creation
+     * @param fields  Fields the cursor should operate on
+     * @return
+     */
+    public static Cursor create(Table table, CallContext callContext, Set<String> fields) {
+        return Cursor.class.cast(BasicCursor.create(table, callContext, fields));
+    }
+
     @Override
     PreparedStmtHolder getHereHolder() {
         return new PreparedStmtHolder() {
