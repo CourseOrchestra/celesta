@@ -27,12 +27,11 @@ public abstract class DbUpdater<T extends ICallContext> {
         EXPECTED_STATUSES.add(ISchemaCursor.LOCK);
     }
 
-
     protected final DBAdaptor dbAdaptor;
     protected final AbstractScore score;
-    private final boolean forceDdInitialize;
     protected final ConnectionPool connectionPool;
     protected ISchemaCursor schemaCursor;
+    private final boolean forceDdInitialize;
 
     public DbUpdater(
             ConnectionPool connectionPool, AbstractScore score, boolean forceDdInitialize, DBAdaptor dbAdaptor) {

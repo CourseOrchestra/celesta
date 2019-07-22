@@ -306,16 +306,16 @@ public abstract class BasicCursor extends BasicDataAccessor {
         try {
             return BasicCursor.class.cast(
                     getCursorClass(element).getConstructor(CallContext.class).newInstance(callContext));
-        } catch(ReflectiveOperationException ex) {
+        } catch (ReflectiveOperationException ex) {
             throw new CelestaException("Cursor creation failed for grain element: " + element.getName(), ex);
         }
     }
 
     static BasicCursor create(DataGrainElement element, CallContext callContext, Set<String> fields) {
         try {
-            return BasicCursor.class.cast(
-                    getCursorClass(element).getConstructor(CallContext.class, Set.class).newInstance(callContext, fields));
-        } catch(ReflectiveOperationException ex) {
+            return BasicCursor.class.cast(getCursorClass(element)
+                    .getConstructor(CallContext.class, Set.class).newInstance(callContext, fields));
+        } catch (ReflectiveOperationException ex) {
             throw new CelestaException("Cursor creation failed for grain element: " + element.getName(), ex);
         }
     }
@@ -1211,11 +1211,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * When using methods without an underscore symbol conflicts with attribute names
      * can be caused.
      */
-    public abstract BasicCursor _getBufferCopy(CallContext context, List<String> fields);
+    protected abstract BasicCursor _getBufferCopy(CallContext context, List<String> fields);
 
-    public abstract Object[] _currentValues();
+    protected abstract Object[] _currentValues();
 
-    public abstract void _clearBuffer(boolean withKeys);
+    protected abstract void _clearBuffer(boolean withKeys);
 
     protected abstract void _setFieldValue(String name, Object value);
 

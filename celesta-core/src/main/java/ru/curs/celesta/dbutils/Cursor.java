@@ -58,7 +58,7 @@ import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
 /**
- * Base cursor class for modification of data in tables.
+ * Cursor class for data modification in tables.
  */
 public abstract class Cursor extends BasicCursor implements InFilterSupport {
 

@@ -5,6 +5,9 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.SequenceElement;
 
+/**
+ * Sequence class for working with DB sequences. 
+ */
 public abstract class Sequence extends BasicDataAccessor {
 
     private SequenceElement meta = null;
@@ -32,7 +35,7 @@ public abstract class Sequence extends BasicDataAccessor {
 
             return Sequence.class.cast(sequenceClass.getConstructor(CallContext.class).newInstance(callContext));
             
-        } catch(ReflectiveOperationException ex) {
+        } catch (ReflectiveOperationException ex) {
             throw new CelestaException("Sequence creation failed for grain element: " + sequence.getName(), ex);
         }
     }

@@ -48,7 +48,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
           return ParameterizedViewCursor.class.cast(
                   getCursorClass(view).getConstructor(CallContext.class, Map.class)
                   .newInstance(callContext, parameters));
-      } catch(ReflectiveOperationException ex) {
+      } catch (ReflectiveOperationException ex) {
           throw new CelestaException("Cursor creation failed for grain element: " + view.getName(), ex);
       }
   }
@@ -68,7 +68,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
           return ParameterizedViewCursor.class.cast(
                   getCursorClass(view).getConstructor(CallContext.class, Set.class, Map.class)
                   .newInstance(callContext, fields, parameters));
-      } catch(ReflectiveOperationException ex) {
+      } catch (ReflectiveOperationException ex) {
           throw new CelestaException("Cursor creation failed for grain element: " + view.getName(), ex);
       }
   }
