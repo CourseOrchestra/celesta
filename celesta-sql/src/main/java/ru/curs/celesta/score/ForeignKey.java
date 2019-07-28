@@ -350,10 +350,10 @@ public final class ForeignKey {
             return constraintName;
         }
 
-        String result = String.format("fk_%s_%s_%s_%s_%s", parentTable
-                .getGrain().getName(), parentTable.getName(), referencedTable
-                .getGrain().getName(), referencedTable.getName(), columns
-                .getElements().keySet().iterator().next());
+        String result = String.format("fk_%s_%s_%s_%s_%s",
+                parentTable.getGrain().getName(), parentTable.getName(),
+                referencedTable.getGrain().getName(), referencedTable.getName(),
+                columns.getElements().keySet().iterator().next());
 
         result = NamedElement.limitName(result);
         LOGGER.trace("{}", result);

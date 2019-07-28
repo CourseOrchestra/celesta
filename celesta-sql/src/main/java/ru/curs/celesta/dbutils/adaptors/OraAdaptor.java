@@ -280,6 +280,12 @@ public final class OraAdaptor extends DBAdaptor {
     }
 
     @Override
+    public String pkConstraintString(TableElement tableElement) {
+        return NamedElement.limitName(
+                tableElement.getPkConstraintName() + "_" + tableElement.getGrain().getName());
+    }
+
+    @Override
     public int getCurrentIdent(Connection conn, Table t) {
         final String sequenceName;
 
@@ -492,7 +498,7 @@ public final class OraAdaptor extends DBAdaptor {
 
     @Override
     public DbPkInfo getPKInfo(Connection conn, TableElement t) {
-        DbPkInfo result = new DbPkInfo();
+        DbPkInfo result = new DbPkInfo(this);
         try {
             String sql = String.format("select cons.constraint_name, column_name from all_constraints cons "
                             + "inner join all_cons_columns cols on cons.constraint_name = cols.constraint_name  "

@@ -78,7 +78,7 @@ public interface TableElement {
   boolean hasPrimeKey();
 
   /**
-   * Returns PK constrain name (or {@code null} if not set).
+   * Returns PK constraint name.
    *
    * @return
    */

@@ -263,7 +263,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                       + "AND table_name = '%s' "
                       + "AND index_type_name = 'PRIMARY KEY'",
                 t.getGrain().getName(), t.getName());
-        DbPkInfo result = new DbPkInfo();
+        DbPkInfo result = new DbPkInfo(this);
 
         try {
             Statement stmt = conn.createStatement();

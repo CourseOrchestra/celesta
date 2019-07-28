@@ -315,7 +315,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                         + "WHERE c.relkind = 'r'::\"char\" AND i.relkind = 'i'::\"char\" "
                         + "and n.nspname = '%s' and c.relname = '%s' and x.indisprimary",
                 t.getGrain().getName().replace("\"", ""), t.getName().replace("\"", ""));
-        DbPkInfo result = new DbPkInfo();
+        DbPkInfo result = new DbPkInfo(this);
 
         try (Statement stmt = conn.createStatement();
              PreparedStatement stmt2 = conn.prepareStatement("select pg_get_indexdef(?, ?, false)");

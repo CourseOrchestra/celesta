@@ -1,5 +1,6 @@
 package ru.curs.celesta.dbutils.meta;
 
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.score.TableElement;
 
 import java.util.Iterator;
@@ -13,8 +14,14 @@ import java.util.List;
  * @since 2017-05-10
  */
 public final class DbPkInfo {
+  private final DBAdaptor dbAdaptor;  
+
   private String name;
   private final List<String> columnNames = new LinkedList<>();
+
+  public DbPkInfo(DBAdaptor dbAdaptor) {
+    this.dbAdaptor = dbAdaptor;
+  }
 
   /**
    * Adds a column to the primary key.
@@ -62,7 +69,7 @@ public final class DbPkInfo {
   }
 
   public boolean reflects(TableElement t) {
-    boolean result = t.getPkConstraintName().equals(name) && (columnNames.size() == t.getPrimaryKey().size());
+    boolean result = dbAdaptor.pkConstraintString(t).equals(name) && (columnNames.size() == t.getPrimaryKey().size());
     Iterator<String> i1 = t.getPrimaryKey().keySet().iterator();
     Iterator<String> i2 = columnNames.iterator();
     while (result && i1.hasNext()) {
