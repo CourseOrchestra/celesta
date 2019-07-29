@@ -37,7 +37,7 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
      * @return
      */
     public static ViewCursor create(View view, CallContext callContext) {
-        return ViewCursor.class.cast(BasicCursor.create(view, callContext));
+        return (ViewCursor) BasicCursor.create(view, callContext);
     }
 
     /**
@@ -49,7 +49,7 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
      * @return
      */
     public static ViewCursor create(View view, CallContext callContext, Set<String> fields) {
-        return ViewCursor.class.cast(BasicCursor.create(view, callContext, fields));
+        return (ViewCursor) BasicCursor.create(view, callContext, fields);
     }
 
     /**

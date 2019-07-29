@@ -133,7 +133,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @return
      */
     public static Cursor create(Table table, CallContext callContext) {
-        return Cursor.class.cast(BasicCursor.create(table, callContext));
+        return (Cursor) BasicCursor.create(table, callContext);
     }
 
     /**
@@ -145,7 +145,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @return
      */
     public static Cursor create(Table table, CallContext callContext, Set<String> fields) {
-        return Cursor.class.cast(BasicCursor.create(table, callContext, fields));
+        return (Cursor) BasicCursor.create(table, callContext, fields);
     }
 
     @Override

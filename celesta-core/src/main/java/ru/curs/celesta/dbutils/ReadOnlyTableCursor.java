@@ -30,7 +30,7 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
      * @return
      */
     public static ReadOnlyTableCursor create(ReadOnlyTable table, CallContext callContext) {
-        return ReadOnlyTableCursor.class.cast(BasicCursor.create(table, callContext));
+        return (ReadOnlyTableCursor) BasicCursor.create(table, callContext);
     }
 
     /**
@@ -42,7 +42,7 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
      * @return
      */
     public static ReadOnlyTableCursor create(ReadOnlyTable table, CallContext callContext, Set<String> fields) {
-        return ReadOnlyTableCursor.class.cast(BasicCursor.create(table, callContext, fields));
+        return (ReadOnlyTableCursor) BasicCursor.create(table, callContext, fields);
     }
 
     @Override

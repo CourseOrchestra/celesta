@@ -240,18 +240,22 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals(0, idx.getTable().getIndices().size());
 
     Table t = g.getElement("employees", Table.class);
+    assertSame(g.getElement("employees", BasicTable.class), t);
     assertNull(t.getCelestaDoc());
     assertTrue(t.isVersioned());
 
     // Checking for additional options
     ReadOnlyTable rot = g.getElement("ttt1", ReadOnlyTable.class);
+    assertSame(g.getElement("ttt1", BasicTable.class), rot);
     assertTrue(rot.isAutoUpdate());
 
     t = g.getElement("ttt2", Table.class);
+    assertSame(g.getElement("ttt2", BasicTable.class), t);
     assertTrue(t.isVersioned());
     assertTrue(t.isAutoUpdate());
 
     t = g.getElement("ttt3", Table.class);
+    assertSame(g.getElement("ttt3", BasicTable.class), t);
     assertFalse(t.isVersioned());
     assertFalse(t.isAutoUpdate());
   }

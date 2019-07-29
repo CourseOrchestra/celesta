@@ -55,7 +55,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
    * @return
    */
   public static MaterializedViewCursor create(MaterializedView view, CallContext callContext) {
-      return MaterializedViewCursor.class.cast(BasicCursor.create(view, callContext));
+      return (MaterializedViewCursor) BasicCursor.create(view, callContext);
   }
 
   /**
@@ -67,7 +67,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
    * @return
    */
   public static MaterializedViewCursor create(MaterializedView view, CallContext callContext, Set<String> fields) {
-      return MaterializedViewCursor.class.cast(BasicCursor.create(view, callContext, fields));
+      return (MaterializedViewCursor) BasicCursor.create(view, callContext, fields);
   }
 
   /**

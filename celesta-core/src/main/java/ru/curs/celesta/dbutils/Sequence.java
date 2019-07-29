@@ -33,7 +33,7 @@ public abstract class Sequence extends BasicDataAccessor {
             Class<?> sequenceClass =
                     Class.forName(sequenceClassName, true, Thread.currentThread().getContextClassLoader());
 
-            return Sequence.class.cast(sequenceClass.getConstructor(CallContext.class).newInstance(callContext));
+            return (Sequence) sequenceClass.getConstructor(CallContext.class).newInstance(callContext);
             
         } catch (ReflectiveOperationException ex) {
             throw new CelestaException("Sequence creation failed for grain element: " + sequence.getName(), ex);

@@ -304,8 +304,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     static BasicCursor create(DataGrainElement element, CallContext callContext) {
         try {
-            return BasicCursor.class.cast(
-                    getCursorClass(element).getConstructor(CallContext.class).newInstance(callContext));
+            return getCursorClass(element).getConstructor(CallContext.class).newInstance(callContext);
         } catch (ReflectiveOperationException ex) {
             throw new CelestaException("Cursor creation failed for grain element: " + element.getName(), ex);
         }
@@ -313,20 +312,21 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     static BasicCursor create(DataGrainElement element, CallContext callContext, Set<String> fields) {
         try {
-            return BasicCursor.class.cast(getCursorClass(element)
-                    .getConstructor(CallContext.class, Set.class).newInstance(callContext, fields));
+            return getCursorClass(element)
+                    .getConstructor(CallContext.class, Set.class).newInstance(callContext, fields);
         } catch (ReflectiveOperationException ex) {
             throw new CelestaException("Cursor creation failed for grain element: " + element.getName(), ex);
         }
     }
 
-    static Class<?> getCursorClass(DataGrainElement element) throws ClassNotFoundException {
+    @SuppressWarnings("unchecked")
+    static Class<? extends BasicCursor> getCursorClass(DataGrainElement element) throws ClassNotFoundException {
         final String namespace = element.getGrain().getNamespace().getValue();
         String cursorClassName =
                 element.getName().substring(0, 1).toUpperCase() + element.getName().substring(1) + "Cursor";
         cursorClassName = (namespace.isEmpty() ? "" : namespace + ".") + cursorClassName;
 
-        return Class.forName(cursorClassName, true, Thread.currentThread().getContextClassLoader());
+        return (Class<? extends BasicCursor>) Class.forName(cursorClassName, true, Thread.currentThread().getContextClassLoader());
     }
 
     PreparedStmtHolder getHereHolder() {
