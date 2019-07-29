@@ -179,7 +179,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         // на один insert--2 select-а, что вызывает справедливое возмущение тех, кто смотрит логи
         // 1) Если у нас автоинкремент и автоинкрементное поле в None, то первый select не нужен
         // 2) Хорошо бы результат инсерта выдавать в одной операции как resultset
-         PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
+        PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
         try {
             ResultSet rs = g.executeQuery();
             try {
