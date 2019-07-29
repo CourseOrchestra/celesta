@@ -2,18 +2,18 @@ package ru.curs.celesta.dbutils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-//import java.util.Collections;
+import java.util.Collections;
 
 import org.junit.jupiter.api.*;
 
-//import createcursors.MvtableCursor;
-//import createcursors.PvtableCursor;
+import createcursors.MvtableCursor;
+import createcursors.PvtableCursor;
 import createcursors.WtableCursor;
 
 import ru.curs.celesta.*;
 import ru.curs.celesta.score.Grain;
-//import ru.curs.celesta.score.MaterializedView;
-//import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.ReadOnlyTable;
 import ru.curs.celesta.score.SequenceElement;
@@ -90,7 +90,7 @@ public class CreateCursorTest extends AbstractCelestaTest {
         assertEquals("test", new CursorIterator<>(vCursor).next().getValue("data"));
     }
 
-/*  // Commented out due to conflict in Oracle container
+
     @Test
     public void createMaterializedViewCursorTest() throws ParseException {
         try(MvtableCursor cursor = new MvtableCursor(cc())) {
@@ -108,10 +108,10 @@ public class CreateCursorTest extends AbstractCelestaTest {
             cursor.insert();
         }
 
-        MaterializedView mvtableDataCountView = g.getMaterializedView("mvtableDataCountView");
-        assertNotNull(mvtableDataCountView);
+        MaterializedView mvtableMView = g.getMaterializedView("mvtableMView");
+        assertNotNull(mvtableMView);
 
-        MaterializedViewCursor mvCursor = MaterializedViewCursor.create(mvtableDataCountView, cc());
+        MaterializedViewCursor mvCursor = MaterializedViewCursor.create(mvtableMView, cc());
         assertNotNull(mvCursor);
 
         assertEquals(2, mvCursor.count());
@@ -126,8 +126,8 @@ public class CreateCursorTest extends AbstractCelestaTest {
         assertEquals("test2", mvCursor.getValue("data"));
         assertEquals(2, mvCursor.getValue("d"));
     }
-*/
-/*  // Commented out due to conflict in Oracle container
+
+
     @Test
     public void createParameterizedViewCursorTest() throws ParseException {
         try(PvtableCursor cursor = new PvtableCursor(cc())) {
@@ -145,11 +145,11 @@ public class CreateCursorTest extends AbstractCelestaTest {
             cursor.insert();
         }
 
-        ParameterizedView pvtableDataView = g.getParameterizedView("pvtableDataView");
-        assertNotNull(pvtableDataView);
+        ParameterizedView pvtablePView = g.getParameterizedView("pvtablePView");
+        assertNotNull(pvtablePView);
 
         ParameterizedViewCursor pvCursor = ParameterizedViewCursor.create(
-                pvtableDataView, cc(), Collections.singletonMap("d", 5));
+                pvtablePView, cc(), Collections.singletonMap("d", 5));
         assertNotNull(pvCursor);
 
         assertEquals(2, pvCursor.count());
@@ -159,14 +159,14 @@ public class CreateCursorTest extends AbstractCelestaTest {
         assertEquals(2, pvci.next().getValue("data"));
         assertEquals(4, pvci.next().getValue("data"));
     }
-*/
+
     @Test
     public void createSequenceTest() throws ParseException {
-        SequenceElement seqEl = g.getElement("seq", SequenceElement.class);
-        assertNotNull(seqEl);
+        SequenceElement crCurSeqEl = g.getElement("crCurSeq", SequenceElement.class);
+        assertNotNull(crCurSeqEl);
 
-        Sequence seq = Sequence.create(seqEl, cc());
-        assertEquals(3, seq.nextValue());
+        Sequence crCurSeq = Sequence.create(crCurSeqEl, cc());
+        assertEquals(3, crCurSeq.nextValue());
     }
 
 }

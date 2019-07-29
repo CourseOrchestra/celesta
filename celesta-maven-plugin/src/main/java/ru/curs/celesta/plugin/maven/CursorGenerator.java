@@ -398,6 +398,9 @@ public final class CursorGenerator {
         return builder.build();
     }
 
+    /* NB In case the better performance is needed, this can be rewritten without using the reflection.
+     * E.g. we can populate two maps: Map<String, Producer<?>> , Map<String, Consumer<?> in static Cursor
+     * initializer, and then use these maps in getFieldValue and setFielValue. */
     private static MethodSpec buildGetFieldValue() {
         String nameParam = "name";
 

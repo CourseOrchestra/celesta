@@ -23,8 +23,7 @@ WITH READ ONLY;
 CREATE VIEW wtableDataView AS
   SELECT data FROM wtable;
 
--- Commented out due to conflict in Oracale container
-/*
+
 CREATE SEQUENCE mvtable_id;
 
 CREATE TABLE mvtable
@@ -33,13 +32,12 @@ CREATE TABLE mvtable
   data VARCHAR(8) NOT NULL
 );
 
-CREATE MATERIALIZED VIEW mvtableDataCountView AS
+CREATE MATERIALIZED VIEW mvtableMView AS
    SELECT data, count(*) AS d
    FROM mvtable
    GROUP BY data;
-*/
--- Commented out due to conflict in Oracale container
-/*
+
+
 CREATE SEQUENCE pvtable_id;
 
 CREATE TABLE pvtable
@@ -47,10 +45,10 @@ CREATE TABLE pvtable
   id   INT NOT NULL DEFAULT NEXTVAL(pvtable_id) PRIMARY KEY,
   data INT NOT NULL
 );
- 
-CREATE FUNCTION pvtableDataView(d INT) AS
+
+CREATE FUNCTION pvtablePView(d INT) AS
   SELECT data FROM pvtable
   WHERE data < $d;
-*/
 
-CREATE SEQUENCE seq START WITH 3;
+
+CREATE SEQUENCE crCurSeq START WITH 3;
