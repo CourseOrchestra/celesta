@@ -69,13 +69,22 @@ public final class DbPkInfo {
   }
 
   public boolean reflects(TableElement t) {
-    boolean result = dbAdaptor.pkConstraintString(t).equals(name) && (columnNames.size() == t.getPrimaryKey().size());
+    if (!dbAdaptor.pkConstraintString(t).equals(name)) {
+        return false;
+    }
+
+    if (columnNames.size() != t.getPrimaryKey().size()) {
+        return false;
+    }
     Iterator<String> i1 = t.getPrimaryKey().keySet().iterator();
     Iterator<String> i2 = columnNames.iterator();
-    while (result && i1.hasNext()) {
-      result = i1.next().equals(i2.next());
+    while (i1.hasNext()) {
+      if (!i1.next().equals(i2.next())) {
+          return false;
+      }
     }
-    return result;
+
+    return true;
   }
 
 }

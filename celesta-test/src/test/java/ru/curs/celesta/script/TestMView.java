@@ -9,17 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.sql.Timestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.time.Month;
 import java.time.temporal.ChronoUnit;
 
 
-import java.time.LocalDateTime;
-
-import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.MaterializedViewCursor;
-import ru.curs.celesta.score.MaterializedView;
 
 class TestMaterializedView implements ScriptTest {
     @TestTemplate

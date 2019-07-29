@@ -1,5 +1,7 @@
 package ru.curs.celesta.dbutils.adaptors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.sql.Connection;
 import java.util.Locale;
 import java.util.Properties;
@@ -70,6 +72,12 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
     @Override
     Connection getConnection() {
         return dba.connectionPool.get();
+    }
+
+    @Override
+    public void pkConstraintString() {
+        final String pkName = dba.pkConstraintString(this.t);
+        assertEquals("pk_test_gtest", pkName);
     }
 
 }
