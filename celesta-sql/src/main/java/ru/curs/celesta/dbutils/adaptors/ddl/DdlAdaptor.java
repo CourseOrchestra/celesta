@@ -233,7 +233,7 @@ public final class DdlAdaptor {
         } catch (CelestaException e) {
             throw new CelestaException(
                     String.format(
-                            "Cannot create PK '%s': %s", t.getPkConstraintName(), e.getMessage()
+                            "Cannot create PK '%s': %s", ddlGenerator.pkConstraintString(t), e.getMessage()
                     ), e
             );
         }

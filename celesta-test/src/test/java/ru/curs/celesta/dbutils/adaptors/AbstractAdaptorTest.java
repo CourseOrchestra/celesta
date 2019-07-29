@@ -53,8 +53,7 @@ public abstract class AbstractAdaptorTest {
     private AbstractScore score;
 
     private Connection conn;
-    private Table t;
-
+    Table t;
 
     abstract Connection getConnection();
 
@@ -1047,20 +1046,28 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
+    public void pkConstraintString() {
+        final String pkName = dba.pkConstraintString(t);
+        assertEquals("pk_test", pkName);
+    }
+
+    @Test
     public void getPKInfo() throws ParseException, IOException, SQLException {
         DbPkInfo c;
         insertRow(conn, t, 15);
 
+        final String pkName = dba.pkConstraintString(t);
+
         c = dba.getPKInfo(conn, t);
         assertNotNull(c);
-        assertEquals("pk_test", c.getName());
+        assertEquals(pkName, c.getName());
         assertEquals(1, c.getColumnNames().size());
         String[] expected = {"id"};
         assertTrue(Arrays.equals(expected, c.getColumnNames().toArray(new String[0])));
         assertTrue(c.reflects(t));
         assertFalse(c.isEmpty());
 
-        dba.dropPk(conn, t, "pk_test");
+        dba.dropPk(conn, t, pkName);
         c = dba.getPKInfo(conn, t);
         assertNull(c.getName());
         assertEquals(0, c.getColumnNames().size());
@@ -1071,13 +1078,12 @@ public abstract class AbstractAdaptorTest {
         dba.createPK(conn, t);
         c = dba.getPKInfo(conn, t);
         assertNotNull(c);
-        assertEquals("pk_test", c.getName());
+        assertEquals(pkName, c.getName());
         assertEquals(3, c.getColumnNames().size());
         String[] expected2 = {"id", "f1", "f9"};
         assertTrue(Arrays.equals(expected2, c.getColumnNames().toArray(new String[0])));
         assertTrue(c.reflects(t));
         assertFalse(c.isEmpty());
-
     }
 
     @Test

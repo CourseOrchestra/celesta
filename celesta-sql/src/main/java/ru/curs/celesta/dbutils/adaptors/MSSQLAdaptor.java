@@ -343,7 +343,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
     @Override
     public DbPkInfo getPKInfo(Connection conn, TableElement t) {
 
-        DbPkInfo result = new DbPkInfo();
+        DbPkInfo result = new DbPkInfo(this);
         try {
             String sql = String.format(
                     "select cons.CONSTRAINT_NAME, cols.COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE cols "

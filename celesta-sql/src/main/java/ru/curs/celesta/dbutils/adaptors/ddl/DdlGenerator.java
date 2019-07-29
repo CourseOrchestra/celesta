@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.adaptors.ddl;
 
-
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
@@ -95,25 +94,12 @@ public abstract class DdlGenerator {
 
     abstract String dropTriggerSql(TriggerQuery query);
 
-    //TODO: must be defined in single place
-    String tableString(String schemaName, String tableName) {
-        StringBuilder sb = new StringBuilder();
+    final String tableString(String schemaName, String tableName) {
+        return this.dmlAdaptor.tableString(schemaName, tableName);
+    }
 
-        if (schemaName.startsWith("\"")) {
-            sb.append(schemaName);
-        } else {
-            sb.append("\"").append(schemaName).append("\"");
-        }
-
-        sb.append(".");
-
-        if (tableName.startsWith("\"")) {
-            sb.append(tableName);
-        } else {
-            sb.append("\"").append(tableName).append("\"");
-        }
-
-        return sb.toString();
+    final String pkConstraintString(TableElement tableElement) {
+        return this.dmlAdaptor.pkConstraintString(tableElement);
     }
 
     final String createSequence(SequenceElement s) {
@@ -178,7 +164,7 @@ public abstract class DdlGenerator {
         if (te.hasPrimeKey()) {
             sb.append(",\n");
             // Primary key definition if it should be present in the table
-            sb.append(String.format("  constraint \"%s\" primary key (", te.getPkConstraintName()));
+            sb.append(String.format("  constraint \"%s\" primary key (", pkConstraintString(te)));
             multiple = false;
             for (String s : te.getPrimaryKey().keySet()) {
                 if (multiple) {
@@ -255,7 +241,7 @@ public abstract class DdlGenerator {
         sb.append(
                 String.format(
                         "alter table %s add constraint \"%s\" " + " primary key (",
-                        tableString(t.getGrain().getName(), t.getName()), t.getPkConstraintName()
+                        tableString(t.getGrain().getName(), t.getName()), pkConstraintString(t)
                 )
         );
 

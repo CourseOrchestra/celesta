@@ -576,6 +576,15 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
+     * Returns DB specific PK constraint name for a table element.
+     *
+     * @param tableElement  table element
+     */
+    public String pkConstraintString(TableElement tableElement) {
+        return tableElement.getPkConstraintName();
+    }
+
+    /**
      * Creates a table "from scratch" in the database.
      *
      * @param conn Connection

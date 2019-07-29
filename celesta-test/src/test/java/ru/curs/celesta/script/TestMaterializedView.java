@@ -9,17 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.sql.Timestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.time.Month;
 import java.time.temporal.ChronoUnit;
 
 
-import java.time.LocalDateTime;
-
-import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.MaterializedViewCursor;
-import ru.curs.celesta.score.MaterializedView;
 
 class TestMaterializedView implements ScriptTest {
     @TestTemplate
@@ -27,7 +22,6 @@ class TestMaterializedView implements ScriptTest {
         Table1Cursor tableCursor = new Table1Cursor(context);
         MView1Cursor mViewCursor = new MView1Cursor(context);
         _test_mat_view_insert(tableCursor, mViewCursor);
-
     }
 
     @TestTemplate
@@ -35,7 +29,6 @@ class TestMaterializedView implements ScriptTest {
         Table2Cursor tableCursor = new Table2Cursor(context);
         MView3Cursor mViewCursor = new MView3Cursor(context);
         _test_mat_view_insert(tableCursor, mViewCursor);
-
     }
 
     @TestTemplate
@@ -43,7 +36,6 @@ class TestMaterializedView implements ScriptTest {
         Table1Cursor tableCursor = new Table1Cursor(context);
         MView1Cursor mViewCursor = new MView1Cursor(context);
         _test_mat_view_update(tableCursor, mViewCursor);
-
     }
 
     @TestTemplate
@@ -51,7 +43,6 @@ class TestMaterializedView implements ScriptTest {
         Table2Cursor tableCursor = new Table2Cursor(context);
         MView3Cursor mViewCursor = new MView3Cursor(context);
         _test_mat_view_update(tableCursor, mViewCursor);
-
     }
 
     @TestTemplate
@@ -59,7 +50,6 @@ class TestMaterializedView implements ScriptTest {
         Table1Cursor tableCursor = new Table1Cursor(context);
         MView1Cursor mViewCursor = new MView1Cursor(context);
         _test_mat_view_delete(tableCursor, mViewCursor);
-
     }
 
     @TestTemplate
@@ -67,7 +57,6 @@ class TestMaterializedView implements ScriptTest {
         Table2Cursor tableCursor = new Table2Cursor(context);
         MView3Cursor mViewCursor = new MView3Cursor(context);
         _test_mat_view_delete(tableCursor, mViewCursor);
-
     }
 
     @TestTemplate
@@ -147,7 +136,6 @@ class TestMaterializedView implements ScriptTest {
         assertEquals(0, mViewCursor.getS().intValue());
         mViewCursor.get("B");
         assertEquals(5, mViewCursor.getS().intValue());
-
     }
 
     @TestTemplate
@@ -185,7 +173,6 @@ class TestMaterializedView implements ScriptTest {
 
         mViewCursor.get(Timestamp.valueOf(date2));
         assertEquals(5, mViewCursor.getS().intValue());
-
     }
 
     @TestTemplate
@@ -209,7 +196,6 @@ class TestMaterializedView implements ScriptTest {
         assertEquals(new BigDecimal("24.02"), mv.getF1());
         assertEquals(new BigDecimal("24.02"), mv.getS1());
         assertEquals(new BigDecimal("1.0001"), mv.getS2());
-
     }
 
 
@@ -309,7 +295,6 @@ class TestMaterializedView implements ScriptTest {
         mViewCursor.first();
         assertEquals(31, getS(mViewCursor));
         assertEquals(2, getC(mViewCursor));
-
     }
 
     void _test_mat_view_update(Cursor tableCursor, MaterializedViewCursor mViewCursor) {
@@ -360,7 +345,6 @@ class TestMaterializedView implements ScriptTest {
         mViewCursor.get("B");
         assertEquals(35, getS(mViewCursor));
         assertEquals(2, getC(mViewCursor));
-
     }
 
     void _test_mat_view_delete(Cursor tableCursor, MaterializedViewCursor mViewCursor) {
@@ -429,6 +413,5 @@ class TestMaterializedView implements ScriptTest {
 
         assertEquals(1, mViewCursor.count());
     }
+
 }
-
-

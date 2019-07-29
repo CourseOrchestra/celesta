@@ -130,26 +130,6 @@ public final class OraDdlGenerator extends DdlGenerator {
         return String.format("DROP TYPE \"%s\"", typeName);
     }
 
-    //TODO: must be defined in single place
-    @Override
-    String tableString(String schemaName, String tableName) {
-        StringBuilder sb = new StringBuilder();
-
-        if (schemaName.startsWith("\"")) {
-            sb.append(schemaName.substring(0, schemaName.length() - 1));
-        } else {
-            sb.append("\"").append(schemaName);
-        }
-        sb.append("_");
-        if (tableName.startsWith("\"")) {
-            sb.append(tableName.substring(1));
-        } else {
-            sb.append(tableName).append("\"");
-        }
-
-        return sb.toString();
-    }
-
     @Override
     String generateArgumentsForCreateSequenceExpression(
             SequenceElement s, SequenceElement.Argument... excludedArguments) {
