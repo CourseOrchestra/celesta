@@ -77,6 +77,10 @@ include::1090_blob.adoc[leveloffset=+2, tag="blob"]
 ==== Option-поля
 include::1100_option.adoc[leveloffset=+2, tag="option"]
 
+[[dynamic_access]]
+==== Динамический доступ к данным
+include::1102_dynamic.adoc[leveloffset=+2, tag="dynamic"]
+
 [[triggers_section]]
 === Триггеры
 include::1105_triggers.adoc[leveloffset=+2, tag="triggers"]
