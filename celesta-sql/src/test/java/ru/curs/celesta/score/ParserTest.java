@@ -98,16 +98,19 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals("1.0", g.getVersion().toString());
     assertEquals("описание гранулы: * grain celestadoc", g.getCelestaDoc());
 
-    Map<String, Table> s = g.getElements(Table.class);
+    assertEquals(5, g.getElements(Table.class).size());
+    assertEquals(1, g.getElements(ReadOnlyTable.class).size());
+
+    Map<String, BasicTable> s = g.getElements(BasicTable.class);
     assertEquals(6, s.size());
 
-    Iterator<Table> i = s.values().iterator();
-    // Первая таблица
-    Table t = i.next();
-    assertEquals("table1", t.getName());
-    assertNull(t.getCelestaDoc());
+    Iterator<BasicTable> i = s.values().iterator();
+    // First table
+    BasicTable t1 = i.next();
+    assertEquals("table1", t1.getName());
+    assertNull(t1.getCelestaDoc());
 
-    Iterator<Column> ic = t.getColumns().values().iterator();
+    Iterator<Column> ic = t1.getColumns().values().iterator();
     Column c = ic.next();
     assertEquals("column1", c.getName());
     assertTrue(c instanceof IntegerColumn);
@@ -164,23 +167,23 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals("f2", c.getName());
     assertEquals(5.5, ((FloatingColumn) c).getDefaultValue(), .00001);
 
-    Map<String, Column> key = t.getPrimaryKey();
+    Map<String, Column> key = t1.getPrimaryKey();
     ic = key.values().iterator();
     c = ic.next();
-    assertSame(c, t.getColumns().get("column1"));
+    assertSame(c, t1.getColumns().get("column1"));
     assertEquals("column1", c.getName());
     c = ic.next();
-    assertSame(c, t.getColumns().get("c3"));
+    assertSame(c, t1.getColumns().get("c3"));
     assertEquals("c3", c.getName());
     c = ic.next();
-    assertSame(c, t.getColumns().get("column2"));
+    assertSame(c, t1.getColumns().get("column2"));
     assertEquals("column2", c.getName());
 
-    // Вторая таблица
-    t = i.next();
-    assertEquals("table2", t.getName());
-    assertEquals("table2 celestadoc", t.getCelestaDoc());
-    ic = t.getColumns().values().iterator();
+    // Second table
+    BasicTable t2 = i.next();
+    assertEquals("table2", t2.getName());
+    assertEquals("table2 celestadoc", t2.getCelestaDoc());
+    ic = t2.getColumns().values().iterator();
 
     c = ic.next();
     assertEquals("column1", c.getName());
@@ -236,25 +239,24 @@ public class ParserTest extends AbstractParsingTest {
     g.removeIndex(idx);
     assertEquals(0, idx.getTable().getIndices().size());
 
-    t = g.getElement("employees", Table.class);
+    Table t = g.getElement("employees", Table.class);
+    assertSame(g.getElement("employees", BasicTable.class), t);
     assertNull(t.getCelestaDoc());
     assertTrue(t.isVersioned());
-    assertFalse(t.isReadOnly());
 
-    // Проверка дополнительных возможностей
-    t = g.getElement("ttt1", Table.class);
-    assertTrue(t.isReadOnly());
-    assertFalse(t.isVersioned());
-    assertTrue(t.isAutoUpdate());
+    // Checking for additional options
+    ReadOnlyTable rot = g.getElement("ttt1", ReadOnlyTable.class);
+    assertSame(g.getElement("ttt1", BasicTable.class), rot);
+    assertTrue(rot.isAutoUpdate());
 
     t = g.getElement("ttt2", Table.class);
+    assertSame(g.getElement("ttt2", BasicTable.class), t);
     assertTrue(t.isVersioned());
-    assertFalse(t.isReadOnly());
     assertTrue(t.isAutoUpdate());
 
     t = g.getElement("ttt3", Table.class);
+    assertSame(g.getElement("ttt3", BasicTable.class), t);
     assertFalse(t.isVersioned());
-    assertFalse(t.isReadOnly());
     assertFalse(t.isAutoUpdate());
   }
 
@@ -268,10 +270,10 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals("test2", g.getName());
     assertEquals("2.5", g.getVersion().toString());
 
-    Table d = g.getElement("d", Table.class);
+    BasicTable d = g.getElement("d", BasicTable.class);
     assertEquals(0, d.getForeignKeys().size());
 
-    Table a = g.getElement("a", Table.class);
+    BasicTable a = g.getElement("a", BasicTable.class);
     assertEquals(2, a.getForeignKeys().size());
     Iterator<ForeignKey> i = a.getForeignKeys().iterator();
 
@@ -291,7 +293,7 @@ public class ParserTest extends AbstractParsingTest {
     assertSame(FKRule.NO_ACTION, fk.getDeleteRule());
     assertSame(FKRule.NO_ACTION, fk.getUpdateRule());
 
-    Table b = g.getElement("b", Table.class);
+    BasicTable b = g.getElement("b", BasicTable.class);
     assertEquals(1, b.getForeignKeys().size());
     i = b.getForeignKeys().iterator();
     fk = i.next();
@@ -311,7 +313,7 @@ public class ParserTest extends AbstractParsingTest {
             "test3.sql"
     );
     Grain g = parse(f);
-    Table t = g.getElement("structure_subordination", Table.class);
+    BasicTable t = g.getElement("structure_subordination", BasicTable.class);
     assertEquals(2, t.getForeignKeys().size());
   }
 
@@ -322,9 +324,9 @@ public class ParserTest extends AbstractParsingTest {
             "test4.sql"
     );
     Grain g = parse(f);
-    Table t = g.getElement("app_division_add_info_el", Table.class);
+    BasicTable t = g.getElement("app_division_add_info_el", BasicTable.class);
     assertEquals("pk_app_division_add_info_el", t.getPkConstraintName());
-    t = g.getElement("x_role_employees", Table.class);
+    t = g.getElement("x_role_employees", BasicTable.class);
     assertEquals(1, t.getForeignKeys().size());
     ForeignKey fk = t.getForeignKeys().iterator().next();
     assertEquals("fk_x_rolempyees_xroles", fk.getConstraintName());

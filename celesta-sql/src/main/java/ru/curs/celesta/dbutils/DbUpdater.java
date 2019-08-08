@@ -27,12 +27,11 @@ public abstract class DbUpdater<T extends ICallContext> {
         EXPECTED_STATUSES.add(ISchemaCursor.LOCK);
     }
 
-
     protected final DBAdaptor dbAdaptor;
     protected final AbstractScore score;
-    private final boolean forceDdInitialize;
     protected final ConnectionPool connectionPool;
     protected ISchemaCursor schemaCursor;
+    private final boolean forceDdInitialize;
 
     public DbUpdater(
             ConnectionPool connectionPool, AbstractScore score, boolean forceDdInitialize, DBAdaptor dbAdaptor) {
@@ -157,7 +156,7 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     void createSysObjects(Connection conn, Grain sys) throws ParseException {
         dbAdaptor.createSchemaIfNotExists(score.getSysSchemaName());
-        dbAdaptor.createTable(conn, sys.getElement(getSchemasTableName(), Table.class));
+        dbAdaptor.createTable(conn, sys.getElement(getSchemasTableName(), BasicTable.class));
         dbAdaptor.createSysObjects(conn, score.getSysSchemaName());
     }
 
@@ -249,7 +248,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             updateSequences(g);
 
             // Обновляем все таблицы.
-            for (Table t : g.getElements(Table.class).values()) {
+            for (BasicTable t : g.getElements(BasicTable.class).values()) {
                 if (updateTable(t, dbFKeys)) {
                     modifiedTablesMap.add(t.getName());
                 }
@@ -274,7 +273,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             }
 
             //Для всех таблиц обновляем триггеры материализованных представлений
-            for (Table t : g.getElements(Table.class).values()) {
+            for (BasicTable t : g.getElements(BasicTable.class).values()) {
                 final Connection conn = schemaCursor.callContext().getConn();
                 dbAdaptor.dropTableTriggersForMaterializedViews(conn, t);
                 dbAdaptor.createTableTriggersForMaterializedViews(conn, t);
@@ -367,7 +366,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         for (DbFkInfo dbi : dbAdaptor.getFKInfo(conn, g)) {
             dbFKeys.put(dbi.getName(), dbi);
         }
-        for (Table t : g.getElements(Table.class).values()) {
+        for (BasicTable t : g.getElements(BasicTable.class).values()) {
             if (t.isAutoUpdate()) {
                 for (ForeignKey fk : t.getForeignKeys()) {
                     if (dbFKeys.containsKey(fk.getConstraintName())) {
@@ -390,7 +389,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         Connection conn = schemaCursor.callContext().getConn();
         List<DbFkInfo> dbFKeys = dbAdaptor.getFKInfo(conn, g);
         Map<String, ForeignKey> fKeys = new HashMap<>();
-        for (Table t : g.getElements(Table.class).values()) {
+        for (BasicTable t : g.getElements(BasicTable.class).values()) {
             for (ForeignKey fk : t.getForeignKeys()) {
                 fKeys.put(fk.getConstraintName(), fk);
             }
@@ -469,9 +468,8 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    boolean updateTable(Table t, List<DbFkInfo> dbFKeys) {
-        // Если таблица скомпилирована с опцией NO AUTOUPDATE, то ничего не
-        // делаем с ней
+    boolean updateTable(BasicTable t, List<DbFkInfo> dbFKeys) {
+        // If table was compiled with option NO AUTOUPDATE then nothing is to be done
         if (!t.isAutoUpdate()) {
             return false;
         }
@@ -479,7 +477,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         final Connection conn = schemaCursor.callContext().getConn();
 
         if (!dbAdaptor.tableExists(conn, t.getGrain().getName(), t.getName())) {
-            // Таблицы не существует в базе данных, создаём с нуля.
+            // Table doesn't exist in the DB, create it from scratch.
             dbAdaptor.createTable(conn, t);
             return true;
         }
@@ -488,23 +486,25 @@ public abstract class DbUpdater<T extends ICallContext> {
         Set<String> dbColumns = dbAdaptor.getColumns(conn, t);
         boolean modified = updateColumns(t, conn, dbColumns, dbFKeys);
 
-        // Для версионированных таблиц синхронизируем поле recversion
-        if (t.isVersioned()) {
-            if (dbColumns.contains(VersionedElement.REC_VERSION)) {
-                DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, t.getRecVersionField());
-                if (!ci.reflects(t.getRecVersionField())) {
-                    dbAdaptor.updateColumn(conn, t.getRecVersionField(), ci);
+        // For versioned tables synchronize 'recversion' field
+        if (t instanceof Table) {
+            Table tab = (Table) t;
+            if (tab.isVersioned()) {
+                if (dbColumns.contains(VersionedElement.REC_VERSION)) {
+                    DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, tab.getRecVersionField());
+                    if (!ci.reflects(tab.getRecVersionField())) {
+                        dbAdaptor.updateColumn(conn, tab.getRecVersionField(), ci);
+                        modified = true;
+                    }
+                } else {
+                    dbAdaptor.createColumn(conn, tab.getRecVersionField());
                     modified = true;
                 }
-            } else {
-                dbAdaptor.createColumn(conn, t.getRecVersionField());
-                modified = true;
             }
         }
 
-
-        // Ещё раз проверяем первичный ключ и при необходимости (если его нет
-        // или он был сброшен) создаём.
+        // Once again check the primary key, and if needed (in case it doesn't exist or
+        // had been dropped) create it.
         pkInfo = dbAdaptor.getPKInfo(conn, t);
         if (pkInfo.isEmpty()) {
             dbAdaptor.createPK(conn, t);

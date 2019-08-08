@@ -6,7 +6,6 @@ import ru.curs.celesta.PermissionDeniedException;
 import ru.curs.celesta.score.MaterializedView;
 import ru.curs.celesta.score.ParseException;
 
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -46,6 +45,29 @@ public abstract class MaterializedViewCursor extends BasicCursor {
         .withFields(fieldsForStatement);
 
     getHelper = cghb.build();
+  }
+
+  /**
+   * Creates a materialized view specific cursor.
+   *
+   * @param view  Cursor related materialized view
+   * @param callContext  Call context that is used for cursor creation
+   * @return
+   */
+  public static MaterializedViewCursor create(MaterializedView view, CallContext callContext) {
+      return (MaterializedViewCursor) BasicCursor.create(view, callContext);
+  }
+
+  /**
+   * Creates a materialized view specific cursor.
+   *
+   * @param view  Cursor related materialized view
+   * @param callContext  Call context that is used for cursor creation
+   * @param fields  Fields the cursor should operate on
+   * @return
+   */
+  public static MaterializedViewCursor create(MaterializedView view, CallContext callContext, Set<String> fields) {
+      return (MaterializedViewCursor) BasicCursor.create(view, callContext, fields);
   }
 
   /**

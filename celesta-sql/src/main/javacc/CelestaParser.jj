@@ -286,36 +286,42 @@ Grain parseGrainPart(GrainPart grainPart) :
 
 void createTable(GrainPart g, String doc):
 {
-	Table table = null;
+	TableBuilder table = null;
 	Token t = null;
     boolean val = true;
 }
 {
     <K_TABLE>
-	t = <S_IDENTIFIER> {table = new Table(g, t.toString());
-	                            table.setCelestaDocLexem(doc);}
+	t = <S_IDENTIFIER> {table = new TableBuilder(g, t.toString());
+	                    table.setCelestaDocLexem(doc);}
 	"("
 		tableConstituent(table)	("," tableConstituent(table))*
 	")"
 
 	[<K_WITH> { token_source.SwitchTo(OPTIONS_STATE); }
 	   (
-	     (<K_READ> <K_ONLY> {table.setVersioned(false);
-	                       table.setReadOnly(true);})
-	   | ( {val = true;}  [ <K_NO> {val = false;} ]
-	       ( <K_VERSION> <K_CHECK> {table.setVersioned(val);}
-	       | <K_AUTOUPDATE>        {table.setAutoUpdate(val);})
+	     (
+	       <K_READ> <K_ONLY> {table.setVersioned(false);
+	                          table.setReadOnly(true);}
+	     )
+	   |
+	     ( {val = true;}  [ <K_NO> {val = false;} ]
+	       (
+	         <K_VERSION> <K_CHECK> {table.setVersioned(val);}
+	       |
+	         <K_AUTOUPDATE>        {table.setAutoUpdate(val);}
+	       )
 	     )+
 	   )
 	]
 	{
-	  table.finalizePK();
+	  table.build();
     }
 }
 
-void tableConstituent(Table table):{
+void tableConstituent(TableBuilder table):{
   String name;
-  ForeignKey fk;
+  TableBuilder.ForeignKeyBuilder fk;
 }
 {
      columnDefinition(table)
@@ -324,15 +330,15 @@ void tableConstituent(Table table):{
         | fk = foreignKey(table) {fk.setConstraintName(name);})
 }
 
-void columnDefinition(Table table):
+void columnDefinition(TableBuilder table):
 {
-   Column column = null;
+   TableBuilder.ColumnBuilder column = null;
    Token t;
    Token length = null;
    boolean nullable;
    boolean negative = false;
    boolean pk = false;
-   ForeignKey fk = null;
+   TableBuilder.ForeignKeyBuilder fk = null;
    String name;
    Token doc = null;
    SequenceElement sequence = null;
@@ -343,7 +349,7 @@ void columnDefinition(Table table):
 {
  [doc = <CELESTA_DOC>]
   t = <S_IDENTIFIER>
-    (  (<K_INT>       {column = new IntegerColumn(table, t.toString()); t = null; }
+    (  (<K_INT>       {column = table.integerColumn(t.toString()); t = null; }
 	       nullable = nullable()
 	       [
 	         (   <K_DEFAULT> ((["-" {negative = true;}] t = <S_INTEGER> {defaultValue = (negative? "-": "") + t.toString();})
@@ -351,45 +357,45 @@ void columnDefinition(Table table):
 	         )
 	       ]
 	    )
-    |  (<K_REAL>      {column = new FloatingColumn(table, t.toString()); t = null;}
+    |  (<K_REAL>      {column = table.floatingColumn(t.toString()); t = null;}
 	       nullable = nullable()
 		  [<K_DEFAULT> ["-" {negative = true;}] (t = <S_INTEGER> | t = <S_DOUBLE>) {defaultValue = (negative? "-": "") + t.toString();}])
     |  (<K_DECIMAL> ("(" precision = <S_INTEGER> "," scale = <S_INTEGER> ")")
           {
-            column = new DecimalColumn(
-                table, t.toString(), Integer.parseInt(precision.toString()), Integer.parseInt(scale.toString())
+            column = table.decimalColumn(
+                t.toString(), Integer.parseInt(precision.toString()), Integer.parseInt(scale.toString())
             );
             t = null;
           }
           nullable = nullable()
           [<K_DEFAULT> ["-" {negative = true;}] (t = <S_DOUBLE>) {defaultValue = (negative? "-": "") + t.toString();}])
-    |  (<K_VARCHAR> {column = new StringColumn(table, t.toString()); t = null; }
+    |  (<K_VARCHAR> {column = table.stringColumn(t.toString()); t = null; }
 	          ["("  (length = <S_INTEGER> /* | length = <K_MAX>*/) ")"]
-			  {((StringColumn) column).setLength(length.toString());}
+			  {column.setLength(length.toString());}
 	       nullable = nullable()
 		  [<K_DEFAULT> t = <S_CHAR_LITERAL>])
-    |  (<K_TEXT> {column = new StringColumn(table, t.toString());
-	              ((StringColumn) column).setLength("MAX");
+    |  (<K_TEXT> {column = table.stringColumn(t.toString());
+	              column.setLength("MAX");
 				  t = null;}
 	       nullable = nullable()
 		  [<K_DEFAULT> t = <S_CHAR_LITERAL>])
-    |  (<K_BLOB>     {column = new BinaryColumn(table, t.toString()); t = null;}
+    |  (<K_BLOB>     {column = table.binaryColumn(t.toString()); t = null;}
 	       nullable = nullable()
 		  [<K_DEFAULT> t = <S_BINARY_LITERAL>])
     |  (<K_DATETIME>
         [
             <K_WITH> {token_source.SwitchTo(DATETIME_STATE);}
-             <K_TIME> <K_ZONE> { column = new ZonedDateTimeColumn(table, t.toString());}
+             <K_TIME> <K_ZONE> { column = table.zonedDateTimeColumn(t.toString());}
         ]
         {
             if (column == null) {
-                column = column = new DateTimeColumn(table, t.toString());
+                column = table.dateTimeColumn(t.toString());
             }
             t = null;
         }
 	       nullable = nullable()
 		  [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <K_GETDATE> "(" ")")])
-    |  (<K_BIT>       {column = new BooleanColumn(table, t.toString()); t = null;})
+    |  (<K_BIT>       {column = table.booleanColumn(t.toString()); t = null;})
 	       nullable = nullable()
 	      [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <S_INTEGER> | t=<K_FALSE>|t=<K_TRUE>)])
 	name = constraint(table.getGrain()) [<K_PRIMARY> <K_KEY>
@@ -403,7 +409,7 @@ void columnDefinition(Table table):
 	    table.finalizePK();
 	  }
     }
-	[<K_FOREIGN> <K_KEY> {fk = new ForeignKey(table); fk.addColumn(column.getName()); fk.setConstraintName(name);} references(fk)]
+	[<K_FOREIGN> <K_KEY> {fk = table.foreignKey(); fk.addColumn(column.getName()); fk.setConstraintName(name);} references(fk)]
 }
 
 boolean nullable():
@@ -414,7 +420,7 @@ boolean nullable():
 [<K_NULL>         {result = true;} |<K_NOT> <K_NULL> {result = false;}] { return result;}
 }
 
-void primaryKey(Table table):
+void primaryKey(TableBuilder table):
 {
   Token t;
   IdentifierParser identifierParser = table.getGrain().getScore().getIdentifierParser();
@@ -427,12 +433,12 @@ void primaryKey(Table table):
   }
 }
 
-ForeignKey foreignKey(Table table):{
+TableBuilder.ForeignKeyBuilder foreignKey(TableBuilder table):{
   Token t;
-  ForeignKey fk;
+  TableBuilder.ForeignKeyBuilder fk;
 }
 {
-<K_FOREIGN><K_KEY> { fk = new ForeignKey(table);}
+<K_FOREIGN><K_KEY> { fk = table.foreignKey();}
    "(" t = <S_IDENTIFIER> {fk.addColumn(t.toString());}
   ("," t = <S_IDENTIFIER> {fk.addColumn(t.toString());})* ")"
 
@@ -441,7 +447,7 @@ ForeignKey foreignKey(Table table):{
   }
 }
 
-void references(ForeignKey fk):{
+void references(TableBuilder.ForeignKeyBuilder fk):{
   Token t;
   Token t2 = null;
   FKRule action;
@@ -492,16 +498,20 @@ Index ind;
 
 void alterTable(GrainPart g):{
   Token t;
-  Table table;
+  BasicTable table;
+  TableBuilder tb;
   String name;
-  ForeignKey fk;
+  TableBuilder.ForeignKeyBuilder fk;
   IdentifierParser identifierParser =  g.getGrain().getScore().getIdentifierParser();
 }
 {
 <K_TABLE> t = <S_IDENTIFIER> {
-  table = g.getGrain().getElement(identifierParser.parse(t.toString()), Table.class);
+  table = g.getGrain().getElement(identifierParser.parse(t.toString()), BasicTable.class);
+}
+<K_ADD> name = constraint(g.getGrain())  fk = foreignKey(tb = new TableBuilder(table)) {
+    fk.setConstraintName(name);
+    tb.build();
   }
-<K_ADD> name = constraint(g.getGrain()) fk = foreignKey(table) {fk.setConstraintName(name);}
 }
 
 String constraint(Grain g):{
@@ -899,11 +909,11 @@ TableRef tableReference(AbstractView v):
 	  [<K_AS>] [t = <S_IDENTIFIER> {alias = t.toString();} ]
   
   {
-     Table tab;
+     BasicTable tab;
      if (grainName == null) {
-	    tab = v.getGrain().getElement(identifierParser.parse(tableName), Table.class);
+	    tab = v.getGrain().getElement(identifierParser.parse(tableName), BasicTable.class);
 	 } else {
-	    tab = v.getGrain().getScore().getGrainAsDependency(v.getGrain(), grainName).getElement(identifierParser.parse(tableName), Table.class);
+	    tab = v.getGrain().getScore().getGrainAsDependency(v.getGrain(), grainName).getElement(identifierParser.parse(tableName), BasicTable.class);
 	 }
 	 return new TableRef(tab, identifierParser.parse(alias));
   }

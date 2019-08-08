@@ -1061,3 +1061,7 @@ testScore
 testScores
 кодогенерируются
 плагина
+columns
+dynamic
+getValue
+setValue

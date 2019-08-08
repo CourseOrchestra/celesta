@@ -63,7 +63,7 @@ public abstract class NamedElementHolder<T extends NamedElement> implements Coll
      * @param name  element name (identifier)
      * @return
      */
-    public int getIndex(String name) {
+    public final int getIndex(String name) {
         int i = -1;
         for (String c : namespace.keySet()) {
             i++;
@@ -80,38 +80,38 @@ public abstract class NamedElementHolder<T extends NamedElement> implements Coll
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public final Iterator<T> iterator() {
         return namespace.values().iterator();
     }
 
     @Override
-    public int size() {
+    public final int size() {
         return namespace.size();
     }
 
     @Override
-    public boolean contains(Object o) {
+    public final boolean contains(Object o) {
         return namespace.containsValue(o);
     }
 
     @Override
-    public Object[] toArray() {
+    public final Object[] toArray() {
         return namespace.values().toArray();
     }
 
     @Override
-    public <A> A[] toArray(A[] a) {
+    public final <A> A[] toArray(A[] a) {
         return namespace.values().toArray(a);
     }
 
     @Override
     @Deprecated
-    public boolean add(T e) {
+    public final boolean add(T e) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean remove(Object o) {
+    public final boolean remove(Object o) {
         if (o instanceof NamedElement) {
             NamedElement e = (NamedElement) o;
             return namespace.remove(e.getName()) != null;
@@ -121,27 +121,27 @@ public abstract class NamedElementHolder<T extends NamedElement> implements Coll
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
+    public final boolean containsAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean addAll(Collection<? extends T> c) {
+    public final boolean addAll(Collection<? extends T> c) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public final boolean removeAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public final boolean retainAll(Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void clear() {
+    public final void clear() {
         namespace.clear();
     }
 

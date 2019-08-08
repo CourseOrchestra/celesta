@@ -341,7 +341,7 @@ public final class DdlAdaptor {
     }
 
     //TODO: Javadoc
-    public void dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
+    public void dropTableTriggersForMaterializedViews(Connection conn, BasicTable t)  {
         List<String> sqlList = this.ddlGenerator.dropTableTriggersForMaterializedViews(conn, t);
         try {
             processSql(conn, sqlList);
@@ -350,7 +350,7 @@ public final class DdlAdaptor {
         }
     }
 
-    public void createTableTriggersForMaterializedViews(Connection conn, Table t)  {
+    public void createTableTriggersForMaterializedViews(Connection conn, BasicTable t)  {
         List<String> sqlList = this.ddlGenerator.createTableTriggersForMaterializedViews(t);
         try {
             processSql(conn, sqlList);

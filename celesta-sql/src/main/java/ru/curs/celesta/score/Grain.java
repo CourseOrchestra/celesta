@@ -108,7 +108,11 @@ public final class Grain extends NamedElement {
         }
 
         modify();
+
         getElementsHolder((Class<T>) element.getClass()).addElement(element);
+        if (element instanceof BasicTable) {
+            getElementsHolder((Class<T>) BasicTable.class).addElement(element);
+        }
     }
 
     /**
@@ -160,12 +164,31 @@ public final class Grain extends NamedElement {
     }
 
     /**
+     * Returns a set of parameterized views defined in the grain.
+     *
+     * @return
+     */
+    public Map<String, ParameterizedView> getParameterizedViews() {
+        return getElementsHolder(ParameterizedView.class).getElements();
+    }
+
+    /**
      * Returns a set of tables defined in the grain.
      *
      * @return
      */
-    public Map<String, Table> getTables() {
-        return getElementsHolder(Table.class).getElements();
+    public Map<String, BasicTable> getTables() {
+        return getElementsHolder(BasicTable.class).getElements();
+    }
+
+    /**
+     * Returns a set of tables defined in the grain by a table class.
+     *
+     * @param tableClass  Table class
+     * @return
+     */
+    public <T extends BasicTable> Map<String, T> getTables(Class<T> tableClass) {
+        return getElementsHolder(tableClass).getElements();
     }
 
     /**
@@ -218,15 +241,15 @@ public final class Grain extends NamedElement {
     }
 
     synchronized <T extends DataGrainElement> void removeElement(T element) throws ParseException {
-        if (element instanceof Table) {
-            removeTable((Table) element);
+        if (element instanceof BasicTable) {
+            removeTable((BasicTable) element);
         } else {
             modify();
             getElementsHolder(element.getClass()).remove(element);
         }
     }
 
-    private synchronized void removeTable(Table table) throws ParseException {
+    private synchronized void removeTable(BasicTable table) throws ParseException {
         // Проверяем, не системную ли таблицу хотим удалить
         modify();
 
@@ -241,7 +264,7 @@ public final class Grain extends NamedElement {
         // Удаляются все внешние ключи, ссылающиеся на данную таблицу
         List<ForeignKey> fkToDelete = new LinkedList<>();
         for (Grain g : score.getGrains().values()) {
-            for (Table t : g.getElements(Table.class).values()) {
+            for (BasicTable t : g.getElements(BasicTable.class).values()) {
                 for (ForeignKey fk : t.getForeignKeys()) {
                     if (fk.getReferencedTable() == table) {
                         fkToDelete.add(fk);
@@ -258,7 +281,7 @@ public final class Grain extends NamedElement {
         }
 
         // Удаляется сама таблица
-        getElementsHolder(Table.class).remove(table);
+        getElementsHolder(BasicTable.class).remove(table);
     }
 
     /**
@@ -375,7 +398,7 @@ public final class Grain extends NamedElement {
      */
     public void finalizeParsing() throws ParseException {
 
-        for (String tableName: getElements(Table.class).keySet()) {
+        for (String tableName: getElements(BasicTable.class).keySet()) {
             String sequenceName = tableName + "_seq";
             SequenceElement se = getElementsHolder(SequenceElement.class).get(sequenceName);
             if (se != null) {
@@ -422,14 +445,50 @@ public final class Grain extends NamedElement {
     }
 
     /**
+     * Returns a materialized view by its name or an exception with a message
+     * that the view was not found.
+     *
+     * @param name  Materialized view name
+     * @return
+     * @throws ParseException  If materialized view with that name was not found in the grain.
+     */
+    public MaterializedView getMaterializedView(String name) throws ParseException {
+        return getElement(name, MaterializedView.class);
+    }
+
+    /**
+     * Returns a parameterized view by its name or an exception with a message
+     * that the view was not found.
+     *
+     * @param name  Parameterized view name
+     * @return
+     * @throws ParseException  If parameterized view with that name was not found in the grain.
+     */
+    public ParameterizedView getParameterizedView(String name) throws ParseException {
+        return getElement(name, ParameterizedView.class);
+    }
+
+    /**
      * Returns a table by its name or an exception with a message that the table was not found.
      *
      * @param name  Table name
      * @return
      * @throws ParseException  If table with that name was not found in the grain.
      */
-    public Table getTable(String name) throws ParseException {
-        return getElement(name, Table.class);
+    public BasicTable getTable(String name) throws ParseException {
+        return getElement(name, BasicTable.class);
+    }
+
+    /**
+     * Returns a table by its name and a table class.
+     *
+     * @param name  Table name
+     * @param tableClass  Table class
+     * @return
+     * @throws ParseException  If table with that name was not found in the grain.
+     */
+    public <T extends BasicTable> T getTable(String name, Class<T> tableClass) throws ParseException {
+        return getElement(name, tableClass);
     }
 
     void addNativeSql(String sql, boolean isBefore, DBType dbType, GrainPart grainPart) throws ParseException {
@@ -459,6 +518,11 @@ public final class Grain extends NamedElement {
         return afterSql.getOrDefault(dbType, Collections.emptyList());
     }
 
+    /**
+     * Returns grain parts that this grain consists of.
+     *
+     * @return
+     */
     public Set<GrainPart> getGrainParts() {
         return grainParts;
     }
@@ -467,6 +531,11 @@ public final class Grain extends NamedElement {
         grainParts.add(grainPart);
     }
 
+    /**
+     * Returns namespace of the grain.
+     *
+     * @return
+     */
     public Namespace getNamespace() {
         if (namespace != null) {
             return namespace;
@@ -487,6 +556,11 @@ public final class Grain extends NamedElement {
         return ns;
     }
 
+    /**
+     * Sets namespace of the grain.
+     *
+     * @param namespace
+     */
     public void setNamespace(Namespace namespace) {
         this.namespace = namespace;
     }

@@ -53,6 +53,18 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     }
 
     @Override
+    protected Object _getFieldValue(String name) {
+        try {
+            Field f = getClass().getDeclaredField(name);
+
+            f.setAccessible(true);
+            return f.get(this);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);

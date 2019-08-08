@@ -34,6 +34,18 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
     }
 
     @Override
+    protected Object _getFieldValue(String name) {
+        try {
+            Field f = getClass().getDeclaredField(name);
+
+            f.setAccessible(true);
+            return f.get(this);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);

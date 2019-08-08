@@ -31,7 +31,7 @@ public final class FieldsLookup {
     public FieldsLookup(Cursor cursor, Cursor otherCursor,
                         Runnable lookupChangeCallback,
                         Function<FieldsLookup, Void> newLookupCallback) {
-        this(Table.class, cursor, cursor.meta(), otherCursor,
+        this(BasicTable.class, cursor, cursor.meta(), otherCursor,
                 otherCursor.meta(), lookupChangeCallback, newLookupCallback);
     }
 
@@ -68,10 +68,10 @@ public final class FieldsLookup {
      *
      */
     public FieldsLookup(
-            Table table, Table otherTable,
+            BasicTable table, BasicTable otherTable,
             Runnable lookupChangeCallback,
             Function<FieldsLookup, Void> newLookupCallback) {
-        this.targetClass = Table.class;
+        this.targetClass = BasicTable.class;
         this.filtered = table;
         this.filtering = otherTable;
         this.lookupChangeCallback = lookupChangeCallback;
@@ -114,7 +114,7 @@ public final class FieldsLookup {
     }
 
     public FieldsLookup and(BasicCursor otherCursor) {
-        if (Table.class.equals(targetClass)) {
+        if (BasicTable.class.equals(targetClass)) {
             FieldsLookup fieldsLookup = new FieldsLookup(
                     (Cursor) cursor, (Cursor) otherCursor, lookupChangeCallback, newLookupCallback);
             newLookupCallback.apply(fieldsLookup);
@@ -130,10 +130,10 @@ public final class FieldsLookup {
         }
     }
 
-    public FieldsLookup and(Table filtering) {
+    public FieldsLookup and(BasicTable filtering) {
 
-        if (filtered instanceof Table) {
-            Table filteredTable = (Table) filtered;
+        if (filtered instanceof BasicTable) {
+            BasicTable filteredTable = (BasicTable) filtered;
             FieldsLookup fieldsLookup = new FieldsLookup(
                     filteredTable, filtering, lookupChangeCallback, newLookupCallback);
             newLookupCallback.apply(fieldsLookup);
@@ -182,16 +182,16 @@ public final class FieldsLookup {
                     filtering.getGrain().getName(), filtering.getName(), otherField);
         }
 
-        if (Table.class.equals(targetClass)) {
+        if (BasicTable.class.equals(targetClass)) {
             List<String> fieldsToValidate = new ArrayList<>(fields);
             fieldsToValidate.add(field);
             Set<List<Integer>> columnOrdersInIndicesSet =
-                    getColumnOrdersInIndicesSet(fieldsToValidate, (Table) filtered);
+                    getColumnOrdersInIndicesSet(fieldsToValidate, (BasicTable) filtered);
 
             List<String> otherFieldsToValidate = new ArrayList<>(otherFields);
             otherFieldsToValidate.add(otherField);
             Set<List<Integer>> otherColumnOrdersInIndicesSet = getColumnOrdersInIndicesSet(otherFieldsToValidate,
-                    (Table) filtering);
+                    (BasicTable) filtering);
 
             columnOrdersInIndicesSet.retainAll(otherColumnOrdersInIndicesSet);
 
@@ -215,10 +215,10 @@ public final class FieldsLookup {
     }
 
     public void validate() {
-        if (Table.class.equals(targetClass)) {
-            Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fields, (Table) filtered);
+        if (BasicTable.class.equals(targetClass)) {
+            Set<List<Integer>> columnOrdersInIndicesSet = getColumnOrdersInIndicesSet(fields, (BasicTable) filtered);
             Set<List<Integer>> otherColumnOrdersInIndicesSet =
-                    getColumnOrdersInIndicesSet(otherFields, (Table) filtering);
+                    getColumnOrdersInIndicesSet(otherFields, (BasicTable) filtering);
 
             columnOrdersInIndicesSet.retainAll(otherColumnOrdersInIndicesSet);
 
@@ -234,7 +234,7 @@ public final class FieldsLookup {
         }
     }
 
-    private Set<List<Integer>> getColumnOrdersInIndicesSet(List<String> fieldsToValidate, Table table) {
+    private Set<List<Integer>> getColumnOrdersInIndicesSet(List<String> fieldsToValidate, BasicTable table) {
 
         final List<Index> indexesToValidate;
         // Сперва определяем, есть ли указанные поля в первичном ключе

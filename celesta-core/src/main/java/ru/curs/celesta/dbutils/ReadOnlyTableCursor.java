@@ -6,13 +6,13 @@ import java.util.Set;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.ParseException;
-import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.ReadOnlyTable;
 
 /**
  * Cursor for tables that are defined only for reading.
  */
 public abstract class ReadOnlyTableCursor extends BasicCursor {
-    private Table meta = null;
+    private ReadOnlyTable meta = null;
 
     public ReadOnlyTableCursor(CallContext context) {
         super(context);
@@ -22,12 +22,35 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
         super(context, fields);
     }
 
+    /**
+     * Creates a read only table specific cursor.
+     *
+     * @param table  Cursor related table
+     * @param callContext  Call context that is used for cursor creation
+     * @return
+     */
+    public static ReadOnlyTableCursor create(ReadOnlyTable table, CallContext callContext) {
+        return (ReadOnlyTableCursor) BasicCursor.create(table, callContext);
+    }
+
+    /**
+     * Creates a table specific cursor.
+     *
+     * @param table  Cursor related table
+     * @param callContext  Call context that is used for cursor creation
+     * @param fields  Fields the cursor should operate on
+     * @return
+     */
+    public static ReadOnlyTableCursor create(ReadOnlyTable table, CallContext callContext, Set<String> fields) {
+        return (ReadOnlyTableCursor) BasicCursor.create(table, callContext, fields);
+    }
+
     @Override
-    public final Table meta() {
+    public final ReadOnlyTable meta() {
         if (meta == null) {
             try {
                 meta = callContext().getScore()
-                        .getGrain(_grainName()).getElement(_objectName(), Table.class);
+                        .getGrain(_grainName()).getElement(_objectName(), ReadOnlyTable.class);
             } catch (ParseException e) {
                 throw new CelestaException(e.getMessage());
             }

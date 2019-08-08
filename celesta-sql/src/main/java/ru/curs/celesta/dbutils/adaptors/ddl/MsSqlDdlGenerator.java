@@ -79,7 +79,6 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
 
             if (t instanceof VersionedElement) {
                 VersionedElement ve = (VersionedElement) t;
-
                 if (ve.isVersioned()) {
                     if (!triggerExists) {
                         result.add(createVersioningTrigger(t));
@@ -262,7 +261,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t)  {
+    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t)  {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
@@ -290,12 +289,12 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
         }
 
         if (!mvList.isEmpty()) {
-            //Обнуляем избыточный rec_version триггер.
+            // Set excessive 'rec_version' trigger to zero.
             query.withName(t.getName() + "_upd");
             if (this.triggerExists(conn, query)) {
                 result.add(dropTrigger(query));
             }
-            if (t.isVersioned()) {
+            if (t instanceof VersionedElement && ((VersionedElement) t).isVersioned()) {
                 result.add(createVersioningTrigger(t));
                 this.rememberTrigger(query);
             }
@@ -305,7 +304,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    public List<String> createTableTriggersForMaterializedViews(Table t) {
+    public List<String> createTableTriggersForMaterializedViews(BasicTable t) {
         List<String> result = new ArrayList<>();
 
         String fullTableName = tableString(t.getGrain().getName(), t.getName());
@@ -320,7 +319,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
 
         StringBuilder afterUpdateTriggerTsql = new StringBuilder();
 
-        if (t.isVersioned()) {
+        if (t instanceof VersionedElement && ((VersionedElement) t).isVersioned()) {
             afterUpdateTriggerTsql.append(generateTsqlForVersioningTrigger(t)).append("\n");
         }
 
@@ -481,7 +480,8 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
 
         StringBuilder sb = new StringBuilder();
 
-        final String sqlPrefix = t.isVersioned() ? "alter" : "create";
+        final String sqlPrefix =
+                (t instanceof VersionedElement && ((VersionedElement) t).isVersioned()) ? "alter" : "create";
 
         String updateTriggerName = String.format("%s_upd", t.getName());
         sb.append(

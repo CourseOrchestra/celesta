@@ -162,7 +162,7 @@ public final class OraAdaptor extends DBAdaptor {
     }
 
     @Override
-    public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+    public PreparedStatement getInsertRecordStatement(Connection conn, BasicTable t, boolean[] nullsMask,
                                                       List<ParameterSetter> program) {
 
         Iterator<String> columns = t.getColumns().keySet().iterator();
@@ -285,8 +285,7 @@ public final class OraAdaptor extends DBAdaptor {
                 tableElement.getPkConstraintName() + "_" + tableElement.getGrain().getName());
     }
 
-    @Override
-    public int getCurrentIdent(Connection conn, Table t) {
+    public int getCurrentIdent(Connection conn, BasicTable t) {
         final String sequenceName;
 
         IntegerColumn idColumn = t.getPrimaryKey().values().stream()

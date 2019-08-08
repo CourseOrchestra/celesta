@@ -358,12 +358,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @return
      */
     public final PreparedStatement getUpdateRecordStatement(
-            Connection conn, Table t, boolean[] equalsMask,
+            Connection conn, BasicTable t, boolean[] equalsMask,
             boolean[] nullsMask, List<ParameterSetter> program, String where) {
 
         // CHECKSTYLE:ON
         StringBuilder setClause = new StringBuilder();
-        if (t.isVersioned()) {
+        if (t instanceof Table && ((Table) t).isVersioned()) {
             setClause.append(String.format("\"%s\" = ?", VersionedElement.REC_VERSION));
             program.add(ParameterSetter.createForRecversion(this));
         }
@@ -518,11 +518,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         this.ddlAdaptor.createParameterizedView(conn, pv);
     }
 
-    public final void dropTableTriggersForMaterializedViews(Connection conn, Table t) {
+    public final void dropTableTriggersForMaterializedViews(Connection conn, BasicTable t) {
         this.ddlAdaptor.dropTableTriggersForMaterializedViews(conn, t);
     }
 
-    public final void createTableTriggersForMaterializedViews(Connection conn, Table t) {
+    public final void createTableTriggersForMaterializedViews(Connection conn, BasicTable t) {
         this.ddlAdaptor.createTableTriggersForMaterializedViews(conn, t);
     }
 
@@ -976,7 +976,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param program  collects parameters that can be set with the query
      * @return
      */
-    public abstract PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+    public abstract PreparedStatement getInsertRecordStatement(Connection conn, BasicTable t, boolean[] nullsMask,
                                                                List<ParameterSetter> program);
     /**
      * Returns current identity value for the table.
@@ -985,7 +985,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param t  table
      * @return
      */
-    public abstract int getCurrentIdent(Connection conn, Table t);
+    public abstract int getCurrentIdent(Connection conn, BasicTable t);
 
     /**
      * Creates a PreparedStatement object for a DELETE statement for deleting a set of records that

@@ -14,9 +14,9 @@ import java.util.function.Function;
  */
 public class FieldsLookupTest {
 
-    private static Table tableA;
-    private static Table tableB;
-    private static Table tableC;
+    private static BasicTable tableA;
+    private static BasicTable tableB;
+    private static BasicTable tableC;
     private static View viewA;
     private static View viewB;
     private static View viewC;
@@ -40,8 +40,8 @@ public class FieldsLookupTest {
         viewC = generateView(gp, "cV", tableC);
     }
 
-    private static Table generateTable(GrainPart gp, String name) throws ParseException {
-        Table table = new Table(gp, name);
+    private static BasicTable generateTable(GrainPart gp, String name) throws ParseException {
+        BasicTable table = new Table(gp, name);
 
         Column c1 = new IntegerColumn(table, name + "1");
         Column c2 = new IntegerColumn(table, name + "2");
@@ -54,7 +54,7 @@ public class FieldsLookupTest {
         return table;
     }
 
-    private static View generateView(GrainPart gp, String name, Table table) throws ParseException {
+    private static View generateView(GrainPart gp, String name, BasicTable table) throws ParseException {
         View view = new View(gp, name);
         view.addFromTableRef(new TableRef(table, table.getName()));
 

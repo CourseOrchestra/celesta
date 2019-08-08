@@ -91,9 +91,13 @@ public final class CelestaSerializer {
         for (Table t : tables) {
             save(t);
         }
+        Collection<ReadOnlyTable> roTables = grain.getElements(ReadOnlyTable.class, gp);
+        for (ReadOnlyTable rot : roTables) {
+            save(rot);
+        }
 
         writer.println("-- *** FOREIGN KEYS ***");
-        for (Table t : tables) {
+        for (BasicTable t : tables) {
             for (ForeignKey fk : t.getForeignKeys()) {
                 save(fk);
             }
@@ -171,6 +175,28 @@ public final class CelestaSerializer {
      * @throws IOException  if serialization fails
      */
     void save(Table t) throws IOException {
+        saveHead(t);
+        if (!t.isVersioned()) {
+            writer.write(" WITH NO VERSION CHECK");
+            saveTail(t, false);
+        } else {
+            saveTail(t, true);
+        }
+    }
+
+    /**
+     * Serializes read only table to its CelestaSQL representation.
+     *
+     * @param t  table
+     * @throws IOException  if serialization fails
+     */
+    void save(ReadOnlyTable t) throws IOException {
+        saveHead(t);
+        writer.write(" WITH READ ONLY");
+        saveTail(t, false);
+    }
+
+    private void saveHead(BasicTable t) throws IOException {
 
         writeCelestaDoc(t);
 
@@ -205,16 +231,11 @@ public final class CelestaSerializer {
         }
 
         writer.write(")");
-        boolean withEmitted = false;
-        if (t.isReadOnly()) {
-            writer.write(" WITH READ ONLY");
-            withEmitted = true;
-        } else if (!t.isVersioned()) {
-            writer.write(" WITH NO VERSION CHECK");
-            withEmitted = true;
-        }
+    }
+
+    private void saveTail(BasicTable t, boolean isWith) {
         if (!t.isAutoUpdate()) {
-            if (!withEmitted) {
+            if (isWith) {
                 writer.write(" WITH");
             }
             writer.write(" NO AUTOUPDATE");
@@ -529,7 +550,7 @@ public final class CelestaSerializer {
 
         @Override
         protected String tableName(TableRef tRef) {
-            Table t = tRef.getTable();
+            BasicTable t = tRef.getTable();
             if (t.getGrain() == view.getGrain()) {
                 return String.format("%s as %s", t.getQuotedNameIfNeeded(), tRef.getAlias());
             } else {

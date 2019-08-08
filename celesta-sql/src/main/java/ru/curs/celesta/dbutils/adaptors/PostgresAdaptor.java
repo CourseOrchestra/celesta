@@ -87,7 +87,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    public int getCurrentIdent(Connection conn, Table t) {
+    public int getCurrentIdent(Connection conn, BasicTable t) {
 
         IntegerColumn idColumn = t.getPrimaryKey().values().stream()
                 .filter(c -> c instanceof IntegerColumn)
@@ -108,7 +108,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    public PreparedStatement getInsertRecordStatement(Connection conn, Table t, boolean[] nullsMask,
+    public PreparedStatement getInsertRecordStatement(Connection conn, BasicTable t, boolean[] nullsMask,
                                                       List<ParameterSetter> program) {
 
         Iterator<String> columns = t.getColumns().keySet().iterator();

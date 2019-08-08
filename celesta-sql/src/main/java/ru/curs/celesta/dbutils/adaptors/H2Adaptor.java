@@ -69,7 +69,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    public int getCurrentIdent(Connection conn, Table t) {
+    public int getCurrentIdent(Connection conn, BasicTable t) {
         IntegerColumn idColumn = t.getPrimaryKey().values().stream()
                 .filter(c -> c instanceof IntegerColumn)
                 .map(c -> (IntegerColumn) c)
@@ -96,7 +96,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
     @Override
     public PreparedStatement getInsertRecordStatement(
-            Connection conn, Table t, boolean[] nullsMask, List<ParameterSetter> program) {
+            Connection conn, BasicTable t, boolean[] nullsMask, List<ParameterSetter> program) {
 
         Iterator<String> columns = t.getColumns().keySet().iterator();
         // Создаём параметризуемую часть запроса, пропуская нулевые значения.

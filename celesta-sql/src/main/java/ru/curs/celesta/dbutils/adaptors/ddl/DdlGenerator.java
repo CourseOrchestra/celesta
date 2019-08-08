@@ -370,7 +370,7 @@ public abstract class DdlGenerator {
     }
 
     final List<String> initDataForMaterializedView(MaterializedView mv) {
-        Table t = mv.getRefTable().getTable();
+        BasicTable t = mv.getRefTable().getTable();
 
         String mvIdentifier = tableString(mv.getGrain().getName(), mv.getName());
         String mvColumns = mv.getColumns().keySet().stream()
@@ -468,9 +468,9 @@ public abstract class DdlGenerator {
 
     abstract Optional<String> dropAutoIncrement(Connection conn, TableElement t);
 
-    public abstract List<String> dropTableTriggersForMaterializedViews(Connection conn, Table t);
+    public abstract List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t);
 
-    public abstract List<String> createTableTriggersForMaterializedViews(Table t);
+    public abstract List<String> createTableTriggersForMaterializedViews(BasicTable t);
 
     /**
      * Returns an SQL with the rounding function of timestamp to date.

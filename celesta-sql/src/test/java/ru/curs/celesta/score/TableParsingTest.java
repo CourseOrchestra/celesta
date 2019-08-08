@@ -45,28 +45,22 @@ public class TableParsingTest extends AbstractParsingTest {
             "table/testTableOptionsCombinations.sql"
     );
     Grain g = parse(f);
-    Table t = g.getTable("t1");
-    assertTrue(t.isReadOnly());
+    ReadOnlyTable rot = g.getTable("t1", ReadOnlyTable.class);
+    assertTrue(rot.isAutoUpdate());
+
+    Table t = g.getTable("t2", Table.class);
     assertTrue(t.isAutoUpdate());
     assertFalse(t.isVersioned());
 
-    t = g.getTable("t2");
-    assertFalse(t.isReadOnly());
-    assertTrue(t.isAutoUpdate());
-    assertFalse(t.isVersioned());
-
-    t = g.getTable("t3");
-    assertFalse(t.isReadOnly());
+    t = g.getTable("t3", Table.class);
     assertFalse(t.isAutoUpdate());
     assertTrue(t.isVersioned());
 
-    t = g.getTable("t4");
-    assertFalse(t.isReadOnly());
+    t = g.getTable("t4", Table.class);
     assertFalse(t.isAutoUpdate());
     assertFalse(t.isVersioned());
 
-    t = g.getTable("t5");
-    assertFalse(t.isReadOnly());
+    t = g.getTable("t5", Table.class);
     assertTrue(t.isAutoUpdate());
     assertTrue(t.isVersioned());
   }
@@ -123,13 +117,13 @@ public class TableParsingTest extends AbstractParsingTest {
             "table/testDecimal.sql"
     );
     Grain g = parse(f);
-    Table t1 = g.getElement("t1", Table.class);
+    BasicTable t1 = g.getElement("t1", BasicTable.class);
     DecimalColumn dc1 = (DecimalColumn)t1.getColumn("cost");
-    Table t2 = g.getElement("t2", Table.class);
+    BasicTable t2 = g.getElement("t2", BasicTable.class);
     DecimalColumn dc2 = (DecimalColumn)t2.getColumn("cost");
-    Table t3 = g.getElement("t3", Table.class);
+    BasicTable t3 = g.getElement("t3", BasicTable.class);
     DecimalColumn dc3 = (DecimalColumn)t3.getColumn("cost");
-    Table t4 = g.getElement("t4", Table.class);
+    BasicTable t4 = g.getElement("t4", BasicTable.class);
     DecimalColumn dc4 = (DecimalColumn)t4.getColumn("cost");
 
     assertAll(
@@ -176,7 +170,7 @@ public class TableParsingTest extends AbstractParsingTest {
             "table/testDatetimeWithTimeZone.sql"
     );
     Grain g = parse(f);
-    Table t1 = g.getElement("t", Table.class);
+    BasicTable t1 = g.getElement("t", BasicTable.class);
     ZonedDateTimeColumn c = (ZonedDateTimeColumn)t1.getColumn("created");
 
     assertAll(

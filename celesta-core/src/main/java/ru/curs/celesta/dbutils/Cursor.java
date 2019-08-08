@@ -58,7 +58,7 @@ import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
 /**
- * Base cursor class for modification of data in tables.
+ * Cursor class for data modification in tables.
  */
 public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
@@ -123,6 +123,29 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
         getHelper = cghb.build();
         inFilterHolder = new InFilterHolder(this);
+    }
+
+    /**
+     * Creates a table specific cursor.
+     *
+     * @param table  Cursor related table
+     * @param callContext  Call context that is used for cursor creation
+     * @return
+     */
+    public static Cursor create(Table table, CallContext callContext) {
+        return (Cursor) BasicCursor.create(table, callContext);
+    }
+
+    /**
+     * Creates a table specific cursor.
+     *
+     * @param table  Cursor related table
+     * @param callContext  Call context that is used for cursor creation
+     * @param fields  Fields the cursor should operate on
+     * @return
+     */
+    public static Cursor create(Table table, CallContext callContext, Set<String> fields) {
+        return (Cursor) BasicCursor.create(table, callContext, fields);
     }
 
     @Override

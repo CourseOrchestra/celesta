@@ -37,14 +37,8 @@ public final class CursorGenerator {
 
     static {
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(SequenceElement.class, ge -> Sequence.class);
-        GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(Table.class, ge -> {
-            Table t = (Table) ge;
-            if (t.isReadOnly()) {
-                return ReadOnlyTableCursor.class;
-            } else {
-                return Cursor.class;
-            }
-        });
+        GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(Table.class, ge -> Cursor.class);
+        GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(ReadOnlyTable.class, ge -> ReadOnlyTableCursor.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(View.class, ge -> ViewCursor.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(MaterializedView.class, ge -> MaterializedViewCursor.class);
         GRAIN_ELEMENTS_TO_DATA_ACCESSORS.put(ParameterizedView.class, ge -> ParameterizedViewCursor.class);
@@ -97,25 +91,19 @@ public final class CursorGenerator {
             DataGrainElement dge = (DataGrainElement) ge;
             Map<String, ? extends ColumnMeta> columns = dge.getColumns();
 
+            cursorClass.addMethod(buildGetFieldValue());
             cursorClass.addMethod(buildSetFieldValue());
 
             StringBuilder parseResultOverridingMethodNameBuilder = new StringBuilder("_parseResult");
 
-            final Set<Column> pk;
-            if (dge instanceof TableElement) {
+            Set<Column> pk = Collections.emptySet();
+            if ((dge instanceof TableElement) && !(dge instanceof ReadOnlyTable)) {
                 TableElement te = (TableElement) dge;
-
-                if (te instanceof Table && ((Table) te).isReadOnly()) {
-                    pk = Collections.emptySet();
-                } else {
-                    pk = new LinkedHashSet<>(te.getPrimaryKey().values());
-                    cursorClass.addMethod(buildCurrentKeyValues(pk));
-                    if (te instanceof Table) {
-                        parseResultOverridingMethodNameBuilder.append("Internal");
-                    }
+                pk = new LinkedHashSet<>(te.getPrimaryKey().values());
+                cursorClass.addMethod(buildCurrentKeyValues(pk));
+                if (te instanceof Table) {
+                    parseResultOverridingMethodNameBuilder.append("Internal");
                 }
-            } else {
-                pk = Collections.emptySet();
             }
 
             MethodSpec buildParseResultMethod = buildParseResult(
@@ -127,9 +115,9 @@ public final class CursorGenerator {
 
             cursorClass.addMethod(buildCurrentValues(columns));
 
-            if (dge instanceof Table) {
-                Table t = (Table) dge;
-                if (!t.isReadOnly()) {
+            if (dge instanceof BasicTable) {
+                BasicTable t = (BasicTable) dge;
+                if (t instanceof Table) {
                     cursorClass.addMethods(buildCalcBlobs(columns, className));
                     cursorClass.addMethod(buildSetAutoIncrement(columns));
                     cursorClass.addMethods(buildTriggerRegistration(className));
@@ -197,9 +185,9 @@ public final class CursorGenerator {
                     ParameterizedTypeName.get(ClassName.get(Iterable.class), selfTypeName)
             );
         }
-        if (ge instanceof Table) {
-            Table t = (Table) ge;
-            if (!t.isReadOnly()) {
+        if (ge instanceof BasicTable) {
+            BasicTable t = (BasicTable) ge;
+            if (!(t instanceof ReadOnlyTable)) {
                 t.getImplements().forEach(
                         i -> builder.addSuperinterface(ClassName.bestGuess(i))
                 );
@@ -408,6 +396,28 @@ public final class CursorGenerator {
         }
 
         return builder.build();
+    }
+
+    /* NB In case the better performance is needed, this can be rewritten without using the reflection.
+     * E.g. we can populate two maps: Map<String, Producer<?>> , Map<String, Consumer<?> in static Cursor
+     * initializer, and then use these maps in getFieldValue and setFielValue. */
+    private static MethodSpec buildGetFieldValue() {
+        String nameParam = "name";
+
+        return MethodSpec.methodBuilder("_getFieldValue")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PROTECTED)
+                .returns(TypeName.OBJECT)
+                .addParameter(String.class, nameParam)
+                .beginControlFlow("try")
+                .addStatement("$T f = getClass().getDeclaredField($N)", Field.class, nameParam)
+                .addStatement("f.setAccessible(true)")
+                .addStatement("return f.get(this)")
+                .endControlFlow()
+                .beginControlFlow("catch ($T e)", Exception.class)
+                .addStatement("throw new $T(e)", RuntimeException.class)
+                .endControlFlow()
+                .build();
     }
 
     private static MethodSpec buildSetFieldValue() {
