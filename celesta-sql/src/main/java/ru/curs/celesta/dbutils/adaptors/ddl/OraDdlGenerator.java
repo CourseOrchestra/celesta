@@ -206,8 +206,8 @@ public final class OraDdlGenerator extends DdlGenerator {
 
                 if (ic.getSequence() != null) {
                     SequenceElement s = ic.getSequence();
-                    String triggerName = generateSequenceTriggerName(ic);
-                    String sequenceName = String.format("%s_%s", s.getGrain().getName(), s.getName());
+                    final String triggerName = generateSequenceTriggerName(ic);
+                    final String sequenceName = sequenceString(s.getGrain().getName(), s.getName());
                     String sql = createOrReplaceSequenceTriggerForColumn(triggerName, ic, sequenceName);
                     result.add(sql);
 
@@ -323,9 +323,9 @@ public final class OraDdlGenerator extends DdlGenerator {
 
             if ("".equals(actual.getDefaultValue())) { //old defaultValue Is null - create trigger if necessary
                 if (((IntegerColumn) c).getSequence() != null) {
-                    String sequenceName = String.format("%s_%s",
+                    final String sequenceTriggerName = generateSequenceTriggerName(ic);
+                    final String sequenceName = sequenceString(
                             c.getParentTable().getGrain().getName(), ic.getSequence().getName());
-                    String sequenceTriggerName = generateSequenceTriggerName(ic);
                     String sql = createOrReplaceSequenceTriggerForColumn(sequenceTriggerName, ic, sequenceName);
                     result.add(sql);
 
@@ -356,7 +356,7 @@ public final class OraDdlGenerator extends DdlGenerator {
                         String oldSequenceName = m.group(1);
 
                         if (!oldSequenceName.equals(ic.getSequence().getName())) { //using of new sequence
-                            String sequenceName = String.format("%s_%s",
+                            final String sequenceName = sequenceString(
                                     c.getParentTable().getGrain().getName(), ic.getSequence().getName());
                             String sql = createOrReplaceSequenceTriggerForColumn(
                                     generateSequenceTriggerName(ic), ic, sequenceName);
@@ -372,7 +372,7 @@ public final class OraDdlGenerator extends DdlGenerator {
                         }
                     }
                 } else if (ic.getSequence() != null) {
-                    String sequenceName = String.format("%s_%s",
+                    final String sequenceName = sequenceString(
                             c.getParentTable().getGrain().getName(), ic.getSequence().getName());
                     String sql = createOrReplaceSequenceTriggerForColumn(
                             generateSequenceTriggerName(ic), ic, sequenceName);
@@ -396,13 +396,13 @@ public final class OraDdlGenerator extends DdlGenerator {
         return Arrays.asList(sql);
     }
 
-    private String createOrReplaceSequenceTriggerForColumn(String triggerName, IntegerColumn ic, String sequenceName) {
+    private String createOrReplaceSequenceTriggerForColumn(String triggerName, IntegerColumn ic, String quotedSequenceName) {
         TableElement t = ic.getParentTable();
         String sql = String.format(
                 "CREATE OR REPLACE TRIGGER \"" + triggerName + "\" BEFORE INSERT ON "
                         + tableString(t.getGrain().getName(), t.getName())
-                        + " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT \"" + sequenceName
-                        + "\".NEXTVAL INTO :new.%s FROM dual; END;",
+                        + " FOR EACH ROW WHEN (new.%s is null) BEGIN SELECT "
+                        + quotedSequenceName + ".NEXTVAL INTO :new.%s FROM dual; END;",
                 ic.getQuotedName(), ic.getQuotedName());
 
         return sql;

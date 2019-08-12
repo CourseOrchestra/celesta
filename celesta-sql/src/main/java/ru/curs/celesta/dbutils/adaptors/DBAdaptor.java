@@ -556,6 +556,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param tableName  table name
      */
     public String tableString(String schemaName, String tableName) {
+        return getSchemaDotNameQuotedTemplate(schemaName, tableName);
+    }
+
+    private String getSchemaDotNameQuotedTemplate(String schemaName, String name) {
         StringBuilder sb = new StringBuilder();
 
         if (schemaName.startsWith("\"")) {
@@ -566,14 +570,26 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
         sb.append(".");
 
-        if (tableName.startsWith("\"")) {
-            sb.append(tableName);
+        if (name.startsWith("\"")) {
+            sb.append(name);
         } else {
-            sb.append("\"").append(tableName).append("\"");
+            sb.append("\"").append(name).append("\"");
         }
 
         return sb.toString();
     }
+
+    /**
+     * Returns template by sequence name.
+     *
+     * @param schemaName
+     * @param sequenceName
+     * @return
+     */
+    public String sequenceString(String schemaName, String sequenceName) {
+        return getSchemaDotNameQuotedTemplate(schemaName, sequenceName);
+    }
+
 
     /**
      * Returns DB specific PK constraint name for a table element.
@@ -706,7 +722,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param s sequence element
      */
     public void dropSequence(Connection conn, SequenceElement s) {
-        String sql = String.format("DROP SEQUENCE " + tableString(s.getGrain().getName(), s.getName()));
+        String sql = String.format("DROP SEQUENCE " + sequenceString(s.getGrain().getName(), s.getName()));
         executeUpdate(conn, sql);
     }
 

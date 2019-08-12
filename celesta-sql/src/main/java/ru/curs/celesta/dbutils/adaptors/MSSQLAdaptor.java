@@ -637,7 +637,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
 
     @Override
     public long nextSequenceValue(Connection conn, SequenceElement s) {
-        String sql = "SELECT NEXT VALUE FOR " + tableString(s.getGrain().getName(), s.getName());
+        String sql = "SELECT NEXT VALUE FOR " + sequenceString(s.getGrain().getName(), s.getName());
 
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {

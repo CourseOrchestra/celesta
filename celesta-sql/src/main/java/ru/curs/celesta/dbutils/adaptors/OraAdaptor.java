@@ -262,18 +262,33 @@ public final class OraAdaptor extends DBAdaptor {
 
     @Override
     public String tableString(String schemaName, String tableName) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(getSchemaUnderscoreNameTemplate(schemaName, tableName));
+        sb.insert(0, '"').append('"');
 
-        if (schemaName.startsWith("\"")) {
-            sb.append(schemaName.substring(0, schemaName.length() - 1));
-        } else {
-            sb.append("\"").append(schemaName);
-        }
-        sb.append("_");
-        if (tableName.startsWith("\"")) {
-            sb.append(tableName.substring(1));
-        } else {
-            sb.append(tableName).append("\"");
+        return sb.toString();
+    }
+
+    private String getSchemaUnderscoreNameTemplate(String schemaName, String name) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(stripNameFromQuotes(schemaName)).append("_").append(stripNameFromQuotes(name));
+
+        return sb.toString();        
+    }
+
+    private String stripNameFromQuotes(String name) {
+        return name.startsWith("\"") ? name.substring(1, name.length() - 1) : name;
+    }
+
+    @Override
+    public String sequenceString(String schemaName, String sequenceName) {
+        return sequenceString(schemaName, sequenceName, true);
+    }
+
+    private String sequenceString(String schemaName, String sequenceName, boolean isQuoted) {
+        StringBuilder sb = new StringBuilder(NamedElement.limitName(
+                getSchemaUnderscoreNameTemplate(schemaName, sequenceName)));
+        if (isQuoted) {
+            sb.insert(0, '"').append('"');
         }
 
         return sb.toString();
@@ -844,7 +859,7 @@ public final class OraAdaptor extends DBAdaptor {
 
     @Override
     public long nextSequenceValue(Connection conn, SequenceElement s) {
-        String sql = "SELECT " + tableString(s.getGrain().getName(), s.getName()) + ".nextval from DUAL";
+        String sql = "SELECT " + sequenceString(s.getGrain().getName(), s.getName()) + ".nextval from DUAL";
 
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -858,11 +873,10 @@ public final class OraAdaptor extends DBAdaptor {
     }
 
     @Override
-    public boolean sequenceExists(Connection conn, String schema, String name) {
+    public boolean sequenceExists(Connection conn, final String schema, final String name) {
         String sql = String.format(
-                "select count(*) from user_sequences where sequence_name = '%s_%s'",
-                schema,
-                name
+                "select count(*) from user_sequences where sequence_name = '%s'",
+                sequenceString(schema, name, false)
         );
 
         try (Statement checkForTable = conn.createStatement();
@@ -879,7 +893,7 @@ public final class OraAdaptor extends DBAdaptor {
                   + " FROM USER_SEQUENCES WHERE SEQUENCE_NAME = ?";
 
         try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, String.format("%s_%s", s.getGrain().getName(), s.getName()));
+            preparedStatement.setString(1, sequenceString(s.getGrain().getName(), s.getName(), false));
             try (ResultSet rs = preparedStatement.executeQuery()) {
                 rs.next();
                 DbSequenceInfo result = new DbSequenceInfo();
