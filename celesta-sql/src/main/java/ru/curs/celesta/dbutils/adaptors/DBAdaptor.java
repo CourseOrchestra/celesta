@@ -427,14 +427,15 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Returns {@link PreparedStatement} containing a filtered set of entries.
      *
-     * @param conn     Connection
-     * @param from     Object for forming FROM part of the query
-     * @param orderBy  Sort order
-     * @param offset   Number of entries to skip
-     * @param rowCount Number of entries to return (limit filter)
-     * @param fields   Requested columns. If none are provided all columns are requested
+     * @param conn         Connection
+     * @param from         Object for forming FROM part of the query
+     * @param whereClause  Where clause
+     * @param orderBy      Sort order
+     * @param offset       Number of entries to skip
+     * @param rowCount     Number of entries to return (limit filter)
+     * @param fields       Requested columns. If none are provided all columns are requested
      */
-    // CHECKSTYLE:OFF 6 parameters
+    // CHECKSTYLE:OFF 7 parameters
     public final PreparedStatement getRecordSetStatement(
             Connection conn, FromClause from, String whereClause,
             String orderBy, long offset, long rowCount, Set<String> fields
@@ -582,8 +583,8 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Returns template by sequence name.
      *
-     * @param schemaName
-     * @param sequenceName
+     * @param schemaName  schema name
+     * @param sequenceName  sequence name
      * @return
      */
     public String sequenceString(String schemaName, String sequenceName) {

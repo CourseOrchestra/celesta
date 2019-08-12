@@ -272,7 +272,7 @@ public final class OraAdaptor extends DBAdaptor {
         StringBuilder sb = new StringBuilder();
         sb.append(stripNameFromQuotes(schemaName)).append("_").append(stripNameFromQuotes(name));
 
-        return sb.toString();        
+        return sb.toString();
     }
 
     private String stripNameFromQuotes(String name) {

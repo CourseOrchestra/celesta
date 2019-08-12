@@ -396,7 +396,9 @@ public final class OraDdlGenerator extends DdlGenerator {
         return Arrays.asList(sql);
     }
 
-    private String createOrReplaceSequenceTriggerForColumn(String triggerName, IntegerColumn ic, String quotedSequenceName) {
+    private String createOrReplaceSequenceTriggerForColumn(
+            String triggerName, IntegerColumn ic, String quotedSequenceName) {
+
         TableElement t = ic.getParentTable();
         String sql = String.format(
                 "CREATE OR REPLACE TRIGGER \"" + triggerName + "\" BEFORE INSERT ON "
