@@ -9,7 +9,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.SystemCallContext;
-import ru.curs.celesta.common.CollatedMSSQLServerContainer;
+import ru.curs.celesta.test.ContainerUtils;
+import ru.curs.celesta.test.common.CollatedMSSQLServerContainer;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -81,10 +82,10 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
     public void startCelestas() {
         celestas.put(Backend.H2, celestaFromH2());
 
-        containers.put(Backend.PostgreSQL, new PostgreSQLContainer());
+        containers.put(Backend.PostgreSQL, ContainerUtils.POSTGRE_SQL);
         celestas.put(Backend.PostgreSQL, celestaFromContainer(containers.get(Backend.PostgreSQL)));
 
-        containers.put(Backend.Oracle, new OracleContainer());
+        containers.put(Backend.Oracle, ContainerUtils.ORACLE);
         celestas.put(Backend.Oracle, celestaFromContainer(containers.get(Backend.Oracle)));
 
         CollatedMSSQLServerContainer<?> ms = new CollatedMSSQLServerContainer<>()
@@ -104,7 +105,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
                     }
                     return null;
                 });
-        containers.forEach((b, c) -> c.stop());
+        containers.forEach((b, c) -> ContainerUtils.cleanUp(c));
     }
 
     private static Celesta celestaFromH2() {

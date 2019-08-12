@@ -94,20 +94,20 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
 
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
-        this.stopDbs();
+        this.clearDbs();
     }
 
     private void startDbs() {
 
         final String emptyScorePath = "src/test/resources/emptyScore";
 
-        PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>();
+        PostgreSQLContainer<?> postgreSQLContainer = ContainerUtils.POSTGRE_SQL;
         postgreSQLContainer.start();
         containers.put(DBType.POSTGRESQL, postgreSQLContainer);
-        OracleContainer oracleContainer = new OracleContainer();
+        OracleContainer oracleContainer = ContainerUtils.ORACLE;
         oracleContainer.start();
         containers.put(DBType.ORACLE, oracleContainer);
-        MSSQLServerContainer<?> mssqlServerContainer = new MSSQLServerContainer<>();
+        MSSQLServerContainer<?> mssqlServerContainer = ContainerUtils.MSSQL;
         mssqlServerContainer.start();
         containers.put(DBType.MSSQL, mssqlServerContainer);
 
@@ -130,14 +130,14 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
         );
     }
 
-    private void stopDbs() {
+    private void clearDbs() {
         try {
             this.connectionPools.get(DBType.H2).get().createStatement().execute("SHUTDOWN");
         } catch (SQLException ex) {
             LOGGER.error("Error on shutting down DB", ex);
         }
 
-        this.containers.forEach((b, c) -> c.stop());
+        this.containers.forEach((b, c) -> ContainerUtils.cleanUp(c));
     }
 
     private ConnectionPool createConnectionPool(DBType dbType, JdbcDatabaseContainer<?> container) {
