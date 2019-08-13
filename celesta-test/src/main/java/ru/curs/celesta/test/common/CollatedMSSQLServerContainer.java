@@ -20,10 +20,10 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
 
     @Override
     public void start() {
-        super.start();
-        if (this.collation != null) {
-            createCustomDataBase();
-        }
+            super.start();
+            if (this.collation != null) {
+                createCustomDataBase();
+            }
     }
 
     @Override

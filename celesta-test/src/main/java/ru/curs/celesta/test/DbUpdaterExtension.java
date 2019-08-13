@@ -10,8 +10,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.*;
 import ru.curs.celesta.dbutils.DbUpdater;
 import ru.curs.celesta.dbutils.DbUpdaterImpl;
-import ru.curs.celesta.dbutils.LoggingManager;
-import ru.curs.celesta.dbutils.PermissionManager;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorFactory;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;

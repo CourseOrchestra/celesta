@@ -16,8 +16,7 @@ import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 
-    public static CollatedMSSQLServerContainer<?> msSql = new CollatedMSSQLServerContainer<>()
-            .withCollation("Cyrillic_General_CI_AI");
+    public static CollatedMSSQLServerContainer<?> msSql = ContainerUtils.MSSQL;
 
     private static MSSQLAdaptor dba;
 

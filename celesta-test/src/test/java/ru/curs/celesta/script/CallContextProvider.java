@@ -88,9 +88,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
         containers.put(Backend.Oracle, ContainerUtils.ORACLE);
         celestas.put(Backend.Oracle, celestaFromContainer(containers.get(Backend.Oracle)));
 
-        CollatedMSSQLServerContainer<?> ms = new CollatedMSSQLServerContainer<>()
-                .withCollation("Cyrillic_General_CI_AS");
-        containers.put(Backend.MSSQL, ms);
+        containers.put(Backend.MSSQL, ContainerUtils.MSSQL);
         celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.MSSQL)));
 
     }
