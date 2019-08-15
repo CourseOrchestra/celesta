@@ -427,14 +427,15 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Returns {@link PreparedStatement} containing a filtered set of entries.
      *
-     * @param conn     Connection
-     * @param from     Object for forming FROM part of the query
-     * @param orderBy  Sort order
-     * @param offset   Number of entries to skip
-     * @param rowCount Number of entries to return (limit filter)
-     * @param fields   Requested columns. If none are provided all columns are requested
+     * @param conn         Connection
+     * @param from         Object for forming FROM part of the query
+     * @param whereClause  Where clause
+     * @param orderBy      Sort order
+     * @param offset       Number of entries to skip
+     * @param rowCount     Number of entries to return (limit filter)
+     * @param fields       Requested columns. If none are provided all columns are requested
      */
-    // CHECKSTYLE:OFF 6 parameters
+    // CHECKSTYLE:OFF 7 parameters
     public final PreparedStatement getRecordSetStatement(
             Connection conn, FromClause from, String whereClause,
             String orderBy, long offset, long rowCount, Set<String> fields
@@ -556,6 +557,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param tableName  table name
      */
     public String tableString(String schemaName, String tableName) {
+        return getSchemaDotNameQuotedTemplate(schemaName, tableName);
+    }
+
+    private String getSchemaDotNameQuotedTemplate(String schemaName, String name) {
         StringBuilder sb = new StringBuilder();
 
         if (schemaName.startsWith("\"")) {
@@ -566,14 +571,26 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
 
         sb.append(".");
 
-        if (tableName.startsWith("\"")) {
-            sb.append(tableName);
+        if (name.startsWith("\"")) {
+            sb.append(name);
         } else {
-            sb.append("\"").append(tableName).append("\"");
+            sb.append("\"").append(name).append("\"");
         }
 
         return sb.toString();
     }
+
+    /**
+     * Returns template by sequence name.
+     *
+     * @param schemaName  schema name
+     * @param sequenceName  sequence name
+     * @return
+     */
+    public String sequenceString(String schemaName, String sequenceName) {
+        return getSchemaDotNameQuotedTemplate(schemaName, sequenceName);
+    }
+
 
     /**
      * Returns DB specific PK constraint name for a table element.
@@ -706,7 +723,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param s sequence element
      */
     public void dropSequence(Connection conn, SequenceElement s) {
-        String sql = String.format("DROP SEQUENCE " + tableString(s.getGrain().getName(), s.getName()));
+        String sql = String.format("DROP SEQUENCE " + sequenceString(s.getGrain().getName(), s.getName()));
         executeUpdate(conn, sql);
     }
 
