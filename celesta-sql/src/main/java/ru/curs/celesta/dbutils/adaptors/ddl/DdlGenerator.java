@@ -98,6 +98,10 @@ public abstract class DdlGenerator {
         return this.dmlAdaptor.tableString(schemaName, tableName);
     }
 
+    final String sequenceString(String schemaName, String sequenceName) {
+        return this.dmlAdaptor.sequenceString(schemaName, sequenceName);
+    }
+
     final String pkConstraintString(TableElement tableElement) {
         return this.dmlAdaptor.pkConstraintString(tableElement);
     }
@@ -105,7 +109,7 @@ public abstract class DdlGenerator {
     final String createSequence(SequenceElement s) {
         String sql = String.format(
                 "CREATE SEQUENCE %s %s",
-                tableString(s.getGrain().getName(), s.getName()),
+                sequenceString(s.getGrain().getName(), s.getName()),
                 generateArgumentsForCreateSequenceExpression(s)
         );
 
@@ -115,7 +119,7 @@ public abstract class DdlGenerator {
     final String alterSequence(SequenceElement s) {
         String sql = String.format(
                 "ALTER SEQUENCE %s %s",
-                tableString(s.getGrain().getName(), s.getName()),
+                sequenceString(s.getGrain().getName(), s.getName()),
                 generateArgumentsForCreateSequenceExpression(s, SequenceElement.Argument.START_WITH)
         );
 

@@ -138,7 +138,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
 
     @Override
     public long nextSequenceValue(Connection conn, SequenceElement s) {
-        String sql = "SELECT NEXTVAL('" + tableString(s.getGrain().getName(), s.getName()) + "')";
+        String sql = "SELECT NEXTVAL('" + sequenceString(s.getGrain().getName(), s.getName()) + "')";
 
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
