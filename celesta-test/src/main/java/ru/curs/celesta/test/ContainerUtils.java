@@ -25,6 +25,7 @@ public class ContainerUtils {
 
     private static final String DROP_TABLE_FROM_ORACLE_TEMPLATE = "DROP TABLE %s CASCADE CONSTRAINTS";
     private static final String DROP_OBJECT_FROM_ORACLE_TEMPLATE = "DROP %s %s";
+    private static final String DROP_TYPE_FROM_ORACLE_TEMPLATE = "DROP TYPE %s FORCE";
 
     private static final Map<Class<? extends JdbcDatabaseContainer>, Runnable> CLEAN_UP_MAP = new HashMap<>();
 
@@ -39,8 +40,10 @@ public class ContainerUtils {
     }
 
     private static void cleanUpPostgres() {
-        try (ConnectionPool connectionPool = getConnectionPool(POSTGRE_SQL)) {
-            Connection connection = connectionPool.get();
+        try (
+            ConnectionPool connectionPool = getConnectionPool(POSTGRE_SQL);
+            Connection connection = connectionPool.get()
+        ) {
 
             try (ResultSet rs = SqlUtils.executeQuery(
                 connection,
@@ -51,18 +54,21 @@ public class ContainerUtils {
             )) {
                 while (rs.next()) {
                     SqlUtils.executeUpdate(connection,
-                        String.format("DROP SCHEMA IF EXISTS %s CASCADE", rs.getString(1)));
+                        String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", rs.getString(1)));
                 }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
             }
+
+            connection.commit();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
     private static void cleanUpOracle() {
-        try (ConnectionPool connectionPool = getConnectionPool(ORACLE)) {
-            Connection connection = connectionPool.get();
-
+        try (
+            ConnectionPool connectionPool = getConnectionPool(ORACLE);
+            Connection connection = connectionPool.get()
+        ) {
 
             try (ResultSet rs = SqlUtils.executeQuery(
                 connection,
@@ -75,6 +81,7 @@ public class ContainerUtils {
                     "                              'PACKAGE',\n" +
                     "                              'PROCEDURE',\n" +
                     "                              'FUNCTION',\n" +
+                    "                              'TYPE',\n" +
                     "                              'SEQUENCE',\n" +
                     "                              'SYNONYM',\n" +
                     "                              'PACKAGE BODY'\n" +
@@ -89,13 +96,18 @@ public class ContainerUtils {
                         if ("TABLE".equalsIgnoreCase(objectType)) {
                             SqlUtils.executeUpdate(
                                 connection,
-                                String.format(DROP_TABLE_FROM_ORACLE_TEMPLATE, objectName)
+                                String.format(DROP_TABLE_FROM_ORACLE_TEMPLATE, String.format("\"%s\"", objectName))
+                            );
+                        } else if ("TYPE".equalsIgnoreCase(objectType)) {
+                            SqlUtils.executeUpdate(
+                                connection,
+                                String.format(DROP_TYPE_FROM_ORACLE_TEMPLATE, String.format("\"%s\"", objectName))
                             );
                         } else {
 
                             SqlUtils.executeUpdate(
                                 connection,
-                                String.format(DROP_OBJECT_FROM_ORACLE_TEMPLATE, objectType, objectName)
+                                String.format(DROP_OBJECT_FROM_ORACLE_TEMPLATE, objectType, String.format("\"%s\"", objectName))
                             );
 
                         }
@@ -110,97 +122,49 @@ public class ContainerUtils {
                         }
                     }
                 }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
             }
+
+            connection.commit();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
     private static void cleanUpMsSql() {
-        try (ConnectionPool connectionPool = getConnectionPool(MSSQL)) {
-            Connection connection = connectionPool.get();
 
-            try (ResultSet rs = SqlUtils.executeQuery(connection, "" +
-                "SELECT s.SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA s\n" +
-                "WHERE s.SCHEMA_NAME NOT IN('dbo', 'guest', 'INFORMATION_SCHEMA', 'sys', 'db_owner', 'db_accessadmin', 'db_securityadmin', 'db_ddladmin', 'db_backupoperator', 'db_datareader', 'db_datawriter', 'db_denydatareader', 'db_denydatawriter')")) {
+        ConnectionPoolConfiguration connectionPoolConfiguration = connectionPoolConfiguration(MSSQL);
+        connectionPoolConfiguration.setJdbcConnectionUrl(MSSQL.getInitJdbcUrl());
 
-                while (rs.next()) {
-                    String schemaName = rs.getString(1);
-                    List<String> dropStatements = new ArrayList<>();
-                    try (ResultSet rs2 = SqlUtils.executeQuery(connection,
-                        String.format("SELECT 'ALTER TABLE ' + QUOTENAME(SCHEMA_NAME(t.schema_id))\n" +
-                            "         +'.'+ QUOTENAME(OBJECT_NAME(s.parent_object_id))\n" +
-                            "         + ' DROP CONSTRAINT ' +  QUOTENAME(s.name)\n" +
-                            "FROM sys.foreign_keys s\n" +
-                            "       JOIN sys.tables t on s.parent_object_id = t.object_id\n" +
-                            "       JOIN sys.tables t2 on s.referenced_object_id = t2.object_id\n" +
-                            "WHERE t2.schema_id = SCHEMA_ID('%s')", schemaName))) {
-                        while (rs2.next()) {
-                            dropStatements.add(rs2.getString(1));
-                        }
-                    }
-
-                    try (ResultSet rs3 = SqlUtils.executeQuery(connection,
-                        String.format("SELECT 'DROP ' +\n" +
-                            "       CASE WHEN type IN ('P','PC') THEN 'PROCEDURE'\n" +
-                            "            WHEN type =  'U' THEN 'TABLE'\n" +
-                            "            WHEN type IN ('IF','TF','FN') THEN 'FUNCTION'\n" +
-                            "            WHEN type = 'V' THEN 'VIEW'\n" +
-                            "            WHEN type = 'SO' THEN 'SEQUENCE'\n" +
-                            "           END +\n" +
-                            "       ' ' +  QUOTENAME(SCHEMA_NAME(schema_id))+'.'+QUOTENAME(name)\n" +
-                            "FROM sys.objects\n" +
-                            "WHERE schema_id = SCHEMA_ID('%s')\n" +
-                            "  AND type IN('P','PC','U','IF','TF','FN','V', 'SO')\n" +
-                            "ORDER BY  CASE WHEN type IN ('P','PC') THEN 4\n" +
-                            "               WHEN type =  'U' THEN 3\n" +
-                            "               WHEN type IN ('IF','TF','FN') THEN 1\n" +
-                            "               WHEN type = 'V' THEN 2\n" +
-                            "               WHEN type = 'SO' THEN 5\n" +
-                            "    END", schemaName))) {
-                        while (rs3.next()) {
-                            dropStatements.add(rs3.getString(1));
-                        }
-                    }
-
-                    try (ResultSet rs4 = SqlUtils.executeQuery(connection, String.format("SELECT 'DROP XML SCHEMA COLLECTION' \n" +
-                        "  + QUOTENAME(SCHEMA_NAME(schema_id))+'.'+QUOTENAME(name)\n" +
-                        "  FROM sys.xml_schema_collections\n" +
-                        "  WHERE schema_id = SCHEMA_ID('%s')", schemaName))) {
-                        if ( rs4.next()) {
-                            dropStatements.add(rs4.getString(1));
-                        }
-                    }
-
-                    dropStatements.forEach(sql -> SqlUtils.executeUpdate(connection, sql));
-
-                    SqlUtils.executeUpdate(connection, String.format("DROP SCHEMA %s", schemaName));
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        try (Connection containerConnection = MSSQL.createConnection("")) {
+        try (
+            ConnectionPool connectionPool = ConnectionPool.create(connectionPoolConfiguration);
+            Connection connection = connectionPool.get()
+        ) {
             SqlUtils.executeUpdate(
-                containerConnection,
+                connection,
                 String.format(
                     "DROP DATABASE IF EXISTS %s",
                     CollatedMSSQLServerContainer.DATABASE_NAME
                 )
             );
+
+            connection.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     private static ConnectionPool getConnectionPool(JdbcDatabaseContainer container) {
+        ConnectionPoolConfiguration poolConfiguration = connectionPoolConfiguration(container);
+        return ConnectionPool.create(poolConfiguration);
+    }
+
+    private static ConnectionPoolConfiguration connectionPoolConfiguration(JdbcDatabaseContainer container) {
         ConnectionPoolConfiguration poolConfiguration = new ConnectionPoolConfiguration();
         poolConfiguration.setJdbcConnectionUrl(container.getJdbcUrl());
         poolConfiguration.setLogin(container.getUsername());
         poolConfiguration.setPassword(container.getPassword());
         poolConfiguration.setDriverClassName(container.getDriverClassName());
 
-        return ConnectionPool.create(poolConfiguration);
+        return poolConfiguration;
     }
 }

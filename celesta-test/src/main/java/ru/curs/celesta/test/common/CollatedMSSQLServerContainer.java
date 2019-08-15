@@ -34,6 +34,8 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
     }
 
     private void createCustomDataBase() {
+        this.isCustomDbCreated = false;
+
         try (Connection conn = createConnection("");
              Statement stmt = conn.createStatement()
         ) {
@@ -52,11 +54,14 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
 
     @Override
     public String getJdbcUrl() {
-        StringBuilder sb = new StringBuilder(
-                "jdbc:sqlserver://" + getContainerIpAddress() + ":" + getMappedPort(MS_SQL_SERVER_PORT));
-        if (isCustomDbCreated) {
+        StringBuilder sb = new StringBuilder(this.getInitJdbcUrl());
+        if (this.isCustomDbCreated) {
             sb.append(";databaseName=").append(DATABASE_NAME);
         }
         return sb.toString();
+    }
+
+    public String getInitJdbcUrl() {
+        return "jdbc:sqlserver://" + getContainerIpAddress() + ":" + getMappedPort(MS_SQL_SERVER_PORT);
     }
 }

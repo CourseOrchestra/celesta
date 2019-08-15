@@ -135,7 +135,11 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
             LOGGER.error("Error on shutting down DB", ex);
         }
 
-        this.containers.forEach((b, c) -> ContainerUtils.cleanUp(c));
+        containers.forEach(
+            (b, c) -> {
+                this.connectionPools.get(b).close();
+                ContainerUtils.cleanUp(c);
+            });
     }
 
     private ConnectionPool createConnectionPool(DBType dbType, JdbcDatabaseContainer<?> container) {

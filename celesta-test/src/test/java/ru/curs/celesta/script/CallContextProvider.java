@@ -94,6 +94,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
     }
 
     public void stopCelestas() {
+
         celestas.computeIfPresent(Backend.H2,
                 (b, c) -> {
                     try {
@@ -103,7 +104,12 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
                     }
                     return null;
                 });
-        containers.forEach((b, c) -> ContainerUtils.cleanUp(c));
+
+        containers.forEach(
+            (b, c) -> {
+                this.celestas.get(b).close();
+                ContainerUtils.cleanUp(c);
+            });
     }
 
     private static Celesta celestaFromH2() {
