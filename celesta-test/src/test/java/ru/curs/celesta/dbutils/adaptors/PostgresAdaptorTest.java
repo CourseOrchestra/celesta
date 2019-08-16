@@ -12,10 +12,11 @@ import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
+import ru.curs.celesta.test.ContainerUtils;
 
 public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
-    public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>();
+    public static PostgreSQLContainer<?> postgres = ContainerUtils.POSTGRE_SQL;
 
     private static PostgresAdaptor dba;
 
@@ -50,7 +51,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
     @AfterAll
     public static void afterAll() {
         dba.connectionPool.close();
-        postgres.stop();
+        ContainerUtils.cleanUp(postgres);
     }
 
     public PostgresAdaptorTest() throws Exception {

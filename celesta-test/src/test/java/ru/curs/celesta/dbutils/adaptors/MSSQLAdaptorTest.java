@@ -6,7 +6,8 @@ import java.util.Properties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import ru.curs.celesta.*;
-import ru.curs.celesta.common.CollatedMSSQLServerContainer;
+import ru.curs.celesta.test.ContainerUtils;
+import ru.curs.celesta.test.common.CollatedMSSQLServerContainer;
 import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
@@ -15,8 +16,7 @@ import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 
 public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 
-    public static CollatedMSSQLServerContainer<?> msSql = new CollatedMSSQLServerContainer<>()
-            .withCollation("Cyrillic_General_CI_AI");
+    public static CollatedMSSQLServerContainer<?> msSql = ContainerUtils.MSSQL;
 
     private static MSSQLAdaptor dba;
 
@@ -51,7 +51,7 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
     @AfterAll
     public static void destroy() {
         dba.connectionPool.close();
-        msSql.stop();
+        ContainerUtils.cleanUp(msSql);
     }
 
     public MSSQLAdaptorTest() throws Exception {

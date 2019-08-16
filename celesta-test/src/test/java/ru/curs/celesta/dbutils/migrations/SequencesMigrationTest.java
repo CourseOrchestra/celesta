@@ -15,6 +15,8 @@ import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.test.DbUpdaterExtension;
 import ru.curs.celesta.test.ScorePath;
 
+import java.sql.Connection;
+
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -32,7 +34,7 @@ public class SequencesMigrationTest {
             @ScorePath(MANUAL_INT_PK_TO_SEQ_BASED_PREFIX_V1) DbUpdater<?> dbUpdater1,
             @ScorePath(MANUAL_INT_PK_TO_SEQ_BASED_PREFIX_V2) DbUpdater<?> dbUpdater2
 
-    ) throws ParseException {
+    ) throws Exception {
         DBAdaptor dbAdaptor = DbUpdaterAccessor.getDbAdaptor(dbUpdater1);
         ConnectionPool connectionPool = DbUpdaterAccessor.getConnectionPool(dbUpdater1);
         AbstractScore abstractScore = DbUpdaterAccessor.getScore(dbUpdater1);
@@ -43,10 +45,17 @@ public class SequencesMigrationTest {
 
 
         dbUpdater1.updateDb();
-        DbColumnInfo oldDbColumnInfo = dbAdaptor.getColumnInfo(connectionPool.get(), column);
 
-        dbUpdater2.updateDb();
-        DbColumnInfo newDbColumnInfo = dbAdaptor.getColumnInfo(connectionPool.get(), column);
+
+        final DbColumnInfo oldDbColumnInfo;
+        final DbColumnInfo newDbColumnInfo;
+
+        try (Connection connection = connectionPool.get()) {
+            oldDbColumnInfo = dbAdaptor.getColumnInfo(connection, column);
+
+            dbUpdater2.updateDb();
+            newDbColumnInfo = dbAdaptor.getColumnInfo(connection, column);
+        }
 
         assertAll(
                 //old

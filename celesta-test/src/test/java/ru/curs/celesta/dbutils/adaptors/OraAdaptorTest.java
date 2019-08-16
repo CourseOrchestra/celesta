@@ -15,6 +15,7 @@ import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
+import ru.curs.celesta.test.ContainerUtils;
 
 public class OraAdaptorTest extends AbstractAdaptorTest {
 
@@ -22,7 +23,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
         Locale.setDefault(Locale.US);
     }
 
-    public static OracleContainer oracle = new OracleContainer();
+    public static OracleContainer oracle = ContainerUtils.ORACLE;
 
     private static OraAdaptor dba;
 
@@ -57,7 +58,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
     @AfterAll
     public static void afterAll() {
         dba.connectionPool.close();
-        oracle.stop();
+        ContainerUtils.cleanUp(oracle);
     }
 
     public OraAdaptorTest() throws Exception {
