@@ -7,6 +7,7 @@ import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -141,13 +142,16 @@ public final class DdlAdaptor {
 
         try {
             processSql(conn, sql);
-            processSql(conn, "COMMIT");
+            conn.commit();
+            // TODO:: What's to do?
+            //processSql(conn, "COMMIT");
+            //processSql(conn, "SET TRANSACTION");
             List<String> sqlList;
             sqlList = ddlGenerator.updateVersioningTrigger(conn, te);
             processSql(conn, sqlList);
             sqlList = ddlGenerator.afterCreateTable(te);
             processSql(conn, sqlList);
-        } catch (CelestaException e) {
+        } catch (SQLException | CelestaException e) {
             throw new CelestaException("Error of creating %s: %s", te.getName(), e.getMessage());
         }
     }

@@ -1,5 +1,6 @@
 package ru.curs.celesta.test;
 
+import org.firebirdsql.testcontainers.FirebirdContainer;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -21,6 +22,7 @@ public class ContainerUtils {
     public static final OracleContainer ORACLE = new OracleContainer();
     public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
         .withCollation("Cyrillic_General_CI_AI");
+    public static final FirebirdContainer FIREBIRD = new FirebirdContainer();
 
 
     private static final String DROP_TABLE_FROM_ORACLE_TEMPLATE = "DROP TABLE %s CASCADE CONSTRAINTS";
@@ -33,6 +35,7 @@ public class ContainerUtils {
         CLEAN_UP_MAP.put(POSTGRE_SQL.getClass(), ContainerUtils::cleanUpPostgres);
         CLEAN_UP_MAP.put(ORACLE.getClass(), ContainerUtils::cleanUpOracle);
         CLEAN_UP_MAP.put(MSSQL.getClass(), ContainerUtils::cleanUpMsSql);
+        CLEAN_UP_MAP.put(FIREBIRD.getClass(), ContainerUtils::cleanUpFirebird);
     }
 
     public static void cleanUp(JdbcDatabaseContainer container) {
@@ -147,6 +150,17 @@ public class ContainerUtils {
                 )
             );
 
+            connection.commit();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void cleanUpFirebird() {
+        try (
+            ConnectionPool connectionPool = getConnectionPool(FIREBIRD);
+            Connection connection = connectionPool.get()
+        ) {
             connection.commit();
         } catch (Exception e) {
             throw new RuntimeException(e);

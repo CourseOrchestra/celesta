@@ -88,6 +88,9 @@ public final class DbAdaptorFactory {
     if (DBType.ORACLE.equals(dbType)) {
       return new OraAdaptor(this.connectionPool, this.ddlConsumer);
     }
+    if ( DBType.FIREBIRD.equals(dbType)) {
+      return new FirebirdAdaptor(this.connectionPool, this.ddlConsumer);
+    }
 
     return null;
   }
