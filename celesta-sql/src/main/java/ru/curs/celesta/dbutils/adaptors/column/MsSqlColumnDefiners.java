@@ -14,12 +14,12 @@ class MsSqlIntegerColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         IntegerColumn ic = (IntegerColumn) c;
         SequenceElement s = ic.getSequence();
         if (s != null) {
@@ -31,7 +31,7 @@ class MsSqlIntegerColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getLightDefaultDefinition(Column c) {
+    public String getLightDefaultDefinition(Column<?> c) {
         IntegerColumn ic = (IntegerColumn) c;
         if (ic.getDefaultValue() != null) {
             return DEFAULT + ic.getDefaultValue();
@@ -47,12 +47,12 @@ class MsSqlFloatingColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         FloatingColumn ic = (FloatingColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -62,7 +62,7 @@ class MsSqlFloatingColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getLightDefaultDefinition(Column c) {
+    public String getLightDefaultDefinition(Column<?> c) {
         FloatingColumn ic = (FloatingColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -79,14 +79,14 @@ class MsSqlDecimalColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
         return join(c.getQuotedName(), fieldType, nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String defaultStr = "";
         if (dc.getDefaultValue() != null) {
@@ -96,7 +96,7 @@ class MsSqlDecimalColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getLightDefaultDefinition(Column c) {
+    public String getLightDefaultDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String defaultStr = "";
         if (dc.getDefaultValue() != null) {
@@ -113,12 +113,12 @@ class MsSqlBooleanColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         BooleanColumn ic = (BooleanColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -128,7 +128,7 @@ class MsSqlBooleanColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getLightDefaultDefinition(Column c) {
+    public String getLightDefaultDefinition(Column<?> c) {
         BooleanColumn ic = (BooleanColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -145,14 +145,14 @@ class MsSqlStringColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String fieldType = String.format("%s(%s)", dbFieldType(), ic.isMax() ? "max" : ic.getLength());
         return join(c.getQuotedName(), fieldType, nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -162,7 +162,7 @@ class MsSqlStringColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getLightDefaultDefinition(Column c) {
+    public String getLightDefaultDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -179,12 +179,12 @@ class MsSqlBinaryColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         BinaryColumn ic = (BinaryColumn) c;
 
         String defaultStr = "";
@@ -196,7 +196,7 @@ class MsSqlBinaryColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getLightDefaultDefinition(Column c) {
+    public String getLightDefaultDefinition(Column<?> c) {
         BinaryColumn ic = (BinaryColumn) c;
 
         String defaultStr = "";
@@ -214,12 +214,12 @@ class MsSqlDateTimeColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         DateTimeColumn ic = (DateTimeColumn) c;
         String defaultStr = "";
         if (ic.isGetdate()) {
@@ -232,7 +232,7 @@ class MsSqlDateTimeColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getLightDefaultDefinition(Column c) {
+    public String getLightDefaultDefinition(Column<?> c) {
         DateTimeColumn ic = (DateTimeColumn) c;
         String defaultStr = "";
         if (ic.isGetdate()) {
@@ -252,17 +252,17 @@ class MsSqlZonedDateTimeColumnDefiner extends MsSqlColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         return "";
     }
 
     @Override
-    public String getLightDefaultDefinition(Column c) {
+    public String getLightDefaultDefinition(Column<?> c) {
         return "";
     }
 }

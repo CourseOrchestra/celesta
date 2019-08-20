@@ -210,7 +210,7 @@ public final class CursorGenerator {
 
     }
 
-    private static List<TypeSpec> buildOptionFieldsAsInnerStaticClasses(Collection<Column> columns) {
+    private static List<TypeSpec> buildOptionFieldsAsInnerStaticClasses(Collection<Column<?>> columns) {
         return columns.stream()
                 .filter(c -> (c instanceof IntegerColumn || c instanceof StringColumn) && !c.getOptions().isEmpty())
                 .map(

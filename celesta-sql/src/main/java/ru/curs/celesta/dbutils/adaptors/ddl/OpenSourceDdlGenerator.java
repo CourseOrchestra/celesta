@@ -47,9 +47,12 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    final List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) {
+    final List<String> updateColumn(Connection conn, Column<?> c, DbColumnInfo actual) {
+        @SuppressWarnings("unchecked")
+        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+
         List<String> result = new LinkedList<>();
-        // Начинаем с удаления default-значения
+        // Starting with deletion of default-value
         String sql = String.format(
                 ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
                         + " ALTER COLUMN \"%s\" DROP DEFAULT", c.getName()
@@ -58,7 +61,7 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
 
         updateColType(c, actual, result);
 
-        // Проверяем nullability
+        // Checking for nullability
         if (c.isNullable() != actual.isNullable()) {
             sql = String.format(
                     ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
@@ -67,14 +70,13 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
             result.add(sql);
         }
 
-        // Если в данных пустой default, а в метаданных -- не пустой -- то
+        // If there's an empty default in data, and non-empty one in metadata then
         if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate())
                 || (c instanceof IntegerColumn && ((IntegerColumn) c).getSequence() != null)) {
             sql = String.format(
                     ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
                             + " ALTER COLUMN \"%s\" SET %s",
-                    c.getName(), ColumnDefinerFactory.getColumnDefiner(getType(),
-                    c.getClass()).getDefaultDefinition(c));
+                    c.getName(), ColumnDefinerFactory.getColumnDefiner(getType(), cClass).getDefaultDefinition(c));
             result.add(sql);
         }
 
@@ -87,7 +89,7 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
         return Optional.of(sql);
     }
 
-    abstract void updateColType(Column c, DbColumnInfo actual, List<String> batch);
+    abstract void updateColType(Column<?> c, DbColumnInfo actual, List<String> batch);
 
     private String dropIndex(String schemaName, String indexName) {
         return String.format(

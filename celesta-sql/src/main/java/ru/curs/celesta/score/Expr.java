@@ -711,7 +711,7 @@ abstract class Aggregate extends Expr {
 final class FieldRef extends Expr {
     private String tableNameOrAlias;
     private String columnName;
-    private Column column = null;
+    private Column<?> column = null;
     private ViewColumnMeta meta;
 
     public FieldRef(String tableNameOrAlias, String columnName) throws ParseException {
@@ -785,7 +785,7 @@ final class FieldRef extends Expr {
      *
      * @return
      */
-    public Column getColumn() {
+    public Column<?> getColumn() {
         return column;
     }
 
@@ -794,7 +794,7 @@ final class FieldRef extends Expr {
      *
      * @param column  reference column
      */
-    public void setColumn(Column column) {
+    public void setColumn(Column<?> column) {
         this.column = column;
     }
 

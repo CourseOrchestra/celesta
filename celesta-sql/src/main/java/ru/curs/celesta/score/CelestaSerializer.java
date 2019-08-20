@@ -202,7 +202,7 @@ public final class CelestaSerializer {
 
         writer.printf("CREATE TABLE %s(%n", t.getQuotedNameIfNeeded());
         boolean comma = false;
-        for (Column c : t.getColumns().values()) {
+        for (Column<?> c : t.getColumns().values()) {
             if (comma) {
                 writer.println(",");
             }
@@ -220,7 +220,7 @@ public final class CelestaSerializer {
             writer.write(t.getPkConstraintName());
             writer.write(" PRIMARY KEY (");
             comma = false;
-            for (Column c : t.getPrimaryKey().values()) {
+            for (Column<?> c : t.getPrimaryKey().values()) {
                 if (comma) {
                     writer.write(", ");
                 }
@@ -250,7 +250,7 @@ public final class CelestaSerializer {
      * @param c  column
      * @throws IOException  if serialization fails
      */
-    void save(Column c) throws IOException {
+    void save(Column<?> c) throws IOException {
         writer.write("  ");
         if (writeCelestaDoc(c)) {
             writer.write("  ");
@@ -409,7 +409,7 @@ public final class CelestaSerializer {
         writer.write(name);
         writer.write(" FOREIGN KEY (");
         boolean comma = false;
-        for (Column c : fk.getColumns().values()) {
+        for (Column<?> c : fk.getColumns().values()) {
             if (comma) {
                 writer.write(", ");
             }
@@ -424,7 +424,7 @@ public final class CelestaSerializer {
         writer.write(fk.getReferencedTable().getQuotedNameIfNeeded());
         writer.write("(");
         comma = false;
-        for (Column c : fk.getReferencedTable().getPrimaryKey().values()) {
+        for (Column<?> c : fk.getReferencedTable().getPrimaryKey().values()) {
             if (comma) {
                 writer.write(", ");
             }
@@ -475,7 +475,7 @@ public final class CelestaSerializer {
         writer.write(i.getTable().getQuotedNameIfNeeded());
         writer.write("(");
         boolean comma = false;
-        for (Column c : i.getColumns().values()) {
+        for (Column<?> c : i.getColumns().values()) {
             if (comma) {
                 writer.write(", ");
             }

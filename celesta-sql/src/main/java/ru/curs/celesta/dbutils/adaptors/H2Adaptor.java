@@ -145,7 +145,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    public DbColumnInfo getColumnInfo(Connection conn, Column c) {
+    public DbColumnInfo getColumnInfo(Connection conn, Column<?> c) {
         try {
             DatabaseMetaData metaData = conn.getMetaData();
             String grainName = c.getParentTable().getGrain().getName();
@@ -170,7 +170,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                         result.setType(StringColumn.class);
                         result.setMax(true);
                     } else {
-                        for (Class<? extends Column> cc : COLUMN_CLASSES) {
+                        for (Class<? extends Column<?>> cc : COLUMN_CLASSES) {
                             if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(typeName)) {
                                 result.setType(cc);
                                 break;

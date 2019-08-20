@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
  */
 public final class DbColumnInfo {
     private String name;
-    private Class<? extends Column> type;
+    private Class<? extends Column<?>> type;
     private boolean isNullable;
     private String defaultValue = "";
     private int length;
@@ -32,7 +32,7 @@ public final class DbColumnInfo {
      *
      * @return
      */
-    public Class<? extends Column> getType() {
+    public Class<? extends Column<?>> getType() {
         return type;
     }
 
@@ -81,7 +81,7 @@ public final class DbColumnInfo {
      *
      * @param type  column type
      */
-    public void setType(Class<? extends Column> type) {
+    public void setType(Class<? extends Column<?>> type) {
         this.type = type;
     }
 
@@ -124,14 +124,14 @@ public final class DbColumnInfo {
         this.isMax = isMax;
     }
 
-    public boolean reflects(Column value) {
-        // Если тип не совпадает -- дальше не проверяем.
+    public boolean reflects(Column<?> value) {
+        // If the type doesn't match -- don't check further.
         if (value.getClass() != type) {
             return false;
         }
 
-        // Проверяем nullability, но помним о том, что в Oracle DEFAULT
-        // ''-строки всегда nullable
+        // Checking for nullability with keeping in mind that in Oracle DEFAULT
+        // ''-strings are always nullable
         if (type != StringColumn.class || !"''".equals(defaultValue)) {
             if (value.isNullable() != isNullable) {
                 return false;
@@ -139,7 +139,7 @@ public final class DbColumnInfo {
         }
 
         if (type == StringColumn.class) {
-            // Если параметры длин не совпали -- не проверяем
+            // If length parameters do not match -- don't check
             StringColumn col = (StringColumn) value;
             if (!(isMax ? col.isMax() : length == col.getLength())) {
                 return false;
@@ -153,8 +153,7 @@ public final class DbColumnInfo {
             }
         }
 
-        // Если в данных пустой default, а в метаданных -- не пустой -- то
-        // не проверяем
+        // If there's an empty default in data, and non-empty one in metadata -- don't check
         if (defaultValue.isEmpty()) {
             if (type == DateTimeColumn.class) {
                 //do not forget DateTime's special case
@@ -167,11 +166,11 @@ public final class DbColumnInfo {
                 return value.getDefaultValue() == null;
             }
         }
-        // Случай непустого default-значения в данных.
+        // A case of a non-empty default-value in data.
         return checkDefault(value);
     }
 
-    private boolean checkDefault(Column value) {
+    private boolean checkDefault(Column<?> value) {
         boolean result;
         if (type == BooleanColumn.class) {
             try {

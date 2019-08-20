@@ -24,7 +24,7 @@ import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_T
  */
 public abstract class DdlGenerator {
 
-    static final Map<String, Class<? extends Column>> CELESTA_TYPES_COLUMN_CLASSES = new HashMap<>();
+    static final Map<String, Class<? extends Column<?>>> CELESTA_TYPES_COLUMN_CLASSES = new HashMap<>();
 
     static {
         CELESTA_TYPES_COLUMN_CLASSES.put(IntegerColumn.CELESTA_TYPE, IntegerColumn.class);
@@ -149,7 +149,7 @@ public abstract class DdlGenerator {
                 "create table " + tableString(te.getGrain().getName(), te.getName()) + "(\n"
         );
         boolean multiple = false;
-        for (Column c : te.getColumns().values()) {
+        for (Column<?> c : te.getColumns().values()) {
             if (multiple) {
                 sb.append(",\n");
             }
@@ -205,13 +205,16 @@ public abstract class DdlGenerator {
      * @return Returns String representation of column definition for RDBMS.
      */
     //TODO:Must be defined in single place
-    final String columnDef(Column c) {
+    final String columnDef(Column<?> c) {
+        @SuppressWarnings("unchecked")
+        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+
         return ColumnDefinerFactory
-                .getColumnDefiner(getType(), c.getClass())
+                .getColumnDefiner(getType(), cClass)
                 .getFullDefinition(c);
     }
 
-    final String createColumn(Column c) {
+    final String createColumn(Column<?> c) {
         String sql = String.format(ALTER_TABLE
                 + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
                 + " add %s", columnDef(c));
@@ -237,7 +240,7 @@ public abstract class DdlGenerator {
      * @param c  column for update
      * @throws RuntimeException  on column update error
      */
-    abstract List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual);
+    abstract List<String> updateColumn(Connection conn, Column<?> c, DbColumnInfo actual);
 
     final String createPk(TableElement t) {
         StringBuilder sb = new StringBuilder();
@@ -386,7 +389,7 @@ public abstract class DdlGenerator {
         String tableGroupByColumns = mv.getColumns().values().stream()
                 .filter(v -> mv.isGroupByColumn(v.getName()))
                 .map(v -> {
-                    Column colRef = mv.getColumnRef(v.getName());
+                    Column<?> colRef = mv.getColumnRef(v.getName());
                     String groupByColStr = "\"" + mv.getColumnRef(v.getName()).getName() + "\"";
 
                     if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
@@ -401,7 +404,7 @@ public abstract class DdlGenerator {
         String colsToSelect = mv.getColumns().keySet().stream()
                 .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
                 .map(alias -> {
-                    Column colRef = mv.getColumnRef(alias);
+                    Column<?> colRef = mv.getColumnRef(alias);
                     Map<String, Expr> aggrCols = mv.getAggregateColumns();
 
                     if (aggrCols.containsKey(alias)) {

@@ -22,21 +22,21 @@ public abstract class ColumnDefiner {
      *
      * @param c  column.
      */
-    public abstract String getMainDefinition(Column c);
+    public abstract String getMainDefinition(Column<?> c);
 
     /**
      * Returns separately DEFAULT definition of the column.
      *
      * @param c  column.
      */
-    public abstract String getDefaultDefinition(Column c);
+    public abstract String getDefaultDefinition(Column<?> c);
 
     /**
      * Returns full definition of the column (for column creation).
      *
      * @param c  column.
      */
-    public String getFullDefinition(Column c) {
+    public String getFullDefinition(Column<?> c) {
         return join(getMainDefinition(c), getDefaultDefinition(c));
     }
 
@@ -46,7 +46,7 @@ public abstract class ColumnDefiner {
      * @param c  column.
      * @return  "null" | "not null"
      */
-    public String nullable(Column c) {
+    public String nullable(Column<?> c) {
         return c.isNullable() ? "null" : "not null";
     }
 

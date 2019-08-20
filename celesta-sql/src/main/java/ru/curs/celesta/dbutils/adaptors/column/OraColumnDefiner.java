@@ -7,15 +7,15 @@ import ru.curs.celesta.score.Column;
  * DEFAULT should precede NOT NULL.
  */
 public abstract class OraColumnDefiner extends ColumnDefiner {
-    public abstract String getInternalDefinition(Column c);
+    public abstract String getInternalDefinition(Column<?> c);
 
     @Override
-    public String getFullDefinition(Column c) {
+    public String getFullDefinition(Column<?> c) {
         return join(getInternalDefinition(c), getDefaultDefinition(c), nullable(c));
     }
 
     @Override
-    public final String getMainDefinition(Column c) {
+    public final String getMainDefinition(Column<?> c) {
         return join(getInternalDefinition(c), nullable(c));
     }
 

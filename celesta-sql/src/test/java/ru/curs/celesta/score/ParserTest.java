@@ -110,8 +110,8 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals("table1", t1.getName());
     assertNull(t1.getCelestaDoc());
 
-    Iterator<Column> ic = t1.getColumns().values().iterator();
-    Column c = ic.next();
+    Iterator<Column<?>> ic = t1.getColumns().values().iterator();
+    Column<?> c = ic.next();
     assertEquals("column1", c.getName());
     assertTrue(c instanceof IntegerColumn);
     assertFalse(c.isNullable());
@@ -167,7 +167,7 @@ public class ParserTest extends AbstractParsingTest {
     assertEquals("f2", c.getName());
     assertEquals(5.5, ((FloatingColumn) c).getDefaultValue(), .00001);
 
-    Map<String, Column> key = t1.getPrimaryKey();
+    Map<String, Column<?>> key = t1.getPrimaryKey();
     ic = key.values().iterator();
     c = ic.next();
     assertSame(c, t1.getColumns().get("column1"));

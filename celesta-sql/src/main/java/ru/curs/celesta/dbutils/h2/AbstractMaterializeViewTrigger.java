@@ -123,7 +123,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
         String selectPartOfScript = mv.getColumns().keySet().stream()
                 .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
                 .map(alias -> {
-                    Column colRef = mv.getColumnRef(alias);
+                    Column<?> colRef = mv.getColumnRef(alias);
 
                     Map<String, Expr> aggrCols = mv.getAggregateColumns();
                     if (aggrCols.containsKey(alias)) {
