@@ -5,7 +5,7 @@ import ru.curs.celesta.dbutils.BLOB;
 /**
  * Binary column (IMAGE or BLOB type).
  */
-public final class BinaryColumn extends Column {
+public final class BinaryColumn extends Column<String> {
 
     /**
      * Celesta type of the column data.

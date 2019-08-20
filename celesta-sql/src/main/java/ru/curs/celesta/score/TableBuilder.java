@@ -142,7 +142,7 @@ final class TableBuilder {
 
     public final class ColumnBuilder {
         private final String columnName;
-        private Column column;
+        private Column<?> column;
 
         private ColumnBuilder(String columnName) {
             this.columnName = columnName;

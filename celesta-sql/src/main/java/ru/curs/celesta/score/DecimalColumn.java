@@ -6,7 +6,7 @@ import java.math.BigInteger;
 /**
  * Column with a fixed decimal point type.
  */
-public final class DecimalColumn extends Column {
+public final class DecimalColumn extends Column<BigDecimal> {
 
     //driven by MsSql
     public static final int MAX_PRECISION = 38;

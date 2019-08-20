@@ -161,6 +161,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
 
     };
+
     final PreparedStmtHolder backwards = new OrderFieldsMaskedStatementHolder() {
 
         @Override
@@ -287,6 +288,19 @@ public abstract class BasicCursor extends BasicDataAccessor {
             return meta().getColumns().get(columnName).isNullable();
         }
     });
+
+    protected static final class ColumnName<T> implements ColumnNamed<T> {
+        private final String name;
+
+        public ColumnName(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+    }
 
     public BasicCursor(CallContext context) {
         super(context);
@@ -774,7 +788,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         return qmaker;
     }
 
-    final void validateColumName(String name) {
+    final void validateColumnName(String name) {
         if (!meta().getColumns().containsKey(name)) {
             throw new CelestaException("No column %s exists in table %s.", name, _objectName());
         }
@@ -783,10 +797,20 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Resets any filter on a field.
      *
-     * @param name field name
+     * @param column  field column
      */
+    public final <T> void setRange(ColumnNamed<? super T> column) {
+        setRange(column.getName());
+    }
+
+    /**
+     * Resets any filter on a field.
+     *
+     * @param name  field name
+     */
+    @Deprecated
     public final void setRange(String name) {
-        validateColumName(name);
+        validateColumnName(name);
         if (isClosed()) {
             return;
         }
@@ -799,14 +823,25 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets range from a single value on the field.
      *
+     * @param column  field column
+     * @param value  value along which filtering is performed
+     */
+    public final <T> void setRange(ColumnNamed<? super T> column, T value) {
+        setRange(column.getName(), value);
+    }
+
+    /**
+     * Sets range from a single value on the field.
+     *
      * @param name  field name
      * @param value value along which filtering is performed
      */
+    @Deprecated
     public final void setRange(String name, Object value) {
         if (value == null) {
             setFilter(name, "null");
         } else {
-            validateColumName(name);
+            validateColumnName(name);
             if (isClosed()) {
                 return;
             }
@@ -825,12 +860,24 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets range from..to on the field.
      *
+     * @param column  field column
+     * @param valueFrom  value <em>from</em>
+     * @param valueTo  value <em>to</em>
+     */
+    public final <T> void setRange(ColumnNamed<? super T> column, T valueFrom, T valueTo) {
+        setRange(column.getName(), valueFrom, valueTo);
+    }
+
+    /**
+     * Sets range from..to on the field.
+     *
      * @param name      field name
      * @param valueFrom value <em>from</em>
      * @param valueTo   value <em>to</em>
      */
+    @Deprecated
     public final void setRange(String name, Object valueFrom, Object valueTo) {
-        validateColumName(name);
+        validateColumnName(name);
         if (isClosed()) {
             return;
         }
@@ -845,6 +892,15 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
     }
 
+    /**
+     * Sets filter to the field.
+     *
+     * @param column  field column
+     * @param value  filter
+     */
+    public final void setFilter(ColumnNamed<?> column, String value) {
+        setFilter(column.getName(), value);
+    }
 
     /**
      * Sets filter to the field.
@@ -852,8 +908,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @param name  field name
      * @param value filter
      */
+    @Deprecated
     public final void setFilter(String name, String value) {
-        validateColumName(name);
+        validateColumnName(name);
         if (value == null || value.isEmpty()) {
             throw new CelestaException(
                     "Filter for column %s is null or empty. "
@@ -937,8 +994,22 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets sorting.
      *
+     * @param columns  columns array for sorting
+     */
+    public final void orderBy(ColumnName<?>... columns) {
+        String[] names = Arrays.stream(columns)
+                .map(ColumnName::getName)
+                .toArray(String[]::new);
+
+        orderBy(names);
+    }
+
+    /**
+     * Sets sorting.
+     *
      * @param names array of fields for sorting
      */
+    @Deprecated
     public final void orderBy(String... names) {
         prepareOrderBy(names);
 
@@ -947,6 +1018,13 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
 
         closeSet();
+    }
+
+    /**
+     * Clears sorting.
+     */
+    public final void orderBy() {
+        orderBy(new String[0]);
     }
 
     private void prepareOrderBy(String... names) {
@@ -962,7 +1040,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
                         name);
             }
             String colName = m.group(1);
-            validateColumName(colName);
+            validateColumnName(colName);
             if (!colNames.add(colName)) {
                 throw new CelestaException("Column '%s' is used more than once in orderby() call",
                         colName);
@@ -1155,7 +1233,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @param value field value
      */
     public final void setValue(String name, Object value) {
-        validateColumName(name);
+        validateColumnName(name);
         _setFieldValue(name, value);
     }
 
@@ -1167,7 +1245,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @return
      */
     public final Object getValue(String name) {
-        validateColumName(name);
+        validateColumnName(name);
         return _getFieldValue(name);
     }
 

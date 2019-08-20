@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 /**
  * Date column (DATETIME).
  */
-public final class DateTimeColumn extends Column {
+public final class DateTimeColumn extends Column<Date> {
 
     /**
      * Celesta type of the column data.

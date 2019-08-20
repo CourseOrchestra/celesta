@@ -235,7 +235,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 // TODO: get rid of "getCurrentIdent" call where possible
                 // e. g. using INSERT.. OUTPUT clause for MSSQL
                 loggingManager.log(this, Action.INSERT);
-                for (Column c : meta().getColumns().values()) {
+                for (Column<?> c : meta().getColumns().values()) {
                     if (c instanceof IntegerColumn) {
                         IntegerColumn ic = (IntegerColumn) c;
                         if (ic.getSequence() != null) {
@@ -495,8 +495,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @return
      */
     protected BLOB calcBlob(String name) {
-        validateColumName(name);
-        Column c = meta().getColumns().get(name);
+        validateColumnName(name);
+        Column<?> c = meta().getColumns().get(name);
         if (!(c instanceof BinaryColumn)) {
             throw new CelestaException("'%s' is not a BLOB column.", c.getName());
         }
@@ -549,8 +549,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @return  length of the text field or -1 (minus one) if MAX is indicated instead of the length.
      */
     public final int getMaxStrLen(String name) {
-        validateColumName(name);
-        Column c = meta().getColumns().get(name);
+        validateColumnName(name);
+        Column<?> c = meta().getColumns().get(name);
         if (c instanceof StringColumn) {
             StringColumn sc = (StringColumn) c;
             return sc.isMax() ? -1 : sc.getLength();
@@ -712,4 +712,5 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     protected abstract void _setAutoIncrement(int val);
 
     protected abstract void _parseResultInternal(ResultSet rs) throws SQLException;
+
 }

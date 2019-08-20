@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 /**
  * Column REAL type.
  */
-public final class FloatingColumn extends Column {
+public final class FloatingColumn extends Column<Double> {
     /**
      * Celesta type of the column data.
      */

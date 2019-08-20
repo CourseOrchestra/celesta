@@ -84,6 +84,9 @@ public final class CursorGenerator {
 
         //FIELDS
         if (ge instanceof DataGrainElement) {
+            List<FieldSpec> columnFieldSpecs = buildColumnFields((DataGrainElement) ge);
+            cursorClass.addFields(columnFieldSpecs);
+
             List<FieldSpec> fieldSpecs = buildFields((DataGrainElement) ge);
             cursorClass.addFields(fieldSpecs);
             cursorClass.addMethods(generateGettersAndSetters(fieldSpecs));
@@ -96,7 +99,7 @@ public final class CursorGenerator {
 
             StringBuilder parseResultOverridingMethodNameBuilder = new StringBuilder("_parseResult");
 
-            Set<Column> pk = Collections.emptySet();
+            Set<Column<?>> pk = Collections.emptySet();
             if ((dge instanceof TableElement) && !(dge instanceof ReadOnlyTable)) {
                 TableElement te = (TableElement) dge;
                 pk = new LinkedHashSet<>(te.getPrimaryKey().values());
@@ -314,6 +317,21 @@ public final class CursorGenerator {
         return Arrays.asList(grainName, objectName);
     }
 
+    private static List<FieldSpec> buildColumnFields(DataGrainElement ge) {
+
+        Map<String, ? extends ColumnMeta> columns = ge.getColumns();
+
+        return columns.entrySet().stream()
+                .filter(e -> e.getValue().getJavaClass() != BLOB.class)
+                .map(e -> FieldSpec.builder(
+                        ParameterizedTypeName.get(ColumnNamed.class, e.getValue().getJavaClass()),
+                        e.getKey().toUpperCase() + "_COLUMN",
+                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                    .initializer("new ColumnName<>($S)", e.getKey()))
+                .map(FieldSpec.Builder::build)
+                .collect(Collectors.toList());
+    }
+
     private static List<FieldSpec> buildFields(DataGrainElement ge) {
         Map<String, ? extends ColumnMeta> columns = ge.getColumns();
 
@@ -440,7 +458,7 @@ public final class CursorGenerator {
                 .build();
     }
 
-    private static MethodSpec buildClearBuffer(Map<String, ? extends ColumnMeta> columns, Set<Column> pk) {
+    private static MethodSpec buildClearBuffer(Map<String, ? extends ColumnMeta> columns, Set<Column<?>> pk) {
 
         ParameterSpec param = ParameterSpec.builder(boolean.class, "withKeys").build();
 
@@ -462,7 +480,7 @@ public final class CursorGenerator {
         return builder.build();
     }
 
-    private static MethodSpec buildCurrentKeyValues(Set<Column> pk) {
+    private static MethodSpec buildCurrentKeyValues(Set<Column<?>> pk) {
 
         ArrayTypeName resultType = ArrayTypeName.of(Object.class);
 

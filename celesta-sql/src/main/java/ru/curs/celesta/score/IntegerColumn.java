@@ -8,7 +8,7 @@ import ru.curs.celesta.CelestaException;
 /**
  * Integer column.
  */
-public final class IntegerColumn extends Column {
+public final class IntegerColumn extends Column<Integer> {
     /**
      * Celesta type of the column data.
      */
