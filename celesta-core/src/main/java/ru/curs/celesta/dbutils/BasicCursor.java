@@ -73,6 +73,10 @@ public abstract class BasicCursor extends BasicDataAccessor {
     protected Set<String> fields = Collections.emptySet();
     protected Set<String> fieldsForStatement = Collections.emptySet();
 
+    protected ResultSet cursor;
+
+    protected FromTerm fromTerm;
+
     final PreparedStmtHolder set = PreparedStatementHolderFactory.createFindSetHolder(
             BasicCursor.this.db(),
             BasicCursor.this.conn(),
@@ -91,9 +95,6 @@ public abstract class BasicCursor extends BasicDataAccessor {
             () -> BasicCursor.this.rowCount,
             () -> BasicCursor.this.fieldsForStatement
     );
-
-
-    protected ResultSet cursor = null;
 
     final PreparedStmtHolder count = new PreparedStmtHolder() {
         @Override
@@ -232,8 +233,6 @@ public abstract class BasicCursor extends BasicDataAccessor {
     private long rowCount = 0;
     private Expr complexFilter;
 
-    protected FromTerm fromTerm;
-
     private final WhereTermsMaker qmaker = new WhereTermsMaker(new WhereMakerParamsProvider() {
 
         @Override
@@ -327,11 +326,12 @@ public abstract class BasicCursor extends BasicDataAccessor {
                 element.getName().substring(0, 1).toUpperCase() + element.getName().substring(1) + "Cursor";
         cursorClassName = (namespace.isEmpty() ? "" : namespace + ".") + cursorClassName;
 
-        return (Class<? extends BasicCursor>) Class.forName(cursorClassName, true, Thread.currentThread().getContextClassLoader());
+        return (Class<? extends BasicCursor>) Class.forName(
+                cursorClassName, true, Thread.currentThread().getContextClassLoader());
     }
 
     protected static <T> ColumnRef<T> createColumnReference(final String columnName) {
-        return new ColumnRef<T>() {  
+        return new ColumnRef<T>() {
             @Override
             public String getName() {
                 return columnName;
@@ -795,7 +795,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      *
      * @param column  field column
      */
-    public final <T> void setRange(ColumnRef<? super T> column) {
+    public final void setRange(ColumnRef<?> column) {
         setRange(column.getName());
     }
 
@@ -821,6 +821,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
      *
      * @param column  field column
      * @param value  value along which filtering is performed
+     *
+     * @param <T>  Java type of value
      */
     public final <T> void setRange(ColumnRef<? super T> column, T value) {
         setRange(column.getName(), value);
@@ -859,6 +861,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @param column  field column
      * @param valueFrom  value <em>from</em>
      * @param valueTo  value <em>to</em>
+     *
+     * @param <T>  Java type of value
      */
     public final <T> void setRange(ColumnRef<? super T> column, T valueFrom, T valueTo) {
         setRange(column.getName(), valueFrom, valueTo);
@@ -994,25 +998,16 @@ public abstract class BasicCursor extends BasicDataAccessor {
      */
     public final void orderBy(ColumnRef<?>... columns) {
         String[] names = Arrays.stream(columns)
-                .map((c) -> c.getName() + getOrderByAscDescSuffix(c.ordering()))
+                .map(c -> c.getName() + getOrderByAscDescSuffix(c.ordering()))
                 .toArray(String[]::new);
 
         orderBy(names);
     }
 
     private String getOrderByAscDescSuffix(ColumnRef.Ordering ordering) {
-        if (ordering != null) {
-            switch (ordering) {
-                case ASC: {
-                    return " asc";
-                }
-                case DESC: {
-                    return " desc";
-                }
-            }
-        }
-
-        return "";
+        return ordering == ColumnRef.Ordering.ASC ? " asc"
+             : ordering == ColumnRef.Ordering.DESC ? " desc"
+             : "";
     }
 
     /**
