@@ -13,8 +13,13 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.MaterializedViewCursor;
+import ru.curs.celesta.score.ColumnRef;
 
 public final class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
+
+    public static final ColumnRef<Integer> surrogate_count_COLUMN = createColumnReference("surrogate_count");
+    public static final ColumnRef<Integer> c_COLUMN = createColumnReference("c");
+    public static final ColumnRef<BigDecimal> cost_COLUMN = createColumnReference("cost");
 
     private Integer surrogate_count;
     private Integer c;

@@ -324,10 +324,10 @@ public final class CursorGenerator {
         return columns.entrySet().stream()
                 .filter(e -> e.getValue().getJavaClass() != BLOB.class)
                 .map(e -> FieldSpec.builder(
-                        ParameterizedTypeName.get(ColumnNamed.class, e.getValue().getJavaClass()),
-                        e.getKey().toUpperCase() + "_COLUMN",
+                        ParameterizedTypeName.get(ColumnRef.class, e.getValue().getJavaClass()),
+                        e.getKey() + "_COLUMN",
                         Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                    .initializer("new ColumnName<>($S)", e.getKey()))
+                    .initializer("createColumnReference($S)", e.getKey()))
                 .map(FieldSpec.Builder::build)
                 .collect(Collectors.toList());
     }

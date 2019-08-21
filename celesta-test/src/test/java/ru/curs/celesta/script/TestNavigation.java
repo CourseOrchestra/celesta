@@ -17,7 +17,7 @@ class TestNavigation implements ScriptTest {
         NavigationTableCursor c = new NavigationTableCursor(context);
         _prepareTableForTest(c);
 
-        c.orderBy("numb");
+        c.orderBy(NavigationTableCursor.numb_COLUMN);
         c.first();
         assertEquals(1, c.getNumb().intValue());
         c.next();
@@ -39,7 +39,7 @@ class TestNavigation implements ScriptTest {
         NavigationTableCursor c = new NavigationTableCursor(context);
         _prepareTableForTest(c);
 
-        c.orderBy("numb");
+        c.orderBy(NavigationTableCursor.numb_COLUMN);
         c.last();
         assertEquals(5, c.getNumb().intValue());
         c.previous();
@@ -61,7 +61,7 @@ class TestNavigation implements ScriptTest {
         NavigationTableCursor c = new NavigationTableCursor(context);
         _prepareTableForTest(c);
 
-        c.orderBy("numb");
+        c.orderBy(NavigationTableCursor.numb_COLUMN);
         c.first();
         assertEquals(1, c.getNumb().intValue());
 
@@ -84,7 +84,7 @@ class TestNavigation implements ScriptTest {
         NavigationTableCursor c = new NavigationTableCursor(context);
         _prepareTableForTest(c);
 
-        c.orderBy("numb");
+        c.orderBy(NavigationTableCursor.numb_COLUMN);
         c.first();
         assertEquals(1, c.getNumb().intValue());
 

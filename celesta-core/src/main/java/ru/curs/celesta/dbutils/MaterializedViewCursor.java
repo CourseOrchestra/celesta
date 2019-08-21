@@ -92,8 +92,8 @@ public abstract class MaterializedViewCursor extends BasicCursor {
 
   @Override
   final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
-    // Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
-    // естественном порядке
+    // Always add to the end of OrderBy the fields of the primary key following in
+    // a natural order.
     for (String colName : meta().getPrimaryKey().keySet()) {
       if (!colNames.contains(colName)) {
         l.add(String.format("\"%s\"", colName));

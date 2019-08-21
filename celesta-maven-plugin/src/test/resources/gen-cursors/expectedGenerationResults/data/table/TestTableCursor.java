@@ -25,8 +25,18 @@ import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.event.TriggerType;
+import ru.curs.celesta.score.ColumnRef;
 
 public final class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
+
+    public static final ColumnRef<Integer> id_COLUMN = createColumnReference("id");
+    public static final ColumnRef<String> str_COLUMN = createColumnReference("str");
+    public static final ColumnRef<Boolean> deleted_COLUMN = createColumnReference("deleted");
+    public static final ColumnRef<Double> weight_COLUMN = createColumnReference("weight");
+    public static final ColumnRef<String> content_COLUMN = createColumnReference("content");
+    public static final ColumnRef<Date> created_COLUMN = createColumnReference("created");
+    public static final ColumnRef<BigDecimal> cost_COLUMN = createColumnReference("cost");
+    public static final ColumnRef<ZonedDateTime> toDelete_COLUMN = createColumnReference("toDelete");
 
     private Integer id;
     private String str;

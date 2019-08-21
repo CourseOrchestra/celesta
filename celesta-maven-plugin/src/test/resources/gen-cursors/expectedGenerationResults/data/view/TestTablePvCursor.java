@@ -13,8 +13,11 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.ParameterizedViewCursor;
+import ru.curs.celesta.score.ColumnRef;
 
 public final class TestTablePvCursor extends ParameterizedViewCursor implements Iterable<TestTablePvCursor> {
+
+    public static final ColumnRef<Integer> s_COLUMN = createColumnReference("s");
 
     private Integer s;
 

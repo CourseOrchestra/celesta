@@ -10,9 +10,9 @@ import ru.curs.celesta.CelestaException;
  * Base class for describing a table column. Subclasses of this class correspond
  * to different column types.
  *
- * @param <T>  Java class of column value
+ * @param <V>  Java class of column value
  */
-public abstract class Column<T> extends NamedElement implements ColumnMeta, ColumnNamed<T> {
+public abstract class Column<V> extends NamedElement implements ColumnRef<V>, ColumnMeta {
 
     private final TableElement parentTable;
     private boolean nullable = true;
@@ -118,7 +118,7 @@ public abstract class Column<T> extends NamedElement implements ColumnMeta, Colu
      *
      * @return
      */
-    public abstract T getDefaultValue();
+    public abstract V getDefaultValue();
 
     /**
      * DEFAULT value of the field in CelestaSQL language.

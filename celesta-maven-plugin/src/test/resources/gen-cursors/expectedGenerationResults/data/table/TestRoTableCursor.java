@@ -12,8 +12,11 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.ReadOnlyTableCursor;
+import ru.curs.celesta.score.ColumnRef;
 
 public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<TestRoTableCursor> {
+
+    public static final ColumnRef<Integer> id_COLUMN = createColumnReference("id");
 
     private Integer id;
 

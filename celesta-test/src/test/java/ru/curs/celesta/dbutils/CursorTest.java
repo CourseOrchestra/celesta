@@ -31,7 +31,7 @@ public class CursorTest extends AbstractCelestaTest {
 
     @Test
     public void cursorIsNavigable() {
-        c.setFilter("grainid", "'b'%");
+        c.setFilter(LogsetupCursor.grainid_COLUMN, "'b'%");
         LogsetupCursor c2 = (LogsetupCursor) c;
         c2.setGrainid("grainval");
         c2.setTablename("tablenameval");
@@ -131,12 +131,12 @@ public class CursorTest extends AbstractCelestaTest {
     @Test
     void copyFilterFromCopiesFilters() {
         LogsetupCursor c2 = new LogsetupCursor(cc());
-        c2.setRange("m", true);
-        c2.setFilter("tablename", "foo%");
+        c2.setRange(LogsetupCursor.m_COLUMN, true);
+        c2.setFilter(LogsetupCursor.tablename_COLUMN, "foo%");
         c2.setComplexFilter("i = m");
         c2.limit(5, 10);
 
-        c.setRange("d", false);
+        c.setRange(LogsetupCursor.d_COLUMN, false);
         c.copyFiltersFrom(c2);
 
 
@@ -152,8 +152,8 @@ public class CursorTest extends AbstractCelestaTest {
     @Test
     void isEquivalentChecksForFilterEquivalence() {
         LogsetupCursor c2 = new LogsetupCursor(cc());
-        c2.setRange("m", true);
-        c2.setFilter("tablename", "foo%");
+        c2.setRange(LogsetupCursor.m_COLUMN, true);
+        c2.setFilter(LogsetupCursor.tablename_COLUMN, "foo%");
         //c2 has complexFilter, no complexFilter on c
         c2.setComplexFilter("i = m");
 
@@ -161,9 +161,9 @@ public class CursorTest extends AbstractCelestaTest {
         c.copyFiltersFrom(c2);
         assertTrue(c.isEquivalent(c2));
 
-        c.orderBy("i");
+        c.orderBy(LogsetupCursor.i_COLUMN);
         assertFalse(c.isEquivalent(c2));
-        c2.orderBy("i");
+        c2.orderBy(LogsetupCursor.i_COLUMN);
         assertTrue(c.isEquivalent(c2));
 
         c.reset();
@@ -179,13 +179,13 @@ public class CursorTest extends AbstractCelestaTest {
     @Test
     void isEquivalentChecksDeepForFilterEquivalence() {
         LogsetupCursor c2 = new LogsetupCursor(cc());
-        c2.setRange("m", true);
+        c2.setRange(LogsetupCursor.m_COLUMN, true);
         assertFalse(c.isEquivalent(c2));
 
-        c.setRange("m", false);
+        c.setRange(LogsetupCursor.m_COLUMN, false);
         assertFalse(c.isEquivalent(c2));
 
-        c.setRange("m", true);
+        c.setRange(LogsetupCursor.m_COLUMN, true);
         assertTrue(c.isEquivalent(c2));
 
         c.setComplexFilter("i > m");
@@ -212,7 +212,7 @@ public class CursorTest extends AbstractCelestaTest {
         lc.insert();
         assertEquals(2, ((BasicCursor) lc).position());
 
-        lc.setFilter("entryno", ">1");
+        lc.setFilter(LogCursor.entryno_COLUMN, ">1");
         assertEquals(1, ((BasicCursor) lc).position());
 
     }

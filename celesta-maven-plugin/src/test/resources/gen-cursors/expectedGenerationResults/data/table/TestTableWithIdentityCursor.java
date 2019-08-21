@@ -16,8 +16,11 @@ import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.event.TriggerType;
+import ru.curs.celesta.score.ColumnRef;
 
 public final class TestTableWithIdentityCursor extends Cursor implements Iterable<TestTableWithIdentityCursor> {
+
+    public static final ColumnRef<Integer> identityId_COLUMN = createColumnReference("id");
 
     private Integer identityId;
 
