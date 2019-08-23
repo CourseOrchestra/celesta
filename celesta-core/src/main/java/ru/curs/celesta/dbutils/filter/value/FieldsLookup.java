@@ -157,8 +157,8 @@ public final class FieldsLookup {
     }
 
     public FieldsLookup add(String field, String otherField) throws ParseException {
-        final ColumnMeta column;
-        final ColumnMeta otherColumn;
+        final ColumnMeta<?> column;
+        final ColumnMeta<?> otherColumn;
 
         column = filtered.getColumns().get(field);
         otherColumn = filtering.getColumns().get(otherField);

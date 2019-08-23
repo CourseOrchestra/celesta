@@ -12,7 +12,7 @@ import ru.curs.celesta.CelestaException;
  *
  * @param <V>  Java class of column value
  */
-public abstract class Column<V> extends NamedElement implements ColumnRef<V>, ColumnMeta {
+public abstract class Column<V> extends NamedElement implements ColumnMeta<V> {
 
     private final TableElement parentTable;
     private boolean nullable = true;

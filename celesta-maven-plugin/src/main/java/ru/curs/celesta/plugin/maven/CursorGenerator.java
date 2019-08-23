@@ -73,26 +73,28 @@ public final class CursorGenerator {
         }
 
         final String sourceFileNamePrefix = StringUtils.capitalize(ge.getName());
+        final String className = calcClassName(ge, sourceFileNamePrefix);
+        final String columnsClassName = className + "Columns";
 
         boolean isVersionedGe = ge instanceof VersionedElement && ((VersionedElement) ge).isVersioned();
 
-        String className = calcClassName(ge, sourceFileNamePrefix);
+        ClassName classType = ClassName.bestGuess(className);
 
-        TypeSpec.Builder cursorClass = buildClassDefinition(ge, className);
+        TypeSpec.Builder cursorClass = buildClassDefinition(ge, classType);
 
         cursorClass.addMethods(buildConstructors(ge));
 
         //FIELDS
         if (ge instanceof DataGrainElement) {
-            List<FieldSpec> columnFieldSpecs = buildColumnFields((DataGrainElement) ge);
-            cursorClass.addFields(columnFieldSpecs);
-
-            List<FieldSpec> fieldSpecs = buildFields((DataGrainElement) ge);
-            cursorClass.addFields(fieldSpecs);
-            cursorClass.addMethods(generateGettersAndSetters(fieldSpecs));
-
             DataGrainElement dge = (DataGrainElement) ge;
-            Map<String, ? extends ColumnMeta> columns = dge.getColumns();
+
+            ClassName columnsClassType = classType.nestedClass(columnsClassName);
+            cursorClass.addField(buildColumnsField(columnsClassType));
+
+            List<FieldSpec> fieldSpecs = buildFields(dge);
+            cursorClass.addFields(fieldSpecs);
+
+            cursorClass.addMethods(generateGettersAndSetters(fieldSpecs));
 
             cursorClass.addMethod(buildGetFieldValue());
             cursorClass.addMethod(buildSetFieldValue());
@@ -109,14 +111,17 @@ public final class CursorGenerator {
                 }
             }
 
+            final Map<String, ? extends ColumnMeta<?>> columns = dge.getColumns();
+
             MethodSpec buildParseResultMethod = buildParseResult(
-                    columns, parseResultOverridingMethodNameBuilder.toString(), isVersionedGe
-            );
+                    columns, parseResultOverridingMethodNameBuilder.toString(), isVersionedGe);
             cursorClass.addMethod(buildParseResultMethod);
 
             cursorClass.addMethod(buildClearBuffer(columns, pk));
 
             cursorClass.addMethod(buildCurrentValues(columns));
+
+            cursorClass.addType(buildCursorColumnsAsInnerClass(dge, columnsClassType));
 
             if (dge instanceof BasicTable) {
                 BasicTable t = (BasicTable) dge;
@@ -126,8 +131,7 @@ public final class CursorGenerator {
                     cursorClass.addMethods(buildTriggerRegistration(className));
                 }
                 cursorClass.addTypes(
-                        buildOptionFieldsAsInnerStaticClasses(t.getColumns().values())
-                );
+                    buildOptionFieldsAsInnerStaticClasses(t.getColumns().values()));
             }
 
             cursorClass.addMethods(buildCompileCopying(ge, className, columns.keySet(), isVersionedGe));
@@ -177,15 +181,14 @@ public final class CursorGenerator {
         }
     }
 
-    private static TypeSpec.Builder buildClassDefinition(GrainElement ge, String className) {
-        TypeSpec.Builder builder = TypeSpec.classBuilder(className)
+    private static TypeSpec.Builder buildClassDefinition(GrainElement ge, ClassName classType) {
+        TypeSpec.Builder builder = TypeSpec.classBuilder(classType)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .superclass(GRAIN_ELEMENTS_TO_DATA_ACCESSORS.get(ge.getClass()).apply(ge));
 
         if (ge instanceof DataGrainElement) {
-            TypeName selfTypeName = ClassName.bestGuess(className);
             builder.addSuperinterface(
-                    ParameterizedTypeName.get(ClassName.get(Iterable.class), selfTypeName)
+                    ParameterizedTypeName.get(ClassName.get(Iterable.class), classType)
             );
         }
         if (ge instanceof BasicTable) {
@@ -317,23 +320,39 @@ public final class CursorGenerator {
         return Arrays.asList(grainName, objectName);
     }
 
-    private static List<FieldSpec> buildColumnFields(DataGrainElement ge) {
+    private static TypeSpec buildCursorColumnsAsInnerClass(DataGrainElement dge, ClassName columnsClassType) {
 
-        Map<String, ? extends ColumnMeta> columns = ge.getColumns();
+        TypeSpec.Builder builder = TypeSpec.classBuilder(columnsClassType)
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
-        return columns.entrySet().stream()
-                .filter(e -> e.getValue().getJavaClass() != BLOB.class)
-                .map(e -> FieldSpec.builder(
-                        ParameterizedTypeName.get(ColumnRef.class, e.getValue().getJavaClass()),
-                        e.getKey() + "_COLUMN",
-                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                    .initializer("createColumnReference($S)", e.getKey()))
+        dge.getColumns().entrySet().stream()
+                .filter(e -> !BinaryColumn.CELESTA_TYPE.equals(e.getValue().getCelestaType()))
+                .map(e -> {
+                    final String columnName = e.getKey();
+                    final TypeName columnType = ParameterizedTypeName.get(ColumnMeta.class, e.getValue().getJavaClass());
+                    return FieldSpec.builder(columnType, columnName,
+                                             Modifier.PUBLIC, Modifier.FINAL)
+                            .initializer("($T) meta().getColumns().get($S)", columnType, columnName);
+                 })
                 .map(FieldSpec.Builder::build)
-                .collect(Collectors.toList());
+                .forEach(builder::addField);
+
+        MethodSpec privateConstructor = MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PRIVATE)
+                .build();
+        builder.addMethod(privateConstructor);
+        
+        return builder.build();
     }
 
-    private static List<FieldSpec> buildFields(DataGrainElement ge) {
-        Map<String, ? extends ColumnMeta> columns = ge.getColumns();
+    private static FieldSpec buildColumnsField(TypeName columnsClassType) {
+        return FieldSpec.builder(columnsClassType, "COLUMNS", Modifier.PUBLIC, Modifier.FINAL)
+                .initializer("new $T()", columnsClassType)
+                .build();
+    }
+
+    private static List<FieldSpec> buildFields(DataGrainElement dge) {
+        Map<String, ? extends ColumnMeta<?>> columns = dge.getColumns();
 
         return columns.entrySet().stream()
                 .map(e -> FieldSpec.builder(e.getValue().getJavaClass(), e.getKey(), Modifier.PRIVATE))
@@ -371,7 +390,7 @@ public final class CursorGenerator {
     }
 
     private static MethodSpec buildParseResult(
-            Map<String, ? extends ColumnMeta> columns, String methodName, boolean isVersionedObject
+            Map<String, ? extends ColumnMeta<?>> columns, String methodName, boolean isVersionedObject
     ) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PROTECTED)
@@ -381,7 +400,7 @@ public final class CursorGenerator {
 
         columns.entrySet().forEach(entry -> {
             String name = entry.getKey();
-            ColumnMeta meta = entry.getValue();
+            ColumnMeta<?> meta = entry.getValue();
 
             if (BinaryColumn.CELESTA_TYPE.equals(meta.getCelestaType())) {
                 builder.addStatement("this.$N = null", name);
@@ -458,7 +477,7 @@ public final class CursorGenerator {
                 .build();
     }
 
-    private static MethodSpec buildClearBuffer(Map<String, ? extends ColumnMeta> columns, Set<Column<?>> pk) {
+    private static MethodSpec buildClearBuffer(Map<String, ? extends ColumnMeta<?>> columns, Set<Column<?>> pk) {
 
         ParameterSpec param = ParameterSpec.builder(boolean.class, "withKeys").build();
 
@@ -498,7 +517,7 @@ public final class CursorGenerator {
         return builder.build();
     }
 
-    private static MethodSpec buildCurrentValues(Map<String, ? extends ColumnMeta> columns) {
+    private static MethodSpec buildCurrentValues(Map<String, ? extends ColumnMeta<?>> columns) {
         ArrayTypeName resultType = ArrayTypeName.of(Object.class);
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("_currentValues")
@@ -515,7 +534,7 @@ public final class CursorGenerator {
         return builder.build();
     }
 
-    private static List<MethodSpec> buildCalcBlobs(Map<String, ? extends ColumnMeta> columns, String className) {
+    private static List<MethodSpec> buildCalcBlobs(Map<String, ? extends ColumnMeta<?>> columns, String className) {
         return columns.entrySet().stream()
                 .filter(e -> e.getValue() instanceof BinaryColumn)
                 .map(e ->
@@ -529,7 +548,7 @@ public final class CursorGenerator {
                 ).collect(Collectors.toList());
     }
 
-    private static MethodSpec buildSetAutoIncrement(Map<String, ? extends ColumnMeta> columns) {
+    private static MethodSpec buildSetAutoIncrement(Map<String, ? extends ColumnMeta<?>> columns) {
         MethodSpec.Builder builder = MethodSpec
                 .methodBuilder("_setAutoIncrement")
                 .addModifiers(Modifier.PROTECTED)

@@ -16,11 +16,11 @@ import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.ColumnRef;
+import ru.curs.celesta.score.ColumnMeta;
 
 public final class TestTableWithIdentityCursor extends Cursor implements Iterable<TestTableWithIdentityCursor> {
 
-    public static final ColumnRef<Integer> identityId_COLUMN = createColumnReference("id");
+    public final TestTableWithIdentityCursor.TestTableWithIdentityCursorColumns COLUMNS = new TestTableWithIdentityCursor.TestTableWithIdentityCursorColumns();
 
     private Integer identityId;
 
@@ -159,4 +159,12 @@ public final class TestTableWithIdentityCursor extends Cursor implements Iterabl
     protected String _objectName() {
         return "testTableWithIdentity";
     }
+
+    public final class TestTableWithIdentityCursorColumns {
+        public final ColumnMeta<Integer> identityId = (ColumnMeta<Integer>) meta().getColumns().get("identityId");
+
+        private TestTableWithIdentityCursorColumns() {
+        }
+    }
+
 }

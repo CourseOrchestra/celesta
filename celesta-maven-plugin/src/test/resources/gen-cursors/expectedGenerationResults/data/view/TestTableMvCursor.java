@@ -13,13 +13,11 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.MaterializedViewCursor;
-import ru.curs.celesta.score.ColumnRef;
+import ru.curs.celesta.score.ColumnMeta;
 
 public final class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
 
-    public static final ColumnRef<Integer> surrogate_count_COLUMN = createColumnReference("surrogate_count");
-    public static final ColumnRef<Integer> c_COLUMN = createColumnReference("c");
-    public static final ColumnRef<BigDecimal> cost_COLUMN = createColumnReference("cost");
+    public final TestTableMvCursor.TestTableMvCursorColumns COLUMNS = new TestTableMvCursor.TestTableMvCursorColumns();
 
     private Integer surrogate_count;
     private Integer c;
@@ -163,4 +161,14 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     protected String _objectName() {
         return "testTableMv";
     }
+
+    public final class TestTableMvCursorColumns {
+        public final ColumnMeta<Integer> surrogate_count = (ColumnMeta<Integer>) meta().getColumns().get("surrogate_count");
+        public final ColumnMeta<Integer> c = (ColumnMeta<Integer>) meta().getColumns().get("c");
+        public final ColumnMeta<BigDecimal> cost = (ColumnMeta<BigDecimal>) meta().getColumns().get("cost");
+
+        private TestTableMvCursorColumns() {
+        }
+    }
+
 }

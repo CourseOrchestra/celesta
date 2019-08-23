@@ -5,12 +5,15 @@ import java.util.regex.Pattern;
 
 /**
  * View column metadata.
+ * 
+ * @param <V>  Java class of column value
  */
-public final class ViewColumnMeta implements ColumnMeta {
+public final class ViewColumnMeta<V> implements ColumnMeta<V> {
 
     private static final Pattern COMMENT = Pattern.compile("/\\*\\*(.*)\\*/", Pattern.DOTALL);
 
     private final ViewColumnType type;
+    private String name;
     private String celestaDoc = "";
     private boolean nullable = true;
     private final int length;
@@ -41,6 +44,11 @@ public final class ViewColumnMeta implements ColumnMeta {
     }
 
     @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
     public String jdbcGetterName() {
         return type.jdbcGetterName();
     }
@@ -63,6 +71,16 @@ public final class ViewColumnMeta implements ColumnMeta {
     @Override
     public String getCelestaDoc() {
         return celestaDoc;
+    }
+
+    /**
+     * Sets column name.
+     *
+     * @param name
+     *            new value
+     */
+    void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -101,7 +119,7 @@ public final class ViewColumnMeta implements ColumnMeta {
      * @param celestaDoc
      *            new value.
      */
-    public void setCelestaDoc(String celestaDoc) {
+    void setCelestaDoc(String celestaDoc) {
         this.celestaDoc = celestaDoc;
     }
 

@@ -54,7 +54,7 @@ public abstract class Expr {
      *
      * @return
      */
-    public abstract ViewColumnMeta getMeta();
+    public abstract ViewColumnMeta<?> getMeta();
 
     /**
      * Resolves references to the fields of tables using the context of the defined
@@ -128,7 +128,7 @@ final class ParenthesizedExpr extends Expr {
     }
 
     @Override
-    public ViewColumnMeta getMeta() {
+    public ViewColumnMeta<?> getMeta() {
         return parenthesized.getMeta();
     }
 
@@ -143,15 +143,15 @@ final class ParenthesizedExpr extends Expr {
  * Expression with logical value. Celestadoc and nullable is not actual.
  */
 abstract class LogicValuedExpr extends Expr {
-    private static final ViewColumnMeta META;
+    private static final ViewColumnMeta<?> META;
 
     static {
-        META = new ViewColumnMeta(ViewColumnType.LOGIC);
+        META = new ViewColumnMeta<>(ViewColumnType.LOGIC);
         META.setNullable(false);
     }
 
     @Override
-    public final ViewColumnMeta getMeta() {
+    public final ViewColumnMeta<?> getMeta() {
         return META;
     }
 
@@ -456,7 +456,7 @@ final class BinaryTermOp extends Expr {
     public static final int CONCAT = 4;
     public static final String[] OPS = { " + ", " - ", " * ", " / ", " || " };
 
-    private ViewColumnMeta meta;
+    private ViewColumnMeta<?> meta;
 
     private final int operator;
     private final List<Expr> operands;
@@ -491,27 +491,27 @@ final class BinaryTermOp extends Expr {
     }
 
     @Override
-    public ViewColumnMeta getMeta() {
+    public ViewColumnMeta<?> getMeta() {
         if (meta == null) {
             cases: switch (operator) {
             case CONCAT: // ||
-                meta = new ViewColumnMeta(ViewColumnType.TEXT);
+                meta = new ViewColumnMeta<>(ViewColumnType.TEXT);
                 break;
             case OVER: // /
-                meta = new ViewColumnMeta(ViewColumnType.REAL);
+                meta = new ViewColumnMeta<>(ViewColumnType.REAL);
                 break;
             default: // +, -, *
                 for (Expr o : operands) {
                     if (o.getMeta().getColumnType() == ViewColumnType.REAL) {
-                        meta = new ViewColumnMeta(ViewColumnType.REAL);
+                        meta = new ViewColumnMeta<>(ViewColumnType.REAL);
                         break cases;
                     }
                     if (o.getMeta().getColumnType() == ViewColumnType.DECIMAL) {
-                        meta = new ViewColumnMeta(ViewColumnType.DECIMAL);
+                        meta = new ViewColumnMeta<>(ViewColumnType.DECIMAL);
                         break cases;
                     }
                 }
-                meta = new ViewColumnMeta(ViewColumnType.INT);
+                meta = new ViewColumnMeta<>(ViewColumnType.INT);
                 break;
             }
 
@@ -552,7 +552,7 @@ final class UnaryMinus extends Expr {
     }
 
     @Override
-    public ViewColumnMeta getMeta() {
+    public ViewColumnMeta<?> getMeta() {
         // Real or Integer
         return arg.getMeta();
     }
@@ -569,16 +569,16 @@ final class UnaryMinus extends Expr {
  */
 abstract class Literal extends Expr {
     private final ViewColumnType type;
-    private ViewColumnMeta meta;
+    private ViewColumnMeta<?> meta;
 
     Literal(ViewColumnType type) {
         this.type = type;
     }
 
     @Override
-    public final ViewColumnMeta getMeta() {
+    public final ViewColumnMeta<?> getMeta() {
         if (meta == null) {
-            meta = new ViewColumnMeta(type);
+            meta = new ViewColumnMeta<>(type);
             meta.setNullable(false);
         }
         return meta;
@@ -689,8 +689,8 @@ final class TextLiteral extends Literal {
 
 final class GetDate extends Expr {
     @Override
-    public ViewColumnMeta getMeta() {
-        return new ViewColumnMeta(ViewColumnType.DATE);
+    public ViewColumnMeta<?> getMeta() {
+        return new ViewColumnMeta<>(ViewColumnType.DATE);
     }
 
     @Override
@@ -712,7 +712,7 @@ final class FieldRef extends Expr {
     private String tableNameOrAlias;
     private String columnName;
     private Column<?> column = null;
-    private ViewColumnMeta meta;
+    private ViewColumnMeta<?> meta;
 
     public FieldRef(String tableNameOrAlias, String columnName) throws ParseException {
         if (columnName == null) {
@@ -742,30 +742,30 @@ final class FieldRef extends Expr {
     }
 
     @Override
-    public ViewColumnMeta getMeta() {
+    public ViewColumnMeta<?> getMeta() {
         if (meta == null) {
             if (column != null) {
                 if (column instanceof IntegerColumn) {
-                    meta = new ViewColumnMeta(ViewColumnType.INT);
+                    meta = new ViewColumnMeta<>(ViewColumnType.INT);
                 } else if (column instanceof FloatingColumn) {
-                    meta = new ViewColumnMeta(ViewColumnType.REAL);
+                    meta = new ViewColumnMeta<>(ViewColumnType.REAL);
                 } else if (column instanceof DecimalColumn) {
-                    meta = new ViewColumnMeta(ViewColumnType.DECIMAL);
+                    meta = new ViewColumnMeta<>(ViewColumnType.DECIMAL);
                 } else if (column instanceof StringColumn) {
                     StringColumn sc = (StringColumn) column;
                     if (sc.isMax()) {
-                        meta = new ViewColumnMeta(ViewColumnType.TEXT);
+                        meta = new ViewColumnMeta<>(ViewColumnType.TEXT);
                     } else {
-                        meta = new ViewColumnMeta(ViewColumnType.TEXT, sc.getLength());
+                        meta = new ViewColumnMeta<>(ViewColumnType.TEXT, sc.getLength());
                     }
                 } else if (column instanceof BooleanColumn) {
-                    meta = new ViewColumnMeta(ViewColumnType.BIT);
+                    meta = new ViewColumnMeta<>(ViewColumnType.BIT);
                 } else if (column instanceof DateTimeColumn) {
-                    meta = new ViewColumnMeta(ViewColumnType.DATE);
+                    meta = new ViewColumnMeta<>(ViewColumnType.DATE);
                 } else if (column instanceof ZonedDateTimeColumn) {
-                    meta = new ViewColumnMeta(ViewColumnType.DATE_WITH_TIME_ZONE);
+                    meta = new ViewColumnMeta<>(ViewColumnType.DATE_WITH_TIME_ZONE);
                 } else if (column instanceof BinaryColumn) {
-                    meta = new ViewColumnMeta(ViewColumnType.BLOB);
+                    meta = new ViewColumnMeta<>(ViewColumnType.BLOB);
                 // This should not happen unless we introduced new types in
                 // Celesta
                 } else {
@@ -774,7 +774,7 @@ final class FieldRef extends Expr {
                 meta.setNullable(column.isNullable());
                 meta.setCelestaDoc(column.getCelestaDoc());
             } else {
-                return new ViewColumnMeta(ViewColumnType.UNDEFINED);
+                return new ViewColumnMeta<>(ViewColumnType.UNDEFINED);
             }
         }
         return meta;
@@ -817,19 +817,19 @@ final class ParameterRef extends Expr {
 
     private Parameter parameter;
     private String name;
-    private ViewColumnMeta meta;
+    private ViewColumnMeta<?> meta;
 
     public ParameterRef(String name) {
         this.name = name;
     }
 
     @Override
-    public ViewColumnMeta getMeta() {
+    public ViewColumnMeta<?> getMeta() {
         if (meta == null) {
             if (parameter != null) {
-                meta = new ViewColumnMeta(parameter.getType());
+                meta = new ViewColumnMeta<>(parameter.getType());
             } else {
-                meta = new ViewColumnMeta(ViewColumnType.UNDEFINED);
+                meta = new ViewColumnMeta<>(ViewColumnType.UNDEFINED);
             }
         }
         return meta;

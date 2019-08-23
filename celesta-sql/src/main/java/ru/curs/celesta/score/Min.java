@@ -17,7 +17,7 @@ public final class Min  extends Aggregate {
   }
 
   @Override
-  public ViewColumnMeta getMeta() {
+  public ViewColumnMeta<?> getMeta() {
     return term.getMeta();
   }
 }

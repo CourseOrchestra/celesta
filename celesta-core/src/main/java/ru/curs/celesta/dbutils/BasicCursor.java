@@ -330,15 +330,6 @@ public abstract class BasicCursor extends BasicDataAccessor {
                 cursorClassName, true, Thread.currentThread().getContextClassLoader());
     }
 
-    protected static <T> ColumnRef<T> createColumnReference(final String columnName) {
-        return new ColumnRef<T>() {
-            @Override
-            public String getName() {
-                return columnName;
-            }
-        };
-    }
-
     PreparedStmtHolder getHereHolder() {
         // To be overriden in Cursor class
         return new OrderFieldsMaskedStatementHolder() {
@@ -795,7 +786,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      *
      * @param column  field column
      */
-    public final void setRange(ColumnRef<?> column) {
+    public final void setRange(ColumnMeta<?> column) {
         setRange(column.getName());
     }
 
@@ -824,7 +815,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      *
      * @param <T>  Java type of value
      */
-    public final <T> void setRange(ColumnRef<? super T> column, T value) {
+    public final <T> void setRange(ColumnMeta<? super T> column, T value) {
         setRange(column.getName(), value);
     }
 
@@ -864,7 +855,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      *
      * @param <T>  Java type of value
      */
-    public final <T> void setRange(ColumnRef<? super T> column, T valueFrom, T valueTo) {
+    public final <T> void setRange(ColumnMeta<? super T> column, T valueFrom, T valueTo) {
         setRange(column.getName(), valueFrom, valueTo);
     }
 
@@ -898,7 +889,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @param column  field column
      * @param value  filter
      */
-    public final void setFilter(ColumnRef<?> column, String value) {
+    public final void setFilter(ColumnMeta<?> column, String value) {
         setFilter(column.getName(), value);
     }
 
@@ -996,7 +987,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      *
      * @param columns  columns array for sorting
      */
-    public final void orderBy(ColumnRef<?>... columns) {
+    public final void orderBy(ColumnMeta<?>... columns) {
         String[] names = Arrays.stream(columns)
                 .map(c -> c.getName() + getOrderByAscDescSuffix(c.ordering()))
                 .toArray(String[]::new);
@@ -1004,9 +995,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
         orderBy(names);
     }
 
-    private String getOrderByAscDescSuffix(ColumnRef.Ordering ordering) {
-        return ordering == ColumnRef.Ordering.ASC ? " asc"
-             : ordering == ColumnRef.Ordering.DESC ? " desc"
+    private String getOrderByAscDescSuffix(ColumnMeta.Ordering ordering) {
+        return ordering == ColumnMeta.Ordering.ASC ? " asc"
+             : ordering == ColumnMeta.Ordering.DESC ? " desc"
              : "";
     }
 

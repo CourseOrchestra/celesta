@@ -12,11 +12,11 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.ReadOnlyTableCursor;
-import ru.curs.celesta.score.ColumnRef;
+import ru.curs.celesta.score.ColumnMeta;
 
 public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<TestRoTableCursor> {
 
-    public static final ColumnRef<Integer> id_COLUMN = createColumnReference("id");
+    public final TestRoTableCursor.TestRoTableCursorColumns COLUMNS = new TestRoTableCursor.TestRoTableCursorColumns();
 
     private Integer id;
 
@@ -114,6 +114,13 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
     @Override
     protected String _objectName() {
         return "testRoTable";
+    }
+
+    public final class TestRoTableCursorColumns {
+        public final ColumnMeta<Integer> id = (ColumnMeta<Integer>) meta().getColumns().get("id");
+
+        private TestRoTableCursorColumns() {
+        }
     }
 
     public static final class Id {

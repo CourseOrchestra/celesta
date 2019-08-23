@@ -25,18 +25,11 @@ import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.ColumnRef;
+import ru.curs.celesta.score.ColumnMeta;
 
 public final class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
 
-    public static final ColumnRef<Integer> id_COLUMN = createColumnReference("id");
-    public static final ColumnRef<String> str_COLUMN = createColumnReference("str");
-    public static final ColumnRef<Boolean> deleted_COLUMN = createColumnReference("deleted");
-    public static final ColumnRef<Double> weight_COLUMN = createColumnReference("weight");
-    public static final ColumnRef<String> content_COLUMN = createColumnReference("content");
-    public static final ColumnRef<Date> created_COLUMN = createColumnReference("created");
-    public static final ColumnRef<BigDecimal> cost_COLUMN = createColumnReference("cost");
-    public static final ColumnRef<ZonedDateTime> toDelete_COLUMN = createColumnReference("toDelete");
+    public final TestTableCursor.TestTableCursorColumns COLUMNS = new TestTableCursor.TestTableCursorColumns();
 
     private Integer id;
     private String str;
@@ -132,7 +125,6 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     protected Object _getFieldValue(String name) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             return f.get(this);
         } catch (Exception e) {
@@ -250,12 +242,10 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         ((TestTableCursor)this.getXRec()).rawData = this.rawData.clone();
     }
 
-
     @Override
     protected void _setAutoIncrement(int val) {
         this.id = val;
     }
-
 
     public static void onPreDelete(ICelesta celesta, Consumer<TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_DELETE, TestTableCursor.class, cursorConsumer);
@@ -284,7 +274,6 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     @Override
     public TestTableCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestTableCursor result;
-
         if (Objects.isNull(fields)) {
             result = new TestTableCursor(context);
         } else {
@@ -309,7 +298,6 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         this.setRecversion(from.getRecversion());
     }
 
-
     @Override
     public Iterator<TestTableCursor> iterator() {
         return new CursorIterator<TestTableCursor>(this);
@@ -325,6 +313,20 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         return "testTable";
     }
 
+    public final class TestTableCursorColumns {
+        public final ColumnMeta<Integer> id = (ColumnMeta<Integer>) meta().getColumns().get("id");
+        public final ColumnMeta<String> str = (ColumnMeta<String>) meta().getColumns().get("str");
+        public final ColumnMeta<Boolean> deleted = (ColumnMeta<Boolean>) meta().getColumns().get("deleted");
+        public final ColumnMeta<Double> weight = (ColumnMeta<Double>) meta().getColumns().get("weight");
+        public final ColumnMeta<String> content = (ColumnMeta<String>) meta().getColumns().get("content");
+        public final ColumnMeta<Date> created = (ColumnMeta<Date>) meta().getColumns().get("created");
+        public final ColumnMeta<BigDecimal> cost = (ColumnMeta<BigDecimal>) meta().getColumns().get("cost");
+        public final ColumnMeta<ZonedDateTime> toDelete = (ColumnMeta<ZonedDateTime>) meta().getColumns().get("toDelete");
+
+        private TestTableCursorColumns() {
+        }
+    }
+
     public static final class Str {
         public static final String one = "one";
         public static final String two = "two";
@@ -334,4 +336,5 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
             throw new AssertionError();
         }
     }
+
 }

@@ -58,10 +58,10 @@ public class FieldsLookupTest {
         View view = new View(gp, name);
         view.addFromTableRef(new TableRef(table, table.getName()));
 
-        view.getColumns().put(table.getName() + "1", new ViewColumnMeta(ViewColumnType.INT));
-        view.getColumns().put(table.getName() + "2", new ViewColumnMeta(ViewColumnType.INT));
-        view.getColumns().put(table.getName() + "3", new ViewColumnMeta(ViewColumnType.TEXT));
-        view.getColumns().put(table.getName() + "4", new ViewColumnMeta(ViewColumnType.DATE));
+        view.getColumns().put(table.getName() + "1", new ViewColumnMeta<>(ViewColumnType.INT));
+        view.getColumns().put(table.getName() + "2", new ViewColumnMeta<>(ViewColumnType.INT));
+        view.getColumns().put(table.getName() + "3", new ViewColumnMeta<>(ViewColumnType.TEXT));
+        view.getColumns().put(table.getName() + "4", new ViewColumnMeta<>(ViewColumnType.DATE));
 
         return view;
     }

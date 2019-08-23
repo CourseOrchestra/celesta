@@ -144,7 +144,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     static String getTableFieldsListExceptBlobs(DataGrainElement t, Set<String> fields) {
         final List<String> flds;
 
-        Predicate<ColumnMeta> notBinary = c -> !BinaryColumn.CELESTA_TYPE.equals(c.getCelestaType());
+        Predicate<ColumnMeta<?>> notBinary = c -> !BinaryColumn.CELESTA_TYPE.equals(c.getCelestaType());
 
         if (fields.isEmpty()) {
             flds = t.getColumns().entrySet().stream()
