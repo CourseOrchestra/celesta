@@ -43,10 +43,10 @@ public class FieldsLookupTest {
     private static BasicTable generateTable(GrainPart gp, String name) throws ParseException {
         BasicTable table = new Table(gp, name);
 
-        Column c1 = new IntegerColumn(table, name + "1");
-        Column c2 = new IntegerColumn(table, name + "2");
-        Column c3 = new StringColumn(table, name + "3");
-        Column c4 = new DateTimeColumn(table, name + "4");
+        Column<?> c1 = new IntegerColumn(table, name + "1");
+        Column<?> c2 = new IntegerColumn(table, name + "2");
+        Column<?> c3 = new StringColumn(table, name + "3");
+        Column<?> c4 = new DateTimeColumn(table, name + "4");
 
         String[] indexColumns = {name + "1", name + "2", name + "3"};
         Index i1 = new Index(table, "I" + name, indexColumns);

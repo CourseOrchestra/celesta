@@ -72,7 +72,9 @@ public class View extends AbstractView {
     if (columnTypes == null) {
       columnTypes = new LinkedHashMap<>();
       for (Map.Entry<String, Expr> e : columns.entrySet()) {
-        columnTypes.put(e.getKey(), e.getValue().getMeta());
+        ViewColumnMeta<?> meta = e.getValue().getMeta();
+        meta.setName(e.getKey());
+        columnTypes.put(e.getKey(), meta);
       }
     }
     return columnTypes;

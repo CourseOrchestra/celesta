@@ -100,7 +100,7 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
     @Override
     protected void processGrainMeta(Grain g) {
         // Update directory celesta.tables.
-        table.setRange(TablesCursor.grainid_COLUMN, g.getName());
+        table.setRange(table.COLUMNS.grainid, g.getName());
         while (table.nextInSet()) {
             switch (TableType.getByAbbreviation(table.getTabletype())) {
                 case TABLE:

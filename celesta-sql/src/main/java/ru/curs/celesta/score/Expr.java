@@ -794,15 +794,15 @@ final class FieldRef extends Expr {
      *
      * @param column  reference column
      */
-    public void setColumn(Column<?> column) {
+    void setColumn(Column<?> column) {
         this.column = column;
     }
 
-    public void setTableNameOrAlias(String tableNameOrAlias) {
+    void setTableNameOrAlias(String tableNameOrAlias) {
         this.tableNameOrAlias = tableNameOrAlias;
     }
 
-    public void setColumnName(String columnName) {
+    void setColumnName(String columnName) {
         this.columnName = columnName;
     }
 
@@ -816,7 +816,7 @@ final class FieldRef extends Expr {
 final class ParameterRef extends Expr {
 
     private Parameter parameter;
-    private String name;
+    private final String name;
     private ViewColumnMeta<?> meta;
 
     public ParameterRef(String name) {
