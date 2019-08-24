@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 /**
  * View column metadata.
- * 
+ *
  * @param <V>  Java class of column value
  */
 public final class ViewColumnMeta<V> implements ColumnMeta<V> {

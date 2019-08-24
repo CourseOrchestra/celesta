@@ -329,7 +329,8 @@ public final class CursorGenerator {
                 .filter(e -> !BinaryColumn.CELESTA_TYPE.equals(e.getValue().getCelestaType()))
                 .map(e -> {
                     final String columnName = e.getKey();
-                    final TypeName columnType = ParameterizedTypeName.get(ColumnMeta.class, e.getValue().getJavaClass());
+                    final TypeName columnType =
+                            ParameterizedTypeName.get(ColumnMeta.class, e.getValue().getJavaClass());
                     return FieldSpec.builder(columnType, columnName,
                                              Modifier.PUBLIC, Modifier.FINAL)
                             .initializer("($T) meta().getColumns().get($S)", columnType, columnName);
@@ -341,7 +342,7 @@ public final class CursorGenerator {
                 .addModifiers(Modifier.PRIVATE)
                 .build();
         builder.addMethod(privateConstructor);
-        
+
         return builder.build();
     }
 

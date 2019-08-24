@@ -52,7 +52,7 @@ public interface ColumnMeta<V> {
     /**
      * Returns column ordering if any.
      *
-     * @return  {@code null} if ordering is unspecified 
+     * @return  {@code null} if ordering is unspecified
      */
     default Ordering ordering() {
         return null;
@@ -76,6 +76,9 @@ public interface ColumnMeta<V> {
         return new ColumnMetaOrderingDecorator<V>(this, Ordering.DESC);
     }
 
+    /**
+     * Column ordering specifier.
+     */
     enum Ordering {
         ASC, DESC
     }
