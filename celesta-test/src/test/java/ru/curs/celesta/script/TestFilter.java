@@ -394,7 +394,7 @@ class TestFilters implements ScriptTest {
         bTableCursor.insert();
         bTableCursor.clear();
 
-        a.setRange(AFilterCursor.number1_COLUMN, 5);
+        a.setRange("number1", 5);
         ((InFilterSupport) a).setIn(b).add("date", "created");
         assertEquals(1, a.count());
         a.first();
@@ -433,7 +433,7 @@ class TestFilters implements ScriptTest {
 
         _fillTablesForTestInFilterWithRangeOnOtherCursor(aTableCursor, bTableCursor, timestamp);
 
-        b.setRange(BFilterCursor.numb2_COLUMN, -40);
+        b.setRange("numb2", -40);
         ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1");
 
         assertEquals(2, a.count());
@@ -462,7 +462,7 @@ class TestFilters implements ScriptTest {
 
         assertEquals(3, a.count());
 
-        b.setRange(BFilterCursor.numb2_COLUMN, -40);
+        b.setRange("numb2", -40);
         assertEquals(2, a.count());
 
         a.first();

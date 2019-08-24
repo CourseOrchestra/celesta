@@ -27,18 +27,18 @@ public class InitTest extends AbstractCelestaTest {
         LogCursor l = new LogCursor(cc());
         assertEquals("log", l.meta().getName());
 
-        l.orderBy(LogCursor.userid_COLUMN.asc(),
-                  LogCursor.pkvalue3_COLUMN.desc(),
-                  LogCursor.pkvalue2_COLUMN);
+        l.orderBy(l.COLUMNS.userid.asc(),
+                  l.COLUMNS.pkvalue3.desc(),
+                  l.COLUMNS.pkvalue2);
         assertAll(
                 // Unknown column
                 () -> assertThrows(CelestaException.class,
                         () -> l.orderBy("userid", "psekvalue3 ASC", "pkvsealue3")),
                 // Column repetition
                 () -> assertThrows(CelestaException.class,
-                        () -> l.orderBy(LogCursor.userid_COLUMN.asc(),
-                                        LogCursor.pkvalue3_COLUMN.desc(),
-                                        LogCursor.pkvalue3_COLUMN)),
+                        () -> l.orderBy(l.COLUMNS.userid.asc(),
+                                        l.COLUMNS.pkvalue3.desc(),
+                                        l.COLUMNS.pkvalue3)),
                 // empty orderBy
                 () -> l.orderBy()
         );

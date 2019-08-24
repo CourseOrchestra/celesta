@@ -50,7 +50,7 @@ class TestParameterizedView implements ScriptTest {
         params = new HashMap<>();
         params.put("p", 2);
         pvCursor = new PView1Cursor(context, params);
-        pvCursor.orderBy(T1Cursor.f3_COLUMN);
+        pvCursor.orderBy(pvCursor.COLUMNS.f3);
         assertEquals(2, pvCursor.count());
 
         pvCursor.first();
@@ -110,7 +110,7 @@ class TestParameterizedView implements ScriptTest {
         param.put("param", 2);
         param.put("param2", "A");
         pvCursor = new PView2Cursor(context, param);
-        pvCursor.orderBy(PView2Cursor.f1_COLUMN);
+        pvCursor.orderBy(pvCursor.COLUMNS.f1);
         assertEquals(2, pvCursor.count());
 
         pvCursor.first();
