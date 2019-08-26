@@ -15,4 +15,9 @@ public abstract class FireBirdColumnDefiner extends ColumnDefiner {
     public final String getMainDefinition(Column c) {
         return join(getInternalDefinition(c), nullable(c));
     }
+
+    @Override
+    public String nullable(Column c) {
+        return c.isNullable() ? "" : "not null";
+    }
 }

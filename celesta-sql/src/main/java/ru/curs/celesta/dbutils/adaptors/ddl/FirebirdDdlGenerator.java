@@ -12,6 +12,7 @@ import ru.curs.celesta.score.*;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +31,12 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
     @Override
     List<String> dropIndex(Grain g, DbIndexInfo dBIndexInfo) {
-        return null;
+        String sql = String.format(
+            "DROP INDEX %s",
+            tableString(g.getName(), dBIndexInfo.getIndexName())
+        );
+
+        return Arrays.asList(sql);
     }
 
     @Override
@@ -66,10 +72,15 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                     if (!triggerExists) {
                         // CREATE TRIGGER
                         sql =
-                            "CREATE TRIGGER \"versioncheck\""
-                                + " BEFORE UPDATE ON " + tableString(t.getGrain().getName(), t.getName())
-                                + " FOR EACH ROW EXECUTE PROCEDURE "
-                                + t.getGrain().getScore().getSysSchemaName() + ".recversion_check();";
+                            "CREATE TRIGGER \"versioncheck\" for " + tableString(t.getGrain().getName(), t.getName())
+                                + " BEFORE UPDATE \n"
+                                + " AS \n"
+                                + " BEGIN \n"
+                                + "   IF (OLD.\"recversion\" = NEW.\"recversion\")\n"
+                                + "     THEN NEW.\"recversion\" = NEW.\"recversion\" + 1;"
+                                + "   ELSE "
+                                + "     EXCEPTION VERSION_CHECK_ERROR;"
+                                + " END";
                         result.add(sql);
                         this.rememberTrigger(query);
                     }

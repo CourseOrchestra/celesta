@@ -178,11 +178,10 @@ class FireBirdDateTimeColumnDefiner extends FireBirdColumnDefiner {
 }
 
 
-// TODO:: Is not supported yet by firebird
 class FireBirdZonedDateTimeColumnDefiner extends FireBirdColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "timestamp";
+        return "timestamp with time zone";
     }
 
     @Override

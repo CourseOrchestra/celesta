@@ -22,7 +22,7 @@ public class ContainerUtils {
     public static final OracleContainer ORACLE = new OracleContainer();
     public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
         .withCollation("Cyrillic_General_CI_AI");
-    public static final FirebirdContainer FIREBIRD = new FirebirdContainer();
+    public static final FirebirdContainer FIREBIRD = new FirebirdContainer("jacobalberty/firebird:4.0");
 
 
     private static final String DROP_TABLE_FROM_ORACLE_TEMPLATE = "DROP TABLE %s CASCADE CONSTRAINTS";
