@@ -10,18 +10,27 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.MaterializedViewCursor;
 import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.MaterializedView;
 
 public final class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
 
-    public final TestTableMvCursor.TestTableMvCursorColumns COLUMNS = new TestTableMvCursor.TestTableMvCursorColumns();
+    private static final String GRAIN_NAME = "test";
+    private static final String OBJECT_NAME = "testTableMv";
+
+    public final TestTableMvCursor.Columns COLUMNS;
 
     private Integer surrogate_count;
     private Integer c;
     private BigDecimal cost;
+
+    {
+        this.COLUMNS = new TestTableMvCursor.Columns(callContext().getCelesta());
+    }
 
     public TestTableMvCursor(CallContext context) {
         super(context);
@@ -154,20 +163,32 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
 
     @Override
     protected String _grainName() {
-        return "test";
+        return GRAIN_NAME;
     }
 
     @Override
     protected String _objectName() {
-        return "testTableMv";
+        return OBJECT_NAME;
     }
 
-    public final class TestTableMvCursorColumns {
-        public final ColumnMeta<Integer> surrogate_count = (ColumnMeta<Integer>) meta().getColumns().get("surrogate_count");
-        public final ColumnMeta<Integer> c = (ColumnMeta<Integer>) meta().getColumns().get("c");
-        public final ColumnMeta<BigDecimal> cost = (ColumnMeta<BigDecimal>) meta().getColumns().get("cost");
+    @SuppressWarnings("unchecked")
+    public static final class Columns {
+        private final MaterializedView element;
 
-        private TestTableMvCursorColumns() {
+        public Columns(ICelesta celesta) {
+            this.element = celesta.getScore().getGrains().get(GRAIN_NAME).getElements(MaterializedView.class).get(OBJECT_NAME);
+        }
+
+        public ColumnMeta<Integer> surrogate_count() {
+            return (ColumnMeta<Integer>) this.element.getColumns().get("surrogate_count");
+        }
+
+        public ColumnMeta<Integer> c() {
+            return (ColumnMeta<Integer>) this.element.getColumns().get("c");
+        }
+
+        public ColumnMeta<BigDecimal> cost() {
+            return (ColumnMeta<BigDecimal>) this.element.getColumns().get("cost");
         }
     }
 

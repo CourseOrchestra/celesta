@@ -137,7 +137,7 @@ public final class PermissionManager implements IPermissionManager {
         if (rce == null || rce.isExpired() || !rce.userId.equals(userID)) {
             rce = new RoleCacheEntry(userID);
             UserrolesCursor userRoles = new UserrolesCursor(sysContext);
-            userRoles.setRange(userRoles.COLUMNS.userid, userID);
+            userRoles.setRange(userRoles.COLUMNS.userid(), userID);
             while (userRoles.nextInSet()) {
                 rce.roles.add(userRoles.getRoleid());
             }

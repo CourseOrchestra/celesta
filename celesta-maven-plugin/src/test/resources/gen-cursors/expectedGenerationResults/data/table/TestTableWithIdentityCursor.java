@@ -17,12 +17,20 @@ import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.Table;
 
 public final class TestTableWithIdentityCursor extends Cursor implements Iterable<TestTableWithIdentityCursor> {
+
+    private static final String GRAIN_NAME = "test";
+    private static final String OBJECT_NAME = "testTableWithIdentity";
 
     public final TestTableWithIdentityCursor.TestTableWithIdentityCursorColumns COLUMNS = new TestTableWithIdentityCursor.TestTableWithIdentityCursorColumns();
 
     private Integer identityId;
+
+    {
+        this.COLUMNS = new TestTableWithIdentityCursor.Columns(callContext().getCelesta());
+    }
 
     public TestTableWithIdentityCursor(CallContext context) {
         super(context);
@@ -152,18 +160,24 @@ public final class TestTableWithIdentityCursor extends Cursor implements Iterabl
 
     @Override
     protected String _grainName() {
-        return "test";
+        return GRAIN_NAME;
     }
 
     @Override
     protected String _objectName() {
-        return "testTableWithIdentity";
+        return OBJECT_NAME;
     }
 
-    public final class TestTableWithIdentityCursorColumns {
-        public final ColumnMeta<Integer> identityId = (ColumnMeta<Integer>) meta().getColumns().get("identityId");
+    @SuppressWarnings("unchecked")
+    public static final class Columns {
+        private final Table element;
 
-        private TestTableWithIdentityCursorColumns() {
+        public Columns(ICelesta celesta) {
+            this.element = celesta.getScore().getGrains().get(GRAIN_NAME).getElements(Table.class).get(OBJECT_NAME);
+        }
+
+        public ColumnMeta<Integer> identityId() {
+            return (ColumnMeta<Integer>) this.element.getColumns().get("identityId");
         }
     }
 

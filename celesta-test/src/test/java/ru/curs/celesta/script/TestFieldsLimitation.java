@@ -107,7 +107,7 @@ class TestFieldsLimitation implements ScriptTest {
         _insert(context, "A", 5, 1);
         _insert(context, "B", 2, 4);
 
-        cursor.orderBy(cursor.COLUMNS.numb.desc());
+        cursor.orderBy(cursor.COLUMNS.numb().desc());
         cursor.findSet();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
@@ -125,7 +125,7 @@ class TestFieldsLimitation implements ScriptTest {
         _insert(context, "A", 5, 1);
         _insert(context, "B", 2, 4);
 
-        cursor.orderBy(cursor.COLUMNS.numb.desc());
+        cursor.orderBy(cursor.COLUMNS.numb().desc());
         cursor.findSet();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
@@ -143,7 +143,7 @@ class TestFieldsLimitation implements ScriptTest {
         _insert(context, "A", 5, 1);
         _insert(context, "B", 2, 4);
 
-        cursor.orderBy(cursor.COLUMNS.numb.desc());
+        cursor.orderBy(cursor.COLUMNS.numb().desc());
         cursor.first();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());
@@ -176,7 +176,7 @@ class TestFieldsLimitation implements ScriptTest {
         _insert(context, "A", 5, 1);
         _insert(context, "B", 2, 4);
 
-        cursor.orderBy(cursor.COLUMNS.numb.desc());
+        cursor.orderBy(cursor.COLUMNS.numb().desc());
         cursor.first();
         assertEquals(5, cursor.getNumb().intValue());
         assertEquals("A", cursor.getVar());

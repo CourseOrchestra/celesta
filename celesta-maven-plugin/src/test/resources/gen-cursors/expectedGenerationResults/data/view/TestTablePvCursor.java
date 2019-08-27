@@ -10,16 +10,25 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.ParameterizedViewCursor;
 import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.ParameterizedView;
 
 public final class TestTablePvCursor extends ParameterizedViewCursor implements Iterable<TestTablePvCursor> {
 
-    public final TestTablePvCursor.TestTablePvCursorColumns COLUMNS = new TestTablePvCursor.TestTablePvCursorColumns();
+    private static final String GRAIN_NAME = "test";
+    private static final String OBJECT_NAME = "testTablePv";
+
+    public final TestTablePvCursor.Columns COLUMNS;
 
     private Integer s;
+
+    {
+        this.COLUMNS = new TestTablePvCursor.Columns(callContext().getCelesta());
+    }
 
     public TestTablePvCursor(CallContext context, Map<String, Object> parameters) {
         super(context, parameters);
@@ -109,18 +118,24 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
 
     @Override
     protected String _grainName() {
-        return "test";
+        return GRAIN_NAME;
     }
 
     @Override
     protected String _objectName() {
-        return "testTablePv";
+        return OBJECT_NAME;
     }
 
-    public final class TestTablePvCursorColumns {
-        public final ColumnMeta<Integer> s = (ColumnMeta<Integer>) meta().getColumns().get("s");
+    @SuppressWarnings("unchecked")
+    public static final class Columns {
+        private final ParameterizedView element;
 
-        private TestTablePvCursorColumns() {
+        public Columns(ICelesta celesta) {
+            this.element = celesta.getScore().getGrains().get(GRAIN_NAME).getElements(ParameterizedView.class).get(OBJECT_NAME);
+        }
+
+        public ColumnMeta<Integer> s() {
+            return (ColumnMeta<Integer>) this.element.getColumns().get("s");
         }
     }
 

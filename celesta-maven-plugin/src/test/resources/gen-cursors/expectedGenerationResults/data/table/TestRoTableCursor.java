@@ -9,16 +9,25 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.ReadOnlyTableCursor;
 import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.ReadOnlyTable;
 
 public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<TestRoTableCursor> {
 
-    public final TestRoTableCursor.TestRoTableCursorColumns COLUMNS = new TestRoTableCursor.TestRoTableCursorColumns();
+    private static final String GRAIN_NAME = "test";
+    private static final String OBJECT_NAME = "testRoTable";
+
+    public final TestRoTableCursor.Columns COLUMNS;
 
     private Integer id;
+
+    {
+        this.COLUMNS = new TestRoTableCursor.Columns(callContext().getCelesta());
+    }
 
     public TestRoTableCursor(CallContext context) {
         super(context);
@@ -40,7 +49,6 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
     protected Object _getFieldValue(String name) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             return f.get(this);
         } catch (Exception e) {
@@ -108,18 +116,24 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
 
     @Override
     protected String _grainName() {
-        return "test";
+        return GRAIN_NAME;
     }
 
     @Override
     protected String _objectName() {
-        return "testRoTable";
+        return OBJECT_NAME;
     }
 
-    public final class TestRoTableCursorColumns {
-        public final ColumnMeta<Integer> id = (ColumnMeta<Integer>) meta().getColumns().get("id");
+    @SuppressWarnings("unchecked")
+    public static final class Columns {
+        private final ReadOnlyTable element;
 
-        private TestRoTableCursorColumns() {
+        public Columns(ICelesta celesta) {
+            this.element = celesta.getScore().getGrains().get(GRAIN_NAME).getElements(ReadOnlyTable.class).get(OBJECT_NAME);
+        }
+
+        public ColumnMeta<Integer> id() {
+            return (ColumnMeta<Integer>) this.element.getColumns().get("id");
         }
     }
 

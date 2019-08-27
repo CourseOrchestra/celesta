@@ -110,7 +110,7 @@ class TestMaterializedView implements ScriptTest {
         mViewCursor.get("A");
         assertEquals(7, mViewCursor.getS().intValue());
 
-        tableCursor.setRange(tableCursor.COLUMNS.numb, 2);
+        tableCursor.setRange(tableCursor.COLUMNS.numb(), 2);
         tableCursor.first();
         tableCursor.setNumb(-5);
         tableCursor.update();
