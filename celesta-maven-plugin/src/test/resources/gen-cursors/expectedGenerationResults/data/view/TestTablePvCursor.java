@@ -34,6 +34,11 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
         super(context, parameters);
     }
 
+    public TestTablePvCursor(CallContext context, Map<String, Object> parameters, ColumnMeta<?>... columns) {
+        super(context, parameters, columns);
+    }
+
+    @Deprecated
     public TestTablePvCursor(CallContext context, Set<String> fields, Map<String, Object> parameters) {
         super(context, fields, parameters);
     }

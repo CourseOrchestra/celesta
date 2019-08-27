@@ -36,6 +36,11 @@ public final class TestTableWithIdentityCursor extends Cursor implements Iterabl
         super(context);
     }
 
+    public TestTableWithIdentityCursor(CallContext context, ColumnMeta<?>... columns) {
+        super(context, columns);
+    }
+
+    @Deprecated
     public TestTableWithIdentityCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }

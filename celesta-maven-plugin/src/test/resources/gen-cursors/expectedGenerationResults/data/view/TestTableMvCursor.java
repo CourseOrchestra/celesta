@@ -36,6 +36,11 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
         super(context);
     }
 
+    public TestTableMvCursor(CallContext context, ColumnMeta<?>... columns) {
+        super(context, columns);
+    }
+
+    @Deprecated
     public TestTableMvCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }

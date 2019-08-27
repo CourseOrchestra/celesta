@@ -33,6 +33,11 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
         super(context);
     }
 
+    public TestRoTableCursor(CallContext context, ColumnMeta<?>... columns) {
+        super(context, columns);
+    }
+
+    @Deprecated
     public TestRoTableCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }

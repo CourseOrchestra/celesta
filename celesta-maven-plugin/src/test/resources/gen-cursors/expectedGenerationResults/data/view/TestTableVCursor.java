@@ -33,6 +33,11 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
         super(context);
     }
 
+    public TestTableVCursor(CallContext context, ColumnMeta<?>... columns) {
+        super(context, columns);
+    }
+
+    @Deprecated
     public TestTableVCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }

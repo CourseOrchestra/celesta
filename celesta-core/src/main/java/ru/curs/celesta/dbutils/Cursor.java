@@ -111,6 +111,10 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         inFilterHolder = new InFilterHolder(this);
     }
 
+    public Cursor(CallContext context, ColumnMeta<?>... columns) {
+        this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
+    }
+
     public Cursor(CallContext context, Set<String> fields) {
         super(context, fields);
 

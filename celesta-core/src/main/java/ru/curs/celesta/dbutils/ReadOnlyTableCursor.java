@@ -1,10 +1,13 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.ReadOnlyTable;
 
@@ -18,6 +21,11 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
         super(context);
     }
 
+    public ReadOnlyTableCursor(CallContext context, ColumnMeta<?>... columns) {
+        this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
+    }
+
+    @Deprecated
     public ReadOnlyTableCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }

@@ -255,13 +255,23 @@ public final class CursorGenerator {
     }
 
     private static List<MethodSpec> buildConstructors(GrainElement ge, TypeName columnsClassType) {
-        List<MethodSpec> result = new ArrayList<>();
+
+        List<MethodSpec> results = new ArrayList<>();
 
         ParameterSpec contextParam = ParameterSpec.builder(CallContext.class, "context")
-                .build();
+            .build();
+
         ParameterSpec fieldsParam = ParameterSpec.builder(
                 ParameterizedTypeName.get(Set.class, String.class), "fields")
-                .build();
+            .build();
+
+        ParameterSpec columnsParam = ParameterSpec.builder(
+                ArrayTypeName.of(
+                        ParameterizedTypeName.get(ClassName.get(ColumnMeta.class),
+                                                  WildcardTypeName.subtypeOf(Object.class))),
+                        "columns")
+            .build();
+
         ParameterSpec parametersParam = ParameterSpec.builder(
                 ParameterizedTypeName.get(Map.class, String.class, Object.class), "parameters")
                 .build();
@@ -270,24 +280,34 @@ public final class CursorGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(contextParam);
 
-        //Common constructor
+        // Common constructor
         MethodSpec.Builder builder = msp.get();
-
         if (ge instanceof ParameterizedView) {
             builder.addParameter(parametersParam);
             builder.addStatement("super(context, parameters)");
         } else {
             builder.addStatement("super(context)");
         }
-
-        result.add(builder.build());
+        results.add(builder.build());
 
         if (ge instanceof SequenceElement) {
-            return result;
+            return results;
         }
 
+        // Constructor with columns limitation
         builder = msp.get();
-        //Constructor with fields limitation
+        if (ge instanceof ParameterizedView) {
+            builder.addParameter(parametersParam);
+            builder.addParameter(columnsParam).varargs();
+            builder.addStatement("super(context, parameters, columns)");
+        } else {
+            builder.addParameter(columnsParam).varargs();
+            builder.addStatement("super(context, columns)");
+        }
+        results.add(builder.build());
+
+        // Deprecated constructor with fields limitation
+        builder = msp.get();
         if (ge instanceof ParameterizedView) {
             builder.addParameter(fieldsParam);
             builder.addParameter(parametersParam);
@@ -296,10 +316,9 @@ public final class CursorGenerator {
             builder.addParameter(fieldsParam);
             builder.addStatement("super(context, fields)");
         }
+        results.add(builder.addAnnotation(Deprecated.class).build());
 
-        result.add(builder.build());
-
-        return result;
+        return results;
     }
 
     private static List<MethodSpec> buildGrainNameAndObjectName(GrainElement ge) {

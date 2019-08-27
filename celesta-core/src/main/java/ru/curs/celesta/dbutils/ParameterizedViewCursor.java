@@ -3,10 +3,12 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.query.FromClause;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.DataGrainElement;
 import ru.curs.celesta.score.ParameterizedView;
 import ru.curs.celesta.score.ParseException;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +31,11 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
     initParameters(parameters);
   }
 
+  public ParameterizedViewCursor(CallContext context, Map<String, Object> parameters, ColumnMeta<?>... columns) {
+      this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()), parameters);
+  }
+
+  @Deprecated
   public ParameterizedViewCursor(CallContext context, Set<String> fields, Map<String, Object> parameters) {
     super(context, fields);
     initParameters(parameters);

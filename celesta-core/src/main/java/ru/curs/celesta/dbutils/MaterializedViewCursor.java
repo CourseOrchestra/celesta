@@ -3,12 +3,15 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.MaterializedView;
 import ru.curs.celesta.score.ParseException;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Materialized view Cursor.
@@ -34,6 +37,11 @@ public abstract class MaterializedViewCursor extends BasicCursor {
     getHelper = cghb.build();
   }
 
+  public MaterializedViewCursor(CallContext context, ColumnMeta<?>... columns) {
+      this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
+  }
+
+  @Deprecated
   public MaterializedViewCursor(CallContext context, Set<String> fields) {
     super(context, fields);
 

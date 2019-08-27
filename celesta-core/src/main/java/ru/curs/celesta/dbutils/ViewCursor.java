@@ -1,13 +1,16 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.View;
 
@@ -24,6 +27,11 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
         inFilterHolder = new InFilterHolder(this);
     }
 
+    public ViewCursor(CallContext context, ColumnMeta<?>... columns) {
+        this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
+    }
+
+    @Deprecated
     public ViewCursor(CallContext context, Set<String> fields) {
         super(context, fields);
         inFilterHolder = new InFilterHolder(this);

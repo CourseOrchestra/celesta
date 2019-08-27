@@ -295,7 +295,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     public BasicCursor(CallContext context, Set<String> fields) {
         this(context);
         if (!meta().getColumns().keySet().containsAll(fields)) {
-            throw new CelestaException("Not all of specified columns are existed!!!");
+            throw new CelestaException("Not all of specified columns exist!!!");
         }
         this.fields = fields;
         prepareOrderBy();
