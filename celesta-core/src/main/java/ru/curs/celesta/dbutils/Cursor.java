@@ -499,17 +499,19 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @return
      */
     protected BLOB calcBlob(String name) {
-        validateColumnName(name);
-        Column<?> c = meta().getColumns().get(name);
+        ColumnMeta<?> c = validateColumnName(name);
         if (!(c instanceof BinaryColumn)) {
             throw new CelestaException("'%s' is not a BLOB column.", c.getName());
         }
+
+        BinaryColumn bc = (BinaryColumn) c;
+
         BLOB result;
 
         List<ParameterSetter> program = new ArrayList<>();
 
         WhereTerm w = WhereTermsMaker.getPKWhereTerm(meta);
-        PreparedStatement stmt = db().getOneFieldStatement(conn(), c, w.getWhere());
+        PreparedStatement stmt = db().getOneFieldStatement(conn(), bc, w.getWhere());
         int i = 1;
         w.programParams(program, db());
         Object[] rec = _currentValues();
@@ -553,8 +555,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @return  length of the text field or -1 (minus one) if MAX is indicated instead of the length.
      */
     public final int getMaxStrLen(String name) {
-        validateColumnName(name);
-        Column<?> c = meta().getColumns().get(name);
+        ColumnMeta<?> c = validateColumnName(name);
         if (c instanceof StringColumn) {
             StringColumn sc = (StringColumn) c;
             return sc.isMax() ? -1 : sc.getLength();
@@ -594,7 +595,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     @Override
-    final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
+    final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
         // Always add to the end of OrderBy the fields of the primary key following in
         // a natural order.
         for (String colName : meta().getPrimaryKey().keySet()) {

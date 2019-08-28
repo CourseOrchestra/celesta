@@ -41,7 +41,6 @@ public abstract class MaterializedViewCursor extends BasicCursor {
       this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
   }
 
-  @Deprecated
   public MaterializedViewCursor(CallContext context, Set<String> fields) {
     super(context, fields);
 
@@ -99,7 +98,7 @@ public abstract class MaterializedViewCursor extends BasicCursor {
 
 
   @Override
-  final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
+  final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
     // Always add to the end of OrderBy the fields of the primary key following in
     // a natural order.
     for (String colName : meta().getPrimaryKey().keySet()) {

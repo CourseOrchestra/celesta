@@ -35,7 +35,6 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
       this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()), parameters);
   }
 
-  @Deprecated
   public ParameterizedViewCursor(CallContext context, Set<String> fields, Map<String, Object> parameters) {
     super(context, fields);
     initParameters(parameters);
@@ -106,7 +105,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   }
 
   @Override
-  final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
+  final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
     // The views are always sorted by the first column if there's no sorting at all.
     if (colNames.isEmpty()) {
       l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));

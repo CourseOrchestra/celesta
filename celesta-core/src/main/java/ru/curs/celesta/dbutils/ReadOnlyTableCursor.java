@@ -25,7 +25,6 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
         this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
     }
 
-    @Deprecated
     public ReadOnlyTableCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }
@@ -68,7 +67,7 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
     }
 
     @Override
-    final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
+    final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
 
         if (meta().getPrimaryKey().isEmpty() && colNames.isEmpty()) {
             // If there's absolutely no sorting it will be sorted by the first field. 

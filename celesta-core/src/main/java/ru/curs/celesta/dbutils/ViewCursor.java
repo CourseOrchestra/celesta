@@ -31,7 +31,6 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
         this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
     }
 
-    @Deprecated
     public ViewCursor(CallContext context, Set<String> fields) {
         super(context, fields);
         inFilterHolder = new InFilterHolder(this);
@@ -80,7 +79,7 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
     }
 
     @Override
-    final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
+    final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
         // The views are always sorted by the first column if there's no sorting at all.
         if (colNames.isEmpty()) {
             l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));
