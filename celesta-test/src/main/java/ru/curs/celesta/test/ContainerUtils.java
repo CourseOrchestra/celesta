@@ -8,6 +8,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.ConnectionPoolConfiguration;
 import ru.curs.celesta.dbutils.jdbc.SqlUtils;
+import ru.curs.celesta.test.common.AdvancedFireBirdContainer;
 import ru.curs.celesta.test.common.CollatedMSSQLServerContainer;
 
 import java.sql.Connection;
@@ -22,7 +23,10 @@ public class ContainerUtils {
     public static final OracleContainer ORACLE = new OracleContainer();
     public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
         .withCollation("Cyrillic_General_CI_AI");
-    public static final FirebirdContainer FIREBIRD = new FirebirdContainer("jacobalberty/firebird:4.0");
+    public static final FirebirdContainer FIREBIRD = new AdvancedFireBirdContainer();
+    // cd /usr/local/firebird/bin
+    // echo "CREATE DATABASE '/firebird/data/celesta-test.fdb' user 'a' password 'b';" > init.sql
+    // ./isql -input init.sql
 
 
     private static final String DROP_TABLE_FROM_ORACLE_TEMPLATE = "DROP TABLE %s CASCADE CONSTRAINTS";

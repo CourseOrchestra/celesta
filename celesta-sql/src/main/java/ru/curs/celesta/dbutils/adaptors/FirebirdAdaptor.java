@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.DBType;
+import ru.curs.celesta.dbutils.adaptors.constants.FireBirdConstants;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlGenerator;
 import ru.curs.celesta.dbutils.adaptors.ddl.FirebirdDdlGenerator;
@@ -21,12 +22,16 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.NOW;
+
 public class FirebirdAdaptor extends DBAdaptor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FirebirdAdaptor.class);
 
     private static final Pattern TABLE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9]*)_([a-zA-Z_][a-zA-Z0-9_]*)");
 
+
+    public static final Pattern DATEPATTERN = Pattern.compile("(\\d\\d)/.(\\d\\d)/.(\\d\\d\\d\\d)");
 
     public FirebirdAdaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer) {
         super(connectionPool, ddlConsumer);
@@ -64,7 +69,22 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public boolean tableExists(Connection conn, String schema, String name) {
-        return false;
+        String sql = String.format(
+            "SELECT count(*)\n" +
+                "FROM RDB$RELATIONS\n" +
+                "WHERE RDB$RELATION_NAME = '%s_%s'",
+            schema,
+            name
+        );
+
+        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+            rs.next();
+            boolean result = rs.getInt(1) > 0;
+            rs.close();
+            return result;
+        } catch (Exception e) {
+            throw new CelestaException(e);
+        }
     }
 
     @Override
@@ -88,6 +108,28 @@ public class FirebirdAdaptor extends DBAdaptor {
         } finally {
             stmt.close();
         }
+    }
+
+    @Override
+    public Set<String> getColumns(Connection conn, TableElement t) {
+        Set<String> result = new LinkedHashSet<>();
+        try {
+            DatabaseMetaData metaData = conn.getMetaData();
+            ResultSet rs = metaData.getColumns(null,
+                null,
+                t.getGrain().getName() + "_" + t.getName(), null);
+            try {
+                while (rs.next()) {
+                    String rColumnName = rs.getString(COLUMN_NAME);
+                    result.add(rColumnName);
+                }
+            } finally {
+                rs.close();
+            }
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
+        }
+        return result;
     }
 
     @Override
@@ -174,12 +216,133 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public DbColumnInfo getColumnInfo(Connection conn, Column c) {
-        return null;
+        String sql = String.format(
+            "SELECT r.RDB$FIELD_NAME AS column_name,\n" +
+                "        r.RDB$DESCRIPTION AS field_description,\n" +
+                "        r.RDB$DEFAULT_SOURCE AS column_default_value,\n" +
+                "        r.RDB$NULL_FLAG AS nullable,\n" +
+                "        f.RDB$FIELD_LENGTH AS column_length,\n" +
+                "        f.RDB$FIELD_PRECISION AS column_precision,\n" +
+                "        f.RDB$FIELD_SCALE AS column_scale,\n" +
+                "        CASE f.RDB$FIELD_TYPE\n" +
+                "          WHEN 261 THEN 'BLOB'\n" +
+                "          WHEN 14 THEN 'CHAR'\n" +
+                "          WHEN 40 THEN 'CSTRING'\n" +
+                "          WHEN 11 THEN 'D_FLOAT'\n" +
+                "          WHEN 27 THEN 'DOUBLE'\n" +
+                "          WHEN 10 THEN 'FLOAT'\n" +
+                "          WHEN 16 THEN 'INT64'\n" +
+                "          WHEN 8 THEN 'INTEGER'\n" +
+                "          WHEN 9 THEN 'QUAD'\n" +
+                "          WHEN 7 THEN 'SMALLINT'\n" +
+                "          WHEN 12 THEN 'DATE'\n" +
+                "          WHEN 13 THEN 'TIME'\n" +
+                "          WHEN 35 THEN 'TIMESTAMP'\n" +
+                "          WHEN 37 THEN 'VARCHAR'\n" +
+                "          ELSE 'UNKNOWN'\n" +
+                "        END AS column_type,\n" +
+                "        f.RDB$FIELD_SUB_TYPE AS column_subtype\n" +
+                "   FROM RDB$RELATION_FIELDS r\n" +
+                "   LEFT JOIN RDB$FIELDS f ON r.RDB$FIELD_SOURCE = f.RDB$FIELD_NAME\n" +
+                "   LEFT JOIN RDB$COLLATIONS coll ON f.RDB$COLLATION_ID = coll.RDB$COLLATION_ID\n" +
+                "   LEFT JOIN RDB$CHARACTER_SETS cset ON f.RDB$CHARACTER_SET_ID = cset.RDB$CHARACTER_SET_ID\n" +
+                "  WHERE r.RDB$RELATION_NAME='%s_%s' AND r.RDB$FIELD_NAME = '%s'",
+            c.getParentTable().getGrain().getName(),
+            c.getParentTable().getName(),
+            c.getName()
+        );
+
+        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+            if (rs.next()) {
+                DbColumnInfo result = new DbColumnInfo();
+
+                result.setName(rs.getString("column_name").trim());
+                String columnType = rs.getString("column_type").trim();
+
+
+                for (Class<? extends Column> cc : COLUMN_CLASSES) {
+                    if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(columnType)) {
+                        result.setType(cc);
+                        break;
+                    }
+                }
+
+                result.setNullable(rs.getInt("nullable") != DatabaseMetaData.columnNoNulls);
+
+                if (result.getType() == StringColumn.class || result.getType() == DecimalColumn.class) {
+                    result.setLength(rs.getInt("column_length"));
+                }
+                if (result.getType() == DecimalColumn.class) {
+                    result.setScale(rs.getInt("column_scale"));
+                }
+                String defaultBody = rs.getString("column_default_value");
+                if (defaultBody != null) {
+                    defaultBody = defaultBody.replace("default", "").trim();
+                    defaultBody = modifyDefault(result, defaultBody);
+                    result.setDefaultValue(defaultBody);
+                }
+
+                return result;
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            throw new CelestaException(e);
+        }
+
     }
+
+    private String modifyDefault(DbColumnInfo ci, String defaultBody) {
+        String result = defaultBody;
+
+        if (DateTimeColumn.class == ci.getType()) {
+            if (FireBirdConstants.CURRENT_TIMESTAMP.equalsIgnoreCase(defaultBody)) {
+                result = "GETDATE()";
+            } else {
+                Matcher m = DATEPATTERN.matcher(defaultBody);
+                m.find();
+                result = String.format("'%s%s%s'", m.group(1), m.group(2), m.group(3));
+            }
+        }
+
+        return result;
+    }
+
 
     @Override
     public DbPkInfo getPKInfo(Connection conn, TableElement t) {
-        return null;
+        String sql = String.format(
+            "select\n" +
+            "    ix.rdb$index_name as pk_name,\n" +
+            "    sg.rdb$field_name as column_name\n" +
+            " from\n" +
+            "    rdb$indices ix\n" +
+            "    left join rdb$index_segments sg on ix.rdb$index_name = sg.rdb$index_name\n" +
+            "    left join rdb$relation_constraints rc on rc.rdb$index_name = ix.rdb$index_name\n" +
+            " where\n" +
+            "    rc.rdb$constraint_type = 'PRIMARY KEY' AND rc.rdb$relation_name = '%s_%s'",
+            t.getGrain().getName(),
+            t.getName()
+        );
+
+        DbPkInfo result = new DbPkInfo(this);
+
+        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+            while (rs.next()) {
+                if (result.getName() == null) {
+                    String pkName = rs.getString("pk_name").trim();
+                    result.setName(pkName);
+                }
+
+                String columnName = rs.getString("column_name").trim();
+                result.addColumnName(columnName);
+            }
+
+        } catch (Exception e) {
+            throw new CelestaException(e);
+        }
+
+        return result;
     }
 
     @Override
@@ -305,7 +468,7 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public DBType getType() {
-        return null;
+        return DBType.FIREBIRD;
     }
 
     @Override
@@ -315,7 +478,13 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public boolean sequenceExists(Connection conn, String schema, String name) {
-        return false;
+        String sql = String.format("SELECT * FROM RDB$GENERATORS WHERE RDB$GENERATOR_NAME = '%s_%s'", schema, name);
+
+        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+            return rs.next();
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage(), e);
+        }
     }
 
     @Override
@@ -412,5 +581,20 @@ public class FirebirdAdaptor extends DBAdaptor {
         return name;
     }
 
+
+    @Override
+    public String sequenceString(String schemaName, String sequenceName) {
+        return sequenceString(schemaName, sequenceName, true);
+    }
+
+    private String sequenceString(String schemaName, String sequenceName, boolean isQuoted) {
+        StringBuilder sb = new StringBuilder(NamedElement.limitName(
+            getSchemaUnderscoreNameTemplate(schemaName, sequenceName)));
+        if (isQuoted) {
+            sb.insert(0, '"').append('"');
+        }
+
+        return sb.toString();
+    }
     // TODO:: End of copy-pasting from OraAdaptor
 }

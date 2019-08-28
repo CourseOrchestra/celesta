@@ -627,22 +627,18 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      */
     public Set<String> getColumns(Connection conn, TableElement t) {
         Set<String> result = new LinkedHashSet<>();
-        try {
-            DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getColumns(null,
-                    t.getGrain().getName(),
-                    t.getName(), null);
-            try {
-                while (rs.next()) {
-                    String rColumnName = rs.getString(COLUMN_NAME);
-                    result.add(rColumnName);
-                }
-            } finally {
-                rs.close();
+        try (
+            ResultSet rs = conn.getMetaData()
+                .getColumns(null, t.getGrain().getName(), t.getName(), null)
+        ) {
+            while (rs.next()) {
+                String rColumnName = rs.getString(COLUMN_NAME);
+                result.add(rColumnName);
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e);
         }
+
         return result;
     }
 

@@ -5,16 +5,17 @@ import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.score.*;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
 
 public class FirebirdDdlGenerator extends DdlGenerator {
 
@@ -22,6 +23,33 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
     public FirebirdDdlGenerator(DBAdaptor dmlAdaptor) {
         super(dmlAdaptor);
+    }
+
+
+    @Override
+    List<String> createSequence(SequenceElement s) {
+        List<String> result = new ArrayList<>();
+
+        String createSql = String.format(
+            "CREATE SEQUENCE %s",
+            sequenceString(s.getGrain().getName(), s.getName())
+        );
+
+        result.add(createSql);
+
+        if (s.getArguments().containsKey(SequenceElement.Argument.START_WITH)) {
+            Long startWith = (Long)s.getArguments().get(SequenceElement.Argument.START_WITH);
+
+            String startWithSql = String.format(
+                "ALTER SEQUENCE %s RESTART WITH %s",
+                sequenceString(s.getGrain().getName(), s.getName()),
+                startWith
+            );
+
+            result.add(startWithSql);
+        }
+
+        return result;
     }
 
     @Override
@@ -46,7 +74,16 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
     @Override
     public String dropPk(TableElement t, String pkName) {
-        return null;
+
+        return "QWE";
+
+        // TODO:: !!!
+        /*
+        return String.format(
+            "ALTER TABLE %s DROP CONSTRAINT \"%s\"",
+            this.tableString(t.getGrain().getName(), t.getName()),
+            pkName
+        );*/
     }
 
     @Override
@@ -57,10 +94,13 @@ public class FirebirdDdlGenerator extends DdlGenerator {
     @Override
     List<String> updateVersioningTrigger(Connection conn, TableElement t) {
         List<String> result = new ArrayList<>();
+
+        String triggerName = String.format("%s_%s_version_check", t.getGrain().getName(), t.getName());
+
         // First of all, we are about to check if trigger exists
         try {
             TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
-                .withName("versioncheck")
+                .withName(triggerName)
                 .withTableName(t.getName());
             boolean triggerExists = this.triggerExists(conn, query);
 
@@ -72,7 +112,8 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                     if (!triggerExists) {
                         // CREATE TRIGGER
                         sql =
-                            "CREATE TRIGGER \"versioncheck\" for " + tableString(t.getGrain().getName(), t.getName())
+                            "CREATE TRIGGER \"" + triggerName + "\" " +
+                                "for " + tableString(t.getGrain().getName(), t.getName())
                                 + " BEFORE UPDATE \n"
                                 + " AS \n"
                                 + " BEGIN \n"
@@ -101,12 +142,25 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
     @Override
     List<String> createIndex(Index index) {
-        return null;
+        String indexColumns = index.getColumns().values()
+            .stream()
+            .map(Column::getQuotedName)
+            .collect(Collectors.joining(", "));
+        String sql = String.format(
+            "CREATE INDEX \"%s\" ON %s (%s)",
+            index.getName(),
+            this.tableString(index.getTable().getGrain().getName(), index.getTable().getName()),
+            indexColumns
+        );
+
+        return Arrays.asList(sql);
     }
 
     @Override
     List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) {
-        return null;
+        List<String> result = new LinkedList<>();
+
+        return result;
     }
 
     @Override

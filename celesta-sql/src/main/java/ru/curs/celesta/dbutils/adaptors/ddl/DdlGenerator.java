@@ -56,6 +56,23 @@ public abstract class DdlGenerator {
         return Optional.of(sql);
     }
 
+
+    /**
+     * Generates SQL for sequence creation in the DB.
+     *
+     * @param s sequence definition
+     * @return
+     */
+    List<String> createSequence(SequenceElement s) {
+        String sql = String.format(
+            "CREATE SEQUENCE %s %s",
+            sequenceString(s.getGrain().getName(), s.getName()),
+            generateArgumentsForCreateSequenceExpression(s)
+        );
+
+        return Arrays.asList(sql);
+    }
+
     /**
      * Generates SQL for dropping view in the schema.
      *
@@ -104,16 +121,6 @@ public abstract class DdlGenerator {
 
     final String pkConstraintString(TableElement tableElement) {
         return this.dmlAdaptor.pkConstraintString(tableElement);
-    }
-
-    final String createSequence(SequenceElement s) {
-        String sql = String.format(
-                "CREATE SEQUENCE %s %s",
-                sequenceString(s.getGrain().getName(), s.getName()),
-                generateArgumentsForCreateSequenceExpression(s)
-        );
-
-        return sql;
     }
 
     final String alterSequence(SequenceElement s) {

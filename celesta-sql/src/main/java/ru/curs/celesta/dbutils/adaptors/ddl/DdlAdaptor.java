@@ -104,10 +104,10 @@ public final class DdlAdaptor {
      * @param s  sequence element
      */
     public void createSequence(Connection conn, SequenceElement s)  {
-        String sql = ddlGenerator.createSequence(s);
+        List<String> sqlList = ddlGenerator.createSequence(s);
 
         try {
-            processSql(conn, sql);
+            processSql(conn, sqlList);
         } catch (CelestaException e) {
             throw new CelestaException("Error while creating sequence %s.%s: %s", s.getGrain().getName(), s.getName(),
                     e.getMessage());
@@ -255,9 +255,11 @@ public final class DdlAdaptor {
 
         try {
             processSql(conn, sqlList);
-            processSql(conn, "COMMIT");
-        } catch (CelestaException e) {
-            throw new CelestaException("Cannot create index '%s': %s", index.getName(), e.getMessage());
+            conn.commit();
+        } catch (Exception e) {
+            throw new CelestaException(
+                String.format("Cannot create index '%s': %s", index.getName(), e.getMessage()), e
+            );
         }
     }
 
@@ -385,6 +387,12 @@ public final class DdlAdaptor {
     }
 
     private void processSql(Connection conn, String sql)  {
+        //TODO:: REMOVE
+
+        if ("QWE".equalsIgnoreCase(sql)) {
+            return;
+        }
+
         ddlConsumer.consume(conn, sql);
     }
 
