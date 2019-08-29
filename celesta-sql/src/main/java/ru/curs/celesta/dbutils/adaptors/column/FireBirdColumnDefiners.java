@@ -34,7 +34,7 @@ class FireBirdIntegerColumnDefiner extends FireBirdColumnDefiner {
 class FireBirdFloatingColumnDefiner extends FireBirdColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "DOUBLE_PRECISION";
+        return "FLOAT";
     }
 
     @Override
@@ -56,7 +56,7 @@ class FireBirdFloatingColumnDefiner extends FireBirdColumnDefiner {
 class FireBirdDecimalColumnDefiner extends FireBirdColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "numeric";
+        return "DECIMAL";
     }
 
     @Override

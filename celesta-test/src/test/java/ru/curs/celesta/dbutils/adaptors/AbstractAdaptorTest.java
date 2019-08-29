@@ -165,7 +165,7 @@ public abstract class AbstractAdaptorTest {
         } catch (CelestaException e) {
             conn.rollback();
         }
-        
+
         dba.createSequence(conn, ts);
         dba.createTable(conn, t);
 
@@ -348,15 +348,12 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void getColumns() throws Exception {
+    public void getColumns() {
         Set<String> columnSet = dba.getColumns(conn, t);
         assertNotNull(columnSet);
         assertEquals(17, columnSet.size());
         assertTrue(columnSet.contains("f4"));
         assertFalse(columnSet.contains("nonExistentColumn"));
-        // String[] columnNames = { "id", "attrVarchar", "attrInt", "f1",
-        // "f2", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13" };
-        // LOGGER.info(Arrays.toString(columnSet.toArray(new String[0])));
     }
 
     @Test
@@ -385,6 +382,8 @@ public abstract class AbstractAdaptorTest {
         dba.dropIndex(grain, inf);
     }
 
+
+    // TODO:: Continue from here
     @Test
     public void getOneFieldStatement() throws Exception {
         insertRow(conn, t, 121215);
@@ -642,7 +641,7 @@ public abstract class AbstractAdaptorTest {
             } catch (CelestaException e) {
                 conn.rollback();
             }
-            
+
             try {
                 dba.dropTable(conn, mView1gTest);
             } catch (CelestaException e) {
@@ -1270,7 +1269,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void testInitDataForMaterializedView() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
-        
+
         SequenceElement ts = g.getElement("tableForInitMvData_id", SequenceElement.class);
         BasicTable t = g.getElement("tableForInitMvData", BasicTable.class);
         MaterializedView mv = g.getElement("mViewForInit", MaterializedView.class);
@@ -1421,7 +1420,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void testGetInFilterClause() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
-        SequenceElement t2s = g.getElement("testInFilterClause_id", SequenceElement.class); 
+        SequenceElement t2s = g.getElement("testInFilterClause_id", SequenceElement.class);
         BasicTable t2 = g.getElement("testInFilterClause", BasicTable.class);
 
         boolean tableIsCreated = false;
@@ -1439,7 +1438,7 @@ public abstract class AbstractAdaptorTest {
             } catch (CelestaException e) {
                 conn.rollback();
             }
-            
+
             dba.createSequence(conn, t2s);
             dba.createTable(conn, t2);
             tableIsCreated = true;

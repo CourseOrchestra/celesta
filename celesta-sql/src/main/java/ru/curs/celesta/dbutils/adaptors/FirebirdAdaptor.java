@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.NOW;
+
 
 public class FirebirdAdaptor extends DBAdaptor {
 
@@ -54,7 +54,14 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     boolean userTablesExist(Connection conn) throws SQLException {
-        return false;
+        String sql = "SELECT COUNT(*) \n" +
+            "FROM RDB$RELATIONS RDB$RELATIONS \n" +
+            "WHERE RDB$SYSTEM_FLAG = 0";
+
+        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+            rs.next();
+            return rs.getInt(1) > 0;
+        }
     }
 
     @Override
@@ -206,12 +213,30 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public int getCurrentIdent(Connection conn, BasicTable t) {
-        return 0;
+
+        IntegerColumn idColumn = t.getPrimaryKey().values().stream()
+            .filter(c -> c instanceof IntegerColumn)
+            .map(c -> (IntegerColumn) c)
+            .filter(ic -> ic.getSequence() != null)
+            .findFirst().get();
+
+        final String sequenceName = sequenceString(t.getGrain().getName(), idColumn.getSequence().getName());
+        String sql = String.format("SELECT GEN_ID(%s, 0) FROM RDB$DATABASE", sequenceName);
+
+        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
+        }
     }
 
     @Override
     public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) {
-        return null;
+        // TODO:: COPY PASTE
+        String sql = String.format("delete from " + tableString(t.getGrain().getName(), t.getName()) + " where %s;",
+            where);
+        return prepareStatement(conn, sql);
     }
 
     @Override
@@ -407,14 +432,16 @@ public class FirebirdAdaptor extends DBAdaptor {
     @Override
     public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
         String sql = String.format(
-            "select ind.RDB$RELATION_NAME as tablename, ind.RDB$INDEX_NAME as indexname, \n" +
-            "inds.RDB$FIELD_NAME as columnname \n" +
-            "FROM RDB$INDICES ind \n" +
-            "INNER JOIN RDB$INDEX_SEGMENTS inds \n" +
-            "ON ind.RDB$INDEX_NAME = inds.RDB$INDEX_NAME \n" +
-            "LEFT JOIN RDB$RELATION_CONSTRAINTS rc \n" +
-            "ON ind.RDB$INDEX_NAME = rc.RDB$INDEX_NAME \n" +
-            "WHERE rc.RDB$CONSTRAINT_TYPE <> 'PRIMARY KEY' AND ind.RDB$RELATION_NAME like '%s@_%%' escape '@'",
+            "SELECT RDB$INDICES.RDB$INDEX_NAME as indexname, RDB$INDICES.RDB$RELATION_NAME as tablename, " +
+                "RDB$INDEX_SEGMENTS.RDB$FIELD_NAME AS columnname\n" +
+                "FROM RDB$INDEX_SEGMENTS\n" +
+                "LEFT JOIN RDB$INDICES " +
+                " ON RDB$INDICES.RDB$INDEX_NAME = RDB$INDEX_SEGMENTS.RDB$INDEX_NAME\n" +
+                "LEFT JOIN RDB$RELATION_CONSTRAINTS " +
+                " ON RDB$RELATION_CONSTRAINTS.RDB$INDEX_NAME = RDB$INDEX_SEGMENTS.RDB$INDEX_NAME\n" +
+                "WHERE RDB$RELATION_CONSTRAINTS.RDB$CONSTRAINT_TYPE IS NULL " +
+                "AND RDB$INDICES.RDB$RELATION_NAME like '%s@_%%' escape '@'\n" +
+                "ORDER BY RDB$INDEX_SEGMENTS.RDB$FIELD_POSITION",
             g.getName()
         );
 
@@ -432,7 +459,7 @@ public class FirebirdAdaptor extends DBAdaptor {
                     i = new DbIndexInfo(tabName, indName);
                     result.put(indName, i);
                 }
-                i.getColumnNames().add(rs.getString("columnname"));
+                i.getColumnNames().add(rs.getString("columnname").trim());
 
             }
         } catch (Exception e) {
@@ -463,6 +490,15 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public int getDBPid(Connection conn) {
+        try (ResultSet rs = SqlUtils.executeQuery(conn, "SELECT MON$SERVER_PID as pid \n" +
+            "  FROM MON$ATTACHMENTS")) {
+            if (rs.next()) {
+                return rs.getInt("pid");
+            }
+        } catch (SQLException e) {
+            // do nothing
+        }
+
         return 0;
     }
 

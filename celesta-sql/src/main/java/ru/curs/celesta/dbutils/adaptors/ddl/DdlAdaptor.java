@@ -272,9 +272,7 @@ public final class DdlAdaptor {
     public void createFk(Connection conn, ForeignKey fk)  {
         try {
             List<String> sqlList = ddlGenerator.createFk(conn, fk);
-            for (String slq : sqlList) {
-                processSql(conn, slq);
-            }
+            processSql(conn, sqlList);
         } catch (CelestaException e) {
             throw new CelestaException("Cannot create foreign key '%s': %s", fk.getConstraintName(),
                     e.getMessage());
@@ -330,7 +328,12 @@ public final class DdlAdaptor {
         processSql(conn, sql);
         Optional<String> sqlOpt = this.ddlGenerator.dropAutoIncrement(conn, t);
         processSql(conn, sqlOpt);
-        processSql(conn, "COMMIT");
+
+        try {
+            conn.commit();
+        } catch (Exception e) {
+            throw new CelestaException(e);
+        }
     }
 
     //TODO: Javadoc

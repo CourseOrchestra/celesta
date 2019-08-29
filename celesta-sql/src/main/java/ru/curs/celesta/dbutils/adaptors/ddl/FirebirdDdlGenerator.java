@@ -5,17 +5,16 @@ import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.event.TriggerQuery;
+import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
 import java.sql.Connection;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
 
 public class FirebirdDdlGenerator extends DdlGenerator {
 
@@ -38,7 +37,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         result.add(createSql);
 
         if (s.getArguments().containsKey(SequenceElement.Argument.START_WITH)) {
-            Long startWith = (Long)s.getArguments().get(SequenceElement.Argument.START_WITH);
+            Long startWith = (Long)s.getArguments().get(SequenceElement.Argument.START_WITH) - 1;
 
             String startWithSql = String.format(
                 "ALTER SEQUENCE %s RESTART WITH %s",
@@ -49,6 +48,38 @@ public class FirebirdDdlGenerator extends DdlGenerator {
             result.add(startWithSql);
         }
 
+        return result;
+    }
+
+    @Override
+    List<String> afterCreateTable(TableElement t) {
+        List<String> result = new ArrayList<>();
+        //creating of triggers to emulate default sequence values
+
+        for (Column column : t.getColumns().values()) {
+            if (IntegerColumn.class.equals(column.getClass())) {
+                IntegerColumn ic = (IntegerColumn) column;
+
+                if (ic.getSequence() != null) {
+                    SequenceElement s = ic.getSequence();
+
+                    final String triggerName = String.format(
+                        "%s_%s_%s_seq_trigger",
+                        t.getGrain().getName(), t.getName(), ic.getName()
+                    );
+
+                    final String sequenceName = sequenceString(s.getGrain().getName(), s.getName());
+                    String sql = createOrReplaceSequenceTriggerForColumn(triggerName, ic, sequenceName);
+                    result.add(sql);
+
+                    TriggerQuery query = new TriggerQuery()
+                        .withSchema(t.getGrain().getName())
+                        .withTableName(t.getName())
+                        .withName(triggerName);
+                    this.rememberTrigger(query);
+                }
+            }
+        }
         return result;
     }
 
@@ -147,8 +178,8 @@ public class FirebirdDdlGenerator extends DdlGenerator {
             .map(Column::getQuotedName)
             .collect(Collectors.joining(", "));
         String sql = String.format(
-            "CREATE INDEX \"%s\" ON %s (%s)",
-            index.getName(),
+            "CREATE INDEX %s ON %s (%s)",
+            tableString(index.getTable().getGrain().getName(), index.getName()),
             this.tableString(index.getTable().getGrain().getName(), index.getTable().getName()),
             indexColumns
         );
@@ -180,16 +211,79 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
     @Override
     public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t) {
-        return null;
+        List<String> result = new ArrayList<>();
+
+        List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
+            .filter(mv -> mv.getRefTable().getTable().equals(t))
+            .collect(Collectors.toList());
+
+        for (MaterializedView mv : mvList) {
+            TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
+                .withTableName(t.getName());
+
+            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+            String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
+
+            query.withName(insertTriggerName);
+            if (this.triggerExists(conn, query)) {
+                result.add(dropTrigger(query));
+            }
+            query.withName(updateTriggerName);
+            if (this.triggerExists(conn, query)) {
+                result.add(dropTrigger(query));
+            }
+            query.withName(deleteTriggerName);
+            if (this.triggerExists(conn, query)) {
+                result.add(dropTrigger(query));
+            }
+        }
+
+        return result;
     }
 
     @Override
     public List<String> createTableTriggersForMaterializedViews(BasicTable t) {
-        return null;
+        List<String> result = new ArrayList<>();
+
+        List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
+            .filter(mv -> mv.getRefTable().getTable().equals(t))
+            .collect(Collectors.toList());
+
+        String fullTableName = tableString(t.getGrain().getName(), t.getName());
+
+        TriggerQuery query = new TriggerQuery()
+            .withSchema(t.getGrain().getName())
+            .withTableName(t.getName());
+
+        for (MaterializedView mv : mvList) {
+            //TODO::
+        }
+
+        return result;
     }
 
     @Override
     String truncDate(String dateStr) {
         return null;
+    }
+
+
+    private String createOrReplaceSequenceTriggerForColumn(String triggerName, IntegerColumn ic,
+                                                           String quotedSequenceName) {
+        TableElement te = ic.getParentTable();
+
+        String sql =
+            "CREATE TRIGGER \"" + triggerName + "\" " +
+                "for " + tableString(te.getGrain().getName(), te.getName())
+                + " BEFORE INSERT \n"
+                + " AS \n"
+                + " BEGIN \n"
+                + "   IF (NEW." + ic.getQuotedName() + " IS NULL)\n"
+                + "     THEN NEW." + ic.getQuotedName() + " = GEN_ID(" + quotedSequenceName + ", "
+                + ic.getSequence().getArguments().get(SequenceElement.Argument.INCREMENT_BY) + ");"
+                + " END";
+
+        return sql;
     }
 }
