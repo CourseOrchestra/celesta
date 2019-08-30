@@ -7,4 +7,5 @@ public interface InFilterSupport {
 
     FieldsLookup setIn(BasicCursor otherCursor) ;
     In getIn();
+
 }

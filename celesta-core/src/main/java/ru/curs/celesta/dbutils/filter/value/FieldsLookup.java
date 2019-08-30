@@ -156,40 +156,51 @@ public final class FieldsLookup {
         }
     }
 
+    /**
+     * Adds fields binding for target and auxiliary cursors.
+     *
+     * @param field  filed of the target cursor.
+     * @param otherField  field of the auxiliary cursor.
+     *
+     * @return
+     * @throws ParseException  if some column is not found.
+     */
+    @Deprecated
     public FieldsLookup add(String field, String otherField) throws ParseException {
-        final ColumnMeta<?> column;
-        final ColumnMeta<?> otherColumn;
+        return add(validateFilteredColumn(field), validateFilteringColumn(otherField));
+    }
 
-        column = filtered.getColumns().get(field);
-        otherColumn = filtering.getColumns().get(otherField);
+    /**
+     * Adds columns binding for target and auxiliary cursors.
+     *
+     * @param column  column of the target cursor.
+     * @param otherColumn  column of the auxiliary cursor.
+     *
+     * @return
+     * @throws ParseException  if some column is not found.
+     */
+    public FieldsLookup add(final ColumnMeta<?> column, final ColumnMeta<?> otherColumn) throws ParseException {
 
-        if (column == null) {
-                throw new ParseException(
-                        String.format("Column '%s' not found in %s '%s.%s'",
-                                field, targetClass.getSimpleName(), filtered.getGrain().getName(), filtered.getName()));
-        }
-        if (otherColumn == null) {
-            throw new ParseException(
-                    String.format("Column '%s' not found in %s '%s.%s'",
-                            otherField, targetClass.getSimpleName(),
-                            filtering.getGrain().getName(), filtering.getName()));
-        }
+        final String columnName = column.getName();
+        final String otherColumnName = otherColumn.getName();
 
+        validateFilteredColumn(columnName);
+        validateFilteringColumn(otherColumnName);
 
         if (!column.getCelestaType().equals(otherColumn.getCelestaType())) {
             throw new CelestaException("Column type of %s.%s.%s is not equal to column type of %s.%s.%s",
-                    filtered.getGrain().getName(), filtered.getName(), field,
-                    filtering.getGrain().getName(), filtering.getName(), otherField);
+                    filtered.getGrain().getName(), filtered.getName(), columnName,
+                    filtering.getGrain().getName(), filtering.getName(), otherColumnName);
         }
 
         if (BasicTable.class.equals(targetClass)) {
             List<String> fieldsToValidate = new ArrayList<>(fields);
-            fieldsToValidate.add(field);
+            fieldsToValidate.add(columnName);
             Set<List<Integer>> columnOrdersInIndicesSet =
                     getColumnOrdersInIndicesSet(fieldsToValidate, (BasicTable) filtered);
 
             List<String> otherFieldsToValidate = new ArrayList<>(otherFields);
-            otherFieldsToValidate.add(otherField);
+            otherFieldsToValidate.add(otherColumnName);
             Set<List<Integer>> otherColumnOrdersInIndicesSet = getColumnOrdersInIndicesSet(otherFieldsToValidate,
                     (BasicTable) filtering);
 
@@ -205,13 +216,33 @@ public final class FieldsLookup {
             }
         }
 
-        fields.add(field);
-        otherFields.add(otherField);
+        fields.add(columnName);
+        otherFields.add(otherColumnName);
 
         validate();
         lookupChangeCallback.run();
 
         return this;
+    }
+
+    private ColumnMeta<?> validateFilteredColumn(String columnField) throws ParseException {
+        final ColumnMeta<?> column = filtered.getColumns().get(columnField);
+        if (column == null) {
+            throw new ParseException(String.format("Column '%s' not found in %s '%s.%s'",
+                    columnField, targetClass.getSimpleName(), filtered.getGrain().getName(), filtered.getName()));
+        }
+
+        return column;
+    }
+
+    private ColumnMeta<?> validateFilteringColumn(String columnField) throws ParseException {
+        final ColumnMeta<?> column = filtering.getColumns().get(columnField);
+        if (column == null) {
+            throw new ParseException(String.format("Column '%s' not found in %s '%s.%s'",
+                    columnField, targetClass.getSimpleName(), filtering.getGrain().getName(), filtering.getName()));
+        }
+
+        return column;
     }
 
     public void validate() {

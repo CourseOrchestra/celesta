@@ -55,17 +55,28 @@ public class FieldsLookupTest {
     }
 
     private static View generateView(GrainPart gp, String name, BasicTable table) throws ParseException {
-        View view = new View(gp, name);
+
+        class GenView extends View {
+            GenView(GrainPart grainPart, String name) throws ParseException {
+                super(grainPart, name);
+            }
+            void addColumn(String columnName, ViewColumnType columnType) {
+                ViewColumnMeta<?> column = new ViewColumnMeta<>(columnType);
+                column.setName(columnName);
+                getColumns().put(columnName, column);
+            }
+        }
+
+        GenView view = new GenView(gp, name);
         view.addFromTableRef(new TableRef(table, table.getName()));
 
-        view.getColumns().put(table.getName() + "1", new ViewColumnMeta<>(ViewColumnType.INT));
-        view.getColumns().put(table.getName() + "2", new ViewColumnMeta<>(ViewColumnType.INT));
-        view.getColumns().put(table.getName() + "3", new ViewColumnMeta<>(ViewColumnType.TEXT));
-        view.getColumns().put(table.getName() + "4", new ViewColumnMeta<>(ViewColumnType.DATE));
+        view.addColumn(table.getName() + "1", ViewColumnType.INT);
+        view.addColumn(table.getName() + "2", ViewColumnType.INT);
+        view.addColumn(table.getName() + "3", ViewColumnType.TEXT);
+        view.addColumn(table.getName() + "4", ViewColumnType.DATE);
 
         return view;
     }
-
 
     @Test
     public void testAddWhenBothColumnsExist() throws Exception {

@@ -16,27 +16,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
-class TestFilters implements ScriptTest {
+public class TestFilter implements ScriptTest {
 
     @TestTemplate
-    void testInFilterForTable(CallContext context) throws ParseException {
+    public void testInFilterForTable(CallContext context) throws ParseException {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         _testInFilterForIndices(context, a, b);
-
     }
 
     @TestTemplate
-    void testInFilterForView(CallContext context) throws ParseException {
+    public void testInFilterForView(CallContext context) throws ParseException {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterForIndices(context, a, b);
-
-
     }
 
     @TestTemplate
-    void testInFilterForSimplePks(CallContext context) throws ParseException {
+    public void testInFilterForSimplePks(CallContext context) throws ParseException {
         CFilterCursor c = new CFilterCursor(context);
         DFilterCursor d = new DFilterCursor(context);
 
@@ -63,12 +60,12 @@ class TestFilters implements ScriptTest {
         d.insert();
         d.clear();
 
-        c.setIn(d).add("id", "id");
+        c.setIn(d).add(c.COLUMNS.id(), d.COLUMNS.id());
         assertEquals(2, c.count());
     }
 
     @TestTemplate
-    void testInFilterForComplexPks(CallContext context) throws ParseException {
+    public void testInFilterForComplexPks(CallContext context) throws ParseException {
         EFilterCursor e = new EFilterCursor(context);
         FFilterCursor f = new FFilterCursor(context);
 
@@ -98,82 +95,71 @@ class TestFilters implements ScriptTest {
         f.insert();
         f.clear();
 
-        e.setIn(f).add("id", "id").add("number", "numb");
+        e.setIn(f).add(e.COLUMNS.id(), f.COLUMNS.id()).add(e.COLUMNS.number(), f.COLUMNS.numb());
         assertEquals(2, e.count());
-
-
     }
 
     @TestTemplate
-    void testInFilterWithRangeInMainCursorForTable(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInMainCursorForTable(CallContext context) throws ParseException {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         _testInFilterWithRangeInMainCursor(context, a, b);
-
     }
 
     @TestTemplate
-    void testInFilterWithRangeInMainCursorForView(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInMainCursorForView(CallContext context) throws ParseException {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterWithRangeInMainCursor(context, a, b);
-
     }
 
     @TestTemplate
-    void testInFilterWithRangeInOtherCursorBeforeSetInForTable(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInOtherCursorBeforeSetInForTable(CallContext context) throws ParseException {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         _testInFilterWithRangeInOtherCursorBeforeSetIn(context, a, b);
-
     }
 
     @TestTemplate
-    void testInFilterWithRangeInOtherCursorBeforeSetInForView(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInOtherCursorBeforeSetInForView(CallContext context) throws ParseException {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterWithRangeInOtherCursorBeforeSetIn(context, a, b);
-
     }
 
     @TestTemplate
-    void testInFilterWithRangeInOtherCursorAfterSetInForTable(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInOtherCursorAfterSetInForTable(CallContext context) throws ParseException {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         _testInFilterWithRangeInOtherCursorAfterSetIn(context, a, b);
-
     }
 
     @TestTemplate
-    void testInFilterWithRangeInOtherCursorAfterSetInForView(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInOtherCursorAfterSetInForView(CallContext context) throws ParseException {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterWithRangeInOtherCursorAfterSetIn(context, a, b);
-
     }
 
     @TestTemplate
-    void testInFilterWithAdditionalLookupForTable(CallContext context) throws ParseException {
+    public void testInFilterWithAdditionalLookupForTable(CallContext context) throws ParseException {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         GFilterCursor g = new GFilterCursor(context);
 
         _testInFilterWithAdditionalLookup(context, a, b, g);
-
     }
 
     @TestTemplate
-    void testInFilterWithAdditionalLookupForView(CallContext context) throws ParseException {
+    public void testInFilterWithAdditionalLookupForView(CallContext context) throws ParseException {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         GFilterViewCursor g = new GFilterViewCursor(context);
         _testInFilterWithAdditionalLookup(context, a, b, g);
-
-
     }
 
     @TestTemplate
-    void testInFilterWhenTargetHasPkAndOtherHasPkWithNotSameOrderAndIndexWithSameOrder(CallContext context) throws ParseException {
+    public void testInFilterWhenTargetHasPkAndOtherHasPkWithNotSameOrderAndIndexWithSameOrder(CallContext context) throws ParseException {
         HFilterCursor h = new HFilterCursor(context);
         IFilterCursor i = new IFilterCursor(context);
 
@@ -193,74 +179,68 @@ class TestFilters implements ScriptTest {
         i.insert();
         i.clear();
 
-        h.setIn(i).add("id", "hFilterId");
+        h.setIn(i).add(h.COLUMNS.id(), i.COLUMNS.hFilterId());
         assertEquals(1, h.count());
-
     }
 
     @TestTemplate
-    void testExceptionWhileAddingNotExistedFieldsToLookupForTable(CallContext context) {
+    public void testExceptionWhileAddingNotExistedFieldsToLookupForTable(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         _testExceptionWhileAddingNotExistedFieldsToLookup(a, b);
-
     }
 
     @TestTemplate
-    void testExceptionWhileAddingNotExistedFieldsToLookupForView(CallContext context) {
+    public void testExceptionWhileAddingNotExistedFieldsToLookupForView(CallContext context) {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testExceptionWhileAddingNotExistedFieldsToLookup(a, b);
-
-
     }
 
     @TestTemplate
-    void testExceptionWhileAddingFieldsWithNotMatchesTypesToLookupForTable(CallContext context) {
+    public void testExceptionWhileAddingFieldsWithNotMatchesTypesToLookupForTable(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         _testExceptionWhileAddingFieldsWithNotMatchesTypesToLookup(a, b);
-
     }
 
     @TestTemplate
-    void testExceptionWhileAddingFieldsWithNotMatchesTypesToLookupForView(CallContext context) {
+    public void testExceptionWhileAddingFieldsWithNotMatchesTypesToLookupForView(CallContext context) {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testExceptionWhileAddingFieldsWithNotMatchesTypesToLookup(a, b);
-
     }
 
     @TestTemplate
-    void testExceptionWhileAddingFieldsWithoutIndexToLookup(CallContext context) {
+    public void testExceptionWhileAddingFieldsWithoutIndexToLookup(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
 
         FieldsLookup lookup = a.setIn(b);
 
         assertThrows(CelestaException.class,
-                () -> lookup.add("noIndexA", "numb1"));
+                () -> lookup.add("noIndexA", b.COLUMNS.numb1().getName()));
 
         assertThrows(CelestaException.class,
-                () -> lookup.add("number1", "noIndexB"));
+                () -> lookup.add(a.COLUMNS.number1().getName(), "noIndexB"));
+
         assertThrows(CelestaException.class,
                 () -> lookup.add("noIndexA", "noIndexB"));
     }
 
     @TestTemplate
-    void testExceptionWhenPairsFromLookupDoNotMatchToIndices(CallContext context) {
+    public void testExceptionWhenPairsFromLookupDoNotMatchToIndices(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
 
         FieldsLookup lookup = a.setIn(b);
 
-        assertThrows(CelestaException.class, () -> lookup.add("number1", "numb2"));
-        assertThrows(CelestaException.class, () -> lookup.add("number2", "numb1"));
+        assertThrows(CelestaException.class, () -> lookup.add(a.COLUMNS.number1(), b.COLUMNS.numb2()));
+        assertThrows(CelestaException.class, () -> lookup.add(a.COLUMNS.number2(), b.COLUMNS.numb1()));
 
         assertThrows(CelestaException.class,
-                () -> lookup.add("date", "created").add("number2", "numb2"));
-
-
+                () -> lookup.add(a.COLUMNS.date(), b.COLUMNS.created())
+                            .add(a.COLUMNS.number2(), b.COLUMNS.numb2()));
     }
 
     void _fillTablesForTestInFilterWithRangeOnOtherCursor(AFilterCursor a, BFilterCursor b, Timestamp timestamp) {
@@ -304,7 +284,6 @@ class TestFilters implements ScriptTest {
         b.setNumb2(-41);
         b.insert();
         b.clear();
-
     }
 
     void _testInFilterForIndices(CallContext context, BasicCursor a, BasicCursor b) throws ParseException {
@@ -353,7 +332,6 @@ class TestFilters implements ScriptTest {
 
         ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1").add("number2", "numb2");
         assertEquals(0, a.count());
-
     }
 
     void _testInFilterWithRangeInMainCursor(CallContext context, BasicCursor a, BasicCursor b) throws ParseException {
@@ -398,11 +376,9 @@ class TestFilters implements ScriptTest {
         ((InFilterSupport) a).setIn(b).add("date", "created");
         assertEquals(1, a.count());
         a.first();
-
-
     }
 
-    void checkFirstRec(BasicCursor a) {
+    private void checkFirstRec(BasicCursor a) {
         if (a instanceof AFilterCursor) {
             assertEquals(5, ((AFilterCursor) a).getNumber1().intValue());
             assertEquals(-10, ((AFilterCursor) a).getNumber2().intValue());
@@ -412,7 +388,7 @@ class TestFilters implements ScriptTest {
         }
     }
 
-    void checkSecondRec(BasicCursor a) {
+    private void checkSecondRec(BasicCursor a) {
         if (a instanceof AFilterCursor) {
             assertEquals(6, ((AFilterCursor) a).getNumber1().intValue());
             assertEquals(-20, ((AFilterCursor) a).getNumber2().intValue());
@@ -443,7 +419,6 @@ class TestFilters implements ScriptTest {
 
         a.navigate(">");
         checkSecondRec(a);
-
     }
 
     void _testInFilterWithRangeInOtherCursorAfterSetIn(CallContext context, BasicCursor a, BasicCursor b) throws ParseException {
@@ -468,10 +443,8 @@ class TestFilters implements ScriptTest {
         a.first();
         checkFirstRec(a);
 
-
         a.navigate(">");
         checkSecondRec(a);
-
     }
 
     void _testInFilterWithAdditionalLookup(CallContext context, BasicCursor a, BasicCursor b, BasicCursor g) throws ParseException {
@@ -511,7 +484,6 @@ class TestFilters implements ScriptTest {
         gTableCursor.insert();
         gTableCursor.clear();
 
-
         FieldsLookup lookup = ((InFilterSupport) a).setIn(b).add("date", "created").add("number1", "numb1");
         lookup.and(g).add("date", "createDate").add("number1", "num1");
 
@@ -531,7 +503,6 @@ class TestFilters implements ScriptTest {
 
         a.first();
         checkFirstRec(a);
-
     }
 
     void _testExceptionWhileAddingNotExistedFieldsToLookup(InFilterSupport a, BasicCursor b) {
@@ -542,8 +513,6 @@ class TestFilters implements ScriptTest {
                 () -> lookup.add("date", "notExistingField"));
         assertThrows(ParseException.class,
                 () -> lookup.add("notExistingField", "notExistingField"));
-
-
     }
 
     void _testExceptionWhileAddingFieldsWithNotMatchesTypesToLookup(InFilterSupport a, BasicCursor b) {
@@ -553,7 +522,7 @@ class TestFilters implements ScriptTest {
     }
 
     @TestTemplate
-    void complexFilterWorksForTableCursor(CallContext context) {
+    public void complexFilterWorksForTableCursor(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         a.deleteAll();
         a.clear();
@@ -572,4 +541,5 @@ class TestFilters implements ScriptTest {
         a.first();
         assertEquals(2, a.getNumber1().intValue());
     }
+
 }

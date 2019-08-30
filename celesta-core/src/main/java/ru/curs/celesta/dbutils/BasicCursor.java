@@ -923,7 +923,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         if (value == null || value.isEmpty()) {
             throw new CelestaException(
                     "Filter for column %s is null or empty. "
-                            + "Use setrange(fieldname) to remove any filters from the column.",
+                            + "Use setRange(column) to remove any filters from the column.",
                     column.getName());
         }
         AbstractFilter oldFilter = filters.put(column.getName(), new Filter(value, column));
