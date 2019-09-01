@@ -4,7 +4,11 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/5ff36f37f97b4366825d4e57986408b2)](https://www.codacy.com/app/CourseOrchestra/celesta?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CourseOrchestra/celesta&amp;utm_campaign=Badge_Grade)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/ru.curs/celesta-parent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/ru.curs/celesta-parent)
 
-A set of tools for rapid development of business applications with relational databases, including database migrations, ORM, and testing framework.
+Celesta is a set of tools for Java backend developers who want easier ways to deliver RDBMS-backed software. 
+
+This is a Java library with Maven plugin that provide database migrations, ORM and testing. 
+
+Unlike e. g. Hibernate + Liquibase, Celesta does not require one to keep in mind the schema design and migrations separately, and provides the fast and lightweight way to unit-test the code that works with the database.
 
 <img src="celesta_duke.png" width="200px">
 
@@ -23,6 +27,8 @@ Feel free to ask a question, open an issue or submit a PR.
 [Celesta Improvement Process](https://github.com/courseorchestra/cip) is for major features and public API changes. In order to initiate such a change you might want to submit a new CIP.
 
 ## Related Tools
+
+* [spring-boot-starter-celesta](https://github.com/CourseOrchestra/spring-boot-starter-celesta) Celesta integration with Spring Boot.
 
 * [CelestaDoc](https://github.com/CourseOrchestra/celestadoc): Celesta documentation report generator.	
 
