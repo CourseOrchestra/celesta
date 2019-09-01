@@ -20,7 +20,7 @@ import ru.curs.celesta.CelestaException;
  */
 public abstract class BasicTable extends DataGrainElement implements TableElement {
 
-    final NamedElementHolder<Column> pk = new NamedElementHolder<Column>() {
+    final NamedElementHolder<Column<?>> pk = new NamedElementHolder<Column<?>>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' defined more than once for primary key in table '%s'.", name, getName());
@@ -28,7 +28,7 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
 
     };
 
-    private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
+    private final NamedElementHolder<Column<?>> columns = new NamedElementHolder<Column<?>>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' defined more than once in table '%s'.", name, getName());
@@ -58,14 +58,14 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
      * Unmodified list of table columns.
      */
     @Override
-    public Map<String, Column> getColumns() {
+    public Map<String, Column<?>> getColumns() {
         return columns.getElements();
     }
 
 
     @Override
-    public final Column getColumn(String colName) throws ParseException {
-        Column result = columns.get(colName);
+    public final Column<?> getColumn(String colName) throws ParseException {
+        Column<?> result = columns.get(colName);
         if (result == null) {
             throw new ParseException(
                     String.format("Column '%s' not found in table '%s.%s'", colName, getGrain().getName(), getName()));
@@ -74,7 +74,7 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
     }
 
     @Override
-    public final Map<String, Column> getPrimaryKey() {
+    public final Map<String, Column<?>> getPrimaryKey() {
         return pk.getElements();
     }
 
@@ -85,7 +85,7 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
      * @throws ParseException  if a column with the same name is already defined
      */
     @Override
-    public void addColumn(Column column) throws ParseException {
+    public void addColumn(Column<?> column) throws ParseException {
         if (column.getParentTable() != this) {
             throw new IllegalArgumentException();
         }
@@ -134,15 +134,15 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
         if (pkFinalized) {
             throw new ParseException(String.format("More than one PRIMARY KEY definition in table '%s'.", getName()));
         }
-        Column c = validatePKColumn(name);
+        Column<?> c = validatePKColumn(name);
         pk.addElement(c);
     }
 
-    private Column validatePKColumn(String name) throws ParseException {
+    private Column<?> validatePKColumn(String name) throws ParseException {
         if (VersionedElement.REC_VERSION.equals(name)) {
             throw new ParseException(String.format("Column '%s' is not allowed for primary key.", name));
         }
-        Column c = columns.get(name);
+        Column<?> c = columns.get(name);
         if (c == null) {
             throw new ParseException(String.format("Column '%s' is not defined in table '%s'.", name, getName()));
         }
@@ -170,7 +170,7 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
         }
         if (fKeys.contains(fk)) {
             StringBuilder sb = new StringBuilder();
-            for (Column c : fk.getColumns().values()) {
+            for (Column<?> c : fk.getColumns().values()) {
                 if (sb.length() != 0) {
                     sb.append(", ");
                 }
@@ -190,14 +190,14 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
 
 
     @Override
-    public synchronized final void removeColumn(Column column) throws ParseException {
-        // Составную часть первичного ключа нельзя удалить
+    public synchronized final void removeColumn(Column<?> column) throws ParseException {
+        // It's not allowed to delete compound part of the primary key
         if (pk.contains(column)) {
             throw new ParseException(
                     String.format(YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO + "a primary key. Change primary key first.",
                             getGrain().getName(), getName(), column.getName()));
         }
-        // Составную часть индекса нельзя удалить
+        // It's not allowed to delete compound part of an index
         for (Index ind : getGrain().getIndices().values()) {
             if (ind.getColumns().containsValue(column)) {
                 throw new ParseException(String.format(
@@ -205,7 +205,7 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
                         getGrain().getName(), getName(), column.getName()));
             }
         }
-        // Составную часть внешнего ключа нельзя удалить
+        // It's not allowed to delete compound part of a foreign key
         for (ForeignKey fk : fKeys) {
             if (fk.getColumns().containsValue(column)) {
                 throw new ParseException(String.format(

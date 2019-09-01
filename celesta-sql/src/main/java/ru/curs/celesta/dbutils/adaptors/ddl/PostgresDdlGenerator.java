@@ -115,23 +115,25 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    void updateColType(Column c, DbColumnInfo actual, List<String> sqlList) {
+    void updateColType(Column<?> c, DbColumnInfo actual, List<String> sqlList) {
+        @SuppressWarnings("unchecked")
+        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
         String colType;
         if (c.getClass() == StringColumn.class) {
             StringColumn sc = (StringColumn) c;
             colType = sc.isMax() ? "text" : String.format(
                     "%s(%s)",
-                    ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType(), sc.getLength()
+                    ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType(), sc.getLength()
             );
         } else if (c.getClass() == DecimalColumn.class) {
             DecimalColumn dc = (DecimalColumn) c;
             colType = String.format(
                     "%s(%s,%s)",
-                    ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType(),
+                    ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType(),
                     dc.getPrecision(), dc.getScale()
             );
         } else {
-            colType = ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType();
+            colType = ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType();
         }
 
         StringBuilder alterSql = new StringBuilder(
@@ -170,7 +172,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
         StringBuilder sb = new StringBuilder();
         StringBuilder sb2 = new StringBuilder();
         boolean conjugate = false;
-        for (Map.Entry<String, Column> c : index.getColumns().entrySet()) {
+        for (Map.Entry<String, Column<?>> c : index.getColumns().entrySet()) {
             if (sb.length() > 0) {
                 sb.append(", ");
                 sb2.append(", ");
@@ -403,7 +405,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
             String rowConditionTemplate = mv.getColumns().keySet().stream()
                     .filter(alias -> mv.isGroupByColumn(alias))
                     .map(alias -> {
-                                Column colRef = mv.getColumnRef(alias);
+                                Column<?> colRef = mv.getColumnRef(alias);
                                 if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
                                     return "\"" + alias + "\" = date_trunc('DAY', %1$s.\"" + colRef.getName() + "\")";
                                 }
@@ -419,7 +421,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                         if (aggrCols.containsKey(alias) && aggrCols.get(alias) instanceof Count) {
                             return "1";
                         } else {
-                            Column colRef = mv.getColumnRef(alias);
+                            Column<?> colRef = mv.getColumnRef(alias);
 
                             if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
                                 return "date_trunc('DAY', %1$s.\"" + mv.getColumnRef(alias) + "\")";

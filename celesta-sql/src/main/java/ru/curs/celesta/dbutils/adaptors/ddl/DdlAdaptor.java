@@ -183,7 +183,7 @@ public final class DdlAdaptor {
      * @param c       Column to update
      * @param actual  Actual column info
      */
-    public void updateColumn(Connection conn, Column c, DbColumnInfo actual)  {
+    public void updateColumn(Connection conn, Column<?> c, DbColumnInfo actual)  {
         List<String> sqlList = ddlGenerator.updateColumn(conn, c, actual);
 
         try {
@@ -204,7 +204,7 @@ public final class DdlAdaptor {
      * @param conn  DB connection
      * @param c  column
      */
-    public void createColumn(Connection conn, Column c) {
+    public void createColumn(Connection conn, Column<?> c) {
         String sql = ddlGenerator.createColumn(c);
         try {
             processSql(conn, sql);

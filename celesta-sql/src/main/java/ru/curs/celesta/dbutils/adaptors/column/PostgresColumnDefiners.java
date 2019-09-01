@@ -16,12 +16,12 @@ class PostgresIntegerColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         IntegerColumn ic = (IntegerColumn) c;
         String defaultStr = "";
         SequenceElement s = ic.getSequence();
@@ -41,12 +41,12 @@ class PostgresFloatingColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         FloatingColumn ic = (FloatingColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -63,14 +63,14 @@ class PostgresDecimalColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
         return join(c.getQuotedName(), fieldType, nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String defaultStr = "";
         if (dc.getDefaultValue() != null) {
@@ -87,12 +87,12 @@ class PostgresBooleanColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         BooleanColumn ic = (BooleanColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -109,14 +109,14 @@ class PostgresStringColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String fieldType = ic.isMax() ? "text" : String.format("%s(%s)", dbFieldType(), ic.getLength());
         return join(c.getQuotedName(), fieldType, nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -133,12 +133,12 @@ class PostgresBinaryColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         BinaryColumn bc = (BinaryColumn) c;
         String defaultStr = "";
         if (bc.getDefaultValue() != null) {
@@ -157,12 +157,12 @@ class PostgresDateTimeColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         DateTimeColumn ic = (DateTimeColumn) c;
         String defaultStr = "";
         if (ic.isGetdate()) {
@@ -182,12 +182,12 @@ class PostgresZonedDateTimeColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         return "";
     }
 }

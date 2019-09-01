@@ -90,9 +90,16 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * then -- private methods
      */
 
-    static final List<Class<? extends Column>> COLUMN_CLASSES = Arrays.asList(IntegerColumn.class, StringColumn.class,
-            BooleanColumn.class, FloatingColumn.class, DecimalColumn.class, BinaryColumn.class, DateTimeColumn.class,
+    static final List<Class<? extends Column<?>>> COLUMN_CLASSES = Arrays.asList(
+            IntegerColumn.class,
+            StringColumn.class,
+            BooleanColumn.class,
+            FloatingColumn.class,
+            DecimalColumn.class,
+            BinaryColumn.class,
+            DateTimeColumn.class,
             ZonedDateTimeColumn.class);
+
     static final String COLUMN_NAME = "COLUMN_NAME";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBAdaptor.class);
@@ -137,7 +144,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     static String getTableFieldsListExceptBlobs(DataGrainElement t, Set<String> fields) {
         final List<String> flds;
 
-        Predicate<ColumnMeta> notBinary = c -> !BinaryColumn.CELESTA_TYPE.equals(c.getCelestaType());
+        Predicate<ColumnMeta<?>> notBinary = c -> !BinaryColumn.CELESTA_TYPE.equals(c.getCelestaType());
 
         if (fields.isEmpty()) {
             flds = t.getColumns().entrySet().stream()
@@ -245,7 +252,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         return "? as " + colName;
     }
 
-    final ColumnDefiner getColumnDefiner(Class<? extends Column> c) {
+    final ColumnDefiner getColumnDefiner(Class<? extends Column<?>> c) {
         return ColumnDefinerFactory.getColumnDefiner(getType(), c);
     }
     // =========> END PACKAGE-PRIVATE METHODS <=========
@@ -336,7 +343,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn  DB connection
      * @param c  column
      */
-    public final void createColumn(Connection conn, Column c) {
+    public final void createColumn(Connection conn, Column<?> c) {
         this.ddlAdaptor.createColumn(conn, c);
     }
 
@@ -902,7 +909,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param c      Column to update
      * @param actual Actual column info
      */
-    public void updateColumn(Connection conn, Column c, DbColumnInfo actual) {
+    public void updateColumn(Connection conn, Column<?> c, DbColumnInfo actual) {
         ddlAdaptor.updateColumn(conn, c, actual);
     }
 
@@ -971,7 +978,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param where  WHERE condition
      * @return
      */
-    public abstract PreparedStatement getOneFieldStatement(Connection conn, Column c, String where);
+    public abstract PreparedStatement getOneFieldStatement(Connection conn, Column<?> c, String where);
 
     /**
      * Creates a PreparedStatement object for a DELETE statement for deleting a set of records that
@@ -1021,7 +1028,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn  DB connection
      * @param c     column
      */
-    public abstract DbColumnInfo getColumnInfo(Connection conn, Column c);
+    public abstract DbColumnInfo getColumnInfo(Connection conn, Column<?> c);
 
     /**
      * Returns information on the primary key of a table.

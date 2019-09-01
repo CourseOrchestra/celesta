@@ -100,23 +100,26 @@ public final class H2DdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    void updateColType(Column c, DbColumnInfo actual, List<String> sqlList) {
+    void updateColType(Column<?> c, DbColumnInfo actual, List<String> sqlList) {
+        @SuppressWarnings("unchecked")
+        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+
         String colType;
-        if (c.getClass() == StringColumn.class) {
+        if (cClass == StringColumn.class) {
             StringColumn sc = (StringColumn) c;
             colType = sc.isMax() ? "clob" : String.format(
                     "%s(%s)",
-                    ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType(), sc.getLength()
+                    ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType(), sc.getLength()
             );
         } else if (c.getClass() == DecimalColumn.class) {
             DecimalColumn dc = (DecimalColumn) c;
             colType = String.format(
                     "%s(%s,%s)",
-                    ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType(),
+                    ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType(),
                     dc.getPrecision(), dc.getScale()
             );
         } else {
-            colType = ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).dbFieldType();
+            colType = ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType();
         }
 
 

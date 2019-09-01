@@ -5,7 +5,7 @@ import java.time.ZonedDateTime;
 /**
  * Column for date with time zone type.
  */
-public final class ZonedDateTimeColumn extends Column {
+public final class ZonedDateTimeColumn extends Column<ZonedDateTime> {
     /**
      * Celesta type of the column data.
      */

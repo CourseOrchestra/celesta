@@ -32,7 +32,7 @@ public final class PermissionManager implements IPermissionManager {
             | Action.DELETE.getMask();
 
     private final ICelesta celesta;
-    private final DBAdaptor dbAdaptor;
+//    private final DBAdaptor dbAdaptor;
     private PermissionCacheEntry[] cache = new PermissionCacheEntry[CACHE_SIZE];
     private RoleCacheEntry[] rolesCache = new RoleCacheEntry[ROLE_CACHE_SIZE];
 
@@ -98,7 +98,7 @@ public final class PermissionManager implements IPermissionManager {
 
     public PermissionManager(ICelesta celesta, DBAdaptor dbAdaptor) {
         this.celesta = celesta;
-        this.dbAdaptor = dbAdaptor;
+//        this.dbAdaptor = dbAdaptor;
     }
 
     /**
@@ -137,7 +137,7 @@ public final class PermissionManager implements IPermissionManager {
         if (rce == null || rce.isExpired() || !rce.userId.equals(userID)) {
             rce = new RoleCacheEntry(userID);
             UserrolesCursor userRoles = new UserrolesCursor(sysContext);
-            userRoles.setRange("userid", userID);
+            userRoles.setRange(userRoles.COLUMNS.userid(), userID);
             while (userRoles.nextInSet()) {
                 rce.roles.add(userRoles.getRoleid());
             }

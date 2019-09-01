@@ -73,6 +73,10 @@ public abstract class BasicCursor extends BasicDataAccessor {
     protected Set<String> fields = Collections.emptySet();
     protected Set<String> fieldsForStatement = Collections.emptySet();
 
+    protected ResultSet cursor;
+
+    protected FromTerm fromTerm;
+
     final PreparedStmtHolder set = PreparedStatementHolderFactory.createFindSetHolder(
             BasicCursor.this.db(),
             BasicCursor.this.conn(),
@@ -91,9 +95,6 @@ public abstract class BasicCursor extends BasicDataAccessor {
             () -> BasicCursor.this.rowCount,
             () -> BasicCursor.this.fieldsForStatement
     );
-
-
-    protected ResultSet cursor = null;
 
     final PreparedStmtHolder count = new PreparedStmtHolder() {
         @Override
@@ -161,6 +162,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
 
     };
+
     final PreparedStmtHolder backwards = new OrderFieldsMaskedStatementHolder() {
 
         @Override
@@ -231,8 +233,6 @@ public abstract class BasicCursor extends BasicDataAccessor {
     private long rowCount = 0;
     private Expr complexFilter;
 
-    protected FromTerm fromTerm;
-
     private final WhereTermsMaker qmaker = new WhereTermsMaker(new WhereMakerParamsProvider() {
 
         @Override
@@ -295,7 +295,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     public BasicCursor(CallContext context, Set<String> fields) {
         this(context);
         if (!meta().getColumns().keySet().containsAll(fields)) {
-            throw new CelestaException("Not all of specified columns are existed!!!");
+            throw new CelestaException("Not all of specified columns exist!!!");
         }
         this.fields = fields;
         prepareOrderBy();
@@ -326,7 +326,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
                 element.getName().substring(0, 1).toUpperCase() + element.getName().substring(1) + "Cursor";
         cursorClassName = (namespace.isEmpty() ? "" : namespace + ".") + cursorClassName;
 
-        return (Class<? extends BasicCursor>) Class.forName(cursorClassName, true, Thread.currentThread().getContextClassLoader());
+        return (Class<? extends BasicCursor>) Class.forName(
+                cursorClassName, true, Thread.currentThread().getContextClassLoader());
     }
 
     PreparedStmtHolder getHereHolder() {
@@ -774,24 +775,48 @@ public abstract class BasicCursor extends BasicDataAccessor {
         return qmaker;
     }
 
-    final void validateColumName(String name) {
-        if (!meta().getColumns().containsKey(name)) {
+    final ColumnMeta<?> validateColumnName(String name) {
+        ColumnMeta<?> column = meta().getColumns().get(name);
+        if (column == null) {
             throw new CelestaException("No column %s exists in table %s.", name, _objectName());
         }
+
+        return column;
+    }
+
+    private Object validateColumnValue(ColumnMeta<?> column, Object value) {
+        if (value == null) {
+            return value;
+        }
+        if (!column.getJavaClass().isAssignableFrom(value.getClass())) {
+            throw new CelestaException("Value %s is not of type %s.", value, column.getJavaClass());
+        }
+
+        return value;
     }
 
     /**
      * Resets any filter on a field.
      *
-     * @param name field name
+     * @param name  field name
      */
+    @Deprecated
     public final void setRange(String name) {
-        validateColumName(name);
+        setRange(validateColumnName(name));
+    }
+
+    /**
+     * Resets any filter on a field.
+     *
+     * @param column  field column
+     */
+    public final void setRange(ColumnMeta<?> column) {
+        validateColumnName(column.getName());
         if (isClosed()) {
             return;
         }
         // If filter was present on the field - reset the data set. If not - do nothing.
-        if (filters.remove(name) != null) {
+        if (filters.remove(column.getName()) != null) {
             closeSet();
         }
     }
@@ -802,21 +827,36 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @param name  field name
      * @param value value along which filtering is performed
      */
+    @Deprecated
     public final void setRange(String name, Object value) {
+        @SuppressWarnings("unchecked")
+        ColumnMeta<Object> column = (ColumnMeta<Object>) validateColumnName(name);
+        setRange(column, validateColumnValue(column, value));
+    }
+
+    /**
+     * Sets range from a single value on the field.
+     *
+     * @param column  field column
+     * @param value  value along which filtering is performed
+     *
+     * @param <T>  Java type of value
+     */
+    public final <T> void setRange(ColumnMeta<? super T> column, T value) {
+        validateColumnName(column.getName());
         if (value == null) {
-            setFilter(name, "null");
+            setFilter(column, "null");
         } else {
-            validateColumName(name);
             if (isClosed()) {
                 return;
             }
-            AbstractFilter oldFilter = filters.get(name);
+            AbstractFilter oldFilter = filters.get(column.getName());
             // If one SingleValue is changed to another one - it is not needed
             // to close up the data set - the old one can be used.
             if (oldFilter instanceof SingleValue) {
                 ((SingleValue) oldFilter).setValue(value);
             } else {
-                filters.put(name, new SingleValue(value));
+                filters.put(column.getName(), new SingleValue(value));
                 closeSet();
             }
         }
@@ -825,43 +865,68 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets range from..to on the field.
      *
-     * @param name      field name
-     * @param valueFrom value <em>from</em>
-     * @param valueTo   value <em>to</em>
+     * @param name  field name
+     * @param valueFrom  value <em>from</em>
+     * @param valueTo  value <em>to</em>
      */
+    @Deprecated
     public final void setRange(String name, Object valueFrom, Object valueTo) {
-        validateColumName(name);
+        @SuppressWarnings("unchecked")
+        ColumnMeta<Object> column = (ColumnMeta<Object>) validateColumnName(name);
+        setRange(column, validateColumnValue(column, valueFrom), validateColumnValue(column, valueTo));
+    }
+
+    /**
+     * Sets range from..to on the field.
+     *
+     * @param column  field column
+     * @param valueFrom  value <em>from</em>
+     * @param valueTo  value <em>to</em>
+     *
+     * @param <T>  Java type of value
+     */
+    public final <T> void setRange(ColumnMeta<? super T> column, T valueFrom, T valueTo) {
+        validateColumnName(column.getName());
         if (isClosed()) {
             return;
         }
-        AbstractFilter oldFilter = filters.get(name);
+        AbstractFilter oldFilter = filters.get(column.getName());
         // If one Range is changed to another one - it is not needed
         // to close up the data set - the old one can be used.
         if (oldFilter instanceof Range) {
             ((Range) oldFilter).setValues(valueFrom, valueTo);
         } else {
-            filters.put(name, new Range(valueFrom, valueTo));
+            filters.put(column.getName(), new Range(valueFrom, valueTo));
             closeSet();
         }
     }
-
 
     /**
      * Sets filter to the field.
      *
      * @param name  field name
-     * @param value filter
+     * @param value  filter
      */
+    @Deprecated
     public final void setFilter(String name, String value) {
-        validateColumName(name);
+        setFilter(validateColumnName(name), value);
+    }
+
+    /**
+     * Sets filter to the field.
+     *
+     * @param column  field column
+     * @param value  filter
+     */
+    public final void setFilter(ColumnMeta<?> column, String value) {
+        validateColumnName(column.getName());
         if (value == null || value.isEmpty()) {
             throw new CelestaException(
                     "Filter for column %s is null or empty. "
-                            + "Use setrange(fieldname) to remove any filters from the column.",
-                    name);
+                            + "Use setRange(column) to remove any filters from the column.",
+                    column.getName());
         }
-        AbstractFilter oldFilter =
-                filters.put(name, new Filter(value, meta().getColumns().get(name)));
+        AbstractFilter oldFilter = filters.put(column.getName(), new Filter(value, column));
         if (isClosed()) {
             return;
         }
@@ -937,10 +1002,48 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets sorting.
      *
-     * @param names array of fields for sorting
+     * @param names  array of fields for sorting
      */
+    @Deprecated
     public final void orderBy(String... names) {
-        prepareOrderBy(names);
+
+        ColumnMeta<?>[] columns = new ColumnMeta<?>[names.length];
+        {
+            for (int i = 0; i < names.length; i++) {
+                final String name = names[i];
+
+                Matcher m = COLUMN_NAME.matcher(name);
+                if (!m.matches()) {
+                    throw new CelestaException(
+                            "orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
+                            name);
+                }
+
+                final String colName = m.group(1);
+                final String colOrdering = Optional.ofNullable(m.group(2)).map(String::trim).orElse(null);
+
+                ColumnMeta<?> column = validateColumnName(colName);
+                if ("asc".equalsIgnoreCase(colOrdering)) {
+                    column = column.asc();
+                } else if ("desc".equalsIgnoreCase(colOrdering)) {
+                    column = column.desc();
+                }
+                
+                columns[i] = column;
+            }
+        }
+
+        orderBy(columns);
+    }
+
+    /**
+     * Sets sorting.
+     *
+     * @param columns  columns array for sorting
+     */
+    public final void orderBy(ColumnMeta<?>... columns) {
+
+        prepareOrderBy(columns);
 
         if (!fieldsForStatement.isEmpty()) {
             fillFieldsForStatement();
@@ -949,30 +1052,30 @@ public abstract class BasicCursor extends BasicDataAccessor {
         closeSet();
     }
 
-    private void prepareOrderBy(String... names) {
+    /**
+     * Clears sorting.
+     */
+    public final void orderBy() {
+        orderBy(new ColumnMeta<?>[0]);
+    }
+
+    private void prepareOrderBy(ColumnMeta<?>... columns) {
 
         ArrayList<String> l = new ArrayList<>(8);
         ArrayList<Boolean> ol = new ArrayList<>(8);
         Set<String> colNames = new HashSet<>();
-        for (String name : names) {
-            Matcher m = COLUMN_NAME.matcher(name);
-            if (!m.matches()) {
-                throw new CelestaException(
-                        "orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
-                        name);
-            }
-            String colName = m.group(1);
-            validateColumName(colName);
-            if (!colNames.add(colName)) {
-                throw new CelestaException("Column '%s' is used more than once in orderby() call",
-                        colName);
-            }
 
-            boolean order = !(m.group(2) == null || "asc".equalsIgnoreCase(m.group(2).trim()));
+        for (ColumnMeta<?> column : columns) {
+            final String colName = column.getName();
+            validateColumnName(colName);
+            if (!colNames.add(colName)) {
+                throw new CelestaException("Column '%s' is used more than once in orderby() call", colName);
+            }
 
             l.add(String.format("\"%s\"", colName));
 
-            ol.add(order);
+            final ColumnMeta.Ordering ordering = column.ordering();
+            ol.add(!(ordering == null || ordering == ColumnMeta.Ordering.ASC));
         }
 
         appendPK(l, ol, colNames);
@@ -987,7 +1090,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
     }
 
-    abstract void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames);
+    abstract void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames);
 
     /**
      * Resets filters, sorting and fully cleans the buffer.
@@ -1155,7 +1258,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @param value field value
      */
     public final void setValue(String name, Object value) {
-        validateColumName(name);
+        validateColumnName(name);
         _setFieldValue(name, value);
     }
 
@@ -1167,7 +1270,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @return
      */
     public final Object getValue(String name) {
-        validateColumName(name);
+        validateColumnName(name);
         return _getFieldValue(name);
     }
 

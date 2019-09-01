@@ -3,12 +3,15 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.MaterializedView;
 import ru.curs.celesta.score.ParseException;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Materialized view Cursor.
@@ -32,6 +35,10 @@ public abstract class MaterializedViewCursor extends BasicCursor {
         .withTableName(_objectName());
 
     getHelper = cghb.build();
+  }
+
+  public MaterializedViewCursor(CallContext context, ColumnMeta<?>... columns) {
+      this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
   }
 
   public MaterializedViewCursor(CallContext context, Set<String> fields) {
@@ -91,9 +98,9 @@ public abstract class MaterializedViewCursor extends BasicCursor {
 
 
   @Override
-  final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
-    // Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
-    // естественном порядке
+  final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
+    // Always add to the end of OrderBy the fields of the primary key following in
+    // a natural order.
     for (String colName : meta().getPrimaryKey().keySet()) {
       if (!colNames.contains(colName)) {
         l.add(String.format("\"%s\"", colName));

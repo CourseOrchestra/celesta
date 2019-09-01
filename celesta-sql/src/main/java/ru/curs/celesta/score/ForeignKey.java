@@ -21,7 +21,7 @@ public final class ForeignKey {
     private FKRule updateRule = FKRule.NO_ACTION;
     private String constraintName;
 
-    private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
+    private final NamedElementHolder<Column<?>> columns = new NamedElementHolder<Column<?>>() {
         @Override
         protected String getErrorMsg(String name) {
             return String
@@ -30,7 +30,7 @@ public final class ForeignKey {
         }
     };
 
-    private final List<Column> referencedColumns = new LinkedList<>();
+    private final List<Column<?>> referencedColumns = new LinkedList<>();
 
     ForeignKey(BasicTable parentTable) {
         if (parentTable == null) {
@@ -84,7 +84,7 @@ public final class ForeignKey {
     }
 
     private void checkNullable() throws ParseException {
-        for (Column c : columns) {
+        for (Column<?> c : columns) {
             if (!c.isNullable()) {
                 throw new ParseException(String.format("Error while "
                         + "creating FK for table '%s': column '%s' is not "
@@ -99,7 +99,7 @@ public final class ForeignKey {
      *
      * @return
      */
-    public Map<String, Column> getColumns() {
+    public Map<String, Column<?>> getColumns() {
         return columns.getElements();
     }
 
@@ -148,7 +148,7 @@ public final class ForeignKey {
      */
     void addColumn(String columnName) throws ParseException {
         columnName = getParentTable().getGrain().getScore().getIdentifierParser().parse(columnName);
-        Column c = parentTable.getColumns().get(columnName);
+        Column<?> c = parentTable.getColumns().get(columnName);
         if (c == null) {
             throw new ParseException(
                     String.format(
@@ -201,17 +201,17 @@ public final class ForeignKey {
         // Проверка того факта, что поля ключа совпадают по типу
         // с полями первичного ключа таблицы, на которую ссылка
 
-        Map<String, Column> refpk = referencedTable.getPrimaryKey();
+        Map<String, Column<?>> refpk = referencedTable.getPrimaryKey();
         if (columns.size() != refpk.size()) {
             throw new ParseException(
                     String.format(
                             "Error creating foreign key for table %s: it has different size with PK of table '%s'",
                             parentTable.getName(), referencedTable.getName()));
         }
-        Iterator<Column> i = referencedTable.getPrimaryKey().values()
+        Iterator<Column<?>> i = referencedTable.getPrimaryKey().values()
                 .iterator();
-        for (Column c : columns) {
-            Column c2 = i.next();
+        for (Column<?> c : columns) {
+            Column<?> c2 = i.next();
             if (c.getClass() != c2.getClass()) {
                 throw new ParseException(
                         String.format(
@@ -242,7 +242,7 @@ public final class ForeignKey {
     @Override
     public int hashCode() {
         int result = 0;
-        for (Column c : columns) {
+        for (Column<?> c : columns) {
             result ^= c.getName().hashCode();
         }
         return result;
@@ -253,9 +253,9 @@ public final class ForeignKey {
         if (obj instanceof ForeignKey) {
             ForeignKey fk = (ForeignKey) obj;
             if (columns.size() == fk.columns.size()) {
-                Iterator<Column> i = fk.columns.iterator();
-                for (Column c : columns) {
-                    Column c2 = i.next();
+                Iterator<Column<?>> i = fk.columns.iterator();
+                for (Column<?> c : columns) {
+                    Column<?> c2 = i.next();
                     if (!c.getName().equals(c2.getName())) {
                         return false;
                     }
@@ -287,7 +287,7 @@ public final class ForeignKey {
             throw new IllegalStateException();
         }
         columnName = getParentTable().getGrain().getScore().getIdentifierParser().parse(columnName);
-        Column c = referencedTable.getColumns().get(columnName);
+        Column<?> c = referencedTable.getColumns().get(columnName);
         if (c == null) {
             throw new ParseException(
                     String.format(
@@ -315,7 +315,7 @@ public final class ForeignKey {
         if (referencedTable == null) {
             throw new IllegalStateException();
         }
-        Map<String, Column> pk = referencedTable.getPrimaryKey();
+        Map<String, Column<?>> pk = referencedTable.getPrimaryKey();
         int size = referencedColumns.size();
         if (pk.size() != size) {
             referencedColumns.clear();
@@ -325,9 +325,9 @@ public final class ForeignKey {
                             + "reference fields is %d.", parentTable.getName(),
                     referencedTable.getName(), pk.size(), size));
         }
-        Iterator<Column> i = pk.values().iterator();
-        for (Column c : referencedColumns) {
-            Column c2 = i.next();
+        Iterator<Column<?>> i = pk.values().iterator();
+        for (Column<?> c : referencedColumns) {
+            Column<?> c2 = i.next();
             if (!c.getName().equals(c2.getName())) {
                 referencedColumns.clear();
                 throw new ParseException(String.format(

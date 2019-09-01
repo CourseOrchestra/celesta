@@ -339,7 +339,11 @@ public class NavigationQueriesMakerTest {
         filters.put("A", new Range(4, 5));
         assertEquals("((\"A\" between ? and ?) and (\"A\" > ?))", c.getWhereTerm('>').getWhere());
 
-        filters.put("A", new Filter("null|'foo'", new ColumnMeta() {
+        filters.put("A", new Filter("null|'foo'", new ColumnMeta<Void>() {
+            @Override
+            public String getName() {
+                return null;
+            }
 
             @Override
             public String jdbcGetterName() {

@@ -15,12 +15,12 @@ class OraIntegerColumnDefiner extends OraColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         IntegerColumn ic = (IntegerColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -37,12 +37,12 @@ class OraFloatingColumnDefiner extends OraColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         FloatingColumn ic = (FloatingColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -59,14 +59,14 @@ class OraDecimalColumnDefiner extends OraColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
         return join(c.getQuotedName(), fieldType);
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String defaultStr = "";
         if (dc.getDefaultValue() != null) {
@@ -83,12 +83,12 @@ class OraBooleanColumnDefiner extends OraColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         BooleanColumn ic = (BooleanColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -98,7 +98,7 @@ class OraBooleanColumnDefiner extends OraColumnDefiner {
     }
 
     @Override
-    public String getFullDefinition(Column c) {
+    public String getFullDefinition(Column<?> c) {
         String check = String.format("constraint %s check (%s in (0, 1))", getBooleanCheckName(c),
                 c.getQuotedName());
         return join(getInternalDefinition(c), getDefaultDefinition(c), nullable(c), check);
@@ -111,22 +111,22 @@ class OraStringColumnDefiner extends OraColumnDefiner {
         return "nvarchar2";
     }
 
-    // Пустая DEFAULT-строка не сочетается с NOT NULL в Oracle.
+    // An empty DEFAULT-string doesn't go with NOT NULL in Oracle.
     @Override
-    public String nullable(Column c) {
+    public String nullable(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         return ("".equals(ic.getDefaultValue())) ? "null" : super.nullable(c);
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String fieldType = ic.isMax() ? "nclob" : String.format("%s(%s)", dbFieldType(), ic.getLength());
         return join(c.getQuotedName(), fieldType);
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -143,16 +143,16 @@ class OraBinaryColumnDefiner extends OraColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         BinaryColumn ic = (BinaryColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
-            // Отрезаем 0x и закавычиваем
+            // Cutting off 0x and quoting
             defaultStr = String.format(DEFAULT + "'%s'", ic.getDefaultValue().substring(2));
         }
         return defaultStr;
@@ -166,12 +166,12 @@ class OraDateTimeColumnDefiner extends OraColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         DateTimeColumn ic = (DateTimeColumn) c;
         String defaultStr = "";
         if (ic.isGetdate()) {
@@ -191,12 +191,12 @@ class OraZonedDateTimeColumnDefiner extends OraColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         return "";
     }
 }

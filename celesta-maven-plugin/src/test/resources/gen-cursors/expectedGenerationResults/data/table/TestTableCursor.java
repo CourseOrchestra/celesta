@@ -25,8 +25,15 @@ import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.event.TriggerType;
+import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.Table;
 
 public final class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
+
+    private static final String GRAIN_NAME = "test";
+    private static final String OBJECT_NAME = "testTable";
+
+    public final TestTableCursor.Columns COLUMNS;
 
     private Integer id;
     private String str;
@@ -38,10 +45,19 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     private BigDecimal cost;
     private ZonedDateTime toDelete;
 
+    {
+        this.COLUMNS = new TestTableCursor.Columns(callContext().getCelesta());
+    }
+
     public TestTableCursor(CallContext context) {
         super(context);
     }
 
+    public TestTableCursor(CallContext context, ColumnMeta<?>... columns) {
+        super(context, columns);
+    }
+
+    @Deprecated
     public TestTableCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }
@@ -122,7 +138,6 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     protected Object _getFieldValue(String name) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             return f.get(this);
         } catch (Exception e) {
@@ -240,12 +255,10 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         ((TestTableCursor)this.getXRec()).rawData = this.rawData.clone();
     }
 
-
     @Override
     protected void _setAutoIncrement(int val) {
         this.id = val;
     }
-
 
     public static void onPreDelete(ICelesta celesta, Consumer<TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_DELETE, TestTableCursor.class, cursorConsumer);
@@ -274,7 +287,6 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     @Override
     public TestTableCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestTableCursor result;
-
         if (Objects.isNull(fields)) {
             result = new TestTableCursor(context);
         } else {
@@ -299,7 +311,6 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         this.setRecversion(from.getRecversion());
     }
 
-
     @Override
     public Iterator<TestTableCursor> iterator() {
         return new CursorIterator<TestTableCursor>(this);
@@ -307,12 +318,53 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
 
     @Override
     protected String _grainName() {
-        return "test";
+        return GRAIN_NAME;
     }
 
     @Override
     protected String _objectName() {
-        return "testTable";
+        return OBJECT_NAME;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static final class Columns {
+        private final Table element;
+
+        public Columns(ICelesta celesta) {
+            this.element = celesta.getScore().getGrains().get(GRAIN_NAME).getElements(Table.class).get(OBJECT_NAME);
+        }
+
+        public ColumnMeta<Integer> id() {
+            return (ColumnMeta<Integer>) this.element.getColumns().get("id");
+        }
+
+        public ColumnMeta<String> str() {
+            return (ColumnMeta<String>) this.element.getColumns().get("str");
+        }
+
+        public ColumnMeta<Boolean> deleted() {
+            return (ColumnMeta<Boolean>) this.element.getColumns().get("deleted");
+        }
+
+        public ColumnMeta<Double> weight() {
+            return (ColumnMeta<Double>) this.element.getColumns().get("weight");
+        }
+
+        public ColumnMeta<String> content() {
+            return (ColumnMeta<String>) this.element.getColumns().get("content");
+        }
+
+        public ColumnMeta<Date> created() {
+            return (ColumnMeta<Date>) this.element.getColumns().get("created");
+        }
+
+        public ColumnMeta<BigDecimal> cost() {
+            return (ColumnMeta<BigDecimal>) this.element.getColumns().get("cost");
+        }
+
+        public ColumnMeta<ZonedDateTime> toDelete() {
+            return (ColumnMeta<ZonedDateTime>) this.element.getColumns().get("toDelete");
+        }
     }
 
     public static final class Str {

@@ -43,10 +43,10 @@ public class FieldsLookupTest {
     private static BasicTable generateTable(GrainPart gp, String name) throws ParseException {
         BasicTable table = new Table(gp, name);
 
-        Column c1 = new IntegerColumn(table, name + "1");
-        Column c2 = new IntegerColumn(table, name + "2");
-        Column c3 = new StringColumn(table, name + "3");
-        Column c4 = new DateTimeColumn(table, name + "4");
+        Column<?> c1 = new IntegerColumn(table, name + "1");
+        Column<?> c2 = new IntegerColumn(table, name + "2");
+        Column<?> c3 = new StringColumn(table, name + "3");
+        Column<?> c4 = new DateTimeColumn(table, name + "4");
 
         String[] indexColumns = {name + "1", name + "2", name + "3"};
         Index i1 = new Index(table, "I" + name, indexColumns);
@@ -55,17 +55,28 @@ public class FieldsLookupTest {
     }
 
     private static View generateView(GrainPart gp, String name, BasicTable table) throws ParseException {
-        View view = new View(gp, name);
+
+        class GenView extends View {
+            GenView(GrainPart grainPart, String name) throws ParseException {
+                super(grainPart, name);
+            }
+            void addColumn(String columnName, ViewColumnType columnType) {
+                ViewColumnMeta<?> column = new ViewColumnMeta<>(columnType);
+                column.setName(columnName);
+                getColumns().put(columnName, column);
+            }
+        }
+
+        GenView view = new GenView(gp, name);
         view.addFromTableRef(new TableRef(table, table.getName()));
 
-        view.getColumns().put(table.getName() + "1", new ViewColumnMeta(ViewColumnType.INT));
-        view.getColumns().put(table.getName() + "2", new ViewColumnMeta(ViewColumnType.INT));
-        view.getColumns().put(table.getName() + "3", new ViewColumnMeta(ViewColumnType.TEXT));
-        view.getColumns().put(table.getName() + "4", new ViewColumnMeta(ViewColumnType.DATE));
+        view.addColumn(table.getName() + "1", ViewColumnType.INT);
+        view.addColumn(table.getName() + "2", ViewColumnType.INT);
+        view.addColumn(table.getName() + "3", ViewColumnType.TEXT);
+        view.addColumn(table.getName() + "4", ViewColumnType.DATE);
 
         return view;
     }
-
 
     @Test
     public void testAddWhenBothColumnsExist() throws Exception {

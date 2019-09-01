@@ -23,7 +23,7 @@ public final class Filter extends AbstractFilter {
     private final String value;
     private final FilterParser.FilterType ftype;
 
-    public Filter(String value, ColumnMeta c) {
+    public Filter(String value, ColumnMeta<?> c) {
         this.value = value;
         this.ftype = C2F.getOrDefault(c.getCelestaType(), FilterParser.FilterType.OTHER);
     }

@@ -388,7 +388,7 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void getOneFieldStatement() throws Exception {
         insertRow(conn, t, 121215);
-        Column c = t.getColumns().get("attrInt");
+        Column<?> c = t.getColumns().get("attrInt");
 
         WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
         List<ParameterSetter> program = new ArrayList<>();
@@ -447,7 +447,7 @@ public abstract class AbstractAdaptorTest {
     public void getColumnInfo1() throws ParseException {
         DbColumnInfo c;
         // Проверяем реакцию на столбец, которого нет в базе данных
-        Column newCol = new IntegerColumn(t, "nonExistentColumn");
+        Column<?> newCol = new IntegerColumn(t, "nonExistentColumn");
         assertSame(newCol, t.getColumn("nonExistentColumn"));
         c = dba.getColumnInfo(conn, newCol);
         assertNull(c);
@@ -655,7 +655,7 @@ public abstract class AbstractAdaptorTest {
             tablesAreCreated = true;
 
             DbColumnInfo c;
-            Column col;
+            Column<?> col;
 
             col = mView1gTest.getColumn("idsum");
             c = dba.getColumnInfo(conn, col);
@@ -735,7 +735,7 @@ public abstract class AbstractAdaptorTest {
     public void updateColumn() throws ParseException, IOException, SQLException {
         // NULL/NOT NULL и DEFAULT (простые)
         DbColumnInfo c;
-        Column col;
+        Column<?> col;
         // To test transforms on non-empty table
         insertRow(conn, t, 17);
 

@@ -100,7 +100,7 @@ public class GrainModelTest {
         assertEquals("bb", t.getName());
         // Корректное и некорректное добавление поля
         new IntegerColumn(t, "col1");
-        Column c = new DateTimeColumn(t, "col2");
+        Column<?> c = new DateTimeColumn(t, "col2");
         c.setNullableAndDefault(false, "GETDATE");
         assertTrue(((DateTimeColumn) c).isGetdate());
         assertFalse(c.isNullable());
@@ -122,9 +122,9 @@ public class GrainModelTest {
         assertThrows(ParseException.class,
                 () -> t.addPK("blahblah"));
         t.addPK("col3");
-        Map<String, Column> key = t.getPrimaryKey();
+        Map<String, Column<?>> key = t.getPrimaryKey();
         assertEquals(2, key.size());
-        Iterator<Column> ic = key.values().iterator();
+        Iterator<Column<?>> ic = key.values().iterator();
         c = ic.next();
         assertEquals("col2", c.getName());
         c = ic.next();
@@ -146,7 +146,7 @@ public class GrainModelTest {
         GrainPart gp = new GrainPart(g, true, null);
         SequenceElement st1 = new SequenceElement(gp, "t1_ida");
         BasicTable t1 = new Table(gp, "t1");
-        Column cc = new IntegerColumn(t1, "ida");
+        Column<?> cc = new IntegerColumn(t1, "ida");
         cc.setNullableAndDefault(false, "NEXTVAL(" + st1.getName() + ")");
 
         t1.addPK("ida");

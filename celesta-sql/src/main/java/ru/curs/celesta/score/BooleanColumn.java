@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 /**
  * Boolean column (BIT type).
  */
-public final class BooleanColumn extends Column {
+public final class BooleanColumn extends Column<Boolean> {
     /**
      * Celesta type of the column data.
      */

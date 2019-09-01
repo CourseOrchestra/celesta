@@ -18,12 +18,12 @@ class H2IntegerColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         IntegerColumn ic = (IntegerColumn) c;
         String defaultStr = "";
 
@@ -44,12 +44,12 @@ class H2FloatingColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         FloatingColumn ic = (FloatingColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -66,14 +66,14 @@ class H2DecimalColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
         return join(c.getQuotedName(), fieldType, nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String defaultStr = "";
         if (dc.getDefaultValue() != null) {
@@ -90,12 +90,12 @@ class H2BooleanColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         BooleanColumn ic = (BooleanColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -112,14 +112,14 @@ class H2StringColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String fieldType = ic.isMax() ? "clob" : String.format("%s(%s)", dbFieldType(), ic.getLength());
         return join(c.getQuotedName(), fieldType, nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -136,12 +136,12 @@ class H2BinaryColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         BinaryColumn bc = (BinaryColumn) c;
         String defaultStr = "";
         if (bc.getDefaultValue() != null) {
@@ -160,12 +160,12 @@ class H2DateTimeColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         DateTimeColumn ic = (DateTimeColumn) c;
         String defaultStr = "";
         if (ic.isGetdate()) {
@@ -186,12 +186,12 @@ class H2ZonedDateTimeColumnDefiner extends ColumnDefiner {
     }
 
     @Override
-    public String getMainDefinition(Column c) {
+    public String getMainDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType(), nullable(c));
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         return "";
     }
 }

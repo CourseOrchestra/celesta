@@ -151,7 +151,10 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) {
+    List<String> updateColumn(Connection conn, Column<?> c, DbColumnInfo actual) {
+        @SuppressWarnings("unchecked")
+        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+
         List<String> result = new ArrayList<>();
         String sql;
         if (!"".equals(actual.getDefaultValue())) {
@@ -161,12 +164,12 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
             result.add(sql);
         }
 
-        String def = ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).getMainDefinition(c);
+        String def = ColumnDefinerFactory.getColumnDefiner(getType(), cClass).getMainDefinition(c);
         sql = String.format(ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(),
                 c.getParentTable().getName()) + " alter column %s", def);
         result.add(sql);
 
-        def = ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass()).getDefaultDefinition(c);
+        def = ColumnDefinerFactory.getColumnDefiner(getType(), cClass).getDefaultDefinition(c);
         if (!"".equals(def)) {
             sql = String.format(ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(),
                     c.getParentTable().getName()) + " add %s for %s",
@@ -353,7 +356,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
             String rowConditionForExistsTemplate = mv.getColumns().keySet().stream()
                     .filter(alias -> mv.isGroupByColumn(alias))
                     .map(alias -> {
-                        Column colRef = mv.getColumnRef(alias);
+                        Column<?> colRef = mv.getColumnRef(alias);
 
                         if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
                             return "mv." + alias + " = cast(floor(cast(%1$s."
@@ -393,7 +396,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
             String selectPartOfScript = mv.getColumns().keySet().stream()
                     .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
                     .map(alias -> {
-                        Column colRef = mv.getColumnRef(alias);
+                        Column<?> colRef = mv.getColumnRef(alias);
 
                         Map<String, Expr> aggrCols = mv.getAggregateColumns();
                         if (aggrCols.containsKey(alias)) {

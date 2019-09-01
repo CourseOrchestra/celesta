@@ -61,7 +61,7 @@ public abstract class OpenSourceDbAdaptor extends DBAdaptor {
     }
 
     @Override
-    public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) {
+    public PreparedStatement getOneFieldStatement(Connection conn, Column<?> c, String where) {
         TableElement t = c.getParentTable();
         String sql = String.format(SELECT_S_FROM + tableString(t.getGrain().getName(), t.getName())
                 + " where %s limit 1;", c.getQuotedName(), where);

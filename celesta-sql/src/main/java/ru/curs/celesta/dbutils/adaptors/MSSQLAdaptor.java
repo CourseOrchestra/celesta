@@ -114,7 +114,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
     }
 
     @Override
-    public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) {
+    public PreparedStatement getOneFieldStatement(Connection conn, Column<?> c, String where) {
         TableElement t = c.getParentTable();
         String sql = String.format(SELECT_TOP_1 + tableString(t.getGrain().getName(), t.getName())
                 + WHERE_S, c.getQuotedName(), where);
@@ -244,7 +244,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
         return result;
     }
 
-    private boolean checkIfVarcharMax(Connection conn, Column c) throws SQLException {
+    private boolean checkIfVarcharMax(Connection conn, Column<?> c) throws SQLException {
         PreparedStatement checkForMax = conn.prepareStatement(String.format(
                 "select max_length from sys.columns where " + "object_id  = OBJECT_ID('%s.%s') and name = '%s'",
                 c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName()));
@@ -269,7 +269,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
      */
     // CHECKSTYLE:OFF
     @Override
-    public DbColumnInfo getColumnInfo(Connection conn, Column c) {
+    public DbColumnInfo getColumnInfo(Connection conn, Column<?> c) {
         // CHECKSTYLE:ON
         try {
             DatabaseMetaData metaData = conn.getMetaData();
@@ -287,7 +287,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
                     } else if ("float".equalsIgnoreCase(typeName) && rs.getInt("COLUMN_SIZE") == DOUBLE_PRECISION) {
                         result.setType(FloatingColumn.class);
                     } else {
-                        for (Class<? extends Column> cc : COLUMN_CLASSES) {
+                        for (Class<? extends Column<?>> cc : COLUMN_CLASSES) {
                             if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(typeName)) {
                                 result.setType(cc);
                                 break;

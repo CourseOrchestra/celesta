@@ -1,10 +1,13 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.ReadOnlyTable;
 
@@ -16,6 +19,10 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
 
     public ReadOnlyTableCursor(CallContext context) {
         super(context);
+    }
+
+    public ReadOnlyTableCursor(CallContext context, ColumnMeta<?>... columns) {
+        this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
     }
 
     public ReadOnlyTableCursor(CallContext context, Set<String> fields) {
@@ -60,7 +67,7 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
     }
 
     @Override
-    final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
+    final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
 
         if (meta().getPrimaryKey().isEmpty() && colNames.isEmpty()) {
             // If there's absolutely no sorting it will be sorted by the first field. 

@@ -142,7 +142,7 @@ public final class OraAdaptor extends DBAdaptor {
     }
 
     @Override
-    public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) {
+    public PreparedStatement getOneFieldStatement(Connection conn, Column<?> c, String where) {
         TableElement t = c.getParentTable();
         String sql = String.format(SELECT_S_FROM + tableString(t.getGrain().getName(), t.getName())
                 + " where %s and rownum = 1", c.getQuotedName(), where);
@@ -341,7 +341,7 @@ public final class OraAdaptor extends DBAdaptor {
         return result;
     }
 
-    private boolean checkForBoolean(Connection conn, Column c) throws SQLException {
+    private boolean checkForBoolean(Connection conn, Column<?> c) throws SQLException {
         String sql = String.format(
                 "SELECT SEARCH_CONDITION FROM ALL_CONSTRAINTS WHERE " + "OWNER = sys_context('userenv','session_user')"
                         + " AND TABLE_NAME = '%s_%s'" + "AND CONSTRAINT_TYPE = 'C'",
@@ -365,7 +365,7 @@ public final class OraAdaptor extends DBAdaptor {
     }
 
     @Override
-    public DbColumnInfo getColumnInfo(Connection conn, Column c) {
+    public DbColumnInfo getColumnInfo(Connection conn, Column<?> c) {
         try {
             String tableName = String.format("%s_%s", c.getParentTable().getGrain().getName(),
                     c.getParentTable().getName());
@@ -400,7 +400,7 @@ public final class OraAdaptor extends DBAdaptor {
                         result.setLength(rs.getInt("DATA_PRECISION"));
                         result.setScale(rs.getInt("DATA_SCALE"));
                     } else {
-                        for (Class<? extends Column> cc : COLUMN_CLASSES) {
+                        for (Class<? extends Column<?>> cc : COLUMN_CLASSES) {
                             if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(typeName)) {
                                 result.setType(cc);
                                 break;
@@ -436,7 +436,7 @@ public final class OraAdaptor extends DBAdaptor {
 
     }
 
-    private void processDefaults(Connection conn, Column c, DbColumnInfo result) throws SQLException {
+    private void processDefaults(Connection conn, Column<?> c, DbColumnInfo result) throws SQLException {
         ResultSet rs;
         TableElement te = c.getParentTable();
         Grain g = te.getGrain();

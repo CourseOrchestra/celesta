@@ -34,10 +34,10 @@ public final class MaterializedView extends AbstractView implements TableElement
 
     @FunctionalInterface
     private interface MatColFabricFunction {
-        Column apply(MaterializedView mView, Column colRef, String alias) throws ParseException;
+        Column<?> apply(MaterializedView mView, Column<?> colRef, String alias) throws ParseException;
     }
 
-    private static final Map<Class<? extends Column>, MatColFabricFunction>
+    private static final Map<Class<? extends Column<?>>, MatColFabricFunction>
                          COL_CLASSES_AND_FABRIC_FUNCS = new HashMap<>();
 
     static {
@@ -69,14 +69,14 @@ public final class MaterializedView extends AbstractView implements TableElement
         });
     }
 
-    private final NamedElementHolder<Column> realColumns = new NamedElementHolder<Column>() {
+    private final NamedElementHolder<Column<?>> realColumns = new NamedElementHolder<Column<?>>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' defined more than once in table '%s'.", name, getName());
         }
     };
 
-    private final NamedElementHolder<Column> pk = new NamedElementHolder<Column>() {
+    private final NamedElementHolder<Column<?>> pk = new NamedElementHolder<Column<?>>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' defined more than once for primary key in table '%s'.", name, getName());
@@ -119,7 +119,7 @@ public final class MaterializedView extends AbstractView implements TableElement
             String alias = entry.getKey();
             Expr expr = entry.getValue();
 
-            final Column colRef;
+            final Column<?> colRef;
             final MatColFabricFunction matColFabricFunction;
 
             if (expr instanceof Count) {
@@ -135,7 +135,7 @@ public final class MaterializedView extends AbstractView implements TableElement
                         "Unsupported type '%s' of column '%s' in materialized view %s was found",
                         expr.getMeta().getCelestaType(), alias, getName()));
             } else {
-                Column col = matColFabricFunction.apply(this, colRef, alias);
+                Column<?> col = matColFabricFunction.apply(this, colRef, alias);
                 if (!(expr instanceof Aggregate)) {
                     pk.addElement(col);
                     col.setNullableAndDefault(false, null);
@@ -149,7 +149,7 @@ public final class MaterializedView extends AbstractView implements TableElement
         super.finalizeGroupByParsing();
 
         for (String alias : groupByColumns.keySet()) {
-            Column colRef = ((FieldRef) columns.get(alias)).getColumn();
+            Column<?> colRef = ((FieldRef) columns.get(alias)).getColumn();
             if (colRef.isNullable()) {
                 throw new ParseException(String.format(
                         "Nullable column %s was found in GROUP BY expression for %s '%s.%s'.",
@@ -167,7 +167,7 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     @Override
-    public Map<String, Column> getColumns() {
+    public Map<String, Column<?>> getColumns() {
         return realColumns.getElements();
     }
 
@@ -179,7 +179,7 @@ public final class MaterializedView extends AbstractView implements TableElement
             Expr expr = entry.getValue();
 
             if (!(expr instanceof Count)) {
-                Column colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
+                Column<?> colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
                 result.add(colRef.getName());
             }
         }
@@ -188,8 +188,8 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     @Override
-    public Column getColumn(String colName) throws ParseException {
-        Column result = realColumns.get(colName);
+    public Column<?> getColumn(String colName) throws ParseException {
+        Column<?> result = realColumns.get(colName);
         if (result == null) {
             throw new ParseException(
                     String.format("Column '%s' not found in materialized view '%s.%s'",
@@ -200,7 +200,7 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     @Override
-    public void addColumn(Column column) throws ParseException {
+    public void addColumn(Column<?> column) throws ParseException {
         if (column.getParentTable() != this) {
             throw new IllegalArgumentException();
         }
@@ -209,14 +209,14 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     @Override
-    public synchronized void removeColumn(Column column) throws ParseException {
-        // Составную часть первичного ключа нельзя удалить
+    public synchronized void removeColumn(Column<?> column) throws ParseException {
+        // It's not allowed to delete compound part of the primary key
         if (pk.contains(column)) {
             throw new ParseException(
                     String.format(YOU_CANNOT_DROP_A_COLUMN_THAT_BELONGS_TO + "a primary key. Change primary key first.",
                             getGrain().getName(), getName(), column.getName()));
         }
-        // Составную часть индекса нельзя удалить
+        // It's not allowed to delete compound part of an index
         for (Index ind : getGrain().getIndices().values()) {
             if (ind.getColumns().containsValue(column)) {
                 throw new ParseException(String.format(
@@ -240,7 +240,7 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     @Override
-    public Map<String, Column> getPrimaryKey() {
+    public Map<String, Column<?>> getPrimaryKey() {
         return pk.getElements();
     }
 

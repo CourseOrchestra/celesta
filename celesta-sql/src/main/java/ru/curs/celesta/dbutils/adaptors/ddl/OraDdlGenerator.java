@@ -200,7 +200,7 @@ public final class OraDdlGenerator extends DdlGenerator {
         List<String> result = new ArrayList<>();
         //creating of triggers to emulate default sequence values
 
-        for (Column column : t.getColumns().values()) {
+        for (Column<?> column : t.getColumns().values()) {
             if (IntegerColumn.class.equals(column.getClass())) {
                 IntegerColumn ic = (IntegerColumn) column;
 
@@ -230,7 +230,10 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual)  {
+    List<String> updateColumn(Connection conn, Column<?> c, DbColumnInfo actual)  {
+        @SuppressWarnings("unchecked")
+        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+
         List<String> result = new ArrayList<>();
 
         final String tableFullName = tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName());
@@ -250,7 +253,7 @@ public final class OraDdlGenerator extends DdlGenerator {
         }
 
         if (actual.getType() == BooleanColumn.class && !(c instanceof BooleanColumn)) {
-            // Тип Boolean меняется на что-то другое, надо сбросить constraint
+            // Boolean type is being changed for something different. The constraint must be dropped.
             String sql = String.format(
                     ALTER_TABLE + tableFullName
                             + " drop constraint %s", getBooleanCheckName(c)
@@ -258,12 +261,12 @@ public final class OraDdlGenerator extends DdlGenerator {
             result.add(sql);
         }
 
-        OraColumnDefiner definer = (OraColumnDefiner) ColumnDefinerFactory.getColumnDefiner(getType(), c.getClass());
+        OraColumnDefiner definer = (OraColumnDefiner) ColumnDefinerFactory.getColumnDefiner(getType(), cClass);
 
         String defdef = defaultDefForAlter(c, definer, actual);
 
-        // В Oracle, если меняешь blob-поле, то в alter table не надо
-        // указывать его тип (будет ошибка).
+        // If blob-field is changed In Oracle then in alter table its type
+        // should not be specified (there will be an error)
         String def;
         if (actual.getType() == BinaryColumn.class && c instanceof BinaryColumn) {
             def = OraColumnDefiner.join(c.getQuotedName(), defdef);
@@ -271,13 +274,12 @@ public final class OraDdlGenerator extends DdlGenerator {
             def = OraColumnDefiner.join(definer.getInternalDefinition(c), defdef);
         }
 
-        // Явно задавать nullable в Oracle можно только если действительно надо
-        // изменить
+        // In Oracle nullable should be specified only if a change is really needed
         if (actual.isNullable() != c.isNullable()) {
             def = OraColumnDefiner.join(def, definer.nullable(c));
         }
 
-        // Перенос из NCLOB и в NCLOB надо производить с осторожностью
+        // A transfer from NCLOB and to NCLOB should be made with caution
 
         if (fromOrToNClob(c, actual)) {
 
@@ -310,7 +312,7 @@ public final class OraDdlGenerator extends DdlGenerator {
             result.add(modifyColumn(tableFullName, def));
         }
         if (c instanceof BooleanColumn && actual.getType() != BooleanColumn.class) {
-            // Тип поменялся на Boolean, надо добавить constraint
+            // The type has been changed to Boolean, a constraint has to be set
             String sql = String.format(
                     ALTER_TABLE + tableFullName
                             + " add constraint %s check (%s in (0, 1))", getBooleanCheckName(c), c.getQuotedName()
@@ -480,7 +482,7 @@ public final class OraDdlGenerator extends DdlGenerator {
         sb.append("\" after update of ");
         BasicTable t = fk.getReferencedTable();
         boolean needComma = false;
-        for (Column c : t.getPrimaryKey().values()) {
+        for (Column<?> c : t.getPrimaryKey().values()) {
             if (needComma) {
                 sb.append(", ");
             }
@@ -491,8 +493,8 @@ public final class OraDdlGenerator extends DdlGenerator {
         sb.append(String.format(" for each row begin\n  update \"%s_%s\" set ",
                 fk.getParentTable().getGrain().getName(), fk.getParentTable().getName()));
 
-        Iterator<Column> i1 = fk.getColumns().values().iterator();
-        Iterator<Column> i2 = t.getPrimaryKey().values().iterator();
+        Iterator<Column<?>> i1 = fk.getColumns().values().iterator();
+        Iterator<Column<?>> i2 = t.getPrimaryKey().values().iterator();
         needComma = false;
         while (i1.hasNext()) {
             sb.append(needComma ? ",\n    " : "\n    ");
@@ -575,7 +577,7 @@ public final class OraDdlGenerator extends DdlGenerator {
                                     CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType())
                             ).dbFieldType());
 
-                    Column colRef = pv.getColumnRef(e.getKey());
+                    Column<?> colRef = pv.getColumnRef(e.getKey());
 
                     if (colRef != null && StringColumn.VARCHAR.equals(colRef.getCelestaType())) {
                         StringColumn sc = (StringColumn) colRef;
@@ -737,7 +739,7 @@ public final class OraDdlGenerator extends DdlGenerator {
             String selectFromRowTemplate = mv.getColumns().keySet().stream()
                     .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
                     .map(alias -> {
-                        Column colRef = mv.getColumnRef(alias);
+                        Column<?> colRef = mv.getColumnRef(alias);
 
                         if (colRef == null) {
                             Map<String, Expr> aggrCols = mv.getAggregateColumns();
@@ -770,7 +772,7 @@ public final class OraDdlGenerator extends DdlGenerator {
             String rowConditionTemplateForDelete = mv.getColumns().keySet().stream()
                     .filter(alias -> mv.isGroupByColumn(alias))
                     .map(alias -> {
-                        Column colRef = mv.getColumnRef(alias);
+                        Column<?> colRef = mv.getColumnRef(alias);
 
                         if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
                             return "mv.\"" + alias + "\" = TRUNC(%1$s.\"" + mv.getColumnRef(alias).getName() + "\", 'DD')";
@@ -960,8 +962,8 @@ public final class OraDdlGenerator extends DdlGenerator {
         return String.format(ALTER_TABLE + tableFullName + " modify (%s)", columnDef);
     }
 
-    private String defaultDefForAlter(Column c, ColumnDefiner cd, DbColumnInfo actual) {
-        // В Oracle нельзя снять default, можно только установить его в Null
+    private String defaultDefForAlter(Column<?> c, ColumnDefiner cd, DbColumnInfo actual) {
+        // In Oracle you cannot drop Default, you can only set it to Null
         String result = cd.getDefaultDefinition(c);
         if ("".equals(result) && !"".equals(actual.getDefaultValue())) {
             result = "default null";

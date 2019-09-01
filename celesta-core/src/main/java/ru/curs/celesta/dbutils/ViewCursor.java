@@ -1,13 +1,16 @@
 package ru.curs.celesta.dbutils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.In;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.View;
 
@@ -22,6 +25,10 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
     public ViewCursor(CallContext context) {
         super(context);
         inFilterHolder = new InFilterHolder(this);
+    }
+
+    public ViewCursor(CallContext context, ColumnMeta<?>... columns) {
+        this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
     }
 
     public ViewCursor(CallContext context, Set<String> fields) {
@@ -72,7 +79,7 @@ public abstract class ViewCursor extends BasicCursor implements InFilterSupport 
     }
 
     @Override
-    final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
+    final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
         // The views are always sorted by the first column if there's no sorting at all.
         if (colNames.isEmpty()) {
             l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));

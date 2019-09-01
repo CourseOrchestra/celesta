@@ -3,7 +3,7 @@ package ru.curs.celesta.score;
 /**
  * String column.
  */
-public final class StringColumn extends Column {
+public final class StringColumn extends Column<String> {
     /**
      * Celesta type of the column data for short string.
      */

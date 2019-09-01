@@ -14,12 +14,8 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractView extends DataGrainElement {
 
-  boolean distinct;
-  final Map<String, Expr> columns = new LinkedHashMap<>();
-  final Map<String, FieldRef> groupByColumns = new LinkedHashMap<>();
-  private final Map<String, TableRef> tables = new LinkedHashMap<>();
-  static final Map<Class<? extends Expr>, Function<Expr, Column>> EXPR_CLASSES_AND_COLUMN_EXTRACTORS = new HashMap<>();
-
+  static final Map<Class<? extends Expr>, Function<Expr, Column<?>>> EXPR_CLASSES_AND_COLUMN_EXTRACTORS =
+          new HashMap<>();
   static {
     EXPR_CLASSES_AND_COLUMN_EXTRACTORS.put(Count.class, (Expr frExpr) -> null);
 
@@ -36,6 +32,13 @@ public abstract class AbstractView extends DataGrainElement {
       return fr.getColumn();
     });
   }
+
+  final Map<String, Expr> columns = new LinkedHashMap<>();
+  final Map<String, FieldRef> groupByColumns = new LinkedHashMap<>();
+
+  boolean distinct;
+
+  private final Map<String, TableRef> tables = new LinkedHashMap<>();
 
   public AbstractView(GrainPart grainPart, String name) throws ParseException {
     super(grainPart, name);
@@ -309,7 +312,7 @@ public abstract class AbstractView extends DataGrainElement {
    *
    * @return
    */
-  public abstract Map<String, ? extends ColumnMeta> getColumns();
+  public abstract Map<String, ? extends ColumnMeta<?>> getColumns();
 
 
   public Map<String, TableRef> getTables() {
@@ -347,7 +350,7 @@ public abstract class AbstractView extends DataGrainElement {
    * @param colName  Column name.
    * @return
    */
-  public Column getColumnRef(String colName) {
+  public Column<?> getColumnRef(String colName) {
     Expr expr = columns.get(colName);
     return EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
   }

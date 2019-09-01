@@ -132,7 +132,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
         }
 
         String returning = "";
-        for (Column c : t.getColumns().values()) {
+        for (Column<?> c : t.getColumns().values()) {
             if (c instanceof IntegerColumn) {
                 IntegerColumn ic = (IntegerColumn) c;
 
@@ -157,7 +157,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    public DbColumnInfo getColumnInfo(Connection conn, Column c) {
+    public DbColumnInfo getColumnInfo(Connection conn, Column<?> c) {
         try {
             DatabaseMetaData metaData = conn.getMetaData();
             try (ResultSet rs = metaData.getColumns(null, c.getParentTable().getGrain().getName()
@@ -186,7 +186,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                         result.setType(StringColumn.class);
                         result.setMax(true);
                     } else {
-                        for (Class<? extends Column> cc : COLUMN_CLASSES) {
+                        for (Class<? extends Column<?>> cc : COLUMN_CLASSES) {
                             if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(typeName)) {
                                 result.setType(cc);
                                 break;

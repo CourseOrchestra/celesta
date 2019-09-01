@@ -17,7 +17,7 @@ public class Index extends GrainElement implements HasColumns {
 
     private static final String INDEX_CREATION_ERROR = "Error while creating index '%s': column '%s' in table '%s' is ";
     private final BasicTable table;
-    private final NamedElementHolder<Column> columns = new NamedElementHolder<Column>() {
+    private final NamedElementHolder<Column<?>> columns = new NamedElementHolder<Column<?>>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' is defined more than once in index '%s'", name, getName());
@@ -62,7 +62,7 @@ public class Index extends GrainElement implements HasColumns {
         if (columnName == null) {
             throw new IllegalArgumentException();
         }
-        Column c = table.getColumns().get(columnName);
+        Column<?> c = table.getColumns().get(columnName);
         if (c == null) {
             throw new ParseException(
                     String.format(INDEX_CREATION_ERROR + "not defined.", getName(), columnName, table.getName()));
@@ -115,9 +115,9 @@ public class Index extends GrainElement implements HasColumns {
             if (ind.columns.size() != columns.size()) {
                 continue;
             }
-            Iterator<Column> i = ind.columns.iterator();
+            Iterator<Column<?>> i = ind.columns.iterator();
             boolean coincide = true;
-            for (Column c : columns) {
+            for (Column<?> c : columns) {
                 if (c != i.next()) {
                     coincide = false;
                     break;
@@ -136,7 +136,7 @@ public class Index extends GrainElement implements HasColumns {
      *
      * @return
      */
-    public Map<String, Column> getColumns() {
+    public Map<String, Column<?>> getColumns() {
         return columns.getElements();
     }
 

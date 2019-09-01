@@ -434,7 +434,7 @@ public abstract class DbUpdater<T extends ICallContext> {
                 }
 
                 // Deletion of indices at those fields that will undergo a change
-                for (Map.Entry<String, Column> ee : e.getValue().getColumns().entrySet()) {
+                for (Map.Entry<String, Column<?>> ee : e.getValue().getColumns().entrySet()) {
                     DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, ee.getValue());
                     if (ci == null || !ci.reflects(ee.getValue())) {
                         dbAdaptor.dropIndex(g, dBIndexInfo);
@@ -562,7 +562,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             keyDropped = true;
         }
 
-        for (Map.Entry<String, Column> e : t.getColumns().entrySet()) {
+        for (Map.Entry<String, Column<?>> e : t.getColumns().entrySet()) {
             if (dbColumns.contains(e.getKey())) {
                 // Таблица содержит колонку с таким именем, надо проверить
                 // все её атрибуты и при необходимости -- попытаться

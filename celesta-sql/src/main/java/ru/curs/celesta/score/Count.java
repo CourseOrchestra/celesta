@@ -5,8 +5,8 @@ package ru.curs.celesta.score;
  */
 public final class Count extends Aggregate {
   @Override
-  public ViewColumnMeta getMeta() {
-    return new ViewColumnMeta(ViewColumnType.INT);
+  public ViewColumnMeta<?> getMeta() {
+    return new ViewColumnMeta<>(ViewColumnType.INT);
   }
 
   @Override

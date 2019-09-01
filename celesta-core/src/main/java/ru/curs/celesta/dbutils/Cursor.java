@@ -111,6 +111,10 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         inFilterHolder = new InFilterHolder(this);
     }
 
+    public Cursor(CallContext context, ColumnMeta<?>... columns) {
+        this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()));
+    }
+
     public Cursor(CallContext context, Set<String> fields) {
         super(context, fields);
 
@@ -235,7 +239,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                 // TODO: get rid of "getCurrentIdent" call where possible
                 // e. g. using INSERT.. OUTPUT clause for MSSQL
                 loggingManager.log(this, Action.INSERT);
-                for (Column c : meta().getColumns().values()) {
+                for (Column<?> c : meta().getColumns().values()) {
                     if (c instanceof IntegerColumn) {
                         IntegerColumn ic = (IntegerColumn) c;
                         if (ic.getSequence() != null) {
@@ -495,17 +499,19 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @return
      */
     protected BLOB calcBlob(String name) {
-        validateColumName(name);
-        Column c = meta().getColumns().get(name);
+        ColumnMeta<?> c = validateColumnName(name);
         if (!(c instanceof BinaryColumn)) {
             throw new CelestaException("'%s' is not a BLOB column.", c.getName());
         }
+
+        BinaryColumn bc = (BinaryColumn) c;
+
         BLOB result;
 
         List<ParameterSetter> program = new ArrayList<>();
 
         WhereTerm w = WhereTermsMaker.getPKWhereTerm(meta);
-        PreparedStatement stmt = db().getOneFieldStatement(conn(), c, w.getWhere());
+        PreparedStatement stmt = db().getOneFieldStatement(conn(), bc, w.getWhere());
         int i = 1;
         w.programParams(program, db());
         Object[] rec = _currentValues();
@@ -549,8 +555,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @return  length of the text field or -1 (minus one) if MAX is indicated instead of the length.
      */
     public final int getMaxStrLen(String name) {
-        validateColumName(name);
-        Column c = meta().getColumns().get(name);
+        ColumnMeta<?> c = validateColumnName(name);
         if (c instanceof StringColumn) {
             StringColumn sc = (StringColumn) c;
             return sc.isMax() ? -1 : sc.getLength();
@@ -590,9 +595,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     }
 
     @Override
-    final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
-        // Всегда добавляем в конец OrderBy поля первичного ключа, идующие в
-        // естественном порядке
+    final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
+        // Always add to the end of OrderBy the fields of the primary key following in
+        // a natural order.
         for (String colName : meta().getPrimaryKey().keySet()) {
             if (!colNames.contains(colName)) {
                 l.add(String.format("\"%s\"", colName));
@@ -712,4 +717,5 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     protected abstract void _setAutoIncrement(int val);
 
     protected abstract void _parseResultInternal(ResultSet rs) throws SQLException;
+
 }

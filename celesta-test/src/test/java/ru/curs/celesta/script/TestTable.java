@@ -19,10 +19,11 @@ import java.util.TimeZone;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
 
-class TestTable implements ScriptTest {
+public class TestTable implements ScriptTest {
 
     @TestTemplate
-    void test_calc_blob(CallContext cc) throws IOException {
+    public void test_calc_blob(CallContext cc) throws IOException {
+
         TBlobCursor cursor = new TBlobCursor(cc);
         cursor.deleteAll();
 
@@ -38,29 +39,23 @@ class TestTable implements ScriptTest {
         assertTrue(cursor.getDat().isNull());
 
         OutputStream os = cursor.getDat().getOutStream();
-        try (OutputStreamWriter osw =
-                     new OutputStreamWriter(os, "utf-8")) {
+        try (OutputStreamWriter osw = new OutputStreamWriter(os, "utf-8")) {
             osw.append("blob field");
         }
-
 
         cursor.update();
         cursor.clear();
         cursor.get(1);
         cursor.calcDat();
-        try (BufferedReader bf =
-
-                     new BufferedReader(new InputStreamReader(cursor.getDat().getInStream(), "utf-8"))) {
+        try (BufferedReader bf = new BufferedReader(
+                new InputStreamReader(cursor.getDat().getInStream(), "utf-8"))) {
             assertEquals("blob field", bf.readLine());
         }
 
         cursor.clear();
         cursor.calcDat();
         os = cursor.getDat().getOutStream();
-        try (OutputStreamWriter osw = new
-
-                OutputStreamWriter(os, "utf-8")) {
-
+        try (OutputStreamWriter osw = new OutputStreamWriter(os, "utf-8")) {
             osw.append("blob field 2!");
         }
 
@@ -69,20 +64,15 @@ class TestTable implements ScriptTest {
         cursor.clear();
         cursor.get(2);
         cursor.calcDat();
-        try (
-                BufferedReader bf =
-
-                        new BufferedReader(new InputStreamReader(cursor.getDat().getInStream(), "utf-8"))
-        ) {
+        try (BufferedReader bf = new BufferedReader(
+                new InputStreamReader(cursor.getDat().getInStream(), "utf-8"))) {
             assertEquals("blob field 2!", bf.readLine());
         }
     }
 
     @TestTemplate
-    void test_getXRec(CallContext cc) {
-        TXRecCursor cursor =
-
-                new TXRecCursor(cc);
+    public void test_getXRec(CallContext cc) {
+        TXRecCursor cursor = new TXRecCursor(cc);
         cursor.deleteAll();
 
         int id = 1;
@@ -124,10 +114,8 @@ class TestTable implements ScriptTest {
     }
 
     @TestTemplate
-    void test_asCSVLine(CallContext cc) {
-        TCsvLineCursor cursor =
-
-                new TCsvLineCursor(cc);
+    public void test_asCSVLine(CallContext cc) {
+        TCsvLineCursor cursor = new TCsvLineCursor(cc);
         assertEquals("NULL,NULL", cursor.asCSVLine());
 
         cursor.setId(1);
@@ -144,17 +132,16 @@ class TestTable implements ScriptTest {
     }
 
     @TestTemplate
-    void test_iterate(CallContext cc) {
-        TIterateCursor cursor =
-                new
-                        TIterateCursor(cc);
+    public void test_iterate(CallContext cc) {
+        TIterateCursor cursor = new TIterateCursor(cc);
         cursor.insert();
         cursor.clear();
         cursor.insert();
 
         ArrayList<Integer> idList = new ArrayList<>();
-        for (TIterateCursor c : cursor)
+        for (TIterateCursor c : cursor) {
             idList.add(c.getId());
+        }
 
         assertEquals(2, idList.size());
         assertEquals(1, idList.get(0).intValue());
@@ -162,14 +149,10 @@ class TestTable implements ScriptTest {
     }
 
     @TestTemplate
-    void test_CopyFieldsFrom(CallContext cc) {
-        TCopyFieldsCursor cursor =
-                new
-                        TCopyFieldsCursor(cc);
+    public void test_CopyFieldsFrom(CallContext cc) {
+        TCopyFieldsCursor cursor = new TCopyFieldsCursor(cc);
 
-        TCopyFieldsCursor cursorFrom =
-                new
-                        TCopyFieldsCursor(cc);
+        TCopyFieldsCursor cursorFrom = new TCopyFieldsCursor(cc);
 
         int id = 11234;
         String title = "ttt";
@@ -183,10 +166,8 @@ class TestTable implements ScriptTest {
     }
 
     @TestTemplate
-    void test_limit(CallContext cc) {
-        TLimitCursor cursor = new
-
-                TLimitCursor(cc);
+    public void test_limit(CallContext cc) {
+        TLimitCursor cursor = new TLimitCursor(cc);
 
         for (int i = 0; i < 3; i++) {
             cursor.insert();
@@ -230,10 +211,8 @@ class TestTable implements ScriptTest {
     }
 
     @TestTemplate
-    void test_decimal(CallContext cc) {
-        TWithDecimalCursor c =
-
-                new TWithDecimalCursor(cc);
+    public void test_decimal(CallContext cc) {
+        TWithDecimalCursor c = new TWithDecimalCursor(cc);
 
         c.insert();
         c.first();
@@ -242,19 +221,15 @@ class TestTable implements ScriptTest {
         c.setCost(new BigDecimal("5.289"));
         c.update();
         c.first();
-        assertEquals(
-
-                new BigDecimal("5.29"), c.getCost().stripTrailingZeros());
+        assertEquals(new BigDecimal("5.29"), c.getCost().stripTrailingZeros());
 
         c.setCost(new BigDecimal("123.2"));
 
-        assertThrows(CelestaException.class,
-                () -> c.update());
-
+        assertThrows(CelestaException.class, () -> c.update());
     }
 
     @TestTemplate
-    void test_datetime_with_time_zone(CallContext cc) {
+    public void test_datetime_with_time_zone(CallContext cc) {
         TimeZone oldDefaultTimeZone = TimeZone.getDefault();
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("GMT+4"));
@@ -302,4 +277,65 @@ class TestTable implements ScriptTest {
         assertEquals(isActive, cursor.getIsActive());
         assertEquals(created, cursor.getCreated());
     }
+
+    @TestTemplate
+    public void test_setRange(CallContext cc) {
+
+        TXRecCursor cursor = new TXRecCursor(cc);
+        cursor.deleteAll();
+
+        cursor.setNum(11);
+        cursor.insert();
+
+        cursor.clear();
+        cursor.setNum(22);
+        cursor.insert();
+
+        cursor.clear();
+        cursor.setNum(33);
+        cursor.insert();
+
+        cursor = new TXRecCursor(cc);
+        assertEquals(3, cursor.count());
+        
+        cursor.setRange(cursor.COLUMNS.num(), 22);
+        assertEquals(1, cursor.count());
+        
+        cursor.setRange(cursor.COLUMNS.num());
+        assertEquals(3, cursor.count());
+
+        cursor.setRange(cursor.COLUMNS.num(), 22, 33);
+        assertEquals(2, cursor.count());
+    }
+
+    @TestTemplate
+    public void test_setFilter(CallContext cc) {
+
+        TXRecCursor cursor = new TXRecCursor(cc);
+        cursor.deleteAll();
+
+        cursor.setNum(11);
+        cursor.insert();
+
+        cursor.clear();
+        cursor.setNum(22);
+        cursor.insert();
+
+        cursor.clear();
+        cursor.setNum(33);
+        cursor.insert();
+
+        cursor = new TXRecCursor(cc);
+        assertEquals(3, cursor.count());
+        
+        cursor.setFilter(cursor.COLUMNS.num(), "22");
+        assertEquals(1, cursor.count());
+        
+        cursor.setRange(cursor.COLUMNS.num());
+        assertEquals(3, cursor.count());
+
+        cursor.setFilter(cursor.COLUMNS.num(), "22..33");
+        assertEquals(2, cursor.count());
+    }
+
 }

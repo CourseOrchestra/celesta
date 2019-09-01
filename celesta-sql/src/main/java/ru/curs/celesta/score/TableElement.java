@@ -42,7 +42,7 @@ public interface TableElement {
    *
    * @return
    */
-  Map<String, Column> getColumns();
+  Map<String, Column<?>> getColumns();
 
   /**
    * Returns a column by its name or throws an exception with a message that
@@ -52,7 +52,7 @@ public interface TableElement {
    * @return
    * @throws ParseException  if a column with the specified name is not found in the table
    */
-  Column getColumn(String colName) throws ParseException;
+  Column<?> getColumn(String colName) throws ParseException;
 
   /**
    * Adds a column to the table.
@@ -60,7 +60,7 @@ public interface TableElement {
    * @param column  new column
    * @throws ParseException  if the column couldn't be added
    */
-  void addColumn(Column column) throws ParseException;
+  void addColumn(Column<?> column) throws ParseException;
 
   /**
    * Removes a column from the table.
@@ -68,7 +68,7 @@ public interface TableElement {
    * @param column  existing column
    * @throws ParseException  if the column couldn't be removed
    */
-  void removeColumn(Column column) throws ParseException;
+  void removeColumn(Column<?> column) throws ParseException;
 
   /**
    * Whether the table has primary key.
@@ -89,6 +89,6 @@ public interface TableElement {
    *
    * @return  map of <b>column name</b> -> <b>column</b>
    */
-  Map<String, Column> getPrimaryKey();
+  Map<String, Column<?>> getPrimaryKey();
 
 }

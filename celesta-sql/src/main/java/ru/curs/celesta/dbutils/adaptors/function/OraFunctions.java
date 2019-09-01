@@ -17,7 +17,7 @@ public final class OraFunctions {
         throw new AssertionError();
     }
 
-    public static String getBooleanCheckName(Column c) {
+    public static String getBooleanCheckName(Column<?> c) {
         String result = String.format("chk_%s_%s_%s", c.getParentTable().getGrain().getName(),
                 c.getParentTable().getName(), c.getName());
         result = NamedElement.limitName(result);
@@ -53,11 +53,11 @@ public final class OraFunctions {
 
     }
 
-    public static boolean fromOrToNClob(Column c, DbColumnInfo actual) {
+    public static boolean fromOrToNClob(Column<?> c, DbColumnInfo actual) {
         return (actual.isMax() || isNclob(c)) && !(actual.isMax() && isNclob(c));
     }
 
-    private static boolean isNclob(Column c) {
+    private static boolean isNclob(Column<?> c) {
         return c instanceof StringColumn && ((StringColumn) c).isMax();
     }
 

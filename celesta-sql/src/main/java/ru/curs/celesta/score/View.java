@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public class View extends AbstractView {
 
-  Map<String, ViewColumnMeta> columnTypes = null;
+  Map<String, ViewColumnMeta<?>> columnTypes = null;
   Expr whereCondition;
 
   View(GrainPart grainPart, String name) throws ParseException {
@@ -68,11 +68,13 @@ public class View extends AbstractView {
   }
 
   @Override
-  public Map<String, ViewColumnMeta> getColumns() {
+  public Map<String, ViewColumnMeta<?>> getColumns() {
     if (columnTypes == null) {
       columnTypes = new LinkedHashMap<>();
       for (Map.Entry<String, Expr> e : columns.entrySet()) {
-        columnTypes.put(e.getKey(), e.getValue().getMeta());
+        ViewColumnMeta<?> meta = e.getValue().getMeta();
+        meta.setName(e.getKey());
+        columnTypes.put(e.getKey(), meta);
       }
     }
     return columnTypes;

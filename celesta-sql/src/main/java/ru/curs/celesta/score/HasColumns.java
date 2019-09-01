@@ -6,7 +6,7 @@ public interface HasColumns {
     /**
      * List of columns with names.
      */
-    Map<String, ? extends ColumnMeta> getColumns();
+    Map<String, ? extends ColumnMeta<?>> getColumns();
 
     /**
      * Column index in the list of columns.

@@ -9,18 +9,35 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.ViewCursor;
+import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.View;
 
 public final class TestTableVCursor extends ViewCursor implements Iterable<TestTableVCursor> {
 
+    private static final String GRAIN_NAME = "test";
+    private static final String OBJECT_NAME = "testTableV";
+
+    public final TestTableVCursor.Columns COLUMNS;
+
     private Integer id;
+
+    {
+        this.COLUMNS = new TestTableVCursor.Columns(callContext().getCelesta());
+    }
 
     public TestTableVCursor(CallContext context) {
         super(context);
     }
 
+    public TestTableVCursor(CallContext context, ColumnMeta<?>... columns) {
+        super(context, columns);
+    }
+
+    @Deprecated
     public TestTableVCursor(CallContext context, Set<String> fields) {
         super(context, fields);
     }
@@ -105,11 +122,25 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
 
     @Override
     protected String _grainName() {
-        return "test";
+        return GRAIN_NAME;
     }
 
     @Override
     protected String _objectName() {
-        return "testTableV";
+        return OBJECT_NAME;
     }
+
+    @SuppressWarnings("unchecked")
+    public static final class Columns {
+        private final View element;
+
+        public Columns(ICelesta celesta) {
+            this.element = celesta.getScore().getGrains().get(GRAIN_NAME).getElements(View.class).get(OBJECT_NAME);
+        }
+
+        public ColumnMeta<Integer> id() {
+            return (ColumnMeta<Integer>) this.element.getColumns().get("id");
+        }
+    }
+
 }

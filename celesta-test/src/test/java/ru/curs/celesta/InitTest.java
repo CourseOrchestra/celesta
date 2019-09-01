@@ -26,15 +26,20 @@ public class InitTest extends AbstractCelestaTest {
     public void logCursorIsCallable() {
         LogCursor l = new LogCursor(cc());
         assertEquals("log", l.meta().getName());
-        l.orderBy("userid ASC", "pkvalue3 DESC", "pkvalue2");
+
+        l.orderBy(l.COLUMNS.userid().asc(),
+                  l.COLUMNS.pkvalue3().desc(),
+                  l.COLUMNS.pkvalue2());
         assertAll(
-                // Неизвестная колонка
+                // Unknown column
                 () -> assertThrows(CelestaException.class,
                         () -> l.orderBy("userid", "psekvalue3 ASC", "pkvsealue3")),
-                // Повтор колонок
+                // Column repetition
                 () -> assertThrows(CelestaException.class,
-                        () -> l.orderBy("userid ASC", "pkvalue3 ASC", "pkvalue3 DESC")),
-                // Пустой orderBy
+                        () -> l.orderBy(l.COLUMNS.userid().asc(),
+                                        l.COLUMNS.pkvalue3().desc(),
+                                        l.COLUMNS.pkvalue3())),
+                // empty orderBy
                 () -> l.orderBy()
         );
     }

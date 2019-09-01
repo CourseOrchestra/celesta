@@ -469,7 +469,7 @@ public class ScoreTest {
         View v = g.getElement("testView5", View.class);
         BasicTable t = g.getElement("testTable", BasicTable.class);
 
-        ViewColumnMeta vcm = v.getColumns().get("foo");
+        ViewColumnMeta<?> vcm = v.getColumns().get("foo");
         assertTrue(vcm.isNullable());
         assertEquals(StringColumn.VARCHAR, vcm.getCelestaType());
         assertEquals(((StringColumn) t.getColumn("attrVarchar")).getLength(), vcm.getLength());

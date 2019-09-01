@@ -3,10 +3,12 @@ package ru.curs.celesta.dbutils;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.query.FromClause;
+import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.DataGrainElement;
 import ru.curs.celesta.score.ParameterizedView;
 import ru.curs.celesta.score.ParseException;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +29,10 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   public ParameterizedViewCursor(CallContext context, Map<String, Object> parameters) {
     super(context);
     initParameters(parameters);
+  }
+
+  public ParameterizedViewCursor(CallContext context, Map<String, Object> parameters, ColumnMeta<?>... columns) {
+      this(context, Arrays.stream(columns).map(ColumnMeta::getName).collect(Collectors.toSet()), parameters);
   }
 
   public ParameterizedViewCursor(CallContext context, Set<String> fields, Map<String, Object> parameters) {
@@ -99,7 +105,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   }
 
   @Override
-  final void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames) {
+  final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
     // The views are always sorted by the first column if there's no sorting at all.
     if (colNames.isEmpty()) {
       l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));
