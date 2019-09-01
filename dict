@@ -1065,3 +1065,12 @@ columns
 dynamic
 getValue
 setValue
+cursormeta
+getBar
+getFoo
+setBar
+setFoo
+super
+инстанцируем
+кодогенерацией
+проинстанцирован
