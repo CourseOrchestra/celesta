@@ -69,7 +69,7 @@ FooCursor "COLUMNS" --> FooCursor.Columns
 @enduml
 ----
 
-В каждом экземпляре курсора соответствующий экземпляр класса `Columns` доступен через `public final` поле `COLUMNS`. Кроме того, класс `Columns` каждого из курсоров может быть проинстанцирован независимо от курсора -- его конструктор принимает параметр {apidocs}ru/curs/celesta/ICelesta.html[ICelesta].
+В каждом экземпляре курсора соответствующий экземпляр класса `Columns` доступен через `public final` поле `COLUMNS`. Кроме того, класс `Columns` каждого из курсоров может быть проинстанцирован независимо от курсора -- его конструктор принимает параметр {apidocs}ru/curs/celesta/ICelesta.html[`ICelesta`].
 
 Использование методов класса `Columns`, получаемого кодогенерацией, для получения ссылок на поля таблиц, гарантирует целостность кода при изменении схемы данных (например, при удалении или переименовании полей в базе данных).
 
@@ -475,15 +475,17 @@ myCursor.setFilter(myCursor.COLUMNS.city_id(), "'M'%");
 1. устанавливаются фильтры на целевом и вспомогательных курсорах,
 2. устанавливается связь полей между целевым и вспомогательными курсорами.
 
-Связь полей задается при помощи вспомогательного класса `FieldsLookup`, возвращаемого в качестве результата из метода `setIn` целевого курсора. Метод `setIn` принимает в качестве единственного аргумента объект вспомогательного курсора, по которому ищется пересечение. Подготовка целевого курсора и аккумулирование пар столбцов с последующей установкой фильтра происходит следующим образом:
+Связь полей задается при помощи вспомогательного класса {apidocs}ru/curs/celesta/dbutils/filter/value/FieldsLookup.html[`FieldsLookup`], возвращаемого в качестве результата из метода `setIn` целевого курсора. Метод `setIn` принимает в качестве единственного аргумента объект вспомогательного курсора, по которому ищется пересечение. Подготовка целевого курсора и аккумулирование пар столбцов с последующей установкой фильтра происходит следующим образом:
 
 [source, java]
 TargetCursor a = new TargetCursor(context);
 AuxiliaryCursor b = new AuxiliaryCursor(context);
 b.setRange(b.COLUMNS.foo(), "bar");
-lookup = a.setIn(b).add("a1", "b1").add("a2", "b2");
+lookup = a.setIn(b)
+     .add(a.COLUMNS.a1(), b.COLUMNS.b1())
+     .add(a.COLUMNS.a2(), b.COLUMNS.b2());
 
-Для данного примера в PostgreSQL, например, для доступа к строкам курсора `a` будет сгенерировано следующее sql выражение:
+Для данного примера в PostgreSQL для доступа к строкам курсора `a` будет сгенерировано следующее sql выражение:
 
 [source, sql]
 SELECT ... FROM Target WHERE ( a1, a2 ) IN (SELECT b1, b2 FROM Auxiliary WHERE Auxiliary.foo = 'bar' )
@@ -497,10 +499,13 @@ AuxiliaryCursor b = new AuxiliaryCursor(context);
 b.setRange(b.COLUMNS.bFoo(), "bBar");
 Auxiliary2Cursor c = new Auxiliary2Cursor(context);
 c.setRange(c.COLUMNS.cFoo(), "cBar");
-FieldsLookup lookup = a.setIn(b).add("a1", "b1").add("a2", "b2");
-FieldsLookup lookup2 = lookup.and(c).add("a1", "c1");
+FieldsLookup lookup = a.setIn(b)
+     .add(a.COLUMNS.a1(), b.COLUMNS.b1())
+     .add(a.COLUMNS.a2(), b.COLUMNS.b2());
+FieldsLookup lookup2 = lookup.and(c)
+     .add(a.COLUMNS.a1(), c.COLUMNS.c1());
 
-Для данного примера в PostgreSQL, например, для доступа к строкам курсора a будет сгенерировано следующее sql выражение:
+Для данного примера в PostgreSQL для доступа к строкам курсора a будет сгенерировано следующее sql выражение:
 
 [source, sql]
 SELECT ...
@@ -509,7 +514,7 @@ WHERE aFoo = 'aBar'
     AND ( a1, a2 ) IN (SELECT b1, b2 FROM Auxiliary WHERE Auxiliary.bFoo = 'bBar' )
     AND (a1) IN (SELECT c1 FROM Auxiliary2 WHERE Auxiliary2.cFoo = 'cBar' )
 
-У данного фильтра имеется набор ограничений, несоблюдение которых приведёт к выбрасыванию исключения во время выполнения методов FieldsLookup.add или BasicCursor.setIn:
+У данного фильтра имеется набор ограничений, несоблюдение которых приведёт к выбрасыванию исключения во время выполнения методов `FieldsLookup.add` или `BasicCursor.setIn`:
 
 * Типы данных у каждой пары сопоставляемых полей должны в точности совпадать.
 
@@ -517,10 +522,12 @@ WHERE aFoo = 'aBar'
 
 * Для курсоров на таблицы соответствующие индексы должны содержать сопоставляемые столбцы в своём начале. Для нашего примера, если имеются индексы `I1(a1, a2,..)`, `I2(b1, b2,...)`, следующий код вызовет исключение, т. к. поля `a2`, `b2` находятся не в начале индексов `I1` и `I2`:
 
+[source, java]
+FieldsLookup lookup = setIn(b).add(a.CURSORS.a2(), b.CURSORS.b2());
+
 * Класс `FieldsLookup` может принять в себя курсоры только одного происхождения, т.е. либо оба курсора для работы с таблицами, либо оба курсора для работы с представлениями.
 
-[source, java]
-FieldsLookup lookup = setIn(b).add("a2", "b2");
+
 
 == Класс Sequence
 
