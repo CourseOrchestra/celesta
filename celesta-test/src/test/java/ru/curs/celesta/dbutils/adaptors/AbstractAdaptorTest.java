@@ -383,7 +383,6 @@ public abstract class AbstractAdaptorTest {
     }
 
 
-    // TODO:: Continue from here
     @Test
     public void getOneFieldStatement() throws Exception {
         insertRow(conn, t, 121215);
@@ -523,6 +522,8 @@ public abstract class AbstractAdaptorTest {
         assertEquals(false, c.isMax());
     }
 
+
+    //TODO:: CONTINUE FROM HERE
     @Test
     public void getColumnInfo2() throws ParseException {
         DbColumnInfo c;

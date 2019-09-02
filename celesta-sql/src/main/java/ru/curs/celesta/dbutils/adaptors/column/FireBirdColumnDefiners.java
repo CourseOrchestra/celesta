@@ -85,7 +85,7 @@ class FireBirdBooleanColumnDefiner extends FireBirdColumnDefiner {
 
     @Override
     public String dbFieldType() {
-        return "numeric";
+        return "SMALLINT";
     }
 
     @Override

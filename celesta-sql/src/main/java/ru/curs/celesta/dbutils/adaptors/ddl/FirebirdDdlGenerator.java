@@ -64,6 +64,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                     SequenceElement s = ic.getSequence();
 
                     final String triggerName = String.format(
+                        //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
                         "%s_%s_%s_seq_trigger",
                         t.getGrain().getName(), t.getName(), ic.getName()
                     );

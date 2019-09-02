@@ -156,12 +156,30 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) {
-        return null;
+        TableElement t = c.getParentTable();
+
+        String sql = String.format(
+            "select first 1 %s from %s where %s;",
+            c.getQuotedName(),
+            tableString(t.getGrain().getName(), t.getName()),
+            where
+        );
+
+        return prepareStatement(conn, sql);
     }
 
     @Override
     public PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where) {
-        return null;
+        // TODO:: COPY PASTE
+        // Готовим запрос на удаление
+        String sql = String.format("delete from " + tableString(t.getGrain().getName(), t.getName()) + " %s;",
+            where.isEmpty() ? "" : "where " + where);
+        try {
+            PreparedStatement result = conn.prepareStatement(sql);
+            return result;
+        } catch (SQLException e) {
+            throw new CelestaException(e.getMessage());
+        }
     }
 
     @Override
@@ -244,7 +262,6 @@ public class FirebirdAdaptor extends DBAdaptor {
         String sql = String.format(
             "SELECT r.RDB$FIELD_NAME AS column_name,\n" +
                 "        r.RDB$DESCRIPTION AS field_description,\n" +
-                "        r.RDB$DEFAULT_SOURCE AS column_default_value,\n" +
                 "        r.RDB$NULL_FLAG AS nullable,\n" +
                 "        f.RDB$FIELD_LENGTH AS column_length,\n" +
                 "        f.RDB$FIELD_PRECISION AS column_precision,\n" +
@@ -256,13 +273,14 @@ public class FirebirdAdaptor extends DBAdaptor {
                 "          WHEN 11 THEN 'D_FLOAT'\n" +
                 "          WHEN 27 THEN 'DOUBLE'\n" +
                 "          WHEN 10 THEN 'FLOAT'\n" +
-                "          WHEN 16 THEN 'INT64'\n" +
+                "          WHEN 16 THEN 'BIGINT'\n" +
                 "          WHEN 8 THEN 'INTEGER'\n" +
                 "          WHEN 9 THEN 'QUAD'\n" +
                 "          WHEN 7 THEN 'SMALLINT'\n" +
                 "          WHEN 12 THEN 'DATE'\n" +
                 "          WHEN 13 THEN 'TIME'\n" +
                 "          WHEN 35 THEN 'TIMESTAMP'\n" +
+                "          WHEN 29 THEN 'TIMESTAMP WITH TIME ZONE'\n" +
                 "          WHEN 37 THEN 'VARCHAR'\n" +
                 "          ELSE 'UNKNOWN'\n" +
                 "        END AS column_type,\n" +
@@ -283,29 +301,28 @@ public class FirebirdAdaptor extends DBAdaptor {
 
                 result.setName(rs.getString("column_name").trim());
                 String columnType = rs.getString("column_type").trim();
+                Integer columnSubType = rs.getInt("column_subtype");
 
-
-                for (Class<? extends Column> cc : COLUMN_CLASSES) {
-                    if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(columnType)) {
-                        result.setType(cc);
-                        break;
+                if ("BIGINT".equals(columnType) && Integer.valueOf(2).equals(columnSubType)) {
+                    result.setType(DecimalColumn.class);
+                    result.setLength(rs.getInt("column_precision"));
+                    result.setScale(Math.abs(rs.getInt("column_scale")));
+                } else {
+                    for (Class<? extends Column> cc : COLUMN_CLASSES) {
+                        if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(columnType)) {
+                            result.setType(cc);
+                            break;
+                        }
                     }
                 }
 
-                result.setNullable(rs.getInt("nullable") != DatabaseMetaData.columnNoNulls);
+                result.setNullable(rs.getInt("nullable") != 1);
 
-                if (result.getType() == StringColumn.class || result.getType() == DecimalColumn.class) {
+                if (result.getType() == StringColumn.class) {
                     result.setLength(rs.getInt("column_length"));
                 }
-                if (result.getType() == DecimalColumn.class) {
-                    result.setScale(rs.getInt("column_scale"));
-                }
-                String defaultBody = rs.getString("column_default_value");
-                if (defaultBody != null) {
-                    defaultBody = defaultBody.replace("default", "").trim();
-                    defaultBody = modifyDefault(result, defaultBody);
-                    result.setDefaultValue(defaultBody);
-                }
+
+                this.processDefaults(conn, c, result);
 
                 return result;
             } else {
@@ -316,6 +333,61 @@ public class FirebirdAdaptor extends DBAdaptor {
         }
 
     }
+
+    private void processDefaults(Connection conn, Column c, DbColumnInfo dbColumnInfo) throws SQLException {
+        String defaultValue = null;
+
+        TableElement te = c.getParentTable();
+        Grain g = te.getGrain();
+
+        String sql = String.format(
+            "SELECT r.RDB$DEFAULT_SOURCE AS column_default_value\n" +
+                "   FROM RDB$RELATION_FIELDS r\n" +
+                "   WHERE r.RDB$RELATION_NAME='%s_%s' AND r.RDB$FIELD_NAME = '%s'",
+            c.getParentTable().getGrain().getName(),
+            c.getParentTable().getName(),
+            c.getName()
+        );
+
+        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+            rs.next();
+
+            String defaultSource = rs.getString(1);
+
+            if (defaultSource == null) {
+                if (IntegerColumn.class.equals(dbColumnInfo.getType())) {
+
+                    String triggerName = String.format(
+                        //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
+                        "%s_%s_%s_seq_trigger",
+                        te.getGrain().getName(),
+                        te.getName(),
+                        c.getName()
+                    );
+
+                    sql = String.format(
+                        "SELECT RDB$DEPENDED_ON_NAME\n " +
+                            "FROM RDB$DEPENDENCIES \n " +
+                            "WHERE RDB$DEPENDENT_NAME = '%s' AND RDB$DEPENDENT_TYPE = 2 AND RDB$DEPENDED_ON_TYPE = 14",
+                        triggerName
+                    );
+
+                    try (ResultSet sequenceRs = SqlUtils.executeQuery(conn, sql)) {
+                        if (sequenceRs.next()) {
+                            String sequenceName = sequenceRs.getString(1);
+                            defaultValue = "NEXTVAL(" + sequenceName.replace(g.getName() + "_", "") + ")";
+                        }
+                    }
+                }
+            }
+
+        }
+
+        if (defaultValue != null) {
+            dbColumnInfo.setDefaultValue(defaultValue);
+        }
+    }
+
 
     private String modifyDefault(DbColumnInfo ci, String defaultBody) {
         String result = defaultBody;
