@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.dbutils.adaptors.column.ColumnDefinerFactory;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.event.TriggerQuery;
@@ -13,7 +14,11 @@ import ru.curs.celesta.score.*;
 
 import java.sql.Connection;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
 
 
 public class FirebirdDdlGenerator extends DdlGenerator {
@@ -190,7 +195,47 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
     @Override
     List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) {
-        List<String> result = new LinkedList<>();
+        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+
+        List<String> result = new ArrayList<>();
+
+        final String tableFullName = tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName());
+
+        String sql;
+
+        Matcher nextValMatcher = Pattern.compile(DbColumnInfo.SEQUENCE_NEXT_VAL_PATTERN)
+            .matcher(actual.getDefaultValue());
+
+        // Starting with deletion of default-value if exists
+        if (!actual.getDefaultValue().isEmpty() && !nextValMatcher.matches()) {
+            sql = String.format(
+                ALTER_TABLE + tableFullName
+                    + " ALTER COLUMN \"%s\" DROP DEFAULT",
+                c.getName()
+            );
+            result.add(sql);
+        }
+
+        result.addAll(this.updateColType(c, actual));
+
+        // Checking for nullability
+        if (c.isNullable() != actual.isNullable()) {
+            sql = String.format(
+                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                    + " ALTER COLUMN \"%s\" %s",
+                c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
+            result.add(sql);
+        }
+
+        // If there's an empty default in data, and non-empty one in metadata then
+        if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate()))
+        {
+            sql = String.format(
+                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                    + " ALTER COLUMN \"%s\" SET %s",
+                c.getName(), ColumnDefinerFactory.getColumnDefiner(getType(), cClass).getDefaultDefinition(c));
+            result.add(sql);
+        }
 
         return result;
     }
@@ -245,6 +290,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
     @Override
     public List<String> createTableTriggersForMaterializedViews(BasicTable t) {
+        // TODO:: What about locks?
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
@@ -258,7 +304,99 @@ public class FirebirdDdlGenerator extends DdlGenerator {
             .withTableName(t.getName());
 
         for (MaterializedView mv : mvList) {
-            //TODO::
+            String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
+
+            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+            String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
+
+            String mvColumns = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .collect(Collectors.joining(", "))
+                .concat(", " + MaterializedView.SURROGATE_COUNT);
+
+            String aggregateColumns = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> "aggregate." + alias)
+                .collect(Collectors.joining(", "))
+                .concat(", " + MaterializedView.SURROGATE_COUNT);
+
+            String selectPartOfScript = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> {
+                    Column<?> colRef = mv.getColumnRef(alias);
+
+                    Map<String, Expr> aggrCols = mv.getAggregateColumns();
+                    if (aggrCols.containsKey(alias)) {
+                        if (colRef == null) {
+                            if (aggrCols.get(alias) instanceof Count) {
+                                return "COUNT(*) as \"" + alias + "\"";
+                            }
+                            return "";
+                        } else if (aggrCols.get(alias) instanceof Sum) {
+                            return "SUM(\"" + colRef.getName() + "\") as \"" + alias + "\"";
+                        } else {
+                            return "";
+                        }
+                    }
+
+                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+                        return "cast(floor(cast(\"" + colRef.getName() + "\" as float)) as datetime) "
+                            + "as \"" + alias + "\"";
+                    }
+
+                    return "\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
+                })
+                .filter(str -> !str.isEmpty())
+                .collect(Collectors.joining(", "))
+                .concat(", COUNT(*) AS " + MaterializedView.SURROGATE_COUNT);
+
+            String tableGroupByColumns = mv.getColumns().values().stream()
+                .filter(v -> mv.isGroupByColumn(v.getName()))
+                .map(v -> "\"" + mv.getColumnRef(v.getName()).getName() + "\"")
+                .collect(Collectors.joining(", "));
+
+            String rowConditionTemplate = mv.getColumns().keySet().stream()
+                .filter(alias -> mv.isGroupByColumn(alias))
+                .map(alias -> "mv." + alias + " = %1$s." + alias + " ")
+                .collect(Collectors.joining(" AND "));
+
+            StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s mv")
+                .append("USING (SELECT %s FROM inserted GROUP BY %s) AS aggregate ON %s \n")
+                .append("WHEN MATCHED THEN \n ")
+                .append("UPDATE SET %s \n")
+                .append("WHEN NOT MATCHED THEN \n")
+                .append("INSERT (%s) VALUES (%s); \n");
+
+            String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
+                .map(e -> {
+                    StringBuilder sb = new StringBuilder();
+                    String alias = e.getKey();
+
+                    sb.append("mv.").append(alias)
+                        .append(" = mv.").append(alias)
+                        .append(" %1$s aggregate.").append(alias);
+
+                    return sb.toString();
+                }).collect(Collectors.joining(", "))
+                .concat(", mv.").concat(MaterializedView.SURROGATE_COUNT).concat(" = ")
+                .concat("mv.").concat(MaterializedView.SURROGATE_COUNT).concat(" %1$s aggregate.")
+                .concat(MaterializedView.SURROGATE_COUNT);
+
+            String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
+                selectPartOfScript, tableGroupByColumns, String.format(rowConditionTemplate, "aggregate"),
+                String.format(setStatementTemplate, "+"), mvColumns, aggregateColumns);
+
+            String sql =
+                "CREATE TRIGGER \"" + insertTriggerName + "\" " +
+                    "for " + tableString(t.getGrain().getName(), t.getName())
+                    + " AFTER INSERT \n"
+                    + " AS \n"
+                    + " BEGIN \n"
+                    + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
+                    + "\n " + insertSql + "\n END;";
+
+            result.add(sql);
         }
 
         return result;
@@ -286,5 +424,109 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                 + " END";
 
         return sql;
+    }
+
+    private List<String> updateColType(Column<?> c, DbColumnInfo actual) {
+        final List<String> result = new ArrayList<>();
+
+        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+
+        final String colType;
+        final String fullTableName = tableString(
+            c.getParentTable().getGrain().getName(),
+            c.getParentTable().getName()
+        );
+
+        if (c.getClass() == StringColumn.class) {
+            StringColumn sc = (StringColumn) c;
+
+            colType = sc.isMax() ? "blob sub_type text" : String.format(
+                "%s(%s)",
+                ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType(), sc.getLength()
+            );
+        } else if (c.getClass() == DecimalColumn.class) {
+            DecimalColumn dc = (DecimalColumn) c;
+            colType = String.format(
+                "%s(%s,%s)",
+                ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType(),
+                dc.getPrecision(), dc.getScale()
+            );
+        } else {
+            colType = ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType();
+        }
+
+        StringBuilder alterSql = new StringBuilder(
+            String.format(
+                ALTER_TABLE + fullTableName + " ALTER COLUMN \"%s\" TYPE %s",
+                c.getName(),
+                colType
+            )
+        );
+
+        // If type doesn't match
+        if (c.getClass() != actual.getType()) {
+            result.add(alterSql.toString());
+        } else if (c.getClass() == StringColumn.class) {
+            StringColumn sc = (StringColumn) c;
+
+            if (actual.isMax() != sc.isMax()) {
+                result.addAll(this.updateColTypeViaTempColumn(c, actual));
+            } else if (sc.getLength() != actual.getLength()) {
+                result.add(alterSql.toString());
+            }
+
+        } else if (c.getClass() == DecimalColumn.class) {
+            DecimalColumn dc = (DecimalColumn) c;
+            if (dc.getPrecision() != actual.getLength() || dc.getScale() != dc.getScale()) {
+                result.addAll(this.updateColTypeViaTempColumn(c, actual));
+            }
+        }
+
+        return result;
+    }
+
+    private List<String> updateColTypeViaTempColumn(Column<?> c, DbColumnInfo actual) {
+        List<String> result = new ArrayList<>();
+
+        final String fullTableName = tableString(
+            c.getParentTable().getGrain().getName(),
+            c.getParentTable().getName()
+        );
+
+        String tempColumnName = String.format("%s_temp", c.getName());
+
+        String renameColumnSql = String.format(
+            "ALTER TABLE %s\n" + " ALTER COLUMN %s TO %s",
+            fullTableName,
+            c.getQuotedName(),
+            tempColumnName
+        );
+
+        String createColumnSql = String.format(
+            "ALTER TABLE %s ADD %s",
+            fullTableName,
+            columnDef(c)
+        );
+
+        String copySql = String.format(
+            "UPDATE %s SET %s = %s",
+            fullTableName,
+            c.getQuotedName(),
+            tempColumnName
+        );
+
+        String deleteTempColumn = String.format(
+            "ALTER TABLE %s DROP %s",
+            fullTableName,
+            tempColumnName
+        );
+
+        result.add(renameColumnSql);
+        result.add(createColumnSql);
+        result.add("COMMIT");
+        result.add(copySql);
+        result.add(deleteTempColumn);
+
+        return result;
     }
 }

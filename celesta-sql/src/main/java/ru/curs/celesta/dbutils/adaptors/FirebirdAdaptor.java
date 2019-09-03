@@ -30,8 +30,9 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     private static final Pattern TABLE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9]*)_([a-zA-Z_][a-zA-Z0-9_]*)");
 
+    private static final Pattern HEX_STRING = Pattern.compile("'([0-9A-F]+)'"); // TODO:: COPY PASTE
 
-    public static final Pattern DATEPATTERN = Pattern.compile("(\\d\\d)/.(\\d\\d)/.(\\d\\d\\d\\d)");
+    public static final Pattern DATE_PATTERN = Pattern.compile("'(\\d\\d)\\.(\\d\\d)\\.(\\d\\d\\d\\d)'");
 
     public FirebirdAdaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer) {
         super(connectionPool, ddlConsumer);
@@ -303,12 +304,18 @@ public class FirebirdAdaptor extends DBAdaptor {
                 String columnType = rs.getString("column_type").trim();
                 Integer columnSubType = rs.getInt("column_subtype");
 
-                if ("BIGINT".equals(columnType) && Integer.valueOf(2).equals(columnSubType)) {
+                if (
+                    ("BIGINT".equals(columnType) || "INTEGER".equals(columnType))
+                    && Integer.valueOf(2).equals(columnSubType)
+                ) {
                     result.setType(DecimalColumn.class);
                     result.setLength(rs.getInt("column_precision"));
                     result.setScale(Math.abs(rs.getInt("column_scale")));
+                } else if ("BLOB".equals(columnType) && Integer.valueOf(1).equals(columnSubType)) {
+                    result.setType(StringColumn.class);
+                    result.setMax(true);
                 } else {
-                    for (Class<? extends Column> cc : COLUMN_CLASSES) {
+                    for (Class<? extends Column<?>> cc : COLUMN_CLASSES) {
                         if (getColumnDefiner(cc).dbFieldType().equalsIgnoreCase(columnType)) {
                             result.setType(cc);
                             break;
@@ -379,6 +386,26 @@ public class FirebirdAdaptor extends DBAdaptor {
                         }
                     }
                 }
+            } else {
+                defaultValue = defaultSource.replace("default", "").trim();
+
+                if (BooleanColumn.class.equals(dbColumnInfo.getType())) {
+                    defaultValue = "0".equals(defaultValue) ? "'FALSE'" : "'TRUE'";
+                } else if (DateTimeColumn.class.equals(dbColumnInfo.getType())) {
+                    if ("current_timestamp".equalsIgnoreCase(defaultValue)) {
+                        defaultValue = "GETDATE()";
+                    } else {
+                        Matcher m = DATE_PATTERN.matcher(defaultValue);
+                        if (m.find()) {
+                            defaultValue = String.format("'%s%s%s'", m.group(3), m.group(2), m.group(1));
+                        }
+                    }
+                } else if (BinaryColumn.class.equals(dbColumnInfo.getType())) {
+                    Matcher m = HEX_STRING.matcher(defaultValue);
+                    if (m.find()) {
+                        defaultValue = "0x" + m.group(1);
+                    }
+                }
             }
 
         }
@@ -396,7 +423,7 @@ public class FirebirdAdaptor extends DBAdaptor {
             if (FireBirdConstants.CURRENT_TIMESTAMP.equalsIgnoreCase(defaultBody)) {
                 result = "GETDATE()";
             } else {
-                Matcher m = DATEPATTERN.matcher(defaultBody);
+                Matcher m = DATE_PATTERN.matcher(defaultBody);
                 m.find();
                 result = String.format("'%s%s%s'", m.group(1), m.group(2), m.group(3));
             }

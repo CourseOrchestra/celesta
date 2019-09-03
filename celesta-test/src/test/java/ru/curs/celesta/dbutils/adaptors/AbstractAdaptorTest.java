@@ -523,7 +523,6 @@ public abstract class AbstractAdaptorTest {
     }
 
 
-    //TODO:: CONTINUE FROM HERE
     @Test
     public void getColumnInfo2() throws ParseException {
         DbColumnInfo c;
@@ -952,6 +951,7 @@ public abstract class AbstractAdaptorTest {
         assertEquals("", c.getDefaultValue());
     }
 
+    // TODO:: CONTINUE FROM HERE
     @Test
     public void updateColumn5test() throws ParseException {
         // Change data type

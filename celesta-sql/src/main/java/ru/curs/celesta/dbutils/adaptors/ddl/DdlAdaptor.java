@@ -401,7 +401,16 @@ public final class DdlAdaptor {
 
     private void processSql(Connection conn, List<String> sqlList)  {
         for (String sql : sqlList) {
-            processSql(conn, sql);
+
+            if ("COMMIT".equalsIgnoreCase(sql)) {
+                try {
+                    conn.commit();
+                } catch (SQLException e) {
+                    throw new CelestaException(e);
+                }
+            } else {
+                processSql(conn, sql);
+            }
         }
     }
 
