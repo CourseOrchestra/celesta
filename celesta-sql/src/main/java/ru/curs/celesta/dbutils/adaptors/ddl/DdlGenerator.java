@@ -406,7 +406,7 @@ public abstract class DdlGenerator {
                 })
                 .collect(Collectors.joining(", "));
 
-        String deleteSql = "TRUNCATE TABLE " + mvIdentifier;
+        String deleteSql = this.truncateTable(mvIdentifier);
 
         String colsToSelect = mv.getColumns().keySet().stream()
                 .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
@@ -443,6 +443,10 @@ public abstract class DdlGenerator {
         String insertSql = String.format("INSERT INTO %s (%s) " + selectScript, mvIdentifier, mvColumns);
 
         return Arrays.asList(deleteSql, insertSql);
+    }
+
+    String truncateTable(String tableName) {
+        return "TRUNCATE TABLE " + tableName;
     }
 
     final boolean triggerExists(Connection conn, TriggerQuery query)  {

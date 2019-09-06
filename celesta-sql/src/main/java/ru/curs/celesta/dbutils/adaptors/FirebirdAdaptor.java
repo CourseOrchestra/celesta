@@ -23,7 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-
 public class FirebirdAdaptor extends DBAdaptor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FirebirdAdaptor.class);
@@ -45,7 +44,33 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     String getLimitedSQL(FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields) {
-        return null;
+        if (offset == 0 && rowCount == 0) {
+            throw new IllegalArgumentException();
+        }
+
+        final String sql;
+
+        String first = "";
+        String limit = "";
+
+        if (rowCount != 0) {
+            first = String.format("FIRST %s", rowCount);
+        }
+
+        if (offset != 0) {
+            limit = String.format("OFFSET %s ROWS", offset);
+        }
+
+        String sqlwhere = "".equals(whereClause) ? "" : " WHERE " + whereClause;
+
+        final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
+
+        sql = String.format("SELECT %s %s FROM %s", first, fieldList,
+            from.getExpression()) + sqlwhere + " ORDER BY " + orderBy + " " + limit;
+
+        return sql;
+
+
     }
 
     @Override
@@ -306,7 +331,7 @@ public class FirebirdAdaptor extends DBAdaptor {
 
                 if (
                     ("BIGINT".equals(columnType) || "INTEGER".equals(columnType))
-                    && Integer.valueOf(2).equals(columnSubType)
+                        && Integer.valueOf(2).equals(columnSubType)
                 ) {
                     result.setType(DecimalColumn.class);
                     result.setLength(rs.getInt("column_precision"));
@@ -381,7 +406,7 @@ public class FirebirdAdaptor extends DBAdaptor {
 
                     try (ResultSet sequenceRs = SqlUtils.executeQuery(conn, sql)) {
                         if (sequenceRs.next()) {
-                            String sequenceName = sequenceRs.getString(1);
+                            String sequenceName = sequenceRs.getString(1).trim();
                             defaultValue = "NEXTVAL(" + sequenceName.replace(g.getName() + "_", "") + ")";
                         }
                     }
@@ -437,14 +462,14 @@ public class FirebirdAdaptor extends DBAdaptor {
     public DbPkInfo getPKInfo(Connection conn, TableElement t) {
         String sql = String.format(
             "select\n" +
-            "    ix.rdb$index_name as pk_name,\n" +
-            "    sg.rdb$field_name as column_name\n" +
-            " from\n" +
-            "    rdb$indices ix\n" +
-            "    left join rdb$index_segments sg on ix.rdb$index_name = sg.rdb$index_name\n" +
-            "    left join rdb$relation_constraints rc on rc.rdb$index_name = ix.rdb$index_name\n" +
-            " where\n" +
-            "    rc.rdb$constraint_type = 'PRIMARY KEY' AND rc.rdb$relation_name = '%s_%s'",
+                "    ix.rdb$index_name as pk_name,\n" +
+                "    sg.rdb$field_name as column_name\n" +
+                " from\n" +
+                "    rdb$indices ix\n" +
+                "    left join rdb$index_segments sg on ix.rdb$index_name = sg.rdb$index_name\n" +
+                "    left join rdb$relation_constraints rc on rc.rdb$index_name = ix.rdb$index_name\n" +
+                " where\n" +
+                "    rc.rdb$constraint_type = 'PRIMARY KEY' AND rc.rdb$relation_name = '%s_%s'",
             t.getGrain().getName(),
             t.getName()
         );
@@ -472,16 +497,18 @@ public class FirebirdAdaptor extends DBAdaptor {
     @Override
     public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
         String sql = String.format(
-            "select relc.RDB$RELATION_NAME as table_name, relc.RDB$CONSTRAINT_NAME as constraint_name, " +
+            "select DISTINCT relc.RDB$RELATION_NAME as table_name, relc.RDB$CONSTRAINT_NAME as constraint_name, " +
                 "refc.RDB$UPDATE_RULE as update_rule, refc.RDB$DELETE_RULE as delete_rule, " +
                 "d1.RDB$FIELD_NAME as column_name, d2.RDB$DEPENDED_ON_NAME AS ref_table_name \n" +
-                "FROM RDB$RELATION_CONSTRAINTS relc \n" +
+                "FROM RDB$INDEX_SEGMENTS inds \n" +
+                "LEFT JOIN RDB$RELATION_CONSTRAINTS relc ON relc.RDB$INDEX_NAME = inds.RDB$INDEX_NAME\n" +
                 "LEFT JOIN RDB$REF_CONSTRAINTS refc ON relc.RDB$CONSTRAINT_NAME = refc.RDB$CONSTRAINT_NAME \n" +
                 "LEFT JOIN RDB$DEPENDENCIES d1 ON d1.RDB$DEPENDED_ON_NAME = relc.RDB$RELATION_NAME \n" +
                 "LEFT JOIN RDB$DEPENDENCIES d2 ON d1.RDB$DEPENDENT_NAME = d2.RDB$DEPENDENT_NAME \n" +
-                "WHERE relc.RDB$CONSTRAINT_TYPE <> 'FOREIGN KEY' AND relc.RDB$RELATION_NAME like '%s@_%%' escape '@' " +
+                "WHERE relc.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY' AND relc.RDB$RELATION_NAME like '%s@_%%' escape '@' " +
                 "AND d1.RDB$DEPENDED_ON_NAME <> d2.RDB$DEPENDED_ON_NAME " +
-                "AND d1.RDB$FIELD_NAME <> d2.RDB$FIELD_NAME",
+                "AND d1.RDB$FIELD_NAME <> d2.RDB$FIELD_NAME \n" +
+                "ORDER BY inds.RDB$FIELD_POSITION",
             g.getName()
         );
 
@@ -490,7 +517,7 @@ public class FirebirdAdaptor extends DBAdaptor {
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             while (rs.next()) {
-                String fkName = rs.getString("constraint_name");
+                String fkName = rs.getString("constraint_name").trim();
 
                 String fullTableName = rs.getString("table_name").trim();
                 String tableName = convertNameFromDb(fullTableName, g);
@@ -499,10 +526,10 @@ public class FirebirdAdaptor extends DBAdaptor {
                 String refTableName = convertNameFromDb(fullRefTableName, g);
                 String refGrainName = fullRefTableName.substring(0, fullRefTableName.indexOf(refTableName) - 1);
 
-                FKRule updateRule = getFKRule(rs.getString("update_rule"));
-                FKRule deleteRule = getFKRule(rs.getString("delete_rule"));
+                FKRule updateRule = getFKRule(rs.getString("update_rule").trim());
+                FKRule deleteRule = getFKRule(rs.getString("delete_rule").trim());
 
-                String columnName = rs.getString("column_name");
+                String columnName = rs.getString("column_name").trim();
 
                 fks.computeIfAbsent(
                     fkName,
@@ -572,13 +599,14 @@ public class FirebirdAdaptor extends DBAdaptor {
     public List<String> getParameterizedViewList(Connection conn, Grain g) {
         List<String> result = new ArrayList<>();
 
-        String sql = String.format("select rdb$function_name\n" +
-            "from rdb$functions\n" +
-            "where rdb$function_name like '%s@_%%' escape '@'", g.getName());
+        String sql = String.format("select RDB$PROCEDURE_NAME\n" +
+            "from RDB$PROCEDURES\n" +
+            "where RDB$PROCEDURE_NAME like '%s@_%%' escape '@'", g.getName());
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             while (rs.next()) {
-                result.add(rs.getString(1));
+                String dbName = rs.getString(1).trim();
+                result.add(convertNameFromDb(dbName, g));
             }
         } catch (Exception e) {
             throw new CelestaException(e);
@@ -666,7 +694,8 @@ public class FirebirdAdaptor extends DBAdaptor {
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             while (rs.next()) {
-                result.add(rs.getString(1));
+                String dbName = rs.getString(1).trim();
+                result.add(convertNameFromDb(dbName, g));
             }
         } catch (Exception e) {
             throw new CelestaException(e);
@@ -686,8 +715,7 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public String pkConstraintString(TableElement tableElement) {
-        return NamedElement.limitName(
-            tableElement.getPkConstraintName() + "_" + tableElement.getGrain().getName());
+        return tableElement.getPkConstraintName() + "_" + tableElement.getGrain().getName();
     }
 
     private String getSchemaUnderscoreNameTemplate(String schemaName, String name) {

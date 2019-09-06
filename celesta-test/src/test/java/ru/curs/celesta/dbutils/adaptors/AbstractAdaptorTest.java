@@ -951,7 +951,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals("", c.getDefaultValue());
     }
 
-    // TODO:: CONTINUE FROM HERE
     @Test
     public void updateColumn5test() throws ParseException {
         // Change data type
@@ -1023,7 +1022,6 @@ public abstract class AbstractAdaptorTest {
         assertEquals("", c.getDefaultValue());
 
     }
-
 
     @Test
     public void testReflects() throws ParseException {
@@ -1111,6 +1109,7 @@ public abstract class AbstractAdaptorTest {
             assertEquals(0, l.size());
 
             dba.createFK(conn, fk);
+            conn.commit();
             l = dba.getFKInfo(conn, g);
             assertEquals(1, l.size());
             DbFkInfo info = l.get(0);
@@ -1153,6 +1152,7 @@ public abstract class AbstractAdaptorTest {
         try {
             dba.createSequence(conn, t3s);
             dba.createTable(conn, t3);
+            conn.commit();
             DbColumnInfo c = dba.getColumnInfo(conn, t3.getColumn("f1"));
             assertEquals("NEXTVAL(aLongIdentityTableNxx_f1)", c.getDefaultValue());
             c = dba.getColumnInfo(conn, t3.getColumn("field2"));
@@ -1328,6 +1328,7 @@ public abstract class AbstractAdaptorTest {
                 ps.execute(pstmt, i++, secondRowData, 0);
             }
             pstmt.execute();
+            pstmt.close();
 
             assertEquals(0, getCount(conn, mv));
 
@@ -1399,6 +1400,7 @@ public abstract class AbstractAdaptorTest {
     }
 
 
+    // TODO:: CONTINUE FROM HERE
     @Test
     public void testDropParameterizedView() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);

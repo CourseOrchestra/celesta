@@ -12,6 +12,9 @@ import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -91,7 +94,12 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
     @Override
     List<String> dropParameterizedView(String schemaName, String viewName, Connection conn) {
-        return null;
+        String sql = String.format(
+            "DROP PROCEDURE %s",
+            tableString(schemaName, viewName)
+        );
+
+        return Arrays.asList(sql);
     }
 
     @Override
@@ -112,15 +120,11 @@ public class FirebirdDdlGenerator extends DdlGenerator {
     @Override
     public String dropPk(TableElement t, String pkName) {
 
-        return "QWE";
-
-        // TODO:: !!!
-        /*
         return String.format(
             "ALTER TABLE %s DROP CONSTRAINT \"%s\"",
             this.tableString(t.getGrain().getName(), t.getName()),
             pkName
-        );*/
+        );
     }
 
     @Override
@@ -241,13 +245,91 @@ public class FirebirdDdlGenerator extends DdlGenerator {
     }
 
     @Override
+    String truncateTable(String tableName) {
+        return String.format("DELETE FROM %s", tableName);
+    }
+
+    @Override
     SQLGenerator getViewSQLGenerator() {
-        return null;
+        return new SQLGenerator() {
+            @Override
+            protected String preamble(AbstractView view) {
+                return String.format("create view %s as", viewName(view));
+            }
+
+            @Override
+            protected String viewName(AbstractView v) {
+                return tableString(v.getGrain().getName(), v.getName());
+            }
+
+            @Override
+            protected String tableName(TableRef tRef) {
+                BasicTable t = tRef.getTable();
+                return String.format(tableString(t.getGrain().getName(), t.getName()) + " \"%s\"", tRef.getAlias());
+            }
+
+            @Override
+            protected String getDate() {
+                return "CURRENT_TIMESTAMP";
+            }
+
+            @Override
+            protected String paramLiteral(String paramName) {
+                return ":" + paramName;
+            }
+        };
     }
 
     @Override
     List<String> createParameterizedView(ParameterizedView pv) {
-        return null;
+        SQLGenerator gen = getViewSQLGenerator();
+        StringWriter sw = new StringWriter();
+        PrintWriter bw = new PrintWriter(sw);
+
+        try {
+            pv.selectScript(bw, gen);
+        } catch (IOException e) {
+            throw new CelestaException(e);
+        }
+        bw.flush();
+
+        String inParams = pv.getParameters()
+            .entrySet().stream()
+            .map(e ->
+                e.getKey() + " "
+                    + ColumnDefinerFactory.getColumnDefiner(getType(),
+                    CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getType().getCelestaType())
+                ).dbFieldType()
+            ).collect(Collectors.joining(", "));
+
+        String outParams = pv.getColumns()
+            .entrySet().stream()
+            .map(e -> e.getKey() + " "
+                + ColumnDefinerFactory.getColumnDefiner(getType(),
+                    CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType())
+                ).dbFieldType()
+            ).collect(Collectors.joining(", "));
+
+        String intoList = pv.getColumns().keySet().stream()
+            .map(":"::concat)
+            .collect(Collectors.joining(", "));
+
+        String selectSql = sw.toString();
+
+        String sql = String.format(
+            "CREATE PROCEDURE " + tableString(pv.getGrain().getName(), pv.getName()) + "(%s)\n"
+                + "  RETURNS (%s)\n"
+                + "  AS\n"
+                + "  BEGIN\n"
+                + "  FOR %s\n"
+                + "  INTO %s\n"
+                + "    DO BEGIN\n"
+                + "      SUSPEND;\n"
+                + "    END\n"
+                + "  END",
+            inParams, outParams, selectSql, intoList);
+
+        return Arrays.asList(sql);
     }
 
     @Override
@@ -404,7 +486,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
     @Override
     String truncDate(String dateStr) {
-        return null;
+        return String.format("CAST(CAST(%s as Date) AS TIMESTAMP)", dateStr);
     }
 
 
@@ -465,7 +547,13 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
         // If type doesn't match
         if (c.getClass() != actual.getType()) {
-            result.add(alterSql.toString());
+            if (c.getClass() == IntegerColumn.class && actual.getType() == StringColumn.class) {
+                result.addAll(this.updateColTypeViaTempColumn(c, actual));
+            } else if (c.getClass() == BooleanColumn.class) {
+                result.addAll(this.updateColTypeViaTempColumn(c, actual));
+            } else {
+                result.add(alterSql.toString());
+            }
         } else if (c.getClass() == StringColumn.class) {
             StringColumn sc = (StringColumn) c;
 

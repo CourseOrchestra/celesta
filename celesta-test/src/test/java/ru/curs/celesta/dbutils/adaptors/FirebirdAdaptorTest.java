@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils.adaptors;
 import org.firebirdsql.testcontainers.FirebirdContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.BaseAppSettings;
 import ru.curs.celesta.ConnectionPool;
@@ -16,6 +17,8 @@ import ru.curs.celesta.test.ContainerUtils;
 
 import java.sql.Connection;
 import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FirebirdAdaptorTest extends AbstractAdaptorTest {
 
@@ -71,5 +74,12 @@ public class FirebirdAdaptorTest extends AbstractAdaptorTest {
     @Override
     Connection getConnection() {
         return dba.connectionPool.get();
+    }
+
+    @Test
+    @Override
+    public void pkConstraintString() {
+        final String pkName = dba.pkConstraintString(this.t);
+        assertEquals("pk_test_gtest", pkName);
     }
 }
