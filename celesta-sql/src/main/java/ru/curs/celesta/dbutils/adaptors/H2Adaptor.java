@@ -491,7 +491,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    String prepareRowColumnForSelectStaticStrings(String value, String colName) {
+    String prepareRowColumnForSelectStaticStrings(String value, String colName, int maxStringLength) {
         int dataType = DataType.getTypeFromClass(value.getClass());
         DataType type = DataType.getDataType(dataType);
         return "CAST(? as " + type.name + ") as " + colName;

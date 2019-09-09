@@ -1400,7 +1400,6 @@ public abstract class AbstractAdaptorTest {
     }
 
 
-    // TODO:: CONTINUE FROM HERE
     @Test
     public void testDropParameterizedView() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
@@ -1444,6 +1443,8 @@ public abstract class AbstractAdaptorTest {
 
             dba.createSequence(conn, t2s);
             dba.createTable(conn, t2);
+            conn.commit();
+
             tableIsCreated = true;
 
             insertRow(conn, t, 1);
@@ -1463,6 +1464,8 @@ public abstract class AbstractAdaptorTest {
             ResultSet rs = pstmt.executeQuery();
             rs.next();
             assertEquals(0, rs.getInt(1));
+            rs.close();
+            pstmt.close();
 
             boolean[] nullsMask = {true, false, false};
             Object[] rowData = {null, "A", 1};
@@ -1473,11 +1476,14 @@ public abstract class AbstractAdaptorTest {
                 ps.execute(pstmt, i++, rowData, 0);
             }
             pstmt.execute();
+            pstmt.close();
 
             pstmt = dba.getSetCountStatement(conn, from, where);
             rs = pstmt.executeQuery();
             rs.next();
             assertEquals(1, rs.getInt(1));
+            rs.close();
+            pstmt.close();
 
             boolean[] nullsMask2 = {true, false, false};
             Object[] rowData2 = {null, "A", 2};
@@ -1488,11 +1494,14 @@ public abstract class AbstractAdaptorTest {
                 ps.execute(pstmt, i++, rowData2, 0);
             }
             pstmt.execute();
+            pstmt.close();
 
             pstmt = dba.getSetCountStatement(conn, from, where);
             rs = pstmt.executeQuery();
             rs.next();
             assertEquals(2, rs.getInt(1));
+            rs.close();
+            pstmt.close();
 
             otherWhere = ("(\"atInt\" = 2)");
             where = dba.getInFilterClause(t, t2, tFields, t2Fields, otherWhere);
@@ -1501,6 +1510,9 @@ public abstract class AbstractAdaptorTest {
             rs = pstmt.executeQuery();
             rs.next();
             assertEquals(1, rs.getInt(1));
+
+            rs.close();
+            pstmt.close();
         } catch (Exception e) {
             throw e;
         } finally {
@@ -1518,6 +1530,7 @@ public abstract class AbstractAdaptorTest {
     }
 
 
+    // TODO:: CONTINUE FROM HERE
     @Test
     void testCreateAndAlterSequence() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
@@ -1667,12 +1680,12 @@ public abstract class AbstractAdaptorTest {
 
     @Test
     void testSelectStaticStrings() throws Exception {
-        List<String> data = Arrays.asList("A", "B");
+        List<String> data = Arrays.asList("A", "AB", "B");
 
         List<String> result = dba.selectStaticStrings(data, "id", "");
         assertEquals(data, result);
 
-        result = dba.selectStaticStrings(data, "id", "id desc");
+        result = dba.selectStaticStrings(data, "id", "desc");
         Collections.reverse(data);
         assertEquals(data, result);
     }
@@ -1712,7 +1725,7 @@ public abstract class AbstractAdaptorTest {
                 "у", "У", "ф", "Ф", "х", "Х", "ц", "Ц", "ч", "Ч", "ш", "Ш", "щ", "Щ", "ъ", "Ъ", "ы", "Ы", "ь", "Ь",
                 "э", "Э", "ю", "Ю", "я", "Я"
         );
-        List<String> data = dba.selectStaticStrings(test, "\"id\"", "\"id\" ASC");
+        List<String> data = dba.selectStaticStrings(test, "\"id\"", "ASC");
         Collections.sort(test);
         Collections.sort(data);
         assertLinesMatch(test, data);

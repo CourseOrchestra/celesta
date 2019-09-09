@@ -21,6 +21,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 public class FirebirdAdaptor extends DBAdaptor {
@@ -661,8 +662,25 @@ public class FirebirdAdaptor extends DBAdaptor {
     }
 
     @Override
-    public String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields, List<String> otherFields, String whereForOtherTable) {
-        return null;
+    public String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
+                                    List<String> otherFields, String whereForOtherTable) {
+        // TODO: COPY PASTE (Oracle)
+        String template = "( %s ) IN (SELECT %s FROM %s WHERE %s)";
+
+        String fieldsStr = String.join(",",
+            fields.stream()
+                .map(s -> "\"" + s + "\"")
+                .collect(Collectors.toList())
+        );
+        String otherFieldsStr = String.join(",",
+            otherFields.stream()
+                .map(s -> "\"" + s + "\"")
+                .collect(Collectors.toList())
+        );
+
+        String otherTableStr = tableString(otherDge.getGrain().getName(), otherDge.getName());
+        String result = String.format(template, fieldsStr, otherFieldsStr, otherTableStr, whereForOtherTable);
+        return result;
     }
 
 
@@ -716,6 +734,21 @@ public class FirebirdAdaptor extends DBAdaptor {
     @Override
     public String pkConstraintString(TableElement tableElement) {
         return tableElement.getPkConstraintName() + "_" + tableElement.getGrain().getName();
+    }
+
+    @Override
+    String constantFromSql() {
+        return "FROM RDB$DATABASE";
+    }
+
+    @Override
+    String prepareRowColumnForSelectStaticStrings(String value, String colName, int maxStringLength) {
+        return String.format("CAST(? as varchar(%d)) as %s", maxStringLength, colName);
+    }
+
+    @Override
+    String orderByForSelectStaticStrings(String columnName, String orderByDirection) {
+        return String.format("ORDER BY 1 %s", orderByDirection);
     }
 
     private String getSchemaUnderscoreNameTemplate(String schemaName, String name) {
