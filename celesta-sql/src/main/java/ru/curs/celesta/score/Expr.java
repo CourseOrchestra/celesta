@@ -392,7 +392,8 @@ final class NotExpr extends LogicValuedExpr {
 /**
  * AND/OR.
  */
-final class BinaryLogicalOp extends LogicValuedExpr {
+// TODO:: MAKE PUBLIC
+public final class BinaryLogicalOp extends LogicValuedExpr {
     public static final int AND = 0;
     public static final int OR = 1;
     public static final String[] OPS = { " AND ", " OR " };

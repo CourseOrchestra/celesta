@@ -23,10 +23,7 @@ public class ContainerUtils {
     public static final OracleContainer ORACLE = new OracleContainer();
     public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
         .withCollation("Cyrillic_General_CI_AI");
-    public static final FirebirdContainer FIREBIRD = new AdvancedFireBirdContainer();
-    // cd /usr/local/firebird/bin
-    // echo "CREATE DATABASE '/firebird/data/celesta-test.fdb' user 'a' password 'b';" > init.sql
-    // ./isql -input init.sql
+    public static final AdvancedFireBirdContainer FIREBIRD = new AdvancedFireBirdContainer();
 
 
     private static final String DROP_TABLE_FROM_ORACLE_TEMPLATE = "DROP TABLE %s CASCADE CONSTRAINTS";
@@ -161,14 +158,7 @@ public class ContainerUtils {
     }
 
     private static void cleanUpFirebird() {
-        try (
-            ConnectionPool connectionPool = getConnectionPool(FIREBIRD);
-            Connection connection = connectionPool.get()
-        ) {
-            connection.commit();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        FIREBIRD.dropDb();
     }
 
     private static ConnectionPool getConnectionPool(JdbcDatabaseContainer container) {

@@ -114,7 +114,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
     @Override
     String dropTriggerSql(TriggerQuery query) {
-        return null;
+        return String.format("DROP TRIGGER \"%s\"", query.getName());
     }
 
     @Override
@@ -136,6 +136,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
     List<String> updateVersioningTrigger(Connection conn, TableElement t) {
         List<String> result = new ArrayList<>();
 
+        // TODO:: NEED FUNCTION FOR THIS NAME
         String triggerName = String.format("%s_%s_version_check", t.getGrain().getName(), t.getName());
 
         // First of all, we are about to check if trigger exists
@@ -205,6 +206,21 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
         final String tableFullName = tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName());
 
+        TableElement t = c.getParentTable();
+        //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
+        String triggerName = String.format("%s_%s_version_check", t.getGrain().getName(), t.getName());
+
+        TriggerQuery query = new TriggerQuery()
+            .withSchema(t.getGrain().getName())
+            .withName(triggerName)
+            .withTableName(t.getName());
+
+
+        boolean triggerExists = this.triggerExists(conn, query);
+        if (triggerExists) {
+            result.add(dropTrigger(query));
+        }
+
         String sql;
 
         Matcher nextValMatcher = Pattern.compile(DbColumnInfo.SEQUENCE_NEXT_VAL_PATTERN)
@@ -240,6 +256,94 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                 c.getName(), ColumnDefinerFactory.getColumnDefiner(getType(), cClass).getDefaultDefinition(c));
             result.add(sql);
         }
+
+        //TODO:: COPY-PASTE
+        if (c instanceof IntegerColumn) {
+            IntegerColumn ic = (IntegerColumn) c;
+
+
+
+
+            if ("".equals(actual.getDefaultValue())) { //old defaultValue Is null - create trigger if necessary
+                if (((IntegerColumn) c).getSequence() != null) {
+                    final String sequenceTriggerName = String.format(
+                        //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
+                        "%s_%s_%s_seq_trigger",
+                        t.getGrain().getName(), t.getName(), ic.getName()
+                    );
+                    final String sequenceName = sequenceString(
+                        c.getParentTable().getGrain().getName(), ic.getSequence().getName());
+                    sql = createOrReplaceSequenceTriggerForColumn(sequenceTriggerName, ic, sequenceName);
+                    result.add(sql);
+
+                    TriggerQuery q = new TriggerQuery()
+                        .withSchema(t.getGrain().getName())
+                        .withTableName(t.getName())
+                        .withName(sequenceTriggerName);
+                    this.rememberTrigger(q);
+                }
+            } else {
+                Pattern p = Pattern.compile("(?i)NEXTVAL\\((.*)\\)");
+                Matcher m = p.matcher(actual.getDefaultValue());
+
+                if (m.matches()) { //old default value is sequence
+                    if (ic.getSequence() == null) {
+                        TriggerQuery triggerQuery = new TriggerQuery()
+                            .withSchema(c.getParentTable().getGrain().getName())
+                            .withTableName(c.getParentTable().getName())
+                            .withName(String.format(
+                                //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
+                                "%s_%s_%s_seq_trigger",
+                                t.getGrain().getName(), t.getName(), ic.getName()
+                            ))
+                            .withType(TriggerType.PRE_INSERT);
+
+                        triggerExists = this.triggerExists(conn, query);
+
+                        if (triggerExists) {
+                            result.add(dropTrigger(triggerQuery));
+                        }
+                    } else {
+                        String oldSequenceName = m.group(1);
+
+                        if (!oldSequenceName.equals(ic.getSequence().getName())) { //using of new sequence
+                            final String sequenceName = sequenceString(
+                                c.getParentTable().getGrain().getName(), ic.getSequence().getName());
+                            sql = createOrReplaceSequenceTriggerForColumn(
+                                String.format(
+                                    //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
+                                    "%s_%s_%s_seq_trigger",
+                                    t.getGrain().getName(), t.getName(), ic.getName()
+                                ), ic, sequenceName);
+                            result.add(sql);
+
+                            TriggerQuery triggerQuery = new TriggerQuery()
+                                .withSchema(c.getParentTable().getGrain().getName())
+                                .withTableName(c.getParentTable().getName())
+                                .withName(String.format(
+                                    //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
+                                    "%s_%s_%s_seq_trigger",
+                                    t.getGrain().getName(), t.getName(), ic.getName()
+                                ))
+                                .withType(TriggerType.PRE_INSERT);
+
+                            this.rememberTrigger(triggerQuery);
+                        }
+                    }
+                } else if (ic.getSequence() != null) {
+                    final String sequenceName = sequenceString(
+                        c.getParentTable().getGrain().getName(), ic.getSequence().getName());
+                    sql = createOrReplaceSequenceTriggerForColumn(
+                        String.format(
+                            //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
+                            "%s_%s_%s_seq_trigger",
+                            t.getGrain().getName(), t.getName(), ic.getName()
+                        ), ic, sequenceName);
+                    result.add(sql);
+                }
+            }
+        }
+        // TODO:: END COPY-PASTE
 
         return result;
     }
@@ -293,6 +397,10 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         }
         bw.flush();
 
+
+        // TODO:: ADD CORRECT TYPED IN PARAMS
+        ((BinaryLogicalOp)pv.getWhereCondition()).getOperands()
+
         String inParams = pv.getParameters()
             .entrySet().stream()
             .map(e ->
@@ -304,10 +412,26 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
         String outParams = pv.getColumns()
             .entrySet().stream()
-            .map(e -> e.getKey() + " "
-                + ColumnDefinerFactory.getColumnDefiner(getType(),
-                    CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType())
-                ).dbFieldType()
+            .map(e -> {
+                    final String type;
+
+                    ViewColumnMeta viewColumnMeta = e.getValue();
+                    if (ViewColumnType.TEXT == viewColumnMeta.getColumnType()) {
+                        StringColumn sc = (StringColumn)pv.getColumnRef(viewColumnMeta.getName());
+
+                        if (sc.isMax()) {
+                            type = "blob sub_type text";
+                        } else {
+                            type = String.format("varchar(%d)", sc.getLength());
+                        }
+                    } else {
+                        type = ColumnDefinerFactory.getColumnDefiner(getType(),
+                            CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType())
+                        ).dbFieldType();
+                    }
+
+                    return e.getKey() + " " + type;
+            }
             ).collect(Collectors.joining(", "));
 
         String intoList = pv.getColumns().keySet().stream()

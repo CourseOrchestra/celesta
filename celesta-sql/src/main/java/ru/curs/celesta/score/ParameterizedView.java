@@ -84,4 +84,7 @@ public final class ParameterizedView extends View {
     return parameterRefsWithOrder;
   }
 
+  public Expr getWhereCondition() {
+    return whereCondition;
+  }
 }

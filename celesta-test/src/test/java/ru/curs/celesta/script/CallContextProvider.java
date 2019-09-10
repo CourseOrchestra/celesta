@@ -25,7 +25,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
     }
 
     enum Backend {
-        H2, PostgreSQL, Oracle, MSSQL
+        H2, PostgreSQL, Oracle, MSSQL, FireBird
     }
 
     private final EnumMap<Backend, JdbcDatabaseContainer<?>> containers = new EnumMap<>(Backend.class);
@@ -80,7 +80,8 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
     }
 
     public void startCelestas() {
-        celestas.put(Backend.H2, celestaFromH2());
+        //TODO:: REMOVE COMMENT
+        /*celestas.put(Backend.H2, celestaFromH2());
 
         containers.put(Backend.PostgreSQL, ContainerUtils.POSTGRE_SQL);
         celestas.put(Backend.PostgreSQL, celestaFromContainer(containers.get(Backend.PostgreSQL)));
@@ -89,13 +90,17 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
         celestas.put(Backend.Oracle, celestaFromContainer(containers.get(Backend.Oracle)));
 
         containers.put(Backend.MSSQL, ContainerUtils.MSSQL);
-        celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.MSSQL)));
+        celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.MSSQL)));*/
+
+        containers.put(Backend.FireBird, ContainerUtils.FIREBIRD);
+        celestas.put(Backend.FireBird, celestaFromContainer(containers.get(Backend.FireBird)));
 
     }
 
     public void stopCelestas() {
 
-        celestas.computeIfPresent(Backend.H2,
+        //TODO:: REMOVE COMMENT
+        /*celestas.computeIfPresent(Backend.H2,
                 (b, c) -> {
                     try {
                         c.getConnectionPool().get().createStatement().execute("SHUTDOWN");
@@ -103,7 +108,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
                         LOGGER.error("Error during DB shutdown", ex);
                     }
                     return null;
-                });
+                });*/
 
         containers.forEach(
             (b, c) -> {

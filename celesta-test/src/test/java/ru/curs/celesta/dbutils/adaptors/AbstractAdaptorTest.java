@@ -184,12 +184,12 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
-    public void isValidConnection() throws Exception {
+    public void isValidConnection() {
         assertTrue(dba.isValidConnection(conn, 0));
     }
 
     @Test
-    public void pidIsReturned() throws Exception {
+    public void pidIsReturned() {
         assertTrue(dba.getDBPid(conn) != 0);
     }
 
