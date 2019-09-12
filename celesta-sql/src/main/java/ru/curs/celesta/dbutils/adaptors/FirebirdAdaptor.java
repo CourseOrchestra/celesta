@@ -52,14 +52,14 @@ public class FirebirdAdaptor extends DBAdaptor {
         final String sql;
 
         String first = "";
-        String limit = "";
+        String offsetSql = "";
 
         if (rowCount != 0) {
             first = String.format("FIRST %s", rowCount);
         }
 
         if (offset != 0) {
-            limit = String.format("OFFSET %s ROWS", offset);
+            offsetSql = String.format("OFFSET %s ROWS", offset);
         }
 
         String sqlwhere = "".equals(whereClause) ? "" : " WHERE " + whereClause;
@@ -67,7 +67,7 @@ public class FirebirdAdaptor extends DBAdaptor {
         final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
 
         sql = String.format("SELECT %s %s FROM %s", first, fieldList,
-            from.getExpression()) + sqlwhere + " ORDER BY " + orderBy + " " + limit;
+            from.getExpression()) + sqlwhere + " ORDER BY " + orderBy + " " + offsetSql;
 
         return sql;
 
@@ -98,7 +98,20 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public PreparedStatement getNavigationStatement(Connection conn, FromClause from, String orderBy, String navigationWhereClause, Set<String> fields, long offset) {
-        return null;
+        if (navigationWhereClause == null) {
+            throw new IllegalArgumentException();
+        }
+        StringBuilder w = new StringBuilder(navigationWhereClause);
+        final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
+        boolean useWhere = w.length() > 0;
+        if (orderBy.length() > 0) {
+            w.append(" order by " + orderBy);
+        }
+        String sql = String.format("SELECT FIRST 1 SKIP %d %s FROM  %s %s;", offset == 0 ? 0 : offset - 1,
+            fieldList,
+            from.getExpression(), useWhere ? " where " + w : w);
+        LOGGER.trace(sql);
+        return prepareStatement(conn, sql);
     }
 
     @Override

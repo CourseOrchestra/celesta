@@ -1,7 +1,10 @@
 package ru.curs.celesta.score;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
 
@@ -139,107 +142,6 @@ final class ParenthesizedExpr extends Expr {
     }
 }
 
-/**
- * Expression with logical value. Celestadoc and nullable is not actual.
- */
-abstract class LogicValuedExpr extends Expr {
-    private static final ViewColumnMeta<?> META;
-
-    static {
-        META = new ViewColumnMeta<>(ViewColumnType.LOGIC);
-        META.setNullable(false);
-    }
-
-    @Override
-    public final ViewColumnMeta<?> getMeta() {
-        return META;
-    }
-
-}
-
-/**
- * Relation (>=, <=, <>, =, <, >).
- */
-final class Relop extends LogicValuedExpr {
-    /**
-     * >.
-     */
-    public static final int GT = 0;
-    /**
-     * <.
-     */
-    public static final int LS = 1;
-    /**
-     * >=.
-     */
-    public static final int GTEQ = 2;
-    /**
-     * <=.
-     */
-    public static final int LSEQ = 3;
-    /**
-     * <>.
-     */
-    public static final int NTEQ = 4;
-    /**
-     * =.
-     */
-    public static final int EQ = 5;
-
-    /**
-     * LIKE.
-     */
-    public static final int LIKE = 6;
-
-    static final String[] OPS = { " > ", " < ", " >= ", " <= ", " <> ", " = ", " LIKE " };
-
-    private final Expr left;
-    private final Expr right;
-    private final int relop;
-
-    public Relop(Expr left, Expr right, int relop) {
-        if (relop < 0 || relop >= OPS.length) {
-            throw new IllegalArgumentException();
-        }
-        this.left = left;
-        this.right = right;
-        this.relop = relop;
-    }
-
-    /**
-     * Returns the left part.
-     *
-     * @return
-     */
-    public Expr getLeft() {
-        return left;
-    }
-
-    /**
-     * Returns the right part.
-     *
-     * @return
-     */
-    public Expr getRight() {
-        return right;
-    }
-
-    /**
-     * Returns the relation.
-     *
-     * @return
-     */
-    public int getRelop() {
-        return relop;
-    }
-
-    @Override
-    public void accept(ExprVisitor visitor) throws ParseException {
-        left.accept(visitor);
-        right.accept(visitor);
-        visitor.visitRelop(this);
-    }
-}
 
 /**
  * ... IN (..., ..., ...).
@@ -269,6 +171,13 @@ final class In extends LogicValuedExpr {
      */
     public List<Expr> getOperands() {
         return operands;
+    }
+
+    @Override
+    public List<Expr> getAllOperands() {
+        return Stream.of(Arrays.asList(left), this.getOperands())
+            .flatMap(List::stream)
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -324,6 +233,11 @@ final class Between extends LogicValuedExpr {
     }
 
     @Override
+    public List<Expr> getAllOperands() {
+        return Arrays.asList(this.getLeft(), this.getRight1(), this.getRight2());
+    }
+
+    @Override
     public void accept(ExprVisitor visitor) throws ParseException {
         left.accept(visitor);
         right1.accept(visitor);
@@ -357,6 +271,11 @@ final class IsNull extends LogicValuedExpr {
     }
 
     @Override
+    public List<Expr> getAllOperands() {
+        return Arrays.asList(this.getExpr());
+    }
+
+    @Override
     public void accept(ExprVisitor visitor) throws ParseException {
         expr.accept(visitor);
         visitor.visitIsNull(this);
@@ -383,68 +302,17 @@ final class NotExpr extends LogicValuedExpr {
     }
 
     @Override
+    public List<Expr> getAllOperands() {
+        return Arrays.asList(getExpr());
+    }
+
+    @Override
     public void accept(ExprVisitor visitor) throws ParseException {
         expr.accept(visitor);
         visitor.visitNotExpr(this);
     }
 }
 
-/**
- * AND/OR.
- */
-// TODO:: MAKE PUBLIC
-public final class BinaryLogicalOp extends LogicValuedExpr {
-    public static final int AND = 0;
-    public static final int OR = 1;
-    public static final String[] OPS = { " AND ", " OR " };
-
-    private final int operator;
-    private final List<Expr> operands;
-
-    BinaryLogicalOp(int operator, List<Expr> operands) throws ParseException {
-        if (operator < 0 || operator >= OPS.length) {
-            throw new IllegalArgumentException();
-        }
-        if (operands.isEmpty()) {
-            throw new IllegalArgumentException();
-        }
-        // all operands should be logical
-        for (Expr e : operands) {
-            if (e.getMeta().getColumnType() != ViewColumnType.LOGIC) {
-                throw new ParseException(
-                        String.format("Expression '%s' is expected to be logical condition.", e.getCSQL()));
-            }
-        }
-        this.operands = operands;
-        this.operator = operator;
-    }
-
-    /**
-     * Returns the operator.
-     *
-     * @return
-     */
-    public int getOperator() {
-        return operator;
-    }
-
-    /**
-     * Returns the operands.
-     *
-     * @return
-     */
-    public List<Expr> getOperands() {
-        return operands;
-    }
-
-    @Override
-    public void accept(ExprVisitor visitor) throws ParseException {
-        for (Expr e : operands) {
-            e.accept(visitor);
-        }
-        visitor.visitBinaryLogicalOp(this);
-    }
-}
 
 /**
  * +, -, *, /.
@@ -705,152 +573,3 @@ abstract class Aggregate extends Expr {
 
 }
 
-
-/**
- * Reference to a table column.
- */
-final class FieldRef extends Expr {
-    private String tableNameOrAlias;
-    private String columnName;
-    private Column<?> column = null;
-    private ViewColumnMeta<?> meta;
-
-    public FieldRef(String tableNameOrAlias, String columnName) throws ParseException {
-        if (columnName == null) {
-            throw new IllegalArgumentException();
-        }
-        this.tableNameOrAlias = tableNameOrAlias;
-        this.columnName = columnName;
-
-    }
-
-    /**
-     * Returns table name or alias.
-     *
-     * @return
-     */
-    public String getTableNameOrAlias() {
-        return tableNameOrAlias;
-    }
-
-    /**
-     * Returns column name.
-     *
-     * @return
-     */
-    public String getColumnName() {
-        return columnName;
-    }
-
-    @Override
-    public ViewColumnMeta<?> getMeta() {
-        if (meta == null) {
-            if (column != null) {
-                if (column instanceof IntegerColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.INT);
-                } else if (column instanceof FloatingColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.REAL);
-                } else if (column instanceof DecimalColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.DECIMAL);
-                } else if (column instanceof StringColumn) {
-                    StringColumn sc = (StringColumn) column;
-                    if (sc.isMax()) {
-                        meta = new ViewColumnMeta<>(ViewColumnType.TEXT);
-                    } else {
-                        meta = new ViewColumnMeta<>(ViewColumnType.TEXT, sc.getLength());
-                    }
-                } else if (column instanceof BooleanColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.BIT);
-                } else if (column instanceof DateTimeColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.DATE);
-                } else if (column instanceof ZonedDateTimeColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.DATE_WITH_TIME_ZONE);
-                } else if (column instanceof BinaryColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.BLOB);
-                // This should not happen unless we introduced new types in
-                // Celesta
-                } else {
-                    throw new IllegalStateException();
-                }
-                meta.setNullable(column.isNullable());
-                meta.setCelestaDoc(column.getCelestaDoc());
-            } else {
-                return new ViewColumnMeta<>(ViewColumnType.UNDEFINED);
-            }
-        }
-        return meta;
-    }
-
-    /**
-     * Returns the column that the reference is pointing to.
-     *
-     * @return
-     */
-    public Column<?> getColumn() {
-        return column;
-    }
-
-    /**
-     * Sets the column of the reference.
-     *
-     * @param column  reference column
-     */
-    void setColumn(Column<?> column) {
-        this.column = column;
-    }
-
-    void setTableNameOrAlias(String tableNameOrAlias) {
-        this.tableNameOrAlias = tableNameOrAlias;
-    }
-
-    void setColumnName(String columnName) {
-        this.columnName = columnName;
-    }
-
-    @Override
-    public void accept(ExprVisitor visitor) throws ParseException {
-        visitor.visitFieldRef(this);
-    }
-
-}
-
-final class ParameterRef extends Expr {
-
-    private Parameter parameter;
-    private final String name;
-    private ViewColumnMeta<?> meta;
-
-    public ParameterRef(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public ViewColumnMeta<?> getMeta() {
-        if (meta == null) {
-            if (parameter != null) {
-                meta = new ViewColumnMeta<>(parameter.getType());
-            } else {
-                meta = new ViewColumnMeta<>(ViewColumnType.UNDEFINED);
-            }
-        }
-        return meta;
-    }
-
-    @Override
-    void accept(ExprVisitor visitor) throws ParseException {
-        visitor.visitParameterRef(this);
-    }
-
-    public Parameter getParameter() {
-        return parameter;
-    }
-
-    public void setParameter(Parameter parameter) {
-        this.parameter = parameter;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-}

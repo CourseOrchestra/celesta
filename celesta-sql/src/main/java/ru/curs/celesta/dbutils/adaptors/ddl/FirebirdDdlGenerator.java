@@ -17,9 +17,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
 
@@ -397,18 +399,103 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         }
         bw.flush();
 
+        // Calculating of max available varchar length for input params
+        Map<String, Integer> textParamToLengthMap = Stream.of((LogicValuedExpr) pv.getWhereCondition())
+            .map(logicValuedExpr -> new BaseLogicValuedExprExtractor().extract(logicValuedExpr))
+            .flatMap(List::stream)
+            .filter(logicValuedExpr -> {
+                Set<Class<? extends Expr>> opsClasses = logicValuedExpr.getAllOperands().stream()
+                    .map(Expr::getClass)
+                    .collect(Collectors.toSet());
 
-        // TODO:: ADD CORRECT TYPED IN PARAMS
-        ((BinaryLogicalOp)pv.getWhereCondition()).getOperands()
+                return opsClasses.containsAll(Arrays.asList(ParameterRef.class, FieldRef.class));
+            })
+            .map(logicValuedExpr -> {
+                Map<Class, List<Expr>> classToExprsMap = logicValuedExpr.getAllOperands().stream()
+                    .collect(Collectors.toMap(
+                        Expr::getClass,
+                        expr -> new ArrayList<>(Arrays.asList(expr)),
+                        (oldList, newList) -> Stream.of(oldList, newList).flatMap(List::stream).collect(Collectors.toList())
+                    ));
+
+                return classToExprsMap;
+                }
+            ).filter(classExprMap ->
+                classExprMap.get(ParameterRef.class).stream()
+                .anyMatch(expr -> ViewColumnType.TEXT.equals(expr.getMeta().getColumnType()))
+            )
+            .map(classExprMap -> {
+                    Map<Class<? extends Expr>, List<Expr>> result = new HashMap<>();
+                    result.put(
+                        ParameterRef.class,
+                        classExprMap.get(ParameterRef.class).stream()
+                            .map(ParameterRef.class::cast)
+                            .filter(parameterRef -> ViewColumnType.TEXT.equals(parameterRef.getMeta().getColumnType()))
+                            .collect(Collectors.toList())
+                    );
+                    result.put(
+                        FieldRef.class,
+                        classExprMap.get(FieldRef.class).stream()
+                            .map(FieldRef.class::cast)
+                            .filter(fieldRef -> fieldRef.getColumn() instanceof StringColumn)
+                            .collect(Collectors.toList())
+                    );
+                    return result;
+                })
+            .map(classExprMap -> classExprMap.get(ParameterRef.class).stream()
+                .map(ParameterRef.class::cast)
+                .collect(Collectors.toMap(
+                    Function.identity(),
+                    pr -> classExprMap.get(FieldRef.class).stream()
+                        .map(FieldRef.class::cast)
+                        .collect(Collectors.toList())
+                )))
+            .flatMap(map -> map.entrySet().stream())
+            .map(e -> e.getValue().stream()
+                .map(FieldRef::getColumn)
+                .map(StringColumn.class::cast)
+                .map(sc -> new AbstractMap.SimpleEntry<>(e.getKey(), sc))
+                .collect(Collectors.toList())
+            )
+            .flatMap(List::stream)
+            .collect(
+                Collectors.toMap(
+                    e -> e.getKey().getName(),
+                    e -> e.getValue().isMax() ? 0 : e.getValue().getLength(),
+                    (oldLength, newLength) -> {
+                        if (oldLength == 0 || newLength == 0) {
+                            return 0;
+                        } else {
+                            return Math.max(oldLength, newLength);
+                        }
+                    }
+                )
+            );
 
         String inParams = pv.getParameters()
             .entrySet().stream()
-            .map(e ->
-                e.getKey() + " "
-                    + ColumnDefinerFactory.getColumnDefiner(getType(),
-                    CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getType().getCelestaType())
-                ).dbFieldType()
+            .map(e -> {
+                    final String type;
+
+                    ViewColumnType viewColumnType = e.getValue().getType();
+                    if (ViewColumnType.TEXT == viewColumnType) {
+                        int length = textParamToLengthMap.get(e.getKey());
+
+                        if (length == 0) {
+                            type = "blob sub_type text";
+                        } else {
+                            type = String.format("varchar(%d)", length);
+                        }
+                    } else {
+                        type = ColumnDefinerFactory.getColumnDefiner(getType(),
+                            CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getType().getCelestaType())
+                        ).dbFieldType();
+                    }
+
+                    return e.getKey() + " " + type;
+                }
             ).collect(Collectors.joining(", "));
+
 
         String outParams = pv.getColumns()
             .entrySet().stream()
@@ -454,6 +541,26 @@ public class FirebirdDdlGenerator extends DdlGenerator {
             inParams, outParams, selectSql, intoList);
 
         return Arrays.asList(sql);
+    }
+
+    public static class BaseLogicValuedExprExtractor {
+        List<LogicValuedExpr> extract(LogicValuedExpr logicValuedExpr) {
+            List<LogicValuedExpr> result = new ArrayList<>();
+
+            boolean containsAnotherLogicValuedExpr = logicValuedExpr.getAllOperands().stream()
+                .anyMatch(expr -> expr instanceof LogicValuedExpr);
+
+            if (containsAnotherLogicValuedExpr) {
+                logicValuedExpr.getAllOperands().stream()
+                    .filter(expr -> expr instanceof LogicValuedExpr)
+                    .map(LogicValuedExpr.class::cast)
+                    .forEach(lve -> result.addAll(this.extract(lve)));
+            } else {
+                result.add(logicValuedExpr);
+            }
+
+            return result;
+        }
     }
 
     @Override
@@ -567,7 +674,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                 .map(alias -> "mv." + alias + " = %1$s." + alias + " ")
                 .collect(Collectors.joining(" AND "));
 
-            StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s mv")
+            StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s mv ")
                 .append("USING (SELECT %s FROM inserted GROUP BY %s) AS aggregate ON %s \n")
                 .append("WHEN MATCHED THEN \n ")
                 .append("UPDATE SET %s \n")
@@ -602,7 +709,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                     + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
                     + "\n " + insertSql + "\n END;";
 
-            result.add(sql);
+            //result.add(sql);
         }
 
         return result;

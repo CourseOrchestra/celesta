@@ -40,7 +40,9 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
 
     @Override
     public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext extensionContext) {
-        return Arrays.stream(Backend.values()).map(this::invocationContext);
+        // TODO:: UNCOMMENT!
+        //return Arrays.stream(Backend.values()).map(this::invocationContext);
+        return Stream.of(Backend.FireBird).map(this::invocationContext);
     }
 
     private TestTemplateInvocationContext invocationContext(final Backend backend) {
