@@ -74,6 +74,7 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     }
 
+    // TODO: !!!
     @Override
     String getSelectTriggerBodySql(TriggerQuery query) {
         return null;
@@ -664,6 +665,7 @@ public class FirebirdAdaptor extends DBAdaptor {
         }
     }
 
+    // TODO: !!!
     @Override
     public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
         return null;
@@ -677,22 +679,26 @@ public class FirebirdAdaptor extends DBAdaptor {
     @Override
     public String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
                                     List<String> otherFields, String whereForOtherTable) {
-        // TODO: COPY PASTE (Oracle)
-        String template = "( %s ) IN (SELECT %s FROM %s WHERE %s)";
+        // TODO: COPY PASTE (Mssql)
+        String template = "EXISTS (SELECT * FROM %s WHERE %s AND %s)";
 
-        String fieldsStr = String.join(",",
-            fields.stream()
-                .map(s -> "\"" + s + "\"")
-                .collect(Collectors.toList())
-        );
-        String otherFieldsStr = String.join(",",
-            otherFields.stream()
-                .map(s -> "\"" + s + "\"")
-                .collect(Collectors.toList())
-        );
-
+        String tableStr = tableString(dge.getGrain().getName(), dge.getName());
         String otherTableStr = tableString(otherDge.getGrain().getName(), otherDge.getName());
-        String result = String.format(template, fieldsStr, otherFieldsStr, otherTableStr, whereForOtherTable);
+
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < fields.size(); ++i) {
+            sb.append(tableStr).append(".\"").append(fields.get(i)).append("\"")
+                .append(" = ")
+                .append(otherTableStr).append(".\"").append(otherFields.get(i)).append("\"");
+
+            if (i + 1 != fields.size()) {
+                sb.append(" AND ");
+            }
+        }
+
+        String result = String.format(template, otherTableStr, sb.toString(), whereForOtherTable);
         return result;
     }
 
