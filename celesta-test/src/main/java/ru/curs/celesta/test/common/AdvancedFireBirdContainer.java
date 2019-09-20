@@ -1,7 +1,10 @@
 package ru.curs.celesta.test.common;
 
 import org.firebirdsql.testcontainers.FirebirdContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +16,10 @@ public class AdvancedFireBirdContainer extends FirebirdContainer {
 
     public AdvancedFireBirdContainer() {
         super("jacobalberty/firebird:4.0");
+    }
+
+    public AdvancedFireBirdContainer(String imageName) {
+        super(imageName);
     }
 
     @Override

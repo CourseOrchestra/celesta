@@ -4,6 +4,7 @@ package ru.curs.celesta.script;
 import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.DBType;
 import testTable.*;
 
 import java.io.*;
@@ -225,7 +226,23 @@ public class TestTable implements ScriptTest {
 
         c.setCost(new BigDecimal("123.2"));
 
-        assertThrows(CelestaException.class, () -> c.update());
+        if (DBType.FIREBIRD.equals(cc.getDbAdaptor().getType())) {
+            c.update();
+            c.first();
+            assertEquals(new BigDecimal("123.2"), c.getCost().stripTrailingZeros());
+        } else{
+            assertThrows(CelestaException.class, () -> c.update());
+        }
+
+        c.setCost(new BigDecimal("1234.25235"));
+
+        if (DBType.FIREBIRD.equals(cc.getDbAdaptor().getType())) {
+            c.update();
+            c.first();
+            assertEquals(new BigDecimal("1234.25"), c.getCost().stripTrailingZeros());
+        } else{
+            assertThrows(CelestaException.class, () -> c.update());
+        }
     }
 
     @TestTemplate
@@ -297,10 +314,10 @@ public class TestTable implements ScriptTest {
 
         cursor = new TXRecCursor(cc);
         assertEquals(3, cursor.count());
-        
+
         cursor.setRange(cursor.COLUMNS.num(), 22);
         assertEquals(1, cursor.count());
-        
+
         cursor.setRange(cursor.COLUMNS.num());
         assertEquals(3, cursor.count());
 
@@ -327,10 +344,10 @@ public class TestTable implements ScriptTest {
 
         cursor = new TXRecCursor(cc);
         assertEquals(3, cursor.count());
-        
+
         cursor.setFilter(cursor.COLUMNS.num(), "22");
         assertEquals(1, cursor.count());
-        
+
         cursor.setRange(cursor.COLUMNS.num());
         assertEquals(3, cursor.count());
 

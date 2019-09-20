@@ -18,6 +18,7 @@ import ru.curs.celesta.score.*;
 import ru.curs.celesta.score.validator.AnsiQuotedIdentifierParser;
 
 import java.sql.*;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,23 +52,24 @@ public class FirebirdAdaptor extends DBAdaptor {
 
         final String sql;
 
-        String first = "";
-        String offsetSql = "";
-
+        String firstSql = "";
         if (rowCount != 0) {
-            first = String.format("FIRST %s", rowCount);
-        }
-
-        if (offset != 0) {
-            offsetSql = String.format("OFFSET %s ROWS", offset);
+            firstSql = String.format("FIRST %s", rowCount);
         }
 
         String sqlwhere = "".equals(whereClause) ? "" : " WHERE " + whereClause;
 
         final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
 
-        sql = String.format("SELECT %s %s FROM %s", first, fieldList,
-            from.getExpression()) + sqlwhere + " ORDER BY " + orderBy + " " + offsetSql;
+        sql = String.format(
+            "SELECT %s SKIP %d %s FROM %s %s ORDER BY %s",
+            firstSql,
+            offset,
+            fieldList,
+            from.getExpression(),
+            sqlwhere,
+            orderBy
+        );
 
         return sql;
 
@@ -651,7 +653,50 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public long nextSequenceValue(Connection conn, SequenceElement s) {
-        return 0;
+        String sql = String.format(
+            "SELECT GEN_ID(%s, %s) from RDB$DATABASE",
+            sequenceString(s.getGrain().getName(), s.getName()),
+            s.getArguments().get(SequenceElement.Argument.INCREMENT_BY)
+        );
+
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            rs.next();
+            return rs.getLong(1);
+        } catch (SQLException e) {
+            throw new CelestaException(
+                "Can't get current value of sequence " + tableString(s.getGrain().getName(), s.getName()), e
+            );
+        }
+    }
+
+    @Override
+    public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
+        return super.prepareZonedDateTimeForParameterSetter(conn, z);
+
+        //TODO:: !!!
+        /*
+        String sql = "select extract(TIMEZONE_HOUR from current_time), extract(timezone_minute from current_timestamp) from rdb$database;";
+
+Integer dbTimeZoneHour = null;
+Integer dbTimeZoneMinute = null;
+
+try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+    rs.next();
+    dbTimeZoneHour = rs.getInt(1);
+    dbTimeZoneMinute = rs.getInt(2);
+} catch (Exception e) {
+    throw new RuntimeException(e);
+}
+
+Instant instant = Instant.now();
+ZoneOffset dbZoneOffset = ZoneOffset.ofHoursMinutes(dbTimeZoneHour, dbTimeZoneMinute);
+ZoneOffset systemOffset = ZoneOffset.systemDefault().getRules().getOffset(instant);
+int offsetDifInSeconds = systemOffset.getTotalSeconds() - dbZoneOffset.getTotalSeconds();
+
+
+z = z.plusSeconds(offsetDifInSeconds);
+         */
     }
 
     @Override

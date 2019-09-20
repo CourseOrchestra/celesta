@@ -16,6 +16,10 @@ public final class Sum extends Aggregate {
   }
 
 
+  public Expr getTerm() {
+    return term;
+  }
+
   @Override
   void accept(ExprVisitor visitor) throws ParseException {
     term.accept(visitor);

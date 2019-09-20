@@ -1,9 +1,9 @@
 package ru.curs.celesta.test;
 
-import org.firebirdsql.testcontainers.FirebirdContainer;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.ConnectionPoolConfiguration;
@@ -23,7 +23,23 @@ public class ContainerUtils {
     public static final OracleContainer ORACLE = new OracleContainer();
     public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
         .withCollation("Cyrillic_General_CI_AI");
-    public static final AdvancedFireBirdContainer FIREBIRD = new AdvancedFireBirdContainer();
+
+    public static final ImageFromDockerfile fireBirdImage =
+        new ImageFromDockerfile("curs/firebird:4.0.0.1613-beta1", false)
+        .withFileFromClasspath("Dockerfile", "dockerfile/firebird/Dockerfile")
+        .withFileFromClasspath("build.sh", "dockerfile/firebird/build.sh")
+        .withFileFromClasspath("docker-entrypoint.sh", "dockerfile/firebird/docker-entrypoint.sh")
+        .withFileFromClasspath("docker-healthcheck.sh", "dockerfile/firebird/docker-healthcheck.sh");
+
+    static {
+        try {
+            fireBirdImage.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static final AdvancedFireBirdContainer FIREBIRD = new AdvancedFireBirdContainer(fireBirdImage.getDockerImageName());
 
 
     private static final String DROP_TABLE_FROM_ORACLE_TEMPLATE = "DROP TABLE %s CASCADE CONSTRAINTS";

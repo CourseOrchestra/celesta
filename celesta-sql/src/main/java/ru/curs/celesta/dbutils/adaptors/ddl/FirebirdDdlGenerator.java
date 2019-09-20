@@ -17,6 +17,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -401,77 +403,55 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         bw.flush();
 
         // Calculating of max available varchar length for input params
-        Map<String, Integer> textParamToLengthMap = Stream.of((LogicValuedExpr) pv.getWhereCondition())
-            .map(logicValuedExpr -> new BaseLogicValuedExprExtractor().extract(logicValuedExpr))
-            .flatMap(List::stream)
-            .filter(logicValuedExpr -> {
-                Set<Class<? extends Expr>> opsClasses = logicValuedExpr.getAllOperands().stream()
-                    .map(Expr::getClass)
-                    .collect(Collectors.toSet());
-
-                return opsClasses.containsAll(Arrays.asList(ParameterRef.class, FieldRef.class));
-            })
-            .map(logicValuedExpr -> {
-                Map<Class, List<Expr>> classToExprsMap = logicValuedExpr.getAllOperands().stream()
-                    .collect(Collectors.toMap(
-                        Expr::getClass,
-                        expr -> new ArrayList<>(Arrays.asList(expr)),
-                        (oldList, newList) -> Stream.of(oldList, newList).flatMap(List::stream).collect(Collectors.toList())
-                    ));
-
-                return classToExprsMap;
+        Map<String, String> textParamMap = new ParameterizedViewTypeResolver<>(
+            pv,
+            ViewColumnType.TEXT,
+            StringColumn.class,
+            sc -> sc.isMax() ? 0 : sc.getLength(),
+            (oldLength, newLength) -> {
+                if (oldLength == 0 || newLength == 0) {
+                    return 0;
+                } else {
+                    return Math.max(oldLength, newLength);
                 }
-            ).filter(classExprMap ->
-                classExprMap.get(ParameterRef.class).stream()
-                .anyMatch(expr -> ViewColumnType.TEXT.equals(expr.getMeta().getColumnType()))
-            )
-            .map(classExprMap -> {
-                    Map<Class<? extends Expr>, List<Expr>> result = new HashMap<>();
-                    result.put(
-                        ParameterRef.class,
-                        classExprMap.get(ParameterRef.class).stream()
-                            .map(ParameterRef.class::cast)
-                            .filter(parameterRef -> ViewColumnType.TEXT.equals(parameterRef.getMeta().getColumnType()))
-                            .collect(Collectors.toList())
-                    );
-                    result.put(
-                        FieldRef.class,
-                        classExprMap.get(FieldRef.class).stream()
-                            .map(FieldRef.class::cast)
-                            .filter(fieldRef -> fieldRef.getColumn() instanceof StringColumn)
-                            .collect(Collectors.toList())
-                    );
-                    return result;
-                })
-            .map(classExprMap -> classExprMap.get(ParameterRef.class).stream()
-                .map(ParameterRef.class::cast)
-                .collect(Collectors.toMap(
-                    Function.identity(),
-                    pr -> classExprMap.get(FieldRef.class).stream()
-                        .map(FieldRef.class::cast)
-                        .collect(Collectors.toList())
-                )))
-            .flatMap(map -> map.entrySet().stream())
-            .map(e -> e.getValue().stream()
-                .map(FieldRef::getColumn)
-                .map(StringColumn.class::cast)
-                .map(sc -> new AbstractMap.SimpleEntry<>(e.getKey(), sc))
-                .collect(Collectors.toList())
-            )
-            .flatMap(List::stream)
-            .collect(
-                Collectors.toMap(
-                    e -> e.getKey().getName(),
-                    e -> e.getValue().isMax() ? 0 : e.getValue().getLength(),
-                    (oldLength, newLength) -> {
-                        if (oldLength == 0 || newLength == 0) {
-                            return 0;
-                        } else {
-                            return Math.max(oldLength, newLength);
-                        }
-                    }
+            },
+            length -> {
+                if (length == 0) {
+                    return "blob sub_type text";
+                } else {
+                    return String.format("varchar(%d)", length);
+                }
+            }
+        ).resolveTypes();
+
+        class ScaleAndPrecision {
+            private int precision;
+            private int scale;
+
+            private ScaleAndPrecision(int precision, int scale) {
+                this.precision = precision;
+                this.scale = scale;
+            }
+        }
+
+        // Calculating of max available varchar length for input params
+        Map<String, String> decimalParamMap = new ParameterizedViewTypeResolver<>(
+            pv,
+            ViewColumnType.DECIMAL,
+            DecimalColumn.class,
+            dc -> new ScaleAndPrecision(dc.getPrecision(), dc.getScale()),
+            (oldValue, newValue) -> new ScaleAndPrecision(
+                Math.max(oldValue.precision, newValue.precision),
+                Math.max(oldValue.scale, newValue.scale)
+            ),
+            scaleAndPrecision ->
+                String.format(
+                    "%s(%s,%s)",
+                    ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
+                    scaleAndPrecision.precision,
+                    scaleAndPrecision.scale
                 )
-            );
+        ).resolveTypes();
 
         String inParams = pv.getParameters()
             .entrySet().stream()
@@ -480,13 +460,9 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
                     ViewColumnType viewColumnType = e.getValue().getType();
                     if (ViewColumnType.TEXT == viewColumnType) {
-                        int length = textParamToLengthMap.get(e.getKey());
-
-                        if (length == 0) {
-                            type = "blob sub_type text";
-                        } else {
-                            type = String.format("varchar(%d)", length);
-                        }
+                        type = textParamMap.get(e.getKey());
+                    } else if (ViewColumnType.DECIMAL == viewColumnType) {
+                        type = decimalParamMap.get(e.getKey());
                     } else {
                         type = ColumnDefinerFactory.getColumnDefiner(getType(),
                             CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getType().getCelestaType())
@@ -511,6 +487,42 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                             type = "blob sub_type text";
                         } else {
                             type = String.format("varchar(%d)", sc.getLength());
+                        }
+                    } else if (ViewColumnType.DECIMAL == viewColumnMeta.getColumnType()) {
+                        DecimalColumn dc = (DecimalColumn)pv.getColumnRef(viewColumnMeta.getName());
+
+                        if (dc != null) {
+                            type = String.format(
+                                "%s(%s,%s)",
+                                ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
+                                dc.getPrecision(),
+                                dc.getScale()
+                            );
+                        } else {
+                            Sum sum = (Sum)pv.getAggregateColumns().get(viewColumnMeta.getName());
+                            BinaryTermOp binaryTermOp = (BinaryTermOp)sum.getTerm();
+                            List<DecimalColumn> decimalColumns = binaryTermOp.getOperands().stream()
+                                .filter(op -> op instanceof FieldRef)
+                                .map(FieldRef.class::cast)
+                                .filter(fr -> DecimalColumn.class.equals(fr.getColumn().getClass()))
+                                .map(FieldRef::getColumn)
+                                .map(DecimalColumn.class::cast)
+                                .collect(Collectors.toList());
+
+                            int maxPrecision = decimalColumns.stream()
+                                .mapToInt(DecimalColumn::getPrecision)
+                                .max().getAsInt();
+
+                            int maxScale = decimalColumns.stream()
+                                .mapToInt(DecimalColumn::getScale)
+                                .max().getAsInt();
+
+                            type = String.format(
+                                "%s(%s,%s)",
+                                ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
+                                maxPrecision,
+                                maxScale
+                            );
                         }
                     } else {
                         type = ColumnDefinerFactory.getColumnDefiner(getType(),
@@ -916,5 +928,103 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         result.add(deleteTempColumn);
 
         return result;
+    }
+
+    private class ParameterizedViewTypeResolver<T, R> {
+
+        private final ParameterizedView pv;
+        private final ViewColumnType viewColumnType;
+        private final Class<R> columnClass;
+        private final Function<R, T> valueResolver;
+        private final BinaryOperator<T> valueMerger;
+        private final Function<T, String> postMapper;
+
+
+        public ParameterizedViewTypeResolver(ParameterizedView pv, ViewColumnType viewColumnType, Class<R> columnClass,
+                                             Function<R, T> valueResolver, BinaryOperator<T> valueMerger,
+                                             Function<T, String> postMapper) {
+            this.pv = pv;
+            this.viewColumnType = viewColumnType;
+            this.columnClass = columnClass;
+            this.valueResolver = valueResolver;
+            this.valueMerger = valueMerger;
+            this.postMapper = postMapper;
+        }
+
+        public Map<String, String> resolveTypes() {
+            Map<String, String> columnToTypeMap = Stream.of((LogicValuedExpr) pv.getWhereCondition())
+                .map(logicValuedExpr -> new BaseLogicValuedExprExtractor().extract(logicValuedExpr))
+                .flatMap(List::stream)
+                .filter(logicValuedExpr -> {
+                    Set<Class<? extends Expr>> opsClasses = logicValuedExpr.getAllOperands().stream()
+                        .map(Expr::getClass)
+                        .collect(Collectors.toSet());
+
+                    return opsClasses.containsAll(Arrays.asList(ParameterRef.class, FieldRef.class));
+                })
+                .map(logicValuedExpr -> {
+                        Map<Class, List<Expr>> classToExprsMap = logicValuedExpr.getAllOperands().stream()
+                            .collect(Collectors.toMap(
+                                Expr::getClass,
+                                expr -> new ArrayList<>(Arrays.asList(expr)),
+                                (oldList, newList) -> Stream.of(oldList, newList).flatMap(List::stream).collect(Collectors.toList())
+                            ));
+
+                        return classToExprsMap;
+                    }
+                ).filter(classExprMap ->
+                    classExprMap.get(ParameterRef.class).stream()
+                        .anyMatch(expr -> this.viewColumnType.equals(expr.getMeta().getColumnType()))
+                )
+                .map(classExprMap -> {
+                    Map<Class<? extends Expr>, List<Expr>> result = new HashMap<>();
+                    result.put(
+                        ParameterRef.class,
+                        classExprMap.get(ParameterRef.class).stream()
+                            .map(ParameterRef.class::cast)
+                            .filter(parameterRef -> this.viewColumnType.equals(parameterRef.getMeta().getColumnType()))
+                            .collect(Collectors.toList())
+                    );
+                    result.put(
+                        FieldRef.class,
+                        classExprMap.get(FieldRef.class).stream()
+                            .map(FieldRef.class::cast)
+                            .filter(fieldRef -> fieldRef.getColumn().getClass() == columnClass)
+                            .collect(Collectors.toList())
+                    );
+                    return result;
+                })
+                .map(classExprMap -> classExprMap.get(ParameterRef.class).stream()
+                    .map(ParameterRef.class::cast)
+                    .collect(Collectors.toMap(
+                        Function.identity(),
+                        pr -> classExprMap.get(FieldRef.class).stream()
+                            .map(FieldRef.class::cast)
+                            .collect(Collectors.toList())
+                    )))
+                .flatMap(map -> map.entrySet().stream())
+                .map(e -> e.getValue().stream()
+                    .map(FieldRef::getColumn)
+                    .map(this.columnClass::cast)
+                    .map(sc -> new AbstractMap.SimpleEntry<>(e.getKey(), sc))
+                    .collect(Collectors.toList())
+                )
+                .flatMap(List::stream)
+                .collect(
+                    Collectors.toMap(
+                        e -> e.getKey().getName(),
+                        e -> this.valueResolver.apply(e.getValue()),
+                        this.valueMerger::apply
+                    )
+                ).entrySet().stream()
+                .collect(
+                    Collectors.toMap(
+                        e -> e.getKey(),
+                        e -> this.postMapper.apply(e.getValue())
+                    )
+                );
+
+            return columnToTypeMap;
+        }
     }
 }
