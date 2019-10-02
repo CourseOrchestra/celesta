@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TestSimpleCases implements ScriptTest {
+public class TestSimpleCases implements ScriptTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestSimpleCases.class);
 
@@ -49,8 +49,6 @@ class TestSimpleCases implements ScriptTest {
         tableCursor.setDate(Timestamp.valueOf(LocalDateTime.now().plusDays(1)));
         tableCursor.insert();
         assertEquals(1, viewCursor.count());
-
-
     }
 
     @TestTemplate
@@ -108,7 +106,6 @@ class TestSimpleCases implements ScriptTest {
 
         assertTrue(isPreDeleteDone.booleanValue());
         assertTrue(isPostDeleteDone.booleanValue());
-
     }
 
     @TestTemplate
@@ -157,8 +154,6 @@ class TestSimpleCases implements ScriptTest {
 
         assertTrue(isPreDeleteDone.booleanValue());
         assertTrue(isPostDeleteDone.booleanValue());
-
-
     }
 
     @TestTemplate
@@ -170,6 +165,46 @@ class TestSimpleCases implements ScriptTest {
         assertFalse(c.tryInsert());
         c.setId(12);
         assertTrue(c.tryInsert());
-
     }
+
+    @TestTemplate
+    void test_cursor_getCurrentKeyValues(CallContext context) {
+        Simple_tableCursor c = new Simple_tableCursor(context);
+        c.deleteAll();
+        c.setId(1);
+        c.setName("ONE");
+        c.insert();
+
+        c = new Simple_tableCursor(context);
+        c = c.iterator().next();
+
+        Object[] keyValues = c.getCurrentKeyValues();
+
+        assertEquals(1, keyValues.length);
+        assertEquals(1, keyValues[0]);
+        assertTrue(keyValues[0].getClass() == Integer.class);
+    }
+
+    @TestTemplate
+    void test_cursor_getCurrentValues(CallContext context) {
+        Simple_tableCursor c = new Simple_tableCursor(context);
+        c.deleteAll();
+        c.setId(1);
+        c.setName("ONE");
+        c.insert();
+
+        c = new Simple_tableCursor(context);
+        c = c.iterator().next();
+
+        Object[] values = c.getCurrentValues();
+
+        assertEquals(2, values.length);
+
+        assertEquals(1, values[0]);
+        assertTrue(values[0].getClass() == Integer.class);
+
+        assertEquals("ONE", values[1]);
+        assertTrue(values[1].getClass() == String.class);
+    }
+
 }
