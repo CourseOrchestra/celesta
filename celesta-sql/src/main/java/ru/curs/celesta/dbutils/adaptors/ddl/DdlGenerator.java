@@ -123,14 +123,14 @@ public abstract class DdlGenerator {
         return this.dmlAdaptor.pkConstraintString(tableElement);
     }
 
-    final String alterSequence(SequenceElement s) {
+    protected List<String> alterSequence(SequenceElement s) {
         String sql = String.format(
                 "ALTER SEQUENCE %s %s",
                 sequenceString(s.getGrain().getName(), s.getName()),
                 generateArgumentsForCreateSequenceExpression(s, SequenceElement.Argument.START_WITH)
         );
 
-        return sql;
+        return Arrays.asList(sql);
     }
 
     String generateArgumentsForCreateSequenceExpression(

@@ -23,23 +23,7 @@ public class ContainerUtils {
     public static final OracleContainer ORACLE = new OracleContainer();
     public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
         .withCollation("Cyrillic_General_CI_AI");
-
-    public static final ImageFromDockerfile fireBirdImage =
-        new ImageFromDockerfile("curs/firebird:4.0.0.1613-beta1", false)
-        .withFileFromClasspath("Dockerfile", "dockerfile/firebird/Dockerfile")
-        .withFileFromClasspath("build.sh", "dockerfile/firebird/build.sh")
-        .withFileFromClasspath("docker-entrypoint.sh", "dockerfile/firebird/docker-entrypoint.sh")
-        .withFileFromClasspath("docker-healthcheck.sh", "dockerfile/firebird/docker-healthcheck.sh");
-
-    static {
-        try {
-            fireBirdImage.get();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static final AdvancedFireBirdContainer FIREBIRD = new AdvancedFireBirdContainer(fireBirdImage.getDockerImageName());
+    public static final AdvancedFireBirdContainer FIREBIRD = new AdvancedFireBirdContainer();
 
 
     private static final String DROP_TABLE_FROM_ORACLE_TEMPLATE = "DROP TABLE %s CASCADE CONSTRAINTS";

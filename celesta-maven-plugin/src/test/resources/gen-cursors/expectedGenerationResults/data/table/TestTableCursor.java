@@ -210,11 +210,24 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
             }
         }
         if (this.inRec("toDelete")) {
-            Timestamp ts = rs.getTimestamp("toDelete", Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-            if (ts != null) {
-                this.toDelete = ZonedDateTime.of(ts.toLocalDateTime(), ZoneOffset.systemDefault());
+            if (DBType.FIREBIRD.equals(db().getType())) {
+                Timestamp ts = rs.getTimestamp("toDelete");
+                if (ts != null) {
+                    this.toDelete = ZonedDateTime.of(
+                        ts.toLocalDateTime(),
+                        ZoneOffset.ofHours(Calendar.getInstance().get(Calendar.ZONE_OFFSET) +
+                            Calendar.getInstance().get(Calendar.DST_OFFSET) / (60 * 60 * 1000))
+                    );
+                } else {
+                    this.eventDate = null;
+                }
             } else {
-                this.toDelete = null;
+                Timestamp ts = rs.getTimestamp("toDelete", Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+                if (ts != null) {
+                    this.toDelete = ZonedDateTime.of(ts.toLocalDateTime(), ZoneOffset.systemDefault());
+                } else {
+                    this.toDelete = null;
+                }
             }
         }
         this.setRecversion(rs.getInt("recversion"));

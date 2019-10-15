@@ -18,11 +18,14 @@ import ru.curs.celesta.score.*;
 import ru.curs.celesta.score.validator.AnsiQuotedIdentifierParser;
 
 import java.sql.*;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static ru.curs.celesta.dbutils.jdbc.SqlUtils.executeUpdate;
 
 
 public class FirebirdAdaptor extends DBAdaptor {
@@ -34,6 +37,9 @@ public class FirebirdAdaptor extends DBAdaptor {
     private static final Pattern HEX_STRING = Pattern.compile("'([0-9A-F]+)'"); // TODO:: COPY PASTE
 
     public static final Pattern DATE_PATTERN = Pattern.compile("'(\\d\\d)\\.(\\d\\d)\\.(\\d\\d\\d\\d)'");
+
+    public static final Pattern SEQUENCE_INFO_PATTERN =
+        Pattern.compile("/\\* INCREMENT_BY = (.*), MINVALUE = (.*), MAXVALUE = (.*), CYCLE = (.*) \\*/");
 
     public FirebirdAdaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer) {
         super(connectionPool, ddlConsumer);
@@ -76,10 +82,13 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     }
 
-    // TODO: !!!
     @Override
     String getSelectTriggerBodySql(TriggerQuery query) {
-        return null;
+        String sql = String.format("SELECT RDB$TRIGGER_SOURCE FROM RDB$TRIGGERS " +
+                "WHERE RDB$TRIGGER_NAME = '%s' AND RDB$RELATION_NAME = '%s_%s'",
+            query.getName(), query.getSchema(), query.getTableName());
+
+        return sql;
     }
 
     @Override
@@ -653,14 +662,11 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public long nextSequenceValue(Connection conn, SequenceElement s) {
-        String sql = String.format(
-            "SELECT GEN_ID(%s, %s) from RDB$DATABASE",
-            sequenceString(s.getGrain().getName(), s.getName()),
-            s.getArguments().get(SequenceElement.Argument.INCREMENT_BY)
-        );
+        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
 
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        String sql = String.format("EXECUTE PROCEDURE %s", nextValueProcName);
+
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             rs.next();
             return rs.getLong(1);
         } catch (SQLException e) {
@@ -672,31 +678,15 @@ public class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public ZonedDateTime prepareZonedDateTimeForParameterSetter(Connection conn, ZonedDateTime z) {
-        return super.prepareZonedDateTimeForParameterSetter(conn, z);
+        return z.withZoneSameInstant(ZoneId.systemDefault());
+    }
 
-        //TODO:: !!!
-        /*
-        String sql = "select extract(TIMEZONE_HOUR from current_time), extract(timezone_minute from current_timestamp) from rdb$database;";
-
-Integer dbTimeZoneHour = null;
-Integer dbTimeZoneMinute = null;
-
-try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
-    rs.next();
-    dbTimeZoneHour = rs.getInt(1);
-    dbTimeZoneMinute = rs.getInt(2);
-} catch (Exception e) {
-    throw new RuntimeException(e);
-}
-
-Instant instant = Instant.now();
-ZoneOffset dbZoneOffset = ZoneOffset.ofHoursMinutes(dbTimeZoneHour, dbTimeZoneMinute);
-ZoneOffset systemOffset = ZoneOffset.systemDefault().getRules().getOffset(instant);
-int offsetDifInSeconds = systemOffset.getTotalSeconds() - dbZoneOffset.getTotalSeconds();
-
-
-z = z.plusSeconds(offsetDifInSeconds);
-         */
+    @Override
+    public void dropSequence(Connection conn, SequenceElement s) {
+        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
+        String sql = String.format("DROP PROCEDURE %s", nextValueProcName);
+        executeUpdate(conn, sql);
+        super.dropSequence(conn, s);
     }
 
     @Override
@@ -710,10 +700,34 @@ z = z.plusSeconds(offsetDifInSeconds);
         }
     }
 
-    // TODO: !!!
     @Override
     public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
-        return null;
+        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
+        nextValueProcName = nextValueProcName.replaceAll("\"", "'");
+
+        String sql = String.format("SELECT RDB$PROCEDURE_SOURCE FROM RDB$PROCEDURES " +
+                "WHERE RDB$PROCEDURE_NAME = %s",
+            nextValueProcName);
+
+        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+            rs.next();
+            String body = rs.getString(1);
+
+            Matcher matcher = SEQUENCE_INFO_PATTERN.matcher(body);
+
+            matcher.find();
+
+            DbSequenceInfo dbSequenceInfo = new DbSequenceInfo();
+            dbSequenceInfo.setIncrementBy(Long.valueOf(matcher.group(1)));
+            dbSequenceInfo.setMinValue(Long.valueOf(matcher.group(2)));
+            dbSequenceInfo.setMaxValue(Long.valueOf(matcher.group(3)));
+            dbSequenceInfo.setCycle(Boolean.valueOf(matcher.group(4)));
+
+            return dbSequenceInfo;
+
+        } catch (Exception e) {
+            throw new CelestaException(e);
+        }
     }
 
     @Override
@@ -750,12 +764,16 @@ z = z.plusSeconds(offsetDifInSeconds);
 
     @Override
     public void createSysObjects(Connection conn, String sysSchemaName) {
-        String sql = "CREATE OR ALTER EXCEPTION VERSION_CHECK_ERROR 'record version check failure'";
+        String versionCheckErrorSql =
+            "CREATE OR ALTER EXCEPTION VERSION_CHECK_ERROR 'record version check failure'";
+        String sequenceOverflowErrorSql =
+            "CREATE OR ALTER EXCEPTION SEQUENCE_OVERFLOW_ERROR 'sequence overflow failure'";
 
         try {
             Statement stmt = conn.createStatement();
             try {
-                stmt.executeUpdate(sql);
+                stmt.executeUpdate(versionCheckErrorSql);
+                stmt.executeUpdate(sequenceOverflowErrorSql);
             } finally {
                 stmt.close();
             }

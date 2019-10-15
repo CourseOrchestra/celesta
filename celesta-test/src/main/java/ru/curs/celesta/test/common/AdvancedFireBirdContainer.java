@@ -18,10 +18,6 @@ public class AdvancedFireBirdContainer extends FirebirdContainer {
         super("jacobalberty/firebird:4.0");
     }
 
-    public AdvancedFireBirdContainer(String imageName) {
-        super(imageName);
-    }
-
     @Override
     public void start() {
         super.start();

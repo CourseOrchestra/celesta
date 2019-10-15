@@ -47,7 +47,7 @@ public abstract class ParameterSetter {
                 stmt.setTimestamp(i, d);
             } else if (v instanceof ZonedDateTime) {
                 ZonedDateTime zdt = (ZonedDateTime) v;
-                zdt = this.queryBuildingHelper.prepareZonedDateTimeForParameterSetter(stmt.getConnection(), zdt);
+                zdt = this.queryBuildingHelper. prepareZonedDateTimeForParameterSetter(stmt.getConnection(), zdt);
                 Timestamp t = Timestamp.valueOf(zdt.toLocalDateTime());
                 Calendar cal = new GregorianCalendar();
                 cal.setTimeZone(TimeZone.getTimeZone(zdt.getZone()));

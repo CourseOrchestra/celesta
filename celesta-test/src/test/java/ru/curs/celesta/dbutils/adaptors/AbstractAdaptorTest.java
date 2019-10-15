@@ -70,22 +70,24 @@ public abstract class AbstractAdaptorTest {
                 "eee", null, null, null, b, BigDecimal.ONE, null, null
         };
         List<ParameterSetter> program = new ArrayList<>();
-        PreparedStatement pstmt = dba.getInsertRecordStatement(conn, t, nullsMask, program);
-        assertNotNull(pstmt);
 
-        int i = 1;
-        for (ParameterSetter ps : program) {
-            ps.execute(pstmt, i++, rowData, 0);
-        }
-        // int i = 1;
-        // for (Object fieldVal : rowData)
-        // DBAdaptor.setParam(pstmt, i++, fieldVal);
-        try {
-            int rowCount = pstmt.execute() ? 1 : pstmt.getUpdateCount(); // pstmt.executeUpdate();
-            return rowCount;
-        } catch (SQLException ex) {
-            LOGGER.error("Error on counting rows", ex);
-            throw ex;
+        try (PreparedStatement pstmt = dba.getInsertRecordStatement(conn, t, nullsMask, program)) {
+            assertNotNull(pstmt);
+
+            int i = 1;
+            for (ParameterSetter ps : program) {
+                ps.execute(pstmt, i++, rowData, 0);
+            }
+            // int i = 1;
+            // for (Object fieldVal : rowData)
+            // DBAdaptor.setParam(pstmt, i++, fieldVal);
+            try {
+                int rowCount = pstmt.execute() ? 1 : pstmt.getUpdateCount(); // pstmt.executeUpdate();
+                return rowCount;
+            } catch (SQLException ex) {
+                LOGGER.error("Error on counting rows", ex);
+                throw ex;
+            }
         }
     }
 
@@ -126,7 +128,6 @@ public abstract class AbstractAdaptorTest {
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, GRAIN_NAME);
             ResultSet rs = statement.executeQuery();
-
             hasRecordInGrainsTable = rs.next();
         }
 
@@ -251,16 +252,18 @@ public abstract class AbstractAdaptorTest {
         Integer[] rec = {1, null, 2, null, null, null, null, null, null, null, null, null, null, null, null, null};
         List<ParameterSetter> program = new ArrayList<>();
         WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
-        PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask, nullsMask, program, w.getWhere());
-        w.programParams(program, dba);
-        int i = 1;
-        for (ParameterSetter ps : program) {
-            ps.execute(pstmt, i++, rec, 1);
+
+        try (PreparedStatement pstmt = dba.getUpdateRecordStatement(conn, t, mask, nullsMask, program, w.getWhere())) {
+            w.programParams(program, dba);
+            int i = 1;
+            for (ParameterSetter ps : program) {
+                ps.execute(pstmt, i++, rec, 1);
+            }
+            assertNotNull(pstmt);
+            int rowCount = pstmt.executeUpdate();
+            assertEquals(1, rowCount);
+            assertEquals(1, getCount(conn, t));
         }
-        assertNotNull(pstmt);
-        int rowCount = pstmt.executeUpdate();
-        assertEquals(1, rowCount);
-        assertEquals(1, getCount(conn, t));
     }
 
     @Test
@@ -391,19 +394,20 @@ public abstract class AbstractAdaptorTest {
         WhereTerm w = WhereTermsMaker.getPKWhereTerm(t);
         List<ParameterSetter> program = new ArrayList<>();
 
-        PreparedStatement pstmt = dba.getOneFieldStatement(conn, c, w.getWhere());
+        try (PreparedStatement pstmt = dba.getOneFieldStatement(conn, c, w.getWhere())) {
 
-        w.programParams(program, dba);
-        int i = 1;
-        for (ParameterSetter ps : program) {
-            ps.execute(pstmt, i++, new Integer[]{1}, 1);
+            w.programParams(program, dba);
+            int i = 1;
+            for (ParameterSetter ps : program) {
+                ps.execute(pstmt, i++, new Integer[]{1}, 1);
+            }
+
+            assertNotNull(pstmt);
+
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next());
+            assertEquals(121215, rs.getInt("attrInt"));
         }
-
-        assertNotNull(pstmt);
-
-        ResultSet rs = pstmt.executeQuery();
-        assertTrue(rs.next());
-        assertEquals(121215, rs.getInt("attrInt"));
     }
 
     @Test
@@ -1530,7 +1534,6 @@ public abstract class AbstractAdaptorTest {
     }
 
 
-    // TODO:: CONTINUE FROM HERE
     @Test
     void testCreateAndAlterSequence() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);

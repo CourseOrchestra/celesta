@@ -121,10 +121,10 @@ public final class DdlAdaptor {
      * @param s sequence element
      */
     public void alterSequence(Connection conn, SequenceElement s)  {
-        String sql = ddlGenerator.alterSequence(s);
+        List<String> sqlList = ddlGenerator.alterSequence(s);
 
         try {
-            processSql(conn, sql);
+            processSql(conn, sqlList);
         } catch (CelestaException e) {
             throw new CelestaException("Error while altering sequence %s.%s: %s", s.getGrain().getName(), s.getName(),
                     e.getMessage());

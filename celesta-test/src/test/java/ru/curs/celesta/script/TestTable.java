@@ -250,9 +250,7 @@ public class TestTable implements ScriptTest {
         TimeZone oldDefaultTimeZone = TimeZone.getDefault();
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("GMT+4"));
-            TWithDateTimeZCursor c =
-
-                    new TWithDateTimeZCursor(cc);
+            TWithDateTimeZCursor c = new TWithDateTimeZCursor(cc);
 
             ZoneId zoneId = ZoneId.of("GMT+2");
             /*
