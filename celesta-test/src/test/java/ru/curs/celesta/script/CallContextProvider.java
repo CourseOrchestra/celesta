@@ -40,9 +40,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
 
     @Override
     public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext extensionContext) {
-        // TODO:: UNCOMMENT!
-        //return Arrays.stream(Backend.values()).map(this::invocationContext);
-        return Stream.of(Backend.FireBird).map(this::invocationContext);
+        return Arrays.stream(Backend.values()).map(this::invocationContext);
     }
 
     private TestTemplateInvocationContext invocationContext(final Backend backend) {
@@ -82,8 +80,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
     }
 
     public void startCelestas() {
-        //TODO:: REMOVE COMMENT
-        /*celestas.put(Backend.H2, celestaFromH2());
+        celestas.put(Backend.H2, celestaFromH2());
 
         containers.put(Backend.PostgreSQL, ContainerUtils.POSTGRE_SQL);
         celestas.put(Backend.PostgreSQL, celestaFromContainer(containers.get(Backend.PostgreSQL)));
@@ -92,7 +89,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
         celestas.put(Backend.Oracle, celestaFromContainer(containers.get(Backend.Oracle)));
 
         containers.put(Backend.MSSQL, ContainerUtils.MSSQL);
-        celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.MSSQL)));*/
+        celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.MSSQL)));
 
         containers.put(Backend.FireBird, ContainerUtils.FIREBIRD);
         celestas.put(Backend.FireBird, celestaFromContainer(containers.get(Backend.FireBird)));
@@ -101,16 +98,15 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
 
     public void stopCelestas() {
 
-        //TODO:: REMOVE COMMENT
-        /*celestas.computeIfPresent(Backend.H2,
-                (b, c) -> {
-                    try {
-                        c.getConnectionPool().get().createStatement().execute("SHUTDOWN");
-                    } catch (SQLException ex) {
-                        LOGGER.error("Error during DB shutdown", ex);
-                    }
-                    return null;
-                });*/
+        celestas.computeIfPresent(Backend.H2,
+            (b, c) -> {
+                try {
+                    c.getConnectionPool().get().createStatement().execute("SHUTDOWN");
+                } catch (SQLException ex) {
+                    LOGGER.error("Error during DB shutdown", ex);
+                }
+                return null;
+            });
 
         containers.forEach(
             (b, c) -> {

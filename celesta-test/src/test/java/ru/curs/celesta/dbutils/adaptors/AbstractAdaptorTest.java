@@ -1608,12 +1608,12 @@ public abstract class AbstractAdaptorTest {
         BasicTable table = g.getElement("tableForTestSequence", BasicTable.class);
 
         try {
+            if (dba.tableExists(conn, g.getName(), table.getName()))
+                dba.dropTable(conn, table);
             if (dba.sequenceExists(conn, g.getName(), sequence.getName()))
                 dba.dropSequence(conn, sequence);
             if (dba.sequenceExists(conn, g.getName(), sequence2.getName()))
                 dba.dropSequence(conn, sequence2);
-            if (dba.tableExists(conn, g.getName(), table.getName()))
-                dba.dropTable(conn, table);
 
             dba.createSequence(conn, sequence);
             dba.createSequence(conn, sequence2);
@@ -1685,12 +1685,12 @@ public abstract class AbstractAdaptorTest {
                 () -> assertEquals("NEXTVAL(testSequence2)".toLowerCase(), numbInfo2.getDefaultValue().toLowerCase())
             );
         } finally {
+            if (dba.tableExists(conn, g.getName(), table.getName()))
+                dba.dropTable(conn, table);
             if (dba.sequenceExists(conn, g.getName(), sequence.getName()))
                 dba.dropSequence(conn, sequence);
             if (dba.sequenceExists(conn, g.getName(), sequence2.getName()))
                 dba.dropSequence(conn, sequence2);
-            if (dba.tableExists(conn, g.getName(), table.getName()))
-                dba.dropTable(conn, table);
         }
     }
 
