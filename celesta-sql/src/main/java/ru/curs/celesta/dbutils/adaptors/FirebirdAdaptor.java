@@ -290,10 +290,11 @@ public class FirebirdAdaptor extends DBAdaptor {
             .filter(ic -> ic.getSequence() != null)
             .findFirst().get();
 
-        final String sequenceName = sequenceString(t.getGrain().getName(), idColumn.getSequence().getName());
-        String sql = String.format("SELECT GEN_ID(%s, 0) FROM RDB$DATABASE", sequenceName);
+        final SequenceElement s = idColumn.getSequence();
+        String curValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_curValueProc");
+        String sql = String.format("EXECUTE PROCEDURE %s(null)", curValueProcName);
 
-        try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {
@@ -323,7 +324,7 @@ public class FirebirdAdaptor extends DBAdaptor {
                 "          WHEN 14 THEN 'CHAR'\n" +
                 "          WHEN 40 THEN 'CSTRING'\n" +
                 "          WHEN 11 THEN 'D_FLOAT'\n" +
-                "          WHEN 27 THEN 'DOUBLE'\n" +
+                "          WHEN 27 THEN 'DOUBLE PRECISION'\n" +
                 "          WHEN 10 THEN 'FLOAT'\n" +
                 "          WHEN 16 THEN 'BIGINT'\n" +
                 "          WHEN 8 THEN 'INTEGER'\n" +
@@ -424,9 +425,11 @@ public class FirebirdAdaptor extends DBAdaptor {
                     );
 
                     sql = String.format(
-                        "SELECT RDB$DEPENDED_ON_NAME\n " +
-                            "FROM RDB$DEPENDENCIES \n " +
-                            "WHERE RDB$DEPENDENT_NAME = '%s' AND RDB$DEPENDENT_TYPE = 2 AND RDB$DEPENDED_ON_TYPE = 14",
+                        "SELECT proc.RDB$DEPENDED_ON_NAME \n " +
+                            "FROM RDB$DEPENDENCIES tr\n " +
+                            "JOIN RDB$DEPENDENCIES proc ON tr.RDB$DEPENDED_ON_NAME = proc.RDB$DEPENDENT_NAME\n " +
+                            "WHERE tr.RDB$DEPENDENT_NAME = '%s' AND tr.RDB$DEPENDENT_TYPE = 2 AND tr.RDB$DEPENDED_ON_TYPE = 5\n " +
+                            "AND proc.RDB$DEPENDENT_TYPE = 5 AND proc.RDB$DEPENDED_ON_TYPE = 14",
                         triggerName
                     );
 
@@ -626,8 +629,11 @@ public class FirebirdAdaptor extends DBAdaptor {
         List<String> result = new ArrayList<>();
 
         String sql = String.format("select RDB$PROCEDURE_NAME\n" +
-            "from RDB$PROCEDURES\n" +
-            "where RDB$PROCEDURE_NAME like '%s@_%%' escape '@'", g.getName());
+                "from RDB$PROCEDURES\n" +
+                "where RDB$PROCEDURE_NAME like '%s@_%%' escape '@' \n" +
+                "AND RDB$PROCEDURE_NAME NOT LIKE '%%curValueProc%%' escape '@' \n" +
+                "AND RDB$PROCEDURE_NAME NOT LIKE '%%nextValueProc%%' escape '@' \n"
+            , g.getName());
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             while (rs.next()) {
@@ -686,6 +692,11 @@ public class FirebirdAdaptor extends DBAdaptor {
         String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
         String sql = String.format("DROP PROCEDURE %s", nextValueProcName);
         executeUpdate(conn, sql);
+
+        String curValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_curValueProc");
+        sql = String.format("DROP PROCEDURE %s", curValueProcName);
+        executeUpdate(conn, sql);
+
         super.dropSequence(conn, s);
     }
 
@@ -866,8 +877,7 @@ public class FirebirdAdaptor extends DBAdaptor {
     }
 
     private String sequenceString(String schemaName, String sequenceName, boolean isQuoted) {
-        StringBuilder sb = new StringBuilder(NamedElement.limitName(
-            getSchemaUnderscoreNameTemplate(schemaName, sequenceName)));
+        StringBuilder sb = new StringBuilder(getSchemaUnderscoreNameTemplate(schemaName, sequenceName));
         if (isQuoted) {
             sb.insert(0, '"').append('"');
         }

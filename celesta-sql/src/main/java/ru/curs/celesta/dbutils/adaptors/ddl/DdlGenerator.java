@@ -367,7 +367,7 @@ public abstract class DdlGenerator {
      * @param t  table
      * @return  list of SQLs to be processed after a table creation
      */
-    List<String> afterCreateTable(TableElement t) {
+    List<String> afterCreateTable(Connection conn, TableElement t) {
         return Collections.emptyList();
     }
 

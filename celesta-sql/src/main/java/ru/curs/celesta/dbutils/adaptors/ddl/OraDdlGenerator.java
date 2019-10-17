@@ -196,7 +196,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> afterCreateTable(TableElement t) {
+    List<String> afterCreateTable(Connection conn, TableElement t) {
         List<String> result = new ArrayList<>();
         //creating of triggers to emulate default sequence values
 

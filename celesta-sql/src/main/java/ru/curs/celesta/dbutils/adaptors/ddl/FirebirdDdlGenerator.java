@@ -64,8 +64,11 @@ public class FirebirdDdlGenerator extends DdlGenerator {
             result.add(startWithSql);
         }
 
-        String createNextValueProcSql = this.createNextValueProcSql(s);
-        result.add(createNextValueProcSql);
+        String createSeqCurValueProcSql = this.createSeqCurValueProcSql(s);
+        result.add(createSeqCurValueProcSql);
+
+        String createSeqNextValueProcSql = this.createSeqNextValueProcSql(s);
+        result.add(createSeqNextValueProcSql);
 
         return result;
     }
@@ -74,18 +77,24 @@ public class FirebirdDdlGenerator extends DdlGenerator {
     protected List<String> alterSequence(SequenceElement s) {
         List<String> result = new ArrayList<>();
 
+        String curValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_curValueProc");
         String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
-        String sql = String.format("DROP PROCEDURE %s", nextValueProcName);
 
+        String sql = String.format("DROP PROCEDURE %s", nextValueProcName);
         result.add(sql);
-        result.add(createNextValueProcSql(s));
+
+        sql = String.format("DROP PROCEDURE %s", curValueProcName);
+        result.add(sql);
+
+        result.add(createSeqCurValueProcSql(s));
+        result.add(createSeqNextValueProcSql(s));
 
         return result;
     }
 
-    private String createNextValueProcSql(SequenceElement s) {
+    private String createSeqCurValueProcSql(SequenceElement s) {
         String fullSequenceName = sequenceString(s.getGrain().getName(), s.getName());
-        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
+        String curValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_curValueProc");
 
         Long incrementBy = (Long) s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
         Long minValue = (Long) s.getArguments().get(SequenceElement.Argument.MINVALUE);
@@ -93,21 +102,25 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         Boolean isCycle = (Boolean) s.getArgument(SequenceElement.Argument.CYCLE);
 
         final String resultDeterminingSql;
-        final String baseResultDeterminingSql = String.format(
-            "SELECT GEN_ID(%s, %s) FROM RDB$DATABASE INTO val;",
-            fullSequenceName,
-            incrementBy
+        final String initValSql = String.format(
+            "IF (:inVal IS NULL)  \n"
+                + "  THEN SELECT GEN_ID(%s, 0) FROM RDB$DATABASE INTO val;\n"
+                + "  ELSE val = inVal;",
+            fullSequenceName
         );
 
         if (!isCycle) {
             resultDeterminingSql = String.format(
                 "%s\n"
                     + "IF (%s)\n"
-                    + "    THEN EXCEPTION SEQUENCE_OVERFLOW_ERROR;",
-                baseResultDeterminingSql,
+                    + "    THEN val = %s;",
+                initValSql,
                 incrementBy > 0
                     ? String.format("val > %s", maxValue)
-                    : String.format("val < %s", minValue)
+                    : String.format("val < %s", minValue),
+                incrementBy > 0
+                    ? maxValue
+                    : minValue
             );
         } else {
             BigInteger incrementByModulus = BigInteger.valueOf(incrementBy).abs();
@@ -115,7 +128,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
             BigInteger stepsForOneCycle = diffBetweenMinAndMax.divide(incrementByModulus)
                 .add(BigInteger.ONE);
 
-            resultDeterminingSql = baseResultDeterminingSql + "\n"
+            resultDeterminingSql = initValSql + "\n"
                 + String.format(
                 "currentStep = (%s) / %s + 1; \n",
                 incrementBy > 0
@@ -144,6 +157,55 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
         }
 
+        return  String.format(
+            "CREATE PROCEDURE %s (inVal integer)\n "
+                + "RETURNS (val integer)\n "
+                + "  AS\n"
+                + (isCycle ? "  declare variable currentStep integer;\n " : "")
+                + "  BEGIN\n"
+                + "  %s\n"
+                + "  END",
+            curValueProcName,
+            resultDeterminingSql
+        );
+    }
+
+    private String createSeqNextValueProcSql(SequenceElement s) {
+        String fullSequenceName = sequenceString(s.getGrain().getName(), s.getName());
+        String curValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_curValueProc");
+        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
+
+        Long incrementBy = (Long) s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
+        Long minValue = (Long) s.getArguments().get(SequenceElement.Argument.MINVALUE);
+        Long maxValue = (Long) s.getArguments().get(SequenceElement.Argument.MAXVALUE);
+        Boolean isCycle = (Boolean) s.getArgument(SequenceElement.Argument.CYCLE);
+
+        final String resultDeterminingSql;
+        final String nextValueSql = String.format(
+            "SELECT GEN_ID(%s, %s) FROM RDB$DATABASE INTO val;",
+            fullSequenceName,
+            incrementBy
+        );
+
+        if (!isCycle) {
+            resultDeterminingSql = String.format(
+                "%s\n"
+                    + "IF (%s)\n"
+                    + "    THEN EXCEPTION SEQUENCE_OVERFLOW_ERROR;",
+                nextValueSql,
+                incrementBy > 0
+                    ? String.format("val > %s", maxValue)
+                    : String.format("val < %s", minValue)
+            );
+        } else {
+            resultDeterminingSql = String.format(
+                "%s\n"
+                    + "EXECUTE PROCEDURE %s(val) RETURNING_VALUES val;",
+                nextValueSql,
+                curValueProcName
+            );
+        }
+
 
         return  String.format(
             "CREATE PROCEDURE %s\n "
@@ -164,7 +226,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    List<String> afterCreateTable(TableElement t) {
+    List<String> afterCreateTable(Connection conn, TableElement t) {
         List<String> result = new ArrayList<>();
         //creating of triggers to emulate default sequence values
 
@@ -182,8 +244,8 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                     );
 
                     final String sequenceName = sequenceString(s.getGrain().getName(), s.getName());
-                    String sql = createOrReplaceSequenceTriggerForColumn(triggerName, ic);
-                    result.add(sql);
+                    List<String> sqlList = createOrReplaceSequenceTriggerForColumn(conn, triggerName, ic);
+                    result.addAll(sqlList);
 
                     TriggerQuery query = new TriggerQuery()
                         .withSchema(t.getGrain().getName())
@@ -377,8 +439,8 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                     );
                     final String sequenceName = sequenceString(
                         c.getParentTable().getGrain().getName(), ic.getSequence().getName());
-                    sql = createOrReplaceSequenceTriggerForColumn(sequenceTriggerName, ic);
-                    result.add(sql);
+                    List<String> sqlList = createOrReplaceSequenceTriggerForColumn(conn, sequenceTriggerName, ic);
+                    result.addAll(sqlList);
 
                     TriggerQuery q = new TriggerQuery()
                         .withSchema(t.getGrain().getName())
@@ -411,15 +473,14 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                         String oldSequenceName = m.group(1);
 
                         if (!oldSequenceName.equals(ic.getSequence().getName())) { //using of new sequence
-                            final String sequenceName = sequenceString(
-                                c.getParentTable().getGrain().getName(), ic.getSequence().getName());
-                            sql = createOrReplaceSequenceTriggerForColumn(
+                            List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
+                                conn,
                                 String.format(
                                     //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
                                     "%s_%s_%s_seq_trigger",
                                     t.getGrain().getName(), t.getName(), ic.getName()
                                 ), ic);
-                            result.add(sql);
+                            result.addAll(sqlList);
 
                             TriggerQuery triggerQuery = new TriggerQuery()
                                 .withSchema(c.getParentTable().getGrain().getName())
@@ -437,13 +498,14 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                 } else if (ic.getSequence() != null) {
                     final String sequenceName = sequenceString(
                         c.getParentTable().getGrain().getName(), ic.getSequence().getName());
-                    sql = createOrReplaceSequenceTriggerForColumn(
+                    List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
+                        conn,
                         String.format(
                             //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
                             "%s_%s_%s_seq_trigger",
                             t.getGrain().getName(), t.getName(), ic.getName()
                         ), ic);
-                    result.add(sql);
+                    result.addAll(sqlList);
                 }
             }
         }
@@ -488,7 +550,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         };
     }
 
-    // TODO:: MAKE CORRECT DECIMAL FOR OUT_PARAMS
+
     @Override
     List<String> createParameterizedView(ParameterizedView pv) {
         SQLGenerator gen = getViewSQLGenerator();
@@ -902,11 +964,23 @@ public class FirebirdDdlGenerator extends DdlGenerator {
     }
 
 
-    private String createOrReplaceSequenceTriggerForColumn(String triggerName, IntegerColumn ic) {
+    private List<String> createOrReplaceSequenceTriggerForColumn(Connection conn, String triggerName,
+                                                                 IntegerColumn ic) {
+        List<String> result = new ArrayList<>();
         TableElement te = ic.getParentTable();
 
         SequenceElement s = ic.getSequence();
         String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
+
+        TriggerQuery triggerQuery = new TriggerQuery()
+            .withSchema(ic.getParentTable().getGrain().getName())
+            .withTableName(ic.getParentTable().getName())
+            .withName(triggerName)
+            .withType(TriggerType.PRE_INSERT);
+
+        if (this.triggerExists(conn, triggerQuery)) {
+            result.add(String.format("DROP TRIGGER \"%s\"", triggerName));
+        }
 
         String sql =
             "CREATE TRIGGER \"" + triggerName + "\" " +
@@ -919,7 +993,9 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                 + "       RETURNING_VALUES :NEW." + ic.getQuotedName() + ";"
                 + " END";
 
-        return sql;
+        result.add(sql);
+
+        return result;
     }
 
     private List<String> updateColType(Column<?> c, DbColumnInfo actual) {

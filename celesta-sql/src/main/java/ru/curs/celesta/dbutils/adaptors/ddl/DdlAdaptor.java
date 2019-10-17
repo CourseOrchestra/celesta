@@ -149,7 +149,7 @@ public final class DdlAdaptor {
             List<String> sqlList;
             sqlList = ddlGenerator.updateVersioningTrigger(conn, te);
             processSql(conn, sqlList);
-            sqlList = ddlGenerator.afterCreateTable(te);
+            sqlList = ddlGenerator.afterCreateTable(conn, te);
             processSql(conn, sqlList);
         } catch (SQLException | CelestaException e) {
             throw new CelestaException("Error of creating %s: %s", te.getName(), e.getMessage());
