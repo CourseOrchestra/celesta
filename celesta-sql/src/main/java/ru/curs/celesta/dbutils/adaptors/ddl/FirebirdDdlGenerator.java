@@ -1,8 +1,5 @@
 package ru.curs.celesta.dbutils.adaptors.ddl;
 
-import org.h2.expression.SequenceValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
@@ -11,16 +8,46 @@ import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.AbstractView;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.BinaryTermOp;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.Count;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.Expr;
+import ru.curs.celesta.score.FieldRef;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.LogicValuedExpr;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterRef;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.SQLGenerator;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.Sum;
+import ru.curs.celesta.score.TableElement;
+import ru.curs.celesta.score.TableRef;
+import ru.curs.celesta.score.VersionedElement;
+import ru.curs.celesta.score.ViewColumnMeta;
+import ru.curs.celesta.score.ViewColumnType;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Connection;
-import java.util.*;
-import java.util.function.BiFunction;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -30,10 +57,11 @@ import java.util.stream.Stream;
 
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
 
+/**
+ * Class for SQL generation of data definition of Firebird.
+ */
+public final class FirebirdDdlGenerator extends DdlGenerator {
 
-public class FirebirdDdlGenerator extends DdlGenerator {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(FirebirdDdlGenerator.class);
 
     public FirebirdDdlGenerator(DBAdaptor dmlAdaptor) {
         super(dmlAdaptor);
@@ -51,8 +79,8 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         result.add(createSql);
 
         if (s.getArguments().containsKey(SequenceElement.Argument.START_WITH)) {
-            Long initialStartWith = (Long)s.getArguments().get(SequenceElement.Argument.START_WITH);
-            Long incrementBy = (Long)s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
+            Long initialStartWith = (Long) s.getArguments().get(SequenceElement.Argument.START_WITH);
+            Long incrementBy = (Long) s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
             Long startWith = initialStartWith - incrementBy;
 
             String startWithSql = String.format(
@@ -103,16 +131,16 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
         final String resultDeterminingSql;
         final String initValSql = String.format(
-            "IF (:inVal IS NULL)  \n"
-                + "  THEN SELECT GEN_ID(%s, 0) FROM RDB$DATABASE INTO val;\n"
+            "IF (:inVal IS NULL)  %n"
+                + "  THEN SELECT GEN_ID(%s, 0) FROM RDB$DATABASE INTO val;%n"
                 + "  ELSE val = inVal;",
             fullSequenceName
         );
 
         if (!isCycle) {
             resultDeterminingSql = String.format(
-                "%s\n"
-                    + "IF (%s)\n"
+                "%s%n"
+                    + "IF (%s)%n"
                     + "    THEN val = %s;",
                 initValSql,
                 incrementBy > 0
@@ -130,21 +158,21 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
             resultDeterminingSql = initValSql + "\n"
                 + String.format(
-                "currentStep = (%s) / %s + 1; \n",
+                "currentStep = (%s) / %s + 1; %n",
                 incrementBy > 0
                     ? String.format("val - %s", minValue)
                     : String.format("%s - val", maxValue),
                 incrementByModulus
             )
                 + String.format(
-                "IF (mod(:currentStep, %s) = 1)\n" +
-                    "  THEN val = %s;\n",
+                "IF (mod(:currentStep, %s) = 1)\n"
+                    + "  THEN val = %s;\n",
                 stepsForOneCycle,
                 incrementBy > 0 ? minValue : maxValue
             )
                 + String.format(
-                "ELSE IF (mod(:currentStep, %s) = 0)\n" +
-                    "  THEN val = %s;\n",
+                "ELSE IF (mod(:currentStep, %s) = 0)%n"
+                    + "  THEN val = %s;%n",
                 stepsForOneCycle,
                 incrementBy > 0 ? maxValue : minValue
             )
@@ -158,12 +186,12 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         }
 
         return  String.format(
-            "CREATE PROCEDURE %s (inVal integer)\n "
-                + "RETURNS (val integer)\n "
-                + "  AS\n"
-                + (isCycle ? "  declare variable currentStep integer;\n " : "")
-                + "  BEGIN\n"
-                + "  %s\n"
+            "CREATE PROCEDURE %s (inVal integer)%n "
+                + "RETURNS (val integer)%n "
+                + "  AS%n"
+                + (isCycle ? "  declare variable currentStep integer;%n " : "")
+                + "  BEGIN%n"
+                + "  %s%n"
                 + "  END",
             curValueProcName,
             resultDeterminingSql
@@ -189,8 +217,8 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
         if (!isCycle) {
             resultDeterminingSql = String.format(
-                "%s\n"
-                    + "IF (%s)\n"
+                "%s%n"
+                    + "IF (%s)%n"
                     + "    THEN EXCEPTION SEQUENCE_OVERFLOW_ERROR;",
                 nextValueSql,
                 incrementBy > 0
@@ -199,7 +227,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
             );
         } else {
             resultDeterminingSql = String.format(
-                "%s\n"
+                "%s%n"
                     + "EXECUTE PROCEDURE %s(val) RETURNING_VALUES val;",
                 nextValueSql,
                 curValueProcName
@@ -208,13 +236,13 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
 
         return  String.format(
-            "CREATE PROCEDURE %s\n "
-                + "RETURNS (val integer)\n "
-                + "  AS\n"
-                + (isCycle ? "  declare variable currentStep integer;\n " : "")
-                + "  BEGIN\n"
-                + "  /* INCREMENT_BY = %s, MINVALUE = %s, MAXVALUE = %s, CYCLE = %s */\n"
-                + "  %s\n"
+            "CREATE PROCEDURE %s%n "
+                + "RETURNS (val integer)%n "
+                + "  AS%n"
+                + (isCycle ? "  declare variable currentStep integer;%n " : "")
+                + "  BEGIN%n"
+                + "  /* INCREMENT_BY = %s, MINVALUE = %s, MAXVALUE = %s, CYCLE = %s */%n"
+                + "  %s%n"
                 + "  END",
             nextValueProcName,
             incrementBy,
@@ -320,8 +348,8 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                     if (!triggerExists) {
                         // CREATE TRIGGER
                         sql =
-                            "CREATE TRIGGER \"" + triggerName + "\" " +
-                                "for " + tableString(t.getGrain().getName(), t.getName())
+                            "CREATE TRIGGER \"" + triggerName + "\" "
+                                + "for " + tableString(t.getGrain().getName(), t.getName())
                                 + " BEFORE UPDATE \n"
                                 + " AS \n"
                                 + " BEGIN \n"
@@ -414,8 +442,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         }
 
         // If there's an empty default in data, and non-empty one in metadata then
-        if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate()))
-        {
+        if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate())) {
             sql = String.format(
                 ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
                     + " ALTER COLUMN \"%s\" SET %s",
@@ -437,8 +464,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                         "%s_%s_%s_seq_trigger",
                         t.getGrain().getName(), t.getName(), ic.getName()
                     );
-                    final String sequenceName = sequenceString(
-                        c.getParentTable().getGrain().getName(), ic.getSequence().getName());
+
                     List<String> sqlList = createOrReplaceSequenceTriggerForColumn(conn, sequenceTriggerName, ic);
                     result.addAll(sqlList);
 
@@ -586,7 +612,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
             }
         ).resolveTypes();
 
-        class ScaleAndPrecision {
+        final class ScaleAndPrecision {
             private int precision;
             private int scale;
 
@@ -643,7 +669,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
 
                     ViewColumnMeta viewColumnMeta = e.getValue();
                     if (ViewColumnType.TEXT == viewColumnMeta.getColumnType()) {
-                        StringColumn sc = (StringColumn)pv.getColumnRef(viewColumnMeta.getName());
+                        StringColumn sc = (StringColumn) pv.getColumnRef(viewColumnMeta.getName());
 
                         if (sc.isMax()) {
                             type = "blob sub_type text";
@@ -651,7 +677,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                             type = String.format("varchar(%d)", sc.getLength());
                         }
                     } else if (ViewColumnType.DECIMAL == viewColumnMeta.getColumnType()) {
-                        DecimalColumn dc = (DecimalColumn)pv.getColumnRef(viewColumnMeta.getName());
+                        DecimalColumn dc = (DecimalColumn) pv.getColumnRef(viewColumnMeta.getName());
 
                         if (dc != null) {
                             type = String.format(
@@ -661,8 +687,8 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                                 dc.getScale()
                             );
                         } else {
-                            Sum sum = (Sum)pv.getAggregateColumns().get(viewColumnMeta.getName());
-                            BinaryTermOp binaryTermOp = (BinaryTermOp)sum.getTerm();
+                            Sum sum = (Sum) pv.getAggregateColumns().get(viewColumnMeta.getName());
+                            BinaryTermOp binaryTermOp = (BinaryTermOp) sum.getTerm();
                             List<DecimalColumn> decimalColumns = binaryTermOp.getOperands().stream()
                                 .filter(op -> op instanceof FieldRef)
                                 .map(FieldRef.class::cast)
@@ -704,22 +730,22 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         String selectSql = sw.toString();
 
         String sql = String.format(
-            "CREATE PROCEDURE " + tableString(pv.getGrain().getName(), pv.getName()) + "(%s)\n"
-                + "  RETURNS (%s)\n"
-                + "  AS\n"
-                + "  BEGIN\n"
-                + "  FOR %s\n"
-                + "  INTO %s\n"
-                + "    DO BEGIN\n"
-                + "      SUSPEND;\n"
-                + "    END\n"
+            "CREATE PROCEDURE " + tableString(pv.getGrain().getName(), pv.getName()) + "(%s)%n"
+                + "  RETURNS (%s)%n"
+                + "  AS%n"
+                + "  BEGIN%n"
+                + "  FOR %s%n"
+                + "  INTO %s%n"
+                + "    DO BEGIN%n"
+                + "      SUSPEND;%n"
+                + "    END%n"
                 + "  END",
             inParams, outParams, selectSql, intoList);
 
         return Arrays.asList(sql);
     }
 
-    public static class BaseLogicValuedExprExtractor {
+    private static class BaseLogicValuedExprExtractor {
         List<LogicValuedExpr> extract(LogicValuedExpr logicValuedExpr) {
             List<LogicValuedExpr> result = new ArrayList<>();
 
@@ -782,27 +808,11 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         // TODO:: What about locks?
         List<String> result = new ArrayList<>();
 
-        String q = "CREATE TRIGGER \"qweqweada\" for \"createCursors_mvtable\" AFTER INSERT \n" +
-            "AS\n" +
-            "BEGIN\n" +
-            "MERGE INTO \"createCursors_mvtableMView\" \"mv\" USING(SELECT NEW.\"data\" as \"data\", 1 AS \"d\", 1 AS \"surrogate_count\" FROM RDB$DATABASE) \n " +
-            "AS \"aggregate\" ON \"mv\".\"data\" = \"aggregate\".\"data\" \n" +
-            "WHEN MATCHED THEN \n" +
-            " UPDATE SET \"mv\".\"d\" = \"mv\".\"d\" + \"aggregate\".\"d\", \"mv\".\"surrogate_count\" = \"mv\".\"surrogate_count\" + \"aggregate\".\"surrogate_count\" \n" +
-            "WHEN NOT MATCHED THEN \n" +
-            "INSERT (\"data\", \"d\", \"surrogate_count\") VALUES (\"aggregate\".\"data\", \"aggregate\".\"d\", \"surrogate_count\"); \n" +
-            "\n" +
-            " END;";
-
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
             .filter(mv -> mv.getRefTable().getTable().equals(t))
             .collect(Collectors.toList());
 
         String fullTableName = tableString(t.getGrain().getName(), t.getName());
-
-        TriggerQuery query = new TriggerQuery()
-            .withSchema(t.getGrain().getName())
-            .withTableName(t.getName());
 
         for (MaterializedView mv : mvList) {
             String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
@@ -923,29 +933,29 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                         .concat(" AND " + existsSql + ")")),
                 String.format(setStatementTemplate, "-"));
 
-            String sql = "CREATE TRIGGER \"" + insertTriggerName + "\" " +
-                    "for " + fullTableName
-                    + " AFTER INSERT \n"
-                    + " AS \n"
-                    + " BEGIN \n"
-                    + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
-                    + "\n " + insertSql + "\n END;";
+            String sql = "CREATE TRIGGER \"" + insertTriggerName + "\" "
+                + "for " + fullTableName
+                + " AFTER INSERT \n"
+                + " AS \n"
+                + " BEGIN \n"
+                + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
+                + "\n " + insertSql + "\n END;";
 
             result.add(sql);
 
-            sql = "CREATE TRIGGER \"" + deleteTriggerName + "\" " +
-                    "for " + fullTableName
-                    + " AFTER DELETE \n"
-                    + " AS \n"
-                    + " BEGIN \n"
-                    + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
-                    + "\n " + deleteSql + "\n END;";
+            sql = "CREATE TRIGGER \"" + deleteTriggerName + "\" "
+                + "for " + fullTableName
+                + " AFTER DELETE \n"
+                + " AS \n"
+                + " BEGIN \n"
+                + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
+                + "\n " + deleteSql + "\n END;";
 
             result.add(sql);
 
-            String updateSql = String.format("%s\n \n%s", deleteSql, insertSql);
-            sql = "CREATE TRIGGER \"" + updateTriggerName + "\" " +
-                "for " + fullTableName
+            String updateSql = String.format("%s%n %n%s", deleteSql, insertSql);
+            sql = "CREATE TRIGGER \"" + updateTriggerName + "\" "
+                + "for " + fullTableName
                 + " AFTER UPDATE \n"
                 + " AS \n"
                 + " BEGIN \n"
@@ -983,8 +993,8 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         }
 
         String sql =
-            "CREATE TRIGGER \"" + triggerName + "\" " +
-                "for " + tableString(te.getGrain().getName(), te.getName())
+            "CREATE TRIGGER \"" + triggerName + "\" "
+                + "for " + tableString(te.getGrain().getName(), te.getName())
                 + " BEFORE INSERT \n"
                 + " AS \n"
                 + " BEGIN \n"
@@ -1074,7 +1084,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         String tempColumnName = String.format("%s_temp", c.getName());
 
         String renameColumnSql = String.format(
-            "ALTER TABLE %s\n" + " ALTER COLUMN %s TO %s",
+            "ALTER TABLE %s%n" + " ALTER COLUMN %s TO %s",
             fullTableName,
             c.getQuotedName(),
             tempColumnName
@@ -1108,7 +1118,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         return result;
     }
 
-    private class ParameterizedViewTypeResolver<T, R> {
+    private static class ParameterizedViewTypeResolver<T, R> {
 
         private final ParameterizedView pv;
         private final ViewColumnType viewColumnType;
@@ -1118,7 +1128,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
         private final Function<T, String> postMapper;
 
 
-        public ParameterizedViewTypeResolver(ParameterizedView pv, ViewColumnType viewColumnType, Class<R> columnClass,
+        private ParameterizedViewTypeResolver(ParameterizedView pv, ViewColumnType viewColumnType, Class<R> columnClass,
                                              Function<R, T> valueResolver, BinaryOperator<T> valueMerger,
                                              Function<T, String> postMapper) {
             this.pv = pv;
@@ -1129,7 +1139,7 @@ public class FirebirdDdlGenerator extends DdlGenerator {
             this.postMapper = postMapper;
         }
 
-        public Map<String, String> resolveTypes() {
+        private Map<String, String> resolveTypes() {
             Map<String, String> columnToTypeMap = Stream.of((LogicValuedExpr) pv.getWhereCondition())
                 .map(logicValuedExpr -> new BaseLogicValuedExprExtractor().extract(logicValuedExpr))
                 .flatMap(List::stream)
@@ -1145,7 +1155,8 @@ public class FirebirdDdlGenerator extends DdlGenerator {
                             .collect(Collectors.toMap(
                                 Expr::getClass,
                                 expr -> new ArrayList<>(Arrays.asList(expr)),
-                                (oldList, newList) -> Stream.of(oldList, newList).flatMap(List::stream).collect(Collectors.toList())
+                                (oldList, newList) -> Stream.of(oldList, newList)
+                                    .flatMap(List::stream).collect(Collectors.toList())
                             ));
 
                         return classToExprsMap;

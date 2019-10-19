@@ -1,6 +1,5 @@
 package ru.curs.celesta.score;
 
-import ru.curs.celesta.score.*;
 
 /**
  * Reference to a table column.

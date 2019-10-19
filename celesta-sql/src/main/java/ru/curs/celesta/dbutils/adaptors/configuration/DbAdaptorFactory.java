@@ -3,7 +3,13 @@ package ru.curs.celesta.dbutils.adaptors.configuration;
 
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.DBType;
-import ru.curs.celesta.dbutils.adaptors.*;
+
+import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.dbutils.adaptors.FirebirdAdaptor;
+import ru.curs.celesta.dbutils.adaptors.H2Adaptor;
+import ru.curs.celesta.dbutils.adaptors.MSSQLAdaptor;
+import ru.curs.celesta.dbutils.adaptors.OraAdaptor;
+import ru.curs.celesta.dbutils.adaptors.PostgresAdaptor;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
 
 /**
@@ -88,7 +94,7 @@ public final class DbAdaptorFactory {
     if (DBType.ORACLE.equals(dbType)) {
       return new OraAdaptor(this.connectionPool, this.ddlConsumer);
     }
-    if ( DBType.FIREBIRD.equals(dbType)) {
+    if (DBType.FIREBIRD.equals(dbType)) {
       return new FirebirdAdaptor(this.connectionPool, this.ddlConsumer);
     }
 

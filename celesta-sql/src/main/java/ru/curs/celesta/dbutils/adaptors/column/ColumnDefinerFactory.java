@@ -1,7 +1,16 @@
 package ru.curs.celesta.dbutils.adaptors.column;
 
 import ru.curs.celesta.DBType;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.ZonedDateTimeColumn;
+
 
 import java.util.HashMap;
 import java.util.Map;
