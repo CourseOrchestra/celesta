@@ -1,10 +1,6 @@
 package ru.curs.celesta.test.common;
 
 import org.firebirdsql.testcontainers.FirebirdContainer;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.images.builder.ImageFromDockerfile;
-
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 

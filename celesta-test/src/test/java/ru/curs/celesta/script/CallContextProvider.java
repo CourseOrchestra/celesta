@@ -4,13 +4,10 @@ import org.junit.jupiter.api.extension.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.containers.OracleContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.test.ContainerUtils;
-import ru.curs.celesta.test.common.CollatedMSSQLServerContainer;
 
 import java.sql.SQLException;
 import java.util.*;

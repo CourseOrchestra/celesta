@@ -225,7 +225,7 @@ public class TestTable implements ScriptTest {
         assertEquals(new BigDecimal("5.29"), c.getCost().stripTrailingZeros());
 
         c.setCost(new BigDecimal("123.2"));
-
+        //TODO: known non-conformity
         if (DBType.FIREBIRD.equals(cc.getDbAdaptor().getType())) {
             c.update();
             c.first();
