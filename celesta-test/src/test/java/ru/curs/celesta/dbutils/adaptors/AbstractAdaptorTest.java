@@ -1114,9 +1114,7 @@ public abstract class AbstractAdaptorTest {
             List<DbFkInfo> l = dba.getFKInfo(conn, g);
             assertNotNull(l);
             assertEquals(0, l.size());
-
             dba.createFK(conn, fk);
-            conn.commit();
             l = dba.getFKInfo(conn, g);
             assertEquals(1, l.size());
             DbFkInfo info = l.get(0);

@@ -18,6 +18,7 @@ import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.DecimalColumn;
 import ru.curs.celesta.score.Expr;
 import ru.curs.celesta.score.FieldRef;
+import ru.curs.celesta.score.ForeignKey;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.Index;
 import ru.curs.celesta.score.IntegerColumn;
@@ -43,7 +44,9 @@ import java.sql.Connection;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -271,7 +274,6 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                         t.getGrain().getName(), t.getName(), ic.getName()
                     );
 
-                    final String sequenceName = sequenceString(s.getGrain().getName(), s.getName());
                     List<String> sqlList = createOrReplaceSequenceTriggerForColumn(conn, triggerName, ic);
                     result.addAll(sqlList);
 
@@ -293,7 +295,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             tableString(schemaName, viewName)
         );
 
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
@@ -303,7 +305,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             tableString(g.getName(), dBIndexInfo.getIndexName())
         );
 
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
@@ -389,11 +391,12 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             indexColumns
         );
 
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
-    List<String> updateColumn(Connection conn, Column c, DbColumnInfo actual) {
+    List<String> updateColumn(Connection conn, Column<?> c, DbColumnInfo actual) {
+        @SuppressWarnings("unchecked")
         final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
 
         List<String> result = new ArrayList<>();
@@ -522,8 +525,6 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                         }
                     }
                 } else if (ic.getSequence() != null) {
-                    final String sequenceName = sequenceString(
-                        c.getParentTable().getGrain().getName(), ic.getSequence().getName());
                     List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
                         conn,
                         String.format(
@@ -742,7 +743,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                 + "  END",
             inParams, outParams, selectSql, intoList);
 
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     private static class BaseLogicValuedExprExtractor {
@@ -1215,5 +1216,13 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
             return columnToTypeMap;
         }
+    }
+
+    @Override
+    void processCreateUpdateRule(Connection conn, ForeignKey fk, LinkedList<StringBuilder> sqlQueue) {
+        super.processCreateUpdateRule(conn, fk, sqlQueue);
+        //In Firebird, FK changes should be commited
+        StringBuilder sb = new StringBuilder("COMMIT");
+        sqlQueue.add(sb);
     }
 }
