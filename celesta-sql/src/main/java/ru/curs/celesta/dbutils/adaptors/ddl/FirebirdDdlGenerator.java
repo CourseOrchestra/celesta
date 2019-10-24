@@ -100,7 +100,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
         String createSeqNextValueProcSql = this.createSeqNextValueProcSql(s);
         result.add(createSeqNextValueProcSql);
-
+        result.add("COMMIT");
         return result;
     }
 
@@ -285,6 +285,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                 }
             }
         }
+        result.add("COMMIT");
         return result;
     }
 

@@ -1157,7 +1157,6 @@ public abstract class AbstractAdaptorTest {
         try {
             dba.createSequence(conn, t3s);
             dba.createTable(conn, t3);
-            conn.commit();
             DbColumnInfo c = dba.getColumnInfo(conn, t3.getColumn("f1"));
             assertEquals("NEXTVAL(aLongIdentityTableNxx_f1)", c.getDefaultValue());
             c = dba.getColumnInfo(conn, t3.getColumn("field2"));
@@ -1448,8 +1447,6 @@ public abstract class AbstractAdaptorTest {
 
             dba.createSequence(conn, t2s);
             dba.createTable(conn, t2);
-            conn.commit();
-
             tableIsCreated = true;
 
             insertRow(conn, t, 1);
@@ -1616,8 +1613,6 @@ public abstract class AbstractAdaptorTest {
             dba.createSequence(conn, sequence);
             dba.createSequence(conn, sequence2);
             dba.createTable(conn, table);
-            conn.commit();
-
             IntegerColumn id = (IntegerColumn) table.getColumn("id");
 
             final DbColumnInfo idInfo1 = dba.getColumnInfo(conn, table.getColumn("id"));

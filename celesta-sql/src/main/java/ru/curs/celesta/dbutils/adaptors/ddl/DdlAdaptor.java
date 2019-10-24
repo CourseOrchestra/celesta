@@ -143,9 +143,6 @@ public final class DdlAdaptor {
         try {
             processSql(conn, sql);
             conn.commit();
-            // TODO:: What's to do?
-            //processSql(conn, "COMMIT");
-            //processSql(conn, "SET TRANSACTION");
             List<String> sqlList;
             sqlList = ddlGenerator.updateVersioningTrigger(conn, te);
             processSql(conn, sqlList);
