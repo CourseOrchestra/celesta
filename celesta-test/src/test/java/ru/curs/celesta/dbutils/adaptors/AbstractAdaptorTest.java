@@ -1625,7 +1625,6 @@ public abstract class AbstractAdaptorTest {
             id.setNullableAndDefault(false, "NEXTVAL(" + sequence2.getName() + ")");
             assertFalse(idInfo1.reflects(id));
             dba.updateColumn(conn, id, idInfo1);
-            conn.commit();
 
             final DbColumnInfo idInfo2 = dba.getColumnInfo(conn, table.getColumn("id"));
             assertAll(
@@ -1637,7 +1636,6 @@ public abstract class AbstractAdaptorTest {
             id.setNullableAndDefault(false, "5");
             assertFalse(idInfo2.reflects(id));
             dba.updateColumn(conn, id, idInfo2);
-            conn.commit();
 
             final DbColumnInfo idInfo3 = dba.getColumnInfo(conn, table.getColumn("id"));
             assertAll(
@@ -1649,7 +1647,6 @@ public abstract class AbstractAdaptorTest {
             id.setNullableAndDefault(false, "NEXTVAL(" + sequence.getName() + ")");
             assertFalse(idInfo3.reflects(id));
             dba.updateColumn(conn, id, idInfo3);
-            conn.commit();
 
             final DbColumnInfo idInfo4 = dba.getColumnInfo(conn, table.getColumn("id"));
             assertAll(
@@ -1670,7 +1667,6 @@ public abstract class AbstractAdaptorTest {
             numb.setNullableAndDefault(false, "NEXTVAL(" + sequence2.getName() + ")");
             assertFalse(numbInfo1.reflects(numb));
             dba.updateColumn(conn, numb, numbInfo1);
-            conn.commit();
             final DbColumnInfo numbInfo2 = dba.getColumnInfo(conn, numb);
             assertAll(
                 () -> assertTrue(numbInfo2.reflects(numb)),

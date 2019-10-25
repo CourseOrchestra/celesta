@@ -538,7 +538,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             }
         }
         // TODO:: END COPY-PASTE
-
+        result.add("COMMIT");
         return result;
     }
 
