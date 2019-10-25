@@ -266,8 +266,6 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                 IntegerColumn ic = (IntegerColumn) column;
 
                 if (ic.getSequence() != null) {
-                    SequenceElement s = ic.getSequence();
-
                     final String triggerName = String.format(
                         //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
                         "%s_%s_%s_seq_trigger",
@@ -870,7 +868,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                 .collect(Collectors.joining(", "));
 
             String rowConditionTemplate = mv.getColumns().keySet().stream()
-                .filter(alias -> mv.isGroupByColumn(alias))
+                .filter(mv::isGroupByColumn)
                 .map(alias -> "\"mv\".\"" + alias + "\" = \"%1$s\".\"" + alias + "\" ")
                 .collect(Collectors.joining(" AND "));
 
@@ -905,7 +903,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                 .collect(Collectors.joining(" %2$s "));
 
             String rowConditionForExistsTemplate = mv.getColumns().keySet().stream()
-                .filter(alias -> mv.isGroupByColumn(alias))
+                .filter(mv::isGroupByColumn)
                 .map(alias -> {
                     Column<?> colRef = mv.getColumnRef(alias);
 
@@ -1210,7 +1208,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                 ).entrySet().stream()
                 .collect(
                     Collectors.toMap(
-                        e -> e.getKey(),
+                            Map.Entry::getKey,
                         e -> this.postMapper.apply(e.getValue())
                     )
                 );

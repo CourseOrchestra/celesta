@@ -78,9 +78,6 @@ public abstract class AbstractAdaptorTest {
             for (ParameterSetter ps : program) {
                 ps.execute(pstmt, i++, rowData, 0);
             }
-            // int i = 1;
-            // for (Object fieldVal : rowData)
-            // DBAdaptor.setParam(pstmt, i++, fieldVal);
             try {
                 int rowCount = pstmt.execute() ? 1 : pstmt.getUpdateCount(); // pstmt.executeUpdate();
                 return rowCount;

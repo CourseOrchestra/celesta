@@ -192,15 +192,12 @@ public final class FirebirdAdaptor extends DBAdaptor {
             query.getTableName()
         );
 
-        Statement stmt = conn.createStatement();
-        try {
+        try (Statement stmt = conn.createStatement()) {
             ResultSet rs = stmt.executeQuery(sql);
             rs.next();
             boolean result = rs.getInt(1) > 0;
             rs.close();
             return result;
-        } finally {
-            stmt.close();
         }
     }
 
@@ -209,16 +206,13 @@ public final class FirebirdAdaptor extends DBAdaptor {
         Set<String> result = new LinkedHashSet<>();
         try {
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getColumns(null,
-                null,
-                t.getGrain().getName() + "_" + t.getName(), null);
-            try {
+            try (ResultSet rs = metaData.getColumns(null,
+                    null,
+                    t.getGrain().getName() + "_" + t.getName(), null)) {
                 while (rs.next()) {
                     String rColumnName = rs.getString(COLUMN_NAME);
                     result.add(rColumnName);
                 }
-            } finally {
-                rs.close();
             }
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
@@ -262,8 +256,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
         String sql = String.format("delete from " + tableString(t.getGrain().getName(), t.getName()) + " %s;",
             where.isEmpty() ? "" : "where " + where);
         try {
-            PreparedStatement result = conn.prepareStatement(sql);
-            return result;
+            return conn.prepareStatement(sql);
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }
@@ -485,7 +478,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 if (BooleanColumn.class.equals(dbColumnInfo.getType())) {
                     defaultValue = "0".equals(defaultValue) ? "'FALSE'" : "'TRUE'";
                 } else if (DateTimeColumn.class.equals(dbColumnInfo.getType())) {
-                    if ("current_timestamp".equalsIgnoreCase(defaultValue)) {
+                    if (FireBirdConstants.CURRENT_TIMESTAMP.equalsIgnoreCase(defaultValue)) {
                         defaultValue = "GETDATE()";
                     } else {
                         Matcher m = DATE_PATTERN.matcher(defaultValue);
@@ -507,24 +500,6 @@ public final class FirebirdAdaptor extends DBAdaptor {
             dbColumnInfo.setDefaultValue(defaultValue);
         }
     }
-
-
-    private String modifyDefault(DbColumnInfo ci, String defaultBody) {
-        String result = defaultBody;
-
-        if (DateTimeColumn.class == ci.getType()) {
-            if (FireBirdConstants.CURRENT_TIMESTAMP.equalsIgnoreCase(defaultBody)) {
-                result = "GETDATE()";
-            } else {
-                Matcher m = DATE_PATTERN.matcher(defaultBody);
-                m.find();
-                result = String.format("'%s%s%s'", m.group(1), m.group(2), m.group(3));
-            }
-        }
-
-        return result;
-    }
-
 
     @Override
     public DbPkInfo getPKInfo(Connection conn, TableElement t) {
@@ -823,12 +798,9 @@ public final class FirebirdAdaptor extends DBAdaptor {
             "CREATE OR ALTER EXCEPTION SEQUENCE_OVERFLOW_ERROR 'sequence overflow failure'";
 
         try {
-            Statement stmt = conn.createStatement();
-            try {
+            try (Statement stmt = conn.createStatement()) {
                 stmt.executeUpdate(versionCheckErrorSql);
                 stmt.executeUpdate(sequenceOverflowErrorSql);
-            } finally {
-                stmt.close();
             }
         } catch (SQLException e) {
             throw new CelestaException("Could not create or alter versioncheck exception: %s", e.getMessage());
@@ -890,10 +862,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
     }
 
     private String getSchemaUnderscoreNameTemplate(String schemaName, String name) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(stripNameFromQuotes(schemaName)).append("_").append(stripNameFromQuotes(name));
-
-        return sb.toString();
+        return stripNameFromQuotes(schemaName) + "_" + stripNameFromQuotes(name);
     }
 
     private String stripNameFromQuotes(String name) {
@@ -918,16 +887,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public String sequenceString(String schemaName, String sequenceName) {
-        return sequenceString(schemaName, sequenceName, true);
-    }
-
-    private String sequenceString(String schemaName, String sequenceName, boolean isQuoted) {
         StringBuilder sb = new StringBuilder(getSchemaUnderscoreNameTemplate(schemaName, sequenceName));
-        if (isQuoted) {
-            sb.insert(0, '"').append('"');
-        }
-
+        sb.insert(0, '"').append('"');
         return sb.toString();
     }
+
     // TODO:: End of copy-pasting from OraAdaptor
 }
