@@ -521,7 +521,6 @@ not
 NOT
 note
 NOTE
-nteger
 null
 NULL
 nullability
@@ -1075,3 +1074,5 @@ super
 кодогенерацией
 проинстанцирован
 filter
+Firebird
+firebird
