@@ -36,7 +36,7 @@ public class FilterParser{
 		 FilterParser parser = new FilterParser(sr, tr);
 		 return parser.filterExpr(fieldType, fieldName);
      } catch (ParseException | TokenMgrError e) {
-         CelestaException ce = CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
+         CelestaException ce = new CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
          ce.initCause(e);
          throw ce;
      }
