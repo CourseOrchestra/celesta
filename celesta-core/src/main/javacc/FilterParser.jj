@@ -32,18 +32,13 @@ public class FilterParser{
    }
 
    public static String translateFilter(FilterType fieldType, String fieldName, String filter, SQLTranslator tr) {
-	 StringReader sr = new StringReader(filter);
-     try {
+     try (StringReader sr = new StringReader(filter)) {
 		 FilterParser parser = new FilterParser(sr, tr);
-		 try {
-            return parser.filterExpr(fieldType, fieldName);
-		 } catch (ParseException e) {
-		    throw new CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
-         } catch (TokenMgrError e) {
-            throw new CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
-         }
-     } finally {
-         sr.close();
+		 return parser.filterExpr(fieldType, fieldName);
+     } catch (ParseException | TokenMgrError e) {
+         CelestaException ce = CelestaException("Invalid field filter '%s': %s", filter, e.getMessage());
+         ce.initCause(e);
+         throw ce;
      }
    }
    

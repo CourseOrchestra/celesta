@@ -23,16 +23,13 @@ import ru.curs.celesta.score.io.Resource;
 //CHECKSTYLE:OFF
 public class CelestaParser{
     public static Expr parseComplexFilter(String filter, IdentifierParser identifierParser) {
-        StringReader sr = new StringReader(filter);
-        try {
+        try (StringReader sr = new StringReader(filter)) {
             CelestaParser parser = new CelestaParser(sr);
-            try {
-                return parser.sqlExpression(identifierParser);
-            } catch (ParseException e) {
-                throw new CelestaException("Invalid complex filter '%s': %s", filter, e.getMessage());
-            }
-        } finally {
-            sr.close();
+            return parser.sqlExpression(identifierParser);
+        } catch (ParseException e) {
+            CelestaException ce = new CelestaException("Invalid complex filter '%s': %s", filter, e.getMessage());
+            ce.initCause(e);
+            throw ce;
         }
     }
 }
