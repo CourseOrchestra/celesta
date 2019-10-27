@@ -10,7 +10,7 @@ include::_doc_general_attributes.adoc[]
 
 //tag::supported_rdbms[]
 
-Система по возможности прозрачно для разработчиков решения поддерживает MS SQL Server, Oracle, Postgre SQL и H2.
+Система по возможности прозрачно для разработчиков решения поддерживает MS SQL Server, Oracle, Postgre SQL, Firebird и H2.
 
 Хотя решения Celesta свободно переносимы между разными типами поддерживаемых СУБД, тем не менее, каждая из этих СУБД имеет особенности настройки. Кроме того, разные функциональные возможности Celesta по-разному реализованы в разных СУБД. Этим особенностям посвящён данный раздел.
 
@@ -60,7 +60,7 @@ GRANT
 
 * Oracle не поддерживает конструкцию FOREIGN KEY ... ON UPDATE/DELETE SET NULL, поэтому она эмулируется при помощи триггеров.
 
-image::images/Postgre.png[width=120,role="left"]
+image::images/postgresql.svg[width=120,role="left"]
 == PostgreSQL
 
 === Особенности реализации
@@ -82,6 +82,15 @@ CREATE OPERATOR = (
 );
 CREATE CAST (character varying AS uuid)
     WITH  INOUT AS ASSIGNMENT;
+
+image::images/firebird.svg[width=120,role="left"]
+== Firebird
+
+=== Особенности реализации
+
+* Гранула — префикс в имени таблицы, отделённый знаком подчёркивания, при этом работает ограничение. Причина в том, что понятия «схема» в Firebird не существует.
+
+* Поддержка типа данных `TIMESTAMP WIH TIMEZONE`, необходимая для Celesta, появилась начиная только с 4-й версии. По состоянию на октябрь 2019 года версия 4.0 находится в статусе beta --- это минимальная версия, необходимая для работы Celesta.
 
 image::images/H2.png[width=120,role="left"]
 == H2

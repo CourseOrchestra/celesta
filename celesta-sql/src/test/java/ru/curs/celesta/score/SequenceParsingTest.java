@@ -94,7 +94,7 @@ public class SequenceParsingTest extends AbstractParsingTest {
         assertAll(
                 () -> assertEquals(5L, s9.getArgument(START_WITH)),
                 () -> assertEquals(1L, s9.getArgument(INCREMENT_BY)),
-                () -> assertEquals(5l, s9.getArgument(MINVALUE)),
+                () -> assertEquals(5L, s9.getArgument(MINVALUE)),
                 () -> assertEquals(Long.MAX_VALUE, s9.getArgument(MAXVALUE)),
                 () -> assertEquals(false, s9.getArgument(CYCLE))
         );

@@ -36,7 +36,6 @@
 package ru.curs.celesta.dbutils.adaptors;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -248,7 +247,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     //TODO: Javadoc
-    String prepareRowColumnForSelectStaticStrings(String value, String colName) {
+    String prepareRowColumnForSelectStaticStrings(String value, String colName, int maxStringLength) {
         return "? as " + colName;
     }
 
@@ -627,22 +626,18 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      */
     public Set<String> getColumns(Connection conn, TableElement t) {
         Set<String> result = new LinkedHashSet<>();
-        try {
-            DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getColumns(null,
-                    t.getGrain().getName(),
-                    t.getName(), null);
-            try {
-                while (rs.next()) {
-                    String rColumnName = rs.getString(COLUMN_NAME);
-                    result.add(rColumnName);
-                }
-            } finally {
-                rs.close();
+        try (
+            ResultSet rs = conn.getMetaData()
+                .getColumns(null, t.getGrain().getName(), t.getName(), null)
+        ) {
+            while (rs.next()) {
+                String rColumnName = rs.getString(COLUMN_NAME);
+                result.add(rColumnName);
             }
         } catch (SQLException e) {
-            throw new CelestaException(e.getMessage());
+            throw new CelestaException(e);
         }
+
         return result;
     }
 
@@ -798,18 +793,20 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     //TODO: Javadoc
     @Override
     public List<String> selectStaticStrings(
-            List<String> data, String columnName, String orderBy) {
+            List<String> data, String columnName, String orderByDirection) {
+
+        int maxStringLength = data.stream().mapToInt(String::length).max().getAsInt();
 
         //prepare sql
         String sql = data.stream().map(
                 str -> {
-                    final String rowStr = prepareRowColumnForSelectStaticStrings(str, columnName);
+                    final String rowStr = prepareRowColumnForSelectStaticStrings(str, columnName, maxStringLength);
                     return String.format("SELECT %s %s", rowStr, constantFromSql());
                 })
                 .collect(Collectors.joining(" UNION ALL "));
 
-        if (orderBy != null && !orderBy.isEmpty()) {
-            sql = sql + " ORDER BY " + orderBy;
+        if (orderByDirection != null && !orderByDirection.isEmpty()) {
+            sql = sql + " " + this.orderByForSelectStaticStrings(columnName, orderByDirection);
         }
 
         try (Connection conn = connectionPool.get();
@@ -841,16 +838,22 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         }
     }
 
+    String orderByForSelectStaticStrings(String columnName, String orderByDirection) {
+        return String.format("ORDER BY %s %s", columnName, orderByDirection);
+    }
+
     //TODO: Javadoc
     @Override
     public int compareStrings(String left, String right) {
 
         List<String> comparisons = Arrays.asList("<", "=", ">");
 
+        int maxStringLength = Math.max(left.length(), right.length());
+
         String sql = comparisons.stream()
                 .map(comparison ->
                         "SELECT COUNT(*) "
-                     + " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("?", "a")
+                     + " FROM ( SELECT " + prepareRowColumnForSelectStaticStrings("?", "a", maxStringLength)
                                 + " " + constantFromSql() + ") r "
                      + " WHERE a " + comparison + " ?"
                 )

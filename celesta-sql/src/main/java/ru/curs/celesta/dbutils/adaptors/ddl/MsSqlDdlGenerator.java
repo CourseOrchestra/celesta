@@ -103,7 +103,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     private String createVersioningTrigger(TableElement t)  {
         StringBuilder sb = new StringBuilder();
         sb.append(
-                String.format("create trigger \"%s\".\"%s_upd\" on \"%s\".\"%s\" for update as begin\n",
+                String.format("create trigger \"%s\".\"%s_upd\" on \"%s\".\"%s\" for update as begin%n",
                         t.getGrain().getName(), t.getName(), t.getGrain().getName(), t.getName()));
         sb.append(generateTsqlForVersioningTrigger(t));
         sb.append("end\n");
@@ -127,7 +127,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
         sb.append("  RAISERROR ('record version check failure', 16, 1);\n");
 
         sb.append("END\n");
-        sb.append(String.format("update \"%s\".\"%s\" set recversion = recversion + 1 where\n",
+        sb.append(String.format("update \"%s\".\"%s\" set recversion = recversion + 1 where%n",
                 t.getGrain().getName(), t.getName()));
         sb.append("exists (select * from inserted where \n");
 
@@ -145,7 +145,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
             if (needAnd) {
                 sb.append(" AND ");
             }
-            sb.append(String.format("  %s.\"%s\" = %s.\"%s\"\n", left, s, right, s));
+            sb.append(String.format("  %s.\"%s\" = %s.\"%s\"%n", left, s, right, s));
             needAnd = true;
         }
     }
@@ -241,9 +241,9 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
         String selectSql = sw.toString();
 
         String sql = String.format(
-                "CREATE FUNCTION " + tableString(pv.getGrain().getName(), pv.getName()) + "(%s)\n"
-                        + "  RETURNS TABLE\n"
-                        + "  AS\n"
+                "CREATE FUNCTION " + tableString(pv.getGrain().getName(), pv.getName()) + "(%s)%n"
+                        + "  RETURNS TABLE%n"
+                        + "  AS%n"
                         + "  RETURN %s",
                                    inParams, selectSql);
 
@@ -253,7 +253,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
     @Override
     Optional<String> dropAutoIncrement(Connection conn, TableElement t) {
         String sql = String.format("delete from " + t.getGrain().getScore().getSysSchemaName()
-                        + ".sequences where grainid = '%s' and tablename = '%s';\n",
+                        + ".sequences where grainid = '%s' and tablename = '%s';%n",
                 t.getGrain().getName(), t.getName());
         return Optional.of(sql);
     }
@@ -459,9 +459,9 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
             //INSERT
 
             sql = String.format("create trigger \"%s\".\"%s\" "
-                            + "on %s after insert as begin \n"
+                            + "on %s after insert as begin %n"
                             + MaterializedView.CHECKSUM_COMMENT_TEMPLATE
-                            + "\n %s \n END;",
+                            + "%n %s %n END;",
                     t.getGrain().getName(), insertTriggerName, fullTableName, mv.getChecksum(), insertSql);
             LOGGER.trace(sql);
             result.add(sql);
@@ -469,10 +469,10 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
 
             //UPDATE
             //Инструкции для update-триггера нужно собирать и использовать после прогона главного цикла метода
-            afterUpdateTriggerTsql.append(String.format("\n%s\n \n%s\n", deleteSql, insertSql));
+            afterUpdateTriggerTsql.append(String.format("%n%s%n %n%s%n", deleteSql, insertSql));
             //DELETE
 
-            sql = String.format("create trigger \"%s\".\"%s\" on %s after delete as begin \n %s \n END;",
+            sql = String.format("create trigger \"%s\".\"%s\" on %s after delete as begin %n %s %n END;",
                                 t.getGrain().getName(), deleteTriggerName, fullTableName, deleteSql);
             LOGGER.trace(sql);
             result.add(sql);
@@ -488,7 +488,7 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
 
         String updateTriggerName = String.format("%s_upd", t.getName());
         sb.append(
-                String.format("%s trigger \"%s\".\"%s\" on \"%s\".\"%s\" for update as begin\n",
+                String.format("%s trigger \"%s\".\"%s\" on \"%s\".\"%s\" for update as begin%n",
                         sqlPrefix, t.getGrain().getName(), updateTriggerName, t.getGrain().getName(), t.getName()));
         sb.append(afterUpdateTriggerTsql.toString());
         sb.append("end\n");

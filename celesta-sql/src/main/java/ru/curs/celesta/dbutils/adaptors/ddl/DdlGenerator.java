@@ -7,14 +7,46 @@ import ru.curs.celesta.dbutils.adaptors.column.ColumnDefinerFactory;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.event.TriggerQuery;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.Count;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.Expr;
+import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.ForeignKey;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.SQLGenerator;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.Sum;
+import ru.curs.celesta.score.TableElement;
+import ru.curs.celesta.score.VersionedElement;
+import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.ZonedDateTimeColumn;
+
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
@@ -54,6 +86,23 @@ public abstract class DdlGenerator {
     Optional<String> createSchema(String name) {
         String sql = String.format("create schema \"%s\"", name);
         return Optional.of(sql);
+    }
+
+
+    /**
+     * Generates SQL for sequence creation in the DB.
+     *
+     * @param s sequence definition
+     * @return
+     */
+    List<String> createSequence(SequenceElement s) {
+        String sql = String.format(
+            "CREATE SEQUENCE %s %s",
+            sequenceString(s.getGrain().getName(), s.getName()),
+            generateArgumentsForCreateSequenceExpression(s)
+        );
+
+        return Arrays.asList(sql);
     }
 
     /**
@@ -106,24 +155,14 @@ public abstract class DdlGenerator {
         return this.dmlAdaptor.pkConstraintString(tableElement);
     }
 
-    final String createSequence(SequenceElement s) {
-        String sql = String.format(
-                "CREATE SEQUENCE %s %s",
-                sequenceString(s.getGrain().getName(), s.getName()),
-                generateArgumentsForCreateSequenceExpression(s)
-        );
-
-        return sql;
-    }
-
-    final String alterSequence(SequenceElement s) {
+    protected List<String> alterSequence(SequenceElement s) {
         String sql = String.format(
                 "ALTER SEQUENCE %s %s",
                 sequenceString(s.getGrain().getName(), s.getName()),
                 generateArgumentsForCreateSequenceExpression(s, SequenceElement.Argument.START_WITH)
         );
 
-        return sql;
+        return Arrays.asList(sql);
     }
 
     String generateArgumentsForCreateSequenceExpression(
@@ -360,7 +399,7 @@ public abstract class DdlGenerator {
      * @param t  table
      * @return  list of SQLs to be processed after a table creation
      */
-    List<String> afterCreateTable(TableElement t) {
+    List<String> afterCreateTable(Connection conn, TableElement t) {
         return Collections.emptyList();
     }
 
@@ -399,7 +438,7 @@ public abstract class DdlGenerator {
                 })
                 .collect(Collectors.joining(", "));
 
-        String deleteSql = "TRUNCATE TABLE " + mvIdentifier;
+        String deleteSql = this.truncateTable(mvIdentifier);
 
         String colsToSelect = mv.getColumns().keySet().stream()
                 .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
@@ -436,6 +475,10 @@ public abstract class DdlGenerator {
         String insertSql = String.format("INSERT INTO %s (%s) " + selectScript, mvIdentifier, mvColumns);
 
         return Arrays.asList(deleteSql, insertSql);
+    }
+
+    String truncateTable(String tableName) {
+        return "TRUNCATE TABLE " + tableName;
     }
 
     final boolean triggerExists(Connection conn, TriggerQuery query)  {

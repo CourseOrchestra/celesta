@@ -553,7 +553,6 @@ public final class OraAdaptor extends DBAdaptor {
                         + "and  cons.table_name like '%s@_%%' escape '@' order by cols.constraint_name, cols.position",
                 g.getName());
 
-        LOGGER.trace(sql);
         List<DbFkInfo> result = new LinkedList<>();
         try {
             Statement stmt = conn.createStatement();
@@ -651,8 +650,6 @@ public final class OraAdaptor extends DBAdaptor {
                         + "where ind.owner = sys_context('userenv','session_user') and ind.uniqueness = 'NONUNIQUE' "
                         + "and ind.table_name like '%s@_%%' escape '@'"
                         + "order by ind.table_name, ind.index_name, cols.column_position", g.getName());
-
-        LOGGER.trace(sql);
 
         Map<String, DbIndexInfo> result = new HashMap<>();
         try {

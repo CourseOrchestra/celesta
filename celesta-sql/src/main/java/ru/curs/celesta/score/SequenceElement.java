@@ -35,7 +35,7 @@ public final class SequenceElement extends GrainElement {
     /**
      * Sets value for {@code INCREMENT_BY} argument of the sequence.
      *
-     * @param startWith  value of {@code INCREMENT_BY} argument
+     * @param incrementBy  value of {@code INCREMENT_BY} argument
      * @throws ParseException
      */
     void incrementBy(Long incrementBy) throws ParseException {
@@ -52,9 +52,9 @@ public final class SequenceElement extends GrainElement {
     }
 
     /**
-     * Sets value for {@code MAXVALUE} argument of the sequence.
+     * Sets value for {@code MINVALUE} argument of the sequence.
      *
-     * @param startWith  value of {@code MAXVALUE} argument
+     * @param minValue  value of {@code MINVALUE} argument
      * @throws ParseException
      */
     void minValue(Long minValue) throws ParseException {
@@ -72,9 +72,9 @@ public final class SequenceElement extends GrainElement {
     }
 
     /**
-     * Sets value for {@code MINVALUE} argument of the sequence.
+     * Sets value for {@code MAXVALUE} argument of the sequence.
      *
-     * @param startWith  value of {@code MINVALUE} argument
+     * @param maxValue value of {@code MAXVALUE} argument
      * @throws ParseException
      */
     void maxValue(Long maxValue) throws ParseException {
@@ -94,7 +94,7 @@ public final class SequenceElement extends GrainElement {
     /**
      * Sets value for {@code CYCLE} argument of the sequence.
      *
-     * @param startWith  value of {@code CYCLE} argument
+     * @param isCycle  value of {@code CYCLE} argument
      * @throws ParseException
      */
     void setIsCycle(Boolean isCycle) throws ParseException {

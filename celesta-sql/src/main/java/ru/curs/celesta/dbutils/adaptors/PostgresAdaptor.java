@@ -35,9 +35,23 @@
 
 package ru.curs.celesta.dbutils.adaptors;
 
-import java.sql.*;
-import java.time.*;
-import java.util.*;
+
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -49,14 +63,34 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.DBType;
 
-import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.*;
+import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
+import ru.curs.celesta.dbutils.adaptors.ddl.DdlGenerator;
+import ru.curs.celesta.dbutils.adaptors.ddl.PostgresDdlGenerator;
 
-import ru.curs.celesta.dbutils.adaptors.ddl.*;
-import ru.curs.celesta.dbutils.meta.*;
+import ru.curs.celesta.dbutils.meta.DbColumnInfo;
+import ru.curs.celesta.dbutils.meta.DbFkInfo;
+import ru.curs.celesta.dbutils.meta.DbIndexInfo;
+import ru.curs.celesta.dbutils.meta.DbPkInfo;
+import ru.curs.celesta.dbutils.meta.DbSequenceInfo;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DataGrainElement;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.TableElement;
+
+import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.CONJUGATE_INDEX_POSTFIX;
+import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.NOW;
+
 
 /**
  * Postgres adaptor.

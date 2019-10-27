@@ -34,6 +34,15 @@ public enum DBType {
         }
     },
     /**
+     * FIREBIRD.
+     */
+    FIREBIRD {
+        @Override
+        public String getDriverClassName() {
+            return "org.firebirdsql.jdbc.FBDriver";
+        }
+    },
+    /**
      * H2.
      */
     H2 {
@@ -72,6 +81,8 @@ public enum DBType {
             return DBType.POSTGRESQL;
         } else if (url.startsWith("jdbc:oracle")) {
             return DBType.ORACLE;
+        } else if (url.startsWith("jdbc:firebirdsql")) {
+            return DBType.FIREBIRD;
         } else if (url.startsWith("jdbc:h2")) {
             return DBType.H2;
         } else {

@@ -48,6 +48,11 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.firebirdsql</groupId>
+            <artifactId>firebird-testcontainers-java</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
         </dependency>
@@ -78,6 +83,11 @@
         <dependency>
             <groupId>com.oracle.weblogic</groupId>
             <artifactId>ojdbc6</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.firebirdsql.jdbc</groupId>
+            <artifactId>jaybird-jdk18</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

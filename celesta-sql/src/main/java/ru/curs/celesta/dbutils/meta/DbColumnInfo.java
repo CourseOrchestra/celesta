@@ -10,6 +10,8 @@ import java.util.regex.Pattern;
  * Column data in the database in form that is needed for Celesta.
  */
 public final class DbColumnInfo {
+    public static final String SEQUENCE_NEXT_VAL_PATTERN = "(?i)NEXTVAL\\((.*)\\)";
+
     private String name;
     private Class<? extends Column<?>> type;
     private boolean isNullable;
@@ -179,7 +181,7 @@ public final class DbColumnInfo {
                 result = false;
             }
         } else if (type == IntegerColumn.class) {
-            Pattern p = Pattern.compile("(?i)NEXTVAL\\((.*)\\)");
+            Pattern p = Pattern.compile(SEQUENCE_NEXT_VAL_PATTERN);
             IntegerColumn iValue = (IntegerColumn) value;
             if (iValue.getSequence() != null) {
                 Matcher m = p.matcher(defaultValue);

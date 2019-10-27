@@ -7,6 +7,7 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.ConnectionPoolConfiguration;
 import ru.curs.celesta.dbutils.jdbc.SqlUtils;
+import ru.curs.celesta.test.common.AdvancedFireBirdContainer;
 import ru.curs.celesta.test.common.CollatedMSSQLServerContainer;
 
 import java.sql.Connection;
@@ -21,6 +22,7 @@ public class ContainerUtils {
     public static final OracleContainer ORACLE = new OracleContainer();
     public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
         .withCollation("Cyrillic_General_CI_AI");
+    public static final AdvancedFireBirdContainer FIREBIRD = new AdvancedFireBirdContainer();
 
 
     private static final String DROP_TABLE_FROM_ORACLE_TEMPLATE = "DROP TABLE %s CASCADE CONSTRAINTS";
@@ -33,6 +35,7 @@ public class ContainerUtils {
         CLEAN_UP_MAP.put(POSTGRE_SQL.getClass(), ContainerUtils::cleanUpPostgres);
         CLEAN_UP_MAP.put(ORACLE.getClass(), ContainerUtils::cleanUpOracle);
         CLEAN_UP_MAP.put(MSSQL.getClass(), ContainerUtils::cleanUpMsSql);
+        CLEAN_UP_MAP.put(FIREBIRD.getClass(), ContainerUtils::cleanUpFirebird);
     }
 
     public static void cleanUp(JdbcDatabaseContainer container) {
@@ -151,6 +154,10 @@ public class ContainerUtils {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static void cleanUpFirebird() {
+        FIREBIRD.dropDb();
     }
 
     private static ConnectionPool getConnectionPool(JdbcDatabaseContainer container) {

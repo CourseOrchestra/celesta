@@ -11,7 +11,6 @@ import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Column;
 import ru.curs.celesta.score.IntegerColumn;
-import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.test.DbUpdaterExtension;
 import ru.curs.celesta.test.ScorePath;
 

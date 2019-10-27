@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
-class TestSequence implements ScriptTest {
+class TestSequences implements ScriptTest {
 
     @TestTemplate
     void testS1(CallContext context) {
@@ -18,7 +18,6 @@ class TestSequence implements ScriptTest {
 
         assertEquals(1L, s.nextValue());
         assertEquals(2L, s.nextValue());
-
     }
 
     @TestTemplate
@@ -27,7 +26,6 @@ class TestSequence implements ScriptTest {
 
         assertEquals(3L, s.nextValue());
         assertEquals(4L, s.nextValue());
-
     }
 
     @TestTemplate
@@ -36,7 +34,6 @@ class TestSequence implements ScriptTest {
 
         assertEquals(1L, s.nextValue());
         assertEquals(3L, s.nextValue());
-
     }
 
     @TestTemplate
@@ -45,7 +42,6 @@ class TestSequence implements ScriptTest {
 
         assertEquals(1L, s.nextValue());
         assertEquals(-1L, s.nextValue());
-
     }
 
     @TestTemplate
@@ -54,7 +50,6 @@ class TestSequence implements ScriptTest {
 
         assertEquals(5L, s.nextValue());
         assertEquals(4L, s.nextValue());
-
     }
 
     @TestTemplate
@@ -78,7 +73,6 @@ class TestSequence implements ScriptTest {
         //end of sequence
         assertThrows(CelestaException.class,
                 s::nextValue);
-
     }
 
     @TestTemplate

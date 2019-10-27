@@ -520,8 +520,8 @@ public final class CelestaSerializer {
     /**
      * Serializes parameterized view to its CelestaSQL representation.
      *
-     * @param mv  parameterized view
-     * @throws IOException  if serialization fails
+     * @param pv parameterized view
+     * @throws IOException if serialization fails
      */
     void save(ParameterizedView pv) throws IOException {
       writeCelestaDoc(pv);

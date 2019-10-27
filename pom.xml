@@ -63,11 +63,13 @@
         <jdbc.driver.oracle.version>12.1.2-0-0</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.1.3</jdbc.driver.postgres.version>
         <jdbc.driver.sqlserver.version>6.4.0.jre8</jdbc.driver.sqlserver.version>
+        <jdbc.driver.firebird.version>4.0.0-beta-1</jdbc.driver.firebird.version>
         <junit.version>5.3.1</junit.version>
         <junit.platform.version>1.3.1</junit.platform.version>
         <org.json.version>20171018</org.json.version>
         <org.reflections.version>0.9.11</org.reflections.version>
         <testcontainers.version>1.12.0</testcontainers.version>
+        <testcontainers.firebird.version>1.0.2</testcontainers.firebird.version>
 
         <!--plugin versions -->
         <spotbugs.maven.plugin.version>3.1.8</spotbugs.maven.plugin.version>
@@ -117,6 +119,12 @@
                 <groupId>com.oracle.weblogic</groupId>
                 <artifactId>ojdbc6</artifactId>
                 <version>${jdbc.driver.oracle.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.firebirdsql.jdbc</groupId>
+                <artifactId>jaybird-jdk18</artifactId>
+                <version>${jdbc.driver.firebird.version}</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
@@ -203,10 +211,15 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>1.7.25</version>
-                <scope>test</scope>
+                <groupId>org.firebirdsql</groupId>
+                <artifactId>firebird-testcontainers-java</artifactId>
+                <version>${testcontainers.firebird.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.firebirdsql.jdbc</groupId>
+                        <artifactId>jaybird-jdk18</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
         </dependencies>
     </dependencyManagement>

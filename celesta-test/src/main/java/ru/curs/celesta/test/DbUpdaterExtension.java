@@ -1,5 +1,6 @@
 package ru.curs.celesta.test;
 
+import org.firebirdsql.testcontainers.FirebirdContainer;
 import org.junit.jupiter.api.extension.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,6 +109,9 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
         MSSQLServerContainer<?> mssqlServerContainer = ContainerUtils.MSSQL;
         mssqlServerContainer.start();
         containers.put(DBType.MSSQL, mssqlServerContainer);
+        FirebirdContainer firebirdContainer = ContainerUtils.FIREBIRD;
+        firebirdContainer.start();
+        containers.put(DBType.FIREBIRD, firebirdContainer);
 
         supportedDbTypes.forEach(
                 dbType -> {

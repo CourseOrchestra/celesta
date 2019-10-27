@@ -8,6 +8,7 @@ import ru.curs.celesta.ConnectionPool;
 import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.*;
 
 import ru.curs.celesta.dbutils.adaptors.ddl.*;
+import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.dbutils.meta.*;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
@@ -227,26 +228,19 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         } else if (StringColumn.class == ci.getType()) {
             if (defaultBody.contains("STRINGDECODE")) {
                 //H2 отдает default для срок в виде функции, которую нужно выполнить отдельным запросом
-                try {
-                    String sql = "SELECT " + defaultBody;
-                    Statement stmt = conn.createStatement();
+                String sql = "SELECT " + defaultBody;
 
-                    try {
-                        ResultSet rs = stmt.executeQuery(sql);
-
-                        if (rs.next()) {
-                            //H2 не сохраняет кавычки в default, если используется не Unicode
-                            result = "'" + rs.getString(1) + "'";
-                        } else {
-                            throw new CelestaException("Can't decode default '" + defaultBody + "'");
-                        }
-                    } finally {
-                        stmt.close();
+                try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
+                    if (rs.next()) {
+                        //H2 не сохраняет кавычки в default, если используется не Unicode
+                        result = "'" + rs.getString(1) + "'";
+                    } else {
+                        throw new CelestaException("Can't decode default '" + defaultBody + "'");
                     }
-
                 } catch (SQLException e) {
                     throw new CelestaException("Can't modify default for '" + defaultBody + "'", e);
                 }
+
             }
         }
 
@@ -491,7 +485,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     }
 
     @Override
-    String prepareRowColumnForSelectStaticStrings(String value, String colName) {
+    String prepareRowColumnForSelectStaticStrings(String value, String colName, int maxStringLength) {
         int dataType = DataType.getTypeFromClass(value.getClass());
         DataType type = DataType.getDataType(dataType);
         return "CAST(? as " + type.name + ") as " + colName;

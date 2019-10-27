@@ -1,4 +1,5 @@
 :!imagesdir:
+:icons: font
 :encoding: utf-8
 :caution-caption: Предостережение
 :important-caption: Важно

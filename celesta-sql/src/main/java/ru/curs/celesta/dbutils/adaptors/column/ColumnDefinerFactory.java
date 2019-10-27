@@ -1,7 +1,16 @@
 package ru.curs.celesta.dbutils.adaptors.column;
 
 import ru.curs.celesta.DBType;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.ZonedDateTimeColumn;
+
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +36,8 @@ public final class ColumnDefinerFactory {
                          MS_SQL_METHODS = new HashMap<>();
     private static final Map<Class<? extends Column<?>>, Supplier<? extends ColumnDefiner>>
                          ORA_METHODS = new HashMap<>();
+    private static final Map<Class<? extends Column>, Supplier<? extends ColumnDefiner>>
+                        FIREBIRD_METHODS = new HashMap<>();
 
     static {
         FACTORY_METHODS.put(
@@ -44,6 +55,10 @@ public final class ColumnDefinerFactory {
         FACTORY_METHODS.put(
                 DBType.ORACLE,
                 cls -> ORA_METHODS.get(cls).get()
+        );
+        FACTORY_METHODS.put(
+            DBType.FIREBIRD,
+            cls -> FIREBIRD_METHODS.get(cls).get()
         );
 
         H2_METHODS.put(IntegerColumn.class, H2IntegerColumnDefiner::new);
@@ -81,6 +96,16 @@ public final class ColumnDefinerFactory {
         ORA_METHODS.put(BinaryColumn.class, OraBinaryColumnDefiner::new);
         ORA_METHODS.put(DateTimeColumn.class, OraDateTimeColumnDefiner::new);
         ORA_METHODS.put(ZonedDateTimeColumn.class, OraZonedDateTimeColumnDefiner::new);
+
+
+        FIREBIRD_METHODS.put(IntegerColumn.class, FireBirdIntegerColumnDefiner::new);
+        FIREBIRD_METHODS.put(FloatingColumn.class, FireBirdFloatingColumnDefiner::new);
+        FIREBIRD_METHODS.put(DecimalColumn.class, FireBirdDecimalColumnDefiner::new);
+        FIREBIRD_METHODS.put(BooleanColumn.class, FireBirdBooleanColumnDefiner::new);
+        FIREBIRD_METHODS.put(StringColumn.class, FireBirdStringColumnDefiner::new);
+        FIREBIRD_METHODS.put(BinaryColumn.class, FireBirdBinaryColumnDefiner::new);
+        FIREBIRD_METHODS.put(DateTimeColumn.class, FireBirdDateTimeColumnDefiner::new);
+        FIREBIRD_METHODS.put(ZonedDateTimeColumn.class, FireBirdZonedDateTimeColumnDefiner::new);
     }
 
     private ColumnDefinerFactory() {

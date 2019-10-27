@@ -12,22 +12,22 @@ import ru.curs.celesta.score.StringColumn;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import static ru.curs.celesta.dbutils.adaptors.function.OraFunctions.getBooleanCheckName;
+import static ru.curs.celesta.dbutils.adaptors.constants.FireBirdConstants.CURRENT_TIMESTAMP;
 
 
-class OraIntegerColumnDefiner extends OraColumnDefiner {
+class FireBirdIntegerColumnDefiner extends FireBirdColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "number";
+        return "integer";
     }
 
     @Override
-    public String getInternalDefinition(Column<?> c) {
+    public String getInternalDefinition(Column c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column<?> c) {
+    public String getDefaultDefinition(Column c) {
         IntegerColumn ic = (IntegerColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -37,19 +37,20 @@ class OraIntegerColumnDefiner extends OraColumnDefiner {
     }
 }
 
-class OraFloatingColumnDefiner extends OraColumnDefiner {
+
+class FireBirdFloatingColumnDefiner extends FireBirdColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "real";
+        return "DOUBLE PRECISION";
     }
 
     @Override
-    public String getInternalDefinition(Column<?> c) {
+    public String getInternalDefinition(Column c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column<?> c) {
+    public String getDefaultDefinition(Column c) {
         FloatingColumn ic = (FloatingColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -59,21 +60,21 @@ class OraFloatingColumnDefiner extends OraColumnDefiner {
     }
 }
 
-class OraDecimalColumnDefiner extends OraColumnDefiner {
+class FireBirdDecimalColumnDefiner extends FireBirdColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "NUMBER";
+        return "DECIMAL";
     }
 
     @Override
-    public String getInternalDefinition(Column<?> c) {
+    public String getInternalDefinition(Column c) {
         DecimalColumn dc = (DecimalColumn) c;
         String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
         return join(c.getQuotedName(), fieldType);
     }
 
     @Override
-    public String getDefaultDefinition(Column<?> c) {
+    public String getDefaultDefinition(Column c) {
         DecimalColumn dc = (DecimalColumn) c;
         String defaultStr = "";
         if (dc.getDefaultValue() != null) {
@@ -83,19 +84,19 @@ class OraDecimalColumnDefiner extends OraColumnDefiner {
     }
 }
 
-class OraBooleanColumnDefiner extends OraColumnDefiner {
+class FireBirdBooleanColumnDefiner extends FireBirdColumnDefiner {
     @Override
-    public String dbFieldType() {
-        return "number";
-    }
-
-    @Override
-    public String getInternalDefinition(Column<?> c) {
+    public String getInternalDefinition(Column c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column<?> c) {
+    public String dbFieldType() {
+        return "SMALLINT";
+    }
+
+    @Override
+    public String getDefaultDefinition(Column c) {
         BooleanColumn ic = (BooleanColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -105,35 +106,27 @@ class OraBooleanColumnDefiner extends OraColumnDefiner {
     }
 
     @Override
-    public String getFullDefinition(Column<?> c) {
-        String check = String.format("constraint %s check (%s in (0, 1))", getBooleanCheckName(c),
-                c.getQuotedName());
+    public String getFullDefinition(Column c) {
+        String check = String.format("check (%s in (0, 1))", c.getQuotedName());
         return join(getInternalDefinition(c), getDefaultDefinition(c), nullable(c), check);
     }
 }
 
-class OraStringColumnDefiner extends OraColumnDefiner {
+class FireBirdStringColumnDefiner extends FireBirdColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "nvarchar2";
-    }
-
-    // An empty DEFAULT-string doesn't go with NOT NULL in Oracle.
-    @Override
-    public String nullable(Column<?> c) {
-        StringColumn ic = (StringColumn) c;
-        return ("".equals(ic.getDefaultValue())) ? "null" : super.nullable(c);
+        return "varchar";
     }
 
     @Override
-    public String getInternalDefinition(Column<?> c) {
+    public String getInternalDefinition(Column c) {
         StringColumn ic = (StringColumn) c;
-        String fieldType = ic.isMax() ? "nclob" : String.format("%s(%s)", dbFieldType(), ic.getLength());
+        String fieldType = ic.isMax() ? "blob sub_type text" : String.format("%s(%s)", dbFieldType(), ic.getLength());
         return join(c.getQuotedName(), fieldType);
     }
 
     @Override
-    public String getDefaultDefinition(Column<?> c) {
+    public String getDefaultDefinition(Column c) {
         StringColumn ic = (StringColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -143,67 +136,68 @@ class OraStringColumnDefiner extends OraColumnDefiner {
     }
 }
 
-class OraBinaryColumnDefiner extends OraColumnDefiner {
+class FireBirdBinaryColumnDefiner extends FireBirdColumnDefiner {
     @Override
     public String dbFieldType() {
         return "blob";
     }
 
     @Override
-    public String getInternalDefinition(Column<?> c) {
+    public String getInternalDefinition(Column c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column<?> c) {
+    public String getDefaultDefinition(Column c) {
         BinaryColumn ic = (BinaryColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
-            // Cutting off 0x and quoting
+            // Отрезаем 0x и закавычиваем
             defaultStr = String.format(DEFAULT + "'%s'", ic.getDefaultValue().substring(2));
         }
         return defaultStr;
     }
 }
 
-class OraDateTimeColumnDefiner extends OraColumnDefiner {
+class FireBirdDateTimeColumnDefiner extends FireBirdColumnDefiner {
     @Override
     public String dbFieldType() {
         return "timestamp";
     }
 
     @Override
-    public String getInternalDefinition(Column<?> c) {
+    public String getInternalDefinition(Column c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column<?> c) {
+    public String getDefaultDefinition(Column c) {
         DateTimeColumn ic = (DateTimeColumn) c;
         String defaultStr = "";
         if (ic.isGetdate()) {
-            defaultStr = DEFAULT + "sysdate";
+            defaultStr = DEFAULT + CURRENT_TIMESTAMP;
         } else if (ic.getDefaultValue() != null) {
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-            defaultStr = String.format(DEFAULT + "date '%s'", df.format(ic.getDefaultValue()));
+            DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
+            defaultStr = String.format(DEFAULT + " '%s'", df.format(ic.getDefaultValue()));
         }
         return defaultStr;
     }
 }
 
-class OraZonedDateTimeColumnDefiner extends OraColumnDefiner {
+
+class FireBirdZonedDateTimeColumnDefiner extends FireBirdColumnDefiner {
     @Override
     public String dbFieldType() {
         return "timestamp with time zone";
     }
 
     @Override
-    public String getInternalDefinition(Column<?> c) {
+    public String getInternalDefinition(Column c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column<?> c) {
+    public String getDefaultDefinition(Column c) {
         return "";
     }
 }
