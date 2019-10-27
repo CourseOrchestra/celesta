@@ -234,23 +234,19 @@ Grain parseGrainPart(GrainPart grainPart) :
    boolean val = true;
 }
 {
-   ((
-    [doc = <CELESTA_DOC>]
-    <K_CREATE>
-    <K_GRAIN>
-    t = <S_IDENTIFIER>
-    {
-        if (doc != null) {grainPart.setCelestaDocLexem(doc.toString()); doc = null;}
-    }
-    <K_GRAIN_VERSION>
-    t = <S_CHAR_LITERAL> {grainPart.setVersion(t.toString());}
-    )
+   ([doc = <CELESTA_DOC>]
+   <K_CREATE>
+   <K_GRAIN>
+   t = <S_IDENTIFIER>
+   {
+       if (doc != null) {grainPart.setCelestaDocLexem(doc.toString()); doc = null;}
+   }
+   <K_GRAIN_VERSION>
+   t = <S_CHAR_LITERAL> {grainPart.setVersion(t.toString());}
     [
         <K_WITH> { token_source.SwitchTo(OPTIONS_STATE); }
-        (
             [ <K_NO> {val = false;} ]
             <K_AUTOUPDATE> { grainPart.setAutoupdate(val); }
-        )
     ]
     |
     (
@@ -260,7 +256,6 @@ Grain parseGrainPart(GrainPart grainPart) :
     <K_END_OF_STATEMENT>
    (
     (
-        (
             ([doc = <CELESTA_DOC>] <K_CREATE> (
                     createTable(grainPart, doc == null? null: doc.toString())
                   | createIndex(grainPart, doc == null? null: doc.toString())
@@ -271,7 +266,6 @@ Grain parseGrainPart(GrainPart grainPart) :
 				  )
 				  {doc = null;} )
 	        | (<K_ALTER>   alterTable(grainPart))
-	    )
 	    | (<K_EXEC> executeNativeSql(grainPart))
 	 )
 	 <K_END_OF_STATEMENT>)*
@@ -357,7 +351,7 @@ void columnDefinition(TableBuilder table):
     |  (<K_REAL>      {column = table.floatingColumn(t.toString()); t = null;}
 	       nullable = nullable()
 		  [<K_DEFAULT> ["-" {negative = true;}] (t = <S_INTEGER> | t = <S_DOUBLE>) {defaultValue = (negative? "-": "") + t.toString();}])
-    |  (<K_DECIMAL> ("(" precision = <S_INTEGER> "," scale = <S_INTEGER> ")")
+    |  (<K_DECIMAL> "(" precision = <S_INTEGER> "," scale = <S_INTEGER> ")"
           {
             column = table.decimalColumn(
                 t.toString(), Integer.parseInt(precision.toString()), Integer.parseInt(scale.toString())
@@ -392,7 +386,7 @@ void columnDefinition(TableBuilder table):
         }
 	       nullable = nullable()
 		  [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <K_GETDATE> "(" ")")])
-    |  (<K_BIT>       {column = table.booleanColumn(t.toString()); t = null;})
+    |  <K_BIT>       {column = table.booleanColumn(t.toString()); t = null;}
 	       nullable = nullable()
 	      [<K_DEFAULT> (t = <S_CHAR_LITERAL> | t = <S_INTEGER> | t=<K_FALSE>|t=<K_TRUE>)])
 	name = constraint(table.getGrain()) [<K_PRIMARY> <K_KEY>
@@ -714,11 +708,11 @@ Expr sqlRelationalExpression(IdentifierParser identifierParser):
 {
     result = sqlTermExpr(identifierParser)
     (   relop = relop() buf1 = sqlTermExpr(identifierParser)                            {result = new Relop(result, buf1, relop);}
-      | (<K_IN> "(" buf1 = sqlTermExpr(identifierParser) {operands.add(buf1);} ("," buf1 = sqlTermExpr(identifierParser) {operands.add(buf1);})* ")")
+      | <K_IN> "(" buf1 = sqlTermExpr(identifierParser) {operands.add(buf1);} ("," buf1 = sqlTermExpr(identifierParser) {operands.add(buf1);})* ")"
 	                                                                    {result = new In(result, operands);}
-      | (<K_BETWEEN> buf1 = sqlTermExpr(identifierParser) <K_AND> buf2 = sqlTermExpr(identifierParser)) {result = new Between(result, buf1, buf2);}
-      | (<K_LIKE> buf1 = sqlTermExpr(identifierParser))                                 {result = new Relop(result, buf1, Relop.LIKE);}
-      | (<K_IS> <K_NULL>)                                               {result = new IsNull(result);}
+      | <K_BETWEEN> buf1 = sqlTermExpr(identifierParser) <K_AND> buf2 = sqlTermExpr(identifierParser) {result = new Between(result, buf1, buf2);}
+      | <K_LIKE> buf1 = sqlTermExpr(identifierParser)                                 {result = new Relop(result, buf1, Relop.LIKE);}
+      | <K_IS> <K_NULL>                                               {result = new IsNull(result);}
     )?
 	{return result;}
 }
@@ -839,12 +833,10 @@ Expr aggregateFunc(AbstractView v):
     Token t;
 }
 {
-  (
       <K_COUNT> "(" "*" ")"                  { return new Count(); }
       | <K_SUM> "(" term = sqlTermExpr(v.getGrain().getScore().getIdentifierParser()) ")" { return new Sum(term); }
       | <K_MAX> "(" term = sqlTermExpr(v.getGrain().getScore().getIdentifierParser()) ")" { return new Max(term); }
       | <K_MIN> "(" term = sqlTermExpr(v.getGrain().getScore().getIdentifierParser()) ")" { return new Min(term); }
-  )
 }
 
 Expr materializedAggregateFunc(MaterializedView v):
@@ -853,10 +845,8 @@ Expr materializedAggregateFunc(MaterializedView v):
     Token t;
 }
 {
-  (
       <K_COUNT> "(" "*" ")"                     { return new Count(); }
       | <K_SUM> "(" term = fieldReference(v.getGrain().getScore().getIdentifierParser()) ")" { return new Sum(term); }
-  )
 }
 
 void selectItem(AbstractView v):

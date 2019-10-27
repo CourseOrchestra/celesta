@@ -145,13 +145,13 @@ String expr():
   StringBuilder result = new StringBuilder();
 }
 {
-  ( buf = singleExpr() {result.append(buf);}
+   buf = singleExpr() {result.append(buf);}
    [
      ("&" buf = singleExpr() {result.append(" and " +  buf);})+
      | 
      ("|" buf = singleExpr() {result.append(" or " +buf);})+
    ]
-   )
+
    { return result.toString();}
 }
 
@@ -161,8 +161,8 @@ String singleExpr():
   String result;
 }
 {
-   ( ("(" buf = expr() ")")    { result = "(" + buf + ")";}
-   | ("!" buf = singleExpr())  { result = "not (" + buf + ")";} 
+   ( "(" buf = expr() ")"      { result = "(" + buf + ")";}
+   | "!" buf = singleExpr()    { result = "not (" + buf + ")";}
    | buf = term()              { result =  buf;}
    )
    {return result;}
@@ -230,12 +230,12 @@ String likeFilter(boolean ci):
 StringBuilder sb = new StringBuilder();
 String val;
 }
-{   (
+{
     "%" {sb.append('%');}
     [ val = text(ci) {sb.append (unquoteString(val));} 
       [val = likeFilter(ci) {sb.append (val);}]
     ]
-    ){return sb.toString();}
+    {return sb.toString();}
 }
 
 String text(boolean ci): {Token tok;}{
