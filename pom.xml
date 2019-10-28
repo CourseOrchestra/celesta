@@ -66,7 +66,7 @@
         <jdbc.driver.firebird.version>4.0.0-beta-1</jdbc.driver.firebird.version>
         <junit.version>5.3.1</junit.version>
         <junit.platform.version>1.3.1</junit.platform.version>
-        <org.json.version>20171018</org.json.version>
+        <org.json.version>20190722</org.json.version>
         <org.reflections.version>0.9.11</org.reflections.version>
         <testcontainers.version>1.12.0</testcontainers.version>
         <testcontainers.firebird.version>1.0.2</testcontainers.firebird.version>
