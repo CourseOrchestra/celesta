@@ -88,12 +88,6 @@
             <property name="processJavadoc" value="false"/>
         </module>
 
-        <!-- Checks for Size Violations.                    -->
-        <!-- See http://checkstyle.sf.net/config_sizes.html -->
-        <module name="LineLength">
-            <property name="max" value="120"/>
-        </module>
-
         <module name="MethodLength"/>
         <module name="ParameterNumber"/>
 
@@ -189,5 +183,10 @@
             <property name="ignoreComments" value="true"/>
             <property name="message" value="Line has Sysout print statement."/>
         </module>
+    </module>
+    <!-- Checks for Size Violations.                    -->
+    <!-- See http://checkstyle.sf.net/config_sizes.html -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
     </module>
 </module>
