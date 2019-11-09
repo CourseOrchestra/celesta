@@ -171,7 +171,7 @@ public class TestSimpleCases implements ScriptTest {
     void test_cursor_getCurrentKeyValues(CallContext context) {
         Simple_tableCursor c = new Simple_tableCursor(context);
         c.deleteAll();
-        c.setId(1);
+//        c.setId(1);
         c.setName("ONE");
         c.insert();
 
@@ -181,7 +181,7 @@ public class TestSimpleCases implements ScriptTest {
         Object[] keyValues = c.getCurrentKeyValues();
 
         assertEquals(1, keyValues.length);
-        assertEquals(1, keyValues[0]);
+//        assertEquals(1, keyValues[0]);
         assertTrue(keyValues[0].getClass() == Integer.class);
     }
 
@@ -189,7 +189,7 @@ public class TestSimpleCases implements ScriptTest {
     void test_cursor_getCurrentValues(CallContext context) {
         Simple_tableCursor c = new Simple_tableCursor(context);
         c.deleteAll();
-        c.setId(1);
+//        c.setId(1);
         c.setName("ONE");
         c.insert();
 
@@ -200,7 +200,7 @@ public class TestSimpleCases implements ScriptTest {
 
         assertEquals(2, values.length);
 
-        assertEquals(1, values[0]);
+//        assertEquals(1, values[0]);
         assertTrue(values[0].getClass() == Integer.class);
 
         assertEquals("ONE", values[1]);
