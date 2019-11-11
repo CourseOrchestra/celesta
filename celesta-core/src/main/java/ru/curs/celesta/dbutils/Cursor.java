@@ -671,7 +671,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      *
      * @return
      */
-    public Object[] getCurrentKeyValues() {
+    public final Object[] getCurrentKeyValues() {
         return _currentKeyValues();
     }
 

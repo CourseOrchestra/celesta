@@ -1307,6 +1307,15 @@ public abstract class BasicCursor extends BasicDataAccessor {
      */
     public abstract void copyFieldsFrom(BasicCursor from);
 
+    /**
+     * Returns an array of field values.
+     *
+     * @return
+     */
+    public final Object[] getCurrentValues() {
+        return _currentValues();
+    }
+
     // CHECKSTYLE:OFF
     /*
      * This group of methods is named according to Python rules, and not Java.
