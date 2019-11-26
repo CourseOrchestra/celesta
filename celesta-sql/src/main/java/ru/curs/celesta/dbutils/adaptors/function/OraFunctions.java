@@ -24,24 +24,6 @@ public final class OraFunctions {
         return "\"" + result + "\"";
     }
 
-    public static String getSequenceName(TableElement table) {
-        String result = String.format("%s_%s_inc", table.getGrain().getName(), table.getName());
-        result = NamedElement.limitName(result);
-        return result;
-    }
-
-    public static String getUpdTriggerName(TableElement table) {
-        String result = String.format("%s_%s_upd", table.getGrain().getName(), table.getName());
-        result = NamedElement.limitName(result);
-        return result;
-    }
-
-    public static String generateSequenceTriggerName(IntegerColumn ic) {
-        TableElement te = ic.getParentTable();
-        String result = String.format("%s_%s_%s_seq_trigger", te.getGrain().getName(), te.getName(), ic.getName());
-        return NamedElement.limitName(result);
-    }
-
     public static String translateDate(String date)  {
         try {
             Date d = DateTimeColumn.parseISODate(date);

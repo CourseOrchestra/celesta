@@ -10,8 +10,7 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
-class TestAggregate implements ScriptTest {
+public class TestAggregate implements ScriptTest {
 
     @TestTemplate
     void test_count_without_condition(CallContext context) {
@@ -88,8 +87,6 @@ class TestAggregate implements ScriptTest {
         assertEquals(4, viewOneFieldCursor.getS().intValue());
         assertEquals(5, viewOneFieldAndNumberCursor.getS().intValue());
         assertEquals(3, viewTwoNumbersCursor.getS().intValue());
-
-
     }
 
     @TestTemplate

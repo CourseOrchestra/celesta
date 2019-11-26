@@ -22,10 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FirebirdAdaptorTest extends AbstractAdaptorTest {
 
+    private static String SCORE_NAME = "testScore_firebird";
+
     private static FirebirdContainer firebird = ContainerUtils.FIREBIRD;
 
     private static FirebirdAdaptor dba;
-
 
     @BeforeAll
     public static void beforeAll() throws Exception {

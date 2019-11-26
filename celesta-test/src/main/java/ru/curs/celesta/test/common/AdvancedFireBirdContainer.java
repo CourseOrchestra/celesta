@@ -1,6 +1,7 @@
 package ru.curs.celesta.test.common;
 
 import org.firebirdsql.testcontainers.FirebirdContainer;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class AdvancedFireBirdContainer extends FirebirdContainer<AdvancedFireBir
     private static boolean firstStart = true;
 
     public AdvancedFireBirdContainer() {
-        super("jacobalberty/firebird:4.0");
+        super("jacobalberty/firebird:3.0.4");
     }
 
     @Override

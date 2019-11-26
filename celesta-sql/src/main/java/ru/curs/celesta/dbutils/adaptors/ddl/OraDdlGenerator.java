@@ -32,6 +32,7 @@ import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
 import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.*;
 import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.*;
 import static ru.curs.celesta.dbutils.adaptors.function.OraFunctions.*;
+import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.*;
 
 /**
  * Class for SQL generation of data definition of Oracle.
@@ -647,7 +648,7 @@ public final class OraDdlGenerator extends DdlGenerator {
 
     @Override
     Optional<String> dropAutoIncrement(Connection conn, TableElement t)  {
-        String sequenceName = getSequenceName(t);
+        String sequenceName = getIncrementSequenceName(t);
         String sequenceExistsSql = String.format(
                 "select count(*) from user_sequences where sequence_name = '%s'",
                 sequenceName

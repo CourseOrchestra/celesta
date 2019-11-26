@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils.adaptors.ddl;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.dbutils.adaptors.FirebirdAdaptor;
 import ru.curs.celesta.dbutils.adaptors.column.ColumnDefinerFactory;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
@@ -60,6 +61,8 @@ import java.util.stream.Stream;
 
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
 
+import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.*;
+
 /**
  * Class for SQL generation of data definition of Firebird.
  */
@@ -108,8 +111,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     protected List<String> alterSequence(SequenceElement s) {
         List<String> result = new ArrayList<>();
 
-        String curValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_curValueProc");
-        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
+        String curValueProcName = FirebirdAdaptor.sequenceCurValueProcString(s.getGrain().getName(), s.getName());
+        String nextValueProcName = FirebirdAdaptor.sequenceNextValueProcString(s.getGrain().getName(), s.getName());
 
         String sql = String.format("DROP PROCEDURE %s", nextValueProcName);
         result.add(sql);
@@ -125,7 +128,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
     private String createSeqCurValueProcSql(SequenceElement s) {
         String fullSequenceName = sequenceString(s.getGrain().getName(), s.getName());
-        String curValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_curValueProc");
+        String curValueProcName = FirebirdAdaptor.sequenceCurValueProcString(s.getGrain().getName(), s.getName());
 
         Long incrementBy = (Long) s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
         Long minValue = (Long) s.getArguments().get(SequenceElement.Argument.MINVALUE);
@@ -203,8 +206,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
     private String createSeqNextValueProcSql(SequenceElement s) {
         String fullSequenceName = sequenceString(s.getGrain().getName(), s.getName());
-        String curValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_curValueProc");
-        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
+        String curValueProcName = FirebirdAdaptor.sequenceCurValueProcString(s.getGrain().getName(), s.getName());
+        String nextValueProcName = FirebirdAdaptor.sequenceNextValueProcString(s.getGrain().getName(), s.getName());
 
         Long incrementBy = (Long) s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
         Long minValue = (Long) s.getArguments().get(SequenceElement.Argument.MINVALUE);
@@ -261,16 +264,12 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         List<String> result = new ArrayList<>();
         //creating of triggers to emulate default sequence values
 
-        for (Column column : t.getColumns().values()) {
+        for (Column<?> column : t.getColumns().values()) {
             if (IntegerColumn.class.equals(column.getClass())) {
                 IntegerColumn ic = (IntegerColumn) column;
 
                 if (ic.getSequence() != null) {
-                    final String triggerName = String.format(
-                        //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
-                        "%s_%s_%s_seq_trigger",
-                        t.getGrain().getName(), t.getName(), ic.getName()
-                    );
+                    final String triggerName = generateSequenceTriggerName(ic);
 
                     List<String> sqlList = createOrReplaceSequenceTriggerForColumn(conn, triggerName, ic);
                     result.addAll(sqlList);
@@ -331,8 +330,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     List<String> updateVersioningTrigger(Connection conn, TableElement t) {
         List<String> result = new ArrayList<>();
 
-        // TODO:: NEED FUNCTION FOR THIS NAME
-        String triggerName = String.format("%s_%s_version_check", t.getGrain().getName(), t.getName());
+        String triggerName = getVersionCheckTriggerName(t);
 
         // First of all, we are about to check if trigger exists
         try {
@@ -403,8 +401,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         final String tableFullName = tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName());
 
         TableElement t = c.getParentTable();
-        //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
-        String triggerName = String.format("%s_%s_version_check", t.getGrain().getName(), t.getName());
+        final String triggerName = getVersionCheckTriggerName(t);
 
         TriggerQuery query = new TriggerQuery()
             .withSchema(t.getGrain().getName())
@@ -456,16 +453,9 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         if (c instanceof IntegerColumn) {
             IntegerColumn ic = (IntegerColumn) c;
 
-
-
-
             if ("".equals(actual.getDefaultValue())) { //old defaultValue Is null - create trigger if necessary
                 if (((IntegerColumn) c).getSequence() != null) {
-                    final String sequenceTriggerName = String.format(
-                        //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
-                        "%s_%s_%s_seq_trigger",
-                        t.getGrain().getName(), t.getName(), ic.getName()
-                    );
+                    final String sequenceTriggerName = generateSequenceTriggerName(ic);
 
                     List<String> sqlList = createOrReplaceSequenceTriggerForColumn(conn, sequenceTriggerName, ic);
                     result.addAll(sqlList);
@@ -485,11 +475,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                         TriggerQuery triggerQuery = new TriggerQuery()
                             .withSchema(c.getParentTable().getGrain().getName())
                             .withTableName(c.getParentTable().getName())
-                            .withName(String.format(
-                                //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
-                                "%s_%s_%s_seq_trigger",
-                                t.getGrain().getName(), t.getName(), ic.getName()
-                            ))
+                            .withName(generateSequenceTriggerName(ic))
                             .withType(TriggerType.PRE_INSERT);
 
                         triggerExists = this.triggerExists(conn, query);
@@ -503,21 +489,14 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                         if (!oldSequenceName.equals(ic.getSequence().getName())) { //using of new sequence
                             List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
                                 conn,
-                                String.format(
-                                    //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
-                                    "%s_%s_%s_seq_trigger",
-                                    t.getGrain().getName(), t.getName(), ic.getName()
-                                ), ic);
+                                generateSequenceTriggerName(ic),
+                                ic);
                             result.addAll(sqlList);
 
                             TriggerQuery triggerQuery = new TriggerQuery()
                                 .withSchema(c.getParentTable().getGrain().getName())
                                 .withTableName(c.getParentTable().getName())
-                                .withName(String.format(
-                                    //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
-                                    "%s_%s_%s_seq_trigger",
-                                    t.getGrain().getName(), t.getName(), ic.getName()
-                                ))
+                                .withName(generateSequenceTriggerName(ic))
                                 .withType(TriggerType.PRE_INSERT);
 
                             this.rememberTrigger(triggerQuery);
@@ -526,11 +505,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                 } else if (ic.getSequence() != null) {
                     List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
                         conn,
-                        String.format(
-                            //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
-                            "%s_%s_%s_seq_trigger",
-                            t.getGrain().getName(), t.getName(), ic.getName()
-                        ), ic);
+                        generateSequenceTriggerName(ic),
+                        ic);
                     result.addAll(sqlList);
                 }
             }
@@ -667,7 +643,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             .map(e -> {
                     final String type;
 
-                    ViewColumnMeta viewColumnMeta = e.getValue();
+                    ViewColumnMeta<?> viewColumnMeta = e.getValue();
                     if (ViewColumnType.TEXT == viewColumnMeta.getColumnType()) {
                         StringColumn sc = (StringColumn) pv.getColumnRef(viewColumnMeta.getName());
 
@@ -980,7 +956,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         TableElement te = ic.getParentTable();
 
         SequenceElement s = ic.getSequence();
-        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
+        String nextValueProcName = FirebirdAdaptor.sequenceNextValueProcString(s.getGrain().getName(), s.getName());
 
         TriggerQuery triggerQuery = new TriggerQuery()
             .withSchema(ic.getParentTable().getGrain().getName())
@@ -1151,7 +1127,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                     return opsClasses.containsAll(Arrays.asList(ParameterRef.class, FieldRef.class));
                 })
                 .map(logicValuedExpr -> {
-                        Map<Class, List<Expr>> classToExprsMap = logicValuedExpr.getAllOperands().stream()
+                        Map<Class<?>, List<Expr>> classToExprsMap = logicValuedExpr.getAllOperands().stream()
                             .collect(Collectors.toMap(
                                 Expr::getClass,
                                 expr -> new ArrayList<>(Arrays.asList(expr)),

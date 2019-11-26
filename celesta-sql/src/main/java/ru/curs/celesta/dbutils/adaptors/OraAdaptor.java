@@ -55,7 +55,7 @@ import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.adaptors.ddl.*;
 
 import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.*;
-import static ru.curs.celesta.dbutils.adaptors.function.OraFunctions.*;
+import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.*;
 
 import ru.curs.celesta.dbutils.adaptors.function.OraFunctions;
 import ru.curs.celesta.dbutils.meta.*;
@@ -269,10 +269,7 @@ public final class OraAdaptor extends DBAdaptor {
     }
 
     private String getSchemaUnderscoreNameTemplate(String schemaName, String name) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(stripNameFromQuotes(schemaName)).append("_").append(stripNameFromQuotes(name));
-
-        return sb.toString();
+        return stripNameFromQuotes(schemaName) + "_" + stripNameFromQuotes(name);
     }
 
     private String stripNameFromQuotes(String name) {
