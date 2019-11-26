@@ -12,6 +12,10 @@
 
     <packaging>maven-plugin</packaging>
 
+    <properties>
+        <maven.plugin.api.version>3.6.3</maven.plugin.api.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>ru.curs</groupId>
@@ -26,17 +30,17 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>3.6.3</version>
+            <version>${maven.plugin.api.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
-            <version>3.6.2</version>
+            <version>${maven.plugin.api.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-compat</artifactId>
-            <version>3.6.2</version>
+            <version>${maven.plugin.api.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
