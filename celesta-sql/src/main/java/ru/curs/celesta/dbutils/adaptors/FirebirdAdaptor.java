@@ -548,9 +548,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 + "LEFT JOIN RDB$REF_CONSTRAINTS refc ON relc.RDB$CONSTRAINT_NAME = refc.RDB$CONSTRAINT_NAME %n"
                 + "LEFT JOIN RDB$DEPENDENCIES d1 ON d1.RDB$DEPENDED_ON_NAME = relc.RDB$RELATION_NAME %n"
                 + "LEFT JOIN RDB$DEPENDENCIES d2 ON d1.RDB$DEPENDENT_NAME = d2.RDB$DEPENDENT_NAME %n"
-              + "WHERE relc.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY' AND relc.RDB$RELATION_NAME like '%s@_%%' escape '@' "
-                + "AND d1.RDB$DEPENDED_ON_NAME <> d2.RDB$DEPENDED_ON_NAME "
-                + "AND d1.RDB$FIELD_NAME <> d2.RDB$FIELD_NAME %n"
+              + "WHERE relc.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY' "
+                + "AND relc.RDB$RELATION_NAME like '%s@_%%' escape '@' "
+                + "AND d1.RDB$FIELD_NAME = inds.RDB$FIELD_NAME "
+                + "AND d1.RDB$DEPENDED_ON_NAME <> d2.RDB$DEPENDED_ON_NAME %n"
               + "ORDER BY inds.RDB$FIELD_POSITION",
             g.getName()
         );
@@ -565,8 +566,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 String tableName = convertNameFromDb(fullTableName, g);
 
                 String fullRefTableName = rs.getString("ref_table_name").trim();
-                String refTableName = convertNameFromDb(fullRefTableName, g);
-                String refGrainName = fullRefTableName.substring(0, fullRefTableName.indexOf(refTableName) - 1);
+                String refGrainName = fullRefTableName.substring(0, fullRefTableName.indexOf("_"));
+                String refTableName = fullRefTableName.substring(refGrainName.length() + 1);
 
                 FKRule updateRule = getFKRule(rs.getString("update_rule").trim());
                 FKRule deleteRule = getFKRule(rs.getString("delete_rule").trim());

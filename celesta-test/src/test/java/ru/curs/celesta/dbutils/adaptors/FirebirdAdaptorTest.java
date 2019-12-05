@@ -10,8 +10,18 @@ import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.ConnectionPoolConfiguration;
 import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
+import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.score.AbstractScore;
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.ZonedDateTimeColumn;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.test.ContainerUtils;
 
@@ -19,6 +29,8 @@ import java.sql.Connection;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class FirebirdAdaptorTest extends AbstractAdaptorTest {
 
@@ -83,4 +95,77 @@ public class FirebirdAdaptorTest extends AbstractAdaptorTest {
         final String pkName = dba.pkConstraintString(this.t);
         assertEquals("pk_test_gtest", pkName);
     }
+
+    @Test
+    @Override
+    public void getColumnInfo1() throws ParseException {
+        DbColumnInfo c;
+        // Проверяем реакцию на столбец, которого нет в базе данных
+        Column<?> newCol = new IntegerColumn(t, "nonExistentColumn");
+        assertSame(newCol, t.getColumn("nonExistentColumn"));
+        c = dba.getColumnInfo(conn, newCol);
+        assertNull(c);
+
+        // Этот тест проверяет типы колонок и выражения not null
+        // attrVarchar varchar(2),
+        c = dba.getColumnInfo(conn, t.getColumn("attrVarchar"));
+        assertEquals("attrVarchar", c.getName());
+        assertSame(StringColumn.class, c.getType());
+        assertEquals(true, c.isNullable());
+        assertEquals(2, c.getLength());
+        assertEquals(0, c.getScale());
+        assertEquals("", c.getDefaultValue());
+        assertEquals(false, c.isMax());
+
+        // f1 bit not null,
+        c = dba.getColumnInfo(conn, t.getColumn("f1"));
+        assertEquals("f1", c.getName());
+        assertSame(BooleanColumn.class, c.getType());
+        assertEquals(false, c.isNullable());
+        assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
+        assertEquals("", c.getDefaultValue());
+        assertEquals(false, c.isMax());
+
+        // f4 real,
+        c = dba.getColumnInfo(conn, t.getColumn("f4"));
+        assertEquals("f4", c.getName());
+        assertSame(FloatingColumn.class, c.getType());
+        assertEquals(true, c.isNullable());
+        assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
+        assertEquals("", c.getDefaultValue());
+        assertEquals(false, c.isMax());
+
+        // f7 varchar(8),
+        c = dba.getColumnInfo(conn, t.getColumn("f7"));
+        assertEquals("f7", c.getName());
+        assertSame(StringColumn.class, c.getType());
+        assertEquals(true, c.isNullable());
+        assertEquals(8, c.getLength());
+        assertEquals(0, c.getScale());
+        assertEquals("", c.getDefaultValue());
+        assertEquals(false, c.isMax());
+
+        // f11 image not null
+        c = dba.getColumnInfo(conn, t.getColumn("f11"));
+        assertEquals("f11", c.getName());
+        assertSame(BinaryColumn.class, c.getType());
+        assertEquals(false, c.isNullable());
+        assertEquals(0, c.getLength());
+        assertEquals(0, c.getScale());
+        assertEquals("", c.getDefaultValue());
+        assertEquals(false, c.isMax());
+
+        // f12 decimal(11, 7),
+        c = dba.getColumnInfo(conn, t.getColumn("f12"));
+        assertEquals("f12", c.getName());
+        assertSame(DecimalColumn.class, c.getType());
+        assertEquals(true, c.isNullable());
+        assertEquals(11, c.getLength());
+        assertEquals(7, c.getScale());
+        assertEquals("", c.getDefaultValue());
+        assertEquals(false, c.isMax());
+    }
+
 }
