@@ -240,7 +240,9 @@ public final class Celesta implements ICelesta {
                 server = Optional.of(Server.createTcpServer(
                         "-tcpPort",
                         Integer.toString(appSettings.getH2Port()),
+                        "-ifNotExists",
                         "-tcpAllowOthers").start());
+
                 LOGGER.info("done.");
 
                 CurrentScore.global(true);

@@ -204,9 +204,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         String result = defaultBody;
 
         if (IntegerColumn.class == ci.getType()) {
-            Pattern p = Pattern.compile("\\(NEXT VALUE FOR \"[^\"]+\"\\.\"([^\"]+)+\"\\)");
+            Pattern p = Pattern.compile("NEXT VALUE FOR \"[^\"]+\"\\.\"([^\"]+)+\"");
             Matcher m = p.matcher(defaultBody);
-            if (m.matches()) {
+            if (m.find()) {
                 String sequenceName = m.group(1);
                 result = "NEXTVAL(" + sequenceName + ")";
             }
@@ -355,7 +355,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     @Override
     public String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
                                     List<String> otherFields, String otherWhere) {
-        String template = "( %s ) IN (SELECT ( %s ) FROM %s WHERE %s)";
+        String template = "( %s ) IN (SELECT %s FROM %s WHERE %s)";
         String fieldsStr = String.join(",",
                 fields.stream()
                         .map(s -> "\"" + s + "\"")
