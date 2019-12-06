@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.*;
 import java.util.Properties;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -11,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class H2MixedModeTest {
 
-    private final String port = "6557";
+    private final String port = Integer.toString(6557 + ThreadLocalRandom.current().nextInt(20));
     private final String jdbcURL = String.format(
             "jdbc:h2:tcp://localhost:%s/mem:celesta", port);
 

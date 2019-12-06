@@ -57,7 +57,7 @@
         <!--dependency versions -->
         <checkstyle.version>8.27</checkstyle.version>
         <slf4j.version>1.7.29</slf4j.version>
-        <h2.version>1.4.197</h2.version>
+        <h2.version>1.4.200</h2.version>
         <javacc.version>7.0.5</javacc.version>
         <jdbc.driver.oracle.version>12.1.2-0-0</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.2.8</jdbc.driver.postgres.version>
