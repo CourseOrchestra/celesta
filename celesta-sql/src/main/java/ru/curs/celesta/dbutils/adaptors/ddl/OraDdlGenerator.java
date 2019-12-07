@@ -28,11 +28,21 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
-import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.*;
-import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.*;
-import static ru.curs.celesta.dbutils.adaptors.function.OraFunctions.*;
-import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.*;
+import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
+
+import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.CSC;
+import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.DROP_TRIGGER;
+import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.SNL;
+
+import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.getFieldList;
+
+import static ru.curs.celesta.dbutils.adaptors.function.OraFunctions.fromOrToNClob;
+import static ru.curs.celesta.dbutils.adaptors.function.OraFunctions.getBooleanCheckName;
+import static ru.curs.celesta.dbutils.adaptors.function.OraFunctions.translateDate;
+
+import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.generateSequenceTriggerName;
+import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.getIncrementSequenceName;
+import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.getUpdTriggerName;
 
 /**
  * Class for SQL generation of data definition of Oracle.

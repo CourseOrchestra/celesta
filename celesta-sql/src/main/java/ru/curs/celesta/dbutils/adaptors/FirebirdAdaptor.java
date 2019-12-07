@@ -735,7 +735,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
         return sequenceProcString(schemaName, sequenceName, "_" + NEXT_VALUE_PROC_POSTFIX, isQuoted);
     }
 
-    private static String sequenceProcString(String schemaName, String sequenceName, String procPostfix, boolean isQuoted) {
+    private static String sequenceProcString(
+            String schemaName, String sequenceName, String procPostfix, boolean isQuoted) {
 
         StringBuilder sb = new StringBuilder(
                 NamedElement.limitName(getSchemaUnderscoreNameTemplate(schemaName, sequenceName), procPostfix));

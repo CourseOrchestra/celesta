@@ -61,7 +61,8 @@ import java.util.stream.Stream;
 
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
 
-import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.*;
+import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.generateSequenceTriggerName;
+import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.getVersionCheckTriggerName;
 
 /**
  * Class for SQL generation of data definition of Firebird.
@@ -1094,7 +1095,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         return result;
     }
 
-    private static class ParameterizedViewTypeResolver<T, R> {
+    private static final class ParameterizedViewTypeResolver<T, R> {
 
         private final ParameterizedView pv;
         private final ViewColumnType viewColumnType;

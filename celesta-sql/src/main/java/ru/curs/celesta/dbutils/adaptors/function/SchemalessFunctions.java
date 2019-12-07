@@ -1,6 +1,8 @@
 package ru.curs.celesta.dbutils.adaptors.function;
 
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.NamedElement;
+import ru.curs.celesta.score.TableElement;
 
 /**
  * Utility class for schemaless database functions.
