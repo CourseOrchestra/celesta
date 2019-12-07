@@ -9,6 +9,7 @@ import ru.curs.celesta.dbutils.adaptors.constants.FireBirdConstants;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlGenerator;
 import ru.curs.celesta.dbutils.adaptors.ddl.FirebirdDdlGenerator;
+import ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions;
 import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
@@ -30,11 +31,11 @@ import ru.curs.celesta.score.DecimalColumn;
 import ru.curs.celesta.score.FKRule;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.NamedElement;
 import ru.curs.celesta.score.SequenceElement;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.TableElement;
 import ru.curs.celesta.score.validator.AnsiQuotedIdentifierParser;
-
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -73,6 +74,9 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
     private static final Pattern SEQUENCE_INFO_PATTERN =
         Pattern.compile("/\\* INCREMENT_BY = (.*), MINVALUE = (.*), MAXVALUE = (.*), CYCLE = (.*) \\*/");
+
+    private static final String CUR_VALUE_PROC_POSTFIX = "curValueProc";
+    private static final String NEXT_VALUE_PROC_POSTFIX = "nextValueProc";
 
     public FirebirdAdaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer) {
         super(connectionPool, ddlConsumer);
@@ -236,7 +240,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
     }
 
     @Override
-    public PreparedStatement getOneFieldStatement(Connection conn, Column c, String where) {
+    public PreparedStatement getOneFieldStatement(Connection conn, Column<?> c, String where) {
         TableElement t = c.getParentTable();
 
         String sql = String.format(
@@ -286,7 +290,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
         }
 
         String returning = "";
-        for (Column c : t.getColumns().values()) {
+        for (Column<?> c : t.getColumns().values()) {
             if (c instanceof IntegerColumn) {
                 IntegerColumn ic = (IntegerColumn) c;
 
@@ -320,7 +324,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
             .findFirst().get();
 
         final SequenceElement s = idColumn.getSequence();
-        String curValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_curValueProc");
+        String curValueProcName = sequenceCurValueProcString(s.getGrain().getName(), s.getName());
         String sql = String.format("EXECUTE PROCEDURE %s(null)", curValueProcName);
 
         try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
@@ -340,7 +344,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
     }
 
     @Override
-    public DbColumnInfo getColumnInfo(Connection conn, Column c) {
+    public DbColumnInfo getColumnInfo(Connection conn, Column<?> c) {
         String sql = String.format(
             "SELECT r.RDB$FIELD_NAME AS column_name,%n"
                 + "        r.RDB$DESCRIPTION AS field_description,%n"
@@ -422,7 +426,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
     }
 
-    private void processDefaults(Connection conn, Column c, DbColumnInfo dbColumnInfo) throws SQLException {
+    private void processDefaults(Connection conn, Column<?> c, DbColumnInfo dbColumnInfo) throws SQLException {
         String defaultValue = null;
 
         TableElement te = c.getParentTable();
@@ -444,15 +448,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
             if (defaultSource == null) {
                 if (IntegerColumn.class.equals(dbColumnInfo.getType())) {
-
-                    String triggerName = String.format(
-                        //TODO:: WE NEED A FUNCTION FOR SEQUENCE TRIGGER NAME GENERATION
-                        "%s_%s_%s_seq_trigger",
-                        te.getGrain().getName(),
-                        te.getName(),
-                        c.getName()
-                    );
-
+                    String triggerName = SchemalessFunctions.generateSequenceTriggerName((IntegerColumn) c);
                     sql = String.format(
                         "SELECT proc.RDB$DEPENDED_ON_NAME %n "
                             + "FROM RDB$DEPENDENCIES tr%n "
@@ -467,6 +463,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                         if (sequenceRs.next()) {
                             String sequenceName = sequenceRs.getString(1).trim();
                             defaultValue = "NEXTVAL("
+                                // TODO: score sequence name could be spoiled here because of name limitation
                                 + sequenceName.replace(g.getName() + "_", "")
                                 + ")";
                         }
@@ -540,21 +537,24 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
         String sql = String.format(
-            "select DISTINCT relc.RDB$RELATION_NAME as table_name, relc.RDB$CONSTRAINT_NAME as constraint_name, "
-                + "refc.RDB$UPDATE_RULE as update_rule, refc.RDB$DELETE_RULE as delete_rule, "
-                + "d1.RDB$FIELD_NAME as column_name, d2.RDB$DEPENDED_ON_NAME AS ref_table_name %n"
-                + "FROM RDB$INDEX_SEGMENTS inds %n"
+                "SELECT DISTINCT relc.RDB$RELATION_NAME as table_name, "
+                              + "relc.RDB$CONSTRAINT_NAME as constraint_name, "
+                              + "refc.RDB$UPDATE_RULE as update_rule, "
+                              + "refc.RDB$DELETE_RULE as delete_rule, "
+                              + "d1.RDB$FIELD_NAME as column_name, "
+                              + "d2.RDB$DEPENDED_ON_NAME AS ref_table_name%n"
+              + "FROM RDB$INDEX_SEGMENTS inds %n"
                 + "LEFT JOIN RDB$RELATION_CONSTRAINTS relc ON relc.RDB$INDEX_NAME = inds.RDB$INDEX_NAME%n"
                 + "LEFT JOIN RDB$REF_CONSTRAINTS refc ON relc.RDB$CONSTRAINT_NAME = refc.RDB$CONSTRAINT_NAME %n"
                 + "LEFT JOIN RDB$DEPENDENCIES d1 ON d1.RDB$DEPENDED_ON_NAME = relc.RDB$RELATION_NAME %n"
                 + "LEFT JOIN RDB$DEPENDENCIES d2 ON d1.RDB$DEPENDENT_NAME = d2.RDB$DEPENDENT_NAME %n"
-                + "WHERE relc.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY' AND relc.RDB$RELATION_NAME like '%s@_%%' escape '@' "
-                + "AND d1.RDB$DEPENDED_ON_NAME <> d2.RDB$DEPENDED_ON_NAME "
-                + "AND d1.RDB$FIELD_NAME <> d2.RDB$FIELD_NAME %n"
-                + "ORDER BY inds.RDB$FIELD_POSITION",
+              + "WHERE relc.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY' "
+                + "AND relc.RDB$RELATION_NAME like '%s@_%%' escape '@' "
+                + "AND d1.RDB$FIELD_NAME = inds.RDB$FIELD_NAME "
+                + "AND d1.RDB$DEPENDED_ON_NAME <> d2.RDB$DEPENDED_ON_NAME %n"
+              + "ORDER BY inds.RDB$FIELD_POSITION",
             g.getName()
         );
-
 
         Map<String, DbFkInfo> fks = new HashMap<>();
 
@@ -566,8 +566,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 String tableName = convertNameFromDb(fullTableName, g);
 
                 String fullRefTableName = rs.getString("ref_table_name").trim();
-                String refTableName = convertNameFromDb(fullRefTableName, g);
-                String refGrainName = fullRefTableName.substring(0, fullRefTableName.indexOf(refTableName) - 1);
+                String refGrainName = fullRefTableName.substring(0, fullRefTableName.indexOf("_"));
+                String refTableName = fullRefTableName.substring(refGrainName.length() + 1);
 
                 FKRule updateRule = getFKRule(rs.getString("update_rule").trim());
                 FKRule deleteRule = getFKRule(rs.getString("delete_rule").trim());
@@ -642,11 +642,13 @@ public final class FirebirdAdaptor extends DBAdaptor {
     public List<String> getParameterizedViewList(Connection conn, Grain g) {
         List<String> result = new ArrayList<>();
 
-        String sql = String.format("select RDB$PROCEDURE_NAME%n"
-                + "from RDB$PROCEDURES%n"
-                + "where RDB$PROCEDURE_NAME like '%s@_%%' escape '@' %n"
-                + "AND RDB$PROCEDURE_NAME NOT LIKE '%%curValueProc%%' escape '@' %n"
-                + "AND RDB$PROCEDURE_NAME NOT LIKE '%%nextValueProc%%' escape '@' %n",
+        // TODO: grain names may be cut, so reconsider the following
+        String sql = String.format(
+                "SELECT RDB$PROCEDURE_NAME%n"
+              + "FROM RDB$PROCEDURES%n"
+              + "WHERE RDB$PROCEDURE_NAME LIKE '%s@_%%' escape '@' %n"
+                + "AND RDB$PROCEDURE_NAME NOT LIKE '%%" + CUR_VALUE_PROC_POSTFIX + "%%' escape '@' %n"
+                + "AND RDB$PROCEDURE_NAME NOT LIKE '%%" + NEXT_VALUE_PROC_POSTFIX + "%%' escape '@' %n",
             g.getName()
         );
 
@@ -685,7 +687,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public long nextSequenceValue(Connection conn, SequenceElement s) {
-        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
+        String nextValueProcName = sequenceNextValueProcString(s.getGrain().getName(), s.getName());
 
         String sql = String.format("EXECUTE PROCEDURE %s", nextValueProcName);
 
@@ -706,20 +708,49 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public void dropSequence(Connection conn, SequenceElement s) {
-        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
+        String nextValueProcName = sequenceNextValueProcString(s.getGrain().getName(), s.getName());
         String sql = String.format("DROP PROCEDURE %s", nextValueProcName);
         executeUpdate(conn, sql);
 
-        String curValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_curValueProc");
+        String curValueProcName = sequenceCurValueProcString(s.getGrain().getName(), s.getName());
         sql = String.format("DROP PROCEDURE %s", curValueProcName);
         executeUpdate(conn, sql);
 
         super.dropSequence(conn, s);
     }
 
+    public static String sequenceCurValueProcString(String schemaName, String sequenceName) {
+        return sequenceCurValueProcString(schemaName, sequenceName, true);
+    }
+
+    private static String sequenceCurValueProcString(String schemaName, String sequenceName, boolean isQuoted) {
+        return sequenceProcString(schemaName, sequenceName, "_" + CUR_VALUE_PROC_POSTFIX, isQuoted);
+    }
+
+    public static String sequenceNextValueProcString(String schemaName, String sequenceName) {
+        return sequenceNextValueProcString(schemaName, sequenceName, true);
+    }
+
+    private static String sequenceNextValueProcString(String schemaName, String sequenceName, boolean isQuoted) {
+        return sequenceProcString(schemaName, sequenceName, "_" + NEXT_VALUE_PROC_POSTFIX, isQuoted);
+    }
+
+    private static String sequenceProcString(
+            String schemaName, String sequenceName, String procPostfix, boolean isQuoted) {
+
+        StringBuilder sb = new StringBuilder(
+                NamedElement.limitName(getSchemaUnderscoreNameTemplate(schemaName, sequenceName), procPostfix));
+        if (isQuoted) {
+            sb.insert(0, '"').append('"');
+        }
+
+        return sb.toString();
+    }
+
     @Override
     public boolean sequenceExists(Connection conn, String schema, String name) {
-        String sql = String.format("SELECT * FROM RDB$GENERATORS WHERE RDB$GENERATOR_NAME = '%s_%s'", schema, name);
+        String sql = String.format("SELECT * FROM RDB$GENERATORS WHERE RDB$GENERATOR_NAME = '%s'",
+                                   sequenceString(schema, name, false));
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             return rs.next();
@@ -730,12 +761,11 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
-        String nextValueProcName = sequenceString(s.getGrain().getName(), s.getName() + "_nextValueProc");
-        nextValueProcName = nextValueProcName.replaceAll("\"", "'");
+        String nextValueProcName = sequenceNextValueProcString(s.getGrain().getName(), s.getName(), false);
 
         String sql = String.format("SELECT RDB$PROCEDURE_SOURCE FROM RDB$PROCEDURES "
-                + "WHERE RDB$PROCEDURE_NAME = %s",
-            nextValueProcName);
+                                 + "WHERE RDB$PROCEDURE_NAME = '%s'",
+                                   nextValueProcName);
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             rs.next();
@@ -843,7 +873,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
     @Override
     public String pkConstraintString(TableElement tableElement) {
-        return tableElement.getPkConstraintName() + "_" + tableElement.getGrain().getName();
+        return NamedElement.limitName(
+                tableElement.getPkConstraintName() + "_" + tableElement.getGrain().getName());
     }
 
     @Override
@@ -861,11 +892,11 @@ public final class FirebirdAdaptor extends DBAdaptor {
         return String.format("ORDER BY 1 %s", orderByDirection);
     }
 
-    private String getSchemaUnderscoreNameTemplate(String schemaName, String name) {
+    private static String getSchemaUnderscoreNameTemplate(String schemaName, String name) {
         return stripNameFromQuotes(schemaName) + "_" + stripNameFromQuotes(name);
     }
 
-    private String stripNameFromQuotes(String name) {
+    private static String stripNameFromQuotes(String name) {
         return name.startsWith("\"") ? name.substring(1, name.length() - 1) : name;
     }
 
@@ -884,11 +915,18 @@ public final class FirebirdAdaptor extends DBAdaptor {
         return name;
     }
 
-
     @Override
     public String sequenceString(String schemaName, String sequenceName) {
-        StringBuilder sb = new StringBuilder(getSchemaUnderscoreNameTemplate(schemaName, sequenceName));
-        sb.insert(0, '"').append('"');
+        return sequenceString(schemaName, sequenceName, true);
+    }
+
+    private String sequenceString(String schemaName, String sequenceName, boolean isQuoted) {
+        StringBuilder sb = new StringBuilder(NamedElement.limitName(
+                getSchemaUnderscoreNameTemplate(schemaName, sequenceName)));
+        if (isQuoted) {
+            sb.insert(0, '"').append('"');
+        }
+
         return sb.toString();
     }
 

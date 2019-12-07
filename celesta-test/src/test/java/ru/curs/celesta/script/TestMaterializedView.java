@@ -16,7 +16,7 @@ import java.time.temporal.ChronoUnit;
 import ru.curs.celesta.dbutils.Cursor;
 import ru.curs.celesta.dbutils.MaterializedViewCursor;
 
-class TestMaterializedView implements ScriptTest {
+public class TestMaterializedView implements ScriptTest {
     @TestTemplate
     void test_mat_view_insert(CallContext context) {
         Table1Cursor tableCursor = new Table1Cursor(context);

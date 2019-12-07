@@ -26,7 +26,6 @@ public class FirebirdAdaptorTest extends AbstractAdaptorTest {
 
     private static FirebirdAdaptor dba;
 
-
     @BeforeAll
     public static void beforeAll() throws Exception {
         firebird.start();
@@ -82,4 +81,5 @@ public class FirebirdAdaptorTest extends AbstractAdaptorTest {
         final String pkName = dba.pkConstraintString(this.t);
         assertEquals("pk_test_gtest", pkName);
     }
+
 }

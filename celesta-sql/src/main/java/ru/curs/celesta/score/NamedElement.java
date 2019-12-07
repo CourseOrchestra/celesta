@@ -42,12 +42,33 @@ public abstract class NamedElement {
      *         last 8 symbols.
      */
     public static String limitName(String value) {
+        return limitName(value, "");
+    }
+
+    /**
+     * Restricts identifier length with a postfix by maximal number of symbols. The resulting form
+     * becomes: &lt;restricted identifier&gt;&lt;postfix&gt;.
+     * For example <em>my_very_long_table_name</em> with <em>_nextValueProc</em> becomes -
+     * <em>my_very_73FAF9A9_nextValueProc</em>
+     *
+     * @param value  Identifier of arbitrary length.
+     * @param postfix  Identifier postfix.
+     *
+     * @return "Shortcut" identifier that has a hash code of the original one as its
+     *         last 8 symbols plus postfix.
+     */
+    public static String limitName(String value, String postfix) {
         String result = value;
-        if (result.length() > NamedElement.MAX_IDENTIFIER_LENGTH) {
-            result = String.format("%s%08X", result.substring(0, NamedElement.MAX_IDENTIFIER_LENGTH - 8),
-                    result.hashCode());
+        if (result.length() + postfix.length() > NamedElement.MAX_IDENTIFIER_LENGTH) {
+            int trimLength = NamedElement.MAX_IDENTIFIER_LENGTH - postfix.length() - 8;
+            if (trimLength < 4) {
+                throw new IllegalArgumentException(
+                        String.format("Restricted name for %s couldn't be created.", value + postfix));
+            }
+            result = String.format("%s%08X", result.substring(0, trimLength), result.hashCode());
         }
-        return result;
+
+        return result + postfix;
     }
 
     /**

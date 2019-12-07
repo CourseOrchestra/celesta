@@ -18,13 +18,13 @@ public class CelestaUnitExtensionTest {
             .build();
 
     @Test
-    void extensionInitializedWithCorrectValues() {
+    public void extensionInitializedWithCorrectValues() {
         assertTrue(ext.isReferentialIntegrity());
         assertTrue(ext.isTruncateAfterEach());
     }
 
     @Test
-    void defaultValuesAreCorrect() {
+    public void defaultValuesAreCorrect() {
         CelestaUnitExtension ext = new CelestaUnitExtension();
         assertEquals(CelestaUnitExtension.DEFAULT_SCORE, ext.getScorePath());
         assertTrue(ext.isReferentialIntegrity());
@@ -32,7 +32,7 @@ public class CelestaUnitExtensionTest {
     }
 
     @Test
-    void integrityCheckWorks(CallContext ctx) {
+    public void integrityCheckWorks(CallContext ctx) {
         try(LineCursor lc = new LineCursor(ctx)) {
             lc.setHeader_id(100);
             lc.setId(100);
@@ -46,13 +46,13 @@ public class CelestaUnitExtensionTest {
 
     @Test
     @DisplayName("When truncateAfterEach is on, and you fill the tables in a test...")
-    void tablesTruncated1(CallContext ctx) {
+    public void tablesTruncated1(CallContext ctx) {
         fillTwoTables(ctx);
     }
 
     @Test
     @DisplayName("...their contents disappears in the following test.")
-    void tablesTruncated2(CallContext ctx) {
+    public void tablesTruncated2(CallContext ctx) {
         try(HeaderCursor hc = new HeaderCursor(ctx);
             LineCursor lc = new LineCursor(ctx)) {
 

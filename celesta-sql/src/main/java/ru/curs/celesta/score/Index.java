@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Index extends GrainElement implements HasColumns {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GrainElement.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Index.class);
 
     private static final String INDEX_CREATION_ERROR = "Error while creating index '%s': column '%s' in table '%s' is ";
     private final BasicTable table;

@@ -148,7 +148,9 @@ public abstract class DbUpdater<T extends ICallContext> {
             Grain sys = score.getGrain(score.getSysSchemaName());
             createSysObjects(conn, sys);
             insertGrainRec(sys);
-            updateGrain(sys, connectionPool);
+            if (!updateGrain(sys, connectionPool)) {
+                throw new CelestaException("System grain '%s' update failed.", score.getSysSchemaName());
+            }
         } catch (ParseException e) {
             throw new CelestaException("No '%s' grain definition found.", score.getSysSchemaName());
         }

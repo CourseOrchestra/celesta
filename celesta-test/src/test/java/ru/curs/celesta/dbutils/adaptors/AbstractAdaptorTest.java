@@ -51,7 +51,7 @@ public abstract class AbstractAdaptorTest {
     private DBAdaptor dba;
     private AbstractScore score;
 
-    private Connection conn;
+    Connection conn;
     BasicTable t;
 
     abstract Connection getConnection();
