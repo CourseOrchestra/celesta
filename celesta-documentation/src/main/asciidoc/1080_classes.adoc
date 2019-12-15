@@ -357,7 +357,10 @@ _Что значит `navigate("=><")`?_:: Эта команда предпис�
 
 Для полей с типами BIT и BLOB допустимо использование выражения фильтров вида null и !null, отфильтровывающие значения «поле is null» и «not (поле is null)»:
 
-image::{img}/01.simple_filter.png[{image-30-width}]
+[syntrax,bit_blob_filter,svg,heading="bit_blob_filter"]   
+....
+line(optx('!'), 'null')
+....
 
 Иные виды фильтрации для типа BLOB смысла не имеют, а для битового типа условие на True или False накладывается с помощью метода *setRange(...)*.
 
@@ -365,7 +368,15 @@ image::{img}/01.simple_filter.png[{image-30-width}]
 
 Для полей с типами INTEGER и REAL допустимо использование выражений фильтров по следующим синтаксическим правилам:
 
-image::{img}/02.filter.png[{image-60-width}]
+[syntrax,filter,svg,heading="filter"]   
+....
+loop(
+  line(optx('!'), choice('/term',
+                         line('(', '/filter', ')'))),
+  choice('&', '|')
+)
+....
+
 
 Здесь
 
@@ -379,7 +390,14 @@ image::{img}/02.filter.png[{image-60-width}]
 
 Выражение *term* для числовых полей имеет следующий синтаксис:
 
-image::{img}/03.numeric_term.png[{image-80-width}]
+[syntrax,filter_numeric_term,svg,heading="numeric_term"]  
+....
+choice(
+  'null',
+  line('/<numeric literal>', optx('..', optx('/<numeric literal>'))),
+  line(choice('..', '>', '<'), '/<numeric literal>')
+)
+....
 
 Например, выражение фильтра
 
@@ -444,7 +462,18 @@ image::{img}/03.numeric_term.png[{image-80-width}]
 
 Более точно, синтаксические правила термов фильтра для текстовых полей выглядят следующим образом:
 
-image::{img}/04.text_term.png[{image-80-width}]
+[syntrax,filter_text_term,svg,heading="text_term"]   
+....
+line(
+  optx('@'),
+  choice(
+    'null',
+    line('/<text literal>', optx('..', optx('/<text literal>'))),
+    line(choice('..', '>', '<'), '/<text literal>'),
+    line(optx('%'), loop('/<text literal>', '%'), optx('%'))
+  )
+)
+....
 
 Так, выражение
 
