@@ -13,8 +13,10 @@ cache:
   - $HOME/.m2
 
 before_install:
-  - sudo apt-get install -y graphviz
-  - cp .travis.settings.xml $HOME/.m2/settings.xml
+  - sudo apt-get install -y graphviz libpango1.0-dev libpangocairo-1.0-0 libgirepository1.0-dev
+  - sudo pip install pygobject
+  - sudo pip install --upgrade https://github.com/kevinpt/syntrax/tarball/master
+  - cp .travis.settings.xml $HOME/.m2/settings.xml  
 
 script:
   - mvn javadoc:aggregate -pl :celesta-parent,:celesta-sql,:celesta-core,:celesta-system-services,:celesta-unit

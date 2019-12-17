@@ -1,6 +1,6 @@
 :!imagesdir:
 :icons: font
-:syntrax-style: src/main/asciidoc/syntrax.ini
+:syntrax-style: celesta-documentation/src/main/asciidoc/syntrax.ini
 :encoding: utf-8
 :caution-caption: Предостережение
 :important-caption: Важно
