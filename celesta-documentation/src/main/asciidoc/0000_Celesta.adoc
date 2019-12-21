@@ -37,7 +37,7 @@ include::1013_maven_plugin.adoc[leveloffset=+2, tag="maven_plugin"]
 include::1020_celesta_start.adoc[leveloffset=+2, tag="celesta_start"]
 
 [[basic_settings_section]]
-=== Базовая настройка Celesta
+=== Параметры конфигурации Celesta
 
 include::1030_basic_settings.adoc[leveloffset=+2, tag="basic_settings"]
 
