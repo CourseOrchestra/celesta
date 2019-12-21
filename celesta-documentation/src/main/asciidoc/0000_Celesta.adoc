@@ -64,7 +64,7 @@ include::1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
 include::1070_call_context.adoc[leveloffset=+2, tag="call_context"]
 
 [[data_accessors_section]]
-=== Работа с данными через классы доступа к данным
+=== Работа с данными через классы доступа к данным (курсоры)
 
 include::1080_classes.adoc[leveloffset=+2, tag="classes"]
 
