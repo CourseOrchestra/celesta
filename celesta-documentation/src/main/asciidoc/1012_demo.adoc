@@ -13,17 +13,16 @@ include::_doc_general_attributes.adoc[]
 
 //tag::demo[]
 
-Работающий тестовый пример, демонстрирующий возможности Celesta, доступен здесь: https://github.com/inponomarev/celesta-demo/.
+Тестовый пример, демонстрирующий возможности Celesta в проекте на основе Spring Boot, доступен здесь: https://github.com/inponomarev/celesta-demo/.
 
 Для создания проекта Spring Boot с помощью Maven необходимо указать следующие зависимости:
 
 ```xml
     <properties>
-       <spring.boot.version>2.0.6.RELEASE</spring.boot.version>
        <!-- Проверьте свежую версию ru.curs:spring-boot-starter-web на Maven Central -->
-       <spring.boot.starter.celesta.version>2.0.1</spring.boot.starter.celesta.version>
+       <spring.boot.starter.celesta.version>2.1.7</spring.boot.starter.celesta.version>
        <!-- Проверьте свежую версию ru.curs:celesta-parent на Maven Central -->
-       <celesta.version>7.1.00</celesta.version>
+       <celesta.version>7.2.5</celesta.version>
     </properties>
 
 . . .
@@ -31,7 +30,6 @@ include::_doc_general_attributes.adoc[]
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <version>${spring.boot.version}</version>
         </dependency>
         
         <dependency>

@@ -13,7 +13,9 @@ include::_doc_general_attributes.adoc[]
 
 //tag::maven_plugin[]
 
-Подключение плагина:
+Celesta-maven-plugin осуществляет кодогенерацию классов доступа к данным на основе CelestaSQL-скриптов. Подключение этого плагина обязательно для проектов, использующих Celesta. 
+
+Пример использования:
 
 ```xml
 <plugin>

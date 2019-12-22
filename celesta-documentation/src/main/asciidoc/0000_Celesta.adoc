@@ -9,9 +9,13 @@ include::_doc_general_attributes.adoc[]
 :source-highlighter: highlightjs
 :toc: left
 
+:numbered!:
+
 == Что такое Celesta?
 
 include::1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
+
+:numbered:
 
 == Часть 1. Быстрый старт
 
@@ -37,7 +41,7 @@ include::1013_maven_plugin.adoc[leveloffset=+2, tag="maven_plugin"]
 include::1020_celesta_start.adoc[leveloffset=+2, tag="celesta_start"]
 
 [[basic_settings_section]]
-=== Базовая настройка Celesta
+=== Параметры конфигурации Celesta
 
 include::1030_basic_settings.adoc[leveloffset=+2, tag="basic_settings"]
 
@@ -53,6 +57,7 @@ include::1040_system_tables.adoc[leveloffset=+2, tag="system_tables"]
 
 include::1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
 
+[[CelestaDoc]]
 === CelestaDoc
 
 include::1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
@@ -64,9 +69,12 @@ include::1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
 include::1070_call_context.adoc[leveloffset=+2, tag="call_context"]
 
 [[data_accessors_section]]
-=== Работа с данными через классы доступа к данным
+=== Работа с данными через классы доступа к данным (курсоры)
 
 include::1080_classes.adoc[leveloffset=+2, tag="classes"]
+
+==== Распределение прав доступа и протоколирование изменений
+include::1088_security_logging.adoc[leveloffset=+2, tag="security_logging"]
 
 [[BLOB_fields]]
 ==== BLOB-поля
@@ -108,6 +116,10 @@ include::1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
 include::1120_meta.adoc[leveloffset=+2, tag="meta"]
 
 == Приложение
+
+[[best_practices]]
+=== Лучшие практики написания кода
+include::2005_best_practices.adoc[leveloffset=+2, tag="best_practices"]
 
 [[RDBMS_peculiarities]]
 === Особенности работы Celesta с поддерживаемыми типами СУБД

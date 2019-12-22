@@ -10,12 +10,11 @@ include::_doc_general_attributes.adoc[]
 
 //tag::triggers[]
 
-Триггером называется написанная создателем решения функция, принимающая в качестве аргумента экземпляр курсора, присоединённая к классу курсора, автоматически вызываемая при вставке, удалении и модификации записи (иначе
-говоря, триггер имеет тип https://docs.oracle.com/javase/8/docs/api/index.html?java/util/function/Consumer.html[`Consumer<YourCursor>`]).
+Триггером называется написанная создателем решения функция, принимающая в качестве аргумента экземпляр курсора, присоединённая к классу курсора, автоматически вызываемая при вставке, удалении и модификации записи. Триггер имеет тип https://docs.oracle.com/javase/8/docs/api/index.html?java/util/function/Consumer.html[`Consumer<YourCursor>`].
 
 При действиях insert(), update() и delete() система вызывает определённые создателем решения pre- (выполняемые до модификации данных в базе) и post- (выполняемые после модификации данных в базе) триггеры. Таким образом, всего существует шесть типов триггеров:
 
-[cols="1, 1, options="header"]
+[cols="^1, ^1", options="header"]
 |====
 ^.^|pre-триггеры
 ^.^|post-триггеры
@@ -64,6 +63,6 @@ public class MyService {
 public static void onPreInsert(ICelesta celesta, Consumer<MyCursor> cursorConsumer)
 ```
 
-Системные курсоры также поддерживают возможность регистрировать триггеры.
+Системные курсоры (из пакета {apidocs}ru/curs/celesta/syscursors/package-summary.html[`ru.curs.celesta.syscursors`]) также поддерживают возможность регистрировать триггеры.
 
 //end::triggers[]
