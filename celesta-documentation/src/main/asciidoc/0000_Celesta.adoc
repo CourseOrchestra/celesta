@@ -9,9 +9,13 @@ include::_doc_general_attributes.adoc[]
 :source-highlighter: highlightjs
 :toc: left
 
+:numbered!:
+
 == Что такое Celesta?
 
 include::1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
+
+:numbered:
 
 == Часть 1. Быстрый старт
 
@@ -67,6 +71,9 @@ include::1070_call_context.adoc[leveloffset=+2, tag="call_context"]
 === Работа с данными через классы доступа к данным (курсоры)
 
 include::1080_classes.adoc[leveloffset=+2, tag="classes"]
+
+==== Распределение прав доступа и протоколирование изменений
+include::1088_secury_logging.adoc[leveloffset=+2, tag="security_logging"]
 
 [[BLOB_fields]]
 ==== BLOB-поля
