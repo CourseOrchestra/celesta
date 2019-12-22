@@ -13,7 +13,7 @@ include::_doc_general_attributes.adoc[]
 
 //tag::basic_settings[]
 
-К параметрам конфигурации Celesta относятся общесистемные параметры, такие как параметры подключения к базе данных и путь к партитуре.
+К параметрам конфигурации Celesta относятся общесистемные параметры, такие как параметры подключения к базе данных.
 
 Эти настройки в виде экземпляра https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html[`Properties`] передаются в конструктор класса {apidocs}ru/curs/celesta/BaseAppSettings.html[`BaseAppSettings`], который,
 в свою очередь, является параметром конструктора класса {apidocs}ru/curs/celesta/Celesta.html[`Celesta`].
