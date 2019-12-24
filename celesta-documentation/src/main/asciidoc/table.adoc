@@ -1,0 +1,101 @@
+== Type Mapping
+
+//tag::table_typemapping[]
+[cols="1, 1, 1, 1, 1, 1, 1, 1", options="header"]
+|====
+^.^|
+^.^|CELESTA
+^.^|Microsoft SQL Server
+^.^|Oracle
+^.^|PostgreSQL
+^.^|Firebird
+^.^|H2
+^.^|Java Type For Cursor
+
+|Integer (32-bit)
+|INT
+|INT
+|NUMBER
+|INT4
+|INTEGER
+|INTEGER
+|java.lang.Integer
+
+|Floating point (64-bit)
+|REAL
+|FLOAT(53)
+|REAL
+|FLOAT8
+[= DOUBLE PRECISION]
+|DOUBLE PRECISION
+|DOUBLE
+|ava.lang.Double
+
+|Fixed point (decimal)
+|DECIMAL(p,s)
+|DECIMAL(p,s)
+|NUMBER(p,s)
+|NUMERIC(p,s)
+|DECIMAL(p,s)
+|DECIMAL(p,s)
+|java.math.BigDecimal
+
+|String (Unicode)
+|VARCHAR(n)
+|NVARCHAR(n)
+|NVARCHAR(n)
+|VARCHAR(n)
+|VARCHAR(n)
+|VARCHAR(n)
+|java.lang.String
+
+|Long string (Unicode)
+|TEXT
+|NVARCHAR(MAX)
+|NCLOB
+|TEXT
+|BLOB SUB_TYPE TEXT
+|CLOB
+|java.lang.String
+
+|Binary
+|BLOB
+|VARBINARY(MAX)
+|BLOB
+|BYTEA
+|BLOB
+|VARBINARY(MAX)
+|java.lang.String
+
+|Date/Time
+|DATETIME
+|DATETIME
+|TIMESTAMP
+|TIMESTAMP
+|TIMESTAMP
+|TIMESTAMP
+|java.util.Date
+
+|DateTime With Time Zone
+|DATETIME WITH TIME ZONE
+|DATETIMEOFFSET
+|TIMESTAMP WITH TIME ZONE
+|TIMESTAMPZ
+|TIMESTAMP WITH TIME ZONE
+|TIMESTAMP WITH TIME ZONE
+|java.time.ZonedDateTime
+
+|Boolean
+|BIT
+|BIT
+|NUMBER
+[check in (0, 1)]
+|BOOL
+|SMALLINT
+[check in (0, 1)]
+|BOOLEAN
+|java.lang.Boolean
+
+|====
+
+//end::table_typemapping[]

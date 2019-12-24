@@ -341,10 +341,7 @@ _Что значит `navigate("\=><")`?_:: Эта команда предпис
 
 Для полей с типами BIT и BLOB допустимо использование выражения фильтров вида null и !null, отфильтровывающие значения «поле is null» и «not (поле is null)»:
 
-[syntrax,bit_blob_filter,svg,heading="bit_blob_filter"]   
-....
-line(optx('!'), 'null')
-....
+include::../synfilter.adoc[tag="synf_bit_blob_filter"]
 
 Иные виды фильтрации для типа BLOB смысла не имеют, а для битового типа условие на `true` или `false` накладывается с помощью метода *setRange(...)*.
 
@@ -352,15 +349,7 @@ line(optx('!'), 'null')
 
 Для полей с типами INTEGER и REAL допустимо использование выражений фильтров по следующим синтаксическим правилам:
 
-[syntrax,filter,svg,heading="filter"]   
-....
-loop(
-  line(optx('!'), choice('/term',
-                         line('(', '/filter', ')'))),
-  choice('&', '|')
-)
-....
-
+include::../synfilter.adoc[tag="synf_filter"]
 
 Здесь
 
@@ -374,14 +363,7 @@ loop(
 
 Выражение *term* для числовых полей имеет следующий синтаксис:
 
-[syntrax,filter_numeric_term,svg,heading="numeric_term"]  
-....
-choice(
-  'null',
-  line('/<numeric literal>', optx('..', optx('/<numeric literal>'))),
-  line(choice('..', '>', '<'), '/<numeric literal>')
-)
-....
+include::../synfilter.adoc[tag="synf_numeric_term"]
 
 Например, выражение фильтра
 
@@ -446,18 +428,7 @@ choice(
 
 Более точно, синтаксические правила термов фильтра для текстовых полей выглядят следующим образом:
 
-[syntrax,filter_text_term,svg,heading="text_term"]   
-....
-line(
-  optx('@'),
-  choice(
-    'null',
-    line('/<text literal>', optx('..', optx('/<text literal>'))),
-    line(choice('..', '>', '<'), '/<text literal>'),
-    line(optx('%'), loop('/<text literal>', '%'), optx('%'))
-  )
-)
-....
+include::../synfilter.adoc[tag="synf_text_term"]
 
 Так, выражение
 
