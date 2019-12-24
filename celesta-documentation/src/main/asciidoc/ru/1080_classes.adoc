@@ -15,18 +15,7 @@ include::_doc_general_attributes.adoc[]
 
 Каждый экземпляр класса доступа к данным (его мы также будем именовать «курсор») в каждый момент времени хранит информацию об одной записи (строке) в базе данных, каждому полю записи в курсоре соответствует поле объекта. Курсор можно передвигать по записям с учётом фильтров и сортировок. Если курсор создан для таблицы, его также можно использовать для вставки, модификации и удаления данных. В курсоре, созданном для представления, доступны только методы навигации по записям.
 
-[plantuml, cursors, png]
-----
-@startuml
-BasicDataAccessor <|-- BasicCursor
-BasicDataAccessor <|-- Sequence
-BasicCursor       <|-- ParameterizedViewCursor
-BasicCursor       <|-- ViewCursor
-BasicCursor       <|-- MaterializedViewCursor
-BasicCursor       <|-- Cursor
-BasicCursor       <|-- ReadOnlyTableCursor
-@enduml
-----
+include::../uml.adoc[tag="uml_cursors"]
 
 На UML-диаграмме показана иерархия классов доступа к данным. В основе иерархии стоит класс {apidocs}ru/curs/celesta/dbutils/BasicDataAccessor.html[`BasicDataAccessor`]. Каждый класс курсоров наследуется от класса {apidocs}ru/curs/celesta/dbutils/BasicCursor.html[`BasicCursor`], класс {apidocs}ru/curs/celesta/dbutils/Sequence.html[`Sequence`] от {apidocs}ru/curs/celesta/dbutils/BasicDataAccessor.html[`BasicDataAccessor`]:
 
@@ -50,24 +39,7 @@ BasicCursor       <|-- ReadOnlyTableCursor
 
 Каждому полю курсора соответствует метод в классе `Columns`, возвращающий <<Celesta_metadata,метаданные>> соответствующей колонки, как показано на диаграмме:
 
-[plantuml, cursormeta, png]
-----
-@startuml
-class FooCursor {
-  +getFoo(): Integer
-  +setFoo(Integer foo)
-  +getBar(): String
-  +setBar(String bar)
-} 
-
-class FooCursor.Columns {
-  +foo(): ColumnMeta<Integer>
-  +bar(): ColumnMeta<String>
-}
-
-FooCursor "COLUMNS" --> FooCursor.Columns
-@enduml
-----
+include::../uml.adoc[tag="uml_cursormeta"]
 
 В каждом экземпляре курсора соответствующий экземпляр класса `Columns` доступен через `public final` поле `COLUMNS`. Кроме того, класс `Columns` каждого из курсоров может быть проинстанцирован независимо от курсора -- его конструктор принимает параметр {apidocs}ru/curs/celesta/ICelesta.html[`ICelesta`].
 
