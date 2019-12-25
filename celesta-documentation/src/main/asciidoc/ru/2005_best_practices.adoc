@@ -17,10 +17,10 @@ include::_doc_general_attributes.adoc[]
 Курсор -- объект, заключающий в себе JDBC PreparedStatements и ResultSets, необходимые для выполнения методов курсора.
 Эти ресурсы необходимо закрывать после использования.
 Кроме того, ни сам курсор, ни объекты, составляющие его внутреннее состояние, не являются потокобезопасными, поэтому нельзя хранить курсор в виде разделяемого ресурса.
-Закрытие курсора, утеря ссылки на него и завершение транзакции -- события, которые в норме должны происходить одновременно. 
+Закрытие курсора, утеря ссылки на него и завершение транзакции -- события, которые в норме должны происходить одновременно.
 
 Время жизни курсора ограничено временем жизни `CallContext`, с помощью которого он был создан.
-Вызов метода `close()` на `CallContext` приводит к закрытию всех курсоров, созданных в этом контексте, поэтому обычно явно закрывать курсоры в коде не нужно. 
+Вызов метода `close()` на `CallContext` приводит к закрытию всех курсоров, созданных в этом контексте, поэтому обычно явно закрывать курсоры в коде не нужно.
 
 Тем не менее, в ситуации, когда создание курсора может происходить в цикле, его следует явно закрывать.
 
@@ -36,7 +36,7 @@ CallContext <<too_many_accessors_warning,не даст создать более
 ----
 @CelestaTransaction
 void doSomething(CallContext context) {
-  for (int i = 0; i < 2000; i++) 
+  for (int i = 0; i < 2000; i++)
     doSomethingElse(context);
 }
 
@@ -50,14 +50,14 @@ void doSomethingElse(CallContext context) {
 ----
 @CelestaTransaction
 void doSomething(CallContext context) {
-  for (int i = 0; i < 2000; i++) 
+  for (int i = 0; i < 2000; i++)
     doSomethingElse(context);
 }
 
 void doSomethingElse(CallContext context) {
   try(FooCursor foo = new FooCursor (context)){
-  /*no exception thrown, but 
-  we can do better!*/ 
+  /*no exception thrown, but
+  we can do better!*/
   }
 }
 ----
@@ -77,14 +77,14 @@ void doSomethingElse(CallContext context) {
 ----
 @CelestaTransaction
 void doSomething(CallContext context) {
-  for (int i = 0; i < 2000; i++) 
+  for (int i = 0; i < 2000; i++)
     doSomethingElse(context);
 }
 
 void doSomethingElse(CallContext context) {
   try(FooCursor foo = new FooCursor (context)){
-  /*no exception thrown, but 
-  we can do better!*/ 
+  /*no exception thrown, but
+  we can do better!*/
   }
 }
 ----
@@ -94,11 +94,11 @@ void doSomethingElse(CallContext context) {
 @CelestaTransaction
 void doSomething(CallContext context) {
   FooCursor foo = new FooCursor (context);
-  for (int i = 0; i < 2000; i++) 
+  for (int i = 0; i < 2000; i++)
    doSomethingElse(foo);
 }
 void doSomethingElse(FooCursor foo) {
-  /*now we do not create-and-close 
+  /*now we do not create-and-close
   the cursor in each iteration*/
 }
 ----
@@ -172,15 +172,15 @@ void doSomethingElse(FooCursor foo) {
 
 [source,java]
 ----
-if (foo.tryGet(idForDeletion)) { 
-	foo.delete(); 
+if (foo.tryGet(idForDeletion)) {
+	foo.delete();
 }
 ----
-| 
+|
 [source,java]
 ----
 foo.setId(idForDeletion);
-foo.delete(); 
+foo.delete();
 ----
 |===
 
@@ -201,7 +201,7 @@ if (fooCursor.count() > 0) {
 	...
 }
 ----
-| 
+|
 [source,java]
 ----
 if (fooCursor.tryFirst()) {
@@ -223,7 +223,7 @@ if (fooCursor.tryFirst()) {
 
 Цикл по записям с целью поиска  максимального значения поля `bar`.
 
-| 
+|
 [source,java]
 ----
 foo.orderBy(foo.COLUMNS.bar().desc());
@@ -268,20 +268,20 @@ FooCursor foo = new FooCursor(context);
 BarCursor bar = new BarCursor(context);
 for (FooCursor c: foo){
   bar.setFilter("baz", "’"+c.getBaz()+"’");
-  /* PreparedStatements are 
+  /* PreparedStatements are
   re-created in each iteration :-(( */
   ...
 }
 
 ----
-| 
+|
 [source,java]
 ----
 FooCursor foo = new FooCursor(context);
 BarCursor bar = new BarCursor(context);
 for (FooCursor c: foo){
   bar.setRange(“baz”, c.getBaz());
-  /* PreparedStatement is created 
+  /* PreparedStatement is created
   only once and is being reused :-)*/
 }
 
@@ -301,7 +301,7 @@ for (FooCursor c: foo){
 == Применяйте индексы
 
 Общий момент, касающийся любой работы с реляционными СУБД.
-В случае с Celesta, простым первым приближением является следующее: если на поле курсора вызывается метод `setRange` -- на данное поле следует создать индекс. 
+В случае с Celesta, простым первым приближением является следующее: если на поле курсора вызывается метод `setRange` -- на данное поле следует создать индекс.
 
 == Эффективно кэшируйте значения при работе в циклах
 
@@ -330,13 +330,13 @@ FooCursor foo = new FooCursor(context);
 BarCursor bar = new BarCursor(context);
 for (FooCursor c: foo){
   bar.get(c.getBarId());
-/*fetching data 
+/*fetching data
   in each iteration :-(*/
 }
 
 
 ----
-| 
+|
 [source,java]
 ----
 FooCursor foo = new FooCursor(context);
@@ -361,9 +361,9 @@ for (FooCursor c: foo){
 
 == В циклах используйте итерацию вместо навигации
 
-Для перемещения по записям в курсоре существуют две группы методов: навигационные и итерационные. 
+Для перемещения по записям в курсоре существуют две группы методов: навигационные и итерационные.
 
-К навигационным относятся `tryFirst()`, `next()`, `previous()` и `navigate(...)`, позволяющие переместиться на другую запись относительно текущей по определённым правилам. 
+К навигационным относятся `tryFirst()`, `next()`, `previous()` и `navigate(...)`, позволяющие переместиться на другую запись относительно текущей по определённым правилам.
 
 К итерационным относятся пара методов `tryFindSet()` -- `nextInSet()`, а также метод `iterator()`, реализующий соответствующий метод интерфейса `java.lang.Iterable`.
 
@@ -386,7 +386,7 @@ if (foo.tryFirst()){
   /*new query in each iteration :-(*/
 }
 ----
-| 
+|
 [source,java]
 ----
 /*only one query! :-)*/

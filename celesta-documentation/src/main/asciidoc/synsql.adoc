@@ -1,9 +1,9 @@
 == CelestaSQL Syntax Diagrams
 
 //tag::syn_script[]
-[syntrax,script,svg,opts=interactive]   
+[syntrax,script,svg,opts=interactive]
 ....
-line('/create_grain', loop(';', 
+line('/create_grain', loop(';',
     choice('/create_sequence',
            '/create_table',
            '/add_foreign_key',
@@ -28,10 +28,10 @@ url_map = {
 
 //tag::syn_create_schema[]
 [[create_grain]]
-[syntrax,create_schema,svg,heading="create_grain",opts=interactive]   
+[syntrax,create_schema,svg,heading="create_grain",opts=interactive]
 ....
 indentstack(3,
-  line('CREATE', 
+  line('CREATE',
        choice('GRAIN', 'SCHEMA'), '/<grain_name>'),
   line('VERSION', '\'', '/<grain_version_tag>', '\''),
   line(opt('WITH', 'NO', 'AUTOUPDATE'))
@@ -41,7 +41,7 @@ indentstack(3,
 
 //tag::syn_create_sequence[]
 [[create_sequence]]
-[syntrax,create_sequence,svg,heading="create_sequence",opts=interactive]   
+[syntrax,create_sequence,svg,heading="create_sequence",opts=interactive]
 ....
 indentstack(3,
   line('CREATE', 'SEQUENCE','/<sequence_name>'),
@@ -60,7 +60,7 @@ indentstack(3,
 
 //tag::syn_create_table[]
 [[create_table]]
-[syntrax,create_table,svg,heading="create_table",opts=interactive] 
+[syntrax,create_table,svg,heading="create_table",opts=interactive]
 ....
 indentstack(3,
   line('CREATE', 'TABLE','/<table_name>'),
@@ -95,7 +95,7 @@ url_map = {
 [[field_definition]]
 [syntrax,field_definition,svg,heading="field_definition",opts=interactive]
 ....
-indentstack(6, 
+indentstack(6,
  line(
     '/<field name>',
     choice(
@@ -163,8 +163,8 @@ optx(optx('NOT'), 'NULL')
 [[int_field]]
 [syntrax,int_field,svg,heading="int_field",opts=interactive]
 ....
-line('INT', '/nullability', 
-optx('DEFAULT', choice('/<integer literal>', 
+line('INT', '/nullability',
+optx('DEFAULT', choice('/<integer literal>',
                      line('NEXTVAL', '(', '/<sequence name>', ')'))))
 url_map = {
   'nullability': '.#nullability'
@@ -176,7 +176,7 @@ url_map = {
 [[floating_field]]
 [syntrax,floating_field,svg,heading="floating_field",opts=interactive]
 ....
-line('REAL', '/nullability', 
+line('REAL', '/nullability',
 optx('DEFAULT', '/<float.-point literal>'))
 
 url_map = {
@@ -220,7 +220,7 @@ url_map = {
 [[blob_field]]
 [syntrax,blob_field,svg,heading="blob_field",opts=interactive]
 ....
-line('BLOB', '/nullability', 
+line('BLOB', '/nullability',
 optx('DEFAULT', '/<binary literal>'))
 
 url_map = {
@@ -233,7 +233,7 @@ url_map = {
 [[datetime_field]]
 [syntrax,datetime_field,svg,heading="datetime_field",opts=interactive]
 ....
-line('DATETIME', '/nullability', 
+line('DATETIME', '/nullability',
 optx('DEFAULT', choice(line('\'', '/<YYYYMMDD>', '\''),
                        'GETDATE()')))
 
@@ -550,7 +550,7 @@ line(
     )
   ),
   'AS', '/<field alias>')
-  
+
 url_map = {
   'term': '.#term'
 }
@@ -578,7 +578,7 @@ line (
 [[create_materialized_view]]
 [syntrax,create_materialized_view,svg,heading="create_materialized_view",opts=interactive]
 ....
-rightstack( 
+rightstack(
 line(
   'CREATE',
   'MATERIALIZED',
@@ -590,7 +590,7 @@ line(
   loop(
       choice(
           line('/materialized_aggregate'),
-          line('/<field name>', 
+          line('/<field name>',
               optx('AS', '/<field alias>')
           )
       ),
@@ -638,7 +638,7 @@ indentstack(3,
   'CREATE',
   'FUNCTION',
   '/<function name>'
- ), 
+ ),
  line(
  '(',
   loop(

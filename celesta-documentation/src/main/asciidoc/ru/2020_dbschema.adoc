@@ -23,7 +23,7 @@ image::{img}/800px-Dbschemascreen.png[{image-100-width}]
 . https://dbschema.com/[DBSchema] (программа проприетарная).
 
 . Утилита https://github.com/courseorchestra/dbschemasync[`dbschemasync`].
-Актуальную сборку утилиты `dbschemasync` можно взять, например, https://artifactory.corchestra.ru/artifactory/list/libs-release-local/ru/curs/dbschemasync/[здесь]. 
+Актуальную сборку утилиты `dbschemasync` можно взять, например, https://artifactory.corchestra.ru/artifactory/list/libs-release-local/ru/curs/dbschemasync/[здесь].
 
 Распакуйте zip-архив и поместите папку Celesta с настройками DBSchema в `%userprofile%\.DbSchema\config\rdbms\`.
 

@@ -76,17 +76,17 @@ class roles {
   description: VARCHAR
 }
 
-tables --> grains: grainid 
+tables --> grains: grainid
 
-logsetup --> tables: [grainid, tablename] 
+logsetup --> tables: [grainid, tablename]
 
-userroles --> roles: roleid 
+userroles --> roles: roleid
 
-log --> tables: [grainid, tablename] 
+log --> tables: [grainid, tablename]
 
-permissions --> roles: roleid 
+permissions --> roles: roleid
 
-permissions --> tables: [grainid, tablename] 
+permissions --> tables: [grainid, tablename]
 
 @enduml
 ----
@@ -94,7 +94,7 @@ permissions --> tables: [grainid, tablename]
 //end::uml_systemtables[]
 
 
-== Cursor and its Columns 
+== Cursor and its Columns
 //tag::uml_cursormeta[]
 [plantuml, cursormeta, png]
 ----
@@ -104,7 +104,7 @@ class FooCursor {
   +setFoo(Integer foo)
   +getBar(): String
   +setBar(String bar)
-} 
+}
 
 class FooCursor.Columns {
   +foo(): ColumnMeta<Integer>
@@ -134,7 +134,7 @@ BasicCursor       <|-- ReadOnlyTableCursor
 ----
 //end::uml_cursors[]
 
-== Metadata Classes 
+== Metadata Classes
 
 //tag::uml_metaclasses[]
 [plantuml, metaclasses, png]
@@ -182,7 +182,7 @@ interface ViewColumnMeta {
 
 }
 
-GrainElement <|-- Index 
+GrainElement <|-- Index
 GrainElement <|-- AbstractView
 AbstractView <|-- View
 AbstractView <|-- MaterializedView
@@ -254,7 +254,7 @@ abstract class Column {
 }
 
 ColumnMeta <|.. ViewColumnMeta
-ColumnMeta <|.. Column   
+ColumnMeta <|.. Column
 
 Column <|-l- IntegerColumn
 Column <|-- FloatingColumn

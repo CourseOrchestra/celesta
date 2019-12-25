@@ -1,14 +1,14 @@
 == Celesta Filter Syntax Diagrams
 
 //tag::synf_bit_blob_filter[]
-[syntrax,bit_blob_filter,svg,heading="bit_blob_filter"]   
+[syntrax,bit_blob_filter,svg,heading="bit_blob_filter"]
 ....
 line(optx('!'), 'null')
 ....
 //end::synf_bit_blob_filter[]
 
 //tag::synf_filter[]
-[syntrax,filter,svg,heading="filter"]   
+[syntrax,filter,svg,heading="filter"]
 ....
 loop(
   line(optx('!'), choice('/term',
@@ -19,7 +19,7 @@ loop(
 //end::synf_filter[]
 
 //tag::synf_numeric_term[]
-[syntrax,filter_numeric_term,svg,heading="numeric_term"]  
+[syntrax,filter_numeric_term,svg,heading="numeric_term"]
 ....
 choice(
   'null',
@@ -31,7 +31,7 @@ choice(
 
 
 //tag::synf_text_term[]
-[syntrax,filter_text_term,svg,heading="text_term"]   
+[syntrax,filter_text_term,svg,heading="text_term"]
 ....
 line(
   optx('@'),
