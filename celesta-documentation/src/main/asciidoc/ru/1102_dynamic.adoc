@@ -20,7 +20,8 @@ include::_doc_general_attributes.adoc[]
 
 * {apidocs}ru/curs/celesta/dbutils/Sequence.html#create--[`ViewCursor.create(SequenceElement sequence, CallContext callContext)`]
 
-и так далее. У классов `Cursor` и `ViewCursor` имеется также перегруженная версия метода `create`, позволяющая создавать экземпляры объектов доступа к данным с <<limit_columns,ограничением по выборке столбцов>>.
+и так далее.
+У классов `Cursor` и `ViewCursor` имеется также перегруженная версия метода `create`, позволяющая создавать экземпляры объектов доступа к данным с <<limit_columns,ограничением по выборке столбцов>>.
 
 Для динамического доступа к значениям полей курсора таблицы или представления в классе `BasicCursor` предусмотрены методы
 
