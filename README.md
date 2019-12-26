@@ -23,7 +23,7 @@ Unlike e. g. Hibernate + Liquibase, Celesta does not require one to keep in mind
 
 Feel free to ask a question, open an issue or submit a PR.
 
-[Celesta Improvement Process](https://github.com/courseorchestra/cip) is for major features and public API changes. In order to initiate such a change you might want to submit a new CIP.
+For more details, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Related Tools
 
@@ -31,7 +31,7 @@ Feel free to ask a question, open an issue or submit a PR.
 
 * [CelestaDoc](https://github.com/CourseOrchestra/celestadoc): Celesta documentation report generator.	
 
-* [DBSchemaSync](https://github.com/CourseOrchestra/dbschemasync): Celesta -- DBSchema sync utility.
+* [DBSchemaSync](https://github.com/CourseOrchestra/dbschemasync): Celesta -- DBSchema sync utility.
 
 * [2Bass](https://github.com/CourseOrchestra/2bass): Database configuration-as-code tool.
 
