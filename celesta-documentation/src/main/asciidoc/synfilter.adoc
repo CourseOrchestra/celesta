@@ -1,0 +1,46 @@
+== Celesta Filter Syntax Diagrams
+
+//tag::synf_bit_blob_filter[]
+[syntrax,bit_blob_filter,svg,heading="bit_blob_filter"]
+....
+line(optx('!'), 'null')
+....
+//end::synf_bit_blob_filter[]
+
+//tag::synf_filter[]
+[syntrax,filter,svg,heading="filter"]
+....
+loop(
+  line(optx('!'), choice('/term',
+                         line('(', '/filter', ')'))),
+  choice('&', '|')
+)
+....
+//end::synf_filter[]
+
+//tag::synf_numeric_term[]
+[syntrax,filter_numeric_term,svg,heading="numeric_term"]
+....
+choice(
+  'null',
+  line('/<numeric literal>', optx('..', optx('/<numeric literal>'))),
+  line(choice('..', '>', '<'), '/<numeric literal>')
+)
+....
+//end::synf_numeric_term[]
+
+
+//tag::synf_text_term[]
+[syntrax,filter_text_term,svg,heading="text_term"]
+....
+line(
+  optx('@'),
+  choice(
+    'null',
+    line('/<text literal>', optx('..', optx('/<text literal>'))),
+    line(choice('..', '>', '<'), '/<text literal>'),
+    line(optx('%'), loop('/<text literal>', '%'), optx('%'))
+  )
+)
+....
+//end::synf_text_term[]

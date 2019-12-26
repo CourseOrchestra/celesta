@@ -1,0 +1,676 @@
+== CelestaSQL Syntax Diagrams
+
+//tag::syn_script[]
+[syntrax,script,svg,opts=interactive]
+....
+line('/create_grain', loop(';',
+    choice('/create_sequence',
+           '/create_table',
+           '/add_foreign_key',
+           '/create_index',
+           '/create_view',
+           '/create_materialized_view',
+           '/create_function'))
+)
+
+url_map = {
+  'create_grain': '.#create_grain',
+  'create_sequence': '.#create_sequence',
+  'create_table': '.#create_table',
+  'add_foreign_key': '.#add_foreign_key',
+  'create_index': '.#create_index',
+  'create_view': '.#create_view',
+  'create_materialized_view': '.#create_materialized_view',
+  'create_function': '.#create_function'
+}
+....
+//end::syn_script[]
+
+//tag::syn_create_schema[]
+[[create_grain]]
+[syntrax,create_schema,svg,heading="create_grain",opts=interactive]
+....
+indentstack(3,
+  line('CREATE',
+       choice('GRAIN', 'SCHEMA'), '/<grain_name>'),
+  line('VERSION', '\'', '/<grain_version_tag>', '\''),
+  line(opt('WITH', 'NO', 'AUTOUPDATE'))
+)
+....
+//end::syn_create_schema[]
+
+//tag::syn_create_sequence[]
+[[create_sequence]]
+[syntrax,create_sequence,svg,heading="create_sequence",opts=interactive]
+....
+indentstack(3,
+  line('CREATE', 'SEQUENCE','/<sequence_name>'),
+  line(loop(
+     choice(line('START', 'WITH', '/<integer_literal>'),
+            line('INCREMENT', 'BY', '/<integer_literal>'),
+            line('MINVALUE', '/<integer_literal>'),
+            line('MAXVALUE', '/<integer_literal>'),
+            'CYCLE'),
+     None
+  ))
+)
+....
+//end::syn_create_sequence[]
+
+
+//tag::syn_create_table[]
+[[create_table]]
+[syntrax,create_table,svg,heading="create_table",opts=interactive]
+....
+indentstack(3,
+  line('CREATE', 'TABLE','/<table_name>'),
+  line('(', loop('/table_constituent', ','), ')', opt('/table_options')))
+
+url_map = {
+  'table_constituent': '.#table_constituent',
+  'table_options': '.#table_options'
+}
+....
+//end::syn_create_table[]
+
+//tag::syn_table_constituent[]
+[[table_constituent]]
+[syntrax,table_constituent,svg,heading="table_constituent",opts=interactive]
+....
+choice(
+  '/field_definition',
+  line(optx('CONSTRAINT', '/<pk name>'), '/primary_key_definition'),
+  line(optx('CONSTRAINT', '/<fk name>'), '/foreign_key_definition')
+)
+
+url_map = {
+  'field_definition': '.#field_definition',
+  'primary_key_definition': '.#primary_key_definition',
+  'foreign_key_definition': '.#foreign_key_definition'
+}
+....
+//end::syn_table_constituent[]
+
+//tag::syn_field_definition[]
+[[field_definition]]
+[syntrax,field_definition,svg,heading="field_definition",opts=interactive]
+....
+indentstack(6,
+ line(
+    '/<field name>',
+    choice(
+        '/int_field',
+        '/floating_field',
+        '/decimal_field',
+        '/text_field',
+        '/blob_field',
+        '/datetime_field',
+        '/datetime_with_time_zone_field',
+        '/bit_field')),
+ line(
+    opt('PRIMARY', 'KEY'),
+    opt('/inline_fk_definition')
+ )
+)
+
+url_map = {
+  'int_field': '.#int_field',
+  'floating_field': '.#floating_field',
+  'decimal_field': '.#decimal_field',
+  'text_field': '.#text_field',
+  'blob_field': '.#blob_field',
+  'datetime_field': '.#datetime_field',
+  'datetime_with_time_zone_field': '.#datetime_with_time_zone_field',
+  'bit_field': '.#bit_field',
+  'inline_fk_definition': '.#inline_fk_definition'
+}
+....
+//end::syn_field_definition[]
+
+//tag::syn_inline_fk_definition[]
+[[inline_fk_definition]]
+[syntrax,inline_fk_definition,svg,heading="inline_fk_definition",opts=interactive]
+....
+rightstack(
+line(
+  'FOREIGN',
+  'KEY',
+  'REFERENCES',
+  '/table_ref'),
+line(
+  '(',
+  '/<field name>',
+  ')',
+  '/fk_rules')
+)
+
+url_map = {
+  'table_ref': '.#table_ref',
+  'fk_rules': '.#fk_rules'
+}
+....
+//end::syn_inline_fk_definition[]
+
+//tag::syn_nullability[]
+[[nullability]]
+[syntrax,nullability,svg,heading="nullability",opts=interactive]
+....
+optx(optx('NOT'), 'NULL')
+....
+//end::syn_nullability[]
+
+//tag::syn_int_field[]
+[[int_field]]
+[syntrax,int_field,svg,heading="int_field",opts=interactive]
+....
+line('INT', '/nullability',
+optx('DEFAULT', choice('/<integer literal>',
+                     line('NEXTVAL', '(', '/<sequence name>', ')'))))
+url_map = {
+  'nullability': '.#nullability'
+}
+....
+//end::syn_int_field[]
+
+//tag::syn_floating_field[]
+[[floating_field]]
+[syntrax,floating_field,svg,heading="floating_field",opts=interactive]
+....
+line('REAL', '/nullability',
+optx('DEFAULT', '/<float.-point literal>'))
+
+url_map = {
+  'nullability': '.#nullability'
+}
+....
+//end::syn_floating_field[]
+
+//tag::syn_decimal_field[]
+[[decimal_field]]
+[syntrax,decimal_field,svg,heading="decimal_field",opts=interactive]
+....
+indentstack(3,
+line('DECIMAL', '(', '/<integer literal>', ',' , '/<integer literal>', ')'),
+line('/nullability', optx('DEFAULT', '/<float.-point literal>'))
+)
+
+url_map = {
+  'nullability': '.#nullability'
+}
+....
+//end::syn_decimal_field[]
+
+//tag::syn_text_field[]
+[[text_field]]
+[syntrax,text_field,svg,heading="text_field",opts=interactive]
+....
+indentstack(10,
+line(choice(line('VARCHAR', '(', '/<integer literal>', ')'),
+            'TEXT')),
+line('/nullability', optx('DEFAULT', '/<text literal>'))
+)
+
+url_map = {
+  'nullability': '.#nullability'
+}
+....
+//end::syn_text_field[]
+
+//tag::syn_blob_field[]
+[[blob_field]]
+[syntrax,blob_field,svg,heading="blob_field",opts=interactive]
+....
+line('BLOB', '/nullability',
+optx('DEFAULT', '/<binary literal>'))
+
+url_map = {
+  'nullability': '.#nullability'
+}
+....
+//end::syn_blob_field[]
+
+//tag::syn_datetime_field[]
+[[datetime_field]]
+[syntrax,datetime_field,svg,heading="datetime_field",opts=interactive]
+....
+line('DATETIME', '/nullability',
+optx('DEFAULT', choice(line('\'', '/<YYYYMMDD>', '\''),
+                       'GETDATE()')))
+
+url_map = {
+  'nullability': '.#nullability'
+}
+....
+//end::syn_datetime_field[]
+
+//tag::syn_datetime_with_time_zone_field[]
+[[datetime_with_time_zone_field]]
+[syntrax,datetime_with_time_zone_field,svg,heading="datetime_with_time_zone_field",opts=interactive]
+....
+line('DATETIME', 'WITH', 'TIME', 'ZONE', '/nullability')
+
+url_map = {
+  'nullability': '.#nullability'
+}
+....
+//end::syn_datetime_with_time_zone_field[]
+
+//tag::syn_bit_field[]
+[[bit_field]]
+[syntrax,bit_field,svg,heading="bit_field",opts=interactive]
+....
+line('BIT', '/nullability', optx('DEFAULT', choice('TRUE', 'FALSE')))
+
+url_map = {
+  'nullability': '.#nullability'
+}
+....
+//end::syn_bit_field[]
+
+//tag::syn_primary_key_definition[]
+[[primary_key_definition]]
+[syntrax,primary_key_definition,svg,heading="primary_key_definition",opts=interactive]
+....
+line('PRIMARY', 'KEY', '(', loop('/<field name>', ','), ')')
+....
+//end::syn_primary_key_definition[]
+
+//tag::syn_foreign_key_definition[]
+[[foreign_key_definition]]
+[syntrax,foreign_key_definition,svg,heading="foreign_key_definition",opts=interactive]
+....
+indentstack(3,
+line(
+  'FOREIGN',
+  'KEY',
+  '(',
+  loop('/<field name>', ','),
+  ')'),
+line(
+  'REFERENCES',
+  '/table_ref',
+  '(',
+  loop('/<field name>', ','),
+  ')',
+  '/fk_rules'
+))
+
+url_map = {
+  'table_ref': '.#table_ref',
+  'fk_rules': '.#fk_rules'
+}
+....
+//end::syn_foreign_key_definition[]
+
+//tag::syn_add_foreign_key[]
+[[add_foreign_key]]
+[syntrax,add_foreign_key,svg,heading="add_foreign_key",opts=interactive]
+....
+indentstack(3,
+line(
+  'ALTER',
+  'TABLE',
+  '/<table name>'),
+line(
+  'ADD',
+  'CONSTRAINT',
+  '/<fk name>',
+  '/foreign_key_definition'
+))
+
+url_map = {
+  'foreign_key_definition': '.#foreign_key_definition'
+}
+....
+//end::syn_add_foreign_key[]
+
+//tag::syn_fk_rules[]
+[[fk_rules]]
+[syntrax,fk_rules,svg,heading="fk_rules",opts=interactive]
+....
+indentstack(6,
+  line(optx(line('ON', 'UPDATE',
+    choice(line('NO', 'ACTION'), 'CASCADE', line('SET', 'NULL'))))),
+  line(optx(line('ON', 'DELETE',
+    choice(line('NO', 'ACTION'), 'CASCADE', line('SET', 'NULL')))))
+)
+....
+//end::syn_fk_rules[]
+
+//tag::syn_table_options[]
+[[table_options]]
+[syntrax,table_options,svg,heading="table_options",opts=interactive]
+....
+rightstack(
+  line('WITH',
+    choice(
+      line('READ', 'ONLY'),
+      line(optx('NO'), 'VERSION', 'CHECK')
+    )),
+  line(opt(line('NO', 'AUTOUPDATE')))
+)
+....
+//end::syn_table_options[]
+
+//tag::syn_create_index[]
+[[create_index]]
+[syntrax,create_index,svg,heading="create_index",opts=interactive]
+....
+rightstack(
+line(
+  'CREATE',
+  'INDEX',
+  '/<index name>',
+  'ON',
+  '/<table name>'),
+line(
+  '(',
+  loop('/<field name>', ','),
+  ')'
+)
+)
+....
+//end::syn_create_index[]
+
+//tag::syn_create_view[]
+[[create_view]]
+[syntrax,create_view,svg,heading="create_view",opts=interactive]
+....
+line(
+  'CREATE',
+  'VIEW',
+  '/<view name>',
+  'AS',
+  '/query')
+
+url_map = {
+  'query': '.#query'
+}
+....
+//end::syn_create_view[]
+
+//tag::syn_query[]
+[[query]]
+[syntrax,query,svg,heading="query",opts=interactive]
+....
+rightstack(
+  line(
+   'SELECT',
+    opt('DISTINCT'),
+    loop(
+        choice(
+            line('/term',
+                 opt('AS', '/<field alias>')),
+            line('/aggregate')
+        ),
+        ',')
+   ),
+   line(
+    'FROM',
+    '/from_clause',
+    optx('WHERE', '/condition'),
+    optx('/group_by')
+   )
+)
+
+url_map = {
+  'term': '.#term',
+  'aggregate': '.#aggregate',
+  'from_clause': '.#from_clause',
+  'condition': '.#condition',
+  'group_by': '.#group_by'
+}
+....
+//end::syn_query[]
+
+//tag::syn_from_clause[]
+[[from_clause]]
+[syntrax,from_clause,svg,heading="from_clause",opts=interactive]
+....
+indentstack(3,
+  line('/table_ref', optx('AS', '/<table alias>')),
+  line(optx(
+        loop(indentstack(10,
+            line(choice('INNER', 'LEFT', 'RIGHT'),
+                  'JOIN',
+                  '/table_ref',
+                  optx('AS', '/<table alias>')),
+            line(
+                  'ON',
+                  '/condition')),
+             None
+             )
+    )
+  )
+)
+
+url_map = {
+  'table_ref': '.#table_ref',
+  'condition': '.#condition'
+}
+....
+//end::syn_from_clause[]
+
+//tag::syn_table_ref[]
+[syntrax,table_ref,svg,heading="table_ref",opts=interactive]
+....
+line(optx('/<grain name>', '.'), '/<table name>')
+....
+//end::syn_table_ref[]
+
+//tag::syn_term[]
+[[term]]
+[syntrax,term,svg,heading="term",opts=interactive]
+....
+loop(
+  line(opt('-'),
+    choice(
+      '/primary_term',
+      line('(', '/term', ')'))),
+  choice('+', '-', '*', '/', '||')
+)
+
+url_map = {
+  'primary_term': '.#primary_term',
+  'term': '.#term'
+}
+....
+//end::syn_term[]
+
+//tag::syn_primary_term[]
+[[primary_term]]
+[syntrax,primary_term,svg,heading="primary_term",opts=interactive]
+....
+choice(
+  line(optx(line(choice('/<table name>', '/<table alias>'), '.')),
+       '/<field name>'),
+  '/<string literal>',
+  '/<integer literal>',
+  '/<float.-point literal>',
+  'TRUE',
+  'FALSE',
+  'GETDATE()',
+  '/<$param id>'
+)
+....
+//end::syn_primary_term[]
+
+//tag::syn_condition[]
+[[condition]]
+[syntrax,condition,svg,heading="condition",opts=interactive]
+....
+loop(
+  line(optx('NOT'),
+       choice('/predicate',
+          line('(', '/condition', ')'))),
+  choice('AND', 'OR')
+)
+
+url_map = {
+  'predicate': '.#predicate',
+  'condition': '.#condition'
+}
+....
+//end::syn_condition[]
+
+//tag::syn_predicate[]
+[[predicate]]
+[syntrax,predicate,svg,heading="predicate",opts=interactive]
+....
+line(
+'/term',
+choice(
+      line(choice('=', '>', '>=', '<=', '<', '<>', 'LIKE'),
+           '/term'),
+      line('BETWEEN', '/term', 'AND', '/term'),
+      line('IN', '(', loop('/term', ','), ')'),
+      line('IS', 'NULL')
+))
+
+url_map = {
+  'term': '.#term'
+}
+....
+//end::syn_predicate[]
+
+//tag::syn_aggregate[]
+[[aggregate]]
+[syntrax,aggregate,svg,heading="aggregate",opts=interactive]
+....
+line(
+  choice(
+    line('COUNT', '(', '*', ')'),
+    line(
+        choice(
+            'SUM',
+            'MIN',
+            'MAX'
+        ),
+        line('(', '/term', ')')
+    )
+  ),
+  'AS', '/<field alias>')
+
+url_map = {
+  'term': '.#term'
+}
+....
+//end::syn_aggregate[]
+
+//tag::syn_group_by[]
+[[group_by]]
+[syntrax,group_by,svg,heading="group_by",opts=interactive]
+....
+line (
+  'GROUP', 'BY',
+  loop(
+      choice(
+          '/<field name>',
+          '/<field alias>'
+      ),
+      ','
+  )
+)
+....
+//end::syn_group_by[]
+
+//tag::syn_create_materialized_view[]
+[[create_materialized_view]]
+[syntrax,create_materialized_view,svg,heading="create_materialized_view",opts=interactive]
+....
+rightstack(
+line(
+  'CREATE',
+  'MATERIALIZED',
+  'VIEW',
+  '/<view name>',
+  'AS'),
+line(
+  'SELECT',
+  loop(
+      choice(
+          line('/materialized_aggregate'),
+          line('/<field name>',
+              optx('AS', '/<field alias>')
+          )
+      ),
+      ','
+  )),
+line(
+  'FROM',
+  '/table_ref',
+  '/group_by'
+))
+
+url_map = {
+  'materialized_aggregate': '.#materialized_aggregate',
+  'table_ref': '.#table_ref',
+  'group_by': '.#group_by'
+}
+....
+//end::syn_create_materialized_view[]
+
+//tag::syn_materialized_aggregate[]
+[[materialized_aggregate]]
+[syntrax,materialized_aggregate,svg,heading="materialized_aggregate",opts=interactive]
+....
+line(
+  choice(
+    line('COUNT', '(', '*', ')'),
+    line(
+      'SUM', '(', '/term', ')'
+    )
+  ),
+  'AS', '/<field alias>')
+
+url_map = {
+  'term': '.#term'
+}
+....
+//end::syn_materialized_aggregate[]
+
+//tag::syn_create_function[]
+[[create_function]]
+[syntrax,create_function,svg,heading="create_function",opts=interactive]
+....
+indentstack(3,
+ line(
+  'CREATE',
+  'FUNCTION',
+  '/<function name>'
+ ),
+ line(
+ '(',
+  loop(
+     '/param_definition',
+     ','
+  ),
+  ')',
+  'AS',
+  '/query'
+ )
+)
+
+url_map = {
+  'param_definition': '.#param_definition',
+  'query': '.#query'
+}
+....
+//end::syn_create_function[]
+
+//tag::syn_param_definition[]
+[[param_definition]]
+[syntrax,param_definition,svg,heading="param_definition",opts=interactive]
+....
+line(
+'/<param name>',
+choice(
+  'INT',
+  'REAL',
+  'DECIMAL',
+  'VARCHAR',
+  'DATETIME',
+  'BIT'
+))
+....
+//end::syn_param_definition[]

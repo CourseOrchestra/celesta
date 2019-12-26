@@ -31,7 +31,7 @@ include::_doc_general_attributes.adoc[]
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>ru.curs</groupId>
             <!-- Собственный Spring Boot starter облегчает конфигурацию Celesta в Spring Boot приложениях -->
@@ -56,7 +56,8 @@ include::_doc_general_attributes.adoc[]
     </dependencies>
 ```
 
-Также для кодогенерации <<data_accessors_section,классов доступа к данным>> понадобится `ru.curs:celesta-maven-plugin`. В его настройках необходимо указать путь к папке `score`:
+Также для кодогенерации <<data_accessors_section,классов доступа к данным>> понадобится `ru.curs:celesta-maven-plugin`.
+В его настройках необходимо указать путь к папке `score`:
 
 ```xml
     <build>
@@ -65,7 +66,7 @@ include::_doc_general_attributes.adoc[]
                 <groupId>ru.curs</groupId>
                 <artifactId>celesta-maven-plugin</artifactId>
                 <version>${celesta.version}</version>
-                
+
                 <executions>
                     <execution>
                         <goals>
@@ -81,7 +82,8 @@ include::_doc_general_attributes.adoc[]
     </build>
 ```
 
-В папке `src/main/celestasql` следует разместить скрипты определения базы данных на языке <<CelestaSQL,CelestaSQL>>. Например,
+В папке `src/main/celestasql` следует разместить скрипты определения базы данных на языке <<CelestaSQL,CelestaSQL>>.
+Например,
 
 ```sql
 -- celestasql/ru/curs/demo/demo.sql

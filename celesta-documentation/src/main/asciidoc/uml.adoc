@@ -1,0 +1,270 @@
+== System tables
+//tag::uml_systemtables[]
+
+[plantuml, systemtables, png]
+----
+@startuml
+
+hide circle
+
+class permissions {
+  roleid: VARCHAR
+  grainid: VARCHAR
+  tablename: VARCHAR
+  r: BIT
+  i: BIT
+  m: BIT
+  d: BIT
+}
+
+class tables {
+  grainid: VARCHAR
+  tablename: VARCHAR
+  tabletype: VARCHAR
+  orphaned: BIT
+}
+
+class log {
+  entryno: INT
+  entry_time: DATETIME
+  userid: VARCHAR
+  sessionid: VARCHAR
+  grainid: VARCHAR
+  tablename: VARCHAR
+  action_type: VARCHAR
+  pkvalue1: VARCHAR
+  pkvalue2: VARCHAR
+  pkvalue3: VARCHAR
+  oldvalues: VARCHAR
+  newvalues: VARCHAR
+}
+
+class logsetup {
+  grainid: VARCHAR
+  tablename: VARCHAR
+  i: BIT
+  m: BIT
+  d: BIT
+}
+
+class calllog {
+  entryno: INT
+  sessionid: VARCHAR
+  userid: VARCHAR
+  procname: VARCHAR
+  starttime: DATETIME
+  duration: INT
+}
+
+class grains {
+  id: VARCHAR
+  version: VARCHAR
+  length: INT
+  checksum: VARCHAR
+  state: INT
+  lastmodified: DATETIME
+  message: TEXT
+}
+
+class userroles {
+  userid: VARCHAR
+  roleid: VARCHAR
+}
+
+class roles {
+  id: VARCHAR
+  description: VARCHAR
+}
+
+tables --> grains: grainid
+
+logsetup --> tables: [grainid, tablename]
+
+userroles --> roles: roleid
+
+log --> tables: [grainid, tablename]
+
+permissions --> roles: roleid
+
+permissions --> tables: [grainid, tablename]
+
+@enduml
+----
+
+//end::uml_systemtables[]
+
+
+== Cursor and its Columns
+//tag::uml_cursormeta[]
+[plantuml, cursormeta, png]
+----
+@startuml
+class FooCursor {
+  +getFoo(): Integer
+  +setFoo(Integer foo)
+  +getBar(): String
+  +setBar(String bar)
+}
+
+class FooCursor.Columns {
+  +foo(): ColumnMeta<Integer>
+  +bar(): ColumnMeta<String>
+}
+
+FooCursor "COLUMNS" --> FooCursor.Columns
+@enduml
+----
+
+//end::uml_cursormeta[]
+
+== Cursors
+
+//tag::uml_cursors[]
+[plantuml, cursors, png]
+----
+@startuml
+BasicDataAccessor <|-- BasicCursor
+BasicDataAccessor <|-- Sequence
+BasicCursor       <|-- ParameterizedViewCursor
+BasicCursor       <|-- ViewCursor
+BasicCursor       <|-- MaterializedViewCursor
+BasicCursor       <|-- Cursor
+BasicCursor       <|-- ReadOnlyTableCursor
+@enduml
+----
+//end::uml_cursors[]
+
+== Metadata Classes
+
+//tag::uml_metaclasses[]
+[plantuml, metaclasses, png]
+----
+@startuml
+abstract class GrainElement {
+ +getGrain(): Grain
+}
+
+abstract class AbstractView {
+
+}
+
+abstract class NamedElement {
+ +getName(): String
+ +getQuotedName(): String
+ +getCelestaDoc(): String
+}
+
+class Index {
+}
+
+class View {
+}
+
+class Table{
+}
+
+abstract class Column {
+
+}
+
+class Grain {
+ +getScore()
+ +getTables()
+ +getIndices()
+ +getViews()
+}
+
+class MaterializedView {
+
+}
+
+interface ViewColumnMeta {
+
+}
+
+GrainElement <|-- Index
+GrainElement <|-- AbstractView
+AbstractView <|-- View
+AbstractView <|-- MaterializedView
+GrainElement <|-- Table
+GrainElement <|-- SequenceElement
+
+NamedElement <|-- GrainElement
+NamedElement <|-- Column
+NamedElement <|-- Grain
+
+View <|-- ParameterizedView
+
+class Score {
+ +getGrains()
+}
+
+Score "1" -- "*" Grain
+
+Grain "1" -- "*" Index
+
+Grain "1" -- "*" View
+
+Grain "1" -- "*" MaterializedView
+
+Grain "1" -- "*" SequenceElement
+
+Grain "1" -- "*" Table
+
+Table "1" -- "1..*" Column
+
+MaterializedView  "1" -- "1..*" Column
+
+Table "1" -- "1..*" ForeignKey
+
+ForeignKey "1" -- "1..*" Column
+
+Index "1" -- "1..*" Column
+
+View "1" -- "1..*" ViewColumnMeta
+
+@enduml
+----
+
+//end::uml_metaclasses[]
+
+== Column Classes
+
+//tag::uml_columnclasses[]
+[plantuml, columnclasses, png]
+----
+@startuml
+interface ColumnMeta{
+ +jdbcGetterName(): String
+ +getCelestaType(): String
+ +getJavaClass(): Class
+ +isNullable(): boolean
+ +getCelestaDoc(): String
+}
+
+interface ViewColumnMeta {
+ +getColumnType(): ViewColumnType
+ +getLength(): int
+}
+
+abstract class Column {
+ +getParentTable: TableElement
+ +getDefaultValue: Object
+ +getCelestaDefault: String
+}
+
+ColumnMeta <|.. ViewColumnMeta
+ColumnMeta <|.. Column
+
+Column <|-l- IntegerColumn
+Column <|-- FloatingColumn
+Column <|-- StringColumn
+Column <|-- BinaryColumn
+Column <|-- DateTimeColumn
+Column <|-- ZonedDateTimeColumn
+Column <|-- DecimalColumn
+Column <|-r- BooleanColumn
+@enduml
+----
+
+//end::uml_columnclasses[]
