@@ -13,9 +13,9 @@ public class InitTest extends AbstractCelestaTest {
     public void grainCursorIsCallable() {
         GrainsCursor g = new GrainsCursor(cc());
         assertEquals("grains", g.meta().getName());
-        assertEquals(8, g.getMaxStrLen("checksum"));
-        assertEquals(30, g.getMaxStrLen("id"));
-        assertEquals(-1, g.getMaxStrLen("message"));
+        assertEquals(8, g.getMaxStrLen(g.COLUMNS.checksum()));
+        assertEquals(30, g.getMaxStrLen(g.COLUMNS.id()));
+        assertEquals(-1, g.getMaxStrLen(g.COLUMNS.message()));
         g.reset();
         g.init();
         g.clear();
