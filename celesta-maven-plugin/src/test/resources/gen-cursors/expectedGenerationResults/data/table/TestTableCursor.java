@@ -260,27 +260,27 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         this.id = val;
     }
 
-    public static void onPreDelete(ICelesta celesta, Consumer<TestTableCursor> cursorConsumer) {
+    public static void onPreDelete(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_DELETE, TestTableCursor.class, cursorConsumer);
     }
 
-    public static void onPostDelete(ICelesta celesta, Consumer<TestTableCursor> cursorConsumer) {
+    public static void onPostDelete(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_DELETE, TestTableCursor.class, cursorConsumer);
     }
 
-    public static void onPreInsert(ICelesta celesta, Consumer<TestTableCursor> cursorConsumer) {
+    public static void onPreInsert(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_INSERT, TestTableCursor.class, cursorConsumer);
     }
 
-    public static void onPostInsert(ICelesta celesta, Consumer<TestTableCursor> cursorConsumer) {
+    public static void onPostInsert(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_INSERT, TestTableCursor.class, cursorConsumer);
     }
 
-    public static void onPreUpdate(ICelesta celesta, Consumer<TestTableCursor> cursorConsumer) {
+    public static void onPreUpdate(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_UPDATE, TestTableCursor.class, cursorConsumer);
     }
 
-    public static void onPostUpdate(ICelesta celesta, Consumer<TestTableCursor> cursorConsumer) {
+    public static void onPostUpdate(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_UPDATE, TestTableCursor.class, cursorConsumer);
     }
 
