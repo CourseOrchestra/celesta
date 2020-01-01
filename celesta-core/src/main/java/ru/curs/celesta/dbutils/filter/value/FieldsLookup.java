@@ -167,7 +167,7 @@ public final class FieldsLookup {
      */
     @Deprecated
     public FieldsLookup add(String field, String otherField) throws ParseException {
-        return add(validateFilteredColumn(field), validateFilteringColumn(otherField));
+        return internalAdd(validateFilteredColumn(field), validateFilteringColumn(otherField));
     }
 
     /**
@@ -176,10 +176,16 @@ public final class FieldsLookup {
      * @param column  column of the target cursor.
      * @param otherColumn  column of the auxiliary cursor.
      *
+     * @param <T> type of the column. Only columns of the same type can be bound in one filter.
+     *
      * @return
-     * @throws ParseException  if some column is not found.
+     * @throws ParseException  if a column is not found in the relevant table.
      */
-    public FieldsLookup add(final ColumnMeta<?> column, final ColumnMeta<?> otherColumn) throws ParseException {
+    public <T> FieldsLookup add(ColumnMeta<T> column, ColumnMeta<T> otherColumn) throws ParseException {
+        return internalAdd(column, otherColumn);
+    }
+
+    private FieldsLookup internalAdd(final ColumnMeta<?> column, final ColumnMeta<?> otherColumn) throws ParseException {
 
         final String columnName = column.getName();
         final String otherColumnName = otherColumn.getName();
