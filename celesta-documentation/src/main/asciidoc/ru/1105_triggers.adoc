@@ -11,7 +11,7 @@ include::_doc_general_attributes.adoc[]
 //tag::triggers[]
 
 Триггером называется написанная создателем решения функция, принимающая в качестве аргумента экземпляр курсора, присоединённая к классу курсора, автоматически вызываемая при вставке, удалении и модификации записи.
-Триггер имеет тип https://docs.oracle.com/javase/8/docs/api/index.html?java/util/function/Consumer.html[`Consumer<YourCursor>`].
+Триггер имеет тип https://docs.oracle.com/javase/8/docs/api/index.html?java/util/function/Consumer.html[`Consumer<? super YourCursor>`].
 
 При действиях insert(), update() и delete() система вызывает определённые создателем решения pre- (выполняемые до модификации данных в базе) и post- (выполняемые после модификации данных в базе) триггеры.
 Таким образом, всего существует шесть типов триггеров:
