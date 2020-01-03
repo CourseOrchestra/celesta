@@ -569,15 +569,16 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * Returns maximal length of the text field .
      *
      * @param column the text field
-     * @return length of the text field or -1 (minus one)
-     * if MAX is indicated instead of the length or the column belongs to View.
+     * @return length of the text field or -1 (minus one) for TEXT fields.
      */
    public final int getMaxStrLen(ColumnMeta<String> column) {
         final int undefinedMaxlength = -1;
         if (column instanceof StringColumn) {
             StringColumn sc = (StringColumn) column;
             return sc.isMax() ? undefinedMaxlength : sc.getLength();
-        } else return undefinedMaxlength;
+        } else {
+            return undefinedMaxlength;
+        }
     }
 
     /**
