@@ -114,27 +114,27 @@ public final class TestTableWithIdentityCursor extends Cursor implements Iterabl
         this.identityId = val;
     }
 
-    public static void onPreDelete(ICelesta celesta, Consumer<TestTableWithIdentityCursor> cursorConsumer) {
+    public static void onPreDelete(ICelesta celesta, Consumer<? super TestTableWithIdentityCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_DELETE, TestTableWithIdentityCursor.class, cursorConsumer);
     }
 
-    public static void onPostDelete(ICelesta celesta, Consumer<TestTableWithIdentityCursor> cursorConsumer) {
+    public static void onPostDelete(ICelesta celesta, Consumer<? super TestTableWithIdentityCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_DELETE, TestTableWithIdentityCursor.class, cursorConsumer);
     }
 
-    public static void onPreInsert(ICelesta celesta, Consumer<TestTableWithIdentityCursor> cursorConsumer) {
+    public static void onPreInsert(ICelesta celesta, Consumer<? super TestTableWithIdentityCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_INSERT, TestTableWithIdentityCursor.class, cursorConsumer);
     }
 
-    public static void onPostInsert(ICelesta celesta, Consumer<TestTableWithIdentityCursor> cursorConsumer) {
+    public static void onPostInsert(ICelesta celesta, Consumer<? super TestTableWithIdentityCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_INSERT, TestTableWithIdentityCursor.class, cursorConsumer);
     }
 
-    public static void onPreUpdate(ICelesta celesta, Consumer<TestTableWithIdentityCursor> cursorConsumer) {
+    public static void onPreUpdate(ICelesta celesta, Consumer<? super TestTableWithIdentityCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_UPDATE, TestTableWithIdentityCursor.class, cursorConsumer);
     }
 
-    public static void onPostUpdate(ICelesta celesta, Consumer<TestTableWithIdentityCursor> cursorConsumer) {
+    public static void onPostUpdate(ICelesta celesta, Consumer<? super TestTableWithIdentityCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_UPDATE, TestTableWithIdentityCursor.class, cursorConsumer);
     }
 

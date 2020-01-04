@@ -637,7 +637,7 @@ public final class CursorGenerator {
                 ICelesta.class, "celesta")
                 .build();
         ParameterSpec consumerParam = ParameterSpec.builder(
-                ParameterizedTypeName.get(ClassName.get(Consumer.class), selfTypeName),
+                ParameterizedTypeName.get(ClassName.get(Consumer.class), WildcardTypeName.supertypeOf(selfTypeName)),
                 "cursorConsumer")
                 .build();
 

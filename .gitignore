@@ -18,3 +18,5 @@ documentation/*.pdf
 documentation/*.html
 documentation/*.gz
 celesta-documentation/src/main/asciidoc/*.png
+celesta-documentation/src/main/asciidoc/ru/*.png
+/inspection-results

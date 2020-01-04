@@ -22,8 +22,12 @@ CREATE SEQUENCE simple_table_id;
 CREATE TABLE simple_table(
   id INT NOT NULL DEFAULT NEXTVAL(simple_table_id),
   name VARCHAR(255) NOT NULL,
+  text_field TEXT,
   CONSTRAINT Pk_simple_table PRIMARY KEY (id)
 );
+
+create view simple_view as
+  select name || '!' as name from simple_table;
 
 create table duplicate(
  id INT NOT NULL PRIMARY KEY,

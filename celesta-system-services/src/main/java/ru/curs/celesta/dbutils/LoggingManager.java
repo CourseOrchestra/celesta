@@ -131,21 +131,21 @@ public final class LoggingManager implements ILoggingManager {
         int len;
         if (o.length > 0) {
             value = o[0] == null ? "NULL" : o[0].toString();
-            len = log.getMaxStrLen("pkvalue1");
+            len = log.getMaxStrLen(log.COLUMNS.pkvalue1());
             log.setPkvalue1(trimValue(value, len));
         }
         if (o.length > 1) {
             value = o[1] == null ? "NULL" : o[1].toString();
-            len = log.getMaxStrLen("pkvalue2");
+            len = log.getMaxStrLen(log.COLUMNS.pkvalue2());
             log.setPkvalue2(trimValue(value, len));
         }
         if (o.length > 2) {
             value = o[2] == null ? "NULL" : o[2].toString();
-            len = log.getMaxStrLen("pkvalue3");
+            len = log.getMaxStrLen(log.COLUMNS.pkvalue3());
             log.setPkvalue3(trimValue(value, len));
         }
 
-        len = log.getMaxStrLen("newvalues");
+        len = log.getMaxStrLen(log.COLUMNS.newvalues());
         switch (a) {
             case INSERT:
                 value = c.asCSVLine();

@@ -132,8 +132,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     /**
      * Creates a table specific cursor.
      *
-     * @param table  Cursor related table
-     * @param callContext  Call context that is used for cursor creation
+     * @param table       Cursor related table
+     * @param callContext Call context that is used for cursor creation
      * @return
      */
     public static Cursor create(Table table, CallContext callContext) {
@@ -143,9 +143,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     /**
      * Creates a table specific cursor.
      *
-     * @param table  Cursor related table
-     * @param callContext  Call context that is used for cursor creation
-     * @param fields  Fields the cursor should operate on
+     * @param table       Cursor related table
+     * @param callContext Call context that is used for cursor creation
+     * @param fields      Fields the cursor should operate on
      * @return
      */
     public static Cursor create(Table table, CallContext callContext, Set<String> fields) {
@@ -194,7 +194,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     /**
      * Tries to perform cursor insert into the DB.
      *
-     * @return  {@code TRUE} if inserted successfully, otherwise - {@code FALSE}. 
+     * @return {@code TRUE} if inserted successfully, otherwise - {@code FALSE}.
      */
     public final boolean tryInsert() {
         if (!canInsert()) {
@@ -252,7 +252,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
             getHelper.internalGet(this::_parseResultInternal, Optional.of(this::initXRec),
                     recversion, _currentKeyValues());
-            
+
             postInsert();
 
         } catch (SQLException e) {
@@ -278,7 +278,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     /**
      * Tries to perform an update of the cursor content in the DB.
      *
-     * @return  {@code TRUE} if updated successfully, otherwise - {@code FALSE}. 
+     * @return {@code TRUE} if updated successfully, otherwise - {@code FALSE}.
      */
     // CHECKSTYLE:OFF for cyclomatic complexity
     public final boolean tryUpdate() {
@@ -362,9 +362,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     /**
      * Compares the values in order to find: what exactly was changed in the record.
      *
-     * @param newVal  new value
-     * @param oldVal  old value
-     * @return  {@code true} if the values were not changed, otherwise - {@code false}
+     * @param newVal new value
+     * @param oldVal old value
+     * @return {@code true} if the values were not changed, otherwise - {@code false}
      */
     private static boolean compareValues(Object newVal, Object oldVal) {
         if (newVal == null) {
@@ -429,7 +429,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * Performs a search of a record by key fields, throwing an exception if
      * the record is not found.
      *
-     * @param values  values of the key fields
+     * @param values values of the key fields
      */
     public final void get(Object... values) {
         if (!tryGet(values)) {
@@ -448,8 +448,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * Tries to perform a search of a record by the key fields, returning a value whether
      * the record was found or not.
      *
-     * @param values  values of the key fields
-     * @return  {@code true} if the record is found, otherwise - {@code false}
+     * @param values values of the key fields
+     * @return {@code true} if the record is found, otherwise - {@code false}
      */
     public final boolean tryGet(Object... values) {
         if (!canRead()) {
@@ -463,7 +463,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * Retrieves a record from the database that corresponds to the fields of current
      * primary key.
      *
-     * @return  {@code true} if the record is retrieved, otherwise - {@code false}
+     * @return {@code true} if the record is retrieved, otherwise - {@code false}
      */
     public final boolean tryGetCurrent() {
         if (!canRead()) {
@@ -477,7 +477,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     /**
      * Sets version of the record.
      *
-     * @param v  new version.
+     * @param v new version.
      */
     public final void setRecversion(int v) {
         recversion = v;
@@ -495,7 +495,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     /**
      * Reads the content of BLOB field to memory.
      *
-     * @param name  field name
+     * @param name field name
      * @return
      */
     protected BLOB calcBlob(String name) {
@@ -551,16 +551,33 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
     /**
      * Returns maximal length of the text field (if it is defined).
      *
-     * @param name  name of the text field
-     * @return  length of the text field or -1 (minus one) if MAX is indicated instead of the length.
+     * @param name name of the text field
+     * @return length of the text field or -1 (minus one) if MAX is indicated instead of the length.
      */
+    @Deprecated
     public final int getMaxStrLen(String name) {
         ColumnMeta<?> c = validateColumnName(name);
         if (c instanceof StringColumn) {
             StringColumn sc = (StringColumn) c;
-            return sc.isMax() ? -1 : sc.getLength();
+            return getMaxStrLen(sc);
         } else {
             throw new CelestaException("Column %s is not of string type.", c.getName());
+        }
+    }
+
+    /**
+     * Returns maximal length of the text field .
+     *
+     * @param column the text field
+     * @return length of the text field or -1 (minus one) for TEXT fields.
+     */
+   public final int getMaxStrLen(ColumnMeta<String> column) {
+        final int undefinedMaxlength = -1;
+        if (column instanceof StringColumn) {
+            StringColumn sc = (StringColumn) column;
+            return sc.isMax() ? undefinedMaxlength : sc.getLength();
+        } else {
+            return undefinedMaxlength;
         }
     }
 

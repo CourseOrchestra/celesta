@@ -198,7 +198,7 @@ public class TestSimpleCases implements ScriptTest {
 
         Object[] values = c.getCurrentValues();
 
-        assertEquals(2, values.length);
+        assertEquals(3, values.length);
 
 //        assertEquals(1, values[0]);
         assertTrue(values[0].getClass() == Integer.class);
