@@ -1,0 +1,113 @@
+= Lost Update Prevention
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::lost_updates[]
+
+== What is Lost Update?
+
+Let us consider the following scenario to illustrate the lost update notion.
+
+Assume the application has a table listing clients and users allowed to edit that table using form-cards.
+Assume the events occur as follows:
+
+. User А opens a client card to edit its postal index.
+
+. User B opens the client's card on it own device independently from user A to edit the client's credit limit.
+
+. User B changes the "credit limit" field value and saves the card.
+Information from user B is recorded in the database, but user A is still working with his copy of the card where the "credit limit" field value is still not updated.
+
+. User A finishes editing the client's postal index and saves his copy of the card.
+All fields are saved to the database, including the old credit limit.
+
+This means the work of user B is lost!
+
+This is the most common example, but in practice developer solutions might face lost updates in much more trivial cases not involving multiuser operation.
+Assume that a single table is modified by two cursors:
+
+[source, java]
+FooTableCursor rec1 = new FooTableCursor(context);
+FooTableCursor rec2 = new FooTableCursor(context);
+
+Assume that at a certain moment both cursors receive data on the same entry as follows:
+
+[source, java]
+rec1.get(1);
+rec2.copyFieldsFrom(rec1);
+
+Assume the `FooTable` table entry has an "id = 1" and consists only of three fields:
+
+
+[cols="^1, ^2, ^2", options="header"]
+|====
+^.^|id
+^.^|field1
+^.^|field2
+
+|1
+|oldvalue
+|oldvalue
+
+|====
+
+And now both cursors perform entry modification:
+
+[source, java]
+rec1.setField1("newvalue");
+rec1.update();
+//the entry already exists in rec1 and in the database 1 | newvalue | oldvalue
+//but in rec2 there is still                 1 | oldvalue | oldvalue
+rec2.setField2("newvalue");
+rec2.update();
+//now the database has an entry 1 | oldvalue | newvalue ???
+
+As we see, bad code may cause lost updates even during single-user operation.
+
+== Methods to Prevent Lost Updates
+
+As of present there are two methods to prevent lost updates:
+
+* Pessimistic lock method: when editing entries somewhere in the application, entry is first marked as locked and no other script or user can work with it until previous editor finishes their work by updating the entry and forego further editing.
+
+* Optimistic lock method: any user and any script can start editing the entry, but the moment the entry is extracted from the base, the entry version number is also extracted.
+During saving, the number of the version being saved is checked against the number in the database.
+If the number matches, the entry is saved and the version number in the database gets incremented; if the saved version number is lower than the one in the database, the user gets an error, a message that someone has changed the entry before him and an advise to read the entry again.
+
+Naturally, every method has its drawbacks.
+
+The main optimistic lock drawback is that the user cannot record the result of their work to the database if somebody else managed to update the entry before he did.
+Still, it rarely happens in practice and only the most sluggish users who take too long to edit entries suffer from it.
+
+Main pessimistic lock drawback is that user is expected to explicitly end or forego editing to unlock the entry.
+But in practice when the editing goes on for excessive periods of time it is impossible to guess if the user is going to properly end editing or some external intervention by administrators is needed to explicitly unlock the entry, otherwise other users will not be able to work with it.
+
+In general, for systems like Celesta pessimistic lock drawbacks are much more severe, so Celesta uses optimistic lock to prevent lost updates.
+
+== Lost Update Prevention in Celesta
+
+By default the whole table in Celesta is supplied with a `INT NOT NULL` type `recversion` system field.
+
+This field is created automatically, so the developer should not include it in the `CREATE TABLE` script.
+The developer also cannot create their own field named `recversion`.
+Access to the field is provided by a `getRecversion()` method just like to any ordinary field.
+
+When inserting a new entry the `recversion` field assumes a default value 1 (one).
+
+When updating the entry special database trigger checks if the new value matches the value in the database: the field is incremented if the values match and an error is generated if not:
+
+[source]
+ Cannot update <grain and table name> ([<primary key field values>]): this record has been already modified by someone. Please start updating again.
+
+In examples above Celesta will generate an error and will not allow to send the entry which causes lost update to the database.
+
+Sometimes it is necessary to give up lost update prevention, for example when the table is intended to be read and adding entries only or just read-only.
+In this case a `WITH NO VERSION CHECK` <<table_options,option>> must be used after the table definition during its creation in CelestaSQL language.
+
+//end::lost_updates[]

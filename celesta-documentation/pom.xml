@@ -13,6 +13,30 @@
         <sourceDirectory>src/main/asciidoc</sourceDirectory>
         <plugins>
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-html</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/generated-docs</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/assembly</directory>
+                                    <includes>
+                                        <include>index.html</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
                 <version>1.6.0</version>
@@ -24,8 +48,6 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <sourceDocumentName>ru/0000_Celesta.adoc</sourceDocumentName>
-                    <outputFile>index.html</outputFile>
                     <requires>
                         <require>asciidoctor-diagram</require>
                     </requires>
@@ -35,25 +57,39 @@
                             <severity>WARN</severity>
                         </failIf>
                     </logHandler>
+                    <backend>html5</backend>
+                    <sourceHighlighter>coderay</sourceHighlighter>
+                    <attributes>
+                        <project-version>${project.version}</project-version>
+                    </attributes>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>asciidoc-to-html</id>
+                        <id>asciidoc-to-html-ru</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>process-asciidoc</goal>
                         </goals>
                         <configuration>
-                            <backend>html5</backend>
-                            <sourceHighlighter>coderay</sourceHighlighter>
-                            <attributes>
-                                <project-version>${project.version}</project-version>
-                            </attributes>
+                            <sourceDocumentName>ru/0000_Celesta.adoc</sourceDocumentName>
+                            <outputDirectory>target/generated-docs/ru-docs</outputDirectory>
+                            <outputFile>index.html</outputFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>asciidoc-to-html-en</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDocumentName>en/0000_Celesta.adoc</sourceDocumentName>
+                            <outputDirectory>target/generated-docs/en-docs</outputDirectory>
+                            <outputFile>index.html</outputFile>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>

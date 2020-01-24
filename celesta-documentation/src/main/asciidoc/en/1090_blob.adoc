@@ -1,0 +1,75 @@
+= BLOB Fields
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::blob[]
+
+
+BLOB fields allow to store great amounts of information in table cells, even entire files with documents.
+Work with these fields using cursors is different from work with other field types.
+
+. Cursor fields corresponding to BLOB fields have a {apidocs}ru/curs/celesta/dbutils/BLOB.html[`BLOB`] data type.
+
+. There is only one way to receive an instance of a BLOB class and assign it to a cursor field: by calling a `calc<field ID>()` method in the cursor.
+For example, if the BLOB field is named `foo`, the corresponding cursor method is named `calcfoo()` and the corresponding cursor field is filled after the method is called.
+
+. Unlike fields of other types, when read with `get()`, `next()` or other similar methods, BLOB fields are not filled and always receive a `null` value instead of being automatically filled with table data.
+A `calc...()` method is called to read a BLOB field.
+And if the cursor indicates an existing entry in the table, calling the `calc...()` causes reading BLOB contents from the database to RAM.
+This is why `calc...()` should only be called when it is intended to read or modify BLOB contents.
+
+. A corresponding cursor field is initialized by a {apidocs}ru/curs/celesta/dbutils/BLOB.html[`BLOB`] type object after calling a `calc<field name>()` method.
+Methods for this objects allow to read and modify its contents and are described below.
+After modifying BLOB object contents, an `update()` or `insert()` method can be used.
+
+. If BLOB must be deleted from the database and a `NULL` value entered in the corresponding cell, a `setNull()` BLOB object method is used and then `update()` method is called.
+Assigning a `null` value via a setter will not work, unlike with other field types, because the system will interpret it as if BLOB is read not from the base and `update()` will not change anything.
+
+{apidocs}ru/curs/celesta/dbutils/BLOB.html[`BLOB`] class methods:
+
+getInStream():: Returns a https://docs.oracle.com/javase/8/docs/api/java/io/InputStream.html[`java.io.InputStream`] class instance allowing to read the cursor contents or `null` if the database table cell contains a NULL value.
+This method can be called multiple times and a new flow starting to read from the beginning is created each time .
+
+getOutStream():: Deletes all BLOB data from the memory (if there were any) and creates an instance of https://docs.oracle.com/javase/8/docs/api/java/io/OutputStream.html[`java.io.OutputStream`], in which data for BLOB can be entered.
+It is worth mentioning, that every `getOutStream()` method call deletes all data from the BLOB in the memory, even if the received flow has no entries yet.
+Another important thing is that this method modifies only the data in a BLOB view in RAM, actual recording in the database is performed only after calling `insert()` or `update()` methods on the cursor.
+
+setNull():: Sets a `NULL` value for BLOB.
+
+isModified():: Returns `true`, if initial object data is modified using `getOutStream()` or `setNull()` calls.
+
+size():: Returns the internal BLOB data size in bytes.
+
+Examples of code for a BLOB field:
+
+```java
+OrderLineCursor line = new LineCursor(context);
+//Hereinafter line.dat is assumed to be a BLOB field
+. . .
+//Recording example
+line.calcDat();
+try(OutputStreamWriter osw = new OutputStreamWriter(
+    line.getDat().getOutStream(), StandardCharsets.UTF_8)){
+    osw.append("hello, blob field!");
+}
+. . .
+//Reading example
+line.calcDat();
+InputStream ins = line.getDat().getInStream();
+//Keep in mind that the field may contain NULL
+if (Objects.nonNull(ins)){
+    try ( BufferedReader inr = new BufferedReader(
+        new InputStreamReader(ins, StandardCharsets.UTF_8))) {
+        //BLOB field contents are output to the console,
+        //for example, 'hello, blob field!'
+                System.out.println(inr.readLine());
+    }
+}
+```
+//end::blob[]

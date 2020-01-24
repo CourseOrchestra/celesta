@@ -1,0 +1,90 @@
+= CelestaUnit
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::celesta_unit[]
+
+Usually, autotesting for data-modifying system poses certain difficulties and requires resorting to special techniques (like deploying database in a container).
+Such tests are usually slow to perform and developers try to avoid them.
+
+
+Testing data-editing methods in Celesta is performed at the level of quick-executing unit tests and a https://junit.org/junit5/[JUnit5] extension is developed for it.
+In Celesta, unit tests run on an in-built H2 database operating in an in-memory mode.
+This database does not require installation, takes only a moment to start and vanishes after testing is complete.
+
+Running a unit test under H2 is an enough condition to verify method correct operation and performance in production databases, because Celesta guarantees uniform class behaviour when accessing data for all supported RDBMS (Celesta testing includes going through scenarios in actual RDBMS).
+
+To employ these functions, add a Maven sequence CelestaUnit:
+
+```xml
+<dependency>
+    <groupId>ru.curs</groupId>
+    <artifactId>celesta-unit<artifactId>
+    <version>...</version>
+    <scope>test</scope>
+</dependency>
+```
+
+A JUnit5 dependency must also be added to the text scope of the project (for examples see the https://junit.org/junit5/docs/current/user-guide/#dependency-metadata-junit-jupiter-samples[Junit5 Documentation]).
+
+== Usage Example
+
+The easiest way to use it is to add an {apidocs}ru/curs/celestaunit/CelestaTest.html[`@CelestaTest`] annotation to the text class and use {apidocs}ru/curs/celesta/CallContext.html[`CallContext`] type attributes in texts:
+
+```java
+/*CelestaTest annotation includes an JUnit5 extension class ru.curs.celestaunit.CelestaUnitExtension,
+    allowing to insert CallContext objects in text attributes.*/
+@CelestaTest
+public class DocumentServiceTest {
+
+    /*Service can be created directly or using DI */
+
+    DocumentService srv = new DocumentService();
+
+    @Test
+    /*CallContext attribute will be inserted automatically
+    based on a temporary H2 database*/
+    void documentIsPutToDb(CallContext context) throws ParseException {
+        /*Call the service*/
+        srv.postOrder(context, ...);
+        /*Check if the data got to the base*/
+        OrderHeaderCursor header = new OrderHeaderCursor(context);
+        header.tryFirst();
+        assertEquals("no1", header.getId());
+    }
+}
+```
+
+In this way every test can receive an active `CallContext` as an attribute.
+This context in generated based on H2 database Celesta score is deployed in and can be used to create cursors.
+
+== Changing CelestaUnit Default Settings
+
+CelestaUnit has the following defaults:
+
+* Score path: `src/main/resources/score`.
+* Reference integrity check (with foreign keys) is enabled.
+* Table clearing after each test is enabled.
+
+Defaults can be changed by using a JUnit5 {apidocs}ru/curs/celestaunit/CelestaUnitExtension.html[`CelestaUnitExtension`] extension https://junit.org/junit5/docs/current/user-guide/#extensions-registration-programmatic[registration programme] in a text class:
+
+```java
+public class DocumentServiceTest {
+    public static final String SCORE_PATH = "src/test/resources/score";
+    @RegisterExtension
+    static CelestaUnitExtension ext =
+            CelestaUnitExtension.builder()
+                    .withScorePath(SCORE_PATH)
+                    .withReferentialIntegrity(true)
+                    .withTruncateAfterEach(false).build();
+```
+
+For example, in some cases it might help to disable reference integrity check to simplify adding text data to tables linked by foreign keys to other tables.
+
+//end::celesta_unit[]

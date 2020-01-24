@@ -1,0 +1,75 @@
+= Maven Plugin
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+:toc: left
+
+//image::{img}/
+
+//tag::maven_plugin[]
+
+Celesta Maven plugin generates the code of data access classes on the basis of CelestaSQL scripts.
+Adding this plugin is mandatory for projects using Celesta.
+
+Usage example:
+
+```xml
+<plugin>
+    <groupId>ru.curs</groupId>
+    <artifactId>celesta-maven-plugin</artifactId>
+    <version>${celesta.version}</version>
+    <configuration>
+        <scores>
+            <score>. . .</score>
+        </scores>
+        <testScores>
+            <testScore>. . .</testScore>
+        </testScores>
+    </configuration>
+    <executions>
+        <execution>
+            <goals>
+                <goal>gen-cursors</goal>
+                <goal>gen-score-resources</goal>
+                <goal>gen-test-cursors</goal>
+                <goal>gen-test-score-resources</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+Plugin configuration settings:
+
+* `scores` — path to the project folders containing <<CelestaSQL>> scripts describing the working database.
+By default the path is `src/main/celestasql`.
+* `testScores` — path to project folders containing <<CelestaSQL>> scripts describing the database, used only for <<celestaunit_section,unit testing>>.
+By default the path is `src/test/celestasql`.
+
+Celesta Maven Plugin executes the following operations:
+
+1. Generates the <<data_accessors_section,cursor>> code based on <<CelestaSQL>>:
+
+** At the `generate-sources` stage the cursors are generated from `scores` and optionally `score` folder to `target/generated-sources/celesta`,
+
+** At the `generate-test-sources` stage – from `testScores` to `target/generated-test-sources/celesta`.
+
+2. Copies CelestaSQL files to resources:
+
+** At the `generate-resources` stage CelestaSQL files are copied from `scores` and optionally the `score` folder to `generated-resources/score`
+
+** At the `generate-test-resources` stage – from `testScores` to `generated-test-resources/score`
+
+3. Generates the `score.files` index containing the list of relative paths to .sql files in resources:
+
+** At the `generate-resources` stage -> `generated-resources/score/score.files`
+** At the `generate-test-resources` stage ->`generated-test-resources/score/score.files`
+
+These files are used when running Celesta to find paths to all CelestaSQL files in .jar files on classpath.
+
+//end::maven_plugin[]

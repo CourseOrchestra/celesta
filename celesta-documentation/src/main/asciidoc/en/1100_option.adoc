@@ -1,0 +1,70 @@
+= Option Fields
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::option[]
+Often fields in relational databases can receive only a few values from a limited list.
+For example, the "state" field may receive only "new", "processing", "finished" or "error" values and nothing more.
+
+It is not feasible to create a separate reference tables or foreign keys since the list is limited.
+Often integer fields and assigning specific "meaning" to integer values may help optimize table size and speed up processing.
+Like this:
+
+* 0 – new;
+
+* 1 – processing;
+
+* 2 – finished;
+
+* 3 – error.
+
+Celesta supports simplified work with such fields.
+
+To declare that the field is only allowed to receive values from a certain list, an "option" property is set in an integer or text <<CelestaDoc,CelestaDoc>> field.
+For example:
+
+[source, sql]
+create table foo
+  ...
+  /**integer state field
+  {option: [new, processing, finished, error]}*/
+  state int,
+  /**text state field
+  {option: [created, closed]*/
+  state2 varchar(6)
+
+When compiling data access class Celesta reads the "option" property and generates auxiliary code to simplify using values from the list.
+
+For example, two auxiliary classes are created automatically in the "fooCursor" class for our foo table:
+
+[source, java]
+public static final class State {
+    public static final Integer new = 0;
+    public static final Integer processing = 1;
+    public static final Integer finished = 2;
+    public static final Integer error = 3;
+    private State() {}
+}
+public static final class State2 {
+    public static final String created = "created";
+    public static final String closed = "closed";
+    private State() {}
+}
+
+Note: for integer fields possible values are numbered and for text fields text values literally match their names.
+The solution developer may refer to possible values in the following manner:
+
+[source, java]
+FooCursor foo = new FooCursor(context)
+foo.setRange(foo.COLUMNS.state(), FooCursor.State.finished)
+if (FooCursor.State2.closed.equals(foo.getState2()){
+    ....
+}
+
+//end::option[]

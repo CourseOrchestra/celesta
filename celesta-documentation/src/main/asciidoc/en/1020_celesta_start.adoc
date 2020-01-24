@@ -1,0 +1,95 @@
+= Celesta Startup Operations
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+:toc: left
+
+//image::{img}/
+//tag::celesta_start[]
+
+== General Operation Sequence
+
+Celesta initialization goes in several stages, which is illustrated by the log output:
+
+```
+Celesta ver. 7.2.4
+Celesta pre-initialization: system settings reading...
+done.
+Celesta initialization: score parsing...
+done.
+Celesta initialization: database upgrade...
+done.
+```
+
+1. During *system settings reading* Celesta analyses the <<basic_settings_section,setting configuration>>  state, checks if all mandatory settings are set and are configured correctly.
+If any errors are found the startup interrupts.
+
+2. During *score parsing* all available *.sql files are read, their syntax is analysed and an internal database object model (score) is created.
+The system collects information about grains, tables and fields from CelestaSQL scripts.
+Checksums are calculated and versions are determined.
+If syntax errors occur or CelestaSQL scripts are not consistent, the system startup interrupts at this stage.
+
+3. Database *automatic migration*.
+
+== Database Automatic Migration
+
+At this stage the application server connects to the database and checks the existence of the `celesta.grains` system table.
+If the table does not exist, it is created automatically (via `CREATE` command), but only in the following cases: 1) the database is completely empty 2) `force.dbinitialize` attribute is set (to prevent "corruption" of existing non-empty bases if Celesta connects to them by fault).
+If an error occurs during celesta.grains table existence check / creation, a fatal error is generated and the system does not launch.
+
+=== Determining the Need to Migrate Grains (Schemas)
+
+Next the process repeats for all grains (schemas) available in the score and all grains available in `celesta.grains` (this excludes grains, declared with `WITH NO AUTOUPDATE` option in CelestaSQL script).
+
+. If the grain exists in the score but not in `celesta.grains`, upgrade is executed by a CelestaSQL script (i.e. it is assumed that the corresponding tables may exist in the database).
+
+. If the grain exists in `celesta.grains` but not in the score, nothing happens.
+Grains are never deleted from the database automatically as their tables may contain important information.
+Instead, the data access classes are not created for such tables.
+
+. If the grain exists both in the table and the score, the application server finds an entry in the `celesta.grains` table on the state, version, checksum of the score upgraded during the last launch and compares it to the current score version available to the server.
+The recorded in `celesta.grains` table state may have one of the following values:
+
+** *recover (3)* — proceed as if no entry exists (see p. 1).
+
+** *lock (4)* — the structure does not upgrade, go to the next grain.
+
+** *upgrading (1)* or *error (2)* — the process interrupts with an error prompt  “Cannot proceed with database upgrade: there are grains not in 'ready', 'recover' or 'lock' state”.
+
+** *ready (0)* — continue the process.
+
+... If the version and the checksum are consistent, nothing happens.
+System assumes that the structure of the corresponding database grain is consistent with the CelestaSQL script and reduces the time necessary to analyse the existing structure.
+
+... If the version is not consistent: if the version is higher, upgrade is carried out regardless of the checksum.
+If it is lower or the version is incompatible (see the version tags <<version_tags,operation logic description>>) the launch interrupts with an error prompt “Grain '...' version '...' is lower than / is inconsistent with database grain version '...' . Will not proceed with auto-upgrade.” regardless of the checksum.
+
+... If the version is consistent but the checksum is not, the score is upgraded.
+
+=== Grain (Schema) Migration Procedure
+
+If the algorithm leads the system to require a grain upgrade, the database structure and the data structure described in the CelestaSQL start to synchronize.
+All missing objects are created – tables, fields, keys, indices, views, etc.
+Objects in need of modification (e.g. field data types, field composition in the index or SQL view requests) are modified.
+The system makes effort to have it done automatically and without any errors.
+Sometimes it is possible in every scenario (e.g. when SQL view request gets changed for a valid one or field composition in the index is changed), sometimes manual intervention and executing an _ad hoc_ script are unavoidable (see the https://dzone.com/articles/trouble-free-database-migration-idempotence-and-co[post] on idempotent migrations).
+Errors at this stage lead to grain transition to an *error* state and demand manual intervention by a database administrator.
+
+If an object is deleted from the CelestaSQL script, auto-migrator removes from the database only the objects lacking any data (i.e. tables and fields are not auto-deleted and can be deleted manually in an ad hoc migration script, external keys are deleted from the deleted fields) to prevent data lose.
+
+== Total or Partial Disabling of Automatic Migration
+
+Celesta features several methods to disable automatic migration:
+
+* *at the level of the whole database* — using `skip.dbupdate` option in the <<basic_settings_section, settings>>,
+
+* *at the schema level* — by setting its state in the <<celesta_grains_table,celesta.grains table>> to 4 or by declaring the `WITH NO AUTOUPDATE` option in the <<create_schema_statement,grain (schema) creation expression>>,
+
+* *at the table level* — by declaring the <<celestasql_with_options,`WITH NO AUTOUPDATE` option>> in the table creation expression.
+
+//end::celesta_start[]

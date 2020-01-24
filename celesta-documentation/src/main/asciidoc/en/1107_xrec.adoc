@@ -1,0 +1,34 @@
+= xRec Object
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::xrec[]
+
+`xRec` object received using the `getXRec()` method is used primarily in `onPreUpdate` <<triggers_section,triggers>>.
+It is possible to see what exactly has changed in the entry by comparing `xRec` fields with the current values.
+
+`xRec` stores field values received during last reading the cursor from the database (unlike main buffer, which fields are equal to `xRec` fields but then change when user assigns them new values).
+`xRec` object is updated only during the following operations:
+
+* `[try]first()`,
+
+* `[try]get()`,
+
+* `next()`,
+
+* `[try]insert()` (the system essentially executes a `get()` operations for the cursor to read values issued by the base to `IDENITY`, `GETDATE()` and `DEFAULT` fields to simultaneously update the main buffer and `xRec`),
+
+* `[try]update()` (after an update in the database `xRec` becomes an instance of the current cursor),
+
+* `delete()` (after an update in the database `xRec` is filled with the buffer value as it was before deletion).
+
+Note that `xRec` values in pre- and post-triggers differ!
+
+
+//end::xrec[]
