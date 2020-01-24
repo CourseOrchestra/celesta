@@ -13,7 +13,7 @@ include::_doc_general_attributes.adoc[]
 
 == What is Celesta?
 
-include::ru/1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
+include::en/1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
 
 :numbered:
 
@@ -21,112 +21,112 @@ include::ru/1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
 
 === Demo
 
-include::ru/1012_demo.adoc[leveloffset=+2, tag="demo"]
+include::en/1012_demo.adoc[leveloffset=+2, tag="demo"]
 
 == Part 2. Celesta Technical Details and Setup
 
 === Key Term Vocabulary
 
 [[celesta_vocabulary]]
-include::ru/1015_vocabulary.adoc[leveloffset=+2, tag="basic_terms"]
+include::en/1015_vocabulary.adoc[leveloffset=+2, tag="basic_terms"]
 
 === Maven Plugin
 
 [[maven_plugin_section]]
-include::ru/1013_maven_plugin.adoc[leveloffset=+2, tag="maven_plugin"]
+include::en/1013_maven_plugin.adoc[leveloffset=+2, tag="maven_plugin"]
 
 === Celesta Startup Operations
 
 [[startup_sequence]]
-include::ru/1020_celesta_start.adoc[leveloffset=+2, tag="celesta_start"]
+include::en/1020_celesta_start.adoc[leveloffset=+2, tag="celesta_start"]
 
 [[basic_settings_section]]
 === Celesta Basic Settings
 
-include::ru/1030_basic_settings.adoc[leveloffset=+2, tag="basic_settings"]
+include::en/1030_basic_settings.adoc[leveloffset=+2, tag="basic_settings"]
 
 [[system_tables]]
 === Celesta System Tables
 
-include::ru/1040_system_tables.adoc[leveloffset=+2, tag="system_tables"]
+include::en/1040_system_tables.adoc[leveloffset=+2, tag="system_tables"]
 
 == Part 3. Designing Databases Using Celesta
 
 [[CelestaSQL]]
 === CelestaSQL
 
-include::ru/1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
+include::en/1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
 
 [[CelestaDoc]]
 === CelestaDoc
 
-include::ru/1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
+include::en/1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
 
 == Part 4. Creating and Testing Methods That Access Data
 
 === Call Context
 
-include::ru/1070_call_context.adoc[leveloffset=+2, tag="call_context"]
+include::en/1070_call_context.adoc[leveloffset=+2, tag="call_context"]
 
 [[data_accessors_section]]
 === Working with Data Using Data Access Classes (Cursors)
 
-include::ru/1080_classes.adoc[leveloffset=+2, tag="classes"]
+include::en/1080_classes.adoc[leveloffset=+2, tag="classes"]
 
 ==== Access Rights Granting and Change Logging
-include::ru/1088_security_logging.adoc[leveloffset=+2, tag="security_logging"]
+include::en/1088_security_logging.adoc[leveloffset=+2, tag="security_logging"]
 
 [[BLOB_fields]]
 ==== BLOB Fields
 
-include::ru/1090_blob.adoc[leveloffset=+2, tag="blob"]
+include::en/1090_blob.adoc[leveloffset=+2, tag="blob"]
 
 [[Option_fields]]
 ==== Option Fields
-include::ru/1100_option.adoc[leveloffset=+2, tag="option"]
+include::en/1100_option.adoc[leveloffset=+2, tag="option"]
 
 [[dynamic_access]]
 ==== Dynamic Access to Data
-include::ru/1102_dynamic.adoc[leveloffset=+2, tag="dynamic"]
+include::en/1102_dynamic.adoc[leveloffset=+2, tag="dynamic"]
 
 [[triggers_section]]
 === Triggers
-include::ru/1105_triggers.adoc[leveloffset=+2, tag="triggers"]
+include::en/1105_triggers.adoc[leveloffset=+2, tag="triggers"]
 
 [[xrec_section]]
 === xRec Object
-include::ru/1107_xrec.adoc[leveloffset=+2, tag="xrec"]
+include::en/1107_xrec.adoc[leveloffset=+2, tag="xrec"]
 
 
 [[Lost_updates_protection]]
 === Lost Update Prevention
 
-include::ru/1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
+include::en/1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
 
 [[celestaunit_section]]
 === CelestaUnit
 
-include::ru/1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
+include::en/1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
 
 == Part 5. Working with Celesta Score
 
 [[Celesta_metadata]]
 === Celesta Metadata
 
-include::ru/1120_meta.adoc[leveloffset=+2, tag="meta"]
+include::en/1120_meta.adoc[leveloffset=+2, tag="meta"]
 
 == Application
 
 [[best_practices]]
 === Best Code Writing Practices
-include::ru/2005_best_practices.adoc[leveloffset=+2, tag="best_practices"]
+include::en/2005_best_practices.adoc[leveloffset=+2, tag="best_practices"]
 
 [[RDBMS_peculiarities]]
 === Features of Using Supported RDBMS in Celesta
 
-include::ru/2010_supported_rdbms.adoc[leveloffset=+2, tag="supported_rdbms"]
+include::en/2010_supported_rdbms.adoc[leveloffset=+2, tag="supported_rdbms"]
 
 [[DBSchema]]
 === Celesta Database Design in DBSchema
 
-include::ru/2020_dbschema.adoc[leveloffset=+2, tag="dbschema"]
+include::en/2020_dbschema.adoc[leveloffset=+2, tag="dbschema"]
