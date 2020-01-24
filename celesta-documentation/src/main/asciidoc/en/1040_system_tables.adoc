@@ -55,7 +55,7 @@ Filled in in <<profiling_mode,profiling mode>>.
 [[celesta_grains_table]]
 == Celesta.grains Table
 
-This table is the vital Celesta system table as its contents manage database stucture synchronization with the score at the system's launch.
+This table is the vital Celesta system table as its contents manage database structure synchronization with the score at the system's launch.
 It contains the following fields:
 
 [cols="1, 1, 4",options="header"]

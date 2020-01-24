@@ -12,7 +12,7 @@ include::_doc_general_attributes.adoc[]
 
 The system supports MS SQL Server, Oracle, Postgre SQL, Firebird and H2 ensuring transparency for the solution developers.
 
-Celesta solutions are easily transferrable between different supported RDBMS, but each of them have their own configuration features.
+Celesta solutions are easily transferable between different supported RDBMS, but each of them have their own configuration features.
 Besides, different Celesta functions in different RDBMS are implemented differently.
 This section covers those features.
 
@@ -65,7 +65,7 @@ image::images/postgresql.svg[width=120,role="left"]
 
 === Usage Features
 
-A problem with "uuid" type fields may occure when Celesta is used to access preexisting (and not created and updated in Celesta) database.
+A problem with "uuid" type fields may occur when Celesta is used to access preexisting (and not created and updated in Celesta) database.
 Celesta does not support "uuid" type data but can work with it via VARCHAR(36) type fields.
 This does not lead to problems in MS SQL Server but for Celesta to work in Postgres it is necessary to explicitly define an operator to compare "varchar" to "uuid" and implicitly change types when assigning:
 

@@ -108,7 +108,7 @@ include::ru/1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
 
 include::ru/1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
 
-== Part 5. Woking with Celesta Score
+== Part 5. Working with Celesta Score
 
 [[Celesta_metadata]]
 === Celesta Metadata

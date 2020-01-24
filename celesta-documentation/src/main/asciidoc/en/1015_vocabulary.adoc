@@ -41,7 +41,7 @@ Grain checksum:: automatically calculated grain script checksum.
 Helps to differentiate CelestaSQL scripts by their contents.
 CelestaSQL scripts with identical version tags might intentionally (during development) or unintentionally (due to developer's carelessness) have different contents.
 Database created automatically using grain creation script not only has a version tag, but also contains a grain creation script checksum to give an opportunity to track the moment it was contacted by an application with an altered grain metadescription.
-Simultaneous match of a version tag and a grain checksum is enough to continue operation without trying to upgrade the database structure. To simplify verification and ensure the algorythm transparency, the checksum consists of two values: the script file length (written down as a decimal integer) and its https://en.wikipedia.org/wiki/Cyclic_redundancy_check#CRC-32_algorithm[CRC32] (written down as eight hexadecimal integers).
+Simultaneous match of a version tag and a grain checksum is enough to continue operation without trying to upgrade the database structure. To simplify verification and ensure the algorithm transparency, the checksum consists of two values: the script file length (written down as a decimal integer) and its https://en.wikipedia.org/wiki/Cyclic_redundancy_check#CRC-32_algorithm[CRC32] (written down as eight hexadecimal integers).
 
 Celesta system grain:: Special grain with an unchangeable table structure.
 This grain's tables are used for the system's internal needs.
@@ -49,7 +49,7 @@ At the same time, recording and editing the data in some of these tables are sta
 See the "celesta" grain description in the <<system_tables>> section.
 
 Celesta.grains table:: Celesta central system table of the database.
-Existance of the table indicates that Celesta is connected to the corresponding database, otherwise it will try to create one from scratch.
+Existence of the table indicates that Celesta is connected to the corresponding database, otherwise it will try to create one from scratch.
 The table contains information on state of grains in the database.
 Field description can be found in the <<celesta_grains_table,Celesta System Tables>> section.
 Information from this table is used extensively during <<startup_sequence,startup sequence>>.

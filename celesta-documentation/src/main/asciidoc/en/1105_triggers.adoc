@@ -32,8 +32,8 @@ This means there are only six trigger types:
 
 |====
 
-IMPORTANT: It often makes sence to use pre-triggers to perform certain action before the change is entered in the database.
-Note that since "onPreInsert" trigger is executed before sending cursor contents to the database, values of fields posessing `DEFAULT` or `GETDATE()` properties are not filled in at the moment of its execution.
+IMPORTANT: It often makes sense to use pre-triggers to perform certain action before the change is entered in the database.
+Note that since "onPreInsert" trigger is executed before sending cursor contents to the database, values of fields possessing `DEFAULT` or `GETDATE()` properties are not filled in at the moment of its execution.
 Assign a `null` value to them to automatically fill them in by the means of the database.
 In the "onPostInsert" trigger these fields are already filled in.
 

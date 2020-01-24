@@ -74,7 +74,7 @@ ACursor a = new ACursor(context);
 [WARNING]
 --
 Maximum number of cursors a single instance of `CallContext` can create is 1023.
-Exceeding the limit resultss in an error "Too many data accessors".
+Exceeding the limit results in an error "Too many data accessors".
 
 This does not restrict sensible scenarios of working with data in the database and prevents JDBC resource leakage, for example if cursors are created in a loop.
 When creating cursor in a loop it must be closed explicitly.
@@ -204,7 +204,7 @@ Still if a need arises to create more cursors, a need arises also to use `close(
 === Entry Navigation Methods
 
 * *tryGet(Object... values)* conducts searching for entries by key fields and returns `true` if the entry is found or `false` if the table contains no entry with the given primary key.
-This method's arguments must specify primery key field values and number of arguments must match the number of primary key fields in the table.
+This method's arguments must specify primary key field values and number of arguments must match the number of primary key fields in the table.
 ATTENTION! This method does not account for any filters applied to the table.
 If needed to find an entry while considering filters, use `[try]First` method.
 
@@ -351,7 +351,7 @@ Note: `onDelete` trigger is not called.
 
 === Auxiliary Methods
 
-* {lupa} *canRead(), canInsert(), canModify(), canDelete()* – returns a boolean value indicating the current session has rigths to perform a corresponding operation.
+* {lupa} *canRead(), canInsert(), canModify(), canDelete()* – returns a boolean value indicating the current session has rights to perform a corresponding operation.
 
 * {lupa} *count()* – returns a number of entries in a filtered set.
 In particular, if there are no filters set for the cursor, it returns the total amount of entries in the table.
@@ -393,7 +393,7 @@ Certainly, in some situations it is necessary to find out if there is an entry w
 [[setFilter_usage]]
 == Usage of a setFilter Method
 
-In most actual cases cursor filtering by field value can be implemented using `setRange(...)` methods with two or three attributes filtering values by "field = value" condition or "field between value and valuue2" condition.
+In most actual cases cursor filtering by field value can be implemented using `setRange(...)` methods with two or three attributes filtering values by "field = value" condition or "field between value1 and value2" condition.
 
 When simple comparison and a "between" condition is not enough, `setFilter` method allows to apply a more complex condition to values in one of the cursor fields.
 First `setFilter` method argument is the field and the second is the filter expression.
@@ -511,7 +511,7 @@ As with other field types, text fields can be filtered by null / not null value 
 
 It is also possible to filter text field using a LIKE operator with a special symbol "%" meaning any combination of symbols and indicate that filter is independent from the register with a special symbol "@".
 
-To be more exact, filter terms for text fields has the following sytanx:
+To be more exact, filter terms for text fields has the following syntax:
 
 include::../synfilter.adoc[tag="synf_text_term"]
 

@@ -9,7 +9,7 @@ include::_doc_general_attributes.adoc[]
 :source-highlighter: highlightjs
 
 //tag::dbschema[]
-== Syncronyzing Celesta Score and DBSchema Project
+== Synchronyzing Celesta Score and DBSchema Project
 
 https://dbschema.com/[DBSchema] is a convenient tool for database visual design.
 It is possible to fully simulate all Celesta information on the database structure (tables, fields, keys and indices) in DBSchema or to turn an existing score into a DBSchema.
@@ -91,7 +91,7 @@ The resulting script will be very similar to a Celesta script and it is easy to 
 
 . It is time to try to launch Celesta with your scripts.
 
-. If you wnat to further use DBSchema, it is recommended to use the "schemasync.jar" to link to a completely empty DBSchema project (you can delete the intermediate DBSchema project), but only when Celesta "agrees" to work with your script.
+. If you want to further use DBSchema, it is recommended to use the "schemasync.jar" to link to a completely empty DBSchema project (you can delete the intermediate DBSchema project), but only when Celesta "agrees" to work with your script.
 This is because the "schemasync.jar" utility incorporates a Celesta SQL script parser and it cannot process what Celesta itself cannot process.
 
 == Uploading to PlantUML

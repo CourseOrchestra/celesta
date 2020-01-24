@@ -71,7 +71,7 @@ include::../synsql.adoc[tag="syn_create_schema"]
 `WITH NO AUTOUPDATE` operation excludes the whole schema from the database autoupdate process.
 It can be used when the schema structure is under external management, as the relevant <<celestasql_with_options,table option>>.
 
-Version indication is mantadory to rule out involuntary database automatic downgrade when an older grain version launches with a more recent database version.
+Version indication is mandatory to rule out involuntary database automatic downgrade when an older grain version launches with a more recent database version.
 
 [[version_tags]]
 Version consists of components separated with commas and may be as follows: `1.23,TITAN3.34`.
@@ -212,11 +212,11 @@ include::../synsql.adoc[tag="syn_add_foreign_key"]
 
 Restrictions:
 
-* Foreign keys, either simple of composite, can refer only to primary keys and only in full. (Celesta SQL does not allow `UNIQUE` restrictions, so from two possibilities usually provided in RDBMS for foreign keys, it supports only refering to primary key).
+* Foreign keys, either simple of composite, can refer only to primary keys and only in full. (Celesta SQL does not allow `UNIQUE` restrictions, so from two possibilities usually provided in RDBMS for foreign keys, it supports only referring to primary key).
 
-* Field types must fully match (if the field is a string one, the length of the refering field must be exactly the same as the refered field length).
+* Field types must fully match (if the field is a string one, the length of the refering field must be exactly the same as the referred field length).
 
-* Single set of columns cannot contain more than one foreign key definition (special case: there cannot be two foreign keys definied for the same column).
+* Single set of columns cannot contain more than one foreign key definition (special case: there cannot be two foreign keys defined for the same column).
 
 *fk_rules* — referring actions:
 
@@ -280,7 +280,7 @@ include::../synsql.adoc[tag="syn_table_options"]
 
 The following features are supported:
 
-* `WITH VERSION CHECK` — defalut mode: enabling entry version tracking to avoid losing updates (see the <<Lost_updates_protection,Lost Update Prevention>> section).
+* `WITH VERSION CHECK` — default mode: enabling entry version tracking to avoid losing updates (see the <<Lost_updates_protection,Lost Update Prevention>> section).
 This option does not have to be indicated explicitly.
 
 * `WITH NO VERSION CHECK` — disabling entry version tracking.

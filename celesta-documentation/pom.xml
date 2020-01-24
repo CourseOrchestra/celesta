@@ -72,7 +72,7 @@
                         </goals>
                         <configuration>
                             <sourceDocumentName>ru/0000_Celesta.adoc</sourceDocumentName>
-                            <outputDirectory>target/generated-docs/ru-docs</outputDirectory>
+                            <outputDirectory>target/generated-docs/ru</outputDirectory>
                             <outputFile>index.html</outputFile>
                         </configuration>
                     </execution>
@@ -84,7 +84,7 @@
                         </goals>
                         <configuration>
                             <sourceDocumentName>en/0000_Celesta.adoc</sourceDocumentName>
-                            <outputDirectory>target/generated-docs/en-docs</outputDirectory>
+                            <outputDirectory>target/generated-docs/en</outputDirectory>
                             <outputFile>index.html</outputFile>
                         </configuration>
                     </execution>

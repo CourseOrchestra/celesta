@@ -35,12 +35,23 @@ node {
 
     stage ('Spellcheck'){
         result = sh (returnStdout: true,
-           script: """for f in \$(find celesta-documentation -name '*.adoc'); do cat \$f | sed "s/-/ /g" | aspell --master=ru --personal=./dict list; done | sort | uniq""")
+           script: 
+              """for f in \$(find celesta-documentation/src/main/asciidoc/en -name '*.adoc'); do cat \$f | sed "s/-/ /g" | aspell --master=en --personal=./dict-en list; done | sort | uniq""")
               .trim()
         if (result) {
            echo "The following words are probaly misspelled:"
            echo result
-           error "Please correct the spelling or add the words above to the local dictionary."
+           error "Please correct the spelling or add the words above to the dict-en."
+        }
+        
+        result = sh (returnStdout: true,
+           script: 
+              """for f in \$(find celesta-documentation/src/main/asciidoc/ru -name '*.adoc'); do cat \$f | sed "s/-/ /g" | aspell --master=ru --personal=./dict-ru list; done | sort | uniq""")
+              .trim()
+        if (result) {
+           echo "The following words are probaly misspelled:"
+           echo result
+           error "Please correct the spelling or add the words above to the dict-ru."
         }
     }
 

@@ -120,7 +120,7 @@ select item_id, sum(qty) as qty from OrderLine group by item_id;
 `mvn verify` command makes `OrderHeaderCursor.java`
  and `OrderLineCursor.java` with <<data_accessors_section,cursor classes>> to appear in the `target/generated-sources/celesta/...` folder.
 
-Those classes can be used to create servises (see the more comprehensive https://github.com/inponomarev/celesta-demo/blob/master/src/main/java/ru/curs/demo/service/DocumentService.java#L17[demo]):
+Those classes can be used to create services (see the more comprehensive https://github.com/inponomarev/celesta-demo/blob/master/src/main/java/ru/curs/demo/service/DocumentService.java#L17[demo]):
 
 ```java
 @Service

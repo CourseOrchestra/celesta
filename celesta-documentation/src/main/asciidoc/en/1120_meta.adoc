@@ -26,7 +26,7 @@ Changing the score when a programme runs that uses Celesta is not allowed and ma
 
 The ({apidocs}ru/curs/celesta/score/Score.html[`Score`]) score is divided into ({apidocs}ru/curs/celesta/score/Grain.html[`Grain`]) grains consisting of ({apidocs}ru/curs/celesta/score/Table.html[`Table`]) tables,  ({apidocs}ru/curs/celesta/score/Index.html[`Index`]) indices and ({apidocs}ru/curs/celesta/score/View.html[`View`]) views.
 
-* Tables consist of ({apidocs}ru/curs/celesta/score/Column.html[`Column`]) coulumns and contain foreign keys.
+* Tables consist of ({apidocs}ru/curs/celesta/score/Column.html[`Column`]) columns and contain foreign keys.
 
 * Indices belong to tables and contain their columns.
 

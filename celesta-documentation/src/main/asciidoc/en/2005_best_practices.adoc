@@ -166,7 +166,7 @@ Filling the primary key fields with correct values is enough for the `delete()` 
 
 [cols="50a,50a",options=header]
 |===
-^| WORNG
+^| WRONG
 ^| CORRECT
 |
 
@@ -241,7 +241,7 @@ There are four data filtering methods in Celesta, ranged from the simplest to th
 . `setComplexFilter`
 . `setIn`
 
-*Do not use more complex filters if the simplier one is enough!*
+*Do not use more complex filters if the simpler one is enough!*
 
 The <<set_range_usage,`setRange`>> method is applicable in most practical tasks to filter a field by a single value or a of range values:
 
@@ -369,7 +369,7 @@ Iteration methods are a `tryFindSet()` – `nextInSet()` pair and an `iterator()
 
 Navigation methods send a single query to the database during each call so they should be utilized when only a single entry is needed.
 
-Iteration methods send queries and open JDBC `ResultSet` used for futher movement between entries.
+Iteration methods send queries and open JDBC `ResultSet` used for further movement between entries.
 
 [cols="50a,50a",options=header]
 |===
