@@ -2,6 +2,7 @@
 :lang: ru
 :is-main-doc:
 include::_doc_general_attributes.adoc[]
+include::ru/_common_attributes.adoc[]
 :toclevels: 3
 :doctype: book
 :img: images
