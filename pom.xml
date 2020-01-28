@@ -66,7 +66,7 @@
         <junit.version>5.6.0</junit.version>
         <org.json.version>20190722</org.json.version>
         <testcontainers.version>1.12.5</testcontainers.version>
-        <testcontainers.firebird.version>1.0.2</testcontainers.firebird.version>
+        <testcontainers.firebird.version>1.0.3</testcontainers.firebird.version>
 
         <!--plugin versions -->
         <spotbugs.maven.plugin.version>3.1.8</spotbugs.maven.plugin.version>
