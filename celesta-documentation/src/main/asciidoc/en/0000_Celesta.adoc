@@ -42,12 +42,12 @@ include::en/1013_maven_plugin.adoc[leveloffset=+2, tag="maven_plugin"]
 include::en/1020_celesta_start.adoc[leveloffset=+2, tag="celesta_start"]
 
 [[basic_settings_section]]
-=== Celesta Basic Settings
+=== Basic Settings
 
 include::en/1030_basic_settings.adoc[leveloffset=+2, tag="basic_settings"]
 
 [[system_tables]]
-=== Celesta System Tables
+=== System Tables
 
 include::en/1040_system_tables.adoc[leveloffset=+2, tag="system_tables"]
 
@@ -63,7 +63,7 @@ include::en/1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
 
 include::en/1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
 
-== Part 4. Creating and Testing Methods That Access Data
+== Part 4. Creating and Testing Data Access and Modification Code
 
 === Call Context
 
@@ -74,7 +74,7 @@ include::en/1070_call_context.adoc[leveloffset=+2, tag="call_context"]
 
 include::en/1080_classes.adoc[leveloffset=+2, tag="classes"]
 
-==== Access Rights Granting and Change Logging
+==== Permissions Management and Change Logging
 include::en/1088_security_logging.adoc[leveloffset=+2, tag="security_logging"]
 
 [[BLOB_fields]]
@@ -109,7 +109,7 @@ include::en/1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
 
 include::en/1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
 
-== Part 5. Working with Celesta Score
+== Part 5. Working with Metadata
 
 [[Celesta_metadata]]
 === Celesta Metadata
@@ -119,11 +119,11 @@ include::en/1120_meta.adoc[leveloffset=+2, tag="meta"]
 == Application
 
 [[best_practices]]
-=== Best Code Writing Practices
+=== Best Practices
 include::en/2005_best_practices.adoc[leveloffset=+2, tag="best_practices"]
 
 [[RDBMS_peculiarities]]
-=== Features of Using Supported RDBMS in Celesta
+=== Notes on Using Supported RDBMS in Celesta
 
 include::en/2010_supported_rdbms.adoc[leveloffset=+2, tag="supported_rdbms"]
 

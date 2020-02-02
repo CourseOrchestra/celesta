@@ -14,15 +14,15 @@ include::en/_common_attributes.adoc[]
 
 //tag::demo[]
 
-Demo illustrating Celesta capabilities for Spring Boot project is available at: https://github.com/inponomarev/celesta-demo/.
+Demo project illustrating Celesta capabilities for Spring Boot is available at: https://github.com/inponomarev/celesta-demo/.
 
-To create a Spring Boot project using Maven indicate the following dependencies:
+To create a Spring Boot project use the following Maven dependencies:
 
 ```xml
     <properties>
-       <!-- Check for the latest version ru.curs:spring-boot-starter-web at Maven Central -->
+       <!-- Check for the latest version of ru.curs:spring-boot-starter-web at Maven Central -->
        <spring.boot.starter.celesta.version>2.1.7</spring.boot.starter.celesta.version>
-       <!-- Check for the latest version ru.curs:celesta-parent at Maven Central     
+       <!-- Check for the latest version of ru.curs:celesta-parent at Maven Central     
        <celesta.version>7.2.5</celesta.version>
     </properties>
 
@@ -57,7 +57,7 @@ To create a Spring Boot project using Maven indicate the following dependencies:
     </dependencies>
 ```
 
-To generate the code of <<data_accessors_section,data access classes>> `ru.curs:celesta-maven-plugin` is used.
+`ru.curs:celesta-maven-plugin` is used to generate the code of <<data_accessors_section,data access classes>>.
 Specify the path to the `score` folder in its settings:
 
 ```xml
@@ -118,8 +118,8 @@ create materialized view OrderedQty as
 select item_id, sum(qty) as qty from OrderLine group by item_id;
 ```
 
-`mvn verify` command makes `OrderHeaderCursor.java`
- and `OrderLineCursor.java` with <<data_accessors_section,cursor classes>> to appear in the `target/generated-sources/celesta/...` folder.
+`mvn verify` command generates `OrderHeaderCursor.java`
+ and `OrderLineCursor.java` files with <<data_accessors_section,cursor classes>> in the `target/generated-sources/celesta/...` folder.
 
 Those classes can be used to create services (see the more comprehensive https://github.com/inponomarev/celesta-demo/blob/master/src/main/java/ru/curs/demo/service/DocumentService.java#L17[demo]):
 
@@ -135,5 +135,5 @@ public class DocumentService {
 }
 ```
 
-Any https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html[method possible in Spring Boot] can be used to configure your project's <<basic_settings_section,settings>>, including the https://github.com/inponomarev/celesta-demo/blob/master/src/main/resources/application.yml[application.yml] file.
+Any https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html[method available in Spring Boot] can be used to configure your project's <<basic_settings_section,settings>>, including the https://github.com/inponomarev/celesta-demo/blob/master/src/main/resources/application.yml[application.yml] file.
 //end::demo[] 

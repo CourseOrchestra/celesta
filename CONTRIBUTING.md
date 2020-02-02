@@ -22,7 +22,7 @@ If you want to build `celesta-documentation` module locally, you will need to in
 In order for a PR to be merged into the main branch, the following conditions should be met:
 
 * CI build should pass. CI build includes test run, static analysis checks and documentation spell check.
-If spell check fails on a correctly spelled word that is missing in the dictionary, `dict` file located in the root of the project should be updated.
+If spell check fails on a correctly spelled word that is missing in the dictionary, `dict-en` and `dict-ru` files located in the root of the project should be updated.
 
 * Every code change should be covered by automated tests (this is verified during the code review).
 

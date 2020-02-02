@@ -69,7 +69,7 @@ Celesta Maven Plugin производит следующие операции:
 3. Генерирует индекс `score.files` с перечнем относительных путей к .sql-файлам в ресурсах:
 
 ** На фазе `generate-resources` -> `generated-resources/score/score.files`
-** На фазе `generate-test-resources` ->`generated-test-resources/score/score.files`
+** На фазе `generate-test-resources` -> `generated-test-resources/score/score.files`
 
 Эти файлы используются во время выполнения Celesta для того, чтобы найти пути ко всем CelestaSQL-файлам внутри jar-файлов на classpath.
 
