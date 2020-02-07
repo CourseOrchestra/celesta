@@ -112,11 +112,11 @@ include::en/1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
 == Part 5. Working with Metadata
 
 [[Celesta_metadata]]
-=== Celesta Metadata
+=== Metadata
 
 include::en/1120_meta.adoc[leveloffset=+2, tag="meta"]
 
-== Application
+== Appendix
 
 [[best_practices]]
 === Best Practices

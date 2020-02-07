@@ -375,7 +375,7 @@ include::../synsql.adoc[tag="syn_aggregate"]
 
 include::../synsql.adoc[tag="syn_group_by"]
 
-Особенность конструкции `GROUP BY` в Celesta-SQL заключается в необходимости всегда перечислять в ней все неагрегатные колонки из выборки.
+Особенность конструкции `GROUP BY` в CelestaSQL заключается в необходимости всегда перечислять в ней все неагрегатные колонки из выборки.
 
 
 [[create_materialized_view_statement]]

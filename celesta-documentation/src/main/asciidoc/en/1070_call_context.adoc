@@ -12,7 +12,7 @@ include::en/_common_attributes.adoc[]
 //tag::call_context[]
 == Call Context Creation and Life Cycle
 To meet the requirements for granting access rights and action logging, all operations are performed on behalf of a specific user, anonymous operations are impossible.
-This is why Celesta code is executed in certain context determined by a class copy ({apidocs}ru/curs/celesta/CallContext.html[`CallContext`]).
+This is why Celesta code is executed in certain context determined by a  ({apidocs}ru/curs/celesta/CallContext.html[`CallContext`]) class instance.
 
 Call context contain user ID, while links between user IDs and roles determine granting access to tables and allow to log changes made on user's behalf.
 
@@ -24,43 +24,43 @@ Context is created with a constructor
 CallContext(String userId)
 ```
 
-If there is no need to consider the user ID or grant rights to access the tables, a  {apidocs}ru/curs/celesta/SystemCallContext.html[`SystemCallContext`] subclass can be used, because its constructor does not receive attributes.
-In this case, "system user" context with full access to all tables is created.
+If there is no need to consider the user ID or grant rights to access the tables, a  {apidocs}ru/curs/celesta/SystemCallContext.html[`SystemCallContext`] subclass can be used, because its constructor does not require any parameters.
+In this case, a "system user" context with full access to all tables is created.
 
 Any context created in this way goes through the following life cycle:
 
  1. *Activation*.
 An `activate(..)` method is called receiving a reference to a `Celesta` object and a name of an executed procedure.
-At this moment a non-explicit transaction opens in the database and call execution countdown begins.
+At this moment an implicit transaction starts in the database and call execution time counting begins.
  2. *Calling a service method*.
-Context is transferred as an attribute to a service method and is used to create cursors.
- 3. *Closure*.
+Context is passed as a parameter to a service method and is used to create cursors.
+ 3. *Closing*.
 A `close()` method is called committing the transaction and closing all open cursors and freeing all JDBC resources.
 
-Developer *does not* usually *need* to manually activate and close contexts since Celesta framework performs it automatically.
+Developer *does not* usually need to manually activate and close contexts since Celesta framework performs it automatically.
 
-* When using  https://github.com/CourseOrchestra/spring-boot-starter-celesta[Celesta Spring Boot starter], cursors are activated or closed when calling methods of services, marked by
+* When using  https://github.com/CourseOrchestra/spring-boot-starter-celesta[Celesta Spring Boot starter], cursors are activated and closed when calling methods of services marked by
 a `@CelestaTransaction` annotation.
-So at the development stage it is enough to transfer deactivated context in them.
-Proxy object created by Spring framework around a service class instance will activate and close context and roll back database transactions if an unprocessed exception is found.
+So for the developmer it is enough to pass a not activated context to them.
+Proxy object created by Spring framework around a service class instance will activate and close context and roll back database transactions if an uncatched exception is thrown.
 
-* When using <<celestaunit_section,CelestaUnit>>, previously activated system context on the basis of Celesta running with a H2 database in an in-memory mode is sent to test attributes of a `CallContext` type.
-Context closures and changes locks/rollbacks in CelestaUnit can be easily monitored by the developer.
+* When using <<celestaunit_section,CelestaUnit>>, an activated system context on the basis of Celesta running with a H2 database in an in-memory mode is passed to test methods' parameters of a `CallContext` type.
+Context closing and commits/rollbacks are performed by Celesta automatically 'under the hood'.
 
 == Call Context Usage
 
-Each method in the service field using Celesta accepts the {apidocs}ru/curs/celesta/CallContext.html[`ru.curs.celesta.CallContext`] object as an argument.
-This object is intended to be an argument for cursor constructors.
-But the call context itself has publicly available methods and properties feasible to be used in a service method:
+Each method in the service layer using Celesta must have an argument of  {apidocs}ru/curs/celesta/CallContext.html[`ru.curs.celesta.CallContext`] type.
+This call context is intended to be an argument for cursor constructors.
+But also, a number of public methods and properties are available in `CallContext`, that are feasible to be used in a service method:
 
 commit():: Commits the current transaction.
-A need to get this method occurs only in rare cases when data processing transaction should be divided in several parts.
-Usually it is not needed, as transactions are locked automatically at the end of the procedure.
+A need in this method occurs only in rare cases when data processing transaction should be split in several parts.
+Usually it is not needed, as transactions are commited automatically at the end of the procedure.
 
 rollback():: Rolls back the current transaction.
 
 getCelesta():: Gets a current instance of a Celesta object.
-To get score information, for example.
+It can be further used to obtain score metadata.
 
 getUserId():: Get an ID of the user on whose behalf the actions are performed.
 

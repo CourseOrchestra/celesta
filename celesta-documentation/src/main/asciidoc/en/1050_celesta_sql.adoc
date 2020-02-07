@@ -14,8 +14,8 @@ include::en/_common_attributes.adoc[]
 
 WARNING: Scripts in CelestaSQL language must be encoded in UTF-8.
 
-Celesta SQL language is used to write scripts for determining grains.
-Script in CelestaSQL consists of statements
+Celesta SQL language is used to write scripts for defining grains.
+Script in CelestaSQL consists of the following statements
 
 * <<create_schema_statement,CREATE GRAIN>>,
 * <<create_sequence_statement,CREATE SEQUENCE>>,
@@ -41,15 +41,15 @@ CelestaSQL supports standard single-string and multistring comments, as well as 
  /**CelestaDoc comment*/
 
 
-Standard comments can be used in any part of the text and CelestaDoc comments — only right before the grain, table, field or index definition.
+Standard comments can be used in any part of the text and CelestaDoc comments can be used only right before the grain, table, field or index definition.
 
 == Object IDs in CelestaSQL
 
 Object IDs are names of grains, tables, fields, indices, limitations and views, in Celesta their syntax is subject to a number of stringent limitations.
 
 . In other RDBMS object IDs are allowed to contain spaces and non-alphabetical symbols if the names are encased in special symbols, like "[]" in MS SQL Server.
-This means that MS SQLServer allows table names like this: [Long Table$Name]. Celesta, on the other hand, cannot support spaces and non-alphabetical symbols in IDs because names of every Celesta table must be names of Java classes and names of every Celesta field – names of Java variables.
-So IDs of all named objects in CelestaSQL must at least meet the naming requirements for Java variables, i.e. *they must contain only lower- and uppercase Latin letters, numerals and underscores and must not start with numerals*.
+This means that MS SQLServer allows table names like this: [Long Table$Name]. Celesta, on the other hand, cannot support spaces and non-alphabetical symbols in IDs because a name of every Celesta table must be a name of a Java class and a name of every Celesta field must be a name of Java variable.
+So IDs of all named objects in CelestaSQL must at least meet the naming requirements for Java identifiers, i.e. *they must contain only lower- and uppercase Latin letters, numerals and underscores and must not start with numerals*.
 
 . *Encasing Celesta IDs with quotation marks* in CelestaSQL scripts *is not allowed* at the syntax level since there is no practical need to do it (names never contain spaces).
 However, when forming requests to RDBMS at the system level Celesta always encases names of its objects with strait marks ("ANSI quotes") to prevent Oracle, PostgreSQL and H2 databases from changing ID letter register.
@@ -58,27 +58,27 @@ However, when forming requests to RDBMS at the system level Celesta always encas
 
 . The *length* of every ID in Celesta *cannot exceed 30 characters*.
 
-. *In addition, grain IDs (prefixes) cannot contain underscores*.
+. *In addition, grain IDs cannot contain underscores*.
 This is because combining grain names with underscores and other IDs often used for Celesta internal needs, this restriction helps to prevent possible ambiguities.
 
 [[create_schema_statement]]
 == CREATE SCHEMA (GRAIN) Statement
 
-Every grain determination script must start with `CREATE SCHEMA`.
+Every grain definition script must start with `CREATE SCHEMA`.
 The following syntax is used (words `GRAIN` and `SCHEMA` are synonyms):
 
 include::../synsql.adoc[tag="syn_create_schema"]
 
-`WITH NO AUTOUPDATE` operation excludes the whole schema from the database autoupdate process.
-It can be used when the schema structure is under external management, as the relevant <<celestasql_with_options,table option>>.
+`WITH NO AUTOUPDATE` clause excludes the whole schema from the database autoupdate process, just like the similar  <<celestasql_with_options,table option>>.
+It can be used when the schema structure is managed not by Celesta, but by some external system.
 
-Version indication is mandatory to rule out involuntary database automatic downgrade when an older grain version launches with a more recent database version.
+Version indication is mandatory to rule out unintentional database automatic downgrade when an older grain version launches with a more recent database version.
 
 [[version_tags]]
 Version consists of components separated with commas and may be as follows: `1.23,TITAN3.34`.
 This reads: basic version 1.23, modified for the TITAN project – 3.34.
 Regular expression to check the component format is `([A-Z_]*)([0-9]+\\.[0-9]+)`.
-Every component of the version can be in bicomponent (and only this!) format and either has no prefix or has one containing only Latin uppercase letters and an underscore.
+Every component of the version can be in bicomponent format only and either has no prefix or has one containing only Latin uppercase letters and an underscore.
 When the system determines a possible autoupgrade, all version tags are compared consecutively.
 
 In this sense the following tags to the "1.23,TITAN3.34" tag are:
@@ -86,12 +86,12 @@ In this sense the following tags to the "1.23,TITAN3.34" tag are:
 * "1.23,TITAN3.35" – a newer version (modification is upgraded), autoupgrade is possible
 * "1.24,TITAN3.34" – a newer version (basic version is upgraded), autoupgrade is possible
 * "1.23,TITAN3.34,PLUTO1.00" – a newer version (a new modification is added), autoupgrade is possible
-* "TITAN3.34,1.23" – the same version (tag sequence does not matter), autoupgrade takes place only if checksums do not align, no errors will occur
+* "TITAN3.34,1.23" – the same version (tag sequence does not matter), autoupgrade takes place only if checksums do not match, no errors will occur
 * "1.22,TITAN3.34" – an older basic version, autoupgrade is not possible, an error will occur and Celesta will stop.
 * "1.22,TITAN3.36" – a non-aligned version, upgrade is not possible, error.
 Versions "1.23,PLUTO1.00" and "1.25" also do not align with "1.23,TITAN3.34" version and will not upgrade automatically.
 
-Versions are compared as digits with floating points.
+Versions are compared as floating point values.
 
 [[create_sequence_statement]]
 == CREATE SEQUENCE Statement
@@ -102,13 +102,13 @@ include::../synsql.adoc[tag="syn_create_sequence"]
 
 Main limitations and differences between this statement and similar statements in various RDBMS are:
 
-. If the `MINVALUE` value is not indicated, it is automatically set equal to the `START WITH` value (by default 1).
+. If the `MINVALUE` is not indicated, it is automatically set equal to the `START WITH` value (by default 1).
 
-. If the `MAXVALUE`, value is not indicated, it is automatically set equal to the `Long.MAX_VALUE` value.
+. If the `MAXVALUE` is not indicated, it is automatically set equal to the `Long.MAX_VALUE`.
 
-. The `START WITH` value does not upgrade for sequences created earlier even if changed in the grain file (because Oracle allows this operation only by deleting and recreating the sequence and Celesta does not envisage stateful object deletion from the database).
+. The `START WITH` value does not upgrade for sequences created earlier even if changed in the grain file (because Oracle allows this operation only by deleting and recreating the sequence and Celesta does not allow stateful object deletion from the database).
 
-. If the grain contains a table with a name, for example, `A`, it is not possible to create a sequence named `A_seq`, since the name is already reserved by the system.
+. If the grain contains a table with a name, for example, `A`, it is not possible to create a sequence named `A_seq`, since this name is reserved by the system.
 
 [[create_table_statement]]
 == CREATE TABLE Statement
@@ -119,8 +119,8 @@ include::../synsql.adoc[tag="syn_create_table"]
 
 include::../synsql.adoc[tag="syn_table_constituent"]
 
-In other words, the `CREATE TABLE` statement can list the definitions of fields, primary keys and foreign keys in any order in the brackets and options can be listed outside them.
-In practice, first definitions of all fields follow each other, then go multipiece primary keys (single-field primary keys may be defined in the field itself) and multipiece foreign keys (if single-field, they may be defined in the field itself).
+In other words, the `CREATE TABLE` statement can list the definitions of fields, primary keys and foreign keys in any order in the brackets and options can be listed after them.
+In practice, first definitions of all fields follow each other, then go composite primary keys (a single-field primary key can be defined in the field itself) and composite foreign keys (if single-field, they can be defined in the fields themselves).
 
 === Field Definitions
 
@@ -137,7 +137,7 @@ Here *table_ref* is a reference to a table, either single-component (if the tabl
 [[table_ref]]
 include::../synsql.adoc[tag="syn_table_ref"]
 
-Syntax rules for foreign keys (*fk_rules*) can be found in the <<foreign_keys_statements,Foreign Rules>> section.
+Syntax rules for foreign keys (*fk_rules*) can be found in the <<foreign_keys_statements,Foreign Key Rules>> section.
 
 [[datatypes_mapping]]
 === Data Types
@@ -146,7 +146,7 @@ The following data type system is used.
 
 include::../table.adoc[tag="table_typemapping"]
 
-See also the <<RDBMS_peculiarities,Features of Using Supported RDBMS in Celesta>> section.
+See also the <<RDBMS_peculiarities,Notes on Using Supported RDBMS in Celesta>> section.
 
 Every field type has its own definition version:
 
@@ -166,7 +166,7 @@ include::../synsql.adoc[tag="syn_text_field"]
 
 include::../synsql.adoc[tag="syn_blob_field"]
 
-Here *<binary literal>* is a hexadecimal view of a byte sequence starting with 0x and not put in the quotation marks, for example: 0xFFAAFFAAFF.
+Here *<binary literal>* is a hexadecimal representation of a byte sequence starting with 0x, without any quotation marks, for example: 0xFFAAFFAAFF.
 
 include::../synsql.adoc[tag="syn_datetime_field"]
 
@@ -180,7 +180,7 @@ include::../synsql.adoc[tag="syn_bit_field"]
 
 include::../synsql.adoc[tag="syn_primary_key_definition"]
 
-*primary_key_definition* is a statement determining the composition of fields constituting primary key of the table.
+*primary_key_definition* is a statement defining the composition of fields constituting the primary key of a table.
 Two version are possible:
 
 * inline version — `PRIMARY KEY` goes right after the field definition, which allows for shorter and more graphic representation when the primary key consists of a single field,
@@ -217,7 +217,7 @@ Restrictions:
 
 * Field types must fully match (if the field is a string one, the length of the refering field must be exactly the same as the referred field length).
 
-* Single set of columns cannot contain more than one foreign key definition (special case: there cannot be two foreign keys defined for the same column).
+* A set of columns cannot have more than one foreign key definition (special case: there cannot be two foreign keys defined for the same column).
 
 *fk_rules* — referring actions:
 
@@ -227,12 +227,12 @@ Supported referring action:
 
 * `NO ACTION` – forbidding deletion/modification of the parent entry if links to it exist.
 
-* `SET NULL` – setting `NULL` in links.
+* `SET NULL` – setting `NULL` in fields referencing a record being updated or deleted.
 Naturally, this action is prohibited for `NOT NULL`-able fields.
 
 * `CASCADE` – cascade field deletion/update.
 
-At the moment of foreign key creation only the following can be referred to:
+A foreign key can refer to the following only:
 
 * a table defined in the current grain above,
 
@@ -289,22 +289,22 @@ Used when there is no need to prevent update loses, for example, in tables used 
 The data in the table can still be modified with this option enabled, but the updates may be lost.
 
 * `WITH READ ONLY` — read-only mode.
-Used when table data comes from external sources and not entered by Celesta means or it is necessary to connect to a table related to a different application and so it is better not to make any changes to its data.
+Used when table data comes from external sources and not updated by Celesta or it is necessary to connect to a table that belongs to a different application and so it is better not to make any changes to its data.
 In this mode the entry version tracking is disabled and table access class is generated without data modification methods.
-In addition, it is not necessary to specify primary keys to such tables.
+In addition, it is not necessary to specify primary keys for such tables.
 
-* `NO AUTOUPDATE` option disconnects the table from database autoupdate and can be used along with other options.
-It is used when structure of a certain table is changed in the database by other means and the system should not try to autosynch the table's structure with the description in CelestaSQL language.
+* `NO AUTOUPDATE` option disables the auto-migration for the table and can be used together with other options.
+It is used when structure of a certain table is changed in the database by other means and the system should not try to autosynch the table's structure with the definition given by CelestaSQL script.
 
 [[create_index_statement]]
 == CREATE INDEX Statement
 
-Indices are used to speed up filtering by table field and are created with the following syntax statement:
+Indices are used to speed up filtering by table field and are created with the following statement:
 
 include::../synsql.adoc[tag="syn_create_index"]
 
 Names of indices within a grain must be unique.
-All indices in Celesta allow repeating values.
+All indices in Celesta allow non-unique column values.
 
 [[create_view_statement]]
 == CREATE VIEW Statement
@@ -333,7 +333,7 @@ Queries cannot be created based on views in order to avoid making ineffective st
 . `SELECT *` statement is not supported and every query field must have a set and unique alias, only if it is not a reference to a table field with a unique name within a query.
 It allows to unambiguously create class-cursors with fields aligned to the query column names.
 
-. `ORDER BY` is not supported since orderBy(...) method of the relevant cursor allows to filter the selection in a specific manner.
+. `ORDER BY` is not supported since orderBy(...) method of the relevant cursor allows to sort the selection in a specific manner.
 
 . `GROUP BY`...`HAVING` statement is not supported.
 
@@ -341,7 +341,7 @@ It allows to unambiguously create class-cursors with fields aligned to the query
 
 . `UNION` and `WITH` statements and inline queries are not supported.
 
-Most functions not supported at the CelestaSQL level can be efficiently emulated in data access class API.
+Most functions not supported at the CelestaSQL level can be efficiently emulated with data access class API.
 
 Reference to a table (*table_ref*) has the following syntax:
 
@@ -371,11 +371,11 @@ include::../synsql.adoc[tag="syn_predicate"]
 
 include::../synsql.adoc[tag="syn_aggregate"]
 
-It is important to note that *term* inside a `SUM` statement must be a digit.
+It is important to note that *term* inside a `SUM` statement must be a number.
 
 include::../synsql.adoc[tag="syn_group_by"]
 
-`GROUP BY` statement is special in Celesta-SQL because it is necessary to always list all not aggregated columns in the selection.
+`GROUP BY` statement is special in CelestaSQL because unlike the common SQL it is necessary to list all not aggregated columns in the selection.
 
 
 [[create_materialized_view_statement]]
@@ -398,9 +398,9 @@ This query key restrictions and differences from SQL queries in various RDBMS ar
 
 . Non-aggregated columns must refer to `NOT NULL` columns in the parent table.
 
-. If a `DATETIME` type column is involved in a `GROUP BY` expression, its values are rounded to days (hours, minutes and more accurate measurements are cut down).
+. If a `DATETIME` type column is involved in a `GROUP BY` expression, its values are rounded to days (hours, minutes and more accurate measurements are truncated).
 
-. Only `SUM` and `COUNT` operations are available from the list of all aggregate operations.
+. Only `SUM` and `COUNT` operations are available from the set of all aggregate operations.
 
 include::../synsql.adoc[tag="syn_materialized_aggregate"]
 
@@ -408,9 +408,9 @@ include::../synsql.adoc[tag="syn_materialized_aggregate"]
 == CREATE FUNCTION Statement
 
 This statement determines functions, or parametered views.
-They serve to grant read-only access to the data collected from one or several tables using a `SELECT` SQL query, taking into account transferred parameters.
+They serve to grant read-only access to the data collected from one or several tables using a `SELECT` SQL query, taking into account the given parameters.
 
-Function are created with the following syntax statement:
+Function are created with the following statement:
 
 include::../synsql.adoc[tag="syn_create_function"]
 
@@ -428,9 +428,9 @@ This query key restrictions and differences from SQL queries in various RDBMS ar
 
 . All declared parameters must be used.
 
-Otherwise, syntax expression is similar to common view.
+Otherwise, a parameterized view syntax is similar to common view.
 
-Function example:
+Parameterized view example:
 
 [source, sql]
 CREATE FUNCTION pView2(param int, param2 varchar) AS

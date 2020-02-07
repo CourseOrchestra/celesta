@@ -11,7 +11,7 @@ include::en/_common_attributes.adoc[]
 //tag::celesta_doc[]
 
 
-Just like Java has JavaDoc for object documentation or Python has a documenting constant available later for execution, CelestaSQL has a special tool to document defined database objects: comments in a special format /** ... */ (two asterisks after the first slash, instead of a single asterisk in a standard comment).
+Just like Java has JavaDoc for object documentation or Python has a documenting constant available in the runtime, CelestaSQL has a special tool to document defined database objects: comments in a special format /** ... */ (two asterisks after the first slash, instead of a single asterisk in a standard comment).
 These comments are called CelestaDoc comments (by analogy with JavaDoc) and can be put in the CelestaSQL script code right before definitions of the corresponding objects as shown in the example:
 
 ```sql
@@ -39,12 +39,12 @@ CREATE VIEW v1 AS
 
 Unlike simple comments possible to use in any part of CelestaSQL script, CelestaDoc comments can be put only before the definition of the corresponding object, otherwise a syntax error occurs.
 
-Parser reads CelestaDoc and this information is available in score objects during execution by using the *getCelestaDoc()* method (see the <<Celesta_metadata,Celesta Score>> section).
+Parser reads CelestaDoc and this information is available in metadata objects in the runtime by using the *getCelestaDoc()* method (see the <<Celesta_metadata,Celesta Metadata>> section).
 
 CelestaDoc comments serve to provide Celesta objects with documentation and additional metainformation during execution, like human-readable field names, information on field representation in UI, etc.
 
 Common practise is to use CelestaDoc comments to provide metainformation in a JSON object format.
-CelestaDoc also supports normal text, as well as JSON objects.
+CelestaDoc also supports plain text, as well as JSON objects.
 The {apidocs}ru/curs/celesta/score/CelestaDocUtils.html[`CelestaDocUtils`] class `getCelestaDocJSON` utility method allows to extract first valid JSON object from a CelestaDoc string.
 //end::celesta_doc[]
 

@@ -14,12 +14,12 @@ include::en/_common_attributes.adoc[]
 
 //tag::basic_settings[]
 
-Celesta configuration parameters include such general system parameters as database connection parameters.
+Celesta configuration parameters include general system parameters such as database connection properties.
 
-These setting are sent to a  {apidocs}ru/curs/celesta/BaseAppSettings.html[`BaseAppSettings`] class constructor as a https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html[`Properties`] instance, and the class constructor, in turn, is a {apidocs}ru/curs/celesta/Celesta.html[`Celesta`] class constructor parameter.
+These settings are passed to a  {apidocs}ru/curs/celesta/BaseAppSettings.html[`BaseAppSettings`] constructor as a https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html[`Properties`] instance, and the `BaseAppSettings` instance, in turn, is a {apidocs}ru/curs/celesta/Celesta.html[`Celesta`] constructor parameter.
 
 When using https://github.com/CourseOrchestra/spring-boot-starter-celesta[Celesta Spring Boot starter]
-these settings are translated via the configuration by every possible Spring Boot application https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html[configuration method], for example, using an
+these settings are defined by any Spring Boot application https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html[configuration method] available, for example, using an
 `application.yml` file.
 In that case, the YAML file root key has to be `celesta`, and other properties are recorded in the hierarchical structure.
 
@@ -34,7 +34,7 @@ celesta:
     username: foo
     password: bar
 ```
-Some IDE, like IntelliJ IDEA, execute context help when editing the `application.yml` file.
+Some IDE, like IntelliJ IDEA, provide auto-completion when editing the `application.yml` file.
 
 [cols="30a,40a,^20a,^10a", options="header"]
 |====
@@ -45,29 +45,29 @@ Some IDE, like IntelliJ IDEA, execute context help when editing the `application
 
 |`rdbms.connection.url`
 
-(`jdbc.url` в `application.yml`)
-|URL connections to the JDBC driver
+(`jdbc.url` in `application.yml`)
+|JDBC connection URL
 |Yes
 |-
 
 |`rdbms.connection.username`
 
-(`jdbc.username` в `application.yml`)
-|Login to connect to the database
+(`jdbc.username` in `application.yml`)
+|Database login
 |No (if empty, the JDBC URL is used)
 |-
 
 |`rdbms.connection.password`
 
-(`jdbc.password` в `application.yml`)
-|Password to connect to the database
+(`jdbc.password` in `application.yml`)
+|Database password
 |No (if empty, the JDBC URL is used)
 |-
 
 |`skip.dbupdate`
 |Forces the system to completely skip the database upgrade phase (including creating the system tables) on startup .
 
-This parameter is required in some scenarios of deploying Celesta in an existing database.
+This parameter is required in some scenarios of deploying Celesta over an existing database.
 |No
 |`false`
 
@@ -75,7 +75,7 @@ This parameter is required in some scenarios of deploying Celesta in an existing
 |Forces the system to create Celesta system object even if the database is non-empty (contains tables) on startup.
 Caution is advised when using this parameter because it may damage the existing database.
 
-This parameter is required in some scenarios of deploying Celesta in an existing database.
+This parameter is required in some scenarios of deploying Celesta over an existing database.
 |No
 |`false`
 
@@ -95,8 +95,8 @@ The mode is used mostly for UI and acceptance automatic testing.
 |`false`
 
 |`h2.referential.integrity`
-|Determines the use of the foreign keys control, when working with an H2 database in in-memory mode (for all other databases this parameter is ignored).
-By default the foreign keys control is disabled when working with an H2 database in in-memory mode to simplify autotest creation.
+|Defines the use of the foreign keys referetial integrity checks, when working with an H2 database in in-memory mode (for all other databases this parameter is ignored).
+By default the referetial integrity checks are disabled when working with an H2 database in in-memory mode to simplify autotest creation.
 |No
 |`false`
 
