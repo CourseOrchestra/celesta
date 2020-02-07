@@ -95,7 +95,7 @@ The mode is used mostly for UI and acceptance automatic testing.
 |`false`
 
 |`h2.referential.integrity`
-|Defines the use of the foreign keys referetial integrity checks, when working with an H2 database in in-memory mode (for all other databases this parameter is ignored).
+|Defines the use of the foreign keys referential integrity checks, when working with an H2 database in in-memory mode (for all other databases this parameter is ignored).
 By default the referetial integrity checks are disabled when working with an H2 database in in-memory mode to simplify autotest creation.
 |No
 |`false`
