@@ -1,0 +1,45 @@
+= What is Celesta?
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+include::en/_common_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+:toc: left
+
+//image::{img}/
+
+//tag::intro[]
+
+https://github.com/CourseOrchestra/celesta[Celesta] is a tool for Java backend-developers who want easier ways to deliver RDBMS-backed software.
+
+This is a Java library with a Maven plugin that provides database migrations, ORM and testing.
+
+Unlike, for instance, Hibernate + Liquibase, Celesta does not require one to keep in mind the schema design and migrations separately, and provides a fast and lightweight way to unit-test the code that works with the database.
+
+It can be used by adding a https://search.maven.org/search?q=a:celesta-parent[Maven dependency] to your project, and it also has its own https://github.com/CourseOrchestra/spring-boot-starter-celesta[Spring Boot starter].
+
+image::{img}/640px-Duke2-2.png[width=300]
+
+= Main Features
+
+. *Independence from database type.* Solutions created in Celesta can be transferred between all supported databases without lose of functionality.
+We support the following types of RDBMS and try to do it in the most transparent manner possible (the list is not final):
+ ** MS SQL Server,
+ ** Oracle,
+ ** Postgre SQL,
+ ** H2,
+ ** Firebird (beta).image::{img}/640px-Duke2-2.png[width=300]
+
+. *Database-first data structure design.* Celesta is used to design tables, views and connections between them first instead of classes, which are generated automatically.
+. *Database structure automatic migration* based on https://dzone.com/articles/trouble-free-database-migration-idempotence-and-co[idempotent DDL].
+. Simplified *unit testing*: quick tests of code that interacts with database, based on H2 database in-memory operation mode.
+. Automatically generated intermediary access layer for tables to create business logic based on the database structure.
+. Application interaction with an existing database (applications integration via database).
+. Permissions management.
+. Data changes auditing.
+
+//end::intro[]

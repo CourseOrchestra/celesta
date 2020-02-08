@@ -1,0 +1,66 @@
+= Celesta Key Terms Vocabulary
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+include::en/_common_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+:toc: left
+
+//image::{img}/
+
+//tag::basic_terms[]
+
+Score:: entirety of database schemas used in the given instance of Celesta, presented as <<CelestaSQL>> scripts.
+
+<<CelestaSQL>> script:: text file defining the following:
+. database schemas.
+Note: due to historical reasons, "schema" in Celesta is synonym to "grain".
+. tables, including information on
+.. fields and their types (a set of data types available in Celesta is selected in order to provide compatibility with all the supported databases)
+.. table primary key – it is necessary for operation of <<data_accessors_section,data access classes>>,
+.. `DEFAULT` field values,
+.. `NOT NULL` field restrictions,
+. indices,
+. sequences,
+. foreign keys,
+. views, including materialized views and functions.
+
+As a result of <<maven_plugin_section,Celesta Maven Plugin>> work the data access classes are generated on the basis of these scripts and SQL files themselves are copied to the resources of the compiled jar files.
+
+During its startup, Celesta automatically migrates the database structure to the state defined by the CelestaSQL scripts.
+
+Schema version tag:: version identifier in the form of a list of components separated with commas, explicitly provided by the developer in the <<version_tags,`CREATE GRAIN ... VERSION ...`>> command.
+It prevents unintentional automatic database downgrade at the launch of an older version CelestaSQL with a newer version database.
+Automatic database migration never takes place if the database version tag is higher than the grain script version tag or the versions do not align.
+
+Grain checksum:: automatically calculated script checksum.
+Helps to differentiate CelestaSQL scripts by their contents.
+CelestaSQL scripts with identical version tags might intentionally (during development) or unintentionally (due to developer's carelessness) have different contents.
+Database created automatically using CelestaSQL script not only has a version tag, but also contains a grain creation script checksum to give an opportunity to track the moment it was connected by an application with an altered database definition script.
+Simultaneous match of a version tag and a grain checksum is enough to continue operation without trying to upgrade the database structure. To simplify verification and ensure the algorithm transparency, the checksum consists of two values: the script file length (written down as a decimal integer) and its https://en.wikipedia.org/wiki/Cyclic_redundancy_check#CRC-32_algorithm[CRC32] (written down as eight hexadecimal integers).
+
+Celesta system grain:: Special grain with an unchangeable table structure.
+This grain's tables are used for the system's internal needs.
+At the same time, recording and editing the data in some of these tables are standard procedures during system configuration.
+See the "celesta" grain description in the <<system_tables>> section.
+
+Celesta.grains table:: The main system table of the database.
+Existence of the table indicates that Celesta is connected to the corresponding database, otherwise it will try to create one from scratch.
+The table contains information on state of grains in the database.
+Field description can be found in the <<celesta_grains_table,Celesta System Tables>> section.
+Information from this table is used extensively during <<startup_sequence,startup sequence>>.
+
+Grain startup sequence:: <<startup_sequence,Sequences>> executed by Celesta for every grain on startup.
+The database migrates automatically if necessary and possible.
+
+Automatic database migration:: Part of startup sequence, involving comparing the existing database structure to Celesta score set by grain creation scripts.
+After comparing, the differences are eliminated with automatically created and executed CREATE/ALTER SQL commands.
+
+Data access class (cursor):: Class, generated automatically on the basis of CelestaSQL script, used for interaction with table, view and sequence data.
+
+//end::basic_terms[]
+

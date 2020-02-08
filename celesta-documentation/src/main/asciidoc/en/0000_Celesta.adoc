@@ -1,0 +1,133 @@
+= Celesta User Manual
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+include::en/_common_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+:toc: left
+
+:numbered!:
+
+== What is Celesta?
+
+include::en/1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
+
+:numbered:
+
+== Part 1. Quick Start
+
+=== Demo
+
+include::en/1012_demo.adoc[leveloffset=+2, tag="demo"]
+
+== Part 2. Celesta Technical Details and Setup
+
+=== Key Term Vocabulary
+
+[[celesta_vocabulary]]
+include::en/1015_vocabulary.adoc[leveloffset=+2, tag="basic_terms"]
+
+=== Maven Plugin
+
+[[maven_plugin_section]]
+include::en/1013_maven_plugin.adoc[leveloffset=+2, tag="maven_plugin"]
+
+=== Celesta Startup Operations
+
+[[startup_sequence]]
+include::en/1020_celesta_start.adoc[leveloffset=+2, tag="celesta_start"]
+
+[[basic_settings_section]]
+=== Basic Settings
+
+include::en/1030_basic_settings.adoc[leveloffset=+2, tag="basic_settings"]
+
+[[system_tables]]
+=== System Tables
+
+include::en/1040_system_tables.adoc[leveloffset=+2, tag="system_tables"]
+
+== Part 3. Designing Databases Using Celesta
+
+[[CelestaSQL]]
+=== CelestaSQL
+
+include::en/1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
+
+[[CelestaDoc]]
+=== CelestaDoc
+
+include::en/1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
+
+== Part 4. Creating and Testing Data Access and Modification Code
+
+=== Call Context
+
+include::en/1070_call_context.adoc[leveloffset=+2, tag="call_context"]
+
+[[data_accessors_section]]
+=== Working with Data Using Data Access Classes (Cursors)
+
+include::en/1080_classes.adoc[leveloffset=+2, tag="classes"]
+
+==== Permissions Management and Change Logging
+include::en/1088_security_logging.adoc[leveloffset=+2, tag="security_logging"]
+
+[[BLOB_fields]]
+==== BLOB Fields
+
+include::en/1090_blob.adoc[leveloffset=+2, tag="blob"]
+
+[[Option_fields]]
+==== Option Fields
+include::en/1100_option.adoc[leveloffset=+2, tag="option"]
+
+[[dynamic_access]]
+==== Dynamic Access to Data
+include::en/1102_dynamic.adoc[leveloffset=+2, tag="dynamic"]
+
+[[triggers_section]]
+=== Triggers
+include::en/1105_triggers.adoc[leveloffset=+2, tag="triggers"]
+
+[[xrec_section]]
+=== xRec Object
+include::en/1107_xrec.adoc[leveloffset=+2, tag="xrec"]
+
+
+[[Lost_updates_protection]]
+=== Lost Updates Prevention
+
+include::en/1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
+
+[[celestaunit_section]]
+=== CelestaUnit
+
+include::en/1130_celesta_unit.adoc[leveloffset=+2, tag="celesta_unit"]
+
+== Part 5. Working with Metadata
+
+[[Celesta_metadata]]
+=== Metadata
+
+include::en/1120_meta.adoc[leveloffset=+2, tag="meta"]
+
+== Appendix
+
+[[best_practices]]
+=== Best Practices
+include::en/2005_best_practices.adoc[leveloffset=+2, tag="best_practices"]
+
+[[RDBMS_peculiarities]]
+=== Notes on Using Supported RDBMS in Celesta
+
+include::en/2010_supported_rdbms.adoc[leveloffset=+2, tag="supported_rdbms"]
+
+[[DBSchema]]
+=== Celesta Database Design in DBSchema
+
+include::en/2020_dbschema.adoc[leveloffset=+2, tag="dbschema"]

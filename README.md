@@ -3,17 +3,17 @@
 [![Build Status](https://ci.corchestra.ru/buildStatus/icon?job=celesta/dev)](https://ci.corchestra.ru/job/celesta/job/dev/)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/ru.curs/celesta-parent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/ru.curs/celesta-parent)
 
+<img align="left" src="celesta_duke.png" width="200px">
+
 Celesta is a set of tools for Java backend developers who want easier ways to deliver RDBMS-backed software. 
 
-This is a Java library with Maven plugin that provide database migrations, ORM and testing. 
+This is a Java library with a Maven plugin that provides database migrations, ORM and testing. 
 
-Unlike e. g. Hibernate + Liquibase, Celesta does not require one to keep in mind the schema design and migrations separately, and provides the fast and lightweight way to unit-test the code that works with the database.
+Unlike e. g. Hibernate + Liquibase, Celesta does not require one to keep in mind the schema design and migrations separately, and provides a fast and lightweight way to unit-test the code that works with the database.
 
-<img src="celesta_duke.png" width="200px">
+## Documentation
 
-## Links to Documentation
-
-* [User Guide (in Russian)](https://courseorchestra.github.io/celesta/)
+* User Guide: [English](https://courseorchestra.github.io/celesta/en) / [Russian](https://courseorchestra.github.io/celesta/ru)
 
 * [JavaDoc](https://courseorchestra.github.io/celesta/apidocs)
 

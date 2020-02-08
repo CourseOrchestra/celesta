@@ -1,0 +1,231 @@
+= Celesta System Tables
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+include::en/_common_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::system_tables[]
+
+== Structure of `celesta` System Schema
+
+Celesta system adds to the database not only user-defined tables and schemas, but also tables in its own `celesta` system schema, the structure of which is presented in a diagram below.
+
+The structure (including the fields) of the Celesta system grain tables is unchangeable and access to data in them is provided by built-in {apidocs}ru/curs/celesta/syscursors/package-summary.html[ru.curs.celesta.syscursors] package classes.
+At the same time, changing data in these tables is part of standard system configuration.
+
+System tables are used to:
+
+* Coordinate automatic migration (`grains` table).
+* Manage the access permissions to tables and views (`permissions`, `roles`, `userroles`).
+* Configure the logging system (`logsetup`) and log storage (`log`, `calllog`).
+
+include::../uml.adoc[tag="uml_systemtables"]
+
+Purpose of tables:
+
+celesta.grains:: List of grains including states.
+Managed automatically, manual changes by the solution developer are limited to setting the "recover" state to grains after failed attempts to upgrade automatically and deleting entries related to deleted grains.
+
+celesta.tables:: List of tables and views.
+Contents of this table automatically synchronize with the list of tables and views available in Celesta grains, the user should not interfere with the data in this table (the changes will be lost during the next synchronization anyway).
+Table type field indicates whether the entry is a table ("T") or a view ("V").
+
+celesta.roles:: List of celesta roles.
+Roles are added here and roles with system names "reader", "editor", etc. are stored here (see the <<access_rights_granting, Permissions Management>> section for more information on roles with system names).
+
+celesta.userroles:: Connections between user IDs (logins) and roles.
+Filled in by the administrator.
+
+celesta.permissions:: Permissions for roles to work with tables.
+Filled in by the administrator.
+
+celesta.logsetup:: Logging setup.
+Filled in by the administrator.
+
+celesta.log:: Changelog.
+New entries are automatically appended by the system each time the data is changed, but only for tables and actions specified in `celesta.logsetup`.
+
+celesta.calllog:: Method calls log.
+Records are written here by the system while in <<profiling_mode,profiling mode>>.
+
+[[celesta_grains_table]]
+== Celesta.grains Table
+
+This table is the vital Celesta system table as its contents manage database structure synchronization with the score at the system's launch.
+It contains the following fields:
+
+[cols="1, 1, 4",options="header"]
+|====
+^.^|Field name
+^.^|Field type
+^.^|Field value
+
+|`id`
+|`VARCHAR(30)`
+|grain ID
+
+|`version`
+|`VARCHAR(2000)`
+|grain version tag
+
+|`length`
+|`INT`
+|grain CelestaSQL script length in bytes
+
+|`checksum`
+|`VARCHAR(8)`
+|grain CelestaSQL script CRC32
+
+|`state`
+|`INT`
+a|grain state:
+
+* 0 – *ready* — the grain is deployed and ready (its version tag and checksum are entered in `version`, `length`, `checksum` fields).
+
+* 1 – *upgrading* — the grain is being created or upgraded by other Celesta applications connected to the database.
+
+* 2 – *error* — the latest autoupgrade attempt failed, the `message` field contains the error message.
+
+* 3 – *recover* (similar to absence of an entry in the `grains` table when the grain exists in the `score` folder) — the grain is missing or needs regeneration (for example, after an upgrade error).
+
+* 4 – *lock* — the grain does not need the structure autoupgrade under any circumstances.
+
+|`lastmodified`
+|`DATETIME`
+|date and time of the latest grain modification
+
+|`message`
+|`TEXT`
+|comment (for example, notification about an error during the latest failed autoupgrade)
+
+|====
+
+[[access_rights_granting]]
+== Permissions Management
+
+As the table structure shows, table access rights are granted to roles and are not meant to be directly granted to users.
+
+The `roleid` field contains the role identifier and `grainid` and `tablename` fields contain references to the tables.
+Flags are set in bit fields "r", "i", "m" and "d" if the rights are needed for reading, insertion, modification or deletion respectively.
+
+Special system role names are available: *reader* and *editor*, as well as roles in form of *<grain ID>.reader* and *<grain ID>.editor*.
+
+The *reader* role grants right to read all tables without any exceptions, the *<grain ID>.reader* (for example, "foo.reader") grants right to read all tables in the respective grain.
+
+The *editor* role grants full rights (to read, insert, modify and delete) to all tables.
+The *<grain ID>.editor* role (for example, "foo.editor") grants full rights to all tables in the respective grain.
+
+
+== Logging System
+
+Not only the access rights granting system is involved in any data modification via Celesta cursors, but also a modification logging system, which logs all changes to the *celesta.log* tables.
+In order to prevent the *celesta.log* table from being littered with potentially huge amounts of unnecessary data, the changes are logged only in the tables explicitly specified in the *celesta.logsetup* table.
+There is also an option to separately enable logging of entry inserts, modifications and deletions.
+
+In order to enable logging data changes made via Celesta system, it is necessary to enter the relevant settings in the  *celesta.logsetup* table.
+The "grainid" and "tablename" fields should contain a link to the table and flags are set in bit fields "i", "m" and "d" if it is needed to log insertion, modification and deletion respectively.
+
+The `celesta.log` table consists of the following fields:
+
+[cols="1, 1, 4",options="header"]
+|====
+^.^|Field ID
+^.^|Field type
+^.^|Field value
+
+|`entryno`
+|`INT`
+|autoincremented integer entry number in the log table
+
+|`entry_time`
+|`DATETIME`
+|entry time
+
+|`userid`
+|`VARCHAR(250)`
+|ID of the user making the change
+
+|`sessionid`
+|`VARCHAR(250)`
+|ID of the session during which the change is made
+
+|`grainid`
+|`VARCHAR(30)`
+|grain ID
+
+|`tablename`
+|`VARCHAR(30)`
+|table name
+
+|`action_type`
+|`VARCHAR(1)`
+|action type ("I" for insertion, "M" for modification, "D" for deletion)
+
+|`pkvalue1`
+|`VARCHAR(100)`
+|primary key first field value (if any, cast to the text type)
+
+|`pkvalue2`
+|`VARCHAR(100)`
+|primary key second field value (if any, cast to the text type)
+
+|`pkvalue3`
+|`VARCHAR(100)`
+|primary key third field value (if any, cast to the text type)
+
+|`oldvalues`
+|`VARCHAR(2000)`
+|old entry state (the fields are cast to the text type, the list is separated with commas in CSV format and the information is cropped to match the length of the field.
+Values are filled in for "M" and "D" actions
+
+|`newvalues`
+|`VARCHAR(2000)`
+|current entry state in the same format as the `oldvalues` field.
+Filled in for "M" and "I" actions
+
+|====
+
+[[profiling_mode]]
+== Profiling System
+
+Celesta can operate in a profiling mode for troubleshooting, which is enabled by a `setProfilemode(true)` mode of a  {apidocs}ru/curs/celesta/Celesta.html[`Celesta`] instance.
+
+Information on all procedure calls in profiling mode is entered in a calllog table consisting of the following fields:
+
+[cols="1, 1, 4",options="header"]
+|====
+^.^|Field name
+^.^|Field type
+^.^|Field value
+
+|`entryno`
+|`INT`
+|autoincremented integer entry number in the log table
+
+|`sessionid`
+|`VARCHAR(250)`
+|ID of the session during which the change is made
+
+|`userid`
+|`VARCHAR(250)`
+|ID of the user initiating the user session
+
+|`procname`
+|`VARCHAR(250)`
+|Executed procedure name
+
+|`starttime`
+|`DATETIME`
+|procedure execution start time
+
+|`duration`
+|`INT`
+|total procedure execution duration (in milliseconds)
+
+|====
+//end::system_tables[]

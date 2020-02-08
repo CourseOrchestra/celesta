@@ -1,0 +1,114 @@
+= Notes on Using Supported RDBMS in Celesta
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+include::en/_common_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::supported_rdbms[]
+
+The system supports MS SQL Server, Oracle, Postgre SQL, Firebird and H2 ensuring uniform work of any application written with Celesta with any of the supported RDBMS.
+
+Celesta solutions are easily transferable between different RDBMS, but each of them have their own configuration peculiarities.
+Besides, different Celesta features are implemented differently in different RDBMS.
+This section covers these issues.
+
+Correspondence between Celesta data types and RDBMS is given in the <<datatypes_mapping,Celesta-SQL Language: Data Types>>.
+
+image::images/Mssql.jpg[width=80,role="left"]
+== MS SQL Server
+
+=== Usage Features
+
+Versions lower than MS SQL Server 2011 do not support the `CREATE SEQUENCE` statement.
+
+image::images/Ora.jpg[width=80,role="left"]
+== Oracle
+
+=== Configuration Features
+
+*ORA-12705 Error: Cannot access NLS data files...* If an error "ORA-12705: Cannot access NLS data files or invalid environment specified" occurs when launching Celesta on Oracle Express Edition, the following parameter must be set in JVM arguments:
+
+[source]
+-Duser.country=US
+
+This is a common problem for the Oracle XE + JDBC and is relevant only for Oracle Express Edition, it is never encountered in other (production) Oracle Database versions.
+
+Minimal settings for USER access rights to the *Oracle 11g* database:
+
+[source,sql]
+GRANT
+	CONNECT,
+	RESOURCE,
+	CREATE TABLE,
+	CREATE PROCEDURE,
+	CREATE VIEW,
+	CREATE SEQUENCE,
+	CREATE TRIGGER,
+	SELECT ANY DICTIONARY
+	TO <USER>
+
+Some organizations do not grant the SELECT ANY DICTIONARY access right by default, which results in an error "ORA-00942: table or view does not exist" when deploying Celesta system grain.
+
+=== Implementation Features
+
+* Grain is a prefix in the table name spaced with an underscore symbol, and the Oracle limit for the table name length (30 characters) applies.
+Schema in Oracle is somewhat different from those in other RDMBS and creating schemas is linked to creating new users, but in practice administrators of Oracle enterprise database servers cannot grant rights to create new users to application.
+
+* Oracle by itself does not support the `FOREIGN KEY ... ON UPDATE/DELETE SET NULL` statement, so it is emulated using triggers.
+
+image::images/postgresql.svg[width=120,role="left"]
+== PostgreSQL
+
+=== Usage Features
+
+A problem with "uuid" type fields may occur when Celesta is used to access preexisting (and not created and updated in Celesta) database.
+Celesta does not support "uuid" data type but can work with it via VARCHAR(36) type fields.
+This does not lead to problems in MS SQL Server but for Celesta to work in Postgres it is necessary to explicitly define an operator to compare "varchar" to "uuid" and implicitly change types when assigning:
+
+[source,sql]
+CREATE OR REPLACE FUNCTION celesta.uuidequal(a1 uuid, a2 CHARACTER VARYING)
+  RETURNS BOOLEAN AS 'select a1::varchar = a2'
+  LANGUAGE SQL IMMUTABLE;
+CREATE OPERATOR = (
+    LEFTARG = uuid,
+    RIGHTARG = CHARACTER VARYING,
+    PROCEDURE = celesta.uuidequal
+);
+CREATE CAST (character varying AS uuid)
+    WITH  INOUT AS ASSIGNMENT;
+
+image::images/firebird.svg[width=120,role="left"]
+== Firebird
+
+=== Implementation Features
+
+* Grain is a prefix in the table name spaced with an underscore symbol. 
+Besides that, the limitation on the identifier length is active.
+This is because schemas as is do not exist in Firebird.
+
+* Firebird starts to support the `TIMESTAMP WITH TIMEZONE` data type only in the 4th version.
+As of February 2020, Firebird 4.0 is in beta.
+
+image::images/H2.png[width=120,role="left"]
+== H2
+
+=== Configuration Features
+
+* To simplify the in-memory database startup it is possible to add a `h2.in-memory=true` setting in the <<basic_settings_section,configuration settings>>.
+In this case the JDBC connection string as well as the user's login and password set by other settings is ignored.
+
+* Configuration settings have a `h2.referential.integrity=false(by default)/true` setting.
+The `false` values means that foreign key type limitations are going to be ignored when recording in the database.
+When enabled, these limitation are going to be proceeded just like in other RDBMS.
+To set this not in the in-memory database the user must have administrator rights (the "ADMIN" field in the "INFORMATION_SCHEMA.USERS" table). This setting activates only once on the application startup and to update it a restart is needed.
+
+=== Implementation Features
+
+* The 'recversion' field is controlled by a trigger written in Java which implements an https://www.h2database.com/javadoc/org/h2/api/Trigger.html[`org.h2.api.Trigger`] interface. H2 does not support triggers with logic in procedural SQL.
+
+//end::supported_rdbms[]

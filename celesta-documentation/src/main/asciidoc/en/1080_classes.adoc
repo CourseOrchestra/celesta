@@ -1,0 +1,652 @@
+= Working with Data Using Data Access Classes (Cursors)
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+include::en/_common_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::classes[]
+== Access Classes and Their Standard Methods
+
+For each table and view declared in CelestaSQL data access classes are generated.
+
+Each instance of a data access class (which are also going to be called "cursors") at each moment holds information about a single database record (row) and every row's field of the cursor has a corresponding object field.
+It is possible to move cursor across records taking into account filters and ordering.
+If a cursor is created from a table, it can also be used to insert, modify or delete data.
+View cursors only allow row navigation methods.
+
+include::../uml.adoc[tag="uml_cursors"]
+
+UML diagram illustrates data access class hierarchy.
+Hierarchy is based on a {apidocs}ru/curs/celesta/dbutils/BasicDataAccessor.html[`BasicDataAccessor`] class.
+Each cursor class inherits from the {apidocs}ru/curs/celesta/dbutils/BasicCursor.html[`BasicCursor`] class, {apidocs}ru/curs/celesta/dbutils/Sequence.html[`Sequence`] class inherits from the {apidocs}ru/curs/celesta/dbutils/BasicDataAccessor.html[`BasicDataAccessor`]:
+
+{apidocs}ru/curs/celesta/dbutils/Cursor.html[Cursor]:: Is used to work with tables.
+It inherits all `BasicCursor` methods and also adds a number of its own methods to allow data modification.
+
+{apidocs}ru/curs/celesta/dbutils/ViewCursor.html[ViewCursor]:: Is used to work with views.
+It does not add any own methods to `BasicCursor`.
+
+{apidocs}ru/curs/celesta/dbutils/MaterializedViewCursor.html[MaterializedViewCursor]:: Is used to work with materialized views.
+It inherits all `BasicCursor` methods and also adds a number of its own methods to make possible accessing data by the primary key.
+
+{apidocs}ru/curs/celesta/dbutils/ParameterizedViewCursor.html[ParameterizedViewCursor]::Iis used to work with functions (parameterized views).
+It does not add any own methods to `BasicCursor` but its constructor differs from the basic one.
+
+{apidocs}ru/curs/celesta/dbutils/ReadOnlyTableCursor.html[ReadOnlyTableCursor]:: Is used to work with tables declared "WITH READ ONLY" option.
+It does not add any own methods to `BasicCursor`.
+
+{apidocs}ru/curs/celesta/dbutils/Sequence.html[Sequence]:: Is used to work with sequences.
+It inherits all `BasicDataAccessor` class methods and adds a `nextValue` method.
+
+Below `Cursor` class methods are described, but the methods that are inherited from `BasicCursor` (and can be used when working with views and read-only tables) are marked with a {lupa} symbol.
+
+=== Cursor Fields' Metadata
+
+A `Columns` companion class is generated for each cursor class to participate in invocation of certain cursor's methods and to make it easier to obtain the information about available cursor's fields in the run time.
+Companion is an inner static class inside the cursor.
+For example, for `FooCursor` class the companion is `FooCursor.Columns`.
+
+Each cursor field has a corresponding method in a `Columns` class returning the <<Celesta_metadata,metadata>> of a corresponding column as illustrated in the diagram:
+
+include::../uml.adoc[tag="uml_cursormeta"]
+
+A corresponding instance of a `Columns` class is available in each cursor instance through a `public final Columns COLUMNS` field.
+In addition, the `Columns` class of each cursor can be instantiated independent of the cursor – its constructor has an {apidocs}ru/curs/celesta/ICelesta.html[`ICelesta`] parameter.
+
+Using code generated `Columns` class methods to get table field references ensures code integrity when changing data schema (for example, when deleting or renaming fields in the database).
+
+=== Cursor Constructor
+
+Constructors of each cursor require a `CallContext context` parameter which in turn is given to each service layer method.
+Context use allows to work with different system tables as part of a single transaction and then commit all changes in a unified manner.
+Context variable also contains information on the current user, which is used by logging and permission management systems.
+
+For classes inherited from `Cursor`, `ViewCursor`, `MaterializedViewCursor` and `ReadOnlyTableCursor` types the constructor can take the following form:
+
+[source, java]
+ACursor a = new ACursor(context);
+
+[[too_many_accessors_warning]]
+[WARNING]
+--
+Maximum number of cursors a single instance of `CallContext` can create is 1023.
+Exceeding the limit results in an error "Too many data accessors".
+
+This does not restrict sensible scenarios of working with data in the database and prevents JDBC resource leakage, for example if cursors are created in a loop.
+When creating cursor in a loop it must be closed explicitly.
+--
+
+[[limit_columns]]
+==== Limiting the Number of Columns Fetched
+
+Tables often have many defined fields, but only a few of them are needed for tasks at hand.
+There is a way to query only necessary column values from the database when creating cursors to prevent transferring unnecessary information between the database and the application server and increase performance.
+To do it, a list of fields for querying must be passed as a cursor's constructor optional "varargs" parameters.
+Fields excluded from the list take `null` values when the cursor navigates database records.
+
+Let us assume the database has `table1` filled with data:
+
+```sql
+create table table1 (
+  id int not null primary key,
+  numb int not null,
+  numb2 int,
+  varr varchar(2) not null
+);
+```
+
+Assume the developed solution does not need to select data from the "varr" column.
+In this case, to create a cursor it is possible to indicate the needed columns.
+Cursor creation will look as follows:
+
+```java
+//initiate companion object containing information on columns
+Table1Cursor.Columns columns = new Table1Cursor.Columns(context.getCelesta());
+//transfer a list of desired columns in additional arguments of the constructor
+Table1Cursor tableCursor = new Table1Cursor(context, columns.numb(), columns.numb2());
+```
+
+Now Celesta will not select `varr` columns when requesting data from the database `varr` column, and `varr` field of the `tableCursor` will always have a value of `null`.
+
+Peculiarities of limiting columns in a selection are:
+
+. Columns of a primary key always get into cursor from the database regardless of whether they are on the list of fields.
+It ensures correct operation of the cursor navigation methods when limiting columns.
+
+. Columns mentioned in a "group by" materialized view expression always get into cursor from the database.
+
+. When passing empty field list or if there is no list, all the columns are selected.
+
+. Use of <<BLOB_fields,`BLOB`>> columns does not change.
+By default, data from these fields is never read from database during navigation and this data can always be retrieved by calling a separate method.
+
+==== Passing Parameters to Functions (Parameterized Views)
+
+It is necessary to note that the  {apidocs}ru/curs/celesta/dbutils/ParameterizedViewCursor.html[`ParameterizedViewCursor`] cursor has its own version of a constructor that contains function arguments.
+
+Let us assume that there is a table and a function for selecting from it.
+
+[source, sql]
+CREATE table t1 (
+  id INT NOT NULL IDENTITY PRIMARY KEY,
+  f1 int,
+  f2 int,
+  f3 VARCHAR (2)
+);
+
+[source, sql]
+CREATE FUNCTION pView1(p int) AS
+  select sum (f1) as sumv, f3 as f3
+  from t1 as t1
+  where f2 = $p
+  group by f3;
+
+To create a cursor for a function with a parameter p = 5 the following code must be executed:
+
+```java
+PView1Cursor pView1 = new PView1Cursor(context, 5);
+```
+
+Passing parameters to a function can be combined with limiting the fetched fields set.
+In order to do it first it is necessary to pass the parameters corresponding to mandatory cursor arguments and then the list of fields for selection as "varargs" arguments.
+
+=== Changing Cursor Fields
+
+Cursor class have fields containing getters and setters for each declared table fields allowing to read and write information.
+For instance, if foo table is defined as follows:
+
+```sql
+CREATE TABLE foo (
+  a INT NOT NULL PRIMARY KEY,
+  b VARCHAR(10),
+  c DATETIME,
+  d BIT
+)
+```
+
+then to insert a record in it the following code can be utilized:
+
+```java
+FooCursor foo = new FooCursor(context);
+foo.setA(1);
+foo.setB("text");
+foo.setC(new GregorianCalendar(year, month, day).getTime());
+foo.insert();
+```
+
+Correspondence between CelestaSQL and Java data types is described in the <<datatypes_mapping,table>>.
+
+Note the `Date` class use when writing date value: this is a JDBC API restriction.
+If needed to fill the "с" field with current date and time the following expression can be utilized:
+
+```java
+foo.setC(new Date());
+```
+
+Changing the BLOB field values is described in the <<BLOB_fields,BLOB Fields>> section.
+
+Special `getRecversion()` attribute in the cursor exists for "recversion" system field value which is necessary for the <<Lost_updates_protection,lost update prevention>> mechanism.
+
+Every cursor has the following methods ({lupa} symbol indicates methods inherited from `BasicCursor` and usable when working with read-only views and tables):
+
+=== Cursor Closing
+
+* {lupa} *close()* — cursor closing (implements a `close` method of `java.io.Closeable` interface).
+This method frees all JDBC resources allocated during the cursors's existence.
+A navigation or update method invocation on a closed cursor causes an error.
+This method is not necessary to call since it is called automatically after closing `CallContext` on all cursors created with it.
+In general, good practice in programming is to create as few cursors as possible during the procedure and use them repeatedly.
+Still if a need arises to create more cursors, e. g. in a loop, one should use `close()` method at the moment the instance of a cursor is not needed.
+
+=== Record Navigation Methods
+
+* *tryGet(Object... values)* conducts searching for the record by given key fields and returns `true` if the record is found or `false` if the table contains no record with the given primary key.
+This method's arguments must specify primary key field values and number of arguments must match the number of primary key fields in the table.
+ATTENTION! This method does not account for any filters applied to the table.
+If needed to find a record while considering filters, use `[try]First` method.
+
+* *get(Object... values)* – same as `tryGet` but throws an exception if the record is not found.
+
+* {lupa} *navigate(command)* — moves around records relative to the current position.
+Returns `true` if the movement is successful and `false` if the record is not found.
+The `command` string can be an set of the following symbol commands in any order, executed consecutively until the record is found (or all commands are executed):
+
+** - (minus) — go to the first record matching the filter criteria,
+
+** + (plus) — go to the last record,
+
+** > — go to the next record relative to the current matching filter criteria,
+
+** < — go the the previous record,
+
+** = — update the current record if it matches current filter criteria.
+
+* {lupa} *tryFirst()* — same as `navigate('-')`.
+
+* {lupa} *first()* — same as `tryFirst()`, but throws an exception if the record is not found.
+
+* {lupa} *tryLast()* — same as `navigate('+')`.
+
+* {lupa} *last()* — same as `tryLast()`, but throws an exception if the record is not found.
+
+* {lupa} *next()* — same as `navigate('>')`.
+
+* {lupa} *previous()* — same as `navigate('<')`.
+
+* {lupa} *tryFindSet()* — opens a record set (`ResultSet`) and sets a cursor in its beginning.
+Returns `true` if the opened set is not empty and `false` if there are no records in the set.
+
+* {lupa} *findSet()* — same as `tryFindSet()`, but throws an exception if the movement has failed.
+
+* {lupa} *nextInSet()* — go to the next record in the current set.
+If the set has not been opened, calling this method equals calling `tryFindSet()`.
+Returns `true` if the movement is successful and `false` if the end of the set is reached.
+
+* {lupa} *iterator()* – returns an iterator allowing to perform a full iteration across the whole set of records.
+Implements the corresponding `java.lang.Iterable` interface method.
+For example, if `rec` variable contains an instance of a cursor, the full iteration using `iterate()` method can be performed as follows:
+
+[source, java]
+ for (FooCursor r: rec): {
+         /* the cycle contains everything
+          you want to do with records r */
+ }
+
+and it will be entirely similar to the following code:
+
+[source, java]
+if (cursor.tryFindSet()) {
+    while (cursor.nextInSet()) {
+        //cycle
+    }
+}
+
+[NOTE]
+====
+_What is the difference between `[try]First()` and `[try]FindSet()`?_:: The difference is the queries sent to the database. The `[try]First()` (and `navigate()`, `next()` and `last()`...) execute `SELECT TOP 1` kind of query, request a single record and immediately close the JDBC ResultSet.
+The `findSet()` method opens ResultSet and keeps it open so it's possible to traverse it with the `iterate()` method.
+
+_What is the difference between `navigate("=")` and `tryGet(getCurrentKeyValues())`?_:: The `navigate()` method accounts for current filters while `get()` does not.
+Record with the current primary key value might not get into the filter, so `navigate('=')` might return `false` when `tryGet(getCurrentKeyValues())` returns `true`.
+
+_What does `navigate("\=><")` mean?_:: This command prescribes the following algorithm: "Try to find the current record.
+If the record is found, exit and return `true`.
+If the record does not exist anymore (deleted) go forward.
+If the record is found, exit and return `true`.
+If there is nothing there, go back.
+If the record is found, exit and return `true`, if not – `false`.
+====
+
+=== Ranging and Filtering Methods
+
+[[set_range_usage]]
+* {lupa} *setRange(ColumnMeta<?> column)* – resets any filter in the field.
+
+* {lupa} *setRange(ColumnMeta<? super T> column, T value)* – sets a single-value range in the field.
+Passing `null` as an argument causes setting an 'IS NULL' filter in that field.
+
+* {lupa} *setRange(ColumnMeta<? super T> column, T valueFrom, T valueTo)* – sets range "from..to and including" in the field (at the SQL language level corresponds to a BETWEEN operator).
+It is not allowed to use `null` as an argument.
+
+* {lupa} *setFilter(ColumnMeta<?> column, String value)* – sets a filter in the field, filter expressions are described  <<setFilter_usage,below>>.
+
+[[set_complex_filter_usage]]
+* {lupa} *setComplexFilter(String value)* – sets a complex filter to the table.
+Corresponds to a `WHERE` condition for queries in CelestaSQL.
+
+* {lupa} *setIn(BasicCursor auxiliaryCursor)* – sets a filter with a nested query.
+`setIn` use is described <<setIn_usage,below>>.
+
+* {lupa} *limit(long skip, long limit)* – sets limits to the returned row range.
+Parameters must be non-negative integers.
+The `skip` parameter is the number of rows skipped before returning (`skip = 0` — start from the very beginning), the `limit` parameter is the maximum number of returned rows, where `limit = 0` indicates that *all* rows are returned.
+Call `limit(0, 0)` to reset limits to the returned row range.
+Limits set using the `limit()` method are not accounted for when calling the `count()` method.
+
+* {lupa} *orderBy(ColumnMeta<?>... columns)* — set sorting.
+Parameters are a set of fields for sorting.
+To specify ascending or descending sorting use an `asc()` or `desc()` method for respective fields.
+If the `asc()` or `desc()` method is not called explicitly, ascending sorting is performed.
+It is allowed to call *orderBy()* without arguments to reset all previous sortings to default.
+The field can be specified only in not more than one *orderBy(...)* method arguments.
+
+Keep in mind that Celesta does not operate unsorted data sets: Celesta data sets are always sorted by primary key fields by default.
+Celesta implicitly adds the primary key fields to every field set defined in `orderBy(...)`.
+For views and `WITH READ ONLY` tables lacking primary key fields, Celesta uses the *first field* for default sorting.
+All of this allows for deterministic iteration over cursor records.
+
+=== Initialization Methods
+
+* {lupa} *reset()* – resets filters and sorting without affecting the buffer field values.
+
+* {lupa} *clear()* – resets filters and sorting and performs a full buffer clearing, including key fields.
+
+* *init()* – clears all buffer fields except for key fields.
+
+=== Copying Methods
+
+* {lupa} *copyFiltersFrom(BasicCursor c)* – copies all filter values including limit (skip and limit) from the cursor of the same type to the current cursor.
+
+* {lupa} *copyOrderFrom(BasicCursor c)* – copies sorting settings from the cursor of the same type to the current cursor.
+
+* {lupa} *copyFieldsFrom(BasicCursor c)* – copies all fields from the cursor of the same type to the current cursor.
+
+=== Data Modification Methods
+
+* *insert()* – inserts the cursor contents to the database.
+If a record with a matching primary key already exists, an error occurs.
+
+* *tryInsert()* – inserts the cursor contents to the database, `true` if successful, `false` if a record with a matching primary key already exists.
+
+* *update()* – saves the cursor contents to the database, throws an exception in case a record with such key fields is not found.
+
+* *tryUpdate()* – saves the cursor contents to the database, `true` if successful, `false` if a record with a matching primary key does not exist.
+
+* *delete()* – deletes the current record.
+
+* *deleteAll()* – deletes all records matching the filter.
+Note: `onDelete` trigger is not called.
+
+=== Auxiliary Methods
+
+* {lupa} *canRead(), canInsert(), canModify(), canDelete()* – returns a boolean value indicating if the current session has rights to perform a corresponding operation.
+
+* {lupa} *count()* – returns a number of records in a filtered set.
+In particular, if there are no filters set for the cursor, it returns the total amount of records in the table.
+Record set limits set with a "limit()" method are not taken into account when calling the "count()" method.
+
+* {lupa} *callContext()* – returns the call context that was used to create this cursor.
+
+* {lupa} *meta()* – returns a table or view description (score, org.javacc.test.celesta.Table/View class instance).
+
+* {lupa} *asCSVLine()* – returns cursor field values as a CSV string.
+
+* *getMaxStrLen(ColumnMeta<String>)* – returns text field length (in characters).
+Necessary to determine length to which the sting sent to the database  must be cropped.
+Returns -1, if the field is defined as "TEXT".
+
+* *getXRec()* – returns a <<xrec_section,buffer copy>> containing values received during the latest reading from the database.
+
+[[try_method_notice]]
+Please note that `get`, `first`, `insert` and `update` methods have two versions: without a `try` prefix (simply `get(...)`, etc.) and with a `try` prefix (`tryGet(...)`, `tryFirst(...)`, etc.).
+
+Methods without a `try` prefix throw an exception if the database does not contain matching data to perform an action.
+For example, `first()` throws an exception if no records match the filter set for the cursor (or in a degenerated case the table is empty).
+The `get` and `update` methods throw an exception if the matching record does not exist and the `insert` method fails if a record with the given set of primary key values already exists.
+At the same time, methods with the `try` prefix do not throw exceptions, returning Boolean values instead, indicating that the respective operation was successful or failed.
+
+
+Good business logic code development practice is to use methods WITHOUT the `try` prefix whenever possible.
+It allows the code to be "self-testing" notifying about errors in logic and/or database data.
+For example, if during a procedure development we want the `idFoo` variable to contain an ID of an entry existing in the `foo` table when the application runs correctly, to get the record itself we should write `foo.get(idFoo)`.
+In this case, if the programme has a bug causing `idFoo` to be assigned with a non-existing ID, developers and users will be notified about it the moment the problem occurs.
+
+[WARNING]
+====
+"Hiding" possible issues by using `try`... methods when there is no real need to use them may complicate debugging and destabilize the code.
+====
+
+Certainly, in some situations it is necessary to find out if there is an entry with a certain ID. And `tryGet` method should be used ONLY in such cases.
+This is true for other `try` methods, their use is justified almost exclusively when it is explicitly intended to use the returned values of these methods.
+
+[[setFilter_usage]]
+== Usage of a setFilter Method
+
+In most cases cursor filtering by field value can be implemented using `setRange(...)` methods with two or three arguments.
+This method filters values by "field = value" condition or "field between value1 and value2" condition.
+
+When simple comparison and a "between" condition is not enough, `setFilter` method allows to apply a more complex condition to values in one of the cursor fields.
+First `setFilter` method argument is the field and the second is the filter expression.
+
+Correct filter expression can consist of:
+
+* numeric or text literals (depending on the field type),
+
+* a `null` literal,
+
+* logical operators &, | and !,
+
+* comparison operators <, > and ..,
+
+* grouping brackets ( and ),
+
+* special operators @ and % for text fields.
+
+Filter expression cannot be a `null` or an empty string, call `setRange()` method without any parameters to reset  filter for the field.
+Spaces between literals and operators are ignored.
+The filter expression is translated directly without any optimization into a condition for a `WHERE` expression in SQL language.
+
+=== Filter Expressions for BIT and BLOB Type Fields
+
+It is possible to use null and !null type filter expression for BIT and BLOB type fields, filtering "field is null" and "not (field is null)" values:
+
+include::../synfilter.adoc[tag="synf_bit_blob_filter"]
+
+Other types of filtering are meaningless for BLOB type. The filters for `true` and `false` BIT values can be set using a *setRange(...)* method.
+
+=== Filter Expressions for INTEGER and REAL Type Fields
+
+Filter expression for INTEGER and REAL type fields have the following syntax:
+
+include::../synfilter.adoc[tag="synf_filter"]
+
+Here
+
+* & — logical AND symbol,
+
+* | — logical OR symbol,
+
+* ! — logical NOT symbol,
+
+* (, ) — grouping brackets.
+
+The *term* expression for numeric fields uses the following syntax:
+
+include::../synfilter.adoc[tag="synf_numeric_term"]
+
+For example, filter expression
+
+----
+(10|<5)&>0
+----
+
+for a field named "foo" translates into a condition
+
+[source, sql]
+("foo" = 10 or "foo" < 5) and "foo" > 0
+
+Symbols ">" and "<" set conditions "strictly greater" and "strictly less" respectively and the usage of a symbol ".." allows to set conditions like "greater or equal" and "less or equal".
+So the filter
+
+----
+..0|5..7|10..
+----
+
+translates into a condition
+
+[source, sql]
+"foo" <= 0 or "foo" between 5 and 7 or "foo" >= 10
+
+(keep in mind that operator "between" in SQL sets range including bounds).
+
+[WARNING]
+====
+Note that filter expression requires explicit grouping with brackets of different logical operators, i.e. the following expressions are correct:
+
+----
+(10|<5)&>0
+10|(<5&>0)
+10|<5|>0
+----
+
+but this expression causes an error:
+
+----
+10|<5&>0
+----
+
+because it lacks grouping brackets explicitly indicating the sequence of calculating OR and AND operators.
+====
+
+
+=== Filter Expressions for DATETIME Type Fields
+
+Filter expressions for DATETIME type fields have the same syntax as numeric fields, but instead of *<numeric literal>* data numeral is used in 'YYYYMMDD' format (a single-quote, eight digits, a single-quote).
+So correct filter expressions for date field look as follows:
+
+[source, sql]
+'20131124'
+'20131124'..'20151211'|'20111111'
+(>'20131124'&..'20151211')|'20111111'..
+
+Each RDBMS operates date literals in its own way, but Celesta translates filter expressions into conditions correctly processed in each supported RDBMS.
+
+=== Filter Expressions for VARCHAR(n) and TEXT Type Fields
+
+Filter expressions for text fields resemble those for numeric fields.
+The only exception is that term expressions contain string literals in single-quotes instead of numerics.
+For example, in a text field the *'aa'|'bb'|'cc'* filter is correct filtering records with filtered field values equal "aa", "bb" or "cc".
+At the same time, if it is necessary to filter a text containing a single-quote, the quote should be doubled in its text literal (as is usual in SQL): to filter "John's company" values 'John''s company' has to be written.
+As with other field types, text fields can be filtered by null / not null value using null/!null terms.
+
+It is also possible to filter text field using a LIKE operator with a special symbol "%" meaning any combination of symbols and indicate that filter is independent from the register with a special symbol "@".
+
+To be precise, filter terms for text fields have the following syntax:
+
+include::../synfilter.adoc[tag="synf_text_term"]
+
+So the expression
+
+[source, sql]
+('aaa'&'bb')|(!'ddd'&!null)
+
+translates into
+
+[source, sql]
+(("foo" = 'aaa' and "foo" = 'bb') or (not ("foo" = 'ddd') and not ("foo" is null))
+
+(which is never yields true, obviously, – this and the next examples only illustrate filter translation into SQL).
+
+Expression
+
+[source, sql]
+@'q'|@..'cC'|@'Ff'..|@'a'..'b'|@%'5a'|'abc'%|! @ %'ef'%|null
+
+with symbols "@" translates into
+
+[source, sql]
+UPPER("foo") = 'Q' or UPPER("foo") <= 'CC' or UPPER("foo") >= 'FF' or UPPER("foo") between 'A' and 'B'
+or UPPER("foo") like '%5A' or "foo" like 'abc%' or not (UPPER("foo") like '%EF%') or "foo" is null
+
+[[setIn_usage]]
+== Usage of a setIn Method
+
+The *setFilter* method allows to filter records with their fields taking values from a predefined set.
+For example,
+
+[source, java]
+myCursor.setFilter(myCursor.COLUMNS.city_id(), "'MSK'|'LON'");
+
+filters records with "city code" equal to MSK or LON.
+A call
+
+[source, java]
+myCursor.setFilter(myCursor.COLUMNS.city_id(), "'M'%");
+
+filters records with city code starting with Latin M.
+
+But sometimes *setFilter* functionality is not enough: what if records have to be filtered by cities located in a certain region or country?
+Here is one of the ways to solve this problem: filter city catalogue by `city.setRange(city.COLUMNS.country_id(), "RUS")`, then upload the full list of these cities IDs from the database to the memory, group them in a single filter string separated by pipes and apply this filter to another cursor.
+Surely this is not an optimal solution if there are too many records matching the filter: it will result in excessive data transmission over the network and a overly long SQL query to the corresponding table.
+
+In this case, a `setIn` method is used, allowing to set a filter with an auxiliary query for the chosen field set.
+It is available for `Cursor` and `ViewCursor` subclasses.
+
+The general schema of the `setIn` method operation is the following:
+
+1. set filters to the target and auxiliary cursors (in the example above `myCursor` is target and `city` is auxiliary);
+2. couple the fields between target and auxiliary cursors.
+
+Coupling is done with a {apidocs}ru/curs/celesta/dbutils/filter/value/FieldsLookup.html[`FieldsLookup`] class, returned as a target cursor `setIn` method result.
+The `setIn` method receives the auxiliary cursor used to look for data intersection as a single argument.
+Preparing the target cursor, gathering pairs of columns and further setting the filter is done this way:
+
+[source, java]
+TargetCursor a = new TargetCursor(context);
+AuxiliaryCursor b = new AuxiliaryCursor(context);
+b.setRange(b.COLUMNS.foo(), "bar");
+a.setIn(b)
+     .add(a.COLUMNS.a1(), b.COLUMNS.b1())
+     .add(a.COLUMNS.a2(), b.COLUMNS.b2());
+
+For this example, to access the `a` cursor records PostgreSQL will generate the following SQL expression:
+
+[source, sql]
+SELECT ... FROM Target WHERE ( a1, a2 ) IN (SELECT b1, b2 FROM Auxiliary WHERE Auxiliary.foo = 'bar' )
+
+Any number of auxiliary cursors can be attached to the target using the `FieldsLookup` class `and` method.
+Auxiliary cursors will not interfere with each other.
+An example for setting several auxiliary cursors is given below:
+
+[source, java]
+TargetCursor a = new TargetCursor(context);
+a.setRange(a.COLUMNS.afoo(), "aBar");
+AuxiliaryCursor b = new AuxiliaryCursor(context);
+b.setRange(b.COLUMNS.bFoo(), "bBar");
+Auxiliary2Cursor c = new Auxiliary2Cursor(context);
+c.setRange(c.COLUMNS.cFoo(), "cBar");
+a.setIn(b)
+     .add(a.COLUMNS.a1(), b.COLUMNS.b1())
+     .add(a.COLUMNS.a2(), b.COLUMNS.b2());
+.and(c)
+     .add(a.COLUMNS.a1(), c.COLUMNS.c1());
+
+For this example, to access the `a` cursor records in PostgreSQL Celesta will generate the following SQL expression:
+
+[source, sql]
+SELECT ...
+FROM Target
+WHERE aFoo = 'aBar'
+    AND ( a1, a2 ) IN (SELECT b1, b2 FROM Auxiliary WHERE Auxiliary.bFoo = 'bBar' )
+    AND (a1) IN (SELECT c1 FROM Auxiliary2 WHERE Auxiliary2.cFoo = 'cBar' )
+
+This filter has a set of restrictions, which, when violated, cause throwing the exceptions during the execution of  `FieldsLookup.add` and `BasicCursor.setIn` methods:
+
+* Data types in each pair of compared fields must fully match.
+
+* Each table must have an index containing all columns from compared column sets: in the example above the `Target` table must have an `I1(a1, a2,..)` index and the `Auxiliary` table – an `I2(b1, b2,...)` index.
+
+* For table cursors the corresponding indices should start with compared columns.
+In this example, if `I1(a1, a2,..)` and `I2(b1, b2,...)` indices are present, the following code throws an exception as `a2` and `b2` fields are not in the beginning of `I1` and `I2` indices:
+
+[source, java]
+a.setIn(b).add(a.CURSORS.a2(), b.CURSORS.b2());
+
+* The `FieldsLookup` class accepts only the cursors of the same origin, i.e. both cursors should be either table cursors or view cursors.
+
+
+== Sequence Class
+
+The {apidocs}ru/curs/celesta/dbutils/Sequence.html[Sequence] class allows to work with sequences.
+Unlike other access classes, during its code generation, a `Sequence` prefix is used instead of `Cursor`.
+Sequence class has a single `nextValue` method allowing to get the next sequence value as a `long` integer.
+
+Below is an example of using a `Sequence` access class:
+
+```sql
+CREATE SCHEMA sequences version '1.0';
+CREATE SEQUENCE idNumerator START WITH 3;
+```
+
+```java
+IdNumeratorSequence sq  = new IdNumeratorSequence(ctx);
+//prints the next value starting with 3.
+System.out.println(sq.nextValue());
+```
+
+//end::classes[]

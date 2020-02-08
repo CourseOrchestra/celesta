@@ -1,0 +1,10 @@
+:caution-caption: Caution
+:important-caption: Important
+:note-caption: Note
+:tip-caption: Tip
+:warning-caption: Warning
+:figure-caption: Figure
+:table-caption: Table
+:example-caption: Example
+:toc-title: Table of Contents
+:appendix-caption: Appendix

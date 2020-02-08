@@ -1,0 +1,63 @@
+= Metadata
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+include::en/_common_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::meta[]
+
+== Metadata and Dynamic Metadata Modification
+
+A {apidocs}ru/curs/celesta/Celesta.html[`Celesta`] class instance is available with a *getCelesta()* method of a `{apidocs}ru/curs/celesta/CallContext.html[CallContext] context` variable sent as an argument to every data processing procedure.
+
+The *getScore()* method provides the solution developer access to the system score built during parsing of CelestaSQL files.
+Score access is necessary to receive information on current database structure when executing business logic code, including metadata bound to database objects using <<CelestaDoc,CelestaDoc>>.
+
+Score objects are not immutable, current score state can be saved to CelestaSQL files using a {apidocs}ru/curs/celesta/score/GrainSaver.html[`GrainSaver`] class.
+
+Score mutability must be used to develop tools that can read and generate CelestaSQL, for example, for integration with database visual design tools.
+Changing the score during the Celesta run time is not allowed and may cause non-determinate system behaviour.
+
+== Score Composition
+
+The ({apidocs}ru/curs/celesta/score/Score.html[`Score`]) score is divided into ({apidocs}ru/curs/celesta/score/Grain.html[`Grain`]) grains consisting of ({apidocs}ru/curs/celesta/score/Table.html[`Table`]) tables,  ({apidocs}ru/curs/celesta/score/Index.html[`Index`]) indices and ({apidocs}ru/curs/celesta/score/View.html[`View`]) views.
+
+* Tables consist of columns (see {apidocs}ru/curs/celesta/score/Column.html[`Column`]) and contain foreign keys.
+
+* Indices belong to tables and contain their columns.
+
+* Views contain ({apidocs}ru/curs/celesta/score/ViewColumnMeta.html[`ViewColumnMeta`]) view columns that differ from table columns, but share some properties with them.
+
+A class diagram that describes the `Score` classes is presented below:
+
+include::../uml.adoc[tag="uml_metaclasses"]
+
+The {apidocs}ru/curs/celesta/score/ColumnMeta.html[`ColumnMeta<V>`] interface is basic for table and view columns (`V` type parameter corresponds to the Java type stored in the column value), which allows to determine the Celesta column data type, column nullability and <<CelestaDoc,CelestaDoc>> bound to it. 
+This interface is implemented by {apidocs}ru/curs/celesta/score/ViewColumnMeta.html[`ViewColumnMeta<V>`] class to describe view fields, and {apidocs}ru/curs/celesta/score/View.html[`Column<V>`] to describe table fields.
+
+The `Column<V>` class is abstract and has subclasses for six field types supported in Celesta:
+
+include::../uml.adoc[tag="uml_columnclasses"]
+
+== Score Modification
+
+Score modification is used only to develop CelestaSQL code generating tools.
+
+WARNING: Score modification when a Celesta-based application is running may cause non-determinate system behaviour.
+
+* To *create* new score objects constructors are used.
+Some links to other elements are passed as parameters, for example,  `IntegerColumn(table, name)` creates an integer field named `name` in the `table`.
+
+* To *remove* objects `delete()` methods are used defined in most of score classes.
+
+* Each {apidocs}ru/curs/celesta/score/NamedElement.html[`NamedElement`] subclass has `getCelestaDoc()` and `setCelestaDoc()` methods to read and set CelestaDoc documenting string.
+CelestaDoc comments are saved when dynamically modified Celesta score is saved to the file.
+
+* See the corresponding  {apidocs}ru/curs/celesta/score/package-summary.html[API Documentation] for information on work with score objects.
+
+//end::meta[]
