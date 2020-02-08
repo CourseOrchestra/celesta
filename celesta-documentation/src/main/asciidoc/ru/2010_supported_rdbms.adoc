@@ -91,7 +91,7 @@ image::images/firebird.svg[width=120,role="left"]
 Причина в том, что понятия «схема» в Firebird не существует.
 
 * Поддержка типа данных `TIMESTAMP WITH TIMEZONE`, необходимая для Celesta, появилась начиная только с 4-й версии.
-По состоянию на декабрь 2019 года версия Firebird 4.0 находится в статусе beta.
+По состоянию на февраль 2020 года версия Firebird 4.0 находится в статусе beta.
 
 image::images/H2.png[width=120,role="left"]
 == H2

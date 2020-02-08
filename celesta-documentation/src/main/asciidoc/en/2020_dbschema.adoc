@@ -13,15 +13,15 @@ include::en/_common_attributes.adoc[]
 == Synchronyzing Celesta Score and DBSchema Project
 
 https://dbschema.com/[DBSchema] is a convenient tool for database visual design.
-It is possible to fully simulate all Celesta information on the database structure (tables, fields, keys and indices) in DBSchema or to turn an existing score into a DBSchema.
+It is possible to fully simulate all Celesta information on the database structure (tables, fields, keys and indices) in DBSchema or to turn an existing Celesta score into a DBSchema diagram.
 
 image::{img}/800px-Dbschemascreen.png[{image-100-width}]
 
 === System Configuration
 
-Used software:
+Required software:
 
-. https://dbschema.com/[DBSchema] (proprietary programme).
+. https://dbschema.com/[DBSchema] (proprietary program).
 
 . https://github.com/courseorchestra/dbschemasync[`dbschemasync`] utility.
 Up-to-date version of the `dbschemasync` utility can be acquired https://artifactory.corchestra.ru/artifactory/list/libs-release-local/ru/curs/dbschemasync/[here].
@@ -62,32 +62,32 @@ Table options (`WITH (NO) VERSION CHECK`, `WITH READ ONLY`...) are in the "Stora
 
 image::{img}/Dbschemascreen4.png[{image-80-width}]
 
-To set a grain version in DBSchema it is necessary to modify an imaginary "stored procedure" with the same name as the grain (obviously, DBScema does not simulate the stored procedures for Celesta):
+To set a grain version in DBSchema it is necessary to modify a fake "stored procedure" with the same name as the grain (obviously, DBScema does not simulate the stored procedures for Celesta):
 
 image::{img}/Dbschemascreen2.png[{image-80-width}]
 
 == Creating CelestaSQL Scripts Based on the Structure of an Existing Database
 
 Everybody who need to create CelestaSQL scripts for an existing database are encouraged to use this technology.
-Other options (like uploading the SQL script from the database and its manual "clearing") proved to be much more labor intensive.
+Other options (like uploading the SQL script from the database and its manual "cleaning") proved to be much more labor intensive.
 
-DBSchema programme with an installed Celesta support helps here.
+DBSchema program with an installed Celesta support helps here.
 Here are the steps:
 
-. Connect DBSchema to the necessary database using a "Reverse Engineering" method, upload the required structure (at this stage it is possible to upload only the tables and references required in Celesta).
+. Connect DBSchema to the necessary database using a "Reverse Engineering" method, upload the required structure (at this stage it is possible to upload only the tables and foreign keys required in Celesta).
 Make sure you "took" all the tables you need, because at later steps you will have to "disconnect" the project from the database and it will not be possible to automatically acquire information about the tables.
 
 . Disconnect DBSchema from the database (offline) and change the database type from SQL Server to Celesta in the Project->Project Settings menu (DBSchema is expected to have a pre-installed add-on for synchronization with Celesta).
 DBSchema will open a window and offer to compare types.
 It is necessary to carefully set type correspondence for Celesta: for SQL Server, for example, `VARCHAR(MAX)` must be converted to `TEXT`, `UUID` to `VARCHAR(36)` and so on.
 
-. By pressing the OK button we get a DBSchema project oriented for Celesta.
+. By pressing the OK button we get a DBSchema project aimed at Celesta.
 At this moment it can be saved at a separate location: it is no longer connected to the source database.
-Still it is not a correct project as it lacks grain division, grains are not assigned declarations and have a lots of features foreign for Celesta.
+Still it is not a correct project as it lacks grain division, grains are not assigned declarations and there are a lot of features foreign for Celesta.
 At this stage grains (schemas) must be created manually and tables put in them.
 
 . The "schemasync.jar" utility will most likely cause error prompts if activated, because the project is still incorrect.
-So we need to use a Schema-->Generate Schema Script command to upload all tables in a single SQL file.
+So we need to use a Schema->Generate Schema Script command to save all tables in a single SQL file.
 The resulting script will be very similar to a Celesta script and it is easy to do finishing touches by hand, e.g. remove the functions Celesta does not support, divide the script into files, somehow fix the names exceeding 30 characters, etc.
 
 . It is time to try to launch Celesta with your scripts.

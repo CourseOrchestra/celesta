@@ -20,7 +20,7 @@ Work with these fields using cursors is different from work with other field typ
 . There is only one way to receive an instance of a BLOB class and assign it to a cursor field: by calling a `calc<field ID>()` method in the cursor.
 For example, if the BLOB field is named `foo`, the corresponding cursor method is named `calcfoo()` and the corresponding cursor field is assigned a value after this method is called.
 
-. Unlike fields of other types, when a record is read with `get()`, `next()` or other similar methods, BLOB field values are not fetched from the tatabease and always assigned with a `null` instead.
+. Unlike fields of other types, when a record is read with `get()`, `next()` or other similar methods, BLOB field values are not fetched from the database and are always assigned with a `null` instead.
 A `calc...()` method is called to read a BLOB field.
 If the cursor's primary key fields reference an existing record in the table, calling the `calc...()` causes reading BLOB contents from the database to RAM.
 This is why `calc...()` should only be called when it is intended to read or modify BLOB contents.
@@ -30,7 +30,7 @@ Methods for this objects allow to read and modify its contents and are described
 After modifying BLOB object contents, an `update()` or `insert()` method should be used.
 
 . If BLOB must be deleted from the database and a `NULL` value assigned to the corresponding table field, a `setNull()` BLOB object method is used and then `update()` method is called.
-Assigning a `null` value via a setter will not work, unlike with other field types, because the system will interpret it as if BLOB is not read from the batabase and `update()` will not change anything.
+Assigning a `null` value via a setter will not work, unlike with other field types, because the system will interpret it as if BLOB is not read from the database and `update()` will not change anything.
 
 {apidocs}ru/curs/celesta/dbutils/BLOB.html[`BLOB`] class methods:
 

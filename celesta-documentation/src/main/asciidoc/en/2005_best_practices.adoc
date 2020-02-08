@@ -1,4 +1,4 @@
-= Best Code Writing Practices in Celesta
+= Best Practices in Celesta
 :lang: ru
 :is-main-doc:
 include::_doc_general_attributes.adoc[]
@@ -17,16 +17,16 @@ These advises help avoid some common mistakes when writing code to work with RDB
 
 Cursor is an object containing JDBC PreparedStatements and ResultSets necessary to execute cursor methods.
 These resources must be closed after use.
-Besides, the cursors and the objects constituting its inner state are not threadsafe, so the cursor must not be stored as a dividable resource.
-Cursor closure, loosing a reference to it and transaction completion must normally happen simultaneously.
+Besides, the cursors and the objects constituting its inner state are not threadsafe, so the cursor must not be stored as a shared resource.
+Cursor closing, loosing a reference to it and transaction completion must normally happen simultaneously.
 
-Cursor life duration is limited by `CallContext` live duration it was created with.
+Cursor life cycle is enclosed into `CallContext` life cycle it was created with.
 Calling `close()` on `CallContext` results in closing all cursors created in that context, so normally it is not necessary to explicitly close cursors in the code.
 
-Still in some situations the cursor is created in an iteration, it must be closed explicitly.
+Still in some situations, when the cursor is created in an iteration, it must be closed explicitly.
 
-CallContext <<too_many_accessors_warning,does not allow to create more than 1023 cursors>> (otherwise it causes an error in the database).
-If a cursor can be created in an iteration, if must be closed (in the next point the code will be improved):
+CallContext <<too_many_accessors_warning,does not allow to create more than 1023 cursors>> (otherwise it throws an exception).
+If a cursor can be created in an iteration, it must be closed (in the next point the code will be improved):
 
 [cols="50a,50a",options=header]
 |===
@@ -67,7 +67,7 @@ void doSomethingElse(CallContext context) {
 == Avoid Creating Cursors in Iterations
 
 Opening and closing cursors in iterations results in multiple opening and closing JDBC PreparedStatements which is not optimal.
-The best solution is to design code where cursors are created in the beginning of the service method and then used repeatedly:
+The best solution is to design code where cursors are created in the beginning of the service method and then reused:
 
 [cols="50a,50a",options=header]
 |===
@@ -106,9 +106,9 @@ void doSomethingElse(FooCursor foo) {
 |===
 
 
-== Use the Limit for Fields in the Cursor
+== Limit the Set of the Columns Fetched by Cursor
 
-If the table being read has many fields, but only some of them are worked with, use the <<limit_columns,field range limit>> to speed it up.
+If the table being read has many columns, but only some of them are worked with, <<limit_columns,define the needed columns explicitly>> to speed it up.
 It can significantly reduce the amount of data transferred from the database.
 
 == Methods not Addressing the Database are Fast
@@ -149,16 +149,16 @@ Cursor methods can be divided in three categories:
 |===
 
 Calling methods of the first category does not result in sending any queries to the database.
-For example, `orderBy` does not range entries at the moment the call happens, it only forms the cursor state to be used for forming SQL queries to call second and third category queries.
+For example, `orderBy` does not range entries at the moment the call happens, it only forms the cursor state to be used for forming SQL queries during the second and third category methods execution.
 
 So the right pattern is to "prepare" the cursor as much as possible by setting all necessary limits using the first category methods before executing reading methods.
 
 
 == Understand the "get" Method Semantics
 
-The `get(...)` method extracts a single from the database by its known primary key.
-It is a reliably fast (because the primary key always has an index) and an often demanded operation in practice.
-The `get(...)` method _does not account for_ existence on the cursor of any filters, so in rare cases it is necessary to check if an entry with a known key is in the range set by certain current cursor filters, a `navigate("=")` method must be used.
+The `get(...)` method extracts a single record from the database by its known primary key.
+It is a reliably fast (because the primary key always has an index) and the most demanded operation in practice.
+The `get(...)` method _does not account for_ existence of any filters set for the cursor, so in rare cases when it is necessary to check if a record with a known key is in the range set by filters, a `navigate("=")` method must be used.
 
 == Do not Read before Deleting if not Necessary
 
@@ -187,8 +187,8 @@ foo.delete();
 
 == Do not Use "count()" Only to Determine if the Data Range is not Empty
 
-Common mistake is to check the range for emptiness using the`count()` method.
-Counting all the entries at the database to determine if there are any at all is a bad idea.
+Common mistake is to check the range for emptiness using the `count()` method.
+Counting all the records in the database only to determine if there are any at all is a bad idea.
 
 [cols="50a,50a",options=header]
 |===
@@ -212,9 +212,9 @@ if (fooCursor.tryFirst()) {
 |===
 
 
-== Use Ranging at the Database Level to Find Min./Max. Values
+== Use Sorting at the Database Level to Find Min./Max. Values
 
-If the search can be done in the database itself, better do that instead of sending the whole entry set to the application to search using its resources:
+If the search can be done in the database itself, better do that instead of sending the whole record set to the application to search using the application's resources:
 
 [cols="50a,50a",options=header]
 |===
@@ -242,7 +242,7 @@ There are four data filtering methods in Celesta, ranged from the simplest to th
 . `setComplexFilter`
 . `setIn`
 
-*Do not use more complex filters if the simpler one is enough!*
+*Do not use more complex filters if the simpler one suffice!*
 
 The <<set_range_usage,`setRange`>> method is applicable in most practical tasks to filter a field by a single value or a of range values:
 
@@ -293,8 +293,8 @@ Also `setRange` is preferred because its API allows to control types sent as arg
 
 The <<set_complex_filter_usage,`setComplexFilter`>> method allows to add "a piece of SQL" to a `WHERE` expression setting the cursor entry set.
 After any `setComplexFilter` call all JDBC `PreparedStatement` statements must be recreated, so as with `setFilter`, it is not efficient to call it in an iteration.
-Main use for this method is to set conditions between fields, for example: `a >= b`.
-In other cases `setRange`/`setFilter` should be applied.
+Main use for this method is to set conditions involving two or more fields, for example: `a >= b`.
+In other cases `setRange`/`setFilter` should be used.
 
 
 The <<setIn_usage,`setIn`>> method is instrumental in situations when the set of filtered values is determined dynamically from other data in the database.
@@ -306,8 +306,8 @@ In Celesta, usually the following is true: if a `setRange` method is called for 
 
 == Ensure Efficient Caching when Working in Iterations
 
-Data query iteration is a common pattern.
-In this case it is possible to significantly reduce the number of queries to the database and the increase speed by using the simplest cashing: there is no need to call `get` for the cursor if the requested value of the primary key already aligns with the one requested earlier:
+Querying data in iteration is a common pattern.
+It is possible to significantly reduce the number of queries to the database and the increase speed by using the simplest caching: there is no need to call `get` for the cursor if the requested value of the primary key already matches the one requested earlier:
 
 [source,java]
 ----
@@ -316,7 +316,7 @@ if (bar.getId() != c.getBarId())
 //use newly fetched or cached bar here...
 ----
 
-This idea can be developed in a very efficient pattern: it is possible to drastically reduce the number of queries for `bar` entries to the database by ranging the `c` cursor by the `barId` field:
+This idea can be developed in a very efficient pattern: it is possible to drastically reduce the number of queries for `bar` entries to the database by sorting the `c` cursor by the `barId` field:
 
 
 [cols="50a,50a",options=header]
@@ -357,20 +357,20 @@ for (FooCursor c: foo){
 == Do not Use "try" Methods Unless Necessary
 
 Many cursor methods have two versions: without a `try` prefix and with it.
-They act the same as far as processing speed is concerned, but from the perspective of code design (fail-fast approach) it is preferable to use methods without `try` if the returned Boolean value is not going to be used.
+They act the same as far as processing speed is concerned, but from the perspective of code design (fail-fast approach) it is preferable to use methods without `try` if the returned boolean value is not going to be used.
 See this <<try_method_notice,explained in the documentation>>.
 
 == Use Iteration instead of Navigation in Cycles
 
-Two groups of methods exists to move between entries in a cursor: navigation and iteration.
+Two groups of methods exists to move between records in a cursor: navigation and iteration.
 
-Navigation methods are `tryFirst()`, `next()`, `previous()` and `navigate(...)` which allow to move to a different entry according to specific rules.
+Navigation methods are `tryFirst()`, `next()`, `previous()` and `navigate(...)` which allow to move to a different record according to specific rules.
 
 Iteration methods are a `tryFindSet()` – `nextInSet()` pair and an `iterator()` method implementing the respective `java.lang.Iterable` interface method.
 
-Navigation methods send a single query to the database during each call so they should be utilized when only a single entry is needed.
+Navigation methods send a query to the database per each call so they should be utilized when only a single entry is needed.
 
-Iteration methods send queries and open JDBC `ResultSet` used for further movement between entries.
+Iteration methods send queries and open JDBC `ResultSet` used for further movement between records.
 
 [cols="50a,50a",options=header]
 |===

@@ -178,7 +178,7 @@ class MaterializedView {
 
 }
 
-interface ViewColumnMeta {
+class ViewColumnMeta {
 
 }
 
@@ -242,7 +242,7 @@ interface ColumnMeta{
  +getCelestaDoc(): String
 }
 
-interface ViewColumnMeta {
+class ViewColumnMeta {
  +getColumnType(): ViewColumnType
  +getLength(): int
 }

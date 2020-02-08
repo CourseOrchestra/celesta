@@ -1,4 +1,4 @@
-= Features of Using Supported RDBMS in Celesta
+= Notes on Using Supported RDBMS in Celesta
 :lang: ru
 :is-main-doc:
 include::_doc_general_attributes.adoc[]
@@ -11,11 +11,11 @@ include::en/_common_attributes.adoc[]
 
 //tag::supported_rdbms[]
 
-The system supports MS SQL Server, Oracle, Postgre SQL, Firebird and H2 ensuring transparency for the solution developers.
+The system supports MS SQL Server, Oracle, Postgre SQL, Firebird and H2 ensuring uniform work of any application written with Celesta with any of the supported RDBMS.
 
-Celesta solutions are easily transferable between different supported RDBMS, but each of them have their own configuration features.
-Besides, different Celesta functions in different RDBMS are implemented differently.
-This section covers those features.
+Celesta solutions are easily transferable between different RDBMS, but each of them have their own configuration peculiarities.
+Besides, different Celesta features are implemented differently in different RDBMS.
+This section covers these issues.
 
 Correspondence between Celesta data types and RDBMS is given in the <<datatypes_mapping,Celesta-SQL Language: Data Types>>.
 
@@ -31,12 +31,12 @@ image::images/Ora.jpg[width=80,role="left"]
 
 === Configuration Features
 
-*ORA-12705 Error: Cannot access NLS data files...* If when launching Celesta on Oracle Express Edition an error occurs "ORA-12705: Cannot access NLS data files or invalid environment specified", the following attribute must be set in JVM arguments:
+*ORA-12705 Error: Cannot access NLS data files...* If an error "ORA-12705: Cannot access NLS data files or invalid environment specified" occurs when launching Celesta on Oracle Express Edition, the following parameter must be set in JVM arguments:
 
 [source]
 -Duser.country=US
 
-This is a common problem for the Oracle XE + JDBC pair and is relevant only for Oracle Express Edition, it is never encountered in other (production) Oracle Database versions.
+This is a common problem for the Oracle XE + JDBC and is relevant only for Oracle Express Edition, it is never encountered in other (production) Oracle Database versions.
 
 Minimal settings for USER access rights to the *Oracle 11g* database:
 
@@ -57,7 +57,7 @@ Some organizations do not grant the SELECT ANY DICTIONARY access right by defaul
 === Implementation Features
 
 * Grain is a prefix in the table name spaced with an underscore symbol, and the Oracle limit for the table name length (30 characters) applies.
-Schema in Oracle is somewhat different from those in other RDMBS and creating schemas is linked to creating new users, but in practice administrators of Oracle-servers storing industrial data cannot be granted rights to create new users.
+Schema in Oracle is somewhat different from those in other RDMBS and creating schemas is linked to creating new users, but in practice administrators of Oracle enterprise database servers cannot grant rights to create new users to application.
 
 * Oracle by itself does not support the `FOREIGN KEY ... ON UPDATE/DELETE SET NULL` statement, so it is emulated using triggers.
 
@@ -67,7 +67,7 @@ image::images/postgresql.svg[width=120,role="left"]
 === Usage Features
 
 A problem with "uuid" type fields may occur when Celesta is used to access preexisting (and not created and updated in Celesta) database.
-Celesta does not support "uuid" type data but can work with it via VARCHAR(36) type fields.
+Celesta does not support "uuid" data type but can work with it via VARCHAR(36) type fields.
 This does not lead to problems in MS SQL Server but for Celesta to work in Postgres it is necessary to explicitly define an operator to compare "varchar" to "uuid" and implicitly change types when assigning:
 
 [source,sql]
@@ -87,11 +87,12 @@ image::images/firebird.svg[width=120,role="left"]
 
 === Implementation Features
 
-* Grain is a prefix in the table name spaced with an underscore symbol, but the limitation is active.
+* Grain is a prefix in the table name spaced with an underscore symbol. 
+Besides that, the limitation on the identifier length is active.
 This is because schemas as is do not exist in Firebird.
 
 * Firebird starts to support the `TIMESTAMP WITH TIMEZONE` data type only in the 4th version.
-As of December 2019, Firebird 4.0 is in beta.
+As of February 2020, Firebird 4.0 is in beta.
 
 image::images/H2.png[width=120,role="left"]
 == H2
@@ -108,6 +109,6 @@ To set this not in the in-memory database the user must have administrator right
 
 === Implementation Features
 
-* The 'recversion' field is controlled by a trigger in Java which implements an https://www.h2database.com/javadoc/org/h2/api/Trigger.html[`org.h2.api.Trigger`] interface. H2 does not support triggers with logic in procedural SQL.
+* The 'recversion' field is controlled by a trigger written in Java which implements an https://www.h2database.com/javadoc/org/h2/api/Trigger.html[`org.h2.api.Trigger`] interface. H2 does not support triggers with logic in procedural SQL.
 
 //end::supported_rdbms[]

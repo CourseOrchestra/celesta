@@ -36,7 +36,7 @@ A JUnit5 dependency must also be added to the test scope of the project (for exa
 
 == Usage Example
 
-The easiest way to use it is to add a {apidocs}ru/curs/celestaunit/CelestaTest.html[`@CelestaTest`] annotation to the test class and use {apidocs}ru/curs/celesta/CallContest.html[`CallContext`] parameters in tests:
+The easiest way to use it is to add a {apidocs}ru/curs/celestaunit/CelestaTest.html[`@CelestaTest`] annotation to the test class and use {apidocs}ru/curs/celesta/CallContext.html[`CallContext`] parameters in tests:
 
 ```java
 /*CelestaTest annotation plugs in a JUnit5 extension class ru.curs.celestaunit.CelestaUnitExtension,
@@ -63,7 +63,7 @@ public class DocumentServiceTest {
 ```
 
 In this way every test can receive an active `CallContext` as a parameter.
-This context is generated based on H2 database, to which a Celesta score is deployed and can be used to create cursors.
+This context is generated basehttp://url[text]d on H2 database, to which a Celesta score is deployed and can be used to create cursors.
 
 == Changing CelestaUnit Default Settings
 
