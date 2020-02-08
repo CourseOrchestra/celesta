@@ -303,8 +303,8 @@ Corresponds to a `WHERE` condition for queries in CelestaSQL.
 `setIn` use is described <<setIn_usage,below>>.
 
 * {lupa} *limit(long skip, long limit)* – sets limits to the returned row range.
-Attributes must be non-negative integers.
-The `skip` attribute indicates the number of rows skipped before returning (`skip = 0` — start from the very beginning), `limit` — maximum number of returned rows, where `limit = 0` indicates that *all* rows are returned.
+Parameters must be non-negative integers.
+The `skip` parameter is the number of rows skipped before returning (`skip = 0` — start from the very beginning), the `limit` parameter is the maximum number of returned rows, where `limit = 0` indicates that *all* rows are returned.
 Call `limit(0, 0)` to reset limits to the returned row range.
 Limits set using the `limit()` method are not accounted for when calling the `count()` method.
 

@@ -40,7 +40,7 @@ If syntax errors occur or CelestaSQL scripts are not consistent, the system star
 == Automatic Database Migration
 
 At this stage the application server connects to the database and checks the existence of the `celesta.grains` system table.
-If the table does not exist, it is created automatically (via `CREATE` command), but only in the following cases: 1) the database is completely empty 2) `force.dbinitialize` attribute is set (to prevent "corruption" of existing non-empty databases if Celesta connects to them by mistake).
+If the table does not exist, it is created automatically (via `CREATE` command), but only in the following cases: 1) the database is completely empty 2) `force.dbinitialize` parameter is set (to prevent "corruption" of existing non-empty databases if Celesta connects to them by mistake).
 If an error occurs during celesta.grains table existence check / creation, a fatal error is generated and the system does not launch.
 
 === Determining if the Automatic Migration is Needed for a Grain (Schema)

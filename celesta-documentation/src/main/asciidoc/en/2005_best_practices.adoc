@@ -250,7 +250,7 @@ The <<set_range_usage,`setRange`>> method is applicable in most practical tasks 
 * `cursor.setRange(cursor.COLUMNS.foo(), from, to)` creates a query in a `WHERE foo BETWEEN from AND to` format.
 
 [NOTE]
-`cursor.setRange(cursor.COLUMNS.foo())` (no attributes) removes a filter for the “foo” field created earlier by `setRange` or `setFilter`.
+`cursor.setRange(cursor.COLUMNS.foo())` (no parameters) removes a filter for the “foo” field created earlier by `setRange` or `setFilter`.
 
 The <<setFilter_usage,`setFilter`>> method is used in rare cases when a field value range to be filtered needs to be set as a complex expression.
 A single field can have either a filter set by `setRange` or by `setFilter`, so calling these methods for the same field "replaces" the previously set filter.

@@ -87,7 +87,7 @@ The mode is used mostly for automatic testing.
 |`false`
 
 |`h2.port`
-|When the value is an integer and `h2.in-memory` is set to `true`, the H2 base launches as a server at the specified port.
+|When the value is an integer and `h2.in-memory` is set to `true`, the H2 database launches as a server at the specified port.
 This mode allows external applications to connect to the H2 database and read and modify the data.
 JDBC connection parameters are ignored.
 The mode is used mostly for UI and acceptance automatic testing.

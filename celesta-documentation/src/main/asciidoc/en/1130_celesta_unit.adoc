@@ -54,7 +54,7 @@ public class DocumentServiceTest {
     void documentIsPutToDb(CallContext context) throws ParseException {
         /*Call the service*/
         srv.postOrder(context, ...);
-        /*Check if the data got to the base*/
+        /*Check if the data got to the database*/
         OrderHeaderCursor header = new OrderHeaderCursor(context);
         header.tryFirst();
         assertEquals("no1", header.getId());

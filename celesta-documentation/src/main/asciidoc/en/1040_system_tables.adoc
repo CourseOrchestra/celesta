@@ -89,7 +89,7 @@ a|grain state:
 
 * 1 – *upgrading* — the grain is being created or upgraded by other Celesta applications connected to the database.
 
-* 2 – *error* — the last autoupgrade attempt failed, the `message` field contains the error message.
+* 2 – *error* — the latest autoupgrade attempt failed, the `message` field contains the error message.
 
 * 3 – *recover* (similar to absence of an entry in the `grains` table when the grain exists in the `score` folder) — the grain is missing or needs regeneration (for example, after an upgrade error).
 
