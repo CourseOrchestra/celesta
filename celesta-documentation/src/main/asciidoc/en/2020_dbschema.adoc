@@ -95,7 +95,7 @@ The resulting script will be very similar to a Celesta script and it is easy to 
 . If you want to further use DBSchema, it is recommended to use the "schemasync.jar" to link to a completely empty DBSchema project (you can delete the intermediate DBSchema project), but only when Celesta "agrees" to work with your script.
 This is because the "schemasync.jar" utility incorporates a Celesta SQL script parser and it cannot process what Celesta itself cannot process.
 
-== Uploading to PlantUML
+== Export to PlantUML
 
 On the start of `dbschemasync` in convertation mode from DBSchema to score, the third command line option `-adoc` simultaneously generates diagrams in https://plantuml.com[PlantUML] format for each DBSchema digram.
 Diagram file names match names of DBSchema sheets with diagrams.
