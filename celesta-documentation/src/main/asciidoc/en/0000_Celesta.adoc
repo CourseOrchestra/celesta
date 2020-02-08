@@ -100,7 +100,7 @@ include::en/1107_xrec.adoc[leveloffset=+2, tag="xrec"]
 
 
 [[Lost_updates_protection]]
-=== Lost Update Prevention
+=== Lost Updates Prevention
 
 include::en/1110_lost_updates.adoc[leveloffset=+2, tag="lost_updates"]
 
