@@ -10,11 +10,11 @@ include::en/_common_attributes.adoc[]
 :source-highlighter: highlightjs
 
 //tag::option[]
-Often fields in relational databases can receive only a few values from a limited list.
-For example, the "state" field may receive only "new", "processing", "finished" or "error" values and nothing more.
+Often fields in relational databases can be assigned only a few values from a limited list.
+For example, the "state" field may have only "new", "processing", "finished" or "error" values and nothing else.
 
-It is not feasible to create a separate reference tables or foreign keys since the list is limited.
-Often integer fields and assigning specific "meaning" to integer values may help optimize table size and speed up processing.
+It is not feasible to create a separate reference tables or foreign keys since the list contains only a few values.
+Often using integer values with specific "meaning" helps to optimize table size and speed up processing.
 Like this:
 
 * 0 – new;
@@ -27,7 +27,7 @@ Like this:
 
 Celesta supports simplified work with such fields.
 
-To declare that the field is only allowed to receive values from a certain list, an "option" property is set in an integer or text <<CelestaDoc,CelestaDoc>> field.
+To declare that the field is only allowed to have values from a certain list, an `option` property is set in an integer or text <<CelestaDoc,CelestaDoc>> field.
 For example:
 
 [source, sql]
@@ -40,9 +40,9 @@ create table foo
   {option: [created, closed]*/
   state2 varchar(6)
 
-When compiling data access class Celesta reads the "option" property and generates auxiliary code to simplify using values from the list.
+When compiling data access class Celesta reads the `option` property and generates auxiliary code to facilitate using values from the list.
 
-For example, two auxiliary classes are created automatically in the "fooCursor" class for our foo table:
+For example, two auxiliary classes are created automatically in the `fooCursor` class for our `foo` table:
 
 [source, java]
 public static final class State {

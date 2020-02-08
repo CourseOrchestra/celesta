@@ -1,4 +1,4 @@
-= Access Rights Granting and Change Logging
+= Permissions Management and Change Logging
 :lang: ru
 :is-main-doc:
 include::_doc_general_attributes.adoc[]
@@ -11,9 +11,9 @@ include::en/_common_attributes.adoc[]
 
 //tag::security_logging[]
 
-Working with data using data access classes not only allows to write universal code independent of RDBMS, but also to get around the issue of centralized granting the rights to access tables and log changes.
+Working with data using data access classes not only allows to write universal RDBMS-agnostic code, but also to get around the issues of centralized permissions management and data changes logging.
 
-Calling some of the methods requires users to have corresponding permissions for tables, set in system tables `celesta.userroles` and `celesta.permissions`, otherwise an  {apidocs}ru/curs/celesta/PermissionDeniedException.html[`PermissionDeniedException`] exception occurs with a prompt "There is no ... permission for user ... on object ...".
+Calling some of the methods requires users to have corresponding permissions for tables, set in system tables `celesta.userroles` and `celesta.permissions`, otherwise a  {apidocs}ru/curs/celesta/PermissionDeniedException.html[`PermissionDeniedException`] exception occurs with a message "There is no ... permission for user ... on object ...".
 
 If tables change logging is set up in the `celesta.logsetup` table, calling certain methods will result in creating entries in the `celesta.log` table.
 
@@ -31,36 +31,36 @@ If tables change logging is set up in the `celesta.logsetup` table, calling cert
 
 |`[try]insert()`
 |insert permission (i)
-a|logged if the "i" box is checked.
+a|logged if the "i" flag is set.
 
 * `oldvalues` – empty value.
 
-* `newvalues` – inserted entry.
+* `newvalues` – inserted record.
 
 |`[try]update()`
 |modification permission (m)
-a|logged if the "m" box is checked.
+a|logged if the "m" flag is set.
 
-* `oldvalues` – entry value before modification.
+* `oldvalues` – record field values before modification.
 
-* `newvalues` – entry value after modification.
+* `newvalues` – record field values after modification.
 
 |`delete[All]()`
 |deletion permission (d)
-a|`delete()` is logged if the "d" box is checked.
+a|`delete()` is logged if the "d" flag is set.
 
-* `oldvalues` – entry value before deletion.
+* `oldvalues` – record field values before deletion.
 
 * `newvalues` – empty value.
 
 |====
 
-WARNING: `deleteAll()` is not logged and triggers are not executed.
+WARNING: `deleteAll()` is not logged and triggers for this method are not executed.
 
 Other methods do not require table access rights and calling them is not logged.
 I.e. it is possible to define a cursor, set its filters and even count the number of entries meeting its conditions with a `count()` method without even a permission to read the table.
 
-It is up to the developer to decide to use access rights granting mechanism.
-If these methods are not used, their potential implementation results in a minimal performance overhead.
+It is up to the developer to decide whether to use access permission management and logging mechanism or not.
+If these features are not used, the potential performance overhead is minimized.
 
 //end::security_logging[]

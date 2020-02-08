@@ -11,11 +11,13 @@ include::en/_common_attributes.adoc[]
 
 //tag::triggers[]
 
-Trigger is a function, which is written by the solution developer, accepts as arguments cursor instances attached to the cursor class and automatically called during entry insertion, deletion and modification.
-Trigger looks like this: https://docs.oracle.com/javase/8/docs/api/index.html?java/util/function/Consumer.html[`Consumer<? super YourCursor>`].
+Trigger is a (lambda) function, which is written by the solution developer.
+It accepts a cursor instance as an argument and is attached to the cursor class.
+It is automatically called during record insertion, deletion and modification.
+Trigger type looks like this: https://docs.oracle.com/javase/8/docs/api/index.html?java/util/function/Consumer.html[`Consumer<? super YourCursor>`].
 
-When "insert()", "update()" or "delete()" actions are performed, the system calls certain solution developer-defined pre- and post-triggers (performed, respectively, before and after modifying the data in the database).
-This means there are only six trigger types:
+When `insert()`, `update()` or `delete()` actions are performed, the system calls certain solution developer-defined pre- and post-triggers (performed, respectively, before and after modifying the data in the database).
+This means there are six trigger types in total:
 
 [cols="^1, ^1", options="header"]
 |====
@@ -33,17 +35,17 @@ This means there are only six trigger types:
 
 |====
 
-IMPORTANT: It often makes sense to use pre-triggers to perform certain action before the change is entered in the database.
-Note that since "onPreInsert" trigger is executed before sending cursor contents to the database, values of fields possessing `DEFAULT` or `GETDATE()` properties are not filled in at the moment of its execution.
-Assign a `null` value to them to automatically fill them in by the means of the database.
-In the "onPostInsert" trigger these fields are already filled in.
+IMPORTANT: It often makes sense to use pre-triggers to perform certain action before the update is sent to the database.
+Note that since `onPreInsert` trigger is executed before sending cursor contents to the database, values of fields with `DEFAULT` or `GETDATE()` properties are not filled in at the moment of its execution.
+Assign a `null` value to them to automatically assign them with values computed by the database.
+During the `onPostInsert` trigger execution these fields are already assigned.
 
 It is convenient to use <<xrec_section,xRec objects>> in `onPreUpdate` triggers to determine exactly what fields are going to be modified in the table.
-And in `onPreDelete` trigger it is impossible to use a xRec object because by that moment it becomes equal to the current buffer.
+Using `xRec` in `onPreDelete` trigger does not make sense because by the moment the trigger is called it becomes equal to the current buffer.
 
 Tables may have any number of triggers of each type.
-For every table triggers can be defined with *static* `onPreInsert`, `onPreDelete` and other methods on cursor classes.
-Determining triggers with static methods makes them "global", i.e. they get executed at every interaction with the table.
+For every table triggers can be set with *static* `onPreInsert`, `onPreDelete` and other methods of cursor classes.
+Defining triggers with static methods makes them "global", i.e. they get executed at every interaction with the table.
 
 Since the trigger registration method requires specifying the {apidocs}ru/curs/celesta/Celesta.html[`Celesta`] class instance, it is convenient to use `@PostConstruct` method to register triggers in Spring applications:
 
@@ -67,9 +69,9 @@ public class MyService {
 The `MyCursor` code generated class has the following method:
 
 ```java
-public static void onPreInsert(ICelesta celesta, Consumer<MyCursor> cursorConsumer)
+public static void onPreInsert(ICelesta celesta, Consumer<? super MyCursor> cursorConsumer)
 ```
 
-System cursors (from the {apidocs}ru/curs/celesta/syscursors/package-summary.html[`ru.curs.celesta.syscursors`] packet) also support trigger registration.
+System cursors (from the {apidocs}ru/curs/celesta/syscursors/package-summary.html[`ru.curs.celesta.syscursors`] package) also support trigger registration.
 
 //end::triggers[]

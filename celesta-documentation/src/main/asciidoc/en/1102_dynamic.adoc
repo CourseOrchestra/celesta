@@ -13,7 +13,7 @@ include::en/_common_attributes.adoc[]
 
 When writing universal data processing procedures (like export/import procedures) the issue of dynamic access to data arises in case the table/view/sequence name is known not at the stage of code writing but during execution.
 
-To create a data access class instance when only a <<Celesta_metadata,score>> object is known, it is possible to use a static factory `create` method of the corresponding basic data access class, for example:
+To create a data access class instance when only a <<Celesta_metadata,metadata>> object is known, it is possible to use a static factory `create` method of the corresponding basic data access class, for example:
 
 * {apidocs}ru/curs/celesta/dbutils/Cursor.html#create--[`Cursor.create(Table table, CallContext callContext)`]
 
@@ -22,9 +22,9 @@ To create a data access class instance when only a <<Celesta_metadata,score>> ob
 * {apidocs}ru/curs/celesta/dbutils/Sequence.html#create--[`ViewCursor.create(SequenceElement sequence, CallContext callContext)`]
 
 and so on.
-`Cursor` and `ViewCursor` classes also have an overloaded version of the `create` method allowing to create data access object instances <<limit_columns,limited by set of columns>>.
+`Cursor` and `ViewCursor` classes also have an overloaded version of the `create` method allowing to create data access object instances <<limit_columns,with limited set of columns>>.
 
-Dynamic access to table cursor fields or representation in the `BasicCursor` class is performed using the following methods:
+Dynamic access to table or view cursor fields in the `BasicCursor` class is performed using the following methods:
 
 * {apidocs}ru/curs/celesta/dbutils/BasicCursor.html#getValue--[`BasicCursor.getValue(String name)`]
 
