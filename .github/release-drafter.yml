@@ -1,7 +1,4 @@
 categories:
-  - title: '📘 Documentation'
-    labels:
-      - 'documentation'
   - title: '🚀 Features'
     labels:
       - 'feature'
@@ -11,6 +8,9 @@ categories:
       - 'fix'
       - 'bugfix'
       - 'bug'
+  - title: '📘 Documentation'
+    labels:
+      - 'documentation'
   - title: '🧰 Maintenance'
     labels:
       - 'dependencies'
