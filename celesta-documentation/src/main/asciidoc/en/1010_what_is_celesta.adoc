@@ -14,7 +14,7 @@ include::en/_common_attributes.adoc[]
 
 //tag::intro[]
 
-https://github.com/CourseOrchestra/celesta[Celesta] is a tool for Java backend-developers who want easier ways to deliver RDBMS-backed software.
+https://github.com/CourseOrchestra/celesta[Celesta] is a tool for Java backend developers who want easier ways to deliver RDBMS-backed software.
 
 This is a Java library with a Maven plugin that provides database migrations, ORM and testing.
 
@@ -26,19 +26,19 @@ image::{img}/640px-Duke2-2.png[width=300]
 
 = Main Features
 
-. *Independence from database type.* Solutions created in Celesta can be transferred between all supported databases without lose of functionality.
+. *Independence from database type.* Solutions created in Celesta can be transferred between all supported databases without losing functionality.
 We support the following types of RDBMS and try to do it in the most transparent manner possible (the list is not final):
- ** MS SQL Server,
- ** Oracle,
- ** Postgre SQL,
- ** H2,
+ ** MS SQL Server;
+ ** Oracle;
+ ** Postgre SQL;
+ ** H2;
  ** Firebird (beta).image::{img}/640px-Duke2-2.png[width=300]
 
 . *Database-first data structure design.* Celesta is used to design tables, views and connections between them first instead of classes, which are generated automatically.
 . *Database structure automatic migration* based on https://dzone.com/articles/trouble-free-database-migration-idempotence-and-co[idempotent DDL].
-. Simplified *unit testing*: quick tests of code that interacts with database, based on H2 database in-memory operation mode.
+. Simplified *unit testing*: quick tests of code that interacts with the database, based on H2 database in-memory operation mode.
 . Automatically generated intermediary access layer for tables to create business logic based on the database structure.
-. Application interaction with an existing database (applications integration via database).
+. Application interaction with an existing database (application integration via database).
 . Permissions management.
 . Data changes auditing.
 

@@ -34,11 +34,11 @@ An executable `dbschemasync` file is in the `/bin` folder of the archive.
 
 The `dbschemasync` utility accepts two settings:
 
-* Score path
+* score path;
 
-* DBS file name (of the DBSchema project)
+* DBS file name (of the DBSchema project).
 
-The direction of synchronization is determined by the argument sequence: if the "Score Path" is first, synchronization goes from the score to the DBSchema project and vice versa.
+The direction of synchronization is determined by the argument sequence: if the score path is first, synchronization goes from the score to the DBSchema project and vice versa.
 
 An example of a command to synchronize from the score to the schema:
 
@@ -62,7 +62,7 @@ Table options (`WITH (NO) VERSION CHECK`, `WITH READ ONLY`...) are in the "Stora
 
 image::{img}/Dbschemascreen4.png[{image-80-width}]
 
-To set a grain version in DBSchema it is necessary to modify a fake "stored procedure" with the same name as the grain (obviously, DBScema does not simulate the stored procedures for Celesta):
+To set a grain version in DBSchema, it is necessary to modify a fake "stored procedure" with the same name as the grain (obviously, DBScema does not simulate the stored procedures for Celesta):
 
 image::{img}/Dbschemascreen2.png[{image-80-width}]
 
@@ -81,9 +81,9 @@ Make sure you "took" all the tables you need, because at later steps you will ha
 DBSchema will open a window and offer to compare types.
 It is necessary to carefully set type correspondence for Celesta: for SQL Server, for example, `VARCHAR(MAX)` must be converted to `TEXT`, `UUID` to `VARCHAR(36)` and so on.
 
-. By pressing the OK button we get a DBSchema project aimed at Celesta.
+. By pressing the OK button we get a Celesta-oriented DBSchema project.
 At this moment it can be saved at a separate location: it is no longer connected to the source database.
-Still it is not a correct project as it lacks grain division, grains are not assigned declarations and there are a lot of features foreign for Celesta.
+Still it is not a correct project as it lacks grain division, grains are not assigned declarations and there are a lot of features foreign to Celesta.
 At this stage grains (schemas) must be created manually and tables put in them.
 
 . The "schemasync.jar" utility will most likely cause error prompts if activated, because the project is still incorrect.

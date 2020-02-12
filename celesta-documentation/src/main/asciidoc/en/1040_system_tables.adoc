@@ -20,9 +20,9 @@ At the same time, changing data in these tables is part of standard system confi
 
 System tables are used to:
 
-* Coordinate automatic migration (`grains` table).
-* Manage the access permissions to tables and views (`permissions`, `roles`, `userroles`).
-* Configure the logging system (`logsetup`) and log storage (`log`, `calllog`).
+* coordinate automatic migration (`grains` table);
+* manage the access permissions to tables and views (`permissions`, `roles`, `userroles`);
+* configure the logging system (`logsetup`) and log storage (`log`, `calllog`).
 
 include::../uml.adoc[tag="uml_systemtables"]
 
@@ -51,12 +51,12 @@ celesta.log:: Changelog.
 New entries are automatically appended by the system each time the data is changed, but only for tables and actions specified in `celesta.logsetup`.
 
 celesta.calllog:: Method calls log.
-Records are written here by the system while in <<profiling_mode,profiling mode>>.
+Records are made by the system while in <<profiling_mode,profiling mode>>.
 
 [[celesta_grains_table]]
 == Celesta.grains Table
 
-This table is the vital Celesta system table as its contents manage database structure synchronization with the score at the system's launch.
+This table is the vital Celesta system table as its contents manage the database structure synchronization with the score at the system's launch.
 It contains the following fields:
 
 [cols="1, 1, 4",options="header"]
@@ -85,15 +85,15 @@ It contains the following fields:
 |`INT`
 a|grain state:
 
-* 0 – *ready* — the grain is deployed and ready (its version tag and checksum are entered in `version`, `length`, `checksum` fields).
+* 0 – *ready* – the grain is deployed and ready (its version tag and checksum are entered in `version`, `length` and `checksum` fields).
 
-* 1 – *upgrading* — the grain is being created or upgraded by other Celesta applications connected to the database.
+* 1 – *upgrading* – the grain is being created or upgraded by other Celesta applications connected to the database.
 
-* 2 – *error* — the latest autoupgrade attempt failed, the `message` field contains the error message.
+* 2 – *error* – the latest autoupgrade attempt failed, the `message` field contains the error message.
 
-* 3 – *recover* (similar to absence of an entry in the `grains` table when the grain exists in the `score` folder) — the grain is missing or needs regeneration (for example, after an upgrade error).
+* 3 – *recover* (similar to absence of an entry in the `grains` table when the grain exists in the `score` folder) – the grain is missing or needs regeneration (for example, after an upgrade error).
 
-* 4 – *lock* — the grain does not need the structure autoupgrade under any circumstances.
+* 4 – *lock* – the grain does not need the structure autoupgrade under any circumstances.
 
 |`lastmodified`
 |`DATETIME`
@@ -113,9 +113,9 @@ As the table structure shows, table access rights are granted to roles and are n
 The `roleid` field contains the role identifier and `grainid` and `tablename` fields contain references to the tables.
 Flags are set in bit fields "r", "i", "m" and "d" if the rights are needed for reading, insertion, modification or deletion respectively.
 
-Special system role names are available: *reader* and *editor*, as well as roles in form of *<grain ID>.reader* and *<grain ID>.editor*.
+Special system role names are available: *reader* and *editor*, as well as *<grain ID>.reader* and *<grain ID>.editor*.
 
-The *reader* role grants right to read all tables without any exceptions, the *<grain ID>.reader* (for example, "foo.reader") grants right to read all tables in the respective grain.
+The *reader* role grants the right to read all tables without any exceptions, the *<grain ID>.reader* (for example, "foo.reader") grants the right to read all tables in the respective grain.
 
 The *editor* role grants full rights (to read, insert, modify and delete) to all tables.
 The *<grain ID>.editor* role (for example, "foo.editor") grants full rights to all tables in the respective grain.
@@ -125,7 +125,7 @@ The *<grain ID>.editor* role (for example, "foo.editor") grants full rights to a
 
 Not only the access rights granting system is involved in any data modification via Celesta cursors, but also a modification logging system, which logs all changes to the *celesta.log* tables.
 In order to prevent the *celesta.log* table from being littered with potentially huge amounts of unnecessary data, the changes are logged only in the tables explicitly specified in the *celesta.logsetup* table.
-There is also an option to separately enable logging of entry inserts, modifications and deletions.
+There is also an option to separately enable logging of entry insertions, modifications and deletions.
 
 In order to enable logging data changes made via Celesta system, it is necessary to enter the relevant settings in the  *celesta.logsetup* table.
 The "grainid" and "tablename" fields should contain a link to the table and flags are set in bit fields "i", "m" and "d" if it is needed to log insertion, modification and deletion respectively.
@@ -164,7 +164,7 @@ The `celesta.log` table consists of the following fields:
 
 |`action_type`
 |`VARCHAR(1)`
-|action type ("I" for insertion, "M" for modification, "D" for deletion)
+|action type ("I" for insertion, "M" for modification and "D" for deletion)
 
 |`pkvalue1`
 |`VARCHAR(100)`
@@ -195,7 +195,7 @@ Filled in for "M" and "I" actions
 
 Celesta can operate in a profiling mode for troubleshooting, which is enabled by a `setProfilemode(true)` mode of a  {apidocs}ru/curs/celesta/Celesta.html[`Celesta`] instance.
 
-Information on all procedure calls in profiling mode is entered in a calllog table consisting of the following fields:
+Information on all procedure calls in a profiling mode is entered in a calllog table consisting of the following fields:
 
 [cols="1, 1, 4",options="header"]
 |====
@@ -217,7 +217,7 @@ Information on all procedure calls in profiling mode is entered in a calllog tab
 
 |`procname`
 |`VARCHAR(250)`
-|Executed procedure name
+|executed procedure name
 
 |`starttime`
 |`DATETIME`

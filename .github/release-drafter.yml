@@ -1,4 +1,7 @@
 categories:
+  - title: '📘 Documentation'
+    labels:
+      - 'documentation'
   - title: '🚀 Features'
     labels:
       - 'feature'

@@ -4,13 +4,13 @@
 [cols="1, 1, 1, 1, 1, 1, 1, 1", options="header"]
 |====
 ^.^|
-^.^|CELESTA
+^.^|Celesta
 ^.^|Microsoft SQL Server
 ^.^|Oracle
 ^.^|PostgreSQL
 ^.^|Firebird
 ^.^|H2
-^.^|Java Type For Cursor
+^.^|Java type for cursor
 
 |Integer (32-bit)
 |INT
@@ -67,7 +67,7 @@
 |VARBINARY(MAX)
 |java.lang.String
 
-|Date/Time
+|Date/time
 |DATETIME
 |DATETIME
 |TIMESTAMP
@@ -76,7 +76,7 @@
 |TIMESTAMP
 |java.util.Date
 
-|DateTime With Time Zone
+|Date/time with time zone
 |DATETIME WITH TIME ZONE
 |DATETIMEOFFSET
 |TIMESTAMP WITH TIME ZONE

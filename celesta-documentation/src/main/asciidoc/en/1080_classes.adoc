@@ -21,7 +21,7 @@ View cursors only allow row navigation methods.
 
 include::../uml.adoc[tag="uml_cursors"]
 
-UML diagram illustrates data access class hierarchy.
+The UML diagram illustrates data access class hierarchy.
 Hierarchy is based on a {apidocs}ru/curs/celesta/dbutils/BasicDataAccessor.html[`BasicDataAccessor`] class.
 Each cursor class inherits from the {apidocs}ru/curs/celesta/dbutils/BasicCursor.html[`BasicCursor`] class, {apidocs}ru/curs/celesta/dbutils/Sequence.html[`Sequence`] class inherits from the {apidocs}ru/curs/celesta/dbutils/BasicDataAccessor.html[`BasicDataAccessor`]:
 
@@ -34,10 +34,10 @@ It does not add any own methods to `BasicCursor`.
 {apidocs}ru/curs/celesta/dbutils/MaterializedViewCursor.html[MaterializedViewCursor]:: Is used to work with materialized views.
 It inherits all `BasicCursor` methods and also adds a number of its own methods to make possible accessing data by the primary key.
 
-{apidocs}ru/curs/celesta/dbutils/ParameterizedViewCursor.html[ParameterizedViewCursor]::Iis used to work with functions (parameterized views).
+{apidocs}ru/curs/celesta/dbutils/ParameterizedViewCursor.html[ParameterizedViewCursor]:: Is used to work with functions (parameterized views).
 It does not add any own methods to `BasicCursor` but its constructor differs from the basic one.
 
-{apidocs}ru/curs/celesta/dbutils/ReadOnlyTableCursor.html[ReadOnlyTableCursor]:: Is used to work with tables declared "WITH READ ONLY" option.
+{apidocs}ru/curs/celesta/dbutils/ReadOnlyTableCursor.html[ReadOnlyTableCursor]:: Is used to work with tables declared "WITH READ ONLY".
 It does not add any own methods to `BasicCursor`.
 
 {apidocs}ru/curs/celesta/dbutils/Sequence.html[Sequence]:: Is used to work with sequences.
@@ -196,7 +196,7 @@ Every cursor has the following methods ({lupa} symbol indicates methods inherite
 
 === Cursor Closing
 
-* {lupa} *close()* — cursor closing (implements a `close` method of `java.io.Closeable` interface).
+* {lupa} *close()* – cursor closing (implements a `close` method of `java.io.Closeable` interface).
 This method frees all JDBC resources allocated during the cursors's existence.
 A navigation or update method invocation on a closed cursor causes an error.
 This method is not necessary to call since it is called automatically after closing `CallContext` on all cursors created with it.
@@ -212,38 +212,38 @@ If needed to find a record while considering filters, use `[try]First` method.
 
 * *get(Object... values)* – same as `tryGet` but throws an exception if the record is not found.
 
-* {lupa} *navigate(command)* — moves around records relative to the current position.
+* {lupa} *navigate(command)* – moves around records relative to the current position.
 Returns `true` if the movement is successful and `false` if the record is not found.
 The `command` string can be an set of the following symbol commands in any order, executed consecutively until the record is found (or all commands are executed):
 
-** - (minus) — go to the first record matching the filter criteria,
+** - (minus) – go to the first record matching the filter criteria;
 
-** + (plus) — go to the last record,
+** + (plus) – go to the last record;
 
-** > — go to the next record relative to the current matching filter criteria,
+** > – go to the next record relative to the current matching filter criteria;
 
-** < — go the the previous record,
+** < – go the the previous record;
 
-** = — update the current record if it matches current filter criteria.
+** = – update the current record if it matches current filter criteria.
 
-* {lupa} *tryFirst()* — same as `navigate('-')`.
+* {lupa} *tryFirst()* – same as `navigate('-')`.
 
-* {lupa} *first()* — same as `tryFirst()`, but throws an exception if the record is not found.
+* {lupa} *first()* – same as `tryFirst()`, but throws an exception if the record is not found.
 
-* {lupa} *tryLast()* — same as `navigate('+')`.
+* {lupa} *tryLast()* – same as `navigate('+')`.
 
-* {lupa} *last()* — same as `tryLast()`, but throws an exception if the record is not found.
+* {lupa} *last()* – same as `tryLast()`, but throws an exception if the record is not found.
 
-* {lupa} *next()* — same as `navigate('>')`.
+* {lupa} *next()* – same as `navigate('>')`.
 
-* {lupa} *previous()* — same as `navigate('<')`.
+* {lupa} *previous()* – same as `navigate('<')`.
 
-* {lupa} *tryFindSet()* — opens a record set (`ResultSet`) and sets a cursor in its beginning.
+* {lupa} *tryFindSet()* – opens a record set (`ResultSet`) and sets a cursor in its beginning.
 Returns `true` if the opened set is not empty and `false` if there are no records in the set.
 
-* {lupa} *findSet()* — same as `tryFindSet()`, but throws an exception if the movement has failed.
+* {lupa} *findSet()* – same as `tryFindSet()`, but throws an exception if the movement has failed.
 
-* {lupa} *nextInSet()* — go to the next record in the current set.
+* {lupa} *nextInSet()* – go to the next record in the current set.
 If the set has not been opened, calling this method equals calling `tryFindSet()`.
 Returns `true` if the movement is successful and `false` if the end of the set is reached.
 
@@ -276,7 +276,7 @@ Record with the current primary key value might not get into the filter, so `nav
 
 _What does `navigate("\=><")` mean?_:: This command prescribes the following algorithm: "Try to find the current record.
 If the record is found, exit and return `true`.
-If the record does not exist anymore (deleted) go forward.
+If the record does not exist anymore (deleted), go forward.
 If the record is found, exit and return `true`.
 If there is nothing there, go back.
 If the record is found, exit and return `true`, if not – `false`.
@@ -290,7 +290,7 @@ If the record is found, exit and return `true`, if not – `false`.
 * {lupa} *setRange(ColumnMeta<? super T> column, T value)* – sets a single-value range in the field.
 Passing `null` as an argument causes setting an 'IS NULL' filter in that field.
 
-* {lupa} *setRange(ColumnMeta<? super T> column, T valueFrom, T valueTo)* – sets range "from..to and including" in the field (at the SQL language level corresponds to a BETWEEN operator).
+* {lupa} *setRange(ColumnMeta<? super T> column, T valueFrom, T valueTo)* – sets range "from ... to and including" in the field (at the SQL language level corresponds to a BETWEEN operator).
 It is not allowed to use `null` as an argument.
 
 * {lupa} *setFilter(ColumnMeta<?> column, String value)* – sets a filter in the field, filter expressions are described  <<setFilter_usage,below>>.
@@ -304,11 +304,11 @@ Corresponds to a `WHERE` condition for queries in CelestaSQL.
 
 * {lupa} *limit(long skip, long limit)* – sets limits to the returned row range.
 Parameters must be non-negative integers.
-The `skip` parameter is the number of rows skipped before returning (`skip = 0` — start from the very beginning), the `limit` parameter is the maximum number of returned rows, where `limit = 0` indicates that *all* rows are returned.
+The `skip` parameter is the number of rows skipped before returning (`skip = 0` – start from the very beginning), the `limit` parameter is the maximum number of returned rows, where `limit = 0` indicates that *all* rows are returned.
 Call `limit(0, 0)` to reset limits to the returned row range.
 Limits set using the `limit()` method are not accounted for when calling the `count()` method.
 
-* {lupa} *orderBy(ColumnMeta<?>... columns)* — set sorting.
+* {lupa} *orderBy(ColumnMeta<?>... columns)* – set sorting.
 Parameters are a set of fields for sorting.
 To specify ascending or descending sorting use an `asc()` or `desc()` method for respective fields.
 If the `asc()` or `desc()` method is not called explicitly, ascending sorting is performed.
@@ -354,7 +354,7 @@ Note: `onDelete` trigger is not called.
 
 === Auxiliary Methods
 
-* {lupa} *canRead(), canInsert(), canModify(), canDelete()* – returns a boolean value indicating if the current session has rights to perform a corresponding operation.
+* {lupa} *canRead(), canInsert(), canModify(), canDelete()* – returns a Boolean value indicating if the current session has rights to perform a corresponding operation.
 
 * {lupa} *count()* – returns a number of records in a filtered set.
 In particular, if there are no filters set for the cursor, it returns the total amount of records in the table.
@@ -373,7 +373,7 @@ Returns -1, if the field is defined as "TEXT".
 * *getXRec()* – returns a <<xrec_section,buffer copy>> containing values received during the latest reading from the database.
 
 [[try_method_notice]]
-Please note that `get`, `first`, `insert` and `update` methods have two versions: without a `try` prefix (simply `get(...)`, etc.) and with a `try` prefix (`tryGet(...)`, `tryFirst(...)`, etc.).
+Please note that `get`, `first`, `insert` and `update` methods have two versions: without a `try` prefix (simply `get(...)`, etc.) and with it (`tryGet(...)`, `tryFirst(...)`, etc.).
 
 Methods without a `try` prefix throw an exception if the database does not contain matching data to perform an action.
 For example, `first()` throws an exception if no records match the filter set for the cursor (or in a degenerated case the table is empty).
@@ -405,17 +405,17 @@ First `setFilter` method argument is the field and the second is the filter expr
 
 Correct filter expression can consist of:
 
-* numeric or text literals (depending on the field type),
+* numeric or text literals (depending on the field type);
 
-* a `null` literal,
+* a `null` literal;
 
-* logical operators &, | and !,
+* logical operators "&", "|" and "!";
 
-* comparison operators <, > and ..,
+* comparison operators "<", ">" and "..";
 
-* grouping brackets ( and ),
+* grouping brackets "(" and ")";
 
-* special operators @ and % for text fields.
+* special operators "@" and "%" for text fields.
 
 Filter expression cannot be a `null` or an empty string, call `setRange()` method without any parameters to reset  filter for the field.
 Spaces between literals and operators are ignored.
@@ -437,13 +437,13 @@ include::../synfilter.adoc[tag="synf_filter"]
 
 Here
 
-* & — logical AND symbol,
+* & – logical AND symbol;
 
-* | — logical OR symbol,
+* | – logical OR symbol;
 
-* ! — logical NOT symbol,
+* ! – logical NOT symbol;
 
-* (, ) — grouping brackets.
+* ( and ) – grouping brackets.
 
 The *term* expression for numeric fields uses the following syntax:
 
@@ -510,7 +510,7 @@ Each RDBMS operates date literals in its own way, but Celesta translates filter 
 
 Filter expressions for text fields resemble those for numeric fields.
 The only exception is that term expressions contain string literals in single-quotes instead of numerics.
-For example, in a text field the *'aa'|'bb'|'cc'* filter is correct filtering records with filtered field values equal "aa", "bb" or "cc".
+For example, in a text field the *'aa'|'bb'|'cc'* filter is correct, filtering records with filtered field values equal "aa", "bb" or "cc".
 At the same time, if it is necessary to filter a text containing a single-quote, the quote should be doubled in its text literal (as is usual in SQL): to filter "John's company" values 'John''s company' has to be written.
 As with other field types, text fields can be filtered by null / not null value using null/!null terms.
 
@@ -530,7 +530,7 @@ translates into
 [source, sql]
 (("foo" = 'aaa' and "foo" = 'bb') or (not ("foo" = 'ddd') and not ("foo" is null))
 
-(which is never yields true, obviously, – this and the next examples only illustrate filter translation into SQL).
+(which is never yields true, obviously – this and the next examples only illustrate filter translation into SQL).
 
 Expression
 
@@ -558,7 +558,7 @@ A call
 [source, java]
 myCursor.setFilter(myCursor.COLUMNS.city_id(), "'M'%");
 
-filters records with city code starting with Latin M.
+filters records with city code starting with a Latin "M".
 
 But sometimes *setFilter* functionality is not enough: what if records have to be filtered by cities located in a certain region or country?
 Here is one of the ways to solve this problem: filter city catalogue by `city.setRange(city.COLUMNS.country_id(), "RUS")`, then upload the full list of these cities IDs from the database to the memory, group them in a single filter string separated by pipes and apply this filter to another cursor.

@@ -47,29 +47,29 @@ Usage example:
 
 Plugin configuration settings:
 
-* `scores` — path to the project folders containing <<CelestaSQL>> scripts describing the working database.
+* `scores` – path to the project folders containing <<CelestaSQL>> scripts describing the working database.
 By default the path is `src/main/celestasql`.
-* `testScores` — path to project folders containing <<CelestaSQL>> scripts describing the database, used only for <<celestaunit_section,unit testing>>.
+* `testScores` – path to the project folders containing <<CelestaSQL>> scripts describing the database, used only for <<celestaunit_section,unit testing>>.
 By default the path is `src/test/celestasql`.
 
 Celesta Maven Plugin executes the following operations:
 
 1. Generates code for <<data_accessors_section,cursors>> based on <<CelestaSQL>>:
 
-** During the `generate-sources` phase the cursors are generated from `scores` and optionally `score` folder to `target/generated-sources/celesta`,
+** During the `generate-sources` phase the cursors are generated from `scores` and optionally `score` folder to `target/generated-sources/celesta`;
 
 ** During the `generate-test-sources` phase – from `testScores` to `target/generated-test-sources/celesta`.
 
 2. Copies CelestaSQL files to resources:
 
-** During the `generate-resources` phase CelestaSQL files are copied from `scores` and optionally the `score` folder to `generated-resources/score`
+** During the `generate-resources` phase CelestaSQL files are copied from `scores` and optionally the `score` folder to `generated-resources/score`;
 
-** During the `generate-test-resources` phase – from `testScores` to `generated-test-resources/score`
+** During the `generate-test-resources` phase – from `testScores` to `generated-test-resources/score`.
 
 3. Generates the `score.files` index containing the list of relative paths to .sql files in resources:
 
-** During the `generate-resources` phase -> `generated-resources/score/score.files`
-** During the `generate-test-resources` phase -> `generated-test-resources/score/score.files`
+** During the `generate-resources` phase – to `generated-resources/score/score.files`;
+** During the `generate-test-resources` phase – to `generated-test-resources/score/score.files`.
 
 These files are used when running Celesta to find paths to all CelestaSQL files in .jar files on classpath.
 

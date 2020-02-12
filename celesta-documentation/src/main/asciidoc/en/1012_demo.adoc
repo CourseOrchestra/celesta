@@ -38,7 +38,7 @@ To create a Spring Boot project use the following Maven dependencies:
             <!-- Own Spring Boot starter simplifies Celesta configuration in Spring Boot applications -->
             <artifactId>spring-boot-starter-celesta</artifactId>
             <version>${spring.boot.starter.celesta.version}</version>
-            <!-- Exclude dependency on Celesta, specified in Celesta spring boot starter,
+            <!-- Exclude dependency on Celesta, specified in Celesta spring boot starter
                  to enter a more recent Celesta version number -->
             <exclusions>
                 <exclusion>
