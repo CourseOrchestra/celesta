@@ -37,7 +37,7 @@ CREATE VIEW v1 AS
   SELECT DISTINCT column2 FROM table2;
 ```
 
-Unlike simple comments possible to use in any part of CelestaSQL script, CelestaDoc comments can be put only before the definition of the corresponding object, otherwise a syntax error occurs.
+Unlike simple comments usable in any part of the CelestaSQL script, CelestaDoc comments can be put only before the definition of the corresponding object, otherwise a syntax error occurs.
 
 Parser reads CelestaDoc and this information is available in metadata objects in the run time by using the *getCelestaDoc()* method (see the <<Celesta_metadata,Celesta Metadata>> section).
 

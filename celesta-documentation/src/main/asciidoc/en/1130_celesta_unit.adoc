@@ -32,7 +32,7 @@ To employ these functions, add a CelestaUnit Maven dependency:
 </dependency>
 ```
 
-A JUnit5 dependency must also be added to the test scope of the project (for examples see the https://junit.org/junit5/docs/current/user-guide/#dependency-metadata-junit-jupiter-samples[Junit5 Documentation]).
+A JUnit5 dependency must also be added to the test scope of the project (see the https://junit.org/junit5/docs/current/user-guide/#dependency-metadata-junit-jupiter-samples[Junit5 Documentation] for examples).
 
 == Usage Example
 
@@ -62,16 +62,16 @@ public class DocumentServiceTest {
 }
 ```
 
-In this way every test can receive an active `CallContext` as a parameter.
-This context is generated basehttp://url[text]d on H2 database, to which a Celesta score is deployed and can be used to create cursors.
+This means every test can receive an active `CallContext` as a parameter.
+This context is generated based on H2 database, to which a Celesta score is deployed and can be used to create cursors.
 
 == Changing CelestaUnit Default Settings
 
 CelestaUnit has the following defaults:
 
-* Score path: `src/main/resources/score`.
-* Reference integrity check (with foreign keys) is enabled.
-* Table clearing after each test is enabled.
+* score path: `src/main/resources/score`;
+* reference integrity check (with foreign keys) is enabled;
+* table clearing after each test is enabled.
 
 Defaults can be changed by using a JUnit5 {apidocs}ru/curs/celestaunit/CelestaUnitExtension.html[`CelestaUnitExtension`] extension https://junit.org/junit5/docs/current/user-guide/#extensions-registration-programmatic[programmatic registration] in a test class:
 
@@ -86,6 +86,6 @@ public class DocumentServiceTest {
                     .withTruncateAfterEach(false).build();
 ```
 
-For example, in some cases it might help to disable reference integrity check to simplify adding test data to tables linked by foreign keys to other tables.
+In some cases it might help to disable reference integrity check to simplify adding test data to tables linked by foreign keys to other tables.
 
 //end::celesta_unit[]

@@ -25,7 +25,7 @@ Changing the score during the Celesta run time is not allowed and may cause non-
 
 == Score Composition
 
-The ({apidocs}ru/curs/celesta/score/Score.html[`Score`]) score is divided into ({apidocs}ru/curs/celesta/score/Grain.html[`Grain`]) grains consisting of ({apidocs}ru/curs/celesta/score/Table.html[`Table`]) tables,  ({apidocs}ru/curs/celesta/score/Index.html[`Index`]) indices and ({apidocs}ru/curs/celesta/score/View.html[`View`]) views.
+The score ({apidocs}ru/curs/celesta/score/Score.html[`Score`]) is divided into grains ({apidocs}ru/curs/celesta/score/Grain.html[`Grain`]) consisting of tables ({apidocs}ru/curs/celesta/score/Table.html[`Table`]),  indices ({apidocs}ru/curs/celesta/score/Index.html[`Index`]) and views ({apidocs}ru/curs/celesta/score/View.html[`View`]).
 
 * Tables consist of columns (see {apidocs}ru/curs/celesta/score/Column.html[`Column`]) and contain foreign keys.
 
@@ -38,7 +38,7 @@ A class diagram that describes the `Score` classes is presented below:
 include::../uml.adoc[tag="uml_metaclasses"]
 
 The {apidocs}ru/curs/celesta/score/ColumnMeta.html[`ColumnMeta<V>`] interface is basic for table and view columns (`V` type parameter corresponds to the Java type stored in the column value), which allows to determine the Celesta column data type, column nullability and <<CelestaDoc,CelestaDoc>> bound to it. 
-This interface is implemented by {apidocs}ru/curs/celesta/score/ViewColumnMeta.html[`ViewColumnMeta<V>`] class to describe view fields, and {apidocs}ru/curs/celesta/score/View.html[`Column<V>`] to describe table fields.
+This interface is implemented by {apidocs}ru/curs/celesta/score/ViewColumnMeta.html[`ViewColumnMeta<V>`] class to describe view fields and {apidocs}ru/curs/celesta/score/View.html[`Column<V>`] to describe table fields.
 
 The `Column<V>` class is abstract and has subclasses for six field types supported in Celesta:
 

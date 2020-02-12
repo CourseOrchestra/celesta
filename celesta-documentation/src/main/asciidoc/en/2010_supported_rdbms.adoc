@@ -11,7 +11,7 @@ include::en/_common_attributes.adoc[]
 
 //tag::supported_rdbms[]
 
-The system supports MS SQL Server, Oracle, Postgre SQL, Firebird and H2 ensuring uniform work of any application written with Celesta with any of the supported RDBMS.
+The system supports MS SQL Server, Oracle, Postgre SQL, Firebird and H2 ensuring uniform work of any application written in Celesta with any of the supported RDBMS.
 
 Celesta solutions are easily transferable between different RDBMS, but each of them have their own configuration peculiarities.
 Besides, different Celesta features are implemented differently in different RDBMS.
@@ -52,12 +52,12 @@ GRANT
 	SELECT ANY DICTIONARY
 	TO <USER>
 
-Some organizations do not grant the SELECT ANY DICTIONARY access right by default, which results in an error "ORA-00942: table or view does not exist" when deploying Celesta system grain.
+Some organizations do not grant the SELECT ANY DICTIONARY permission by default, which results in an error "ORA-00942: table or view does not exist" when deploying Celesta system grain.
 
 === Implementation Features
 
-* Grain is a prefix in the table name spaced with an underscore symbol, and the Oracle limit for the table name length (30 characters) applies.
-Schema in Oracle is somewhat different from those in other RDMBS and creating schemas is linked to creating new users, but in practice administrators of Oracle enterprise database servers cannot grant rights to create new users to application.
+* Grain is a prefix in the table name separated with an underscore symbol, and the Oracle limit for the table name length (30 characters) applies.
+Schemas in Oracle are somewhat different from those in other RDMBS and creating schemas is linked to creating new users, but in practice administrators of Oracle enterprise database servers cannot grant applications rights to create new users.
 
 * Oracle by itself does not support the `FOREIGN KEY ... ON UPDATE/DELETE SET NULL` statement, so it is emulated using triggers.
 
@@ -87,8 +87,7 @@ image::images/firebird.svg[width=120,role="left"]
 
 === Implementation Features
 
-* Grain is a prefix in the table name spaced with an underscore symbol. 
-Besides that, the limitation on the identifier length is active.
+* Grain is a prefix in the table name separated with an underscore symbol and the limitation on the identifier length applies.
 This is because schemas as is do not exist in Firebird.
 
 * Firebird starts to support the `TIMESTAMP WITH TIMEZONE` data type only in the 4th version.
@@ -109,6 +108,6 @@ To set this not in the in-memory database the user must have administrator right
 
 === Implementation Features
 
-* The 'recversion' field is controlled by a trigger written in Java which implements an https://www.h2database.com/javadoc/org/h2/api/Trigger.html[`org.h2.api.Trigger`] interface. H2 does not support triggers with logic in procedural SQL.
+* The `recversion` field is controlled by a trigger written in Java which implements an https://www.h2database.com/javadoc/org/h2/api/Trigger.html[`org.h2.api.Trigger`] interface. H2 does not support triggers with logic in procedural SQL.
 
 //end::supported_rdbms[]

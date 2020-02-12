@@ -17,15 +17,15 @@ It is possible to see what exactly has changed in the record by comparing `xRec`
 `xRec` stores field values received during the latest reading of the cursor from the database (unlike main buffer, which fields are equal to `xRec`'s fields, but then change when user assigns them new values).
 `xRec` object is updated only during the following operations:
 
-* `[try]first()`,
+* `[try]first()`;
 
-* `[try]get()`,
+* `[try]get()`;
 
-* `next()`,
+* `next()`;
 
-* `[try]insert()` (the system essentially executes a `get()` operations for the cursor to read values issued by the database to `IDENITY`, `GETDATE()` and `DEFAULT` fields to simultaneously update the main buffer and `xRec`),
+* `[try]insert()` (the system essentially executes a `get()` operations for the cursor to read values issued by the database to `IDENITY`, `GETDATE()` and `DEFAULT` fields to simultaneously update the main buffer and `xRec`);
 
-* `[try]update()` (after an update in the database `xRec` becomes a copy of the current cursor),
+* `[try]update()` (after an update in the database `xRec` becomes a copy of the current cursor);
 
 * `delete()` (after an update in the database `xRec` is filled with the buffer value as it was before deletion).
 

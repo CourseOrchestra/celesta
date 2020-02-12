@@ -18,7 +18,7 @@ Let us consider the following scenario to illustrate the lost update notion.
 Assume the application has a table listing clients and users allowed to edit that table using form-cards.
 Assume the events occur as follows:
 
-. User А opens a client card to edit its postal index.
+. User А opens a client's card to edit its postal index.
 
 . User B opens the client's card on it own device independently from user A to edit the client's credit limit.
 
@@ -86,14 +86,14 @@ Naturally, every method has its drawbacks.
 The main optimistic lock drawback is that the user cannot write the result of their work to the database if somebody else managed to update the entry before they did.
 Still, it rarely happens in practice and only the most sluggish users who take too long to edit entries suffer from it.
 
-Main pessimistic lock drawback is that user is expected to explicitly commit or cancel editing to unlock the entry.
+Main pessimistic lock drawback is that the user is expected to explicitly commit or cancel editing to unlock the entry.
 But in practice when the editing goes on for excessive periods of time it is impossible to guess if the user is going to properly end editing or some external intervention by administrators is needed to explicitly unlock the entry, otherwise other users will not be able to work with it.
 
 In general, for systems like Celesta pessimistic lock drawbacks are much more severe, so Celesta uses optimistic lock to prevent lost updates.
 
 == Lost Update Prevention in Celesta
 
-By default every table in Celesta is supplied with a `INT NOT NULL` type `recversion` system field.
+By default, every table in Celesta is supplied with a `INT NOT NULL` type `recversion` system field.
 
 This field is created automatically, so the developer should not include it in the `CREATE TABLE` script.
 The developer also cannot create their own field named `recversion`.

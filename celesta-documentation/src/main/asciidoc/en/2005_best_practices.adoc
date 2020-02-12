@@ -18,9 +18,9 @@ These advises help avoid some common mistakes when writing code to work with RDB
 Cursor is an object containing JDBC PreparedStatements and ResultSets necessary to execute cursor methods.
 These resources must be closed after use.
 Besides, the cursors and the objects constituting its inner state are not threadsafe, so the cursor must not be stored as a shared resource.
-Cursor closing, loosing a reference to it and transaction completion must normally happen simultaneously.
+Cursor closing, loosing a link to it and transaction completion must normally happen simultaneously.
 
-Cursor life cycle is enclosed into `CallContext` life cycle it was created with.
+Cursor life cycle is limited to `CallContext` life cycle it was created with.
 Calling `close()` on `CallContext` results in closing all cursors created in that context, so normally it is not necessary to explicitly close cursors in the code.
 
 Still in some situations, when the cursor is created in an iteration, it must be closed explicitly.
@@ -154,7 +154,7 @@ For example, `orderBy` does not range entries at the moment the call happens, it
 So the right pattern is to "prepare" the cursor as much as possible by setting all necessary limits using the first category methods before executing reading methods.
 
 
-== Understand the "get" Method Semantics
+== Understand the `get(...)` Method Semantics
 
 The `get(...)` method extracts a single record from the database by its known primary key.
 It is a reliably fast (because the primary key always has an index) and the most demanded operation in practice.
@@ -185,7 +185,7 @@ foo.delete();
 ----
 |===
 
-== Do not Use "count()" Only to Determine if the Data Range is not Empty
+== Do not Use `count()` Only to Determine if the Data Range is not Empty
 
 Common mistake is to check the range for emptiness using the `count()` method.
 Counting all the records in the database only to determine if there are any at all is a bad idea.
@@ -246,16 +246,16 @@ There are four data filtering methods in Celesta, ranged from the simplest to th
 
 The <<set_range_usage,`setRange`>> method is applicable in most practical tasks to filter a field by a single value or a of range values:
 
-* `cursor.setRange(cursor.COLUMNS.foo(), value)` creates a query in a `WHERE foo = value` format.
+* `cursor.setRange(cursor.COLUMNS.foo(), value)` creates a query in a `WHERE foo = value` format;
 * `cursor.setRange(cursor.COLUMNS.foo(), from, to)` creates a query in a `WHERE foo BETWEEN from AND to` format.
 
 [NOTE]
-`cursor.setRange(cursor.COLUMNS.foo())` (no parameters) removes a filter for the “foo” field created earlier by `setRange` or `setFilter`.
+`cursor.setRange(cursor.COLUMNS.foo())` (no parameters) removes a filter for the `foo` field created earlier by `setRange` or `setFilter`.
 
 The <<setFilter_usage,`setFilter`>> method is used in rare cases when a field value range to be filtered needs to be set as a complex expression.
 A single field can have either a filter set by `setRange` or by `setFilter`, so calling these methods for the same field "replaces" the previously set filter.
 
-`setRange` must be used whenever possible so Celesta can reuse JDBC `PreparedStatement`s to greatly increase performance during the iteration:
+`setRange` must be used whenever possible so Celesta can reuse JDBC `PreparedStatement` statements to greatly increase performance during the iteration:
 
 [cols="50a,50a",options=header]
 |===
@@ -306,8 +306,8 @@ In Celesta, usually the following is true: if a `setRange` method is called for 
 
 == Ensure Efficient Caching when Working in Iterations
 
-Querying data in iteration is a common pattern.
-It is possible to significantly reduce the number of queries to the database and the increase speed by using the simplest caching: there is no need to call `get` for the cursor if the requested value of the primary key already matches the one requested earlier:
+Querying data in iterations is a common pattern.
+It is possible to significantly reduce the number of queries to the database and increase speed by using the simplest caching: there is no need to call `get` for the cursor if the requested value of the primary key already matches the one requested earlier:
 
 [source,java]
 ----
@@ -354,10 +354,10 @@ for (FooCursor c: foo){
 ----
 |===
 
-== Do not Use "try" Methods Unless Necessary
+== Do not Use `try` Methods Unless Necessary
 
-Many cursor methods have two versions: without a `try` prefix and with it.
-They act the same as far as processing speed is concerned, but from the perspective of code design (fail-fast approach) it is preferable to use methods without `try` if the returned boolean value is not going to be used.
+Many cursor methods have two versions: with and without a `try` prefix.
+They act the same as far as processing speed is concerned, but from the perspective of code design (fail-fast approach) it is preferable to use methods without `try` if the returned Boolean value is not going to be used.
 See this <<try_method_notice,explained in the documentation>>.
 
 == Use Iteration instead of Navigation in Cycles

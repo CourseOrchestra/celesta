@@ -41,7 +41,7 @@ Assign a `null` value to them to automatically assign them with values computed 
 During the `onPostInsert` trigger execution these fields are already assigned.
 
 It is convenient to use <<xrec_section,xRec objects>> in `onPreUpdate` triggers to determine exactly what fields are going to be modified in the table.
-Using `xRec` in `onPreDelete` trigger does not make sense because by the moment the trigger is called it becomes equal to the current buffer.
+Using `xRec` in `onPreDelete` trigger does not make sense because by the time the trigger is called it becomes equal to the current buffer.
 
 Tables may have any number of triggers of each type.
 For every table triggers can be set with *static* `onPreInsert`, `onPreDelete` and other methods of cursor classes.
