@@ -32,7 +32,7 @@ We support the following types of RDBMS and try to do it in the most transparent
  ** Oracle;
  ** Postgre SQL;
  ** H2;
- ** Firebird (beta).image::{img}/640px-Duke2-2.png[width=300]
+ ** Firebird (beta).
 
 . *Database-first data structure design.* Celesta is used to design tables, views and connections between them first instead of classes, which are generated automatically.
 . *Database structure automatic migration* based on https://dzone.com/articles/trouble-free-database-migration-idempotence-and-co[idempotent DDL].
