@@ -277,18 +277,18 @@ public class GrainModelTest {
 
         assertEquals(1, t2.getForeignKeys().size());
 
-        final  ForeignKey fk7 = new ForeignKey(t2);
+        final ForeignKey fk7 = new ForeignKey(t2);
         fk7.addColumn("idb");
         fk7.addColumn("datecol");
         // Длина подходящая, но тип неподоходящий
         assertThrows(ParseException.class,
-                () ->  fk7.setReferencedTable("", "t4"));
+                () -> fk7.setReferencedTable("", "t4"));
 
 
         assertEquals(1, t2.getForeignKeys().size());
 
         // А теперь всё должно быть ОК!
-        final  ForeignKey  fk8 = new ForeignKey(t2);
+        final ForeignKey fk8 = new ForeignKey(t2);
         fk8.addColumn("idb");
         fk8.addColumn("intcol");
         fk8.setReferencedTable("", "t4");
@@ -309,7 +309,7 @@ public class GrainModelTest {
         fk9.addColumn("idb");
         fk9.addColumn("intcol");
         assertThrows(ParseException.class,
-                ()-> fk9.setReferencedTable("", "t4"));
+                () -> fk9.setReferencedTable("", "t4"));
     }
 
     @Test
@@ -341,20 +341,41 @@ public class GrainModelTest {
         assertSame(FKRule.NO_ACTION, fk.getUpdateRule());
 
         // нельзя использовать SET NULL в Not-nullable колонках
-        assertThrows(ParseException.class, ()->
-            fk.setDeleteRule(FKRule.SET_NULL));
+        assertThrows(ParseException.class, () ->
+                fk.setDeleteRule(FKRule.SET_NULL));
 
         assertSame(FKRule.NO_ACTION, fk.getDeleteRule());
         fk.setDeleteRule(FKRule.CASCADE);
         assertSame(FKRule.CASCADE, fk.getDeleteRule());
 
         // нельзя использовать SET NULL в Not-nullable колонках
-        assertThrows(ParseException.class, ()->
-            fk.setUpdateRule(FKRule.SET_NULL));
+        assertThrows(ParseException.class, () ->
+                fk.setUpdateRule(FKRule.SET_NULL));
 
         assertSame(FKRule.NO_ACTION, fk.getUpdateRule());
         fk.setUpdateRule(FKRule.CASCADE);
         assertSame(FKRule.CASCADE, fk.getUpdateRule());
+    }
+
+    @Test
+    void tableRemovalTest() throws ParseException {
+        Grain gm = new Grain(s, "tableremoval");
+        GrainPart gp = new GrainPart(gm, true, null);
+        BasicTable t1 = new Table(gp, "t1");
+        BasicTable t2 = new ReadOnlyTable(gp, "t2");
+        assertEquals(2, gm.getTables().size());
+        //delete and recreate - no exceptions should be thrown
+        t1.delete();
+        t2.delete();
+        assertEquals(0, gm.getTables().size());
+        t1 = new Table(gp, "t1");
+        t2 = new ReadOnlyTable(gp, "t2");
+        //now swap table classes
+        t1.delete();
+        t2.delete();
+        new ReadOnlyTable(gp, "t1");
+        new Table(gp, "t2");
+        assertEquals(2, gm.getTables().size());
     }
 
     @Test
