@@ -282,6 +282,7 @@ public final class Grain extends NamedElement {
 
         // Удаляется сама таблица
         getElementsHolder(BasicTable.class).remove(table);
+        getElementsHolder(table.getClass()).remove(table);
     }
 
     /**
