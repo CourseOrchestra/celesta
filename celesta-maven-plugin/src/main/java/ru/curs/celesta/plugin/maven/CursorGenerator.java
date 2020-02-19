@@ -11,6 +11,7 @@ import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 import ru.curs.celesta.score.io.FileResource;
 
+import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.IOException;
@@ -193,7 +194,8 @@ public final class CursorGenerator {
     private static TypeSpec.Builder buildClassDefinition(GrainElement ge, ClassName classType) {
         TypeSpec.Builder builder = TypeSpec.classBuilder(classType)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .superclass(GRAIN_ELEMENTS_TO_DATA_ACCESSORS.get(ge.getClass()).apply(ge));
+                .superclass(GRAIN_ELEMENTS_TO_DATA_ACCESSORS.get(ge.getClass()).apply(ge))
+                .addAnnotation(AnnotationSpec.builder(Generated.class).build());
 
         if (ge instanceof DataGrainElement) {
             builder.addSuperinterface(
@@ -219,7 +221,8 @@ public final class CursorGenerator {
                 .map(
                         c -> {
                             TypeSpec.Builder builder = TypeSpec.classBuilder(StringUtils.capitalize(c.getName()))
-                                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+                                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                                    .addAnnotation(AnnotationSpec.builder(Generated.class).build());
 
                             MethodSpec constructor = MethodSpec.constructorBuilder()
                                     .addModifiers(Modifier.PRIVATE)
@@ -345,7 +348,8 @@ public final class CursorGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                 .addAnnotation(AnnotationSpec.builder(SuppressWarnings.class)
                         .addMember("value", "$S", "unchecked")
-                        .build());
+                        .build())
+                .addAnnotation(AnnotationSpec.builder(Generated.class).build());
 
         FieldSpec elementField = FieldSpec.builder(
                 dge.getClass(), "element", Modifier.PRIVATE, Modifier.FINAL)
