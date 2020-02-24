@@ -11,7 +11,9 @@
     <url>https://corchestra.ru/wiki/index.php?title=Celesta</url>
 
     <modules>
+        <!--
         <module>celesta-documentation</module>
+        -->
         <module>celesta-unit</module>
         <module>celesta-test</module>
         <module>celesta-sql</module>
@@ -199,7 +201,10 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.plugin.version}</version>
                 <configuration>
+                    <!--
+                    TURN ON this flag if you build project on Java version greater than 8.
                     <release>8</release>
+                    -->
                     <source>1.8</source>
                     <target>1.8</target>
                     <encoding>utf-8</encoding>
