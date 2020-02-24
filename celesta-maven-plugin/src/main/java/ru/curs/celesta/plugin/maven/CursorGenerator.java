@@ -1,12 +1,33 @@
 package ru.curs.celesta.plugin.maven;
 
-import com.squareup.javapoet.*;
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ArrayTypeName;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
+
 import org.apache.commons.lang3.StringUtils;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ICelesta;
-import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.dbutils.BasicCursor;
+import ru.curs.celesta.dbutils.BasicDataAccessor;
+import ru.curs.celesta.dbutils.Cursor;
+import ru.curs.celesta.dbutils.CursorIterator;
+import ru.curs.celesta.dbutils.MaterializedViewCursor;
+import ru.curs.celesta.dbutils.ParameterizedViewCursor;
+import ru.curs.celesta.dbutils.ReadOnlyTableCursor;
+import ru.curs.celesta.dbutils.Sequence;
+import ru.curs.celesta.dbutils.ViewCursor;
+
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 import ru.curs.celesta.score.io.FileResource;
@@ -21,7 +42,21 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
