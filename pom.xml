@@ -61,7 +61,7 @@
         <javacc.version>7.0.5</javacc.version>
         <jdbc.driver.oracle.version>12.1.2-0-0</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.2.10</jdbc.driver.postgres.version>
-        <jdbc.driver.sqlserver.version>7.4.1.jre8</jdbc.driver.sqlserver.version>
+        <jdbc.driver.sqlserver.version>8.2.1.jre13</jdbc.driver.sqlserver.version>
         <jdbc.driver.firebird.version>4.0.0-beta-1</jdbc.driver.firebird.version>
         <junit.version>5.6.0</junit.version>
         <org.json.version>20190722</org.json.version>
