@@ -6,7 +6,7 @@ import ru.curs.celesta.dbutils.Sequence;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2020-02-25 10:19"
+        date = "2020-02-25T10:50:49"
 )
 public final class SeqSequence extends Sequence {
 

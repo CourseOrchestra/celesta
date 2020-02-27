@@ -31,7 +31,7 @@ import ru.curs.celesta.score.Table;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2020-02-25 10:50"
+        date = "2020-02-25T10:50:49"
 )
 public final class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
 
@@ -334,7 +334,7 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25 10:50"
+            date = "2020-02-25T10:50:49"
     )
     public static final class Columns {
         private final Table element;
@@ -378,7 +378,7 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
 
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25 10:50"
+            date = "2020-02-25T10:50:49"
     )
     public static final class Str {
         public static final String one = "one";

@@ -20,7 +20,7 @@ import ru.curs.celesta.score.ParameterizedView;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2020-02-25 10:50"
+        date = "2020-02-25T10:50:49"
 )
 public final class TestTablePvCursor extends ParameterizedViewCursor implements Iterable<TestTablePvCursor> {
 
@@ -139,7 +139,7 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25 10:50"
+            date = "2020-02-25T10:50:49"
     )
     public static final class Columns {
         private final ParameterizedView element;

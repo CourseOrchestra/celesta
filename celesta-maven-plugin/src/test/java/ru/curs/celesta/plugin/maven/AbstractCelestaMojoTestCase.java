@@ -94,8 +94,8 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
 
     String replaceDateInGeneratedAnnotation(String s) {
         return s.replaceAll(
-                "@Generated\\( value = \"ru.curs.celesta.plugin.maven.CursorGenerator\", date = \".+\" \\)",
-                "@Generated( value = \"ru.curs.celesta.plugin.maven.CursorGenerator\", date = \"2020-02-25 10:00\" )");
+                "@Generated\\( value = \"ru\\.curs\\.celesta\\.plugin\\.maven\\.CursorGenerator\", date = \"[^\"]+\" \\)",
+                "@Generated( value = \"ru.curs.celesta.plugin.maven.CursorGenerator\", date = \"2020-02-25T10:00:00\" )");
     }
 
     void assertGeneratedScore(

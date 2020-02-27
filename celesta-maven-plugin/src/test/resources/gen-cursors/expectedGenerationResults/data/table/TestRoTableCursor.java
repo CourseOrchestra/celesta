@@ -137,7 +137,7 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25 10:50"
+            date = "2020-02-25T10:50:49"
     )
     public static final class Columns {
         private final ReadOnlyTable element;
@@ -153,7 +153,7 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
 
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25 10:50"
+            date = "2020-02-25T10:50:49"
     )
     public static final class Id {
         public static final Integer open = 0;

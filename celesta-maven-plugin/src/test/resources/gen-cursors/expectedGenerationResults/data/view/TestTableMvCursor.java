@@ -20,7 +20,7 @@ import ru.curs.celesta.score.MaterializedView;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2020-02-25 10:50"
+        date = "2020-02-25T10:50:49"
 )
 public final class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
 
@@ -184,7 +184,7 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25 10:50"
+            date = "2020-02-25T10:50:49"
     )
     public static final class Columns {
         private final MaterializedView element;

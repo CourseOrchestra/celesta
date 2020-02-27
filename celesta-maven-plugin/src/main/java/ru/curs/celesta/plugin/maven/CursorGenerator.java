@@ -40,15 +40,15 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -229,7 +229,7 @@ public final class CursorGenerator {
     }
 
     private static String getCurrentDate() {
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date());
+        return DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now());
     }
 
     private static AnnotationSpec buildGeneratedAnnotation() {
