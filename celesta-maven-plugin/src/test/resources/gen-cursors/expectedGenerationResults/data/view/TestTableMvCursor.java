@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BasicCursor;
@@ -17,6 +18,10 @@ import ru.curs.celesta.dbutils.MaterializedViewCursor;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.MaterializedView;
 
+@Generated(
+        value = "ru.curs.celesta.plugin.maven.CursorGenerator",
+        date = "2020-02-25T10:50:49"
+)
 public final class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
 
     private static final String GRAIN_NAME = "test";
@@ -177,6 +182,10 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     }
 
     @SuppressWarnings("unchecked")
+    @Generated(
+            value = "ru.curs.celesta.plugin.maven.CursorGenerator",
+            date = "2020-02-25T10:50:49"
+    )
     public static final class Columns {
         private final MaterializedView element;
 

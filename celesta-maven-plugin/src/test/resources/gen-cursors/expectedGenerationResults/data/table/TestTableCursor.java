@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Consumer;
 
+import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BLOB;
@@ -28,6 +29,10 @@ import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.Table;
 
+@Generated(
+        value = "ru.curs.celesta.plugin.maven.CursorGenerator",
+        date = "2020-02-25T10:50:49"
+)
 public final class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
 
     private static final String GRAIN_NAME = "test";
@@ -327,6 +332,10 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     }
 
     @SuppressWarnings("unchecked")
+    @Generated(
+            value = "ru.curs.celesta.plugin.maven.CursorGenerator",
+            date = "2020-02-25T10:50:49"
+    )
     public static final class Columns {
         private final Table element;
 
@@ -367,6 +376,10 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         }
     }
 
+    @Generated(
+            value = "ru.curs.celesta.plugin.maven.CursorGenerator",
+            date = "2020-02-25T10:50:49"
+    )
     public static final class Str {
         public static final String one = "one";
         public static final String two = "two";

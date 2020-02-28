@@ -72,22 +72,30 @@ abstract class AbstractCelestaMojoTestCase extends AbstractMojoTestCase {
 
         JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
 
-        cursorPaths.forEach(p -> {
-            File f = new File(prefix, p);
-            assertTrue(f.exists());
-            assertEquals(0, javaCompiler.run(null, null, null, f.getPath()));
+        cursorPaths.forEach(p -> assertGeneratedCursor(p, prefix, expectedPrefix, javaCompiler));
+    }
 
-            File expectedF = new File(expectedPrefix, p);
-            try {
-                assertEquals(
-                        StringUtils.normalizeSpace(FileUtils.readFileToString(expectedF)),
-                        StringUtils.normalizeSpace(FileUtils.readFileToString(f))
-                );
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+    void assertGeneratedCursor(String p, File prefix, File expectedPrefix, JavaCompiler javaCompiler) {
+        File f = new File(prefix, p);
+        assertTrue(f.exists());
+        assertEquals(0, javaCompiler.run(null, null, null, f.getPath()));
 
+        File expectedF = new File(expectedPrefix, p);
+        System.out.printf("Comparing files:\n  %s\n  %s\n", expectedF, f);
+        try {
+            assertEquals(
+                    replaceDateInGeneratedAnnotation(StringUtils.normalizeSpace(FileUtils.readFileToString(expectedF))),
+                    replaceDateInGeneratedAnnotation(StringUtils.normalizeSpace(FileUtils.readFileToString(f)))
+            );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    String replaceDateInGeneratedAnnotation(String s) {
+        return s.replaceAll(
+                "@Generated\\( value = \"ru\\.curs\\.celesta\\.plugin\\.maven\\.CursorGenerator\", date = \"[^\"]+\" \\)",
+                "@Generated( value = \"ru.curs.celesta.plugin.maven.CursorGenerator\", date = \"2020-02-25T10:00:00\" )");
     }
 
     void assertGeneratedScore(

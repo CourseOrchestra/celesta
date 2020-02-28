@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BasicCursor;
@@ -16,6 +17,10 @@ import ru.curs.celesta.dbutils.ReadOnlyTableCursor;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.ReadOnlyTable;
 
+@Generated(
+        value = "ru.curs.celesta.plugin.maven.CursorGenerator",
+        date = "2020-02-25 10:50"
+)
 public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<TestRoTableCursor> {
 
     private static final String GRAIN_NAME = "test";
@@ -130,6 +135,10 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
     }
 
     @SuppressWarnings("unchecked")
+    @Generated(
+            value = "ru.curs.celesta.plugin.maven.CursorGenerator",
+            date = "2020-02-25T10:50:49"
+    )
     public static final class Columns {
         private final ReadOnlyTable element;
 
@@ -142,6 +151,10 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
         }
     }
 
+    @Generated(
+            value = "ru.curs.celesta.plugin.maven.CursorGenerator",
+            date = "2020-02-25T10:50:49"
+    )
     public static final class Id {
         public static final Integer open = 0;
         public static final Integer closed = 1;

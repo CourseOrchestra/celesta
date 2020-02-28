@@ -1,16 +1,38 @@
 package ru.curs.celesta.plugin.maven;
 
-import com.squareup.javapoet.*;
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ArrayTypeName;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
+
 import org.apache.commons.lang3.StringUtils;
 
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ICelesta;
-import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.dbutils.BasicCursor;
+import ru.curs.celesta.dbutils.BasicDataAccessor;
+import ru.curs.celesta.dbutils.Cursor;
+import ru.curs.celesta.dbutils.CursorIterator;
+import ru.curs.celesta.dbutils.MaterializedViewCursor;
+import ru.curs.celesta.dbutils.ParameterizedViewCursor;
+import ru.curs.celesta.dbutils.ReadOnlyTableCursor;
+import ru.curs.celesta.dbutils.Sequence;
+import ru.curs.celesta.dbutils.ViewCursor;
+
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
 import ru.curs.celesta.score.io.FileResource;
 
+import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.IOException;
@@ -18,9 +40,25 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -190,10 +228,22 @@ public final class CursorGenerator {
         }
     }
 
+    private static String getCurrentDate() {
+        return DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now());
+    }
+
+    private static AnnotationSpec buildGeneratedAnnotation() {
+        return AnnotationSpec.builder(Generated.class)
+                .addMember("value", "$S", CursorGenerator.class.getCanonicalName())
+                .addMember("date", "$S", getCurrentDate())
+                .build();
+    }
+
     private static TypeSpec.Builder buildClassDefinition(GrainElement ge, ClassName classType) {
         TypeSpec.Builder builder = TypeSpec.classBuilder(classType)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .superclass(GRAIN_ELEMENTS_TO_DATA_ACCESSORS.get(ge.getClass()).apply(ge));
+                .superclass(GRAIN_ELEMENTS_TO_DATA_ACCESSORS.get(ge.getClass()).apply(ge))
+                .addAnnotation(buildGeneratedAnnotation());
 
         if (ge instanceof DataGrainElement) {
             builder.addSuperinterface(
@@ -219,7 +269,8 @@ public final class CursorGenerator {
                 .map(
                         c -> {
                             TypeSpec.Builder builder = TypeSpec.classBuilder(StringUtils.capitalize(c.getName()))
-                                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+                                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                                    .addAnnotation(buildGeneratedAnnotation());
 
                             MethodSpec constructor = MethodSpec.constructorBuilder()
                                     .addModifiers(Modifier.PRIVATE)
@@ -345,7 +396,8 @@ public final class CursorGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                 .addAnnotation(AnnotationSpec.builder(SuppressWarnings.class)
                         .addMember("value", "$S", "unchecked")
-                        .build());
+                        .build())
+                .addAnnotation(buildGeneratedAnnotation());
 
         FieldSpec elementField = FieldSpec.builder(
                 dge.getClass(), "element", Modifier.PRIVATE, Modifier.FINAL)
