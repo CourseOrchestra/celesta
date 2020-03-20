@@ -1153,6 +1153,7 @@ public abstract class AbstractAdaptorTest {
         BasicTable t3 = g.getElement("aLongIdentityTableNaaame", BasicTable.class);
         BasicTable t4 = g.getElement("refTo2", BasicTable.class);
         Set<ForeignKey> foreignKeys = t3.getForeignKeys();
+        assertFalse(dba.sequenceExists(conn, t3s.getGrain().getName(), t3s.getName()), "sequence exists before");
         try {
             dba.createSequence(conn, t3s);
             dba.createTable(conn, t3);
@@ -1169,8 +1170,11 @@ public abstract class AbstractAdaptorTest {
             LOGGER.error("Error", ex);
         } finally {
             dba.dropTable(conn, t3);
+            dba.dropTable(conn, t4);
             dba.dropSequence(conn, t3s);
         }
+        assertFalse(dba.sequenceExists(conn, t3s.getGrain().getName(), t3s.getName()), "sequence exists after");
+
     }
 
 
@@ -1179,6 +1183,8 @@ public abstract class AbstractAdaptorTest {
         Grain g = score.getGrain(GRAIN_NAME);
         SequenceElement t3s = g.getElement("aLongIdentityTableNxx_f1", SequenceElement.class);
         BasicTable t3 = g.getElement("aLongIdentityTableNaaame", BasicTable.class);
+        assertFalse(dba.sequenceExists(conn, t3s.getGrain().getName(), t3s.getName()), "sequence exists before");
+
         try {
             dba.createSequence(conn, t3s);
             dba.createTable(conn, t3);
@@ -1193,6 +1199,8 @@ public abstract class AbstractAdaptorTest {
             dba.dropTable(conn, t3);
             dba.dropSequence(conn, t3s);
         }
+        assertFalse(dba.sequenceExists(conn, t3s.getGrain().getName(), t3s.getName()), "sequence exists after");
+
     }
 
     @Test
