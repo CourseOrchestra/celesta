@@ -16,7 +16,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.Date;
+import java.util.stream.Collectors;
 
+import org.testcontainers.shaded.com.google.common.base.Functions;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.meta.*;
@@ -94,9 +96,9 @@ public abstract class AbstractAdaptorTest {
         from.setExpression(dba.tableString(ge.getGrain().getName(), ge.getName()));
 
         try (PreparedStatement stmt = dba.getSetCountStatement(conn, from, "")) {
-                ResultSet rs = stmt.executeQuery();
-                rs.next();
-                return rs.getInt(1);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            return rs.getInt(1);
         }
     }
 
@@ -280,7 +282,7 @@ public abstract class AbstractAdaptorTest {
 
             boolean[] mask = {true, true, false, true, true, true, true, true, true, true, true, true, true, false, true, true};
             boolean[] nullsMask = {false, false, false, false, false, false, false, false, false, false, false, false,
-                false, false, false, false};
+                    false, false, false, false};
             Integer[] rec = {1, null, 22, null, null, null, null, null, null, null, null, null, null, null, null};
             program = new ArrayList<>();
             w = WhereTermsMaker.getPKWhereTerm(t);
@@ -1116,10 +1118,8 @@ public abstract class AbstractAdaptorTest {
             assertEquals(1, l.size());
             DbFkInfo info = l.get(0);
             assertEquals("fk_testNameVeryVeryLongLonName", info.getName());
-            String[] expected = {"attrVarchar", "attrInt"};
-            String[] actual = info.getColumnNames().toArray(new String[0]);
 
-            assertTrue(Arrays.equals(expected, actual));
+            assertEquals(Arrays.asList("attrVarchar", "attrInt"), info.getColumnNames());
             assertEquals(FKRule.CASCADE, info.getUpdateRule());
             assertEquals(FKRule.SET_NULL, info.getDeleteRule());
 
@@ -1147,10 +1147,45 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
+    public void additionalFKTest() throws ParseException {
+        Grain g = score.getGrain(GRAIN_NAME);
+        BasicTable refA = g.getElement("refA", BasicTable.class);
+        BasicTable refB = g.getElement("refB", BasicTable.class);
+        BasicTable oneToTwo = g.getElement("oneToTwo", BasicTable.class);
+        Set<ForeignKey> foreignKeys = oneToTwo.getForeignKeys();
+        assertEquals(2, foreignKeys.size());
+        try {
+            dba.createTable(conn, refA);
+            dba.createTable(conn, refB);
+            dba.createTable(conn, oneToTwo);
+            for (ForeignKey fk : foreignKeys)
+                dba.createFK(conn, fk);
+            Map<String, DbFkInfo> fkInfo = dba.getFKInfo(conn, g).stream()
+                    .filter(i -> oneToTwo.getName().equals(i.getTableName()))
+                    .collect(Collectors.toMap(
+                            DbFkInfo::getRefTableName,
+                            i -> i
+                    ));
+            assertEquals(2, fkInfo.size());
+            assertEquals(Collections.singletonList("idA"), fkInfo.get("refA").getColumnNames());
+            assertEquals(Arrays.asList("idB2", "idB1"), fkInfo.get("refB").getColumnNames());
+            assertNotEquals(FKRule.CASCADE, fkInfo.get("refA").getDeleteRule());
+            assertEquals(FKRule.CASCADE, fkInfo.get("refB").getDeleteRule());
+        } finally {
+            dba.dropTable(conn, oneToTwo);
+            dba.dropTable(conn, refA);
+            dba.dropTable(conn, refB);
+        }
+    }
+
+
+    @Test
     public void additionalCreateTableTest() throws ParseException {
         Grain g = score.getGrain(GRAIN_NAME);
         SequenceElement t3s = g.getElement("aLongIdentityTableNxx_f1", SequenceElement.class);
         BasicTable t3 = g.getElement("aLongIdentityTableNaaame", BasicTable.class);
+        assertFalse(dba.sequenceExists(conn, t3s.getGrain().getName(), t3s.getName()), "sequence exists before");
+
         try {
             dba.createSequence(conn, t3s);
             dba.createTable(conn, t3);
@@ -1165,6 +1200,8 @@ public abstract class AbstractAdaptorTest {
             dba.dropTable(conn, t3);
             dba.dropSequence(conn, t3s);
         }
+        assertFalse(dba.sequenceExists(conn, t3s.getGrain().getName(), t3s.getName()), "sequence exists after");
+
     }
 
     @Test
@@ -1217,49 +1254,49 @@ public abstract class AbstractAdaptorTest {
         insertRow(conn, t, 2);
 
 
-            String orderBy = t.getColumn("id").getQuotedName();
+        String orderBy = t.getColumn("id").getQuotedName();
 
 
-            FromClause from = new FromClause();
-            from.setGe(t);
-            from.setExpression(dba.tableString(t.getGrain().getName(), t.getName()));
+        FromClause from = new FromClause();
+        from.setGe(t);
+        from.setExpression(dba.tableString(t.getGrain().getName(), t.getName()));
 
-            int count = 0;
-            try (
+        int count = 0;
+        try (
                 PreparedStatement stmt = dba.getRecordSetStatement(
-                    conn, from, "", orderBy, 0, 0, Collections.emptySet()
+                        conn, from, "", orderBy, 0, 0, Collections.emptySet()
                 )
-            ) {
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    ++count;
-                }
-                assertEquals(2, count);
+        ) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                ++count;
             }
+            assertEquals(2, count);
+        }
 
-            count = 0;
-            try (
+        count = 0;
+        try (
                 PreparedStatement stmt = dba.getRecordSetStatement(
-                    conn, from, "", orderBy, 1, 0, Collections.emptySet()
+                        conn, from, "", orderBy, 1, 0, Collections.emptySet()
                 )
-            ) {
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    ++count;
-                }
-                assertEquals(1, count);
+        ) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                ++count;
             }
+            assertEquals(1, count);
+        }
 
-            count = 0;
-            try (PreparedStatement stmt = dba.getRecordSetStatement(
-                    conn, from, "", orderBy, 0, 1, Collections.emptySet()
-            )) {
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    ++count;
-                }
-                assertEquals(1, count);
+        count = 0;
+        try (PreparedStatement stmt = dba.getRecordSetStatement(
+                conn, from, "", orderBy, 0, 1, Collections.emptySet()
+        )) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                ++count;
             }
+            assertEquals(1, count);
+        }
 
     }
 
@@ -1308,7 +1345,7 @@ public abstract class AbstractAdaptorTest {
 
                 d = d.plusSeconds(1);
                 Object[] rowData2 = {null, "A", 5, Date.from(
-                    d.toInstant(ZoneOffset.UTC))};
+                        d.toInstant(ZoneOffset.UTC))};
                 i = 1;
                 for (ParameterSetter ps : program) {
                     ps.execute(pstmt, i++, rowData2, 0);
@@ -1340,9 +1377,9 @@ public abstract class AbstractAdaptorTest {
             from.setExpression(dba.tableString(mv.getGrain().getName(), mv.getName()));
 
             try (
-                PreparedStatement pstmt = dba.getRecordSetStatement(
-                    conn, from, "", "\"var\"", 0, 0, Collections.emptySet()
-            )) {
+                    PreparedStatement pstmt = dba.getRecordSetStatement(
+                            conn, from, "", "\"var\"", 0, 0, Collections.emptySet()
+                    )) {
                 ResultSet rs = pstmt.executeQuery();
 
                 rs.next();
@@ -1414,7 +1451,6 @@ public abstract class AbstractAdaptorTest {
 
         ParameterizedView pView = g.getElement(pViewName, ParameterizedView.class);
         dba.createParameterizedView(conn, pView);
-
         dba.dropParameterizedView(conn, g.getName(), pViewName);
         assertEquals(0, list.size());
     }
@@ -1614,9 +1650,9 @@ public abstract class AbstractAdaptorTest {
 
             final DbColumnInfo idInfo1 = dba.getColumnInfo(conn, table.getColumn("id"));
             assertAll(
-                () -> assertTrue(idInfo1.reflects(id)),
-                () -> assertEquals(IntegerColumn.class, idInfo1.getType()),
-                () -> assertEquals("NEXTVAL(testSequence)".toLowerCase(), idInfo1.getDefaultValue().toLowerCase())
+                    () -> assertTrue(idInfo1.reflects(id)),
+                    () -> assertEquals(IntegerColumn.class, idInfo1.getType()),
+                    () -> assertEquals("NEXTVAL(testSequence)".toLowerCase(), idInfo1.getDefaultValue().toLowerCase())
             );
 
             id.setNullableAndDefault(false, "NEXTVAL(" + sequence2.getName() + ")");
@@ -1625,9 +1661,9 @@ public abstract class AbstractAdaptorTest {
 
             final DbColumnInfo idInfo2 = dba.getColumnInfo(conn, table.getColumn("id"));
             assertAll(
-                () -> assertTrue(idInfo2.reflects(id)),
-                () -> assertEquals(IntegerColumn.class, idInfo2.getType()),
-                () -> assertEquals("NEXTVAL(testSequence2)".toLowerCase(), idInfo2.getDefaultValue().toLowerCase())
+                    () -> assertTrue(idInfo2.reflects(id)),
+                    () -> assertEquals(IntegerColumn.class, idInfo2.getType()),
+                    () -> assertEquals("NEXTVAL(testSequence2)".toLowerCase(), idInfo2.getDefaultValue().toLowerCase())
             );
 
             id.setNullableAndDefault(false, "5");
@@ -1636,9 +1672,9 @@ public abstract class AbstractAdaptorTest {
 
             final DbColumnInfo idInfo3 = dba.getColumnInfo(conn, table.getColumn("id"));
             assertAll(
-                () -> assertTrue(idInfo3.reflects(id)),
-                () -> assertEquals(IntegerColumn.class, idInfo3.getType()),
-                () -> assertEquals("5".toLowerCase(), idInfo3.getDefaultValue().toLowerCase())
+                    () -> assertTrue(idInfo3.reflects(id)),
+                    () -> assertEquals(IntegerColumn.class, idInfo3.getType()),
+                    () -> assertEquals("5".toLowerCase(), idInfo3.getDefaultValue().toLowerCase())
             );
 
             id.setNullableAndDefault(false, "NEXTVAL(" + sequence.getName() + ")");
@@ -1647,18 +1683,18 @@ public abstract class AbstractAdaptorTest {
 
             final DbColumnInfo idInfo4 = dba.getColumnInfo(conn, table.getColumn("id"));
             assertAll(
-                () -> assertTrue(idInfo4.reflects(id)),
-                () -> assertEquals(IntegerColumn.class, idInfo4.getType()),
-                () -> assertEquals("NEXTVAL(testSequence)".toLowerCase(), idInfo4.getDefaultValue().toLowerCase())
+                    () -> assertTrue(idInfo4.reflects(id)),
+                    () -> assertEquals(IntegerColumn.class, idInfo4.getType()),
+                    () -> assertEquals("NEXTVAL(testSequence)".toLowerCase(), idInfo4.getDefaultValue().toLowerCase())
             );
 
 
             IntegerColumn numb = (IntegerColumn) table.getColumn("numb");
             final DbColumnInfo numbInfo1 = dba.getColumnInfo(conn, numb);
             assertAll(
-                () -> assertTrue(numbInfo1.reflects(numb)),
-                () -> assertEquals(IntegerColumn.class, numbInfo1.getType()),
-                () -> assertTrue(numbInfo1.getDefaultValue().isEmpty())
+                    () -> assertTrue(numbInfo1.reflects(numb)),
+                    () -> assertEquals(IntegerColumn.class, numbInfo1.getType()),
+                    () -> assertTrue(numbInfo1.getDefaultValue().isEmpty())
             );
 
             numb.setNullableAndDefault(false, "NEXTVAL(" + sequence2.getName() + ")");
@@ -1666,9 +1702,9 @@ public abstract class AbstractAdaptorTest {
             dba.updateColumn(conn, numb, numbInfo1);
             final DbColumnInfo numbInfo2 = dba.getColumnInfo(conn, numb);
             assertAll(
-                () -> assertTrue(numbInfo2.reflects(numb)),
-                () -> assertEquals(IntegerColumn.class, numbInfo2.getType()),
-                () -> assertEquals("NEXTVAL(testSequence2)".toLowerCase(), numbInfo2.getDefaultValue().toLowerCase())
+                    () -> assertTrue(numbInfo2.reflects(numb)),
+                    () -> assertEquals(IntegerColumn.class, numbInfo2.getType()),
+                    () -> assertEquals("NEXTVAL(testSequence2)".toLowerCase(), numbInfo2.getDefaultValue().toLowerCase())
             );
         } finally {
             if (dba.tableExists(conn, g.getName(), table.getName()))

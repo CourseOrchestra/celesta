@@ -103,3 +103,24 @@ CREATE TABLE tableForTestSequence(
   numb int,
   CONSTRAINT Pk_gtest_tableForTestSequence PRIMARY KEY (id)
 );
+
+create table refA(
+  id int not null primary key,
+  descr varchar(5)
+);
+
+create table refB(
+  id1 int not null,
+  id2 int not null,
+  descr varchar(5),
+  constraint rbpk primary key(id1, id2)
+);
+
+create table oneToTwo(
+  id int not null primary key,
+  idA int foreign key references refA(id),
+  idB2 int,
+  idB1 int,
+  constraint FK_TWO foreign key (idB2, idB1) references refB(id1, id2)
+    on delete cascade
+);
