@@ -4,7 +4,17 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.event.TriggerQuery;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.ForeignKey;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.SQLGenerator;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.TableElement;
+import ru.curs.celesta.score.View;
 
 import java.sql.Connection;
 import java.sql.SQLException;

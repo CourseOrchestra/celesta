@@ -451,13 +451,13 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 if (IntegerColumn.class.equals(dbColumnInfo.getType())) {
                     String triggerName = SchemalessFunctions.generateSequenceTriggerName((IntegerColumn) c);
                     sql = String.format(
-                            "SELECT proc.RDB$DEPENDED_ON_NAME %n "
-                                    + "FROM RDB$DEPENDENCIES tr%n "
-                                    + "JOIN RDB$DEPENDENCIES proc ON tr.RDB$DEPENDED_ON_NAME = proc.RDB$DEPENDENT_NAME%n "
-                                    + "WHERE tr.RDB$DEPENDENT_NAME = '%s' AND tr.RDB$DEPENDENT_TYPE = 2 "
-                                    + "AND tr.RDB$DEPENDED_ON_TYPE = 5%n "
-                                    + "AND proc.RDB$DEPENDENT_TYPE = 5 AND proc.RDB$DEPENDED_ON_TYPE = 14",
-                            triggerName
+                        "SELECT proc.RDB$DEPENDED_ON_NAME %n "
+                                + "FROM RDB$DEPENDENCIES tr%n "
+                                + "JOIN RDB$DEPENDENCIES proc ON tr.RDB$DEPENDED_ON_NAME = proc.RDB$DEPENDENT_NAME%n "
+                                + "WHERE tr.RDB$DEPENDENT_NAME = '%s' AND tr.RDB$DEPENDENT_TYPE = 2 "
+                                + "AND tr.RDB$DEPENDED_ON_TYPE = 5%n "
+                                + "AND proc.RDB$DEPENDENT_TYPE = 5 AND proc.RDB$DEPENDED_ON_TYPE = 14",
+                        triggerName
                     );
 
                     try (ResultSet sequenceRs = SqlUtils.executeQuery(conn, sql)) {
@@ -538,26 +538,26 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
         String sql = String.format(
-                "SELECT"
-                        + "    detail_relation_constraints.RDB$RELATION_NAME as table_name%n"
-                        + "    , detail_relation_constraints.RDB$CONSTRAINT_NAME as constraint_name%n"
-                        + "    , ref_constraints.RDB$UPDATE_RULE as update_rule%n"
-                        + "    , ref_constraints.RDB$DELETE_RULE as delete_rule%n"
-                        + "    , detail_index_segments.rdb$field_name AS column_name%n"
-                        + "    , master_relation_constraints.rdb$relation_name AS ref_table_name%n"
-                        + "FROM%n"
-                        + "    rdb$relation_constraints detail_relation_constraints%n"
-                        + "    JOIN rdb$index_segments detail_index_segments ON "
-                        + "      detail_relation_constraints.rdb$index_name = detail_index_segments.rdb$index_name %n"
-                        + "    JOIN rdb$ref_constraints ref_constraints ON "
-                        + "      detail_relation_constraints.rdb$constraint_name = ref_constraints.rdb$constraint_name%n"
-                        + "    JOIN rdb$relation_constraints master_relation_constraints ON "
-                        + "      ref_constraints.rdb$const_name_uq = master_relation_constraints.rdb$constraint_name%n"
-                        + "WHERE%n"
-                        + "    detail_relation_constraints.rdb$constraint_type = 'FOREIGN KEY'%n"
-                        + "    AND detail_relation_constraints.rdb$relation_name like '%s@_%%' escape '@'%n"
-                        + "ORDER BY table_name, constraint_name, detail_index_segments.rdb$field_position;",
-                g.getName()
+            "SELECT"
+                    + "    detail_relation_constraints.RDB$RELATION_NAME as table_name%n"
+                    + "    , detail_relation_constraints.RDB$CONSTRAINT_NAME as constraint_name%n"
+                    + "    , ref_constraints.RDB$UPDATE_RULE as update_rule%n"
+                    + "    , ref_constraints.RDB$DELETE_RULE as delete_rule%n"
+                    + "    , detail_index_segments.rdb$field_name AS column_name%n"
+                    + "    , master_relation_constraints.rdb$relation_name AS ref_table_name%n"
+                    + "FROM%n"
+                    + "    rdb$relation_constraints detail_relation_constraints%n"
+                    + "    JOIN rdb$index_segments detail_index_segments ON "
+                    + "      detail_relation_constraints.rdb$index_name = detail_index_segments.rdb$index_name %n"
+                    + "    JOIN rdb$ref_constraints ref_constraints ON "
+                    + "      detail_relation_constraints.rdb$constraint_name = ref_constraints.rdb$constraint_name%n"
+                    + "    JOIN rdb$relation_constraints master_relation_constraints ON "
+                    + "      ref_constraints.rdb$const_name_uq = master_relation_constraints.rdb$constraint_name%n"
+                    + "WHERE%n"
+                    + "    detail_relation_constraints.rdb$constraint_type = 'FOREIGN KEY'%n"
+                    + "    AND detail_relation_constraints.rdb$relation_name like '%s@_%%' escape '@'%n"
+                    + "ORDER BY table_name, constraint_name, detail_index_segments.rdb$field_position;",
+            g.getName()
         );
 
         Map<String, DbFkInfo> fks = new HashMap<>();
