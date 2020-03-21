@@ -1170,7 +1170,9 @@ public abstract class AbstractAdaptorTest {
                     ));
             assertEquals(2, fkInfo.size());
             assertEquals(Collections.singletonList("idA"), fkInfo.get("refA").getColumnNames());
-            assertEquals(Collections.singletonList("idB"), fkInfo.get("refB").getColumnNames());
+            assertEquals(Arrays.asList("idB2", "idB1"), fkInfo.get("refB").getColumnNames());
+            assertNotEquals(FKRule.CASCADE, fkInfo.get("refA").getDeleteRule());
+            assertEquals(FKRule.CASCADE, fkInfo.get("refB").getDeleteRule());
         } finally {
             dba.dropTable(conn, oneToTwo);
             dba.dropTable(conn, refA);

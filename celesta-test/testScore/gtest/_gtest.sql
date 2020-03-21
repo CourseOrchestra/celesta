@@ -110,12 +110,17 @@ create table refA(
 );
 
 create table refB(
-  id int not null primary key,
-  descr varchar(5)
+  id1 int not null,
+  id2 int not null,
+  descr varchar(5),
+  constraint rbpk primary key(id1, id2)
 );
 
 create table oneToTwo(
   id int not null primary key,
   idA int foreign key references refA(id),
-  idB int foreign key references refB(id)
+  idB2 int,
+  idB1 int,
+  constraint FK_TWO foreign key (idB2, idB1) references refB(id1, id2)
+    on delete cascade
 );
