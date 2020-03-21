@@ -555,7 +555,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 "WHERE%n" +
                 "    detail_relation_constraints.rdb$constraint_type = 'FOREIGN KEY'%n" +
                 "    AND detail_relation_constraints.rdb$relation_name like '%s@_%%' escape '@'%n" +
-                "ORDER BY constraint_name, column_name, detail_index_segments.rdb$field_position;",
+                "ORDER BY table_name, constraint_name, detail_index_segments.rdb$field_position;",
             g.getName()
         );
 
