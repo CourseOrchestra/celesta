@@ -16,7 +16,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.Date;
+import java.util.stream.Collectors;
 
+import org.testcontainers.shaded.com.google.common.base.Functions;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.*;
 import ru.curs.celesta.dbutils.meta.*;
@@ -1149,32 +1151,31 @@ public abstract class AbstractAdaptorTest {
     @Test
     public void additionalFKTest() throws ParseException {
         Grain g = score.getGrain(GRAIN_NAME);
-        SequenceElement t3s = g.getElement("aLongIdentityTableNxx_f1", SequenceElement.class);
-        BasicTable t3 = g.getElement("aLongIdentityTableNaaame", BasicTable.class);
-        BasicTable t4 = g.getElement("refTo2", BasicTable.class);
-        Set<ForeignKey> foreignKeys = t3.getForeignKeys();
-        assertFalse(dba.sequenceExists(conn, t3s.getGrain().getName(), t3s.getName()), "sequence exists before");
+        BasicTable refA = g.getElement("refA", BasicTable.class);
+        BasicTable refB = g.getElement("refB", BasicTable.class);
+        BasicTable oneToTwo = g.getElement("oneToTwo", BasicTable.class);
+        Set<ForeignKey> foreignKeys = oneToTwo.getForeignKeys();
+        assertEquals(2, foreignKeys.size());
         try {
-            dba.createSequence(conn, t3s);
-            dba.createTable(conn, t3);
-            dba.createTable(conn, t4);
+            dba.createTable(conn, refA);
+            dba.createTable(conn, refB);
+            dba.createTable(conn, oneToTwo);
             for (ForeignKey fk : foreignKeys)
                 dba.createFK(conn, fk);
-            List<DbFkInfo> fkInfo = dba.getFKInfo(conn, g);
-            for (DbFkInfo i : fkInfo) {
-                assertTrue(Collections.singletonList("field2").equals(i.getColumnNames())
-                        || Collections.singletonList("field3").equals(i.getColumnNames()));
-            }
-        } catch (Exception ex) {
-            // TODO: When can it happen?
-            LOGGER.error("Error", ex);
+            Map<String, DbFkInfo> fkInfo = dba.getFKInfo(conn, g).stream()
+                    .filter(i -> oneToTwo.getName().equals(i.getTableName()))
+                    .collect(Collectors.toMap(
+                            DbFkInfo::getRefTableName,
+                            i -> i
+                    ));
+            assertEquals(2, fkInfo.size());
+            assertEquals(Collections.singletonList("idA"), fkInfo.get("refA").getColumnNames());
+            assertEquals(Collections.singletonList("idB"), fkInfo.get("refB").getColumnNames());
         } finally {
-            dba.dropTable(conn, t3);
-            dba.dropTable(conn, t4);
-            dba.dropSequence(conn, t3s);
+            dba.dropTable(conn, oneToTwo);
+            dba.dropTable(conn, refA);
+            dba.dropTable(conn, refB);
         }
-        assertFalse(dba.sequenceExists(conn, t3s.getGrain().getName(), t3s.getName()), "sequence exists after");
-
     }
 
 

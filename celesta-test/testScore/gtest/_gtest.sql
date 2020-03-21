@@ -103,3 +103,19 @@ CREATE TABLE tableForTestSequence(
   numb int,
   CONSTRAINT Pk_gtest_tableForTestSequence PRIMARY KEY (id)
 );
+
+create table refA(
+  id int not null primary key,
+  descr varchar(5)
+);
+
+create table refB(
+  id int not null primary key,
+  descr varchar(5)
+);
+
+create table oneToTwo(
+  id int not null primary key,
+  idA int foreign key references refA(id),
+  idB int foreign key references refB(id)
+);
