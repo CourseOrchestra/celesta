@@ -382,15 +382,7 @@ public final class DdlAdaptor {
     }
 
     private void processSql(Connection conn, String sql) {
-        if ("COMMIT".equalsIgnoreCase(sql)) {
-            try {
-                conn.commit();
-            } catch (SQLException e) {
-                throw new CelestaException(e);
-            }
-        } else {
-            ddlConsumer.consume(conn, sql);
-        }
+        ddlConsumer.consume(conn, sql);
     }
 
     private void processSql(Connection conn, Collection<String> sqlList) {
