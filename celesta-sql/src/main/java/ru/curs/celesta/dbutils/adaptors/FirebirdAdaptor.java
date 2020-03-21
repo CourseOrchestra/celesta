@@ -60,6 +60,7 @@ import static ru.curs.celesta.dbutils.jdbc.SqlUtils.executeUpdate;
 
 /**
  * FirebirdAdaptor.
+ *
  * @author ioanngolovko
  */
 public final class FirebirdAdaptor extends DBAdaptor {
@@ -73,7 +74,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
     private static final Pattern DATE_PATTERN = Pattern.compile("'(\\d\\d)\\.(\\d\\d)\\.(\\d\\d\\d\\d)'");
 
     private static final Pattern SEQUENCE_INFO_PATTERN =
-        Pattern.compile("/\\* INCREMENT_BY = (.*), MINVALUE = (.*), MAXVALUE = (.*), CYCLE = (.*) \\*/");
+            Pattern.compile("/\\* INCREMENT_BY = (.*), MINVALUE = (.*), MAXVALUE = (.*), CYCLE = (.*) \\*/");
 
     private static final String CUR_VALUE_PROC_POSTFIX = "curValueProc";
     private static final String NEXT_VALUE_PROC_POSTFIX = "nextValueProc";
@@ -106,13 +107,13 @@ public final class FirebirdAdaptor extends DBAdaptor {
         final String fieldList = getTableFieldsListExceptBlobs(from.getGe(), fields);
 
         sql = String.format(
-            "SELECT %s SKIP %d %s FROM %s %s ORDER BY %s",
-            firstSql,
-            offset,
-            fieldList,
-            from.getExpression(),
-            sqlwhere,
-            orderBy
+                "SELECT %s SKIP %d %s FROM %s %s ORDER BY %s",
+                firstSql,
+                offset,
+                fieldList,
+                from.getExpression(),
+                sqlwhere,
+                orderBy
         );
 
         return sql;
@@ -123,8 +124,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     String getSelectTriggerBodySql(TriggerQuery query) {
         String sql = String.format("SELECT RDB$TRIGGER_SOURCE FROM RDB$TRIGGERS "
-                + "WHERE RDB$TRIGGER_NAME = '%s' AND RDB$RELATION_NAME = '%s_%s'",
-            query.getName(), query.getSchema(), query.getTableName());
+                        + "WHERE RDB$TRIGGER_NAME = '%s' AND RDB$RELATION_NAME = '%s_%s'",
+                query.getName(), query.getSchema(), query.getTableName());
 
         return sql;
     }
@@ -132,8 +133,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     boolean userTablesExist(Connection conn) throws SQLException {
         String sql = "SELECT COUNT(*) \n"
-            + "FROM RDB$RELATIONS RDB$RELATIONS \n"
-            + "WHERE RDB$SYSTEM_FLAG = 0";
+                + "FROM RDB$RELATIONS RDB$RELATIONS \n"
+                + "WHERE RDB$SYSTEM_FLAG = 0";
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             rs.next();
@@ -159,8 +160,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
             w.append(" order by " + orderBy);
         }
         String sql = String.format("SELECT FIRST 1 SKIP %d %s FROM  %s %s;", offset == 0 ? 0 : offset - 1,
-            fieldList,
-            from.getExpression(), useWhere ? " where " + w : w);
+                fieldList,
+                from.getExpression(), useWhere ? " where " + w : w);
         LOGGER.trace(sql);
         return prepareStatement(conn, sql);
     }
@@ -168,11 +169,11 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public boolean tableExists(Connection conn, String schema, String name) {
         String sql = String.format(
-            "SELECT count(*)%n"
-                + "FROM RDB$RELATIONS%n"
-                + "WHERE RDB$RELATION_NAME = '%s_%s'",
-            schema,
-            name
+                "SELECT count(*)%n"
+                        + "FROM RDB$RELATIONS%n"
+                        + "WHERE RDB$RELATION_NAME = '%s_%s'",
+                schema,
+                name
         );
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
@@ -188,12 +189,12 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
         String sql = String.format(
-            "SELECT count(*) FROM RDB$TRIGGERS%n"
-                + "WHERE %n"
-                + "  RDB$TRIGGER_NAME = '%s' AND RDB$RELATION_NAME = '%s_%s'",
-            query.getName(),
-            query.getSchema(),
-            query.getTableName()
+                "SELECT count(*) FROM RDB$TRIGGERS%n"
+                        + "WHERE %n"
+                        + "  RDB$TRIGGER_NAME = '%s' AND RDB$RELATION_NAME = '%s_%s'",
+                query.getName(),
+                query.getSchema(),
+                query.getTableName()
         );
 
         try (Statement stmt = conn.createStatement()) {
@@ -228,10 +229,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
     public PreparedStatement getOneRecordStatement(Connection conn, TableElement t, String where, Set<String> fields) {
         final String fieldList = getTableFieldsListExceptBlobs((DataGrainElement) t, fields);
         String sql = String.format(
-            "select first 1 %s from %s where %s;",
-            fieldList,
-            tableString(t.getGrain().getName(), t.getName()),
-            where
+                "select first 1 %s from %s where %s;",
+                fieldList,
+                tableString(t.getGrain().getName(), t.getName()),
+                where
         );
 
         PreparedStatement result = prepareStatement(conn, sql);
@@ -244,10 +245,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
         TableElement t = c.getParentTable();
 
         String sql = String.format(
-            "select first 1 %s from %s where %s;",
-            c.getQuotedName(),
-            tableString(t.getGrain().getName(), t.getName()),
-            where
+                "select first 1 %s from %s where %s;",
+                c.getQuotedName(),
+                tableString(t.getGrain().getName(), t.getName()),
+                where
         );
 
         return prepareStatement(conn, sql);
@@ -258,7 +259,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
         // TODO:: COPY PASTE
         // Готовим запрос на удаление
         String sql = String.format("delete from " + tableString(t.getGrain().getName(), t.getName()) + " %s;",
-            where.isEmpty() ? "" : "where " + where);
+                where.isEmpty() ? "" : "where " + where);
         try {
             return conn.prepareStatement(sql);
         } catch (SQLException e) {
@@ -305,10 +306,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
         if (fields.length() == 0 && params.length() == 0) {
             sql = String.format("insert into " + tableString(t.getGrain().getName(),
-                t.getName()) + " default values %s;", returning);
+                    t.getName()) + " default values %s;", returning);
         } else {
             sql = String.format("insert into " + tableString(t.getGrain().getName(),
-                t.getName()) + " (%s) values (%s)%s;", fields.toString(), params.toString(), returning);
+                    t.getName()) + " (%s) values (%s)%s;", fields.toString(), params.toString(), returning);
         }
 
         return prepareStatement(conn, sql);
@@ -318,10 +319,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
     public int getCurrentIdent(Connection conn, BasicTable t) {
 
         IntegerColumn idColumn = t.getPrimaryKey().values().stream()
-            .filter(c -> c instanceof IntegerColumn)
-            .map(c -> (IntegerColumn) c)
-            .filter(ic -> ic.getSequence() != null)
-            .findFirst().get();
+                .filter(c -> c instanceof IntegerColumn)
+                .map(c -> (IntegerColumn) c)
+                .filter(ic -> ic.getSequence() != null)
+                .findFirst().get();
 
         final SequenceElement s = idColumn.getSequence();
         String curValueProcName = sequenceCurValueProcString(s.getGrain().getName(), s.getName());
@@ -339,46 +340,46 @@ public final class FirebirdAdaptor extends DBAdaptor {
     public PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where) {
         // TODO:: COPY PASTE
         String sql = String.format("delete from " + tableString(t.getGrain().getName(), t.getName()) + " where %s;",
-            where);
+                where);
         return prepareStatement(conn, sql);
     }
 
     @Override
     public DbColumnInfo getColumnInfo(Connection conn, Column<?> c) {
         String sql = String.format(
-            "SELECT r.RDB$FIELD_NAME AS column_name,%n"
-                + "        r.RDB$DESCRIPTION AS field_description,%n"
-                + "        r.RDB$NULL_FLAG AS nullable,%n"
-                + "        f.RDB$FIELD_LENGTH AS column_length,%n"
-                + "        f.RDB$FIELD_PRECISION AS column_precision,%n"
-                + "        f.RDB$FIELD_SCALE AS column_scale,%n"
-                + "        CASE f.RDB$FIELD_TYPE%n"
-                + "          WHEN 261 THEN 'BLOB'%n"
-                + "          WHEN 14 THEN 'CHAR'%n"
-                + "          WHEN 40 THEN 'CSTRING'%n"
-                + "          WHEN 11 THEN 'D_FLOAT'%n"
-                + "          WHEN 27 THEN 'DOUBLE PRECISION'%n"
-                + "          WHEN 10 THEN 'FLOAT'%n"
-                + "          WHEN 16 THEN 'BIGINT'%n"
-                + "          WHEN 8 THEN 'INTEGER'%n"
-                + "          WHEN 9 THEN 'QUAD'%n"
-                + "          WHEN 7 THEN 'SMALLINT'%n"
-                + "          WHEN 12 THEN 'DATE'%n"
-                + "          WHEN 13 THEN 'TIME'%n"
-                + "          WHEN 35 THEN 'TIMESTAMP'%n"
-                + "          WHEN 29 THEN 'TIMESTAMP WITH TIME ZONE'%n"
-                + "          WHEN 37 THEN 'VARCHAR'%n"
-                + "          ELSE 'UNKNOWN'%n"
-                + "        END AS column_type,%n"
-                + "        f.RDB$FIELD_SUB_TYPE AS column_subtype%n"
-                + "   FROM RDB$RELATION_FIELDS r%n"
-                + "   LEFT JOIN RDB$FIELDS f ON r.RDB$FIELD_SOURCE = f.RDB$FIELD_NAME%n"
-                + "   LEFT JOIN RDB$COLLATIONS coll ON f.RDB$COLLATION_ID = coll.RDB$COLLATION_ID%n"
-                + "   LEFT JOIN RDB$CHARACTER_SETS cset ON f.RDB$CHARACTER_SET_ID = cset.RDB$CHARACTER_SET_ID%n"
-                + "  WHERE r.RDB$RELATION_NAME='%s_%s' AND r.RDB$FIELD_NAME = '%s'",
-            c.getParentTable().getGrain().getName(),
-            c.getParentTable().getName(),
-            c.getName()
+                "SELECT r.RDB$FIELD_NAME AS column_name,%n"
+                        + "        r.RDB$DESCRIPTION AS field_description,%n"
+                        + "        r.RDB$NULL_FLAG AS nullable,%n"
+                        + "        f.RDB$FIELD_LENGTH AS column_length,%n"
+                        + "        f.RDB$FIELD_PRECISION AS column_precision,%n"
+                        + "        f.RDB$FIELD_SCALE AS column_scale,%n"
+                        + "        CASE f.RDB$FIELD_TYPE%n"
+                        + "          WHEN 261 THEN 'BLOB'%n"
+                        + "          WHEN 14 THEN 'CHAR'%n"
+                        + "          WHEN 40 THEN 'CSTRING'%n"
+                        + "          WHEN 11 THEN 'D_FLOAT'%n"
+                        + "          WHEN 27 THEN 'DOUBLE PRECISION'%n"
+                        + "          WHEN 10 THEN 'FLOAT'%n"
+                        + "          WHEN 16 THEN 'BIGINT'%n"
+                        + "          WHEN 8 THEN 'INTEGER'%n"
+                        + "          WHEN 9 THEN 'QUAD'%n"
+                        + "          WHEN 7 THEN 'SMALLINT'%n"
+                        + "          WHEN 12 THEN 'DATE'%n"
+                        + "          WHEN 13 THEN 'TIME'%n"
+                        + "          WHEN 35 THEN 'TIMESTAMP'%n"
+                        + "          WHEN 29 THEN 'TIMESTAMP WITH TIME ZONE'%n"
+                        + "          WHEN 37 THEN 'VARCHAR'%n"
+                        + "          ELSE 'UNKNOWN'%n"
+                        + "        END AS column_type,%n"
+                        + "        f.RDB$FIELD_SUB_TYPE AS column_subtype%n"
+                        + "   FROM RDB$RELATION_FIELDS r%n"
+                        + "   LEFT JOIN RDB$FIELDS f ON r.RDB$FIELD_SOURCE = f.RDB$FIELD_NAME%n"
+                        + "   LEFT JOIN RDB$COLLATIONS coll ON f.RDB$COLLATION_ID = coll.RDB$COLLATION_ID%n"
+                        + "   LEFT JOIN RDB$CHARACTER_SETS cset ON f.RDB$CHARACTER_SET_ID = cset.RDB$CHARACTER_SET_ID%n"
+                        + "  WHERE r.RDB$RELATION_NAME='%s_%s' AND r.RDB$FIELD_NAME = '%s'",
+                c.getParentTable().getGrain().getName(),
+                c.getParentTable().getName(),
+                c.getName()
         );
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
@@ -390,8 +391,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 Integer columnSubType = rs.getInt("column_subtype");
 
                 if (
-                    ("BIGINT".equals(columnType) || "INTEGER".equals(columnType))
-                        && Integer.valueOf(2).equals(columnSubType)
+                        ("BIGINT".equals(columnType) || "INTEGER".equals(columnType))
+                                && Integer.valueOf(2).equals(columnSubType)
                 ) {
                     result.setType(DecimalColumn.class);
                     result.setLength(rs.getInt("column_precision"));
@@ -433,12 +434,12 @@ public final class FirebirdAdaptor extends DBAdaptor {
         Grain g = te.getGrain();
 
         String sql = String.format(
-            "SELECT r.RDB$DEFAULT_SOURCE AS column_default_value%n"
-                + "   FROM RDB$RELATION_FIELDS r%n"
-                + "   WHERE r.RDB$RELATION_NAME='%s_%s' AND r.RDB$FIELD_NAME = '%s'",
-            c.getParentTable().getGrain().getName(),
-            c.getParentTable().getName(),
-            c.getName()
+                "SELECT r.RDB$DEFAULT_SOURCE AS column_default_value%n"
+                        + "   FROM RDB$RELATION_FIELDS r%n"
+                        + "   WHERE r.RDB$RELATION_NAME='%s_%s' AND r.RDB$FIELD_NAME = '%s'",
+                c.getParentTable().getGrain().getName(),
+                c.getParentTable().getName(),
+                c.getName()
         );
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
@@ -450,22 +451,22 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 if (IntegerColumn.class.equals(dbColumnInfo.getType())) {
                     String triggerName = SchemalessFunctions.generateSequenceTriggerName((IntegerColumn) c);
                     sql = String.format(
-                        "SELECT proc.RDB$DEPENDED_ON_NAME %n "
-                            + "FROM RDB$DEPENDENCIES tr%n "
-                            + "JOIN RDB$DEPENDENCIES proc ON tr.RDB$DEPENDED_ON_NAME = proc.RDB$DEPENDENT_NAME%n "
-                            + "WHERE tr.RDB$DEPENDENT_NAME = '%s' AND tr.RDB$DEPENDENT_TYPE = 2 "
-                            + "AND tr.RDB$DEPENDED_ON_TYPE = 5%n "
-                            + "AND proc.RDB$DEPENDENT_TYPE = 5 AND proc.RDB$DEPENDED_ON_TYPE = 14",
-                        triggerName
+                            "SELECT proc.RDB$DEPENDED_ON_NAME %n "
+                                    + "FROM RDB$DEPENDENCIES tr%n "
+                                    + "JOIN RDB$DEPENDENCIES proc ON tr.RDB$DEPENDED_ON_NAME = proc.RDB$DEPENDENT_NAME%n "
+                                    + "WHERE tr.RDB$DEPENDENT_NAME = '%s' AND tr.RDB$DEPENDENT_TYPE = 2 "
+                                    + "AND tr.RDB$DEPENDED_ON_TYPE = 5%n "
+                                    + "AND proc.RDB$DEPENDENT_TYPE = 5 AND proc.RDB$DEPENDED_ON_TYPE = 14",
+                            triggerName
                     );
 
                     try (ResultSet sequenceRs = SqlUtils.executeQuery(conn, sql)) {
                         if (sequenceRs.next()) {
                             String sequenceName = sequenceRs.getString(1).trim();
                             defaultValue = "NEXTVAL("
-                                // TODO: score sequence name could be spoiled here because of name limitation
-                                + sequenceName.replace(g.getName() + "_", "")
-                                + ")";
+                                    // TODO: score sequence name could be spoiled here because of name limitation
+                                    + sequenceName.replace(g.getName() + "_", "")
+                                    + ")";
                         }
                     }
                 }
@@ -501,17 +502,17 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public DbPkInfo getPKInfo(Connection conn, TableElement t) {
         String sql = String.format(
-            "select%n"
-                + "    ix.rdb$index_name as pk_name,%n"
-                + "    sg.rdb$field_name as column_name%n"
-                + " from%n"
-                + "    rdb$indices ix%n"
-                + "    left join rdb$index_segments sg on ix.rdb$index_name = sg.rdb$index_name%n"
-                + "    left join rdb$relation_constraints rc on rc.rdb$index_name = ix.rdb$index_name%n"
-                + " where%n"
-                + "    rc.rdb$constraint_type = 'PRIMARY KEY' AND rc.rdb$relation_name = '%s_%s'",
-            t.getGrain().getName(),
-            t.getName()
+                "select%n"
+                        + "    ix.rdb$index_name as pk_name,%n"
+                        + "    sg.rdb$field_name as column_name%n"
+                        + " from%n"
+                        + "    rdb$indices ix%n"
+                        + "    left join rdb$index_segments sg on ix.rdb$index_name = sg.rdb$index_name%n"
+                        + "    left join rdb$relation_constraints rc on rc.rdb$index_name = ix.rdb$index_name%n"
+                        + " where%n"
+                        + "    rc.rdb$constraint_type = 'PRIMARY KEY' AND rc.rdb$relation_name = '%s_%s'",
+                t.getGrain().getName(),
+                t.getName()
         );
 
         DbPkInfo result = new DbPkInfo(this);
@@ -537,26 +538,26 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
         String sql = String.format(
-                "SELECT" +
-                "    detail_relation_constraints.RDB$RELATION_NAME as table_name%n" +
-                "    , detail_relation_constraints.RDB$CONSTRAINT_NAME as constraint_name%n" +
-                "    , ref_constraints.RDB$UPDATE_RULE as update_rule%n" +
-                "    , ref_constraints.RDB$DELETE_RULE as delete_rule%n" +
-                "    , detail_index_segments.rdb$field_name AS column_name%n" +
-                "    , master_relation_constraints.rdb$relation_name AS ref_table_name%n" +
-                "FROM%n" +
-                "    rdb$relation_constraints detail_relation_constraints%n" +
-                "    JOIN rdb$index_segments detail_index_segments ON " +
-                "      detail_relation_constraints.rdb$index_name = detail_index_segments.rdb$index_name %n" +
-                "    JOIN rdb$ref_constraints ref_constraints ON " +
-                "      detail_relation_constraints.rdb$constraint_name = ref_constraints.rdb$constraint_name%n" +
-                "    JOIN rdb$relation_constraints master_relation_constraints ON " +
-                "      ref_constraints.rdb$const_name_uq = master_relation_constraints.rdb$constraint_name%n" +
-                "WHERE%n" +
-                "    detail_relation_constraints.rdb$constraint_type = 'FOREIGN KEY'%n" +
-                "    AND detail_relation_constraints.rdb$relation_name like '%s@_%%' escape '@'%n" +
-                "ORDER BY table_name, constraint_name, detail_index_segments.rdb$field_position;",
-            g.getName()
+                "SELECT"
+                        + "    detail_relation_constraints.RDB$RELATION_NAME as table_name%n"
+                        + "    , detail_relation_constraints.RDB$CONSTRAINT_NAME as constraint_name%n"
+                        + "    , ref_constraints.RDB$UPDATE_RULE as update_rule%n"
+                        + "    , ref_constraints.RDB$DELETE_RULE as delete_rule%n"
+                        + "    , detail_index_segments.rdb$field_name AS column_name%n"
+                        + "    , master_relation_constraints.rdb$relation_name AS ref_table_name%n"
+                        + "FROM%n"
+                        + "    rdb$relation_constraints detail_relation_constraints%n"
+                        + "    JOIN rdb$index_segments detail_index_segments ON "
+                        + "      detail_relation_constraints.rdb$index_name = detail_index_segments.rdb$index_name %n"
+                        + "    JOIN rdb$ref_constraints ref_constraints ON "
+                        + "      detail_relation_constraints.rdb$constraint_name = ref_constraints.rdb$constraint_name%n"
+                        + "    JOIN rdb$relation_constraints master_relation_constraints ON "
+                        + "      ref_constraints.rdb$const_name_uq = master_relation_constraints.rdb$constraint_name%n"
+                        + "WHERE%n"
+                        + "    detail_relation_constraints.rdb$constraint_type = 'FOREIGN KEY'%n"
+                        + "    AND detail_relation_constraints.rdb$relation_name like '%s@_%%' escape '@'%n"
+                        + "ORDER BY table_name, constraint_name, detail_index_segments.rdb$field_position;",
+                g.getName()
         );
 
         Map<String, DbFkInfo> fks = new HashMap<>();
@@ -578,18 +579,18 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 String columnName = rs.getString("column_name").trim();
 
                 fks.computeIfAbsent(
-                    fkName,
-                    key -> {
-                        DbFkInfo dfi = new DbFkInfo(fkName);
+                        fkName,
+                        key -> {
+                            DbFkInfo dfi = new DbFkInfo(fkName);
 
-                        dfi.setTableName(tableName);
-                        dfi.setRefGrainName(refGrainName);
-                        dfi.setRefTableName(refTableName);
-                        dfi.setDeleteRule(deleteRule);
-                        dfi.setUpdateRule(updateRule);
+                            dfi.setTableName(tableName);
+                            dfi.setRefGrainName(refGrainName);
+                            dfi.setRefTableName(refTableName);
+                            dfi.setDeleteRule(deleteRule);
+                            dfi.setUpdateRule(updateRule);
 
-                        return dfi;
-                    }
+                            return dfi;
+                        }
                 ).getColumnNames().add(columnName);
 
             }
@@ -604,17 +605,17 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public Map<String, DbIndexInfo> getIndices(Connection conn, Grain g) {
         String sql = String.format(
-            "SELECT RDB$INDICES.RDB$INDEX_NAME as indexname, RDB$INDICES.RDB$RELATION_NAME as tablename, "
-                + "RDB$INDEX_SEGMENTS.RDB$FIELD_NAME AS columnname%n"
-                + "FROM RDB$INDEX_SEGMENTS%n"
-                + "LEFT JOIN RDB$INDICES "
-                + " ON RDB$INDICES.RDB$INDEX_NAME = RDB$INDEX_SEGMENTS.RDB$INDEX_NAME%n"
-                + "LEFT JOIN RDB$RELATION_CONSTRAINTS "
-                + " ON RDB$RELATION_CONSTRAINTS.RDB$INDEX_NAME = RDB$INDEX_SEGMENTS.RDB$INDEX_NAME%n"
-                + "WHERE RDB$RELATION_CONSTRAINTS.RDB$CONSTRAINT_TYPE IS NULL "
-                + "AND RDB$INDICES.RDB$RELATION_NAME like '%s@_%%' escape '@'%n"
-                + "ORDER BY RDB$INDEX_SEGMENTS.RDB$FIELD_POSITION",
-            g.getName()
+                "SELECT RDB$INDICES.RDB$INDEX_NAME as indexname, RDB$INDICES.RDB$RELATION_NAME as tablename, "
+                        + "RDB$INDEX_SEGMENTS.RDB$FIELD_NAME AS columnname%n"
+                        + "FROM RDB$INDEX_SEGMENTS%n"
+                        + "LEFT JOIN RDB$INDICES "
+                        + " ON RDB$INDICES.RDB$INDEX_NAME = RDB$INDEX_SEGMENTS.RDB$INDEX_NAME%n"
+                        + "LEFT JOIN RDB$RELATION_CONSTRAINTS "
+                        + " ON RDB$RELATION_CONSTRAINTS.RDB$INDEX_NAME = RDB$INDEX_SEGMENTS.RDB$INDEX_NAME%n"
+                        + "WHERE RDB$RELATION_CONSTRAINTS.RDB$CONSTRAINT_TYPE IS NULL "
+                        + "AND RDB$INDICES.RDB$RELATION_NAME like '%s@_%%' escape '@'%n"
+                        + "ORDER BY RDB$INDEX_SEGMENTS.RDB$FIELD_POSITION",
+                g.getName()
         );
 
         Map<String, DbIndexInfo> result = new HashMap<>();
@@ -648,11 +649,11 @@ public final class FirebirdAdaptor extends DBAdaptor {
         // TODO: grain names may be cut, so reconsider the following
         String sql = String.format(
                 "SELECT RDB$PROCEDURE_NAME%n"
-              + "FROM RDB$PROCEDURES%n"
-              + "WHERE RDB$PROCEDURE_NAME LIKE '%s@_%%' escape '@' %n"
-                + "AND RDB$PROCEDURE_NAME NOT LIKE '%%" + CUR_VALUE_PROC_POSTFIX + "%%' escape '@' %n"
-                + "AND RDB$PROCEDURE_NAME NOT LIKE '%%" + NEXT_VALUE_PROC_POSTFIX + "%%' escape '@' %n",
-            g.getName()
+                        + "FROM RDB$PROCEDURES%n"
+                        + "WHERE RDB$PROCEDURE_NAME LIKE '%s@_%%' escape '@' %n"
+                        + "AND RDB$PROCEDURE_NAME NOT LIKE '%%" + CUR_VALUE_PROC_POSTFIX + "%%' escape '@' %n"
+                        + "AND RDB$PROCEDURE_NAME NOT LIKE '%%" + NEXT_VALUE_PROC_POSTFIX + "%%' escape '@' %n",
+                g.getName()
         );
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
@@ -670,8 +671,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public int getDBPid(Connection conn) {
         try (
-            ResultSet rs = SqlUtils.executeQuery(
-                conn, "SELECT MON$SERVER_PID as pid FROM MON$ATTACHMENTS")
+                ResultSet rs = SqlUtils.executeQuery(
+                        conn, "SELECT MON$SERVER_PID as pid FROM MON$ATTACHMENTS")
         ) {
             if (rs.next()) {
                 return rs.getInt("pid");
@@ -699,7 +700,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
             return rs.getLong(1);
         } catch (SQLException e) {
             throw new CelestaException(
-                "Can't get current value of sequence " + tableString(s.getGrain().getName(), s.getName()), e
+                    "Can't get current value of sequence " + tableString(s.getGrain().getName(), s.getName()), e
             );
         }
     }
@@ -753,7 +754,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public boolean sequenceExists(Connection conn, String schema, String name) {
         String sql = String.format("SELECT * FROM RDB$GENERATORS WHERE RDB$GENERATOR_NAME = '%s'",
-                                   sequenceString(schema, name, false));
+                sequenceString(schema, name, false));
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             return rs.next();
@@ -767,8 +768,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
         String nextValueProcName = sequenceNextValueProcString(s.getGrain().getName(), s.getName(), false);
 
         String sql = String.format("SELECT RDB$PROCEDURE_SOURCE FROM RDB$PROCEDURES "
-                                 + "WHERE RDB$PROCEDURE_NAME = '%s'",
-                                   nextValueProcName);
+                        + "WHERE RDB$PROCEDURE_NAME = '%s'",
+                nextValueProcName);
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             rs.next();
@@ -810,8 +811,8 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
         for (int i = 0; i < fields.size(); ++i) {
             sb.append(tableStr).append(".\"").append(fields.get(i)).append("\"")
-                .append(" = ")
-                .append(otherTableStr).append(".\"").append(otherFields.get(i)).append("\"");
+                    .append(" = ")
+                    .append(otherTableStr).append(".\"").append(otherFields.get(i)).append("\"");
 
             if (i + 1 != fields.size()) {
                 sb.append(" AND ");
@@ -826,9 +827,9 @@ public final class FirebirdAdaptor extends DBAdaptor {
     @Override
     public void createSysObjects(Connection conn, String sysSchemaName) {
         String versionCheckErrorSql =
-            "CREATE OR ALTER EXCEPTION VERSION_CHECK_ERROR 'record version check failure'";
+                "CREATE OR ALTER EXCEPTION VERSION_CHECK_ERROR 'record version check failure'";
         String sequenceOverflowErrorSql =
-            "CREATE OR ALTER EXCEPTION SEQUENCE_OVERFLOW_ERROR 'sequence overflow failure'";
+                "CREATE OR ALTER EXCEPTION SEQUENCE_OVERFLOW_ERROR 'sequence overflow failure'";
 
         try {
             try (Statement stmt = conn.createStatement()) {
@@ -845,12 +846,12 @@ public final class FirebirdAdaptor extends DBAdaptor {
         List<String> result = new ArrayList<>();
 
         String sql = String.format(
-            "select rdb$relation_name%n"
-            + "from rdb$relations%n"
-            + "where rdb$view_blr is not null %n"
-            + "and (rdb$system_flag is null or rdb$system_flag = 0)"
-            + "and rdb$relation_name like '%s@_%%' escape '@'",
-            g.getName()
+                "select rdb$relation_name%n"
+                        + "from rdb$relations%n"
+                        + "where rdb$view_blr is not null %n"
+                        + "and (rdb$system_flag is null or rdb$system_flag = 0)"
+                        + "and rdb$relation_name like '%s@_%%' escape '@'",
+                g.getName()
         );
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
