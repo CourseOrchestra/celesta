@@ -1118,10 +1118,8 @@ public abstract class AbstractAdaptorTest {
             assertEquals(1, l.size());
             DbFkInfo info = l.get(0);
             assertEquals("fk_testNameVeryVeryLongLonName", info.getName());
-            String[] expected = {"attrVarchar", "attrInt"};
-            String[] actual = info.getColumnNames().toArray(new String[0]);
 
-            assertTrue(Arrays.equals(expected, actual));
+            assertEquals(Arrays.asList("attrVarchar", "attrInt"), info.getColumnNames());
             assertEquals(FKRule.CASCADE, info.getUpdateRule());
             assertEquals(FKRule.SET_NULL, info.getDeleteRule());
 
@@ -1453,7 +1451,6 @@ public abstract class AbstractAdaptorTest {
 
         ParameterizedView pView = g.getElement(pViewName, ParameterizedView.class);
         dba.createParameterizedView(conn, pView);
-
         dba.dropParameterizedView(conn, g.getName(), pViewName);
         assertEquals(0, list.size());
     }
