@@ -38,10 +38,13 @@ For more details, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Useful Links
 
-* Overview (in Russian): https://habrahabr.ru/post/455746/
+### In English
 
-* Older overview (versions before 7.x): https://habr.com/ru/post/335966/
+* Overview: https://dzone.com/articles/celesta-sql-databases-api-schema-migration-and-tes
 
-* SECON2018: A concise overview talk (in Russian, 30 min): https://youtu.be/IEIzpqID2XI
+### In Russian
+* Overview: https://habrahabr.ru/post/455746/
 
-* JUG.MSK meetup, September 2018: A longer talk with more technical details (in Russian, versions before 7.x): https://youtu.be/16lB_c6pHfc?t=4143
+* SECON2018: A concise overview talk: https://youtu.be/IEIzpqID2XI
+
+* JUG.MSK meetup, September 2018: A longer talk with more technical details (versions before 7.x): https://youtu.be/16lB_c6pHfc?t=4143
