@@ -113,10 +113,10 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public List<String> getColumnRefNames() {
-        if (segments.size() > 0) {
+        if (getSegments().size() > 0) {
             List<String> result = new ArrayList<>();
 
-            for (Map.Entry<String, Expr> entry : segments.get(0).columns.entrySet()) {
+            for (Map.Entry<String, Expr> entry : getSegments().get(0).columns.entrySet()) {
                 Expr expr = entry.getValue();
 
                 if (!(expr instanceof Count)) {
@@ -188,11 +188,11 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public TableRef getRefTable() {
-        return segments.get(0).tables.values().stream().findFirst().get();
+        return getSegments().get(0).tables.values().stream().findFirst().get();
     }
 
     public boolean isGroupByColumn(String alias) {
-        return segments.get(0).groupByColumns.containsKey(alias);
+        return getSegments().get(0).groupByColumns.containsKey(alias);
     }
 
     public String getSelectPartOfScript() {
@@ -202,7 +202,7 @@ public final class MaterializedView extends AbstractView implements TableElement
             PrintWriter bw = new PrintWriter(sw);
             BWWrapper bww = new BWWrapper();
 
-            segments.get(0).writeSelectPart(bw, gen, bww);
+            getSegments().get(0).writeSelectPart(bw, gen, bww);
             bw.flush();
             return sw.getBuffer().toString();
         } catch (IOException e) {
@@ -216,7 +216,7 @@ public final class MaterializedView extends AbstractView implements TableElement
             StringWriter sw = new StringWriter();
             PrintWriter bw = new PrintWriter(sw);
 
-            segments.get(0).writeGroupByPart(bw, gen);
+            getSegments().get(0).writeGroupByPart(bw, gen);
             bw.flush();
             return sw.getBuffer().toString();
         } catch (IOException e) {
