@@ -20,20 +20,14 @@ public class View extends AbstractView {
 
     public View(GrainPart grainPart, String name, String sql) throws ParseException {
         this(grainPart, name);
-        StringReader sr = new StringReader(sql);
-        CelestaParser parser = new CelestaParser(sr);
-        try {
-            AbstractSelectStmt selectStmt = addSelectStatement();
+        try (StringReader sr = new StringReader(sql)) {
+            CelestaParser parser = new CelestaParser(sr);
             try {
-                parser.select(selectStmt);
-            } finally {
-                sr.close();
+                parser.unionAll(this);
+            } catch (ParseException e) {
+                delete();
+                throw e;
             }
-            selectStmt.finalizeParsing();
-            finalizeParsing();
-        } catch (ParseException e) {
-            delete();
-            throw e;
         }
     }
 

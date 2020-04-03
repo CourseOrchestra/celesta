@@ -253,7 +253,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest7() throws ParseException, IOException {
+    public void modificationTest7() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
                 .build();
@@ -267,7 +267,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest8() throws ParseException, IOException {
+    public void modificationTest8() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
                 .build();
@@ -281,10 +281,25 @@ public class ScoreTest {
         assertEquals(1, g1.getElements(View.class).size());
         assertTrue(g1.isModified());
         View nv = new View(g1p, "testit", "select postalcode, city from addresses where flat = '5'");
+        assertEquals(1, nv.getSegments().size());
         assertEquals(2, nv.getColumns().size());
         assertEquals(2, g1.getElements(View.class).size());
         assertTrue(g1.isModified());
+    }
 
+    @Test
+    public void addViewWithUnion() throws ParseException {
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
+                .build();
+        Grain g1 = s.getGrain("grain1");
+        GrainPart g1p = g1.getGrainParts().stream().findFirst().get();
+
+        View nv = new View(g1p, "testit",
+                "select postalcode, city from addresses where flat = '5'" +
+                        "union all select postalcode, city from addresses where flat = '6'");
+        assertEquals(2, nv.getSegments().size());
+        assertEquals(2, nv.getColumns().size());
     }
 
     @Test

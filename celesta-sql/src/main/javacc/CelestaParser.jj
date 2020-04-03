@@ -526,21 +526,26 @@ void createView(GrainPart g, String doc):
 {
 	View view = null;
 	Token viewName = null;
-	AbstractSelectStmt selectStmt = null;
 }
 {
 <K_VIEW> viewName = <S_IDENTIFIER> <K_AS>
     {
         view = new View(g, viewName.toString());
 	    view.setCelestaDocLexem(doc);
-	    selectStmt = view.addSelectStatement();
 	}
-	select(selectStmt)	{selectStmt.finalizeParsing();}
-    (<K_UNION> <K_ALL> {selectStmt = view.addSelectStatement();}
-    select(selectStmt) {selectStmt.finalizeParsing();})*
-    { view.finalizeParsing();}
+	unionAll(view)
 }
 
+void unionAll(View view):
+{
+   AbstractSelectStmt selectStmt = view.addSelectStatement();
+}
+{
+   select(selectStmt)	{selectStmt.finalizeParsing();}
+   (<K_UNION> <K_ALL>   {selectStmt = view.addSelectStatement();}
+     select(selectStmt) {selectStmt.finalizeParsing();})*
+   { view.finalizeParsing();}
+}
 
 void createMaterializedView(GrainPart g, String doc):
 {
@@ -564,22 +569,16 @@ void createFunction(GrainPart g, String doc):
 {
     ParameterizedView v = null;
     Token viewName = null;
-    AbstractSelectStmt select = null;
 }
 {
 <K_FUNCTION> viewName = <S_IDENTIFIER>
     {
         v = new ParameterizedView(g, viewName.toString());
         v.setCelestaDocLexem(doc);
-        select = v.addSelectStatement();
     }
 "(" functionParam(v) ("," functionParam(v))* ")"
     <K_AS>
-    select(select)
-	{select.finalizeParsing();}
-	(<K_UNION> <K_ALL> {select = v.addSelectStatement();}
-        select(select) {select.finalizeParsing();})*
-    {v.finalizeParsing();}
+    unionAll(v)
 }
 
 void createSequence(GrainPart g, String doc):
