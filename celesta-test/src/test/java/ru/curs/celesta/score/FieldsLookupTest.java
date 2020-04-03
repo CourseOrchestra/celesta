@@ -68,7 +68,8 @@ public class FieldsLookupTest {
         }
 
         GenView view = new GenView(gp, name);
-        view.addFromTableRef(new TableRef(table, table.getName()));
+        AbstractSelectStmt selectStmt = view.addSelectStatement();
+        selectStmt.addFromTableRef(new TableRef(table, table.getName()));
 
         view.addColumn(table.getName() + "1", ViewColumnType.INT);
         view.addColumn(table.getName() + "2", ViewColumnType.INT);

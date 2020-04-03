@@ -524,47 +524,56 @@ void createView(GrainPart g, String doc):
 {
 	View view = null;
 	Token viewName = null;
+	AbstractSelectStmt selectStmt = null;
 }
 {
 <K_VIEW> viewName = <S_IDENTIFIER> <K_AS>
     {
         view = new View(g, viewName.toString());
 	    view.setCelestaDocLexem(doc);
+	    selectStmt = view.addSelectStatement();
 	}
-	select(view)
-	{view.finalizeParsing();}
+	select(selectStmt)
+	{selectStmt.finalizeParsing();
+     view.finalizeParsing();}
 }
 
 void createMaterializedView(GrainPart g, String doc):
 {
     MaterializedView view = null;
     Token viewName = null;
+    AbstractSelectStmt selectStmt = null;
 }
 {
 <K_MATERIALIZED> <K_VIEW> viewName = <S_IDENTIFIER> <K_AS>
     {
         view = new MaterializedView(g, viewName.toString());
         view.setCelestaDocLexem(doc);
+        selectStmt = view.addSelectStatement();
     }
-    materializedSelect(view)
-    {view.finalizeParsing();}
+    materializedSelect(selectStmt)
+    {selectStmt.finalizeParsing();
+     view.finalizeParsing();}
 }
 
 void createFunction(GrainPart g, String doc):
 {
     ParameterizedView v = null;
     Token viewName = null;
+    AbstractSelectStmt select = null;
 }
 {
 <K_FUNCTION> viewName = <S_IDENTIFIER>
     {
         v = new ParameterizedView(g, viewName.toString());
         v.setCelestaDocLexem(doc);
+        select = v.addSelectStatement();
     }
 "(" functionParam(v) ("," functionParam(v))* ")"
     <K_AS>
-    select(v)
-	{v.finalizeParsing();}
+    select(select)
+	{select.finalizeParsing();
+     v.finalizeParsing();}
 }
 
 void createSequence(GrainPart g, String doc):
@@ -788,7 +797,7 @@ FieldRef fieldReference(IdentifierParser identifierParser):
   {return new FieldRef(tableName, fieldName);}
 }
 
-void select(AbstractView v):
+void select(AbstractSelectStmt v):
 {
 Expr where;
 }
@@ -799,7 +808,7 @@ Expr where;
     [<K_GROUP> <K_BY>  groupBy(v)]
 }
 
-void parameterizedSelect(ParameterizedView v):
+void parameterizedSelect(AbstractSelectStmt v):
 {
 Expr where;
 }
@@ -810,7 +819,7 @@ Expr where;
     [<K_GROUP> <K_BY>  groupBy(v)]
 }
 
-void materializedSelect(MaterializedView v):
+void materializedSelect(AbstractSelectStmt v):
 {
 }
 {
@@ -820,14 +829,14 @@ void materializedSelect(MaterializedView v):
 }
 
 
-void groupBy(AbstractView view):
+void groupBy(AbstractSelectStmt view):
 { FieldRef fr; }
 {
 fr = fieldReference(view.getGrain().getScore().getIdentifierParser()) {view.addGroupByColumn(fr);}
      ("," fr = fieldReference(view.getGrain().getScore().getIdentifierParser()) {view.addGroupByColumn(fr);} )*
 }
 
-Expr aggregateFunc(AbstractView v):
+Expr aggregateFunc(AbstractSelectStmt v):
 {
     Expr term;
     Token t;
@@ -839,7 +848,7 @@ Expr aggregateFunc(AbstractView v):
       | <K_MIN> "(" term = sqlTermExpr(v.getGrain().getScore().getIdentifierParser()) ")" { return new Min(term); }
 }
 
-Expr materializedAggregateFunc(MaterializedView v):
+Expr materializedAggregateFunc(AbstractSelectStmt v):
 {
     Expr term;
     Token t;
@@ -849,7 +858,7 @@ Expr materializedAggregateFunc(MaterializedView v):
       | <K_SUM> "(" term = fieldReference(v.getGrain().getScore().getIdentifierParser()) ")" { return new Sum(term); }
 }
 
-void selectItem(AbstractView v):
+void selectItem(AbstractSelectStmt v):
 {
   Token doc = null;
   Token aliasToken = null;
@@ -865,7 +874,7 @@ void selectItem(AbstractView v):
      v.addColumn(alias, expr); }
 }
 
-void materializedSelectItem(MaterializedView v):
+void materializedSelectItem(AbstractSelectStmt v):
 {
   Token doc = null;
   Token aliasToken = null;
@@ -882,7 +891,7 @@ void materializedSelectItem(MaterializedView v):
      v.addColumn(alias, expr); }
 }
 
-TableRef tableReference(AbstractView v):
+TableRef tableReference(AbstractSelectStmt v):
 { TableRef result;
   Token t;
   String grainName = null;
@@ -919,14 +928,14 @@ String sequenceNextVal():
   }
 }
 
-void fromClause(AbstractView v):
+void fromClause(AbstractSelectStmt v):
 {TableRef tRef;}
 {
     tRef = tableReference(v) {v.addFromTableRef(tRef);} 
     (tRef = join(v) {v.addFromTableRef(tRef);} )*
 }
 
-TableRef join(AbstractView v):
+TableRef join(AbstractSelectStmt v):
 { TableRef tRef;
   TableRef.JoinType jt;
   Expr onExpr;

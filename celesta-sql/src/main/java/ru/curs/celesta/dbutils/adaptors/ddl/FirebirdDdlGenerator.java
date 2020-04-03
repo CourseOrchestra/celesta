@@ -27,6 +27,7 @@ import ru.curs.celesta.score.LogicValuedExpr;
 import ru.curs.celesta.score.MaterializedView;
 import ru.curs.celesta.score.ParameterRef;
 import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.ParameterizedViewSelectStmt;
 import ru.curs.celesta.score.SQLGenerator;
 import ru.curs.celesta.score.SequenceElement;
 import ru.curs.celesta.score.StringColumn;
@@ -91,9 +92,9 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             Long startWith = initialStartWith - incrementBy;
 
             String startWithSql = String.format(
-                "ALTER SEQUENCE %s RESTART WITH %s",
-                fullSequenceName,
-                startWith
+                    "ALTER SEQUENCE %s RESTART WITH %s",
+                    fullSequenceName,
+                    startWith
             );
 
             result.add(startWithSql);
@@ -138,70 +139,70 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
         final String resultDeterminingSql;
         final String initValSql = String.format(
-            "IF (:inVal IS NULL)  %n"
-                + "  THEN SELECT GEN_ID(%s, 0) FROM RDB$DATABASE INTO val;%n"
-                + "  ELSE val = inVal;",
-            fullSequenceName
+                "IF (:inVal IS NULL)  %n"
+                        + "  THEN SELECT GEN_ID(%s, 0) FROM RDB$DATABASE INTO val;%n"
+                        + "  ELSE val = inVal;",
+                fullSequenceName
         );
 
         if (!isCycle) {
             resultDeterminingSql = String.format(
-                "%s%n"
-                    + "IF (%s)%n"
-                    + "    THEN val = %s;",
-                initValSql,
-                incrementBy > 0
-                    ? String.format("val > %s", maxValue)
-                    : String.format("val < %s", minValue),
-                incrementBy > 0
-                    ? maxValue
-                    : minValue
+                    "%s%n"
+                            + "IF (%s)%n"
+                            + "    THEN val = %s;",
+                    initValSql,
+                    incrementBy > 0
+                            ? String.format("val > %s", maxValue)
+                            : String.format("val < %s", minValue),
+                    incrementBy > 0
+                            ? maxValue
+                            : minValue
             );
         } else {
             BigInteger incrementByModulus = BigInteger.valueOf(incrementBy).abs();
             BigInteger diffBetweenMinAndMax = BigInteger.valueOf(maxValue).subtract(BigInteger.valueOf(minValue));
             BigInteger stepsForOneCycle = diffBetweenMinAndMax.divide(incrementByModulus)
-                .add(BigInteger.ONE);
+                    .add(BigInteger.ONE);
 
             resultDeterminingSql = initValSql + "\n"
-                + String.format(
-                "currentStep = (%s) / %s + 1; %n",
-                incrementBy > 0
-                    ? String.format("val - %s", minValue)
-                    : String.format("%s - val", maxValue),
-                incrementByModulus
+                    + String.format(
+                    "currentStep = (%s) / %s + 1; %n",
+                    incrementBy > 0
+                            ? String.format("val - %s", minValue)
+                            : String.format("%s - val", maxValue),
+                    incrementByModulus
             )
-                + String.format(
-                "IF (mod(:currentStep, %s) = 1)\n"
-                    + "  THEN val = %s;\n",
-                stepsForOneCycle,
-                incrementBy > 0 ? minValue : maxValue
+                    + String.format(
+                    "IF (mod(:currentStep, %s) = 1)\n"
+                            + "  THEN val = %s;\n",
+                    stepsForOneCycle,
+                    incrementBy > 0 ? minValue : maxValue
             )
-                + String.format(
-                "ELSE IF (mod(:currentStep, %s) = 0)%n"
-                    + "  THEN val = %s;%n",
-                stepsForOneCycle,
-                incrementBy > 0 ? maxValue : minValue
+                    + String.format(
+                    "ELSE IF (mod(:currentStep, %s) = 0)%n"
+                            + "  THEN val = %s;%n",
+                    stepsForOneCycle,
+                    incrementBy > 0 ? maxValue : minValue
             )
-                + String.format(
-                "ELSE val = %s + %s * (mod(:currentStep, %s) - 1);",
-                incrementBy > 0 ? minValue : maxValue,
-                incrementBy,
-                stepsForOneCycle
+                    + String.format(
+                    "ELSE val = %s + %s * (mod(:currentStep, %s) - 1);",
+                    incrementBy > 0 ? minValue : maxValue,
+                    incrementBy,
+                    stepsForOneCycle
             );
 
         }
 
-        return  String.format(
-            "CREATE PROCEDURE %s (inVal integer)%n "
-                + "RETURNS (val integer)%n "
-                + "  AS%n"
-                + (isCycle ? "  declare variable currentStep integer;%n " : "")
-                + "  BEGIN%n"
-                + "  %s%n"
-                + "  END",
-            curValueProcName,
-            resultDeterminingSql
+        return String.format(
+                "CREATE PROCEDURE %s (inVal integer)%n "
+                        + "RETURNS (val integer)%n "
+                        + "  AS%n"
+                        + (isCycle ? "  declare variable currentStep integer;%n " : "")
+                        + "  BEGIN%n"
+                        + "  %s%n"
+                        + "  END",
+                curValueProcName,
+                resultDeterminingSql
         );
     }
 
@@ -217,46 +218,46 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
         final String resultDeterminingSql;
         final String nextValueSql = String.format(
-            "SELECT GEN_ID(%s, %s) FROM RDB$DATABASE INTO val;",
-            fullSequenceName,
-            incrementBy
+                "SELECT GEN_ID(%s, %s) FROM RDB$DATABASE INTO val;",
+                fullSequenceName,
+                incrementBy
         );
 
         if (!isCycle) {
             resultDeterminingSql = String.format(
-                "%s%n"
-                    + "IF (%s)%n"
-                    + "    THEN EXCEPTION SEQUENCE_OVERFLOW_ERROR;",
-                nextValueSql,
-                incrementBy > 0
-                    ? String.format("val > %s", maxValue)
-                    : String.format("val < %s", minValue)
+                    "%s%n"
+                            + "IF (%s)%n"
+                            + "    THEN EXCEPTION SEQUENCE_OVERFLOW_ERROR;",
+                    nextValueSql,
+                    incrementBy > 0
+                            ? String.format("val > %s", maxValue)
+                            : String.format("val < %s", minValue)
             );
         } else {
             resultDeterminingSql = String.format(
-                "%s%n"
-                    + "EXECUTE PROCEDURE %s(val) RETURNING_VALUES val;",
-                nextValueSql,
-                curValueProcName
+                    "%s%n"
+                            + "EXECUTE PROCEDURE %s(val) RETURNING_VALUES val;",
+                    nextValueSql,
+                    curValueProcName
             );
         }
 
 
-        return  String.format(
-            "CREATE PROCEDURE %s%n "
-                + "RETURNS (val integer)%n "
-                + "  AS%n"
-                + (isCycle ? "  declare variable currentStep integer;%n " : "")
-                + "  BEGIN%n"
-                + "  /* INCREMENT_BY = %s, MINVALUE = %s, MAXVALUE = %s, CYCLE = %s */%n"
-                + "  %s%n"
-                + "  END",
-            nextValueProcName,
-            incrementBy,
-            minValue,
-            maxValue,
-            isCycle,
-            resultDeterminingSql
+        return String.format(
+                "CREATE PROCEDURE %s%n "
+                        + "RETURNS (val integer)%n "
+                        + "  AS%n"
+                        + (isCycle ? "  declare variable currentStep integer;%n " : "")
+                        + "  BEGIN%n"
+                        + "  /* INCREMENT_BY = %s, MINVALUE = %s, MAXVALUE = %s, CYCLE = %s */%n"
+                        + "  %s%n"
+                        + "  END",
+                nextValueProcName,
+                incrementBy,
+                minValue,
+                maxValue,
+                isCycle,
+                resultDeterminingSql
         );
     }
 
@@ -276,9 +277,9 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                     result.addAll(sqlList);
 
                     TriggerQuery query = new TriggerQuery()
-                        .withSchema(t.getGrain().getName())
-                        .withTableName(t.getName())
-                        .withName(triggerName);
+                            .withSchema(t.getGrain().getName())
+                            .withTableName(t.getName())
+                            .withName(triggerName);
                     this.rememberTrigger(query);
                 }
             }
@@ -290,8 +291,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     @Override
     List<String> dropParameterizedView(String schemaName, String viewName, Connection conn) {
         String sql = String.format(
-            "DROP PROCEDURE %s",
-            tableString(schemaName, viewName)
+                "DROP PROCEDURE %s",
+                tableString(schemaName, viewName)
         );
 
         return Collections.singletonList(sql);
@@ -300,8 +301,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     @Override
     List<String> dropIndex(Grain g, DbIndexInfo dBIndexInfo) {
         String sql = String.format(
-            "DROP INDEX %s",
-            tableString(g.getName(), dBIndexInfo.getIndexName())
+                "DROP INDEX %s",
+                tableString(g.getName(), dBIndexInfo.getIndexName())
         );
 
         return Collections.singletonList(sql);
@@ -316,9 +317,9 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     public String dropPk(TableElement t, String pkName) {
 
         return String.format(
-            "ALTER TABLE %s DROP CONSTRAINT \"%s\"",
-            this.tableString(t.getGrain().getName(), t.getName()),
-            pkName
+                "ALTER TABLE %s DROP CONSTRAINT \"%s\"",
+                this.tableString(t.getGrain().getName(), t.getName()),
+                pkName
         );
     }
 
@@ -336,8 +337,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         // First of all, we are about to check if trigger exists
         try {
             TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
-                .withName(triggerName)
-                .withTableName(t.getName());
+                    .withName(triggerName)
+                    .withTableName(t.getName());
             boolean triggerExists = this.triggerExists(conn, query);
 
             if (t instanceof VersionedElement) {
@@ -348,16 +349,16 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                     if (!triggerExists) {
                         // CREATE TRIGGER
                         sql =
-                            "CREATE TRIGGER \"" + triggerName + "\" "
-                                + "for " + tableString(t.getGrain().getName(), t.getName())
-                                + " BEFORE UPDATE \n"
-                                + " AS \n"
-                                + " BEGIN \n"
-                                + "   IF (OLD.\"recversion\" = NEW.\"recversion\")\n"
-                                + "     THEN NEW.\"recversion\" = NEW.\"recversion\" + 1;"
-                                + "   ELSE "
-                                + "     EXCEPTION VERSION_CHECK_ERROR;"
-                                + " END";
+                                "CREATE TRIGGER \"" + triggerName + "\" "
+                                        + "for " + tableString(t.getGrain().getName(), t.getName())
+                                        + " BEFORE UPDATE \n"
+                                        + " AS \n"
+                                        + " BEGIN \n"
+                                        + "   IF (OLD.\"recversion\" = NEW.\"recversion\")\n"
+                                        + "     THEN NEW.\"recversion\" = NEW.\"recversion\" + 1;"
+                                        + "   ELSE "
+                                        + "     EXCEPTION VERSION_CHECK_ERROR;"
+                                        + " END";
                         result.add(sql);
                         this.rememberTrigger(query);
                     }
@@ -370,7 +371,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             }
         } catch (CelestaException e) {
             throw new CelestaException("Could not update version check trigger on %s.%s: %s", t.getGrain().getName(),
-                t.getName(), e.getMessage());
+                    t.getName(), e.getMessage());
         }
 
         return result;
@@ -379,14 +380,14 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     @Override
     List<String> createIndex(Index index) {
         String indexColumns = index.getColumns().values()
-            .stream()
-            .map(Column::getQuotedName)
-            .collect(Collectors.joining(", "));
+                .stream()
+                .map(Column::getQuotedName)
+                .collect(Collectors.joining(", "));
         String sql = String.format(
-            "CREATE INDEX %s ON %s (%s)",
-            tableString(index.getTable().getGrain().getName(), index.getName()),
-            this.tableString(index.getTable().getGrain().getName(), index.getTable().getName()),
-            indexColumns
+                "CREATE INDEX %s ON %s (%s)",
+                tableString(index.getTable().getGrain().getName(), index.getName()),
+                this.tableString(index.getTable().getGrain().getName(), index.getTable().getName()),
+                indexColumns
         );
 
         return Collections.singletonList(sql);
@@ -394,8 +395,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
     @Override
     List<String> updateColumn(Connection conn, Column<?> c, DbColumnInfo actual) {
-        @SuppressWarnings("unchecked")
-        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+        @SuppressWarnings("unchecked") final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
 
         List<String> result = new ArrayList<>();
 
@@ -405,9 +405,9 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         final String triggerName = getVersionCheckTriggerName(t);
 
         TriggerQuery query = new TriggerQuery()
-            .withSchema(t.getGrain().getName())
-            .withName(triggerName)
-            .withTableName(t.getName());
+                .withSchema(t.getGrain().getName())
+                .withName(triggerName)
+                .withTableName(t.getName());
 
 
         boolean triggerExists = this.triggerExists(conn, query);
@@ -418,14 +418,14 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         String sql;
 
         Matcher nextValMatcher = Pattern.compile(DbColumnInfo.SEQUENCE_NEXT_VAL_PATTERN)
-            .matcher(actual.getDefaultValue());
+                .matcher(actual.getDefaultValue());
 
         // Starting with deletion of default-value if exists
         if (!actual.getDefaultValue().isEmpty() && !nextValMatcher.matches()) {
             sql = String.format(
-                ALTER_TABLE + tableFullName
-                    + " ALTER COLUMN \"%s\" DROP DEFAULT",
-                c.getName()
+                    ALTER_TABLE + tableFullName
+                            + " ALTER COLUMN \"%s\" DROP DEFAULT",
+                    c.getName()
             );
             result.add(sql);
         }
@@ -435,18 +435,18 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         // Checking for nullability
         if (c.isNullable() != actual.isNullable()) {
             sql = String.format(
-                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                    + " ALTER COLUMN \"%s\" %s",
-                c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
+                    ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                            + " ALTER COLUMN \"%s\" %s",
+                    c.getName(), c.isNullable() ? "DROP NOT NULL" : "SET NOT NULL");
             result.add(sql);
         }
 
         // If there's an empty default in data, and non-empty one in metadata then
         if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate())) {
             sql = String.format(
-                ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
-                    + " ALTER COLUMN \"%s\" SET %s",
-                c.getName(), ColumnDefinerFactory.getColumnDefiner(getType(), cClass).getDefaultDefinition(c));
+                    ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
+                            + " ALTER COLUMN \"%s\" SET %s",
+                    c.getName(), ColumnDefinerFactory.getColumnDefiner(getType(), cClass).getDefaultDefinition(c));
             result.add(sql);
         }
 
@@ -462,9 +462,9 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                     result.addAll(sqlList);
 
                     TriggerQuery q = new TriggerQuery()
-                        .withSchema(t.getGrain().getName())
-                        .withTableName(t.getName())
-                        .withName(sequenceTriggerName);
+                            .withSchema(t.getGrain().getName())
+                            .withTableName(t.getName())
+                            .withName(sequenceTriggerName);
                     this.rememberTrigger(q);
                 }
             } else {
@@ -474,10 +474,10 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                 if (m.matches()) { //old default value is sequence
                     if (ic.getSequence() == null) {
                         TriggerQuery triggerQuery = new TriggerQuery()
-                            .withSchema(c.getParentTable().getGrain().getName())
-                            .withTableName(c.getParentTable().getName())
-                            .withName(generateSequenceTriggerName(ic))
-                            .withType(TriggerType.PRE_INSERT);
+                                .withSchema(c.getParentTable().getGrain().getName())
+                                .withTableName(c.getParentTable().getName())
+                                .withName(generateSequenceTriggerName(ic))
+                                .withType(TriggerType.PRE_INSERT);
 
                         triggerExists = this.triggerExists(conn, query);
 
@@ -489,25 +489,25 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
                         if (!oldSequenceName.equals(ic.getSequence().getName())) { //using of new sequence
                             List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
-                                conn,
-                                generateSequenceTriggerName(ic),
-                                ic);
+                                    conn,
+                                    generateSequenceTriggerName(ic),
+                                    ic);
                             result.addAll(sqlList);
 
                             TriggerQuery triggerQuery = new TriggerQuery()
-                                .withSchema(c.getParentTable().getGrain().getName())
-                                .withTableName(c.getParentTable().getName())
-                                .withName(generateSequenceTriggerName(ic))
-                                .withType(TriggerType.PRE_INSERT);
+                                    .withSchema(c.getParentTable().getGrain().getName())
+                                    .withTableName(c.getParentTable().getName())
+                                    .withName(generateSequenceTriggerName(ic))
+                                    .withType(TriggerType.PRE_INSERT);
 
                             this.rememberTrigger(triggerQuery);
                         }
                     }
                 } else if (ic.getSequence() != null) {
                     List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
-                        conn,
-                        generateSequenceTriggerName(ic),
-                        ic);
+                            conn,
+                            generateSequenceTriggerName(ic),
+                            ic);
                     result.addAll(sqlList);
                 }
             }
@@ -569,24 +569,24 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
         // Calculating of max available varchar length for input params
         Map<String, String> textParamMap = new ParameterizedViewTypeResolver<>(
-            pv,
-            ViewColumnType.TEXT,
-            StringColumn.class,
-            sc -> sc.isMax() ? 0 : sc.getLength(),
-            (oldLength, newLength) -> {
-                if (oldLength == 0 || newLength == 0) {
-                    return 0;
-                } else {
-                    return Math.max(oldLength, newLength);
+                pv,
+                ViewColumnType.TEXT,
+                StringColumn.class,
+                sc -> sc.isMax() ? 0 : sc.getLength(),
+                (oldLength, newLength) -> {
+                    if (oldLength == 0 || newLength == 0) {
+                        return 0;
+                    } else {
+                        return Math.max(oldLength, newLength);
+                    }
+                },
+                length -> {
+                    if (length == 0) {
+                        return "blob sub_type text";
+                    } else {
+                        return String.format("varchar(%d)", length);
+                    }
                 }
-            },
-            length -> {
-                if (length == 0) {
-                    return "blob sub_type text";
-                } else {
-                    return String.format("varchar(%d)", length);
-                }
-            }
         ).resolveTypes();
 
         final class ScaleAndPrecision {
@@ -601,123 +601,123 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
         // Calculating of max available varchar length for input params
         Map<String, String> decimalParamMap = new ParameterizedViewTypeResolver<>(
-            pv,
-            ViewColumnType.DECIMAL,
-            DecimalColumn.class,
-            dc -> new ScaleAndPrecision(dc.getPrecision(), dc.getScale()),
-            (oldValue, newValue) -> new ScaleAndPrecision(
-                Math.max(oldValue.precision, newValue.precision),
-                Math.max(oldValue.scale, newValue.scale)
-            ),
-            scaleAndPrecision ->
-                String.format(
-                    "%s(%s,%s)",
-                    ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
-                    scaleAndPrecision.precision,
-                    scaleAndPrecision.scale
-                )
+                pv,
+                ViewColumnType.DECIMAL,
+                DecimalColumn.class,
+                dc -> new ScaleAndPrecision(dc.getPrecision(), dc.getScale()),
+                (oldValue, newValue) -> new ScaleAndPrecision(
+                        Math.max(oldValue.precision, newValue.precision),
+                        Math.max(oldValue.scale, newValue.scale)
+                ),
+                scaleAndPrecision ->
+                        String.format(
+                                "%s(%s,%s)",
+                                ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
+                                scaleAndPrecision.precision,
+                                scaleAndPrecision.scale
+                        )
         ).resolveTypes();
 
         String inParams = pv.getParameters()
-            .entrySet().stream()
-            .map(e -> {
-                    final String type;
+                .entrySet().stream()
+                .map(e -> {
+                            final String type;
 
-                    ViewColumnType viewColumnType = e.getValue().getType();
-                    if (ViewColumnType.TEXT == viewColumnType) {
-                        type = textParamMap.get(e.getKey());
-                    } else if (ViewColumnType.DECIMAL == viewColumnType) {
-                        type = decimalParamMap.get(e.getKey());
-                    } else {
-                        type = ColumnDefinerFactory.getColumnDefiner(getType(),
-                            CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getType().getCelestaType())
-                        ).dbFieldType();
-                    }
+                            ViewColumnType viewColumnType = e.getValue().getType();
+                            if (ViewColumnType.TEXT == viewColumnType) {
+                                type = textParamMap.get(e.getKey());
+                            } else if (ViewColumnType.DECIMAL == viewColumnType) {
+                                type = decimalParamMap.get(e.getKey());
+                            } else {
+                                type = ColumnDefinerFactory.getColumnDefiner(getType(),
+                                        CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getType().getCelestaType())
+                                ).dbFieldType();
+                            }
 
-                    return e.getKey() + " " + type;
-                }
-            ).collect(Collectors.joining(", "));
+                            return e.getKey() + " " + type;
+                        }
+                ).collect(Collectors.joining(", "));
 
 
         String outParams = pv.getColumns()
-            .entrySet().stream()
-            .map(e -> {
-                    final String type;
+                .entrySet().stream()
+                .map(e -> {
+                            final String type;
 
-                    ViewColumnMeta<?> viewColumnMeta = e.getValue();
-                    if (ViewColumnType.TEXT == viewColumnMeta.getColumnType()) {
-                        StringColumn sc = (StringColumn) pv.getColumnRef(viewColumnMeta.getName());
+                            ViewColumnMeta<?> viewColumnMeta = e.getValue();
+                            if (ViewColumnType.TEXT == viewColumnMeta.getColumnType()) {
+                                StringColumn sc = (StringColumn) pv.getColumnRef(viewColumnMeta.getName());
 
-                        if (sc.isMax()) {
-                            type = "blob sub_type text";
-                        } else {
-                            type = String.format("varchar(%d)", sc.getLength());
+                                if (sc.isMax()) {
+                                    type = "blob sub_type text";
+                                } else {
+                                    type = String.format("varchar(%d)", sc.getLength());
+                                }
+                            } else if (ViewColumnType.DECIMAL == viewColumnMeta.getColumnType()) {
+                                DecimalColumn dc = (DecimalColumn) pv.getColumnRef(viewColumnMeta.getName());
+
+                                if (dc != null) {
+                                    type = String.format(
+                                            "%s(%s,%s)",
+                                            ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
+                                            dc.getPrecision(),
+                                            dc.getScale()
+                                    );
+                                } else {
+                                    Sum sum = (Sum) pv.getAggregateColumns().get(viewColumnMeta.getName());
+                                    BinaryTermOp binaryTermOp = (BinaryTermOp) sum.getTerm();
+                                    List<DecimalColumn> decimalColumns = binaryTermOp.getOperands().stream()
+                                            .filter(op -> op instanceof FieldRef)
+                                            .map(FieldRef.class::cast)
+                                            .filter(fr -> DecimalColumn.class.equals(fr.getColumn().getClass()))
+                                            .map(FieldRef::getColumn)
+                                            .map(DecimalColumn.class::cast)
+                                            .collect(Collectors.toList());
+
+                                    int maxPrecision = decimalColumns.stream()
+                                            .mapToInt(DecimalColumn::getPrecision)
+                                            .max().getAsInt();
+
+                                    int maxScale = decimalColumns.stream()
+                                            .mapToInt(DecimalColumn::getScale)
+                                            .max().getAsInt();
+
+                                    type = String.format(
+                                            "%s(%s,%s)",
+                                            ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
+                                            maxPrecision,
+                                            maxScale
+                                    );
+                                }
+                            } else {
+                                type = ColumnDefinerFactory.getColumnDefiner(getType(),
+                                        CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType())
+                                ).dbFieldType();
+                            }
+
+                            return String.format("\"%s\" %s", e.getKey(), type);
                         }
-                    } else if (ViewColumnType.DECIMAL == viewColumnMeta.getColumnType()) {
-                        DecimalColumn dc = (DecimalColumn) pv.getColumnRef(viewColumnMeta.getName());
-
-                        if (dc != null) {
-                            type = String.format(
-                                "%s(%s,%s)",
-                                ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
-                                dc.getPrecision(),
-                                dc.getScale()
-                            );
-                        } else {
-                            Sum sum = (Sum) pv.getAggregateColumns().get(viewColumnMeta.getName());
-                            BinaryTermOp binaryTermOp = (BinaryTermOp) sum.getTerm();
-                            List<DecimalColumn> decimalColumns = binaryTermOp.getOperands().stream()
-                                .filter(op -> op instanceof FieldRef)
-                                .map(FieldRef.class::cast)
-                                .filter(fr -> DecimalColumn.class.equals(fr.getColumn().getClass()))
-                                .map(FieldRef::getColumn)
-                                .map(DecimalColumn.class::cast)
-                                .collect(Collectors.toList());
-
-                            int maxPrecision = decimalColumns.stream()
-                                .mapToInt(DecimalColumn::getPrecision)
-                                .max().getAsInt();
-
-                            int maxScale = decimalColumns.stream()
-                                .mapToInt(DecimalColumn::getScale)
-                                .max().getAsInt();
-
-                            type = String.format(
-                                "%s(%s,%s)",
-                                ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
-                                maxPrecision,
-                                maxScale
-                            );
-                        }
-                    } else {
-                        type = ColumnDefinerFactory.getColumnDefiner(getType(),
-                            CELESTA_TYPES_COLUMN_CLASSES.get(e.getValue().getCelestaType())
-                        ).dbFieldType();
-                    }
-
-                    return String.format("\"%s\" %s", e.getKey(), type);
-            }
-            ).collect(Collectors.joining(", "));
+                ).collect(Collectors.joining(", "));
 
         String intoList = pv.getColumns().keySet().stream()
-            .map(c -> String.format("\"%s\"", c))
-            .map(":"::concat)
-            .collect(Collectors.joining(", "));
+                .map(c -> String.format("\"%s\"", c))
+                .map(":"::concat)
+                .collect(Collectors.joining(", "));
 
         String selectSql = sw.toString();
 
         String sql = String.format(
-            "CREATE PROCEDURE " + tableString(pv.getGrain().getName(), pv.getName()) + "(%s)%n"
-                + "  RETURNS (%s)%n"
-                + "  AS%n"
-                + "  BEGIN%n"
-                + "  FOR %s%n"
-                + "  INTO %s%n"
-                + "    DO BEGIN%n"
-                + "      SUSPEND;%n"
-                + "    END%n"
-                + "  END",
-            inParams, outParams, selectSql, intoList);
+                "CREATE PROCEDURE " + tableString(pv.getGrain().getName(), pv.getName()) + "(%s)%n"
+                        + "  RETURNS (%s)%n"
+                        + "  AS%n"
+                        + "  BEGIN%n"
+                        + "  FOR %s%n"
+                        + "  INTO %s%n"
+                        + "    DO BEGIN%n"
+                        + "      SUSPEND;%n"
+                        + "    END%n"
+                        + "  END",
+                inParams, outParams, selectSql, intoList);
 
         return Collections.singletonList(sql);
     }
@@ -727,13 +727,13 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             List<LogicValuedExpr> result = new ArrayList<>();
 
             boolean containsAnotherLogicValuedExpr = logicValuedExpr.getAllOperands().stream()
-                .anyMatch(expr -> expr instanceof LogicValuedExpr);
+                    .anyMatch(expr -> expr instanceof LogicValuedExpr);
 
             if (containsAnotherLogicValuedExpr) {
                 logicValuedExpr.getAllOperands().stream()
-                    .filter(expr -> expr instanceof LogicValuedExpr)
-                    .map(LogicValuedExpr.class::cast)
-                    .forEach(lve -> result.addAll(this.extract(lve)));
+                        .filter(expr -> expr instanceof LogicValuedExpr)
+                        .map(LogicValuedExpr.class::cast)
+                        .forEach(lve -> result.addAll(this.extract(lve)));
             } else {
                 result.add(logicValuedExpr);
             }
@@ -752,12 +752,12 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-            .filter(mv -> mv.getRefTable().getTable().equals(t))
-            .collect(Collectors.toList());
+                .filter(mv -> mv.getRefTable().getTable().equals(t))
+                .collect(Collectors.toList());
 
         for (MaterializedView mv : mvList) {
             TriggerQuery query = new TriggerQuery().withSchema(t.getGrain().getName())
-                .withTableName(t.getName());
+                    .withTableName(t.getName());
 
             String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
             String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
@@ -786,8 +786,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
-            .filter(mv -> mv.getRefTable().getTable().equals(t))
-            .collect(Collectors.toList());
+                .filter(mv -> mv.getRefTable().getTable().equals(t))
+                .collect(Collectors.toList());
 
         String fullTableName = tableString(t.getGrain().getName(), t.getName());
 
@@ -799,145 +799,145 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
             String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
 
             String mvColumns = mv.getColumns().keySet().stream()
-                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                .map(alias -> String.format("\"%s\"", alias))
-                .collect(Collectors.joining(", "))
-                .concat(", \"" + MaterializedView.SURROGATE_COUNT + "\"");
+                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                    .map(alias -> String.format("\"%s\"", alias))
+                    .collect(Collectors.joining(", "))
+                    .concat(", \"" + MaterializedView.SURROGATE_COUNT + "\"");
 
             String aggregateColumns = mv.getColumns().keySet().stream()
-                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                .map(alias -> "\"aggregate\".\"" + alias + "\"")
-                .collect(Collectors.joining(", "))
-                .concat(", \"" + MaterializedView.SURROGATE_COUNT + "\"");
+                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                    .map(alias -> "\"aggregate\".\"" + alias + "\"")
+                    .collect(Collectors.joining(", "))
+                    .concat(", \"" + MaterializedView.SURROGATE_COUNT + "\"");
 
             String selectPartOfScriptTemplate = mv.getColumns().keySet().stream()
-                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                .map(alias -> {
-                    Column<?> colRef = mv.getColumnRef(alias);
+                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                    .map(alias -> {
+                        Column<?> colRef = mv.getColumnRef(alias);
 
-                    Map<String, Expr> aggrCols = mv.getAggregateColumns();
-                    if (aggrCols.containsKey(alias)) {
-                        if (colRef == null) {
-                            if (aggrCols.get(alias) instanceof Count) {
-                                return "1 as \"" + alias + "\"";
+                        Map<String, Expr> aggrCols = mv.getAggregateColumns();
+                        if (aggrCols.containsKey(alias)) {
+                            if (colRef == null) {
+                                if (aggrCols.get(alias) instanceof Count) {
+                                    return "1 as \"" + alias + "\"";
+                                }
+                                return "";
+                            } else if (aggrCols.get(alias) instanceof Sum) {
+                                return "%1$s.\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
+                            } else {
+                                return "";
                             }
-                            return "";
-                        } else if (aggrCols.get(alias) instanceof Sum) {
-                            return "%1$s.\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
-                        } else {
-                            return "";
                         }
-                    }
 
-                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
-                        return truncDate("%1$s.\"" + colRef.getName() + "\"") + "as \"" + alias + "\"";
-                    }
+                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+                            return truncDate("%1$s.\"" + colRef.getName() + "\"") + "as \"" + alias + "\"";
+                        }
 
-                    return "%1$s.\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
-                })
-                .filter(str -> !str.isEmpty())
-                .collect(Collectors.joining(", "))
-                .concat(", 1 AS \"" + MaterializedView.SURROGATE_COUNT + "\"");
+                        return "%1$s.\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
+                    })
+                    .filter(str -> !str.isEmpty())
+                    .collect(Collectors.joining(", "))
+                    .concat(", 1 AS \"" + MaterializedView.SURROGATE_COUNT + "\"");
 
             String tableGroupByColumns = mv.getColumns().values().stream()
-                .filter(v -> mv.isGroupByColumn(v.getName()))
-                .map(v -> "\"" + mv.getColumnRef(v.getName()).getName() + "\"")
-                .collect(Collectors.joining(", "));
+                    .filter(v -> mv.isGroupByColumn(v.getName()))
+                    .map(v -> "\"" + mv.getColumnRef(v.getName()).getName() + "\"")
+                    .collect(Collectors.joining(", "));
 
             String rowConditionTemplate = mv.getColumns().keySet().stream()
-                .filter(mv::isGroupByColumn)
-                .map(alias -> "\"mv\".\"" + alias + "\" = \"%1$s\".\"" + alias + "\" ")
-                .collect(Collectors.joining(" AND "));
+                    .filter(mv::isGroupByColumn)
+                    .map(alias -> "\"mv\".\"" + alias + "\" = \"%1$s\".\"" + alias + "\" ")
+                    .collect(Collectors.joining(" AND "));
 
             StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s \"mv\" ")
-                .append("USING (SELECT %s FROM RDB$DATABASE) AS \"aggregate\" ON %s \n")
-                .append("WHEN MATCHED THEN \n ")
-                .append("UPDATE SET %s \n")
-                .append("WHEN NOT MATCHED THEN \n")
-                .append("INSERT (%s) VALUES (%s); \n");
+                    .append("USING (SELECT %s FROM RDB$DATABASE) AS \"aggregate\" ON %s \n")
+                    .append("WHEN MATCHED THEN \n ")
+                    .append("UPDATE SET %s \n")
+                    .append("WHEN NOT MATCHED THEN \n")
+                    .append("INSERT (%s) VALUES (%s); \n");
 
             String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
-                .map(e -> {
-                    StringBuilder sb = new StringBuilder();
-                    String alias = e.getKey();
+                    .map(e -> {
+                        StringBuilder sb = new StringBuilder();
+                        String alias = e.getKey();
 
-                    sb.append("\"mv\".\"").append(alias)
-                        .append("\" = \"mv\".\"").append(alias)
-                        .append("\" %1$s \"aggregate\".\"").append(alias).append("\"");
+                        sb.append("\"mv\".\"").append(alias)
+                                .append("\" = \"mv\".\"").append(alias)
+                                .append("\" %1$s \"aggregate\".\"").append(alias).append("\"");
 
-                    return sb.toString();
-                }).collect(Collectors.joining(", "))
-                .concat(", \"mv\".\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
-                .concat("\"mv\".\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" %1$s \"aggregate\".\"")
-                .concat(MaterializedView.SURROGATE_COUNT).concat("\"");
+                        return sb.toString();
+                    }).collect(Collectors.joining(", "))
+                    .concat(", \"mv\".\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
+                    .concat("\"mv\".\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" %1$s \"aggregate\".\"")
+                    .concat(MaterializedView.SURROGATE_COUNT).concat("\"");
 
             String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
-                String.format(selectPartOfScriptTemplate, "NEW"), String.format(rowConditionTemplate, "aggregate"),
-                String.format(setStatementTemplate, "+"), mvColumns, aggregateColumns);
+                    String.format(selectPartOfScriptTemplate, "NEW"), String.format(rowConditionTemplate, "aggregate"),
+                    String.format(setStatementTemplate, "+"), mvColumns, aggregateColumns);
 
             String deleteMatchedCondTemplate = mv.getAggregateColumns().keySet().stream()
-                .map(alias -> "\"mv\".\"" + alias + "\" %1$s \"aggregate\".\"" + alias + "\"")
-                .collect(Collectors.joining(" %2$s "));
+                    .map(alias -> "\"mv\".\"" + alias + "\" %1$s \"aggregate\".\"" + alias + "\"")
+                    .collect(Collectors.joining(" %2$s "));
 
             String rowConditionForExistsTemplate = mv.getColumns().keySet().stream()
-                .filter(mv::isGroupByColumn)
-                .map(alias -> {
-                    Column<?> colRef = mv.getColumnRef(alias);
+                    .filter(mv::isGroupByColumn)
+                    .map(alias -> {
+                        Column<?> colRef = mv.getColumnRef(alias);
 
-                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
-                        return "\"mv\".\"" + alias + "\" = "
-                            + truncDate("\"%1$s\".\"" + mv.getColumnRef(alias).getName() + "\"");
-                    }
+                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+                            return "\"mv\".\"" + alias + "\" = "
+                                    + truncDate("\"%1$s\".\"" + mv.getColumnRef(alias).getName() + "\"");
+                        }
 
-                    return "\"mv\".\"" + alias + "\" = \"%1$s\".\"" + mv.getColumnRef(alias).getName() + "\" ";
-                })
-                .collect(Collectors.joining(" AND "));
+                        return "\"mv\".\"" + alias + "\" = \"%1$s\".\"" + mv.getColumnRef(alias).getName() + "\" ";
+                    })
+                    .collect(Collectors.joining(" AND "));
 
             String existsSql = "EXISTS(SELECT * FROM " + fullTableName + " AS \"t\" WHERE "
-                + String.format(rowConditionForExistsTemplate, "t") + ")";
+                    + String.format(rowConditionForExistsTemplate, "t") + ")";
 
             StringBuilder deleteSqlBuilder = new StringBuilder("MERGE INTO %s AS \"mv\" \n")
-                .append("USING (SELECT %s FROM RDB$DATABASE) AS \"aggregate\" ON %s \n")
-                .append("WHEN MATCHED AND %s THEN DELETE\n ")
-                .append("WHEN MATCHED AND (%s) THEN \n")
-                .append("UPDATE SET %s; \n");
+                    .append("USING (SELECT %s FROM RDB$DATABASE) AS \"aggregate\" ON %s \n")
+                    .append("WHEN MATCHED AND %s THEN DELETE\n ")
+                    .append("WHEN MATCHED AND (%s) THEN \n")
+                    .append("UPDATE SET %s; \n");
 
             String deleteSql = String.format(deleteSqlBuilder.toString(), fullMvName,
-                String.format(selectPartOfScriptTemplate, "OLD"), String.format(rowConditionTemplate, "aggregate"),
-                String.format(deleteMatchedCondTemplate, "=", "AND").concat(" AND NOT " + existsSql),
-                String.format(deleteMatchedCondTemplate, "<>", "OR")
-                    .concat(" OR (" + String.format(deleteMatchedCondTemplate, "=", "AND")
-                        .concat(" AND " + existsSql + ")")),
-                String.format(setStatementTemplate, "-"));
+                    String.format(selectPartOfScriptTemplate, "OLD"), String.format(rowConditionTemplate, "aggregate"),
+                    String.format(deleteMatchedCondTemplate, "=", "AND").concat(" AND NOT " + existsSql),
+                    String.format(deleteMatchedCondTemplate, "<>", "OR")
+                            .concat(" OR (" + String.format(deleteMatchedCondTemplate, "=", "AND")
+                                    .concat(" AND " + existsSql + ")")),
+                    String.format(setStatementTemplate, "-"));
 
             String sql = "CREATE TRIGGER \"" + insertTriggerName + "\" "
-                + "for " + fullTableName
-                + " AFTER INSERT \n"
-                + " AS \n"
-                + " BEGIN \n"
-                + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
-                + "\n " + insertSql + "\n END;";
+                    + "for " + fullTableName
+                    + " AFTER INSERT \n"
+                    + " AS \n"
+                    + " BEGIN \n"
+                    + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
+                    + "\n " + insertSql + "\n END;";
 
             result.add(sql);
 
             sql = "CREATE TRIGGER \"" + deleteTriggerName + "\" "
-                + "for " + fullTableName
-                + " AFTER DELETE \n"
-                + " AS \n"
-                + " BEGIN \n"
-                + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
-                + "\n " + deleteSql + "\n END;";
+                    + "for " + fullTableName
+                    + " AFTER DELETE \n"
+                    + " AS \n"
+                    + " BEGIN \n"
+                    + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
+                    + "\n " + deleteSql + "\n END;";
 
             result.add(sql);
 
             String updateSql = String.format("%s%n %n%s", deleteSql, insertSql);
             sql = "CREATE TRIGGER \"" + updateTriggerName + "\" "
-                + "for " + fullTableName
-                + " AFTER UPDATE \n"
-                + " AS \n"
-                + " BEGIN \n"
-                + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
-                + "\n " + updateSql + "\n END;";
+                    + "for " + fullTableName
+                    + " AFTER UPDATE \n"
+                    + " AS \n"
+                    + " BEGIN \n"
+                    + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
+                    + "\n " + updateSql + "\n END;";
 
             result.add(sql);
         }
@@ -960,25 +960,25 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         String nextValueProcName = FirebirdAdaptor.sequenceNextValueProcString(s.getGrain().getName(), s.getName());
 
         TriggerQuery triggerQuery = new TriggerQuery()
-            .withSchema(ic.getParentTable().getGrain().getName())
-            .withTableName(ic.getParentTable().getName())
-            .withName(triggerName)
-            .withType(TriggerType.PRE_INSERT);
+                .withSchema(ic.getParentTable().getGrain().getName())
+                .withTableName(ic.getParentTable().getName())
+                .withName(triggerName)
+                .withType(TriggerType.PRE_INSERT);
 
         if (this.triggerExists(conn, triggerQuery)) {
             result.add(String.format("DROP TRIGGER \"%s\"", triggerName));
         }
 
         String sql =
-            "CREATE TRIGGER \"" + triggerName + "\" "
-                + "for " + tableString(te.getGrain().getName(), te.getName())
-                + " BEFORE INSERT \n"
-                + " AS \n"
-                + " BEGIN \n"
-                + "   IF (NEW." + ic.getQuotedName() + " IS NULL)\n"
-                + "     THEN EXECUTE PROCEDURE " + nextValueProcName + " "
-                + "       RETURNING_VALUES :NEW." + ic.getQuotedName() + ";"
-                + " END";
+                "CREATE TRIGGER \"" + triggerName + "\" "
+                        + "for " + tableString(te.getGrain().getName(), te.getName())
+                        + " BEFORE INSERT \n"
+                        + " AS \n"
+                        + " BEGIN \n"
+                        + "   IF (NEW." + ic.getQuotedName() + " IS NULL)\n"
+                        + "     THEN EXECUTE PROCEDURE " + nextValueProcName + " "
+                        + "       RETURNING_VALUES :NEW." + ic.getQuotedName() + ";"
+                        + " END";
 
         result.add(sql);
 
@@ -992,34 +992,34 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
         final String colType;
         final String fullTableName = tableString(
-            c.getParentTable().getGrain().getName(),
-            c.getParentTable().getName()
+                c.getParentTable().getGrain().getName(),
+                c.getParentTable().getName()
         );
 
         if (c.getClass() == StringColumn.class) {
             StringColumn sc = (StringColumn) c;
 
             colType = sc.isMax() ? "blob sub_type text" : String.format(
-                "%s(%s)",
-                ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType(), sc.getLength()
+                    "%s(%s)",
+                    ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType(), sc.getLength()
             );
         } else if (c.getClass() == DecimalColumn.class) {
             DecimalColumn dc = (DecimalColumn) c;
             colType = String.format(
-                "%s(%s,%s)",
-                ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType(),
-                dc.getPrecision(), dc.getScale()
+                    "%s(%s,%s)",
+                    ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType(),
+                    dc.getPrecision(), dc.getScale()
             );
         } else {
             colType = ColumnDefinerFactory.getColumnDefiner(getType(), cClass).dbFieldType();
         }
 
         StringBuilder alterSql = new StringBuilder(
-            String.format(
-                ALTER_TABLE + fullTableName + " ALTER COLUMN \"%s\" TYPE %s",
-                c.getName(),
-                colType
-            )
+                String.format(
+                        ALTER_TABLE + fullTableName + " ALTER COLUMN \"%s\" TYPE %s",
+                        c.getName(),
+                        colType
+                )
         );
 
         // If type doesn't match
@@ -1054,36 +1054,36 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         List<String> result = new ArrayList<>();
 
         final String fullTableName = tableString(
-            c.getParentTable().getGrain().getName(),
-            c.getParentTable().getName()
+                c.getParentTable().getGrain().getName(),
+                c.getParentTable().getName()
         );
 
         String tempColumnName = String.format("%s_temp", c.getName());
 
         String renameColumnSql = String.format(
-            "ALTER TABLE %s%n" + " ALTER COLUMN %s TO %s",
-            fullTableName,
-            c.getQuotedName(),
-            tempColumnName
+                "ALTER TABLE %s%n" + " ALTER COLUMN %s TO %s",
+                fullTableName,
+                c.getQuotedName(),
+                tempColumnName
         );
 
         String createColumnSql = String.format(
-            "ALTER TABLE %s ADD %s",
-            fullTableName,
-            columnDef(c)
+                "ALTER TABLE %s ADD %s",
+                fullTableName,
+                columnDef(c)
         );
 
         String copySql = String.format(
-            "UPDATE %s SET %s = %s",
-            fullTableName,
-            c.getQuotedName(),
-            tempColumnName
+                "UPDATE %s SET %s = %s",
+                fullTableName,
+                c.getQuotedName(),
+                tempColumnName
         );
 
         String deleteTempColumn = String.format(
-            "ALTER TABLE %s DROP %s",
-            fullTableName,
-            tempColumnName
+                "ALTER TABLE %s DROP %s",
+                fullTableName,
+                tempColumnName
         );
 
         result.add(renameColumnSql);
@@ -1106,8 +1106,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
 
         private ParameterizedViewTypeResolver(ParameterizedView pv, ViewColumnType viewColumnType, Class<R> columnClass,
-                                             Function<R, T> valueResolver, BinaryOperator<T> valueMerger,
-                                             Function<T, String> postMapper) {
+                                              Function<R, T> valueResolver, BinaryOperator<T> valueMerger,
+                                              Function<T, String> postMapper) {
             this.pv = pv;
             this.viewColumnType = viewColumnType;
             this.columnClass = columnClass;
@@ -1117,78 +1117,82 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         }
 
         private Map<String, String> resolveTypes() {
-            Map<String, String> columnToTypeMap = Stream.of((LogicValuedExpr) pv.getWhereCondition())
-                .map(logicValuedExpr -> new BaseLogicValuedExprExtractor().extract(logicValuedExpr))
-                .flatMap(List::stream)
-                .filter(logicValuedExpr -> {
-                    Set<Class<? extends Expr>> opsClasses = logicValuedExpr.getAllOperands().stream()
-                        .map(Expr::getClass)
-                        .collect(Collectors.toSet());
+            Map<String, String> columnToTypeMap =
+                    pv.getSegments().stream()
+                            .map(ParameterizedViewSelectStmt.class::cast)
+                            .map(ParameterizedViewSelectStmt::getWhereCondition)
+                            .map(LogicValuedExpr.class::cast)
+                            .map(logicValuedExpr -> new BaseLogicValuedExprExtractor().extract(logicValuedExpr))
+                            .flatMap(List::stream)
+                            .filter(logicValuedExpr -> {
+                                Set<Class<? extends Expr>> opsClasses = logicValuedExpr.getAllOperands().stream()
+                                        .map(Expr::getClass)
+                                        .collect(Collectors.toSet());
 
-                    return opsClasses.containsAll(Arrays.asList(ParameterRef.class, FieldRef.class));
-                })
-                .map(logicValuedExpr -> {
-                        Map<Class<?>, List<Expr>> classToExprsMap = logicValuedExpr.getAllOperands().stream()
-                            .collect(Collectors.toMap(
-                                Expr::getClass,
-                                expr -> new ArrayList<>(Arrays.asList(expr)),
-                                (oldList, newList) -> Stream.of(oldList, newList)
-                                    .flatMap(List::stream).collect(Collectors.toList())
-                            ));
+                                return opsClasses.containsAll(Arrays.asList(ParameterRef.class, FieldRef.class));
+                            })
+                            .map(logicValuedExpr -> {
+                                        Map<Class<?>, List<Expr>> classToExprsMap = logicValuedExpr.getAllOperands().stream()
+                                                .collect(Collectors.toMap(
+                                                        Expr::getClass,
+                                                        expr -> new ArrayList<>(Arrays.asList(expr)),
+                                                        (oldList, newList) -> Stream.of(oldList, newList)
+                                                                .flatMap(List::stream).collect(Collectors.toList())
+                                                ));
 
-                        return classToExprsMap;
-                    }
-                ).filter(classExprMap ->
-                    classExprMap.get(ParameterRef.class).stream()
-                        .anyMatch(expr -> this.viewColumnType.equals(expr.getMeta().getColumnType()))
-                )
-                .map(classExprMap -> {
-                    Map<Class<? extends Expr>, List<Expr>> result = new HashMap<>();
-                    result.put(
-                        ParameterRef.class,
-                        classExprMap.get(ParameterRef.class).stream()
-                            .map(ParameterRef.class::cast)
-                            .filter(parameterRef -> this.viewColumnType.equals(parameterRef.getMeta().getColumnType()))
-                            .collect(Collectors.toList())
-                    );
-                    result.put(
-                        FieldRef.class,
-                        classExprMap.get(FieldRef.class).stream()
-                            .map(FieldRef.class::cast)
-                            .filter(fieldRef -> fieldRef.getColumn().getClass() == columnClass)
-                            .collect(Collectors.toList())
-                    );
-                    return result;
-                })
-                .map(classExprMap -> classExprMap.get(ParameterRef.class).stream()
-                    .map(ParameterRef.class::cast)
-                    .collect(Collectors.toMap(
-                        Function.identity(),
-                        pr -> classExprMap.get(FieldRef.class).stream()
-                            .map(FieldRef.class::cast)
-                            .collect(Collectors.toList())
-                    )))
-                .flatMap(map -> map.entrySet().stream())
-                .map(e -> e.getValue().stream()
-                    .map(FieldRef::getColumn)
-                    .map(this.columnClass::cast)
-                    .map(sc -> new AbstractMap.SimpleEntry<>(e.getKey(), sc))
-                    .collect(Collectors.toList())
-                )
-                .flatMap(List::stream)
-                .collect(
-                    Collectors.toMap(
-                        e -> e.getKey().getName(),
-                        e -> this.valueResolver.apply(e.getValue()),
-                        this.valueMerger::apply
+                                        return classToExprsMap;
+                                    }
+                            ).filter(classExprMap ->
+                            classExprMap.get(ParameterRef.class).stream()
+                                    .anyMatch(expr -> this.viewColumnType.equals(expr.getMeta().getColumnType()))
                     )
-                ).entrySet().stream()
-                .collect(
-                    Collectors.toMap(
-                            Map.Entry::getKey,
-                        e -> this.postMapper.apply(e.getValue())
-                    )
-                );
+                            .map(classExprMap -> {
+                                Map<Class<? extends Expr>, List<Expr>> result = new HashMap<>();
+                                result.put(
+                                        ParameterRef.class,
+                                        classExprMap.get(ParameterRef.class).stream()
+                                                .map(ParameterRef.class::cast)
+                                                .filter(parameterRef -> this.viewColumnType.equals(parameterRef.getMeta().getColumnType()))
+                                                .collect(Collectors.toList())
+                                );
+                                result.put(
+                                        FieldRef.class,
+                                        classExprMap.get(FieldRef.class).stream()
+                                                .map(FieldRef.class::cast)
+                                                .filter(fieldRef -> fieldRef.getColumn().getClass() == columnClass)
+                                                .collect(Collectors.toList())
+                                );
+                                return result;
+                            })
+                            .map(classExprMap -> classExprMap.get(ParameterRef.class).stream()
+                                    .map(ParameterRef.class::cast)
+                                    .collect(Collectors.toMap(
+                                            Function.identity(),
+                                            pr -> classExprMap.get(FieldRef.class).stream()
+                                                    .map(FieldRef.class::cast)
+                                                    .collect(Collectors.toList())
+                                    )))
+                            .flatMap(map -> map.entrySet().stream())
+                            .map(e -> e.getValue().stream()
+                                    .map(FieldRef::getColumn)
+                                    .map(this.columnClass::cast)
+                                    .map(sc -> new AbstractMap.SimpleEntry<>(e.getKey(), sc))
+                                    .collect(Collectors.toList())
+                            )
+                            .flatMap(List::stream)
+                            .collect(
+                                    Collectors.toMap(
+                                            e -> e.getKey().getName(),
+                                            e -> this.valueResolver.apply(e.getValue()),
+                                            this.valueMerger::apply
+                                    )
+                            ).entrySet().stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            Map.Entry::getKey,
+                                            e -> this.postMapper.apply(e.getValue())
+                                    )
+                            );
 
             return columnToTypeMap;
         }

@@ -14,8 +14,8 @@ import java.util.Map;
  */
 public final class ParameterizedView extends View {
 
-  private final Map<String, Parameter> parameters = new LinkedHashMap<>();
-  private final List<String> parameterRefsWithOrder = new ArrayList<>();
+  final Map<String, Parameter> parameters = new LinkedHashMap<>();
+  final List<String> parameterRefsWithOrder = new ArrayList<>();
 
   public ParameterizedView(GrainPart grainPart, String name) throws ParseException {
     super(grainPart, name);
@@ -26,23 +26,9 @@ public final class ParameterizedView extends View {
     return "function";
   }
 
-
   @Override
-  void finalizeWhereConditionParsing() throws ParseException {
-    List<TableRef> t = new ArrayList<>(getTables().values());
-    if (whereCondition != null) {
-      whereCondition.resolveFieldRefs(t);
-      ParameterResolverResult paramResolveResult = whereCondition.resolveParameterRefs(parameters);
-
-      if (!paramResolveResult.getUnusedParameters().isEmpty()) {
-        String unusedParametersStr = String.join(", ", paramResolveResult.getUnusedParameters());
-        throw new ParseException(String.format("%s '%s' contains not used parameters %s.",
-            viewType(), getName(), unusedParametersStr));
-      }
-      whereCondition.validateTypes();
-
-      parameterRefsWithOrder.addAll(paramResolveResult.getParametersWithUsageOrder());
-    }
+  AbstractSelectStmt newSelectStatement() {
+    return new ParameterizedViewSelectStmt(this);
   }
 
   /**
@@ -84,7 +70,4 @@ public final class ParameterizedView extends View {
     return parameterRefsWithOrder;
   }
 
-  public Expr getWhereCondition() {
-    return whereCondition;
-  }
 }

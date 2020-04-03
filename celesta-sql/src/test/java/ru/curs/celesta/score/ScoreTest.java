@@ -97,7 +97,7 @@ public class ScoreTest {
         View v = g1.getElement("testView", View.class);
         assertEquals("testView", v.getName());
         assertEquals("view description ", v.getCelestaDoc());
-        assertTrue(v.isDistinct());
+        assertTrue(v.getSegments().get(0).isDistinct());
 
         assertEquals(4, v.getColumns().size());
         String[] ref = {"fieldAlias", "tablename", "checksum", "f1"};
@@ -398,7 +398,7 @@ public class ScoreTest {
 
         View v = g.getElement("testView", View.class);
         String exp;
-        assertFalse(v.isDistinct());
+        assertFalse(v.getSegments().get(0).isDistinct());
         assertEquals(4, v.getColumns().size());
         exp = String.format("  select id as id, descr as descr, descr || 'foo' as descr2, k2 as k2%n"
                 + "  from testTable as testTable%n" + "    INNER join refTo as refTo on attrVarchar = k1 AND attrInt = k2");
@@ -452,11 +452,11 @@ public class ScoreTest {
         assertAll(
                 () -> assertArrayEquals(expected, CelestaSerializer.toQueryString(v).split("\\r?\\n")),
                 // Checking nullability evaluation
-                () -> assertFalse(v.getColumns().get("f1").isNullable()),
-                () -> assertTrue(v.getColumns().get("f4").isNullable()),
-                () -> assertFalse(v.getColumns().get("f5").isNullable()),
-                () -> assertTrue(v.getColumns().get("s").isNullable()),
-                () -> assertFalse(v.getColumns().get("s2").isNullable())
+                () -> assertFalse(v.getColumns().get("f1").isNullable(), "f1 should not be nullable"),
+                () -> assertTrue(v.getColumns().get("f4").isNullable(), "f4 should be nullable"),
+                () -> assertFalse(v.getColumns().get("f5").isNullable(), "f5 should not be nullable"),
+                () -> assertTrue(v.getColumns().get("s").isNullable(), "s should be nullable"),
+                () -> assertFalse(v.getColumns().get("s2").isNullable(), "s2 should not be nullable")
         );
     }
 
