@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 /**
  * A segment of a UNION chain in a SQL UNION ALL query.
- * */
+ */
 public abstract class AbstractSelectStmt {
     final AbstractView view;
 
@@ -256,7 +256,6 @@ public abstract class AbstractSelectStmt {
     }
 
 
-
     /**
      * Whether DISTINCT keyword was used in the view query.
      *
@@ -275,7 +274,7 @@ public abstract class AbstractSelectStmt {
         this.distinct = distinct;
     }
 
-    Grain getGrain(){
+    final Grain getGrain() {
         return view.getGrain();
     }
 

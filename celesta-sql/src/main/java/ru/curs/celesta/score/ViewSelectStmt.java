@@ -6,11 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 class ViewSelectStmt extends AbstractSelectStmt {
+    protected Expr whereCondition;
+
     public ViewSelectStmt(AbstractView view) {
         super(view);
     }
-
-    Expr whereCondition;
 
     @Override
     void setWhereCondition(Expr whereCondition) throws ParseException {

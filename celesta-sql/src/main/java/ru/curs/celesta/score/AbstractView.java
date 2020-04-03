@@ -2,7 +2,12 @@ package ru.curs.celesta.score;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,11 +39,11 @@ public abstract class AbstractView extends DataGrainElement {
         });
     }
 
+    private final List<AbstractSelectStmt> segments = new ArrayList<>();
+
     public final List<AbstractSelectStmt> getSegments() {
         return segments;
     }
-
-    List<AbstractSelectStmt> segments = new ArrayList<>();
 
     public AbstractView(GrainPart grainPart, String name) throws ParseException {
         super(grainPart, name);
@@ -82,7 +87,7 @@ public abstract class AbstractView extends DataGrainElement {
      * @throws ParseException Error on types checking or reference resolving.
      */
 
-    void finalizeParsing() throws ParseException{
+    void finalizeParsing() throws ParseException {
         //System.out.println("FP");
         //TODO
     };
@@ -111,7 +116,7 @@ public abstract class AbstractView extends DataGrainElement {
         return i;
     }
 
-    public Map<String, Expr> getAggregateColumns() {
+    public final Map<String, Expr> getAggregateColumns() {
         if (segments.size() > 0) {
             return segments.get(0).columns.entrySet().stream()
                     .filter(e -> e.getValue() instanceof Aggregate)

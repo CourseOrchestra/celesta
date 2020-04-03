@@ -5,7 +5,7 @@ import java.util.Map;
 final class MaterializedSelectStmt extends AbstractSelectStmt {
     final MaterializedView view;
 
-    public MaterializedSelectStmt(MaterializedView view) {
+    MaterializedSelectStmt(MaterializedView view) {
         super(view);
         this.view = view;
     }

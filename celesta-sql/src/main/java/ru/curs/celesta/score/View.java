@@ -49,11 +49,11 @@ public class View extends AbstractView {
 
 
     @Override
-    public Map<String, ViewColumnMeta<?>> getColumns() {
-        if (segments.size() > 0) {
+    public final Map<String, ViewColumnMeta<?>> getColumns() {
+        if (getSegments().size() > 0) {
             if (columnTypes == null) {
                 columnTypes = new LinkedHashMap<>();
-                for (Map.Entry<String, Expr> e : segments.get(0).columns.entrySet()) {
+                for (Map.Entry<String, Expr> e : getSegments().get(0).columns.entrySet()) {
                     ViewColumnMeta<?> meta = e.getValue().getMeta();
                     meta.setName(e.getKey());
                     columnTypes.put(e.getKey(), meta);
