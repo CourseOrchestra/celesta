@@ -88,10 +88,35 @@ public abstract class AbstractView extends DataGrainElement {
      */
 
     void finalizeParsing() throws ParseException {
-        //System.out.println("FP");
-        //TODO
-    };
+        //This should never happen: at least one segment must be present
+        //before this method is called
+        if (segments.size() == 0)
+            throw new IllegalStateException();
 
+        Expr[] first = segments.get(0).columns.values().toArray(new Expr[0]);
+        for (int i = 1; i < segments.size(); i++) {
+            Expr[] current = segments.get(i).columns.values().toArray(new Expr[0]);
+            if (first.length != current.length) {
+                throw new ParseException(
+                        String.format("Each UNION query in %s '%s.%s' must have the same number of columns",
+                                viewType(), getGrain().getName(), getName()));
+
+            }
+            for (int j = 0; j < first.length; j++) {
+                try {
+                    current[j].assertType(first[j].getMeta().getColumnType());
+                    first[j].getMeta().setNullable(
+                            first[j].getMeta().isNullable()
+                                    | current[j].getMeta().isNullable());
+                } catch (ParseException e) {
+                    throw new ParseException(
+                            String.format("UNION types in %s '%s.%s' must match. %s",
+                                    viewType(), getGrain().getName(), getName(),
+                                    e.getMessage()));
+                }
+            }
+        }
+    }
 
     /**
      * Returns a map of columns of the view.

@@ -94,6 +94,8 @@ PARSER_END(CelestaParser)
 |   <K_UPDATE:       "UPDATE">
 |   <K_WITH:         "WITH">
 |   <K_WHERE:        "WHERE">
+|   <K_UNION:        "UNION">
+|   <K_ALL:          "ALL">
 |   <K_TABLE:        "TABLE">: DEFAULT
 |   <K_FUNCTION:     "FUNCTION">: DEFAULT
 |   <K_INDEX:        "INDEX">: DEFAULT
@@ -533,10 +535,12 @@ void createView(GrainPart g, String doc):
 	    view.setCelestaDocLexem(doc);
 	    selectStmt = view.addSelectStatement();
 	}
-	select(selectStmt)
-	{selectStmt.finalizeParsing();
-     view.finalizeParsing();}
+	select(selectStmt)	{selectStmt.finalizeParsing();}
+    (<K_UNION> <K_ALL> {selectStmt = view.addSelectStatement();}
+    select(selectStmt) {selectStmt.finalizeParsing();})*
+    { view.finalizeParsing();}
 }
+
 
 void createMaterializedView(GrainPart g, String doc):
 {
@@ -572,8 +576,10 @@ void createFunction(GrainPart g, String doc):
 "(" functionParam(v) ("," functionParam(v))* ")"
     <K_AS>
     select(select)
-	{select.finalizeParsing();
-     v.finalizeParsing();}
+	{select.finalizeParsing();}
+	(<K_UNION> <K_ALL> {select = v.addSelectStatement();}
+        select(select) {select.finalizeParsing();})*
+    {v.finalizeParsing();}
 }
 
 void createSequence(GrainPart g, String doc):
