@@ -1,6 +1,8 @@
 package ru.curs.celesta.score;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +18,7 @@ public final class ParameterizedViewSelectStmt extends ViewSelectStmt {
 
     @Override
     void finalizeWhereConditionParsing() throws ParseException {
+
         List<TableRef> t = new ArrayList<>(tables.values());
         if (whereCondition != null) {
             whereCondition.resolveFieldRefs(t);
@@ -23,6 +26,9 @@ public final class ParameterizedViewSelectStmt extends ViewSelectStmt {
             unusedParameters = paramResolveResult.getUnusedParameters();
             whereCondition.validateTypes();
             view.parameterRefsWithOrder.addAll(paramResolveResult.getParametersWithUsageOrder());
+        } else {
+            //All params are unused
+            unusedParameters = new LinkedHashSet<>(view.parameters.keySet());
         }
     }
 

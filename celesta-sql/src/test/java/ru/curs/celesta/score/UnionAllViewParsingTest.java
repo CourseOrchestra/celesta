@@ -57,6 +57,17 @@ public class UnionAllViewParsingTest extends AbstractParsingTest {
         assertTrue(msg
                 .contains("must match"), msg);
     }
+
+    @Test
+    public void testParsingFailsWhenParamsUnused() throws Exception {
+        File f = ResourceUtil.getResourceAsFile(
+                ParserTest.class,
+                "unionAll/testFunction.sql"
+        );
+        String msg = assertThrows(ParseException.class, () -> parse(f)).getMessage();
+        assertTrue(msg
+                .contains("contains not used"), msg);
+    }
 }
 
 

@@ -64,7 +64,7 @@ public abstract class AbstractView extends DataGrainElement {
         for (int i = 0; i < segments.size(); i++) {
             AbstractSelectStmt viewSegment = segments.get(i);
             if (i > 0) {
-                bw.println("UNION ALL");
+                bw.println(" union all ");
             }
             viewSegment.writeSelectPart(bw, gen, bww);
             viewSegment.writeFromPart(bw, gen);
