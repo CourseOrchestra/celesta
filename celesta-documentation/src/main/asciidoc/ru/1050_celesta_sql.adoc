@@ -322,6 +322,8 @@ include::../synsql.adoc[tag="syn_create_view"]
 
 include::../synsql.adoc[tag="syn_query"]
 
+include::../synsql.adoc[tag="syn_select_qry"]
+
 include::../synsql.adoc[tag="syn_from_clause"]
 
 Основными ограничениями и отличиями такого запроса от SQL-запросов в различных СУБД являются:
@@ -339,7 +341,7 @@ include::../synsql.adoc[tag="syn_from_clause"]
 
 . Не поддерживаются `FULL JOIN` (объединения `LEFT` и `RIGHT` joins) и `CROSS JOIN` (декартовы произведения таблиц).
 
-. Не поддерживаются конструкции `UNION`, `WITH`, вложенные запросы.
+. Не поддерживается конструкция `WITH` и вложенные запросы.
 
 Большая часть из функциональности, не поддерживаемой на уровне CelestaSQL, эффективно эмулируется в API классов доступа к данным.
 

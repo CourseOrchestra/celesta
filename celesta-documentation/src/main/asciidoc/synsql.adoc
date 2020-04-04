@@ -393,6 +393,19 @@ url_map = {
 [[query]]
 [syntrax,query,svg,heading="query",opts=interactive]
 ....
+loop('/select', 'UNION ALL')
+)
+
+url_map = {
+  'select': '.#select_qry'
+}
+....
+//end::syn_query[]
+
+//tag::syn_select_qry[]
+[[select_qry]]
+[syntrax,select_qry,svg,heading="select",opts=interactive]
+....
 rightstack(
   line(
    'SELECT',
@@ -421,7 +434,7 @@ url_map = {
   'group_by': '.#group_by'
 }
 ....
-//end::syn_query[]
+//end::syn_select_qry[]
 
 //tag::syn_from_clause[]
 [[from_clause]]
