@@ -813,17 +813,6 @@ Expr where;
     [<K_GROUP> <K_BY>  groupBy(v)]
 }
 
-void parameterizedSelect(AbstractSelectStmt v):
-{
-Expr where;
-}
-{
-    <K_SELECT>  [ <K_DISTINCT> {v.setDistinct(true);}] selectItem(v) ("," selectItem(v))*
-    <K_FROM>  fromClause(v)
-    [<K_WHERE> where = sqlExpression(v.getGrain().getScore().getIdentifierParser()) {v.setWhereCondition(where);} ]
-    [<K_GROUP> <K_BY>  groupBy(v)]
-}
-
 void materializedSelect(AbstractSelectStmt v):
 {
 }
@@ -832,7 +821,6 @@ void materializedSelect(AbstractSelectStmt v):
     <K_FROM>  fromClause(v)
     [<K_GROUP> <K_BY>  groupBy(v)]
 }
-
 
 void groupBy(AbstractSelectStmt view):
 { FieldRef fr; }
