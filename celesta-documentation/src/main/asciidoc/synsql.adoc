@@ -394,7 +394,6 @@ url_map = {
 [syntrax,query,svg,heading="query",opts=interactive]
 ....
 loop('/select', 'UNION ALL')
-)
 
 url_map = {
   'select': '.#select_qry'
