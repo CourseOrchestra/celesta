@@ -90,8 +90,9 @@ public abstract class AbstractView extends DataGrainElement {
     void finalizeParsing() throws ParseException {
         //This should never happen: at least one segment must be present
         //before this method is called
-        if (segments.size() == 0)
+        if (segments.size() == 0) {
             throw new IllegalStateException();
+        }
 
         Expr[] first = segments.get(0).columns.values().toArray(new Expr[0]);
         for (int i = 1; i < segments.size(); i++) {

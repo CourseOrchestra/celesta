@@ -55,7 +55,8 @@ public final class ParameterizedView extends View {
 
         if (parameters.containsKey(parameter.getName())) {
             throw new ParseException(
-                    String.format("%s '%s' already contains parameter with name '%s'. Use unique names for %s parameters.",
+                    String.format("%s '%s' already contains parameter with name '%s'. " +
+                                    "Use unique names for %s parameters.",
                             viewType(), getName(), parameter.getName(), viewType())
             );
         }
