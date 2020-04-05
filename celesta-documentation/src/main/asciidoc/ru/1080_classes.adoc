@@ -620,9 +620,6 @@ WHERE aFoo = 'aBar'
 [source, java]
 a.setIn(b).add(a.CURSORS.a2(), b.CURSORS.b2());
 
-* Класс `FieldsLookup` может принять в себя курсоры только одного происхождения, т. е. либо оба курсора для работы с таблицами, либо оба курсора для работы с представлениями.
-
-
 == Класс Sequence
 
 Класс {apidocs}ru/curs/celesta/dbutils/Sequence.html[Sequence] позволяет работать с последовательностями.

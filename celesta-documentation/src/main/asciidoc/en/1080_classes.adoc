@@ -627,8 +627,6 @@ In this example, if `I1(a1, a2,..)` and `I2(b1, b2,...)` indices are present, th
 [source, java]
 a.setIn(b).add(a.CURSORS.a2(), b.CURSORS.b2());
 
-* The `FieldsLookup` class accepts only the cursors of the same origin, i.e. both cursors should be either table cursors or view cursors.
-
 
 == Sequence Class
 
