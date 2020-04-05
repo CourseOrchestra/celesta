@@ -323,6 +323,12 @@ include::../synsql.adoc[tag="syn_create_view"]
 
 include::../synsql.adoc[tag="syn_query"]
 
+`SELECT` statements in CelestaSQL can be chained with `UNION ALL`.
+As usual, it is required that each `SELECT` statement in `UNION ALL` chain returns the same number of columns of the matching types.
+
+The names of the columns returned by `UNION ALL` expression are assigned from the respective columns of the first `SELECT` query.
+Columns' nullability is determined the following way: if any of the queries in `UNION ALL` chain can return `null` in a column, the column is identified as nullable.
+
 include::../synsql.adoc[tag="syn_select_qry"]
 
 include::../synsql.adoc[tag="syn_from_clause"]
