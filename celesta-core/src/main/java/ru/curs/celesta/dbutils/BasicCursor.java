@@ -1328,10 +1328,10 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Clones the current cursor.
      *
      * @param context call context
-     * @param fields  list of fields to be fetched
+     * @param fetchedFields  list of fields to be fetched
      */
-    public final BasicCursor getBufferCopy(CallContext context, List<String> fields) {
-        return _getBufferCopy(context, fields);
+    public final BasicCursor getBufferCopy(CallContext context, List<String> fetchedFields) {
+        return _getBufferCopy(context, fetchedFields);
     }
 
     // CHECKSTYLE:OFF
