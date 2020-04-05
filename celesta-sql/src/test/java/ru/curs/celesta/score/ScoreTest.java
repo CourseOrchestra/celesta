@@ -97,7 +97,7 @@ public class ScoreTest {
         View v = g1.getElement("testView", View.class);
         assertEquals("testView", v.getName());
         assertEquals("view description ", v.getCelestaDoc());
-        assertTrue(v.isDistinct());
+        assertTrue(v.getSegments().get(0).isDistinct());
 
         assertEquals(4, v.getColumns().size());
         String[] ref = {"fieldAlias", "tablename", "checksum", "f1"};
@@ -253,7 +253,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest7() throws ParseException, IOException {
+    public void modificationTest7() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
                 .build();
@@ -267,7 +267,7 @@ public class ScoreTest {
     }
 
     @Test
-    public void modificationTest8() throws ParseException, IOException {
+    public void modificationTest8() throws ParseException {
         AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
                 .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
                 .build();
@@ -281,10 +281,25 @@ public class ScoreTest {
         assertEquals(1, g1.getElements(View.class).size());
         assertTrue(g1.isModified());
         View nv = new View(g1p, "testit", "select postalcode, city from addresses where flat = '5'");
+        assertEquals(1, nv.getSegments().size());
         assertEquals(2, nv.getColumns().size());
         assertEquals(2, g1.getElements(View.class).size());
         assertTrue(g1.isModified());
+    }
 
+    @Test
+    public void addViewWithUnion() throws ParseException {
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlTestScore.class)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(COMPOSITE_SCORE_PATH_1))
+                .build();
+        Grain g1 = s.getGrain("grain1");
+        GrainPart g1p = g1.getGrainParts().stream().findFirst().get();
+
+        View nv = new View(g1p, "testit",
+                "select postalcode, city from addresses where flat = '5'" +
+                        "union all select postalcode, city from addresses where flat = '6'");
+        assertEquals(2, nv.getSegments().size());
+        assertEquals(2, nv.getColumns().size());
     }
 
     @Test
@@ -398,7 +413,7 @@ public class ScoreTest {
 
         View v = g.getElement("testView", View.class);
         String exp;
-        assertFalse(v.isDistinct());
+        assertFalse(v.getSegments().get(0).isDistinct());
         assertEquals(4, v.getColumns().size());
         exp = String.format("  select id as id, descr as descr, descr || 'foo' as descr2, k2 as k2%n"
                 + "  from testTable as testTable%n" + "    INNER join refTo as refTo on attrVarchar = k1 AND attrInt = k2");
@@ -452,11 +467,11 @@ public class ScoreTest {
         assertAll(
                 () -> assertArrayEquals(expected, CelestaSerializer.toQueryString(v).split("\\r?\\n")),
                 // Checking nullability evaluation
-                () -> assertFalse(v.getColumns().get("f1").isNullable()),
-                () -> assertTrue(v.getColumns().get("f4").isNullable()),
-                () -> assertFalse(v.getColumns().get("f5").isNullable()),
-                () -> assertTrue(v.getColumns().get("s").isNullable()),
-                () -> assertFalse(v.getColumns().get("s2").isNullable())
+                () -> assertFalse(v.getColumns().get("f1").isNullable(), "f1 should not be nullable"),
+                () -> assertTrue(v.getColumns().get("f4").isNullable(), "f4 should be nullable"),
+                () -> assertFalse(v.getColumns().get("f5").isNullable(), "f5 should not be nullable"),
+                () -> assertTrue(v.getColumns().get("s").isNullable(), "s should be nullable"),
+                () -> assertFalse(v.getColumns().get("s2").isNullable(), "s2 should not be nullable")
         );
     }
 

@@ -2,9 +2,16 @@ package ru.curs.celesta.score;
 
 import ru.curs.celesta.event.TriggerType;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Materialized view data element.
@@ -33,18 +40,18 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     @FunctionalInterface
-    private interface MatColFabricFunction {
+    interface MatColFabricFunction {
         Column<?> apply(MaterializedView mView, Column<?> colRef, String alias) throws ParseException;
     }
 
-    private static final Map<Class<? extends Column<?>>, MatColFabricFunction>
-                         COL_CLASSES_AND_FABRIC_FUNCS = new HashMap<>();
+    static final Map<Class<? extends Column<?>>, MatColFabricFunction>
+            COL_CLASSES_AND_FABRIC_FUNCS = new HashMap<>();
 
     static {
         COL_CLASSES_AND_FABRIC_FUNCS.put(IntegerColumn.class,
-                                         (mView, colRef, alias) -> new IntegerColumn(mView, alias));
+                (mView, colRef, alias) -> new IntegerColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(FloatingColumn.class,
-                                         (mView, colRef, alias) -> new FloatingColumn(mView, alias));
+                (mView, colRef, alias) -> new FloatingColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(
                 DecimalColumn.class, (mView, colRef, alias) -> {
                     DecimalColumn dc = (DecimalColumn) colRef;
@@ -54,13 +61,13 @@ public final class MaterializedView extends AbstractView implements TableElement
                 }
         );
         COL_CLASSES_AND_FABRIC_FUNCS.put(BooleanColumn.class,
-                                         (mView, colRef, alias) -> new BooleanColumn(mView, alias));
+                (mView, colRef, alias) -> new BooleanColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(BinaryColumn.class,
-                                         (mView, colRef, alias) -> new BinaryColumn(mView, alias));
+                (mView, colRef, alias) -> new BinaryColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(DateTimeColumn.class,
-                                         (mView, colRef, alias) -> new DateTimeColumn(mView, alias));
+                (mView, colRef, alias) -> new DateTimeColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(ZonedDateTimeColumn.class,
-                                         (mView, colRef, alias) -> new ZonedDateTimeColumn(mView, alias));
+                (mView, colRef, alias) -> new ZonedDateTimeColumn(mView, alias));
         COL_CLASSES_AND_FABRIC_FUNCS.put(StringColumn.class, (mView, colRef, alias) -> {
             StringColumn result = new StringColumn(mView, alias);
             StringColumn strColRef = (StringColumn) colRef;
@@ -76,7 +83,7 @@ public final class MaterializedView extends AbstractView implements TableElement
         }
     };
 
-    private final NamedElementHolder<Column<?>> pk = new NamedElementHolder<Column<?>>() {
+    final NamedElementHolder<Column<?>> pk = new NamedElementHolder<Column<?>>() {
         @Override
         protected String getErrorMsg(String name) {
             return String.format("Column '%s' defined more than once for primary key in table '%s'.", name, getName());
@@ -96,74 +103,8 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     @Override
-    void finalizeParsing() throws ParseException {
-
-        //Присутствие хотя бы одного агрегатного столбца - обязательное условие
-        boolean aggregate = columns.entrySet().stream()
-                .anyMatch(e -> e.getValue() instanceof Aggregate);
-
-        if (!aggregate) {
-            throw new ParseException(String.format("%s %s.%s must have at least one aggregate column",
-                    viewType(), getGrain().getName(), getName()));
-        }
-
-        finalizeColumnsParsing();
-        finalizeGroupByParsing();
-    }
-
-    @Override
-    void finalizeColumnsParsing() throws ParseException {
-        super.finalizeColumnsParsing();
-
-        for (Map.Entry<String, Expr> entry : columns.entrySet()) {
-            String alias = entry.getKey();
-            Expr expr = entry.getValue();
-
-            final Column<?> colRef;
-            final MatColFabricFunction matColFabricFunction;
-
-            if (expr instanceof Count) {
-                colRef = null;
-                matColFabricFunction = COL_CLASSES_AND_FABRIC_FUNCS.get(IntegerColumn.class);
-            } else {
-                colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
-                matColFabricFunction = COL_CLASSES_AND_FABRIC_FUNCS.get(colRef.getClass());
-            }
-
-            if (matColFabricFunction == null) {
-                throw new ParseException(String.format(
-                        "Unsupported type '%s' of column '%s' in materialized view %s was found",
-                        expr.getMeta().getCelestaType(), alias, getName()));
-            } else {
-                Column<?> col = matColFabricFunction.apply(this, colRef, alias);
-                if (!(expr instanceof Aggregate)) {
-                    pk.addElement(col);
-                    col.setNullableAndDefault(false, null);
-                }
-            }
-        }
-    }
-
-    @Override
-    void finalizeGroupByParsing() throws ParseException {
-        super.finalizeGroupByParsing();
-
-        for (String alias : groupByColumns.keySet()) {
-            Column<?> colRef = ((FieldRef) columns.get(alias)).getColumn();
-            if (colRef.isNullable()) {
-                throw new ParseException(String.format(
-                        "Nullable column %s was found in GROUP BY expression for %s '%s.%s'.",
-                        alias, viewType(), getGrain().getName(), getName())
-                );
-            }
-        }
-    }
-
-    @Override
-    void setWhereCondition(Expr whereCondition) throws ParseException {
-        throw new ParseException(String.format(
-                "Exception while parsing materialized view %s.%s Materialized views doesn't support where condition.",
-                getGrain().getName(), getName()));
+    AbstractSelectStmt newSelectStatement() {
+        return new MaterializedSelectStmt(this);
     }
 
     @Override
@@ -171,20 +112,22 @@ public final class MaterializedView extends AbstractView implements TableElement
         return realColumns.getElements();
     }
 
-
     public List<String> getColumnRefNames() {
-        List<String> result = new ArrayList<>();
+        if (getSegments().size() > 0) {
+            List<String> result = new ArrayList<>();
 
-        for (Map.Entry<String, Expr> entry : columns.entrySet()) {
-            Expr expr = entry.getValue();
+            for (Map.Entry<String, Expr> entry : getSegments().get(0).columns.entrySet()) {
+                Expr expr = entry.getValue();
 
-            if (!(expr instanceof Count)) {
-                Column<?> colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
-                result.add(colRef.getName());
+                if (!(expr instanceof Count)) {
+                    Column<?> colRef = EXPR_CLASSES_AND_COLUMN_EXTRACTORS.get(expr.getClass()).apply(expr);
+                    result.add(colRef.getName());
+                }
             }
+            return result;
+        } else {
+            return Collections.emptyList();
         }
-
-        return result;
     }
 
     @Override
@@ -193,7 +136,7 @@ public final class MaterializedView extends AbstractView implements TableElement
         if (result == null) {
             throw new ParseException(
                     String.format("Column '%s' not found in materialized view '%s.%s'",
-                                  colName, getGrain().getName(), getName()));
+                            colName, getGrain().getName(), getName()));
         }
 
         return result;
@@ -245,11 +188,11 @@ public final class MaterializedView extends AbstractView implements TableElement
     }
 
     public TableRef getRefTable() {
-        return getTables().values().stream().findFirst().get();
+        return getSegments().get(0).tables.values().stream().findFirst().get();
     }
 
     public boolean isGroupByColumn(String alias) {
-        return groupByColumns.containsKey(alias);
+        return getSegments().get(0).groupByColumns.containsKey(alias);
     }
 
     public String getSelectPartOfScript() {
@@ -259,7 +202,7 @@ public final class MaterializedView extends AbstractView implements TableElement
             PrintWriter bw = new PrintWriter(sw);
             BWWrapper bww = new BWWrapper();
 
-            writeSelectPart(bw, gen, bww);
+            getSegments().get(0).writeSelectPart(bw, gen, bww);
             bw.flush();
             return sw.getBuffer().toString();
         } catch (IOException e) {
@@ -273,7 +216,7 @@ public final class MaterializedView extends AbstractView implements TableElement
             StringWriter sw = new StringWriter();
             PrintWriter bw = new PrintWriter(sw);
 
-            writeGroupByPart(bw, gen);
+            getSegments().get(0).writeGroupByPart(bw, gen);
             bw.flush();
             return sw.getBuffer().toString();
         } catch (IOException e) {
@@ -281,16 +224,6 @@ public final class MaterializedView extends AbstractView implements TableElement
         }
     }
 
-    @Override
-    void addFromTableRef(TableRef ref) throws ParseException {
-
-        if (!getGrain().equals(ref.getTable().getGrain())) {
-            throw new ParseException(String.format("%s '%s.%s' contains a table from another grain.",
-                    viewType(), getGrain().getName(), getName()));
-        }
-
-        super.addFromTableRef(ref);
-    }
 
     public String getChecksum() {
         // TODO: CelestaSerializer is not intended to be used from GrainElement classes.

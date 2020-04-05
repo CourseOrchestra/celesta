@@ -40,15 +40,15 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn)  {
+    List<String> dropParameterizedView(String schemaName, String viewName, Connection conn) {
         List<String> result = new ArrayList<>();
 
         String sql = "SELECT format('DROP FUNCTION IF EXISTS %s(%s);',\n"
-                     + "  p.oid::regproc, pg_get_function_identity_arguments(p.oid))\n"
-                  + " FROM pg_catalog.pg_proc p\n"
-                      + " LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace\n"
-                  + " WHERE\n"
-                      + " p.oid::regproc::text = '" + String.format("%s.%s", schemaName, viewName) + "';";
+                + "  p.oid::regproc, pg_get_function_identity_arguments(p.oid))\n"
+                + " FROM pg_catalog.pg_proc p\n"
+                + " LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace\n"
+                + " WHERE\n"
+                + " p.oid::regproc::text = '" + String.format("%s.%s", schemaName, viewName) + "';";
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             if (rs.next()) {
@@ -68,7 +68,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> updateVersioningTrigger(Connection conn, TableElement t)  {
+    List<String> updateVersioningTrigger(Connection conn, TableElement t) {
         List<String> result = new ArrayList<>();
         // First of all, we are about to check if trigger exists
         try {
@@ -222,7 +222,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    List<String> createParameterizedView(ParameterizedView pv)  {
+    List<String> createParameterizedView(ParameterizedView pv) {
         SQLGenerator gen = getViewSQLGenerator();
         StringWriter sw = new StringWriter();
         PrintWriter bw = new PrintWriter(sw);
@@ -246,7 +246,8 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
 
         String pViewCols = pv.getColumns().entrySet().stream()
                 .map(e -> {
-                            StringBuilder sb = new StringBuilder(e.getKey()).append(" ");
+                            StringBuilder sb = new StringBuilder("\"")
+                                    .append(e.getKey()).append("\" ");
 
                             if (pv.getAggregateColumns().containsKey(e.getKey())
                                     && e.getValue().getColumnType() != ViewColumnType.DECIMAL) {
@@ -279,7 +280,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
     }
 
     @Override
-    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t)  {
+    public List<String> dropTableTriggersForMaterializedViews(Connection conn, BasicTable t) {
         List<String> result = new ArrayList<>();
 
         List<MaterializedView> mvList = t.getGrain().getElements(MaterializedView.class).values().stream()
@@ -391,8 +392,8 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
 
                         if (e.getValue() instanceof Sum) {
                             sb.append("%2$s.\"")
-                              .append(mv.getColumnRef(alias.replace("\"", "")).getName())
-                              .append("\"");
+                                    .append(mv.getColumnRef(alias.replace("\"", "")).getName())
+                                    .append("\"");
                         } else if (e.getValue() instanceof Count) {
                             sb.append("1");
                         }
@@ -437,10 +438,10 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
 
             String insertSql = String.format(
                     "UPDATE %s SET %s WHERE %s ;\n"
-                  + "GET DIAGNOSTICS updatedCount = ROW_COUNT; \n"
-                  + "IF updatedCount = 0 THEN \n"
-                     + " INSERT INTO %s (%s) VALUES(%s); \n"
-                  + "END IF;\n",
+                            + "GET DIAGNOSTICS updatedCount = ROW_COUNT; \n"
+                            + "IF updatedCount = 0 THEN \n"
+                            + " INSERT INTO %s (%s) VALUES(%s); \n"
+                            + "END IF;\n",
                     fullMvName, String.format(setStatementTemplate, "+", "NEW"),
                     String.format(rowConditionTemplate, "NEW"), fullMvName,
                     mvColumns + ", " + MaterializedView.SURROGATE_COUNT,
@@ -448,7 +449,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
 
             String deleteSql = String.format(
                     "UPDATE %s SET %s WHERE %s ;\n"
-                  + "DELETE FROM %s WHERE %s ;\n",
+                            + "DELETE FROM %s WHERE %s ;\n",
                     fullMvName, String.format(setStatementTemplate, "-", "OLD"),
                     String.format(rowConditionTemplate, "OLD"), fullMvName, whereForDelete);
 
@@ -457,13 +458,13 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
             //INSERT
             sql = String.format(
                     "CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n "
-                  + "DECLARE\n"
-                      + "updatedCount int;\n"
-                      + "BEGIN \n"
-                          + MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n"
-                          + "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n"
-                          + "%s "
-                          + "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
+                            + "DECLARE\n"
+                            + "updatedCount int;\n"
+                            + "BEGIN \n"
+                            + MaterializedView.CHECKSUM_COMMENT_TEMPLATE + "\n"
+                            + "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n"
+                            + "%s "
+                            + "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
                     insertTriggerFunctionFullName, mv.getChecksum(), fullMvName, insertSql);
 
             LOGGER.trace(sql);
@@ -480,13 +481,13 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
             //UPDATE
             sql = String.format(
                     "CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n "
-                  + "DECLARE\n"
-                      + "updatedCount int;\n"
-                          + "BEGIN \n"
-                              + "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n"
-                              + "%s " //DELETE
-                              + "%s " //INSERT
-                              + "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
+                            + "DECLARE\n"
+                            + "updatedCount int;\n"
+                            + "BEGIN \n"
+                            + "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n"
+                            + "%s " //DELETE
+                            + "%s " //INSERT
+                            + "RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
                     updateTriggerFunctionFullName, fullMvName, deleteSql, insertSql);
 
             LOGGER.trace(sql);
@@ -503,10 +504,10 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
             //DELETE
             sql = String.format(
                     "CREATE OR REPLACE FUNCTION %s RETURNS trigger AS $BODY$ \n "
-                  + "BEGIN \n"
-                      + "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n"
-                          + "%s"
-                          + "RETURN OLD; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
+                            + "BEGIN \n"
+                            + "LOCK TABLE ONLY %s IN EXCLUSIVE MODE; \n"
+                            + "%s"
+                            + "RETURN OLD; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;",
                     deleteTriggerFunctionFullName, fullMvName, deleteSql
             );
 

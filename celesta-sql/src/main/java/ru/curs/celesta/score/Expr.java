@@ -21,12 +21,12 @@ public abstract class Expr {
                     || columnType == ViewColumnType.DECIMAL)) {
                 throw new ParseException(
                         String.format("Expression '%s' is expected to be of numeric type, but it is %s", getCSQL(),
-                                getMeta().toString()));
+                                getMeta().getColumnType().getCelestaType()));
             }
         } else {
             if (columnType != t) {
                 throw new ParseException(String.format("Expression '%s' is expected to be of %s type, but it is %s",
-                        getCSQL(), t.toString(), getMeta().toString()));
+                        getCSQL(), t.toString(), getMeta().getColumnType().getCelestaType()));
             }
         }
     }

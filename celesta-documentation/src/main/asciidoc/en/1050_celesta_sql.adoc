@@ -10,7 +10,7 @@ include::en/_common_attributes.adoc[]
 :source-highlighter: highlightjs
 //tag::celesta_sql[]
 
-== CelestaSQL Language to Determine Database Objects
+== Database Objects Definition Language
 
 WARNING: Scripts in CelestaSQL language must be encoded in UTF-8.
 
@@ -43,24 +43,24 @@ CelestaSQL supports standard single-string and multistring comments, as well as 
 
 Standard comments can be used in any part of the text and CelestaDoc comments can be used only right before the grain, table, field or index definition.
 
-== Object IDs in CelestaSQL
+== Identifiers in CelestaSQL
 
-Object IDs are names of grains, tables, fields, indices, limitations and views.
+Identifiers are names of grains, tables, fields, indices, limitations and views.
 In Celesta, their syntax is subject to a number of stringent limitations.
 
-. In other RDBMS, object IDs are allowed to contain spaces and non-alphabetical symbols if the names are encased in special symbols, like "[]" in MS SQL Server.
+. In other RDBMS, identifiers are allowed to contain spaces and non-alphabetical symbols if the names are encased in special symbols, like "[]" in MS SQL Server.
 This means that MS SQLServer allows table names like this: [Long Table$Name]. Celesta, on the other hand, cannot support spaces and non-alphabetical symbols in IDs because the name of every Celesta table must be the name of a Java class and the name of every Celesta field must be the name of a Java variable.
 So IDs of all named objects in CelestaSQL must at least meet the naming requirements for Java identifiers, i.e. *they must contain only lower- and uppercase Latin letters, numerals and underscores and must not start with numerals*.
 
-. *Encasing Celesta IDs with quotation marks* in CelestaSQL scripts *is not allowed* at the syntax level since there is no practical need to do that (names never contain spaces).
+. *Encasing identifiers with quotation marks* in CelestaSQL scripts *is not allowed* at the CelestaSQL syntax level since there is no practical need to do that (names never contain spaces).
 However, when forming requests to RDBMS at the system level, Celesta always encases names of its objects with strait marks ("ANSI quotes") to prevent Oracle, PostgreSQL and H2 databases from changing ID letter register.
 
-. *IDs* in Celesta *are case-sensitive*, but it is impossible to create two tables with names different only in letter register.
+. *Identifiers* in Celesta *are case-sensitive*, but it is impossible to create two tables with names different only in letter register.
 
-. The *length* of every ID in Celesta *cannot exceed 30 characters*.
+. The *length* of every identifier in Celesta *cannot exceed 30 characters*.
 
-. *In addition, grain IDs cannot contain underscores*.
-This is because combining grain names with underscores and other IDs often used for Celesta internal needs, this restriction helps to prevent possible ambiguities.
+. *In addition, grain identifiers cannot contain underscores*.
+This is because combining grain names with underscores and other identifiers often used for Celesta internal needs, this restriction helps to prevent possible ambiguities.
 
 [[create_schema_statement]]
 == CREATE SCHEMA (GRAIN) Statement
@@ -323,6 +323,14 @@ include::../synsql.adoc[tag="syn_create_view"]
 
 include::../synsql.adoc[tag="syn_query"]
 
+`SELECT` statements in CelestaSQL can be chained with `UNION ALL`.
+As usual, it is required that each `SELECT` statement in `UNION ALL` chain returns the same number of columns of the matching types.
+
+The names of the columns returned by `UNION ALL` expression are assigned from the respective columns of the first `SELECT` query.
+Columns' nullability is determined the following way: if any of the queries in `UNION ALL` chain can return `null` in a column, the column is identified as nullable.
+
+include::../synsql.adoc[tag="syn_select_qry"]
+
 include::../synsql.adoc[tag="syn_from_clause"]
 
 This query key restrictions and differences from SQL queries in various RDBMS are:
@@ -340,7 +348,7 @@ It allows to unambiguously create class-cursors with fields aligned to the query
 
 . `FULL JOIN` (`LEFT` and `RIGHT` joins) and `CROSS JOIN` (table Cartesian products) statements are not supported.
 
-. `UNION` and `WITH` statements and inline queries are not supported.
+. `WITH` statements and nested queries are not supported.
 
 Most functions not supported at the CelestaSQL level can be efficiently emulated with data access classes API.
 
