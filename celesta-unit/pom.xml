@@ -3,7 +3,7 @@
     <parent>
         <artifactId>celesta-parent</artifactId>
         <groupId>ru.curs</groupId>
-        <version>7.3.4-SNAPSHOT</version>
+        <version>7.3.4</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -18,13 +18,13 @@
         <dependency>
             <groupId>ru.curs</groupId>
             <artifactId>celesta-core</artifactId>
-            <version>7.3.4-SNAPSHOT</version>
+            <version>7.3.4</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>ru.curs</groupId>
             <artifactId>celesta-system-services</artifactId>
-            <version>7.3.4-SNAPSHOT</version>
+            <version>7.3.4</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
