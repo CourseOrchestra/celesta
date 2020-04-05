@@ -33,6 +33,20 @@ public class TestFilter implements ScriptTest {
     }
 
     @TestTemplate
+    public void testInFilterForTableToView(CallContext context) throws ParseException {
+        AFilterCursor a = new AFilterCursor(context);
+        BFilterViewCursor b = new BFilterViewCursor(context);
+        _testInFilterForIndices(context, a, b);
+    }
+
+    @TestTemplate
+    public void testInFilterForViewToTable(CallContext context) throws ParseException {
+        AFilterCursor a = new AFilterCursor(context);
+        BFilterViewCursor b = new BFilterViewCursor(context);
+        _testInFilterForIndices(context, a, b);
+    }
+
+    @TestTemplate
     public void testInFilterForSimplePks(CallContext context) throws ParseException {
         CFilterCursor c = new CFilterCursor(context);
         DFilterCursor d = new DFilterCursor(context);
@@ -114,6 +128,14 @@ public class TestFilter implements ScriptTest {
     }
 
     @TestTemplate
+    public void testInFilterWithRangeInMainCursorForTableToView(CallContext context) throws ParseException {
+        AFilterCursor a = new AFilterCursor(context);
+        BFilterViewCursor b = new BFilterViewCursor(context);
+        _testInFilterWithRangeInMainCursor(context, a, b);
+    }
+
+
+    @TestTemplate
     public void testInFilterWithRangeInOtherCursorBeforeSetInForTable(CallContext context) throws ParseException {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
@@ -123,6 +145,13 @@ public class TestFilter implements ScriptTest {
     @TestTemplate
     public void testInFilterWithRangeInOtherCursorBeforeSetInForView(CallContext context) throws ParseException {
         AFilterViewCursor a = new AFilterViewCursor(context);
+        BFilterViewCursor b = new BFilterViewCursor(context);
+        _testInFilterWithRangeInOtherCursorBeforeSetIn(context, a, b);
+    }
+
+    @TestTemplate
+    public void testInFilterWithRangeInOtherCursorBeforeSetInForTableToView(CallContext context) throws ParseException {
+        AFilterCursor a = new AFilterCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterWithRangeInOtherCursorBeforeSetIn(context, a, b);
     }
@@ -153,6 +182,14 @@ public class TestFilter implements ScriptTest {
     @TestTemplate
     public void testInFilterWithAdditionalLookupForView(CallContext context) throws ParseException {
         AFilterViewCursor a = new AFilterViewCursor(context);
+        BFilterViewCursor b = new BFilterViewCursor(context);
+        GFilterViewCursor g = new GFilterViewCursor(context);
+        _testInFilterWithAdditionalLookup(context, a, b, g);
+    }
+
+    @TestTemplate
+    public void testInFilterWithAdditionalLookupForTableToView(CallContext context) throws ParseException {
+        AFilterCursor a = new AFilterCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         GFilterViewCursor g = new GFilterViewCursor(context);
         _testInFilterWithAdditionalLookup(context, a, b, g);

@@ -36,10 +36,10 @@ public final class InFilterHolder {
 
         if (cursor instanceof Cursor) {
             fieldsLookup = new FieldsLookup(
-                    (Cursor) cursor, (Cursor) otherCursor, lookupChangeCallback, newLookupCallback);
+                    (Cursor) cursor, otherCursor, lookupChangeCallback, newLookupCallback);
         } else if (cursor instanceof ViewCursor) {
             fieldsLookup = new FieldsLookup(
-                    (ViewCursor) cursor, (ViewCursor) otherCursor, lookupChangeCallback, newLookupCallback);
+                    (ViewCursor) cursor, otherCursor, lookupChangeCallback, newLookupCallback);
         } else {
             throw new CelestaException("Not supported cursor type: %s", cursor.getClass().getSimpleName());
         }
