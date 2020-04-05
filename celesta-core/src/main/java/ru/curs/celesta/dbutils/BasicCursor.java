@@ -798,7 +798,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Resets any filter on a field.
      *
-     * @param name  field name
+     * @param name field name
      */
     @Deprecated
     public final void setRange(String name) {
@@ -808,7 +808,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Resets any filter on a field.
      *
-     * @param column  field column
+     * @param column field column
      */
     public final void setRange(ColumnMeta<?> column) {
         validateColumnName(column.getName());
@@ -837,10 +837,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets range from a single value on the field.
      *
-     * @param column  field column
+     * @param column field column
      * @param value  value along which filtering is performed
-     *
-     * @param <T>  Java type of value
+     * @param <T>    Java type of value
      */
     public final <T> void setRange(ColumnMeta<? super T> column, T value) {
         validateColumnName(column.getName());
@@ -865,9 +864,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets range from..to on the field.
      *
-     * @param name  field name
-     * @param valueFrom  value <em>from</em>
-     * @param valueTo  value <em>to</em>
+     * @param name      field name
+     * @param valueFrom value <em>from</em>
+     * @param valueTo   value <em>to</em>
      */
     @Deprecated
     public final void setRange(String name, Object valueFrom, Object valueTo) {
@@ -879,11 +878,10 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets range from..to on the field.
      *
-     * @param column  field column
-     * @param valueFrom  value <em>from</em>
-     * @param valueTo  value <em>to</em>
-     *
-     * @param <T>  Java type of value
+     * @param column    field column
+     * @param valueFrom value <em>from</em>
+     * @param valueTo   value <em>to</em>
+     * @param <T>       Java type of value
      */
     public final <T> void setRange(ColumnMeta<? super T> column, T valueFrom, T valueTo) {
         validateColumnName(column.getName());
@@ -905,7 +903,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Sets filter to the field.
      *
      * @param name  field name
-     * @param value  filter
+     * @param value filter
      */
     @Deprecated
     public final void setFilter(String name, String value) {
@@ -915,7 +913,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets filter to the field.
      *
-     * @param column  field column
+     * @param column field column
      * @param value  filter
      */
     public final void setFilter(ColumnMeta<?> column, String value) {
@@ -1002,7 +1000,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets sorting.
      *
-     * @param names  array of fields for sorting
+     * @param names array of fields for sorting
      */
     @Deprecated
     public final void orderBy(String... names) {
@@ -1028,7 +1026,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
                 } else if ("desc".equalsIgnoreCase(colOrdering)) {
                     column = column.desc();
                 }
-                
+
                 columns[i] = column;
             }
         }
@@ -1039,7 +1037,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Sets sorting.
      *
-     * @param columns  columns array for sorting
+     * @param columns columns array for sorting
      */
     public final void orderBy(ColumnMeta<?>... columns) {
 
@@ -1266,7 +1264,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * Returns a value of a field by its name. This is needed for accessing data when using generic cursors,
      * such as {@link Cursor}.
      *
-     * @param name  field name
+     * @param name field name
      * @return
      */
     public final Object getValue(String name) {
@@ -1314,6 +1312,26 @@ public abstract class BasicCursor extends BasicDataAccessor {
      */
     public final Object[] getCurrentValues() {
         return _currentValues();
+    }
+
+    /**
+     * Clears current cursor buffer (sets all fields to null)
+     *
+     * @param withKeys if true, all fields will be cleared, otherwise,
+     *                 primary key fields will remain unchanged.
+     */
+    public final void clearBuffer(boolean withKeys) {
+        _clearBuffer(withKeys);
+    }
+
+    /**
+     * Clones the current cursor.
+     *
+     * @param context call context
+     * @param fields  list of fields to be fetched
+     */
+    public final BasicCursor getBufferCopy(CallContext context, List<String> fields) {
+        return _getBufferCopy(context, fields);
     }
 
     // CHECKSTYLE:OFF
