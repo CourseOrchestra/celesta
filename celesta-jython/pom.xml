@@ -3,7 +3,7 @@
     <parent>
         <artifactId>celesta-parent</artifactId>
         <groupId>ru.curs</groupId>
-        <version>6.2.11</version>
+        <version>6.2.12-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -13,7 +13,7 @@
         <dependency>
             <groupId>ru.curs</groupId>
             <artifactId>celesta-sql</artifactId>
-            <version>6.2.11</version>
+            <version>6.2.12-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.python</groupId>
