@@ -26,7 +26,7 @@ include::ru/_common_attributes.adoc[]
 ```xml
 <dependency>
     <groupId>ru.curs</groupId>
-    <artifactId>celesta-unit<artifactId>
+    <artifactId>celesta-unit</artifactId>
     <version>...</version>
     <scope>test</scope>
 </dependency>

@@ -26,7 +26,7 @@ To employ these functions, add a CelestaUnit Maven dependency:
 ```xml
 <dependency>
     <groupId>ru.curs</groupId>
-    <artifactId>celesta-unit<artifactId>
+    <artifactId>celesta-unit</artifactId>
     <version>...</version>
     <scope>test</scope>
 </dependency>
