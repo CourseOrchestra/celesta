@@ -58,7 +58,7 @@
         <checkstyle.version>8.33</checkstyle.version>
         <slf4j.version>1.7.30</slf4j.version>
         <h2.version>1.4.200</h2.version>
-        <javacc.version>7.0.6</javacc.version>
+        <javacc.version>7.0.9</javacc.version>
         <jdbc.driver.oracle.version>11.2.0.4</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.2.14</jdbc.driver.postgres.version>
         <jdbc.driver.sqlserver.version>8.2.1.jre8</jdbc.driver.sqlserver.version>
