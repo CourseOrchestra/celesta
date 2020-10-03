@@ -3,8 +3,14 @@ package ru.curs.celesta;
 import org.h2.tools.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.dbutils.DbUpdaterBuilder;
+import ru.curs.celesta.dbutils.DbUpdaterImpl;
+import ru.curs.celesta.dbutils.ILoggingManager;
+import ru.curs.celesta.dbutils.IPermissionManager;
+import ru.curs.celesta.dbutils.IProfiler;
+import ru.curs.celesta.dbutils.LoggingManager;
+import ru.curs.celesta.dbutils.PermissionManager;
+import ru.curs.celesta.dbutils.ProfilingManager;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorFactory;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
@@ -19,7 +25,12 @@ import ru.curs.celesta.ver.CelestaVersion;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * Celesta instance.
@@ -71,6 +82,8 @@ public final class Celesta implements ICelesta {
         }
         CurrentScore.set(this.score);
         LOGGER.info("done.");
+
+        LOGGER.info(this.score.describeGrains());
 
         // 2. Updating database structure.
         // Since at this stage meta information is already in use, theCelesta and ConnectionPool
@@ -175,7 +188,7 @@ public final class Celesta implements ICelesta {
     /**
      * Creates Celesta instance with the specified properties.
      *
-     * @param properties  properties to initialize the Celesta instance with
+     * @param properties properties to initialize the Celesta instance with
      * @return
      */
     public static Celesta createInstance(Properties properties) {
@@ -278,7 +291,7 @@ public final class Celesta implements ICelesta {
     /**
      * Sets profiling mode.
      *
-     * @param profilemode  profiling mode
+     * @param profilemode profiling mode
      */
     public void setProfilemode(boolean profilemode) {
         profiler.setProfilemode(profilemode);

@@ -40,12 +40,14 @@ import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
 import ru.curs.celesta.CelestaException;
@@ -82,8 +84,8 @@ public abstract class AbstractScore {
      * Core initialization by providing a set of paths to 'score' directories
      * delimited by semicolon.
      *
-     * @throws CelestaException  in case if non-existing path is provided or in case if
-     * there's a double definition of a grain with the same name.
+     * @throws CelestaException in case if non-existing path is provided or in case if
+     *                          there's a double definition of a grain with the same name.
      */
     void init(ScoreDiscovery scoreDiscovery) throws ParseException {
 
@@ -187,8 +189,8 @@ public abstract class AbstractScore {
     /**
      * Returns grain by its name. In case if the grain name is unknown an exception is thrown.
      *
-     * @param name  Grain name.
-     * @throws ParseException  If grain name is unknown to the system.
+     * @param name Grain name.
+     * @throws ParseException If grain name is unknown to the system.
      */
     public Grain getGrain(String name) throws ParseException {
         Grain result = grains.get(name);
@@ -262,7 +264,7 @@ public abstract class AbstractScore {
 
     private GrainPart extractGrainInfo(Resource r, boolean isSystem) throws ParseException {
         try (ChecksumInputStream is = isSystem ? new ChecksumInputStream(getSysSchemaInputStream())
-                                               : new ChecksumInputStream(r.getInputStream())) {
+                : new ChecksumInputStream(r.getInputStream())) {
             CelestaParser parser = new CelestaParser(is, "utf-8");
             try {
                 return parser.extractGrainInfo(this, r);
@@ -352,10 +354,9 @@ public abstract class AbstractScore {
         /**
          * Sets score path.
          *
-         * @param path  score path
+         * @param path score path
          * @return
-         *
-         * @deprecated  Use {@link #scoreDiscovery(ScoreDiscovery)} explicitly.
+         * @deprecated Use {@link #scoreDiscovery(ScoreDiscovery)} explicitly.
          */
         @Deprecated
         public ScoreBuilder<T> path(String path) {
@@ -367,7 +368,7 @@ public abstract class AbstractScore {
         /**
          * Sets score discovery.
          *
-         * @param scoreDiscovery  score discovery
+         * @param scoreDiscovery score discovery
          * @return
          */
         public ScoreBuilder<T> scoreDiscovery(ScoreDiscovery scoreDiscovery) {
@@ -379,7 +380,7 @@ public abstract class AbstractScore {
          * Builds the score.
          *
          * @return
-         * @throws ParseException  when score parsing fails
+         * @throws ParseException when score parsing fails
          */
         public T build() throws ParseException {
             try {
@@ -392,6 +393,36 @@ public abstract class AbstractScore {
                 throw new CelestaException(e);
             }
         }
+    }
+
+    /**
+     * Returns a human-readable table with all available grains,
+     * their versions, checksums and lengths.
+     */
+    public final String describeGrains() {
+        int maxGrainNameLen = 8;
+        int maxVersionLen = 8;
+        for (Grain g : grains.values()) {
+            if (g.getName().length() > maxGrainNameLen) {
+                maxGrainNameLen = g.getName().length();
+            }
+            if (g.getVersion().toString().length() > maxVersionLen) {
+                maxVersionLen = g.getVersion().toString().length();
+            }
+        }
+        StringBuilder builder = new StringBuilder(String.format("%n"));
+        builder.append(String.format("%-" + maxGrainNameLen + "s | ", "SCHEMA"));
+        builder.append(String.format("%-" + maxVersionLen + "s | CHECKSUM | %7s%n", "VERSION", "LENGTH"));
+        for (Grain g : grains
+                .values()
+                .stream()
+                .sorted(Comparator.comparing(NamedElement::getName))
+                .collect(Collectors.toList())) {
+            builder.append(String.format("%-" + maxGrainNameLen + "s | ", g.getName()));
+            builder.append(String.format("%-" + maxVersionLen + "s | ", g.getVersion()));
+            builder.append(String.format("%08X | % 7d%n", g.getChecksum(), g.getLength()));
+        }
+        return builder.toString();
     }
 
 }

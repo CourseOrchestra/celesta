@@ -1,10 +1,15 @@
 package ru.curs.celesta.score;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
 import java.util.StringJoiner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
@@ -525,5 +530,40 @@ public class ScoreTest {
                 () -> assertNotNull(g.getElement(seq2Name, SequenceElement.class)),
                 () -> assertNotNull(g.getElement(seq3Name, SequenceElement.class))
         );
+    }
+
+    @Test
+    void testDescribe() throws Exception {
+        Path scoreDir = Files.createTempDirectory("testDescribe");
+        StringBuilder nameBuilder = new StringBuilder("A");
+        final int GRAIN_NUMBER = 10;
+        for (int i = 0; i < GRAIN_NUMBER; i++) {
+            String name = nameBuilder.toString();
+            String createSchema = String.format("CREATE SCHEMA %s VERSION '%s1.0';",
+                    name, name);
+            Path grainDir = scoreDir.resolve(name);
+            Files.createDirectory(grainDir);
+
+            Files.write(grainDir.resolve(name + ".sql"),
+                    Collections.singletonList(createSchema), StandardCharsets.UTF_8);
+
+            nameBuilder.append('A');
+        }
+
+        AbstractScore s = new AbstractScore.ScoreBuilder<>(CelestaSqlAnsiQuotedTestScore.class)
+                .scoreDiscovery(new ScoreByScorePathDiscovery(
+                        scoreDir.toString()))
+                .build();
+
+        String[] description = s.describeGrains().split(String.format("%n"));
+
+        //first line is empty
+        Assertions.assertEquals("", description[0]);
+        Assertions.assertTrue(description[1].startsWith("SCHEMA"));
+        nameBuilder = new StringBuilder("A");
+        for (int i = 0; i < GRAIN_NUMBER; i++) {
+            Assertions.assertTrue(description[i + 2].startsWith(nameBuilder.toString() + ' '));
+            nameBuilder.append('A');
+        }
     }
 }
