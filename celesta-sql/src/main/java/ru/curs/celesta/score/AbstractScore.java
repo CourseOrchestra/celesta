@@ -400,8 +400,8 @@ public abstract class AbstractScore {
      * their versions, checksums and lengths.
      */
     public final String describeGrains() {
-        int maxGrainNameLen = 8;
-        int maxVersionLen = 8;
+        int maxGrainNameLen = "SCHEMA".length();
+        int maxVersionLen = "VERSION".length();
         for (Grain g : grains.values()) {
             if (g.getName().length() > maxGrainNameLen) {
                 maxGrainNameLen = g.getName().length();
