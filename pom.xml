@@ -300,71 +300,12 @@
                     <version>${jacoco.version}</version>
                     <executions>
                         <execution>
-                            <id>prepare-agent</id>
                             <goals>
                                 <goal>prepare-agent</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>report</id>
-                            <phase>prepare-package</phase>
-                            <goals>
                                 <goal>report</goal>
                             </goals>
-                            <configuration>
-                                <includes>
-                                    <!--Do not include generated test cursors-->
-                                    <include>
-                                        ru/curs/**/*
-                                    </include>
-                                </includes>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>post-unit-test</id>
-                            <phase>test</phase>
-                            <goals>
-                                <goal>report</goal>
-                            </goals>
-                            <configuration>
-                                <!-- Sets the path to the file which contains the execution data. -->
-
-                                <dataFile>target/jacoco.exec</dataFile>
-                                <!-- Sets the output directory for the code coverage report. -->
-                                <outputDirectory>target/jacoco-ut</outputDirectory>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>check</id>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                            <configuration>
-                                <rules>
-                                    <rule>
-                                        <element>CLASS</element>
-                                        <limits>
-                                            <limit>
-                                                <counter>LINE</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>0</minimum>
-                                            </limit>
-                                            <limit>
-                                                <counter>BRANCH</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>0</minimum>
-                                            </limit>
-                                        </limits>
-                                    </rule>
-                                </rules>
-                            </configuration>
-                        </execution>
+                        </execution>    
                     </executions>
-                    <configuration>
-                        <systemPropertyVariables>
-                            <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
-                        </systemPropertyVariables>
-                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
