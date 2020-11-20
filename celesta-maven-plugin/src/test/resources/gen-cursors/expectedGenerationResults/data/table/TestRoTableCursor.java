@@ -141,6 +141,7 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
             date = "2020-02-25T10:50:49"
     )
+    @CelestaGenerated
     public static final class Columns {
         private final ReadOnlyTable element;
 
@@ -157,6 +158,7 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
             date = "2020-02-25T10:50:49"
     )
+    @CelestaGenerated
     public static final class Id {
         public static final Integer open = 0;
         public static final Integer closed = 1;

@@ -18,10 +18,36 @@ import org.apache.commons.lang3.StringUtils;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ICelesta;
-import ru.curs.celesta.dbutils.*;
 
+import ru.curs.celesta.dbutils.BasicCursor;
+import ru.curs.celesta.dbutils.BasicDataAccessor;
+import ru.curs.celesta.dbutils.CelestaGenerated;
+import ru.curs.celesta.dbutils.Cursor;
+import ru.curs.celesta.dbutils.CursorIterator;
+import ru.curs.celesta.dbutils.MaterializedViewCursor;
+import ru.curs.celesta.dbutils.ParameterizedViewCursor;
+import ru.curs.celesta.dbutils.ReadOnlyTableCursor;
+import ru.curs.celesta.dbutils.Sequence;
+import ru.curs.celesta.dbutils.ViewCursor;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.DataGrainElement;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.GrainElement;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.ReadOnlyTable;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.TableElement;
+import ru.curs.celesta.score.VersionedElement;
+import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.ZonedDateTimeColumn;
 import ru.curs.celesta.score.io.FileResource;
 
 import javax.annotation.Generated;
@@ -263,7 +289,8 @@ public final class CursorGenerator {
                         c -> {
                             TypeSpec.Builder builder = TypeSpec.classBuilder(StringUtils.capitalize(c.getName()))
                                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                                    .addAnnotation(buildGeneratedAnnotation());
+                                    .addAnnotation(buildGeneratedAnnotation())
+                                    .addAnnotation(CelestaGenerated.class);
 
                             MethodSpec constructor = MethodSpec.constructorBuilder()
                                     .addModifiers(Modifier.PRIVATE)
@@ -390,7 +417,8 @@ public final class CursorGenerator {
                 .addAnnotation(AnnotationSpec.builder(SuppressWarnings.class)
                         .addMember("value", "$S", "unchecked")
                         .build())
-                .addAnnotation(buildGeneratedAnnotation());
+                .addAnnotation(buildGeneratedAnnotation())
+                .addAnnotation(CelestaGenerated.class);
 
         FieldSpec elementField = FieldSpec.builder(
                 dge.getClass(), "element", Modifier.PRIVATE, Modifier.FINAL)

@@ -143,6 +143,7 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
             date = "2020-02-25T10:50:49"
     )
+    @CelestaGenerated
     public static final class Columns {
         private final ParameterizedView element;
 
