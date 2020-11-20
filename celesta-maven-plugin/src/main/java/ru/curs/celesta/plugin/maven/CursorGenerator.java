@@ -18,15 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ICelesta;
-import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.dbutils.BasicDataAccessor;
-import ru.curs.celesta.dbutils.Cursor;
-import ru.curs.celesta.dbutils.CursorIterator;
-import ru.curs.celesta.dbutils.MaterializedViewCursor;
-import ru.curs.celesta.dbutils.ParameterizedViewCursor;
-import ru.curs.celesta.dbutils.ReadOnlyTableCursor;
-import ru.curs.celesta.dbutils.Sequence;
-import ru.curs.celesta.dbutils.ViewCursor;
+import ru.curs.celesta.dbutils.*;
 
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.*;
@@ -243,7 +235,8 @@ public final class CursorGenerator {
         TypeSpec.Builder builder = TypeSpec.classBuilder(classType)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .superclass(GRAIN_ELEMENTS_TO_DATA_ACCESSORS.get(ge.getClass()).apply(ge))
-                .addAnnotation(buildGeneratedAnnotation());
+                .addAnnotation(buildGeneratedAnnotation())
+                .addAnnotation(AnnotationSpec.builder(CelestaGenerated.class).build());
 
         if (ge instanceof DataGrainElement) {
             builder.addSuperinterface(

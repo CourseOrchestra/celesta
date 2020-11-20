@@ -12,6 +12,7 @@ import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BasicCursor;
+import ru.curs.celesta.dbutils.CelestaGenerated;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.ReadOnlyTableCursor;
 import ru.curs.celesta.score.ColumnMeta;
@@ -21,6 +22,7 @@ import ru.curs.celesta.score.ReadOnlyTable;
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
         date = "2020-02-25 10:50"
 )
+@CelestaGenerated
 public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<TestRoTableCursor> {
 
     private static final String GRAIN_NAME = "test";

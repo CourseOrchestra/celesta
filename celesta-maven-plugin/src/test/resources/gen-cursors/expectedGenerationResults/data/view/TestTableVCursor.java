@@ -12,6 +12,7 @@ import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.dbutils.BasicCursor;
+import ru.curs.celesta.dbutils.CelestaGenerated;
 import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.dbutils.ViewCursor;
 import ru.curs.celesta.score.ColumnMeta;
@@ -21,6 +22,7 @@ import ru.curs.celesta.score.View;
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
         date = "2020-02-25T10:50:49"
 )
+@CelestaGenerated
 public final class TestTableVCursor extends ViewCursor implements Iterable<TestTableVCursor> {
 
     private static final String GRAIN_NAME = "test";
