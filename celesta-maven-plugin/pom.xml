@@ -20,7 +20,7 @@
         <dependency>
             <groupId>ru.curs</groupId>
             <artifactId>celesta-core</artifactId>
-            <version>7.3.23-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup</groupId>
@@ -86,12 +86,27 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
                 <version>3.6.0</version>
                 <executions>
                     <execution>
                         <id>default-descriptor</id>
                         <phase>process-classes</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
