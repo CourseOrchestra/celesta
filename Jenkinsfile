@@ -68,9 +68,18 @@ fi'''
         }
     } finally {
         junit '**/surefire-reports/**/*.xml'
-        step( [ $class: 'JacocoPublisher', execPattern: '**/target/jacoco.exec' ] )
+        jacoco execPattern: 'coverage-report/target/jacoco.exec', exclusionPattern: '*ParserTokenManager.class'
         checkstyle pattern: '**/target/checkstyle-result.xml' //, canComputeNew: true, useDeltaValues: true, shouldDetectModules: true
         findbugs pattern: '**/target/spotbugsXml.xml'
+        publishHTML (target: [
+          allowMissing: true,
+          alwaysLinkToLastBuild: true,
+          keepAll: true,
+          reportDir: 'coverage-report/target/site/jacoco-aggregate',
+          reportFiles: 'index.html',
+          reportName: "JaCoCo report"
+       ])
+
     }
 
     stage ('Ratcheting') {

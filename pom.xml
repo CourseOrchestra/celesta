@@ -11,13 +11,14 @@
     <url>https://corchestra.ru/wiki/index.php?title=Celesta</url>
 
     <modules>
-        <module>celesta-documentation</module>
+     <!--   <module>celesta-documentation</module>-->
         <module>celesta-unit</module>
         <module>celesta-test</module>
         <module>celesta-sql</module>
         <module>celesta-maven-plugin</module>
         <module>celesta-core</module>
         <module>celesta-system-services</module>
+        <module>coverage-report</module>
     </modules>
 
     <organization>
@@ -193,29 +194,22 @@
     </dependencyManagement>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler.plugin.version}</version>
-                <configuration>
-                    <!--
-                    TURN ON this flag if you build project on Java version greater than 8.
-                    <release>8</release>
-                    -->
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <encoding>utf-8</encoding>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.plugin.version}</version>
+                    <configuration>
+                        <!--
+                        TURN ON this flag if you build project on Java version greater than 8.
+                        <release>8</release>
+                        -->
+                        <source>1.8</source>
+                        <target>1.8</target>
+                        <encoding>utf-8</encoding>
+                    </configuration>
+                </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>javacc-maven-plugin</artifactId>
@@ -298,14 +292,7 @@
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>${jacoco.version}</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>prepare-agent</goal>
-                                <goal>report</goal>
-                            </goals>
-                        </execution>    
-                    </executions>
+
                 </plugin>
             </plugins>
         </pluginManagement>
