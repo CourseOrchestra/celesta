@@ -25,12 +25,8 @@ import ru.curs.celesta.ver.CelestaVersion;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 
 /**
  * Celesta instance.
@@ -58,8 +54,6 @@ public final class Celesta implements ICelesta {
     private final LoggingManager loggingManager;
     private final PermissionManager permissionManager;
     private final ProfilingManager profiler;
-
-    private final Set<CallContext> contexts = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
 
     public Celesta(BaseAppSettings appSettings) {
         this.appSettings = appSettings;
@@ -103,9 +97,9 @@ public final class Celesta implements ICelesta {
 
         dbAdaptor = dac.createDbAdaptor();
 
-        this.loggingManager = new LoggingManager(this, dbAdaptor);
-        this.permissionManager = new PermissionManager(this, dbAdaptor);
-        this.profiler = new ProfilingManager(this, dbAdaptor);
+        this.loggingManager = new LoggingManager(this);
+        this.permissionManager = new PermissionManager(this);
+        this.profiler = new ProfilingManager(this);
 
         if (!appSettings.getSkipDBUpdate()) {
             LOGGER.info("Celesta initialization: database upgrade...");
@@ -124,16 +118,6 @@ public final class Celesta implements ICelesta {
             LOGGER.info("Celesta initialization: database upgrade...skipped.");
         }
 
-    }
-
-    /**
-     * Returns the set of active (running) call contexts (for monitoring/debug
-     * purposes).
-     *
-     * @return
-     */
-    public Collection<CallContext> getActiveContexts() {
-        return Collections.unmodifiableCollection(contexts);
     }
 
     @Override

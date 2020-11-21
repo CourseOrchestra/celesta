@@ -34,8 +34,8 @@ public final class CelestaImpl implements ICelesta {
         this.connectionPool = connectionPool;
         this.score = score;
         this.scorePath = scorePath;
-        this.permissionManager = new PermissionManager(this, dbAdaptor);
-        this.loggingManager = new LoggingManager(this, dbAdaptor);
+        this.permissionManager = new PermissionManager(this);
+        this.loggingManager = new LoggingManager(this);
     }
 
     @Override

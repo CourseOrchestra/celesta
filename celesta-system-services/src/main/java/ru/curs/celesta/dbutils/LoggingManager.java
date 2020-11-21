@@ -1,7 +1,8 @@
 package ru.curs.celesta.dbutils;
 
-import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.CallContext;
+import ru.curs.celesta.ICelesta;
+import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.score.BasicTable;
 import ru.curs.celesta.syscursors.LogCursor;
 import ru.curs.celesta.syscursors.LogsetupCursor;
@@ -22,7 +23,6 @@ public final class LoggingManager implements ILoggingManager {
     private static final int CACHE_ENTRY_SHELF_LIFE = 20000;
 
     private final ICelesta celesta;
-    private final DBAdaptor dbAdaptor;
 
     private CacheEntry[] cache = new CacheEntry[CACHE_SIZE];
 
@@ -60,9 +60,8 @@ public final class LoggingManager implements ILoggingManager {
 
     }
 
-    public LoggingManager(ICelesta celesta, DBAdaptor dbAdaptor) {
+    public LoggingManager(ICelesta celesta) {
         this.celesta = celesta;
-        this.dbAdaptor = dbAdaptor;
     }
 
     boolean isLoggingNeeded(CallContext sysContext, BasicTable t, Action a) {
