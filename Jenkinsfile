@@ -68,7 +68,6 @@ fi'''
         }
     } finally {
         junit '**/surefire-reports/**/*.xml'
-        jacoco execPattern: 'coverage-report/target/jacoco.exec', exclusionPattern: '*ParserTokenManager.class'
         checkstyle pattern: '**/target/checkstyle-result.xml' //, canComputeNew: true, useDeltaValues: true, shouldDetectModules: true
         findbugs pattern: '**/target/spotbugsXml.xml'
         publishHTML (target: [
