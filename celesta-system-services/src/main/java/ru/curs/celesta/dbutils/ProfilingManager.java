@@ -1,7 +1,8 @@
 package ru.curs.celesta.dbutils;
 
-import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.CallContext;
+import ru.curs.celesta.Celesta;
+import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.syscursors.CalllogCursor;
 
 /**
@@ -10,13 +11,11 @@ import ru.curs.celesta.syscursors.CalllogCursor;
 public final class ProfilingManager implements IProfiler {
 
     private final Celesta celesta;
-    private final DBAdaptor dbAdaptor;
     private boolean profilemode = false;
 
 
-    public ProfilingManager(Celesta celesta, DBAdaptor dbAdaptor) {
+    public ProfilingManager(Celesta celesta) {
         this.celesta = celesta;
-        this.dbAdaptor = dbAdaptor;
     }
 
     /**

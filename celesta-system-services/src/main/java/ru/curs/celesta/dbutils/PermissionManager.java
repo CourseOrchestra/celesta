@@ -3,8 +3,9 @@ package ru.curs.celesta.dbutils;
 import java.util.ArrayList;
 import java.util.List;
 
-import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
+import ru.curs.celesta.CallContext;
+import ru.curs.celesta.ICelesta;
+import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.syscursors.PermissionsCursor;
 import ru.curs.celesta.syscursors.UserrolesCursor;
@@ -32,7 +33,6 @@ public final class PermissionManager implements IPermissionManager {
             | Action.DELETE.getMask();
 
     private final ICelesta celesta;
-//    private final DBAdaptor dbAdaptor;
     private PermissionCacheEntry[] cache = new PermissionCacheEntry[CACHE_SIZE];
     private RoleCacheEntry[] rolesCache = new RoleCacheEntry[ROLE_CACHE_SIZE];
 
@@ -96,9 +96,8 @@ public final class PermissionManager implements IPermissionManager {
     }
 
 
-    public PermissionManager(ICelesta celesta, DBAdaptor dbAdaptor) {
+    public PermissionManager(ICelesta celesta) {
         this.celesta = celesta;
-//        this.dbAdaptor = dbAdaptor;
     }
 
     /**
