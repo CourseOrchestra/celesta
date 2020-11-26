@@ -46,7 +46,7 @@ node {
     }
 
     stage ('Make release') {
-        rtMaven.run pom: 'pom.xml', goals: '-Dmaven.test.skip=true clean install -P corchestra-release', buildInfo: buildInfo
+        rtMaven.run pom: 'pom.xml', goals: '-Dmaven.test.skip=true clean install -P corchestra-release -pl !coverage-report', buildInfo: buildInfo
         server.publishBuildInfo buildInfo
 
         def distributionConfig = [
