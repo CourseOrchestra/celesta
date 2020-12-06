@@ -1,6 +1,10 @@
 package ru.curs.celesta.score;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Syntax tree visitor for procedure implementation of types validation, code
@@ -83,7 +87,7 @@ final class FieldResolver extends ExprVisitor {
 
   private final List<TableRef> tables;
 
-  public FieldResolver(List<TableRef> tables) {
+  FieldResolver(List<TableRef> tables) {
     this.tables = tables;
   }
 
@@ -119,7 +123,7 @@ final class ParameterResolver extends ExprVisitor {
   private final Map<String, Parameter> parameters;
   private final ParameterResolverResult result;
 
-  public ParameterResolver(Map<String, Parameter> parameters) {
+  ParameterResolver(Map<String, Parameter> parameters) {
     this.parameters = parameters;
     this.result =  new ParameterResolverResult();
     this.result.getUnusedParameters().addAll(parameters.keySet());
