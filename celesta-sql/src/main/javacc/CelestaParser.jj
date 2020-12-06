@@ -75,6 +75,7 @@ PARSER_END(CelestaParser)
 |   <K_KEY:          "KEY">
 |   <K_LEFT:         "LEFT">
 |   <K_LIKE:         "LIKE">
+|   <K_LOWER:        "LOWER">
 |   <K_MAX:          "MAX">
 |   <K_MIN:          "MIN">
 |   <K_NEXTVAL:      "NEXTVAL">
@@ -95,6 +96,7 @@ PARSER_END(CelestaParser)
 |   <K_WITH:         "WITH">
 |   <K_WHERE:        "WHERE">
 |   <K_UNION:        "UNION">
+|   <K_UPPER:        "UPPER">
 |   <K_ALL:          "ALL">
 |   <K_TABLE:        "TABLE">: DEFAULT
 |   <K_FUNCTION:     "FUNCTION">: DEFAULT
@@ -769,8 +771,9 @@ Expr sqlUnaryExpression(IdentifierParser identifierParser):
 {Expr result;
 boolean isMinus = false;}
 {
-    ["-" {isMinus = true;}] result = sqlPrimaryExpression(identifierParser)
-    {return isMinus? new UnaryMinus(result) : result;}
+      ["-" {isMinus = true;}] result = sqlPrimaryExpression(identifierParser)  {return isMinus? new UnaryMinus(result) : result;}
+    | <K_UPPER> "(" result = sqlTermExpr(identifierParser) ")" {return new Upper(result);}
+    | <K_LOWER> "(" result = sqlTermExpr(identifierParser) ")" {return new Lower(result);}
 }
 
 

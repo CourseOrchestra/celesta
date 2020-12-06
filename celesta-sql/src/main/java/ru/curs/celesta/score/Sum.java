@@ -4,7 +4,7 @@ package ru.curs.celesta.score;
  * Created by ioann on 10.07.2017.
  */
 public final class Sum extends Aggregate {
-  Expr term;
+  final Expr term;
 
   Sum(Expr term) {
     this.term = term;

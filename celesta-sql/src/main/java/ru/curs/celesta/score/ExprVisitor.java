@@ -68,6 +68,12 @@ public abstract class ExprVisitor {
   void visitMin(Min expr) throws ParseException {
   }
 
+  void visitUpper(Upper expr) throws ParseException {
+  }
+
+  void visitLower(Lower expr) throws ParseException {
+  }
+
 }
 
 /**
@@ -239,4 +245,14 @@ final class TypeChecker extends ExprVisitor {
     expr.term.assertType(ViewColumnType.REAL);
   }
 
+
+  @Override
+  void visitUpper(Upper expr) throws ParseException {
+    expr.getArg().assertType(ViewColumnType.TEXT);
+  }
+
+  @Override
+  void visitLower(Lower expr) throws ParseException {
+    expr.getArg().assertType(ViewColumnType.TEXT);
+  }
 }

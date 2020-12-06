@@ -342,6 +342,58 @@ final class UnaryMinus extends Expr {
 }
 
 /**
+ * UPPER(..) operation
+ */
+final class Upper extends Expr {
+    private final Expr arg;
+
+    Upper(Expr arg) {
+        this.arg = arg;
+    }
+
+    @Override
+    public ViewColumnMeta<?> getMeta() {
+        return new ViewColumnMeta<>(ViewColumnType.TEXT);
+    }
+
+    @Override
+    void accept(ExprVisitor visitor) throws ParseException {
+        arg.accept(visitor);
+        visitor.visitUpper(this);
+    }
+
+    public Expr getArg() {
+        return arg;
+    }
+}
+
+/**
+ * LOWER(..) operation
+ */
+final class Lower extends Expr {
+    private final Expr arg;
+
+    Lower(Expr arg) {
+        this.arg = arg;
+    }
+
+    @Override
+    public ViewColumnMeta<?> getMeta() {
+        return new ViewColumnMeta<>(ViewColumnType.TEXT);
+    }
+
+    @Override
+    void accept(ExprVisitor visitor) throws ParseException {
+        arg.accept(visitor);
+        visitor.visitLower(this);
+    }
+
+    public Expr getArg() {
+        return arg;
+    }
+}
+
+/**
  * Base class for literal expressions.
  */
 abstract class Literal extends Expr {
