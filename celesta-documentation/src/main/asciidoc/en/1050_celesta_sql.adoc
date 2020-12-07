@@ -362,9 +362,9 @@ View field defining term has the following syntax:
 
 include::../synsql.adoc[tag="syn_term"]
 
-It is possible to conduct normal priority common arithmetical operations with `INT` and `REAL` type expressions: unary minus has the top priority, next goes multiplication and division ("*", "/") and still next goes adding and substracting ("+", "-").
-It is possible to conduct concatenation operation "||" with `VARCHAR` type expressions.
-Operations with fields of other types are not allowed.
+Common arithmetical operations with normal precedence are available for `INT` and `REAL`-typed expressions: unary minus has the highest precedence, next goes multiplication and division ("*", "/") and still next goes adding and substracting ("+", "-").
+For `VARCHAR` expressions concatenation "||" is available, as well as `UPPER` and `LOWER` functions that convert text to upper- and lower-case, respectively.
+Operations with other types are not allowed.
 
 include::../synsql.adoc[tag="syn_primary_term"]
 

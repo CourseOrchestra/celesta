@@ -117,7 +117,7 @@ public abstract class Expr {
 final class ParenthesizedExpr extends Expr {
     private final Expr parenthesized;
 
-    public ParenthesizedExpr(Expr parenthesized) {
+    ParenthesizedExpr(Expr parenthesized) {
         this.parenthesized = parenthesized;
     }
 
@@ -199,7 +199,7 @@ final class Between extends LogicValuedExpr {
     private final Expr right1;
     private final Expr right2;
 
-    public Between(Expr left, Expr right1, Expr right2) {
+    Between(Expr left, Expr right1, Expr right2) {
         this.left = left;
         this.right1 = right1;
         this.right2 = right2;
@@ -320,7 +320,7 @@ final class NotExpr extends LogicValuedExpr {
 final class UnaryMinus extends Expr {
     private final Expr arg;
 
-    public UnaryMinus(Expr arg) {
+    UnaryMinus(Expr arg) {
         this.arg = arg;
     }
 
@@ -338,6 +338,58 @@ final class UnaryMinus extends Expr {
     public void accept(ExprVisitor visitor) throws ParseException {
         arg.accept(visitor);
         visitor.visitUnaryMinus(this);
+    }
+}
+
+/**
+ * UPPER(..) operation.
+ */
+final class Upper extends Expr {
+    private final Expr arg;
+
+    Upper(Expr arg) {
+        this.arg = arg;
+    }
+
+    @Override
+    public ViewColumnMeta<?> getMeta() {
+        return new ViewColumnMeta<>(ViewColumnType.TEXT);
+    }
+
+    @Override
+    void accept(ExprVisitor visitor) throws ParseException {
+        arg.accept(visitor);
+        visitor.visitUpper(this);
+    }
+
+    public Expr getArg() {
+        return arg;
+    }
+}
+
+/**
+ * LOWER(..) operation.
+ */
+final class Lower extends Expr {
+    private final Expr arg;
+
+    Lower(Expr arg) {
+        this.arg = arg;
+    }
+
+    @Override
+    public ViewColumnMeta<?> getMeta() {
+        return new ViewColumnMeta<>(ViewColumnType.TEXT);
+    }
+
+    @Override
+    void accept(ExprVisitor visitor) throws ParseException {
+        arg.accept(visitor);
+        visitor.visitLower(this);
+    }
+
+    public Expr getArg() {
+        return arg;
     }
 }
 

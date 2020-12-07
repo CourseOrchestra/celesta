@@ -35,7 +35,7 @@ abstract class AbstractGenScoreResourcesMojo extends AbstractCelestaMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        this.getLog().info("celesta project is " + project);
+        this.getLog().info("Celesta project is " + project);
 
         List<GrainSourceBag> grainsSources = new ArrayList<>();
         for (ScoreProperties sp : getScorePaths.get()) {

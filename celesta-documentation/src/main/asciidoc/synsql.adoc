@@ -475,10 +475,12 @@ line(optx('/<grain name>', '.'), '/<table name>')
 [syntrax,term,svg,heading="term",opts=interactive]
 ....
 loop(
-  line(opt('-'),
-    choice(
-      '/primary_term',
-      line('(', '/term', ')'))),
+  choice(line(opt('-'),
+       choice(
+         '/primary_term',
+          line('(', '/term', ')'))),
+      line(choice('UPPER', 'LOWER'),
+      '(', '/term', ')')),
   choice('+', '-', '*', '/', '||')
 )
 
