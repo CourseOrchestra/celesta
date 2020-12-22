@@ -62,8 +62,8 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
                     .scoreDiscovery(new ScoreByScorePathDiscovery(scorePath))
                     .build();
             return score;
-        } catch (CelestaException | ParseException e) {
-            throw new CelestaException("Can't init score", e);
+        } catch (ParseException e) {
+            throw new CelestaException(e.getMessage(), e);
         }
     }
 
