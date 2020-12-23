@@ -47,6 +47,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
@@ -238,6 +240,15 @@ public abstract class AbstractScore {
                 ));
     }
 
+    static String extractLineColNo(String msg) {
+        Matcher matcher = Pattern.compile("at\\s+line\\s*(\\d+),?\\s*column\\s*(\\d+)").matcher(msg);
+        if (matcher.find()) {
+            return String.format(":%s:%s ", matcher.group(1), matcher.group(2));
+        } else {
+            return "";
+        }
+    }
+
     private ChecksumInputStream parseGrainPart(GrainPart grainPart, ChecksumInputStream cis) throws ParseException {
         Resource r = grainPart.getSource();
         try (
@@ -250,7 +261,11 @@ public abstract class AbstractScore {
             try {
                 parser.parseGrainPart(grainPart);
             } catch (ParseException | TokenMgrError e) {
-                throw new ParseException(String.format("Error parsing '%s': %s", r.toString(), e.getMessage()));
+                /*IntelliJ IDEA-friendly log format*/
+                throw new ParseException(String.format("Error parsing %s%s: %s",
+                        r.toString(),
+                        extractLineColNo(e.getMessage()),
+                        e.getMessage()));
             }
             return is;
         } catch (FileNotFoundException e) {
