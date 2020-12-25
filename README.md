@@ -29,6 +29,8 @@ For more details, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 * [spring-boot-starter-celesta](https://github.com/CourseOrchestra/spring-boot-starter-celesta) Celesta integration with Spring Boot.
 
+* [celesta-intellij-plugin](https://github.com/CourseOrchestra/celesta-intellij-plugin) Celesta plugin for for IntelliJ IDEA.
+
 * [CelestaDoc](https://github.com/CourseOrchestra/celestadoc): Celesta documentation report generator.	
 
 * [DBSchemaSync](https://github.com/CourseOrchestra/dbschemasync): Celesta -- DBSchema sync utility.
@@ -38,13 +40,5 @@ For more details, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Useful Links
 
-### In English
-
-* Overview: https://dzone.com/articles/celesta-sql-databases-api-schema-migration-and-tes
-
-### In Russian
-* Overview: https://habrahabr.ru/post/455746/
-
-* SECON2018: A concise overview talk: https://youtu.be/IEIzpqID2XI
-
-* JUG.MSK meetup, September 2018: A longer talk with more technical details (versions before 7.x): https://youtu.be/16lB_c6pHfc?t=4143
+* Overview in English: https://dzone.com/articles/celesta-sql-databases-api-schema-migration-and-tes
+* Overview in Russian: https://habrahabr.ru/post/455746/
