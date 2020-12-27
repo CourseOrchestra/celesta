@@ -3,7 +3,7 @@
     <parent>
         <artifactId>celesta-parent</artifactId>
         <groupId>ru.curs</groupId>
-        <version>7.3.29</version>
+        <version>7.3.30-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>ru.curs</groupId>
             <artifactId>celesta-sql</artifactId>
-            <version>7.3.29</version>
+            <version>7.3.30-SNAPSHOT</version>
         </dependency>
 
         <!-- TEST DEPENDENCIES -->
