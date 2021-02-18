@@ -37,7 +37,7 @@ node {
 
     stage ('Make release') {
        withMaven (maven: 'M3', mavenSettingsConfig: 'maven-settings', options: [artifactsPublisher(disabled: true)]) {
-         sh 'mvn -DskipTests clean deploy -Prelease -pl !coverage-report'
+         sh 'mvn -DskipTests clean deploy -Prelease -pl !coverage-report,!celesta-documentation,!celesta-test'
        }
     }
 
