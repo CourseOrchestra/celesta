@@ -12,9 +12,6 @@ properties(
 )
 
 node {
-    def server = Artifactory.server 'ART'
-    def rtMaven = Artifactory.newMavenBuild()
-    def buildInfo
     def descriptor
     def releaseVersion
 
@@ -29,14 +26,7 @@ node {
         }
     }
 
-    stage ('Artifactory configuration') {
-        rtMaven.tool = 'M3'
-        rtMaven.deployer releaseRepo: 'libs-release-local', snapshotRepo: 'libs-snapshot-local', server: server
-        rtMaven.resolver releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot', server: server
-        rtMaven.deployer.artifactDeploymentPatterns.addExclude("*celesta-test*").addExclude("*dbschemasync*")
-        buildInfo = Artifactory.newBuildInfo()
-        buildInfo.env.capture = true
-
+    stage ('Modify version') {
         descriptor = Artifactory.mavenDescriptor()
         pom = readMavenPom file: 'pom.xml'
         releaseVersion = pom.version.split('-')[0]
@@ -46,18 +36,9 @@ node {
     }
 
     stage ('Make release') {
-        rtMaven.run pom: 'pom.xml', goals: '-Dmaven.test.skip=true clean install -P corchestra-release -pl !coverage-report', buildInfo: buildInfo
-        server.publishBuildInfo buildInfo
-
-        def distributionConfig = [
-            // Mandatory parameters
-            'buildName'             : buildInfo.name,
-            'buildNumber'           : buildInfo.number,
-            'targetRepo'            : 'orchestra',
-            // Optional parameters
-            'overrideExistingFiles' : true // Default: false. If true, Artifactory overwrites builds already existing in the target path in Bintray.
-        ]
-        server.distribute distributionConfig
+       withMaven (maven: 'M3', mavenSettingsConfig: 'maven-settings', options: [artifactsPublisher(disabled: true)]) {
+         sh 'mvn -DskipTests clean deploy -Prelease -pl !coverage-report'
+       }
     }
 
     stage ('Update repository') {
@@ -82,30 +63,6 @@ node {
         sshagent(['cf816ae4-a98e-4eaa-98fd-18c588739711']) {
             sh '''git push origin dev'''
             sh '''git push --tags'''
-        }
-    }
-
-    stage ('Sync with maven central') {
-        def modules = ['celesta-parent',
-                       'celesta-sql',
-                       'celesta-core',
-                       'celesta-maven-plugin',
-                       'celesta-system-services',
-                       'celesta-unit']
-
-        withCredentials([usernamePassword(credentialsId: 'curs-bintray', passwordVariable: 'bintrayPassword', usernameVariable: 'bintrayUserName')]) {
-            for (module in modules) {
-                    def shScript = "\\" +
-                        "curl --verbose \\" +
-            			    "-s \\" +
-            			    "--connect-timeout 240 \\" +
-            			    "--max-time 2700 \\" +
-            			    "-u $bintrayUserName:$bintrayPassword \\" +
-            			    "-f \\" +
-            			    "-X \\" +
-            			    "POST \"https://api.bintray.com/maven_central_sync/courseorchestra/libs-release-local/" + module + "/versions/" + releaseVersion + "\""
-                    sh shScript
-            }
         }
     }
 }
