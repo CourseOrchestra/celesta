@@ -68,8 +68,8 @@ fi'''
         }
     } finally {
         junit '**/surefire-reports/**/*.xml'
-        checkstyle pattern: '**/target/checkstyle-result.xml' //, canComputeNew: true, useDeltaValues: true, shouldDetectModules: true
-        findbugs pattern: '**/target/spotbugsXml.xml'
+        recordIssues tool: checkStyle(pattern: '**/target/checkstyle-result.xml')
+        recordIssues tool: spotBugs(pattern: '**/target/spotbugsXml.xml')
         publishHTML (target: [
           allowMissing: true,
           alwaysLinkToLastBuild: true,
