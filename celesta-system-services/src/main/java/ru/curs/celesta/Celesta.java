@@ -17,6 +17,7 @@ import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.event.TriggerDispatcher;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.discovery.CombinedScoreDiscovery;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.score.discovery.ScoreByScoreResourceDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
@@ -65,9 +66,14 @@ public final class Celesta implements ICelesta {
         LOGGER.info("Celesta initialization: score parsing...");
 
         try {
-            ScoreDiscovery scoreDiscovery = this.appSettings.getScorePath().isEmpty()
-                    ? new ScoreByScoreResourceDiscovery()
-                    : new ScoreByScorePathDiscovery(appSettings.getScorePath());
+            ScoreDiscovery scoreDiscovery;
+            if (this.appSettings.getScorePath().isEmpty()) {
+                scoreDiscovery = new ScoreByScoreResourceDiscovery();
+            } else {
+                scoreDiscovery = new CombinedScoreDiscovery(
+                        new ScoreByScorePathDiscovery(appSettings.getScorePath()),
+                        new ScoreByScoreResourceDiscovery());
+            }
             this.score = new Score.ScoreBuilder<>(Score.class)
                     .scoreDiscovery(scoreDiscovery)
                     .build();
