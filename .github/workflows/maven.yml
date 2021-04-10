@@ -13,15 +13,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install JDK8
-        uses: AdoptOpenJDK/install-jdk@v1
+      
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
         with:
-          version: '8'
-      - name: Install JDK11
+          distribution: 'adopt'
+          java-version: '8'
+          
+      - name: Set up JDK11
         uses: AdoptOpenJDK/install-jdk@v1
         with:
           version: '11'
           targets: 'JDK_11'
+          
       - uses: actions/cache@v1
         with:
           path: ~/.m2/repository
