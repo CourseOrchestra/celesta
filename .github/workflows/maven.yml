@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 8
+      - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
-          java-version: '8'
+          java-version: '11'
       - uses: actions/cache@v1
         with:
           path: ~/.m2/repository
@@ -25,14 +25,14 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
       - name: Install Graphviz
         run: sudo apt-get install -y graphviz
-      - name: Download jsyntrax
+      - name: Install jsyntrax
         run: |
           wget https://github.com/atp-mipt/jsyntrax/releases/download/1.1/jsyntrax-1.1-syntrax.zip -O jsyntrax.zip
           unzip jsyntrax.zip
           rm jsyntrax.zip
           sudo chmod +x $(pwd)/jsyntrax-1.1/bin/syntrax
-      - name: Install jsyntrax
-        run: sudo ln -s $(pwd)/jsyntrax-1.1/bin/syntrax /usr/local/bin/syntrax && syntrax --version
+          sudo ln -s $(pwd)/jsyntrax-1.1/bin/syntrax /usr/local/bin/syntrax
+          syntrax --version
       - name: Copy Maven settings
         run: cp .settings.xml ~/.m2/settings.xml 
       - name: Build Javadoc
