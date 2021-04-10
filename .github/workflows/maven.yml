@@ -13,11 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2
+      - name: Install JDK8
+        uses: AdoptOpenJDK/install-jdk@v1
         with:
-          distribution: 'adopt'
-          java-version: '11'
+          version: '8'
+      - name: Install JDK11
+        uses: AdoptOpenJDK/install-jdk@v1
+        with:
+          version: '11'
+          targets: 'JDK_11'
       - uses: actions/cache@v1
         with:
           path: ~/.m2/repository
@@ -32,13 +36,13 @@ jobs:
           rm jsyntrax.zip
           sudo chmod +x $(pwd)/jsyntrax-1.1/bin/syntrax
           sudo ln -s $(pwd)/jsyntrax-1.1/bin/syntrax /usr/local/bin/syntrax
-          syntrax --version
+          JAVA_HOME=$JDK_11; syntrax --version
       - name: Copy Maven settings
         run: cp .settings.xml ~/.m2/settings.xml 
       - name: Build Javadoc
         run: mvn javadoc:aggregate -pl :celesta-parent,:celesta-sql,:celesta-core,:celesta-system-services,:celesta-unit
       - name: Build documentation
-        run: mvn generate-resources -pl :celesta-documentation       
+        run: JAVA_HOME=$JDK_11; mvn generate-resources -pl :celesta-documentation       
       - name: Move Javadoc
         run: mv target/site/apidocs celesta-documentation/target/generated-docs/apidocs
       - name: Deploy to GitHub Pages
