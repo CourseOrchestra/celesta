@@ -35,8 +35,8 @@ jobs:
         run: sudo apt-get install -y graphviz
       - name: Install jsyntrax
         run: |
-          wget https://github.com/atp-mipt/jsyntrax/releases/download/1.1/jsyntrax-1.1-syntrax.zip -O jsyntrax.zip
-          unzip jsyntrax.zip
+          wget https://github.com/atp-mipt/jsyntrax/releases/download/1.1/jsyntrax-1.1-syntrax.zip -nv -O jsyntrax.zip
+          unzip -q jsyntrax.zip
           rm jsyntrax.zip
           sudo chmod +x $(pwd)/jsyntrax-1.1/bin/syntrax
           sudo ln -s $(pwd)/jsyntrax-1.1/bin/syntrax /usr/local/bin/syntrax
@@ -54,6 +54,6 @@ jobs:
         uses: crazy-max/ghaction-github-pages@v2
         with:
           target_branch: gh-pages
-          build_dir: doc/target/generated-docs
+          build_dir: celesta-documentation/target/generated-docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
