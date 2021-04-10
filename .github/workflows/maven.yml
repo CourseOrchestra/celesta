@@ -1,0 +1,50 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+name: build
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '8'
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+      - name: Install Graphviz
+        run: sudo apt-get install -y graphviz
+      - name: Install jsyntrax
+        run: |
+          wget https://github.com/atp-mipt/jsyntrax/releases/download/1.1/jsyntrax-1.1-syntrax.zip -O jsyntrax.zip
+          unzip jsyntrax.zip
+          rm jsyntrax.zip
+          sudo ln -s $(pwd)/jsyntrax-1.1/bin/syntrax /usr/local/bin/syntrax
+          syntrax --version
+      - name: Copy Maven settings
+        run: cp .settings.xml ~/.m2/settings.xml 
+      - name: Build Javadoc
+        run: mvn javadoc:aggregate -pl :celesta-parent,:celesta-sql,:celesta-core,:celesta-system-services,:celesta-unit
+      - name: Build documentation
+        run: mvn generate-resources -pl :celesta-documentation       
+      - name: Move Javadoc
+        run: mv target/site/apidocs celesta-documentation/target/generated-docs/apidocs
+      - name: Deploy to GitHub Pages
+        if: success() && github.ref == 'refs/heads/dev'
+        uses: crazy-max/ghaction-github-pages@v2
+        with:
+          target_branch: gh-pages
+          build_dir: doc/target/generated-docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
