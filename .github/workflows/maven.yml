@@ -30,6 +30,7 @@ jobs:
           wget https://github.com/atp-mipt/jsyntrax/releases/download/1.1/jsyntrax-1.1-syntrax.zip -O jsyntrax.zip
           unzip jsyntrax.zip
           rm jsyntrax.zip
+          sudo chmod +x $(pwd)/jsyntrax-1.1/bin/syntrax
       - name: Install jsyntrax
         run: sudo ln -s $(pwd)/jsyntrax-1.1/bin/syntrax /usr/local/bin/syntrax && syntrax --version
       - name: Copy Maven settings
