@@ -1,6 +1,6 @@
 :!imagesdir:
 :icons: font
-:syntrax-style: celesta-documentation/src/main/asciidoc/jsyntrax.ini
+:syntrax-style-file: celesta-documentation/src/main/asciidoc/jsyntrax.ini
 :encoding: utf-8
 :apidocs: https://courseorchestra.github.io/celesta/apidocs/index.html?
 :hyph: &#173;
