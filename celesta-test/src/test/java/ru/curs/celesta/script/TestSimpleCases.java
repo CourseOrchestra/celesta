@@ -10,6 +10,7 @@ import simpleCases.*;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -207,4 +208,16 @@ public class TestSimpleCases implements ScriptTest {
         assertTrue(values[1].getClass() == String.class);
     }
 
+
+    @TestTemplate
+    void test_autoincremental_insertion(CallContext context) {
+        GetDateForViewCursor tableCursor = new GetDateForViewCursor(context);
+        tableCursor.deleteAll();
+        for (int i = 0; i < 7; i++) {
+            tableCursor.clear();
+            tableCursor.setDate(new Date());
+            tableCursor.insert();
+        }
+        assertEquals(7, tableCursor.count());
+    }
 }
