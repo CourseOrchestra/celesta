@@ -5,11 +5,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.syscursors.LogCursor;
 import simpleCases.*;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -207,4 +209,38 @@ public class TestSimpleCases implements ScriptTest {
         assertTrue(values[1].getClass() == String.class);
     }
 
+
+    @TestTemplate
+    void test_autoincremental_insertion(CallContext context) {
+        GetDateForViewCursor tableCursor = new GetDateForViewCursor(context);
+        tableCursor.deleteAll();
+        for (int i = 0; i < 7; i++) {
+            tableCursor.clear();
+            tableCursor.setDate(new Date());
+            tableCursor.insert();
+        }
+        assertEquals(7, tableCursor.count());
+    }
+
+    @TestTemplate
+    void test_duplicate_insertion(CallContext context) {
+        DuplicateCursor c = new DuplicateCursor(context);
+        c.deleteAll();
+        c.setId(7);
+        c.insert();
+
+        String message = assertThrows(CelestaException.class, c::insert).getMessage();
+        assertEquals("Record duplicate [7] already exists", message);
+    }
+
+    @TestTemplate
+    void test_update_nonexistent(CallContext context) {
+        DuplicateCursor c = new DuplicateCursor(context);
+        c.deleteAll();
+        c.setId(42);
+        c.setVal(42);
+
+        String message = assertThrows(CelestaException.class, c::update).getMessage();
+        assertEquals("Record duplicate [42] does not exist.", message);
+    }
 }

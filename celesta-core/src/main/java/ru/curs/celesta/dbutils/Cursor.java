@@ -96,8 +96,10 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
     };
 
+    private byte canOptimizeInsertion;
     private Cursor xRec;
     private int recversion;
+
 
     public Cursor(CallContext context) {
         super(context);
@@ -180,14 +182,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      */
     public final void insert() {
         if (!tryInsert()) {
-            StringBuilder sb = new StringBuilder();
-            for (Object value : _currentKeyValues()) {
-                if (sb.length() > 0) {
-                    sb.append(", ");
-                }
-                sb.append(value == null ? "null" : value.toString());
-            }
-            throw new CelestaException("Record %s (%s) already exists", _objectName(), sb.toString());
+            throw new CelestaException("Record %s %s already exists",
+                    _objectName(),
+                    Arrays.toString(_currentKeyValues()));
         }
     }
 
@@ -205,24 +202,25 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         //TODO: одно из самых нуждающихся в переделке мест.
         // на один insert--2 select-а, что вызывает справедливое возмущение тех, кто смотрит логи
         // 1) Если у нас автоинкремент и автоинкрементное поле в None, то первый select не нужен
+        // (NB 2021-04-14: это реализовано через canOptimizeInsertion)
         // 2) Хорошо бы результат инсерта выдавать в одной операции как resultset
-        PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
+
         try {
-            ResultSet rs = g.executeQuery();
-            try {
-                if (rs.next()) {
-                    getXRec()._parseResult(rs);
-                    /*
-                     * transmit recversion from xRec to rec for possible future
-                     * record update
-                     */
-                    if (getRecversion() == 0) {
-                        setRecversion(xRec.getRecversion());
+            if (!canOptimizeInsertion()) {
+                PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
+                try (ResultSet rs = g.executeQuery()) {
+                    if (rs.next()) {
+                        getXRec()._parseResult(rs);
+                        /*
+                         * transmit recversion from xRec to rec for possible future
+                         * record update
+                         */
+                        if (getRecversion() == 0) {
+                            setRecversion(xRec.getRecversion());
+                        }
+                        return false;
                     }
-                    return false;
                 }
-            } finally {
-                rs.close();
             }
 
             PreparedStatement ins = insert.getStatement(_currentValues(), recversion);
@@ -261,17 +259,33 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         return true;
     }
 
+    final boolean canOptimizeInsertion() {
+        /*If the only key value is an auto-incremented integer,
+        * and the inserted value is null, then we can skip the selection phase.*/
+        status: if (canOptimizeInsertion == 0) {
+            Collection<Column<?>> pkColumns = meta().getPrimaryKey().values();
+            if (pkColumns.size() == 1) {
+                Column<?> pkColumn = pkColumns.iterator().next();
+                if (pkColumn instanceof IntegerColumn) {
+                    IntegerColumn intPkColumn = (IntegerColumn) pkColumn;
+                    canOptimizeInsertion = intPkColumn.getSequence() == null ? (byte) 1 : (byte) 2;
+                    break status;
+                }
+            }
+            canOptimizeInsertion = 1;
+        }
+        return canOptimizeInsertion == 2 && getCurrentKeyValues()[0] == null;
+    }
+
     /**
      * Performs an update of the cursor content in the DB, throwing an exception
      * in case if a record with such key fields is not found.
      */
     public final void update() {
         if (!tryUpdate()) {
-            String values = Arrays.stream(_currentKeyValues())
-                    .map(String::valueOf)
-                    .collect(Collectors.joining(", "));
-
-            throw new CelestaException("Record %s (%s) does not exist.", _objectName(), values);
+            throw new CelestaException("Record %s %s does not exist.",
+                    _objectName(),
+                    Arrays.toString(_currentKeyValues()));
         }
     }
 
@@ -290,8 +304,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         preUpdate();
         PreparedStatement g = getHelper.prepareGet(recversion, _currentKeyValues());
         try {
-            ResultSet rs = g.executeQuery();
-            try {
+            try (ResultSet rs = g.executeQuery()) {
                 if (!rs.next()) {
                     return false;
                 }
@@ -302,8 +315,6 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                     // фигурной скобкой? (проблема совместной работы над базой)
                     xRec._parseResult(rs);
                 }
-            } finally {
-                rs.close();
             }
 
             Object[] values = _currentValues();
@@ -520,8 +531,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         }
 
         try {
-            ResultSet rs = stmt.executeQuery();
-            try {
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     InputStream is = rs.getBinaryStream(1);
                     if (!(is == null || rs.wasNull())) {
@@ -538,8 +548,6 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
                     // Записи не существует вовсе
                     result = new BLOB();
                 }
-            } finally {
-                rs.close();
             }
             stmt.close();
         } catch (SQLException | IOException e) {
@@ -571,7 +579,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @param column the text field
      * @return length of the text field or -1 (minus one) for TEXT fields.
      */
-   public final int getMaxStrLen(ColumnMeta<String> column) {
+    public final int getMaxStrLen(ColumnMeta<String> column) {
         final int undefinedMaxlength = -1;
         if (column instanceof StringColumn) {
             StringColumn sc = (StringColumn) column;
