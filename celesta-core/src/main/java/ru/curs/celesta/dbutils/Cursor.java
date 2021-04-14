@@ -182,14 +182,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      */
     public final void insert() {
         if (!tryInsert()) {
-            StringBuilder sb = new StringBuilder();
-            for (Object value : _currentKeyValues()) {
-                if (sb.length() > 0) {
-                    sb.append(", ");
-                }
-                sb.append(value == null ? "null" : value.toString());
-            }
-            throw new CelestaException("Record %s (%s) already exists", _objectName(), sb.toString());
+            throw new CelestaException("Record %s %s already exists",
+                    _objectName(),
+                    Arrays.toString(_currentKeyValues()));
         }
     }
 
@@ -288,11 +283,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      */
     public final void update() {
         if (!tryUpdate()) {
-            String values = Arrays.stream(_currentKeyValues())
-                    .map(String::valueOf)
-                    .collect(Collectors.joining(", "));
-
-            throw new CelestaException("Record %s (%s) does not exist.", _objectName(), values);
+            throw new CelestaException("Record %s %s does not exist.",
+                    _objectName(),
+                    Arrays.toString(_currentKeyValues()));
         }
     }
 
