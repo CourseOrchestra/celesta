@@ -20,12 +20,12 @@ import ru.curs.celesta.score.View;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2020-02-25T10:50:49"
+        date = "2021-04-15T02:06:38.885"
 )
 @CelestaGenerated
 public final class TestTableVCursor extends ViewCursor implements Iterable<TestTableVCursor> {
-
     private static final String GRAIN_NAME = "test";
+
     private static final String OBJECT_NAME = "testTableV";
 
     public final TestTableVCursor.Columns COLUMNS;
@@ -61,10 +61,10 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
     protected Object _getFieldValue(String name) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             return f.get(this);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -73,10 +73,10 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             f.set(this, value);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -98,18 +98,16 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
 
     @Override
     public Object[] _currentValues() {
-        Object[] result = new Object[1];
-        result[0] = this.id;
-        return result;
+        return new Object[] {id};
     }
 
     @Override
     public TestTableVCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestTableVCursor result;
-
         if (Objects.isNull(fields)) {
             result = new TestTableVCursor(context);
-        } else {
+        }
+        else {
             result = new TestTableVCursor(context, new LinkedHashSet<>(fields));
         }
         result.copyFieldsFrom(this);
@@ -140,7 +138,7 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25T10:50:49"
+            date = "2021-04-15T02:06:38.886"
     )
     @CelestaGenerated
     public static final class Columns {
@@ -154,5 +152,4 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
             return (ColumnMeta<Integer>) this.element.getColumns().get("id");
         }
     }
-
 }

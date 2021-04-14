@@ -21,18 +21,20 @@ import ru.curs.celesta.score.MaterializedView;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2020-02-25T10:50:49"
+        date = "2021-04-15T02:06:38.892"
 )
 @CelestaGenerated
 public final class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
-
     private static final String GRAIN_NAME = "test";
+
     private static final String OBJECT_NAME = "testTableMv";
 
     public final TestTableMvCursor.Columns COLUMNS;
 
     private Integer surrogate_count;
+
     private Integer c;
+
     private BigDecimal cost;
 
     {
@@ -80,10 +82,10 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     protected Object _getFieldValue(String name) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             return f.get(this);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -92,19 +94,17 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             f.set(this, value);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
     protected Object[] _currentKeyValues() {
-        Object[] result = new Object[1];
-        result[0] = this.cost;
-        return result;
+        return new Object[] {cost};
     }
 
     @Override
@@ -140,20 +140,16 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
 
     @Override
     public Object[] _currentValues() {
-        Object[] result = new Object[3];
-        result[0] = this.surrogate_count;
-        result[1] = this.c;
-        result[2] = this.cost;
-        return result;
+        return new Object[] {surrogate_count, c, cost};
     }
 
     @Override
     public TestTableMvCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestTableMvCursor result;
-
         if (Objects.isNull(fields)) {
             result = new TestTableMvCursor(context);
-        } else {
+        }
+        else {
             result = new TestTableMvCursor(context, new LinkedHashSet<>(fields));
         }
         result.copyFieldsFrom(this);
@@ -186,7 +182,7 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25T10:50:49"
+            date = "2021-04-15T02:06:38.893"
     )
     @CelestaGenerated
     public static final class Columns {
@@ -208,5 +204,4 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
             return (ColumnMeta<BigDecimal>) this.element.getColumns().get("cost");
         }
     }
-
 }

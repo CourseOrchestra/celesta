@@ -15,7 +15,7 @@ There we discuss new major/compatibility breaking proposals before the implement
 
 Celesta is using [TestContainers](https://www.testcontainers.org/) for tests. If you want to build Celesta with test run, you will need Docker on your machine. Allow some time and network traffic to automatically download the Docker images with the Celesta-supported database engines.
 
-If you want to build `celesta-documentation` module locally, you will need to install [Graphviz](https://www.graphviz.org/) and [syntrax](https://github.com/kevinpt/syntrax). They are required to generate UML and syntax diagrams in the documentation.
+If you want to build `celesta-documentation` module locally, you will need to install [Graphviz](https://www.graphviz.org/) and [jsyntrax](https://github.com/atp-mipt/jsyntrax). They are required to generate UML and syntax diagrams in the documentation.
 
 ## Pull Request Check List
 

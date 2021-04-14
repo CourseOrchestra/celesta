@@ -39,6 +39,8 @@ import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.NamedElement;
+import ru.curs.celesta.score.Parameter;
 import ru.curs.celesta.score.ParameterizedView;
 import ru.curs.celesta.score.ReadOnlyTable;
 import ru.curs.celesta.score.SequenceElement;
@@ -77,7 +79,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -196,7 +197,7 @@ public final class CursorGenerator {
                     cursorClass.addMethods(buildTriggerRegistration(className));
                 }
                 cursorClass.addTypes(
-                    buildOptionFieldsAsInnerStaticClasses(t.getColumns().values()));
+                        buildOptionFieldsAsInnerStaticClasses(t.getColumns().values()));
             }
 
             cursorClass.addMethods(buildCompileCopying(ge, className, columns.keySet(), isVersionedGe));
@@ -227,9 +228,9 @@ public final class CursorGenerator {
             String grainPartRelativePath =
                     new FileResource(new File(scorePath)).getRelativePath(ge.getGrainPart().getSource());
             result = Optional.of(grainPartRelativePath.lastIndexOf(File.separatorChar))
-                .filter(i -> i >= 0)
-                .map(i -> grainPartRelativePath.substring(0, i).replace(File.separator, "."))
-                .orElse("");
+                    .filter(i -> i >= 0)
+                    .map(i -> grainPartRelativePath.substring(0, i).replace(File.separator, "."))
+                    .orElse("");
             if (result.startsWith(".")) {
                 result = result.substring(1);
             }
@@ -330,18 +331,18 @@ public final class CursorGenerator {
         List<MethodSpec> results = new ArrayList<>();
 
         ParameterSpec contextParam = ParameterSpec.builder(CallContext.class, "context")
-            .build();
+                .build();
 
         ParameterSpec fieldsParam = ParameterSpec.builder(
                 ParameterizedTypeName.get(Set.class, String.class), "fields")
-            .build();
+                .build();
 
         ParameterSpec columnsParam = ParameterSpec.builder(
                 ArrayTypeName.of(
                         ParameterizedTypeName.get(ClassName.get(ColumnMeta.class),
-                                                  WildcardTypeName.subtypeOf(Object.class))),
-                        "columns")
-            .build();
+                                WildcardTypeName.subtypeOf(Object.class))),
+                "columns")
+                .build();
 
         ParameterSpec parametersParam = ParameterSpec.builder(
                 ParameterizedTypeName.get(Map.class, String.class, Object.class), "parameters")
@@ -389,7 +390,57 @@ public final class CursorGenerator {
         }
         results.add(builder.addAnnotation(Deprecated.class).build());
 
+        //ParameterizedView constructors
+        if (ge instanceof ParameterizedView) {
+            ParameterizedView pv = (ParameterizedView) ge;
+
+            builder = msp.get();
+            for (Parameter parameter : pv.getParameters().values()) {
+                builder.addParameter(ParameterSpec.builder(
+                        parameter.getJavaClass(), parameter.getName()
+                ).build());
+            }
+
+            String spec = "super (context, paramsMap(" +
+                    pv.getParameters().values().stream().map(c -> "$N").collect(Collectors.joining(", "))
+                    + "))";
+            builder.addStatement(spec, pv.getParameters().keySet().toArray());
+            results.add(builder.build());
+
+            builder = msp.get();
+            for (Parameter parameter : pv.getParameters().values()) {
+                builder.addParameter(ParameterSpec.builder(
+                        parameter.getJavaClass(), parameter.getName()
+                ).build());
+            }
+            builder.addParameter(columnsParam).varargs();
+            spec = "super (context, paramsMap(" +
+                    pv.getParameters().values().stream().map(c -> "$N").collect(Collectors.joining(", "))
+                    + "), columns)";
+            builder.addStatement(spec, pv.getParameters().keySet().toArray());
+            results.add(builder.build());
+
+            results.add(getParameterizedViewTypedConstructorHelper(pv));
+        }
         return results;
+    }
+
+    private static MethodSpec getParameterizedViewTypedConstructorHelper(ParameterizedView pv) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("paramsMap")
+                .addModifiers(Modifier.PRIVATE, Modifier.STATIC).returns(
+                        ParameterizedTypeName.get(Map.class,
+                                String.class, Object.class));
+        builder.addStatement("$T<$T,$T> params = new $T<>()",
+                Map.class, String.class, Object.class, HashMap.class);
+        for (Parameter parameter : pv.getParameters().values()) {
+            String paramName = parameter.getName();
+            builder.addParameter(ParameterSpec.builder(
+                    parameter.getJavaClass(), paramName
+            ).build());
+            builder.addStatement("params.put($S, $N)", paramName, paramName);
+        }
+        builder.addStatement("return params");
+        return builder.build();
     }
 
     private static List<MethodSpec> buildGrainNameAndObjectName(GrainElement ge) {
@@ -429,7 +480,7 @@ public final class CursorGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(ICelesta.class, "celesta")
                 .addStatement("this.$N = celesta.getScore().getGrains().get($L).getElements($T.class).get($L)",
-                              elementField, GRAIN_FIELD_NAME, elementField.type, OBJECT_FIELD_NAME)
+                        elementField, GRAIN_FIELD_NAME, elementField.type, OBJECT_FIELD_NAME)
                 .build());
 
         dge.getColumns().entrySet().stream()
@@ -442,9 +493,9 @@ public final class CursorGenerator {
                             .addModifiers(Modifier.PUBLIC)
                             .returns(columnType)
                             .addStatement("return ($T) this.$N.getColumns().get($S)",
-                                          columnType, elementField, columnName)
+                                    columnType, elementField, columnName)
                             .build();
-                 })
+                })
                 .forEach(builder::addMethod);
 
         return builder.build();
@@ -455,23 +506,23 @@ public final class CursorGenerator {
         final String grainName = ge.getGrain().getName();
 
         FieldSpec grainField = FieldSpec.builder(String.class, GRAIN_FIELD_NAME,
-                                                 Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-            .initializer("$S", grainName)
-            .build();
+                Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                .initializer("$S", grainName)
+                .build();
 
         FieldSpec objectField = FieldSpec.builder(String.class, OBJECT_FIELD_NAME,
-                                                  Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-            .initializer("$S", ge.getName())
-            .build();
+                Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                .initializer("$S", ge.getName())
+                .build();
 
         if (!grainName.equals(ge.getGrain().getScore().getSysSchemaName())) {
             return Arrays.asList(grainField, objectField);
         }
 
         FieldSpec tableField = FieldSpec.builder(String.class, "TABLE_NAME",
-                                                 Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-            .initializer("$N", objectField)
-            .build();
+                Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                .initializer("$N", objectField)
+                .build();
 
         return Arrays.asList(grainField, objectField, tableField);
     }
@@ -534,9 +585,7 @@ public final class CursorGenerator {
                 .addParameter(ResultSet.class, "rs")
                 .addException(SQLException.class);
 
-        columns.entrySet().forEach(entry -> {
-            String name = entry.getKey();
-            ColumnMeta<?> meta = entry.getValue();
+        columns.forEach((name, meta) -> {
 
             if (BinaryColumn.CELESTA_TYPE.equals(meta.getCelestaType())) {
                 builder.addStatement("this.$N = null", name);
@@ -642,14 +691,12 @@ public final class CursorGenerator {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("_currentKeyValues")
                 .addModifiers(Modifier.PROTECTED)
                 .addAnnotation(Override.class)
-                .returns(resultType)
-                .addStatement("$T result = new Object[$L]", resultType, pk.size());
-
-        AtomicInteger counter = new AtomicInteger(0);
-        pk.forEach(
-                c -> builder.addStatement("result[$L] = this.$N", counter.getAndIncrement(), c.getName())
-        );
-        builder.addStatement("return result");
+                .returns(resultType);
+        String spec = "return new Object[] {" +
+                pk.stream().map(c -> "$N").collect(Collectors.joining(", "))
+                + "}";
+        builder.addStatement(spec, pk.stream()
+                .map(NamedElement::getName).toArray());
         return builder.build();
     }
 
@@ -659,14 +706,13 @@ public final class CursorGenerator {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("_currentValues")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
-                .returns(resultType)
-                .addStatement("$T result = new Object[$L]", resultType, columns.size());
+                .returns(resultType);
+        String spec = "return new Object[] {" +
+                columns.values().stream().map(c -> "$N").collect(Collectors.joining(", "))
+                + "}";
+        builder.addStatement(spec, columns.values().stream()
+                .map(ColumnMeta::getName).toArray());
 
-        AtomicInteger counter = new AtomicInteger(0);
-        columns.forEach(
-                (name, c) -> builder.addStatement("result[$L] = this.$N", counter.getAndIncrement(), name)
-        );
-        builder.addStatement("return result");
         return builder.build();
     }
 
@@ -695,10 +741,10 @@ public final class CursorGenerator {
         builder.addParameter(param);
 
         columns.entrySet().stream()
-                          .filter(e -> e.getValue() instanceof IntegerColumn)
-                          .filter(e -> ((IntegerColumn) e.getValue()).getSequence() != null)
-                          .findAny()
-                          .ifPresent(e -> builder.addStatement("this.$N = $N", e.getKey(), param.name));
+                .filter(e -> e.getValue() instanceof IntegerColumn)
+                .filter(e -> ((IntegerColumn) e.getValue()).getSequence() != null)
+                .findAny()
+                .ifPresent(e -> builder.addStatement("this.$N = $N", e.getKey(), param.name));
 
         return builder.build();
     }
