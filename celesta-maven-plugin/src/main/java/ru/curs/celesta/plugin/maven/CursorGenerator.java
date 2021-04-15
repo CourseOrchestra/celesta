@@ -401,8 +401,8 @@ public final class CursorGenerator {
                 ).build());
             }
 
-            String spec = "super (context, paramsMap(" +
-                    pv.getParameters().values().stream().map(c -> "$N").collect(Collectors.joining(", "))
+            String spec = "super (context, paramsMap("
+                    + pv.getParameters().values().stream().map(c -> "$N").collect(Collectors.joining(", "))
                     + "))";
             builder.addStatement(spec, pv.getParameters().keySet().toArray());
             results.add(builder.build());
@@ -414,8 +414,8 @@ public final class CursorGenerator {
                 ).build());
             }
             builder.addParameter(columnsParam).varargs();
-            spec = "super (context, paramsMap(" +
-                    pv.getParameters().values().stream().map(c -> "$N").collect(Collectors.joining(", "))
+            spec = "super (context, paramsMap("
+                    + pv.getParameters().values().stream().map(c -> "$N").collect(Collectors.joining(", "))
                     + "), columns)";
             builder.addStatement(spec, pv.getParameters().keySet().toArray());
             results.add(builder.build());
@@ -692,8 +692,8 @@ public final class CursorGenerator {
                 .addModifiers(Modifier.PROTECTED)
                 .addAnnotation(Override.class)
                 .returns(resultType);
-        String spec = "return new Object[] {" +
-                pk.stream().map(c -> "$N").collect(Collectors.joining(", "))
+        String spec = "return new Object[] {"
+                + pk.stream().map(c -> "$N").collect(Collectors.joining(", "))
                 + "}";
         builder.addStatement(spec, pk.stream()
                 .map(NamedElement::getName).toArray());
@@ -707,8 +707,8 @@ public final class CursorGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .returns(resultType);
-        String spec = "return new Object[] {" +
-                columns.values().stream().map(c -> "$N").collect(Collectors.joining(", "))
+        String spec = "return new Object[] {"
+                + columns.values().stream().map(c -> "$N").collect(Collectors.joining(", "))
                 + "}";
         builder.addStatement(spec, columns.values().stream()
                 .map(ColumnMeta::getName).toArray());
