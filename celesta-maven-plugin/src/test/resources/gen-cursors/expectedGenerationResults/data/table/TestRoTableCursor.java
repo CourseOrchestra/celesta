@@ -20,12 +20,12 @@ import ru.curs.celesta.score.ReadOnlyTable;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2020-02-25 10:50"
+        date = "2021-04-15T01:58:49.662"
 )
 @CelestaGenerated
 public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<TestRoTableCursor> {
-
     private static final String GRAIN_NAME = "test";
+
     private static final String OBJECT_NAME = "testRoTable";
 
     public final TestRoTableCursor.Columns COLUMNS;
@@ -63,7 +63,8 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
             Field f = getClass().getDeclaredField(name);
             f.setAccessible(true);
             return f.get(this);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -72,10 +73,10 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             f.set(this, value);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -97,18 +98,16 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
 
     @Override
     public Object[] _currentValues() {
-        Object[] result = new Object[1];
-        result[0] = this.id;
-        return result;
+        return new Object[] {id};
     }
 
     @Override
     public TestRoTableCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestRoTableCursor result;
-
         if (Objects.isNull(fields)) {
             result = new TestRoTableCursor(context);
-        } else {
+        }
+        else {
             result = new TestRoTableCursor(context, new LinkedHashSet<>(fields));
         }
         result.copyFieldsFrom(this);
@@ -139,7 +138,7 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25T10:50:49"
+            date = "2021-04-15T01:58:49.664"
     )
     @CelestaGenerated
     public static final class Columns {
@@ -156,16 +155,16 @@ public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iter
 
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25T10:50:49"
+            date = "2021-04-15T01:58:49.665"
     )
     @CelestaGenerated
     public static final class Id {
         public static final Integer open = 0;
+
         public static final Integer closed = 1;
 
         private Id() {
             throw new AssertionError();
         }
     }
-
 }

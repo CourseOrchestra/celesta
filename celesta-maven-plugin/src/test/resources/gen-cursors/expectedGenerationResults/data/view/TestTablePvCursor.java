@@ -3,6 +3,7 @@ package data.view;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,12 +22,12 @@ import ru.curs.celesta.score.ParameterizedView;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2020-02-25T10:50:49"
+        date = "2021-04-15T02:06:38.84"
 )
 @CelestaGenerated
 public final class TestTablePvCursor extends ParameterizedViewCursor implements Iterable<TestTablePvCursor> {
-
     private static final String GRAIN_NAME = "test";
+
     private static final String OBJECT_NAME = "testTablePv";
 
     public final TestTablePvCursor.Columns COLUMNS;
@@ -41,13 +42,29 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
         super(context, parameters);
     }
 
-    public TestTablePvCursor(CallContext context, Map<String, Object> parameters, ColumnMeta<?>... columns) {
+    public TestTablePvCursor(CallContext context, Map<String, Object> parameters,
+            ColumnMeta<?>... columns) {
         super(context, parameters, columns);
     }
 
     @Deprecated
-    public TestTablePvCursor(CallContext context, Set<String> fields, Map<String, Object> parameters) {
+    public TestTablePvCursor(CallContext context, Set<String> fields,
+            Map<String, Object> parameters) {
         super(context, fields, parameters);
+    }
+
+    public TestTablePvCursor(CallContext context, Integer p) {
+        super (context, paramsMap(p));
+    }
+
+    public TestTablePvCursor(CallContext context, Integer p, ColumnMeta<?>... columns) {
+        super (context, paramsMap(p), columns);
+    }
+
+    private static Map<String, Object> paramsMap(Integer p) {
+        Map<String,Object> params = new HashMap<>();
+        params.put("p", p);
+        return params;
     }
 
     public Integer getS() {
@@ -62,10 +79,10 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
     protected Object _getFieldValue(String name) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             return f.get(this);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -74,10 +91,10 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             f.set(this, value);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -99,18 +116,16 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
 
     @Override
     public Object[] _currentValues() {
-        Object[] result = new Object[1];
-        result[0] = this.s;
-        return result;
+        return new Object[] {s};
     }
 
     @Override
     public TestTablePvCursor _getBufferCopy(CallContext context, List<String> fields) {
         final TestTablePvCursor result;
-
         if (Objects.isNull(fields)) {
             result = new TestTablePvCursor(context, this.parameters);
-        } else {
+        }
+        else {
             result = new TestTablePvCursor(context, new LinkedHashSet<>(fields), this.parameters);
         }
         result.copyFieldsFrom(this);
@@ -141,7 +156,7 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25T10:50:49"
+            date = "2021-04-15T02:06:38.844"
     )
     @CelestaGenerated
     public static final class Columns {
@@ -155,5 +170,4 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
             return (ColumnMeta<Integer>) this.element.getColumns().get("s");
         }
     }
-
 }

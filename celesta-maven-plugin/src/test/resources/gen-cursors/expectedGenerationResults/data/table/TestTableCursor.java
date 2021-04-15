@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Consumer;
-
 import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
@@ -32,24 +31,32 @@ import ru.curs.celesta.score.Table;
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-        date = "2020-02-25T10:50:49"
+        date = "2021-04-15T01:58:49.563"
 )
 @CelestaGenerated
 public final class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
-
     private static final String GRAIN_NAME = "test";
+
     private static final String OBJECT_NAME = "testTable";
 
     public final TestTableCursor.Columns COLUMNS;
 
     private Integer id;
+
     private String str;
+
     private Boolean deleted;
+
     private Double weight;
+
     private String content;
+
     private Date created;
+
     private BLOB rawData;
+
     private BigDecimal cost;
+
     private ZonedDateTime toDelete;
 
     {
@@ -147,7 +154,8 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
             Field f = getClass().getDeclaredField(name);
             f.setAccessible(true);
             return f.get(this);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -156,19 +164,17 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     protected void _setFieldValue(String name, Object value) {
         try {
             Field f = getClass().getDeclaredField(name);
-
             f.setAccessible(true);
             f.set(this, value);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
     protected Object[] _currentKeyValues() {
-        Object[] result = new Object[1];
-        result[0] = this.id;
-        return result;
+        return new Object[] {id};
     }
 
     @Override
@@ -220,7 +226,8 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
             Timestamp ts = rs.getTimestamp("toDelete", Calendar.getInstance(TimeZone.getTimeZone("UTC")));
             if (ts != null) {
                 this.toDelete = ZonedDateTime.of(ts.toLocalDateTime(), ZoneOffset.systemDefault());
-            } else {
+            }
+            else {
                 this.toDelete = null;
             }
         }
@@ -244,17 +251,7 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
 
     @Override
     public Object[] _currentValues() {
-        Object[] result = new Object[9];
-        result[0] = this.id;
-        result[1] = this.str;
-        result[2] = this.deleted;
-        result[3] = this.weight;
-        result[4] = this.content;
-        result[5] = this.created;
-        result[6] = this.rawData;
-        result[7] = this.cost;
-        result[8] = this.toDelete;
-        return result;
+        return new Object[] {id, str, deleted, weight, content, created, rawData, cost, toDelete};
     }
 
     public void calcRawData() {
@@ -267,27 +264,33 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         this.id = val;
     }
 
-    public static void onPreDelete(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
+    public static void onPreDelete(ICelesta celesta,
+            Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_DELETE, TestTableCursor.class, cursorConsumer);
     }
 
-    public static void onPostDelete(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
+    public static void onPostDelete(ICelesta celesta,
+            Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_DELETE, TestTableCursor.class, cursorConsumer);
     }
 
-    public static void onPreInsert(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
+    public static void onPreInsert(ICelesta celesta,
+            Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_INSERT, TestTableCursor.class, cursorConsumer);
     }
 
-    public static void onPostInsert(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
+    public static void onPostInsert(ICelesta celesta,
+            Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_INSERT, TestTableCursor.class, cursorConsumer);
     }
 
-    public static void onPreUpdate(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
+    public static void onPreUpdate(ICelesta celesta,
+            Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.PRE_UPDATE, TestTableCursor.class, cursorConsumer);
     }
 
-    public static void onPostUpdate(ICelesta celesta, Consumer<? super TestTableCursor> cursorConsumer) {
+    public static void onPostUpdate(ICelesta celesta,
+            Consumer<? super TestTableCursor> cursorConsumer) {
         celesta.getTriggerDispatcher().registerTrigger(TriggerType.POST_UPDATE, TestTableCursor.class, cursorConsumer);
     }
 
@@ -296,7 +299,8 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         final TestTableCursor result;
         if (Objects.isNull(fields)) {
             result = new TestTableCursor(context);
-        } else {
+        }
+        else {
             result = new TestTableCursor(context, new LinkedHashSet<>(fields));
         }
         result.copyFieldsFrom(this);
@@ -336,7 +340,7 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     @SuppressWarnings("unchecked")
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25T10:50:49"
+            date = "2021-04-15T01:58:49.593"
     )
     @CelestaGenerated
     public static final class Columns {
@@ -381,12 +385,14 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
 
     @Generated(
             value = "ru.curs.celesta.plugin.maven.CursorGenerator",
-            date = "2020-02-25T10:50:49"
+            date = "2021-04-15T01:58:49.603"
     )
     @CelestaGenerated
     public static final class Str {
         public static final String one = "one";
+
         public static final String two = "two";
+
         public static final String three = "three";
 
         private Str() {
