@@ -22,6 +22,7 @@ import ru.curs.celesta.score.discovery.ScoreByScoreResourceDiscovery;
 import ru.curs.celesta.score.discovery.ScoreDiscovery;
 import ru.curs.celesta.ver.CelestaVersion;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -55,9 +56,9 @@ public final class Celesta implements ICelesta {
     private final PermissionManager permissionManager;
     private final ProfilingManager profiler;
 
-    public Celesta(BaseAppSettings appSettings) {
+    Celesta(BaseAppSettings appSettings, ConnectionPool connectionPool) {
         this.appSettings = appSettings;
-
+        this.connectionPool = connectionPool;
         manageH2Server();
 
         // CELESTA STARTUP SEQUENCE
@@ -82,13 +83,6 @@ public final class Celesta implements ICelesta {
         // 2. Updating database structure.
         // Since at this stage meta information is already in use, theCelesta and ConnectionPool
         // have to be initialized.
-        ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
-        cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
-        cpc.setDriverClassName(appSettings.getDbClassName());
-        cpc.setLogin(appSettings.getDBLogin());
-        cpc.setPassword(appSettings.getDBPassword());
-        connectionPool = InternalConnectionPool.create(cpc);
-
         DbAdaptorFactory dac = new DbAdaptorFactory()
                 .setDbType(appSettings.getDBType())
                 .setDdlConsumer(new JdbcDdlConsumer())
@@ -170,15 +164,50 @@ public final class Celesta implements ICelesta {
     }
 
     /**
-     * Creates Celesta instance with the specified properties.
+     * Creates Celesta instance with specified properties and {@link DataSource}.
      *
-     * @param properties properties to initialize the Celesta instance with
+     * @param properties Celesta initialization properties. All the properties regarding db connection will be ignored,
+     *                   but {@code rdbms.connection.url} is still required in order for
+     *                   Celesta to define the database type (you may pass only the
+     *                   prefix, e. g. {@code jdbc:postgresql})
+     * @param dataSource Provided data source.
+     * @return
+     */
+    public static Celesta createInstance(Properties properties, DataSource dataSource) {
+        return createInstance(properties, new DatasourceConnectionPool(dataSource));
+    }
+
+
+    /**
+     * Creates Celesta instance with specified properties and ConnectionPool.
+     *
+     * @param properties     Celesta initialization properties. All the properties regarding db connection will be ignored,
+     *                       but {@code rdbms.connection.url} is still required in order for
+     *                       Celesta to define the database type (you may pass only the
+     *                       prefix, e. g. {@code jdbc:postgresql})
+     * @param connectionPool Provided connection pool (either {@link DatasourceConnectionPool} or
+     *                       {@link InternalConnectionPool}).
+     * @return
+     */
+    public static Celesta createInstance(Properties properties, ConnectionPool connectionPool) {
+        AppSettings appSettings = preInit(properties);
+        return new Celesta(appSettings, connectionPool);
+    }
+
+    /**
+     * Creates Celesta instance with the specified properties and internal connection pool.
+     *
+     * @param properties Celesta initialization properties
      * @return
      */
     public static Celesta createInstance(Properties properties) {
-        LOGGER.info("Celesta ver. {}", VERSION != null ? VERSION : "N/A (invalid build?)");
         AppSettings appSettings = preInit(properties);
-        return new Celesta(appSettings);
+        ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
+        cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
+        cpc.setDriverClassName(appSettings.getDbClassName());
+        cpc.setLogin(appSettings.getDBLogin());
+        cpc.setPassword(appSettings.getDBPassword());
+        return new Celesta(appSettings, InternalConnectionPool.create(cpc));
     }
 
     /**
@@ -193,6 +222,7 @@ public final class Celesta implements ICelesta {
     }
 
     private static AppSettings preInit(Properties properties) {
+        LOGGER.info("Celesta ver. {}", VERSION != null ? VERSION : "N/A (invalid build?)");
         LOGGER.info("Celesta pre-initialization: system settings reading...");
         AppSettings appSettings = new AppSettings(properties);
         LOGGER.info("done.");
