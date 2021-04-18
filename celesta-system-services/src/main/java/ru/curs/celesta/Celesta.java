@@ -87,7 +87,7 @@ public final class Celesta implements ICelesta {
         cpc.setDriverClassName(appSettings.getDbClassName());
         cpc.setLogin(appSettings.getDBLogin());
         cpc.setPassword(appSettings.getDBPassword());
-        connectionPool = ConnectionPool.create(cpc);
+        connectionPool = InternalConnectionPool.create(cpc);
 
         DbAdaptorFactory dac = new DbAdaptorFactory()
                 .setDbType(appSettings.getDBType())

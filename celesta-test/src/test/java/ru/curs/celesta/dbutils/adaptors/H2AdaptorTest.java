@@ -35,7 +35,7 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
         cpc.setLogin(appSettings.getDBLogin());
         cpc.setPassword(appSettings.getDBPassword());
 
-        ConnectionPool connectionPool = ConnectionPool.create(cpc);
+        ConnectionPool connectionPool = InternalConnectionPool.create(cpc);
 
         dba = new H2Adaptor(connectionPool, new JdbcDdlConsumer(), appSettings.isH2ReferentialIntegrity());
 

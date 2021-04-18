@@ -5,6 +5,7 @@ import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.InternalConnectionPool;
 import ru.curs.celesta.ConnectionPoolConfiguration;
 import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.test.common.AdvancedFireBirdContainer;
@@ -44,8 +45,8 @@ public class ContainerUtils {
 
     private static void cleanUpPostgres() {
         try (
-            ConnectionPool connectionPool = getConnectionPool(POSTGRE_SQL);
-            Connection connection = connectionPool.get()
+                ConnectionPool connectionPool = getConnectionPool(POSTGRE_SQL);
+                Connection connection = connectionPool.get()
         ) {
 
             try (ResultSet rs = SqlUtils.executeQuery(
@@ -69,8 +70,8 @@ public class ContainerUtils {
 
     private static void cleanUpOracle() {
         try (
-            ConnectionPool connectionPool = getConnectionPool(ORACLE);
-            Connection connection = connectionPool.get()
+                ConnectionPool connectionPool = getConnectionPool(ORACLE);
+                Connection connection = connectionPool.get()
         ) {
 
             try (ResultSet rs = SqlUtils.executeQuery(
@@ -139,8 +140,8 @@ public class ContainerUtils {
         connectionPoolConfiguration.setJdbcConnectionUrl(MSSQL.getInitJdbcUrl());
 
         try (
-            ConnectionPool connectionPool = ConnectionPool.create(connectionPoolConfiguration);
-            Connection connection = connectionPool.get()
+                ConnectionPool connectionPool = InternalConnectionPool.create(connectionPoolConfiguration);
+                Connection connection = connectionPool.get()
         ) {
             SqlUtils.executeUpdate(
                 connection,
@@ -162,7 +163,7 @@ public class ContainerUtils {
 
     private static ConnectionPool getConnectionPool(JdbcDatabaseContainer container) {
         ConnectionPoolConfiguration poolConfiguration = connectionPoolConfiguration(container);
-        return ConnectionPool.create(poolConfiguration);
+        return InternalConnectionPool.create(poolConfiguration);
     }
 
     private static ConnectionPoolConfiguration connectionPoolConfiguration(JdbcDatabaseContainer container) {

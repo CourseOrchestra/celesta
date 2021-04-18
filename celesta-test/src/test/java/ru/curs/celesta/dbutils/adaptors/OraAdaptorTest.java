@@ -43,7 +43,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
         cpc.setDriverClassName(appSettings.getDbClassName());
         cpc.setLogin(appSettings.getDBLogin());
         cpc.setPassword(appSettings.getDBPassword());
-        ConnectionPool connectionPool = ConnectionPool.create(cpc);
+        ConnectionPool connectionPool = InternalConnectionPool.create(cpc);
 
         dba = new OraAdaptor(connectionPool, new JdbcDdlConsumer());
 
