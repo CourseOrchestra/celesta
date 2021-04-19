@@ -1,6 +1,10 @@
 package ru.curs.celesta;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * Application settings.

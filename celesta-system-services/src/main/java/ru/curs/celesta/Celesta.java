@@ -181,8 +181,8 @@ public final class Celesta implements ICelesta {
     /**
      * Creates Celesta instance with specified properties and ConnectionPool.
      *
-     * @param properties     Celesta initialization properties. All the properties regarding db connection will be ignored,
-     *                       but {@code rdbms.connection.url} is still required in order for
+     * @param properties     Celesta initialization properties. All the properties regarding db connection
+     *                       will be ignored, but {@code rdbms.connection.url} is still required in order for
      *                       Celesta to define the database type (you may pass only the
      *                       prefix, e. g. {@code jdbc:postgresql})
      * @param connectionPool Provided connection pool (either {@link DatasourceConnectionPool} or
