@@ -45,6 +45,14 @@ class DatasourceConnectionPoolTest {
     }
 
     @Test
+    void repeatedClose() throws IOException {
+        pool.close();
+        pool.close();
+        assertTrue(pool.isClosed());
+        Mockito.verify((Closeable) ds, times(1)).close();
+    }
+
+    @Test
     void closeFail() throws IOException {
         IOException exception = new IOException();
         Mockito.doThrow(exception).when((Closeable) ds).close();

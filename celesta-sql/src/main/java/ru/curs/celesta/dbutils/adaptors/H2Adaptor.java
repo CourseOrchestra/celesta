@@ -47,7 +47,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
         try (Connection connection = connectionPool.get()) {
             //Выполняем команду включения флага REFERENTIAL_INTEGRITY
-            String sql = "SET REFERENTIAL_INTEGRITY " + String.valueOf(isH2ReferentialIntegrity);
+            String sql = "SET REFERENTIAL_INTEGRITY " + isH2ReferentialIntegrity;
 
             try (Statement stmt = connection.createStatement()) {
                 stmt.execute(sql);
