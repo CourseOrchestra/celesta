@@ -331,6 +331,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     public final void createSchemaIfNotExists(String name) {
         try (Connection conn = connectionPool.get()) {
             createSchemaIfNotExists(conn, name);
+            conn.commit();
         } catch (SQLException e) {
             throw new CelestaException("Cannot create schema. " + e.getMessage());
         }
@@ -425,6 +426,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     public final void dropIndex(Grain g, DbIndexInfo dBIndexInfo) {
         try (Connection conn = connectionPool.get()) { //TODO: Why there is a new Connection instance
             ddlAdaptor.dropIndex(conn, g, dBIndexInfo);
+            conn.commit();
         } catch (CelestaException | SQLException e) {
             throw new CelestaException("Cannot drop index '%s': %s ", dBIndexInfo.getIndexName(), e.getMessage());
         }

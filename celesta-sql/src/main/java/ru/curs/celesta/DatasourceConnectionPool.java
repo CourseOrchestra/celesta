@@ -5,10 +5,11 @@ import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class DatasourceConnectionPool implements ConnectionPool {
     private final DataSource dataSource;
-    private volatile boolean isClosed;
+    private AtomicBoolean isClosed = new AtomicBoolean();
 
     public DatasourceConnectionPool(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -16,11 +17,15 @@ public final class DatasourceConnectionPool implements ConnectionPool {
 
     @Override
     public Connection get() {
+        if (isClosed.get()) {
+            throw new CelestaException("ConnectionPool is closed");
+        }
         try {
             return dataSource.getConnection();
         } catch (SQLException e) {
             CelestaException celestaException =
-                    new CelestaException("Could not connect to %s with error: %s", e.getMessage());
+                    new CelestaException("Could not connect to the database with error: %s",
+                            e.getMessage());
             celestaException.initCause(e);
             throw celestaException;
         }
@@ -33,11 +38,19 @@ public final class DatasourceConnectionPool implements ConnectionPool {
 
     @Override
     public void close() {
-        isClosed = true;
+        if (!isClosed.getAndSet(true)) {
+            if (dataSource instanceof AutoCloseable) {
+                try {
+                    ((AutoCloseable) dataSource).close();
+                } catch (Exception e) {
+                    throw new CelestaException(e);
+                }
+            }
+        }
     }
 
     @Override
     public boolean isClosed() {
-        return isClosed;
+        return isClosed.get();
     }
 }
