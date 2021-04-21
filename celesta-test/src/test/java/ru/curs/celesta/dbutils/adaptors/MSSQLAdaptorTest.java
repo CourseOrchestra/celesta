@@ -36,7 +36,7 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
         cpc.setDriverClassName(appSettings.getDbClassName());
         cpc.setLogin(appSettings.getDBLogin());
         cpc.setPassword(appSettings.getDBPassword());
-        ConnectionPool connectionPool = ConnectionPool.create(cpc);
+        ConnectionPool connectionPool = InternalConnectionPool.create(cpc);
 
         dba = new MSSQLAdaptor(connectionPool, new JdbcDdlConsumer());
 

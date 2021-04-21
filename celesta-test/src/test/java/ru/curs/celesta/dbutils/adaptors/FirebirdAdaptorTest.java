@@ -8,6 +8,7 @@ import ru.curs.celesta.AppSettings;
 import ru.curs.celesta.BaseAppSettings;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.ConnectionPoolConfiguration;
+import ru.curs.celesta.InternalConnectionPool;
 import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
@@ -43,7 +44,7 @@ public class FirebirdAdaptorTest extends AbstractAdaptorTest {
         cpc.setDriverClassName(appSettings.getDbClassName());
         cpc.setLogin(appSettings.getDBLogin());
         cpc.setPassword(appSettings.getDBPassword());
-        ConnectionPool connectionPool = ConnectionPool.create(cpc);
+        ConnectionPool connectionPool = InternalConnectionPool.create(cpc);
 
         dba = new FirebirdAdaptor(connectionPool, new JdbcDdlConsumer());
 

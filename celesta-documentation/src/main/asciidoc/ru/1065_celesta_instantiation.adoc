@@ -1,0 +1,35 @@
+= Создание экземпляра Celesta
+:lang: ru
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+include::en/_common_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::celesta_instantiation[]
+
+== Методы `Celesta.createInstance`
+
+Чтобы начать работать с Celesta, должен быть создан экземпляр класса {apidocs}ru/curs/celesta/Celesta.html[`Celesta`].
+Обычно создаётся всего один объект с типом `Celesta` на всё приложение, поэтому он должен быть сохранён в синглетоне либо управляться фреймворком Spring.
+
+Если вы используете <<quick_start_demo,`spring-boot-starter-celesta`>>, экземпляр `Celesta` создаётся автоматически и доступен как Spring bean. 
+
+Если вы создаёте экземпляр Celesta самостоятельно, вы должны создать  https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html[`Properties`], содержащие <<basic_settings_section,настройки Celesta>>  и затем использовать один из следующих статических методов класса {apidocs}ru/curs/celesta/Celesta.html[`Celesta`]:
+
+`Celesta createInstance(Properties properties)`:: Создаёт Celesta с использованием предоставленных параметров и и собственным пулом соединений.
+
+`Celesta createInstance(Properties properties, DataSource dataSource)`:: Создаёт Celesta с использованием предоставленных параметров и  https://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html[`DataSource`]. Вы можете использовать данный метод если хотите предоставить внешний пул соединений для Celesta.
+
+
+[IMPORTANT]
+--
+* Внешний пул соединений должен быть сконфигурирован так, чтобы возвращать соединения с `autoCommit` установленным в `false`.
+
+* Вам всё ещё необходимо прописать параметр  `rdbms.connection.url`, чтобы Celesta определила тип базы данных, с которой она работает. Но т. к. этот параметр не будет использоваться для того, чтобы подключаться к базе данных, достаточно указать только префикс, например `jdbc:postgresql`, `jdbc:sqlserver` и т. д.
+--
+
+//end::celesta_instantiation[]

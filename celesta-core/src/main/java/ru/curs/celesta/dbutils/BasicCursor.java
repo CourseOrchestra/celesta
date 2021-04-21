@@ -1030,29 +1030,27 @@ public abstract class BasicCursor extends BasicDataAccessor {
     public final void orderBy(String... names) {
 
         ColumnMeta<?>[] columns = new ColumnMeta<?>[names.length];
-        {
-            for (int i = 0; i < names.length; i++) {
-                final String name = names[i];
-
-                Matcher m = COLUMN_NAME.matcher(name);
-                if (!m.matches()) {
-                    throw new CelestaException(
-                            "orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
-                            name);
-                }
-
-                final String colName = m.group(1);
-                final String colOrdering = Optional.ofNullable(m.group(2)).map(String::trim).orElse(null);
-
-                ColumnMeta<?> column = validateColumnName(colName);
-                if ("asc".equalsIgnoreCase(colOrdering)) {
-                    column = column.asc();
-                } else if ("desc".equalsIgnoreCase(colOrdering)) {
-                    column = column.desc();
-                }
-
-                columns[i] = column;
+        for (int i = 0; i < names.length; i++) {
+            final String name = names[i];
+    
+            Matcher m = COLUMN_NAME.matcher(name);
+            if (!m.matches()) {
+                throw new CelestaException(
+                        "orderby() argument '%s' should match pattern <column name> [ASC|DESC]",
+                        name);
             }
+
+            final String colName = m.group(1);
+            final String colOrdering = Optional.ofNullable(m.group(2)).map(String::trim).orElse(null);
+
+            ColumnMeta<?> column = validateColumnName(colName);
+            if ("asc".equalsIgnoreCase(colOrdering)) {
+                column = column.asc();
+            } else if ("desc".equalsIgnoreCase(colOrdering)) {
+                column = column.desc();
+            }
+
+            columns[i] = column;
         }
 
         orderBy(columns);

@@ -14,6 +14,8 @@ include::en/_common_attributes.adoc[]
 
 //tag::demo[]
 
+== Celesta and Spring Boot
+
 Demo project illustrating Celesta capabilities for Spring Boot is available at: https://github.com/inponomarev/celesta-demo/.
 
 To create a Spring Boot project use the following Maven dependencies:
@@ -136,4 +138,50 @@ public class DocumentService {
 ```
 
 Any https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html[method available in Spring Boot] can be used to configure your project's <<basic_settings_section,settings>>, including the https://github.com/inponomarev/celesta-demo/blob/master/src/main/resources/application.yml[application.yml] file.
+
+== Using Celesta with Spring-JDBC
+
+Celesta utilizes its own built-in JDBC connection pool if no other option is provided.
+If you want to configure a specific connection pool, or if you want to utilize the https://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html[`DataSource`] provided by the Spring framework, you can do so. 
+
+In standalone application you can use <<celesta_instantiation,`Celesta.createInstance`>> method providing a `DataSource` in its parameter.
+
+`spring-boot-starter-celesta` will utilize a `DataSorce` when it is provided by Spring.
+
+For example, if you add the following dependency:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jdbc</artifactId>
+</dependency>
+```
+
+and the following configuration parameters to `application.yml`
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://<DATABASE>
+    username: <USER>
+    password: <PWD>
+    hikari:
+      auto-commit: false
+celesta:
+  jdbc:
+    url: jdbc:postgresql
+```
+
+Celesta will run with https://github.com/brettwooldridge/HikariCP[Hikari Connection Pool] provided by Spring. Please note the following:
+
+[IMPORTANT]
+--
+* The connection pool must be configured to return connections with `autoCommit` set to `false`.
+
+* You still have to provide `celesta.jdbc.url` in order for Celesta to determine the type of the database, but since this parameter will not be used for connection to the database, it's enough to provide only the prefix, like `jdbc:postgresql`, `jdbc:sqlserver` etc.
+--
+
+
 //end::demo[] 
+
+

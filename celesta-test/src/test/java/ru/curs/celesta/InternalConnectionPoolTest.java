@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import ru.curs.celesta.dbutils.adaptors.configuration.DbAdaptorFactory;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 
-public class ConnectionPoolTest {
+public class InternalConnectionPoolTest {
 
     private static ConnectionPoolConfiguration cpc;
 
@@ -28,11 +28,11 @@ public class ConnectionPoolTest {
         cpc.setLogin("");
     }
 
-    private ConnectionPool connectionPool;
+    private InternalConnectionPool connectionPool;
 
     @BeforeEach
     public void init() {
-        connectionPool = ConnectionPool.create(cpc);
+        connectionPool = InternalConnectionPool.create(cpc);
 
         DbAdaptorFactory dac = new DbAdaptorFactory()
                 .setDbType(DBType.H2)
@@ -50,7 +50,7 @@ public class ConnectionPoolTest {
             connectionPool.get().createStatement().execute("SHUTDOWN");
             connectionPool.close();
         } else {
-            connectionPool = ConnectionPool.create(cpc);
+            connectionPool = InternalConnectionPool.create(cpc);
             connectionPool.get().createStatement().execute("SHUTDOWN");
             connectionPool.close();
         }

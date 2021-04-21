@@ -127,7 +127,7 @@ public class SchemaAutoupdateTest {
             cpc.setLogin(appSettings.getDBLogin());
             cpc.setPassword(appSettings.getDBPassword());
 
-            connectionPool = ConnectionPool.create(cpc);
+            connectionPool = InternalConnectionPool.create(cpc);
             dba = new H2Adaptor(connectionPool, new JdbcDdlConsumer(), appSettings.isH2ReferentialIntegrity());
         }
 

@@ -65,7 +65,7 @@ public class DbUpdaterTest {
         cpc.setLogin(appSettings.getDBLogin());
         cpc.setPassword(appSettings.getDBPassword());
 
-        this.connectionPool = ConnectionPool.create(cpc);
+        this.connectionPool = InternalConnectionPool.create(cpc);
 
         DBAdaptor dba = new H2Adaptor(this.connectionPool, new JdbcDdlConsumer(), appSettings.isH2ReferentialIntegrity());
 

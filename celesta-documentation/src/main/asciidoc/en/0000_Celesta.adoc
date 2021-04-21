@@ -22,6 +22,7 @@ include::en/1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
 
 === Demo
 
+[[quick_start_demo]]
 include::en/1012_demo.adoc[leveloffset=+2, tag="demo"]
 
 == Part 2. Celesta Technical Details and Setup
@@ -64,6 +65,10 @@ include::en/1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
 include::en/1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
 
 == Part 4. Creating and Testing Data Access and Modification Code
+
+[[celesta_instantiation]]
+=== Creating an Instance of Celesta
+include::en/1065_celesta_instantiation.adoc[leveloffset=+2, tag="celesta_instantiation"]
 
 === Call Context
 

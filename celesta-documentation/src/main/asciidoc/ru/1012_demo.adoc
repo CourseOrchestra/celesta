@@ -14,6 +14,8 @@ include::ru/_common_attributes.adoc[]
 
 //tag::demo[]
 
+== Celesta и Spring Boot
+
 Тестовый пример, демонстрирующий возможности Celesta в проекте на основе Spring Boot, доступен здесь: https://github.com/inponomarev/celesta-demo/.
 
 Для создания проекта Spring Boot с помощью Maven необходимо указать следующие зависимости:
@@ -136,4 +138,47 @@ public class DocumentService {
 ```
 
 Управление <<basic_settings_section,настройками>> проекта осуществляется любым https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html[доступным для Spring Boot способом], в частности, с помощью файла https://github.com/inponomarev/celesta-demo/blob/master/src/main/resources/application.yml[application.yml].
+
+== Использование Celesta совместно со Spring-JDBC
+
+Celesta использует свой собственный пул соединений JDBC, если не предоставлено иной альтернативы.
+Если вам необходимо использовать какой-либо особенный пул соединений, или если вы желаете использовать  https://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html[`DataSource`], предоставляемый фреймворком Spring, вы также можете это сделать. 
+
+В самостоятельном приложении вы можете использовать метод <<celesta_instantiation,`Celesta.createInstance`>>, подставив `DataSource` в качестве параметра.
+
+`spring-boot-starter-celesta` будет автоматически использовать `DataSorce`, если он предоставлен Spring-ом.
+
+Например, если добавить в проект следующую зависимость:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jdbc</artifactId>
+</dependency>
+```
+
+и прописать следующие аргументы в `application.yml`
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://<DATABASE>
+    username: <USER>
+    password: <PWD>
+    hikari:
+      auto-commit: false
+celesta:
+  jdbc:
+    url: jdbc:postgresql
+```
+
+Celesta запустится с https://github.com/brettwooldridge/HikariCP[Hikari Connection Pool], предоставленным Spring-ом. Обратите внимание на следующее:
+
+[IMPORTANT]
+--
+* Внешний пул соединений должен быть сконфигурирован так, чтобы возвращать соединения с `autoCommit` установленным в `false`.
+
+* Вам всё ещё необходимо прописать параметр `celesta.jdbc.url` для того, чтобы Celesta определила тип базы данных, с которой она работает. Но т. к. этот параметр не будет использоваться для того, чтобы подключаться к базе данных, достаточно указать только префикс, например `jdbc:postgresql`, `jdbc:sqlserver` и т. д.
+--
+
 //end::demo[]
