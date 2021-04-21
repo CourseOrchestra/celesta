@@ -1229,3 +1229,7 @@ sqlserver
 bean
 instantiation
 quick
+Connection
+en
+Pool
+синглетоне
