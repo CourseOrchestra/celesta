@@ -22,6 +22,7 @@ include::ru/1010_what_is_celesta.adoc[leveloffset=+2, tag="intro"]
 
 === Демонстрационный пример
 
+[[quick_start_demo]]
 include::ru/1012_demo.adoc[leveloffset=+2, tag="demo"]
 
 == Часть 2. Технические детали и настройка Celesta
@@ -64,6 +65,10 @@ include::ru/1050_celesta_sql.adoc[leveloffset=+2, tag="celesta_sql"]
 include::ru/1060_celesta_doc.adoc[leveloffset=+2, tag="celesta_doc"]
 
 == Часть 4. Создание и тестирование методов, обращающихся к данным
+
+[[celesta_instantiation]]
+=== Создание экземпляра класса `Celesta`
+include::ru/1065_celesta_instantiation.adoc[leveloffset=+2, tag="celesta_instantiation"]
 
 === Контекст вызова
 

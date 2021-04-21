@@ -1,0 +1,35 @@
+= Creating an Instance of Celesta
+:lang: en
+:is-main-doc:
+include::_doc_general_attributes.adoc[]
+include::en/_common_attributes.adoc[]
+:toclevels: 3
+:doctype: book
+:img: images
+:lupa: icon:search[]
+:source-highlighter: highlightjs
+
+//tag::celesta_instantiation[]
+
+== `Celesta.createInstance` Methods
+
+In order to start working with Celesta, a {apidocs}ru/curs/celesta/Celesta.html[`Celesta`] instance should be created.
+Normally, there must be a single `Celesta` object per application, this is why it must be stored as a singleton or managed by Spring framework.
+
+If you are using <<quick_start_demo,`spring-boot-starter-celesta`>>, the `Celesta` instance is created automatically and is available as a bean. 
+
+If you want to create and instance of Celesta yourself, you should create https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html[`Properties`] holding the <<basic_settings_section,Celesta settings>>  and then  utilize one of the following static methods on {apidocs}ru/curs/celesta/Celesta.html[`Celesta`] class:
+
+`Celesta createInstance(Properties properties)`:: Creates Celesta instance with specified properties and Celesta's own connection pool.
+
+`Celesta createInstance(Properties properties, DataSource dataSource)`:: Creates Celesta instance with specified properties and a https://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html[`DataSource`]. You can use this method if you want to provide a specific connection pool for Celesta.
+
+
+[IMPORTANT]
+--
+* The provided connection pool must be configured to return connections with `autoCommit` set to `false`.
+
+* You still have to provide `rdbms.connection.url` property in order for Celesta to determine the type of the database. Since this parameter will not be used for connection to the database, it's enough to provide only the prefix, like `jdbc:postgresql`, `jdbc:sqlserver` etc.
+--
+
+//end::celesta_instantiation[]
