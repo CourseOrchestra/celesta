@@ -1,5 +1,5 @@
-= Creating an Instance of Celesta
-:lang: en
+= Создание экземпляра Celesta
+:lang: ru
 :is-main-doc:
 include::_doc_general_attributes.adoc[]
 include::en/_common_attributes.adoc[]
@@ -20,7 +20,7 @@ include::en/_common_attributes.adoc[]
 
 Если вы создаёте экземпляр Celesta самостоятельно, вы должны создать  https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html[`Properties`], содержащие <<basic_settings_section,настройки Celesta>>  и затем использовать один из следующих статических методов класса {apidocs}ru/curs/celesta/Celesta.html[`Celesta`]:
 
-`Celesta createInstance(Properties properties)`:: Содаёт Celesta с использованием предоставленных параметров и и собственным пулом соединений.
+`Celesta createInstance(Properties properties)`:: Создаёт Celesta с использованием предоставленных параметров и и собственным пулом соединений.
 
 `Celesta createInstance(Properties properties, DataSource dataSource)`:: Создаёт Celesta с использованием предоставленных параметров и  https://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html[`DataSource`]. Вы можете использовать данный метод если хотите предоставить внешний пул соединений для Celesta.
 

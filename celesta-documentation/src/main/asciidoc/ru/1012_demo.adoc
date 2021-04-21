@@ -142,9 +142,9 @@ public class DocumentService {
 == Использование Celesta совместно со Spring-JDBC
 
 Celesta использует свой собственный пул соединений JDBC, если не предоставлено иной альтернативы.
-Если вам необходимо использовать како-то особенный пул соединений, или если вы желаете использовать  https://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html[`DataSource`], предоставляемый фреймворком Spring, вы также можете это сделать. 
+Если вам необходимо использовать какой-либо особенный пул соединений, или если вы желаете использовать  https://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html[`DataSource`], предоставляемый фреймворком Spring, вы также можете это сделать. 
 
-В самостоятельном приложении вы можете исопльзовать метод <<celesta_instantiation,`Celesta.createInstance`>>, подставив `DataSource` в качестве параметра.
+В самостоятельном приложении вы можете использовать метод <<celesta_instantiation,`Celesta.createInstance`>>, подставив `DataSource` в качестве параметра.
 
 `spring-boot-starter-celesta` будет автоматически использовать `DataSorce`, если он предоставлен Spring-ом.
 
