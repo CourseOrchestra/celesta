@@ -14,7 +14,7 @@ include::ru/_common_attributes.adoc[]
 
 //tag::demo[]
 
-== Celesta и SpringBoot
+== Celesta и Spring Boot
 
 Тестовый пример, демонстрирующий возможности Celesta в проекте на основе Spring Boot, доступен здесь: https://github.com/inponomarev/celesta-demo/.
 

@@ -1217,3 +1217,12 @@ typemapping
 uml
 common
 qry
+autoCommit
+createInstance
+DataSorce
+datasource
+dataSource
+DataSource
+hikari
+PWD
+sqlserver
