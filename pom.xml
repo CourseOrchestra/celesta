@@ -56,7 +56,7 @@
         <version>${project.version}</version>
 
         <!--dependency versions -->
-        <checkstyle.version>8.41.1</checkstyle.version>
+        <checkstyle.version>8.42</checkstyle.version>
         <slf4j.version>1.7.30</slf4j.version>
         <h2.version>1.4.200</h2.version>
         <javacc.version>7.0.10</javacc.version>
