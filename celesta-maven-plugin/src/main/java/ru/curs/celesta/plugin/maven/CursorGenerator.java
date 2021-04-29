@@ -168,7 +168,7 @@ public final class CursorGenerator {
             StringBuilder parseResultOverridingMethodNameBuilder = new StringBuilder("_parseResult");
 
             Set<Column<?>> pk = Collections.emptySet();
-            if ((dge instanceof TableElement) && !(dge instanceof ReadOnlyTable)) {
+            if (dge instanceof TableElement && !(dge instanceof ReadOnlyTable)) {
                 TableElement te = (TableElement) dge;
                 pk = new LinkedHashSet<>(te.getPrimaryKey().values());
                 cursorClass.addMethod(buildCurrentKeyValues(pk));
