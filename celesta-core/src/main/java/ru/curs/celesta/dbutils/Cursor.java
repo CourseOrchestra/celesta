@@ -379,7 +379,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      */
     private static boolean compareValues(Object newVal, Object oldVal) {
         if (newVal == null) {
-            return oldVal == null || (oldVal instanceof BLOB);
+            return oldVal == null || oldVal instanceof BLOB;
         }
         if (newVal instanceof BLOB) {
             return !((BLOB) newVal).isModified();

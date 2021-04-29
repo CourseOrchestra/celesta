@@ -117,7 +117,7 @@ public final class BLOB implements Cloneable {
      * Resets BLOB to {@code NULL}.
      */
     public void setNull() {
-        isModified = isModified || (data != null);
+        isModified = isModified || data != null;
         size = 0;
         data = null;
     }

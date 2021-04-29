@@ -108,7 +108,7 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
      *            in case when an empty array is passed in
      */
     public void setPK(String... columnNames) throws ParseException {
-        if (columnNames == null || (columnNames.length == 0 && !canHaveEmptyPK)) {
+        if (columnNames == null || columnNames.length == 0 && !canHaveEmptyPK) {
             throw new ParseException(
                     String.format("Primary key for table %s.%s cannot be empty.", getGrain().getName(), getName()));
         }

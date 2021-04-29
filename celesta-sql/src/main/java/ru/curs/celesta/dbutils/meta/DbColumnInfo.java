@@ -160,7 +160,7 @@ public final class DbColumnInfo {
             if (type == DateTimeColumn.class) {
                 //do not forget DateTime's special case
                 DateTimeColumn dtc = (DateTimeColumn) value;
-                return dtc.getDefaultValue() == null && (!dtc.isGetdate());
+                return dtc.getDefaultValue() == null && !dtc.isGetdate();
             } else if (type == IntegerColumn.class) {
                 IntegerColumn ic = (IntegerColumn) value;
                 return ic.getDefaultValue() == null && ic.getSequence() == null;

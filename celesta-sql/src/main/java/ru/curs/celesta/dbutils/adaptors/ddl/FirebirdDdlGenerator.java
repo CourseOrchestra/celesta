@@ -442,7 +442,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         }
 
         // If there's an empty default in data, and non-empty one in metadata then
-        if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate())) {
+        if (c.getDefaultValue() != null || c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate()) {
             sql = String.format(
                     ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
                             + " ALTER COLUMN \"%s\" SET %s",
