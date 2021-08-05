@@ -57,6 +57,7 @@ import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -172,6 +173,8 @@ public final class CursorGenerator {
                 TableElement te = (TableElement) dge;
                 pk = new LinkedHashSet<>(te.getPrimaryKey().values());
                 cursorClass.addMethod(buildCurrentKeyValues(pk));
+                cursorClass.addMethod(buildTryGet(pk));
+                cursorClass.addMethod(buildGet(pk));
                 if (te instanceof Table) {
                     parseResultOverridingMethodNameBuilder.append("Internal");
                 }
@@ -575,6 +578,32 @@ public final class CursorGenerator {
 
         return result;
     }
+
+    private static MethodSpec buildTryGet(Set<Column<?>> pk) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("tryGet")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(TypeName.BOOLEAN);
+        for (Column<?> pkColumn : pk) {
+            builder.addParameter(pkColumn.getJavaClass(), pkColumn.getName());
+        }
+        String pkColumnNames = pk.stream().map(NamedElement::getName).collect(Collectors.joining(", "));
+        builder.addStatement("return tryGetByValuesArray($N)", pkColumnNames);
+        return builder.build();
+    }
+
+    private static MethodSpec buildGet(Set<Column<?>> pk) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("get")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(TypeName.VOID);
+        for (Column<?> pkColumn : pk) {
+            builder.addParameter(pkColumn.getJavaClass(), pkColumn.getName());
+        }
+        String pkColumnNames = pk.stream().map(NamedElement::getName).collect(Collectors.joining(", "));
+        builder.addStatement("getByValuesArray($N)", pkColumnNames);
+        return builder.build();
+    }
+
+
 
     private static MethodSpec buildParseResult(
             Map<String, ? extends ColumnMeta<?>> columns, String methodName, boolean isVersionedObject

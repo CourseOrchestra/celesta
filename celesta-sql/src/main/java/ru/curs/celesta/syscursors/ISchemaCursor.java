@@ -82,7 +82,7 @@ public interface ISchemaCursor {
 
     void update();
 
-    void get(Object... values);
+    void get(String name);
 
     void init();
 

@@ -177,6 +177,14 @@ public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>
         return new Object[] {id};
     }
 
+    public boolean tryGet(Integer id) {
+        return tryGetByValuesArray(id);
+    }
+
+    public void get(Integer id) {
+        getByValuesArray(id);
+    }
+
     @Override
     protected void _parseResultInternal(ResultSet rs) throws SQLException {
         if (this.inRec("id")) {

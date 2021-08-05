@@ -107,6 +107,14 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
         return new Object[] {cost};
     }
 
+    public boolean tryGet(BigDecimal cost) {
+        return tryGetByValuesArray(cost);
+    }
+
+    public void get(BigDecimal cost) {
+        getByValuesArray(cost);
+    }
+
     @Override
     protected void _parseResult(ResultSet rs) throws SQLException {
         if (this.inRec("surrogate_count")) {

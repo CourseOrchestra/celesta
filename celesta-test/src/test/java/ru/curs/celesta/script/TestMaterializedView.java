@@ -276,11 +276,11 @@ public class TestMaterializedView implements ScriptTest {
 
         assertEquals(2, mViewCursor.count());
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(6, getS(mViewCursor));
         assertEquals(4, getC(mViewCursor));
 
-        mViewCursor.get("B");
+        mViewCursor.getByValuesArray("B");
         assertEquals(31, getS(mViewCursor));
         assertEquals(2, getC(mViewCursor));
 
@@ -311,7 +311,7 @@ public class TestMaterializedView implements ScriptTest {
         tableCursor.insert();
         tableCursor.clear();
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(7, getS(mViewCursor));
 
         setNumb(tableCursor, 20);
@@ -338,11 +338,11 @@ public class TestMaterializedView implements ScriptTest {
 
         assertEquals(2, mViewCursor.count());
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(9, getS(mViewCursor));
         assertEquals(2, getC(mViewCursor));
 
-        mViewCursor.get("B");
+        mViewCursor.getByValuesArray("B");
         assertEquals(35, getS(mViewCursor));
         assertEquals(2, getC(mViewCursor));
     }
@@ -361,12 +361,12 @@ public class TestMaterializedView implements ScriptTest {
         tableCursor.insert();
         tableCursor.clear();
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(8, getS(mViewCursor));
 
-        tableCursor.get(old_id);
+        tableCursor.getByValuesArray(old_id);
         tableCursor.delete();
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(2, getS(mViewCursor));
 
         setNumb(tableCursor, 5);
@@ -374,7 +374,7 @@ public class TestMaterializedView implements ScriptTest {
         tableCursor.insert();
         tableCursor.clear();
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(7, getS(mViewCursor));
 
         setNumb(tableCursor, 20);
@@ -394,7 +394,7 @@ public class TestMaterializedView implements ScriptTest {
 
         assertEquals(2, mViewCursor.count());
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(5, getS(mViewCursor));
         assertEquals(1, getC(mViewCursor));
 
@@ -403,7 +403,7 @@ public class TestMaterializedView implements ScriptTest {
         tableCursor.delete();
         tableCursor.clear();
 
-        mViewCursor.get("B");
+        mViewCursor.getByValuesArray("B");
         assertEquals(20, getS(mViewCursor));
         assertEquals(1, getC(mViewCursor));
 

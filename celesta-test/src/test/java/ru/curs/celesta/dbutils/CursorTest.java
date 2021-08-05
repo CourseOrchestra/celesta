@@ -228,6 +228,6 @@ public class CursorTest extends AbstractCelestaTest {
         c.deleteAll();
         assertThrows(CelestaException.class, () -> c.first());
         assertThrows(CelestaException.class, () -> c.last());
-        assertThrows(CelestaException.class, () -> c.get("foo", "bar"));
+        assertThrows(CelestaException.class, () -> c.getByValuesArray("foo", "bar"));
     }
 }
