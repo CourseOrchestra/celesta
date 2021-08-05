@@ -53,8 +53,9 @@ public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<T
         return this.id;
     }
 
-    public void setId(Integer id) {
+    public TestRoTableCursor setId(Integer id) {
         this.id = id;
+        return this;
     }
 
     @Override

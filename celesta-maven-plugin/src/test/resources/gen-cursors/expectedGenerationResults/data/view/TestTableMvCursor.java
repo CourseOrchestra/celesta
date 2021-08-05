@@ -58,24 +58,27 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
         return this.surrogate_count;
     }
 
-    public void setSurrogate_count(Integer surrogate_count) {
+    public TestTableMvCursor setSurrogate_count(Integer surrogate_count) {
         this.surrogate_count = surrogate_count;
+        return this;
     }
 
     public Integer getC() {
         return this.c;
     }
 
-    public void setC(Integer c) {
+    public TestTableMvCursor setC(Integer c) {
         this.c = c;
+        return this;
     }
 
     public BigDecimal getCost() {
         return this.cost;
     }
 
-    public void setCost(BigDecimal cost) {
+    public TestTableMvCursor setCost(BigDecimal cost) {
         this.cost = cost;
+        return this;
     }
 
     @Override

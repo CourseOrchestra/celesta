@@ -36,21 +36,21 @@ public interface ISchemaCursor {
      *
      * @param state  state
      */
-    void setState(Integer state);
+    ISchemaCursor setState(Integer state);
 
     /**
      * Sets checksum to the schema cursor.
      *
      * @param checksum  checksum
      */
-    void setChecksum(String checksum);
+    ISchemaCursor setChecksum(String checksum);
 
     /**
      * Sets length to the schema cursor.
      *
      * @param length  length
      */
-    void setLength(Integer length);
+    ISchemaCursor setLength(Integer length);
 
     /**
      * Returns 'last modified' date of the schema cursor.
@@ -64,21 +64,21 @@ public interface ISchemaCursor {
      *
      * @param lastmodified  'last modified' date
      */
-    void setLastmodified(Date lastmodified);
+    ISchemaCursor setLastmodified(Date lastmodified);
 
     /**
      * Sets message to the schema cursor.
      *
      * @param message  message
      */
-    void setMessage(String message);
+    ISchemaCursor setMessage(String message);
 
     /**
      * Sets version to the schema cursor.
      *
      * @param version  version
      */
-    void setVersion(String version);
+    ISchemaCursor setVersion(String version);
 
     void update();
 
@@ -91,7 +91,7 @@ public interface ISchemaCursor {
      *
      * @param id  ID
      */
-    void setId(String id);
+    ISchemaCursor setId(String id);
 
     /**
      * Returns ID of the schema cursor.

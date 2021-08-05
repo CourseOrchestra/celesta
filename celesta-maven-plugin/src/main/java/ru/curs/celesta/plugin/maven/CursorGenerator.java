@@ -160,7 +160,7 @@ public final class CursorGenerator {
             List<FieldSpec> fieldSpecs = buildDataFields(dge);
             cursorClass.addFields(fieldSpecs);
 
-            cursorClass.addMethods(generateGettersAndSetters(fieldSpecs));
+            cursorClass.addMethods(generateGettersAndSetters(fieldSpecs, classType));
 
             cursorClass.addMethod(buildGetFieldValue());
             cursorClass.addMethod(buildSetFieldValue());
@@ -196,14 +196,14 @@ public final class CursorGenerator {
                 if (t instanceof Table) {
                     cursorClass.addMethods(buildCalcBlobs(columns, className));
                     cursorClass.addMethod(buildSetAutoIncrement(columns));
-                    cursorClass.addMethods(buildTriggerRegistration(className));
+                    cursorClass.addMethods(buildTriggerRegistration(classType));
                 }
                 cursorClass.addTypes(
                         buildOptionFieldsAsInnerStaticClasses(t.getColumns().values()));
             }
 
-            cursorClass.addMethods(buildCompileCopying(ge, className, columns.keySet(), isVersionedGe));
-            cursorClass.addMethod(buildIterator(className));
+            cursorClass.addMethods(buildCompileCopying(ge, classType, columns.keySet(), isVersionedGe));
+            cursorClass.addMethod(buildIterator(classType));
         }
 
         cursorClass.addMethods(buildGrainNameAndObjectName(ge));
@@ -550,7 +550,7 @@ public final class CursorGenerator {
 
     }
 
-    private static List<MethodSpec> generateGettersAndSetters(List<FieldSpec> fieldSpecs) {
+    private static List<MethodSpec> generateGettersAndSetters(List<FieldSpec> fieldSpecs, TypeName selfTypeName) {
         List<MethodSpec> result = new ArrayList<>();
 
         fieldSpecs.forEach(
@@ -567,8 +567,10 @@ public final class CursorGenerator {
                             .addStatement("return this.$N", fieldSpec.name).build();
                     MethodSpec setter = MethodSpec.methodBuilder("set" + methodSuffix)
                             .addModifiers(Modifier.PUBLIC)
+                            .returns(selfTypeName)
                             .addParameter(fieldSpec.type, fieldSpec.name)
-                            .addStatement("this.$N = $N", fieldSpec.name, fieldSpec.name).build();
+                            .addStatement("this.$N = $N", fieldSpec.name, fieldSpec.name)
+                            .addStatement("return this").build();
 
                     result.add(getter);
                     result.add(setter);
@@ -592,8 +594,7 @@ public final class CursorGenerator {
 
     private static MethodSpec buildGet(Set<Column<?>> pk) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("get")
-                .addModifiers(Modifier.PUBLIC)
-                .returns(TypeName.VOID);
+                .addModifiers(Modifier.PUBLIC);
         for (Column<?> pkColumn : pk) {
             builder.addParameter(pkColumn.getJavaClass(), pkColumn.getName());
         }
@@ -777,8 +778,7 @@ public final class CursorGenerator {
         return builder.build();
     }
 
-    private static List<MethodSpec> buildTriggerRegistration(String className) {
-        TypeName selfTypeName = ClassName.bestGuess(className);
+    private static List<MethodSpec> buildTriggerRegistration(TypeName selfTypeName) {
 
         ParameterSpec celestaParam = ParameterSpec.builder(
                 ICelesta.class, "celesta")
@@ -807,7 +807,7 @@ public final class CursorGenerator {
     }
 
     private static List<MethodSpec> buildCompileCopying(
-            GrainElement ge, String className, Collection<String> columns, boolean isVersionedObject
+            GrainElement ge, TypeName selfTypeName, Collection<String> columns, boolean isVersionedObject
     ) {
         final String copyFieldsFromMethodName = "copyFieldsFrom";
 
@@ -815,8 +815,6 @@ public final class CursorGenerator {
         final ParameterSpec fields = ParameterSpec.builder(
                 ParameterizedTypeName.get(List.class, String.class), "fields"
         ).build();
-
-        TypeName selfTypeName = ClassName.bestGuess(className);
 
         MethodSpec.Builder getBufferCopyBuilder = MethodSpec.methodBuilder("_getBufferCopy")
                 .addModifiers(Modifier.PUBLIC)
@@ -872,9 +870,7 @@ public final class CursorGenerator {
         return Arrays.asList(getBufferCopy, copyFieldsFromBuilder.build());
     }
 
-    private static MethodSpec buildIterator(String className) {
-        TypeName selfTypeName = ClassName.bestGuess(className);
-
+    private static MethodSpec buildIterator(TypeName selfTypeName) {
         TypeName iteratorTypeName = ParameterizedTypeName.get(ClassName.get(Iterator.class), selfTypeName);
         TypeName cursorIterator = ParameterizedTypeName.get(ClassName.get(CursorIterator.class), selfTypeName);
 

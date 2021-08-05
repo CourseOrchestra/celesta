@@ -71,8 +71,9 @@ public class TestTablePvCursor extends ParameterizedViewCursor implements Iterab
         return this.s;
     }
 
-    public void setS(Integer s) {
+    public TestTablePvCursor setS(Integer s) {
         this.s = s;
+        return this;
     }
 
     @Override

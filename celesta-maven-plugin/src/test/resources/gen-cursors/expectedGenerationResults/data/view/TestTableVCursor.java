@@ -60,15 +60,17 @@ public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVC
         return this.id;
     }
 
-    public void setId(Integer id) {
+    public TestTableVCursor setId(Integer id) {
         this.id = id;
+        return this;
     }
 
     public ZonedDateTime getToDelete() {
         return this.toDelete;
     }
-    public void setToDelete(ZonedDateTime toDelete) {
+    public TestTableVCursor setToDelete(ZonedDateTime toDelete) {
         this.toDelete = toDelete;
+        return this;
     }
 
     @Override
