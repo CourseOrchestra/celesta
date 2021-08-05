@@ -28,7 +28,7 @@ import ru.curs.celesta.score.View;
         date = "2021-04-15T02:06:38.885"
 )
 @CelestaGenerated
-public final class TestTableVCursor extends ViewCursor implements Iterable<TestTableVCursor> {
+public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVCursor> {
     private static final String GRAIN_NAME = "test";
 
     private static final String OBJECT_NAME = "testTableV";
@@ -60,15 +60,17 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
         return this.id;
     }
 
-    public void setId(Integer id) {
+    public TestTableVCursor setId(Integer id) {
         this.id = id;
+        return this;
     }
 
     public ZonedDateTime getToDelete() {
         return this.toDelete;
     }
-    public void setToDelete(ZonedDateTime toDelete) {
+    public TestTableVCursor setToDelete(ZonedDateTime toDelete) {
         this.toDelete = toDelete;
+        return this;
     }
 
     @Override

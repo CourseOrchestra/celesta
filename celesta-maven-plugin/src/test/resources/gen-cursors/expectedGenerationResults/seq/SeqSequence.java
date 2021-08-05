@@ -10,7 +10,7 @@ import ru.curs.celesta.dbutils.Sequence;
         date = "2020-02-25T10:50:49"
 )
 @CelestaGenerated
-public final class SeqSequence extends Sequence {
+public class SeqSequence extends Sequence {
 
     private static final String GRAIN_NAME = "test";
     private static final String OBJECT_NAME = "seq";

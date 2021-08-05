@@ -24,7 +24,7 @@ import ru.curs.celesta.score.MaterializedView;
         date = "2021-04-15T02:06:38.892"
 )
 @CelestaGenerated
-public final class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
+public class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
     private static final String GRAIN_NAME = "test";
 
     private static final String OBJECT_NAME = "testTableMv";
@@ -58,24 +58,27 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
         return this.surrogate_count;
     }
 
-    public void setSurrogate_count(Integer surrogate_count) {
+    public TestTableMvCursor setSurrogate_count(Integer surrogate_count) {
         this.surrogate_count = surrogate_count;
+        return this;
     }
 
     public Integer getC() {
         return this.c;
     }
 
-    public void setC(Integer c) {
+    public TestTableMvCursor setC(Integer c) {
         this.c = c;
+        return this;
     }
 
     public BigDecimal getCost() {
         return this.cost;
     }
 
-    public void setCost(BigDecimal cost) {
+    public TestTableMvCursor setCost(BigDecimal cost) {
         this.cost = cost;
+        return this;
     }
 
     @Override
@@ -105,6 +108,14 @@ public final class TestTableMvCursor extends MaterializedViewCursor implements I
     @Override
     protected Object[] _currentKeyValues() {
         return new Object[] {cost};
+    }
+
+    public boolean tryGet(BigDecimal cost) {
+        return tryGetByValuesArray(cost);
+    }
+
+    public void get(BigDecimal cost) {
+        getByValuesArray(cost);
     }
 
     @Override

@@ -81,20 +81,20 @@ public final class DbUpdaterImpl extends DbUpdater<CallContext> {
     private void initSecurity(CallContext context) {
         RolesCursor roles = new RolesCursor(context);
         roles.clear();
-        roles.setId("editor");
-        roles.setDescription("full read-write access");
-        roles.tryInsert();
+        roles.setId("editor")
+                .setDescription("full read-write access")
+                .tryInsert();
 
         roles.clear();
-        roles.setId("reader");
-        roles.setDescription("full read-only access");
-        roles.tryInsert();
+        roles.setId("reader")
+                .setDescription("full read-only access")
+                .tryInsert();
 
         UserrolesCursor userRoles = new UserrolesCursor(context);
         userRoles.clear();
-        userRoles.setRoleid("editor");
-        userRoles.setUserid("super");
-        userRoles.tryInsert();
+        userRoles.setRoleid("editor")
+                .setUserid("super")
+                .tryInsert();
     }
 
     @Override

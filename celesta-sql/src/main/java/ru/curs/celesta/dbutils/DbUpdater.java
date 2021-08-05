@@ -164,14 +164,14 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     private void insertGrainRec(Grain g) {
         schemaCursor.init();
-        schemaCursor.setId(g.getName());
-        schemaCursor.setVersion(g.getVersion().toString());
-        schemaCursor.setLength(g.getLength());
-        schemaCursor.setChecksum(String.format("%08X", g.getChecksum()));
-        schemaCursor.setState(ISchemaCursor.RECOVER);
-        schemaCursor.setLastmodified(new Date());
-        schemaCursor.setMessage("");
-        schemaCursor.insert();
+        schemaCursor.setId(g.getName())
+                .setVersion(g.getVersion().toString())
+                .setLength(g.getLength())
+                .setChecksum(String.format("%08X", g.getChecksum()))
+                .setState(ISchemaCursor.RECOVER)
+                .setLastmodified(new Date())
+                .setMessage("")
+                .insert();
     }
 
     private boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) {

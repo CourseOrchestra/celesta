@@ -1,6 +1,7 @@
 package ru.curs.celesta.plugin.maven;
 
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
 
 @Mojo(
         name = "gen-test-cursors",
