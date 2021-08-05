@@ -1233,3 +1233,4 @@ Connection
 en
 Pool
 синглетоне
+tryGetCurrent

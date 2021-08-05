@@ -386,3 +386,4 @@ hikari
 instantiation
 PWD
 sqlserver
+tryGetCurrent
