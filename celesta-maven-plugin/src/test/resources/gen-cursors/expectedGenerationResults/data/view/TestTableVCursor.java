@@ -28,7 +28,7 @@ import ru.curs.celesta.score.View;
         date = "2021-04-15T02:06:38.885"
 )
 @CelestaGenerated
-public final class TestTableVCursor extends ViewCursor implements Iterable<TestTableVCursor> {
+public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVCursor> {
     private static final String GRAIN_NAME = "test";
 
     private static final String OBJECT_NAME = "testTableV";

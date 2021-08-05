@@ -260,7 +260,7 @@ public final class CursorGenerator {
 
     private static TypeSpec.Builder buildClassDefinition(GrainElement ge, ClassName classType) {
         TypeSpec.Builder builder = TypeSpec.classBuilder(classType)
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addModifiers(Modifier.PUBLIC)
                 .superclass(GRAIN_ELEMENTS_TO_DATA_ACCESSORS.get(ge.getClass()).apply(ge))
                 .addAnnotation(buildGeneratedAnnotation())
                 .addAnnotation(AnnotationSpec.builder(CelestaGenerated.class).build());

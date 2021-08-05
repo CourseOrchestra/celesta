@@ -23,7 +23,7 @@ import ru.curs.celesta.score.ReadOnlyTable;
         date = "2021-04-15T01:58:49.662"
 )
 @CelestaGenerated
-public final class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<TestRoTableCursor> {
+public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<TestRoTableCursor> {
     private static final String GRAIN_NAME = "test";
 
     private static final String OBJECT_NAME = "testRoTable";

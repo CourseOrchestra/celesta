@@ -34,7 +34,7 @@ import ru.curs.celesta.score.Table;
         date = "2021-04-15T01:58:49.563"
 )
 @CelestaGenerated
-public final class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
+public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
     private static final String GRAIN_NAME = "test";
 
     private static final String OBJECT_NAME = "testTable";

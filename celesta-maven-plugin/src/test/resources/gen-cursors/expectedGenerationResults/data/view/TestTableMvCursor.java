@@ -24,7 +24,7 @@ import ru.curs.celesta.score.MaterializedView;
         date = "2021-04-15T02:06:38.892"
 )
 @CelestaGenerated
-public final class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
+public class TestTableMvCursor extends MaterializedViewCursor implements Iterable<TestTableMvCursor> {
     private static final String GRAIN_NAME = "test";
 
     private static final String OBJECT_NAME = "testTableMv";
