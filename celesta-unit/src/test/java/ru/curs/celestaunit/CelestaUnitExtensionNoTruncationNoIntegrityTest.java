@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import ru.curs.celesta.CallContext;
 import s1.HeaderCursor;
 import s1.LineCursor;
+import s1.Seq1Sequence;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -15,13 +16,15 @@ public class CelestaUnitExtensionNoTruncationNoIntegrityTest {
     @RegisterExtension
     static CelestaUnitExtension ext = CelestaUnitExtension.builder()
                     .withReferentialIntegrity(false)
-                    .withTruncateAfterEach(false)
+                    .withTruncateTables(false)
+                    .withResetSequences(false)
                     .build();
 
     @Test
     void extensionInitializedWithCorrectValues() {
         assertFalse(ext.isReferentialIntegrity());
-        assertFalse(ext.isTruncateAfterEach());
+        assertFalse(ext.isTruncateTables());
+        assertFalse(ext.isResetSequences());
     }
 
     @Test
@@ -50,4 +53,18 @@ public class CelestaUnitExtensionNoTruncationNoIntegrityTest {
         }
     }
 
+    @Test
+    @DisplayName("When resetSequences is on, and you get a value from sequence...")
+    public void sequencesReset1(CallContext ctx){
+        Seq1Sequence sequence = new Seq1Sequence(ctx);
+        assertEquals(1, sequence.nextValue());
+    }
+
+
+    @Test
+    @DisplayName("...this value persists in the following test")
+    public void sequencesReset2(CallContext ctx){
+        Seq1Sequence sequence = new Seq1Sequence(ctx);
+        assertEquals(2, sequence.nextValue());
+    }
 }
