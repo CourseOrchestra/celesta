@@ -1234,3 +1234,9 @@ en
 Pool
 синглетоне
 tryGetCurrent
+BeforeEach
+referentialIntegrity
+resetSequences
+scorePath
+setUp
+truncateTables
