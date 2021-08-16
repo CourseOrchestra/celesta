@@ -80,17 +80,15 @@ CelestaUnit has the following defaults:
 * table clearing before each test is enabled;
 * sequence resetting before each test is enabled.
 
-Defaults can be changed by using a JUnit5 {apidocs}ru/curs/celestaunit/CelestaUnitExtension.html[`CelestaUnitExtension`] extension https://junit.org/junit5/docs/current/user-guide/#extensions-registration-programmatic[programmatic registration] in a test class:
+Defaults can be changed by using {apidocs}ru/curs/celestaunit/CelestaTest.html[`@CelestaTest`] annotation parameters:
 
 ```java
+@CelestaTest(scorePath = DocumentServiceTest.SCORE_PATH,
+    referentialIntegrity = true,
+    truncateTables = false,
+    resetSequences = false)
 public class DocumentServiceTest {
     public static final String SCORE_PATH = "src/test/resources/score";
-    @RegisterExtension
-    static CelestaUnitExtension ext =
-            CelestaUnitExtension.builder()
-                    .withScorePath(SCORE_PATH)
-                    .withReferentialIntegrity(true)
-                    .withTruncateTables(false).build();
 ```
 
 In some cases it might help to disable reference integrity check to simplify adding test data to tables linked by foreign keys to other tables.

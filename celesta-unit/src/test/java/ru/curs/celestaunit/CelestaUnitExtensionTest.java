@@ -20,18 +20,20 @@ public class CelestaUnitExtensionTest {
 
     @Test
     public void extensionInitializedWithCorrectValues() {
-        assertTrue(ext.isReferentialIntegrity());
-        assertTrue(ext.isTruncateTables());
-        assertTrue(ext.isResetSequences());
+        CelestaUnitExtension.Parameters extParameters = ext.getParameters();
+        assertTrue(extParameters.referentialIntegrity);
+        assertTrue(extParameters.truncateTables);
+        assertTrue(extParameters.resetSequences);
     }
 
     @Test
     public void defaultValuesAreCorrect() {
         CelestaUnitExtension ext = new CelestaUnitExtension();
-        assertEquals(CelestaUnitExtension.DEFAULT_SCORE, ext.getScorePath());
-        assertTrue(ext.isReferentialIntegrity());
-        assertTrue(ext.isTruncateTables());
-        assertTrue(ext.isResetSequences());
+        CelestaUnitExtension.Parameters extParameters = ext.getParameters();
+        assertEquals(CelestaUnitExtension.DEFAULT_SCORE, extParameters.scorePath);
+        assertTrue(extParameters.referentialIntegrity);
+        assertTrue(extParameters.truncateTables);
+        assertTrue(extParameters.resetSequences);
     }
 
     @Test

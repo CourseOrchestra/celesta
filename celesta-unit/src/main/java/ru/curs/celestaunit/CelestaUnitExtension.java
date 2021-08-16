@@ -38,36 +38,40 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
                     }
             ).collect(Collectors.joining(File.pathSeparator));
 
-    private final String scorePath;
-    private final boolean referentialIntegrity;
-    private final boolean truncateTables;
-    private final boolean resetSequences;
+    private final Parameters parameters;
     private final Namespace namespace;
 
-    private Celesta celesta;
-
     public CelestaUnitExtension() {
-        this(builder());
+        this(new Parameters(builder()));
     }
 
-    private CelestaUnitExtension(Builder builder) {
-        scorePath = builder.builderScorePath;
-        referentialIntegrity = builder.builderReferentialIntegrity;
-        truncateTables = builder.builderTruncateTables;
-        resetSequences = builder.builderResetSequences;
+    private CelestaUnitExtension(Parameters parameters) {
+        this.parameters = parameters;
         namespace = Namespace.create(this);
     }
 
     /**
      * Returns builder for CelestaUnitExtension instance, allowing
      * to override default settings.
+     *
+     * @deprecated Use {@link CelestaTest} annotation parameters instead.
      */
+    @Deprecated
     public static Builder builder() {
         return new Builder();
     }
 
+    private Celesta celesta(ExtensionContext extensionContext) {
+        return extensionContext.getStore(namespace).get(Celesta.class, Celesta.class);
+    }
+
+    Parameters getParameters() {
+        return parameters;
+    }
+
     @Override
     public void afterAll(ExtensionContext extensionContext) {
+        Celesta celesta = celesta(extensionContext);
         try {
             try (Statement statement = celesta.getConnectionPool().get().createStatement()) {
                 statement.execute("SHUTDOWN");
@@ -81,13 +85,14 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
         Properties params = new Properties();
-        params.setProperty("score.path", scorePath);
+        params.setProperty("score.path", parameters.getScorePath(extensionContext));
         params.setProperty("h2.in-memory", "true");
-        celesta = Celesta.createInstance(params);
+        Celesta celesta = Celesta.createInstance(params);
         assertSame(celesta.getSetupProperties(), params);
+        extensionContext.getStore(namespace).put(Celesta.class, celesta);
         try (Connection conn = celesta.getConnectionPool().get();
              Statement stmt = conn.createStatement()) {
-            stmt.execute("SET REFERENTIAL_INTEGRITY " + referentialIntegrity);
+            stmt.execute("SET REFERENTIAL_INTEGRITY " + parameters.isReferentialIntegrity(extensionContext));
         } catch (SQLException e) {
             throw new CelestaException(e);
         }
@@ -102,16 +107,18 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
         return extensionContext.getStore(namespace)
                 .getOrComputeIfAbsent(extensionContext.getUniqueId(),
-                        k -> new SystemCallContext(celesta, extensionContext.getDisplayName()), CallContext.class);
+                        k -> new SystemCallContext(celesta(extensionContext),
+                                extensionContext.getDisplayName()), CallContext.class);
     }
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-        if (truncateTables) {
-            truncateTables();
+        Celesta celesta = celesta(extensionContext);
+        if (parameters.isTruncateTables(extensionContext)) {
+            truncateTables(celesta, parameters.isReferentialIntegrity(extensionContext));
         }
-        if (resetSequences) {
-            resetSequences();
+        if (parameters.isResetSequences(extensionContext)) {
+            resetSequences(celesta);
         }
     }
 
@@ -125,7 +132,8 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
         }
     }
 
-    private void truncateTables() {
+    private void truncateTables(Celesta celesta, boolean referentialIntegrity) {
+
         try (Connection conn = celesta.getConnectionPool().get();
              Statement stmt = conn.createStatement()) {
             if (referentialIntegrity) {
@@ -149,7 +157,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
         }
     }
 
-    private void resetSequences() {
+    private void resetSequences(Celesta celesta) {
         try (Connection conn = celesta.getConnectionPool().get();
              Statement stmt = conn.createStatement()) {
             for (Grain grain : celesta.getScore().getGrains().values()) {
@@ -163,32 +171,54 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
         }
     }
 
-    /**
-     * Score path.
-     */
-    String getScorePath() {
-        return scorePath;
-    }
+    static final class Parameters {
+        final String scorePath;
+        final boolean referentialIntegrity;
+        final boolean truncateTables;
+        final boolean resetSequences;
 
-    /**
-     * Is referential integrity check set on H2.
-     */
-    boolean isReferentialIntegrity() {
-        return referentialIntegrity;
-    }
+        Parameters(Builder builder) {
+            scorePath = builder.builderScorePath;
+            referentialIntegrity = builder.builderReferentialIntegrity;
+            truncateTables = builder.builderTruncateTables;
+            resetSequences = builder.builderResetSequences;
+        }
 
-    /**
-     * Is every table truncated before each test.
-     */
-    boolean isTruncateTables() {
-        return truncateTables;
-    }
+        String getScorePath(ExtensionContext extensionContext) {
+            CelestaTest annotation = extensionContext.getRequiredTestClass().getAnnotation(CelestaTest.class);
+            if (!(annotation == null || annotation.scorePath().isEmpty())) {
+                return annotation.scorePath();
+            } else {
+                return scorePath;
+            }
+        }
 
-    /**
-     * Is every sequence reset before each test.
-     */
-    public boolean isResetSequences() {
-        return resetSequences;
+        boolean isReferentialIntegrity(ExtensionContext extensionContext) {
+            CelestaTest annotation = extensionContext.getRequiredTestClass().getAnnotation(CelestaTest.class);
+            if (annotation != null) {
+                return annotation.referentialIntegrity();
+            } else {
+                return referentialIntegrity;
+            }
+        }
+
+        boolean isTruncateTables(ExtensionContext extensionContext) {
+            CelestaTest annotation = extensionContext.getRequiredTestClass().getAnnotation(CelestaTest.class);
+            if (annotation != null) {
+                return annotation.truncateTables();
+            } else {
+                return truncateTables;
+            }
+        }
+
+        boolean isResetSequences(ExtensionContext extensionContext) {
+            CelestaTest annotation = extensionContext.getRequiredTestClass().getAnnotation(CelestaTest.class);
+            if (annotation != null) {
+                return annotation.truncateTables();
+            } else {
+                return resetSequences;
+            }
+        }
     }
 
     /**
@@ -248,7 +278,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
          * Generates CelestaUnitExtension with given parameters.
          */
         public CelestaUnitExtension build() {
-            return new CelestaUnitExtension(this);
+            return new CelestaUnitExtension(new Parameters(this));
         }
     }
 

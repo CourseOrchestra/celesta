@@ -8,8 +8,8 @@ import s1.HeaderCursor;
 import s1.LineCursor;
 import s1.Seq1Sequence;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CelestaUnitExtensionNoTruncationNoIntegrityTest {
 
@@ -22,9 +22,10 @@ public class CelestaUnitExtensionNoTruncationNoIntegrityTest {
 
     @Test
     void extensionInitializedWithCorrectValues() {
-        assertFalse(ext.isReferentialIntegrity());
-        assertFalse(ext.isTruncateTables());
-        assertFalse(ext.isResetSequences());
+        CelestaUnitExtension.Parameters extParameters = ext.getParameters();
+        assertFalse(extParameters.referentialIntegrity);
+        assertFalse(extParameters.truncateTables);
+        assertFalse(extParameters.resetSequences);
     }
 
     @Test
