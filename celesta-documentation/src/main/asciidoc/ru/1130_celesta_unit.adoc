@@ -49,6 +49,12 @@ public class DocumentServiceTest {
 
     DocumentService srv = new DocumentService();
 
+    @BeforeEach
+    void setUp(CallContext context) {
+        //Здесь можно наполнить базу данными, нужными для каждого теста
+    }
+
+
     @Test
     /*Параметр CallContext будет подставлен автоматически,
     на основе временной базы данных H2*/
@@ -65,6 +71,7 @@ public class DocumentServiceTest {
 
 Таким образом, каждый из тестов может получать в качестве параметра активный `CallContext`.
 Этот контекст формируется на основе базы данных H2, в которой развёрнута Celesta score, и может быть использован для создания курсоров.
+Если используются `@BeforeEach`-методы, вызываемые перед каждым тестом, то в них будет передаваться тот же `CallContext`, что и в тестовый метод.
 
 == Изменение настроек CelestaUnit по умолчанию
 
@@ -72,7 +79,8 @@ CelestaUnit работает со следующими умолчаниями:
 
 * Score path: `src/main/resources/score`.
 * Проверка ссылочной целостности (по Foreign keys) по умолчанию включена.
-* Очистка таблиц после каждого теста по умолчанию включена.
+* Очистка таблиц перед каждым тестом по умолчанию включена.
+* Сброс значений sequence-ов перед каждым тестом по умолчанию включен.
 
 Изменить умолчания можно, воспользовавшись в тестовом классе https://junit.org/junit5/docs/current/user-guide/#extensions-registration-programmatic[программной регистрацией] расширения {apidocs}ru/curs/celestaunit/CelestaUnitExtension.html[`CelestaUnitExtension`] в JUnit5:
 
@@ -84,7 +92,7 @@ public class DocumentServiceTest {
             CelestaUnitExtension.builder()
                     .withScorePath(SCORE_PATH)
                     .withReferentialIntegrity(true)
-                    .withTruncateAfterEach(false).build();
+                    .withTruncateTables(false).build();
 ```
 
 Например, в ряде случаев бывает полезно отключить проверку ссылочной целостности, что упрощает добавление тестовых данных в таблицы, связанные внешними ключами с другими таблицами.
