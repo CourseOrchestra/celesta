@@ -221,7 +221,7 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
         boolean isResetSequences(ExtensionContext extensionContext) {
             CelestaTest annotation = extensionContext.getRequiredTestClass().getAnnotation(CelestaTest.class);
             if (annotation != null) {
-                return annotation.truncateTables();
+                return annotation.resetSequences();
             } else {
                 return resetSequences;
             }
