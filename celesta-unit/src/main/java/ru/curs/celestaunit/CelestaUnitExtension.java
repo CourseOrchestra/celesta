@@ -1,7 +1,13 @@
 package ru.curs.celestaunit;
 
-import org.junit.jupiter.api.extension.*;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
@@ -162,7 +168,8 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
              Statement stmt = conn.createStatement()) {
             for (Grain grain : celesta.getScore().getGrains().values()) {
                 for (String seqName : grain.getElements(SequenceElement.class).keySet()) {
-                    stmt.execute(String.format("ALTER SEQUENCE \"%s\".\"%s\" RESTART WITH 1", grain.getName(), seqName));
+                    stmt.execute(String.format("ALTER SEQUENCE \"%s\".\"%s\" RESTART WITH 1",
+                            grain.getName(), seqName));
                     conn.commit();
                 }
             }
