@@ -4,7 +4,7 @@
 
     <groupId>ru.curs</groupId>
     <artifactId>celesta-parent</artifactId>
-    <version>7.4.1-SNAPSHOT</version>
+    <version>7.4.1</version>
     <name>celesta-parent</name>
     <description>celesta - LGPL platform for business logic development</description>
     <packaging>pom</packaging>
