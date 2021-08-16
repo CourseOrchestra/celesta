@@ -100,10 +100,9 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
-        CallContext ctx = new SystemCallContext(celesta, extensionContext.getDisplayName());
-        extensionContext.getStore(namespace)
-                .put(extensionContext.getUniqueId(), ctx);
-        return ctx;
+        return extensionContext.getStore(namespace)
+                .getOrComputeIfAbsent(extensionContext.getUniqueId(),
+                        k -> new SystemCallContext(celesta, extensionContext.getDisplayName()), CallContext.class);
     }
 
     @Override
