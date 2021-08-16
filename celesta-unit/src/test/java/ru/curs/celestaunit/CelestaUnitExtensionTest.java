@@ -7,6 +7,7 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import s1.HeaderCursor;
 import s1.LineCursor;
+import s1.Seq1Sequence;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,16 +20,20 @@ public class CelestaUnitExtensionTest {
 
     @Test
     public void extensionInitializedWithCorrectValues() {
-        assertTrue(ext.isReferentialIntegrity());
-        assertTrue(ext.isTruncateAfterEach());
+        CelestaUnitExtension.Parameters extParameters = ext.getParameters();
+        assertTrue(extParameters.referentialIntegrity);
+        assertTrue(extParameters.truncateTables);
+        assertTrue(extParameters.resetSequences);
     }
 
     @Test
     public void defaultValuesAreCorrect() {
         CelestaUnitExtension ext = new CelestaUnitExtension();
-        assertEquals(CelestaUnitExtension.DEFAULT_SCORE, ext.getScorePath());
-        assertTrue(ext.isReferentialIntegrity());
-        assertTrue(ext.isTruncateAfterEach());
+        CelestaUnitExtension.Parameters extParameters = ext.getParameters();
+        assertEquals(CelestaUnitExtension.DEFAULT_SCORE, extParameters.scorePath);
+        assertTrue(extParameters.referentialIntegrity);
+        assertTrue(extParameters.truncateTables);
+        assertTrue(extParameters.resetSequences);
     }
 
     @Test
@@ -45,7 +50,7 @@ public class CelestaUnitExtensionTest {
     }
 
     @Test
-    @DisplayName("When truncateAfterEach is on, and you fill the tables in a test...")
+    @DisplayName("When truncateTables is on, and you fill the tables in a test...")
     public void tablesTruncated1(CallContext ctx) {
         fillTwoTables(ctx);
     }
@@ -59,6 +64,21 @@ public class CelestaUnitExtensionTest {
             assertEquals(0, hc.count());
             assertEquals(0, lc.count());
         }
+    }
+
+    @Test
+    @DisplayName("When resetSequences is on, and you get a value from sequence...")
+    public void sequencesReset1(CallContext ctx){
+        Seq1Sequence sequence = new Seq1Sequence(ctx);
+        assertEquals(1, sequence.nextValue());
+    }
+
+
+    @Test
+    @DisplayName("...this value resets in the following test")
+    public void sequencesReset2(CallContext ctx){
+        Seq1Sequence sequence = new Seq1Sequence(ctx);
+        assertEquals(1, sequence.nextValue());
     }
 
     public static void fillTwoTables(CallContext ctx) {

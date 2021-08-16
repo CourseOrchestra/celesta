@@ -9,3 +9,5 @@ create table line (
   header_id int not null foreign key references header(id),
   CONSTRAINT pk_line PRIMARY KEY (id, header_id)
 );
+
+create sequence seq1;

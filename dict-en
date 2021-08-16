@@ -387,3 +387,9 @@ instantiation
 PWD
 sqlserver
 tryGetCurrent
+BeforeEach
+referentialIntegrity
+resetSequences
+scorePath
+setUp
+truncateTables
