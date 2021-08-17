@@ -212,6 +212,11 @@ public final class MsSqlDdlGenerator extends DdlGenerator {
             protected String paramLiteral(String paramName) {
                 return "@" + paramName;
             }
+
+            @Override
+            protected String substring(String arg, String from, String len) {
+                return String.format("SUBSTRING(%s, %s, %s)", arg, from, len);
+            }
         };
     }
 

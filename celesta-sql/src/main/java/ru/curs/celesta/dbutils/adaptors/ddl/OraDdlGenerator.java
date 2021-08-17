@@ -573,6 +573,11 @@ public final class OraDdlGenerator extends DdlGenerator {
             protected String getDate() {
                 return "CURRENT_TIMESTAMP";
             }
+
+            @Override
+            protected String substring(String arg, String from, String len) {
+                return String.format("SUBSTR(%s, %s, %s)", arg, from, len);
+            }
         };
     }
 

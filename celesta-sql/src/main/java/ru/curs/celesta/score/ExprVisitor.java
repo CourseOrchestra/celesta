@@ -78,6 +78,8 @@ public abstract class ExprVisitor {
   void visitLower(Lower expr) throws ParseException {
   }
 
+  void visitSubstr(Substr substr) throws ParseException {
+  }
 }
 
 /**
@@ -258,5 +260,12 @@ final class TypeChecker extends ExprVisitor {
   @Override
   void visitLower(Lower expr) throws ParseException {
     expr.getArg().assertType(ViewColumnType.TEXT);
+  }
+
+  @Override
+  void visitSubstr(Substr expr) throws ParseException {
+    expr.getArg().assertType(ViewColumnType.TEXT);
+    expr.getFrom().assertType(ViewColumnType.INT);
+    expr.getLen().assertType(ViewColumnType.INT);
   }
 }

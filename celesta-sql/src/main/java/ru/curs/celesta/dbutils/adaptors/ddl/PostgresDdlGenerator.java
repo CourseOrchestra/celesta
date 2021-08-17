@@ -218,6 +218,12 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
             protected String getDate() {
                 return "CURRENT_TIMESTAMP";
             }
+
+            @Override
+            protected String substring(String arg, String from, String len) {
+                return String.format("SUBSTRING(%s FROM CASE WHEN %s > 0 THEN %s ELSE 1 END FOR %s)",
+                        arg, from, from, len);
+            }
         };
     }
 

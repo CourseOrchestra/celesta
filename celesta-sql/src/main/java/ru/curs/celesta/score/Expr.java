@@ -393,6 +393,44 @@ final class Lower extends Expr {
     }
 }
 
+
+final class Substr extends Expr{
+    private final Expr arg;
+    private final Expr from;
+    private final Expr len;
+
+    Substr(Expr arg, Expr from, Expr len) {
+        this.arg = arg;
+        this.from = from;
+        this.len = len;
+    }
+
+    public Expr getArg() {
+        return arg;
+    }
+
+    public Expr getFrom() {
+        return from;
+    }
+
+    public Expr getLen() {
+        return len;
+    }
+
+    @Override
+    public ViewColumnMeta<?> getMeta() {
+        return new ViewColumnMeta<>(ViewColumnType.TEXT);
+    }
+
+    @Override
+    void accept(ExprVisitor visitor) throws ParseException {
+        arg.accept(visitor);
+        from.accept(visitor);
+        len.accept(visitor);
+        visitor.visitSubstr(this);
+    }
+}
+
 /**
  * Base class for literal expressions.
  */

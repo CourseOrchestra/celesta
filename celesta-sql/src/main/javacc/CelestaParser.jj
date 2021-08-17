@@ -63,6 +63,7 @@ PARSER_END(CelestaParser)
 |   <K_DISTINCT:     "DISTINCT">
 |   <K_EXEC:         "EXEC"|"EXECUTE">: EXEC_STATE
 |   <K_FALSE:        "FALSE">
+|   <K_FOR:          "FOR">
 |   <K_FOREIGN:      "FOREIGN">
 |   <K_FROM:         "FROM">
 |   <K_FULL:         "FULL">
@@ -89,6 +90,7 @@ PARSER_END(CelestaParser)
 |   <K_RIGHT:        "RIGHT">
 |   <K_SELECT:       "SELECT">
 |   <K_SET:          "SET">
+|   <K_SUBSTRING:    "SUBSTRING">
 |   <K_SUM:          "SUM">
 |   <K_TEXT:         "TEXT">
 |   <K_TRUE:         "TRUE">
@@ -769,11 +771,16 @@ Expr sqlMultiplicativeExpression(IdentifierParser identifierParser):
 
 Expr sqlUnaryExpression(IdentifierParser identifierParser):
 {Expr result;
+Expr from;
+Expr len;
 boolean isMinus = false;}
 {
       ["-" {isMinus = true;}] result = sqlPrimaryExpression(identifierParser)  {return isMinus? new UnaryMinus(result) : result;}
     | <K_UPPER> "(" result = sqlTermExpr(identifierParser) ")" {return new Upper(result);}
     | <K_LOWER> "(" result = sqlTermExpr(identifierParser) ")" {return new Lower(result);}
+    | <K_SUBSTRING> "(" result = sqlTermExpr(identifierParser)
+                        <K_FROM> from = sqlTermExpr(identifierParser)
+                        <K_FOR> len = sqlTermExpr(identifierParser) ")" {return new Substr(result, from, len);}
 }
 
 
