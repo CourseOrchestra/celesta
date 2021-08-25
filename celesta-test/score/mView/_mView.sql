@@ -61,6 +61,12 @@ create materialized view mView5 AS
   from table4
   group by var1, vvv;
 
+create materialized view mViewReverseOrder AS
+select var2, var1, sum(numb) as s
+    from table4
+group by var2, var1;
+
+
 CREATE SEQUENCE table5Num;
 
 create table table5 (
