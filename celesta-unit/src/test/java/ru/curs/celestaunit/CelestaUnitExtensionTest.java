@@ -7,6 +7,7 @@ import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import s1.HeaderCursor;
 import s1.LineCursor;
+import s1.LinecountCursor;
 import s1.Seq1Sequence;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -88,15 +89,44 @@ public class CelestaUnitExtensionTest {
             hc.deleteAll();
             hc.setId(100);
             hc.insert();
-    
+
             lc.deleteAll();
             lc.setId(10);
             lc.setHeader_id(100);
             lc.insert();
-    
+
             assertEquals(1, hc.count());
             assertEquals(1, lc.count());
         }
     }
 
+    @Test
+    @DisplayName("When materialized views are involved...")
+    void mvReset1(CallContext ctx) {
+        HeaderCursor headerCursor = new HeaderCursor(ctx);
+        headerCursor.setId(42);
+        headerCursor.insert();
+        LineCursor lineCursor = new LineCursor(ctx);
+        lineCursor.setId(1).setHeader_id(headerCursor.getId()).insert();
+        lineCursor.setId(2).setHeader_id(headerCursor.getId()).insert();
+        LinecountCursor linecountCursor = new LinecountCursor(ctx);
+        linecountCursor.get(42);
+        //1+2
+        assertEquals(3, linecountCursor.getLine_count());
+    }
+
+    @Test
+    @DisplayName("...their content is cleared")
+    void mvReset2(CallContext ctx) {
+        HeaderCursor headerCursor = new HeaderCursor(ctx);
+        headerCursor.setId(42);
+        headerCursor.insert();
+        LineCursor lineCursor = new LineCursor(ctx);
+        lineCursor.setId(7);
+        lineCursor.setHeader_id(headerCursor.getId());
+        lineCursor.insert();
+        LinecountCursor linecountCursor = new LinecountCursor(ctx);
+        linecountCursor.get(42);
+        assertEquals(7, linecountCursor.getLine_count());
+    }
 }

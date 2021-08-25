@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class BeforeEachContextTest {
     @BeforeEach
     void fillTables(CallContext ctx) {
-        System.out.println("BEFORE EACH IN TEST");
         HeaderCursor hc = new HeaderCursor(ctx);
         hc.setId(100);
         hc.insert();

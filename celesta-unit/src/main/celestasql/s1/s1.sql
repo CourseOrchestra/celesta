@@ -11,3 +11,6 @@ create table line (
 );
 
 create sequence seq1;
+
+create materialized view linecount as
+    select header_id, sum(id) as line_count from line group by header_id;
