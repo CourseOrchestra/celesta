@@ -1,6 +1,7 @@
 package ru.curs.celesta.script;
 
 import mView.*;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
 
@@ -414,4 +415,14 @@ public class TestMaterializedView implements ScriptTest {
         assertEquals(1, mViewCursor.count());
     }
 
+    @TestTemplate
+    void test_mat_view_reverse_order_of_columns(CallContext ctx) {
+        Table4Cursor t4 = new Table4Cursor(ctx);
+        t4.setVar1("v1").setVar2("v2").setNumb(1).insert();
+        t4.clear();
+        t4.setVar1("v1").setVar2("v2").setNumb(2).insert();
+        MViewReverseOrderCursor reverseOrderCursor = new MViewReverseOrderCursor(ctx);
+        reverseOrderCursor.get("v2", "v1");
+        assertEquals(3, reverseOrderCursor.getS());
+    }
 }
