@@ -61,29 +61,19 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
                 .map(v -> "\"" + v + "\"")
                 .collect(Collectors.joining(", "));
 
-        keySearchTerm = mv.getColumns().keySet().stream()
-                .filter(alias -> mv.isGroupByColumn(alias))
-                .map((String alias) -> {
-                    try {
-                        return String.format("(\"%s\" = %s)",
-                                alias,
-                                DateTimeColumn.CELESTA_TYPE.equals(
-                                        mv.getColumn(alias).getCelestaType()) ? "TRUNC(?)" : "?");
-                    } catch (ParseException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .collect(Collectors.joining(" and "));
-
+        List<String> keySearchTerms = new ArrayList<>();
         List<String> columnRefNames = mv.getColumnRefNames();
-
         int curIndex = 0;
         for (String tCol : t.getColumns().keySet()) {
-            boolean isGroupBy = mv.getColumns().keySet().stream()
-                    .anyMatch(v -> mv.isGroupByColumn(v) && tCol.equals(mv.getColumnRef(v).getName()));
-
-            if (isGroupBy) {
-                tGroupByColumnIndices.put(curIndex, tCol);
+            for (Map.Entry<String, Column<?>> col : mv.getColumns().entrySet()) {
+                if (mv.isGroupByColumn(col.getKey()) && tCol.equals(mv.getColumnRef(col.getKey()).getName())) {
+                    tGroupByColumnIndices.put(curIndex, tCol);
+                    keySearchTerms.add(String.format("(\"%s\" = %s)",
+                            col.getKey(),
+                            DateTimeColumn.CELESTA_TYPE.equals(
+                                    col.getValue().getCelestaType()) ? "TRUNC(?)" : "?"));
+                    break;
+                }
             }
 
             if (columnRefNames.contains(tCol)) {
@@ -91,6 +81,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
             }
             ++curIndex;
         }
+        keySearchTerm = String.join(" and ", keySearchTerms);
     }
 
 
