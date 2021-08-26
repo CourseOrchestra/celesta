@@ -1,11 +1,25 @@
 package ru.curs.celesta.plugin.maven;
 
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.GrainElement;
+import ru.curs.celesta.score.GrainPart;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.ReadOnlyTable;
+import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.View;
 import ru.curs.celesta.score.io.FileResource;
 import ru.curs.celesta.score.io.Resource;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 

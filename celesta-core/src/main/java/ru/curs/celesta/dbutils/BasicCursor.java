@@ -396,9 +396,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Whether the session has rights to insert data into current table.
      *
-     * @return
+     * @return true, if current record can be inserted
      */
-    public final boolean canInsert() {
+    public boolean canInsert() {
         if (isClosed()) {
             throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
         }
@@ -409,9 +409,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Whether the session has rights to modify data of current table.
      *
-     * @return
+     * @return true, if current record can be updated
      */
-    public final boolean canModify() {
+    public boolean canModify() {
         if (isClosed()) {
             throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
         }
@@ -422,9 +422,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
     /**
      * Whether the session has rights to delete data from current table.
      *
-     * @return
+     * @return true, if current record can be deleted
      */
-    public final boolean canDelete() {
+    public boolean canDelete() {
         if (isClosed()) {
             throw new CelestaException(DATA_ACCESSOR_IS_CLOSED);
         }

@@ -71,8 +71,8 @@ public abstract class OpenSourceDdlGenerator extends DdlGenerator {
         }
 
         // If there's an empty default in data, and non-empty one in metadata then
-        if (c.getDefaultValue() != null || (c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate())
-                || (c instanceof IntegerColumn && ((IntegerColumn) c).getSequence() != null)) {
+        if (c.getDefaultValue() != null || c instanceof DateTimeColumn && ((DateTimeColumn) c).isGetdate()
+                || c instanceof IntegerColumn && ((IntegerColumn) c).getSequence() != null) {
             sql = String.format(
                     ALTER_TABLE + tableString(c.getParentTable().getGrain().getName(), c.getParentTable().getName())
                             + " ALTER COLUMN \"%s\" SET %s",

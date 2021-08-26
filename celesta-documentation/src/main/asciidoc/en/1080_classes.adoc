@@ -205,12 +205,18 @@ Still if a need arises to create more cursors, e. g. in a loop, one should use `
 
 === Record Navigation Methods
 
-* *tryGet(Object... values)* conducts searching for the record by given key fields and returns `true` if the record is found or `false` if the table contains no record with the given primary key.
+* *tryGet(...)* conducts searching for the record by given key fields and returns `true` if the record is found or `false` if the table contains no record with the given primary key.
 This method's arguments must specify primary key field values and number of arguments must match the number of primary key fields in the table.
-ATTENTION! This method does not account for any filters applied to the table.
-If needed to find a record while considering filters, use `[try]First` method.
 
-* *get(Object... values)* – same as `tryGet` but throws an exception if the record is not found.
+* *get(...)* – same as `tryGet` but throws an exception if the record is not found.
+
+* *tryGetCurrent()*  – retrieves a record from the database that corresponds to the fields of current primary key.
+
+[WARNING]
+====
+`get`, `tryGet` and `tryGetCurrent` methods do not account for any filters applied to the table.
+If needed to find a record while considering filters, use `[try]First` method.
+====
 
 * {lupa} *navigate(command)* – moves around records relative to the current position.
 Returns `true` if the movement is successful and `false` if the record is not found.
@@ -271,8 +277,8 @@ if (cursor.tryFindSet()) {
 _What is the difference between `[try]First()` and `[try]FindSet()`?_:: The difference is the queries sent to the database. The `[try]First()` (and `navigate()`, `next()` and `last()`...) execute `SELECT TOP 1` kind of query, request a single record and immediately close the JDBC ResultSet.
 The `findSet()` method opens ResultSet and keeps it open so it's possible to traverse it with the `iterate()` method.
 
-_What is the difference between `navigate("=")` and `tryGet(getCurrentKeyValues())`?_:: The `navigate()` method accounts for current filters while `get()` does not.
-Record with the current primary key value might not get into the filter, so `navigate('=')` might return `false` when `tryGet(getCurrentKeyValues())` returns `true`.
+_What is the difference between `navigate("=")` and `tryGetCurrent()`?_:: The `navigate()` method accounts for current filters while `get...()` methods do not.
+Record with the current primary key value might not get into the filter, so `navigate('=')` might return `false` when `tryGetCurrent()` returns `true`.
 
 _What does `navigate("\=><")` mean?_:: This command prescribes the following algorithm: "Try to find the current record.
 If the record is found, exit and return `true`.

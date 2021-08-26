@@ -4,7 +4,7 @@
 
     <groupId>ru.curs</groupId>
     <artifactId>celesta-parent</artifactId>
-    <version>7.3.42-SNAPSHOT</version>
+    <version>7.4.3-SNAPSHOT</version>
     <name>celesta-parent</name>
     <description>celesta - LGPL platform for business logic development</description>
     <packaging>pom</packaging>
@@ -56,29 +56,29 @@
         <version>${project.version}</version>
 
         <!--dependency versions -->
-        <checkstyle.version>8.41.1</checkstyle.version>
-        <slf4j.version>1.7.30</slf4j.version>
+        <checkstyle.version>8.45</checkstyle.version>
+        <slf4j.version>1.7.32</slf4j.version>
         <h2.version>1.4.200</h2.version>
         <javacc.version>7.0.10</javacc.version>
         <jdbc.driver.oracle.version>11.2.0.4</jdbc.driver.oracle.version>
-        <jdbc.driver.postgres.version>42.2.20</jdbc.driver.postgres.version>
+        <jdbc.driver.postgres.version>42.2.23</jdbc.driver.postgres.version>
         <jdbc.driver.sqlserver.version>8.2.1.jre8</jdbc.driver.sqlserver.version>
         <jdbc.driver.firebird.version>4.0.0-beta-1</jdbc.driver.firebird.version>
-        <junit.version>5.7.1</junit.version>
+        <junit.version>5.7.2</junit.version>
         <org.json.version>20210307</org.json.version>
         <testcontainers.version>1.15.3</testcontainers.version>
         <testcontainers.firebird.version>1.1.0</testcontainers.firebird.version>
 
         <!--plugin versions -->
         <spotbugs.maven.plugin.version>3.1.8</spotbugs.maven.plugin.version>
-        <jacoco.version>0.8.6</jacoco.version>
+        <jacoco.version>0.8.7</jacoco.version>
         <javacc.maven.plugin.version>2.6</javacc.maven.plugin.version>
         <maven.assembly.plugin.version>3.3.0</maven.assembly.plugin.version>
         <maven.checkstyle.plugin.version>3.1.2</maven.checkstyle.plugin.version>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
         <maven.jar.plugin.version>3.2.0</maven.jar.plugin.version>
-        <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
+        <maven.javadoc.plugin.version>3.3.0</maven.javadoc.plugin.version>
         <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
         <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
         <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
@@ -410,7 +410,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
+                        <version>3.0.1</version>
                         <executions>
                             <execution>
                                 <phase>verify</phase>

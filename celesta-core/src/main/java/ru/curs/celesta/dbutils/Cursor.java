@@ -379,7 +379,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      */
     private static boolean compareValues(Object newVal, Object oldVal) {
         if (newVal == null) {
-            return oldVal == null || (oldVal instanceof BLOB);
+            return oldVal == null || oldVal instanceof BLOB;
         }
         if (newVal instanceof BLOB) {
             return !((BLOB) newVal).isModified();
@@ -442,8 +442,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      *
      * @param values values of the key fields
      */
-    public final void get(Object... values) {
-        if (!tryGet(values)) {
+    public final void getByValuesArray(Object... values) {
+        if (!tryGetByValuesArray(values)) {
             StringBuilder sb = new StringBuilder();
             for (Object value : values) {
                 if (sb.length() > 0) {
@@ -462,7 +462,7 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * @param values values of the key fields
      * @return {@code true} if the record is found, otherwise - {@code false}
      */
-    public final boolean tryGet(Object... values) {
+    public boolean tryGetByValuesArray(Object... values) {
         if (!canRead()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.READ);
         }

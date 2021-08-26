@@ -3,11 +3,16 @@ package data.view;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 import javax.annotation.Generated;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
@@ -23,7 +28,7 @@ import ru.curs.celesta.score.View;
         date = "2021-04-15T02:06:38.885"
 )
 @CelestaGenerated
-public final class TestTableVCursor extends ViewCursor implements Iterable<TestTableVCursor> {
+public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVCursor> {
     private static final String GRAIN_NAME = "test";
 
     private static final String OBJECT_NAME = "testTableV";
@@ -31,6 +36,8 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
     public final TestTableVCursor.Columns COLUMNS;
 
     private Integer id;
+
+    private ZonedDateTime toDelete;
 
     {
         this.COLUMNS = new TestTableVCursor.Columns(callContext().getCelesta());
@@ -53,8 +60,17 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
         return this.id;
     }
 
-    public void setId(Integer id) {
+    public TestTableVCursor setId(Integer id) {
         this.id = id;
+        return this;
+    }
+
+    public ZonedDateTime getToDelete() {
+        return this.toDelete;
+    }
+    public TestTableVCursor setToDelete(ZonedDateTime toDelete) {
+        this.toDelete = toDelete;
+        return this;
     }
 
     @Override
@@ -89,16 +105,26 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
                 this.id = null;
             }
         }
+
+        if (this.inRec("toDelete")) {
+            Timestamp ts = rs.getTimestamp("toDelete", Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+            if (ts != null) {
+                this.toDelete = ZonedDateTime.of(ts.toLocalDateTime(), ZoneOffset.systemDefault());
+            } else {
+                this.toDelete = null;
+            }
+        }
     }
 
     @Override
     public void _clearBuffer(boolean withKeys) {
         this.id = null;
+        this.toDelete = null;
     }
 
     @Override
     public Object[] _currentValues() {
-        return new Object[] {id};
+        return new Object[] {id, toDelete};
     }
 
     @Override
@@ -118,6 +144,7 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
     public void copyFieldsFrom(BasicCursor c) {
         TestTableVCursor from = (TestTableVCursor)c;
         this.id = from.id;
+        this.toDelete = from.toDelete;
     }
 
     @Override
@@ -150,6 +177,10 @@ public final class TestTableVCursor extends ViewCursor implements Iterable<TestT
 
         public ColumnMeta<Integer> id() {
             return (ColumnMeta<Integer>) this.element.getColumns().get("id");
+        }
+
+        public ColumnMeta<ZonedDateTime> toDelete() {
+            return (ColumnMeta<ZonedDateTime>) this.element.getColumns().get("toDelete");
         }
     }
 }

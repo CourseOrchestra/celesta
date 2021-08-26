@@ -48,6 +48,11 @@ public class DocumentServiceTest {
 
     DocumentService srv = new DocumentService();
 
+    @BeforeEach
+    void setUp(CallContext context) {
+        //Set up data needed for each test here
+    }
+
     @Test
     /*CallContext parameter will be injected automatically
     based on a temporary H2 database*/
@@ -64,6 +69,7 @@ public class DocumentServiceTest {
 
 This means every test can receive an active `CallContext` as a parameter.
 This context is generated based on H2 database, to which a Celesta score is deployed and can be used to create cursors.
+When `@BeforeEach`-annotated methods are used, the same `CallContext` will be provided in the setup method and test method.
 
 == Changing CelestaUnit Default Settings
 
@@ -71,19 +77,18 @@ CelestaUnit has the following defaults:
 
 * score path: `src/main/resources/score`;
 * reference integrity check (with foreign keys) is enabled;
-* table clearing after each test is enabled.
+* table clearing before each test is enabled;
+* sequence resetting before each test is enabled.
 
-Defaults can be changed by using a JUnit5 {apidocs}ru/curs/celestaunit/CelestaUnitExtension.html[`CelestaUnitExtension`] extension https://junit.org/junit5/docs/current/user-guide/#extensions-registration-programmatic[programmatic registration] in a test class:
+Defaults can be changed by using {apidocs}ru/curs/celestaunit/CelestaTest.html[`@CelestaTest`] annotation parameters:
 
 ```java
+@CelestaTest(scorePath = DocumentServiceTest.SCORE_PATH,
+    referentialIntegrity = true,
+    truncateTables = false,
+    resetSequences = false)
 public class DocumentServiceTest {
     public static final String SCORE_PATH = "src/test/resources/score";
-    @RegisterExtension
-    static CelestaUnitExtension ext =
-            CelestaUnitExtension.builder()
-                    .withScorePath(SCORE_PATH)
-                    .withReferentialIntegrity(true)
-                    .withTruncateAfterEach(false).build();
 ```
 
 In some cases it might help to disable reference integrity check to simplify adding test data to tables linked by foreign keys to other tables.

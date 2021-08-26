@@ -129,7 +129,7 @@ public enum ViewColumnType {
     DATE_WITH_TIME_ZONE {
         @Override
         public String jdbcGetterName() {
-            return "getString";
+            return "getTimestamp";
         }
 
         @Override

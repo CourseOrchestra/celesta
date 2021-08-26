@@ -1,6 +1,17 @@
 package ru.curs.celesta.script;
 
-import mView.*;
+import mView.MView1Cursor;
+import mView.MView2Cursor;
+import mView.MView3Cursor;
+import mView.MView4Cursor;
+import mView.MView5Cursor;
+import mView.MView6Cursor;
+import mView.MViewReverseOrderCursor;
+import mView.Table1Cursor;
+import mView.Table2Cursor;
+import mView.Table3Cursor;
+import mView.Table4Cursor;
+import mView.Table5Cursor;
 import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
 
@@ -64,21 +75,24 @@ public class TestMaterializedView implements ScriptTest {
         Table4Cursor tableCursor = new Table4Cursor(context);
         MView5Cursor mViewCursor = new MView5Cursor(context);
         assertEquals(0, mViewCursor.count());
-        tableCursor.setVar1("A");
-        tableCursor.setVar2("B");
-        tableCursor.setNumb(3);
-        tableCursor.insert();
-        tableCursor.setId(null);
-        tableCursor.setNumb(2);
-        tableCursor.insert();
+        tableCursor
+                .setVar1("A")
+                .setVar2("B")
+                .setNumb(3)
+                .insert();
+        tableCursor
+                .setId(null)
+                .setNumb(2)
+                .insert();
         assertEquals(1, mViewCursor.count());
         mViewCursor.get("A", "B");
         assertEquals(5, mViewCursor.getS().intValue());
 
-        tableCursor.setId(null);
-        tableCursor.setVar2("C");
-        tableCursor.setNumb(4);
-        tableCursor.insert();
+        tableCursor
+                .setId(null)
+                .setVar2("C")
+                .setNumb(4)
+                .insert();
         mViewCursor.get("A", "C");
         assertEquals(4, mViewCursor.getS().intValue());
         mViewCursor.tryGetCurrent();
@@ -96,15 +110,17 @@ public class TestMaterializedView implements ScriptTest {
         tableCursor.deleteAll();
         assertEquals(0, mViewCursor.count());
 
-        tableCursor.setNumb(5);
-        tableCursor.setVar("A");
-        tableCursor.insert();
+        tableCursor
+                .setNumb(5)
+                .setVar("A")
+                .insert();
         Integer id1 = tableCursor.getId();
         tableCursor.clear();
 
-        tableCursor.setNumb(2);
-        tableCursor.setVar("A");
-        tableCursor.insert();
+        tableCursor
+                .setNumb(2)
+                .setVar("A")
+                .insert();
         tableCursor.clear();
 
         mViewCursor.get("A");
@@ -112,24 +128,27 @@ public class TestMaterializedView implements ScriptTest {
 
         tableCursor.setRange(tableCursor.COLUMNS.numb(), 2);
         tableCursor.first();
-        tableCursor.setNumb(-5);
-        tableCursor.update();
+        tableCursor
+                .setNumb(-5)
+                .update();
         tableCursor.clear();
 
         mViewCursor.get("A");
         assertEquals(0, mViewCursor.getS().intValue());
 
-        tableCursor.setNumb(5);
-        tableCursor.setVar("A");
-        tableCursor.insert();
+        tableCursor
+                .setNumb(5)
+                .setVar("A")
+                .insert();
         tableCursor.clear();
 
         mViewCursor.get("A");
         assertEquals(5, mViewCursor.getS().intValue());
 
         tableCursor.get(id1);
-        tableCursor.setVar("B");
-        tableCursor.update();
+        tableCursor
+                .setVar("B")
+                .update();
         tableCursor.clear();
 
         mViewCursor.get("A");
@@ -149,22 +168,25 @@ public class TestMaterializedView implements ScriptTest {
         LocalDateTime datetime1 = LocalDateTime.of(2000, Month.AUGUST, 5, 10, 5, 32);
         LocalDateTime date1 = datetime1.truncatedTo(ChronoUnit.DAYS);
 
-        tableCursor.setNumb(5);
-        tableCursor.setDate(Timestamp.valueOf(datetime1));
-        tableCursor.insert();
+        tableCursor
+                .setNumb(5)
+                .setDate(Timestamp.valueOf(datetime1))
+                .insert();
         tableCursor.clear();
 
         LocalDateTime datetime2 = LocalDateTime.of(2000, Month.AUGUST, 5, 22, 5, 32);
-        tableCursor.setNumb(2);
-        tableCursor.setDate(Timestamp.valueOf(datetime2));
-        tableCursor.insert();
+        tableCursor
+                .setNumb(2)
+                .setDate(Timestamp.valueOf(datetime2))
+                .insert();
         tableCursor.clear();
 
         LocalDateTime datetime3 = LocalDateTime.of(2000, Month.AUGUST, 6, 10, 5, 32);
         LocalDateTime date2 = datetime3.truncatedTo(ChronoUnit.DAYS);
-        tableCursor.setNumb(5);
-        tableCursor.setDate(Timestamp.valueOf(datetime3));
-        tableCursor.insert();
+        tableCursor
+                .setNumb(5)
+                .setDate(Timestamp.valueOf(datetime3))
+                .insert();
         tableCursor.clear();
 
         assertEquals(2, mViewCursor.count());
@@ -276,11 +298,11 @@ public class TestMaterializedView implements ScriptTest {
 
         assertEquals(2, mViewCursor.count());
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(6, getS(mViewCursor));
         assertEquals(4, getC(mViewCursor));
 
-        mViewCursor.get("B");
+        mViewCursor.getByValuesArray("B");
         assertEquals(31, getS(mViewCursor));
         assertEquals(2, getC(mViewCursor));
 
@@ -311,7 +333,7 @@ public class TestMaterializedView implements ScriptTest {
         tableCursor.insert();
         tableCursor.clear();
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(7, getS(mViewCursor));
 
         setNumb(tableCursor, 20);
@@ -338,11 +360,11 @@ public class TestMaterializedView implements ScriptTest {
 
         assertEquals(2, mViewCursor.count());
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(9, getS(mViewCursor));
         assertEquals(2, getC(mViewCursor));
 
-        mViewCursor.get("B");
+        mViewCursor.getByValuesArray("B");
         assertEquals(35, getS(mViewCursor));
         assertEquals(2, getC(mViewCursor));
     }
@@ -361,12 +383,12 @@ public class TestMaterializedView implements ScriptTest {
         tableCursor.insert();
         tableCursor.clear();
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(8, getS(mViewCursor));
 
-        tableCursor.get(old_id);
+        tableCursor.getByValuesArray(old_id);
         tableCursor.delete();
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(2, getS(mViewCursor));
 
         setNumb(tableCursor, 5);
@@ -374,7 +396,7 @@ public class TestMaterializedView implements ScriptTest {
         tableCursor.insert();
         tableCursor.clear();
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(7, getS(mViewCursor));
 
         setNumb(tableCursor, 20);
@@ -394,7 +416,7 @@ public class TestMaterializedView implements ScriptTest {
 
         assertEquals(2, mViewCursor.count());
 
-        mViewCursor.get("A");
+        mViewCursor.getByValuesArray("A");
         assertEquals(5, getS(mViewCursor));
         assertEquals(1, getC(mViewCursor));
 
@@ -403,7 +425,7 @@ public class TestMaterializedView implements ScriptTest {
         tableCursor.delete();
         tableCursor.clear();
 
-        mViewCursor.get("B");
+        mViewCursor.getByValuesArray("B");
         assertEquals(20, getS(mViewCursor));
         assertEquals(1, getC(mViewCursor));
 
@@ -414,4 +436,14 @@ public class TestMaterializedView implements ScriptTest {
         assertEquals(1, mViewCursor.count());
     }
 
+    @TestTemplate
+    void test_mat_view_reverse_order_of_columns(CallContext ctx) {
+        Table4Cursor t4 = new Table4Cursor(ctx);
+        t4.setVar1("v1").setVar2("v2").setNumb(1).insert();
+        t4.clear();
+        t4.setVar1("v1").setVar2("v2").setNumb(2).insert();
+        MViewReverseOrderCursor reverseOrderCursor = new MViewReverseOrderCursor(ctx);
+        reverseOrderCursor.get("v2", "v1");
+        assertEquals(3, reverseOrderCursor.getS());
+    }
 }

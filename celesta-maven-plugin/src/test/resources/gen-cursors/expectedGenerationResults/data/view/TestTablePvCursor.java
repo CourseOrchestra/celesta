@@ -25,7 +25,7 @@ import ru.curs.celesta.score.ParameterizedView;
         date = "2021-04-15T02:06:38.84"
 )
 @CelestaGenerated
-public final class TestTablePvCursor extends ParameterizedViewCursor implements Iterable<TestTablePvCursor> {
+public class TestTablePvCursor extends ParameterizedViewCursor implements Iterable<TestTablePvCursor> {
     private static final String GRAIN_NAME = "test";
 
     private static final String OBJECT_NAME = "testTablePv";
@@ -71,8 +71,9 @@ public final class TestTablePvCursor extends ParameterizedViewCursor implements 
         return this.s;
     }
 
-    public void setS(Integer s) {
+    public TestTablePvCursor setS(Integer s) {
         this.s = s;
+        return this;
     }
 
     @Override

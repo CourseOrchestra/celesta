@@ -34,7 +34,7 @@ import ru.curs.celesta.score.Table;
         date = "2021-04-15T01:58:49.563"
 )
 @CelestaGenerated
-public final class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
+public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>, Serializable, Cloneable {
     private static final String GRAIN_NAME = "test";
 
     private static final String OBJECT_NAME = "testTable";
@@ -80,72 +80,81 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
         return this.id;
     }
 
-    public void setId(Integer id) {
+    public TestTableCursor setId(Integer id) {
         this.id = id;
+        return this;
     }
 
     public String getStr() {
         return this.str;
     }
 
-    public void setStr(String str) {
+    public TestTableCursor setStr(String str) {
         this.str = str;
+        return this;
     }
 
     public Boolean getDeleted() {
         return this.deleted;
     }
 
-    public void setDeleted(Boolean deleted) {
+    public TestTableCursor setDeleted(Boolean deleted) {
         this.deleted = deleted;
+        return this;
     }
 
     public Double getWeight() {
         return this.weight;
     }
 
-    public void setWeight(Double weight) {
+    public TestTableCursor setWeight(Double weight) {
         this.weight = weight;
+        return this;
     }
 
     public String getContent() {
         return this.content;
     }
 
-    public void setContent(String content) {
+    public TestTableCursor setContent(String content) {
         this.content = content;
+        return this;
     }
 
     public Date getCreated() {
         return this.created;
     }
 
-    public void setCreated(Date created) {
+    public TestTableCursor setCreated(Date created) {
         this.created = created;
+        return this;
     }
 
     public BLOB getRawData() {
         return this.rawData;
     }
 
-    public void setRawData(BLOB rawData) {
+    public TestTableCursor setRawData(BLOB rawData) {
         this.rawData = rawData;
+        return this;
     }
 
     public BigDecimal getCost() {
         return this.cost;
     }
 
-    public void setCost(BigDecimal cost) {
+    public TestTableCursor setCost(BigDecimal cost) {
         this.cost = cost;
+        return this;
     }
 
     public ZonedDateTime getToDelete() {
         return this.toDelete;
     }
 
-    public void setToDelete(ZonedDateTime toDelete) {
+    public TestTableCursor setToDelete(ZonedDateTime toDelete) {
         this.toDelete = toDelete;
+        return this;
     }
 
     @Override
@@ -175,6 +184,14 @@ public final class TestTableCursor extends Cursor implements Iterable<TestTableC
     @Override
     protected Object[] _currentKeyValues() {
         return new Object[] {id};
+    }
+
+    public boolean tryGet(Integer id) {
+        return tryGetByValuesArray(id);
+    }
+
+    public void get(Integer id) {
+        getByValuesArray(id);
     }
 
     @Override

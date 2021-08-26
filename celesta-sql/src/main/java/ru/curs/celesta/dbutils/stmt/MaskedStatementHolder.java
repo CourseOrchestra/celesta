@@ -13,7 +13,7 @@ public abstract class MaskedStatementHolder extends PreparedStmtHolder {
     public synchronized PreparedStatement getStatement(Object[] rec, int recversion)  {
         reusable: if (isStmtValid()) {
             for (int i = 0; i < nullsMask.length; i++) {
-                if (nullsMask[i] != (rec[nullsMaskIndices[i]] == null)) {
+                if (rec[nullsMaskIndices[i]] == null != nullsMask[i]) {
                     close();
                     break reusable;
                 }
