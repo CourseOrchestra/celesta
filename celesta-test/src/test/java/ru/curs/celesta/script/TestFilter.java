@@ -19,35 +19,35 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class TestFilter implements ScriptTest {
 
     @TestTemplate
-    public void testInFilterForTable(CallContext context) throws ParseException {
+    public void testInFilterForTable(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         _testInFilterForIndices(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterForView(CallContext context) throws ParseException {
+    public void testInFilterForView(CallContext context) {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterForIndices(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterForTableToView(CallContext context) throws ParseException {
+    public void testInFilterForTableToView(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterForIndices(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterForViewToTable(CallContext context) throws ParseException {
+    public void testInFilterForViewToTable(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterForIndices(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterForSimplePks(CallContext context) throws ParseException {
+    public void testInFilterForSimplePks(CallContext context) {
         CFilterCursor c = new CFilterCursor(context);
         DFilterCursor d = new DFilterCursor(context);
 
@@ -79,7 +79,7 @@ public class TestFilter implements ScriptTest {
     }
 
     @TestTemplate
-    public void testInFilterForComplexPks(CallContext context) throws ParseException {
+    public void testInFilterForComplexPks(CallContext context) {
         EFilterCursor e = new EFilterCursor(context);
         FFilterCursor f = new FFilterCursor(context);
 
@@ -114,21 +114,21 @@ public class TestFilter implements ScriptTest {
     }
 
     @TestTemplate
-    public void testInFilterWithRangeInMainCursorForTable(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInMainCursorForTable(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         _testInFilterWithRangeInMainCursor(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterWithRangeInMainCursorForView(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInMainCursorForView(CallContext context) {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterWithRangeInMainCursor(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterWithRangeInMainCursorForTableToView(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInMainCursorForTableToView(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterWithRangeInMainCursor(context, a, b);
@@ -136,42 +136,42 @@ public class TestFilter implements ScriptTest {
 
 
     @TestTemplate
-    public void testInFilterWithRangeInOtherCursorBeforeSetInForTable(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInOtherCursorBeforeSetInForTable(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         _testInFilterWithRangeInOtherCursorBeforeSetIn(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterWithRangeInOtherCursorBeforeSetInForView(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInOtherCursorBeforeSetInForView(CallContext context) {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterWithRangeInOtherCursorBeforeSetIn(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterWithRangeInOtherCursorBeforeSetInForTableToView(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInOtherCursorBeforeSetInForTableToView(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterWithRangeInOtherCursorBeforeSetIn(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterWithRangeInOtherCursorAfterSetInForTable(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInOtherCursorAfterSetInForTable(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         _testInFilterWithRangeInOtherCursorAfterSetIn(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterWithRangeInOtherCursorAfterSetInForView(CallContext context) throws ParseException {
+    public void testInFilterWithRangeInOtherCursorAfterSetInForView(CallContext context) {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         _testInFilterWithRangeInOtherCursorAfterSetIn(context, a, b);
     }
 
     @TestTemplate
-    public void testInFilterWithAdditionalLookupForTable(CallContext context) throws ParseException {
+    public void testInFilterWithAdditionalLookupForTable(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterCursor b = new BFilterCursor(context);
         GFilterCursor g = new GFilterCursor(context);
@@ -180,7 +180,7 @@ public class TestFilter implements ScriptTest {
     }
 
     @TestTemplate
-    public void testInFilterWithAdditionalLookupForView(CallContext context) throws ParseException {
+    public void testInFilterWithAdditionalLookupForView(CallContext context) {
         AFilterViewCursor a = new AFilterViewCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         GFilterViewCursor g = new GFilterViewCursor(context);
@@ -188,7 +188,7 @@ public class TestFilter implements ScriptTest {
     }
 
     @TestTemplate
-    public void testInFilterWithAdditionalLookupForTableToView(CallContext context) throws ParseException {
+    public void testInFilterWithAdditionalLookupForTableToView(CallContext context) {
         AFilterCursor a = new AFilterCursor(context);
         BFilterViewCursor b = new BFilterViewCursor(context);
         GFilterViewCursor g = new GFilterViewCursor(context);
@@ -196,7 +196,7 @@ public class TestFilter implements ScriptTest {
     }
 
     @TestTemplate
-    public void testInFilterWhenTargetHasPkAndOtherHasPkWithNotSameOrderAndIndexWithSameOrder(CallContext context) throws ParseException {
+    public void testInFilterWhenTargetHasPkAndOtherHasPkWithNotSameOrderAndIndexWithSameOrder(CallContext context) {
         HFilterCursor h = new HFilterCursor(context);
         IFilterCursor i = new IFilterCursor(context);
 
@@ -323,7 +323,7 @@ public class TestFilter implements ScriptTest {
         b.clear();
     }
 
-    void _testInFilterForIndices(CallContext context, BasicCursor a, BasicCursor b) throws ParseException {
+    void _testInFilterForIndices(CallContext context, BasicCursor a, BasicCursor b) {
         AFilterCursor aTableCursor = new AFilterCursor(context);
         BFilterCursor bTableCursor = new BFilterCursor(context);
 
@@ -371,7 +371,7 @@ public class TestFilter implements ScriptTest {
         assertEquals(0, a.count());
     }
 
-    void _testInFilterWithRangeInMainCursor(CallContext context, BasicCursor a, BasicCursor b) throws ParseException {
+    void _testInFilterWithRangeInMainCursor(CallContext context, BasicCursor a, BasicCursor b) {
         AFilterCursor aTableCursor = new AFilterCursor(context);
         BFilterCursor bTableCursor = new BFilterCursor(context);
 
@@ -435,7 +435,7 @@ public class TestFilter implements ScriptTest {
         }
     }
 
-    void _testInFilterWithRangeInOtherCursorBeforeSetIn(CallContext context, BasicCursor a, BasicCursor b) throws ParseException {
+    void _testInFilterWithRangeInOtherCursorBeforeSetIn(CallContext context, BasicCursor a, BasicCursor b) {
         AFilterCursor aTableCursor = new AFilterCursor(context);
         BFilterCursor bTableCursor = new BFilterCursor(context);
 
@@ -458,7 +458,7 @@ public class TestFilter implements ScriptTest {
         checkSecondRec(a);
     }
 
-    void _testInFilterWithRangeInOtherCursorAfterSetIn(CallContext context, BasicCursor a, BasicCursor b) throws ParseException {
+    void _testInFilterWithRangeInOtherCursorAfterSetIn(CallContext context, BasicCursor a, BasicCursor b) {
         AFilterCursor aTableCursor = new AFilterCursor(context);
         BFilterCursor bTableCursor = new BFilterCursor(context);
 
@@ -484,7 +484,7 @@ public class TestFilter implements ScriptTest {
         checkSecondRec(a);
     }
 
-    void _testInFilterWithAdditionalLookup(CallContext context, BasicCursor a, BasicCursor b, BasicCursor g) throws ParseException {
+    void _testInFilterWithAdditionalLookup(CallContext context, BasicCursor a, BasicCursor b, BasicCursor g) {
         AFilterCursor aTableCursor = new AFilterCursor(context);
         BFilterCursor bTableCursor = new BFilterCursor(context);
         GFilterCursor gTableCursor = new GFilterCursor(context);
