@@ -91,28 +91,28 @@ public class FieldsLookupTest {
     @Test
     public void testAddWhenLeftColumnDoesNotExist() throws Exception {
         final FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
-        assertThrows(ParseException.class, () -> lookup.add("notExistedField", "b1"));
+        assertThrows(CelestaException.class, () -> lookup.add("notExistedField", "b1"));
 
         final FieldsLookup lookup2 = new FieldsLookup(viewA, viewB, lookupChangeCallback, newLookupCallback);
-        assertThrows(ParseException.class, () -> lookup2.add("notExistedField", "b1"));
+        assertThrows(CelestaException.class, () -> lookup2.add("notExistedField", "b1"));
     }
 
     @Test
     public void testAddWhenRightColumnDoesNotExist() throws Exception {
         final FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
-        assertThrows(ParseException.class, () -> lookup.add("a1", "notExistedField"));
+        assertThrows(CelestaException.class, () -> lookup.add("a1", "notExistedField"));
 
         final FieldsLookup lookup2 = new FieldsLookup(viewA, viewB, lookupChangeCallback, newLookupCallback);
-        assertThrows(ParseException.class, () -> lookup2.add("a1", "notExistedField"));
+        assertThrows(CelestaException.class, () -> lookup2.add("a1", "notExistedField"));
     }
 
     @Test
     public void testAddWhenBothColumnsDoNotExist() throws Exception {
         FieldsLookup lookup = new FieldsLookup(tableA, tableB, lookupChangeCallback, newLookupCallback);
-        assertThrows(ParseException.class, () -> lookup.add("notExistedField", "notExistedField"));
+        assertThrows(CelestaException.class, () -> lookup.add("notExistedField", "notExistedField"));
 
         FieldsLookup lookup2 = new FieldsLookup(viewA, viewB, lookupChangeCallback, newLookupCallback);
-        assertThrows(ParseException.class, () -> lookup2.add("notExistedField", "notExistedField"));
+        assertThrows(CelestaException.class, () -> lookup2.add("notExistedField", "notExistedField"));
     }
 
     @Test
