@@ -7,7 +7,6 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.BasicCursor;
 import ru.curs.celesta.dbutils.InFilterSupport;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
-import ru.curs.celesta.score.ParseException;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -544,11 +543,11 @@ public class TestFilter implements ScriptTest {
 
     void _testExceptionWhileAddingNotExistedFieldsToLookup(InFilterSupport a, BasicCursor b) {
         FieldsLookup lookup = a.setIn(b);
-        assertThrows(ParseException.class,
+        assertThrows(CelestaException.class,
                 () -> lookup.add("notExistingField", "created"));
-        assertThrows(ParseException.class,
+        assertThrows(CelestaException.class,
                 () -> lookup.add("date", "notExistingField"));
-        assertThrows(ParseException.class,
+        assertThrows(CelestaException.class,
                 () -> lookup.add("notExistingField", "notExistingField"));
     }
 
