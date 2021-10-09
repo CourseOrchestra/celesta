@@ -416,7 +416,7 @@ public abstract class DdlGenerator {
     }
 
     final List<String> initDataForMaterializedView(MaterializedView mv) {
-        BasicTable t = mv.getRefTable().getTable();
+        TableElement t = mv.getRefTable().getTable();
 
         String mvIdentifier = tableString(mv.getGrain().getName(), mv.getName());
         String mvColumns = mv.getColumns().keySet().stream()

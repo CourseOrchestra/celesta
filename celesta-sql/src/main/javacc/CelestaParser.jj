@@ -821,7 +821,7 @@ void materializedSelect(AbstractSelectStmt v):
 }
 {
     <K_SELECT> materializedSelectItem(v) ("," materializedSelectItem(v))*
-    <K_FROM>  fromClause(v)
+    <K_FROM>  materializedFromClause(v)
     [<K_GROUP> <K_BY>  groupBy(v)]
 }
 
@@ -887,7 +887,7 @@ void materializedSelectItem(AbstractSelectStmt v):
      v.addColumn(alias, expr); }
 }
 
-TableRef tableReference(AbstractSelectStmt v):
+TableRef tableReference(AbstractSelectStmt v, boolean lookupMViews):
 { TableRef result;
   Token t;
   String grainName = null;
@@ -901,12 +901,16 @@ TableRef tableReference(AbstractSelectStmt v):
 	  [<K_AS>] [t = <S_IDENTIFIER> {alias = t.toString();} ]
   
   {
-     BasicTable tab;
-     if (grainName == null) {
-	    tab = v.getGrain().getElement(identifierParser.parse(tableName), BasicTable.class);
-	 } else {
-	    tab = v.getGrain().getScore().getGrainAsDependency(v.getGrain(), grainName).getElement(identifierParser.parse(tableName), BasicTable.class);
-	 }
+     TableElement tab;
+     Grain g = grainName == null
+          ? v.getGrain()
+          : v.getGrain().getScore().getGrainAsDependency(v.getGrain(), grainName);
+     tab = lookupMViews
+         ? g.getMaterializedViews().get(identifierParser.parse(tableName))
+         : null;
+     if (tab == null) {
+        tab = g.getElement(identifierParser.parse(tableName), BasicTable.class);
+     }
 	 return new TableRef(tab, identifierParser.parse(alias));
   }
 }
@@ -924,10 +928,17 @@ String sequenceNextVal():
   }
 }
 
+void materializedFromClause(AbstractSelectStmt v):
+{TableRef tRef;}
+{
+    tRef = tableReference(v, false) {v.addFromTableRef(tRef);}
+}
+
+
 void fromClause(AbstractSelectStmt v):
 {TableRef tRef;}
 {
-    tRef = tableReference(v) {v.addFromTableRef(tRef);} 
+    tRef = tableReference(v, true) {v.addFromTableRef(tRef);}
     (tRef = join(v) {v.addFromTableRef(tRef);} )*
 }
 
@@ -939,7 +950,7 @@ TableRef join(AbstractSelectStmt v):
 {
   (<K_INNER> {jt = TableRef.JoinType.INNER;} | <K_LEFT> {jt = TableRef.JoinType.LEFT;}| <K_RIGHT> {jt = TableRef.JoinType.RIGHT;}) 
    <K_JOIN>
-   tRef = tableReference(v)
+   tRef = tableReference(v, true)
    <K_ON> 
    onExpr = sqlExpression(v.getGrain().getScore().getIdentifierParser())
    { tRef.setJoinType(jt);

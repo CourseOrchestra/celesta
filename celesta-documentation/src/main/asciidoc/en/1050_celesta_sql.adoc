@@ -335,8 +335,8 @@ include::../synsql.adoc[tag="syn_from_clause"]
 
 This query key restrictions and differences from SQL queries in various RDBMS are:
 
-. Queries are based only on tables (in the current or neighbouring grains).
-Queries cannot be created based on views in order to avoid making ineffective statements.
+. Queries are based only on tables or materialized views (in the current or neighbouring grains).
+Queries cannot be created based on ordinary views in order to avoid making ineffective statements.
 
 [[no_select_all_fields]]
 . `SELECT *` statement is not supported and every query field must have a set and unique alias, only if it is not a reference to a table field with a unique name within a query.
