@@ -262,9 +262,6 @@ public abstract class DbUpdater<T extends ICallContext> {
             // Обновляем внешние ключи
             updateGrainFKeys(g);
 
-            // Создаём представления заново
-            createViews(g);
-
             // Создаём параметризованные представления заново
             createParameterizedViews(g);
 
@@ -280,6 +277,9 @@ public abstract class DbUpdater<T extends ICallContext> {
                 dbAdaptor.dropTableTriggersForMaterializedViews(conn, t);
                 dbAdaptor.createTableTriggersForMaterializedViews(conn, t);
             }
+
+            // Создаём представления заново
+            createViews(g);
 
             processGrainMeta(g);
 

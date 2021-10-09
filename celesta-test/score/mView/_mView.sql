@@ -80,3 +80,7 @@ CREATE materialized view mView6 AS
   select f1, sum(f1) as s1, sum(f2) as s2
   from table5
   group by f1;
+
+-- This tests creation of a view based on materialized view
+CREATE view viewFromMView as
+    select distinct vvv from mView5;
