@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by ioann on 15.06.2017.
@@ -35,6 +36,15 @@ public class ViewParsingTest extends AbstractParsingTest {
             "view/testParsingFailsWhenAggregateExprInGroupBy.sql"
     );
     assertThrows(ParseException.class, () -> parse(f));
+  }
+
+  @Test
+  void TestParsingDoesNotFailWhenTableIsJoinedWithMV() throws IOException, ParseException {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "view/TestParsingDoesNotFailWhenTableIsJoinedWithMV.sql"
+    );
+    parse(f);
   }
 
   @Test

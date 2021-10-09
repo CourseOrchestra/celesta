@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by ioann on 15.06.2017.
@@ -33,6 +34,24 @@ public class MaterializedViewParsingTest extends AbstractParsingTest {
     File f = ResourceUtil.getResourceAsFile(
             ParserTest.class,
             "materializedView/testParsingFailsWithWhereCondition.sql"
+    );
+    assertThrows(ParseException.class, () ->  parse(f));
+  }
+
+  @Test
+  public void testParsingFailsWithJoin() {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "materializedView/testParsingFailsWithJoin.sql"
+    );
+    assertThrows(ParseException.class, () ->  parse(f));
+  }
+
+  @Test
+  public void testParsingFailsWithViewFromMView() {
+    File f = ResourceUtil.getResourceAsFile(
+            ParserTest.class,
+            "materializedView/TestParsingFailsWhenMviewFromMview.sql"
     );
     assertThrows(ParseException.class, () ->  parse(f));
   }

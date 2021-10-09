@@ -550,12 +550,13 @@ public final class CelestaSerializer {
 
         @Override
         protected String tableName(TableRef tRef) {
-            BasicTable t = tRef.getTable();
+            TableElement t = tRef.getTable();
             if (t.getGrain() == view.getGrain()) {
                 return String.format("%s as %s", t.getQuotedNameIfNeeded(), tRef.getAlias());
             } else {
                 return String.format("%s.%s as %s",
-                                     t.getGrain().getQuotedNameIfNeeded(), t.getQuotedNameIfNeeded(), tRef.getAlias());
+                        t.getGrain().getQuotedNameIfNeeded(), t.getQuotedNameIfNeeded(),
+                        tRef.getAlias());
             }
         }
 

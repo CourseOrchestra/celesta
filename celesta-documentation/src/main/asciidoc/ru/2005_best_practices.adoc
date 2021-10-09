@@ -311,7 +311,8 @@ for (FooCursor c: foo){
 
 [source,java]
 ----
-if (bar.getId() != c.getBarId())
+//mind possible nulls!
+if (!Objects.equals(bar.getId(), c.getBarId()))
 		bar.get(c.getBarId());
 //use newly fetched or cached bar here...
 ----
@@ -345,7 +346,7 @@ FooCursor foo = new FooCursor(context);
 foo.orderBy(foo.COLUMNS.barId());
 BarCursor bar = new BarCursor(context);
 for (FooCursor c: foo){
-  if (bar.getId() != c.getBarId())
+  if (!Objects.equals(bar.getId(), c.getBarId()))
 	/*minimum number of fetches*/
 	bar.get(c.getBarId());
 }

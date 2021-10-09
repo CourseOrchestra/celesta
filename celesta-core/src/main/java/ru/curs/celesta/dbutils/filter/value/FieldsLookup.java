@@ -36,8 +36,8 @@ public final class FieldsLookup {
 
     private BasicCursor cursor;
     private BasicCursor otherCursor;
-    private Runnable lookupChangeCallback;
-    private Function<FieldsLookup, Void> newLookupCallback;
+    private final Runnable lookupChangeCallback;
+    private final Function<FieldsLookup, Void> newLookupCallback;
 
     public FieldsLookup(Cursor cursor, BasicCursor otherCursor,
                         Runnable lookupChangeCallback,
@@ -171,11 +171,14 @@ public final class FieldsLookup {
      * @param field      filed of the target cursor.
      * @param otherField field of the auxiliary cursor.
      * @return
-     * @throws ParseException if some column is not found.
      */
     @Deprecated
-    public FieldsLookup add(String field, String otherField) throws ParseException {
-        return internalAdd(validateFilteredColumn(field), validateFilteringColumn(otherField));
+    public FieldsLookup add(String field, String otherField) {
+        try {
+            return internalAdd(validateFilteredColumn(field), validateFilteringColumn(otherField));
+        } catch (ParseException e) {
+            throw new CelestaException(e.getMessage(), e);
+        }
     }
 
     /**
@@ -185,10 +188,13 @@ public final class FieldsLookup {
      * @param otherColumn column of the auxiliary cursor.
      * @param <T>         type of the column. Only columns of the same type can be bound in one filter.
      * @return
-     * @throws ParseException if a column is not found in the relevant table.
      */
-    public <T> FieldsLookup add(ColumnMeta<T> column, ColumnMeta<T> otherColumn) throws ParseException {
-        return internalAdd(column, otherColumn);
+    public <T> FieldsLookup add(ColumnMeta<T> column, ColumnMeta<T> otherColumn) {
+        try {
+            return internalAdd(column, otherColumn);
+        } catch (ParseException e) {
+            throw new CelestaException(e.getMessage(), e);
+        }
     }
 
     private FieldsLookup internalAdd(final ColumnMeta<?> column, final ColumnMeta<?> otherColumn) throws ParseException {
