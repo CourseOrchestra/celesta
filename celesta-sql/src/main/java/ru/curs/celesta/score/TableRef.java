@@ -23,13 +23,13 @@ public class TableRef {
         RIGHT
     }
 
-    private final BasicTable table;
+    private final TableElement table;
     private final String alias;
 
     private JoinType joinType;
     private Expr onExpr;
 
-    public TableRef(BasicTable table, String alias) {
+    public TableRef(TableElement table, String alias) {
         this.table = table;
         this.alias = alias;
     }
@@ -48,7 +48,7 @@ public class TableRef {
      *
      * @return
      */
-    public BasicTable getTable() {
+    public TableElement getTable() {
         return table;
     }
 

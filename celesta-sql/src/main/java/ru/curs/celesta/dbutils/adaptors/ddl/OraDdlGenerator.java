@@ -545,7 +545,7 @@ public final class OraDdlGenerator extends DdlGenerator {
 
             @Override
             protected String tableName(TableRef tRef) {
-                BasicTable t = tRef.getTable();
+                TableElement t = tRef.getTable();
                 return String.format(tableString(t.getGrain().getName(), t.getName()) + " \"%s\"", tRef.getAlias());
             }
 

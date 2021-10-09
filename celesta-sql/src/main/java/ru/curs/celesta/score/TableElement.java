@@ -38,6 +38,12 @@ public interface TableElement {
   String getQuotedName();
 
   /**
+   * Returns the name in ANSI quotes if needed.
+   * @return
+   */
+  String getQuotedNameIfNeeded();
+
+  /**
    * Returns a map of columns with names.
    *
    * @return
