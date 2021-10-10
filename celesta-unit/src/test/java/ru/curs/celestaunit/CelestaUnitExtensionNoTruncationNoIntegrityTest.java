@@ -9,7 +9,6 @@ import s1.LineCursor;
 import s1.Seq1Sequence;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CelestaUnitExtensionNoTruncationNoIntegrityTest {
 
@@ -31,7 +30,7 @@ public class CelestaUnitExtensionNoTruncationNoIntegrityTest {
     @Test
     void integrityCheckDoesNotWork(CallContext ctx) {
         try(LineCursor lc = new LineCursor(ctx)) {
-            lc.setHeader_id(100);
+            lc.setHeaderId(100);
             lc.setId(100);
             lc.insert();
         }

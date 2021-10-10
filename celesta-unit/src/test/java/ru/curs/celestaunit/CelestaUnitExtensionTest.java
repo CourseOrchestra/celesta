@@ -40,7 +40,7 @@ public class CelestaUnitExtensionTest {
     @Test
     public void integrityCheckWorks(CallContext ctx) {
         try(LineCursor lc = new LineCursor(ctx)) {
-            lc.setHeader_id(100);
+            lc.setHeaderId(100);
             lc.setId(100);
             assertTrue(
                     assertThrows(CelestaException.class,
@@ -92,7 +92,7 @@ public class CelestaUnitExtensionTest {
 
             lc.deleteAll();
             lc.setId(10);
-            lc.setHeader_id(100);
+            lc.setHeaderId(100);
             lc.insert();
 
             assertEquals(1, hc.count());
@@ -107,12 +107,12 @@ public class CelestaUnitExtensionTest {
         headerCursor.setId(42);
         headerCursor.insert();
         LineCursor lineCursor = new LineCursor(ctx);
-        lineCursor.setId(1).setHeader_id(headerCursor.getId()).insert();
-        lineCursor.setId(2).setHeader_id(headerCursor.getId()).insert();
+        lineCursor.setId(1).setHeaderId(headerCursor.getId()).insert();
+        lineCursor.setId(2).setHeaderId(headerCursor.getId()).insert();
         LinecountCursor linecountCursor = new LinecountCursor(ctx);
         linecountCursor.get(42);
         //1+2
-        assertEquals(3, linecountCursor.getLine_count());
+        assertEquals(3, linecountCursor.getLineCount());
     }
 
     @Test
@@ -123,10 +123,10 @@ public class CelestaUnitExtensionTest {
         headerCursor.insert();
         LineCursor lineCursor = new LineCursor(ctx);
         lineCursor.setId(7);
-        lineCursor.setHeader_id(headerCursor.getId());
+        lineCursor.setHeaderId(headerCursor.getId());
         lineCursor.insert();
         LinecountCursor linecountCursor = new LinecountCursor(ctx);
         linecountCursor.get(42);
-        assertEquals(7, linecountCursor.getLine_count());
+        assertEquals(7, linecountCursor.getLineCount());
     }
 }

@@ -222,7 +222,7 @@ public class CursorTest extends AbstractCelestaTest {
         lc.setUserid("foo");
         lc.setGrainid("celesta");
         lc.setTablename("logsetup");
-        lc.setAction_type(Action.INSERT.shortId());
+        lc.setActionType(Action.INSERT.shortId());
     }
 
     @Test

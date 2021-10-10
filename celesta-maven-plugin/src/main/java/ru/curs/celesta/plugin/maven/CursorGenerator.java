@@ -86,6 +86,7 @@ import java.util.stream.Collectors;
 
 public final class CursorGenerator {
     private final File srcDir;
+    private final boolean snakeToCamel;
     private static final String GRAIN_FIELD_NAME = "GRAIN_NAME";
     private static final String OBJECT_FIELD_NAME = "OBJECT_NAME";
     private static final String COLUMNS_FIELD_NAME = "COLUMNS";
@@ -119,8 +120,9 @@ public final class CursorGenerator {
         TRIGGER_REGISTRATION_METHOD_TO_TRIGGER_TYPE = Collections.unmodifiableMap(map);
     }
 
-    CursorGenerator(File srcDir) {
+    CursorGenerator(File srcDir, boolean snakeToCamel) {
         this.srcDir = srcDir;
+        this.snakeToCamel = snakeToCamel;
     }
 
     void generateCursor(GrainElement ge, String scorePath) {
@@ -133,8 +135,7 @@ public final class CursorGenerator {
             );
         }
 
-        final String sourceFileNamePrefix = StringUtils.capitalize(ge.getName());
-        final String className = calcClassName(ge, sourceFileNamePrefix);
+        final String className = calcClassName(ge);
         final String columnsClassName = "Columns";
 
         boolean isVersionedGe = ge instanceof VersionedElement && ((VersionedElement) ge).isVersioned();
@@ -241,12 +242,17 @@ public final class CursorGenerator {
         return result;
     }
 
-    private static String calcClassName(GrainElement ge, String sourceFileNamePrefix) {
+    private String calcClassName(GrainElement ge) {
+        final String sourceFileNamePrefix = camelize(StringUtils.capitalize(ge.getName()));
         if (ge instanceof SequenceElement) {
             return sourceFileNamePrefix + "Sequence";
         } else {
             return sourceFileNamePrefix + "Cursor";
         }
+    }
+
+    private String camelize(String s) {
+        return snakeToCamel ? CaseUtils.snakeToCamel(s) : s;
     }
 
     private static String getCurrentDate() {
@@ -463,7 +469,7 @@ public final class CursorGenerator {
         return Arrays.asList(grainName, objectName);
     }
 
-    private static TypeSpec buildCursorColumnsAsInnerStaticClass(DataGrainElement dge, ClassName columnsClassType) {
+    private TypeSpec buildCursorColumnsAsInnerStaticClass(DataGrainElement dge, ClassName columnsClassType) {
 
         TypeSpec.Builder builder = TypeSpec.classBuilder(columnsClassType)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
@@ -491,7 +497,7 @@ public final class CursorGenerator {
                     final String columnName = e.getKey();
                     final TypeName columnType =
                             ParameterizedTypeName.get(ColumnMeta.class, e.getValue().getJavaClass());
-                    return MethodSpec.methodBuilder(columnName)
+                    return MethodSpec.methodBuilder(camelize(columnName))
                             .addModifiers(Modifier.PUBLIC)
                             .returns(columnType)
                             .addStatement("return ($T) this.$N.getColumns().get($S)",
@@ -540,17 +546,17 @@ public final class CursorGenerator {
                 .build();
     }
 
-    private static List<FieldSpec> buildDataFields(DataGrainElement dge) {
+    private List<FieldSpec> buildDataFields(DataGrainElement dge) {
         Map<String, ? extends ColumnMeta<?>> columns = dge.getColumns();
 
         return columns.entrySet().stream()
-                .map(e -> FieldSpec.builder(e.getValue().getJavaClass(), e.getKey(), Modifier.PRIVATE))
+                .map(e -> FieldSpec.builder(e.getValue().getJavaClass(), camelize(e.getKey()), Modifier.PRIVATE))
                 .map(FieldSpec.Builder::build)
                 .collect(Collectors.toList());
 
     }
 
-    private static List<MethodSpec> generateGettersAndSetters(List<FieldSpec> fieldSpecs, TypeName selfTypeName) {
+    private List<MethodSpec> generateGettersAndSetters(List<FieldSpec> fieldSpecs, TypeName selfTypeName) {
         List<MethodSpec> result = new ArrayList<>();
 
         fieldSpecs.forEach(
@@ -558,7 +564,7 @@ public final class CursorGenerator {
                     String methodSuffix = String.valueOf(Character.toUpperCase(fieldSpec.name.charAt(0)));
 
                     if (fieldSpec.name.length() > 1) {
-                        methodSuffix = methodSuffix + fieldSpec.name.substring(1);
+                        methodSuffix = methodSuffix + camelize(fieldSpec.name.substring(1));
                     }
 
                     MethodSpec getter = MethodSpec.methodBuilder("get" + methodSuffix)
@@ -580,32 +586,35 @@ public final class CursorGenerator {
         return result;
     }
 
-    private static MethodSpec buildTryGet(Set<Column<?>> pk) {
+    private MethodSpec buildTryGet(Set<Column<?>> pk) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("tryGet")
                 .addModifiers(Modifier.PUBLIC)
                 .returns(TypeName.BOOLEAN);
         for (Column<?> pkColumn : pk) {
-            builder.addParameter(pkColumn.getJavaClass(), pkColumn.getName());
+            builder.addParameter(pkColumn.getJavaClass(), camelize(pkColumn.getName()));
         }
-        String pkColumnNames = pk.stream().map(NamedElement::getName).collect(Collectors.joining(", "));
+        String pkColumnNames = pk.stream().map(NamedElement::getName)
+                .map(this::camelize)
+                .collect(Collectors.joining(", "));
         builder.addStatement("return tryGetByValuesArray($N)", pkColumnNames);
         return builder.build();
     }
 
-    private static MethodSpec buildGet(Set<Column<?>> pk) {
+    private MethodSpec buildGet(Set<Column<?>> pk) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("get")
                 .addModifiers(Modifier.PUBLIC);
         for (Column<?> pkColumn : pk) {
-            builder.addParameter(pkColumn.getJavaClass(), pkColumn.getName());
+            builder.addParameter(pkColumn.getJavaClass(), camelize(pkColumn.getName()));
         }
-        String pkColumnNames = pk.stream().map(NamedElement::getName).collect(Collectors.joining(", "));
+        String pkColumnNames = pk.stream().map(NamedElement::getName)
+                .map(this::camelize).collect(Collectors.joining(", "));
         builder.addStatement("getByValuesArray($N)", pkColumnNames);
         return builder.build();
     }
 
 
 
-    private static MethodSpec buildParseResult(
+    private MethodSpec buildParseResult(
             Map<String, ? extends ColumnMeta<?>> columns, String methodName, boolean isVersionedObject
     ) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
@@ -615,9 +624,9 @@ public final class CursorGenerator {
                 .addException(SQLException.class);
 
         columns.forEach((name, meta) -> {
-
+            String cursorField = camelize(name);
             if (BinaryColumn.CELESTA_TYPE.equals(meta.getCelestaType())) {
-                builder.addStatement("this.$N = null", name);
+                builder.addStatement("this.$N = null", cursorField);
             } else {
                 builder.beginControlFlow("if (this.$N($S))", "inRec", name);
                 if (ZonedDateTimeColumn.CELESTA_TYPE.equals(meta.getCelestaType())) {
@@ -627,15 +636,15 @@ public final class CursorGenerator {
                     );
                     builder.beginControlFlow("if ($N != null)", "ts");
                     builder.addStatement("this.$N = $T.of(ts.toLocalDateTime(), $T.systemDefault())",
-                            name, ZonedDateTime.class, ZoneOffset.class);
+                            cursorField, ZonedDateTime.class, ZoneOffset.class);
                     builder.endControlFlow();
                     builder.beginControlFlow("else");
-                    builder.addStatement("this.$N = null", name);
+                    builder.addStatement("this.$N = null", cursorField);
                     builder.endControlFlow();
                 } else {
-                    builder.addStatement("this.$N = rs.$N($S)", name, meta.jdbcGetterName(), name);
+                    builder.addStatement("this.$N = rs.$N($S)", cursorField, meta.jdbcGetterName(), name);
                     builder.beginControlFlow("if (rs.$N())", "wasNull");
-                    builder.addStatement("this.$N = null", name);
+                    builder.addStatement("this.$N = null", cursorField);
                     builder.endControlFlow();
                 }
                 builder.endControlFlow();
@@ -691,7 +700,7 @@ public final class CursorGenerator {
                 .build();
     }
 
-    private static MethodSpec buildClearBuffer(Map<String, ? extends ColumnMeta<?>> columns, Set<Column<?>> pk) {
+    private MethodSpec buildClearBuffer(Map<String, ? extends ColumnMeta<?>> columns, Set<Column<?>> pk) {
 
         ParameterSpec param = ParameterSpec.builder(boolean.class, "withKeys").build();
 
@@ -702,18 +711,18 @@ public final class CursorGenerator {
 
         if (!pk.isEmpty()) {
             builder.beginControlFlow("if ($N)", param.name);
-            pk.stream().forEach(c -> builder.addStatement("this.$N = null", c.getName()));
+            pk.stream().forEach(c -> builder.addStatement("this.$N = null", camelize(c.getName())));
             builder.endControlFlow();
         }
 
         columns.entrySet().stream()
                 .filter(e -> !pk.contains(e.getValue()))
-                .forEach(e -> builder.addStatement("this.$N = null", e.getKey()));
+                .forEach(e -> builder.addStatement("this.$N = null", camelize(e.getKey())));
 
         return builder.build();
     }
 
-    private static MethodSpec buildCurrentKeyValues(Set<Column<?>> pk) {
+    private MethodSpec buildCurrentKeyValues(Set<Column<?>> pk) {
 
         ArrayTypeName resultType = ArrayTypeName.of(Object.class);
 
@@ -725,11 +734,11 @@ public final class CursorGenerator {
                 + pk.stream().map(c -> "$N").collect(Collectors.joining(", "))
                 + "}";
         builder.addStatement(spec, pk.stream()
-                .map(NamedElement::getName).toArray());
+                .map(NamedElement::getName).map(this::camelize).toArray());
         return builder.build();
     }
 
-    private static MethodSpec buildCurrentValues(Map<String, ? extends ColumnMeta<?>> columns) {
+    private MethodSpec buildCurrentValues(Map<String, ? extends ColumnMeta<?>> columns) {
         ArrayTypeName resultType = ArrayTypeName.of(Object.class);
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("_currentValues")
@@ -740,26 +749,26 @@ public final class CursorGenerator {
                 + columns.values().stream().map(c -> "$N").collect(Collectors.joining(", "))
                 + "}";
         builder.addStatement(spec, columns.values().stream()
-                .map(ColumnMeta::getName).toArray());
+                .map(ColumnMeta::getName).map(this::camelize).toArray());
 
         return builder.build();
     }
 
-    private static List<MethodSpec> buildCalcBlobs(Map<String, ? extends ColumnMeta<?>> columns, String className) {
+    private List<MethodSpec> buildCalcBlobs(Map<String, ? extends ColumnMeta<?>> columns, String className) {
         return columns.entrySet().stream()
                 .filter(e -> e.getValue() instanceof BinaryColumn)
                 .map(e ->
-                        MethodSpec.methodBuilder("calc" + StringUtils.capitalize(e.getKey()))
+                        MethodSpec.methodBuilder("calc" + StringUtils.capitalize(camelize(e.getKey())))
                                 .addModifiers(Modifier.PUBLIC)
-                                .addStatement("this.$N = this.calcBlob($S)", e.getKey(), e.getKey())
+                                .addStatement("this.$N = this.calcBlob($S)", camelize(e.getKey()), e.getKey())
                                 .addStatement(
                                         "(($N)this.getXRec()).$N = this.$N.clone()",
-                                        className, e.getKey(), e.getKey()
+                                        className, camelize(e.getKey()), camelize(e.getKey())
                                 ).build()
                 ).collect(Collectors.toList());
     }
 
-    private static MethodSpec buildSetAutoIncrement(Map<String, ? extends ColumnMeta<?>> columns) {
+    private MethodSpec buildSetAutoIncrement(Map<String, ? extends ColumnMeta<?>> columns) {
         MethodSpec.Builder builder = MethodSpec
                 .methodBuilder("_setAutoIncrement")
                 .addModifiers(Modifier.PROTECTED)
@@ -773,7 +782,7 @@ public final class CursorGenerator {
                 .filter(e -> e.getValue() instanceof IntegerColumn)
                 .filter(e -> ((IntegerColumn) e.getValue()).getSequence() != null)
                 .findAny()
-                .ifPresent(e -> builder.addStatement("this.$N = $N", e.getKey(), param.name));
+                .ifPresent(e -> builder.addStatement("this.$N = $N", camelize(e.getKey()), param.name));
 
         return builder.build();
     }
@@ -806,7 +815,7 @@ public final class CursorGenerator {
                 ).collect(Collectors.toList());
     }
 
-    private static List<MethodSpec> buildCompileCopying(
+    private List<MethodSpec> buildCompileCopying(
             GrainElement ge, TypeName selfTypeName, Collection<String> columns, boolean isVersionedObject
     ) {
         final String copyFieldsFromMethodName = "copyFieldsFrom";
@@ -860,7 +869,7 @@ public final class CursorGenerator {
         copyFieldsFromBuilder.addStatement("$T from = ($T)c", selfTypeName, selfTypeName);
 
         columns.forEach(c ->
-                copyFieldsFromBuilder.addStatement("this.$N = from.$N", c, c)
+                copyFieldsFromBuilder.addStatement("this.$N = from.$N", camelize(c), camelize(c))
         );
 
         if (isVersionedObject) {

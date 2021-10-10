@@ -123,7 +123,7 @@ public final class LoggingManager implements ILoggingManager {
         log.setUserid(c.callContext().getUserId());
         log.setGrainid(c.meta().getGrain().getName());
         log.setTablename(c._objectName());
-        log.setAction_type(a.shortId());
+        log.setActionType(a.shortId());
         Object[] o = c._currentKeyValues();
 
         String value;

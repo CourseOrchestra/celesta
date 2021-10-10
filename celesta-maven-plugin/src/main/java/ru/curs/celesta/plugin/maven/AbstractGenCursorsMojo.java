@@ -64,7 +64,7 @@ abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
                         .add(ge)
         );
 
-        CursorGenerator generator = new CursorGenerator(getSourceRoot());
+        CursorGenerator generator = new CursorGenerator(getSourceRoot(), isSnakeToCamel());
         partsToElements.entrySet().stream().forEach(
                 e -> {
                     final String sp;

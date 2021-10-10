@@ -74,4 +74,7 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
         return genSysCursors || !Objects.equals(grain.getScore().getSysSchemaName(), grain.getName());
     }
 
+    boolean isSnakeToCamel() {
+        return snakeToCamel;
+    }
 }
