@@ -85,7 +85,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public final class CursorGenerator {
-
+    private final File srcDir;
     private static final String GRAIN_FIELD_NAME = "GRAIN_NAME";
     private static final String OBJECT_FIELD_NAME = "OBJECT_NAME";
     private static final String COLUMNS_FIELD_NAME = "COLUMNS";
@@ -119,11 +119,11 @@ public final class CursorGenerator {
         TRIGGER_REGISTRATION_METHOD_TO_TRIGGER_TYPE = Collections.unmodifiableMap(map);
     }
 
-    private CursorGenerator() {
-        throw new AssertionError();
+    CursorGenerator(File srcDir) {
+        this.srcDir = srcDir;
     }
 
-    protected static void generateCursor(GrainElement ge, File srcDir, String scorePath) {
+    void generateCursor(GrainElement ge, String scorePath) {
         final String sourcePackage = calcSourcePackage(ge, scorePath);
 
         if (sourcePackage.isEmpty()) {

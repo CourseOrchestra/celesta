@@ -24,13 +24,16 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
     static final String CELESTASQL_DIR = "src/main/celestasql";
     static final String CELESTASQL_TEST_DIR = "src/test/celestasql";
 
-    @Parameter(property = "scores", required = false)
+    @Parameter(property = "scores")
     List<ScoreProperties> scores = Collections.emptyList();
 
-    @Parameter(property = "testScores", required = false)
+    @Parameter(property = "testScores")
     List<ScoreProperties> testScores = Collections.emptyList();
 
-    @Parameter(property = "genSysCursors", required = false)
+    @Parameter(property = "snakeToCamel")
+    boolean snakeToCamel = true;
+
+    @Parameter(property = "genSysCursors")
     boolean genSysCursors;
 
     @Component
