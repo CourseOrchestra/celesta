@@ -1,13 +1,19 @@
 package ru.curs.celesta.script;
 
 import org.junit.jupiter.api.TestTemplate;
-import pView.*;
+import pView.PView1Cursor;
+import pView.PView2Cursor;
+import pView.PView3Cursor;
+import pView.PView4Cursor;
+import pView.T1Cursor;
+import pView.T2Cursor;
+import pView.T3Cursor;
 import ru.curs.celesta.CallContext;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TestParameterizedView implements ScriptTest {
 

@@ -1,7 +1,11 @@
 package ru.curs.celesta.dbutils;
 
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
+import ru.curs.celesta.dbutils.filter.Range;
+import ru.curs.celesta.dbutils.filter.SingleValue;
+import ru.curs.celesta.dbutils.stmt.MaskedStatementHolder;
+import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -28,12 +32,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
-
-import ru.curs.celesta.dbutils.filter.Range;
-import ru.curs.celesta.dbutils.filter.SingleValue;
-import ru.curs.celesta.dbutils.stmt.MaskedStatementHolder;
-import ru.curs.celesta.dbutils.stmt.ParameterSetter;
-import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PreparedStatementHolderTest {
 

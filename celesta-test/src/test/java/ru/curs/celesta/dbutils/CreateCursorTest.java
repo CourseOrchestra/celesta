@@ -1,16 +1,12 @@
 package ru.curs.celesta.dbutils;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.Collections;
-
-import org.junit.jupiter.api.*;
-
 import createcursors.MvtableCursor;
 import createcursors.PvtableCursor;
 import createcursors.WtableCursor;
-
-import ru.curs.celesta.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import ru.curs.celesta.AbstractCelestaTest;
 import ru.curs.celesta.score.Grain;
 import ru.curs.celesta.score.MaterializedView;
 import ru.curs.celesta.score.ParameterizedView;
@@ -19,6 +15,10 @@ import ru.curs.celesta.score.ReadOnlyTable;
 import ru.curs.celesta.score.SequenceElement;
 import ru.curs.celesta.score.Table;
 import ru.curs.celesta.score.View;
+
+import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CreateCursorTest extends AbstractCelestaTest {
 

@@ -1,12 +1,12 @@
 package ru.curs.celesta.score;
 
 
+import org.junit.jupiter.api.Test;
+
 import java.util.Iterator;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.Test;
 
 public class GrainModelTest {
 

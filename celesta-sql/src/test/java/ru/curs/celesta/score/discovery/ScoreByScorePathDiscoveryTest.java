@@ -1,12 +1,11 @@
 package ru.curs.celesta.score.discovery;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import ru.curs.celesta.score.Namespace;
 
 import java.io.File;
 
-import org.junit.jupiter.api.Test;
-
-import ru.curs.celesta.score.Namespace;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ScoreByScorePathDiscoveryTest {
 

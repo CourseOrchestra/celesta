@@ -1,35 +1,71 @@
 package ru.curs.celesta.dbutils.adaptors;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.*;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.Date;
-import java.util.stream.Collectors;
-
-import org.testcontainers.shaded.com.google.common.base.Functions;
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.*;
-import ru.curs.celesta.dbutils.meta.*;
+import ru.curs.celesta.dbutils.BLOB;
+import ru.curs.celesta.dbutils.DbUpdater;
+import ru.curs.celesta.dbutils.DbUpdaterBuilder;
+import ru.curs.celesta.dbutils.DbUpdaterImpl;
+import ru.curs.celesta.dbutils.meta.DbColumnInfo;
+import ru.curs.celesta.dbutils.meta.DbFkInfo;
+import ru.curs.celesta.dbutils.meta.DbIndexInfo;
+import ru.curs.celesta.dbutils.meta.DbPkInfo;
+import ru.curs.celesta.dbutils.meta.DbSequenceInfo;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
-import ru.curs.celesta.test.mock.CelestaImpl;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.AbstractScore;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DataGrainElement;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.FKRule;
+import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.ForeignKey;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.View;
+import ru.curs.celesta.score.ZonedDateTimeColumn;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.syscursors.GrainsCursor;
+import ru.curs.celesta.test.mock.CelestaImpl;
+
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class AbstractAdaptorTest {
 

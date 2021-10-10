@@ -1,12 +1,14 @@
 package ru.curs.celesta.dbutils;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.*;
-
-import ru.curs.celesta.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import ru.curs.celesta.AbstractCelestaTest;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.syscursors.LogCursor;
 import ru.curs.celesta.syscursors.LogsetupCursor;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CursorTest extends AbstractCelestaTest {
 

@@ -14,18 +14,16 @@ import mView.Table4Cursor;
 import mView.Table5Cursor;
 import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.dbutils.Cursor;
+import ru.curs.celesta.dbutils.MaterializedViewCursor;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.sql.Timestamp;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.temporal.ChronoUnit;
 
-
-import ru.curs.celesta.dbutils.Cursor;
-import ru.curs.celesta.dbutils.MaterializedViewCursor;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestMaterializedView implements ScriptTest {
     @TestTemplate

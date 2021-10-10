@@ -1,12 +1,32 @@
 package ru.curs.celesta.script;
 
-import aggregate.*;
+import aggregate.CountConditionLessCursor;
+import aggregate.CountGetDateCondCursor;
+import aggregate.SumFieldAndNumberCursor;
+import aggregate.TWithDecimalCursor;
+import aggregate.TableGroupByCursor;
+import aggregate.TableMinMaxCursor;
+import aggregate.TableSumOneFieldCursor;
+import aggregate.TableSumTwoFieldsCursor;
+import aggregate.ViewCountCondLessCursor;
+import aggregate.ViewCountGetDateCondCursor;
+import aggregate.ViewCountMinMaxCursor;
+import aggregate.ViewGroupByAggregateCursor;
+import aggregate.ViewGroupByCursor;
+import aggregate.ViewMaxOneFieldCursor;
+import aggregate.ViewMaxTwoFieldsCursor;
+import aggregate.ViewMinOneFieldCursor;
+import aggregate.ViewMinTwoFieldsCursor;
+import aggregate.ViewSumOneFieldCursor;
+import aggregate.ViewSumTwoFieldsCursor;
+import aggregate.ViewSumTwoNumbersCursor;
+import aggregate.ViewWithDecimalCursor;
 import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 

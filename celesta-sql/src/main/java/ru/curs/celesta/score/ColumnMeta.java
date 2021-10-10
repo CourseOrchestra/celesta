@@ -80,7 +80,14 @@ public interface ColumnMeta<V> {
      * Column ordering specifier.
      */
     enum Ordering {
-        ASC, DESC
+        /**
+         * Ascending order.
+         */
+        ASC,
+        /**
+         * Descending order.
+         */
+        DESC
     }
 
 }

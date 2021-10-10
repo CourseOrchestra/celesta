@@ -4,15 +4,43 @@ import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.ICallContext;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.dbutils.meta.*;
+import ru.curs.celesta.dbutils.meta.DbColumnInfo;
+import ru.curs.celesta.dbutils.meta.DbFkInfo;
+import ru.curs.celesta.dbutils.meta.DbIndexInfo;
+import ru.curs.celesta.dbutils.meta.DbPkInfo;
+import ru.curs.celesta.dbutils.meta.DbSequenceInfo;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.AbstractScore;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.ForeignKey;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.Table;
+import ru.curs.celesta.score.TableElement;
+import ru.curs.celesta.score.VersionString;
+import ru.curs.celesta.score.VersionedElement;
+import ru.curs.celesta.score.View;
 import ru.curs.celesta.syscursors.ISchemaCursor;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public abstract class DbUpdater<T extends ICallContext> {
 

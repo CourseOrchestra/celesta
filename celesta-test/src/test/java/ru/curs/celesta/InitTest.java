@@ -2,7 +2,11 @@ package ru.curs.celesta;
 
 import org.junit.jupiter.api.Test;
 import ru.curs.celesta.dbutils.BasicCursor;
-import ru.curs.celesta.syscursors.*;
+import ru.curs.celesta.syscursors.CalllogCursor;
+import ru.curs.celesta.syscursors.GrainsCursor;
+import ru.curs.celesta.syscursors.LogCursor;
+import ru.curs.celesta.syscursors.PermissionsCursor;
+import ru.curs.celesta.syscursors.RolesCursor;
 import simpleCases.Simple_tableCursor;
 import simpleCases.Simple_viewCursor;
 

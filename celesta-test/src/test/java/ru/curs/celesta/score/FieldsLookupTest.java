@@ -1,13 +1,13 @@
 package ru.curs.celesta.score;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import ru.curs.celesta.*;
+import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 
 import java.util.function.Function;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Created by ioann on 07.06.2017.

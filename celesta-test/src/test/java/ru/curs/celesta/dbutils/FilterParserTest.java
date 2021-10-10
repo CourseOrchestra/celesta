@@ -1,14 +1,13 @@
 package ru.curs.celesta.dbutils;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
-
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.FilterParser;
 import ru.curs.celesta.dbutils.filter.FilterParser.FilterType;
 import ru.curs.celesta.score.DateTimeColumn;
 import ru.curs.celesta.score.ParseException;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FilterParserTest {
 

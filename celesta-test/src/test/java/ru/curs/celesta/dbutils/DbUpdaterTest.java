@@ -2,18 +2,23 @@ package ru.curs.celesta.dbutils;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import ru.curs.celesta.*;
+import ru.curs.celesta.AppSettings;
+import ru.curs.celesta.BaseAppSettings;
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.ConnectionPoolConfiguration;
+import ru.curs.celesta.InternalConnectionPool;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.H2Adaptor;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
-import ru.curs.celesta.test.mock.CelestaImpl;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
-
-import static org.junit.jupiter.api.Assertions.*;
+import ru.curs.celesta.test.mock.CelestaImpl;
 
 import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DbUpdaterTest {
 

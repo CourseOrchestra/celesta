@@ -1,19 +1,20 @@
 package ru.curs.celesta.score;
 
 
+import org.junit.jupiter.api.Test;
+import ru.curs.celesta.score.io.FileResource;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.Test;
-
-import ru.curs.celesta.score.io.FileResource;
 
 public class ParserTest extends AbstractParsingTest {
 

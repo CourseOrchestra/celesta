@@ -1,8 +1,20 @@
 package ru.curs.celesta.dbutils;
 
-import ru.curs.celesta.*;
+import ru.curs.celesta.CallContext;
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.DBType;
+import ru.curs.celesta.ICelesta;
+import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.Score;
+import ru.curs.celesta.score.TableType;
+import ru.curs.celesta.score.View;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.RolesCursor;
 import ru.curs.celesta.syscursors.TablesCursor;

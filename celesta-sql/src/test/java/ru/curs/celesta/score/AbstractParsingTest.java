@@ -1,9 +1,9 @@
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.score.io.FileResource;
+
 import java.io.File;
 import java.io.IOException;
-
-import ru.curs.celesta.score.io.FileResource;
 
 /**
  * Created by ioann on 15.06.2017.
