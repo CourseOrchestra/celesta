@@ -1,21 +1,25 @@
 package ru.curs.celesta.dbutils.adaptors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.sql.Connection;
-import java.util.Locale;
-import java.util.Properties;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.OracleContainer;
-import ru.curs.celesta.*;
+import ru.curs.celesta.AppSettings;
+import ru.curs.celesta.BaseAppSettings;
+import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.ConnectionPoolConfiguration;
+import ru.curs.celesta.InternalConnectionPool;
 import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.test.ContainerUtils;
+
+import java.sql.Connection;
+import java.util.Locale;
+import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class OraAdaptorTest extends AbstractAdaptorTest {
 

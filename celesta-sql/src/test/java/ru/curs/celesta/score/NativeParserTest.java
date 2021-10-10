@@ -3,12 +3,12 @@ package ru.curs.celesta.score;
 import org.junit.jupiter.api.Test;
 import ru.curs.celesta.DBType;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class NativeParserTest {

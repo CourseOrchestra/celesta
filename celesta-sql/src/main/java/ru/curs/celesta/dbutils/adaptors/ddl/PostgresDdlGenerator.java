@@ -1,5 +1,7 @@
 package ru.curs.celesta.dbutils.adaptors.ddl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
@@ -8,7 +10,23 @@ import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.Count;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.Expr;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.SQLGenerator;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.Sum;
+import ru.curs.celesta.score.TableElement;
+import ru.curs.celesta.score.VersionedElement;
+import ru.curs.celesta.score.ViewColumnType;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -22,11 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
-import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.*;
+import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
+import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.CONJUGATE_INDEX_POSTFIX;
 
 /**
  * Class for SQL generation of data definition of PostgreSQL.

@@ -1,5 +1,7 @@
 package ru.curs.celesta.dbutils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.stmt.PreparedStatementHolderFactory;
@@ -13,9 +15,6 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author ioann

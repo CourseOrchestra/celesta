@@ -1,7 +1,8 @@
 package ru.curs.celesta.dbutils.stmt;
 
 import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.dbutils.BLOB;
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
 import ru.curs.celesta.dbutils.filter.Range;
 import ru.curs.celesta.dbutils.filter.SingleValue;
 

@@ -1,12 +1,11 @@
 package ru.curs.celesta.score.io;
 
+import org.junit.jupiter.api.Test;
+import ru.curs.celesta.score.Namespace;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-
-import org.junit.jupiter.api.Test;
-
-import ru.curs.celesta.score.Namespace;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -3,10 +3,25 @@ package ru.curs.celesta.dbutils.h2;
 import org.h2.api.Trigger;
 import ru.curs.celesta.CurrentScore;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.AbstractScore;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.Count;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.Expr;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.Sum;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 

@@ -3,12 +3,11 @@ package ru.curs.celesta.script;
 import navigation.NavigationTableCursor;
 import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
+import ru.curs.celesta.CelestaException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import ru.curs.celesta.CelestaException;
 
 class TestNavigation implements ScriptTest {
 

@@ -2,23 +2,29 @@ package ru.curs.celesta.score;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-
-import ru.curs.celesta.*;
+import ru.curs.celesta.AppSettings;
+import ru.curs.celesta.BaseAppSettings;
+import ru.curs.celesta.CallContext;
+import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.ConnectionPoolConfiguration;
+import ru.curs.celesta.ICelesta;
+import ru.curs.celesta.InternalConnectionPool;
+import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.dbutils.DbUpdater;
 import ru.curs.celesta.dbutils.DbUpdaterBuilder;
 import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.H2Adaptor;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
-import ru.curs.celesta.test.mock.CelestaImpl;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.ISchemaCursor;
-
-import static org.junit.jupiter.api.Assertions.*;
+import ru.curs.celesta.test.mock.CelestaImpl;
 
 import java.sql.Connection;
 import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Pavel Perminov (packpaul@mail.ru)

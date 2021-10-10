@@ -34,10 +34,16 @@
  */
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.RepeatedParseException;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
+import ru.curs.celesta.score.discovery.ScoreDiscovery;
+import ru.curs.celesta.score.io.Resource;
+import ru.curs.celesta.score.validator.IdentifierParser;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -51,13 +57,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
-
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.RepeatedParseException;
-import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
-import ru.curs.celesta.score.discovery.ScoreDiscovery;
-import ru.curs.celesta.score.io.Resource;
-import ru.curs.celesta.score.validator.IdentifierParser;
 
 /**
  * Root class for complete data model of grains.

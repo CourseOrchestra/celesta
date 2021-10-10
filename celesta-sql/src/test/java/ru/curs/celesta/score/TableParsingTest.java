@@ -1,10 +1,11 @@
 package ru.curs.celesta.score;
 
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Created by ioann on 11.09.2017.

@@ -8,7 +8,6 @@ import ru.curs.celesta.score.Score;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;

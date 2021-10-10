@@ -1,10 +1,9 @@
 package ru.curs.celesta.score;
 
-import java.util.List;
-
 import org.json.JSONException;
-
 import ru.curs.celesta.CelestaException;
+
+import java.util.List;
 
 /**
  * Base class for describing a table column. Subclasses of this class correspond

@@ -3,11 +3,16 @@ package ru.curs.celesta.script;
 import org.junit.jupiter.api.TestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.syscursors.LogCursor;
-import simpleCases.*;
+import simpleCases.CustomSequence;
+import simpleCases.DuplicateCursor;
+import simpleCases.ForTriggersCursor;
+import simpleCases.GetDateForViewCursor;
+import simpleCases.Simple_tableCursor;
+import simpleCases.ViewWithGetDateCursor;
+import simpleCases.ZeroInsertCursor;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;

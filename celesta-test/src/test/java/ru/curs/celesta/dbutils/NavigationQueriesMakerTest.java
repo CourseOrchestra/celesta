@@ -1,6 +1,22 @@
 package ru.curs.celesta.dbutils;
 
 
+import org.junit.jupiter.api.Test;
+import ru.curs.celesta.dbutils.filter.AbstractFilter;
+import ru.curs.celesta.dbutils.filter.Filter;
+import ru.curs.celesta.dbutils.filter.In;
+import ru.curs.celesta.dbutils.filter.Range;
+import ru.curs.celesta.dbutils.filter.SingleValue;
+import ru.curs.celesta.dbutils.term.WhereMakerParamsProvider;
+import ru.curs.celesta.dbutils.term.WhereTermsMaker;
+import ru.curs.celesta.score.CelestaParser;
+import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.DataGrainElement;
+import ru.curs.celesta.score.Expr;
+import ru.curs.celesta.score.SQLGenerator;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.validator.PlainIdentifierParser;
+
 import java.sql.Connection;
 import java.time.ZonedDateTime;
 import java.util.Collections;
@@ -9,13 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.Test;
-
-import ru.curs.celesta.dbutils.filter.*;
-import ru.curs.celesta.dbutils.term.WhereMakerParamsProvider;
-import ru.curs.celesta.dbutils.term.WhereTermsMaker;
-import ru.curs.celesta.score.*;
-import ru.curs.celesta.score.validator.PlainIdentifierParser;
 
 public class NavigationQueriesMakerTest {
 

@@ -2,8 +2,6 @@ package ru.curs.celesta.script;
 
 import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.ParseException;
 import upperlower.IdWithValueCursor;
 import upperlower.UpperLowerCursor;
 

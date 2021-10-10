@@ -5,7 +5,11 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static ru.curs.celesta.score.SequenceElement.Argument.*;
+import static ru.curs.celesta.score.SequenceElement.Argument.CYCLE;
+import static ru.curs.celesta.score.SequenceElement.Argument.INCREMENT_BY;
+import static ru.curs.celesta.score.SequenceElement.Argument.MAXVALUE;
+import static ru.curs.celesta.score.SequenceElement.Argument.MINVALUE;
+import static ru.curs.celesta.score.SequenceElement.Argument.START_WITH;
 
 public class SequenceParsingTest extends AbstractParsingTest {
 

@@ -5,8 +5,8 @@ import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.InternalConnectionPool;
 import ru.curs.celesta.ConnectionPoolConfiguration;
+import ru.curs.celesta.InternalConnectionPool;
 import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.test.common.AdvancedFireBirdContainer;
 import ru.curs.celesta.test.common.CollatedMSSQLServerContainer;
@@ -14,7 +14,9 @@ import ru.curs.celesta.test.common.CollatedMSSQLServerContainer;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class ContainerUtils {

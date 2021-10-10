@@ -1,6 +1,17 @@
 package ru.curs.celesta.script;
 
-import filters.*;
+import filters.AFilterCursor;
+import filters.AFilterViewCursor;
+import filters.BFilterCursor;
+import filters.BFilterViewCursor;
+import filters.CFilterCursor;
+import filters.DFilterCursor;
+import filters.EFilterCursor;
+import filters.FFilterCursor;
+import filters.GFilterCursor;
+import filters.GFilterViewCursor;
+import filters.HFilterCursor;
+import filters.IFilterCursor;
 import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;

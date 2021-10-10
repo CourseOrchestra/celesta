@@ -3,7 +3,6 @@ package ru.curs.celesta.dbutils.adaptors.configuration;
 
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.DBType;
-
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.FirebirdAdaptor;
 import ru.curs.celesta.dbutils.adaptors.H2Adaptor;

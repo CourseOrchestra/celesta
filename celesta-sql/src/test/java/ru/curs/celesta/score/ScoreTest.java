@@ -1,6 +1,17 @@
 package ru.curs.celesta.score;
 
-import java.io.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
+import ru.curs.celesta.score.io.FileResource;
+import ru.curs.celesta.score.io.Resource;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,13 +19,6 @@ import java.util.Collections;
 import java.util.StringJoiner;
 
 import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
-import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
-import ru.curs.celesta.score.io.FileResource;
-import ru.curs.celesta.score.io.Resource;
 
 public class ScoreTest {
 

@@ -1,12 +1,12 @@
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.score.io.Resource;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-
-import ru.curs.celesta.score.io.Resource;
 
 /**
  * Persists grain to a writable resource.

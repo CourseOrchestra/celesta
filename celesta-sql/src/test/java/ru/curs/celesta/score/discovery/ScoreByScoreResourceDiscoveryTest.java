@@ -3,13 +3,10 @@ package ru.curs.celesta.score.discovery;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.score.Namespace;
 import ru.curs.celesta.score.io.Resource;
 import ru.curs.celesta.score.io.UrlResource;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.net.URL;
@@ -17,6 +14,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ScoreByScoreResourceDiscoveryTest {
 

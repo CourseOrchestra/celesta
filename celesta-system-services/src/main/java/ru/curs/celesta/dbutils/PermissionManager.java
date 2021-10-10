@@ -1,14 +1,14 @@
 package ru.curs.celesta.dbutils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.ICelesta;
 import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.score.GrainElement;
 import ru.curs.celesta.syscursors.PermissionsCursor;
 import ru.curs.celesta.syscursors.UserrolesCursor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Permission manager. It determines if a user has rights for operations with a table.

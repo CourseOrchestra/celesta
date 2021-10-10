@@ -1,9 +1,9 @@
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.CelestaException;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import ru.curs.celesta.CelestaException;
 
 /**
  * Integer column.

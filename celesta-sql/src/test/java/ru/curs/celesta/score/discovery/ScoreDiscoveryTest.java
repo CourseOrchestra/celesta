@@ -2,7 +2,11 @@ package ru.curs.celesta.score.discovery;
 
 
 import org.junit.jupiter.api.Test;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.AbstractScore;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.ScoreUtil;
+import ru.curs.celesta.score.SequenceElement;
 
 import static org.junit.jupiter.api.Assertions.*;
 

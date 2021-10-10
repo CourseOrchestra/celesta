@@ -9,13 +9,19 @@ import ru.curs.celesta.dbutils.h2.MaterializedViewDeleteTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewInsertTrigger;
 import ru.curs.celesta.dbutils.h2.MaterializedViewUpdateTrigger;
 import ru.curs.celesta.dbutils.h2.RecVersionCheckTrigger;
-import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
-import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.*;
-
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.SQLGenerator;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.TableElement;
+import ru.curs.celesta.score.VersionedElement;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,6 +31,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
+import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.getFieldList;
 
 /**
  * Class for SQL generation of data definition of H2.

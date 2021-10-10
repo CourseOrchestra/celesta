@@ -11,7 +11,6 @@ import ru.curs.celesta.score.IntegerColumn;
 import ru.curs.celesta.score.StringColumn;
 import ru.curs.celesta.score.ZonedDateTimeColumn;
 
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;

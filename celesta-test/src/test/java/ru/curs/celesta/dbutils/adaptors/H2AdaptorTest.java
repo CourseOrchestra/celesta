@@ -2,13 +2,16 @@ package ru.curs.celesta.dbutils.adaptors;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import ru.curs.celesta.*;
-import ru.curs.celesta.dbutils.*;
+import ru.curs.celesta.AppSettings;
+import ru.curs.celesta.BaseAppSettings;
+import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.ConnectionPoolConfiguration;
+import ru.curs.celesta.InternalConnectionPool;
+import ru.curs.celesta.dbutils.DbUpdaterImpl;
 import ru.curs.celesta.dbutils.adaptors.ddl.JdbcDdlConsumer;
 import ru.curs.celesta.score.AbstractScore;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
-
 
 import java.sql.Connection;
 import java.util.Properties;

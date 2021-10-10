@@ -1,21 +1,24 @@
 package ru.curs.celesta.dbutils.adaptors.ddl;
 
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
-
-import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
-import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.*;
-
 import ru.curs.celesta.dbutils.adaptors.column.ColumnDefinerFactory;
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.event.TriggerQuery;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.TableElement;
 
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+
+import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
+import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.CONJUGATE_INDEX_POSTFIX;
 
 /**
  * Base class for SQL generation of data definition of open source DBs (PostgreSQL, H2).

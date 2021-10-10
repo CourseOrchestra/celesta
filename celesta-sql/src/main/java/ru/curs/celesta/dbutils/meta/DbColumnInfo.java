@@ -1,6 +1,13 @@
 package ru.curs.celesta.dbutils.meta;
 
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.StringColumn;
 
 import java.math.BigDecimal;
 import java.util.regex.Matcher;

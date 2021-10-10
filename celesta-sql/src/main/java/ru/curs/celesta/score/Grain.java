@@ -1,5 +1,7 @@
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.DBType;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,8 +17,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import ru.curs.celesta.DBType;
 
 /**
  * Grain.
