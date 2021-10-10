@@ -1,5 +1,12 @@
 package ru.curs.celesta.score.discovery;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.Namespace;
+import ru.curs.celesta.score.io.Resource;
+import ru.curs.celesta.score.io.UrlResource;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,14 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.Namespace;
-import ru.curs.celesta.score.io.Resource;
-import ru.curs.celesta.score.io.UrlResource;
 
 /**
  * Implementation of score discovery based on JAR-files resources look up.

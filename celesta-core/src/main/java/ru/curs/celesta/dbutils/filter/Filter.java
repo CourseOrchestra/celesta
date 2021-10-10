@@ -1,7 +1,11 @@
 package ru.curs.celesta.dbutils.filter;
 
 import ru.curs.celesta.dbutils.QueryBuildingHelper;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.StringColumn;
 
 import java.util.HashMap;
 

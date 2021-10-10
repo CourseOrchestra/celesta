@@ -1,5 +1,10 @@
 package ru.curs.celesta.score.discovery;
 
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.score.Namespace;
+import ru.curs.celesta.score.io.FileResource;
+import ru.curs.celesta.score.io.Resource;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
@@ -9,11 +14,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.score.Namespace;
-import ru.curs.celesta.score.io.FileResource;
-import ru.curs.celesta.score.io.Resource;
 
 /**
  * Implementation of score discovery based on score path look up.

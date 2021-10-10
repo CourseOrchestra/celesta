@@ -1,10 +1,10 @@
 package ru.curs.celesta.score.io;
 
+import ru.curs.celesta.score.Namespace;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import ru.curs.celesta.score.Namespace;
 
 /**
  * Score resource abstraction. Its implementation may point to a physical file or a resource in

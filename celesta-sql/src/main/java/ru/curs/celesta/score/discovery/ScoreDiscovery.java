@@ -1,8 +1,8 @@
 package ru.curs.celesta.score.discovery;
 
-import java.util.Set;
-
 import ru.curs.celesta.score.io.Resource;
+
+import java.util.Set;
 
 /**
  * Score discovery interface.

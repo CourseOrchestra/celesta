@@ -1,11 +1,5 @@
 package ru.curs.celesta.dbutils;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.dbutils.filter.In;
@@ -13,6 +7,12 @@ import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.ParseException;
 import ru.curs.celesta.score.View;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Base class of cursor for viewing data in views.

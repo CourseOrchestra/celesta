@@ -35,38 +35,68 @@
 
 package ru.curs.celesta.dbutils.adaptors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.curs.celesta.CelestaException;
+import ru.curs.celesta.ConnectionPool;
+import ru.curs.celesta.DBType;
+import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
+import ru.curs.celesta.dbutils.adaptors.ddl.DdlGenerator;
+import ru.curs.celesta.dbutils.adaptors.ddl.OraDdlGenerator;
+import ru.curs.celesta.dbutils.adaptors.function.OraFunctions;
+import ru.curs.celesta.dbutils.meta.DbColumnInfo;
+import ru.curs.celesta.dbutils.meta.DbFkInfo;
+import ru.curs.celesta.dbutils.meta.DbIndexInfo;
+import ru.curs.celesta.dbutils.meta.DbPkInfo;
+import ru.curs.celesta.dbutils.meta.DbSequenceInfo;
+import ru.curs.celesta.dbutils.query.FromClause;
+import ru.curs.celesta.dbutils.stmt.ParameterSetter;
+import ru.curs.celesta.event.TriggerQuery;
+import ru.curs.celesta.event.TriggerType;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DataGrainElement;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.FKRule;
+import ru.curs.celesta.score.FloatingColumn;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.NamedElement;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.TableElement;
+import ru.curs.celesta.score.VersionedElement;
+import ru.curs.celesta.score.ZonedDateTimeColumn;
+import ru.curs.celesta.score.validator.AnsiQuotedIdentifierParser;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import ru.curs.celesta.DBType;
-import ru.curs.celesta.CelestaException;
-import ru.curs.celesta.ConnectionPool;
-import ru.curs.celesta.dbutils.adaptors.ddl.*;
-
-import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.*;
-import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.*;
-
-import ru.curs.celesta.dbutils.adaptors.function.OraFunctions;
-import ru.curs.celesta.dbutils.meta.*;
-import ru.curs.celesta.dbutils.query.FromClause;
-import ru.curs.celesta.dbutils.stmt.ParameterSetter;
-import ru.curs.celesta.event.TriggerQuery;
-import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.*;
-import ru.curs.celesta.score.validator.AnsiQuotedIdentifierParser;
-
-import static ru.curs.celesta.dbutils.jdbc.SqlUtils.*;
+import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.CSC;
+import static ru.curs.celesta.dbutils.adaptors.constants.OraConstants.SNL;
+import static ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions.generateSequenceTriggerName;
+import static ru.curs.celesta.dbutils.jdbc.SqlUtils.executeQuery;
 
 /**
  * Oracle Database Adaptor.

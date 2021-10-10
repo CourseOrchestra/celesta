@@ -2,9 +2,12 @@ package ru.curs.celesta.dbutils.meta;
 
 import ru.curs.celesta.score.SequenceElement;
 
-import static ru.curs.celesta.score.SequenceElement.Argument.*;
-
 import java.util.Objects;
+
+import static ru.curs.celesta.score.SequenceElement.Argument.CYCLE;
+import static ru.curs.celesta.score.SequenceElement.Argument.INCREMENT_BY;
+import static ru.curs.celesta.score.SequenceElement.Argument.MAXVALUE;
+import static ru.curs.celesta.score.SequenceElement.Argument.MINVALUE;
 
 /**
  * Information on sequence taken from the database.

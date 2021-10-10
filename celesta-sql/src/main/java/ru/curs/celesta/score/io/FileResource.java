@@ -1,13 +1,13 @@
 package ru.curs.celesta.score.io;
 
+import ru.curs.celesta.score.Namespace;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Objects;
-
-import ru.curs.celesta.score.Namespace;
 
 /**
  * Score resource located in the file system.

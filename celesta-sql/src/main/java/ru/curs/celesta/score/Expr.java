@@ -1,12 +1,12 @@
 package ru.curs.celesta.score;
 
+import ru.curs.celesta.dbutils.QueryBuildingHelper;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import ru.curs.celesta.dbutils.QueryBuildingHelper;
 
 /**
  * Scalar SQL expression.

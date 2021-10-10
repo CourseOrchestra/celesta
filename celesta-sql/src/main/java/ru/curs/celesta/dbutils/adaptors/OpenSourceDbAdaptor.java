@@ -1,27 +1,24 @@
 package ru.curs.celesta.dbutils.adaptors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.dbutils.adaptors.ddl.DdlConsumer;
 import ru.curs.celesta.dbutils.jdbc.SqlUtils;
 import ru.curs.celesta.dbutils.query.FromClause;
-
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.DataGrainElement;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.TableElement;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import ru.curs.celesta.score.Column;
-import ru.curs.celesta.score.DataGrainElement;
-import ru.curs.celesta.score.SequenceElement;
-import ru.curs.celesta.score.TableElement;
 
 /**
  * Created by ioann on 02.05.2017.

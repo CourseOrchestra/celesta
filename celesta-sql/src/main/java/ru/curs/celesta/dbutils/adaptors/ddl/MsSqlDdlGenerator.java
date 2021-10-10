@@ -1,28 +1,44 @@
 package ru.curs.celesta.dbutils.adaptors.ddl;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.DBType;
 import ru.curs.celesta.dbutils.adaptors.DBAdaptor;
 import ru.curs.celesta.dbutils.adaptors.column.ColumnDefinerFactory;
-import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.*;
-import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.*;
-
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.AbstractView;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.Count;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.Expr;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.SQLGenerator;
+import ru.curs.celesta.score.Sum;
+import ru.curs.celesta.score.TableElement;
+import ru.curs.celesta.score.VersionedElement;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
+import static ru.curs.celesta.dbutils.adaptors.function.CommonFunctions.getFieldList;
 
 /**
  * Class for SQL generation of data definition of MsSql.

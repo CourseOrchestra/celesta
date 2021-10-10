@@ -35,14 +35,6 @@
 
 package ru.curs.celesta.dbutils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.PermissionDeniedException;
@@ -55,7 +47,27 @@ import ru.curs.celesta.dbutils.stmt.PreparedStmtHolder;
 import ru.curs.celesta.dbutils.term.WhereTerm;
 import ru.curs.celesta.dbutils.term.WhereTermsMaker;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.*;
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.ColumnMeta;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.ParseException;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.Table;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Cursor class for data modification in tables.

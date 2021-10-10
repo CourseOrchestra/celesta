@@ -1,15 +1,14 @@
 package ru.curs.celesta.score;
 
+import org.json.JSONException;
+import ru.curs.celesta.CelestaException;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.json.JSONException;
-
-import ru.curs.celesta.CelestaException;
 
 /**
  * Super class for {@link Table} and {@link ReadOnlyTable} that encompasses common logic

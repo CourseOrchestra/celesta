@@ -11,7 +11,6 @@ import ru.curs.celesta.dbutils.adaptors.ddl.DdlGenerator;
 import ru.curs.celesta.dbutils.adaptors.ddl.FirebirdDdlGenerator;
 import ru.curs.celesta.dbutils.adaptors.function.SchemalessFunctions;
 import ru.curs.celesta.dbutils.jdbc.SqlUtils;
-
 import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbFkInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
@@ -20,7 +19,6 @@ import ru.curs.celesta.dbutils.meta.DbSequenceInfo;
 import ru.curs.celesta.dbutils.query.FromClause;
 import ru.curs.celesta.dbutils.stmt.ParameterSetter;
 import ru.curs.celesta.event.TriggerQuery;
-
 import ru.curs.celesta.score.BasicTable;
 import ru.curs.celesta.score.BinaryColumn;
 import ru.curs.celesta.score.BooleanColumn;
@@ -45,7 +43,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;

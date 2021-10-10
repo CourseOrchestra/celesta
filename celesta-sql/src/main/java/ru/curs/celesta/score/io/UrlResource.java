@@ -1,5 +1,7 @@
 package ru.curs.celesta.score.io;
 
+import ru.curs.celesta.score.Namespace;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -7,8 +9,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Objects;
-
-import ru.curs.celesta.score.Namespace;
 
 /**
  * Score resource located in a JAR-file.
