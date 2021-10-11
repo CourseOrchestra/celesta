@@ -62,6 +62,10 @@ However, when forming requests to RDBMS at the system level, Celesta always enca
 . *In addition, grain identifiers cannot contain underscores*.
 This is because combining grain names with underscores and other identifiers often used for Celesta internal needs, this restriction helps to prevent possible ambiguities.
 
+[NOTE]
+It is a usual practice to write identifiers in CelestaSQL in "snake_case" -- when transformed to Java classes, they will be converted to 'CamelCase'.
+
+
 [[create_schema_statement]]
 == CREATE SCHEMA (GRAIN) Statement
 
