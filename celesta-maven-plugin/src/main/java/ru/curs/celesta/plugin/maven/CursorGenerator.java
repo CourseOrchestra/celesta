@@ -83,12 +83,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public final class CursorGenerator {
-    private final File srcDir;
-    private final boolean snakeToCamel;
     private static final String GRAIN_FIELD_NAME = "GRAIN_NAME";
     private static final String OBJECT_FIELD_NAME = "OBJECT_NAME";
     private static final String COLUMNS_FIELD_NAME = "COLUMNS";
-
     private static final HashMap<
             Class<? extends GrainElement>,
             Function<GrainElement, Class<? extends BasicDataAccessor>>
@@ -117,6 +114,9 @@ public final class CursorGenerator {
 
         TRIGGER_REGISTRATION_METHOD_TO_TRIGGER_TYPE = Collections.unmodifiableMap(map);
     }
+
+    private final File srcDir;
+    private final boolean snakeToCamel;
 
     CursorGenerator(File srcDir, boolean snakeToCamel) {
         this.srcDir = srcDir;

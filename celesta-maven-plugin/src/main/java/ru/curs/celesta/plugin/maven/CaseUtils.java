@@ -46,6 +46,8 @@ public final class CaseUtils {
                         state = 2;
                     }
                     break;
+                default:
+                    break;
             }
         }
         return result.toString();
