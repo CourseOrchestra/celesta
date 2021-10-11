@@ -7,8 +7,8 @@ import ru.curs.celesta.syscursors.GrainsCursor;
 import ru.curs.celesta.syscursors.LogCursor;
 import ru.curs.celesta.syscursors.PermissionsCursor;
 import ru.curs.celesta.syscursors.RolesCursor;
-import simpleCases.Simple_tableCursor;
-import simpleCases.Simple_viewCursor;
+import simpleCases.SimpleTableCursor;
+import simpleCases.SimpleViewCursor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -73,10 +73,10 @@ public class InitTest extends AbstractCelestaTest {
 
     @Test
     public void getMaxStrLenReturnsCorrectValues(){
-        Simple_tableCursor simpleTableCursor = new Simple_tableCursor(cc());
+        SimpleTableCursor simpleTableCursor = new SimpleTableCursor(cc());
         assertEquals(255, simpleTableCursor.getMaxStrLen(simpleTableCursor.COLUMNS.name()));
-        assertEquals(-1, simpleTableCursor.getMaxStrLen(simpleTableCursor.COLUMNS.text_field()));
-        Simple_viewCursor simpleViewCursor = new Simple_viewCursor(cc());
+        assertEquals(-1, simpleTableCursor.getMaxStrLen(simpleTableCursor.COLUMNS.textField()));
+        SimpleViewCursor simpleViewCursor = new SimpleViewCursor(cc());
         //Note that this generally does not make sense:
         // we check the length of the field that belongs to other cursor.
         //However, we are covering a certain execution path here.

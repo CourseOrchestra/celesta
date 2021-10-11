@@ -393,3 +393,5 @@ resetSequences
 scorePath
 setUp
 truncateTables
+CamelCase
+snakeToCamel

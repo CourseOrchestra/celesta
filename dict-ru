@@ -1244,3 +1244,8 @@ truncateTables
 mind
 possible
 nulls
+CamelCase
+snakeToCamel
+case
+snake
+unnecessary

@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static ru.curs.celesta.plugin.maven.CursorGenerator.generateCursor;
-
 abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
 
     Supplier<Collection<ScoreProperties>> getScorePaths;
@@ -66,6 +64,7 @@ abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
                         .add(ge)
         );
 
+        CursorGenerator generator = new CursorGenerator(getSourceRoot(), isSnakeToCamel());
         partsToElements.entrySet().stream().forEach(
                 e -> {
                     final String sp;
@@ -80,7 +79,7 @@ abstract class AbstractGenCursorsMojo extends AbstractCelestaMojo {
                         sp = scoreDir.getAbsolutePath();
                     }
                     e.getValue().forEach(
-                            ge -> generateCursor(ge, getSourceRoot(), sp)
+                            ge -> generator.generateCursor(ge, sp)
                     );
                 }
         );

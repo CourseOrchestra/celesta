@@ -31,6 +31,8 @@ Usage example:
         <testScores>
             <testScore>. . .</testScore>
         </testScores>
+        <!-- unnecessary, true by default -->
+        <snakeToCamel>true</snakeToCamel>
     </configuration>
     <executions>
         <execution>
@@ -51,6 +53,7 @@ Plugin configuration settings:
 By default the path is `src/main/celestasql`.
 * `testScores` – path to the project folders containing <<CelestaSQL>> scripts describing the database, used only for <<celestaunit_section,unit testing>>.
 By default the path is `src/test/celestasql`.
+* `snakeToCamel` (boolean, true by default) – whether tables and fields named in "snake_case" in CelestaSQL should be transformed to "CamelCase" in <<data_accessors_section,data access classes>> in order to meet naming conventions in Java.
 
 Celesta Maven Plugin executes the following operations:
 

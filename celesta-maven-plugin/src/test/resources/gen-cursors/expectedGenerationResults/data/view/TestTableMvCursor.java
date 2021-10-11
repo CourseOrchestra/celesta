@@ -31,7 +31,7 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
 
     public final TestTableMvCursor.Columns COLUMNS;
 
-    private Integer surrogate_count;
+    private Integer surrogateCount;
 
     private Integer c;
 
@@ -54,12 +54,12 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
         super(context, fields);
     }
 
-    public Integer getSurrogate_count() {
-        return this.surrogate_count;
+    public Integer getSurrogateCount() {
+        return this.surrogateCount;
     }
 
-    public TestTableMvCursor setSurrogate_count(Integer surrogate_count) {
-        this.surrogate_count = surrogate_count;
+    public TestTableMvCursor setSurrogateCount(Integer surrogateCount) {
+        this.surrogateCount = surrogateCount;
         return this;
     }
 
@@ -121,9 +121,9 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
     @Override
     protected void _parseResult(ResultSet rs) throws SQLException {
         if (this.inRec("surrogate_count")) {
-            this.surrogate_count = rs.getInt("surrogate_count");
+            this.surrogateCount = rs.getInt("surrogate_count");
             if (rs.wasNull()) {
-                this.surrogate_count = null;
+                this.surrogateCount = null;
             }
         }
         if (this.inRec("c")) {
@@ -145,13 +145,13 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
         if (withKeys) {
             this.cost = null;
         }
-        this.surrogate_count = null;
+        this.surrogateCount = null;
         this.c = null;
     }
 
     @Override
     public Object[] _currentValues() {
-        return new Object[] {surrogate_count, c, cost};
+        return new Object[] {surrogateCount, c, cost};
     }
 
     @Override
@@ -170,7 +170,7 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
     @Override
     public void copyFieldsFrom(BasicCursor c) {
         TestTableMvCursor from = (TestTableMvCursor)c;
-        this.surrogate_count = from.surrogate_count;
+        this.surrogateCount = from.surrogateCount;
         this.c = from.c;
         this.cost = from.cost;
     }
@@ -203,7 +203,7 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
             this.element = celesta.getScore().getGrains().get(GRAIN_NAME).getElements(MaterializedView.class).get(OBJECT_NAME);
         }
 
-        public ColumnMeta<Integer> surrogate_count() {
+        public ColumnMeta<Integer> surrogateCount() {
             return (ColumnMeta<Integer>) this.element.getColumns().get("surrogate_count");
         }
 

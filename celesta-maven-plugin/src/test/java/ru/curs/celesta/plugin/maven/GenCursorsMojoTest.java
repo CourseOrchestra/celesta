@@ -54,7 +54,8 @@ public class GenCursorsMojoTest extends AbstractCelestaMojoTestCase {
             Arrays.asList(
                 "seq/SeqSequence.java",
                 "data/table/TestTableCursor.java",
-                "data/table/TestRoTableCursor.java")
+                "data/table/TestRoTableCursor.java",
+                "data/table/TestSnakeTableCursor.java")
         );
     }
 

@@ -26,3 +26,13 @@ create table testRoTable(
   id int  NOT NULL,
   CONSTRAINT Pk_test_testRoTable PRIMARY KEY (id)
 ) WITH READ ONLY;
+
+create table test_snake_table (
+  snake_field int not null  primary key,
+  snake_blob blob,
+  date_one datetime,
+  date_two datetime with time zone,
+  text_field varchar(10),
+  /**{option: [open, closed]}*/
+  status_field int not null default 0
+);

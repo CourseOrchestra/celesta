@@ -10,7 +10,7 @@ import simpleCases.CustomSequence;
 import simpleCases.DuplicateCursor;
 import simpleCases.ForTriggersCursor;
 import simpleCases.GetDateForViewCursor;
-import simpleCases.Simple_tableCursor;
+import simpleCases.SimpleTableCursor;
 import simpleCases.ViewWithGetDateCursor;
 import simpleCases.ZeroInsertCursor;
 
@@ -95,7 +95,7 @@ public class TestSimpleCases implements ScriptTest {
         c.setSessionid("0");
         c.setGrainid("simpleCases");
         c.setTablename("zeroInsert");
-        c.setAction_type("I");
+        c.setActionType("I");
         c.insert();
 
         assertEquals("getDateForView", c.getTablename());
@@ -176,13 +176,13 @@ public class TestSimpleCases implements ScriptTest {
 
     @TestTemplate
     void test_cursor_getCurrentKeyValues(CallContext context) {
-        Simple_tableCursor c = new Simple_tableCursor(context);
+        SimpleTableCursor c = new SimpleTableCursor(context);
         c.deleteAll();
 //        c.setId(1);
         c.setName("ONE");
         c.insert();
 
-        c = new Simple_tableCursor(context);
+        c = new SimpleTableCursor(context);
         c = c.iterator().next();
 
         Object[] keyValues = c.getCurrentKeyValues();
@@ -194,13 +194,13 @@ public class TestSimpleCases implements ScriptTest {
 
     @TestTemplate
     void test_cursor_getCurrentValues(CallContext context) {
-        Simple_tableCursor c = new Simple_tableCursor(context);
+        SimpleTableCursor c = new SimpleTableCursor(context);
         c.deleteAll();
 //        c.setId(1);
         c.setName("ONE");
         c.insert();
 
-        c = new Simple_tableCursor(context);
+        c = new SimpleTableCursor(context);
         c = c.iterator().next();
 
         Object[] values = c.getCurrentValues();

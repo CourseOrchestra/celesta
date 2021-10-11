@@ -4,10 +4,10 @@ import org.junit.jupiter.api.TestTemplate;
 import ru.curs.celesta.CallContext;
 import unionAll.MessageCursor;
 import unionAll.RoleCursor;
-import unionAll.Role_permissionsCursor;
+import unionAll.RolePermissionsCursor;
 import unionAll.SecurityCursor;
 import unionAll.UserCursor;
-import unionAll.User_roleCursor;
+import unionAll.UserRoleCursor;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,38 +32,38 @@ public class TestUnionAll implements ScriptTest {
         role.insert();
 
         //Assign super permission to admin role
-        Role_permissionsCursor rp = new Role_permissionsCursor(ctx);
-        rp.setRole_id(1);
+        RolePermissionsCursor rp = new RolePermissionsCursor(ctx);
+        rp.setRoleId(1);
         rp.setDescription("super");
         rp.insert();
 
         //Assign Mary to admin role
-        User_roleCursor ur = new User_roleCursor(ctx);
-        ur.setUser_id(2);
-        ur.setRole_id(1);
+        UserRoleCursor ur = new UserRoleCursor(ctx);
+        ur.setUserId(2);
+        ur.setRoleId(1);
         ur.insert();
 
         //John & Mary send their messages
         MessageCursor msg = new MessageCursor(ctx);
-        msg.setMessage_id(1);
-        msg.setUser_id(1);
+        msg.setMessageId(1);
+        msg.setUserId(1);
         msg.insert();
-        msg.setMessage_id(2);
-        msg.setUser_id(2);
+        msg.setMessageId(2);
+        msg.setUserId(2);
         msg.insert();
 
         //John's messages
         SecurityCursor security = new SecurityCursor(ctx, Collections.singletonMap("uid", 1));
         assertEquals(1, security.count());
         security.first();
-        assertEquals(1, security.getMessage_id());
+        assertEquals(1, security.getMessageId());
 
         //Mary's messages
         security = new SecurityCursor(ctx, Collections.singletonMap("uid", 2));
 
         Set<Integer> recordIds = new HashSet<>();
         for (SecurityCursor c: security){
-            recordIds.add(c.getMessage_id());
+            recordIds.add(c.getMessageId());
         }
         Set<Integer> expected = new HashSet<>();
         expected.add(1);
