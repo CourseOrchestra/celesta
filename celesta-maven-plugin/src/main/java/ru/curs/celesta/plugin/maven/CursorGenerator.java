@@ -13,8 +13,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
 
-import org.apache.commons.lang3.StringUtils;
-
 import ru.curs.celesta.CallContext;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ICelesta;
@@ -243,7 +241,7 @@ public final class CursorGenerator {
     }
 
     private String calcClassName(GrainElement ge) {
-        final String sourceFileNamePrefix = camelize(StringUtils.capitalize(ge.getName()));
+        final String sourceFileNamePrefix = CaseUtils.capitalize(camelize(ge.getName()));
         if (ge instanceof SequenceElement) {
             return sourceFileNamePrefix + "Sequence";
         } else {
@@ -297,7 +295,7 @@ public final class CursorGenerator {
                 .map(
                         c -> {
                             TypeSpec.Builder builder = TypeSpec.classBuilder(
-                                    StringUtils.capitalize(camelize(c.getName())))
+                                    CaseUtils.capitalize(camelize(c.getName())))
                                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                                     .addAnnotation(buildGeneratedAnnotation())
                                     .addAnnotation(CelestaGenerated.class);
@@ -562,11 +560,7 @@ public final class CursorGenerator {
 
         fieldSpecs.forEach(
                 fieldSpec -> {
-                    String methodSuffix = String.valueOf(Character.toUpperCase(fieldSpec.name.charAt(0)));
-
-                    if (fieldSpec.name.length() > 1) {
-                        methodSuffix = methodSuffix + camelize(fieldSpec.name.substring(1));
-                    }
+                    String methodSuffix = CaseUtils.capitalize(camelize(fieldSpec.name));
 
                     MethodSpec getter = MethodSpec.methodBuilder("get" + methodSuffix)
                             .addModifiers(Modifier.PUBLIC)
@@ -759,7 +753,7 @@ public final class CursorGenerator {
         return columns.entrySet().stream()
                 .filter(e -> e.getValue() instanceof BinaryColumn)
                 .map(e ->
-                        MethodSpec.methodBuilder("calc" + StringUtils.capitalize(camelize(e.getKey())))
+                        MethodSpec.methodBuilder("calc" + CaseUtils.capitalize(camelize(e.getKey())))
                                 .addModifiers(Modifier.PUBLIC)
                                 .addStatement("this.$N = this.calcBlob($S)", camelize(e.getKey()), e.getKey())
                                 .addStatement(

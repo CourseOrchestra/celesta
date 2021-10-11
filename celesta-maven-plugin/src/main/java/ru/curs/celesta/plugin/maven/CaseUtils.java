@@ -1,8 +1,17 @@
 package ru.curs.celesta.plugin.maven;
 
 public final class CaseUtils {
-    private CaseUtils(){
+    private CaseUtils() {
 
+    }
+
+    public static String capitalize(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        char[] buffer = text.toCharArray();
+        buffer[0] = Character.toUpperCase(buffer[0]);
+        return String.valueOf(buffer);
     }
 
     public static String snakeToCamel(String snakeText) {

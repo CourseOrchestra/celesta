@@ -17,13 +17,12 @@ class CaseUtilsTest {
     }
 
     @Test
-    void snakeToCamelBlank() {
+    void snakeToCamelEmpty() {
         assertEquals("", CaseUtils.snakeToCamel(""));
     }
 
     @Test
     void snakeToCamelUnderscore() {
-
         assertEquals("_", CaseUtils.snakeToCamel("_"));
     }
 
@@ -42,4 +41,28 @@ class CaseUtilsTest {
         assertEquals("thisIsCamel", CaseUtils.snakeToCamel("thisIsCamel"));
     }
 
+    @Test
+    void capitalize() {
+        assertEquals("Foo", CaseUtils.capitalize("foo"));
+    }
+
+    @Test
+    void capitalizeNull() {
+        assertEquals(null, CaseUtils.capitalize(null));
+    }
+
+    @Test
+    void capitalizeEmpty() {
+        assertEquals("", CaseUtils.capitalize(""));
+    }
+
+    @Test
+    void capitalizeSingleChar() {
+        assertEquals("A", CaseUtils.capitalize("a"));
+    }
+
+    @Test
+    void capitalizeUnderscore() {
+        assertEquals("_foo", CaseUtils.capitalize("_foo"));
+    }
 }
