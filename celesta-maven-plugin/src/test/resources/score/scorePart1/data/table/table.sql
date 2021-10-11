@@ -32,5 +32,7 @@ create table test_snake_table (
   snake_blob blob,
   date_one datetime,
   date_two datetime with time zone,
-  text_field varchar(10)
+  text_field varchar(10),
+  /**{option: [open, closed]}*/
+  status_field int not null default 0
 );

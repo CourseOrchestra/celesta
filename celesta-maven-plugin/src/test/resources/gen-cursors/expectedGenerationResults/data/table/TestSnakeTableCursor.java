@@ -49,6 +49,8 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
 
     private String textField;
 
+    private Integer statusField;
+
     {
         this.COLUMNS = new TestSnakeTableCursor.Columns(callContext().getCelesta());
     }
@@ -108,6 +110,15 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
 
     public TestSnakeTableCursor setTextField(String textField) {
         this.textField = textField;
+        return this;
+    }
+
+    public Integer getStatusField() {
+        return this.statusField;
+    }
+
+    public TestSnakeTableCursor setStatusField(Integer statusField) {
+        this.statusField = statusField;
         return this;
     }
 
@@ -178,6 +189,12 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
                 this.textField = null;
             }
         }
+        if (this.inRec("status_field")) {
+            this.statusField = rs.getInt("status_field");
+            if (rs.wasNull()) {
+                this.statusField = null;
+            }
+        }
         this.setRecversion(rs.getInt("recversion"));
     }
 
@@ -190,11 +207,12 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
         this.dateOne = null;
         this.dateTwo = null;
         this.textField = null;
+        this.statusField = null;
     }
 
     @Override
     public Object[] _currentValues() {
-        return new Object[] {snakeField, snakeBlob, dateOne, dateTwo, textField};
+        return new Object[] {snakeField, snakeBlob, dateOne, dateTwo, textField, statusField};
     }
 
     public void calcSnakeBlob() {
@@ -257,6 +275,7 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
         this.dateOne = from.dateOne;
         this.dateTwo = from.dateTwo;
         this.textField = from.textField;
+        this.statusField = from.statusField;
         this.setRecversion(from.getRecversion());
     }
 
@@ -302,6 +321,24 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
 
         public ColumnMeta<String> textField() {
             return (ColumnMeta<String>) this.element.getColumns().get("text_field");
+        }
+
+        public ColumnMeta<Integer> statusField() {
+            return (ColumnMeta<Integer>) this.element.getColumns().get("status_field");
+        }
+    }
+
+    @Generated(
+            value = "ru.curs.celesta.plugin.maven.CursorGenerator",
+            date = "2021-10-10T22:57:53.807"
+    )
+    @CelestaGenerated
+    public static final class StatusField {
+        public static final Integer open = 0;
+        public static final Integer closed = 1;
+
+        private StatusField() {
+            throw new AssertionError();
         }
     }
 } 

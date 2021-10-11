@@ -291,12 +291,13 @@ public final class CursorGenerator {
 
     }
 
-    private static List<TypeSpec> buildOptionFieldsAsInnerStaticClasses(Collection<Column<?>> columns) {
+    private List<TypeSpec> buildOptionFieldsAsInnerStaticClasses(Collection<Column<?>> columns) {
         return columns.stream()
                 .filter(c -> (c instanceof IntegerColumn || c instanceof StringColumn) && !c.getOptions().isEmpty())
                 .map(
                         c -> {
-                            TypeSpec.Builder builder = TypeSpec.classBuilder(StringUtils.capitalize(c.getName()))
+                            TypeSpec.Builder builder = TypeSpec.classBuilder(
+                                    StringUtils.capitalize(camelize(c.getName())))
                                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                                     .addAnnotation(buildGeneratedAnnotation())
                                     .addAnnotation(CelestaGenerated.class);
