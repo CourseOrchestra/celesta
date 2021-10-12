@@ -1,6 +1,5 @@
 package data.table;
 
-import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -60,25 +59,22 @@ public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<T
 
     @Override
     protected Object _getFieldValue(String name) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            return f.get(this);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "id":
+                return id;
+            default:
+                return null;
         }
     }
 
     @Override
     protected void _setFieldValue(String name, Object value) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            f.set(this, value);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "id": {
+                id = (Integer) value;
+                break;
+            }
+            default:;
         }
     }
 

@@ -54,7 +54,6 @@ import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -161,8 +160,8 @@ public final class CursorGenerator {
 
             cursorClass.addMethods(generateGettersAndSetters(fieldSpecs, classType));
 
-            cursorClass.addMethod(buildGetFieldValue());
-            cursorClass.addMethod(buildSetFieldValue());
+            cursorClass.addMethod(buildGetFieldValue(dge.getColumns()));
+            cursorClass.addMethod(buildSetFieldValue(dge.getColumns()));
 
             StringBuilder parseResultOverridingMethodNameBuilder = new StringBuilder("_parseResult");
 
@@ -653,46 +652,45 @@ public final class CursorGenerator {
         return builder.build();
     }
 
-    /* NB In case the better performance is needed, this can be rewritten without using the reflection.
-     * E.g. we can populate two maps: Map<String, Producer<?>> , Map<String, Consumer<?> in static Cursor
-     * initializer, and then use these maps in getFieldValue and setFielValue. */
-    private static MethodSpec buildGetFieldValue() {
+    private MethodSpec buildGetFieldValue(Map<String, ? extends ColumnMeta<?>> columns) {
         String nameParam = "name";
 
-        return MethodSpec.methodBuilder("_getFieldValue")
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("_getFieldValue")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PROTECTED)
                 .returns(TypeName.OBJECT)
                 .addParameter(String.class, nameParam)
-                .beginControlFlow("try")
-                .addStatement("$T f = getClass().getDeclaredField($N)", Field.class, nameParam)
-                .addStatement("f.setAccessible(true)")
-                .addStatement("return f.get(this)")
-                .endControlFlow()
-                .beginControlFlow("catch ($T e)", Exception.class)
-                .addStatement("throw new $T(e)", RuntimeException.class)
-                .endControlFlow()
-                .build();
+                .beginControlFlow("switch (name)");
+
+        for (String columnName : columns.keySet()) {
+            builder.addStatement("case $S: return $N", columnName, camelize(columnName));
+        }
+        builder.addStatement("default: return null").endControlFlow();
+
+        return builder.build();
     }
 
-    private static MethodSpec buildSetFieldValue() {
+    private MethodSpec buildSetFieldValue(Map<String, ? extends ColumnMeta<?>> columns) {
         String nameParam = "name";
         String valueParam = "value";
 
-        return MethodSpec.methodBuilder("_setFieldValue")
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("_setFieldValue")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PROTECTED)
                 .addParameter(String.class, nameParam)
                 .addParameter(Object.class, valueParam)
-                .beginControlFlow("try")
-                .addStatement("$T f = getClass().getDeclaredField($N)", Field.class, nameParam)
-                .addStatement("f.setAccessible(true)")
-                .addStatement("f.set(this, value)")
-                .endControlFlow()
-                .beginControlFlow("catch ($T e)", Exception.class)
-                .addStatement("throw new $T(e)", RuntimeException.class)
-                .endControlFlow()
-                .build();
+                .beginControlFlow("switch (name)");
+        for (Map.Entry<String, ? extends ColumnMeta<?>> column : columns.entrySet()) {
+            builder.beginControlFlow("case $S:", column.getKey())
+                    .addStatement("$N = ($T) $N", camelize(column.getKey()),
+                            column.getValue().getJavaClass(),
+                            valueParam)
+                    .addStatement("break")
+                    .endControlFlow();
+        }
+        builder.addStatement("default:").endControlFlow();
+        return builder.build();
+
     }
 
     private MethodSpec buildClearBuffer(Map<String, ? extends ColumnMeta<?>> columns, Set<Column<?>> pk) {

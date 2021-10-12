@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import ru.curs.celesta.AbstractCelestaTest;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.syscursors.LogCursor;
-import ru.curs.celesta.syscursors.LogsetupCursor;
+import cursors.LogSetupTestCursor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,7 +22,7 @@ public class CursorTest extends AbstractCelestaTest {
 
     @BeforeEach
     public void before() {
-        c = new LogsetupCursor(cc());
+        c = new LogSetupTestCursor(cc());
     }
 
 
@@ -33,10 +33,10 @@ public class CursorTest extends AbstractCelestaTest {
 
     @Test
     public void cursorIsNavigable() {
-        LogsetupCursor c2 = (LogsetupCursor) c;
-        c.setFilter(c2.COLUMNS.grainid(), "'b'%");
-        c2.setGrainid("grainval");
-        c2.setTablename("tablenameval");
+        LogSetupTestCursor c2 = (LogSetupTestCursor) c;
+        c.setFilter(c2.COLUMNS.grainId(), "'b'%");
+        c2.setGrainId("grainval");
+        c2.setTableName("tablenameval");
         c2.setI(true);
         c2.setM(false);
         c2.setD(true);
@@ -51,12 +51,12 @@ public class CursorTest extends AbstractCelestaTest {
 
     @Test
     public void fieldsAreAssignable() {
-        LogsetupCursor lsc = (LogsetupCursor) c;
-        assertNull(lsc.getGrainid());
-        lsc.setValue("grainid", "asdFsaf");
+        LogSetupTestCursor lsc = (LogSetupTestCursor) c;
+        assertNull(lsc.getGrainId());
+        lsc.setValue("grain_id", "asdFsaf");
 
-        assertEquals("asdFsaf", lsc.getGrainid());
-
+        assertEquals("asdFsaf", lsc.getGrainId());
+        assertEquals("asdFsaf", lsc.getValue("grain_id"));
         assertTrue(
                 assertThrows(CelestaException.class,
                         () -> lsc.setValue("asdfasdf", "sswe")).getMessage()
@@ -132,9 +132,9 @@ public class CursorTest extends AbstractCelestaTest {
 
     @Test
     void copyFilterFromCopiesFilters() {
-        LogsetupCursor c2 = new LogsetupCursor(cc());
+        LogSetupTestCursor c2 = new LogSetupTestCursor(cc());
         c2.setRange(c2.COLUMNS.m(), true);
-        c2.setFilter(c2.COLUMNS.tablename(), "foo%");
+        c2.setFilter(c2.COLUMNS.tableName(), "foo%");
         c2.setComplexFilter("i = m");
         c2.limit(5, 10);
 
@@ -145,16 +145,16 @@ public class CursorTest extends AbstractCelestaTest {
                 () -> assertEquals(c2.getComplexFilter(), c.getComplexFilter()),
                 () -> assertNull(c.getFilters().get("d")),
                 () -> assertEquals("true", c.getFilters().get("m").toString()),
-                () -> assertEquals("foo%", c.getFilters().get("tablename").toString()),
+                () -> assertEquals("foo%", c.getFilters().get("table_name").toString()),
                 () -> assertEquals("\"i\" = \"m\"", c.getComplexFilter())
         );
     }
 
     @Test
     void isEquivalentChecksForFilterEquivalence() {
-        LogsetupCursor c2 = new LogsetupCursor(cc());
+        LogSetupTestCursor c2 = new LogSetupTestCursor(cc());
         c2.setRange(c2.COLUMNS.m(), true);
-        c2.setFilter(c2.COLUMNS.tablename(), "foo%");
+        c2.setFilter(c2.COLUMNS.tableName(), "foo%");
         //c2 has complexFilter, no complexFilter on c
         c2.setComplexFilter("i = m");
 
@@ -179,7 +179,7 @@ public class CursorTest extends AbstractCelestaTest {
 
     @Test
     void isEquivalentChecksDeepForFilterEquivalence() {
-        LogsetupCursor c2 = new LogsetupCursor(cc());
+        LogSetupTestCursor c2 = new LogSetupTestCursor(cc());
         c2.setRange(c2.COLUMNS.m(), true);
         assertFalse(c.isEquivalent(c2));
 
@@ -211,10 +211,10 @@ public class CursorTest extends AbstractCelestaTest {
 
         setupLogCursor(lc);
         lc.insert();
-        assertEquals(2, ((BasicCursor) lc).position());
+        assertEquals(2, lc.position());
 
         lc.setFilter(lc.COLUMNS.entryno(), ">1");
-        assertEquals(1, ((BasicCursor) lc).position());
+        assertEquals(1, lc.position());
 
     }
 

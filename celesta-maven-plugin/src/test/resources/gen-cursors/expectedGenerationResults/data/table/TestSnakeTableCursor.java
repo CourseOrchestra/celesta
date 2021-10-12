@@ -1,6 +1,5 @@
 package data.table;
 
-import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -124,25 +123,52 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
 
     @Override
     protected Object _getFieldValue(String name) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            return f.get(this);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "snake_field":
+                return snakeField;
+            case "snake_blob":
+                return snakeBlob;
+            case "date_one":
+                return dateOne;
+            case "date_two":
+                return dateTwo;
+            case "text_field":
+                return textField;
+            case "status_field":
+                return statusField;
+            default:
+                return null;
         }
     }
 
     @Override
     protected void _setFieldValue(String name, Object value) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            f.set(this, value);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "snake_field": {
+                snakeField = (Integer) value;
+                break;
+            }
+            case "snake_blob": {
+                snakeBlob = (BLOB) value;
+                break;
+            }
+            case "date_one": {
+                dateOne = (Date) value;
+                break;
+            }
+            case "date_two": {
+                dateTwo = (ZonedDateTime) value;
+                break;
+            }
+            case "text_field": {
+                textField = (String) value;
+                break;
+            }
+            case "status_field": {
+                statusField = (Integer) value;
+                break;
+            }
+            default:;
         }
     }
 
