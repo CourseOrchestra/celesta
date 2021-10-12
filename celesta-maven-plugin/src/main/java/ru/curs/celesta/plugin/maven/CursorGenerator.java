@@ -54,7 +54,6 @@ import javax.annotation.Generated;
 import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -681,10 +680,10 @@ public final class CursorGenerator {
                 .addParameter(String.class, nameParam)
                 .addParameter(Object.class, valueParam)
                 .beginControlFlow("switch (name)");
-        for (String columnName : columns.keySet()) {
-            builder.beginControlFlow("case $S:", columnName)
-                    .addStatement("$N = ($T) $N", camelize(columnName),
-                            columns.get(columnName).getJavaClass(),
+        for (Map.Entry<String, ? extends ColumnMeta<?>> column : columns.entrySet()) {
+            builder.beginControlFlow("case $S:", column.getKey())
+                    .addStatement("$N = ($T) $N", camelize(column.getKey()),
+                            column.getValue().getJavaClass(),
                             valueParam)
                     .addStatement("break")
                     .endControlFlow();
