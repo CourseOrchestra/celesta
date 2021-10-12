@@ -1,7 +1,6 @@
 package data.table;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,6 +27,7 @@ import ru.curs.celesta.dbutils.CursorIterator;
 import ru.curs.celesta.event.TriggerType;
 import ru.curs.celesta.score.ColumnMeta;
 import ru.curs.celesta.score.Table;
+
 
 @Generated(
         value = "ru.curs.celesta.plugin.maven.CursorGenerator",
@@ -159,25 +159,70 @@ public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>
 
     @Override
     protected Object _getFieldValue(String name) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            return f.get(this);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "id":
+                return id;
+            case "str":
+                return str;
+            case "deleted":
+                return deleted;
+            case "weight":
+                return weight;
+            case "content":
+                return content;
+            case "created":
+                return created;
+            case "rawData":
+                return rawData;
+            case "cost":
+                return cost;
+            case "toDelete":
+                return toDelete;
+            default:
+                return null;
         }
     }
 
     @Override
     protected void _setFieldValue(String name, Object value) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            f.set(this, value);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "id": {
+                id = (Integer) value;
+                break;
+            }
+            case "str": {
+                str = (String) value;
+                break;
+            }
+            case "deleted": {
+                deleted = (Boolean) value;
+                break;
+            }
+            case "weight": {
+                weight = (Double) value;
+                break;
+            }
+            case "content": {
+                content = (String) value;
+                break;
+            }
+            case "created": {
+                created = (Date) value;
+                break;
+            }
+            case "rawData": {
+                rawData = (BLOB) value;
+                break;
+            }
+            case "cost": {
+                cost = (BigDecimal) value;
+                break;
+            }
+            case "toDelete": {
+                toDelete = (ZonedDateTime) value;
+                break;
+            }
+            default:;
         }
     }
 

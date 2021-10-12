@@ -1,6 +1,5 @@
 package data.view;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -83,25 +82,34 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
 
     @Override
     protected Object _getFieldValue(String name) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            return f.get(this);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "surrogate_count":
+                return surrogateCount;
+            case "c":
+                return c;
+            case "cost":
+                return cost;
+            default:
+                return null;
         }
     }
 
     @Override
     protected void _setFieldValue(String name, Object value) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            f.set(this, value);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "surrogate_count": {
+                surrogateCount = (Integer) value;
+                break;
+            }
+            case "c": {
+                c = (Integer) value;
+                break;
+            }
+            case "cost": {
+                cost = (BigDecimal) value;
+                break;
+            }
+            default:;
         }
     }
 

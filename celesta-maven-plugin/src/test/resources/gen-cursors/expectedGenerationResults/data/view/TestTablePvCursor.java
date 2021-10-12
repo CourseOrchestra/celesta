@@ -1,6 +1,5 @@
 package data.view;
 
-import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -78,25 +77,22 @@ public class TestTablePvCursor extends ParameterizedViewCursor implements Iterab
 
     @Override
     protected Object _getFieldValue(String name) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            return f.get(this);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "s":
+                return s;
+            default:
+                return null;
         }
     }
 
     @Override
     protected void _setFieldValue(String name, Object value) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            f.set(this, value);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "s": {
+                s = (Integer) value;
+                break;
+            }
+            default:;
         }
     }
 

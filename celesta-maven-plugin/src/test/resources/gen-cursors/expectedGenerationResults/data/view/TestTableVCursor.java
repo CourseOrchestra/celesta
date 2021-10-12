@@ -1,6 +1,5 @@
 package data.view;
 
-import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -75,25 +74,28 @@ public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVC
 
     @Override
     protected Object _getFieldValue(String name) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            return f.get(this);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "id":
+                return id;
+            case "toDelete":
+                return toDelete;
+            default:
+                return null;
         }
     }
 
     @Override
     protected void _setFieldValue(String name, Object value) {
-        try {
-            Field f = getClass().getDeclaredField(name);
-            f.setAccessible(true);
-            f.set(this, value);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        switch (name) {
+            case "id": {
+                id = (Integer) value;
+                break;
+            }
+            case "toDelete": {
+                toDelete = (ZonedDateTime) value;
+                break;
+            }
+            default:;
         }
     }
 
