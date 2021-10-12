@@ -61,7 +61,7 @@ public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<T
     protected Object _getFieldValue(String name) {
         switch (name) {
             case "id":
-                return id;
+                return this.id;
             default:
                 return null;
         }
@@ -71,7 +71,7 @@ public class TestRoTableCursor extends ReadOnlyTableCursor implements Iterable<T
     protected void _setFieldValue(String name, Object value) {
         switch (name) {
             case "id": {
-                id = (Integer) value;
+                this.id = (Integer) value;
                 break;
             }
             default:;

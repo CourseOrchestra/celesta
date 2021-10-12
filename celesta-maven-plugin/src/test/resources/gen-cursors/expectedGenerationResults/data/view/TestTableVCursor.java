@@ -76,9 +76,9 @@ public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVC
     protected Object _getFieldValue(String name) {
         switch (name) {
             case "id":
-                return id;
+                return this.id;
             case "toDelete":
-                return toDelete;
+                return this.toDelete;
             default:
                 return null;
         }
@@ -88,11 +88,11 @@ public class TestTableVCursor extends ViewCursor implements Iterable<TestTableVC
     protected void _setFieldValue(String name, Object value) {
         switch (name) {
             case "id": {
-                id = (Integer) value;
+                this.id = (Integer) value;
                 break;
             }
             case "toDelete": {
-                toDelete = (ZonedDateTime) value;
+                this.toDelete = (ZonedDateTime) value;
                 break;
             }
             default:;

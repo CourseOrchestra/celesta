@@ -84,11 +84,11 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
     protected Object _getFieldValue(String name) {
         switch (name) {
             case "surrogate_count":
-                return surrogateCount;
+                return this.surrogateCount;
             case "c":
-                return c;
+                return this.c;
             case "cost":
-                return cost;
+                return this.cost;
             default:
                 return null;
         }
@@ -98,15 +98,15 @@ public class TestTableMvCursor extends MaterializedViewCursor implements Iterabl
     protected void _setFieldValue(String name, Object value) {
         switch (name) {
             case "surrogate_count": {
-                surrogateCount = (Integer) value;
+                this.surrogateCount = (Integer) value;
                 break;
             }
             case "c": {
-                c = (Integer) value;
+                this.c = (Integer) value;
                 break;
             }
             case "cost": {
-                cost = (BigDecimal) value;
+                this.cost = (BigDecimal) value;
                 break;
             }
             default:;

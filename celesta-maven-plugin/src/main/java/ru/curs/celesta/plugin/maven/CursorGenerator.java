@@ -663,7 +663,7 @@ public final class CursorGenerator {
                 .beginControlFlow("switch (name)");
 
         for (String columnName : columns.keySet()) {
-            builder.addStatement("case $S: return $N", columnName, camelize(columnName));
+            builder.addStatement("case $S: return this.$N", columnName, camelize(columnName));
         }
         builder.addStatement("default: return null").endControlFlow();
 
@@ -682,7 +682,7 @@ public final class CursorGenerator {
                 .beginControlFlow("switch (name)");
         for (Map.Entry<String, ? extends ColumnMeta<?>> column : columns.entrySet()) {
             builder.beginControlFlow("case $S:", column.getKey())
-                    .addStatement("$N = ($T) $N", camelize(column.getKey()),
+                    .addStatement("this.$N = ($T) $N", camelize(column.getKey()),
                             column.getValue().getJavaClass(),
                             valueParam)
                     .addStatement("break")
