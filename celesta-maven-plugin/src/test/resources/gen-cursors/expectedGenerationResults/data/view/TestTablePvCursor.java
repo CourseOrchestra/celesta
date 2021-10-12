@@ -79,7 +79,7 @@ public class TestTablePvCursor extends ParameterizedViewCursor implements Iterab
     protected Object _getFieldValue(String name) {
         switch (name) {
             case "s":
-                return s;
+                return this.s;
             default:
                 return null;
         }
@@ -89,7 +89,7 @@ public class TestTablePvCursor extends ParameterizedViewCursor implements Iterab
     protected void _setFieldValue(String name, Object value) {
         switch (name) {
             case "s": {
-                s = (Integer) value;
+                this.s = (Integer) value;
                 break;
             }
             default:;

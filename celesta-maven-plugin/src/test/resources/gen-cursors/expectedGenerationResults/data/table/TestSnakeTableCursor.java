@@ -125,17 +125,17 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
     protected Object _getFieldValue(String name) {
         switch (name) {
             case "snake_field":
-                return snakeField;
+                return this.snakeField;
             case "snake_blob":
-                return snakeBlob;
+                return this.snakeBlob;
             case "date_one":
-                return dateOne;
+                return this.dateOne;
             case "date_two":
-                return dateTwo;
+                return this.dateTwo;
             case "text_field":
-                return textField;
+                return this.textField;
             case "status_field":
-                return statusField;
+                return this.statusField;
             default:
                 return null;
         }
@@ -145,27 +145,27 @@ public class TestSnakeTableCursor extends Cursor implements Iterable<TestSnakeTa
     protected void _setFieldValue(String name, Object value) {
         switch (name) {
             case "snake_field": {
-                snakeField = (Integer) value;
+                this.snakeField = (Integer) value;
                 break;
             }
             case "snake_blob": {
-                snakeBlob = (BLOB) value;
+                this.snakeBlob = (BLOB) value;
                 break;
             }
             case "date_one": {
-                dateOne = (Date) value;
+                this.dateOne = (Date) value;
                 break;
             }
             case "date_two": {
-                dateTwo = (ZonedDateTime) value;
+                this.dateTwo = (ZonedDateTime) value;
                 break;
             }
             case "text_field": {
-                textField = (String) value;
+                this.textField = (String) value;
                 break;
             }
             case "status_field": {
-                statusField = (Integer) value;
+                this.statusField = (Integer) value;
                 break;
             }
             default:;

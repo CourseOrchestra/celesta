@@ -161,23 +161,23 @@ public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>
     protected Object _getFieldValue(String name) {
         switch (name) {
             case "id":
-                return id;
+                return this.id;
             case "str":
-                return str;
+                return this.str;
             case "deleted":
-                return deleted;
+                return this.deleted;
             case "weight":
-                return weight;
+                return this.weight;
             case "content":
-                return content;
+                return this.content;
             case "created":
-                return created;
+                return this.created;
             case "rawData":
-                return rawData;
+                return this.rawData;
             case "cost":
-                return cost;
+                return this.cost;
             case "toDelete":
-                return toDelete;
+                return this.toDelete;
             default:
                 return null;
         }
@@ -187,39 +187,39 @@ public class TestTableCursor extends Cursor implements Iterable<TestTableCursor>
     protected void _setFieldValue(String name, Object value) {
         switch (name) {
             case "id": {
-                id = (Integer) value;
+                this.id = (Integer) value;
                 break;
             }
             case "str": {
-                str = (String) value;
+                this.str = (String) value;
                 break;
             }
             case "deleted": {
-                deleted = (Boolean) value;
+                this.deleted = (Boolean) value;
                 break;
             }
             case "weight": {
-                weight = (Double) value;
+                this.weight = (Double) value;
                 break;
             }
             case "content": {
-                content = (String) value;
+                this.content = (String) value;
                 break;
             }
             case "created": {
-                created = (Date) value;
+                this.created = (Date) value;
                 break;
             }
             case "rawData": {
-                rawData = (BLOB) value;
+                this.rawData = (BLOB) value;
                 break;
             }
             case "cost": {
-                cost = (BigDecimal) value;
+                this.cost = (BigDecimal) value;
                 break;
             }
             case "toDelete": {
-                toDelete = (ZonedDateTime) value;
+                this.toDelete = (ZonedDateTime) value;
                 break;
             }
             default:;
