@@ -5,6 +5,7 @@ import pView.PView1Cursor;
 import pView.PView2Cursor;
 import pView.PView3Cursor;
 import pView.PView4Cursor;
+import pView.PView5Cursor;
 import pView.T1Cursor;
 import pView.T2Cursor;
 import pView.T3Cursor;
@@ -25,18 +26,21 @@ class TestParameterizedView implements ScriptTest {
         tCursor.setF1(1);
         tCursor.setF2(2);
         tCursor.setF3("A");
+        tCursor.setF4(0.5);
         tCursor.insert();
         tCursor.clear();
 
         tCursor.setF1(9);
         tCursor.setF2(2);
         tCursor.setF3("A");
+        tCursor.setF4(0.2);
         tCursor.insert();
         tCursor.clear();
 
         tCursor.setF1(4);
         tCursor.setF2(3);
         tCursor.setF3("A");
+        tCursor.setF4(0.1);
         tCursor.insert();
         tCursor.clear();
 
@@ -46,16 +50,11 @@ class TestParameterizedView implements ScriptTest {
         tCursor.insert();
         tCursor.clear();
 
-        //TODO: generate convenient constructor for parameterized view,
-        //just as for Python
-        HashMap<String, Object> params = new HashMap<>();
-        params.put("p", 1);
-        PView1Cursor pvCursor = new PView1Cursor(context, params);
+
+        PView1Cursor pvCursor = new PView1Cursor(context, 1);
         assertEquals(0, pvCursor.count());
 
-        params = new HashMap<>();
-        params.put("p", 2);
-        pvCursor = new PView1Cursor(context, params);
+        pvCursor = new PView1Cursor(context, 2);
         pvCursor.orderBy(pvCursor.COLUMNS.f3());
         assertEquals(2, pvCursor.count());
 
@@ -66,15 +65,16 @@ class TestParameterizedView implements ScriptTest {
         assertEquals(7, pvCursor.getSumv().intValue());
         assertEquals("B", pvCursor.getF3());
 
-        params = new HashMap<>();
-        params.put("p", 3);
-        pvCursor = new PView1Cursor(context, params);
+        pvCursor = new PView1Cursor(context, 3);
         assertEquals(1, pvCursor.count());
 
         pvCursor.first();
         assertEquals(4, pvCursor.getSumv().intValue());
         assertEquals("A", pvCursor.getF3());
 
+        PView5Cursor pv5 = new PView5Cursor(context, 9);
+        pv5.first();
+        assertEquals(0.4, pv5.getC(), 0.00001);
     }
 
     @TestTemplate

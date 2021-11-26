@@ -6,7 +6,8 @@ CREATE table t1 (
   id INT NOT NULL DEFAULT NEXTVAL(t1_id) PRIMARY KEY,
   f1 int,
   f2 int,
-  f3 VARCHAR (2)
+  f3 VARCHAR (2),
+  f4 REAL NOT NULL DEFAULT 0
 );
 
 CREATE SEQUENCE t2_id;
@@ -35,7 +36,6 @@ CREATE FUNCTION pView3(p int) AS
   LEFT JOIN t2 ON f2 = ff2
   WHERE f2 = $p;
 
-
 CREATE SEQUENCE t3Num;
 
 create table t3 (
@@ -48,3 +48,7 @@ create table t3 (
 CREATE FUNCTION pView4(p decimal) AS
   select sum(f1) as f1, sum(f2) as f2, sum(f1 + f2) as f12 from t3
   WHERE f2 > $p;
+
+CREATE FUNCTION pView5(p int) AS
+  select sum(f2 * f4) as c from t1
+  where f1 = $p;
