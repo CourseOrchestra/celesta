@@ -447,8 +447,8 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                     })
                     .collect(Collectors.joining(", "));
 
-            String whereForDelete = String.format(rowConditionTemplate, "OLD") +
-                    " AND \"" + MaterializedView.SURROGATE_COUNT + "\" = 0 ";
+            String whereForDelete = String.format(rowConditionTemplate, "OLD")
+                    + " AND \"" + MaterializedView.SURROGATE_COUNT + "\" = 0 ";
 
             String insertSql = String.format(
                     "UPDATE %s SET %s WHERE %s ;\n"

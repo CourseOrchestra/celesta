@@ -52,11 +52,11 @@ public class ContainerUtils {
         ) {
 
             try (ResultSet rs = SqlUtils.executeQuery(
-                connection,
-                "select distinct schemaname " +
-                    "         from pg_catalog.pg_tables " +
-                    "         " +
-                    "         where schemaname not in ('pg_catalog', 'information_schema') "
+                    connection,
+                    "select distinct schemaname "
+                            + "         from pg_catalog.pg_tables "
+                            + "         "
+                            + "         where schemaname not in ('pg_catalog', 'information_schema') "
             )) {
                 while (rs.next()) {
                     SqlUtils.executeUpdate(connection,
@@ -77,22 +77,22 @@ public class ContainerUtils {
         ) {
 
             try (ResultSet rs = SqlUtils.executeQuery(
-                connection,
-                "SELECT object_name, object_type\n" +
-                    "                     FROM user_objects\n" +
-                    "                    WHERE object_type IN\n" +
-                    "                             ('TABLE',\n" +
-                    "                              'VIEW',\n" +
-                    "                              'MATERIALIZED VIEW',\n" +
-                    "                              'PACKAGE',\n" +
-                    "                              'PROCEDURE',\n" +
-                    "                              'FUNCTION',\n" +
-                    "                              'TYPE',\n" +
-                    "                              'SEQUENCE',\n" +
-                    "                              'SYNONYM',\n" +
-                    "                              'PACKAGE BODY'\n" +
-                    "                             )" +
-                    "                    AND created > sysdate - interval '1' hour"
+                    connection,
+                    "SELECT object_name, object_type\n"
+                            + "                     FROM user_objects\n"
+                            + "                    WHERE object_type IN\n"
+                            + "                             ('TABLE',\n"
+                            + "                              'VIEW',\n"
+                            + "                              'MATERIALIZED VIEW',\n"
+                            + "                              'PACKAGE',\n"
+                            + "                              'PROCEDURE',\n"
+                            + "                              'FUNCTION',\n"
+                            + "                              'TYPE',\n"
+                            + "                              'SEQUENCE',\n"
+                            + "                              'SYNONYM',\n"
+                            + "                              'PACKAGE BODY'\n"
+                            + "                             )"
+                            + "                    AND created > sysdate - interval '1' hour"
             )) {
                 while (rs.next()) {
                     try {
