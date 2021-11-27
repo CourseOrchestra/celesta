@@ -32,11 +32,11 @@ public class AdvancedFireBirdContainer extends FirebirdContainer<AdvancedFireBir
 
         try {
             String dropDbSql = String.format(
-                "echo \"CONNECT '/firebird/data/%s' user '%s' password '%s';\n" +
-                    "DROP DATABASE;\" > dropDb.sql",
-                getDatabaseName(),
-                getUsername(),
-                getPassword()
+                    "echo \"CONNECT '/firebird/data/%s' user '%s' password '%s';\n"
+                            + "DROP DATABASE;\" > dropDb.sql",
+                    getDatabaseName(),
+                    getUsername(),
+                    getPassword()
             );
 
             List<ExecResult> execResults = new ArrayList<>();
@@ -54,11 +54,11 @@ public class AdvancedFireBirdContainer extends FirebirdContainer<AdvancedFireBir
         try {
             String createDbSql =
                 String.format(
-                    "echo \"CREATE DATABASE '/firebird/data/%s' user '%s' password '%s' page_size = 8192;\" " +
-                        "> createDb.sql",
-                    getDatabaseName(),
-                    getUsername(),
-                    getPassword()
+                        "echo \"CREATE DATABASE '/firebird/data/%s' user '%s' password '%s' page_size = 8192;\" "
+                                + "> createDb.sql",
+                        getDatabaseName(),
+                        getUsername(),
+                        getPassword()
                 );
 
 
@@ -78,9 +78,9 @@ public class AdvancedFireBirdContainer extends FirebirdContainer<AdvancedFireBir
         execResults.stream().filter(er -> er.getExitCode() != 0)
             .findFirst()
             .ifPresent(er -> {
-                    throw new RuntimeException("Couldn't start container. " +
-                        "Execution failed with status " + er.getExitCode() + " : " + er.getStderr());
-                }
+                        throw new RuntimeException("Couldn't start container. "
+                                + "Execution failed with status " + er.getExitCode() + " : " + er.getStderr());
+                    }
             );
     }
 

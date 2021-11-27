@@ -35,7 +35,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -265,7 +265,8 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                                     .append(e.getKey()).append("\" ");
 
                             if (pv.getAggregateColumns().containsKey(e.getKey())
-                                    && e.getValue().getColumnType() != ViewColumnType.DECIMAL) {
+                                    && !(e.getValue().getColumnType() == ViewColumnType.DECIMAL
+                                    || e.getValue().getColumnType() == ViewColumnType.REAL)) {
                                 sb.append("bigint");
                             } else {
                                 sb.append(ColumnDefinerFactory.getColumnDefiner(getType(),
@@ -285,8 +286,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                         + "(%s) returns TABLE(%s) AS\n"
                         + "$$\n %s $$\n"
                         + "language sql;", pvParams, pViewCols, selectSql);
-
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
@@ -386,7 +386,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                     .collect(Collectors.joining(", "));
 
             String whereCondition = mv.getColumns().keySet().stream()
-                    .filter(alias -> mv.isGroupByColumn(alias))
+                    .filter(mv::isGroupByColumn)
                     .map(alias -> alias + " = $1." + alias + " ")
                     .collect(Collectors.joining(" AND "));
 
@@ -419,7 +419,7 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                     .concat("\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" %1$s 1");
 
             String rowConditionTemplate = mv.getColumns().keySet().stream()
-                    .filter(alias -> mv.isGroupByColumn(alias))
+                    .filter(mv::isGroupByColumn)
                     .map(alias -> {
                                 Column<?> colRef = mv.getColumnRef(alias);
                                 if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
@@ -447,9 +447,8 @@ public final class PostgresDdlGenerator extends OpenSourceDdlGenerator {
                     })
                     .collect(Collectors.joining(", "));
 
-            String whereForDelete = new StringBuilder().append(String.format(rowConditionTemplate, "OLD"))
-                    .append(" AND \"" + MaterializedView.SURROGATE_COUNT + "\" = 0 ")
-                    .toString();
+            String whereForDelete = String.format(rowConditionTemplate, "OLD")
+                    + " AND \"" + MaterializedView.SURROGATE_COUNT + "\" = 0 ";
 
             String insertSql = String.format(
                     "UPDATE %s SET %s WHERE %s ;\n"
