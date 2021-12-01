@@ -118,6 +118,8 @@ public class CelestaUnitExtensionTest {
     @Test
     @DisplayName("...their content is cleared")
     void mvReset2(CallContext ctx) {
+        LinecountCursor linecountCursor = new LinecountCursor(ctx);
+        assertEquals(0, linecountCursor.count());
         HeaderCursor headerCursor = new HeaderCursor(ctx);
         headerCursor.setId(42);
         headerCursor.insert();
@@ -125,7 +127,6 @@ public class CelestaUnitExtensionTest {
         lineCursor.setId(7);
         lineCursor.setHeaderId(headerCursor.getId());
         lineCursor.insert();
-        LinecountCursor linecountCursor = new LinecountCursor(ctx);
         linecountCursor.get(42);
         assertEquals(7, linecountCursor.getLineCount());
     }
