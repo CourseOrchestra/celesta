@@ -13,6 +13,7 @@ import ru.curs.celesta.Celesta;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.MaterializedView;
 import ru.curs.celesta.score.Score;
 import ru.curs.celesta.score.BasicTable;
 import ru.curs.celesta.score.SequenceElement;
@@ -152,6 +153,11 @@ public final class CelestaUnitExtension implements BeforeAllCallback,
                         stmt.execute(String.format("truncate table %s.%s",
                                 grain.getQuotedName(),
                                 table.getQuotedName()));
+                    }
+                    for (MaterializedView view : grain.getMaterializedViews().values()) {
+                        stmt.execute(String.format("truncate table %s.%s",
+                                grain.getQuotedName(),
+                                view.getQuotedName()));
                     }
                 }
             }
