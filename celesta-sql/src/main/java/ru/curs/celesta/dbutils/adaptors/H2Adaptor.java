@@ -1,6 +1,7 @@
 package ru.curs.celesta.dbutils.adaptors;
 
 import org.h2.value.DataType;
+import org.h2.value.Value;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.DBType;
@@ -513,9 +514,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
     @Override
     String prepareRowColumnForSelectStaticStrings(String value, String colName, int maxStringLength) {
-        int dataType = DataType.getTypeFromClass(value.getClass());
-        DataType type = DataType.getDataType(dataType);
-        return "CAST(? as " + type.name + ") as " + colName;
+        return String.format("CAST(? as varchar(%d)) as %s", maxStringLength, colName);
     }
 
     @Override
