@@ -117,12 +117,22 @@ public final class CursorGenerator {
     private final File srcDir;
     private final boolean snakeToCamel;
 
-    CursorGenerator(File srcDir, boolean snakeToCamel) {
+    /**
+     * Creates code generator for data accessor classes.
+     * @param srcDir Path to directory where generated files should be put
+     * @param snakeToCamel True if snake_case identifiers should be converted to camelCase
+     */
+    public CursorGenerator(File srcDir, boolean snakeToCamel) {
         this.srcDir = srcDir;
         this.snakeToCamel = snakeToCamel;
     }
 
-    void generateCursor(GrainElement ge, String scorePath) {
+    /**
+     * Generate code for schema (grain) element.
+     * @param ge Schema (grain) element
+     * @param scorePath path to CelestaSQL file
+     */
+    public void generateCursor(GrainElement ge, String scorePath) {
         final String sourcePackage = calcSourcePackage(ge, scorePath);
 
         if (sourcePackage.isEmpty()) {
