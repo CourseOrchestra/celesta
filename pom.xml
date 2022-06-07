@@ -62,7 +62,7 @@
         <javacc.version>7.0.10</javacc.version>
         <jdbc.driver.oracle.version>11.2.0.4</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.3.3</jdbc.driver.postgres.version>
-        <jdbc.driver.sqlserver.version>8.2.1.jre8</jdbc.driver.sqlserver.version>
+        <jdbc.driver.sqlserver.version>11.1.1.jre8-preview</jdbc.driver.sqlserver.version>
         <jdbc.driver.firebird.version>4.0.0-beta-1</jdbc.driver.firebird.version>
         <junit.version>5.8.2</junit.version>
         <org.json.version>20220320</org.json.version>
