@@ -19,6 +19,9 @@
         <Class name="ru.curs.celesta.dbutils.filter.TokenMgrError"/>
     </Match>
     <Match>
+        <Class name="ru.curs.celesta.score.TokenMgrError"/>
+    </Match>
+    <Match>
         <Package name="ru.curs.celesta.syscursors"/>
     </Match>
 </FindBugsFilter>
