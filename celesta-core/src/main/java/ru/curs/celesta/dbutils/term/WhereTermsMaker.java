@@ -38,33 +38,19 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
     private static final TermConstructor[] C;
 
     static {
-        // CHECKSTYLE:OFF this is meta-programming
+        // CHECKSTYLE:OFF: checkstyle:magicnumber
         C = new TermConstructor[40];
         // NOT NULL, NF, REGULAR
-        C[0] = (f, i, m) -> {
-            return new FieldCompTerm(f, i, ">");
-        };
-        C[1] = (f, i, m) -> {
-            return new FieldCompTerm(f, i, ">=");
-        };
-        C[2] = (f, i, m) -> {
-            return new FieldCompTerm(f, i, "=");
-        };
-        C[3] = (f, i, m) -> {
-            return new FieldCompTerm(f, i, "<=");
-        };
-        C[4] = (f, i, m) -> {
-            return new FieldCompTerm(f, i, "<");
-        };
+        C[0] = (f, i, m) -> new FieldCompTerm(f, i, ">");
+        C[1] = (f, i, m) -> new FieldCompTerm(f, i, ">=");
+        C[2] = (f, i, m) -> new FieldCompTerm(f, i, "=");
+        C[3] = (f, i, m) -> new FieldCompTerm(f, i, "<=");
+        C[4] = (f, i, m) -> new FieldCompTerm(f, i, "<");
 
         // NOT NULL, NF, NULL
-        C[5] = (f, i, m) -> {
-            return AlwaysTrue.TRUE;
-        };
+        C[5] = (f, i, m) -> AlwaysTrue.TRUE;
         C[6] = C[5];
-        C[7] = (f, i, m) -> {
-            return AlwaysFalse.FALSE;
-        };
+        C[7] = (f, i, m) -> AlwaysFalse.FALSE;
         C[8] = C[7];
         C[9] = C[7];
 
@@ -86,31 +72,19 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
         C[20] = C[0];
         C[21] = C[1];
         C[22] = C[2];
-        C[23] = (f, i, m) -> {
-            return OrTerm.construct(new FieldCompTerm(f, i, "<="), new IsNull(f));
-        };
-        C[24] = (f, i, m) -> {
-            return OrTerm.construct(new FieldCompTerm(f, i, "<"), new IsNull(f));
-        };
+        C[23] = (f, i, m) -> OrTerm.construct(new FieldCompTerm(f, i, "<="), new IsNull(f));
+        C[24] = (f, i, m) -> OrTerm.construct(new FieldCompTerm(f, i, "<"), new IsNull(f));
 
         // NULLABLE, NF, NULL
-        C[25] = (f, i, m) -> {
-            return NotTerm.construct(new IsNull(f));
-        };
+        C[25] = (f, i, m) -> NotTerm.construct(new IsNull(f));
         C[26] = C[5];
-        C[27] = (f, i, m) -> {
-            return new IsNull(f);
-        };
+        C[27] = (f, i, m) -> new IsNull(f);
         C[28] = C[27];
         C[29] = C[7];
 
         // NULLABLE, NL, REGULAR
-        C[30] = (f, i, m) -> {
-            return OrTerm.construct(new FieldCompTerm(f, i, ">"), new IsNull(f));
-        };
-        C[31] = (f, i, m) -> {
-            return OrTerm.construct(new FieldCompTerm(f, i, ">="), new IsNull(f));
-        };
+        C[30] = (f, i, m) -> OrTerm.construct(new FieldCompTerm(f, i, ">"), new IsNull(f));
+        C[31] = (f, i, m) -> OrTerm.construct(new FieldCompTerm(f, i, ">="), new IsNull(f));
         C[32] = C[2];
         C[33] = C[3];
         C[34] = C[4];
@@ -121,7 +95,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
         C[37] = C[27];
         C[38] = C[5];
         C[39] = C[25];
-        // CHECKSTYLE:ON
+        // CHECKSTYLE:ON: checkstyle:magicnumber
     }
 
     private final WhereMakerParamsProvider paramsProvider;

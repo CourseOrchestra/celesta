@@ -70,7 +70,7 @@ public abstract class ReadOnlyTableCursor extends BasicCursor {
     final void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames) {
 
         if (meta().getPrimaryKey().isEmpty() && colNames.isEmpty()) {
-            // If there's absolutely no sorting it will be sorted by the first field. 
+            // If there's absolutely no sorting it will be sorted by the first field.
             l.add(String.format("\"%s\"", meta().getColumns().keySet().iterator().next()));
             ol.add(Boolean.FALSE);
         } else {
