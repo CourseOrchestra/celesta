@@ -13,6 +13,10 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
     private String collation;
     private boolean isCustomDbCreated;
 
+    public CollatedMSSQLServerContainer(){
+        super("mcr.microsoft.com/mssql/server:2017-latest");
+    }
+
     public SELF withCollation(final String collation) {
         this.collation = collation;
         return self();

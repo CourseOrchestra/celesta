@@ -125,7 +125,7 @@ public final class OraDdlGenerator extends DdlGenerator {
 
     private boolean hasTypeInteractive(String typeName, String typeCode, Connection conn)  {
         String sql = String.format(
-                "SELECT TYPE_NAME from DBA_TYPES "
+                "SELECT TYPE_NAME from ALL_TYPES "
               + "WHERE owner = sys_context('userenv','session_user')\n"
                   + " and TYPECODE = '%s' and TYPE_NAME = '%s'",
                                    typeCode, typeName);

@@ -21,8 +21,9 @@ import java.util.Map;
 
 public class ContainerUtils {
 
-    public static final PostgreSQLContainer POSTGRE_SQL = new PostgreSQLContainer();
-    public static final OracleContainer ORACLE = new OracleContainer();
+    public static final PostgreSQLContainer POSTGRE_SQL = new PostgreSQLContainer("postgres:14.0");
+    public static final OracleContainer ORACLE =
+            new OracleContainer("gvenzl/oracle-xe:18.4.0");
     public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
         .withCollation("Cyrillic_General_CI_AI");
     public static final AdvancedFireBirdContainer FIREBIRD = new AdvancedFireBirdContainer();
