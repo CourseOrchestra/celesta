@@ -96,7 +96,8 @@ public final class Celesta implements ICelesta {
         this.profiler = new ProfilingManager(this);
 
         if (!appSettings.getSkipDBUpdate()) {
-            LOGGER.info("Celesta initialization: database upgrade...");
+            LOGGER.info("Celesta initialization: database {} upgrade...",
+                    PasswordHider.maskPassword(appSettings.getDatabaseConnection()));
 
             DbUpdaterImpl dbUpdater = new DbUpdaterBuilder()
                     .dbAdaptor(dbAdaptor)

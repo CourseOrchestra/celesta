@@ -11,15 +11,17 @@ public interface ScriptTest {
     @RegisterExtension
     CallContextProvider callContextProvider = new CallContextProvider();
 
+
     @BeforeAll
     default void startCelestas() {
         callContextProvider.startCelestas();
     }
 
+/*
     @AfterAll
     default void stopCelestas() {
         callContextProvider.stopCelestas();
-    }
+    }*/
 
     @AfterEach
     default void closeContext() {

@@ -23,7 +23,7 @@ public class ContainerUtils {
 
     public static final PostgreSQLContainer POSTGRE_SQL = new PostgreSQLContainer("postgres:14.0");
     public static final OracleContainer ORACLE =
-            new OracleContainer("gvenzl/oracle-xe:18.4.0");
+            new OracleContainer("gvenzl/oracle-xe:21.3.0");
     public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
         .withCollation("Cyrillic_General_CI_AI");
     public static final AdvancedFireBirdContainer FIREBIRD = new AdvancedFireBirdContainer();
