@@ -13,7 +13,7 @@
     <packaging>maven-plugin</packaging>
 
     <properties>
-        <maven.plugin.api.version>3.8.5</maven.plugin.api.version>
+        <maven.plugin.api.version>3.8.6</maven.plugin.api.version>
     </properties>
 
     <dependencies>
