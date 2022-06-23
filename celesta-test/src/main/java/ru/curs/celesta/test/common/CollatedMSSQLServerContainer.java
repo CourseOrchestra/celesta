@@ -14,7 +14,7 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
     private boolean isCustomDbCreated;
 
     public CollatedMSSQLServerContainer() {
-        super("mcr.microsoft.com/mssql/server:2017-latest");
+        super("mcr.microsoft.com/mssql/server:2017-CU29-ubuntu-16.04");
     }
 
     public SELF withCollation(final String collation) {
@@ -25,7 +25,6 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
     @Override
     public void start() {
         withLogConsumer(s -> System.out.println(s.getUtf8String()));
-        withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withMemory(2L ^ 31)); //2GB of memory
         super.start();
         if (this.collation != null) {
             createCustomDataBase();
