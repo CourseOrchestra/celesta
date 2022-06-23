@@ -60,7 +60,7 @@
         <slf4j.version>1.7.36</slf4j.version>
         <h2.version>1.4.200</h2.version>
         <javacc.version>7.0.11</javacc.version>
-        <jdbc.driver.oracle.version>11.2.0.4</jdbc.driver.oracle.version>
+        <jdbc.driver.oracle.version>21.6.0.0.1</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.4.0</jdbc.driver.postgres.version>
         <jdbc.driver.sqlserver.version>8.2.1.jre8</jdbc.driver.sqlserver.version>
         <jdbc.driver.firebird.version>4.0.0-beta-1</jdbc.driver.firebird.version>
@@ -117,7 +117,7 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.database.jdbc</groupId>
-                <artifactId>ojdbc6</artifactId>
+                <artifactId>ojdbc8</artifactId>
                 <version>${jdbc.driver.oracle.version}</version>
                 <scope>runtime</scope>
             </dependency>
@@ -170,7 +170,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>com.oracle</groupId>
-                        <artifactId>ojdbc6</artifactId>
+                        <artifactId>ojdbc8</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
