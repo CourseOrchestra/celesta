@@ -25,6 +25,7 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
     @Override
     public void start() {
         withLogConsumer(s -> System.out.println(s.getUtf8String()));
+        withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withMemory(2L ^ 31)); //2GB of memory
         super.start();
         if (this.collation != null) {
             createCustomDataBase();
