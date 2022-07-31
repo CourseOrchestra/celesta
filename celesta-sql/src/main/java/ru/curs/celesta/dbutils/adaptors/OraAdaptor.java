@@ -468,7 +468,7 @@ public final class OraAdaptor extends DBAdaptor {
         TableElement te = c.getParentTable();
         Grain g = te.getGrain();
         PreparedStatement getDefault = conn.prepareStatement(String.format(
-                "select DATA_DEFAULT from DBA_TAB_COLUMNS where " + "owner = sys_context('userenv','session_user') "
+                "select DATA_DEFAULT from ALL_TAB_COLUMNS where " + "owner = sys_context('userenv','session_user') "
                         + "and TABLE_NAME = '%s_%s' and COLUMN_NAME = '%s'",
                 g.getName(), te.getName(), c.getName()));
         try {

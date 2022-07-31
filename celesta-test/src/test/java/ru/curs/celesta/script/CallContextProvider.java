@@ -77,39 +77,42 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
     }
 
     public void startCelestas() {
-        celestas.put(Backend.H2, celestaFromH2());
+        celestas.putIfAbsent(Backend.H2, celestaFromH2());
 
-        containers.put(Backend.PostgreSQL, ContainerUtils.POSTGRE_SQL);
-        celestas.put(Backend.PostgreSQL, celestaFromContainer(containers.get(Backend.PostgreSQL)));
+        containers.putIfAbsent(Backend.PostgreSQL, ContainerUtils.POSTGRE_SQL);
+        celestas.computeIfAbsent(Backend.PostgreSQL, b -> celestaFromContainer(containers.get(Backend.PostgreSQL)));
 
-        containers.put(Backend.Oracle, ContainerUtils.ORACLE);
-        celestas.put(Backend.Oracle, celestaFromContainer(containers.get(Backend.Oracle)));
+        containers.putIfAbsent(Backend.Oracle, ContainerUtils.ORACLE);
+        celestas.computeIfAbsent(Backend.Oracle, b -> celestaFromContainer(containers.get(Backend.Oracle)));
 
-        containers.put(Backend.MSSQL, ContainerUtils.MSSQL);
-        celestas.put(Backend.MSSQL, celestaFromContainer(containers.get(Backend.MSSQL)));
+        containers.putIfAbsent(Backend.MSSQL, ContainerUtils.MSSQL);
+        celestas.computeIfAbsent(Backend.MSSQL, b -> celestaFromContainer(containers.get(Backend.MSSQL)));
 
-        containers.put(Backend.FireBird, ContainerUtils.FIREBIRD);
-        celestas.put(Backend.FireBird, celestaFromContainer(containers.get(Backend.FireBird)));
+        containers.putIfAbsent(Backend.FireBird, ContainerUtils.FIREBIRD);
+        celestas.computeIfAbsent(Backend.FireBird, b -> celestaFromContainer(containers.get(Backend.FireBird)));
 
     }
 
     public void stopCelestas() {
 
         celestas.computeIfPresent(Backend.H2,
-            (b, c) -> {
-                try {
-                    c.getConnectionPool().get().createStatement().execute("SHUTDOWN");
-                } catch (SQLException ex) {
-                    LOGGER.error("Error during DB shutdown", ex);
-                }
-                return null;
-            });
+                (b, c) -> {
+                    try {
+                        c.getConnectionPool().get().createStatement().execute("SHUTDOWN");
+                    } catch (SQLException ex) {
+                        LOGGER.error("Error during DB shutdown", ex);
+                    }
+                    return null;
+                });
 
         containers.forEach(
-            (b, c) -> {
-                this.celestas.get(b).close();
-                ContainerUtils.cleanUp(c);
-            });
+                (b, c) -> {
+                    this.celestas.get(b).close();
+                    ContainerUtils.cleanUp(c);
+                });
+
+        celestas.clear();
+        containers.clear();
     }
 
     private static Celesta celestaFromH2() {

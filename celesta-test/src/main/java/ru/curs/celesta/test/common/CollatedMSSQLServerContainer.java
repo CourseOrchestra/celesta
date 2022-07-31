@@ -13,6 +13,10 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
     private String collation;
     private boolean isCustomDbCreated;
 
+    public CollatedMSSQLServerContainer() {
+        super("mcr.microsoft.com/mssql/server:2017-CU29-ubuntu-16.04");
+    }
+
     public SELF withCollation(final String collation) {
         this.collation = collation;
         return self();
@@ -20,10 +24,11 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
 
     @Override
     public void start() {
-            super.start();
-            if (this.collation != null) {
-                createCustomDataBase();
-            }
+        withLogConsumer(s -> System.out.println(s.getUtf8String()));
+        super.start();
+        if (this.collation != null) {
+            createCustomDataBase();
+        }
     }
 
     @Override
@@ -62,6 +67,6 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
     }
 
     public String getInitJdbcUrl() {
-        return "jdbc:sqlserver://" + getContainerIpAddress() + ":" + getMappedPort(MS_SQL_SERVER_PORT);
+        return "jdbc:sqlserver://" + getHost() + ":" + getMappedPort(MS_SQL_SERVER_PORT) + ";encrypt=false";
     }
 }
