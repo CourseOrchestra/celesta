@@ -67,6 +67,6 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
     }
 
     public String getInitJdbcUrl() {
-        return "jdbc:sqlserver://" + getHost() + ":" + getMappedPort(MS_SQL_SERVER_PORT);
+        return "jdbc:sqlserver://" + getHost() + ":" + getMappedPort(MS_SQL_SERVER_PORT) + ";encrypt=false";
     }
 }
