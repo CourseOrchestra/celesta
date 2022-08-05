@@ -206,6 +206,10 @@ public class SQLGenerator extends ExprVisitor {
     }
 
 
+    /** Whether this generator should put all the names in quotes.
+     *
+     * @return true, if names should be quoted
+     */
     protected boolean quoteNames() {
         return true;
     }

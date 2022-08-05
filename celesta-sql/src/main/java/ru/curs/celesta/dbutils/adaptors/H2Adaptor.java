@@ -1,6 +1,5 @@
 package ru.curs.celesta.dbutils.adaptors;
 
-import org.h2.value.DataType;
 import ru.curs.celesta.CelestaException;
 import ru.curs.celesta.ConnectionPool;
 import ru.curs.celesta.DBType;
@@ -49,9 +48,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.NOW;
-
-
 /**
  * Created by ioann on 02.05.2017.
  */
@@ -89,7 +85,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         try (
                 PreparedStatement check = conn.prepareStatement(
                         "SELECT COUNT(*) FROM information_schema.tables "
-                      + "WHERE table_type = 'TABLE' AND table_schema <> 'INFORMATION_SCHEMA';");
+                                + "WHERE table_type = 'BASE TABLE' AND table_schema <> 'INFORMATION_SCHEMA';");
                 ResultSet rs = check.executeQuery()) {
             rs.next();
             return rs.getInt(1) != 0;
@@ -107,15 +103,10 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         String sequenceName = idColumn.getSequence().getName();
 
         String sql = String.format("select CURRVAL('\"%s\".\"%s\"')", t.getGrain().getName(), sequenceName);
-        try {
-            Statement stmt = conn.createStatement();
-            try {
-                ResultSet rs = stmt.executeQuery(sql);
-                rs.next();
-                return rs.getInt(1);
-            } finally {
-                stmt.close();
-            }
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            rs.next();
+            return rs.getInt(1);
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }
@@ -149,7 +140,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
         String sql = String.format(
                 "insert into " + tableString(t.getGrain().getName(), t.getName()) + " (%s) "
-                     + "values (%s)", fields.toString(), params.toString()
+                        + "values (%s)", fields.toString(), params.toString()
         );
 
         return prepareStatement(conn, sql);
@@ -158,7 +149,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     @Override
     public List<String> getParameterizedViewList(Connection conn, Grain g) {
         String sql = String.format(
-                "SELECT ALIAS_NAME FROM INFORMATION_SCHEMA.FUNCTION_ALIASES where alias_schema = '%s'",
+                "SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA = '%s'",
                 g.getName());
         List<String> result = new LinkedList<>();
         try (Statement stmt = conn.createStatement();
@@ -186,15 +177,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                     String typeName = rs.getString("TYPE_NAME");
                     String columnDefault = rs.getString("COLUMN_DEF");
 
-
-                    String columnDefaultForIdentity = "NEXTVAL('" + tableString(grainName, tableName + "_seq") + "')";
-
-                    if ("integer".equalsIgnoreCase(typeName)
-                            && columnDefaultForIdentity.equals(columnDefault)) {
-                        result.setType(IntegerColumn.class);
-                        result.setNullable(rs.getInt("NULLABLE") != DatabaseMetaData.columnNoNulls);
-                        return result;
-                    } else if ("clob".equalsIgnoreCase(typeName)) {
+                    if ("character large object".equalsIgnoreCase(typeName)) {
                         result.setType(StringColumn.class);
                         result.setMax(true);
                     } else {
@@ -238,7 +221,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                 result = "NEXTVAL(" + sequenceName + ")";
             }
         } else if (DateTimeColumn.class == ci.getType()) {
-            if (NOW.equalsIgnoreCase(defaultBody)) {
+            if ("localtimestamp".equalsIgnoreCase(defaultBody)) {
                 result = "GETDATE()";
             } else {
                 Matcher m = DATEPATTERN.matcher(defaultBody);
@@ -253,7 +236,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                 result = "0x" + m.group(1).toUpperCase();
             }
         } else if (StringColumn.class == ci.getType()) {
-            if (defaultBody.contains("STRINGDECODE")) {
+            if (defaultBody.startsWith("U&'")) {
                 //H2 отдает default для срок в виде функции, которую нужно выполнить отдельным запросом
                 String sql = "SELECT " + defaultBody;
 
@@ -278,30 +261,31 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     @Override
     public DbPkInfo getPKInfo(Connection conn, TableElement t) {
         String sql = String.format(
-                "SELECT constraint_name AS indexName, column_name as colName "
-              + "FROM  INFORMATION_SCHEMA.INDEXES "
-              + "WHERE table_schema = '%s' "
-                      + "AND table_name = '%s' "
-                      + "AND index_type_name = 'PRIMARY KEY'",
+                "SELECT tc.CONSTRAINT_NAME, kcu.COLUMN_NAME\n" +
+                        "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc\n" +
+                        "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu\n" +
+                        "ON kcu.CONSTRAINT_CATALOG = tc.CONSTRAINT_CATALOG\n" +
+                        "AND kcu.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA\n" +
+                        "AND kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME\n" +
+                        "WHERE \n" +
+                        "tc.CONSTRAINT_TYPE = 'PRIMARY KEY'\n" +
+                        "AND tc.TABLE_SCHEMA = '%s'\n" +
+                        "AND tc.TABLE_NAME = '%s'" +
+                        "ORDER BY tc.CONSTRAINT_NAME, kcu.ORDINAL_POSITION\n",
                 t.getGrain().getName(), t.getName());
         DbPkInfo result = new DbPkInfo(this);
 
-        try {
-            Statement stmt = conn.createStatement();
-            try {
-                ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
-                while (rs.next()) {
-                    if (result.getName() == null) {
-                        String indName = rs.getString("indexName");
-                        result.setName(indName);
-                    }
-
-                    String colName = rs.getString("colName");
-                    result.getColumnNames().add(colName);
+            while (rs.next()) {
+                if (result.getName() == null) {
+                    String indName = rs.getString("CONSTRAINT_NAME");
+                    result.setName(indName);
                 }
-            } finally {
-                stmt.close();
+
+                String colName = rs.getString("COLUMN_NAME");
+                result.getColumnNames().add(colName);
             }
         } catch (SQLException e) {
             throw new CelestaException("Could not get indices information: %s", e.getMessage());
@@ -312,72 +296,58 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     @Override
     public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
 
-        String sql = "SELECT FK_NAME AS FK_CONSTRAINT_NAME, "
-                          + "FKTABLE_NAME AS FK_TABLE_NAME, "
-                          + "FKCOLUMN_NAME AS FK_COLUMN_NAME, "
-                          + "PKTABLE_SCHEMA AS REF_GRAIN, "
-                          + "PKTABLE_NAME AS REF_TABLE_NAME, "
-                          + "UPDATE_RULE, "
-                          + "DELETE_RULE "
-                   + "FROM INFORMATION_SCHEMA.CROSS_REFERENCES "
-                   + "WHERE FKTABLE_SCHEMA = '%s' "
-                   + "ORDER BY FK_CONSTRAINT_NAME, ORDINAL_POSITION";
+        String sql = "select \n" +
+                "  tc.CONSTRAINT_NAME AS FK_CONSTRAINT_NAME, \n" +
+                "  tc.TABLE_NAME AS FK_TABLE_NAME,\n" +
+                "  kcu.COLUMN_NAME AS FK_COLUMN_NAME, \n" +
+                "  rtc.TABLE_SCHEMA as REF_GRAIN,\n" +
+                "  rtc.TABLE_NAME as REF_TABLE_NAME,\n" +
+                "  rc.UPDATE_RULE, \n" +
+                "  rc.DELETE_RULE \n" +
+                "from  INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc\n" +
+                "INNER JOIN  INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc\n" +
+                "ON rc.CONSTRAINT_CATALOG= tc.CONSTRAINT_CATALOG\n" +
+                "AND rc.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA\n" +
+                "AND rc.CONSTRAINT_NAME = tc.CONSTRAINT_NAME\n" +
+                "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu\n" +
+                "ON tc.CONSTRAINT_CATALOG = tc.CONSTRAINT_CATALOG \n" +
+                "AND tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA\n" +
+                "AND tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME\n" +
+                "AND tc.TABLE_NAME = kcu.TABLE_NAME\n" +
+                "INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS rtc\n" +
+                "ON rc.UNIQUE_CONSTRAINT_CATALOG = rtc.CONSTRAINT_CATALOG\n" +
+                "AND rc.UNIQUE_CONSTRAINT_SCHEMA = rtc.CONSTRAINT_SCHEMA\n" +
+                "AND rc.UNIQUE_CONSTRAINT_NAME = rtc.CONSTRAINT_NAME\n" +
+                "WHERE tc.CONSTRAINT_TYPE='FOREIGN KEY' AND tc.constraint_schema ='%s'" +
+                "ORDER BY tc.CONSTRAINT_NAME, kcu.ORDINAL_POSITION";
         sql = String.format(sql, g.getName());
 
         List<DbFkInfo> result = new LinkedList<>();
-        try {
-            Statement stmt = conn.createStatement();
-            try {
-                DbFkInfo i = null;
-                ResultSet rs = stmt.executeQuery(sql);
-                while (rs.next()) {
-                    String fkName = rs.getString("FK_CONSTRAINT_NAME");
-                    if (i == null || !i.getName().equals(fkName)) {
-                        i = new DbFkInfo(fkName);
-                        result.add(i);
-                        i.setTableName(rs.getString("FK_TABLE_NAME"));
-                        i.setRefGrainName(rs.getString("REF_GRAIN"));
-                        i.setRefTableName(rs.getString("REF_TABLE_NAME"));
 
-                        String updateRule = resolveConstraintReferential(rs.getInt("UPDATE_RULE"));
-                        i.setUpdateRule(getFKRule(updateRule));
-                        String deleteRule = resolveConstraintReferential(rs.getInt("DELETE_RULE"));
-                        i.setDeleteRule(getFKRule(deleteRule));
-                    }
-                    i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            DbFkInfo i = null;
+            while (rs.next()) {
+                String fkName = rs.getString("FK_CONSTRAINT_NAME");
+                if (i == null || !i.getName().equals(fkName)) {
+                    i = new DbFkInfo(fkName);
+                    result.add(i);
+                    i.setTableName(rs.getString("FK_TABLE_NAME"));
+                    i.setRefGrainName(rs.getString("REF_GRAIN"));
+                    i.setRefTableName(rs.getString("REF_TABLE_NAME"));
+
+                    String updateRule = rs.getString("UPDATE_RULE");
+                    i.setUpdateRule(getFKRule(updateRule));
+                    String deleteRule = rs.getString("DELETE_RULE");
+                    i.setDeleteRule(getFKRule(deleteRule));
                 }
-            } finally {
-                stmt.close();
+                i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
             }
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }
         return result;
     }
-
-    private String resolveConstraintReferential(int constraintReferential) {
-        final String result;
-
-        switch (constraintReferential) {
-            case DatabaseMetaData.importedKeyCascade:
-                result = "CASCADE";
-                break;
-            case DatabaseMetaData.importedKeyRestrict:
-                result = "RESTRICT";
-                break;
-            case DatabaseMetaData.importedKeySetNull:
-                result = "SET NULL";
-                break;
-            case DatabaseMetaData.importedKeyNoAction:
-                result = "NO ACTION";
-                break;
-            default:
-                result = "";
-        }
-
-        return result;
-    }
-
 
     @Override
     public String getInFilterClause(DataGrainElement dge, DataGrainElement otherDge, List<String> fields,
@@ -412,7 +382,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                     + String.format(" limit %d", rowCount);
         } else if (rowCount == 0) {
             sql = getSelectFromOrderBy(from, whereClause, orderBy, fields)
-                    + String.format(" limit -1 offset %d", offset);
+                    + String.format(" offset %d", offset);
         } else {
             sql = getSelectFromOrderBy(from, whereClause, orderBy, fields)
                     + String.format(" limit %d offset %d", rowCount, offset);
@@ -425,32 +395,33 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         Map<String, DbIndexInfo> result = new HashMap<>();
 
         String sql = String.format(
-                "SELECT table_name as tableName, index_name as indexName, column_name as colName "
-              + "FROM INFORMATION_SCHEMA.INDEXES "
-              + "WHERE table_schema = '%s' AND primary_key <> true",
-              g.getName());
+                "SELECT i.TABLE_NAME as tableName, ic.INDEX_NAME AS indexName, ic.column_name as colName\n" +
+                        "FROM INFORMATION_SCHEMA.INDEX_COLUMNS ic  INNER JOIN INFORMATION_SCHEMA.INDEXES i\n" +
+                        "ON \n" +
+                        "  ic.INDEX_CATALOG = i.INDEX_CATALOG\n" +
+                        "  and ic.INDEX_SCHEMA = i.INDEX_SCHEMA \n" +
+                        "  and ic.INDEX_NAME = i.INDEX_NAME\n" +
+                        "WHERE i.table_schema = '%s' " +
+                        "and i.index_type_name <> 'PRIMARY KEY'\n" +
+                        "ORDER BY ic.ordinal_position",
+                g.getName());
 
-        try {
-            Statement stmt = conn.createStatement();
 
-            try {
-                ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
-                while (rs.next()) {
-                    String indexName = rs.getString("indexName");
-                    DbIndexInfo ii = result.get(indexName);
+            while (rs.next()) {
+                String indexName = rs.getString("indexName");
+                DbIndexInfo ii = result.get(indexName);
 
-                    if (ii == null) {
-                        String tableName = rs.getString("tableName");
-                        ii = new DbIndexInfo(tableName, indexName);
-                        result.put(indexName, ii);
-                    }
-
-                    String colName = rs.getString("colName");
-                    ii.getColumnNames().add(colName);
+                if (ii == null) {
+                    String tableName = rs.getString("tableName");
+                    ii = new DbIndexInfo(tableName, indexName);
+                    result.put(indexName, ii);
                 }
-            } finally {
-                stmt.close();
+
+                String colName = rs.getString("colName");
+                ii.getColumnNames().add(colName);
             }
         } catch (SQLException e) {
             throw new CelestaException("Could not get indices information: %s", e.getMessage());
@@ -462,7 +433,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     @Override
     public boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException {
         String sql = String.format("select count(*) from information_schema.triggers where "
-                        + "        table_schema = '%s' and table_name = '%s'"
+                        + "        event_object_schema = '%s' and event_object_table = '%s'"
                         + "        and trigger_name = '%s'",
                 query.getSchema().replace("\"", ""),
                 query.getTableName().replace("\"", ""),
@@ -513,9 +484,7 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
     @Override
     String prepareRowColumnForSelectStaticStrings(String value, String colName, int maxStringLength) {
-        int dataType = DataType.getTypeFromClass(value.getClass());
-        DataType type = DataType.getDataType(dataType);
-        return "CAST(? as " + type.name + ") as " + colName;
+        return String.format("CAST(? as varchar(%d)) as %s", maxStringLength, colName);
     }
 
     @Override
@@ -525,9 +494,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
 
     @Override
     public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
-        String sql = "SELECT INCREMENT, MIN_VALUE, MAX_VALUE, IS_CYCLE "
-                   + "FROM INFORMATION_SCHEMA.SEQUENCES "
-                   + "WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
+        String sql = "SELECT INCREMENT, MINIMUM_VALUE, MAXIMUM_VALUE, CYCLE_OPTION "
+                + "FROM INFORMATION_SCHEMA.SEQUENCES "
+                + "WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
 
         try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, s.getGrain().getName());
@@ -537,9 +506,9 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
                 rs.next();
                 DbSequenceInfo result = new DbSequenceInfo();
                 result.setIncrementBy(rs.getLong("INCREMENT"));
-                result.setMinValue(rs.getLong("MIN_VALUE"));
-                result.setMaxValue(rs.getLong("MAX_VALUE"));
-                result.setCycle(rs.getBoolean("IS_CYCLE"));
+                result.setMinValue(rs.getLong("MINIMUM_VALUE"));
+                result.setMaxValue(rs.getLong("MAXIMUM_VALUE"));
+                result.setCycle(rs.getBoolean("CYCLE_OPTION"));
                 return result;
             }
         } catch (SQLException e) {

@@ -36,7 +36,7 @@ class H2IntegerColumnDefiner extends ColumnDefiner {
 
         SequenceElement s = ic.getSequence();
         if (s != null) {
-            defaultStr = DEFAULT + s.getGrain().getQuotedName() + "." + s.getQuotedName() + ".nextval";
+            defaultStr = DEFAULT + "next value for " + s.getGrain().getQuotedName() + "." + s.getQuotedName();
         } else if (ic.getDefaultValue() != null) {
             defaultStr = DEFAULT + ic.getDefaultValue();
         }
@@ -47,7 +47,7 @@ class H2IntegerColumnDefiner extends ColumnDefiner {
 class H2FloatingColumnDefiner extends ColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "double";
+        return "double precision";
     }
 
     @Override
@@ -115,7 +115,7 @@ class H2BooleanColumnDefiner extends ColumnDefiner {
 class H2StringColumnDefiner extends ColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "varchar";
+        return "character varying";
     }
 
     @Override
@@ -139,7 +139,7 @@ class H2StringColumnDefiner extends ColumnDefiner {
 class H2BinaryColumnDefiner extends ColumnDefiner {
     @Override
     public String dbFieldType() {
-        return "varbinary";
+        return "binary varying";
     }
 
     @Override
