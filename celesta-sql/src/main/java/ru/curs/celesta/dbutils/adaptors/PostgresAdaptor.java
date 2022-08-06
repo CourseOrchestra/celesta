@@ -464,11 +464,11 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     @Override
     public void createSysObjects(Connection conn, String sysSchemaName) {
         String sql = "CREATE OR REPLACE FUNCTION " + sysSchemaName + ".recversion_check()"
-                + "  RETURNS trigger AS $BODY$ BEGIN%n"
-                + "    IF (OLD.recversion = NEW.recversion) THEN%n"
-                + "       NEW.recversion = NEW.recversion + 1;\n     ELSE%n"
-                + "       RAISE EXCEPTION 'record version check failure';%n" + "    END IF;"
-                + "    RETURN NEW; END; $BODY$%n" + "  LANGUAGE plpgsql VOLATILE COST 100;";
+                + "  RETURNS trigger AS $BODY$ BEGIN\n"
+                + "    IF (OLD.recversion = NEW.recversion) THEN\n"
+                + "       NEW.recversion = NEW.recversion + 1;\n     ELSE\n"
+                + "       RAISE EXCEPTION 'record version check failure';\n" + "    END IF;"
+                + "    RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;";
 
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
