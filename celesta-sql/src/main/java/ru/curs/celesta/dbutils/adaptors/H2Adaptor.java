@@ -261,17 +261,17 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     @Override
     public DbPkInfo getPKInfo(Connection conn, TableElement t) {
         String sql = String.format(
-                "SELECT tc.CONSTRAINT_NAME, kcu.COLUMN_NAME\n" +
-                        "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc\n" +
-                        "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu\n" +
-                        "ON kcu.CONSTRAINT_CATALOG = tc.CONSTRAINT_CATALOG\n" +
-                        "AND kcu.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA\n" +
-                        "AND kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME\n" +
-                        "WHERE \n" +
-                        "tc.CONSTRAINT_TYPE = 'PRIMARY KEY'\n" +
-                        "AND tc.TABLE_SCHEMA = '%s'\n" +
-                        "AND tc.TABLE_NAME = '%s'" +
-                        "ORDER BY tc.CONSTRAINT_NAME, kcu.ORDINAL_POSITION\n",
+                "SELECT tc.CONSTRAINT_NAME, kcu.COLUMN_NAME%n"
+                        + "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc%n"
+                        + "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu%n"
+                        + "ON kcu.CONSTRAINT_CATALOG = tc.CONSTRAINT_CATALOG%n"
+                        + "AND kcu.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA%n"
+                        + "AND kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME%n"
+                        + "WHERE %n"
+                        + "tc.CONSTRAINT_TYPE = 'PRIMARY KEY'%n"
+                        + "AND tc.TABLE_SCHEMA = '%s'%n"
+                        + "AND tc.TABLE_NAME = '%s'"
+                        + "ORDER BY tc.CONSTRAINT_NAME, kcu.ORDINAL_POSITION%n",
                 t.getGrain().getName(), t.getName());
         DbPkInfo result = new DbPkInfo(this);
 
@@ -296,30 +296,30 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
     @Override
     public List<DbFkInfo> getFKInfo(Connection conn, Grain g) {
 
-        String sql = "select \n" +
-                "  tc.CONSTRAINT_NAME AS FK_CONSTRAINT_NAME, \n" +
-                "  tc.TABLE_NAME AS FK_TABLE_NAME,\n" +
-                "  kcu.COLUMN_NAME AS FK_COLUMN_NAME, \n" +
-                "  rtc.TABLE_SCHEMA as REF_GRAIN,\n" +
-                "  rtc.TABLE_NAME as REF_TABLE_NAME,\n" +
-                "  rc.UPDATE_RULE, \n" +
-                "  rc.DELETE_RULE \n" +
-                "from  INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc\n" +
-                "INNER JOIN  INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc\n" +
-                "ON rc.CONSTRAINT_CATALOG= tc.CONSTRAINT_CATALOG\n" +
-                "AND rc.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA\n" +
-                "AND rc.CONSTRAINT_NAME = tc.CONSTRAINT_NAME\n" +
-                "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu\n" +
-                "ON tc.CONSTRAINT_CATALOG = tc.CONSTRAINT_CATALOG \n" +
-                "AND tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA\n" +
-                "AND tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME\n" +
-                "AND tc.TABLE_NAME = kcu.TABLE_NAME\n" +
-                "INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS rtc\n" +
-                "ON rc.UNIQUE_CONSTRAINT_CATALOG = rtc.CONSTRAINT_CATALOG\n" +
-                "AND rc.UNIQUE_CONSTRAINT_SCHEMA = rtc.CONSTRAINT_SCHEMA\n" +
-                "AND rc.UNIQUE_CONSTRAINT_NAME = rtc.CONSTRAINT_NAME\n" +
-                "WHERE tc.CONSTRAINT_TYPE='FOREIGN KEY' AND tc.constraint_schema ='%s'" +
-                "ORDER BY tc.CONSTRAINT_NAME, kcu.ORDINAL_POSITION";
+        String sql = "select %n"
+                + "  tc.CONSTRAINT_NAME AS FK_CONSTRAINT_NAME, %n"
+                + "  tc.TABLE_NAME AS FK_TABLE_NAME,%n"
+                + "  kcu.COLUMN_NAME AS FK_COLUMN_NAME, %n"
+                + "  rtc.TABLE_SCHEMA as REF_GRAIN,%n"
+                + "  rtc.TABLE_NAME as REF_TABLE_NAME,%n"
+                + "  rc.UPDATE_RULE, %n"
+                + "  rc.DELETE_RULE %n"
+                + "from  INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc%n"
+                + "INNER JOIN  INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc%n"
+                + "ON rc.CONSTRAINT_CATALOG= tc.CONSTRAINT_CATALOG%n"
+                + "AND rc.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA%n"
+                + "AND rc.CONSTRAINT_NAME = tc.CONSTRAINT_NAME%n"
+                + "INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu%n"
+                + "ON tc.CONSTRAINT_CATALOG = tc.CONSTRAINT_CATALOG %n"
+                + "AND tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA%n"
+                + "AND tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME%n"
+                + "AND tc.TABLE_NAME = kcu.TABLE_NAME%n"
+                + "INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS rtc%n"
+                + "ON rc.UNIQUE_CONSTRAINT_CATALOG = rtc.CONSTRAINT_CATALOG%n"
+                + "AND rc.UNIQUE_CONSTRAINT_SCHEMA = rtc.CONSTRAINT_SCHEMA%n"
+                + "AND rc.UNIQUE_CONSTRAINT_NAME = rtc.CONSTRAINT_NAME%n"
+                + "WHERE tc.CONSTRAINT_TYPE='FOREIGN KEY' AND tc.constraint_schema ='%s'"
+                + "ORDER BY tc.CONSTRAINT_NAME, kcu.ORDINAL_POSITION";
         sql = String.format(sql, g.getName());
 
         List<DbFkInfo> result = new LinkedList<>();
@@ -395,15 +395,15 @@ final public class H2Adaptor extends OpenSourceDbAdaptor {
         Map<String, DbIndexInfo> result = new HashMap<>();
 
         String sql = String.format(
-                "SELECT i.TABLE_NAME as tableName, ic.INDEX_NAME AS indexName, ic.column_name as colName\n" +
-                        "FROM INFORMATION_SCHEMA.INDEX_COLUMNS ic  INNER JOIN INFORMATION_SCHEMA.INDEXES i\n" +
-                        "ON \n" +
-                        "  ic.INDEX_CATALOG = i.INDEX_CATALOG\n" +
-                        "  and ic.INDEX_SCHEMA = i.INDEX_SCHEMA \n" +
-                        "  and ic.INDEX_NAME = i.INDEX_NAME\n" +
-                        "WHERE i.table_schema = '%s' " +
-                        "and i.index_type_name <> 'PRIMARY KEY'\n" +
-                        "ORDER BY ic.ordinal_position",
+                "SELECT i.TABLE_NAME as tableName, ic.INDEX_NAME AS indexName, ic.column_name as colName%n"
+                        + "FROM INFORMATION_SCHEMA.INDEX_COLUMNS ic  INNER JOIN INFORMATION_SCHEMA.INDEXES i%n"
+                        + "ON %n"
+                        + "  ic.INDEX_CATALOG = i.INDEX_CATALOG%n"
+                        + "  and ic.INDEX_SCHEMA = i.INDEX_SCHEMA %n"
+                        + "  and ic.INDEX_NAME = i.INDEX_NAME%n"
+                        + "WHERE i.table_schema = '%s' "
+                        + "and i.index_type_name <> 'PRIMARY KEY'%n"
+                        + "ORDER BY ic.ordinal_position",
                 g.getName());
 
 
