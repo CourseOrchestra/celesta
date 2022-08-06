@@ -227,16 +227,13 @@ public final class MSSQLAdaptor extends DBAdaptor {
                 "SELECT CURRENT_VALUE FROM SYS.sequences WHERE name = '%s'",
                 idColumn.getSequence().getName());
 
-        try (Statement stmt = conn.createStatement()) {
-
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             if (!rs.next()) {
                 throw new CelestaException("Id sequence for %s.%s is not initialized.", t.getGrain().getName(),
                         t.getName());
             }
-
             return (int) rs.getLong(1);
-
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }
@@ -479,9 +476,9 @@ public final class MSSQLAdaptor extends DBAdaptor {
         LOGGER.trace(sql);
 
         Map<String, DbIndexInfo> result = new HashMap<>();
-        try (Statement stmt = conn.createStatement()) {
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             DbIndexInfo i = null;
-            ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
                 String tabName = rs.getString("TableName");
                 String indName = rs.getString("IndexName");

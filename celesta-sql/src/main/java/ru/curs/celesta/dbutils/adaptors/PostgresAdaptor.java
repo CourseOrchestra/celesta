@@ -319,8 +319,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
         String sql = String.format(
                 " SELECT r.routine_name FROM INFORMATION_SCHEMA.ROUTINES r "
                         + "WHERE r.routine_schema = '%s' AND r.routine_type='FUNCTION' "
-                        + "AND exists (select * from pg_proc p\n"
-                        + "        where p.proname = r.routine_name\n"
+                        + "AND exists (select * from pg_proc p%n"
+                        + "        where p.proname = r.routine_name%n"
                         + "        AND upper(pg_get_function_result(p.oid)) like upper('%%table%%'))",
                 g.getName());
         List<String> result = new LinkedList<>();
@@ -429,8 +429,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                 + "and n.nspname = '%s' and x.indisunique = false;", g.getName());
         Map<String, DbIndexInfo> result = new HashMap<>();
         try (Statement stmt = conn.createStatement();
-             PreparedStatement stmt2 = conn.prepareStatement("select pg_get_indexdef(?, ?, false)")) {
-            ResultSet rs = stmt.executeQuery(sql);
+             PreparedStatement stmt2 = conn.prepareStatement("select pg_get_indexdef(?, ?, false)");
+             ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 String tabName = rs.getString("tablename");
                 String indName = rs.getString("indexname");
@@ -464,11 +464,11 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     @Override
     public void createSysObjects(Connection conn, String sysSchemaName) {
         String sql = "CREATE OR REPLACE FUNCTION " + sysSchemaName + ".recversion_check()"
-                + "  RETURNS trigger AS $BODY$ BEGIN\n"
-                + "    IF (OLD.recversion = NEW.recversion) THEN\n"
-                + "       NEW.recversion = NEW.recversion + 1;\n     ELSE\n"
-                + "       RAISE EXCEPTION 'record version check failure';\n" + "    END IF;"
-                + "    RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;";
+                + "  RETURNS trigger AS $BODY$ BEGIN%n"
+                + "    IF (OLD.recversion = NEW.recversion) THEN%n"
+                + "       NEW.recversion = NEW.recversion + 1;\n     ELSE%n"
+                + "       RAISE EXCEPTION 'record version check failure';%n" + "    END IF;"
+                + "    RETURN NEW; END; $BODY$%n" + "  LANGUAGE plpgsql VOLATILE COST 100;";
 
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
@@ -520,13 +520,13 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     @Override
     String getSelectTriggerBodySql(TriggerQuery query) {
         String sql = String.format(
-                "select DISTINCT(prosrc)\n"
-                        + " from pg_trigger, pg_proc, information_schema.triggers\n"
-                        + " where\n"
-                        + " pg_proc.oid=pg_trigger.tgfoid\n"
-                        + " and information_schema.triggers.trigger_schema='%s'\n"
+                "select DISTINCT(prosrc)%n"
+                        + " from pg_trigger, pg_proc, information_schema.triggers%n"
+                        + " where%n"
+                        + " pg_proc.oid=pg_trigger.tgfoid%n"
+                        + " and information_schema.triggers.trigger_schema='%s'%n"
                         + " and information_schema.triggers.event_object_table='%s'"
-                        + " and pg_trigger.tgname = '%s'\n",
+                        + " and pg_trigger.tgname = '%s'%n",
                 query.getSchema(), query.getTableName(), query.getName());
 
         return sql;

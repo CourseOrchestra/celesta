@@ -329,8 +329,8 @@ public final class OraAdaptor extends DBAdaptor {
         sequenceName = tableString(t.getGrain().getName(), idColumn.getSequence().getName());
 
         String sql = String.format("SELECT %s.CURRVAL FROM DUAL", sequenceName);
-        try (Statement stmt = conn.createStatement()) {
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             rs.next();
             return rs.getInt(1);
         } catch (SQLException e) {
