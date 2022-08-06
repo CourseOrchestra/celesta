@@ -86,7 +86,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
                     keySearchTerms.add(String.format("(\"%s\" = %s)",
                             col.getKey(),
                             DateTimeColumn.CELESTA_TYPE.equals(
-                                    col.getValue().getCelestaType()) ? "TRUNC(?)" : "?"));
+                                    col.getValue().getCelestaType()) ? "DATE_TRUNC(DAY, CAST(? AS TIMESTAMP))" : "?"));
                     break;
                 }
             }
@@ -117,8 +117,9 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
                 .map(alias -> {
                     try {
                         return DateTimeColumn.CELESTA_TYPE.equals(
-                                t.getColumn(alias).getCelestaType()) ? "TRUNC(\"" + alias + "\") = TRUNC(?)"
-                                                                     : "\"" + alias + "\" = ?";
+                                t.getColumn(alias).getCelestaType()) ?
+                                "DATE_TRUNC(DAY, \"" + alias + "\") = DATE_TRUNC(DAY, CAST(? AS TIMESTAMP))"
+                                : "\"" + alias + "\" = ?";
                     } catch (ParseException e) {
                         throw new RuntimeException(e);
                     }
@@ -146,7 +147,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
                     }
 
                     if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
-                        return "TRUNC(\"" + colRef.getName() + "\") as \"" + alias + "\"";
+                        return "DATE_TRUNC(DAY, \"" + colRef.getName() + "\") as \"" + alias + "\"";
                     }
 
                     return "\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";

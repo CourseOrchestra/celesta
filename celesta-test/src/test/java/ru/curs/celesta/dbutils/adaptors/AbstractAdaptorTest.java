@@ -1337,6 +1337,14 @@ public abstract class AbstractAdaptorTest {
     }
 
     @Test
+    public void limitedSQLWithZeroLimitAndOffset() {
+        assertThrows(IllegalArgumentException.class, () ->
+                dba.getLimitedSQL(new FromClause(), "", "",
+                        0, 0, Collections.emptySet()));
+
+    }
+
+    @Test
     public void testInitDataForMaterializedView() throws Exception {
         Grain g = score.getGrain(GRAIN_NAME);
 

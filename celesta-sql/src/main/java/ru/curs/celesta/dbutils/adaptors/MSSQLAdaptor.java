@@ -227,16 +227,13 @@ public final class MSSQLAdaptor extends DBAdaptor {
                 "SELECT CURRENT_VALUE FROM SYS.sequences WHERE name = '%s'",
                 idColumn.getSequence().getName());
 
-        try (Statement stmt = conn.createStatement()) {
-
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             if (!rs.next()) {
                 throw new CelestaException("Id sequence for %s.%s is not initialized.", t.getGrain().getName(),
                         t.getName());
             }
-
             return (int) rs.getLong(1);
-
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }
@@ -267,17 +264,15 @@ public final class MSSQLAdaptor extends DBAdaptor {
     }
 
     private boolean checkIfVarcharMax(Connection conn, Column<?> c) throws SQLException {
-        PreparedStatement checkForMax = conn.prepareStatement(String.format(
+        try (PreparedStatement checkForMax = conn.prepareStatement(String.format(
                 "select max_length from sys.columns where " + "object_id  = OBJECT_ID('%s.%s') and name = '%s'",
                 c.getParentTable().getGrain().getName(), c.getParentTable().getName(), c.getName()));
-        try {
-            ResultSet rs = checkForMax.executeQuery();
+             ResultSet rs = checkForMax.executeQuery()
+        ) {
             if (rs.next()) {
                 int len = rs.getInt(1);
                 return len == -1;
             }
-        } finally {
-            checkForMax.close();
         }
         return false;
 
@@ -295,9 +290,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
         // CHECKSTYLE:ON
         try {
             DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet rs = metaData.getColumns(null, c.getParentTable().getGrain().getName(),
-                    c.getParentTable().getName(), c.getName());
-            try {
+            try (ResultSet rs = metaData.getColumns(null, c.getParentTable().getGrain().getName(),
+                    c.getParentTable().getName(), c.getName())) {
                 if (rs.next()) {
                     DbColumnInfo result = new DbColumnInfo();
                     result.setName(rs.getString(COLUMN_NAME));
@@ -353,8 +347,6 @@ public final class MSSQLAdaptor extends DBAdaptor {
                 } else {
                     return null;
                 }
-            } finally {
-                rs.close();
             }
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
@@ -366,26 +358,20 @@ public final class MSSQLAdaptor extends DBAdaptor {
     public DbPkInfo getPKInfo(Connection conn, TableElement t) {
 
         DbPkInfo result = new DbPkInfo(this);
-        try {
-            String sql = String.format(
-                    "select cons.CONSTRAINT_NAME, cols.COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE cols "
-                            + "inner join INFORMATION_SCHEMA.TABLE_CONSTRAINTS cons "
-                            + "on cols.TABLE_SCHEMA = cons.TABLE_SCHEMA " + "and cols.TABLE_NAME = cons.TABLE_NAME "
-                            + "and cols.CONSTRAINT_NAME = cons.CONSTRAINT_NAME "
-                            + "where cons.CONSTRAINT_TYPE = 'PRIMARY KEY' and cons.TABLE_SCHEMA = '%s' "
-                            + "and cons.TABLE_NAME = '%s' order by ORDINAL_POSITION",
-                    t.getGrain().getName(), t.getName());
-            LOGGER.trace(sql);
-            Statement check = conn.createStatement();
-            ResultSet rs = check.executeQuery(sql);
-            try {
-                while (rs.next()) {
-                    result.setName(rs.getString(1));
-                    result.getColumnNames().add(rs.getString(2));
-                }
-            } finally {
-                rs.close();
-                check.close();
+
+        String sql = String.format(
+                "select cons.CONSTRAINT_NAME, cols.COLUMN_NAME from INFORMATION_SCHEMA.KEY_COLUMN_USAGE cols "
+                        + "inner join INFORMATION_SCHEMA.TABLE_CONSTRAINTS cons "
+                        + "on cols.TABLE_SCHEMA = cons.TABLE_SCHEMA " + "and cols.TABLE_NAME = cons.TABLE_NAME "
+                        + "and cols.CONSTRAINT_NAME = cons.CONSTRAINT_NAME "
+                        + "where cons.CONSTRAINT_TYPE = 'PRIMARY KEY' and cons.TABLE_SCHEMA = '%s' "
+                        + "and cons.TABLE_NAME = '%s' order by ORDINAL_POSITION",
+                t.getGrain().getName(), t.getName());
+        try (Statement check = conn.createStatement();
+             ResultSet rs = check.executeQuery(sql)) {
+            while (rs.next()) {
+                result.setName(rs.getString(1));
+                result.getColumnNames().add(rs.getString(2));
             }
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
@@ -416,26 +402,21 @@ public final class MSSQLAdaptor extends DBAdaptor {
         LOGGER.trace(sql);
 
         List<DbFkInfo> result = new LinkedList<>();
-        try {
-            Statement stmt = conn.createStatement();
-            try {
-                DbFkInfo i = null;
-                ResultSet rs = stmt.executeQuery(sql);
-                while (rs.next()) {
-                    String fkName = rs.getString("FK_CONSTRAINT_NAME");
-                    if (i == null || !i.getName().equals(fkName)) {
-                        i = new DbFkInfo(fkName);
-                        result.add(i);
-                        i.setTableName(rs.getString("FK_TABLE_NAME"));
-                        i.setRefGrainName(rs.getString("REF_GRAIN"));
-                        i.setRefTableName(rs.getString("REF_TABLE_NAME"));
-                        i.setUpdateRule(getFKRule(rs.getString("UPDATE_RULE")));
-                        i.setDeleteRule(getFKRule(rs.getString("DELETE_RULE")));
-                    }
-                    i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            DbFkInfo i = null;
+            while (rs.next()) {
+                String fkName = rs.getString("FK_CONSTRAINT_NAME");
+                if (i == null || !i.getName().equals(fkName)) {
+                    i = new DbFkInfo(fkName);
+                    result.add(i);
+                    i.setTableName(rs.getString("FK_TABLE_NAME"));
+                    i.setRefGrainName(rs.getString("REF_GRAIN"));
+                    i.setRefTableName(rs.getString("REF_TABLE_NAME"));
+                    i.setUpdateRule(getFKRule(rs.getString("UPDATE_RULE")));
+                    i.setDeleteRule(getFKRule(rs.getString("DELETE_RULE")));
                 }
-            } finally {
-                stmt.close();
+                i.getColumnNames().add(rs.getString("FK_COLUMN_NAME"));
             }
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
@@ -495,22 +476,17 @@ public final class MSSQLAdaptor extends DBAdaptor {
         LOGGER.trace(sql);
 
         Map<String, DbIndexInfo> result = new HashMap<>();
-        try {
-            Statement stmt = conn.createStatement();
-            try {
-                DbIndexInfo i = null;
-                ResultSet rs = stmt.executeQuery(sql);
-                while (rs.next()) {
-                    String tabName = rs.getString("TableName");
-                    String indName = rs.getString("IndexName");
-                    if (i == null || !i.getTableName().equals(tabName) || !i.getIndexName().equals(indName)) {
-                        i = new DbIndexInfo(tabName, indName);
-                        result.put(indName, i);
-                    }
-                    i.getColumnNames().add(rs.getString("ColumnName"));
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            DbIndexInfo i = null;
+            while (rs.next()) {
+                String tabName = rs.getString("TableName");
+                String indName = rs.getString("IndexName");
+                if (i == null || !i.getTableName().equals(tabName) || !i.getIndexName().equals(indName)) {
+                    i = new DbIndexInfo(tabName, indName);
+                    result.put(indName, i);
                 }
-            } finally {
-                stmt.close();
+                i.getColumnNames().add(rs.getString("ColumnName"));
             }
         } catch (SQLException e) {
             throw new CelestaException("Could not get indices information: %s", e.getMessage());
@@ -527,15 +503,10 @@ public final class MSSQLAdaptor extends DBAdaptor {
                 query.getName().replace("\"", "")
         );
 
-        Statement stmt = conn.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             rs.next();
-            boolean result = rs.getInt(1) > 0;
-            rs.close();
-            return result;
-        } finally {
-            stmt.close();
+            return rs.getInt(1) > 0;
         }
     }
 
@@ -624,8 +595,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
     @Override
     public List<String> getParameterizedViewList(Connection conn, Grain g) {
         String sql = String.format("SELECT routine_name FROM INFORMATION_SCHEMA.ROUTINES "
-                                 + "WHERE routine_schema = '%s' AND routine_type='FUNCTION'",
-                                   g.getName());
+                        + "WHERE routine_schema = '%s' AND routine_type='FUNCTION'",
+                g.getName());
         List<String> result = new LinkedList<>();
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -641,12 +612,12 @@ public final class MSSQLAdaptor extends DBAdaptor {
     @Override
     String getSelectTriggerBodySql(TriggerQuery query) {
         String sql = String.format(" SELECT OBJECT_DEFINITION (id)%n"
-                                 + "        FROM sysobjects%n"
-                                 + "    WHERE id IN(SELECT tr.object_id%n"
-                                 + "        FROM sys.triggers tr%n"
-                                 + "        INNER JOIN sys.tables t ON tr.parent_id = t.object_id%n"
-                                 + "        WHERE t.schema_id = SCHEMA_ID('%s')%n"
-                                 + "        AND tr.name = '%s');",
+                        + "        FROM sysobjects%n"
+                        + "    WHERE id IN(SELECT tr.object_id%n"
+                        + "        FROM sys.triggers tr%n"
+                        + "        INNER JOIN sys.tables t ON tr.parent_id = t.object_id%n"
+                        + "        WHERE t.schema_id = SCHEMA_ID('%s')%n"
+                        + "        AND tr.name = '%s');",
                 query.getSchema(), query.getName());
 
         return sql;
@@ -682,10 +653,10 @@ public final class MSSQLAdaptor extends DBAdaptor {
     @Override
     public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
         String sql = "SELECT CAST(INCREMENT AS varchar(max)) AS INCREMENT,"
-                         + " CAST(MINIMUM_VALUE AS varchar(max)) AS MINIMUM_VALUE,"
-                         + " CAST(MAXIMUM_VALUE AS varchar(max)) AS MAXIMUM_VALUE,"
-                         + " CAST(IS_CYCLING AS varchar(max)) AS IS_CYCLING"
-                  + " FROM SYS.SEQUENCES WHERE SCHEMA_ID = SCHEMA_ID (?) AND NAME = ?";
+                + " CAST(MINIMUM_VALUE AS varchar(max)) AS MINIMUM_VALUE,"
+                + " CAST(MAXIMUM_VALUE AS varchar(max)) AS MAXIMUM_VALUE,"
+                + " CAST(IS_CYCLING AS varchar(max)) AS IS_CYCLING"
+                + " FROM SYS.SEQUENCES WHERE SCHEMA_ID = SCHEMA_ID (?) AND NAME = ?";
 
         try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, s.getGrain().getName());

@@ -175,9 +175,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
 
         try (ResultSet rs = SqlUtils.executeQuery(conn, sql)) {
             rs.next();
-            boolean result = rs.getInt(1) > 0;
-            rs.close();
-            return result;
+            return rs.getInt(1) > 0;
         } catch (Exception e) {
             throw new CelestaException(e);
         }
@@ -194,12 +192,10 @@ public final class FirebirdAdaptor extends DBAdaptor {
                 query.getTableName()
         );
 
-        try (Statement stmt = conn.createStatement()) {
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             rs.next();
-            boolean result = rs.getInt(1) > 0;
-            rs.close();
-            return result;
+            return rs.getInt(1) > 0;
         }
     }
 

@@ -318,10 +318,10 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     public List<String> getParameterizedViewList(Connection conn, Grain g) {
         String sql = String.format(
                 " SELECT r.routine_name FROM INFORMATION_SCHEMA.ROUTINES r "
-               + "WHERE r.routine_schema = '%s' AND r.routine_type='FUNCTION' "
-                   + "AND exists (select * from pg_proc p\n"
-                       + "        where p.proname = r.routine_name\n"
-                           + "        AND upper(pg_get_function_result(p.oid)) like upper('%%table%%'))",
+                        + "WHERE r.routine_schema = '%s' AND r.routine_type='FUNCTION' "
+                        + "AND exists (select * from pg_proc p%n"
+                        + "        where p.proname = r.routine_name%n"
+                        + "        AND upper(pg_get_function_result(p.oid)) like upper('%%table%%'))",
                 g.getName());
         List<String> result = new LinkedList<>();
         try (Statement stmt = conn.createStatement();
@@ -428,40 +428,31 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                 + "WHERE c.relkind = 'r'::\"char\" AND i.relkind = 'i'::\"char\" "
                 + "and n.nspname = '%s' and x.indisunique = false;", g.getName());
         Map<String, DbIndexInfo> result = new HashMap<>();
-        try {
-            Statement stmt = conn.createStatement();
-            PreparedStatement stmt2 = conn.prepareStatement("select pg_get_indexdef(?, ?, false)");
-            try {
-                ResultSet rs = stmt.executeQuery(sql);
-                while (rs.next()) {
-                    String tabName = rs.getString("tablename");
-                    String indName = rs.getString("indexname");
-                    if (indName.endsWith(CONJUGATE_INDEX_POSTFIX)) {
-                        continue;
-                    }
-                    DbIndexInfo ii = new DbIndexInfo(tabName, indName);
-                    result.put(indName, ii);
-                    int colCount = rs.getInt("colcount");
-                    int oid = rs.getInt("oid");
-                    stmt2.setInt(1, oid);
-                    for (int i = 1; i <= colCount; i++) {
-                        stmt2.setInt(2, i);
-                        ResultSet rs2 = stmt2.executeQuery();
-                        try {
-                            rs2.next();
-                            String colName = rs2.getString(1);
-                            Matcher m = QUOTED_NAME.matcher(colName);
-                            m.matches();
-                            ii.getColumnNames().add(m.group(1));
-                        } finally {
-                            rs2.close();
-                        }
-                    }
-
+        try (Statement stmt = conn.createStatement();
+             PreparedStatement stmt2 = conn.prepareStatement("select pg_get_indexdef(?, ?, false)");
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                String tabName = rs.getString("tablename");
+                String indName = rs.getString("indexname");
+                if (indName.endsWith(CONJUGATE_INDEX_POSTFIX)) {
+                    continue;
                 }
-            } finally {
-                stmt.close();
-                stmt2.close();
+                DbIndexInfo ii = new DbIndexInfo(tabName, indName);
+                result.put(indName, ii);
+                int colCount = rs.getInt("colcount");
+                int oid = rs.getInt("oid");
+                stmt2.setInt(1, oid);
+                for (int i = 1; i <= colCount; i++) {
+                    stmt2.setInt(2, i);
+                    try (ResultSet rs2 = stmt2.executeQuery()) {
+                        rs2.next();
+                        String colName = rs2.getString(1);
+                        Matcher m = QUOTED_NAME.matcher(colName);
+                        m.matches();
+                        ii.getColumnNames().add(m.group(1));
+                    }
+                }
+
             }
         } catch (SQLException e) {
             throw new CelestaException("Could not get indices information: %s", e.getMessage());
@@ -479,13 +470,8 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                 + "       RAISE EXCEPTION 'record version check failure';\n" + "    END IF;"
                 + "    RETURN NEW; END; $BODY$\n" + "  LANGUAGE plpgsql VOLATILE COST 100;";
 
-        try {
-            Statement stmt = conn.createStatement();
-            try {
-                stmt.executeUpdate(sql);
-            } finally {
-                stmt.close();
-            }
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(sql);
         } catch (SQLException e) {
             throw new CelestaException("Could not create or replace " + sysSchemaName
                     + ".recversion_check() function: %s", e.getMessage());
@@ -502,15 +488,10 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
                 query.getTableName().replace("\"", ""),
                 query.getName());
 
-        Statement stmt = conn.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql);) {
             rs.next();
-            boolean result = rs.getInt(1) > 0;
-            rs.close();
-            return result;
-        } finally {
-            stmt.close();
+            return rs.getInt(1) > 0;
         }
 
     }
@@ -539,13 +520,13 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     @Override
     String getSelectTriggerBodySql(TriggerQuery query) {
         String sql = String.format(
-                "select DISTINCT(prosrc)\n"
-             + " from pg_trigger, pg_proc, information_schema.triggers\n"
-             + " where\n"
-                 + " pg_proc.oid=pg_trigger.tgfoid\n"
-                 + " and information_schema.triggers.trigger_schema='%s'\n"
-                 + " and information_schema.triggers.event_object_table='%s'"
-                 + " and pg_trigger.tgname = '%s'\n",
+                "select DISTINCT(prosrc)%n"
+                        + " from pg_trigger, pg_proc, information_schema.triggers%n"
+                        + " where%n"
+                        + " pg_proc.oid=pg_trigger.tgfoid%n"
+                        + " and information_schema.triggers.trigger_schema='%s'%n"
+                        + " and information_schema.triggers.event_object_table='%s'"
+                        + " and pg_trigger.tgname = '%s'%n",
                 query.getSchema(), query.getTableName(), query.getName());
 
         return sql;
@@ -564,7 +545,7 @@ final public class PostgresAdaptor extends OpenSourceDbAdaptor {
     @Override
     public DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s) {
         String sql = "SELECT INCREMENT, MINIMUM_VALUE, MAXIMUM_VALUE, CYCLE_OPTION"
-                  + " FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
+                + " FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = ? AND SEQUENCE_NAME = ?";
 
         try (PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, s.getGrain().getName().replace("\"", ""));

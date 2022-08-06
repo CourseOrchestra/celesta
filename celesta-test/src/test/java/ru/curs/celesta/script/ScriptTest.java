@@ -1,6 +1,5 @@
 package ru.curs.celesta.script;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -17,7 +16,8 @@ public interface ScriptTest {
         callContextProvider.startCelestas();
     }
 
-/*
+
+    /*
     @AfterAll
     default void stopCelestas() {
         callContextProvider.stopCelestas();
