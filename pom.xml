@@ -65,7 +65,7 @@
         <jdbc.driver.sqlserver.version>12.1.0.jre8-preview</jdbc.driver.sqlserver.version>
         <jdbc.driver.firebird.version>4.0.0-beta-1</jdbc.driver.firebird.version>
         <junit.version>5.9.2</junit.version>
-        <org.json.version>20220924</org.json.version>
+        <org.json.version>20230227</org.json.version>
         <testcontainers.version>1.17.6</testcontainers.version>
         <testcontainers.firebird.version>1.3.0</testcontainers.firebird.version>
 
