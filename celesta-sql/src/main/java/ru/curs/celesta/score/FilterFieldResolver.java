@@ -7,7 +7,7 @@ package ru.curs.celesta.score;
 final class FilterFieldResolver extends ExprVisitor {
     private final DataGrainElement ge;
 
-    public FilterFieldResolver(DataGrainElement ge) {
+    FilterFieldResolver(DataGrainElement ge) {
         this.ge = ge;
     }
 

@@ -8,7 +8,7 @@ import java.util.List;
 class ViewSelectStmt extends AbstractSelectStmt {
     protected Expr whereCondition;
 
-    public ViewSelectStmt(AbstractView view) {
+    ViewSelectStmt(AbstractView view) {
         super(view);
     }
 
