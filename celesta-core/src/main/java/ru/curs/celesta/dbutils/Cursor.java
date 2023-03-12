@@ -74,18 +74,13 @@ import java.util.stream.Collectors;
  */
 public abstract class Cursor extends BasicCursor implements InFilterSupport {
 
-    private Table meta = null;
-    final CursorGetHelper getHelper;
-    private InFilterHolder inFilterHolder;
-
     final MaskedStatementHolder insert = PreparedStatementHolderFactory.createInsertHolder(meta(), db(), conn());
-
+    final CursorGetHelper getHelper;
     boolean[] updateMask = null;
     boolean[] nullUpdateMask = null;
     final PreparedStmtHolder update = PreparedStatementHolderFactory.createUpdateHolder(
             meta(), db(), conn(), () -> updateMask, () -> nullUpdateMask
     );
-
     final PreparedStmtHolder delete = new PreparedStmtHolder() {
 
         @Override
@@ -96,7 +91,8 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         }
 
     };
-
+    private Table meta = null;
+    private InFilterHolder inFilterHolder;
     private final PreparedStmtHolder deleteAll = new PreparedStmtHolder() {
 
         @Override
@@ -107,11 +103,9 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
         }
 
     };
-
     private byte canOptimizeInsertion;
     private Cursor xRec;
     private int recversion;
-
 
     public Cursor(CallContext context) {
         super(context);

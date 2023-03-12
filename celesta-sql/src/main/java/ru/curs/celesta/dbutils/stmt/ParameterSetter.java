@@ -23,11 +23,11 @@ public abstract class ParameterSetter {
 
     QueryBuildingHelper queryBuildingHelper;
 
-    public abstract void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion);
-
     ParameterSetter(QueryBuildingHelper queryBuildingHelper) {
         this.queryBuildingHelper = queryBuildingHelper;
     }
+
+    public abstract void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion);
 
     protected void setParam(PreparedStatement stmt, int i, Object v)  {
         try {
