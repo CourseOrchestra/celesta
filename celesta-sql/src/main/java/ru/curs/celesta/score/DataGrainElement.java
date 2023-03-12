@@ -1,7 +1,7 @@
 package ru.curs.celesta.score;
 
 /**
- * Parent class for grain elements containing data:
+ * Parent class for grain elements containing data.
  * <ul>
  *   <li>Tables</li>
  *   <li>Views</li>

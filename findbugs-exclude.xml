@@ -24,4 +24,7 @@
     <Match>
         <Package name="ru.curs.celesta.syscursors"/>
     </Match>
+	<Match>
+	  <Source name="~.*/*Cursor.java" />
+	</Match>
 </FindBugsFilter>

@@ -3,7 +3,6 @@ package ru.curs.celesta.score;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Generator class of SQL expressions.

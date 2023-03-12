@@ -37,7 +37,7 @@ public final class Relop extends LogicValuedExpr {
      */
     public static final int LIKE = 6;
 
-    static final String[] OPS = { " > ", " < ", " >= ", " <= ", " <> ", " = ", " LIKE " };
+    static final String[] OPS = {" > ", " < ", " >= ", " <= ", " <> ", " = ", " LIKE "};
 
     private final Expr left;
     private final Expr right;

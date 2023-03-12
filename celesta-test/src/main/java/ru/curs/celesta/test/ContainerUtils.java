@@ -114,7 +114,8 @@ public class ContainerUtils {
 
                             SqlUtils.executeUpdate(
                                 connection,
-                                String.format(DROP_OBJECT_FROM_ORACLE_TEMPLATE, objectType, String.format("\"%s\"", objectName))
+                                String.format(DROP_OBJECT_FROM_ORACLE_TEMPLATE, objectType, String.format("\"%s\"",
+                                        objectName))
                             );
 
                         }

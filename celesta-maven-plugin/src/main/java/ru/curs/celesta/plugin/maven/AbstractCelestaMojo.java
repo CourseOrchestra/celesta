@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
@@ -36,7 +35,7 @@ abstract class AbstractCelestaMojo extends AbstractMojo {
     @Parameter(property = "genSysCursors")
     boolean genSysCursors;
 
-    @Component
+    @Parameter(defaultValue = "${project}", readonly = true)
     MavenProject project;
 
     final Collection<ScoreProperties> getScorePaths() {

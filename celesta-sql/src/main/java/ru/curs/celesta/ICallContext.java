@@ -15,28 +15,24 @@ public interface ICallContext extends AutoCloseable {
     /**
      * Connection with database.
      *
-     * @return
      */
     Connection getConn();
 
     /**
      * Whether the context was closed.
      *
-     * @return
      */
     boolean isClosed();
 
     /**
-     * Returns actual implementation of {@link DBAdaptor}
+     * Returns actual implementation of {@link DBAdaptor}.
      *
-     * @return
      */
     DBAdaptor getDbAdaptor();
 
     /**
      * Returns Celesta score.
      *
-     * @return
      */
     AbstractScore getScore();
 

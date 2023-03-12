@@ -590,8 +590,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         ).resolveTypes();
 
         final class ScaleAndPrecision {
-            private int precision;
-            private int scale;
+            private final int precision;
+            private final int scale;
 
             private ScaleAndPrecision(int precision, int scale) {
                 this.precision = precision;
@@ -659,7 +659,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                                 if (dc != null) {
                                     type = String.format(
                                             "%s(%s,%s)",
-                                            ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
+                                            ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class)
+                                                    .dbFieldType(),
                                             dc.getPrecision(),
                                             dc.getScale()
                                     );
@@ -669,8 +670,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                                     List<DecimalColumn> decimalColumns = binaryTermOp.getOperands().stream()
                                             .filter(op -> op instanceof FieldRef)
                                             .map(FieldRef.class::cast)
-                                            .filter(fr -> DecimalColumn.class.equals(fr.getColumn().getClass()))
                                             .map(FieldRef::getColumn)
+                                            .filter(column -> DecimalColumn.class.equals(column.getClass()))
                                             .map(DecimalColumn.class::cast)
                                             .collect(Collectors.toList());
 
@@ -684,7 +685,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
                                     type = String.format(
                                             "%s(%s,%s)",
-                                            ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
+                                            ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class)
+                                                    .dbFieldType(),
                                             maxPrecision,
                                             maxScale
                                     );
@@ -856,19 +858,13 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                     .append("WHEN NOT MATCHED THEN \n")
                     .append("INSERT (%s) VALUES (%s); \n");
 
-            String setStatementTemplate = mv.getAggregateColumns().entrySet().stream()
-                    .map(e -> {
-                        StringBuilder sb = new StringBuilder();
-                        String alias = e.getKey();
-
-                        sb.append("\"mv\".\"").append(alias)
-                                .append("\" = \"mv\".\"").append(alias)
-                                .append("\" %1$s \"aggregate\".\"").append(alias).append("\"");
-
-                        return sb.toString();
-                    }).collect(Collectors.joining(", "))
+            String setStatementTemplate = mv.getAggregateColumns().keySet().stream()
+                    .map(alias -> "\"mv\".\"" + alias
+                            + "\" = \"mv\".\"" + alias
+                            + "\" %1$s \"aggregate\".\"" + alias + "\"").collect(Collectors.joining(", "))
                     .concat(", \"mv\".\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
-                    .concat("\"mv\".\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" %1$s \"aggregate\".\"")
+                    .concat("\"mv\".\"").concat(MaterializedView.SURROGATE_COUNT)
+                    .concat("\" %1$s \"aggregate\".\"")
                     .concat(MaterializedView.SURROGATE_COUNT).concat("\"");
 
             String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
@@ -1132,10 +1128,11 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                                 return opsClasses.containsAll(Arrays.asList(ParameterRef.class, FieldRef.class));
                             })
                             .map(logicValuedExpr -> {
-                                        Map<Class<?>, List<Expr>> classToExprsMap = logicValuedExpr.getAllOperands().stream()
+                                        Map<Class<?>, List<Expr>> classToExprsMap = logicValuedExpr.getAllOperands()
+                                                .stream()
                                                 .collect(Collectors.toMap(
                                                         Expr::getClass,
-                                                        expr -> new ArrayList<>(Arrays.asList(expr)),
+                                                        expr -> new ArrayList<>(Collections.singletonList(expr)),
                                                         (oldList, newList) -> Stream.of(oldList, newList)
                                                                 .flatMap(List::stream).collect(Collectors.toList())
                                                 ));
@@ -1152,7 +1149,8 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                                         ParameterRef.class,
                                         classExprMap.get(ParameterRef.class).stream()
                                                 .map(ParameterRef.class::cast)
-                                                .filter(parameterRef -> this.viewColumnType.equals(parameterRef.getMeta().getColumnType()))
+                                                .filter(parameterRef -> this.viewColumnType.equals(
+                                                        parameterRef.getMeta().getColumnType()))
                                                 .collect(Collectors.toList())
                                 );
                                 result.put(
@@ -1184,7 +1182,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                                     Collectors.toMap(
                                             e -> e.getKey().getName(),
                                             e -> this.valueResolver.apply(e.getValue()),
-                                            this.valueMerger::apply
+                                            this.valueMerger
                                     )
                             ).entrySet().stream()
                             .collect(
