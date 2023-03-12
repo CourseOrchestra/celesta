@@ -170,6 +170,11 @@ public abstract class DbUpdater<T extends ICallContext> {
     }
 
 
+    /**
+     * Updates system grain.
+     *
+     * @param context call context
+     */
     void updateSysGrain(T context) {
         try {
             Connection conn = context.getConn();
@@ -184,6 +189,12 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
+    /**
+     * Creates essential system elements: celesta schema and system object.
+     *
+     * @param conn current connection
+     * @param sys system grain
+     */
     void createSysObjects(Connection conn, Grain sys) throws ParseException {
         dbAdaptor.createSchemaIfNotExists(score.getSysSchemaName());
         dbAdaptor.createTable(conn, sys.getElement(getSchemasTableName(), BasicTable.class));
@@ -243,8 +254,8 @@ public abstract class DbUpdater<T extends ICallContext> {
     /**
      * Performs update at the level of individual grain.
      *
-     * @param g  grain
-     * @param connectionPool  connection pool
+     * @param g              grain
+     * @param connectionPool connection pool
      * @return
      */
     boolean updateGrain(Grain g, ConnectionPool connectionPool) {
@@ -340,34 +351,48 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    protected void beforeGrainUpdating(Grain g) { }
+    /**
+     * Called before the grain is updated.
+     * @param g the grain being updated
+     */
+    protected void beforeGrainUpdating(Grain g) {
+    }
 
-    protected void afterGrainUpdating(Grain g) { }
+    /**
+     * Called after the grain is updated.
+     * @param g the grain being updated
+     */
+    protected void afterGrainUpdating(Grain g) {
+    }
 
+    /**
+     * Updates celesta.tables table with current meta information.
+     * @param g current grain
+     */
     protected abstract void processGrainMeta(Grain g);
 
-    void createViews(Grain g) {
+    final void createViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         for (View v : g.getElements(View.class).values()) {
             dbAdaptor.createView(conn, v);
         }
     }
 
-    void dropAllViews(Grain g) {
+    final void dropAllViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         for (String viewName : dbAdaptor.getViewList(conn, g)) {
             dbAdaptor.dropView(conn, g.getName(), viewName);
         }
     }
 
-    void createParameterizedViews(Grain g) {
+    final void createParameterizedViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         for (ParameterizedView pv : g.getElements(ParameterizedView.class).values()) {
             dbAdaptor.createParameterizedView(conn, pv);
         }
     }
 
-    void updateSequences(Grain g) {
+    final void updateSequences(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
 
         for (SequenceElement s : g.getElements(SequenceElement.class).values()) {
@@ -383,14 +408,14 @@ public abstract class DbUpdater<T extends ICallContext> {
 
     }
 
-    void dropAllParameterizedViews(Grain g) {
+    final void dropAllParameterizedViews(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         for (String viewName : dbAdaptor.getParameterizedViewList(conn, g)) {
             dbAdaptor.dropParameterizedView(conn, g.getName(), viewName);
         }
     }
 
-    void updateGrainFKeys(Grain g) {
+    final void updateGrainFKeys(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         Map<String, DbFkInfo> dbFKeys = new HashMap<>();
         for (DbFkInfo dbi : dbAdaptor.getFKInfo(conn, g)) {
@@ -415,7 +440,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    List<DbFkInfo> dropOrphanedGrainFKeys(Grain g) {
+    final List<DbFkInfo> dropOrphanedGrainFKeys(Grain g) {
         Connection conn = schemaCursor.callContext().getConn();
         List<DbFkInfo> dbFKeys = dbAdaptor.getFKInfo(conn, g);
         Map<String, ForeignKey> fKeys = new HashMap<>();
@@ -436,7 +461,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         return dbFKeys;
     }
 
-    void dropOrphanedGrainIndices(Grain g) {
+    final void dropOrphanedGrainIndices(Grain g) {
         /*
          * In general this method repeats the code from updateGrainIndices but only
          * in the part of deletion of indices. It is needed to clear up all indices
@@ -475,7 +500,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    void updateGrainIndices(Grain g) {
+    final void updateGrainIndices(Grain g) {
         final Connection conn = schemaCursor.callContext().getConn();
         Map<String, DbIndexInfo> dbIndices = dbAdaptor.getIndices(conn, g);
         Map<String, Index> myIndices = g.getIndices();
@@ -498,7 +523,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         }
     }
 
-    boolean updateTable(BasicTable t, List<DbFkInfo> dbFKeys) {
+    final boolean updateTable(BasicTable t, List<DbFkInfo> dbFKeys) {
         // If table was compiled with option NO AUTOUPDATE then nothing is to be done
         if (!t.isAutoUpdate()) {
             return false;
@@ -545,7 +570,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         return modified;
     }
 
-    void updateMaterializedView(MaterializedView mv, boolean refTableIsModified) {
+    final void updateMaterializedView(MaterializedView mv, boolean refTableIsModified) {
         final Connection conn = schemaCursor.callContext().getConn();
 
         boolean mViewExists = dbAdaptor.tableExists(conn, mv.getGrain().getName(), mv.getName());
@@ -633,7 +658,7 @@ public abstract class DbUpdater<T extends ICallContext> {
     /**
      * Buffer for storing grain information.
      */
-    class GrainInfo {
+    static class GrainInfo {
         private boolean recover;
         private boolean lock;
         private int length;

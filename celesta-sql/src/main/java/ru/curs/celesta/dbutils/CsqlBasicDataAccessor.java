@@ -34,6 +34,9 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements C
         this.db = callContext().getDbAdaptor();
     }
 
+    /**
+     * Validates call context passed to data accessor constructor.
+     */
     protected void validateInitContext(T context) {
         if (context == null) {
             throw new CelestaException(
