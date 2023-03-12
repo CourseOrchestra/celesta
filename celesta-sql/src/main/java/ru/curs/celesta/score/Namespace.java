@@ -16,6 +16,9 @@ package ru.curs.celesta.score;
  */
 public final class Namespace {
 
+    /**
+     * Default namespace instance.
+     */
     public static final Namespace DEFAULT = new Namespace();
 
     private final String value;
