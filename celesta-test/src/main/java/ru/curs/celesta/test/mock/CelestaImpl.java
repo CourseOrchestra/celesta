@@ -100,7 +100,7 @@ public final class CelestaImpl implements ICelesta {
      * @return
      */
     public String getScorePath() {
-        return scorePath;  
+        return scorePath;
     }
 
 }

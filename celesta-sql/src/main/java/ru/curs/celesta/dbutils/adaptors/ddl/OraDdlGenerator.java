@@ -14,19 +14,52 @@ import ru.curs.celesta.dbutils.meta.DbColumnInfo;
 import ru.curs.celesta.dbutils.meta.DbIndexInfo;
 import ru.curs.celesta.event.TriggerQuery;
 import ru.curs.celesta.event.TriggerType;
-import ru.curs.celesta.score.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.curs.celesta.score.AbstractView;
+import ru.curs.celesta.score.BasicTable;
+import ru.curs.celesta.score.BinaryColumn;
+import ru.curs.celesta.score.BooleanColumn;
+import ru.curs.celesta.score.Column;
+import ru.curs.celesta.score.Count;
+import ru.curs.celesta.score.DateTimeColumn;
+import ru.curs.celesta.score.DecimalColumn;
+import ru.curs.celesta.score.Expr;
+import ru.curs.celesta.score.FKRule;
+import ru.curs.celesta.score.ForeignKey;
+import ru.curs.celesta.score.Grain;
+import ru.curs.celesta.score.Index;
+import ru.curs.celesta.score.IntegerColumn;
+import ru.curs.celesta.score.MaterializedView;
+import ru.curs.celesta.score.NamedElement;
+import ru.curs.celesta.score.ParameterizedView;
+import ru.curs.celesta.score.SQLGenerator;
+import ru.curs.celesta.score.SequenceElement;
+import ru.curs.celesta.score.StringColumn;
+import ru.curs.celesta.score.Sum;
+import ru.curs.celesta.score.TableElement;
+import ru.curs.celesta.score.TableRef;
+import ru.curs.celesta.score.VersionedElement;
 
 import static ru.curs.celesta.dbutils.adaptors.constants.CommonConstants.ALTER_TABLE;
 
@@ -90,7 +123,7 @@ public final class OraDdlGenerator extends DdlGenerator {
         } else {
             sql = dropIndex(tableString(g.getName(), dBIndexInfo.getIndexName()));
         }
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     @Override
@@ -406,7 +439,7 @@ public final class OraDdlGenerator extends DdlGenerator {
                         + " ON " + tableString(grainName, index.getTable().getName()) + " (%s)",
                 fieldList
         );
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     private String createOrReplaceSequenceTriggerForColumn(
@@ -776,17 +809,18 @@ public final class OraDdlGenerator extends DdlGenerator {
                     .collect(Collectors.joining(", "));
 
             String rowConditionTemplate = mv.getColumns().keySet().stream()
-                    .filter(alias -> mv.isGroupByColumn(alias))
+                    .filter(mv::isGroupByColumn)
                     .map(alias -> "mv.\"" + alias + "\" = %1$s.\"" + alias + "\"")
                     .collect(Collectors.joining(" AND "));
 
             String rowConditionTemplateForDelete = mv.getColumns().keySet().stream()
-                    .filter(alias -> mv.isGroupByColumn(alias))
+                    .filter(mv::isGroupByColumn)
                     .map(alias -> {
                         Column<?> colRef = mv.getColumnRef(alias);
 
                         if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
-                            return "mv.\"" + alias + "\" = TRUNC(%1$s.\"" + mv.getColumnRef(alias).getName() + "\", 'DD')";
+                            return "mv.\"" + alias + "\" = TRUNC(%1$s.\"" + mv.getColumnRef(alias).getName()
+                                    + "\", 'DD')";
                         }
 
                         return "mv.\"" + alias + "\" = %1$s.\"" + mv.getColumnRef(alias).getName() + "\"";
@@ -875,7 +909,7 @@ public final class OraDdlGenerator extends DdlGenerator {
                     "create or replace trigger \"%s\" after update "
                             + "on %s for each row\n"
                             + "begin %s \n %s\n %s\n END;",
-                    updateTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString(), insertSql);
+                    updateTriggerName, fullTableName, lockTable, deleteSqlBuilder, insertSql);
 
             LOGGER.trace(sql);
             result.add(sql);
@@ -886,7 +920,7 @@ public final class OraDdlGenerator extends DdlGenerator {
                     "create or replace trigger \"%s\" after delete "
                             + "on %s for each row\n "
                             + " begin %s \n %s\n END;",
-                    deleteTriggerName, fullTableName, lockTable, deleteSqlBuilder.toString());
+                    deleteTriggerName, fullTableName, lockTable, deleteSqlBuilder);
 
             result.add(sql);
             this.rememberTrigger(query.withName(deleteTriggerName));
@@ -915,7 +949,7 @@ public final class OraDdlGenerator extends DdlGenerator {
 
             String tempColumnName = String.format(
                     "\"%s\"",
-                    NamedElement.limitName(String.format("temp%s%s", dc.getName(), UUID.randomUUID().toString()))
+                    NamedElement.limitName(String.format("temp%s%s", dc.getName(), UUID.randomUUID()))
             );
 
             OraColumnDefiner columnDefiner =

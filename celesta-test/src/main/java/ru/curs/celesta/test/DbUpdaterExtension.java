@@ -53,7 +53,7 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
         Locale.setDefault(Locale.US);
     }
 
-    private static final List<DBType> supportedDbTypes = Arrays.stream(DBType.values())
+    private static final List<DBType> SUPPORTED_DB_TYPES = Arrays.stream(DBType.values())
             .filter(dbType -> !DBType.UNKNOWN.equals(dbType))
             .collect(Collectors.toList());
 
@@ -72,7 +72,7 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
     public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(
             ExtensionContext extensionContext) {
 
-        return supportedDbTypes.stream()
+        return SUPPORTED_DB_TYPES.stream()
                 .map(this::invocationContext);
     }
 
@@ -133,7 +133,7 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
         firebirdContainer.start();
         containers.put(DBType.FIREBIRD, firebirdContainer);
 
-        supportedDbTypes.forEach(
+        SUPPORTED_DB_TYPES.forEach(
                 dbType -> {
                     ConnectionPool connectionPool =
                             this.createConnectionPool(dbType, this.containers.get(dbType));
