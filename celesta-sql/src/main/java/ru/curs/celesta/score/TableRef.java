@@ -37,7 +37,6 @@ public class TableRef {
     /**
      * Returns JOIN type.
      *
-     * @return
      */
     public JoinType getJoinType() {
         return joinType;
@@ -46,7 +45,6 @@ public class TableRef {
     /**
      * Returns table.
      *
-     * @return
      */
     public TableElement getTable() {
         return table;
@@ -55,12 +53,16 @@ public class TableRef {
     /**
      * Returns condition ON...
      *
-     * @return
      */
     public Expr getOnExpr() {
         return onExpr;
     }
 
+    /**
+     * Sets condition ON...
+     * @param onExpr ON condition
+     * @throws ParseException condition must be of TRUE/FALSE type
+     */
     void setOnExpr(Expr onExpr) throws ParseException {
         if (onExpr == null) {
             throw new IllegalArgumentException();
@@ -73,7 +75,6 @@ public class TableRef {
     /**
      * Returns table alias.
      *
-     * @return
      */
     public String getAlias() {
         return alias;

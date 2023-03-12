@@ -210,6 +210,10 @@ public abstract class AbstractSelectStmt {
         }
     }
 
+    /**
+     * Finalizes parsing of columns.
+     * @throws ParseException if column not found
+     */
     void finalizeColumnsParsing() throws ParseException {
         List<TableRef> t = new ArrayList<>(tables.values());
         for (Expr e : columns.values()) {
@@ -233,6 +237,11 @@ public abstract class AbstractSelectStmt {
      */
     abstract void finalizeParsing() throws ParseException;
 
+    /**
+     * Finalizes parsing of GROUP BY clause.
+     *
+     * @throws ParseException if GROUP BY is invalid
+     */
     void finalizeGroupByParsing() throws ParseException {
         //Check that columns which were not used for aggregation are mentioned in GROUP BY clause
         Set<String> aggregateAliases = columns.entrySet().stream()
