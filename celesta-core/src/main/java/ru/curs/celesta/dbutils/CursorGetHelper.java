@@ -42,7 +42,7 @@ class CursorGetHelper {
 
   private final PreparedStmtHolder get;
 
-  public CursorGetHelper(DBAdaptor db, Connection conn, TableElement meta,
+  CursorGetHelper(DBAdaptor db, Connection conn, TableElement meta,
                          String tableName, Set<String> fields) {
     this.db = db;
     this.conn = conn;

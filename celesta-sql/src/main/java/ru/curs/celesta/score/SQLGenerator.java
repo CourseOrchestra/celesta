@@ -3,6 +3,7 @@ package ru.curs.celesta.score;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Generator class of SQL expressions.
@@ -180,18 +181,33 @@ public class SQLGenerator extends ExprVisitor {
         stack.push("LOWER(" + stack.pop() + ")");
     }
 
+    /**
+     * Literals for boolean values.
+     * @param val boolean value
+     */
     protected String boolLiteral(boolean val) {
         return val ? "true" : "false";
     }
 
+    /**
+     * Literal for parameterized query parameter.
+     * @param paramName name of the parameter
+     */
     protected String paramLiteral(String paramName) {
         return "$" + paramName;
     }
 
+    /**
+     * Built-in function returning the current date.
+     */
     protected String getDate() {
         return "GETDATE()";
     }
 
+    /**
+     * Check if value is date and translate it if needed.
+     * @param lexValue Lex value
+     */
     protected String checkForDate(String lexValue) {
         return lexValue;
     }
@@ -214,11 +230,14 @@ public class SQLGenerator extends ExprVisitor {
         return true;
     }
 
+    /**
+     * Concatenation operator.
+     */
     protected String concat() {
         return " || ";
     }
 
-    protected void concat(StringBuilder result, List<String> operands) {
+    private void concat(StringBuilder result, List<String> operands) {
         boolean needOp = false;
         for (String operand : operands) {
             if (needOp) {
@@ -229,14 +248,26 @@ public class SQLGenerator extends ExprVisitor {
         }
     }
 
+    /**
+     * SQL preamble for view.
+     * @param view view
+     */
     protected String preamble(AbstractView view) {
         return String.format("create or replace view %s as", viewName(view));
     }
 
+    /**
+     * Formatted view name.
+     * @param v view
+     */
     protected String viewName(AbstractView v) {
         return String.format("%s.%s", v.getGrain().getQuotedName(), v.getQuotedName());
     }
 
+    /**
+     * Formatted table reference.
+     * @param t table reference
+     */
     protected String tableName(TableRef t) {
         return String.format("%s.%s as \"%s\"", t.getTable().getGrain().getQuotedName(), t.getTable().getQuotedName(),
                 t.getAlias());

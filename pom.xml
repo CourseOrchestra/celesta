@@ -317,7 +317,6 @@
                         <configuration>
                             <configLocation>checkstyle.xml</configLocation>
                             <failsOnError>false</failsOnError>
-                            <encoding>UTF-8</encoding>
                             <consoleOutput>true</consoleOutput>
                         </configuration>
                         <executions>

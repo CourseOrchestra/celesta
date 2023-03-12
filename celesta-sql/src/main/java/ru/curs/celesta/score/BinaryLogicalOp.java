@@ -6,9 +6,18 @@ import java.util.List;
  * AND/OR.
  */
 public final class BinaryLogicalOp extends LogicValuedExpr {
+    /**
+     * Index for conjunction operator.
+     */
     public static final int AND = 0;
+    /**
+     * Index for disjunction operator.
+     */
     public static final int OR = 1;
-    public static final String[] OPS = { " AND ", " OR " };
+    /**
+     * Array of logical operators.
+     */
+    public static final String[] OPS = {" AND ", " OR "};
 
     private final int operator;
     private final List<Expr> operands;
@@ -34,7 +43,6 @@ public final class BinaryLogicalOp extends LogicValuedExpr {
     /**
      * Returns the operator.
      *
-     * @return
      */
     public int getOperator() {
         return operator;
@@ -43,7 +51,6 @@ public final class BinaryLogicalOp extends LogicValuedExpr {
     /**
      * Returns the operands.
      *
-     * @return
      */
     public List<Expr> getOperands() {
         return operands;

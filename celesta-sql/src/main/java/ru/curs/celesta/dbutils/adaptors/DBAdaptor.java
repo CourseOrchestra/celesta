@@ -110,8 +110,8 @@ import static ru.curs.celesta.dbutils.jdbc.SqlUtils.executeUpdate;
 public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdaptor {
 
     /*
-     * N.B. for contributors. This class is great, so To avoid chaos,
-     * here is the order of (except constructors and fabric methods):
+     * N.B. for contributors. This class is big, so to avoid chaos,
+     * here is the order of (except constructors and factory methods):
      * first of all -- public final methods,
      * then -- package-private static methods,
      * then -- package-private final methods,
@@ -141,7 +141,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     protected final ConnectionPool connectionPool;
     DdlAdaptor ddlAdaptor;
 
-    //TODO: Javadoc
     protected DBAdaptor(ConnectionPool connectionPool, DdlConsumer ddlConsumer) {
         this.connectionPool = connectionPool;
         this.ddlAdaptor = new DdlAdaptor(getDdlGenerator(), ddlConsumer);
@@ -275,13 +274,17 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     // =========> PACKAGE-PRIVATE METHODS <=========
     /**
      * Returns FROM clause for selection of a constant in SQL.
-     * @return
      */
     String constantFromSql() {
         return "";
     }
 
-    //TODO: Javadoc
+    /**
+     * Database specific preparation of column for select static method
+     * @param value to be selected
+     * @param colName name of the column
+     * @param maxStringLength maximum length
+     */
     String prepareRowColumnForSelectStaticStrings(String value, String colName, int maxStringLength) {
         return "? as " + colName;
     }
@@ -297,27 +300,27 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * Builds SELECT expression that selects restricted amount of records starting
      * from an offset.
      *
-     * @param from
-     * @param whereClause
-     * @param orderBy
-     * @param offset
-     * @param rowCount
-     * @param fields
-     * @return
+     * @param from from clause of the SQL
+     * @param whereClause where clause of the SQL
+     * @param orderBy order by clause of the SQL
+     * @param offset offset
+     * @param rowCount row count to remove
+     * @param fields fields to select
      */
     abstract String getLimitedSQL(
             FromClause from, String whereClause, String orderBy, long offset, long rowCount, Set<String> fields
     );
 
-    //TODO: Javadoc
+    /**
+     * Returns trigger body for the given query
+     * @param query query
+     */
     abstract String getSelectTriggerBodySql(TriggerQuery query);
 
     /**
      * Whether user defined tables exist in the DB.
      *
      * @param conn  DB connection
-     * @return
-     * @throws SQLException
      */
     abstract boolean userTablesExist(Connection conn) throws SQLException;
 
@@ -397,7 +400,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param nullsMask  nulls mask
      * @param program  collects parameter predicates
      * @param where  WHERE clause
-     * @return
      */
     public final PreparedStatement getUpdateRecordStatement(
             Connection conn, BasicTable t, boolean[] equalsMask,
@@ -510,7 +512,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn  Connection
      * @param from  From clause
      * @param whereClause  Where clause
-     * @return
      */
     public final PreparedStatement getSetCountStatement(Connection conn, FromClause from, String whereClause) {
         String sql = "select count(*) from " + from.getExpression()
@@ -628,7 +629,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param schemaName  schema name
      * @param sequenceName  sequence name
-     * @return
      */
     public String sequenceString(String schemaName, String sequenceName) {
         return getSchemaDotNameQuotedTemplate(schemaName, sequenceName);
@@ -725,7 +725,10 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         return result;
     }
 
-    //TODO: Javadoc
+    /**
+     * Prepares a function call expression.
+     * @param pv current parameterized view
+     */
     public String getCallFunctionSql(ParameterizedView pv) {
         return String.format(
                 tableString(pv.getGrain().getName(), pv.getName()) + "(%s)",
@@ -792,7 +795,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * Translates Celesta date literal to the one from specific database.
      *
      * @param date  Date literal
-     * @return
      */
     public String translateDate(String date) {
         try {
@@ -803,7 +805,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         return date;
     }
 
-    //TODO: Javadoc
+    /**
+     * Returns body of the trigger existing in the database.
+     * @param conn Connection
+     * @param query Trigger query
+     * @return Trigger body or empty optional if not exists.
+     */
     public Optional<String> getTriggerBody(Connection conn, TriggerQuery query) {
         String sql = getSelectTriggerBodySql(query);
 
@@ -822,12 +829,23 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         }
     }
 
-    //TODO: Javadoc
+    /**
+     * Initializes data for a newly crated materialized view.
+     * @param conn connection
+     * @param mv current materialized view
+     */
     public void initDataForMaterializedView(Connection conn, MaterializedView mv) {
         this.ddlAdaptor.initDataForMaterializedView(conn, mv);
     }
 
-    //TODO: Javadoc
+    /** Returned strings ordered by the database according to the current collation. This method is required
+     * for operations that depend on collation rules.
+     *
+     * @param data List of String to select
+     * @param columnName name of result column
+     * @param orderByDirection expression to concatenate after "ORDER BY" (ASC or DESC)
+     * @return list of strings sorted according to the current collation rule.
+     */
     @Override
     public List<String> selectStaticStrings(
             List<String> data, String columnName, String orderByDirection) {
@@ -879,7 +897,12 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         return String.format("ORDER BY %s %s", columnName, orderByDirection);
     }
 
-    //TODO: Javadoc
+    /**
+     * Compare strings using database according to current collation rules.
+     * @param left  left string
+     * @param right  right string
+     * @return result of comparison
+     */
     @Override
     public int compareStrings(String left, String right) {
 
@@ -924,7 +947,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Whether DB supports cortege comparing.
      *
-     * @return
      */
     @Override
     public boolean supportsCortegeComparing() {
@@ -983,7 +1005,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn  DB connection
      * @param schema  schema name
      * @param name  table name
-     * @return
      */
     public abstract boolean tableExists(Connection conn, String schema, String name);
 
@@ -992,7 +1013,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn  DB connection.
      * @param query  trigger query parameters
-     * @return
      * @throws SQLException  thrown if resulting query fails
      */
     public abstract boolean triggerExists(Connection conn, TriggerQuery query) throws SQLException;
@@ -1004,7 +1024,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param t  table
      * @param where  WHERE condition
      * @param fields  fields of selection
-     * @return
      */
     public abstract PreparedStatement getOneRecordStatement(Connection conn, TableElement t,
                                                             String where, Set<String> fields);
@@ -1016,7 +1035,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn  DB connection
      * @param c  column to select
      * @param where  WHERE condition
-     * @return
      */
     public abstract PreparedStatement getOneFieldStatement(Connection conn, Column<?> c, String where);
 
@@ -1027,7 +1045,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn  DB connection
      * @param t  table
      * @param where  condition
-     * @return
      */
     public abstract PreparedStatement deleteRecordSetStatement(Connection conn, TableElement t, String where);
 
@@ -1038,7 +1055,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param t  table
      * @param nullsMask  null-flags (if set the corresponding field at n-th position becomes {@code null})
      * @param program  collects parameters that can be set with the query
-     * @return
      */
     public abstract PreparedStatement getInsertRecordStatement(Connection conn, BasicTable t, boolean[] nullsMask,
                                                                List<ParameterSetter> program);
@@ -1047,7 +1063,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn  DB connection
      * @param t  table
-     * @return
      */
     public abstract int getCurrentIdent(Connection conn, BasicTable t);
 
@@ -1058,7 +1073,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn  DB connection
      * @param t  table
      * @param where  condition (can be {@code null})
-     * @return
      */
     public abstract PreparedStatement getDeleteRecordStatement(Connection conn, TableElement t, String where);
 
@@ -1095,7 +1109,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      */
     public abstract Map<String, DbIndexInfo> getIndices(Connection conn, Grain g);
 
-    //TODO: Javadoc
+    /**
+     * Get names of existing parameterized views.
+     * @param conn connection
+     * @param g current grain
+     */
     public abstract List<String> getParameterizedViewList(Connection conn, Grain g);
 
     /**
@@ -1108,7 +1126,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     /**
      * Returns current database type. E.g. <b>H2</b>, <b>POSTGRESQL</b> etc.
      *
-     * @return
      */
     public abstract DBType getType();
 
@@ -1117,7 +1134,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn  DB connection
      * @param s  sequence
-     * @return
      */
     public abstract long nextSequenceValue(Connection conn, SequenceElement s);
 
@@ -1127,7 +1143,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      * @param conn  DB connection
      * @param schema  schema name
      * @param name  sequence name
-     * @return
      */
     public abstract boolean sequenceExists(Connection conn, String schema, String name);
 
@@ -1136,7 +1151,6 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
      *
      * @param conn  DB connection
      * @param s  sequence
-     * @return
      */
     public abstract DbSequenceInfo getSequenceInfo(Connection conn, SequenceElement s);
     // =========> END PUBLIC ABSTRACT METHODS <=========

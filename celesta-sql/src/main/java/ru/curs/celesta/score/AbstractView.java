@@ -41,12 +41,12 @@ public abstract class AbstractView extends DataGrainElement {
 
     private final List<AbstractSelectStmt> segments = new ArrayList<>();
 
-    public final List<AbstractSelectStmt> getSegments() {
-        return segments;
-    }
-
     public AbstractView(GrainPart grainPart, String name) throws ParseException {
         super(grainPart, name);
+    }
+
+    public final List<AbstractSelectStmt> getSegments() {
+        return segments;
     }
 
     abstract String viewType();

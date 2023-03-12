@@ -6,12 +6,31 @@ import java.util.List;
  * +, -, *, /.
  */
 public final class BinaryTermOp extends Expr {
+    /**
+     * Index for addition operator.
+     */
     public static final int PLUS = 0;
+    /**
+     * Index for subtraction operator.
+     */
     public static final int MINUS = 1;
+    /**
+     * Index for multiplication operator.
+     */
     public static final int TIMES = 2;
+    /**
+     * Index for division operator.
+     */
     public static final int OVER = 3;
+    /**
+     * Index for string concatenation operator.
+     */
     public static final int CONCAT = 4;
-    public static final String[] OPS = { " + ", " - ", " * ", " / ", " || " };
+
+    /**
+     * Array of operators.
+     */
+    public static final String[] OPS = {" + ", " - ", " * ", " / ", " || "};
 
     private ViewColumnMeta<?> meta;
 
@@ -32,7 +51,6 @@ public final class BinaryTermOp extends Expr {
     /**
      * Returns the operator.
      *
-     * @return
      */
     public int getOperator() {
         return operator;
@@ -41,7 +59,6 @@ public final class BinaryTermOp extends Expr {
     /**
      * Returns the operands.
      *
-     * @return
      */
     public List<Expr> getOperands() {
         return operands;

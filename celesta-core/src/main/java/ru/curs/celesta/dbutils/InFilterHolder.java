@@ -18,7 +18,7 @@ public final class InFilterHolder {
         this.cursor = cursor;
     }
 
-    final FieldsLookup setIn(BasicCursor otherCursor) {
+    FieldsLookup setIn(BasicCursor otherCursor) {
 
         Runnable lookupChangeCallback = () -> {
             if (!cursor.isClosed()) {
@@ -50,7 +50,7 @@ public final class InFilterHolder {
         return fieldsLookup;
     }
 
-    final In getIn() {
+    In getIn() {
         return inFilter;
     }
 

@@ -8,7 +8,11 @@ import java.math.BigInteger;
  */
 public final class DecimalColumn extends Column<BigDecimal> {
 
-    //driven by MsSql
+    /**
+     * Maximum possible precision of a decimal column.
+     * <p>
+     * (currently limited by MS SQL)
+     */
     public static final int MAX_PRECISION = 38;
 
     /**

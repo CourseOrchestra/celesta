@@ -21,10 +21,8 @@ import java.util.stream.Collectors;
  * @since 2017-08-15
  */
 public abstract class ParameterizedViewCursor extends BasicCursor {
-
-  private ParameterizedView meta = null;
   protected Map<String, Object> parameters = null;
-
+  private ParameterizedView meta = null;
 
   public ParameterizedViewCursor(CallContext context, Map<String, Object> parameters) {
     super(context);

@@ -25,15 +25,34 @@ public final class MaterializedView extends AbstractView implements TableElement
      * System field name that contains result of COUNT().
      */
     public static final String SURROGATE_COUNT = "surrogate_count";
-
-    private static final String CHECKSUM_SEPARATOR = "CHECKSUM";
-
     /**
      * Checksum comment template.
      */
-    public static final String CHECKSUM_COMMENT_TEMPLATE = "/*" + CHECKSUM_SEPARATOR + "%s" + CHECKSUM_SEPARATOR + "*/";
+    public static final String CHECKSUM_COMMENT_TEMPLATE = "/*CHECKSUM%sCHECKSUM*/";
+
+    static final Map<Class<? extends Column<?>>, MatColFabricFunction>
+            COL_CLASSES_AND_FABRIC_FUNCS = new HashMap<>();
+
+    final NamedElementHolder<Column<?>> pk = new NamedElementHolder<Column<?>>() {
+        @Override
+        protected String getErrorMsg(String name) {
+            return String.format("Column '%s' defined more than once for primary key in table '%s'.", name, getName());
+        }
+    };
 
     private final IntegerColumn surrogateCount;
+    private final NamedElementHolder<Column<?>> realColumns = new NamedElementHolder<Column<?>>() {
+        @Override
+        protected String getErrorMsg(String name) {
+            return String.format("Column '%s' defined more than once in table '%s'.", name, getName());
+        }
+    };
+    public MaterializedView(GrainPart grainPart, String name) throws ParseException {
+        super(grainPart, name);
+        getGrain().addElement(this);
+        surrogateCount = new IntegerColumn(this, SURROGATE_COUNT);
+        surrogateCount.setNullableAndDefault(false, "0");
+    }
 
     public IntegerColumn getSurrogateCount() {
         return surrogateCount;
@@ -43,9 +62,6 @@ public final class MaterializedView extends AbstractView implements TableElement
     interface MatColFabricFunction {
         Column<?> apply(MaterializedView mView, Column<?> colRef, String alias) throws ParseException;
     }
-
-    static final Map<Class<? extends Column<?>>, MatColFabricFunction>
-            COL_CLASSES_AND_FABRIC_FUNCS = new HashMap<>();
 
     static {
         COL_CLASSES_AND_FABRIC_FUNCS.put(IntegerColumn.class,
@@ -74,27 +90,6 @@ public final class MaterializedView extends AbstractView implements TableElement
             result.setLength(String.valueOf(strColRef.getLength()));
             return result;
         });
-    }
-
-    private final NamedElementHolder<Column<?>> realColumns = new NamedElementHolder<Column<?>>() {
-        @Override
-        protected String getErrorMsg(String name) {
-            return String.format("Column '%s' defined more than once in table '%s'.", name, getName());
-        }
-    };
-
-    final NamedElementHolder<Column<?>> pk = new NamedElementHolder<Column<?>>() {
-        @Override
-        protected String getErrorMsg(String name) {
-            return String.format("Column '%s' defined more than once for primary key in table '%s'.", name, getName());
-        }
-    };
-
-    public MaterializedView(GrainPart grainPart, String name) throws ParseException {
-        super(grainPart, name);
-        getGrain().addElement(this);
-        surrogateCount = new IntegerColumn(this, SURROGATE_COUNT);
-        surrogateCount.setNullableAndDefault(false, "0");
     }
 
     @Override
@@ -224,14 +219,15 @@ public final class MaterializedView extends AbstractView implements TableElement
         }
     }
 
-
     public String getChecksum() {
         // TODO: CelestaSerializer is not intended to be used from GrainElement classes.
         //       Consider using a different approach for checksum calculation.
         try (ChecksumInputStream is = new ChecksumInputStream(
                 new ByteArrayInputStream(CelestaSerializer.toString(this).getBytes(StandardCharsets.UTF_8))
         )) {
+            //CHECKSTYLE: OFF
             while (is.read() != -1) ;
+            //CHECKSTYLE: ON
             return String.format("%08X", is.getCRC32());
         } catch (IOException ex) {
             throw new RuntimeException(ex);
