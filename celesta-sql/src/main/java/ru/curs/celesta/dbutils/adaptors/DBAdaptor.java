@@ -280,7 +280,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     }
 
     /**
-     * Database specific preparation of column for select static method
+     * Database specific preparation of column for select static method.
      * @param value to be selected
      * @param colName name of the column
      * @param maxStringLength maximum length
@@ -312,7 +312,7 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
     );
 
     /**
-     * Returns trigger body for the given query
+     * Returns trigger body for the given query.
      * @param query query
      */
     abstract String getSelectTriggerBodySql(TriggerQuery query);

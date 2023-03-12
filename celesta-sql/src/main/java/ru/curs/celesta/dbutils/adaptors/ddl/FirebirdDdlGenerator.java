@@ -859,9 +859,9 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                     .append("INSERT (%s) VALUES (%s); \n");
 
             String setStatementTemplate = mv.getAggregateColumns().keySet().stream()
-                    .map(alias -> "\"mv\".\"" + alias +
-                            "\" = \"mv\".\"" + alias +
-                            "\" %1$s \"aggregate\".\"" + alias + "\"").collect(Collectors.joining(", "))
+                    .map(alias -> "\"mv\".\"" + alias
+                            + "\" = \"mv\".\"" + alias
+                            + "\" %1$s \"aggregate\".\"" + alias + "\"").collect(Collectors.joining(", "))
                     .concat(", \"mv\".\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
                     .concat("\"mv\".\"").concat(MaterializedView.SURROGATE_COUNT)
                     .concat("\" %1$s \"aggregate\".\"")

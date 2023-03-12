@@ -354,6 +354,9 @@ public abstract class BasicCursor extends BasicDataAccessor {
                 cursorClassName, true, Thread.currentThread().getContextClassLoader());
     }
 
+    /**
+     * Returns prepared statement holder which retrieves the current cursor position.
+     */
     PreparedStmtHolder getHereHolder() {
         // To be overriden in Cursor class
         return new OrderFieldsMaskedStatementHolder() {
@@ -732,6 +735,11 @@ public abstract class BasicCursor extends BasicDataAccessor {
         return false;
     }
 
+    /** Navigate forwards or backwards for the given offset.
+     *
+     * @param command Can be either '>' or '<' for forwards or backwards navigation.
+     * @param offset Offset.
+     */
     public boolean navigate(String command, long offset) {
         if (!canRead()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.READ);
@@ -1264,7 +1272,10 @@ public abstract class BasicCursor extends BasicDataAccessor {
         return Arrays.equals(descOrders, c.descOrders);
     }
 
-
+    /**
+     * Returns true if In filters are equivalent for this cursor and a given cursor.
+     * @param c another cursor to compare In filters with
+     */
     boolean isEquivalentSpecific(BasicCursor c) {
         return true;
     }
@@ -1298,10 +1309,16 @@ public abstract class BasicCursor extends BasicDataAccessor {
         return fieldsForStatement.isEmpty() || fieldsForStatement.contains(field);
     }
 
+    /**
+     * Returns In condition.
+     */
     protected In getIn() {
         return null;
     }
 
+    /**
+     * Returns FROM clause.
+     */
     //TODO:Must be refactored by new util class FromClauseGenerator
     protected FromClause getFrom() {
         FromClause result = new FromClause();
@@ -1337,7 +1354,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
     }
 
     /**
-     * Clears current cursor buffer (sets all fields to null)
+     * Clears current cursor buffer (sets all fields to null).
      *
      * @param withKeys if true, all fields will be cleared, otherwise,
      *                 primary key fields will remain unchanged.
