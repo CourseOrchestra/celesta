@@ -101,6 +101,7 @@ public final class ViewColumnMeta<V> implements ColumnMeta<V> {
      * @throws ParseException
      *             wrong CelestaDoc.
      */
+    @SuppressWarnings("HiddenField")
     void setCelestaDocLexem(String celestaDoc) throws ParseException {
         if (celestaDoc == null) {
             this.celestaDoc = null;

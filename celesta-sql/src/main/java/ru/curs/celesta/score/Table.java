@@ -5,7 +5,7 @@ package ru.curs.celesta.score;
  */
 public final class Table extends BasicTable implements VersionedElement {
 
-    private boolean isVersioned = true;
+    private boolean versioned = true;
 
     private final IntegerColumn recVersion = new IntegerColumn(this);
 
@@ -32,16 +32,16 @@ public final class Table extends BasicTable implements VersionedElement {
 
     @Override
     public boolean isVersioned() {
-        return isVersioned;
+        return versioned;
     }
 
     /**
      * Sets to the table option "versioned".
      *
-     * @param isVersioned  "versioned" option value
+     * @param versioned  "versioned" option value
      */
-    public void setVersioned(boolean isVersioned) {
-        this.isVersioned = isVersioned;
+    public void setVersioned(boolean versioned) {
+        this.versioned = versioned;
     }
 
     @Override

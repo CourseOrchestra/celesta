@@ -18,7 +18,7 @@ final class TableBuilder {
     private List<BuildAction> actions = new ArrayList<>();
 
     private BasicTable table;
-    private boolean isReadOnly;
+    private boolean readOnly;
 
     TableBuilder(BasicTable table) {
         this(table.getGrainPart(), table.getName());
@@ -37,7 +37,7 @@ final class TableBuilder {
     public BasicTable build() throws ParseException {
 
         if (this.table == null) {
-            this.table = isReadOnly ? new ReadOnlyTable(grainPart, name) : new Table(grainPart, name);
+            this.table = readOnly ? new ReadOnlyTable(grainPart, name) : new Table(grainPart, name);
         }
 
         for (BuildAction action : actions) {
@@ -55,22 +55,22 @@ final class TableBuilder {
 
     public void setVersioned(boolean isVersioned) {
         actions.add(() -> {
-            if (!isReadOnly) {
+            if (!readOnly) {
                 ((Table) table).setVersioned(isVersioned);
             }
         });
     }
 
-    public void setReadOnly(boolean isReadOnly) {
-        this.isReadOnly = isReadOnly;
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
     }
 
     public void setAutoUpdate(boolean isAutoUpdate) {
         actions.add(() -> table.setAutoUpdate(isAutoUpdate));
     }
 
-    public void addPK(String name) {
-        actions.add(() -> table.addPK(name));
+    public void addPK(String columnName) {
+        actions.add(() -> table.addPK(columnName));
     }
 
     public void finalizePK() {
@@ -179,8 +179,8 @@ final class TableBuilder {
             actions.add(() -> foreignKey.setConstraintName(constraintName));
         }
 
-        public void setReferencedTable(String grain, String table) {
-            actions.add(() -> foreignKey.setReferencedTable(grain, table));
+        public void setReferencedTable(String grain, String tableName) {
+            actions.add(() -> foreignKey.setReferencedTable(grain, tableName));
         }
 
         public void addReferencedColumn(String columnName) {

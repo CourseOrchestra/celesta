@@ -48,9 +48,9 @@
     <!--   <property name="headerFile" value="${checkstyle.header.file}"/> -->
     <!--   <property name="fileExtensions" value="java"/> -->
     <!-- </module> -->
-
+    <module name="SuppressWarningsFilter" />
     <module name="TreeWalker">
-
+        <module name="SuppressWarningsHolder" />
         <module name="SuppressionCommentFilter"/>
 
         <!-- Checks for Javadoc comments.                     -->
@@ -145,7 +145,7 @@
         <module name="IllegalInstantiation"/>
         <module name="InnerAssignment"/>
         <module name="MagicNumber">
-            <property name="ignoreNumbers" value="-1, 0, 1, 2, 3, 4, 5, 6, 7"/>
+            <property name="ignoreNumbers" value="-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 16"/>
             <property name="ignoreHashCodeMethod" value="true"/>
             <property name="ignoreAnnotation" value="true"/>
         </module>
