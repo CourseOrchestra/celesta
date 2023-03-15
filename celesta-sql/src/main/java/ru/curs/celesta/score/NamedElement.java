@@ -57,7 +57,6 @@ public abstract class NamedElement {
      * @return "Shortcut" identifier that has a hash code of the original one as its
      *         last 8 symbols plus postfix.
      */
-    @SuppressWarnings("MagicNumber")
     public static String limitName(String value, String postfix) {
         String result = value;
         if (result.length() + postfix.length() > NamedElement.MAX_IDENTIFIER_LENGTH) {
