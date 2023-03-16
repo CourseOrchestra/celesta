@@ -109,7 +109,7 @@ public final class FieldsLookup {
         lookupChangeCallback.run();
     }
 
-    private void validateCursors(BasicCursor cursor, BasicCursor otherCursor) {
+    private static void validateCursors(BasicCursor cursor, BasicCursor otherCursor) {
         if (cursor == null) {
             throw new IllegalArgumentException("Argument 'cursor' can't be null");
         }
@@ -122,6 +122,7 @@ public final class FieldsLookup {
         }
     }
 
+    @SuppressWarnings("HiddenField")
     public FieldsLookup and(BasicCursor otherCursor) {
         if (BasicTable.class.equals(targetClass)) {
             FieldsLookup fieldsLookup = new FieldsLookup(
@@ -139,6 +140,7 @@ public final class FieldsLookup {
         }
     }
 
+    @SuppressWarnings("HiddenField")
     public FieldsLookup and(BasicTable filtering) {
 
         if (filtered instanceof BasicTable) {
@@ -152,6 +154,7 @@ public final class FieldsLookup {
         }
     }
 
+    @SuppressWarnings("HiddenField")
     public FieldsLookup and(View filtering) {
 
         if (filtered instanceof View) {

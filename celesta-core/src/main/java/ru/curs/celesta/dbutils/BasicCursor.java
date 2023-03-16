@@ -740,6 +740,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @param command Can be either '>' or '<' for forwards or backwards navigation.
      * @param offset Offset.
      */
+    @SuppressWarnings("HiddenField")
     public boolean navigate(String command, long offset) {
         if (!canRead()) {
             throw new PermissionDeniedException(callContext(), meta(), Action.READ);
@@ -999,6 +1000,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
      * @param offset   number of records that has to be skipped (0 - start from the beginning).
      * @param rowCount maximal number of records that has to be returned (0 - return all records).
      */
+    @SuppressWarnings("HiddenField")
     public final void limit(long offset, long rowCount) {
         if (offset < 0) {
             throw new CelestaException("Negative offset (%d) in limit(...) call", offset);
