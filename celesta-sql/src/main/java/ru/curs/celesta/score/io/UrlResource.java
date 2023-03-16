@@ -46,6 +46,7 @@ public final class UrlResource implements Resource {
         }
     }
 
+    @SuppressWarnings("HiddenField")
     @Override
     public UrlResource createRelative(
             String relativePath, Namespace namespace) throws MalformedURLException {

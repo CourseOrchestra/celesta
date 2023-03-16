@@ -21,16 +21,15 @@ public final class DbColumnInfo {
 
     private String name;
     private Class<? extends Column<?>> type;
-    private boolean isNullable;
+    private boolean nullable;
     private String defaultValue = "";
     private int length;
     private int scale;
-    private boolean isMax;
+    private boolean max;
 
     /**
      * Returns column name.
      *
-     * @return
      */
     public String getName() {
         return name;
@@ -39,7 +38,6 @@ public final class DbColumnInfo {
     /**
      * Returns column type.
      *
-     * @return
      */
     public Class<? extends Column<?>> getType() {
         return type;
@@ -48,16 +46,14 @@ public final class DbColumnInfo {
     /**
      * Whether column is nullable.
      *
-     * @return
      */
     public boolean isNullable() {
-        return isNullable;
+        return nullable;
     }
 
     /**
      * Column default value.
      *
-     * @return
      */
     public String getDefaultValue() {
         return defaultValue;
@@ -66,14 +62,13 @@ public final class DbColumnInfo {
     /**
      * Column length.
      *
-     * @return
      */
     public int getLength() {
         return length;
     }
 
     public boolean isMax() {
-        return isMax;
+        return max;
     }
 
     /**
@@ -97,10 +92,10 @@ public final class DbColumnInfo {
     /**
      * Sets if column is nullable.
      *
-     * @param isNullable  {@code true} if column is nullable otherwise {@code false}
+     * @param nullable  {@code true} if column is nullable otherwise {@code false}
      */
-    public void setNullable(boolean isNullable) {
-        this.isNullable = isNullable;
+    public void setNullable(boolean nullable) {
+        this.nullable = nullable;
     }
 
     /**
@@ -129,8 +124,8 @@ public final class DbColumnInfo {
         this.scale = scale;
     }
 
-    public void setMax(boolean isMax) {
-        this.isMax = isMax;
+    public void setMax(boolean max) {
+        this.max = max;
     }
 
     public boolean reflects(Column<?> value) {
@@ -142,7 +137,7 @@ public final class DbColumnInfo {
         // Checking for nullability with keeping in mind that in Oracle DEFAULT
         // ''-strings are always nullable
         if (type != StringColumn.class || !"''".equals(defaultValue)) {
-            if (value.isNullable() != isNullable) {
+            if (value.isNullable() != nullable) {
                 return false;
             }
         }
@@ -150,7 +145,7 @@ public final class DbColumnInfo {
         if (type == StringColumn.class) {
             // If length parameters do not match -- don't check
             StringColumn col = (StringColumn) value;
-            if (!(isMax ? col.isMax() : length == col.getLength())) {
+            if (!(max ? col.isMax() : length == col.getLength())) {
                 return false;
             }
         }

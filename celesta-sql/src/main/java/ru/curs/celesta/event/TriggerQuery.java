@@ -19,6 +19,7 @@ public final class TriggerQuery {
    * @param schema  schema name
    * @return  {@code this}
    */
+  @SuppressWarnings("HiddenField")
   public TriggerQuery withSchema(String schema) {
     this.schema = schema;
     return this;
@@ -30,6 +31,7 @@ public final class TriggerQuery {
    * @param name  trigger name
    * @return  {@code this}
    */
+  @SuppressWarnings("HiddenField")
   public TriggerQuery withName(String name) {
     this.name = name;
     return this;
@@ -41,6 +43,7 @@ public final class TriggerQuery {
    * @param tableName  table name
    * @return {@code this}
    */
+  @SuppressWarnings("HiddenField")
   public TriggerQuery withTableName(String tableName) {
     this.tableName = tableName;
     return this;
@@ -52,6 +55,7 @@ public final class TriggerQuery {
    * @param type  trigger type
    * @return {@code this}
    */
+  @SuppressWarnings("HiddenField")
   public TriggerQuery withType(TriggerType type) {
     this.type = type;
     return this;
