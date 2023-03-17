@@ -47,6 +47,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -1197,7 +1198,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    void processCreateUpdateRule(Connection conn, ForeignKey fk, LinkedList<StringBuilder> sqlQueue) {
+    void processCreateUpdateRule(Connection conn, ForeignKey fk, Deque<StringBuilder> sqlQueue) {
         super.processCreateUpdateRule(conn, fk, sqlQueue);
         //In Firebird, FK changes should be commited
         StringBuilder sb = new StringBuilder("COMMIT");

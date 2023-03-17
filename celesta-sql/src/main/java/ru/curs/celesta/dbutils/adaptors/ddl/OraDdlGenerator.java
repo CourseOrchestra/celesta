@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -457,7 +458,7 @@ public final class OraDdlGenerator extends DdlGenerator {
     }
 
     @Override
-    void processCreateUpdateRule(Connection conn, ForeignKey fk, LinkedList<StringBuilder> sqlQueue)  {
+    void processCreateUpdateRule(Connection conn, ForeignKey fk, Deque<StringBuilder> sqlQueue)  {
         String snlTriggerName = getFKTriggerName(SNL, fk.getConstraintName());
         String cscTriggerName = getFKTriggerName(CSC, fk.getConstraintName());
         TriggerQuery query = new TriggerQuery()

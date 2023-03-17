@@ -100,7 +100,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
     }
 
 
-    void delete(Connection conn, Object[] row) throws SQLException {
+    final void delete(Connection conn, Object[] row) throws SQLException {
 
         HashMap<String, Object> groupByColumnValues = getTableRowGroupByColumns(row);
 
@@ -109,7 +109,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
         setParamsAndRun(conn, groupByColumnValues, deleteSql);
     }
 
-    void insert(Connection conn, Object[] row) throws SQLException {
+    final void insert(Connection conn, Object[] row) throws SQLException {
 
         HashMap<String, Object> groupByColumnValues = getTableRowGroupByColumns(row);
 
@@ -202,7 +202,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
         return result;
     }
 
-    HashMap<Integer, String> getMvColumnRefs() {
+    final HashMap<Integer, String> getMvColumnRefs() {
         return mvColumnRefs;
     }
 }

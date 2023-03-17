@@ -29,7 +29,7 @@ public abstract class ParameterSetter {
 
     public abstract void execute(PreparedStatement stmt, int paramNum, Object[] rec, int recversion);
 
-    protected void setParam(PreparedStatement stmt, int i, Object v)  {
+    final void setParam(PreparedStatement stmt, int i, Object v)  {
         try {
             if (v == null) {
                 stmt.setNull(i, java.sql.Types.NULL);

@@ -40,6 +40,7 @@ import java.sql.SQLException;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -132,6 +133,10 @@ public abstract class DdlGenerator {
         return sql;
     }
 
+    /**
+     * Adds drop trigger statements to drop Foreign Key.
+     * @param fkName Name of the foreign key being dropped
+     */
     List<String> dropUpdateRule(String fkName) {
         return Collections.emptyList();
     }
@@ -141,6 +146,10 @@ public abstract class DdlGenerator {
         return dropTriggerSql(query);
     }
 
+    /**
+     * Returns SQL string for droping the trigger
+     * @param query trigger query
+     */
     abstract String dropTriggerSql(TriggerQuery query);
 
     final String tableString(String schemaName, String tableName) {
@@ -155,6 +164,10 @@ public abstract class DdlGenerator {
         return this.dmlAdaptor.pkConstraintString(tableElement);
     }
 
+    /**
+     * Generates ALTER SEQUENCE script.
+     * @param s sequence to alter
+     */
     protected List<String> alterSequence(SequenceElement s) {
         String sql = String.format(
                 "ALTER SEQUENCE %s %s",
@@ -165,6 +178,11 @@ public abstract class DdlGenerator {
         return Arrays.asList(sql);
     }
 
+    /**
+     * Subsitutes arguments for CREATE SEQUENCE expression.
+     * @param s sequence
+     * @param excludedArguments arguments to exclude
+     */
     String generateArgumentsForCreateSequenceExpression(
             SequenceElement s, SequenceElement.Argument... excludedArguments) {
 
@@ -232,7 +250,6 @@ public abstract class DdlGenerator {
      *
      * @param t  table table name
      * @param pkName  primary key name
-     * @return
      */
     public abstract String dropPk(TableElement t, String pkName);
 
@@ -307,7 +324,7 @@ public abstract class DdlGenerator {
     }
 
     final List<String> createFk(Connection conn, ForeignKey fk)  {
-        LinkedList<StringBuilder> sqlQueue = new LinkedList<>();
+        Deque<StringBuilder> sqlQueue = new LinkedList<>();
 
         // Building a query for FK creation
         StringBuilder sql = new StringBuilder();
@@ -362,7 +379,13 @@ public abstract class DdlGenerator {
                 .collect(Collectors.toList());
     }
 
-    void processCreateUpdateRule(Connection conn, ForeignKey fk, LinkedList<StringBuilder> sqlQueue)  {
+    /**
+     * Add on update rules to sql syntax.
+     * @param conn connection
+     * @param fk foreign key
+     * @param sqlQueue queue of queries
+     */
+    void processCreateUpdateRule(Connection conn, ForeignKey fk, Deque<StringBuilder> sqlQueue)  {
         StringBuilder sql = sqlQueue.peek();
         switch (fk.getUpdateRule()) {
             case SET_NULL:
@@ -477,6 +500,10 @@ public abstract class DdlGenerator {
         return Arrays.asList(deleteSql, insertSql);
     }
 
+    /**
+     * Generates TRUNCATE TABLE script.
+     * @param tableName name of the table to truncate
+     */
     String truncateTable(String tableName) {
         return "TRUNCATE TABLE " + tableName;
     }

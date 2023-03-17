@@ -91,7 +91,7 @@ import static ru.curs.celesta.dbutils.adaptors.constants.OpenSourceConstants.NOW
 /**
  * Postgres adaptor.
  */
-final public class PostgresAdaptor extends OpenSourceDbAdaptor {
+public final class PostgresAdaptor extends OpenSourceDbAdaptor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresAdaptor.class);
 
