@@ -20,12 +20,23 @@ import java.util.Map;
 
 
 public class ContainerUtils {
-
+    /**
+     * PostgreSQL container.
+     */
     public static final PostgreSQLContainer POSTGRE_SQL = new PostgreSQLContainer("postgres:14.0");
+    /**
+     * Oracle container.
+     */
     public static final OracleContainer ORACLE =
             new OracleContainer("gvenzl/oracle-xe:21.3.0");
+    /**
+     * MS SQL Server container.
+     */
     public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
         .withCollation("Cyrillic_General_CI_AI");
+    /**
+     * Firebird container.
+     */
     public static final AdvancedFireBirdContainer FIREBIRD = new AdvancedFireBirdContainer();
 
 

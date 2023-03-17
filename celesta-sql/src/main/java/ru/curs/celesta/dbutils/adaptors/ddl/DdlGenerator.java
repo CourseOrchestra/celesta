@@ -147,7 +147,7 @@ public abstract class DdlGenerator {
     }
 
     /**
-     * Returns SQL string for droping the trigger
+     * Returns SQL string for dropping the trigger.
      * @param query trigger query
      */
     abstract String dropTriggerSql(TriggerQuery query);

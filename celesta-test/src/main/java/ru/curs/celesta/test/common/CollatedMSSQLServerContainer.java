@@ -9,6 +9,9 @@ import java.util.TimeZone;
 
 public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContainer<SELF>>
         extends MSSQLServerContainer<SELF> {
+    /**
+     * Working database name.
+     */
     public static final String DATABASE_NAME = "celesta";
     private String collation;
     private boolean isCustomDbCreated;

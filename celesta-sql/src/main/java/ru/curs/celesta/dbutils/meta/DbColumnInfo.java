@@ -17,6 +17,9 @@ import java.util.regex.Pattern;
  * Column data in the database in form that is needed for Celesta.
  */
 public final class DbColumnInfo {
+    /**
+     * Pattern for getting auto incremented value from a sequence.
+     */
     public static final String SEQUENCE_NEXT_VAL_PATTERN = "(?i)NEXTVAL\\((.*)\\)";
 
     private String name;
