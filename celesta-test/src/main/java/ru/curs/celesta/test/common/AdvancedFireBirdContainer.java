@@ -5,7 +5,7 @@ import org.firebirdsql.testcontainers.FirebirdContainer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AdvancedFireBirdContainer extends FirebirdContainer<AdvancedFireBirdContainer> {
+public final class AdvancedFireBirdContainer extends FirebirdContainer<AdvancedFireBirdContainer> {
 
     private static final String EXEC_SQL_TEMPLATE = "./usr/local/firebird/bin/isql -input %s";
 

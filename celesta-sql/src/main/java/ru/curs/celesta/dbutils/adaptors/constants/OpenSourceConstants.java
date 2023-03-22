@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils.adaptors.constants;
 /**
  * Constants holder for open source DBs (PostgreSql, H2).
  */
+@SuppressWarnings("JavadocVariable")
 public final class OpenSourceConstants {
 
     public static final String NOW = "now()";

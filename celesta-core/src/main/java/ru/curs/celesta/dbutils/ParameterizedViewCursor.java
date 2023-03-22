@@ -44,7 +44,6 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
    * @param view  Cursor related view
    * @param callContext  Call context that is used for cursor creation
    * @param parameters   A map with parameterizing parameters
-   * @return
    */
   public static ParameterizedViewCursor create(ParameterizedView view, CallContext callContext,
           Map<String, Object> parameters) {
@@ -63,7 +62,6 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
    * @param callContext  Call context that is used for cursor creation
    * @param fields  Fields the cursor should operate on
    * @param parameters   A map with parameterizing parameters
-   * @return
    */
   public static ParameterizedViewCursor create(ParameterizedView view, CallContext callContext,
           Set<String> fields, Map<String, Object> parameters) {
@@ -75,6 +73,7 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
       }
   }
 
+  @SuppressWarnings("HiddenField")
   private void initParameters(Map<String, Object> parameters) {
     if (!meta().getParameters().keySet().containsAll(parameters.keySet())) {
       throw new CelestaException("Not all required parameters were passed");
@@ -86,7 +85,6 @@ public abstract class ParameterizedViewCursor extends BasicCursor {
   /**
    * Returns parameterized view description (meta information).
    *
-   * @return
    */
   @Override
   public ParameterizedView meta() {

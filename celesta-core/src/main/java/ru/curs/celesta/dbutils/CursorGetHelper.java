@@ -34,21 +34,15 @@ class CursorGetHelper {
     void apply();
   }
 
-  private final DBAdaptor db;
-  private final Connection conn;
   private final TableElement meta;
   private final String tableName;
-  private final Set<String> fields;
 
   private final PreparedStmtHolder get;
 
   CursorGetHelper(DBAdaptor db, Connection conn, TableElement meta,
                          String tableName, Set<String> fields) {
-    this.db = db;
-    this.conn = conn;
     this.meta = meta;
     this.tableName = tableName;
-    this.fields = fields;
 
     this.get = PreparedStatementHolderFactory.createGetHolder(meta, db, conn);
   }
@@ -58,12 +52,11 @@ class CursorGetHelper {
     return get;
   }
 
-
   final boolean internalGet(ParseResultFunction parseResultFunc, Optional<ParseResultCallBack> initXRecFunc,
                             int recversion, Object... values) {
     PreparedStatement g = prepareGet(recversion, values);
     LOGGER.trace("{}", g);
-    try (ResultSet rs = g.executeQuery()){
+    try (ResultSet rs = g.executeQuery()) {
         boolean result = rs.next();
         if (result) {
           parseResultFunc.apply(rs);
@@ -94,26 +87,31 @@ class CursorGetHelper {
     private String tableName;
     private Set<String> fields = Collections.emptySet();
 
+    @SuppressWarnings("HiddenField")
     CursorGetHelperBuilder withDb(DBAdaptor db) {
       this.db = db;
       return this;
     }
 
+    @SuppressWarnings("HiddenField")
     CursorGetHelperBuilder withConn(Connection conn) {
       this.conn = conn;
       return this;
     }
 
+    @SuppressWarnings("HiddenField")
     CursorGetHelperBuilder withMeta(TableElement meta) {
       this.meta = meta;
       return this;
     }
 
+    @SuppressWarnings("HiddenField")
     CursorGetHelperBuilder withTableName(String tableName) {
       this.tableName = tableName;
       return this;
     }
 
+    @SuppressWarnings("HiddenField")
     CursorGetHelperBuilder withFields(Set<String> fields) {
       if (!fields.isEmpty()) {
         this.fields = fields;

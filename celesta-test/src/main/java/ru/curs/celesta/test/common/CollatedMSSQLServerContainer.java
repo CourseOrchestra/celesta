@@ -7,8 +7,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.TimeZone;
 
-public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContainer<SELF>>
+public final class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContainer<SELF>>
         extends MSSQLServerContainer<SELF> {
+    /**
+     * Working database name.
+     */
     public static final String DATABASE_NAME = "celesta";
     private String collation;
     private boolean isCustomDbCreated;
@@ -17,6 +20,7 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
         super("mcr.microsoft.com/mssql/server:2017-CU29-ubuntu-16.04");
     }
 
+    @SuppressWarnings("HiddenField")
     public SELF withCollation(final String collation) {
         this.collation = collation;
         return self();

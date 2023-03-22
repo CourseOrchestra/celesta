@@ -37,9 +37,10 @@ public final class Range extends AbstractFilter {
     /**
      * Sets <em>from</em> and <em>to</em> values.
      *
-     * @param valueFrom
-     * @param valueTo
+     * @param valueFrom beginning of the range (inclusive)
+     * @param valueTo end of the range (inclusive)
      */
+    @SuppressWarnings("HiddenField")
     public void setValues(Object valueFrom, Object valueTo) {
         this.valueFrom = valueFrom;
         this.valueTo = valueTo;

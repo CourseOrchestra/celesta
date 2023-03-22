@@ -35,7 +35,7 @@ public abstract class MaskedStatementHolder extends PreparedStmtHolder {
         nullsMaskIndices = null;
     }
 
-    public boolean[] getNullsMask() {
+    public final boolean[] getNullsMask() {
         return nullsMask;
     }
 

@@ -37,7 +37,6 @@ public final class FromClause {
   /**
    * Returns FROM expression.
    *
-   * @return
    */
   public String getExpression() {
     return expression;

@@ -153,11 +153,11 @@ public abstract class DbUpdater<T extends ICallContext> {
                 GrainInfo gi = dbGrains.get(g.getName());
                 if (gi == null) {
                     insertGrainRec(g);
-                    success = updateGrain(g, connectionPool) & success;
+                    success = updateGrain(g) & success;
                 } else {
                     // Запись есть -- решение об апгрейде принимается на основе
                     // версии и контрольной суммы.
-                    success = decideToUpgrade(g, gi, connectionPool) & success;
+                    success = decideToUpgrade(g, gi) & success;
                 }
             }
             if (!success) {
@@ -181,7 +181,7 @@ public abstract class DbUpdater<T extends ICallContext> {
             Grain sys = score.getGrain(score.getSysSchemaName());
             createSysObjects(conn, sys);
             insertGrainRec(sys);
-            if (!updateGrain(sys, connectionPool)) {
+            if (!updateGrain(sys)) {
                 throw new CelestaException("System grain '%s' update failed.", score.getSysSchemaName());
             }
         } catch (ParseException e) {
@@ -213,13 +213,13 @@ public abstract class DbUpdater<T extends ICallContext> {
                 .insert();
     }
 
-    private boolean decideToUpgrade(Grain g, GrainInfo gi, ConnectionPool connectionPool) {
+    private boolean decideToUpgrade(Grain g, GrainInfo gi) {
         if (gi.lock) {
             return true;
         }
 
         if (gi.recover) {
-            return updateGrain(g, connectionPool);
+            return updateGrain(g);
         }
 
         // Как соотносятся версии?
@@ -239,12 +239,12 @@ public abstract class DbUpdater<T extends ICallContext> {
                         g.getName(), g.getVersion().toString(), gi.version.toString());
             case GREATER:
                 // Версия выросла -- апгрейдим.
-                return updateGrain(g, connectionPool);
+                return updateGrain(g);
             case EQUALS:
                 // Версия не изменилась: апгрейдим лишь в том случае, если
                 // изменилась контрольная сумма.
                 if (gi.length != g.getLength() || gi.checksum != g.getChecksum()) {
-                    return updateGrain(g, connectionPool);
+                    return updateGrain(g);
                 }
             default:
                 return true;
@@ -255,10 +255,8 @@ public abstract class DbUpdater<T extends ICallContext> {
      * Performs update at the level of individual grain.
      *
      * @param g              grain
-     * @param connectionPool connection pool
-     * @return
      */
-    boolean updateGrain(Grain g, ConnectionPool connectionPool) {
+    boolean updateGrain(Grain g) {
         // выставление в статус updating
         schemaCursor.get(g.getName());
         schemaCursor.setState(ISchemaCursor.UPGRADING);

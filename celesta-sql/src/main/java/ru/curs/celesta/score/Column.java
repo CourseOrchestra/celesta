@@ -44,8 +44,6 @@ public abstract class Column<V> extends NamedElement implements ColumnMeta<V> {
      * Returns options (the value of <code>option</code> property) for current field.
      * It is applicable only for text and Integer fields.
      *
-     * @return
-     *
      * @throws CelestaException  in case if options are provided incorrectly.
      */
     public List<String> getOptions()  {
@@ -73,7 +71,6 @@ public abstract class Column<V> extends NamedElement implements ColumnMeta<V> {
     /**
      * Returns table that current column belongs to.
      *
-     * @return
      */
     public final TableElement getParentTable() {
         return parentTable;
@@ -86,17 +83,16 @@ public abstract class Column<V> extends NamedElement implements ColumnMeta<V> {
      * @param defaultValue  default value
      * @throws ParseException  in case if DEFAULT value has an incorrect format.
      */
+    @SuppressWarnings("HiddenField")
     public final void setNullableAndDefault(boolean nullable, String defaultValue) throws ParseException {
         parentTable.getGrain().modify();
-        String buf = defaultValue;
         this.nullable = nullable;
-        setDefault(buf);
+        setDefault(defaultValue);
     }
 
     /**
      * Returns the value of Nullable property.
      *
-     * @return
      */
     public final boolean isNullable() {
         return nullable;
@@ -115,7 +111,6 @@ public abstract class Column<V> extends NamedElement implements ColumnMeta<V> {
     /**
      * Returns default value.
      *
-     * @return
      */
     public abstract V getDefaultValue();
 

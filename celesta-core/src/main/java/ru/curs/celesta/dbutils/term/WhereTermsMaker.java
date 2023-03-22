@@ -34,7 +34,7 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
     static final int LE = 3; // <=
     static final int LT = 4; // <
 
-    // COMPARISION TABLE TERM FACTORY
+    // COMPARISON TABLE TERM FACTORY
     private static final TermConstructor[] C;
 
     static {
@@ -115,7 +115,6 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
      * record.
      *
      * @param t  Table meta.
-     * @return
      */
     public WhereTerm getHereWhereTerm(BasicTable t) {
         return AndTerm.construct(getPKWhereTerm(t), getWhereTerm());
@@ -124,7 +123,6 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
     /**
      * Gets WHERE clause for filtered row set.
      *
-     * @return
      */
     public WhereTerm getWhereTerm() {
         paramsProvider.initOrderBy();
@@ -160,7 +158,6 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
      * database settings.
      *
      * @param op  navigation operator: '>', '<', or '='.
-     * @return
      */
     public WhereTerm getWhereTerm(char op) {
         paramsProvider.initOrderBy();
@@ -282,7 +279,6 @@ public class WhereTermsMaker extends CsqlWhereTermsMaker {
      * <b>'name'</b> -> <b>name</b>
      *
      * @param name  name to be unquoted
-     * @return
      */
     public static String unquot(String name) {
         return name.substring(1, name.length() - 1);

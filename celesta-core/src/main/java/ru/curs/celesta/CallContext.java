@@ -84,6 +84,7 @@ public class CallContext implements ICallContext {
      * @param celesta  Celesta to use CallContext with.
      * @param procName Name of the called procedure (for logging/audit needs).
      */
+    @SuppressWarnings("HiddenField")
     public void activate(ICelesta celesta, String procName) {
         Objects.requireNonNull(celesta);
         Objects.requireNonNull(procName);

@@ -182,14 +182,13 @@ public abstract class BasicTable extends DataGrainElement implements TableElemen
         fKeys.add(fk);
     }
 
-    synchronized final void removeFK(ForeignKey foreignKey) throws ParseException {
+    final synchronized void removeFK(ForeignKey foreignKey) throws ParseException {
         getGrain().modify();
         fKeys.remove(foreignKey);
     }
 
-
     @Override
-    public synchronized final void removeColumn(Column<?> column) throws ParseException {
+    public final synchronized void removeColumn(Column<?> column) throws ParseException {
         // It's not allowed to delete compound part of the primary key
         if (pk.contains(column)) {
             throw new ParseException(

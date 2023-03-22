@@ -130,6 +130,7 @@ public abstract class NamedElement {
      * @param celestaDoc  new value
      * @throws ParseException  if the comment has a wrong format
      */
+    @SuppressWarnings("HiddenField")
     void setCelestaDocLexem(String celestaDoc) throws ParseException {
         if (celestaDoc == null) {
             this.celestaDoc = null;

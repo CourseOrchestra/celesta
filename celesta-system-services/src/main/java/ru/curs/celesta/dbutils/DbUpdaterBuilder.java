@@ -21,6 +21,7 @@ public final class DbUpdaterBuilder {
      * @param dbAdaptor  adaptor of concrete DB.
      * @return {@code this}
      */
+    @SuppressWarnings("HiddenField")
     public DbUpdaterBuilder dbAdaptor(DBAdaptor dbAdaptor) {
         this.dbAdaptor = dbAdaptor;
         return this;
@@ -32,6 +33,7 @@ public final class DbUpdaterBuilder {
      * @param connectionPool  connection pool
      * @return {@code this}
      */
+    @SuppressWarnings("HiddenField")
     public DbUpdaterBuilder connectionPool(ConnectionPool connectionPool) {
         this.connectionPool = connectionPool;
         return this;
@@ -43,6 +45,7 @@ public final class DbUpdaterBuilder {
      * @param score  score
      * @return {@code this}
      */
+    @SuppressWarnings("HiddenField")
     public DbUpdaterBuilder score(Score score) {
         this.score = score;
         return this;
@@ -55,6 +58,7 @@ public final class DbUpdaterBuilder {
      *                           {@code false} - don't force DB initialization
      * @return {@code this}
      */
+    @SuppressWarnings("HiddenField")
     public DbUpdaterBuilder forceDdInitialize(boolean forceDdInitialize) {
         this.forceDdInitialize = forceDdInitialize;
         return this;
@@ -66,6 +70,7 @@ public final class DbUpdaterBuilder {
      * @param celesta
      * @return {@code this}
      */
+    @SuppressWarnings("HiddenField")
     public DbUpdaterBuilder setCelesta(ICelesta celesta) {
         this.celesta = celesta;
         return this;
@@ -74,7 +79,6 @@ public final class DbUpdaterBuilder {
     /**
      * Builds DB updater instance.
      *
-     * @return
      */
     public DbUpdaterImpl build() {
         return new DbUpdaterImpl(connectionPool, score, forceDdInitialize,

@@ -39,9 +39,9 @@ public final class Grain extends NamedElement {
 
     private boolean modified = true;
 
-    private boolean isAutoupdate = true;
+    private boolean autoupdate = true;
 
-    private Set<GrainPart> grainParts = new LinkedHashSet<>();
+    private final Set<GrainPart> grainParts = new LinkedHashSet<>();
 
     private Namespace namespace;
 
@@ -62,7 +62,7 @@ public final class Grain extends NamedElement {
 
     public Grain(AbstractScore score, String name) throws ParseException {
         super(name, score.getIdentifierParser());
-        if (name.indexOf("_") >= 0) {
+        if (name.contains("_")) {
             throw new ParseException("Invalid grain name '" + name + "'. No underscores are allowed for grain names.");
         }
         this.score = score;
@@ -120,7 +120,6 @@ public final class Grain extends NamedElement {
      *
      * @param classOfElement  class of elements from the set
      * @param <T> class of element
-     * @return
      */
     public <T extends GrainElement> Map<String, T> getElements(Class<T> classOfElement) {
         return getElementsHolder(classOfElement).getElements();
@@ -131,7 +130,6 @@ public final class Grain extends NamedElement {
      *
      * @param classOfElement  class of elements from the set
      * @param gp  grain part to which the returned elements should belong
-     * @return
      */
     <T extends GrainElement> Collection<T> getElements(Class<T> classOfElement, GrainPart gp) {
 
@@ -148,7 +146,6 @@ public final class Grain extends NamedElement {
     /**
      * Returns a set of indices defined in the grain.
      *
-     * @return
      */
     public Map<String, Index> getIndices() {
         return indices.getElements();
@@ -157,7 +154,6 @@ public final class Grain extends NamedElement {
     /**
      * Returns a set of materialized views defined in the grain.
      *
-     * @return
      */
     public Map<String, MaterializedView> getMaterializedViews() {
         return getElementsHolder(MaterializedView.class).getElements();
@@ -166,7 +162,6 @@ public final class Grain extends NamedElement {
     /**
      * Returns a set of parameterized views defined in the grain.
      *
-     * @return
      */
     public Map<String, ParameterizedView> getParameterizedViews() {
         return getElementsHolder(ParameterizedView.class).getElements();
@@ -175,7 +170,6 @@ public final class Grain extends NamedElement {
     /**
      * Returns a set of tables defined in the grain.
      *
-     * @return
      */
     public Map<String, BasicTable> getTables() {
         return getElementsHolder(BasicTable.class).getElements();
@@ -185,7 +179,6 @@ public final class Grain extends NamedElement {
      * Returns a set of tables defined in the grain by a table class.
      *
      * @param tableClass  Table class
-     * @return
      */
     public <T extends BasicTable> Map<String, T> getTables(Class<T> tableClass) {
         return getElementsHolder(tableClass).getElements();
@@ -194,7 +187,6 @@ public final class Grain extends NamedElement {
     /**
      * Returns a set of views defined in the grain.
      *
-     * @return
      */
     public Map<String, View> getViews() {
         return getElementsHolder(View.class).getElements();
@@ -207,7 +199,6 @@ public final class Grain extends NamedElement {
      * @param name            element name
      * @param classOfElement  element class
      * @param <T>             class of element
-     * @return
      * @throws ParseException  if element with such name and class is not found in the grain
      */
     public <T extends GrainElement> T getElement(String name, Class<T> classOfElement) throws ParseException {
@@ -288,7 +279,6 @@ public final class Grain extends NamedElement {
     /**
      * Returns model that the grain belongs to.
      *
-     * @return
      */
     public AbstractScore getScore() {
         return score;
@@ -298,24 +288,22 @@ public final class Grain extends NamedElement {
      * Value {@code false} indicates that grain was created with option WITH NO AUTOUPDATE,
      * and won't be updated. Default value is {@code true}.
      *
-     * @return
      */
     public boolean isAutoupdate() {
-        return isAutoupdate;
+        return autoupdate;
     }
 
     /**
      * Sets autoupdate option. Default value is {@code true}.
-     * @param isAutoupdate  autoupdate flag
+     * @param autoupdate  autoupdate flag
      */
-    public void setAutoupdate(boolean isAutoupdate) {
-        this.isAutoupdate = isAutoupdate;
+    public void setAutoupdate(boolean autoupdate) {
+        this.autoupdate = autoupdate;
     }
 
     /**
      * Returns the grain version.
      *
-     * @return
      */
     public VersionString getVersion() {
         return version;
@@ -335,7 +323,6 @@ public final class Grain extends NamedElement {
     /**
      * Returns length of the script file that the grain was created from.
      *
-     * @return
      */
     public int getLength() {
         return length;
@@ -350,7 +337,6 @@ public final class Grain extends NamedElement {
      * Coincidence of version, length and checksum is considered to be a sufficient solution for
      * skipping the reading and update of the database structure.
      *
-     * @return
      */
     public int getChecksum() {
         return checksum;
@@ -377,7 +363,6 @@ public final class Grain extends NamedElement {
     /**
      * Indicates that the grain parsing from file is completed.
      *
-     * @return
      */
     public boolean isParsingComplete() {
         return parsingComplete;
@@ -386,7 +371,6 @@ public final class Grain extends NamedElement {
     /**
      * If a grain has a higher number than the other grain then it means that it can depend from the first one.
      *
-     * @return
      */
     public int getDependencyOrder() {
         return dependencyOrder;
@@ -420,7 +404,6 @@ public final class Grain extends NamedElement {
     /**
      * Returns a flag of grain modification ({@code true} if parts of grain were modified in the runtime).
      *
-     * @return
      */
     public boolean isModified() {
         return modified;
@@ -437,7 +420,6 @@ public final class Grain extends NamedElement {
      * Returns a view by its name or an exception with a message that the view was not found.
      *
      * @param name  View name
-     * @return
      * @throws ParseException  If view with that name was not found in the grain.
      */
 
@@ -450,7 +432,6 @@ public final class Grain extends NamedElement {
      * that the view was not found.
      *
      * @param name  Materialized view name
-     * @return
      * @throws ParseException  If materialized view with that name was not found in the grain.
      */
     public MaterializedView getMaterializedView(String name) throws ParseException {
@@ -462,7 +443,6 @@ public final class Grain extends NamedElement {
      * that the view was not found.
      *
      * @param name  Parameterized view name
-     * @return
      * @throws ParseException  If parameterized view with that name was not found in the grain.
      */
     public ParameterizedView getParameterizedView(String name) throws ParseException {
@@ -473,7 +453,6 @@ public final class Grain extends NamedElement {
      * Returns a table by its name or an exception with a message that the table was not found.
      *
      * @param name  Table name
-     * @return
      * @throws ParseException  If table with that name was not found in the grain.
      */
     public BasicTable getTable(String name) throws ParseException {
@@ -485,7 +464,6 @@ public final class Grain extends NamedElement {
      *
      * @param name  Table name
      * @param tableClass  Table class
-     * @return
      * @throws ParseException  If table with that name was not found in the grain.
      */
     public <T extends BasicTable> T getTable(String name, Class<T> tableClass) throws ParseException {
@@ -522,7 +500,6 @@ public final class Grain extends NamedElement {
     /**
      * Returns grain parts that this grain consists of.
      *
-     * @return
      */
     public Set<GrainPart> getGrainParts() {
         return grainParts;
@@ -535,7 +512,6 @@ public final class Grain extends NamedElement {
     /**
      * Returns namespace of the grain.
      *
-     * @return
      */
     public Namespace getNamespace() {
         if (namespace != null) {
@@ -560,7 +536,7 @@ public final class Grain extends NamedElement {
     /**
      * Sets namespace of the grain.
      *
-     * @param namespace
+     * @param namespace namespace
      */
     public void setNamespace(Namespace namespace) {
         this.namespace = namespace;

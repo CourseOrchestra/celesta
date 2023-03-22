@@ -330,14 +330,12 @@ public abstract class AbstractScore {
     /**
      * Returns system schema name.
      *
-     * @return
      */
     public abstract String getSysSchemaName();
 
     /**
      * Returns identifier parser.
      *
-     * @return
      */
     public abstract IdentifierParser getIdentifierParser();
 
@@ -369,7 +367,6 @@ public abstract class AbstractScore {
          * Sets score path.
          *
          * @param path score path
-         * @return
          * @deprecated Use {@link #scoreDiscovery(ScoreDiscovery)} explicitly.
          */
         @Deprecated
@@ -383,8 +380,8 @@ public abstract class AbstractScore {
          * Sets score discovery.
          *
          * @param scoreDiscovery score discovery
-         * @return
          */
+        @SuppressWarnings("HiddenField")
         public ScoreBuilder<T> scoreDiscovery(ScoreDiscovery scoreDiscovery) {
             this.scoreDiscovery = scoreDiscovery;
             return this;
@@ -393,7 +390,6 @@ public abstract class AbstractScore {
         /**
          * Builds the score.
          *
-         * @return
          * @throws ParseException when score parsing fails
          */
         public T build() throws ParseException {

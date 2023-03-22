@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public final class In {
 
-  final private Map<FieldsLookup, WhereTermsMaker> lookupWhereTermMap = new LinkedHashMap<>();
+  private final Map<FieldsLookup, WhereTermsMaker> lookupWhereTermMap = new LinkedHashMap<>();
 
   public In(FieldsLookup lookup, WhereTermsMaker otherWhereTermMaker) {
     lookupWhereTermMap.put(lookup, otherWhereTermMaker);

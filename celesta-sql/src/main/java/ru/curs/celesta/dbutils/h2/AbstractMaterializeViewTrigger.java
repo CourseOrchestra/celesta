@@ -62,7 +62,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
             t = g.getElement(tableName, BasicTable.class);
 
             mv = g.getElements(MaterializedView.class).values().stream()
-                    .filter(mv -> triggerName.equals(mv.getTriggerName(TRIGGER_TYPE_MAP.get(type))))
+                    .filter(view -> triggerName.equals(view.getTriggerName(TRIGGER_TYPE_MAP.get(type))))
                     .findFirst().get();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -100,7 +100,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
     }
 
 
-    void delete(Connection conn, Object[] row) throws SQLException {
+    final void delete(Connection conn, Object[] row) throws SQLException {
 
         HashMap<String, Object> groupByColumnValues = getTableRowGroupByColumns(row);
 
@@ -109,7 +109,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
         setParamsAndRun(conn, groupByColumnValues, deleteSql);
     }
 
-    void insert(Connection conn, Object[] row) throws SQLException {
+    final void insert(Connection conn, Object[] row) throws SQLException {
 
         HashMap<String, Object> groupByColumnValues = getTableRowGroupByColumns(row);
 
@@ -117,8 +117,8 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
                 .map(alias -> {
                     try {
                         return DateTimeColumn.CELESTA_TYPE.equals(
-                                t.getColumn(alias).getCelestaType()) ?
-                                "DATE_TRUNC(DAY, \"" + alias + "\") = DATE_TRUNC(DAY, CAST(? AS TIMESTAMP))"
+                                t.getColumn(alias).getCelestaType())
+                                ? "DATE_TRUNC(DAY, \"" + alias + "\") = DATE_TRUNC(DAY, CAST(? AS TIMESTAMP))"
                                 : "\"" + alias + "\" = ?";
                     } catch (ParseException e) {
                         throw new RuntimeException(e);
@@ -202,7 +202,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
         return result;
     }
 
-    HashMap<Integer, String> getMvColumnRefs() {
+    final HashMap<Integer, String> getMvColumnRefs() {
         return mvColumnRefs;
     }
 }

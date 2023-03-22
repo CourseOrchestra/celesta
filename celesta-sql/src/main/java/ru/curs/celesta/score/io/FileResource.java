@@ -81,8 +81,9 @@ public final class FileResource implements Resource {
         return file.toPath().relativize(childFile.toPath()).toString();
     }
 
+    @SuppressWarnings("HiddenField")
     @Override
-    public Resource createRelative(String relativePath, Namespace namespace) throws IOException {
+    public Resource createRelative(String relativePath, Namespace namespace) {
         return new FileResource(new File(this.file, relativePath), namespace);
     }
 

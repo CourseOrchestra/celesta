@@ -8,7 +8,7 @@ import ru.curs.celesta.score.Column;
 public abstract class MsSqlColumnDefiner extends ColumnDefiner {
     public abstract String getLightDefaultDefinition(Column<?> c);
 
-    String msSQLDefault(Column<?> c) {
+    final String msSQLDefault(Column<?> c) {
         return String.format("constraint \"def_%s_%s\" ", c.getParentTable().getName(), c.getName())
                 + DEFAULT;
     }

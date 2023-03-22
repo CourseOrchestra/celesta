@@ -37,6 +37,7 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements C
     /**
      * Validates call context passed to data accessor constructor.
      */
+    @SuppressWarnings("HiddenField")
     protected void validateInitContext(T context) {
         if (context == null) {
             throw new CelestaException(

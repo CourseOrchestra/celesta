@@ -51,8 +51,7 @@ import java.util.stream.Collectors;
 /**
  * Created by ioann on 02.05.2017.
  */
-final public class H2Adaptor extends OpenSourceDbAdaptor {
-
+public final class H2Adaptor extends OpenSourceDbAdaptor {
     private static final Pattern HEX_STRING = Pattern.compile("X'([0-9A-Fa-f]+)'");
 
 
