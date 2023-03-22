@@ -468,53 +468,59 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                     this.rememberTrigger(q);
                 }
             } else {
-                Pattern p = Pattern.compile("(?i)NEXTVAL\\((.*)\\)");
-                Matcher m = p.matcher(actual.getDefaultValue());
-
-                if (m.matches()) { //old default value is sequence
-                    if (ic.getSequence() == null) {
-                        TriggerQuery triggerQuery = new TriggerQuery()
-                                .withSchema(c.getParentTable().getGrain().getName())
-                                .withTableName(c.getParentTable().getName())
-                                .withName(generateSequenceTriggerName(ic))
-                                .withType(TriggerType.PRE_INSERT);
-
-                        triggerExists = this.triggerExists(conn, query);
-
-                        if (triggerExists) {
-                            result.add(dropTrigger(triggerQuery));
-                        }
-                    } else {
-                        String oldSequenceName = m.group(1);
-
-                        if (!oldSequenceName.equals(ic.getSequence().getName())) { //using of new sequence
-                            List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
-                                    conn,
-                                    generateSequenceTriggerName(ic),
-                                    ic);
-                            result.addAll(sqlList);
-
-                            TriggerQuery triggerQuery = new TriggerQuery()
-                                    .withSchema(c.getParentTable().getGrain().getName())
-                                    .withTableName(c.getParentTable().getName())
-                                    .withName(generateSequenceTriggerName(ic))
-                                    .withType(TriggerType.PRE_INSERT);
-
-                            this.rememberTrigger(triggerQuery);
-                        }
-                    }
-                } else if (ic.getSequence() != null) {
-                    List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
-                            conn,
-                            generateSequenceTriggerName(ic),
-                            ic);
-                    result.addAll(sqlList);
-                }
+                updateColumnWithIntDefault(conn, actual, result, query, ic);
             }
         }
         // TODO:: END COPY-PASTE
         result.add("COMMIT");
         return result;
+    }
+
+    private void updateColumnWithIntDefault(Connection conn,
+                                            DbColumnInfo actual,
+                                            List<String> result,
+                                            TriggerQuery query,
+                                            IntegerColumn ic) {
+        Pattern p = Pattern.compile("(?i)NEXTVAL\\((.*)\\)");
+        Matcher m = p.matcher(actual.getDefaultValue());
+
+        if (m.matches()) { //old default value is sequence
+            if (ic.getSequence() == null) {
+                TriggerQuery triggerQuery = new TriggerQuery()
+                        .withSchema(ic.getParentTable().getGrain().getName())
+                        .withTableName(ic.getParentTable().getName())
+                        .withName(generateSequenceTriggerName(ic))
+                        .withType(TriggerType.PRE_INSERT);
+
+                if (this.triggerExists(conn, query)) {
+                    result.add(dropTrigger(triggerQuery));
+                }
+            } else {
+                String oldSequenceName = m.group(1);
+
+                if (!oldSequenceName.equals(ic.getSequence().getName())) { //using of new sequence
+                    List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
+                            conn,
+                            generateSequenceTriggerName(ic),
+                            ic);
+                    result.addAll(sqlList);
+
+                    TriggerQuery triggerQuery = new TriggerQuery()
+                            .withSchema(ic.getParentTable().getGrain().getName())
+                            .withTableName(ic.getParentTable().getName())
+                            .withName(generateSequenceTriggerName(ic))
+                            .withType(TriggerType.PRE_INSERT);
+
+                    this.rememberTrigger(triggerQuery);
+                }
+            }
+        } else if (ic.getSequence() != null) {
+            List<String> sqlList = createOrReplaceSequenceTriggerForColumn(
+                    conn,
+                    generateSequenceTriggerName(ic),
+                    ic);
+            result.addAll(sqlList);
+        }
     }
 
     @Override

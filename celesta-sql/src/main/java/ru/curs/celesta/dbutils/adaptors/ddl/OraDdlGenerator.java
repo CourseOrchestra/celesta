@@ -392,7 +392,6 @@ public final class OraDdlGenerator extends DdlGenerator {
                                             List<String> result,
                                             TriggerQuery query,
                                             IntegerColumn ic) {
-        boolean triggerExists;
         Pattern p = Pattern.compile("(?i)NEXTVAL\\((.*)\\)");
         Matcher m = p.matcher(actual.getDefaultValue());
 
@@ -404,9 +403,7 @@ public final class OraDdlGenerator extends DdlGenerator {
                         .withName(generateSequenceTriggerName(ic))
                         .withType(TriggerType.PRE_INSERT);
 
-                triggerExists = this.triggerExists(conn, query);
-
-                if (triggerExists) {
+                if (this.triggerExists(conn, query)) {
                     result.add(dropTrigger(triggerQuery));
                 }
             } else {
