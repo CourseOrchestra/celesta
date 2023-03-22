@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.TimeZone;
 
-public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContainer<SELF>>
+public final class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContainer<SELF>>
         extends MSSQLServerContainer<SELF> {
     /**
      * Working database name.

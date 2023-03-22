@@ -9,7 +9,7 @@ import java.util.List;
  * @author ioann
  * @since 2017-08-16
  */
-public class FromTerm {
+public final class FromTerm {
 
   private final List<?> values;
 

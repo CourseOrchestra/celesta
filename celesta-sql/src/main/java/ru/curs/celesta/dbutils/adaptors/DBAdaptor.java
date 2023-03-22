@@ -893,6 +893,11 @@ public abstract class DBAdaptor implements QueryBuildingHelper, StaticDataAdapto
         }
     }
 
+    /**
+     * Generates ORDER BY clause for auxiliary strings selector.
+     * @param columnName selected column
+     * @param orderByDirection direction of ORDER BY
+     */
     String orderByForSelectStaticStrings(String columnName, String orderByDirection) {
         return String.format("ORDER BY %s %s", columnName, orderByDirection);
     }
