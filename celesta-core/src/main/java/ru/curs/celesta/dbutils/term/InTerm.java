@@ -29,6 +29,7 @@ public final class InTerm extends WhereTerm {
   }
 
   @Override
+  @SuppressWarnings("HiddenField")
   public void programParams(List<ParameterSetter> program, QueryBuildingHelper queryBuildingHelper) {
     for (WhereTermsMaker wtm : filter.getOtherWhereTermMakers()) {
       if (wtm != null) {

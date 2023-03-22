@@ -62,7 +62,7 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
             t = g.getElement(tableName, BasicTable.class);
 
             mv = g.getElements(MaterializedView.class).values().stream()
-                    .filter(mv -> triggerName.equals(mv.getTriggerName(TRIGGER_TYPE_MAP.get(type))))
+                    .filter(view -> triggerName.equals(view.getTriggerName(TRIGGER_TYPE_MAP.get(type))))
                     .findFirst().get();
         } catch (Exception e) {
             throw new RuntimeException(e);

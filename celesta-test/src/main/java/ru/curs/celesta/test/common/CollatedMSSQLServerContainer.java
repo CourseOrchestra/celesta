@@ -20,6 +20,7 @@ public class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServerContai
         super("mcr.microsoft.com/mssql/server:2017-CU29-ubuntu-16.04");
     }
 
+    @SuppressWarnings("HiddenField")
     public SELF withCollation(final String collation) {
         this.collation = collation;
         return self();

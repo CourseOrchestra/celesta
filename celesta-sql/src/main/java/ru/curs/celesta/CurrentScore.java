@@ -43,9 +43,9 @@ public final class CurrentScore {
     /**
      * Sets if current score is in global mode.
      *
-     * @param globalMode  {@code true} - global mode on, {@code false} - off.
+     * @param isGlobal  {@code true} - global mode on, {@code false} - off.
      */
-    public static void global(boolean globalMode) {
-        CurrentScore.globalMode = globalMode;
+    public static void global(boolean isGlobal) {
+        CurrentScore.globalMode = isGlobal;
     }
 }
