@@ -46,7 +46,8 @@ public final class SqlUtils {
         try  {
             stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-            return (ResultSet) Proxy.newProxyInstance(rs.getClass().getClassLoader(), new Class<?>[] { ResultSet.class},
+            return (ResultSet) Proxy.newProxyInstance(rs.getClass().getClassLoader(),
+                    new Class<?>[] { ResultSet.class },
                     new ResultSetInvocationHandler(rs));
         } catch (SQLException e) {
             if (stmt != null) {

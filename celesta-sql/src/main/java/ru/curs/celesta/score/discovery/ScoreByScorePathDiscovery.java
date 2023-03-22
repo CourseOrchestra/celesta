@@ -51,10 +51,10 @@ public final class ScoreByScorePathDiscovery implements ScoreDiscovery {
 
     private Set<Resource> discoverScore(final File scoreDir) {
         try {
-            Path scorePath = scoreDir.toPath().toAbsolutePath();
-            return Files.walk(scorePath, FileVisitOption.FOLLOW_LINKS)
+            Path pathToScore = scoreDir.toPath().toAbsolutePath();
+            return Files.walk(pathToScore, FileVisitOption.FOLLOW_LINKS)
                     .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".sql"))
-                    .map(p -> new FileResource(p.toFile(), getNamespaceFromPath(scorePath.relativize(p))))
+                    .map(p -> new FileResource(p.toFile(), getNamespaceFromPath(pathToScore.relativize(p))))
                     .collect(Collectors.toCollection(LinkedHashSet::new));
         } catch (IOException ex) {
             throw new CelestaException(ex);

@@ -40,7 +40,7 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
 
             return discoverScore(urls);
 
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             throw new CelestaException("Unable to load score files from resources.", ex);
         }
     }

@@ -117,8 +117,8 @@ public abstract class AbstractMaterializeViewTrigger implements Trigger {
                 .map(alias -> {
                     try {
                         return DateTimeColumn.CELESTA_TYPE.equals(
-                                t.getColumn(alias).getCelestaType()) ?
-                                "DATE_TRUNC(DAY, \"" + alias + "\") = DATE_TRUNC(DAY, CAST(? AS TIMESTAMP))"
+                                t.getColumn(alias).getCelestaType())
+                                ? "DATE_TRUNC(DAY, \"" + alias + "\") = DATE_TRUNC(DAY, CAST(? AS TIMESTAMP))"
                                 : "\"" + alias + "\" = ?";
                     } catch (ParseException e) {
                         throw new RuntimeException(e);

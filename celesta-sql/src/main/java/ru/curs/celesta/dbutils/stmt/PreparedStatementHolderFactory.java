@@ -73,8 +73,7 @@ public class PreparedStatementHolderFactory {
             Supplier<Long> rowCountSupplier, Supplier<Set<String>> fieldsForStatementSupplier) {
         return new PreparedStmtHolder() {
             @Override
-            protected PreparedStatement initStatement(List<ParameterSetter> program)
-                     {
+            protected PreparedStatement initStatement(List<ParameterSetter> program) {
                 FromClause from = fromClauseSupplier.get();
                 FromTerm fromTerm = fromTermSupplier.get();
 

@@ -52,12 +52,11 @@ class CursorGetHelper {
     return get;
   }
 
-
   final boolean internalGet(ParseResultFunction parseResultFunc, Optional<ParseResultCallBack> initXRecFunc,
                             int recversion, Object... values) {
     PreparedStatement g = prepareGet(recversion, values);
     LOGGER.trace("{}", g);
-    try (ResultSet rs = g.executeQuery()){
+    try (ResultSet rs = g.executeQuery()) {
         boolean result = rs.next();
         if (result) {
           parseResultFunc.apply(rs);
