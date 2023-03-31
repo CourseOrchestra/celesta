@@ -17,10 +17,13 @@
             <Class name="ru.curs.celesta.score.CelestaParserTokenManager"/>
             <Class name="ru.curs.celesta.score.TokenMgrError"/>
             <Class name="ru.curs.celesta.score.SimpleCharStream"/>
+            <Class name="ru.curs.celesta.score.ParseException"/>
+
             <Class name="ru.curs.celesta.dbutils.filter.FilterParser"/>
             <Class name="ru.curs.celesta.dbutils.filter.FilterParserTokenManager"/>
             <Class name="ru.curs.celesta.dbutils.filter.TokenMgrError"/>
             <Class name="ru.curs.celesta.dbutils.filter.SimpleCharStream"/>
+            <Class name="ru.curs.celesta.dbutils.filter.ParseException"/>
         </Or>
     </Match>
     <Match>

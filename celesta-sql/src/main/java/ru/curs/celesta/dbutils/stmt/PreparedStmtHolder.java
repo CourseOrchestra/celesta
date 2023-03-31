@@ -6,7 +6,7 @@ import ru.curs.celesta.CelestaException;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,14 +17,13 @@ public abstract class PreparedStmtHolder {
     private static final Logger LOGGER = LoggerFactory.getLogger(PreparedStmtHolder.class);
 
     private PreparedStatement stmt;
-    private final List<ParameterSetter> program = new LinkedList<>();
+    private final List<ParameterSetter> program = new ArrayList<>();
 
     /**
      * Whether statement is valid.
      *
-     * @return
      */
-    public boolean isStmtValid()  {
+    public synchronized boolean isStmtValid()  {
         try {
             return !(stmt == null || stmt.isClosed());
         } catch (SQLException e) {
