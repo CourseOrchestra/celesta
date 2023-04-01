@@ -60,9 +60,16 @@ public final class InFilterHolder {
             return true;
         }
 
-        if (!(o instanceof InFilterHolder)) return false;
+        if (!(o instanceof InFilterHolder)) {
+            return false;
+        }
 
         InFilterHolder other = (InFilterHolder) o;
         return Objects.equals(inFilter, other.inFilter);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(inFilter);
     }
 }
