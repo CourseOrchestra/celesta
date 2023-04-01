@@ -24,7 +24,6 @@ public final class SqlUtils {
      *
      * @param conn  DB connection
      * @param sql  SQL update statement
-     * @return
      */
     public static int executeUpdate(Connection conn, String sql)  {
         try (Statement stmt = conn.createStatement()) {

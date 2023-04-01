@@ -17,7 +17,7 @@ public final class BinaryLogicalOp extends LogicValuedExpr {
     /**
      * Array of logical operators.
      */
-    public static final String[] OPS = {" AND ", " OR "};
+    static final String[] OPS = {" AND ", " OR "};
 
     private final int operator;
     private final List<Expr> operands;

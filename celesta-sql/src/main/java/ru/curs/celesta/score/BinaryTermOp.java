@@ -30,7 +30,7 @@ public final class BinaryTermOp extends Expr {
     /**
      * Array of operators.
      */
-    public static final String[] OPS = {" + ", " - ", " * ", " / ", " || "};
+    static final String[] OPS = {" + ", " - ", " * ", " / ", " || "};
 
     private ViewColumnMeta<?> meta;
 

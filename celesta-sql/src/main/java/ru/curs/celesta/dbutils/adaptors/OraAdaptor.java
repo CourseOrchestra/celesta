@@ -701,8 +701,8 @@ public final class OraAdaptor extends DBAdaptor {
     @Override
     public List<String> getParameterizedViewList(Connection conn, Grain g) {
         String sql = String.format(
-                "select OBJECT_NAME from all_objects\n"
-                        + " where owner = sys_context('userenv','session_user')\n"
+                "select OBJECT_NAME from all_objects"
+                        + " where owner = sys_context('userenv','session_user')"
                         + " and object_type = 'FUNCTION' and object_name like '%s@_%%' escape '@'",
                 g.getName());
         List<String> result = new LinkedList<>();

@@ -23,7 +23,7 @@ public class ContainerUtils {
     /**
      * PostgreSQL container.
      */
-    public static final PostgreSQLContainer POSTGRE_SQL = new PostgreSQLContainer("postgres:14.0");
+    public static final PostgreSQLContainer<?> POSTGRE_SQL = new PostgreSQLContainer<>("postgres:14.0");
     /**
      * Oracle container.
      */
@@ -32,7 +32,7 @@ public class ContainerUtils {
     /**
      * MS SQL Server container.
      */
-    public static final CollatedMSSQLServerContainer MSSQL = new CollatedMSSQLServerContainer()
+    public static final CollatedMSSQLServerContainer<?> MSSQL = new CollatedMSSQLServerContainer<>()
         .withCollation("Cyrillic_General_CI_AI");
     /**
      * Firebird container.
@@ -53,7 +53,7 @@ public class ContainerUtils {
         CLEAN_UP_MAP.put(FIREBIRD.getClass(), ContainerUtils::cleanUpFirebird);
     }
 
-    public static void cleanUp(JdbcDatabaseContainer container) {
+    public static void cleanUp(JdbcDatabaseContainer<?> container) {
         CLEAN_UP_MAP.get(container.getClass()).run();
     }
 
@@ -134,9 +134,7 @@ public class ContainerUtils {
                         SQLException sqlException = (SQLException) e.getCause();
 
                         // Object not found -> cascaded deleted with table
-                        if (Arrays.asList(942, 2289, 4043).contains(sqlException.getErrorCode())) {
-                            continue;
-                        } else {
+                        if (!Arrays.asList(942, 2289, 4043).contains(sqlException.getErrorCode())) {
                             throw e;
                         }
                     }
@@ -144,7 +142,7 @@ public class ContainerUtils {
             }
 
             connection.commit();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
@@ -176,12 +174,12 @@ public class ContainerUtils {
         FIREBIRD.dropDb();
     }
 
-    private static ConnectionPool getConnectionPool(JdbcDatabaseContainer container) {
+    private static ConnectionPool getConnectionPool(JdbcDatabaseContainer<?> container) {
         ConnectionPoolConfiguration poolConfiguration = connectionPoolConfiguration(container);
         return InternalConnectionPool.create(poolConfiguration);
     }
 
-    private static ConnectionPoolConfiguration connectionPoolConfiguration(JdbcDatabaseContainer container) {
+    private static ConnectionPoolConfiguration connectionPoolConfiguration(JdbcDatabaseContainer<?> container) {
         ConnectionPoolConfiguration poolConfiguration = new ConnectionPoolConfiguration();
         poolConfiguration.setJdbcConnectionUrl(container.getJdbcUrl());
         poolConfiguration.setLogin(container.getUsername());
