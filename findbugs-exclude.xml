@@ -15,12 +15,15 @@
         <Or>
             <Class name="ru.curs.celesta.score.CelestaParser"/>
             <Class name="ru.curs.celesta.score.CelestaParserTokenManager"/>
+            <Class name="ru.curs.celesta.score.CelestaParserConstants"/>
             <Class name="ru.curs.celesta.score.TokenMgrError"/>
             <Class name="ru.curs.celesta.score.SimpleCharStream"/>
             <Class name="ru.curs.celesta.score.ParseException"/>
 
+
             <Class name="ru.curs.celesta.dbutils.filter.FilterParser"/>
             <Class name="ru.curs.celesta.dbutils.filter.FilterParserTokenManager"/>
+            <Class name="ru.curs.celesta.dbutils.filter.FilterParserConstants"/>
             <Class name="ru.curs.celesta.dbutils.filter.TokenMgrError"/>
             <Class name="ru.curs.celesta.dbutils.filter.SimpleCharStream"/>
             <Class name="ru.curs.celesta.dbutils.filter.ParseException"/>
@@ -30,4 +33,17 @@
         <!-- These are triggered by getDate()/setDate() on cursors-->
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
     </Match>
+    <Match>
+        <!-- Boolean column can contain nulls in database -->
+        <Class name="ru.curs.celesta.score.BooleanColumn"/>
+        <Bug pattern="NP_BOOLEAN_RETURN_NULL"/>
+    </Match>
+
+    <Match>
+        <!-- Writes are in subclass -->
+        <Class name="ru.curs.celesta.dbutils.DbUpdater"/>
+        <Method name="updateDb"/>
+        <Bug pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+    </Match>
+
 </FindBugsFilter>

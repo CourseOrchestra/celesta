@@ -34,6 +34,7 @@ import ru.curs.celesta.score.discovery.ScoreByScorePathDiscovery;
 import ru.curs.celesta.test.mock.CelestaImpl;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -107,12 +108,12 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
+    public void beforeAll(ExtensionContext context) {
         this.startDbs();
     }
 
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
+    public void afterAll(ExtensionContext context) {
         this.clearDbs();
     }
 
@@ -153,17 +154,17 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
     }
 
     private void clearDbs() {
-        try {
-            this.connectionPools.get(DBType.H2).get().createStatement().execute("SHUTDOWN");
+        try (Statement stmt = connectionPools.get(DBType.H2).get().createStatement()) {
+            stmt.execute("SHUTDOWN");
         } catch (SQLException ex) {
             LOGGER.error("Error on shutting down DB", ex);
         }
 
         containers.forEach(
-            (b, c) -> {
-                this.connectionPools.get(b).close();
-                ContainerUtils.cleanUp(c);
-            });
+                (b, c) -> {
+                    this.connectionPools.get(b).close();
+                    ContainerUtils.cleanUp(c);
+                });
     }
 
     private ConnectionPool createConnectionPool(DBType dbType, JdbcDatabaseContainer<?> container) {
