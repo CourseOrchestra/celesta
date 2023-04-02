@@ -863,11 +863,6 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                 .collect(Collectors.joining(", "))
                 .concat(", 1 AS \"" + MaterializedView.SURROGATE_COUNT + "\"");
 
-        String tableGroupByColumns = mv.getColumns().values().stream()
-                .filter(v -> mv.isGroupByColumn(v.getName()))
-                .map(v -> "\"" + mv.getColumnRef(v.getName()).getName() + "\"")
-                .collect(Collectors.joining(", "));
-
         String rowConditionTemplate = mv.getColumns().keySet().stream()
                 .filter(mv::isGroupByColumn)
                 .map(alias -> "\"mv\".\"" + alias + "\" = \"%1$s\".\"" + alias + "\" ")
