@@ -574,55 +574,9 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         bw.flush();
 
         // Calculating of max available varchar length for input params
-        Map<String, String> textParamMap = new ParameterizedViewTypeResolver<>(
-                pv,
-                ViewColumnType.TEXT,
-                StringColumn.class,
-                sc -> sc.isMax() ? 0 : sc.getLength(),
-                (oldLength, newLength) -> {
-                    if (oldLength == 0 || newLength == 0) {
-                        return 0;
-                    } else {
-                        return Math.max(oldLength, newLength);
-                    }
-                },
-                length -> {
-                    if (length == 0) {
-                        return "blob sub_type text";
-                    } else {
-                        return String.format("varchar(%d)", length);
-                    }
-                }
-        ).resolveTypes();
+        Map<String, String> textParamMap = getTextParamMap(pv);
 
-        final class ScaleAndPrecision {
-            private final int precision;
-            private final int scale;
-
-            private ScaleAndPrecision(int precision, int scale) {
-                this.precision = precision;
-                this.scale = scale;
-            }
-        }
-
-        // Calculating of max available varchar length for input params
-        Map<String, String> decimalParamMap = new ParameterizedViewTypeResolver<>(
-                pv,
-                ViewColumnType.DECIMAL,
-                DecimalColumn.class,
-                dc -> new ScaleAndPrecision(dc.getPrecision(), dc.getScale()),
-                (oldValue, newValue) -> new ScaleAndPrecision(
-                        Math.max(oldValue.precision, newValue.precision),
-                        Math.max(oldValue.scale, newValue.scale)
-                ),
-                scaleAndPrecision ->
-                        String.format(
-                                "%s(%s,%s)",
-                                ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
-                                scaleAndPrecision.precision,
-                                scaleAndPrecision.scale
-                        )
-        ).resolveTypes();
+        Map<String, String> decimalParamMap = getDecimalParamMap(pv);
 
         String inParams = pv.getParameters()
                 .entrySet().stream()
@@ -730,6 +684,61 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         return Collections.singletonList(sql);
     }
 
+    private Map<String, String> getDecimalParamMap(ParameterizedView pv) {
+        final class ScaleAndPrecision {
+            private final int precision;
+            private final int scale;
+
+            private ScaleAndPrecision(int precision, int scale) {
+                this.precision = precision;
+                this.scale = scale;
+            }
+        }
+
+        // Calculating of max available varchar length for input params
+        Map<String, String> decimalParamMap = new ParameterizedViewTypeResolver<>(
+                pv,
+                ViewColumnType.DECIMAL,
+                DecimalColumn.class,
+                dc -> new ScaleAndPrecision(dc.getPrecision(), dc.getScale()),
+                (oldValue, newValue) -> new ScaleAndPrecision(
+                        Math.max(oldValue.precision, newValue.precision),
+                        Math.max(oldValue.scale, newValue.scale)
+                ),
+                scaleAndPrecision ->
+                        String.format(
+                                "%s(%s,%s)",
+                                ColumnDefinerFactory.getColumnDefiner(getType(), DecimalColumn.class).dbFieldType(),
+                                scaleAndPrecision.precision,
+                                scaleAndPrecision.scale
+                        )
+        ).resolveTypes();
+        return decimalParamMap;
+    }
+
+    private static Map<String, String> getTextParamMap(ParameterizedView pv) {
+        return new ParameterizedViewTypeResolver<>(
+                pv,
+                ViewColumnType.TEXT,
+                StringColumn.class,
+                sc -> sc.isMax() ? 0 : sc.getLength(),
+                (oldLength, newLength) -> {
+                    if (oldLength == 0 || newLength == 0) {
+                        return 0;
+                    } else {
+                        return Math.max(oldLength, newLength);
+                    }
+                },
+                length -> {
+                    if (length == 0) {
+                        return "blob sub_type text";
+                    } else {
+                        return String.format("varchar(%d)", length);
+                    }
+                }
+        ).resolveTypes();
+    }
+
     private static class BaseLogicValuedExprExtractor {
         List<LogicValuedExpr> extract(LogicValuedExpr logicValuedExpr) {
             List<LogicValuedExpr> result = new ArrayList<>();
@@ -800,151 +809,155 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         String fullTableName = tableString(t.getGrain().getName(), t.getName());
 
         for (MaterializedView mv : mvList) {
-            String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
-
-            String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
-            String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
-            String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
-
-            String mvColumns = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .map(alias -> String.format("\"%s\"", alias))
-                    .collect(Collectors.joining(", "))
-                    .concat(", \"" + MaterializedView.SURROGATE_COUNT + "\"");
-
-            String aggregateColumns = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .map(alias -> "\"aggregate\".\"" + alias + "\"")
-                    .collect(Collectors.joining(", "))
-                    .concat(", \"" + MaterializedView.SURROGATE_COUNT + "\"");
-
-            String selectPartOfScriptTemplate = mv.getColumns().keySet().stream()
-                    .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
-                    .map(alias -> {
-                        Column<?> colRef = mv.getColumnRef(alias);
-
-                        Map<String, Expr> aggrCols = mv.getAggregateColumns();
-                        if (aggrCols.containsKey(alias)) {
-                            if (colRef == null) {
-                                if (aggrCols.get(alias) instanceof Count) {
-                                    return "1 as \"" + alias + "\"";
-                                }
-                                return "";
-                            } else if (aggrCols.get(alias) instanceof Sum) {
-                                return "%1$s.\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
-                            } else {
-                                return "";
-                            }
-                        }
-
-                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
-                            return truncDate("%1$s.\"" + colRef.getName() + "\"") + "as \"" + alias + "\"";
-                        }
-
-                        return "%1$s.\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
-                    })
-                    .filter(str -> !str.isEmpty())
-                    .collect(Collectors.joining(", "))
-                    .concat(", 1 AS \"" + MaterializedView.SURROGATE_COUNT + "\"");
-
-            String tableGroupByColumns = mv.getColumns().values().stream()
-                    .filter(v -> mv.isGroupByColumn(v.getName()))
-                    .map(v -> "\"" + mv.getColumnRef(v.getName()).getName() + "\"")
-                    .collect(Collectors.joining(", "));
-
-            String rowConditionTemplate = mv.getColumns().keySet().stream()
-                    .filter(mv::isGroupByColumn)
-                    .map(alias -> "\"mv\".\"" + alias + "\" = \"%1$s\".\"" + alias + "\" ")
-                    .collect(Collectors.joining(" AND "));
-
-            StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s \"mv\" ")
-                    .append("USING (SELECT %s FROM RDB$DATABASE) AS \"aggregate\" ON %s \n")
-                    .append("WHEN MATCHED THEN \n ")
-                    .append("UPDATE SET %s \n")
-                    .append("WHEN NOT MATCHED THEN \n")
-                    .append("INSERT (%s) VALUES (%s); \n");
-
-            String setStatementTemplate = mv.getAggregateColumns().keySet().stream()
-                    .map(alias -> "\"mv\".\"" + alias
-                            + "\" = \"mv\".\"" + alias
-                            + "\" %1$s \"aggregate\".\"" + alias + "\"").collect(Collectors.joining(", "))
-                    .concat(", \"mv\".\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
-                    .concat("\"mv\".\"").concat(MaterializedView.SURROGATE_COUNT)
-                    .concat("\" %1$s \"aggregate\".\"")
-                    .concat(MaterializedView.SURROGATE_COUNT).concat("\"");
-
-            String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
-                    String.format(selectPartOfScriptTemplate, "NEW"), String.format(rowConditionTemplate, "aggregate"),
-                    String.format(setStatementTemplate, "+"), mvColumns, aggregateColumns);
-
-            String deleteMatchedCondTemplate = mv.getAggregateColumns().keySet().stream()
-                    .map(alias -> "\"mv\".\"" + alias + "\" %1$s \"aggregate\".\"" + alias + "\"")
-                    .collect(Collectors.joining(" %2$s "));
-
-            String rowConditionForExistsTemplate = mv.getColumns().keySet().stream()
-                    .filter(mv::isGroupByColumn)
-                    .map(alias -> {
-                        Column<?> colRef = mv.getColumnRef(alias);
-
-                        if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
-                            return "\"mv\".\"" + alias + "\" = "
-                                    + truncDate("\"%1$s\".\"" + mv.getColumnRef(alias).getName() + "\"");
-                        }
-
-                        return "\"mv\".\"" + alias + "\" = \"%1$s\".\"" + mv.getColumnRef(alias).getName() + "\" ";
-                    })
-                    .collect(Collectors.joining(" AND "));
-
-            String existsSql = "EXISTS(SELECT * FROM " + fullTableName + " AS \"t\" WHERE "
-                    + String.format(rowConditionForExistsTemplate, "t") + ")";
-
-            StringBuilder deleteSqlBuilder = new StringBuilder("MERGE INTO %s AS \"mv\" \n")
-                    .append("USING (SELECT %s FROM RDB$DATABASE) AS \"aggregate\" ON %s \n")
-                    .append("WHEN MATCHED AND %s THEN DELETE\n ")
-                    .append("WHEN MATCHED AND (%s) THEN \n")
-                    .append("UPDATE SET %s; \n");
-
-            String deleteSql = String.format(deleteSqlBuilder.toString(), fullMvName,
-                    String.format(selectPartOfScriptTemplate, "OLD"), String.format(rowConditionTemplate, "aggregate"),
-                    String.format(deleteMatchedCondTemplate, "=", "AND").concat(" AND NOT " + existsSql),
-                    String.format(deleteMatchedCondTemplate, "<>", "OR")
-                            .concat(" OR (" + String.format(deleteMatchedCondTemplate, "=", "AND")
-                                    .concat(" AND " + existsSql + ")")),
-                    String.format(setStatementTemplate, "-"));
-
-            String sql = "CREATE TRIGGER \"" + insertTriggerName + "\" "
-                    + "for " + fullTableName
-                    + " AFTER INSERT \n"
-                    + " AS \n"
-                    + " BEGIN \n"
-                    + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
-                    + "\n " + insertSql + "\n END;";
-
-            result.add(sql);
-
-            sql = "CREATE TRIGGER \"" + deleteTriggerName + "\" "
-                    + "for " + fullTableName
-                    + " AFTER DELETE \n"
-                    + " AS \n"
-                    + " BEGIN \n"
-                    + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
-                    + "\n " + deleteSql + "\n END;";
-
-            result.add(sql);
-
-            String updateSql = String.format("%s%n %n%s", deleteSql, insertSql);
-            sql = "CREATE TRIGGER \"" + updateTriggerName + "\" "
-                    + "for " + fullTableName
-                    + " AFTER UPDATE \n"
-                    + " AS \n"
-                    + " BEGIN \n"
-                    + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
-                    + "\n " + updateSql + "\n END;";
-
-            result.add(sql);
+            createTableTriggerForMv(result, fullTableName, mv);
         }
 
         return result;
+    }
+
+    private void createTableTriggerForMv(List<String> result, String fullTableName, MaterializedView mv) {
+        String fullMvName = tableString(mv.getGrain().getName(), mv.getName());
+
+        String insertTriggerName = mv.getTriggerName(TriggerType.POST_INSERT);
+        String updateTriggerName = mv.getTriggerName(TriggerType.POST_UPDATE);
+        String deleteTriggerName = mv.getTriggerName(TriggerType.POST_DELETE);
+
+        String mvColumns = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> String.format("\"%s\"", alias))
+                .collect(Collectors.joining(", "))
+                .concat(", \"" + MaterializedView.SURROGATE_COUNT + "\"");
+
+        String aggregateColumns = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> "\"aggregate\".\"" + alias + "\"")
+                .collect(Collectors.joining(", "))
+                .concat(", \"" + MaterializedView.SURROGATE_COUNT + "\"");
+
+        String selectPartOfScriptTemplate = mv.getColumns().keySet().stream()
+                .filter(alias -> !MaterializedView.SURROGATE_COUNT.equals(alias))
+                .map(alias -> {
+                    Column<?> colRef = mv.getColumnRef(alias);
+
+                    Map<String, Expr> aggrCols = mv.getAggregateColumns();
+                    if (aggrCols.containsKey(alias)) {
+                        if (colRef == null) {
+                            if (aggrCols.get(alias) instanceof Count) {
+                                return "1 as \"" + alias + "\"";
+                            }
+                            return "";
+                        } else if (aggrCols.get(alias) instanceof Sum) {
+                            return "%1$s.\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
+                        } else {
+                            return "";
+                        }
+                    }
+
+                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+                        return truncDate("%1$s.\"" + colRef.getName() + "\"") + "as \"" + alias + "\"";
+                    }
+
+                    return "%1$s.\"" + colRef.getName() + "\" as " + "\"" + alias + "\"";
+                })
+                .filter(str -> !str.isEmpty())
+                .collect(Collectors.joining(", "))
+                .concat(", 1 AS \"" + MaterializedView.SURROGATE_COUNT + "\"");
+
+        String tableGroupByColumns = mv.getColumns().values().stream()
+                .filter(v -> mv.isGroupByColumn(v.getName()))
+                .map(v -> "\"" + mv.getColumnRef(v.getName()).getName() + "\"")
+                .collect(Collectors.joining(", "));
+
+        String rowConditionTemplate = mv.getColumns().keySet().stream()
+                .filter(mv::isGroupByColumn)
+                .map(alias -> "\"mv\".\"" + alias + "\" = \"%1$s\".\"" + alias + "\" ")
+                .collect(Collectors.joining(" AND "));
+
+        StringBuilder insertSqlBuilder = new StringBuilder("MERGE INTO %s \"mv\" ")
+                .append("USING (SELECT %s FROM RDB$DATABASE) AS \"aggregate\" ON %s \n")
+                .append("WHEN MATCHED THEN \n ")
+                .append("UPDATE SET %s \n")
+                .append("WHEN NOT MATCHED THEN \n")
+                .append("INSERT (%s) VALUES (%s); \n");
+
+        String setStatementTemplate = mv.getAggregateColumns().keySet().stream()
+                .map(alias -> "\"mv\".\"" + alias
+                        + "\" = \"mv\".\"" + alias
+                        + "\" %1$s \"aggregate\".\"" + alias + "\"").collect(Collectors.joining(", "))
+                .concat(", \"mv\".\"").concat(MaterializedView.SURROGATE_COUNT).concat("\" = ")
+                .concat("\"mv\".\"").concat(MaterializedView.SURROGATE_COUNT)
+                .concat("\" %1$s \"aggregate\".\"")
+                .concat(MaterializedView.SURROGATE_COUNT).concat("\"");
+
+        String insertSql = String.format(insertSqlBuilder.toString(), fullMvName,
+                String.format(selectPartOfScriptTemplate, "NEW"), String.format(rowConditionTemplate, "aggregate"),
+                String.format(setStatementTemplate, "+"), mvColumns, aggregateColumns);
+
+        String deleteMatchedCondTemplate = mv.getAggregateColumns().keySet().stream()
+                .map(alias -> "\"mv\".\"" + alias + "\" %1$s \"aggregate\".\"" + alias + "\"")
+                .collect(Collectors.joining(" %2$s "));
+
+        String rowConditionForExistsTemplate = mv.getColumns().keySet().stream()
+                .filter(mv::isGroupByColumn)
+                .map(alias -> {
+                    Column<?> colRef = mv.getColumnRef(alias);
+
+                    if (DateTimeColumn.CELESTA_TYPE.equals(colRef.getCelestaType())) {
+                        return "\"mv\".\"" + alias + "\" = "
+                                + truncDate("\"%1$s\".\"" + mv.getColumnRef(alias).getName() + "\"");
+                    }
+
+                    return "\"mv\".\"" + alias + "\" = \"%1$s\".\"" + mv.getColumnRef(alias).getName() + "\" ";
+                })
+                .collect(Collectors.joining(" AND "));
+
+        String existsSql = "EXISTS(SELECT * FROM " + fullTableName + " AS \"t\" WHERE "
+                + String.format(rowConditionForExistsTemplate, "t") + ")";
+
+        StringBuilder deleteSqlBuilder = new StringBuilder("MERGE INTO %s AS \"mv\" \n")
+                .append("USING (SELECT %s FROM RDB$DATABASE) AS \"aggregate\" ON %s \n")
+                .append("WHEN MATCHED AND %s THEN DELETE\n ")
+                .append("WHEN MATCHED AND (%s) THEN \n")
+                .append("UPDATE SET %s; \n");
+
+        String deleteSql = String.format(deleteSqlBuilder.toString(), fullMvName,
+                String.format(selectPartOfScriptTemplate, "OLD"), String.format(rowConditionTemplate, "aggregate"),
+                String.format(deleteMatchedCondTemplate, "=", "AND").concat(" AND NOT " + existsSql),
+                String.format(deleteMatchedCondTemplate, "<>", "OR")
+                        .concat(" OR (" + String.format(deleteMatchedCondTemplate, "=", "AND")
+                                .concat(" AND " + existsSql + ")")),
+                String.format(setStatementTemplate, "-"));
+
+        String sql = "CREATE TRIGGER \"" + insertTriggerName + "\" "
+                + "for " + fullTableName
+                + " AFTER INSERT \n"
+                + " AS \n"
+                + " BEGIN \n"
+                + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
+                + "\n " + insertSql + "\n END;";
+
+        result.add(sql);
+
+        sql = "CREATE TRIGGER \"" + deleteTriggerName + "\" "
+                + "for " + fullTableName
+                + " AFTER DELETE \n"
+                + " AS \n"
+                + " BEGIN \n"
+                + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
+                + "\n " + deleteSql + "\n END;";
+
+        result.add(sql);
+
+        String updateSql = String.format("%s%n %n%s", deleteSql, insertSql);
+        sql = "CREATE TRIGGER \"" + updateTriggerName + "\" "
+                + "for " + fullTableName
+                + " AFTER UPDATE \n"
+                + " AS \n"
+                + " BEGIN \n"
+                + String.format(MaterializedView.CHECKSUM_COMMENT_TEMPLATE, mv.getChecksum())
+                + "\n " + updateSql + "\n END;";
+
+        result.add(sql);
     }
 
     @Override
