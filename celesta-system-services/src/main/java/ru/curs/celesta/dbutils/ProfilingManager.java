@@ -5,6 +5,9 @@ import ru.curs.celesta.Celesta;
 import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.syscursors.CalllogCursor;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
 /**
  * Call profiling manager.
  */
@@ -29,9 +32,8 @@ public final class ProfilingManager implements IProfiler {
                 CalllogCursor clc = new CalllogCursor(sysContext);
                 clc.setProcname(context.getProcName());
                 clc.setUserid(context.getUserId());
-
                 clc.setStarttime(context.getStartTime());
-                clc.setDuration((int) (context.getDurationNs() / 1000));
+                clc.setDuration((int) Duration.ofNanos(context.getDurationNs()).get(ChronoUnit.MILLIS));
                 clc.insert();
             }
         }

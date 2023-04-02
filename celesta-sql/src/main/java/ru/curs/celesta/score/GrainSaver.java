@@ -18,6 +18,9 @@ public final class GrainSaver {
 
     /**
      * Saves metadata content of score back to SQL-files rewriting their content.
+     *
+     * @param score Score to save
+     * @param scorePath path to save the score to
      */
     public void save(AbstractScore score, Resource scorePath) throws IOException {
         for (Grain g : score.getGrains().values()) {
@@ -28,7 +31,8 @@ public final class GrainSaver {
     /**
      * Saves grain to file(s).
      *
-     * @ io error
+     * @param grain grain to save
+     * @param scorePath path to save the grain to
      */
     public void save(Grain grain, Resource scorePath) throws IOException {
 

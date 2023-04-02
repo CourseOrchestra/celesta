@@ -742,11 +742,13 @@ public abstract class Cursor extends BasicCursor implements InFilterSupport {
      * When using methods without an underscore symbol conflicts with attribute names
      * may happen.
      */
-
+    @SuppressWarnings("MethodName")
     protected abstract Object[] _currentKeyValues();
 
+    @SuppressWarnings("MethodName")
     protected abstract void _setAutoIncrement(int val);
 
+    @SuppressWarnings("MethodName")
     protected abstract void _parseResultInternal(ResultSet rs) throws SQLException;
 
 }

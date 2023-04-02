@@ -1042,7 +1042,6 @@ public abstract class BasicCursor extends BasicDataAccessor {
         ColumnMeta<?>[] columns = new ColumnMeta<?>[names.length];
         for (int i = 0; i < names.length; i++) {
             final String name = names[i];
-    
             Matcher m = COLUMN_NAME.matcher(name);
             if (!m.matches()) {
                 throw new CelestaException(
@@ -1120,7 +1119,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
         }
     }
 
-    abstract void appendPK(List<String> l, List<Boolean> ol, final Set<String> colNames);
+    abstract void appendPK(List<String> l, List<Boolean> ol, Set<String> colNames);
 
     /**
      * Resets filters, sorting and fully cleans the buffer.
@@ -1375,25 +1374,27 @@ public abstract class BasicCursor extends BasicDataAccessor {
         return _getBufferCopy(context, fetchedFields);
     }
 
-    // CHECKSTYLE:OFF
     /*
      * This group of methods is named according to Python rules, and not Java.
      * In Python names of protected methods are started with an underscore symbol.
      * When using methods without an underscore symbol conflicts with attribute names
      * can be caused.
      */
+    @SuppressWarnings("MethodName")
     protected abstract BasicCursor _getBufferCopy(CallContext context, List<String> fields);
 
+    @SuppressWarnings("MethodName")
     protected abstract Object[] _currentValues();
 
+    @SuppressWarnings("MethodName")
     protected abstract void _clearBuffer(boolean withKeys);
 
+    @SuppressWarnings("MethodName")
     protected abstract void _setFieldValue(String name, Object value);
 
+    @SuppressWarnings("MethodName")
     protected abstract Object _getFieldValue(String name);
 
+    @SuppressWarnings("MethodName")
     protected abstract void _parseResult(ResultSet rs) throws SQLException;
-
-    // CHECKSTYLE:ON
-
 }

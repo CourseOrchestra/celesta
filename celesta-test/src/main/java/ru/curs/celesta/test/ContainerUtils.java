@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class ContainerUtils {
+public final class ContainerUtils {
     /**
      * PostgreSQL container.
      */
@@ -53,6 +53,9 @@ public class ContainerUtils {
         CLEAN_UP_MAP.put(FIREBIRD.getClass(), ContainerUtils::cleanUpFirebird);
     }
 
+    private ContainerUtils() {
+    }
+
     public static void cleanUp(JdbcDatabaseContainer<?> container) {
         CLEAN_UP_MAP.get(container.getClass()).run();
     }
@@ -82,6 +85,7 @@ public class ContainerUtils {
         }
     }
 
+    @SuppressWarnings("MagicNumber")
     private static void cleanUpOracle() {
         try (
                 ConnectionPool connectionPool = getConnectionPool(ORACLE);
@@ -132,7 +136,6 @@ public class ContainerUtils {
                         }
                     } catch (CelestaException e) {
                         SQLException sqlException = (SQLException) e.getCause();
-
                         // Object not found -> cascaded deleted with table
                         if (!Arrays.asList(942, 2289, 4043).contains(sqlException.getErrorCode())) {
                             throw e;

@@ -22,7 +22,6 @@ public final class FieldRef extends Expr {
     /**
      * Returns table name or alias.
      *
-     * @return
      */
     public String getTableNameOrAlias() {
         return tableNameOrAlias;
@@ -31,7 +30,6 @@ public final class FieldRef extends Expr {
     /**
      * Returns column name.
      *
-     * @return
      */
     public String getColumnName() {
         return columnName;
@@ -41,34 +39,7 @@ public final class FieldRef extends Expr {
     public ViewColumnMeta<?> getMeta() {
         if (meta == null) {
             if (column != null) {
-                if (column instanceof IntegerColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.INT);
-                } else if (column instanceof FloatingColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.REAL);
-                } else if (column instanceof DecimalColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.DECIMAL);
-                } else if (column instanceof StringColumn) {
-                    StringColumn sc = (StringColumn) column;
-                    if (sc.isMax()) {
-                        meta = new ViewColumnMeta<>(ViewColumnType.TEXT);
-                    } else {
-                        meta = new ViewColumnMeta<>(ViewColumnType.TEXT, sc.getLength());
-                    }
-                } else if (column instanceof BooleanColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.BIT);
-                } else if (column instanceof DateTimeColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.DATE);
-                } else if (column instanceof ZonedDateTimeColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.DATE_WITH_TIME_ZONE);
-                } else if (column instanceof BinaryColumn) {
-                    meta = new ViewColumnMeta<>(ViewColumnType.BLOB);
-                    // This should not happen unless we introduced new types in
-                    // Celesta
-                } else {
-                    throw new IllegalStateException();
-                }
-                meta.setNullable(column.isNullable());
-                meta.setCelestaDoc(column.getCelestaDoc());
+                updateMeta();
             } else {
                 return new ViewColumnMeta<>(ViewColumnType.UNDEFINED);
             }
@@ -76,10 +47,40 @@ public final class FieldRef extends Expr {
         return meta;
     }
 
+    private void updateMeta() {
+        if (column instanceof IntegerColumn) {
+            meta = new ViewColumnMeta<>(ViewColumnType.INT);
+        } else if (column instanceof FloatingColumn) {
+            meta = new ViewColumnMeta<>(ViewColumnType.REAL);
+        } else if (column instanceof DecimalColumn) {
+            meta = new ViewColumnMeta<>(ViewColumnType.DECIMAL);
+        } else if (column instanceof StringColumn) {
+            StringColumn sc = (StringColumn) column;
+            if (sc.isMax()) {
+                meta = new ViewColumnMeta<>(ViewColumnType.TEXT);
+            } else {
+                meta = new ViewColumnMeta<>(ViewColumnType.TEXT, sc.getLength());
+            }
+        } else if (column instanceof BooleanColumn) {
+            meta = new ViewColumnMeta<>(ViewColumnType.BIT);
+        } else if (column instanceof DateTimeColumn) {
+            meta = new ViewColumnMeta<>(ViewColumnType.DATE);
+        } else if (column instanceof ZonedDateTimeColumn) {
+            meta = new ViewColumnMeta<>(ViewColumnType.DATE_WITH_TIME_ZONE);
+        } else if (column instanceof BinaryColumn) {
+            meta = new ViewColumnMeta<>(ViewColumnType.BLOB);
+            // This should not happen unless we introduced new types in
+            // Celesta
+        } else {
+            throw new IllegalStateException();
+        }
+        meta.setNullable(column.isNullable());
+        meta.setCelestaDoc(column.getCelestaDoc());
+    }
+
     /**
      * Returns the column that the reference is pointing to.
      *
-     * @return
      */
     public Column<?> getColumn() {
         return column;

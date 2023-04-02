@@ -46,7 +46,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class DbUpdaterExtension implements TestTemplateInvocationContextProvider, BeforeAllCallback, AfterAllCallback {
+public final class DbUpdaterExtension implements TestTemplateInvocationContextProvider,
+        BeforeAllCallback, AfterAllCallback {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DbUpdaterExtension.class);
 

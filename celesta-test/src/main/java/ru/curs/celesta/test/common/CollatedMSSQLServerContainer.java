@@ -27,6 +27,7 @@ public final class CollatedMSSQLServerContainer<SELF extends CollatedMSSQLServer
     }
 
     @Override
+    @SuppressWarnings("RegexpSinglelineJava")
     public void start() {
         withLogConsumer(s -> System.out.println(s.getUtf8String()));
         super.start();
