@@ -464,25 +464,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
                     }
                 }
             } else {
-                defaultValue = defaultSource.replace("default", "").trim();
-
-                if (BooleanColumn.class.equals(dbColumnInfo.getType())) {
-                    defaultValue = "0".equals(defaultValue) ? "'FALSE'" : "'TRUE'";
-                } else if (DateTimeColumn.class.equals(dbColumnInfo.getType())) {
-                    if (FireBirdConstants.CURRENT_TIMESTAMP.equalsIgnoreCase(defaultValue)) {
-                        defaultValue = "GETDATE()";
-                    } else {
-                        Matcher m = DATE_PATTERN.matcher(defaultValue);
-                        if (m.find()) {
-                            defaultValue = String.format("'%s%s%s'", m.group(3), m.group(2), m.group(1));
-                        }
-                    }
-                } else if (BinaryColumn.class.equals(dbColumnInfo.getType())) {
-                    Matcher m = HEX_STRING.matcher(defaultValue);
-                    if (m.find()) {
-                        defaultValue = "0x" + m.group(1);
-                    }
-                }
+                defaultValue = getDefaultValue(dbColumnInfo, defaultSource);
             }
 
         }
@@ -490,6 +472,29 @@ public final class FirebirdAdaptor extends DBAdaptor {
         if (defaultValue != null) {
             dbColumnInfo.setDefaultValue(defaultValue);
         }
+    }
+
+    private static String getDefaultValue(DbColumnInfo dbColumnInfo, String defaultSource) {
+        String defaultValue = defaultSource.replace("default", "").trim();
+
+        if (BooleanColumn.class.equals(dbColumnInfo.getType())) {
+            defaultValue = "0".equals(defaultValue) ? "'FALSE'" : "'TRUE'";
+        } else if (DateTimeColumn.class.equals(dbColumnInfo.getType())) {
+            if (FireBirdConstants.CURRENT_TIMESTAMP.equalsIgnoreCase(defaultValue)) {
+                defaultValue = "GETDATE()";
+            } else {
+                Matcher m = DATE_PATTERN.matcher(defaultValue);
+                if (m.find()) {
+                    defaultValue = String.format("'%s%s%s'", m.group(3), m.group(2), m.group(1));
+                }
+            }
+        } else if (BinaryColumn.class.equals(dbColumnInfo.getType())) {
+            Matcher m = HEX_STRING.matcher(defaultValue);
+            if (m.find()) {
+                defaultValue = "0x" + m.group(1);
+            }
+        }
+        return defaultValue;
     }
 
     @Override

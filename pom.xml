@@ -316,7 +316,7 @@
                         <version>${maven.checkstyle.plugin.version}</version>
                         <configuration>
                             <configLocation>checkstyle.xml</configLocation>
-                            <failsOnError>false</failsOnError>
+                            <failsOnError>true</failsOnError>
                             <consoleOutput>true</consoleOutput>
                         </configuration>
                         <executions>

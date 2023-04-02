@@ -284,10 +284,8 @@ public final class MSSQLAdaptor extends DBAdaptor {
      * @param conn DB connection
      * @param c    column
      */
-    // CHECKSTYLE:OFF
     @Override
     public DbColumnInfo getColumnInfo(Connection conn, Column<?> c) {
-        // CHECKSTYLE:ON
         try {
             DatabaseMetaData metaData = conn.getMetaData();
             try (ResultSet rs = metaData.getColumns(null, c.getParentTable().getGrain().getName(),
@@ -319,30 +317,7 @@ public final class MSSQLAdaptor extends DBAdaptor {
                         result.setLength(rs.getInt("COLUMN_SIZE"));
                         result.setScale(rs.getInt("DECIMAL_DIGITS"));
                     }
-                    String defaultBody = rs.getString("COLUMN_DEF");
-                    if (defaultBody != null) {
-                        int i = 0;
-                        // Снимаем наружные скобки
-                        while (defaultBody.charAt(i) == '('
-                                && defaultBody.charAt(defaultBody.length() - i - 1) == ')') {
-                            i++;
-                        }
-                        defaultBody = defaultBody.substring(i, defaultBody.length() - i);
-                        if (IntegerColumn.class == result.getType()) {
-                            Pattern p = Pattern.compile("NEXT VALUE FOR \\[.*]\\.\\[(.*)]");
-                            Matcher m = p.matcher(defaultBody);
-                            if (m.matches()) {
-                                String sequenceName = m.group(1);
-                                defaultBody = "NEXTVAL(" + sequenceName + ")";
-                            }
-                        }
-                        if (BooleanColumn.class == result.getType()
-                                || DateTimeColumn.class == result.getType()
-                                || ZonedDateTimeColumn.class == result.getType()) {
-                            defaultBody = defaultBody.toUpperCase();
-                        }
-                        result.setDefaultValue(defaultBody);
-                    }
+                    defineDefaultValue(rs, result);
                     return result;
                 } else {
                     return null;
@@ -352,6 +327,33 @@ public final class MSSQLAdaptor extends DBAdaptor {
             throw new CelestaException(e.getMessage());
         }
 
+    }
+
+    private static void defineDefaultValue(ResultSet rs, DbColumnInfo result) throws SQLException {
+        String defaultBody = rs.getString("COLUMN_DEF");
+        if (defaultBody != null) {
+            int i = 0;
+            // Снимаем наружные скобки
+            while (defaultBody.charAt(i) == '('
+                    && defaultBody.charAt(defaultBody.length() - i - 1) == ')') {
+                i++;
+            }
+            defaultBody = defaultBody.substring(i, defaultBody.length() - i);
+            if (IntegerColumn.class == result.getType()) {
+                Pattern p = Pattern.compile("NEXT VALUE FOR \\[.*]\\.\\[(.*)]");
+                Matcher m = p.matcher(defaultBody);
+                if (m.matches()) {
+                    String sequenceName = m.group(1);
+                    defaultBody = "NEXTVAL(" + sequenceName + ")";
+                }
+            }
+            if (BooleanColumn.class == result.getType()
+                    || DateTimeColumn.class == result.getType()
+                    || ZonedDateTimeColumn.class == result.getType()) {
+                defaultBody = defaultBody.toUpperCase();
+            }
+            result.setDefaultValue(defaultBody);
+        }
     }
 
     @Override

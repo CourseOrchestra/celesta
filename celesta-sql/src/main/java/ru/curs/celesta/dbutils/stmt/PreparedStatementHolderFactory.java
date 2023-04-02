@@ -15,7 +15,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public class PreparedStatementHolderFactory {
+public final class PreparedStatementHolderFactory {
+
+    private PreparedStatementHolderFactory() {
+    }
 
     public static MaskedStatementHolder createInsertHolder(BasicTable meta, DBAdaptor dbAdaptor, Connection conn) {
         return new MaskedStatementHolder() {
@@ -66,6 +69,7 @@ public class PreparedStatementHolderFactory {
     }
 
     //TODO:MUST BE REFACTORED!!!
+    @SuppressWarnings("ParameterNumber")
     public static PreparedStmtHolder createFindSetHolder(
             DBAdaptor dbAdaptor, Connection conn, Supplier<FromClause> fromClauseSupplier,
             Supplier<FromTerm> fromTermSupplier, Supplier<WhereTerm> whereTermSupplier,

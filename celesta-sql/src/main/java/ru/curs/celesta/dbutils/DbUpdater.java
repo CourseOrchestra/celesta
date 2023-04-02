@@ -542,18 +542,7 @@ public abstract class DbUpdater<T extends ICallContext> {
         // For versioned tables synchronize 'recversion' field
         if (t instanceof Table) {
             Table tab = (Table) t;
-            if (tab.isVersioned()) {
-                if (dbColumns.contains(VersionedElement.REC_VERSION)) {
-                    DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, tab.getRecVersionField());
-                    if (!ci.reflects(tab.getRecVersionField())) {
-                        dbAdaptor.updateColumn(conn, tab.getRecVersionField(), ci);
-                        modified = true;
-                    }
-                } else {
-                    dbAdaptor.createColumn(conn, tab.getRecVersionField());
-                    modified = true;
-                }
-            }
+            modified = processRecVersion(conn, dbColumns, modified, tab);
         }
 
         // Once again check the primary key, and if needed (in case it doesn't exist or
@@ -565,6 +554,22 @@ public abstract class DbUpdater<T extends ICallContext> {
 
         dbAdaptor.updateVersioningTrigger(conn, t);
 
+        return modified;
+    }
+
+    private boolean processRecVersion(Connection conn, Set<String> dbColumns, boolean modified, Table tab) {
+        if (tab.isVersioned()) {
+            if (dbColumns.contains(VersionedElement.REC_VERSION)) {
+                DbColumnInfo ci = dbAdaptor.getColumnInfo(conn, tab.getRecVersionField());
+                if (!ci.reflects(tab.getRecVersionField())) {
+                    dbAdaptor.updateColumn(conn, tab.getRecVersionField(), ci);
+                    modified = true;
+                }
+            } else {
+                dbAdaptor.createColumn(conn, tab.getRecVersionField());
+                modified = true;
+            }
+        }
         return modified;
     }
 
