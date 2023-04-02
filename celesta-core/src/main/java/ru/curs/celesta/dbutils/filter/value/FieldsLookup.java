@@ -200,7 +200,8 @@ public final class FieldsLookup {
         }
     }
 
-    private FieldsLookup internalAdd(final ColumnMeta<?> column, final ColumnMeta<?> otherColumn) throws ParseException {
+    private FieldsLookup internalAdd(final ColumnMeta<?> column, final ColumnMeta<?> otherColumn)
+            throws ParseException {
 
         final String columnName = column.getName();
         final String otherColumnName = otherColumn.getName();

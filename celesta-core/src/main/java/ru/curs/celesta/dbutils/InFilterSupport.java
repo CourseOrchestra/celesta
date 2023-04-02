@@ -5,7 +5,7 @@ import ru.curs.celesta.dbutils.filter.value.FieldsLookup;
 
 public interface InFilterSupport {
 
-    FieldsLookup setIn(BasicCursor otherCursor) ;
+    FieldsLookup setIn(BasicCursor otherCursor);
     In getIn();
 
 }
