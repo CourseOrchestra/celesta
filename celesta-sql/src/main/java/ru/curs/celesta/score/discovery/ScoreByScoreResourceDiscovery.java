@@ -98,7 +98,6 @@ public final class ScoreByScoreResourceDiscovery implements ScoreDiscovery {
     Namespace getGrainNamespace(String grainPath) {
 
         String[] parts = grainPath.split("/");
-        
         return Arrays.stream(parts, 0, parts.length - 1)
                 .map(String::toLowerCase)
                 .reduce((ns1, ns2) -> ns1 + "." + ns2)

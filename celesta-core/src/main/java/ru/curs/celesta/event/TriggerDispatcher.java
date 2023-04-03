@@ -23,7 +23,8 @@ public final class TriggerDispatcher {
         Arrays.stream(TriggerType.values()).forEach(t -> triggerMap.put(t, new HashMap<>()));
     }
 
-    public <T extends Cursor> void registerTrigger(TriggerType type, Class<T> cursorClass, Consumer<? super T> consumer) {
+    public <T extends Cursor> void registerTrigger(TriggerType type, Class<T> cursorClass,
+                                                   Consumer<? super T> consumer) {
         Map<Class<? extends Cursor>, List<Consumer<?>>> cursorClassMap = triggerMap.get(type);
         cursorClassMap.computeIfAbsent(cursorClass, s -> new ArrayList<>()).add(consumer);
     }

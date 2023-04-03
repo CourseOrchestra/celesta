@@ -3,6 +3,7 @@ package ru.curs.celesta.dbutils.term;
 import ru.curs.celesta.score.BasicTable;
 import ru.curs.celesta.score.TableElement;
 
+@SuppressWarnings("HideUtilityClassConstructor")
 public class CsqlWhereTermsMaker {
 
     public static WhereTerm getPKWhereTermForGet(TableElement t)  {

@@ -82,7 +82,6 @@ public abstract class DdlGenerator {
      * Generates SQL for schema creation in the DB.
      *
      * @param name  schema names
-     * @return
      */
     Optional<String> createSchema(String name) {
         String sql = String.format("create schema \"%s\"", name);
@@ -94,7 +93,6 @@ public abstract class DdlGenerator {
      * Generates SQL for sequence creation in the DB.
      *
      * @param s sequence definition
-     * @return
      */
     List<String> createSequence(SequenceElement s) {
         String sql = String.format(
@@ -103,7 +101,7 @@ public abstract class DdlGenerator {
             generateArgumentsForCreateSequenceExpression(s)
         );
 
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     /**
@@ -111,7 +109,6 @@ public abstract class DdlGenerator {
      *
      * @param schemaName  schema name
      * @param viewName  view name
-     * @return
      */
     String dropView(String schemaName, String viewName) {
         String sql = String.format("DROP VIEW %s", tableString(schemaName, viewName));
@@ -175,7 +172,7 @@ public abstract class DdlGenerator {
                 generateArgumentsForCreateSequenceExpression(s, SequenceElement.Argument.START_WITH)
         );
 
-        return Arrays.asList(sql);
+        return Collections.singletonList(sql);
     }
 
     /**
@@ -537,7 +534,6 @@ public abstract class DdlGenerator {
     /**
      * Returns a translator from CelestaSQL language to the language of desired DB dialect.
      *
-     * @return
      */
     abstract SQLGenerator getViewSQLGenerator();
 
@@ -553,7 +549,6 @@ public abstract class DdlGenerator {
      * Returns an SQL with the rounding function of timestamp to date.
      *
      * @param dateStr  value that has to be rounded
-     * @return
      */
     abstract String truncDate(String dateStr);
 }

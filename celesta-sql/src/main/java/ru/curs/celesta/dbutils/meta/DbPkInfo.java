@@ -14,7 +14,7 @@ import java.util.List;
  * @since 2017-05-10
  */
 public final class DbPkInfo {
-  private final DBAdaptor dbAdaptor;  
+  private final DBAdaptor dbAdaptor;
 
   private String name;
   private final List<String> columnNames = new LinkedList<>();

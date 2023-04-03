@@ -162,19 +162,23 @@ public final class DbColumnInfo {
 
         // If there's an empty default in data, and non-empty one in metadata -- don't check
         if (defaultValue.isEmpty()) {
-            if (type == DateTimeColumn.class) {
-                //do not forget DateTime's special case
-                DateTimeColumn dtc = (DateTimeColumn) value;
-                return dtc.getDefaultValue() == null && !dtc.isGetdate();
-            } else if (type == IntegerColumn.class) {
-                IntegerColumn ic = (IntegerColumn) value;
-                return ic.getDefaultValue() == null && ic.getSequence() == null;
-            } else {
-                return value.getDefaultValue() == null;
-            }
+            return checkEmptyDefault(value);
         }
         // A case of a non-empty default-value in data.
         return checkDefault(value);
+    }
+
+    private boolean checkEmptyDefault(Column<?> value) {
+        if (type == DateTimeColumn.class) {
+            //do not forget DateTime's special case
+            DateTimeColumn dtc = (DateTimeColumn) value;
+            return dtc.getDefaultValue() == null && !dtc.isGetdate();
+        } else if (type == IntegerColumn.class) {
+            IntegerColumn ic = (IntegerColumn) value;
+            return ic.getDefaultValue() == null && ic.getSequence() == null;
+        } else {
+            return value.getDefaultValue() == null;
+        }
     }
 
     private boolean checkDefault(Column<?> value) {
