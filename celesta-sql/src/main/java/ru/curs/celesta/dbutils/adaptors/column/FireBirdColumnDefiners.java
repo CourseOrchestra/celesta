@@ -22,12 +22,12 @@ class FireBirdIntegerColumnDefiner extends FireBirdColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         IntegerColumn ic = (IntegerColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -45,12 +45,12 @@ class FireBirdFloatingColumnDefiner extends FireBirdColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         FloatingColumn ic = (FloatingColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -67,14 +67,14 @@ class FireBirdDecimalColumnDefiner extends FireBirdColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String fieldType = String.format("%s(%s,%s)", dbFieldType(), dc.getPrecision(), dc.getScale());
         return join(c.getQuotedName(), fieldType);
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         DecimalColumn dc = (DecimalColumn) c;
         String defaultStr = "";
         if (dc.getDefaultValue() != null) {
@@ -86,7 +86,7 @@ class FireBirdDecimalColumnDefiner extends FireBirdColumnDefiner {
 
 class FireBirdBooleanColumnDefiner extends FireBirdColumnDefiner {
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
@@ -96,7 +96,7 @@ class FireBirdBooleanColumnDefiner extends FireBirdColumnDefiner {
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         BooleanColumn ic = (BooleanColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -106,7 +106,7 @@ class FireBirdBooleanColumnDefiner extends FireBirdColumnDefiner {
     }
 
     @Override
-    public String getFullDefinition(Column c) {
+    public String getFullDefinition(Column<?> c) {
         String check = String.format("check (%s in (0, 1))", c.getQuotedName());
         return join(getInternalDefinition(c), getDefaultDefinition(c), nullable(c), check);
     }
@@ -119,14 +119,14 @@ class FireBirdStringColumnDefiner extends FireBirdColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String fieldType = ic.isMax() ? "blob sub_type text" : String.format("%s(%s)", dbFieldType(), ic.getLength());
         return join(c.getQuotedName(), fieldType);
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         StringColumn ic = (StringColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -143,12 +143,12 @@ class FireBirdBinaryColumnDefiner extends FireBirdColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         BinaryColumn ic = (BinaryColumn) c;
         String defaultStr = "";
         if (ic.getDefaultValue() != null) {
@@ -166,12 +166,12 @@ class FireBirdDateTimeColumnDefiner extends FireBirdColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         DateTimeColumn ic = (DateTimeColumn) c;
         String defaultStr = "";
         if (ic.isGetdate()) {
@@ -192,12 +192,12 @@ class FireBirdZonedDateTimeColumnDefiner extends FireBirdColumnDefiner {
     }
 
     @Override
-    public String getInternalDefinition(Column c) {
+    public String getInternalDefinition(Column<?> c) {
         return join(c.getQuotedName(), dbFieldType());
     }
 
     @Override
-    public String getDefaultDefinition(Column c) {
+    public String getDefaultDefinition(Column<?> c) {
         return "";
     }
 }

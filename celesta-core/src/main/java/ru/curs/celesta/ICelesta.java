@@ -24,7 +24,6 @@ public interface ICelesta extends AutoCloseable {
     /**
      * Returns Celesta metadata (tables description).
      *
-     *  @return
      */
     Score getScore();
 
@@ -33,7 +32,6 @@ public interface ICelesta extends AutoCloseable {
      * it makes sense using this object as read only, dynamic change of these
      * properties does lead to nothing.
      *
-     * @return
      */
     Properties getSetupProperties();
 

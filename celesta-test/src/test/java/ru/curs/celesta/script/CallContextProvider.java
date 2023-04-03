@@ -122,7 +122,7 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
         return Celesta.createInstance(params);
     }
 
-    private static Celesta celestaFromContainer(JdbcDatabaseContainer container) {
+    private static Celesta celestaFromContainer(JdbcDatabaseContainer<?> container) {
         container.start();
         Properties properties = new Properties();
         properties.put("score.path", "score");

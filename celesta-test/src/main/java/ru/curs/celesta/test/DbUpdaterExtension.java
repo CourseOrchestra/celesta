@@ -131,7 +131,7 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
         MSSQLServerContainer<?> mssqlServerContainer = ContainerUtils.MSSQL;
         mssqlServerContainer.start();
         containers.put(DBType.MSSQL, mssqlServerContainer);
-        FirebirdContainer firebirdContainer = ContainerUtils.FIREBIRD;
+        FirebirdContainer<?> firebirdContainer = ContainerUtils.FIREBIRD;
         firebirdContainer.start();
         containers.put(DBType.FIREBIRD, firebirdContainer);
 

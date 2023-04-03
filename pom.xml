@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ru.curs</groupId>
@@ -70,7 +71,7 @@
         <testcontainers.firebird.version>1.3.0</testcontainers.firebird.version>
 
         <!--plugin versions -->
-        <spotbugs.maven.plugin.version>3.1.8</spotbugs.maven.plugin.version>
+        <spotbugs.maven.plugin.version>4.7.3.3</spotbugs.maven.plugin.version>
         <jacoco.version>0.8.8</jacoco.version>
         <javacc.maven.plugin.version>3.0.1</javacc.maven.plugin.version>
         <maven.assembly.plugin.version>3.5.0</maven.assembly.plugin.version>
@@ -215,6 +216,16 @@
                         <source>1.8</source>
                         <target>1.8</target>
                         <encoding>utf-8</encoding>
+                        <compilerArgs>
+                            <arg>-Xlint:varargs</arg>
+                            <arg>-Xlint:rawtypes</arg>
+                            <arg>-Xlint:unchecked</arg>
+                            <arg>-Xlint:static</arg>
+                            <arg>-Xlint:overrides</arg>
+                            <arg>-Xlint:empty</arg>
+                            <arg>-Xlint:cast</arg>
+                            <arg>-Werror</arg>
+                        </compilerArgs>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -339,34 +350,18 @@
                     <plugin>
                         <groupId>com.github.spotbugs</groupId>
                         <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>${spotbugs.maven.plugin.version}</version>
                         <configuration>
+                            <effort>Max</effort>
                             <excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
                         </configuration>
                         <executions>
                             <execution>
-                                <id>check</id>
-                                <phase>verify</phase>
                                 <goals>
-                                    <goal>spotbugs</goal>
+                                    <goal>check</goal>
                                 </goals>
                             </execution>
                         </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-site-plugin</artifactId>
-                        <configuration>
-                            <reportPlugins>
-                                <plugin>
-                                    <groupId>com.github.spotbugs</groupId>
-                                    <artifactId>spotbugs-maven-plugin</artifactId>
-                                    <configuration>
-                                        <effort>Max</effort>
-                                        <threshold>Low</threshold>
-                                    </configuration>
-                                </plugin>
-                            </reportPlugins>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -386,6 +381,15 @@
                                 </reports>
                             </reportSet>
                         </reportSets>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>${spotbugs.maven.plugin.version}</version>
+                        <configuration>
+                            <effort>Max</effort>
+                            <threshold>Low</threshold>
+                        </configuration>
                     </plugin>
                 </plugins>
             </reporting>

@@ -155,7 +155,7 @@ public final class CursorGenerator {
 
         cursorClass.addFields(buildMetaFields(ge));
 
-        cursorClass.addMethods(buildConstructors(ge, columnsClassType));
+        cursorClass.addMethods(buildConstructors(ge));
 
         //FIELDS
         if (ge instanceof DataGrainElement) {
@@ -214,7 +214,7 @@ public final class CursorGenerator {
             cursorClass.addMethod(buildIterator(classType));
         }
 
-        cursorClass.addMethods(buildGrainNameAndObjectName(ge));
+        cursorClass.addMethods(buildGrainNameAndObjectName());
 
         JavaFile javaFile = JavaFile.builder(sourcePackage, cursorClass.build())
                 .skipJavaLangImports(true)
@@ -342,7 +342,7 @@ public final class CursorGenerator {
                 ).collect(Collectors.toList());
     }
 
-    private static List<MethodSpec> buildConstructors(GrainElement ge, TypeName columnsClassType) {
+    private static List<MethodSpec> buildConstructors(GrainElement ge) {
 
         List<MethodSpec> results = new ArrayList<>();
 
@@ -459,7 +459,7 @@ public final class CursorGenerator {
         return builder.build();
     }
 
-    private static List<MethodSpec> buildGrainNameAndObjectName(GrainElement ge) {
+    private static List<MethodSpec> buildGrainNameAndObjectName() {
         MethodSpec grainName = MethodSpec.methodBuilder("_grainName")
                 .addAnnotation(Override.class)
                 .returns(String.class)
@@ -741,6 +741,7 @@ public final class CursorGenerator {
         return builder.build();
     }
 
+    @SuppressWarnings("rawtypes")
     private MethodSpec buildCurrentValues(Map<String, ? extends ColumnMeta<?>> columns) {
         ArrayTypeName resultType = ArrayTypeName.of(Object.class);
 

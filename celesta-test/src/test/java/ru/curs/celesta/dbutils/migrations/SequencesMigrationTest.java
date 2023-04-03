@@ -38,7 +38,7 @@ public class SequencesMigrationTest {
         ConnectionPool connectionPool = DbUpdaterAccessor.getConnectionPool(dbUpdater1);
         AbstractScore abstractScore = DbUpdaterAccessor.getScore(dbUpdater1);
 
-        Column column = abstractScore.getGrain("manualIntPkToSeqBased")
+        Column<?> column = abstractScore.getGrain("manualIntPkToSeqBased")
                 .getTable("t")
                 .getColumn("id");
 

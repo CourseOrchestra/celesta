@@ -7,7 +7,7 @@ import ru.curs.celesta.score.Column;
  */
 public abstract class FireBirdColumnDefiner extends ColumnDefiner {
 
-    public abstract String getInternalDefinition(Column c);
+    public abstract String getInternalDefinition(Column<?> c);
 
     /**
      * Returns full definition of the column (for column creation).
@@ -15,12 +15,12 @@ public abstract class FireBirdColumnDefiner extends ColumnDefiner {
      * @param c column.
      */
     @Override
-    public String getFullDefinition(Column c) {
+    public String getFullDefinition(Column<?> c) {
         return join(getInternalDefinition(c), getDefaultDefinition(c), nullable(c));
     }
 
     @Override
-    public final String getMainDefinition(Column c) {
+    public final String getMainDefinition(Column<?> c) {
         return join(getInternalDefinition(c), nullable(c));
     }
 
@@ -31,7 +31,7 @@ public abstract class FireBirdColumnDefiner extends ColumnDefiner {
      * @return  "null" | "not null"
      */
     @Override
-    public String nullable(Column c) {
+    public String nullable(Column<?> c) {
         return c.isNullable() ? "" : "not null";
     }
 }

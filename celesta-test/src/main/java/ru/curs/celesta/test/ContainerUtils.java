@@ -44,6 +44,7 @@ public final class ContainerUtils {
     private static final String DROP_OBJECT_FROM_ORACLE_TEMPLATE = "DROP %s %s";
     private static final String DROP_TYPE_FROM_ORACLE_TEMPLATE = "DROP TYPE %s FORCE";
 
+    @SuppressWarnings("rawtypes")
     private static final Map<Class<? extends JdbcDatabaseContainer>, Runnable> CLEAN_UP_MAP = new HashMap<>();
 
     static {
