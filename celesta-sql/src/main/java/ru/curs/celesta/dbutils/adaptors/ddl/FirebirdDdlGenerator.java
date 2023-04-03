@@ -998,6 +998,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     private List<String> updateColType(Column<?> c, DbColumnInfo actual) {
         final List<String> result = new ArrayList<>();
 
+        @SuppressWarnings("unchecked")
         final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
 
         final String colType;

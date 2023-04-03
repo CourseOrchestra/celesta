@@ -35,7 +35,7 @@ public final class ColumnDefinerFactory {
                          MS_SQL_METHODS = new HashMap<>();
     private static final Map<Class<? extends Column<?>>, Supplier<? extends ColumnDefiner>>
                          ORA_METHODS = new HashMap<>();
-    private static final Map<Class<? extends Column>, Supplier<? extends ColumnDefiner>>
+    private static final Map<Class<? extends Column<?>>, Supplier<? extends ColumnDefiner>>
                         FIREBIRD_METHODS = new HashMap<>();
 
     static {
@@ -116,7 +116,6 @@ public final class ColumnDefinerFactory {
      *
      * @param dbType  DB type.
      * @param cls  column class
-     * @return
      */
     public static ColumnDefiner getColumnDefiner(DBType dbType, Class<? extends Column<?>> cls) {
         Map<Class<? extends Column<?>>, ColumnDefiner> definers = COLUMN_DEFINERS.computeIfAbsent(

@@ -12,7 +12,6 @@ public abstract class ColumnDefiner {
      * Returns column field type, e.g. "boolean", "double","int" etc.
      * depending on the DBMS in question.
      *
-     * @return
      */
     public abstract String dbFieldType();
 

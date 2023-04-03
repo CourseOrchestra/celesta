@@ -12,19 +12,19 @@ class TableMetaModificationTest {
         Grain grain = new Grain(score, "test");
         GrainPart gp = new GrainPart(grain, true, null);
         BasicTable tableA = new Table(gp, "a");
-        Column a1 = new IntegerColumn(tableA, "a1");
+        IntegerColumn a1 = new IntegerColumn(tableA, "a1");
         a1.setNullableAndDefault(false, "0");
-        Column a2 = new IntegerColumn(tableA, "a2");
+        IntegerColumn a2 = new IntegerColumn(tableA, "a2");
         a2.setNullableAndDefault(false, "0");
         new IntegerColumn(tableA, "a3");
-        Column a4 = new IntegerColumn(tableA, "a4");
+        IntegerColumn a4 = new IntegerColumn(tableA, "a4");
         tableA.addPK("a1");
         tableA.finalizePK();
         new Index(tableA, "IA", new String[]{"a2"});
 
 
         BasicTable tableB = new Table(gp, "b");
-        Column b1 = new IntegerColumn(tableB, "b1");
+        IntegerColumn b1 = new IntegerColumn(tableB, "b1");
         b1.setNullableAndDefault(false, "0");
         tableB.addPK("b1");
         tableB.finalizePK();

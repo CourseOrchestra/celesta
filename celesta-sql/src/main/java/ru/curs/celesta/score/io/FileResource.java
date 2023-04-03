@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -46,7 +47,10 @@ public final class FileResource implements Resource {
 
     @Override
     public OutputStream getOutputStream() throws IOException {
-        Files.createDirectories(file.toPath().getParent());
+        final Path parent = file.toPath().getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
         return Files.newOutputStream(file.toPath());
     }
 
