@@ -76,29 +76,21 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     }
 
 
+
     @Override
     List<String> createSequence(SequenceElement s) {
         List<String> result = new ArrayList<>();
 
-        String fullSequenceName = sequenceString(s.getGrain().getName(), s.getName());
-
-        String createSql = String.format("CREATE SEQUENCE %s", fullSequenceName);
+        String createSql = String.format(
+                "CREATE SEQUENCE %s %s",
+                sequenceString(s.getGrain().getName(), s.getName()),
+                generateArgumentsForCreateSequenceExpression(s,
+                        SequenceElement.Argument.MINVALUE,
+                        SequenceElement.Argument.MAXVALUE,
+                        SequenceElement.Argument.CYCLE,
+                        SequenceElement.Argument.INCREMENT_BY));
 
         result.add(createSql);
-
-        if (s.getArguments().containsKey(SequenceElement.Argument.START_WITH)) {
-            Long initialStartWith = (Long) s.getArguments().get(SequenceElement.Argument.START_WITH);
-            Long incrementBy = (Long) s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
-            Long startWith = initialStartWith - incrementBy;
-
-            String startWithSql = String.format(
-                    "ALTER SEQUENCE %s RESTART WITH %s",
-                    fullSequenceName,
-                    startWith
-            );
-
-            result.add(startWithSql);
-        }
 
         String createSeqCurValueProcSql = this.createSeqCurValueProcSql(s);
         result.add(createSeqCurValueProcSql);
