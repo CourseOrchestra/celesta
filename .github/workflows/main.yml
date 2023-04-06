@@ -9,7 +9,7 @@ on:
     branches: [ dev ]
 
 jobs:
-  build-docs:
+  build-main:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
