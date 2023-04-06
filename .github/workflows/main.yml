@@ -27,5 +27,12 @@ jobs:
       - name: Copy Maven settings
         run: cp .settings.xml ~/.m2/settings.xml 
 
-      - name: Build Celesta
-        run: mvn clean verify -P dev -pl !celesta-documentation
+      - name: Build Celesta without running the tests
+        run: mvn clean verify -P dev -pl !celesta-documentation -DskipTests
+
+      - name: Build Celesta with tests
+        run: mvn verify -P dev -pl !celesta-documentation
+
+      - name: Publish Test Report
+        if: success() || failure()
+        uses: scacap/action-surefire-report@v1
