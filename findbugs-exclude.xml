@@ -71,7 +71,7 @@
     <Match>
         <!-- A hacked-up class to support Firebird in tests -->
         <Class name="ru.curs.celesta.test.common.AdvancedFireBirdContainer"/>
-        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE,ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE,ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD,EQ_DOESNT_OVERRIDE_EQUALS"/>
     </Match>
     <Match>
         <!-- This public field is written in a subclass -->

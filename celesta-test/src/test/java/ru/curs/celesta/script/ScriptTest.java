@@ -17,6 +17,10 @@ public interface ScriptTest {
         callContextProvider.startCelestas();
     }
 
+    @AfterAll
+    default void shutDownH2() {
+        callContextProvider.shutDownH2();
+    }
     /*
     @AfterAll
     default void stopCelestas() {
