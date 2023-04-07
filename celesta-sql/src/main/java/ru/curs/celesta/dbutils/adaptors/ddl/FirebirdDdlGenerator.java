@@ -76,23 +76,25 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     }
 
 
-
     @Override
     List<String> createSequence(SequenceElement s) {
         List<String> result = new ArrayList<>();
 
-        String createSql = String.format(
-                "CREATE SEQUENCE %s %s",
-                sequenceString(s.getGrain().getName(), s.getName()),
-                generateArgumentsForCreateSequenceExpression(s,
-                        SequenceElement.Argument.MINVALUE,
-                        SequenceElement.Argument.MAXVALUE,
-                        SequenceElement.Argument.CYCLE,
-                        SequenceElement.Argument.INCREMENT_BY));
+        String fullSequenceName = sequenceString(s.getGrain().getName(), s.getName());
 
+        Long startwith = (Long) s.getArguments().get(SequenceElement.Argument.START_WITH);
+        Long incrBy = (Long) s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
+        Long maxValue = (Long) s.getArguments().get(SequenceElement.Argument.MAXVALUE);
+        if (incrBy < 0 && startwith == 1) {
+            startwith = maxValue;
+        }
+
+        String createSql = String.format("CREATE SEQUENCE %s START WITH %s", fullSequenceName, startwith - incrBy + 1);
         result.add(createSql);
 
+
         String createSeqCurValueProcSql = this.createSeqCurValueProcSql(s);
+
         result.add(createSeqCurValueProcSql);
 
         String createSeqNextValueProcSql = this.createSeqNextValueProcSql(s);
@@ -990,8 +992,7 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
     private List<String> updateColType(Column<?> c, DbColumnInfo actual) {
         final List<String> result = new ArrayList<>();
 
-        @SuppressWarnings("unchecked")
-        final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
+        @SuppressWarnings("unchecked") final Class<? extends Column<?>> cClass = (Class<Column<?>>) c.getClass();
 
         final String colType;
         final String fullTableName = tableString(
@@ -1147,9 +1148,10 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
                                         return classToExprsMap;
                                     }
                             ).filter(classExprMap ->
-                            classExprMap.get(ParameterRef.class).stream()
-                                    .anyMatch(expr -> this.viewColumnType.equals(expr.getMeta().getColumnType()))
-                    )
+                                    classExprMap.get(ParameterRef.class).stream()
+                                            .anyMatch(expr -> this.viewColumnType
+                                                    .equals(expr.getMeta().getColumnType()))
+                            )
                             .map(classExprMap -> {
                                 Map<Class<? extends Expr>, List<Expr>> result = new HashMap<>();
                                 result.put(

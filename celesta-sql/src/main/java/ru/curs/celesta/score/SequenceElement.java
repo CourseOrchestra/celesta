@@ -160,7 +160,6 @@ public final class SequenceElement extends GrainElement {
     /**
      * Returns a map of all arguments with values for the sequence.
      *
-     * @return
      */
     public Map<Argument, Object> getArguments() {
         return arguments;
@@ -170,7 +169,6 @@ public final class SequenceElement extends GrainElement {
      * Whether the sequence contains the specified argument.
      *
      * @param argument  argument
-     * @return
      */
     public boolean hasArgument(Argument argument) {
         return arguments.containsKey(argument);
@@ -180,7 +178,6 @@ public final class SequenceElement extends GrainElement {
      * Returns value of the specified argument.
      *
      * @param argument  argument
-     * @return
      */
     public Object getArgument(Argument argument) {
         return arguments.get(argument);
@@ -223,7 +220,6 @@ public final class SequenceElement extends GrainElement {
          * Returns SQL for argument with the specified {@code value}.
          *
          * @param value  argument value
-         * @return
          */
         public String getSql(Object value) {
 
