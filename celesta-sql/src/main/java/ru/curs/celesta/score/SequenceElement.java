@@ -109,8 +109,8 @@ public final class SequenceElement extends GrainElement {
         arguments.putIfAbsent(Argument.START_WITH, 1L);
         arguments.putIfAbsent(Argument.INCREMENT_BY, 1L);
 
-        Long startWith = (Long) getArgument(Argument.START_WITH);
-        Long incrementBy = (Long) getArgument(Argument.INCREMENT_BY);
+        Long startWith = getStartWith();
+        Long incrementBy = getIncrementBy();
 
         if (!hasArgument(Argument.MINVALUE)) {
             minValue(startWith);
@@ -160,7 +160,6 @@ public final class SequenceElement extends GrainElement {
     /**
      * Returns a map of all arguments with values for the sequence.
      *
-     * @return
      */
     public Map<Argument, Object> getArguments() {
         return arguments;
@@ -170,7 +169,6 @@ public final class SequenceElement extends GrainElement {
      * Whether the sequence contains the specified argument.
      *
      * @param argument  argument
-     * @return
      */
     public boolean hasArgument(Argument argument) {
         return arguments.containsKey(argument);
@@ -180,10 +178,44 @@ public final class SequenceElement extends GrainElement {
      * Returns value of the specified argument.
      *
      * @param argument  argument
-     * @return
      */
-    public Object getArgument(Argument argument) {
+    private Object getArgument(Argument argument) {
         return arguments.get(argument);
+    }
+
+    /**
+     * Returns STARTS WITH parameter for this SEQUENCE.
+     */
+    public Long getStartWith() {
+        return (Long) arguments.get(Argument.START_WITH);
+    }
+
+    /**
+     * Returns MINVALUE parameter for this SEQUENCE.
+     */
+    public Long getMinValue() {
+        return (Long) arguments.get(Argument.MINVALUE);
+    }
+
+    /**
+     * Returns MAXVALUE parameter for this SEQUENCE.
+     */
+    public Long getMaxValue() {
+        return (Long) arguments.get(Argument.MAXVALUE);
+    }
+
+    /**
+     * Returns INCREMENT BY parameter for this SEQUENCE.
+     */
+    public Long getIncrementBy() {
+        return (Long) arguments.get(Argument.INCREMENT_BY);
+    }
+
+    /**
+     * Returns CYCLE parameter for this SEQUENCE.
+     */
+    public Boolean isCycle() {
+        return (Boolean) arguments.get(Argument.CYCLE);
     }
 
     /**
@@ -223,7 +255,6 @@ public final class SequenceElement extends GrainElement {
          * Returns SQL for argument with the specified {@code value}.
          *
          * @param value  argument value
-         * @return
          */
         public String getSql(Object value) {
 

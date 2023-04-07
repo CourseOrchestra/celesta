@@ -778,7 +778,8 @@ public abstract class BasicCursor extends BasicDataAccessor {
                 }
             }
         } catch (SQLException e) {
-            throw new CelestaException(NAVIGATING_ERROR, e.getMessage());
+            throw new CelestaException(
+                    String.format(NAVIGATING_ERROR, e.getMessage()), e);
         }
         return false;
     }

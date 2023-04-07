@@ -33,6 +33,7 @@ class TestSequences implements ScriptTest {
 
         assertEquals(1L, s.nextValue());
         assertEquals(2L, s.nextValue());
+        assertEquals(3L, s.nextValue());
     }
 
     @TestTemplate
@@ -41,6 +42,7 @@ class TestSequences implements ScriptTest {
 
         assertEquals(3L, s.nextValue());
         assertEquals(4L, s.nextValue());
+        assertEquals(5L, s.nextValue());
     }
 
     @TestTemplate
@@ -49,6 +51,7 @@ class TestSequences implements ScriptTest {
 
         assertEquals(1L, s.nextValue());
         assertEquals(3L, s.nextValue());
+        assertEquals(5L, s.nextValue());
     }
 
     @TestTemplate
@@ -57,6 +60,7 @@ class TestSequences implements ScriptTest {
 
         assertEquals(1L, s.nextValue());
         assertEquals(-1L, s.nextValue());
+        assertEquals(-3L, s.nextValue());
     }
 
     @TestTemplate

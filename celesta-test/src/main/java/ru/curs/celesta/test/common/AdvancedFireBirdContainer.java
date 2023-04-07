@@ -12,7 +12,7 @@ public final class AdvancedFireBirdContainer extends FirebirdContainer<AdvancedF
     private static boolean firstStart = true;
 
     public AdvancedFireBirdContainer() {
-        super("jacobalberty/firebird:4.0");
+        super("jacobalberty/firebird:v4.0");
     }
 
     @Override

@@ -238,7 +238,7 @@ public final class FirebirdAdaptor extends DBAdaptor {
         TableElement t = c.getParentTable();
 
         String sql = String.format(
-                "select first 1 %s from %s where %s;",
+                "select %s from %s where %s fetch first row only;",
                 c.getQuotedName(),
                 tableString(t.getGrain().getName(), t.getName()),
                 where
