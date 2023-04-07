@@ -17,10 +17,11 @@ public interface ScriptTest {
         callContextProvider.startCelestas();
     }
 
+    /*
     @AfterAll
     default void stopCelestas() {
         callContextProvider.stopCelestas();
-    }
+    }*/
 
     @AfterEach
     default void closeContext() {
