@@ -122,16 +122,16 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
 
         final String emptyScorePath = "src/test/resources/emptyScore";
 
-        PostgreSQLContainer<?> postgreSQLContainer = ContainerUtils.POSTGRE_SQL;
+        PostgreSQLContainer<?> postgreSQLContainer = ContainerUtils.getPostgreSQLContainer();
         postgreSQLContainer.start();
         containers.put(DBType.POSTGRESQL, postgreSQLContainer);
-        OracleContainer oracleContainer = ContainerUtils.ORACLE;
+        OracleContainer oracleContainer = ContainerUtils.getOracleContainer();
         oracleContainer.start();
         containers.put(DBType.ORACLE, oracleContainer);
-        MSSQLServerContainer<?> mssqlServerContainer = ContainerUtils.MSSQL;
+        MSSQLServerContainer<?> mssqlServerContainer = ContainerUtils.getMSSQLContainer();
         mssqlServerContainer.start();
         containers.put(DBType.MSSQL, mssqlServerContainer);
-        FirebirdContainer<?> firebirdContainer = ContainerUtils.FIREBIRD;
+        FirebirdContainer<?> firebirdContainer = ContainerUtils.getFireBirdContainer();
         firebirdContainer.start();
         containers.put(DBType.FIREBIRD, firebirdContainer);
 
@@ -164,7 +164,7 @@ public final class DbUpdaterExtension implements TestTemplateInvocationContextPr
         containers.forEach(
                 (b, c) -> {
                     this.connectionPools.get(b).close();
-                    ContainerUtils.cleanUp(c);
+                    c.stop();
                 });
     }
 

@@ -9,7 +9,7 @@ public final class AdvancedFireBirdContainer extends FirebirdContainer<AdvancedF
 
     private static final String EXEC_SQL_TEMPLATE = "./usr/local/firebird/bin/isql -input %s";
 
-    private static boolean firstStart = true;
+    private boolean firstStart = true;
 
     public AdvancedFireBirdContainer() {
         super("jacobalberty/firebird:v4.0");
