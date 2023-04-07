@@ -42,7 +42,6 @@ public abstract class Sequence extends BasicDataAccessor {
     /**
      * Returns the <em>next value</em> of the sequence.
      *
-     * @return
      */
     public final long nextValue() {
         return db().nextSequenceValue(conn(), meta());

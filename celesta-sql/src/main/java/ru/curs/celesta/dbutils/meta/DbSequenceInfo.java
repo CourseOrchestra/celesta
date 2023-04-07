@@ -4,11 +4,6 @@ import ru.curs.celesta.score.SequenceElement;
 
 import java.util.Objects;
 
-import static ru.curs.celesta.score.SequenceElement.Argument.CYCLE;
-import static ru.curs.celesta.score.SequenceElement.Argument.INCREMENT_BY;
-import static ru.curs.celesta.score.SequenceElement.Argument.MAXVALUE;
-import static ru.curs.celesta.score.SequenceElement.Argument.MINVALUE;
-
 /**
  * Information on sequence taken from the database.
  */
@@ -91,10 +86,10 @@ public final class DbSequenceInfo {
     }
 
     public boolean reflects(SequenceElement s) {
-        return !Objects.equals(incrementBy, s.getArgument(INCREMENT_BY))
-                || !Objects.equals(minValue, s.getArgument(MINVALUE))
-                || !Objects.equals(maxValue, s.getArgument(MAXVALUE))
-                || !Objects.equals(isCycle, s.getArgument(CYCLE));
+        return !Objects.equals(incrementBy, s.getIncrementBy())
+                || !Objects.equals(minValue, s.getMinValue())
+                || !Objects.equals(maxValue, s.getMaxValue())
+                || !Objects.equals(isCycle, s.isCycle());
     }
 
 }

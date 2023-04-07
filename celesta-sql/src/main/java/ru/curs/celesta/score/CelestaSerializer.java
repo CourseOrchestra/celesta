@@ -138,29 +138,29 @@ public final class CelestaSerializer {
         }
     }
 
-    void save(SequenceElement s) throws IOException {
+    void save(SequenceElement s) {
 
         writeCelestaDoc(s);
         writer.printf("CREATE SEQUENCE %s ", s.getName());
 
 
         if (s.hasArgument(Argument.START_WITH)) {
-            writer.printf("START WITH %s ", s.getArgument(Argument.START_WITH));
+            writer.printf("START WITH %s ", s.getStartWith());
         }
 
         if (s.hasArgument(Argument.INCREMENT_BY)) {
-            writer.printf("INCREMENT BY %s ", s.getArgument(Argument.INCREMENT_BY));
+            writer.printf("INCREMENT BY %s ", s.getIncrementBy());
         }
 
         if (s.hasArgument(Argument.MINVALUE)) {
-            writer.printf("MINVALUE %s ", s.getArgument(Argument.MINVALUE));
+            writer.printf("MINVALUE %s ", s.getMinValue());
         }
 
         if (s.hasArgument(Argument.MAXVALUE)) {
-            writer.printf("MAXVALUE %s ", s.getArgument(Argument.MAXVALUE));
+            writer.printf("MAXVALUE %s ", s.getMaxValue());
         }
 
-        if (s.hasArgument(Argument.CYCLE) && (Boolean) s.getArgument(Argument.CYCLE)) {
+        if (s.hasArgument(Argument.CYCLE) && s.isCycle()) {
             writer.write("CYCLE ");
         }
 

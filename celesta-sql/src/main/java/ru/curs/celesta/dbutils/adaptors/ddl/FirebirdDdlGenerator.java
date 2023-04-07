@@ -82,9 +82,9 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
 
         String fullSequenceName = sequenceString(s.getGrain().getName(), s.getName());
 
-        Long startwith = (Long) s.getArguments().get(SequenceElement.Argument.START_WITH);
-        Long incrBy = (Long) s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
-        Long maxValue = (Long) s.getArguments().get(SequenceElement.Argument.MAXVALUE);
+        Long startwith = s.getStartWith();
+        Long incrBy = s.getIncrementBy();
+        Long maxValue = s.getMaxValue();
         if (incrBy < 0 && startwith == 1) {
             startwith = maxValue;
         }
@@ -126,10 +126,10 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         String fullSequenceName = sequenceString(s.getGrain().getName(), s.getName());
         String curValueProcName = FirebirdAdaptor.sequenceCurValueProcString(s.getGrain().getName(), s.getName());
 
-        Long incrementBy = (Long) s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
-        Long minValue = (Long) s.getArguments().get(SequenceElement.Argument.MINVALUE);
-        Long maxValue = (Long) s.getArguments().get(SequenceElement.Argument.MAXVALUE);
-        Boolean isCycle = (Boolean) s.getArgument(SequenceElement.Argument.CYCLE);
+        Long incrementBy = s.getIncrementBy();
+        Long minValue = s.getMinValue();
+        Long maxValue = s.getMaxValue();
+        Boolean isCycle =  s.isCycle();
 
         final String resultDeterminingSql;
         final String initValSql = String.format(
@@ -205,10 +205,10 @@ public final class FirebirdDdlGenerator extends DdlGenerator {
         String curValueProcName = FirebirdAdaptor.sequenceCurValueProcString(s.getGrain().getName(), s.getName());
         String nextValueProcName = FirebirdAdaptor.sequenceNextValueProcString(s.getGrain().getName(), s.getName());
 
-        Long incrementBy = (Long) s.getArguments().get(SequenceElement.Argument.INCREMENT_BY);
-        Long minValue = (Long) s.getArguments().get(SequenceElement.Argument.MINVALUE);
-        Long maxValue = (Long) s.getArguments().get(SequenceElement.Argument.MAXVALUE);
-        Boolean isCycle = (Boolean) s.getArgument(SequenceElement.Argument.CYCLE);
+        Long incrementBy = s.getIncrementBy();
+        Long minValue = s.getMinValue();
+        Long maxValue = s.getMaxValue();
+        Boolean isCycle = s.isCycle();
 
         final String resultDeterminingSql;
         final String nextValueSql = String.format(

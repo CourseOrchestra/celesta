@@ -109,8 +109,8 @@ public final class SequenceElement extends GrainElement {
         arguments.putIfAbsent(Argument.START_WITH, 1L);
         arguments.putIfAbsent(Argument.INCREMENT_BY, 1L);
 
-        Long startWith = (Long) getArgument(Argument.START_WITH);
-        Long incrementBy = (Long) getArgument(Argument.INCREMENT_BY);
+        Long startWith = getStartWith();
+        Long incrementBy = getIncrementBy();
 
         if (!hasArgument(Argument.MINVALUE)) {
             minValue(startWith);
@@ -179,8 +179,43 @@ public final class SequenceElement extends GrainElement {
      *
      * @param argument  argument
      */
-    public Object getArgument(Argument argument) {
+    private Object getArgument(Argument argument) {
         return arguments.get(argument);
+    }
+
+    /**
+     * Returns STARTS WITH parameter for this SEQUENCE.
+     */
+    public Long getStartWith() {
+        return (Long) arguments.get(Argument.START_WITH);
+    }
+
+    /**
+     * Returns MINVALUE parameter for this SEQUENCE.
+     */
+    public Long getMinValue() {
+        return (Long) arguments.get(Argument.MINVALUE);
+    }
+
+    /**
+     * Returns MAXVALUE parameter for this SEQUENCE.
+     */
+    public Long getMaxValue() {
+        return (Long) arguments.get(Argument.MAXVALUE);
+    }
+
+    /**
+     * Returns INCREMENT BY parameter for this SEQUENCE.
+     */
+    public Long getIncrementBy() {
+        return (Long) arguments.get(Argument.INCREMENT_BY);
+    }
+
+    /**
+     * Returns CYCLE parameter for this SEQUENCE.
+     */
+    public Boolean isCycle() {
+        return (Boolean) arguments.get(Argument.CYCLE);
     }
 
     /**
