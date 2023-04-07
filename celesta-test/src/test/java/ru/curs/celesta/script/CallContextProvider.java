@@ -106,29 +106,6 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
                 });
     }
 
-
-    public void stopCelestas() {
-
-        celestas.computeIfPresent(Backend.H2,
-                (b, c) -> {
-                    try {
-                        c.getConnectionPool().get().createStatement().execute("SHUTDOWN");
-                    } catch (SQLException ex) {
-                        LOGGER.error("Error during DB shutdown", ex);
-                    }
-                    return null;
-                });
-
-        containers.forEach(
-                (b, c) -> {
-                    this.celestas.get(b).close();
-                    ContainerUtils.cleanUp(c);
-                });
-
-        celestas.clear();
-        containers.clear();
-    }
-
     private static Celesta celestaFromH2() {
         Properties params = new Properties();
         params.setProperty("score.path", "score");
