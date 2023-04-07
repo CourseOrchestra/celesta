@@ -23,12 +23,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FirebirdAdaptorTest extends AbstractAdaptorTest {
 
-    private static FirebirdContainer<?> firebird = ContainerUtils.FIREBIRD;
+    private static FirebirdContainer<?> firebird;
 
     private static FirebirdAdaptor dba;
 
     @BeforeAll
     public static void beforeAll() throws Exception {
+        firebird = ContainerUtils.getFireBirdContainer();
         firebird.start();
 
         Properties params = new Properties();
@@ -59,7 +60,7 @@ public class FirebirdAdaptorTest extends AbstractAdaptorTest {
     @AfterAll
     public static void destroy() {
         dba.connectionPool.close();
-        ContainerUtils.cleanUp(firebird);
+        firebird.stop();
     }
 
     public FirebirdAdaptorTest() throws Exception {

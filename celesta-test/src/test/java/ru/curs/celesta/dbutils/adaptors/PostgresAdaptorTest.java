@@ -20,12 +20,13 @@ import java.util.Properties;
 
 public class PostgresAdaptorTest extends AbstractAdaptorTest {
 
-    public static PostgreSQLContainer<?> postgres = ContainerUtils.POSTGRE_SQL;
+    public static PostgreSQLContainer<?> postgres;
 
     private static PostgresAdaptor dba;
 
     @BeforeAll
     public static void beforeAll() throws Exception {
+        postgres = ContainerUtils.getPostgreSQLContainer();
         postgres.start();
 
         Properties params = new Properties();
@@ -55,7 +56,7 @@ public class PostgresAdaptorTest extends AbstractAdaptorTest {
     @AfterAll
     public static void afterAll() {
         dba.connectionPool.close();
-        ContainerUtils.cleanUp(postgres);
+        postgres.stop();
     }
 
     public PostgresAdaptorTest() throws Exception {

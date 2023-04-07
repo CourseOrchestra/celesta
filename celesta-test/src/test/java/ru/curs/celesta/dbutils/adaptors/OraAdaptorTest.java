@@ -27,12 +27,13 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
         Locale.setDefault(Locale.US);
     }
 
-    public static OracleContainer oracle = ContainerUtils.ORACLE;
+    public static OracleContainer oracle;
 
     private static OraAdaptor dba;
 
     @BeforeAll
     public static void beforeAll() throws Exception {
+        oracle = ContainerUtils.getOracleContainer();
         oracle.start();
 
         Properties params = new Properties();
@@ -62,7 +63,7 @@ public class OraAdaptorTest extends AbstractAdaptorTest {
     @AfterAll
     public static void afterAll() {
         dba.connectionPool.close();
-        ContainerUtils.cleanUp(oracle);
+        oracle.stop();
     }
 
     public OraAdaptorTest() throws Exception {

@@ -23,22 +23,22 @@ public final class ContainerUtils {
     /**
      * PostgreSQL container.
      */
-    public static final PostgreSQLContainer<?> POSTGRE_SQL = new PostgreSQLContainer<>("postgres:14.0");
+    public static final PostgreSQLContainer<?> POSTGRE_SQL = getPostgreSQLContainer();
+
     /**
      * Oracle container.
      */
-    public static final OracleContainer ORACLE =
-            new OracleContainer("gvenzl/oracle-xe:21.3.0");
+    public static final OracleContainer ORACLE = getOracleContainer();
+
     /**
      * MS SQL Server container.
      */
-    public static final CollatedMSSQLServerContainer<?> MSSQL = new CollatedMSSQLServerContainer<>()
-        .withCollation("Cyrillic_General_CI_AI");
+    public static final CollatedMSSQLServerContainer<?> MSSQL = getMSSQLContainer();
+
     /**
      * Firebird container.
      */
-    public static final AdvancedFireBirdContainer FIREBIRD = new AdvancedFireBirdContainer();
-
+    public static final AdvancedFireBirdContainer FIREBIRD = getFireBirdContainer();
 
     private static final String DROP_TABLE_FROM_ORACLE_TEMPLATE = "DROP TABLE %s CASCADE CONSTRAINTS";
     private static final String DROP_OBJECT_FROM_ORACLE_TEMPLATE = "DROP %s %s";
@@ -55,6 +55,23 @@ public final class ContainerUtils {
     }
 
     private ContainerUtils() {
+    }
+
+    public static PostgreSQLContainer<?> getPostgreSQLContainer() {
+        return new PostgreSQLContainer<>("postgres:14.0");
+    }
+
+    public static OracleContainer getOracleContainer() {
+        return new OracleContainer("gvenzl/oracle-xe:21.3.0");
+    }
+
+    public static CollatedMSSQLServerContainer<?> getMSSQLContainer() {
+        return new CollatedMSSQLServerContainer<>()
+                .withCollation("Cyrillic_General_CI_AI");
+    }
+
+    public static AdvancedFireBirdContainer getFireBirdContainer() {
+        return new AdvancedFireBirdContainer();
     }
 
     public static void cleanUp(JdbcDatabaseContainer<?> container) {
