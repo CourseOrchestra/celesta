@@ -24,16 +24,20 @@ jobs:
         with:
           token: ${{ secrets.TC_CLOUD_TOKEN }}
 
-      - name: Copy Maven settings
-        run: cp .settings.xml ~/.m2/settings.xml 
-
-      - name: Build Celesta with tests
+      - name: Build and test Celesta
         run: mvn verify -P dev -pl !celesta-documentation
 
-      - name: Publish Test Report
+      - name: Publish test report
         uses: dorny/test-reporter@v1
         if: success() || failure()    
         with:
-          name: Junit Tests           
+          name: Test report          
           path: '**/surefire-reports/**/*.xml'    
           reporter: java-junit
+
+      - name: Publish test coverage
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: test-coverage
+          path: coverage-report/target/site/jacoco-aggregate
