@@ -1,0 +1,17 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+workdir=celesta-documentation/src/main/asciidoc/$1
+echo "Running spellchecking in $workdir..."
+result=$(for f in $(find $workdir -name '*.adoc'); do 
+  cat $f | sed "s/-/ /g" | aspell --run-together --run-together-limit=5 --master=$1 --personal=./dict-$1 list; 
+done | sort | uniq)
+if [[ $result ]]; then
+	echo "The following words are probably misspelled:" 
+	echo "-----"
+	echo $result
+	echo "-----"
+	echo "Please correct the spelling or add the words above to the local dictionary."
+	exit 1;
+else
+	echo "Spellchecking complete, no misspelled words found."
+fi

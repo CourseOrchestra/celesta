@@ -9,7 +9,7 @@ on:
     branches: [ dev ]
 
 jobs:
-  build:
+  build-docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -31,8 +31,8 @@ jobs:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
-      - name: Install Graphviz
-        run: sudo apt-get install -y graphviz
+      - name: Install apell and graphviz
+        run: sudo apt-get install -y aspell-en aspell-ru graphviz
       - name: Install jsyntrax
         run: |
           wget https://github.com/atp-mipt/jsyntrax/releases/download/1.1/jsyntrax-1.1-syntrax.zip -nv -O jsyntrax.zip
@@ -41,8 +41,13 @@ jobs:
           sudo chmod +x $(pwd)/jsyntrax-1.1/bin/syntrax
           sudo ln -s $(pwd)/jsyntrax-1.1/bin/syntrax /usr/local/bin/syntrax
           JAVA_HOME=$JDK_11; syntrax --version
-      - name: Copy Maven settings
-        run: cp .settings.xml ~/.m2/settings.xml 
+      
+      - name: Spellcheck
+        run: |
+          chmod +x spellcheck 
+          ./spellcheck en
+          ./spellcheck ru
+      
       - name: Build Javadoc
         run: mvn javadoc:aggregate -pl :celesta-parent,:celesta-sql,:celesta-core,:celesta-system-services,:celesta-unit
       - name: Build documentation

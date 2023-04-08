@@ -20,12 +20,13 @@ import java.util.Properties;
 
 public class MSSQLAdaptorTest extends AbstractAdaptorTest {
 
-    public static CollatedMSSQLServerContainer<?> msSql = ContainerUtils.MSSQL;
+    public static CollatedMSSQLServerContainer<?> msSql;
 
     private static MSSQLAdaptor dba;
 
     @BeforeAll
     public static void beforeAll() throws Exception {
+        msSql = ContainerUtils.getMSSQLContainer();
         msSql.start();
 
         Properties params = new Properties();
@@ -55,7 +56,7 @@ public class MSSQLAdaptorTest extends AbstractAdaptorTest {
     @AfterAll
     public static void destroy() {
         dba.connectionPool.close();
-        ContainerUtils.cleanUp(msSql);
+        msSql.stop();
     }
 
     public MSSQLAdaptorTest() throws Exception {

@@ -10,6 +10,7 @@ import ru.curs.celesta.SystemCallContext;
 import ru.curs.celesta.test.ContainerUtils;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -93,26 +94,16 @@ public class CallContextProvider implements TestTemplateInvocationContextProvide
 
     }
 
-    public void stopCelestas() {
-
+    public void shutDownH2() {
         celestas.computeIfPresent(Backend.H2,
                 (b, c) -> {
-                    try {
-                        c.getConnectionPool().get().createStatement().execute("SHUTDOWN");
+                    try (Statement stmt = c.getConnectionPool().get().createStatement()){
+                        stmt.execute("SHUTDOWN");
                     } catch (SQLException ex) {
                         LOGGER.error("Error during DB shutdown", ex);
                     }
                     return null;
                 });
-
-        containers.forEach(
-                (b, c) -> {
-                    this.celestas.get(b).close();
-                    ContainerUtils.cleanUp(c);
-                });
-
-        celestas.clear();
-        containers.clear();
     }
 
     private static Celesta celestaFromH2() {
