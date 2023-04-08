@@ -32,7 +32,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
       - name: Install apell and graphviz
-        run: sudo apt-get install -y aspell aspell-ru graphviz
+        run: sudo apt-get install -y aspell-en aspell-ru graphviz
       - name: Install jsyntrax
         run: |
           wget https://github.com/atp-mipt/jsyntrax/releases/download/1.1/jsyntrax-1.1-syntrax.zip -nv -O jsyntrax.zip
