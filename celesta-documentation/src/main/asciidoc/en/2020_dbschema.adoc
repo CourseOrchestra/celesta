@@ -13,7 +13,7 @@ include::en/_common_attributes.adoc[]
 == Synchronyzing Celesta Score and DBSchema Project
 
 https://dbschema.com/[DBSchema] is a convenient tool for database visual design.
-It is possssssible to fully simulate all Celesta information on the database structure (tables, fields, keys and indices) in DBSchema or to turn an existing Celesta score into a DBSchema diagram.
+It is possible to fully simulate all Celesta information on the database structure (tables, fields, keys and indices) in DBSchema or to turn an existing Celesta score into a DBSchema diagram.
 
 image::{img}/800px-Dbschemascreen.png[{image-100-width}]
 
