@@ -47,9 +47,10 @@ jobs:
           chmod +x spellcheck 
           ./spellcheck en
           ./spellcheck ru
-      
+      - name: Build prerequisites
+        run: mvn install -pl celesta-maven-plugin -DskipTests -Dspotbugs.skip=true -am 
       - name: Build Javadoc
-        run: mvn javadoc:aggregate -pl :celesta-parent,:celesta-sql,:celesta-core,:celesta-system-services,:celesta-unit
+        run: mvn javadoc:aggregate -pl :celesta-parent,:celesta-sql,:celesta-core,:celesta-system-services,:celesta-unit,:celesta-maven-plugin
       - name: Build documentation
         run: JAVA_HOME=$JDK_11; mvn generate-resources -pl :celesta-documentation       
       - name: Move Javadoc
