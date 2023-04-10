@@ -106,12 +106,12 @@ class FooCursor {
   +setBar(String bar)
 }
 
-class FooCursor.Columns {
+class Columns {
   +foo(): ColumnMeta<Integer>
   +bar(): ColumnMeta<String>
 }
 
-FooCursor "COLUMNS" --> FooCursor.Columns
+FooCursor "COLUMNS" --> Columns
 @enduml
 ----
 
