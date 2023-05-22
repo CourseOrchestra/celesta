@@ -31,16 +31,13 @@ jobs:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
-      - name: Install apell and graphviz
+      - name: Install aspell and graphviz
         run: sudo apt-get install -y aspell-en aspell-ru graphviz
       - name: Install jsyntrax
         run: |
-          wget https://github.com/atp-mipt/jsyntrax/releases/download/1.1/jsyntrax-1.1-syntrax.zip -nv -O jsyntrax.zip
+          wget https://github.com/atp-mipt/jsyntrax/releases/download/1.37/jsyntrax-1.37-syntrax.zip -nv -O jsyntrax.zip
           unzip -q jsyntrax.zip
           rm jsyntrax.zip
-          sudo chmod +x $(pwd)/jsyntrax-1.1/bin/syntrax
-          sudo ln -s $(pwd)/jsyntrax-1.1/bin/syntrax /usr/local/bin/syntrax
-          JAVA_HOME=$JDK_11; syntrax --version
       
       - name: Spellcheck
         run: |
@@ -52,7 +49,10 @@ jobs:
       - name: Build Javadoc
         run: mvn javadoc:aggregate -pl :celesta-parent,:celesta-sql,:celesta-core,:celesta-system-services,:celesta-unit
       - name: Build documentation
-        run: JAVA_HOME=$JDK_11; mvn generate-resources -pl :celesta-documentation       
+        run: mvn generate-resources -pl :celesta-documentation
+        env:
+          JAVA_HOME: ${{ env.JDK_11 }}
+          DIAGRAM_JSYNTRAX_HOME: ${{ github.workspace }}/jsyntrax-1.37
       - name: Move Javadoc
         run: mv target/site/apidocs celesta-documentation/target/generated-docs/apidocs
       - name: Deploy to GitHub Pages
