@@ -71,7 +71,7 @@
         <testcontainers.firebird.version>1.3.0</testcontainers.firebird.version>
 
         <!--plugin versions -->
-        <spotbugs.maven.plugin.version>4.7.3.4</spotbugs.maven.plugin.version>
+        <spotbugs.maven.plugin.version>4.7.3.5</spotbugs.maven.plugin.version>
         <jacoco.version>0.8.10</jacoco.version>
         <javacc.maven.plugin.version>3.0.1</javacc.maven.plugin.version>
         <maven.assembly.plugin.version>3.6.0</maven.assembly.plugin.version>
