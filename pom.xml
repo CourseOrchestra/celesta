@@ -59,7 +59,7 @@
         <!--dependency versions -->
         <checkstyle.version>9.3</checkstyle.version>
         <slf4j.version>2.0.9</slf4j.version>
-        <h2.version>2.2.222</h2.version>
+        <h2.version>2.2.224</h2.version>
         <javacc.version>7.0.12</javacc.version>
         <jdbc.driver.oracle.version>23.2.0.0</jdbc.driver.oracle.version>
         <jdbc.driver.postgres.version>42.6.0</jdbc.driver.postgres.version>
