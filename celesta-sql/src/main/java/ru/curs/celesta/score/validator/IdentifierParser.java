@@ -19,7 +19,6 @@ public abstract class IdentifierParser {
      * a normalized version of it (e.g. strips down the quotes).
      *
      * @param name  identifier
-     * @return
      * @throws ParseException  thrown on validation error.
      */
     public final String parse(String name) throws ParseException {
@@ -31,7 +30,6 @@ public abstract class IdentifierParser {
      * Validates the passed in identifier.
      *
      * @param name  identifier
-     * @return
      * @throws ParseException  thrown on validation error.
      */
     void validate(String name) throws ParseException {

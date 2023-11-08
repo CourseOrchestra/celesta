@@ -9,6 +9,7 @@ import ru.curs.celesta.syscursors.UserrolesCursor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Permission manager. It determines if a user has rights for operations with a table.
@@ -63,10 +64,7 @@ public final class PermissionManager implements IPermissionManager {
         PermissionCacheEntry(String userName, GrainElement table,
                                     int permissionMask) {
             super();
-            if (userName == null) {
-                throw new IllegalArgumentException();
-            }
-            this.userName = userName;
+            this.userName = Objects.requireNonNull(userName);
             this.table = table;
             this.permissionMask = permissionMask;
         }

@@ -20,18 +20,21 @@ public abstract class CsqlBasicDataAccessor<T extends ICallContext> implements C
 
 
     public CsqlBasicDataAccessor(T context) {
+        validateConnection(context);
         validateInitContext(context);
-
         this.context = context;
         this.conn = context.getConn();
+        this.db = context.getDbAdaptor();
+    }
+
+    private static void validateConnection(ICallContext context) {
         try {
-            if (conn.isClosed()) {
+            if (context.getConn().isClosed()) {
                 throw new CelestaException("Trying to create a cursor on closed connection.");
             }
         } catch (SQLException e) {
             throw new CelestaException(e.getMessage());
         }
-        this.db = callContext().getDbAdaptor();
     }
 
     /**

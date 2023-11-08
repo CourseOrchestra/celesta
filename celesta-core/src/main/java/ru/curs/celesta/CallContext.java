@@ -55,9 +55,10 @@ public class CallContext implements ICallContext {
      * @param userId User identifier. Cannot be null or empty.
      */
     public CallContext(String userId) {
-        if (Objects.requireNonNull(userId).isEmpty()) {
-            throw new CelestaException("Call context's user Id must not be empty");
-        }
+        this(verify(userId), userId);
+    }
+
+    private CallContext(boolean verified, String userId) {
         this.userId = userId;
         state = State.NEW;
     }
@@ -72,6 +73,13 @@ public class CallContext implements ICallContext {
     public CallContext(String userId, ICelesta celesta, String procName) {
         this(userId);
         activate(celesta, procName);
+    }
+
+    private static boolean verify(String userId) {
+        if (Objects.requireNonNull(userId).isEmpty()) {
+            throw new CelestaException("Call context's user Id must not be empty");
+        }
+        return true;
     }
 
     final int getDataAccessorsCount() {
@@ -175,7 +183,7 @@ public class CallContext implements ICallContext {
     /**
      * Set the last data accessor object.
      *
-     * @param dataAccessor  data accessor object
+     * @param dataAccessor data accessor object
      */
     public void setLastDataAccessor(BasicDataAccessor dataAccessor) {
         lastDataAccessor = dataAccessor;
@@ -184,7 +192,7 @@ public class CallContext implements ICallContext {
     /**
      * Increments counter of open data accessor objects.
      *
-     * @throws CelestaException  if the maximal limit of data accessors is exceeded.
+     * @throws CelestaException if the maximal limit of data accessors is exceeded.
      */
     public void incDataAccessorsCount() {
         if (dataAccessorsCount > MAX_DATA_ACCESSORS) {

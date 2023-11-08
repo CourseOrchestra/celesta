@@ -27,10 +27,11 @@ public abstract class NamedElement {
     public NamedElement(String name, IdentifierParser identifierParser) throws ParseException {
         // name==null should not happen, for all methods are written assuming
         // that name != null.
-        if (name == null) {
-            throw new IllegalArgumentException();
-        }
-        this.name = identifierParser.parse(name);
+        this(identifierParser.parse(Objects.requireNonNull(name)));
+    }
+
+    private NamedElement(String name) {
+        this.name = name;
         this.quotedName = String.format("\"%s\"", this.name);
     }
 
