@@ -1,6 +1,6 @@
 # Celesta
 
-[![Build Status](https://ci.corchestra.ru/buildStatus/icon?job=celesta/dev)](https://ci.corchestra.ru/job/celesta/job/dev/)
+[![build](https://github.com/CourseOrchestra/celesta/actions/workflows/main.yml/badge.svg)](https://github.com/CourseOrchestra/celesta/actions/workflows/main.yml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/ru.curs/celesta-parent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/ru.curs/celesta-parent)
 
 <img align="left" src="celesta_duke.png" width="200px">
