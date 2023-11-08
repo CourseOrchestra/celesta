@@ -26,7 +26,7 @@ public class Index extends GrainElement implements HasColumns {
 
     Index(GrainPart grainPart, String tableName, String name) throws ParseException {
         super(grainPart, name);
-        if (tableName == null || name == null) {
+        if (tableName == null) {
             throw new IllegalArgumentException();
         }
         table = getGrain().getElement(tableName, BasicTable.class);
