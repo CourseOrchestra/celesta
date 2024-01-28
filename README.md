@@ -40,5 +40,5 @@ For more details, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Useful Links
 
-* Overview in English: https://dzone.com/articles/celesta-sql-databases-api-schema-migration-and-tes
+* Overview in English: https://ponomarev.uk/blog/celesta
 * Overview in Russian: https://habrahabr.ru/post/455746/
