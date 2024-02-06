@@ -58,7 +58,7 @@
 
         <!--dependency versions -->
         <checkstyle.version>9.3</checkstyle.version>
-        <slf4j.version>2.0.11</slf4j.version>
+        <slf4j.version>2.0.12</slf4j.version>
         <h2.version>2.2.224</h2.version>
         <javacc.version>7.0.13</javacc.version>
         <jdbc.driver.oracle.version>23.3.0.23.09</jdbc.driver.oracle.version>
