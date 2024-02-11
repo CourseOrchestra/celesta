@@ -20,7 +20,8 @@ include::ru/_common_attributes.adoc[]
 
 Для создания проекта Spring Boot с помощью Maven необходимо указать следующие зависимости:
 
-```xml
+[source,xml]
+----
     <properties>
        <!-- Проверьте свежую версию ru.curs:spring-boot-starter-web на Maven Central -->
        <spring.boot.starter.celesta.version>2.1.7</spring.boot.starter.celesta.version>
@@ -57,12 +58,13 @@ include::ru/_common_attributes.adoc[]
         </dependency>
     ...
     </dependencies>
-```
+----
 
 Также для кодогенерации <<data_accessors_section,классов доступа к данным>> понадобится `ru.curs:celesta-maven-plugin`.
 В его настройках необходимо указать путь к папке `score`:
 
-```xml
+[source,xml]
+----
     <build>
         <plugins>
             <plugin>
@@ -83,12 +85,13 @@ include::ru/_common_attributes.adoc[]
             </plugin>
         </plugins>
     </build>
-```
+----
 
 В папке `src/main/celestasql` следует разместить скрипты определения базы данных на языке <<CelestaSQL,CelestaSQL>>.
 Например,
 
-```sql
+[source,sql]
+----
 -- celestasql/ru/curs/demo/demo.sql
 CREATE SCHEMA demo VERSION '1.0';
 
@@ -118,14 +121,15 @@ CREATE TABLE OrderLine(
 ALTER TABLE OrderLine ADD CONSTRAINT fk_OrderLine FOREIGN KEY (order_id) REFERENCES OrderHeader(id);
 create materialized view OrderedQty as
 select item_id, sum(qty) as qty from OrderLine group by item_id;
-```
+----
 
 Команда `mvn verify` приведёт к появлению Java-файлов `OrderHeaderCursor.java`
  и `OrderLineCursor.java` с <<data_accessors_section,классами курсоров>> в папке  `target/generated-sources/celesta/...`.
 
 Эти классы можно использовать при создании сервисов (см. также более полный https://github.com/inponomarev/celesta-demo/blob/master/src/main/java/ru/curs/demo/service/DocumentService.java#L17[демонстрационный пример]):
 
-```java
+[source,java]
+----
 @Service
 public class DocumentService {
     @CelestaTransaction
@@ -135,7 +139,7 @@ public class DocumentService {
              . . .
     }
 }
-```
+----
 
 Управление <<basic_settings_section,настройками>> проекта осуществляется любым https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html[доступным для Spring Boot способом], в частности, с помощью файла https://github.com/inponomarev/celesta-demo/blob/master/src/main/resources/application.yml[application.yml].
 
@@ -150,16 +154,18 @@ Celesta использует свой собственный пул соедин
 
 Например, если добавить в проект следующую зависимость:
 
-```xml
+[source,xml]
+----
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-jdbc</artifactId>
 </dependency>
-```
+----
 
 и прописать следующие аргументы в `application.yml`
 
-```yaml
+[source,yaml]
+----
 spring:
   datasource:
     url: jdbc:postgresql://<DATABASE>
@@ -170,7 +176,7 @@ spring:
 celesta:
   jdbc:
     url: jdbc:postgresql
-```
+----
 
 Celesta запустится с https://github.com/brettwooldridge/HikariCP[Hikari Connection Pool], предоставленным Spring-ом. Обратите внимание на следующее:
 

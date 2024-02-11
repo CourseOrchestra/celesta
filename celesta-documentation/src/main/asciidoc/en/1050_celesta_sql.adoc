@@ -261,21 +261,23 @@ CREATE TABLE a (ida INT NOT NULL PRIMARY KEY, descr nvarchar(2), parent INT
 
 Foreign key created outside the table:
 
-```sql
+[source,sql]
+----
 ALTER TABLE aa ADD CONSTRAINT fk1
   FOREIGN KEY (idc) REFERENCES a(ida); --second part of a circle reference
-```
+----
 
 Example of creating a composite key consisting of two fields:
 
-```sql
+[source,sql]
+----
 CREATE TABLE empfiles(
   id INT NOT NULL PRIMARY KEY,
   user_id varchar(200) NOT NULL,
   orgtype_id varchar(255) NOT NULL,
   question_id varchar(30) NOT NULL,
   FOREIGN KEY (orgtype_id, question_id) REFERENCES schema.table(field, field)
-```
+----
 
 [[celestasql_with_options]]
 === Options

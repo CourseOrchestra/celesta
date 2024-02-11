@@ -20,9 +20,8 @@ Context calls are created at the controller level, where the ID of the user perf
 
 Context is created with a constructor
 
-```java
+[source,java]
 CallContext(String userId)
-```
 
 If there is no need to consider the user ID or grant rights to access the tables, a  {apidocs}ru/curs/celesta/SystemCallContext.html[`SystemCallContext`] subclass can be used, because its constructor does not require any parameters.
 In this case, a "system user" context with full access to all tables is created.

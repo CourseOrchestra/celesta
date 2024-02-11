@@ -42,15 +42,13 @@ image::{img}/800px-Dbschemascreen.png[{image-100-width}]
 
 Пример команды для синхронизации от score к схеме:
 
-```
+[source]
 dbschemasync "c:/temp/dbschema/score/" "c:/temp/dbschema/schema.dbs"
-```
 
 Пример синхронизации от схемы к score:
 
-```
+[source]
 dbschemasync "c:/temp/dbschema/schema.dbs" "c:/temp/dbschema/score/"
-```
 
 === Особенности работы при дизайне структуры БД
 

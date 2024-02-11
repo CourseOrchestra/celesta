@@ -19,7 +19,8 @@ Celesta-maven-plugin осуществляет кодогенерацию кла�
 
 Пример использования:
 
-```xml
+[source,xml]
+----
 <plugin>
     <groupId>ru.curs</groupId>
     <artifactId>celesta-maven-plugin</artifactId>
@@ -45,7 +46,7 @@ Celesta-maven-plugin осуществляет кодогенерацию кла�
         </execution>
     </executions>
 </plugin>
-```
+----
 
 Параметры конфигурации плагина:
 

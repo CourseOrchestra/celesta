@@ -49,7 +49,8 @@ size():: Returns the internal BLOB data size in bytes.
 
 Examples of code for a BLOB field:
 
-```java
+[source,java]
+----
 OrderLineCursor line = new LineCursor(context);
 //Hereinafter line.dat is assumed to be a BLOB field
 . . .
@@ -72,5 +73,5 @@ if (Objects.nonNull(ins)){
                 System.out.println(inr.readLine());
     }
 }
-```
+----
 //end::blob[]

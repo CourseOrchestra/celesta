@@ -23,14 +23,15 @@ Running a unit test under H2 is sufficient to ensure method correctness in produ
 
 To employ these functions, add a CelestaUnit Maven dependency:
 
-```xml
+[source,xml]
+----
 <dependency>
     <groupId>ru.curs</groupId>
     <artifactId>celesta-unit</artifactId>
     <version>...</version>
     <scope>test</scope>
 </dependency>
-```
+----
 
 A JUnit5 dependency must also be added to the test scope of the project (see the https://junit.org/junit5/docs/current/user-guide/#dependency-metadata-junit-jupiter-samples[Junit5 Documentation] for examples).
 
@@ -38,7 +39,8 @@ A JUnit5 dependency must also be added to the test scope of the project (see the
 
 The easiest way to use it is to add a {apidocs}ru/curs/celestaunit/CelestaTest.html[`@CelestaTest`] annotation to the test class and use {apidocs}ru/curs/celesta/CallContext.html[`CallContext`] parameters in tests:
 
-```java
+[source,java]
+----
 /*CelestaTest annotation plugs in a JUnit5 extension class ru.curs.celestaunit.CelestaUnitExtension,
   allowing to use CallContext parameters in test methods.*/
 @CelestaTest
@@ -65,7 +67,7 @@ public class DocumentServiceTest {
         assertEquals("no1", header.getId());
     }
 }
-```
+----
 
 This means every test can receive an active `CallContext` as a parameter.
 This context is generated based on H2 database, to which a Celesta score is deployed and can be used to create cursors.
@@ -82,14 +84,15 @@ CelestaUnit has the following defaults:
 
 Defaults can be changed by using {apidocs}ru/curs/celestaunit/CelestaTest.html[`@CelestaTest`] annotation parameters:
 
-```java
+[source,java]
+----
 @CelestaTest(scorePath = DocumentServiceTest.SCORE_PATH,
     referentialIntegrity = true,
     truncateTables = false,
     resetSequences = false)
 public class DocumentServiceTest {
     public static final String SCORE_PATH = "src/test/resources/score";
-```
+----
 
 In some cases it might help to disable reference integrity check to simplify adding test data to tables linked by foreign keys to other tables.
 

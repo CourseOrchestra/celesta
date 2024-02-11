@@ -91,25 +91,27 @@ Fields excluded from the list take `null` values when the cursor navigates datab
 
 Let us assume the database has `table1` filled with data:
 
-```sql
+[source,sql]
+----
 create table table1 (
   id int not null primary key,
   numb int not null,
   numb2 int,
   varr varchar(2) not null
 );
-```
+----
 
 Assume the developed solution does not need to select data from the "varr" column.
 In this case, to create a cursor it is possible to indicate the needed columns.
 Cursor creation will look as follows:
 
-```java
+[source,java]
+----
 //initiate companion object containing information on columns
 Table1Cursor.Columns columns = new Table1Cursor.Columns(context.getCelesta());
 //transfer a list of desired columns in additional arguments of the constructor
 Table1Cursor tableCursor = new Table1Cursor(context, columns.numb(), columns.numb2());
-```
+----
 
 Now Celesta will not select `varr` columns when requesting data from the database `varr` column, and `varr` field of the `tableCursor` will always have a value of `null`.
 
@@ -148,9 +150,8 @@ CREATE FUNCTION pView1(p int) AS
 
 To create a cursor for a function with a parameter p = 5 the following code must be executed:
 
-```java
+[source,java]
 PView1Cursor pView1 = new PView1Cursor(context, 5);
-```
 
 Passing parameters to a function can be combined with limiting the fetched fields set.
 In order to do it first it is necessary to pass the parameters corresponding to mandatory cursor arguments and then the list of fields for selection as "varargs" arguments.
@@ -160,33 +161,34 @@ In order to do it first it is necessary to pass the parameters corresponding to 
 Cursor class have fields containing getters and setters for each declared table fields allowing to read and write information.
 For instance, if foo table is defined as follows:
 
-```sql
+[source,sql]
+----
 CREATE TABLE foo (
   a INT NOT NULL PRIMARY KEY,
   b VARCHAR(10),
   c DATETIME,
   d BIT
 )
-```
+----
 
 then to insert a record in it the following code can be utilized:
 
-```java
+[source,java]
+----
 FooCursor foo = new FooCursor(context);
 foo.setA(1);
 foo.setB("text");
 foo.setC(new GregorianCalendar(year, month, day).getTime());
 foo.insert();
-```
+----
 
 Correspondence between CelestaSQL and Java data types is described in the <<datatypes_mapping,table>>.
 
 Note the `Date` class use when writing date value: this is a JDBC API restriction.
 If needed to fill the "с" field with current date and time the following expression can be utilized:
 
-```java
+[source,java]
 foo.setC(new Date());
-```
 
 Changing the BLOB field values is described in the <<BLOB_fields,BLOB Fields>> section.
 
@@ -642,15 +644,17 @@ Sequence class has a single `nextValue` method allowing to get the next sequence
 
 Below is an example of using a `Sequence` access class:
 
-```sql
+[source,sql]
+----
 CREATE SCHEMA sequences version '1.0';
 CREATE SEQUENCE idNumerator START WITH 3;
-```
+----
 
-```java
+[source,java]
+----
 IdNumeratorSequence sq  = new IdNumeratorSequence(ctx);
 //prints the next value starting with 3.
 System.out.println(sq.nextValue());
-```
+----
 
 //end::classes[]

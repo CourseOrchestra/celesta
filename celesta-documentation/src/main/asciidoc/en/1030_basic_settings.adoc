@@ -25,7 +25,8 @@ In that case, the YAML file root key has to be `celesta`, and other properties a
 
 For example, to set the properties of `jdbc.url`, `jdbc.username` and `jdbc.password` the `application.yml` file structure must be the following:
 
-```yaml
+[source,yaml]
+----
 celesta:
   jdbc:
     url: jdbc:postgresql://127.0.0.1:5432/celesta
@@ -33,7 +34,7 @@ celesta:
     # url: jdbc:oracle:thin:192.168.110.128:1521:XE
     username: foo
     password: bar
-```
+----
 Some IDE, like IntelliJ IDEA, provide auto-completion when editing the `application.yml` file.
 
 [cols="30a,40a,^20a,^10a", options="header"]

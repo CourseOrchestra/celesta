@@ -17,7 +17,8 @@ include::ru/_common_attributes.adoc[]
 
 Инициализация Celesta происходит в несколько этапов, о чём сообщает вывод в лог:
 
-```
+[source]
+----
 Celesta ver. 7.2.4
 Celesta pre-initialization: system settings reading...
 done.
@@ -25,7 +26,7 @@ Celesta initialization: score parsing...
 done.
 Celesta initialization: database upgrade...
 done.
-```
+----
 
 1. В процессе *чтения системных настроек* Celesta анализирует состояние <<basic_settings_section,параметров конфигурации>>, проверяет тот факт, что все обязательные параметры заданы, и что все параметры заданы корректно.
 При обнаружении ошибки в настройках запуск системы не будет продолжен.

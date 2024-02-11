@@ -19,7 +19,8 @@ Adding this plugin is mandatory for projects using Celesta.
 
 Usage example:
 
-```xml
+[source,xml]
+----
 <plugin>
     <groupId>ru.curs</groupId>
     <artifactId>celesta-maven-plugin</artifactId>
@@ -45,7 +46,7 @@ Usage example:
         </execution>
     </executions>
 </plugin>
-```
+----
 
 Plugin configuration settings:
 

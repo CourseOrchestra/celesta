@@ -49,7 +49,8 @@ IMPORTANT: Чаще всего имеет смысл пользоваться pr
 Т. к. метод регистрации триггера требует указания экземпляра класса {apidocs}ru/curs/celesta/Celesta.html[`Celesta`], в Spring-приложениях
 для регистрации триггеров удобно использовать метод `@PostConstruct`:
 
-```java
+[source,java]
+----
 @Service
 public class MyService {
 
@@ -64,13 +65,14 @@ public class MyService {
 
     . . .
 }
-```
+----
 
 Кодогенерируемый класс `MyCursor` имеет метод
 
-```java
+[source,java]
+----
 public static void onPreInsert(ICelesta celesta, Consumer<? super MyCursor> cursorConsumer)
-```
+----
 
 Системные курсоры (из пакета {apidocs}ru/curs/celesta/syscursors/package-summary.html[`ru.curs.celesta.syscursors`]) также поддерживают возможность регистрировать триггеры.
 

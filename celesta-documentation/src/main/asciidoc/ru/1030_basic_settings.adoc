@@ -26,7 +26,8 @@ include::ru/_common_attributes.adoc[]
 
 Например, для задания свойств `jdbc.url`, `jdbc.username` и `jdbc.password` структура файла `application.yml` будет следующей:
 
-```yaml
+[source,yaml]
+----
 celesta:
   jdbc:
     url: jdbc:postgresql://127.0.0.1:5432/celesta
@@ -34,7 +35,7 @@ celesta:
     # url: jdbc:oracle:thin:192.168.110.128:1521:XE
     username: foo
     password: bar
-```
+----
 Некоторые IDE, например, IntelliJ IDEA, выполняют контекстную подсказку при редактировании файла `application.yml`.
 
 [cols="30a,40a,^20a,^10a", options="header"]
