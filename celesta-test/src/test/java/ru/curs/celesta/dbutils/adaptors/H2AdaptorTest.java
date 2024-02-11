@@ -34,7 +34,6 @@ public class H2AdaptorTest extends AbstractAdaptorTest {
 
         ConnectionPoolConfiguration cpc = new ConnectionPoolConfiguration();
         cpc.setJdbcConnectionUrl(appSettings.getDatabaseConnection());
-        cpc.setDriverClassName(appSettings.getDbClassName());
         cpc.setLogin(appSettings.getDBLogin());
         cpc.setPassword(appSettings.getDBPassword());
 

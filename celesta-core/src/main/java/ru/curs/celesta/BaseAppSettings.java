@@ -175,15 +175,6 @@ public abstract class BaseAppSettings {
     }
 
     /**
-     * Returns parameter value "JDBC connection class".
-     *
-     * @return
-     */
-    public String getDbClassName() {
-        return dbType.getDriverClassName();
-    }
-
-    /**
      * Returns parameter value "JDBC connection string".
      *
      * @return

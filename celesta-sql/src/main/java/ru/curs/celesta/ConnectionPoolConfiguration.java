@@ -6,7 +6,6 @@ package ru.curs.celesta;
 public final class ConnectionPoolConfiguration {
 
   private String jdbcConnectionUrl;
-  private String driverClassName;
   private String login;
   private String password;
 
@@ -24,23 +23,6 @@ public final class ConnectionPoolConfiguration {
    */
   public void setJdbcConnectionUrl(String jdbcConnectionUrl) {
     this.jdbcConnectionUrl = jdbcConnectionUrl;
-  }
-
-  /**
-   * Returns JDBC driver class name.
-   * @return
-   */
-  public String getDriverClassName() {
-    return driverClassName;
-  }
-
-  /**
-   * Sets JDBC driver class name.
-   *
-   * @param driverClassName  JDBC driver class name.
-   */
-  public void setDriverClassName(String driverClassName) {
-    this.driverClassName = driverClassName;
   }
 
   /**

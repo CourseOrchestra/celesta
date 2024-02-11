@@ -9,64 +9,27 @@ public enum DBType {
     /**
      * Postgre.
      */
-    POSTGRESQL {
-        @Override
-        public String getDriverClassName() {
-            return "org.postgresql.Driver";
-        }
-    },
+    POSTGRESQL,
     /**
      * MS SQL.
      */
-    MSSQL {
-        @Override
-        public String getDriverClassName() {
-            return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-        }
-    },
+    MSSQL,
     /**
      * ORACLE.
      */
-    ORACLE {
-        @Override
-        public String getDriverClassName() {
-            return "oracle.jdbc.driver.OracleDriver";
-        }
-    },
+    ORACLE,
     /**
      * FIREBIRD.
      */
-    FIREBIRD {
-        @Override
-        public String getDriverClassName() {
-            return "org.firebirdsql.jdbc.FBDriver";
-        }
-    },
+    FIREBIRD,
     /**
      * H2.
      */
-    H2 {
-        @Override
-        public String getDriverClassName() {
-            return "org.h2.Driver";
-        }
-    },
+    H2,
     /**
      * Unknown type.
      */
-    UNKNOWN {
-        @Override
-        public String getDriverClassName() {
-            return "";
-        }
-    };
-
-    /**
-     * Returns JDBC driver class name.
-     *
-     * @return
-     */
-    public abstract String getDriverClassName();
+    UNKNOWN;
 
     /**
      * Resolves DB type from JDBC URL string.

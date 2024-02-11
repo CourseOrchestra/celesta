@@ -23,7 +23,6 @@ public class InternalConnectionPoolTest {
         cpc = new ConnectionPoolConfiguration();
         String jdbcUrl = BaseAppSettings.H2_IN_MEMORY_URL;
         cpc.setJdbcConnectionUrl(jdbcUrl);
-        cpc.setDriverClassName(DBType.resolveByJdbcUrl(jdbcUrl).getDriverClassName());
         cpc.setLogin("");
     }
 
@@ -64,8 +63,8 @@ public class InternalConnectionPoolTest {
         conn1.close();
 
         assertAll(
-                () -> assertTrue(!conn1.isClosed()),
-                () -> assertTrue(!conn2.isClosed()),
+                () -> assertFalse(conn1.isClosed()),
+                () -> assertFalse(conn2.isClosed()),
                 () -> assertEquals(1, connectionPool.poolSize())
         );
     }

@@ -21,14 +21,12 @@ public final class InternalConnectionPool implements ConnectionPool {
 
     private final ConcurrentLinkedQueue<CelestaConnection> pool = new ConcurrentLinkedQueue<>();
     private final String jdbcConnectionUrl;
-    private final String driverClassName;
     private final String login;
     private final String password;
     private DBAdaptor dbAdaptor;
     private volatile boolean isClosed;
 
-    private InternalConnectionPool(String jdbcConnectionUrl, String driverClassName, String login, String password) {
-        this.driverClassName = driverClassName;
+    private InternalConnectionPool(String jdbcConnectionUrl, String login, String password) {
         this.login = login;
         this.password = password;
         this.jdbcConnectionUrl = jdbcConnectionUrl;
@@ -43,7 +41,7 @@ public final class InternalConnectionPool implements ConnectionPool {
      * @return
      */
     public static InternalConnectionPool create(ConnectionPoolConfiguration configuration) {
-        return new InternalConnectionPool(configuration.getJdbcConnectionUrl(), configuration.getDriverClassName(),
+        return new InternalConnectionPool(configuration.getJdbcConnectionUrl(),
                 configuration.getLogin(), configuration.getPassword());
     }
 
@@ -84,7 +82,6 @@ public final class InternalConnectionPool implements ConnectionPool {
         }
 
         try {
-            Class.forName(driverClassName);
             if (login.isEmpty()) {
                 c = DriverManager.getConnection(jdbcConnectionUrl);
             } else {
@@ -92,7 +89,7 @@ public final class InternalConnectionPool implements ConnectionPool {
             }
             c.setAutoCommit(false);
 
-            CelestaConnection celestaConnection = new CelestaConnection(c) {
+            return new CelestaConnection(c) {
                 @Override
                 public void close() {
                     try {
@@ -107,9 +104,8 @@ public final class InternalConnectionPool implements ConnectionPool {
                     }
                 }
             };
-            return celestaConnection;
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             throw new CelestaException("Could not connect to %s with error: %s",
                     PasswordHider.maskPassword(jdbcConnectionUrl), e.getMessage());
         }
@@ -160,7 +156,7 @@ final class PasswordHider {
     // Password for Oracle is always between / and @ (and cannot contain @).
     private static final Pattern ORA_PATTERN = Pattern.compile("/[^@]+@");
     // In MS SQL is everything thought out and if password contains ;, it is exchanged to {;}
-    private static final Pattern MSSQL_PATTERN = Pattern.compile("(password)=([^{;]|(\\{(;\\})|[^;]?))+(;|$)",
+    private static final Pattern MSSQL_PATTERN = Pattern.compile("(password)=([^{;]|(\\{(;})|[^;]?))+(;|$)",
             Pattern.CASE_INSENSITIVE);
     // In POSTGRESQL JDBC-URL will work incorrectly if password contains &
     private static final Pattern POSTGRESQL_PATTERN = Pattern.compile("(password)=[^&]+(&|$)",
