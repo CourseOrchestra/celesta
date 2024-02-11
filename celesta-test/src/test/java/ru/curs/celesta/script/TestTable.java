@@ -20,6 +20,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -28,7 +29,6 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.TimeZone;
 
-import static junit.framework.TestCase.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestTable implements ScriptTest {
@@ -51,7 +51,7 @@ public class TestTable implements ScriptTest {
         assertTrue(cursor.getDat().isNull());
 
         OutputStream os = cursor.getDat().getOutStream();
-        try (OutputStreamWriter osw = new OutputStreamWriter(os, "utf-8")) {
+        try (OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
             osw.append("blob field");
         }
 
@@ -60,14 +60,14 @@ public class TestTable implements ScriptTest {
         cursor.get(1);
         cursor.calcDat();
         try (BufferedReader bf = new BufferedReader(
-                new InputStreamReader(cursor.getDat().getInStream(), "utf-8"))) {
+                new InputStreamReader(cursor.getDat().getInStream(), StandardCharsets.UTF_8))) {
             assertEquals("blob field", bf.readLine());
         }
 
         cursor.clear();
         cursor.calcDat();
         os = cursor.getDat().getOutStream();
-        try (OutputStreamWriter osw = new OutputStreamWriter(os, "utf-8")) {
+        try (OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
             osw.append("blob field 2!");
         }
 
@@ -77,7 +77,7 @@ public class TestTable implements ScriptTest {
         cursor.get(2);
         cursor.calcDat();
         try (BufferedReader bf = new BufferedReader(
-                new InputStreamReader(cursor.getDat().getInStream(), "utf-8"))) {
+                new InputStreamReader(cursor.getDat().getInStream(), StandardCharsets.UTF_8))) {
             assertEquals("blob field 2!", bf.readLine());
         }
     }

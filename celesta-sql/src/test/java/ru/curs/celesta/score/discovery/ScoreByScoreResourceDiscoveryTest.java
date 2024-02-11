@@ -55,7 +55,7 @@ public class ScoreByScoreResourceDiscoveryTest {
         final URL scoreAUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_A/");
         final URL scoreBUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_B/");
 
-        Set<Resource> grainUrls =  scoreDiscovery.discoverScore(Collections.enumeration(Arrays.asList(
+        Set<Resource> grainUrls = scoreDiscovery.discoverScore(Collections.enumeration(Arrays.asList(
                 new URL(scoreAUrl, SCORE_FILES),
                 new URL(scoreBUrl, SCORE_FILES))));
 
@@ -72,7 +72,7 @@ public class ScoreByScoreResourceDiscoveryTest {
         final URL scoreAUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_A/");
         final URL scoreZUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_Z/");
 
-        Set<Resource> grainUrls =  scoreDiscovery.discoverScore(Collections.enumeration(Arrays.asList(
+        Set<Resource> grainUrls = scoreDiscovery.discoverScore(Collections.enumeration(Arrays.asList(
                 new URL(scoreAUrl, SCORE_FILES),
                 new URL(scoreZUrl, SCORE_FILES))));
 
@@ -88,11 +88,10 @@ public class ScoreByScoreResourceDiscoveryTest {
         final URL scoreAUrl = getClass().getResource("/scores/resourceDiscoveryScore/score_A/");
         final URL scoreA1Url = getClass().getResource("/scores/resourceDiscoveryScore/score_A1/");
 
-        CelestaException ex = assertThrows(CelestaException.class, () -> {
-            scoreDiscovery.discoverScore(Collections.enumeration(Arrays.asList(
-                    new URL(scoreAUrl, SCORE_FILES),
-                    new URL(scoreA1Url, SCORE_FILES))));
-        });
+        CelestaException ex = assertThrows(CelestaException.class, () -> scoreDiscovery
+                .discoverScore(Collections.enumeration(Arrays.asList(
+                        new URL(scoreAUrl, SCORE_FILES),
+                        new URL(scoreA1Url, SCORE_FILES)))));
 
         LOGGER.info(ex.getMessage());
     }

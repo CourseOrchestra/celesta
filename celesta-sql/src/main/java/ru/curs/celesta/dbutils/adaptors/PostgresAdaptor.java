@@ -485,7 +485,7 @@ public final class PostgresAdaptor extends OpenSourceDbAdaptor {
                 query.getName());
 
         try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql);) {
+             ResultSet rs = stmt.executeQuery(sql)) {
             rs.next();
             return rs.getInt(1) > 0;
         }

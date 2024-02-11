@@ -820,7 +820,7 @@ public abstract class BasicCursor extends BasicDataAccessor {
 
     private Object validateColumnValue(ColumnMeta<?> column, Object value) {
         if (value == null) {
-            return value;
+            return null;
         }
         if (!column.getJavaClass().isAssignableFrom(value.getClass())) {
             throw new CelestaException("Value %s is not of type %s.", value, column.getJavaClass());

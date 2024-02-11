@@ -109,7 +109,7 @@ public class PreparedStatementHolderTest {
         assertEquals("[1->37.8][2->16]", s2.params);
     }
 
-    class A extends PreparedStmtHolder {
+    static class A extends PreparedStmtHolder {
 
         SingleValue filter = new SingleValue(5);
         Range filter2 = new Range("bar", "foo");
@@ -124,7 +124,7 @@ public class PreparedStatementHolderTest {
         }
     }
 
-    class B extends MaskedStatementHolder {
+    static class B extends MaskedStatementHolder {
 
         @Override
         protected int[] getNullsMaskIndices() {
@@ -141,7 +141,7 @@ public class PreparedStatementHolderTest {
 
     }
 
-    class C extends PreparedStmtHolder {
+    static class C extends PreparedStmtHolder {
 
         @Override
         protected PreparedStatement initStatement(List<ParameterSetter> program) {

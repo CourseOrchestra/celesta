@@ -178,7 +178,7 @@ final class PasswordHider {
             return null;
         }
         Matcher m;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (url.toLowerCase().startsWith("jdbc:oracle")) {
             m = ORA_PATTERN.matcher(url);
             while (m.find()) {

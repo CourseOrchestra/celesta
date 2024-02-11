@@ -292,11 +292,9 @@ public abstract class AbstractScore {
     }
 
     private void initSystemGrain() {
-        ChecksumInputStream is = null;
-
-        try {
+        try (ChecksumInputStream is = new ChecksumInputStream(getSysSchemaInputStream())) {
             GrainPart grainPart = extractGrainInfo(null, true);
-            is = new ChecksumInputStream(getSysSchemaInputStream());
+
             CelestaParser parser = new CelestaParser(is, "utf-8");
 
             Grain result;
@@ -310,17 +308,7 @@ public abstract class AbstractScore {
             result.finalizeParsing();
         } catch (Exception e) {
             throw new CelestaException(e);
-        } finally {
-            try {
-                if (is != null) {
-                    is.close();
-                }
-            } catch (IOException e) {
-                // This should never happen, however.
-                is = null;
-            }
         }
-
     }
 
     private InputStream getSysSchemaInputStream() {
